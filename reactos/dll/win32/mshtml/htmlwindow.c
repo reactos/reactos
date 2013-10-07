@@ -30,7 +30,8 @@
 #include <ole2.h>
 #include <mshtmdid.h>
 #include <shlguid.h>
-#include "shobjidl.h"
+#include <shobjidl.h>
+#include <exdispid.h>
 
 #define NO_SHLWAPI_REG
 #include "shlwapi.h"
@@ -176,6 +177,9 @@ static HRESULT WINAPI HTMLWindow2_QueryInterface(IHTMLWindow2 *iface, REFIID rii
     }else if(IsEqualGUID(&IID_ITravelLogClient, riid)) {
         TRACE("(%p)->(IID_ITravelLogClient %p)\n", This, ppv);
         *ppv = &This->ITravelLogClient_iface;
+    }else if(IsEqualGUID(&IID_IObjectIdentity, riid)) {
+        TRACE("(%p)->(IID_IObjectIdentity %p)\n", This, ppv);
+        *ppv = &This->IObjectIdentity_iface;
     }else if(dispex_query_interface(&This->inner_window->dispex, riid, ppv)) {
         assert(!*ppv);
         return E_NOINTERFACE;
@@ -266,8 +270,12 @@ static void release_inner_window(HTMLInnerWindow *This)
 
     if(This->screen)
         IHTMLScreen_Release(This->screen);
-    if(This->history)
-        IOmHistory_Release(This->history);
+
+    if(This->history) {
+        This->history->window = NULL;
+        IOmHistory_Release(&This->history->IOmHistory_iface);
+    }
+
     if(This->mon)
         IMoniker_Release(This->mon);
 
@@ -765,20 +773,89 @@ static HRESULT WINAPI HTMLWindow2_get_history(IHTMLWindow2 *iface, IOmHistory **
     if(!window->history) {
         HRESULT hres;
 
-        hres = create_history(&window->history);
+        hres = create_history(window, &window->history);
         if(FAILED(hres))
             return hres;
     }
 
-    IOmHistory_AddRef(window->history);
-    *p = window->history;
+    IOmHistory_AddRef(&window->history->IOmHistory_iface);
+    *p = &window->history->IOmHistory_iface;
     return S_OK;
+}
+
+static BOOL notify_webbrowser_close(HTMLOuterWindow *window, HTMLDocumentObj *doc)
+{
+    IConnectionPointContainer *cp_container;
+    VARIANT_BOOL cancel = VARIANT_FALSE;
+    IEnumConnections *enum_conn;
+    VARIANT args[2];
+    DISPPARAMS dp = {args, NULL, 2, 0};
+    CONNECTDATA conn_data;
+    IConnectionPoint *cp;
+    IDispatch *disp;
+    ULONG fetched;
+    HRESULT hres;
+
+    if(!doc->webbrowser)
+        return TRUE;
+
+    hres = IUnknown_QueryInterface(doc->webbrowser, &IID_IConnectionPointContainer, (void**)&cp_container);
+    if(FAILED(hres))
+        return TRUE;
+
+    hres = IConnectionPointContainer_FindConnectionPoint(cp_container, &DIID_DWebBrowserEvents2, &cp);
+    IConnectionPointContainer_Release(cp_container);
+    if(FAILED(hres))
+        return TRUE;
+
+    hres = IConnectionPoint_EnumConnections(cp, &enum_conn);
+    IConnectionPoint_Release(cp);
+    if(FAILED(hres))
+        return TRUE;
+
+    while(!cancel) {
+        conn_data.pUnk = NULL;
+        conn_data.dwCookie = 0;
+        fetched = 0;
+        hres = IEnumConnections_Next(enum_conn, 1, &conn_data, &fetched);
+        if(hres != S_OK)
+            break;
+
+        hres = IUnknown_QueryInterface(conn_data.pUnk, &IID_IDispatch, (void**)&disp);
+        IUnknown_Release(conn_data.pUnk);
+        if(FAILED(hres))
+            continue;
+
+        V_VT(args) = VT_BYREF|VT_BOOL;
+        V_BOOLREF(args) = &cancel;
+        V_VT(args+1) = VT_BOOL;
+        V_BOOL(args+1) = window->parent ? VARIANT_TRUE : VARIANT_FALSE;
+        hres = IDispatch_Invoke(disp, DISPID_WINDOWCLOSING, &IID_NULL, 0, DISPATCH_METHOD, &dp, NULL, NULL, NULL);
+        IDispatch_Release(disp);
+        if(FAILED(hres))
+            cancel = VARIANT_FALSE;
+    }
+
+    IEnumConnections_Release(enum_conn);
+    return !cancel;
 }
 
 static HRESULT WINAPI HTMLWindow2_close(IHTMLWindow2 *iface)
 {
     HTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->()\n", This);
+    HTMLOuterWindow *window = This->outer_window;
+
+    TRACE("(%p)\n", This);
+
+    if(!window->doc_obj) {
+        FIXME("No document object\n");
+        return E_FAIL;
+    }
+
+    if(!notify_webbrowser_close(window, window->doc_obj))
+        return S_OK;
+
+    FIXME("default action not implemented\n");
     return E_NOTIMPL;
 }
 
@@ -2086,7 +2163,7 @@ static HRESULT WINAPI HTMLPrivateWindow_SuperNavigate(IHTMLPrivateWindow *iface,
             translated_url = NULL;
     }
 
-    hres = CreateUri(translated_url ? translated_url : url, 0, 0, &uri);
+    hres = create_uri(translated_url ? translated_url : url, 0, &uri);
     CoTaskMemFree(translated_url);
     if(FAILED(hres))
         return hres;
@@ -2222,6 +2299,57 @@ static const ITravelLogClientVtbl TravelLogClientVtbl = {
     TravelLogClient_FindWindowByIndex,
     TravelLogClient_GetWindowData,
     TravelLogClient_LoadHistoryPosition
+};
+
+static inline HTMLWindow *impl_from_IObjectIdentity(IObjectIdentity *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLWindow, IObjectIdentity_iface);
+}
+
+static HRESULT WINAPI ObjectIdentity_QueryInterface(IObjectIdentity *iface, REFIID riid, void **ppv)
+{
+    HTMLWindow *This = impl_from_IObjectIdentity(iface);
+
+    return IHTMLWindow2_QueryInterface(&This->IHTMLWindow2_iface, riid, ppv);
+}
+
+static ULONG WINAPI ObjectIdentity_AddRef(IObjectIdentity *iface)
+{
+    HTMLWindow *This = impl_from_IObjectIdentity(iface);
+
+    return IHTMLWindow2_AddRef(&This->IHTMLWindow2_iface);
+}
+
+static ULONG WINAPI ObjectIdentity_Release(IObjectIdentity *iface)
+{
+    HTMLWindow *This = impl_from_IObjectIdentity(iface);
+
+    return IHTMLWindow2_Release(&This->IHTMLWindow2_iface);
+}
+
+static HRESULT WINAPI ObjectIdentity_IsEqualObject(IObjectIdentity *iface, IUnknown *unk)
+{
+    HTMLWindow *This = impl_from_IObjectIdentity(iface);
+    IServiceProvider *sp;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, unk);
+
+    hres = IUnknown_QueryInterface(unk, &IID_IServiceProvider, (void**)&sp);
+    if(hres != S_OK)
+        return hres;
+
+    hres = &This->inner_window->base.IServiceProvider_iface==sp ||
+        &This->outer_window->base.IServiceProvider_iface==sp ? S_OK : S_FALSE;
+    IServiceProvider_Release(sp);
+    return hres;
+}
+
+static const IObjectIdentityVtbl ObjectIdentityVtbl = {
+    ObjectIdentity_QueryInterface,
+    ObjectIdentity_AddRef,
+    ObjectIdentity_Release,
+    ObjectIdentity_IsEqualObject
 };
 
 static inline HTMLWindow *impl_from_IDispatchEx(IDispatchEx *iface)
@@ -2722,6 +2850,7 @@ static void *alloc_window(size_t size)
     window->IDispatchEx_iface.lpVtbl = &WindowDispExVtbl;
     window->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
     window->ITravelLogClient_iface.lpVtbl = &TravelLogClientVtbl;
+    window->IObjectIdentity_iface.lpVtbl = &ObjectIdentityVtbl;
     window->ref = 1;
 
     return window;
@@ -2882,7 +3011,7 @@ HRESULT update_window_doc(HTMLInnerWindow *window)
 
         static const PRUnichar onW[] = {'o','n',0};
 
-        nsAString_Init(&mode_str, onW);
+        nsAString_InitDepend(&mode_str, onW);
         nsres = nsIDOMHTMLDocument_SetDesignMode(window->doc->nsdoc, &mode_str);
         nsAString_Finish(&mode_str);
         if(NS_FAILED(nsres))

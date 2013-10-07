@@ -595,109 +595,12 @@ static HRESULT exec_browsemode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in
 
 static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)
 {
-    IMoniker *mon;
-    HRESULT hres;
-
     TRACE("(%p)->(%08x %p %p)\n", This, cmdexecopt, in, out);
 
     if(in || out)
         FIXME("unsupported args\n");
 
-    if(This->doc_obj->usermode == EDITMODE)
-        return S_OK;
-
-    This->doc_obj->usermode = EDITMODE;
-
-    if(This->window->mon) {
-        CLSID clsid = IID_NULL;
-        hres = IMoniker_GetClassID(This->window->mon, &clsid);
-        if(SUCCEEDED(hres)) {
-            /* We should use IMoniker::Save here */
-            FIXME("Use CLSID %s\n", debugstr_guid(&clsid));
-        }
-    }
-
-    if(This->doc_obj->frame)
-        IOleInPlaceFrame_SetStatusText(This->doc_obj->frame, NULL);
-
-    This->window->readystate = READYSTATE_UNINITIALIZED;
-
-    if(This->doc_obj->client) {
-        IOleCommandTarget *cmdtrg;
-
-        hres = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget,
-                (void**)&cmdtrg);
-        if(SUCCEEDED(hres)) {
-            VARIANT var;
-
-            V_VT(&var) = VT_I4;
-            V_I4(&var) = 0;
-            IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 37, 0, &var, NULL);
-
-            IOleCommandTarget_Release(cmdtrg);
-        }
-    }
-
-    if(This->doc_obj->hostui) {
-        DOCHOSTUIINFO hostinfo;
-
-        memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
-        hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
-        hres = IDocHostUIHandler_GetHostInfo(This->doc_obj->hostui, &hostinfo);
-        if(SUCCEEDED(hres))
-            /* FIXME: use hostinfo */
-            TRACE("hostinfo = {%u %08x %08x %s %s}\n",
-                    hostinfo.cbSize, hostinfo.dwFlags, hostinfo.dwDoubleClick,
-                    debugstr_w(hostinfo.pchHostCss), debugstr_w(hostinfo.pchHostNS));
-    }
-
-    update_doc(This, UPDATE_UI);
-
-    if(This->window->mon) {
-        /* FIXME: We should find nicer way to do this */
-        remove_target_tasks(This->task_magic);
-
-        mon = This->window->mon;
-        IMoniker_AddRef(mon);
-    }else {
-        static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
-
-        hres = CreateURLMoniker(NULL, about_blankW, &mon);
-        if(FAILED(hres)) {
-            FIXME("CreateURLMoniker failed: %08x\n", hres);
-            return hres;
-        }
-    }
-
-    hres = IPersistMoniker_Load(&This->IPersistMoniker_iface, TRUE, mon, NULL, 0);
-    IMoniker_Release(mon);
-    if(FAILED(hres))
-        return hres;
-
-    if(This->doc_obj->ui_active) {
-        if(This->doc_obj->ip_window)
-            call_set_active_object(This->doc_obj->ip_window, NULL);
-        if(This->doc_obj->hostui)
-            IDocHostUIHandler_HideUI(This->doc_obj->hostui);
-    }
-
-    if(This->doc_obj->ui_active) {
-        RECT rcBorderWidths;
-
-        if(This->doc_obj->hostui)
-            IDocHostUIHandler_ShowUI(This->doc_obj->hostui, DOCHOSTUITYPE_AUTHOR,
-                    &This->IOleInPlaceActiveObject_iface, &This->IOleCommandTarget_iface,
-                    This->doc_obj->frame, This->doc_obj->ip_window);
-
-        if(This->doc_obj->ip_window)
-            call_set_active_object(This->doc_obj->ip_window, &This->IOleInPlaceActiveObject_iface);
-
-        memset(&rcBorderWidths, 0, sizeof(rcBorderWidths));
-        if(This->doc_obj->frame)
-            IOleInPlaceFrame_SetBorderSpace(This->doc_obj->frame, &rcBorderWidths);
-    }
-
-    return S_OK;
+    return setup_edit_mode(This->doc_obj);
 }
 
 static HRESULT exec_htmleditmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)

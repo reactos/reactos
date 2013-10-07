@@ -131,8 +131,10 @@ void remove_target_tasks(LONG target)
     }
 
     if(!list_empty(&thread_data->timer_list)) {
+        DWORD tc = GetTickCount();
+
         timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
-        SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time - GetTickCount(), NULL);
+        SetTimer(thread_data->thread_hwnd, TIMER_ID, max( (int)(timer->time - tc), 0 ), NULL);
     }
 
     while(thread_data->task_queue_head && thread_data->task_queue_head->target_magic == target) {
@@ -258,17 +260,29 @@ static LRESULT process_timer(void)
     thread_data_t *thread_data;
     IDispatch *disp;
     DWORD tc;
-    task_timer_t *timer;
+    task_timer_t *timer=NULL, *last_timer;
 
     TRACE("\n");
 
     thread_data = get_thread_data(FALSE);
     assert(thread_data != NULL);
 
-    while(!list_empty(&thread_data->timer_list)) {
+    if(list_empty(&thread_data->timer_list)) {
+        KillTimer(thread_data->thread_hwnd, TIMER_ID);
+        return 0;
+    }
+
+    last_timer = LIST_ENTRY(list_tail(&thread_data->timer_list), task_timer_t, entry);
+    do {
+        tc = GetTickCount();
+        if(timer == last_timer) {
+            timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
+            SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time>tc ? timer->time-tc : 0, NULL);
+            return 0;
+        }
+
         timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
 
-        tc = GetTickCount();
         if(timer->time > tc) {
             SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time-tc, NULL);
             return 0;
@@ -287,7 +301,7 @@ static LRESULT process_timer(void)
         call_timer_disp(disp);
 
         IDispatch_Release(disp);
-    }
+    }while(!list_empty(&thread_data->timer_list));
 
     KillTimer(thread_data->thread_hwnd, TIMER_ID);
     return 0;

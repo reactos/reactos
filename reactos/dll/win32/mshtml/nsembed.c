@@ -290,6 +290,7 @@ static nsresult NSAPI nsDirectoryServiceProvider2_GetFile(nsIDirectoryServicePro
         return nsIFile_Clone(profile_directory, _retval);
     }
 
+    *_retval = NULL;
     return NS_ERROR_FAILURE;
 }
 
@@ -313,8 +314,10 @@ static nsresult NSAPI nsDirectoryServiceProvider2_GetFiles(nsIDirectoryServicePr
 
             strcpyW(plugin_path+len, gecko_pluginW);
             nsres = create_nsfile(plugin_path, &plugin_directory);
-            if(NS_FAILED(nsres))
+            if(NS_FAILED(nsres)) {
+                *_retval = NULL;
                 return nsres;
+            }
         }
 
         nsres = nsIFile_Clone(plugin_directory, &file);
@@ -329,6 +332,7 @@ static nsresult NSAPI nsDirectoryServiceProvider2_GetFiles(nsIDirectoryServicePr
         return NS_OK;
     }
 
+    *_retval = NULL;
     return NS_ERROR_FAILURE;
 }
 
@@ -394,6 +398,46 @@ static void register_nscontainer_class(void)
     wndclass.hInstance = hInst;
     nscontainer_class = RegisterClassExW(&wndclass);
 }
+
+#ifndef __REACTOS__
+static BOOL install_wine_gecko(void)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFOW si;
+    WCHAR app[MAX_PATH];
+    WCHAR *args;
+    LONG len;
+    BOOL ret;
+
+    static const WCHAR controlW[] = {'\\','c','o','n','t','r','o','l','.','e','x','e',0};
+    static const WCHAR argsW[] =
+        {' ','a','p','p','w','i','z','.','c','p','l',' ','i','n','s','t','a','l','l','_','g','e','c','k','o',0};
+
+    len = GetSystemDirectoryW(app, MAX_PATH-sizeof(controlW)/sizeof(WCHAR));
+    memcpy(app+len, controlW, sizeof(controlW));
+
+    args = heap_alloc(len*sizeof(WCHAR) + sizeof(controlW) + sizeof(argsW));
+    if(!args)
+        return FALSE;
+
+    memcpy(args, app, len*sizeof(WCHAR) + sizeof(controlW));
+    memcpy(args + len + sizeof(controlW)/sizeof(WCHAR)-1, argsW, sizeof(argsW));
+
+    TRACE("starting %s\n", debugstr_w(args));
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    ret = CreateProcessW(app, args, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    heap_free(args);
+    if (ret) {
+        CloseHandle(pi.hThread);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+    }
+
+    return ret;
+}
+#endif
 
 static void set_environment(LPCWSTR gre_path)
 {
@@ -723,7 +767,12 @@ BOOL load_gecko(void)
     if(!loading_thread) {
         loading_thread = GetCurrentThreadId();
 
+#ifdef __REACTOS__
         if(load_wine_gecko(gre_path))
+#else
+        if(load_wine_gecko(gre_path)
+           || (install_wine_gecko() && load_wine_gecko(gre_path)))
+#endif
             ret = init_xpcom(gre_path);
         else
            MESSAGE("Could not load wine-gecko. HTML rendering will be disabled.\n");

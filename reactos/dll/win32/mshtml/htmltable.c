@@ -173,15 +173,49 @@ static HRESULT WINAPI HTMLTable_get_rules(IHTMLTable *iface, BSTR *p)
 static HRESULT WINAPI HTMLTable_put_cellSpacing(IHTMLTable *iface, VARIANT v)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    WCHAR buf[64];
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    switch(V_VT(&v)) {
+    case VT_BSTR:
+        nsAString_InitDepend(&nsstr, V_BSTR(&v));
+        break;
+    case VT_I4: {
+        static const WCHAR formatW[] = {'%','d',0};
+        sprintfW(buf, formatW, V_I4(&v));
+        nsAString_InitDepend(&nsstr, buf);
+        break;
+    }
+    default:
+        FIXME("unsupported arg %s\n", debugstr_variant(&v));
+        return E_NOTIMPL;
+    }
+
+    nsres = nsIDOMHTMLTableElement_SetCellSpacing(This->nstable, &nsstr);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("SetCellSpacing failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTable_get_cellSpacing(IHTMLTable *iface, VARIANT *p)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLTableElement_GetCellSpacing(This->nstable, &nsstr);
+    V_VT(p) = VT_BSTR;
+    return return_nsstr(nsres, &nsstr, &V_BSTR(p));
 }
 
 static HRESULT WINAPI HTMLTable_put_cellPadding(IHTMLTable *iface, VARIANT v)
@@ -382,8 +416,21 @@ static HRESULT WINAPI HTMLTable_get_tFoot(IHTMLTable *iface, IHTMLTableSection *
 static HRESULT WINAPI HTMLTable_get_tBodies(IHTMLTable *iface, IHTMLElementCollection **p)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMHTMLCollection *nscol = NULL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLTableElement_GetTBodies(This->nstable, &nscol);
+    if(NS_FAILED(nsres)) {
+        ERR("GetTBodies failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = create_collection_from_htmlcol(This->element.node.doc, nscol);
+
+    nsIDOMHTMLCollection_Release(nscol);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTable_get_caption(IHTMLTable *iface, IHTMLTableCaption **p)
