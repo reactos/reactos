@@ -62,14 +62,6 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
    SET_Indexf(tab, vfmt->Indexf);
    SET_Indexfv(tab, vfmt->Indexfv);
    SET_Materialfv(tab, vfmt->Materialfv);
-   SET_MultiTexCoord1fARB(tab, vfmt->MultiTexCoord1fARB);
-   SET_MultiTexCoord1fvARB(tab, vfmt->MultiTexCoord1fvARB);
-   SET_MultiTexCoord2fARB(tab, vfmt->MultiTexCoord2fARB);
-   SET_MultiTexCoord2fvARB(tab, vfmt->MultiTexCoord2fvARB);
-   SET_MultiTexCoord3fARB(tab, vfmt->MultiTexCoord3fARB);
-   SET_MultiTexCoord3fvARB(tab, vfmt->MultiTexCoord3fvARB);
-   SET_MultiTexCoord4fARB(tab, vfmt->MultiTexCoord4fARB);
-   SET_MultiTexCoord4fvARB(tab, vfmt->MultiTexCoord4fvARB);
    SET_Normal3f(tab, vfmt->Normal3f);
    SET_Normal3fv(tab, vfmt->Normal3fv);
    SET_SecondaryColor3fEXT(tab, vfmt->SecondaryColor3fEXT);
@@ -99,7 +91,6 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
    SET_DrawArrays(tab, vfmt->DrawArrays);
    SET_DrawElements(tab, vfmt->DrawElements);
    SET_DrawRangeElements(tab, vfmt->DrawRangeElements);
-   SET_MultiDrawElementsEXT(tab, vfmt->MultiDrawElementsEXT);
 
    /* GL_NV_vertex_program */
    SET_VertexAttrib1fNV(tab, vfmt->VertexAttrib1fNV);
@@ -110,33 +101,6 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
    SET_VertexAttrib3fvNV(tab, vfmt->VertexAttrib3fvNV);
    SET_VertexAttrib4fNV(tab, vfmt->VertexAttrib4fNV);
    SET_VertexAttrib4fvNV(tab, vfmt->VertexAttrib4fvNV);
-#if FEATURE_ARB_vertex_program
-   SET_VertexAttrib1fARB(tab, vfmt->VertexAttrib1fARB);
-   SET_VertexAttrib1fvARB(tab, vfmt->VertexAttrib1fvARB);
-   SET_VertexAttrib2fARB(tab, vfmt->VertexAttrib2fARB);
-   SET_VertexAttrib2fvARB(tab, vfmt->VertexAttrib2fvARB);
-   SET_VertexAttrib3fARB(tab, vfmt->VertexAttrib3fARB);
-   SET_VertexAttrib3fvARB(tab, vfmt->VertexAttrib3fvARB);
-   SET_VertexAttrib4fARB(tab, vfmt->VertexAttrib4fARB);
-   SET_VertexAttrib4fvARB(tab, vfmt->VertexAttrib4fvARB);
-#endif
-
-   /* GL_EXT_gpu_shader4 / OpenGL 3.0 */
-   SET_VertexAttribI1iEXT(tab, vfmt->VertexAttribI1i);
-   SET_VertexAttribI2iEXT(tab, vfmt->VertexAttribI2i);
-   SET_VertexAttribI3iEXT(tab, vfmt->VertexAttribI3i);
-   SET_VertexAttribI4iEXT(tab, vfmt->VertexAttribI4i);
-   SET_VertexAttribI2ivEXT(tab, vfmt->VertexAttribI2iv);
-   SET_VertexAttribI3ivEXT(tab, vfmt->VertexAttribI3iv);
-   SET_VertexAttribI4ivEXT(tab, vfmt->VertexAttribI4iv);
-
-   SET_VertexAttribI1uiEXT(tab, vfmt->VertexAttribI1ui);
-   SET_VertexAttribI2uiEXT(tab, vfmt->VertexAttribI2ui);
-   SET_VertexAttribI3uiEXT(tab, vfmt->VertexAttribI3ui);
-   SET_VertexAttribI4uiEXT(tab, vfmt->VertexAttribI4ui);
-   SET_VertexAttribI2uivEXT(tab, vfmt->VertexAttribI2uiv);
-   SET_VertexAttribI3uivEXT(tab, vfmt->VertexAttribI3uiv);
-   SET_VertexAttribI4uivEXT(tab, vfmt->VertexAttribI4uiv);
 }
 
 

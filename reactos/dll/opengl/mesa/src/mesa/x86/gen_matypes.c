@@ -123,10 +123,7 @@ int main( int argc, char **argv )
    OFFSET( "VB_CLIP_MASK           ", struct vertex_buffer, ClipMask );
    OFFSET( "VB_NORMAL_PTR          ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_NORMAL] );
    OFFSET( "VB_EDGE_FLAG           ", struct vertex_buffer, EdgeFlag );
-   OFFSET( "VB_TEX0_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX0] );
-   OFFSET( "VB_TEX1_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX1] );
-   OFFSET( "VB_TEX2_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX2] );
-   OFFSET( "VB_TEX3_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX3] );
+   OFFSET( "VB_TEX_COORD_PTR       ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX] );
    OFFSET( "VB_INDEX_PTR           ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR_INDEX] );
    OFFSET( "VB_COLOR_PTR           ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR0] );
    OFFSET( "VB_SECONDARY_COLOR_PTR ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR1] );

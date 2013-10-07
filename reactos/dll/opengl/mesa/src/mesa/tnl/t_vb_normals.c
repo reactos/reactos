@@ -93,9 +93,8 @@ validate_normal_stage(struct gl_context *ctx, struct tnl_pipeline_stage *stage)
 {
    struct normal_stage_data *store = NORMAL_STAGE_DATA(stage);
 
-   if (ctx->VertexProgram._Current ||
-       (!ctx->Light.Enabled &&
-	!(ctx->Texture._GenFlags & TEXGEN_NEED_NORMALS))) {
+   if (!ctx->Light.Enabled &&
+	!(ctx->Texture._GenFlags & TEXGEN_NEED_NORMALS)) {
       store->NormalTransform = NULL;
       return;
    }

@@ -396,16 +396,16 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
 #endif /* INTERP_RGB */
 #ifdef INTERP_INT_TEX
       {
-         GLfloat eMaj_ds = (vMax->attrib[FRAG_ATTRIB_TEX0][0] - vMin->attrib[FRAG_ATTRIB_TEX0][0]) * S_SCALE;
-         GLfloat eBot_ds = (vMid->attrib[FRAG_ATTRIB_TEX0][0] - vMin->attrib[FRAG_ATTRIB_TEX0][0]) * S_SCALE;
-         GLfloat eMaj_dt = (vMax->attrib[FRAG_ATTRIB_TEX0][1] - vMin->attrib[FRAG_ATTRIB_TEX0][1]) * T_SCALE;
-         GLfloat eBot_dt = (vMid->attrib[FRAG_ATTRIB_TEX0][1] - vMin->attrib[FRAG_ATTRIB_TEX0][1]) * T_SCALE;
-         span.attrStepX[FRAG_ATTRIB_TEX0][0] = oneOverArea * (eMaj_ds * eBot.dy - eMaj.dy * eBot_ds);
-         span.attrStepY[FRAG_ATTRIB_TEX0][0] = oneOverArea * (eMaj.dx * eBot_ds - eMaj_ds * eBot.dx);
-         span.attrStepX[FRAG_ATTRIB_TEX0][1] = oneOverArea * (eMaj_dt * eBot.dy - eMaj.dy * eBot_dt);
-         span.attrStepY[FRAG_ATTRIB_TEX0][1] = oneOverArea * (eMaj.dx * eBot_dt - eMaj_dt * eBot.dx);
-         span.intTexStep[0] = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_TEX0][0]);
-         span.intTexStep[1] = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_TEX0][1]);
+         GLfloat eMaj_ds = (vMax->attrib[FRAG_ATTRIB_TEX][0] - vMin->attrib[FRAG_ATTRIB_TEX][0]) * S_SCALE;
+         GLfloat eBot_ds = (vMid->attrib[FRAG_ATTRIB_TEX][0] - vMin->attrib[FRAG_ATTRIB_TEX][0]) * S_SCALE;
+         GLfloat eMaj_dt = (vMax->attrib[FRAG_ATTRIB_TEX][1] - vMin->attrib[FRAG_ATTRIB_TEX][1]) * T_SCALE;
+         GLfloat eBot_dt = (vMid->attrib[FRAG_ATTRIB_TEX][1] - vMin->attrib[FRAG_ATTRIB_TEX][1]) * T_SCALE;
+         span.attrStepX[FRAG_ATTRIB_TEX][0] = oneOverArea * (eMaj_ds * eBot.dy - eMaj.dy * eBot_ds);
+         span.attrStepY[FRAG_ATTRIB_TEX][0] = oneOverArea * (eMaj.dx * eBot_ds - eMaj_ds * eBot.dx);
+         span.attrStepX[FRAG_ATTRIB_TEX][1] = oneOverArea * (eMaj_dt * eBot.dy - eMaj.dy * eBot_dt);
+         span.attrStepY[FRAG_ATTRIB_TEX][1] = oneOverArea * (eMaj.dx * eBot_dt - eMaj_dt * eBot.dx);
+         span.intTexStep[0] = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_TEX][0]);
+         span.intTexStep[1] = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_TEX][1]);
       }
 #endif
 #ifdef INTERP_ATTRIBS
@@ -678,17 +678,17 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
 #ifdef INTERP_INT_TEX
                {
                   GLfloat s0, t0;
-                  s0 = vLower->attrib[FRAG_ATTRIB_TEX0][0] * S_SCALE;
-                  sLeft = (GLfixed)(s0 * FIXED_SCALE + span.attrStepX[FRAG_ATTRIB_TEX0][0] * adjx
-                                 + span.attrStepY[FRAG_ATTRIB_TEX0][0] * adjy) + FIXED_HALF;
-                  dsOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_TEX0][0]
-                                               + dxOuter * span.attrStepX[FRAG_ATTRIB_TEX0][0]);
+                  s0 = vLower->attrib[FRAG_ATTRIB_TEX][0] * S_SCALE;
+                  sLeft = (GLfixed)(s0 * FIXED_SCALE + span.attrStepX[FRAG_ATTRIB_TEX][0] * adjx
+                                 + span.attrStepY[FRAG_ATTRIB_TEX][0] * adjy) + FIXED_HALF;
+                  dsOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_TEX][0]
+                                               + dxOuter * span.attrStepX[FRAG_ATTRIB_TEX][0]);
 
-                  t0 = vLower->attrib[FRAG_ATTRIB_TEX0][1] * T_SCALE;
-                  tLeft = (GLfixed)(t0 * FIXED_SCALE + span.attrStepX[FRAG_ATTRIB_TEX0][1] * adjx
-                                 + span.attrStepY[FRAG_ATTRIB_TEX0][1] * adjy) + FIXED_HALF;
-                  dtOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_TEX0][1]
-                                               + dxOuter * span.attrStepX[FRAG_ATTRIB_TEX0][1]);
+                  t0 = vLower->attrib[FRAG_ATTRIB_TEX][1] * T_SCALE;
+                  tLeft = (GLfixed)(t0 * FIXED_SCALE + span.attrStepX[FRAG_ATTRIB_TEX][1] * adjx
+                                 + span.attrStepY[FRAG_ATTRIB_TEX][1] * adjy) + FIXED_HALF;
+                  dtOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_TEX][1]
+                                               + dxOuter * span.attrStepX[FRAG_ATTRIB_TEX][1]);
                }
 #endif
 #ifdef INTERP_ATTRIBS

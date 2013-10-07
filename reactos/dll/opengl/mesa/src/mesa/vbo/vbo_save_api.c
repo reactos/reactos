@@ -746,6 +746,8 @@ _save_Materialfv(GLenum face, GLenum pname, const GLfloat *params)
       _mesa_compile_error(ctx, GL_INVALID_ENUM, "glMaterial(face)");
       return;
    }
+   
+   __debugbreak();
 
    switch (pname) {
    case GL_EMISSION:
@@ -991,20 +993,6 @@ _save_DrawArrays(GLenum mode, GLint start, GLsizei count)
 
 
 static void GLAPIENTRY
-_save_MultiDrawElements(GLenum mode, const GLsizei *count, GLenum type,
-                        const GLvoid **indices, GLsizei primcount)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   (void) mode;
-   (void) count;
-   (void) type;
-   (void) indices;
-   (void) primcount;
-   _mesa_compile_error(ctx, GL_INVALID_OPERATION, "glMultiDrawElements");
-}
-
-
-static void GLAPIENTRY
 _save_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -1162,20 +1150,6 @@ _save_OBE_DrawRangeElements(GLenum mode, GLuint start, GLuint end,
 }
 
 
-static void GLAPIENTRY
-_save_OBE_MultiDrawElements(GLenum mode, const GLsizei *count, GLenum type,
-                            const GLvoid **indices, GLsizei primcount)
-{
-   GLsizei i;
-
-   for (i = 0; i < primcount; i++) {
-      if (count[i] > 0) {
-	 CALL_DrawElements(GET_DISPATCH(), (mode, count[i], type, indices[i]));
-      }
-   }
-}
-
-
 static void
 _save_vtxfmt_init(struct gl_context *ctx)
 {
@@ -1196,14 +1170,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->Indexf = _save_Indexf;
    vfmt->Indexfv = _save_Indexfv;
    vfmt->Materialfv = _save_Materialfv;
-   vfmt->MultiTexCoord1fARB = _save_MultiTexCoord1f;
-   vfmt->MultiTexCoord1fvARB = _save_MultiTexCoord1fv;
-   vfmt->MultiTexCoord2fARB = _save_MultiTexCoord2f;
-   vfmt->MultiTexCoord2fvARB = _save_MultiTexCoord2fv;
-   vfmt->MultiTexCoord3fARB = _save_MultiTexCoord3f;
-   vfmt->MultiTexCoord3fvARB = _save_MultiTexCoord3fv;
-   vfmt->MultiTexCoord4fARB = _save_MultiTexCoord4f;
-   vfmt->MultiTexCoord4fvARB = _save_MultiTexCoord4fv;
    vfmt->Normal3f = _save_Normal3f;
    vfmt->Normal3fv = _save_Normal3fv;
    vfmt->SecondaryColor3fEXT = _save_SecondaryColor3fEXT;
@@ -1222,14 +1188,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->Vertex3fv = _save_Vertex3fv;
    vfmt->Vertex4f = _save_Vertex4f;
    vfmt->Vertex4fv = _save_Vertex4fv;
-   vfmt->VertexAttrib1fARB = _save_VertexAttrib1fARB;
-   vfmt->VertexAttrib1fvARB = _save_VertexAttrib1fvARB;
-   vfmt->VertexAttrib2fARB = _save_VertexAttrib2fARB;
-   vfmt->VertexAttrib2fvARB = _save_VertexAttrib2fvARB;
-   vfmt->VertexAttrib3fARB = _save_VertexAttrib3fARB;
-   vfmt->VertexAttrib3fvARB = _save_VertexAttrib3fvARB;
-   vfmt->VertexAttrib4fARB = _save_VertexAttrib4fARB;
-   vfmt->VertexAttrib4fvARB = _save_VertexAttrib4fvARB;
 
    vfmt->VertexAttrib1fNV = _save_VertexAttrib1fNV;
    vfmt->VertexAttrib1fvNV = _save_VertexAttrib1fvNV;
@@ -1239,24 +1197,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->VertexAttrib3fvNV = _save_VertexAttrib3fvNV;
    vfmt->VertexAttrib4fNV = _save_VertexAttrib4fNV;
    vfmt->VertexAttrib4fvNV = _save_VertexAttrib4fvNV;
-
-   /* integer-valued */
-   vfmt->VertexAttribI1i = _save_VertexAttribI1i;
-   vfmt->VertexAttribI2i = _save_VertexAttribI2i;
-   vfmt->VertexAttribI3i = _save_VertexAttribI3i;
-   vfmt->VertexAttribI4i = _save_VertexAttribI4i;
-   vfmt->VertexAttribI2iv = _save_VertexAttribI2iv;
-   vfmt->VertexAttribI3iv = _save_VertexAttribI3iv;
-   vfmt->VertexAttribI4iv = _save_VertexAttribI4iv;
-
-   /* unsigned integer-valued */
-   vfmt->VertexAttribI1ui = _save_VertexAttribI1ui;
-   vfmt->VertexAttribI2ui = _save_VertexAttribI2ui;
-   vfmt->VertexAttribI3ui = _save_VertexAttribI3ui;
-   vfmt->VertexAttribI4ui = _save_VertexAttribI4ui;
-   vfmt->VertexAttribI2uiv = _save_VertexAttribI2uiv;
-   vfmt->VertexAttribI3uiv = _save_VertexAttribI3uiv;
-   vfmt->VertexAttribI4uiv = _save_VertexAttribI4uiv;
 
    /* This will all require us to fallback to saving the list as opcodes:
     */
@@ -1272,7 +1212,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->DrawArrays = _save_DrawArrays;
    vfmt->DrawElements = _save_DrawElements;
    vfmt->DrawRangeElements = _save_DrawRangeElements;
-   vfmt->MultiDrawElementsEXT = _save_MultiDrawElements;
 }
 
 
@@ -1425,7 +1364,7 @@ _save_current_init(struct gl_context *ctx)
    struct vbo_save_context *save = &vbo_context(ctx)->save;
    GLint i;
 
-   for (i = VBO_ATTRIB_POS; i <= VBO_ATTRIB_GENERIC15; i++) {
+   for (i = VBO_ATTRIB_POS; i <= VBO_ATTRIB_POINT_SIZE; i++) {
       const GLuint j = i - VBO_ATTRIB_POS;
       ASSERT(j < VERT_ATTRIB_MAX);
       save->currentsz[i] = &ctx->ListState.ActiveAttribSize[j];
@@ -1474,7 +1413,6 @@ vbo_save_api_init(struct vbo_save_context *save)
    ctx->ListState.ListVtxfmt.DrawArrays = _save_OBE_DrawArrays;
    ctx->ListState.ListVtxfmt.DrawElements = _save_OBE_DrawElements;
    ctx->ListState.ListVtxfmt.DrawRangeElements = _save_OBE_DrawRangeElements;
-   ctx->ListState.ListVtxfmt.MultiDrawElementsEXT = _save_OBE_MultiDrawElements;
    _mesa_install_save_vtxfmt(ctx, &ctx->ListState.ListVtxfmt);
 }
 

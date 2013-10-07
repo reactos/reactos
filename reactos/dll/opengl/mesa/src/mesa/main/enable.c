@@ -75,8 +75,8 @@ client_state(struct gl_context *ctx, GLenum cap, GLboolean state)
          flag = VERT_BIT_COLOR_INDEX;
          break;
       case GL_TEXTURE_COORD_ARRAY:
-         var = &arrayObj->VertexAttrib[VERT_ATTRIB_TEX(ctx->Array.ActiveTexture)].Enabled;
-         flag = VERT_BIT_TEX(ctx->Array.ActiveTexture);
+         var = &arrayObj->VertexAttrib[VERT_ATTRIB_TEX].Enabled;
+         flag = VERT_BIT_TEX;
          break;
       case GL_EDGE_FLAG_ARRAY:
          var = &arrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled;
@@ -207,16 +207,10 @@ _mesa_DisableClientState( GLenum cap )
  * Note that we'll set GL_INVALID_OPERATION and return NULL if the active
  * texture unit is higher than the number of supported coordinate units.
  */
-static struct gl_texture_unit *
+static inline struct gl_texture_unit *
 get_texcoord_unit(struct gl_context *ctx)
 {
-   if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glEnable/Disable(texcoord unit)");
-      return NULL;
-   }
-   else {
-      return &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
-   }
+   return &ctx->Texture.Unit;
 }
 
 
@@ -228,7 +222,7 @@ get_texcoord_unit(struct gl_context *ctx)
 static GLboolean
 enable_texture(struct gl_context *ctx, GLboolean state, GLbitfield texBit)
 {
-   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
+   struct gl_texture_unit *texUnit = &ctx->Texture.Unit;
    const GLbitfield newenabled = state
       ? (texUnit->Enabled | texBit) : (texUnit->Enabled & ~texBit);
 
@@ -650,15 +644,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          }
          break;
 
-      /* GL_EXT_secondary_color */
-      case GL_COLOR_SUM_EXT:
-         CHECK_EXTENSION2(EXT_secondary_color, ARB_vertex_program, cap);
-         if (ctx->Fog.ColorSumEnabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_FOG);
-         ctx->Fog.ColorSumEnabled = state;
-         break;
-
       /* GL_ARB_multisample */
       case GL_MULTISAMPLE_ARB:
          if (ctx->Multisample.Enabled == state)
@@ -709,88 +694,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          ctx->Point.PointSprite = state;
          break;
 
-#if FEATURE_NV_vertex_program || FEATURE_ARB_vertex_program
-      case GL_VERTEX_PROGRAM_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program, cap);
-         if (ctx->VertexProgram.Enabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
-         ctx->VertexProgram.Enabled = state;
-         break;
-      case GL_VERTEX_PROGRAM_POINT_SIZE_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program, cap);
-         if (ctx->VertexProgram.PointSizeEnabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-         ctx->VertexProgram.PointSizeEnabled = state;
-         break;
-      case GL_VERTEX_PROGRAM_TWO_SIDE_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program, cap);
-         if (ctx->VertexProgram.TwoSideEnabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
-         ctx->VertexProgram.TwoSideEnabled = state;
-         break;
-#endif
-#if FEATURE_NV_vertex_program
-      case GL_MAP1_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB15_4_NV:
-         CHECK_EXTENSION(NV_vertex_program, cap);
-         {
-            const GLuint map = (GLuint) (cap - GL_MAP1_VERTEX_ATTRIB0_4_NV);
-            FLUSH_VERTICES(ctx, _NEW_EVAL);
-            ctx->Eval.Map1Attrib[map] = state;
-         }
-         break;
-      case GL_MAP2_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB15_4_NV:
-         CHECK_EXTENSION(NV_vertex_program, cap);
-         {
-            const GLuint map = (GLuint) (cap - GL_MAP2_VERTEX_ATTRIB0_4_NV);
-            FLUSH_VERTICES(ctx, _NEW_EVAL);
-            ctx->Eval.Map2Attrib[map] = state;
-         }
-         break;
-#endif /* FEATURE_NV_vertex_program */
-
-#if FEATURE_NV_fragment_program
-      case GL_FRAGMENT_PROGRAM_NV:
-         CHECK_EXTENSION(NV_fragment_program, cap);
-         if (ctx->FragmentProgram.Enabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-         ctx->FragmentProgram.Enabled = state;
-         break;
-#endif /* FEATURE_NV_fragment_program */
-
       /* GL_EXT_stencil_two_side */
       case GL_STENCIL_TEST_TWO_SIDE_EXT:
          CHECK_EXTENSION(EXT_stencil_two_side, cap);
@@ -806,16 +709,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
             ctx->_TriangleCaps &= ~DD_TRI_TWOSTENCIL;
          }
          break;
-
-#if FEATURE_ARB_fragment_program
-      case GL_FRAGMENT_PROGRAM_ARB:
-         CHECK_EXTENSION(ARB_fragment_program, cap);
-         if (ctx->FragmentProgram.Enabled == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-         ctx->FragmentProgram.Enabled = state;
-         break;
-#endif /* FEATURE_ARB_fragment_program */
 
       /* GL_EXT_depth_bounds_test */
       case GL_DEPTH_BOUNDS_TEST_EXT:
@@ -890,7 +783,7 @@ static GLboolean
 is_texture_enabled(struct gl_context *ctx, GLbitfield bit)
 {
    const struct gl_texture_unit *const texUnit =
-       &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+       &ctx->Texture.Unit;
    return (texUnit->Enabled & bit) ? GL_TRUE : GL_FALSE;
 }
 
@@ -1056,7 +949,7 @@ _mesa_IsEnabled( GLenum cap )
       case GL_INDEX_ARRAY:
          return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Enabled != 0);
       case GL_TEXTURE_COORD_ARRAY:
-         return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX(ctx->Array.ActiveTexture)]
+         return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX]
                  .Enabled != 0);
       case GL_EDGE_FLAG_ARRAY:
          return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled != 0);
@@ -1075,11 +968,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_TEXTURE_CUBE_MAP_ARB:
          CHECK_EXTENSION(ARB_texture_cube_map);
          return is_texture_enabled(ctx, TEXTURE_CUBE_BIT);
-
-      /* GL_EXT_secondary_color */
-      case GL_COLOR_SUM_EXT:
-         CHECK_EXTENSION2(EXT_secondary_color, ARB_vertex_program);
-         return ctx->Fog.ColorSumEnabled;
 
       /* GL_ARB_multisample */
       case GL_MULTISAMPLE_ARB:
@@ -1103,99 +991,10 @@ _mesa_IsEnabled( GLenum cap )
          CHECK_EXTENSION2(NV_point_sprite, ARB_point_sprite)
          return ctx->Point.PointSprite;
 
-#if FEATURE_NV_vertex_program || FEATURE_ARB_vertex_program
-      case GL_VERTEX_PROGRAM_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program);
-         return ctx->VertexProgram.Enabled;
-      case GL_VERTEX_PROGRAM_POINT_SIZE_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program);
-         return ctx->VertexProgram.PointSizeEnabled;
-      case GL_VERTEX_PROGRAM_TWO_SIDE_ARB:
-         CHECK_EXTENSION2(ARB_vertex_program, NV_vertex_program);
-         return ctx->VertexProgram.TwoSideEnabled;
-#endif
-#if FEATURE_NV_vertex_program
-      case GL_VERTEX_ATTRIB_ARRAY0_NV:
-      case GL_VERTEX_ATTRIB_ARRAY1_NV:
-      case GL_VERTEX_ATTRIB_ARRAY2_NV:
-      case GL_VERTEX_ATTRIB_ARRAY3_NV:
-      case GL_VERTEX_ATTRIB_ARRAY4_NV:
-      case GL_VERTEX_ATTRIB_ARRAY5_NV:
-      case GL_VERTEX_ATTRIB_ARRAY6_NV:
-      case GL_VERTEX_ATTRIB_ARRAY7_NV:
-      case GL_VERTEX_ATTRIB_ARRAY8_NV:
-      case GL_VERTEX_ATTRIB_ARRAY9_NV:
-      case GL_VERTEX_ATTRIB_ARRAY10_NV:
-      case GL_VERTEX_ATTRIB_ARRAY11_NV:
-      case GL_VERTEX_ATTRIB_ARRAY12_NV:
-      case GL_VERTEX_ATTRIB_ARRAY13_NV:
-      case GL_VERTEX_ATTRIB_ARRAY14_NV:
-      case GL_VERTEX_ATTRIB_ARRAY15_NV:
-         CHECK_EXTENSION(NV_vertex_program);
-         {
-            GLint n = (GLint) cap - GL_VERTEX_ATTRIB_ARRAY0_NV;
-            ASSERT(VERT_ATTRIB_GENERIC(n) < Elements(ctx->Array.ArrayObj->VertexAttrib));
-            return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_GENERIC(n)].Enabled != 0);
-         }
-      case GL_MAP1_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB15_4_NV:
-         CHECK_EXTENSION(NV_vertex_program);
-         {
-            const GLuint map = (GLuint) (cap - GL_MAP1_VERTEX_ATTRIB0_4_NV);
-            return ctx->Eval.Map1Attrib[map];
-         }
-      case GL_MAP2_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB15_4_NV:
-         CHECK_EXTENSION(NV_vertex_program);
-         {
-            const GLuint map = (GLuint) (cap - GL_MAP2_VERTEX_ATTRIB0_4_NV);
-            return ctx->Eval.Map2Attrib[map];
-         }
-#endif /* FEATURE_NV_vertex_program */
-
-#if FEATURE_NV_fragment_program
-      case GL_FRAGMENT_PROGRAM_NV:
-         CHECK_EXTENSION(NV_fragment_program);
-         return ctx->FragmentProgram.Enabled;
-#endif /* FEATURE_NV_fragment_program */
-
       /* GL_EXT_stencil_two_side */
       case GL_STENCIL_TEST_TWO_SIDE_EXT:
          CHECK_EXTENSION(EXT_stencil_two_side);
          return ctx->Stencil.TestTwoSide;
-
-#if FEATURE_ARB_fragment_program
-      case GL_FRAGMENT_PROGRAM_ARB:
-         return ctx->FragmentProgram.Enabled;
-#endif /* FEATURE_ARB_fragment_program */
 
       /* GL_EXT_depth_bounds_test */
       case GL_DEPTH_BOUNDS_TEST_EXT:

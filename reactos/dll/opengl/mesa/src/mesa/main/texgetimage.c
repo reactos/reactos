@@ -508,19 +508,13 @@ getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
       return GL_TRUE;
    }
 
-   if (!ctx->Extensions.ATI_envmap_bumpmap
-       && _mesa_is_dudv_format(format)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexImage(format)");
-      return GL_TRUE;
-   }
-
    err = _mesa_error_check_format_and_type(ctx, format, type);
    if (err != GL_NO_ERROR) {
       _mesa_error(ctx, err, "glGetTexImage(format/type)");
       return GL_TRUE;
    }
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    if (!texObj || _mesa_is_proxy_texture(target)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexImage(target)");
@@ -550,11 +544,6 @@ getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
    }
    else if (_mesa_is_ycbcr_format(format)
             && !_mesa_is_ycbcr_format(baseFormat)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexImage(format mismatch)");
-      return GL_TRUE;
-   }
-   else if (_mesa_is_dudv_format(format)
-            && !_mesa_is_dudv_format(baseFormat)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexImage(format mismatch)");
       return GL_TRUE;
    }
@@ -616,7 +605,7 @@ _mesa_GetnTexImageARB( GLenum target, GLint level, GLenum format,
       return;
    }
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
    texImage = _mesa_select_tex_image(ctx, texObj, target, level);
 
    if (_mesa_is_zero_size_texture(texImage))

@@ -1722,31 +1722,6 @@ sample_2d_footprint(struct gl_context *ctx,
    rgba[3] = num[3] / numSamples;
 }
 
-
-/**
- * Returns the index of the specified texture object in the
- * gl_context texture unit array.
- */
-static inline GLuint
-texture_unit_index(const struct gl_context *ctx,
-                   const struct gl_texture_object *tObj)
-{
-   const GLuint maxUnit
-      = (ctx->Texture._EnabledCoordUnits > 1) ? ctx->Const.MaxTextureUnits : 1;
-   GLuint u;
-
-   /* XXX CoordUnits vs. ImageUnits */
-   for (u = 0; u < maxUnit; u++) {
-      if (ctx->Texture.Unit[u]._Current == tObj)
-         break; /* found */
-   }
-   if (u >= maxUnit)
-      u = 0; /* not found, use 1st one; should never happen */
-   
-   return u;
-}
-
-
 /**
  * Sample 2D texture using an anisotropic filter.
  * NOTE: the const GLfloat lambda_iso[] parameter does *NOT* contain
@@ -1778,8 +1753,7 @@ sample_lambda_2d_aniso(struct gl_context *ctx,
    /* find the texture unit index by looking up the current texture object
     * from the context list of available texture objects.
     */
-   const GLuint u = texture_unit_index(ctx, tObj);
-   const GLuint attr = FRAG_ATTRIB_TEX0 + u;
+   const GLuint attr = FRAG_ATTRIB_TEX;
    GLfloat texW, texH;
 
    const GLfloat dsdx = span->attrStepX[attr][0];

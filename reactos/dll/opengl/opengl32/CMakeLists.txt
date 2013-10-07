@@ -1,8 +1,6 @@
 
 spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
 
-set_cpp(WITH_STL)
-
 include_directories(
     ../mesa/src/mesa
     ../mesa/src/mapi)
@@ -50,9 +48,7 @@ target_link_libraries(opengl32
     mesa_tnl
     mesa_main
     mesa_vbo
-    mesa_program
     mesa_math
-    mesa_glsl
 )
 
 if((ARCH STREQUAL "i386") AND (NOT MSVC))

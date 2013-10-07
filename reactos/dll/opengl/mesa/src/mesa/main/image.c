@@ -226,8 +226,6 @@ _mesa_components_in_format( GLenum format )
       case GL_LUMINANCE_ALPHA_INTEGER_EXT:
       case GL_RG:
       case GL_YCBCR_MESA:
-      case GL_DUDV_ATI:
-      case GL_DU8DV8_ATI:
       case GL_RG_INTEGER:
 	 return 2;
 
@@ -503,23 +501,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             return GL_NO_ERROR;
          else
             return GL_INVALID_OPERATION;
-
-      case GL_DUDV_ATI:
-      case GL_DU8DV8_ATI:
-         if (!ctx->Extensions.ATI_envmap_bumpmap)
-            return GL_INVALID_ENUM;
-         switch (type) {
-            case GL_BYTE:
-            case GL_UNSIGNED_BYTE:
-            case GL_SHORT:
-            case GL_UNSIGNED_SHORT:
-            case GL_INT:
-            case GL_UNSIGNED_INT:
-            case GL_FLOAT:
-               return GL_NO_ERROR;
-            default:
-               return GL_INVALID_ENUM;
-         }
 
       /* integer-valued formats */
       case GL_RED_INTEGER_EXT:
@@ -813,22 +794,6 @@ _mesa_is_depth_or_stencil_format(GLenum format)
       case GL_STENCIL_INDEX4_EXT:
       case GL_STENCIL_INDEX8_EXT:
       case GL_STENCIL_INDEX16_EXT:
-         return GL_TRUE;
-      default:
-         return GL_FALSE;
-   }
-}
-
-
-/**
- * Test if the given image format is a dudv format.
- */
-GLboolean
-_mesa_is_dudv_format(GLenum format)
-{
-   switch (format) {
-      case GL_DUDV_ATI:
-      case GL_DU8DV8_ATI:
          return GL_TRUE;
       default:
          return GL_FALSE;

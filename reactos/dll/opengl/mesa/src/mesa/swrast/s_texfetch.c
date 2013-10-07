@@ -653,14 +653,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_rgba_uint32
    },
 
-   /* dudv */
-   {
-      MESA_FORMAT_DUDV8,
-      fetch_texel_1d_dudv8,
-      fetch_texel_2d_dudv8,
-      fetch_texel_3d_dudv8
-   },
-
    /* signed, normalized */
    {
       MESA_FORMAT_SIGNED_RGBA_16,

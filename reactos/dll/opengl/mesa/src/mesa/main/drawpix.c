@@ -67,14 +67,9 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
       return;
    }
 
-   /* We're not using the current vertex program, and the driver may install
-    * its own.  Note: this may dirty some state.
-    */
-   _mesa_set_vp_override(ctx, GL_TRUE);
-
    /* Note: this call does state validation */
    if (!_mesa_valid_to_render(ctx, "glDrawPixels")) {
-      goto end;      /* the error code was recorded */
+      return;      /* the error code was recorded */
    }
 
    /* GL 3.0 introduced a new restriction on glDrawPixels() over what was in
@@ -91,19 +86,19 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
     */
    if (_mesa_is_integer_format(format)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glDrawPixels(integer format)");
-      goto end;
+      return;
    }
 
    if (_mesa_error_check_format_type(ctx, format, type, GL_TRUE)) {
-      goto end;      /* the error code was recorded */
+      return;      /* the error code was recorded */
    }
 
    if (ctx->RasterDiscard) {
-      goto end;
+      return;
    }
 
    if (!ctx->Current.RasterPosValid) {
-      goto end;  /* no-op, not an error */
+      return;  /* no-op, not an error */
    }
 
    if (ctx->RenderMode == GL_RENDER) {
@@ -118,13 +113,13 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
                                            1, format, type, INT_MAX, pixels)) {
                _mesa_error(ctx, GL_INVALID_OPERATION,
                            "glDrawPixels(invalid PBO access)");
-               goto end;
+               return;
             }
             if (_mesa_bufferobj_mapped(ctx->Unpack.BufferObj)) {
                /* buffer is mapped - that's an error */
                _mesa_error(ctx, GL_INVALID_OPERATION,
                            "glDrawPixels(PBO is mapped)");
-               goto end;
+               return;
             }
          }
 
@@ -139,15 +134,12 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
       _mesa_feedback_vertex( ctx,
                              ctx->Current.RasterPos,
                              ctx->Current.RasterColor,
-                             ctx->Current.RasterTexCoords[0] );
+                             ctx->Current.RasterTexCoords );
    }
    else {
       ASSERT(ctx->RenderMode == GL_SELECT);
       /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
-
-end:
-   _mesa_set_vp_override(ctx, GL_FALSE);
 }
 
 
@@ -185,29 +177,24 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
       return;
    }
 
-   /* We're not using the current vertex program, and the driver may install
-    * it's own.  Note: this may dirty some state.
-    */
-   _mesa_set_vp_override(ctx, GL_TRUE);
-
    /* Note: this call does state validation */
    if (!_mesa_valid_to_render(ctx, "glCopyPixels")) {
-      goto end;      /* the error code was recorded */
+      return;      /* the error code was recorded */
    }
 
    if (!_mesa_source_buffer_exists(ctx, type) ||
        !_mesa_dest_buffer_exists(ctx, type)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glCopyPixels(missing source or dest buffer)");
-      goto end;
+      return;
    }
 
    if (ctx->RasterDiscard) {
-      goto end;
+      return;
    }
 
    if (!ctx->Current.RasterPosValid || width == 0 || height == 0) {
-      goto end; /* no-op, not an error */
+      return; /* no-op, not an error */
    }
 
    if (ctx->RenderMode == GL_RENDER) {
@@ -225,15 +212,12 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
       _mesa_feedback_vertex( ctx, 
                              ctx->Current.RasterPos,
                              ctx->Current.RasterColor,
-                             ctx->Current.RasterTexCoords[0] );
+                             ctx->Current.RasterTexCoords );
    }
    else {
       ASSERT(ctx->RenderMode == GL_SELECT);
       /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
-
-end:
-   _mesa_set_vp_override(ctx, GL_FALSE);
 }
 
 
@@ -297,7 +281,7 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
       _mesa_feedback_vertex( ctx,
                              ctx->Current.RasterPos,
                              ctx->Current.RasterColor,
-                             ctx->Current.RasterTexCoords[0] );
+                             ctx->Current.RasterTexCoords );
    }
    else {
       ASSERT(ctx->RenderMode == GL_SELECT);

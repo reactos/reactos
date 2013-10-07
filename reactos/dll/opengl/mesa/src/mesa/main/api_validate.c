@@ -106,26 +106,10 @@ check_valid_to_render(struct gl_context *ctx, const char *function)
       return GL_FALSE;
    }
 
-   {
-      const struct gl_shader_program *vsProg =
-         ctx->Shader.CurrentVertexProgram;
-      GLboolean haveVertexShader = (vsProg && vsProg->LinkStatus);
-      GLboolean haveVertexProgram = ctx->VertexProgram._Enabled;
-      if (haveVertexShader || haveVertexProgram) {
-         /* Draw regardless of whether or not we have any vertex arrays.
-          * (Ex: could draw a point using a constant vertex pos)
-          */
-         return GL_TRUE;
-      }
-      else {
-         /* Draw if we have vertex positions (GL_VERTEX_ARRAY or generic
-          * array [0]).
-          */
-         return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled ||
-                 ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_GENERIC0].Enabled);
-      }
-   }
-   return GL_TRUE;
+   /* Draw if we have vertex positions (GL_VERTEX_ARRAY or generic
+    * array [0]).
+    */
+   return ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled;
 }
 
 

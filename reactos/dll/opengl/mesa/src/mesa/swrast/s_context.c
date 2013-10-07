@@ -31,8 +31,6 @@
 #include "main/colormac.h"
 #include "main/mtypes.h"
 #include "main/teximage.h"
-#include "program/prog_parameter.h"
-#include "program/prog_statevars.h"
 #include "swrast.h"
 #include "s_blend.h"
 #include "s_context.h"
@@ -70,7 +68,7 @@ _swrast_update_rasterflags( struct gl_context *ctx )
    }
 
    if (ctx->Color.ColorLogicOpEnabled) rasterMask |= LOGIC_OP_BIT;
-   if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
+   if (ctx->Texture._Enabled)     rasterMask |= TEXTURE_BIT;
    if (   ctx->Viewport.X < 0
        || ctx->Viewport.X + ctx->Viewport.Width > (GLint) ctx->DrawBuffer->Width
        || ctx->Viewport.Y < 0
@@ -155,23 +153,20 @@ static void
 _swrast_update_texture_env( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLuint i;
+   const struct gl_tex_env_combine_state *combine =
+      ctx->Texture.Unit._CurrentCombine;
+   GLuint term;
 
    swrast->_TextureCombinePrimary = GL_FALSE;
 
-   for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
-      const struct gl_tex_env_combine_state *combine =
-         ctx->Texture.Unit[i]._CurrentCombine;
-      GLuint term;
-      for (term = 0; term < combine->_NumArgsRGB; term++) {
-         if (combine->SourceRGB[term] == GL_PRIMARY_COLOR) {
-            swrast->_TextureCombinePrimary = GL_TRUE;
-            return;
-         }
-         if (combine->SourceA[term] == GL_PRIMARY_COLOR) {
-            swrast->_TextureCombinePrimary = GL_TRUE;
-            return;
-         }
+   for (term = 0; term < combine->_NumArgsRGB; term++) {
+      if (combine->SourceRGB[term] == GL_PRIMARY_COLOR) {
+         swrast->_TextureCombinePrimary = GL_TRUE;
+         return;
+      }
+      if (combine->SourceA[term] == GL_PRIMARY_COLOR) {
+         swrast->_TextureCombinePrimary = GL_TRUE;
+         return;
       }
    }
 }
@@ -203,11 +198,6 @@ static void
 _swrast_update_fog_state( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const struct gl_fragment_program *fp = ctx->FragmentProgram._Current;
-
-   assert((fp == NULL) ||
-          (fp->Base.Target == GL_FRAGMENT_PROGRAM_ARB) ||
-          (fp->Base.Target == GL_FRAGMENT_PROGRAM_NV));
 
    /* determine if fog is needed, and if so, which fog mode */
    swrast->_FogEnabled = ctx->Fog.Enabled;
@@ -226,13 +216,11 @@ _swrast_update_specular_vertex_add(struct gl_context *ctx)
       (ctx->Light.Enabled &&
        ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR);
 
-   swrast->SpecularVertexAdd = (separateSpecular
-                                && ctx->Texture._EnabledUnits == 0x0);
+   swrast->SpecularVertexAdd = (separateSpecular && !ctx->Texture._Enabled);
 }
 
 
 #define _SWRAST_NEW_DERIVED (_SWRAST_NEW_RASTERMASK |	\
-                             _NEW_PROGRAM_CONSTANTS |   \
 			     _NEW_TEXTURE |		\
 			     _NEW_HINT |		\
 			     _NEW_POLYGON )
@@ -371,7 +359,6 @@ static void
 _swrast_invalidate_state( struct gl_context *ctx, GLbitfield new_state )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLuint i;
 
    swrast->NewState |= new_state;
 
@@ -397,8 +384,7 @@ _swrast_invalidate_state( struct gl_context *ctx, GLbitfield new_state )
       swrast->BlendFunc = _swrast_validate_blend_func;
 
    if (new_state & _SWRAST_NEW_TEXTURE_SAMPLE_FUNC)
-      for (i = 0 ; i < ctx->Const.MaxTextureImageUnits ; i++)
-	 swrast->TextureSample[i] = NULL;
+	 swrast->TextureSample = NULL;
 }
 
 
@@ -406,21 +392,20 @@ void
 _swrast_update_texture_samplers(struct gl_context *ctx)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLuint u;
+   struct gl_texture_object *tObj;
 
    if (!swrast)
       return; /* pipe hack */
+   
+   tObj = ctx->Texture.Unit._Current;
 
-   for (u = 0; u < ctx->Const.MaxTextureImageUnits; u++) {
-      struct gl_texture_object *tObj = ctx->Texture.Unit[u]._Current;
-      /* Note: If tObj is NULL, the sample function will be a simple
-       * function that just returns opaque black (0,0,0,1).
-       */
-      if (tObj) {
-         _mesa_update_fetch_functions(tObj);
-      }
-      swrast->TextureSample[u] = _swrast_choose_texture_sample_func(ctx, tObj);
+   /* Note: If tObj is NULL, the sample function will be a simple
+    * function that just returns opaque black (0,0,0,1).
+    */
+   if (tObj) {
+      _mesa_update_fetch_functions(tObj);
    }
+   swrast->TextureSample = _swrast_choose_texture_sample_func(ctx, tObj);
 }
 
 
@@ -452,7 +437,7 @@ _swrast_update_active_attribs(struct gl_context *ctx)
    if (swrast->_FogEnabled)
       attribsMask |= FRAG_BIT_FOGC;
 
-   attribsMask |= (ctx->Texture._EnabledUnits << FRAG_ATTRIB_TEX0);
+   attribsMask |= ctx->Texture._Enabled << FRAG_ATTRIB_TEX;
 
    swrast->_ActiveAttribMask = attribsMask;
 
@@ -483,20 +468,20 @@ _swrast_validate_derived( struct gl_context *ctx )
       if (swrast->NewState & _NEW_POLYGON)
 	 _swrast_update_polygon( ctx );
 
-      if (swrast->NewState & (_NEW_HINT | _NEW_PROGRAM))
+      if (swrast->NewState & _NEW_HINT)
 	 _swrast_update_fog_hint( ctx );
 
       if (swrast->NewState & _SWRAST_NEW_TEXTURE_ENV_MODE)
 	 _swrast_update_texture_env( ctx );
 
-      if (swrast->NewState & (_NEW_FOG | _NEW_PROGRAM))
+      if (swrast->NewState & _NEW_FOG)
          _swrast_update_fog_state( ctx );
 
-      if (swrast->NewState & (_NEW_TEXTURE | _NEW_PROGRAM)) {
+      if (swrast->NewState & _NEW_TEXTURE) {
          _swrast_update_texture_samplers( ctx );
       }
 
-      if (swrast->NewState & (_NEW_COLOR | _NEW_PROGRAM))
+      if (swrast->NewState & _NEW_COLOR)
          _swrast_update_deferred_texture(ctx);
 
       if (swrast->NewState & _SWRAST_NEW_RASTERMASK)
@@ -505,12 +490,10 @@ _swrast_validate_derived( struct gl_context *ctx )
       if (swrast->NewState & (_NEW_DEPTH |
                               _NEW_FOG |
                               _NEW_LIGHT |
-                              _NEW_PROGRAM |
                               _NEW_TEXTURE))
          _swrast_update_active_attribs(ctx);
 
       if (swrast->NewState & (_NEW_FOG | 
-                              _NEW_PROGRAM |
                               _NEW_LIGHT |
                               _NEW_TEXTURE))
          _swrast_update_specular_vertex_add(ctx);
@@ -620,24 +603,6 @@ _swrast_allow_pixel_fog( struct gl_context *ctx, GLboolean value )
 }
 
 
-/**
- * Initialize native program limits by copying the logical limits.
- * See comments in init_program_limits() in context.c
- */
-static void
-init_program_native_limits(struct gl_program_constants *prog)
-{
-   prog->MaxNativeInstructions = prog->MaxInstructions;
-   prog->MaxNativeAluInstructions = prog->MaxAluInstructions;
-   prog->MaxNativeTexInstructions = prog->MaxTexInstructions;
-   prog->MaxNativeTexIndirections = prog->MaxTexIndirections;
-   prog->MaxNativeAttribs = prog->MaxAttribs;
-   prog->MaxNativeTemps = prog->MaxTemps;
-   prog->MaxNativeAddressRegs = prog->MaxAddressRegs;
-   prog->MaxNativeParameters = prog->MaxParameters;
-}
-
-
 GLboolean
 _swrast_CreateContext( struct gl_context *ctx )
 {
@@ -678,8 +643,7 @@ _swrast_CreateContext( struct gl_context *ctx )
    swrast->Driver.SpanRenderStart = _swrast_span_render_start;
    swrast->Driver.SpanRenderFinish = _swrast_span_render_finish;
 
-   for (i = 0; i < MAX_TEXTURE_IMAGE_UNITS; i++)
-      swrast->TextureSample[i] = NULL;
+   swrast->TextureSample = NULL;
 
    /* SpanArrays is global and shared by all SWspan instances. However, when
     * using multiple threads, it is necessary to have one SpanArrays instance
@@ -706,9 +670,6 @@ _swrast_CreateContext( struct gl_context *ctx )
    swrast->PointSpan.end = 0;
    swrast->PointSpan.facing = 0;
    swrast->PointSpan.array = swrast->SpanArrays;
-
-   init_program_native_limits(&ctx->Const.VertexProgram);
-   init_program_native_limits(&ctx->Const.FragmentProgram);
 
    ctx->swrast_context = swrast;
 
@@ -816,13 +777,12 @@ _swrast_print_vertex( struct gl_context *ctx, const SWvertex *v )
                   v->attrib[FRAG_ATTRIB_WPOS][2],
                   v->attrib[FRAG_ATTRIB_WPOS][3]);
 
-      for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-	 if (ctx->Texture.Unit[i]._ReallyEnabled)
+	 if (ctx->Texture.Unit._ReallyEnabled)
 	    _mesa_debug(ctx, "texcoord[%d] %f %f %f %f\n", i,
-                        v->attrib[FRAG_ATTRIB_TEX0 + i][0],
-                        v->attrib[FRAG_ATTRIB_TEX0 + i][1],
-                        v->attrib[FRAG_ATTRIB_TEX0 + i][2],
-                        v->attrib[FRAG_ATTRIB_TEX0 + i][3]);
+                        v->attrib[FRAG_ATTRIB_TEX][0],
+                        v->attrib[FRAG_ATTRIB_TEX][1],
+                        v->attrib[FRAG_ATTRIB_TEX][2],
+                        v->attrib[FRAG_ATTRIB_TEX][3]);
 
 #if CHAN_TYPE == GL_FLOAT
       _mesa_debug(ctx, "color %f %f %f %f\n",

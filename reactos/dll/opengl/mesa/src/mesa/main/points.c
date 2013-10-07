@@ -251,8 +251,6 @@ _mesa_PointParameterfv( GLenum pname, const GLfloat *params)
 void
 _mesa_init_point(struct gl_context *ctx)
 {
-   GLuint i;
-
    ctx->Point.SmoothFlag = GL_FALSE;
    ctx->Point.Size = 1.0;
    ctx->Point.Params[0] = 1.0;
@@ -266,7 +264,5 @@ _mesa_init_point(struct gl_context *ctx)
    ctx->Point.PointSprite = GL_FALSE; /* GL_ARB/NV_point_sprite */
    ctx->Point.SpriteRMode = GL_ZERO; /* GL_NV_point_sprite (only!) */
    ctx->Point.SpriteOrigin = GL_UPPER_LEFT; /* GL_ARB_point_sprite */
-   for (i = 0; i < Elements(ctx->Point.CoordReplace); i++) {
-      ctx->Point.CoordReplace[i] = GL_FALSE; /* GL_ARB/NV_point_sprite */
-   }
+   ctx->Point.CoordReplace = GL_FALSE; /* GL_ARB/NV_point_sprite */
 }

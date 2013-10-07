@@ -31,7 +31,6 @@
 #include "main/framebuffer.h"
 #include "main/readpix.h"
 #include "main/renderbuffer.h"
-#include "main/shaderobj.h"
 #include "main/texformat.h"
 #include "main/texgetimage.h"
 #include "main/teximage.h"
@@ -40,7 +39,6 @@
 #include "main/bufferobj.h"
 #include "main/texturebarrier.h"
 
-#include "program/program.h"
 #include "tnl/tnl.h"
 #include "swrast/swrast.h"
 #include "swrast/s_renderbuffer.h"
@@ -105,11 +103,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->MapTextureImage = _swrast_map_teximage;
    driver->UnmapTextureImage = _swrast_unmap_teximage;
 
-   /* Vertex/fragment programs */
-   driver->BindProgram = NULL;
-   driver->NewProgram = _mesa_new_program;
-   driver->DeleteProgram = _mesa_delete_program;
-
    /* simple state commands */
    driver->AlphaFunc = NULL;
    driver->BlendColor = NULL;
@@ -164,8 +157,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->NewArrayObject = _mesa_new_array_object;
    driver->DeleteArrayObject = _mesa_delete_array_object;
    driver->BindArrayObject = NULL;
-
-   _mesa_init_shader_object_functions(driver);
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

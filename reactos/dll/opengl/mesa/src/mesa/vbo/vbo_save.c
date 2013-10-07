@@ -63,24 +63,14 @@ void vbo_save_init( struct gl_context *ctx )
       struct gl_client_array *arrays = save->arrays;
       unsigned i;
 
-      memcpy(arrays, vbo->legacy_currval,
-             VERT_ATTRIB_FF_MAX * sizeof(arrays[0]));
-      for (i = 0; i < VERT_ATTRIB_FF_MAX; ++i) {
+      memcpy(arrays, vbo->currval,
+             VBO_ATTRIB_MAX * sizeof(arrays[0]));
+      for (i = 0; i < VBO_ATTRIB_MAX; ++i) {
          struct gl_client_array *array;
-         array = &arrays[VERT_ATTRIB_FF(i)];
+         array = &arrays[i];
          array->BufferObj = NULL;
          _mesa_reference_buffer_object(ctx, &arrays->BufferObj,
-                                       vbo->legacy_currval[i].BufferObj);
-      }
-
-      memcpy(arrays + VERT_ATTRIB_GENERIC(0), vbo->generic_currval,
-             VERT_ATTRIB_GENERIC_MAX * sizeof(arrays[0]));
-      for (i = 0; i < VERT_ATTRIB_GENERIC_MAX; ++i) {
-         struct gl_client_array *array;
-         array = &arrays[VERT_ATTRIB_GENERIC(i)];
-         array->BufferObj = NULL;
-         _mesa_reference_buffer_object(ctx, &array->BufferObj,
-                                       vbo->generic_currval[i].BufferObj);
+                                       vbo->currval[i].BufferObj);
       }
    }
 

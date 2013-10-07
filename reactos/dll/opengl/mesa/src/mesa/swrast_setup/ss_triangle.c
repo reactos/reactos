@@ -246,8 +246,7 @@ void _swsetup_choose_trifuncs( struct gl_context *ctx )
        ctx->Polygon.OffsetFill)
       ind |= SS_OFFSET_BIT;
 
-   if ((ctx->Light.Enabled && ctx->Light.Model.TwoSide) ||
-       (ctx->VertexProgram._Current && ctx->VertexProgram.TwoSideEnabled))
+   if (ctx->Light.Enabled && ctx->Light.Model.TwoSide)
       ind |= SS_TWOSIDE_BIT;
 
    /* We piggyback the two-sided stencil front/back determination on the

@@ -109,8 +109,6 @@ void vbo_split_prims( struct gl_context *ctx,
 
 /* Helpers for dealing translating away non-zero min_index.
  */
-GLboolean vbo_all_varyings_in_vbos( const struct gl_client_array *arrays[] );
-GLboolean vbo_any_varyings_in_vbos( const struct gl_client_array *arrays[] );
 
 void vbo_rebase_prims( struct gl_context *ctx,
 		       const struct gl_client_array *arrays[],
@@ -141,44 +139,5 @@ void vbo_bind_arrays(struct gl_context *ctx);
 
 size_t
 count_tessellated_primitives(const struct _mesa_prim *prim);
-
-void GLAPIENTRY
-_es_Color4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
-
-void GLAPIENTRY
-_es_Normal3f(GLfloat x, GLfloat y, GLfloat z);
-
-void GLAPIENTRY
-_es_MultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-
-void GLAPIENTRY
-_es_Materialfv(GLenum face, GLenum pname, const GLfloat *params);
-
-void GLAPIENTRY
-_es_Materialf(GLenum face, GLenum pname, GLfloat param);
-
-void GLAPIENTRY
-_es_VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-
-void GLAPIENTRY
-_es_VertexAttrib1f(GLuint indx, GLfloat x);
-
-void GLAPIENTRY
-_es_VertexAttrib1fv(GLuint indx, const GLfloat* values);
-
-void GLAPIENTRY
-_es_VertexAttrib2f(GLuint indx, GLfloat x, GLfloat y);
-
-void GLAPIENTRY
-_es_VertexAttrib2fv(GLuint indx, const GLfloat* values);
-
-void GLAPIENTRY
-_es_VertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z);
-
-void GLAPIENTRY
-_es_VertexAttrib3fv(GLuint indx, const GLfloat* values);
-
-void GLAPIENTRY
-_es_VertexAttrib4fv(GLuint indx, const GLfloat* values);
 
 #endif

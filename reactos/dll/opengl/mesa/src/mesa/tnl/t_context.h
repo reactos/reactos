@@ -84,31 +84,7 @@ enum {
 	_TNL_ATTRIB_FOG = 5,
 	_TNL_ATTRIB_COLOR_INDEX = 6,
 	_TNL_ATTRIB_EDGEFLAG = 7,
-	_TNL_ATTRIB_TEX0 = 8,
-	_TNL_ATTRIB_TEX1 = 9,
-	_TNL_ATTRIB_TEX2 = 10,
-	_TNL_ATTRIB_TEX3 = 11,
-	_TNL_ATTRIB_TEX4 = 12,
-	_TNL_ATTRIB_TEX5 = 13,
-	_TNL_ATTRIB_TEX6 = 14,
-	_TNL_ATTRIB_TEX7 = 15,
-
-	_TNL_ATTRIB_GENERIC0 = 17, /* doesn't really exist! */
-	_TNL_ATTRIB_GENERIC1 = 18,
-	_TNL_ATTRIB_GENERIC2 = 19,
-	_TNL_ATTRIB_GENERIC3 = 20,
-	_TNL_ATTRIB_GENERIC4 = 21,
-	_TNL_ATTRIB_GENERIC5 = 22,
-	_TNL_ATTRIB_GENERIC6 = 23,
-	_TNL_ATTRIB_GENERIC7 = 24,
-	_TNL_ATTRIB_GENERIC8 = 25,
-	_TNL_ATTRIB_GENERIC9 = 26,
-	_TNL_ATTRIB_GENERIC10 = 27,
-	_TNL_ATTRIB_GENERIC11 = 28,
-	_TNL_ATTRIB_GENERIC12 = 29,
-	_TNL_ATTRIB_GENERIC13 = 30,
-	_TNL_ATTRIB_GENERIC14 = 31,
-	_TNL_ATTRIB_GENERIC15 = 32,
+	_TNL_ATTRIB_TEX = 8,
 
 	/* These alias with the generics, but they are not active
 	 * concurrently, so it's not a problem.  The TNL module
@@ -120,28 +96,27 @@ enum {
 	 * generic attribute in order to pick up per-vertex material
 	 * data.
 	 */
-	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 17,
-	_TNL_ATTRIB_MAT_BACK_AMBIENT = 18,
-	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 19,
-	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 20,
-	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 21,
-	_TNL_ATTRIB_MAT_BACK_SPECULAR = 22,
-	_TNL_ATTRIB_MAT_FRONT_EMISSION = 23,
-	_TNL_ATTRIB_MAT_BACK_EMISSION = 24,
-	_TNL_ATTRIB_MAT_FRONT_SHININESS = 25,
-	_TNL_ATTRIB_MAT_BACK_SHININESS = 26,
-	_TNL_ATTRIB_MAT_FRONT_INDEXES = 27,
-	_TNL_ATTRIB_MAT_BACK_INDEXES = 28,
+	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 10,
+	_TNL_ATTRIB_MAT_BACK_AMBIENT = 11,
+	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 12,
+	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 13,
+	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 14,
+	_TNL_ATTRIB_MAT_BACK_SPECULAR = 15,
+	_TNL_ATTRIB_MAT_FRONT_EMISSION = 16,
+	_TNL_ATTRIB_MAT_BACK_EMISSION = 17,
+	_TNL_ATTRIB_MAT_FRONT_SHININESS = 18,
+	_TNL_ATTRIB_MAT_BACK_SHININESS = 19,
+	_TNL_ATTRIB_MAT_FRONT_INDEXES = 20,
+	_TNL_ATTRIB_MAT_BACK_INDEXES = 21,
 
 	/* This is really a VERT_RESULT, not an attrib.  Need to fix
 	 * tnl to understand the difference.
 	 */
-	_TNL_ATTRIB_POINTSIZE = 16,
+	_TNL_ATTRIB_POINTSIZE = 9,
 
-	_TNL_ATTRIB_MAX = 33
+	_TNL_ATTRIB_MAX = 22
 } ;
 
-#define _TNL_ATTRIB_TEX(u)       (_TNL_ATTRIB_TEX0 + (u))
 #define _TNL_ATTRIB_GENERIC(n) (_TNL_ATTRIB_GENERIC0 + (n))
 
 /* special index used for handing invalid glVertexAttribute() indices */
@@ -151,16 +126,10 @@ enum {
  * Handy attribute ranges:
  */
 #define _TNL_FIRST_PROG      _TNL_ATTRIB_WEIGHT
-#define _TNL_LAST_PROG       _TNL_ATTRIB_TEX7
+#define _TNL_LAST_PROG       _TNL_ATTRIB_TEX
 
-#define _TNL_FIRST_TEX       _TNL_ATTRIB_TEX0
-#define _TNL_LAST_TEX        _TNL_ATTRIB_TEX7
-
-#define _TNL_FIRST_GENERIC _TNL_ATTRIB_GENERIC0
-#define _TNL_LAST_GENERIC  _TNL_ATTRIB_GENERIC15
-
-#define _TNL_FIRST_MAT       _TNL_ATTRIB_MAT_FRONT_AMBIENT /* GENERIC0 */
-#define _TNL_LAST_MAT        _TNL_ATTRIB_MAT_BACK_INDEXES  /* GENERIC11 */
+#define _TNL_FIRST_MAT       _TNL_ATTRIB_MAT_FRONT_AMBIENT
+#define _TNL_LAST_MAT        _TNL_ATTRIB_MAT_BACK_INDEXES
 
 /* Number of available texture attributes */
 #define _TNL_NUM_TEX 8
@@ -510,11 +479,11 @@ typedef struct
 
    GLbitfield64 render_inputs_bitset;
 
-   GLvector4f tmp_inputs[VERT_ATTRIB_MAX];
+   GLvector4f tmp_inputs[_TNL_ATTRIB_MAX];
 
    /* Temp storage for t_draw.c: 
     */
-   GLubyte *block[VERT_ATTRIB_MAX];
+   GLubyte *block[_TNL_ATTRIB_MAX];
    GLuint nr_blocks;
 
    GLuint CurInstance;

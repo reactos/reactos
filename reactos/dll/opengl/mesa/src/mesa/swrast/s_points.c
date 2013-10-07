@@ -56,7 +56,7 @@ get_size(const struct gl_context *ctx, const SWvertex *vert, GLboolean smoothed)
 {
    GLfloat size;
 
-   if (ctx->Point._Attenuated || ctx->VertexProgram.PointSizeEnabled) {
+   if (ctx->Point._Attenuated) {
       /* use vertex's point size */
       size = vert->pointSize;
    }
@@ -85,8 +85,7 @@ sprite_point(struct gl_context *ctx, const SWvertex *vert)
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    SWspan span;
    GLfloat size;
-   GLuint tCoords[MAX_TEXTURE_COORD_UNITS + 1];
-   GLuint numTcoords = 0;
+   GLuint tCoords;
    GLfloat t0, dtdy;
 
    CULL_INVALID(vert);
@@ -137,12 +136,10 @@ sprite_point(struct gl_context *ctx, const SWvertex *vert)
       }
 
       ATTRIB_LOOP_BEGIN
-         if (attr >= FRAG_ATTRIB_TEX0 && attr <= FRAG_ATTRIB_TEX7) {
+         if (attr == FRAG_ATTRIB_TEX) {
             /* a texcoord attribute */
-            const GLuint u = attr - FRAG_ATTRIB_TEX0;
-            ASSERT(u < Elements(ctx->Point.CoordReplace));
-            if (ctx->Point.CoordReplace[u]) {
-               tCoords[numTcoords++] = attr;
+            if (ctx->Point.CoordReplace) {
+               tCoords = attr;
 
                if (ctx->Point.SpriteRMode == GL_ZERO)
                   r = 0.0F;
@@ -177,7 +174,7 @@ sprite_point(struct gl_context *ctx, const SWvertex *vert)
             span.attrStepX[FRAG_ATTRIB_PNTC][1] = 0.0;
             span.attrStepY[FRAG_ATTRIB_PNTC][0] = 0.0;
             span.attrStepY[FRAG_ATTRIB_PNTC][1] = dtdy;
-            tCoords[numTcoords++] = FRAG_ATTRIB_PNTC;
+            tCoords = FRAG_ATTRIB_PNTC;
             continue;
          }
          /* use vertex's texcoord/attrib */
@@ -217,11 +214,8 @@ sprite_point(struct gl_context *ctx, const SWvertex *vert)
 
       /* render spans */
       for (iy = ymin; iy <= ymax; iy++) {
-         GLuint i;
          /* setup texcoord T for this row */
-         for (i = 0; i < numTcoords; i++) {
-            span.attrStart[tCoords[i]][1] = tcoord;
-         }
+         span.attrStart[tCoords][1] = tcoord;
 
          /* these might get changed by span clipping */
          span.x = xmin;
@@ -554,8 +548,7 @@ _swrast_choose_point(struct gl_context *ctx)
          swrast->Point = smooth_point;
       }
       else if (size > 1.0 ||
-               ctx->Point._Attenuated ||
-               ctx->VertexProgram.PointSizeEnabled) {
+               ctx->Point._Attenuated) {
          swrast->Point = large_point;
       }
       else {

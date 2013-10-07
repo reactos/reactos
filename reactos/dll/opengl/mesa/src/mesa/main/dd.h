@@ -40,11 +40,8 @@ struct gl_context;
 struct gl_display_list;
 struct gl_framebuffer;
 struct gl_pixelstore_attrib;
-struct gl_program;
 struct gl_renderbuffer;
 struct gl_renderbuffer_attachment;
-struct gl_shader;
-struct gl_shader_program;
 struct gl_texture_image;
 struct gl_texture_object;
 
@@ -391,13 +388,6 @@ struct dd_function_table {
                                    GLsizei width, GLint height, GLint depth,
                                    GLenum format,
                                    GLsizei imageSize, const GLvoid *data);
-
-   /**
-    * Called by glGetCompressedTexImage.
-    */
-   void (*GetCompressedTexImage)(struct gl_context *ctx,
-                                 struct gl_texture_image *texImage,
-                                 GLvoid *data);
    /*@}*/
 
    /**
@@ -486,37 +476,6 @@ struct dd_function_table {
    void (*UnmapRenderbuffer)(struct gl_context *ctx,
 			     struct gl_renderbuffer *rb);
 
-   /*@}*/
-
-
-   /**
-    * \name Vertex/fragment program functions
-    */
-   /*@{*/
-   /** Bind a vertex/fragment program */
-   void (*BindProgram)(struct gl_context *ctx, GLenum target, struct gl_program *prog);
-   /** Allocate a new program */
-   struct gl_program * (*NewProgram)(struct gl_context *ctx, GLenum target, GLuint id);
-   /** Delete a program */
-   void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
-
-   /** Query if program can be loaded onto hardware */
-   GLboolean (*IsProgramNative)(struct gl_context *ctx, GLenum target, 
-				struct gl_program *prog);
-   
-   /*@}*/
-
-   /**
-    * \name GLSL shader/program functions.
-    */
-   /*@{*/
-   /**
-    * Called when a shader program is linked.
-    *
-    * This gives drivers an opportunity to clone the IR and make their
-    * own transformations on it for the purposes of code generation.
-    */
-   GLboolean (*LinkShader)(struct gl_context *ctx, struct gl_shader_program *shader);
    /*@}*/
 
    /**
@@ -692,18 +651,6 @@ struct dd_function_table {
    struct gl_array_object * (*NewArrayObject)(struct gl_context *ctx, GLuint id);
    void (*DeleteArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
    void (*BindArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
-   /*@}*/
-
-   /**
-    * \name GLSL-related functions (ARB extensions and OpenGL 2.x)
-    */
-   /*@{*/
-   struct gl_shader *(*NewShader)(struct gl_context *ctx, GLuint name, GLenum type);
-   void (*DeleteShader)(struct gl_context *ctx, struct gl_shader *shader);
-   struct gl_shader_program *(*NewShaderProgram)(struct gl_context *ctx, GLuint name);
-   void (*DeleteShaderProgram)(struct gl_context *ctx,
-                               struct gl_shader_program *shProg);
-   void (*UseProgram)(struct gl_context *ctx, struct gl_shader_program *shProg);
    /*@}*/
 
 
@@ -896,32 +843,6 @@ typedef struct {
    void (GLAPIENTRYP VertexAttrib3fvNV)( GLuint index, const GLfloat *v );
    void (GLAPIENTRYP VertexAttrib4fNV)( GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w );
    void (GLAPIENTRYP VertexAttrib4fvNV)( GLuint index, const GLfloat *v );
-   /* GL_ARB_vertex_program */
-   void (GLAPIENTRYP VertexAttrib1fARB)( GLuint index, GLfloat x );
-   void (GLAPIENTRYP VertexAttrib1fvARB)( GLuint index, const GLfloat *v );
-   void (GLAPIENTRYP VertexAttrib2fARB)( GLuint index, GLfloat x, GLfloat y );
-   void (GLAPIENTRYP VertexAttrib2fvARB)( GLuint index, const GLfloat *v );
-   void (GLAPIENTRYP VertexAttrib3fARB)( GLuint index, GLfloat x, GLfloat y, GLfloat z );
-   void (GLAPIENTRYP VertexAttrib3fvARB)( GLuint index, const GLfloat *v );
-   void (GLAPIENTRYP VertexAttrib4fARB)( GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w );
-   void (GLAPIENTRYP VertexAttrib4fvARB)( GLuint index, const GLfloat *v );
-
-   /* GL_EXT_gpu_shader4 / GL 3.0 */
-   void (GLAPIENTRYP VertexAttribI1i)( GLuint index, GLint x);
-   void (GLAPIENTRYP VertexAttribI2i)( GLuint index, GLint x, GLint y);
-   void (GLAPIENTRYP VertexAttribI3i)( GLuint index, GLint x, GLint y, GLint z);
-   void (GLAPIENTRYP VertexAttribI4i)( GLuint index, GLint x, GLint y, GLint z, GLint w);
-   void (GLAPIENTRYP VertexAttribI2iv)( GLuint index, const GLint *v);
-   void (GLAPIENTRYP VertexAttribI3iv)( GLuint index, const GLint *v);
-   void (GLAPIENTRYP VertexAttribI4iv)( GLuint index, const GLint *v);
-
-   void (GLAPIENTRYP VertexAttribI1ui)( GLuint index, GLuint x);
-   void (GLAPIENTRYP VertexAttribI2ui)( GLuint index, GLuint x, GLuint y);
-   void (GLAPIENTRYP VertexAttribI3ui)( GLuint index, GLuint x, GLuint y, GLuint z);
-   void (GLAPIENTRYP VertexAttribI4ui)( GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-   void (GLAPIENTRYP VertexAttribI2uiv)( GLuint index, const GLuint *v);
-   void (GLAPIENTRYP VertexAttribI3uiv)( GLuint index, const GLuint *v);
-   void (GLAPIENTRYP VertexAttribI4uiv)( GLuint index, const GLuint *v);
 
    /*@}*/
 
@@ -937,10 +858,6 @@ typedef struct {
    void (GLAPIENTRYP DrawRangeElements)( GLenum mode, GLuint start,
 			      GLuint end, GLsizei count,
 			      GLenum type, const GLvoid *indices );
-   void (GLAPIENTRYP MultiDrawElementsEXT)( GLenum mode, const GLsizei *count,
-					    GLenum type,
-					    const GLvoid **indices,
-					    GLsizei primcount);
    /*@}*/
 
    /**

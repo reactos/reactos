@@ -231,6 +231,8 @@ static GLboolean *_tnl_import_edgeflag( struct gl_context *ctx,
    return space;
 }
 
+static const GLfloat zero_floats[4] = {0.0, 0.0, 0.0, 0.0};
+
 
 static void bind_inputs( struct gl_context *ctx, 
 			 const struct gl_client_array *inputs[],
@@ -244,7 +246,7 @@ static void bind_inputs( struct gl_context *ctx,
 
    /* Map all the VBOs
     */
-   for (i = 0; i < VERT_ATTRIB_MAX; i++) {
+   for (i = 0; i < _TNL_ATTRIB_MAX; i++) {
       const void *ptr;
 
       if (inputs[i]->BufferObj->Name) { 
@@ -447,7 +449,7 @@ void _tnl_draw_prims( struct gl_context *ctx,
       /* May need to map a vertex buffer object for every attribute plus
        * one for the index buffer.
        */
-      struct gl_buffer_object *bo[VERT_ATTRIB_MAX + 1];
+      struct gl_buffer_object *bo[_TNL_ATTRIB_MAX];
       GLuint nr_bo = 0;
       GLuint inst;
 

@@ -235,7 +235,7 @@ _swrast_choose_line( struct gl_context *ctx )
          _swrast_choose_aa_line_function(ctx);
          ASSERT(swrast->Line);
       }
-      else if (ctx->Texture._EnabledCoordUnits
+      else if (ctx->Texture._EnabledCoord
                || swrast->_FogEnabled
                || specular) {
          USE(general_line);

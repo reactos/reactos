@@ -154,7 +154,7 @@ static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
          /* Note: the exec->vtx.current[i] pointers point into the
           * ctx->Current.Attrib and ctx->Light.Material.Attrib arrays.
           */
-	 GLfloat *current = (GLfloat *)vbo->currval[i].Ptr;
+         GLfloat *current = (GLfloat *)vbo->currval[i].Ptr;
          GLfloat tmp[4];
 
          COPY_CLEAN_4V(tmp, 
@@ -176,8 +176,7 @@ static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
             /* This triggers rather too much recalculation of Mesa state
              * that doesn't get used (eg light positions).
              */
-            if (i >= VBO_ATTRIB_MAT_FRONT_AMBIENT &&
-                i <= VBO_ATTRIB_MAT_BACK_INDEXES)
+            if (i >= VBO_ATTRIB_MAT_FRONT_AMBIENT && i <= VBO_ATTRIB_MAT_BACK_INDEXES)
                ctx->NewState |= _NEW_LIGHT;
             
             ctx->NewState |= _NEW_CURRENT_ATTRIB;
@@ -561,7 +560,7 @@ static void GLAPIENTRY vbo_exec_EvalCoord1f( GLfloat u )
       if (exec->eval.recalculate_maps) 
 	 vbo_exec_eval_update( exec );
 
-      for (i = 0; i <= VBO_ATTRIB_TEX7; i++) {
+      for (i = 0; i <= VBO_ATTRIB_TEX; i++) {
 	 if (exec->eval.map1[i].map) 
 	    if (exec->vtx.active_sz[i] != exec->eval.map1[i].sz)
 	       vbo_exec_fixup_vertex( ctx, i, exec->eval.map1[i].sz );
@@ -588,7 +587,7 @@ static void GLAPIENTRY vbo_exec_EvalCoord2f( GLfloat u, GLfloat v )
       if (exec->eval.recalculate_maps) 
 	 vbo_exec_eval_update( exec );
 
-      for (i = 0; i <= VBO_ATTRIB_TEX7; i++) {
+      for (i = 0; i <= VBO_ATTRIB_TEX; i++) {
 	 if (exec->eval.map2[i].map) 
 	    if (exec->vtx.active_sz[i] != exec->eval.map2[i].sz)
 	       vbo_exec_fixup_vertex( ctx, i, exec->eval.map2[i].sz );
@@ -668,8 +667,7 @@ vbo_exec_EvalMesh1(GLenum mode, GLint i1, GLint i2)
    /* No effect if vertex maps disabled.
     */
    if (!ctx->Eval.Map1Vertex4 && 
-       !ctx->Eval.Map1Vertex3 &&
-       !(ctx->VertexProgram._Enabled && ctx->Eval.Map1Attrib[VERT_ATTRIB_POS]))
+       !ctx->Eval.Map1Vertex3)
       return;
 
    du = ctx->Eval.MapGrid1du;
@@ -705,8 +703,7 @@ vbo_exec_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
    /* No effect if vertex maps disabled.
     */
    if (!ctx->Eval.Map2Vertex4 && 
-       !ctx->Eval.Map2Vertex3 &&
-       !(ctx->VertexProgram._Enabled && ctx->Eval.Map2Attrib[VERT_ATTRIB_POS]))
+       !ctx->Eval.Map2Vertex3)
       return;
 
    du = ctx->Eval.MapGrid2du;
@@ -888,14 +885,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
    vfmt->Color4fv = vbo_Color4fv;
    vfmt->FogCoordfEXT = vbo_FogCoordfEXT;
    vfmt->FogCoordfvEXT = vbo_FogCoordfvEXT;
-   vfmt->MultiTexCoord1fARB = vbo_MultiTexCoord1f;
-   vfmt->MultiTexCoord1fvARB = vbo_MultiTexCoord1fv;
-   vfmt->MultiTexCoord2fARB = vbo_MultiTexCoord2f;
-   vfmt->MultiTexCoord2fvARB = vbo_MultiTexCoord2fv;
-   vfmt->MultiTexCoord3fARB = vbo_MultiTexCoord3f;
-   vfmt->MultiTexCoord3fvARB = vbo_MultiTexCoord3fv;
-   vfmt->MultiTexCoord4fARB = vbo_MultiTexCoord4f;
-   vfmt->MultiTexCoord4fvARB = vbo_MultiTexCoord4fv;
    vfmt->Normal3f = vbo_Normal3f;
    vfmt->Normal3fv = vbo_Normal3fv;
    vfmt->SecondaryColor3fEXT = vbo_SecondaryColor3fEXT;
@@ -914,15 +903,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
    vfmt->Vertex3fv = vbo_Vertex3fv;
    vfmt->Vertex4f = vbo_Vertex4f;
    vfmt->Vertex4fv = vbo_Vertex4fv;
-   
-   vfmt->VertexAttrib1fARB = vbo_VertexAttrib1fARB;
-   vfmt->VertexAttrib1fvARB = vbo_VertexAttrib1fvARB;
-   vfmt->VertexAttrib2fARB = vbo_VertexAttrib2fARB;
-   vfmt->VertexAttrib2fvARB = vbo_VertexAttrib2fvARB;
-   vfmt->VertexAttrib3fARB = vbo_VertexAttrib3fARB;
-   vfmt->VertexAttrib3fvARB = vbo_VertexAttrib3fvARB;
-   vfmt->VertexAttrib4fARB = vbo_VertexAttrib4fARB;
-   vfmt->VertexAttrib4fvARB = vbo_VertexAttrib4fvARB;
 
    vfmt->VertexAttrib1fNV = vbo_VertexAttrib1fNV;
    vfmt->VertexAttrib1fvNV = vbo_VertexAttrib1fvNV;
@@ -932,24 +912,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
    vfmt->VertexAttrib3fvNV = vbo_VertexAttrib3fvNV;
    vfmt->VertexAttrib4fNV = vbo_VertexAttrib4fNV;
    vfmt->VertexAttrib4fvNV = vbo_VertexAttrib4fvNV;
-
-   /* integer-valued */
-   vfmt->VertexAttribI1i = vbo_VertexAttribI1i;
-   vfmt->VertexAttribI2i = vbo_VertexAttribI2i;
-   vfmt->VertexAttribI3i = vbo_VertexAttribI3i;
-   vfmt->VertexAttribI4i = vbo_VertexAttribI4i;
-   vfmt->VertexAttribI2iv = vbo_VertexAttribI2iv;
-   vfmt->VertexAttribI3iv = vbo_VertexAttribI3iv;
-   vfmt->VertexAttribI4iv = vbo_VertexAttribI4iv;
-
-   /* unsigned integer-valued */
-   vfmt->VertexAttribI1ui = vbo_VertexAttribI1ui;
-   vfmt->VertexAttribI2ui = vbo_VertexAttribI2ui;
-   vfmt->VertexAttribI3ui = vbo_VertexAttribI3ui;
-   vfmt->VertexAttribI4ui = vbo_VertexAttribI4ui;
-   vfmt->VertexAttribI2uiv = vbo_VertexAttribI2uiv;
-   vfmt->VertexAttribI3uiv = vbo_VertexAttribI3uiv;
-   vfmt->VertexAttribI4uiv = vbo_VertexAttribI4uiv;
 
    vfmt->Materialfv = vbo_Materialfv;
 
@@ -997,15 +959,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
    (void) vbo_Vertex3fv;
    (void) vbo_Vertex4f;
    (void) vbo_Vertex4fv;
-
-   (void) vbo_VertexAttrib1fARB;
-   (void) vbo_VertexAttrib1fvARB;
-   (void) vbo_VertexAttrib2fARB;
-   (void) vbo_VertexAttrib2fvARB;
-   (void) vbo_VertexAttrib3fARB;
-   (void) vbo_VertexAttrib3fvARB;
-   (void) vbo_VertexAttrib4fARB;
-   (void) vbo_VertexAttrib4fvARB;
 
    (void) vbo_VertexAttrib1fNV;
    (void) vbo_VertexAttrib1fvNV;
@@ -1117,23 +1070,13 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
       unsigned i;
 
       memcpy(arrays, vbo->legacy_currval,
-             VERT_ATTRIB_FF_MAX * sizeof(arrays[0]));
-      for (i = 0; i < VERT_ATTRIB_FF_MAX; ++i) {
+             VERT_ATTRIB_MAX * sizeof(arrays[0]));
+      for (i = 0; i < VERT_ATTRIB_MAX; ++i) {
          struct gl_client_array *array;
-         array = &arrays[VERT_ATTRIB_FF(i)];
+         array = &arrays[VERT_ATTRIB(i)];
          array->BufferObj = NULL;
          _mesa_reference_buffer_object(ctx, &arrays->BufferObj,
                                        vbo->legacy_currval[i].BufferObj);
-      }
-
-      memcpy(arrays + VERT_ATTRIB_GENERIC(0), vbo->generic_currval,
-             VERT_ATTRIB_GENERIC_MAX * sizeof(arrays[0]));
-      for (i = 0; i < VERT_ATTRIB_GENERIC_MAX; ++i) {
-         struct gl_client_array *array;
-         array = &arrays[VERT_ATTRIB_GENERIC(i)];
-         array->BufferObj = NULL;
-         _mesa_reference_buffer_object(ctx, &array->BufferObj,
-                                       vbo->generic_currval[i].BufferObj);
       }
    }
 
@@ -1241,112 +1184,4 @@ static void reset_attrfv( struct vbo_exec_context *exec )
    }
 
    exec->vtx.vertex_size = 0;
-}
-      
-
-void GLAPIENTRY
-_es_Color4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
-{
-   vbo_Color4f(r, g, b, a);
-}
-
-
-void GLAPIENTRY
-_es_Normal3f(GLfloat x, GLfloat y, GLfloat z)
-{
-   vbo_Normal3f(x, y, z);
-}
-
-
-void GLAPIENTRY
-_es_MultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
-{
-   vbo_MultiTexCoord4f(target, s, t, r, q);
-}
-
-
-void GLAPIENTRY
-_es_Materialfv(GLenum face, GLenum pname, const GLfloat *params)
-{
-   vbo_Materialfv(face, pname, params);
-}
-
-
-void GLAPIENTRY
-_es_Materialf(GLenum face, GLenum pname, GLfloat param)
-{
-   GLfloat p[4];
-   p[0] = param;
-   p[1] = p[2] = p[3] = 0.0F;
-   vbo_Materialfv(face, pname, p);
-}
-
-
-/**
- * A special version of glVertexAttrib4f that does not treat index 0 as
- * VBO_ATTRIB_POS.
- */
-static void
-VertexAttrib4f_nopos(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR(VBO_ATTRIB_GENERIC0 + index, 4, x, y, z, w);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-void GLAPIENTRY
-_es_VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   VertexAttrib4f_nopos(index, x, y, z, w);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib1f(GLuint indx, GLfloat x)
-{
-   VertexAttrib4f_nopos(indx, x, 0.0f, 0.0f, 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib1fv(GLuint indx, const GLfloat* values)
-{
-   VertexAttrib4f_nopos(indx, values[0], 0.0f, 0.0f, 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
-{
-   VertexAttrib4f_nopos(indx, x, y, 0.0f, 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib2fv(GLuint indx, const GLfloat* values)
-{
-   VertexAttrib4f_nopos(indx, values[0], values[1], 0.0f, 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
-{
-   VertexAttrib4f_nopos(indx, x, y, z, 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib3fv(GLuint indx, const GLfloat* values)
-{
-   VertexAttrib4f_nopos(indx, values[0], values[1], values[2], 1.0f);
-}
-
-
-void GLAPIENTRY
-_es_VertexAttrib4fv(GLuint indx, const GLfloat* values)
-{
-   VertexAttrib4f_nopos(indx, values[0], values[1], values[2], values[3]);
 }

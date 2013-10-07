@@ -89,18 +89,6 @@ _mesa_Hint( GLenum target, GLenum mode )
          ctx->Hint.ClipVolumeClipping = mode;
          break;
 
-      /* GL_ARB_fragment_shader */
-      case GL_FRAGMENT_SHADER_DERIVATIVE_HINT_ARB:
-         if (!ctx->Extensions.ARB_fragment_shader) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glHint(target)");
-            return;
-         }
-         if (ctx->Hint.FragmentShaderDerivative == mode)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_HINT);
-         ctx->Hint.FragmentShaderDerivative = mode;
-         break;
-
       default:
          _mesa_error(ctx, GL_INVALID_ENUM, "glHint(target)");
          return;
@@ -125,5 +113,4 @@ void _mesa_init_hint( struct gl_context * ctx )
    ctx->Hint.PolygonSmooth = GL_DONT_CARE;
    ctx->Hint.Fog = GL_DONT_CARE;
    ctx->Hint.ClipVolumeClipping = GL_DONT_CARE;
-   ctx->Hint.FragmentShaderDerivative = GL_DONT_CARE;
 }

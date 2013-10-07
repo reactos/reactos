@@ -64,12 +64,7 @@ struct vbo_context {
    /* These point into the above.  TODO: remove. 
     */
    struct gl_client_array *legacy_currval;
-   struct gl_client_array *generic_currval;
    struct gl_client_array *mat_currval;
-
-   /** Map VERT_ATTRIB_x to VBO_ATTRIB_y */
-   GLuint map_vp_none[VERT_ATTRIB_MAX];
-   GLuint map_vp_arb[VERT_ATTRIB_MAX];
 
    GLfloat *current[VBO_ATTRIB_MAX]; /* points into ctx->Current, ctx->Light.Material */
    GLfloat CurrentFloatEdgeFlag;
@@ -90,22 +85,6 @@ struct vbo_context {
 static inline struct vbo_context *vbo_context(struct gl_context *ctx) 
 {
    return (struct vbo_context *)(ctx->swtnl_im);
-}
-
-
-/**
- * Return VP_x token to indicate whether we're running fixed-function
- * vertex transformation, an NV vertex program or ARB vertex program/shader.
- */
-static inline enum vp_mode
-get_program_mode( struct gl_context *ctx )
-{
-   if (!ctx->VertexProgram._Current)
-      return VP_NONE;
-   else if (ctx->VertexProgram._Current->IsNVProgram)
-      return VP_NV;
-   else
-      return VP_ARB;
 }
 
 

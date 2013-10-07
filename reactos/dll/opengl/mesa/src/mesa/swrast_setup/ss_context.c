@@ -40,7 +40,7 @@
 /* Need to check lighting state and vertex program state to know
  * if two-sided lighting is in effect.
  */
-#define _SWSETUP_NEW_RENDERINDEX (_NEW_POLYGON|_NEW_LIGHT|_NEW_PROGRAM)
+#define _SWSETUP_NEW_RENDERINDEX (_NEW_POLYGON|_NEW_LIGHT)
 
 
 #define VARYING_EMIT_STYLE  EMIT_4F
@@ -112,15 +112,14 @@ setup_vertex_format(struct gl_context *ctx)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
-   GLboolean intColors = !ctx->FragmentProgram._Current
-                      && ctx->RenderMode == GL_RENDER
+   GLboolean intColors = ctx->RenderMode == GL_RENDER
                       && CHAN_TYPE != GL_FLOAT;
 
    if (intColors != swsetup->intColors ||
        tnl->render_inputs_bitset != swsetup->last_index_bitset) {
       GLbitfield64 index_bitset = tnl->render_inputs_bitset;
       struct tnl_attr_map map[_TNL_ATTRIB_MAX];
-      unsigned int i, e = 0;
+      unsigned e = 0;
 
       swsetup->intColors = intColors;
 
@@ -138,28 +137,12 @@ setup_vertex_format(struct gl_context *ctx)
       }
 
       if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_FOG)) {
-         const GLint emit = ctx->FragmentProgram._Current ? EMIT_4F : EMIT_1F;
-         EMIT_ATTR( _TNL_ATTRIB_FOG, emit, attrib[FRAG_ATTRIB_FOGC]);
+         EMIT_ATTR( _TNL_ATTRIB_FOG, EMIT_1F, attrib[FRAG_ATTRIB_FOGC]);
       }
 
-      if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_TEX0, _TNL_NUM_TEX))
-      {
-         for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
-            if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_TEX(i))) {
-               EMIT_ATTR( _TNL_ATTRIB_TEX(i), EMIT_4F,
-                          attrib[FRAG_ATTRIB_TEX0 + i] );
-            }
-         }
-      }
-
-      /* shader varying vars */
-      if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_GENERIC0, _TNL_NUM_GENERIC)) {
-         for (i = 0; i < ctx->Const.MaxVarying; i++) {
-            if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_GENERIC(i))) {
-               EMIT_ATTR( _TNL_ATTRIB_GENERIC(i), VARYING_EMIT_STYLE,
-                          attrib[FRAG_ATTRIB_VAR0 + i] );
-            }
-         }
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_TEX)) {
+         EMIT_ATTR( _TNL_ATTRIB_TEX, EMIT_4F,
+                    attrib[FRAG_ATTRIB_TEX] );
       }
 
       if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_POINTSIZE))
@@ -187,10 +170,6 @@ _swsetup_RenderStart( struct gl_context *ctx )
 
    if (swsetup->NewState & _SWSETUP_NEW_RENDERINDEX) {
       _swsetup_choose_trifuncs(ctx);
-   }
-
-   if (swsetup->NewState & _NEW_PROGRAM) {
-      swsetup->last_index_bitset = 0;
    }
 
    swsetup->NewState = 0;
@@ -256,46 +235,3 @@ _swsetup_Wakeup( struct gl_context *ctx )
    swsetup->verts = (SWvertex *)tnl->clipspace.vertex_buf;
    swsetup->last_index_bitset = 0;
 }
-
-
-/**
- * Populate a swrast SWvertex from an attrib-style vertex.
- */
-void 
-_swsetup_Translate( struct gl_context *ctx, const void *vertex, SWvertex *dest )
-{
-   const GLfloat *m = ctx->Viewport._WindowMap.m;
-   GLfloat tmp[4];
-   GLuint i;
-
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POS, tmp );
-
-   dest->attrib[FRAG_ATTRIB_WPOS][0] = m[0]  * tmp[0] + m[12];
-   dest->attrib[FRAG_ATTRIB_WPOS][1] = m[5]  * tmp[1] + m[13];
-   dest->attrib[FRAG_ATTRIB_WPOS][2] = m[10] * tmp[2] + m[14];
-   dest->attrib[FRAG_ATTRIB_WPOS][3] =         tmp[3];
-
-   /** XXX try to limit these loops someday */
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_TEX0 + i,
-                     dest->attrib[FRAG_ATTRIB_TEX0 + i] );
-
-   for (i = 0 ; i < ctx->Const.MaxVarying ; i++)
-      _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_GENERIC0 + i,
-                     dest->attrib[FRAG_ATTRIB_VAR0 + i] );
-
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0,
-                  dest->attrib[FRAG_ATTRIB_COL0] );
-   UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
-
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR1,
-                  dest->attrib[FRAG_ATTRIB_COL1]);
-
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_FOG, tmp );
-   dest->attrib[FRAG_ATTRIB_FOGC][0] = tmp[0];
-
-   /* XXX See _tnl_get_attr about pointsize ... */
-   _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POINTSIZE, tmp );
-   dest->pointSize = tmp[0];
-}
-

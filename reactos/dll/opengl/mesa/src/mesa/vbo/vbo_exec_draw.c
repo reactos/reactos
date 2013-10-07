@@ -164,63 +164,23 @@ vbo_exec_bind_arrays( struct gl_context *ctx )
    struct vbo_exec_context *exec = &vbo->exec;
    struct gl_client_array *arrays = exec->vtx.arrays;
    const GLuint count = exec->vtx.vert_count;
-   const GLuint *map;
    GLuint attr;
    GLbitfield64 varying_inputs = 0x0;
 
    /* Install the default (ie Current) attributes first, then overlay
     * all active ones.
     */
-   switch (get_program_mode(exec->ctx)) {
-   case VP_NONE:
-      for (attr = 0; attr < VERT_ATTRIB_FF_MAX; attr++) {
-         exec->vtx.inputs[attr] = &vbo->legacy_currval[attr];
-      }
-      for (attr = 0; attr < MAT_ATTRIB_MAX; attr++) {
-         ASSERT(VERT_ATTRIB_GENERIC(attr) < Elements(exec->vtx.inputs));
-         exec->vtx.inputs[VERT_ATTRIB_GENERIC(attr)] = &vbo->mat_currval[attr];
-      }
-      map = vbo->map_vp_none;
-      break;
-   case VP_NV:
-   case VP_ARB:
-      /* The aliasing of attributes for NV vertex programs has already
-       * occurred.  NV vertex programs cannot access material values,
-       * nor attributes greater than VERT_ATTRIB_TEX7.  
-       */
-      for (attr = 0; attr < VERT_ATTRIB_FF_MAX; attr++) {
-         exec->vtx.inputs[attr] = &vbo->legacy_currval[attr];
-      }
-      for (attr = 0; attr < VERT_ATTRIB_GENERIC_MAX; attr++) {
-         ASSERT(VERT_ATTRIB_GENERIC(attr) < Elements(exec->vtx.inputs));
-         exec->vtx.inputs[VERT_ATTRIB_GENERIC(attr)] = &vbo->generic_currval[attr];
-      }
-      map = vbo->map_vp_arb;
-
-      /* check if VERT_ATTRIB_POS is not read but VERT_BIT_GENERIC0 is read.
-       * In that case we effectively need to route the data from
-       * glVertexAttrib(0, val) calls to feed into the GENERIC0 input.
-       */
-      if ((ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_POS) == 0 &&
-          (ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_GENERIC0)) {
-         exec->vtx.inputs[VERT_ATTRIB_GENERIC0] = exec->vtx.inputs[0];
-         exec->vtx.attrsz[VERT_ATTRIB_GENERIC0] = exec->vtx.attrsz[0];
-         exec->vtx.attrptr[VERT_ATTRIB_GENERIC0] = exec->vtx.attrptr[0];
-         exec->vtx.attrsz[0] = 0;
-      }
-      break;
-   default:
-      assert(0);
+   for (attr = 0; attr < VBO_ATTRIB_MAX; attr++) {
+      exec->vtx.inputs[attr] = &vbo->legacy_currval[attr];
    }
 
    /* Make all active attributes (including edgeflag) available as
     * arrays of floats.
     */
-   for (attr = 0; attr < VERT_ATTRIB_MAX ; attr++) {
-      const GLuint src = map[attr];
+   for (attr = 0; attr < VBO_ATTRIB_MAX ; attr++) {
 
-      if (exec->vtx.attrsz[src]) {
-	 GLsizeiptr offset = (GLbyte *)exec->vtx.attrptr[src] -
+      if (exec->vtx.attrsz[attr]) {
+	 GLsizeiptr offset = (GLbyte *)exec->vtx.attrptr[attr] -
 	    (GLbyte *)exec->vtx.vertex;
 
          /* override the default array set above */
@@ -238,7 +198,7 @@ vbo_exec_bind_arrays( struct gl_context *ctx )
             /* Ptr into ordinary app memory */
             arrays[attr].Ptr = (GLubyte *)exec->vtx.buffer_map + offset;
          }
-	 arrays[attr].Size = exec->vtx.attrsz[src];
+	 arrays[attr].Size = exec->vtx.attrsz[attr];
 	 arrays[attr].StrideB = exec->vtx.vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = exec->vtx.vertex_size * sizeof(GLfloat);
 	 arrays[attr].Type = GL_FLOAT;

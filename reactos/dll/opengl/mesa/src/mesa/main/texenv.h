@@ -48,16 +48,4 @@ _mesa_TexEnvi( GLenum target, GLenum pname, GLint param );
 extern void GLAPIENTRY
 _mesa_TexEnviv( GLenum target, GLenum pname, const GLint *param );
 
-extern void GLAPIENTRY
-_mesa_TexBumpParameterivATI( GLenum pname, const GLint *param );
-
-extern void GLAPIENTRY
-_mesa_TexBumpParameterfvATI( GLenum pname, const GLfloat *param );
-
-extern void GLAPIENTRY
-_mesa_GetTexBumpParameterivATI( GLenum pname, GLint *param );
-
-extern void GLAPIENTRY
-_mesa_GetTexBumpParameterfvATI( GLenum pname, GLfloat *param );
-
 #endif /* TEXENV_H */

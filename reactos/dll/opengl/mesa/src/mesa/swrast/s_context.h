@@ -45,7 +45,6 @@
 
 #include "main/compiler.h"
 #include "main/mtypes.h"
-#include "program/prog_execute.h"
 #include "swrast.h"
 #include "s_span.h"
 
@@ -99,7 +98,6 @@ typedef void (*validate_texture_image_func)(struct gl_context *ctx,
 			        _NEW_COLOR|	\
 			        _NEW_DEPTH|	\
 			        _NEW_FOG|	\
-                                _NEW_PROGRAM|   \
 			        _NEW_STENCIL|	\
 			        _NEW_TEXTURE|	\
 			        _NEW_VIEWPORT|	\
@@ -290,7 +288,7 @@ typedef struct
    /** Internal hooks, kept up to date by the same mechanism as above.
     */
    blend_func BlendFunc;
-   texture_sample_func TextureSample[MAX_TEXTURE_IMAGE_UNITS];
+   texture_sample_func TextureSample;
 
    /** Buffer for saving the sampled texture colors.
     * Needed for GL_ARB_texture_env_crossbar implementation.
@@ -298,9 +296,6 @@ typedef struct
    GLfloat *TexelBuffer;
 
    validate_texture_image_func ValidateTextureImage;
-
-   /** State used during execution of fragment programs */
-   struct gl_program_machine FragProgMachine;
 
 } SWcontext;
 

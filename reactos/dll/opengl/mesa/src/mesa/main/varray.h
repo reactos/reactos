@@ -138,63 +138,12 @@ _mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
 
 
 extern void GLAPIENTRY
-_mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
-                            GLsizei stride, const GLvoid *pointer);
-
-
-extern void GLAPIENTRY
-_mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
-                             GLboolean normalized, GLsizei stride,
-                             const GLvoid *pointer);
-
-void GLAPIENTRY
-_mesa_VertexAttribIPointer(GLuint index, GLint size, GLenum type,
-                           GLsizei stride, const GLvoid *ptr);
-
-
-extern void GLAPIENTRY
-_mesa_EnableVertexAttribArrayARB(GLuint index);
-
-
-extern void GLAPIENTRY
-_mesa_DisableVertexAttribArrayARB(GLuint index);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribdvARB(GLuint index, GLenum pname, GLdouble *params);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribfvARB(GLuint index, GLenum pname, GLfloat *params);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribivARB(GLuint index, GLenum pname, GLint *params);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribIiv(GLuint index, GLenum pname, GLint *params);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params);
-
-
-extern void GLAPIENTRY
-_mesa_GetVertexAttribPointervARB(GLuint index, GLenum pname, GLvoid **pointer);
-
-
-extern void GLAPIENTRY
 _mesa_InterleavedArrays(GLenum format, GLsizei stride, const GLvoid *pointer);
 
 
 extern void GLAPIENTRY
 _mesa_MultiDrawArraysEXT( GLenum mode, const GLint *first,
                           const GLsizei *count, GLsizei primcount );
-
-extern void GLAPIENTRY
-_mesa_MultiDrawElementsEXT( GLenum mode, const GLsizei *count, GLenum type,
-                            const GLvoid **indices, GLsizei primcount );
 
 extern void GLAPIENTRY
 _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,

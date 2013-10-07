@@ -5,7 +5,6 @@ list(APPEND SOURCE
     api_loopback.c
     api_validate.c
     accum.c
-    arbprogram.c
     attrib.c
     arrayobj.c
     blend.c
@@ -56,9 +55,6 @@ list(APPEND SOURCE
     readpix.c
     renderbuffer.c
     scissor.c
-    shaderapi.c
-    shaderobj.c
-    shader_query.cpp
     shared.c
     state.c
     stencil.c
@@ -74,8 +70,6 @@ list(APPEND SOURCE
     texstorage.c
     texstore.c
     texturebarrier.c
-    uniform_query.cpp
-    uniforms.c
     varray.c
     version.c
     viewport.c

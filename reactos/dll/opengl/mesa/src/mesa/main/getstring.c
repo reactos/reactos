@@ -34,32 +34,6 @@
 
 
 /**
- * Return the string for a glGetString(GL_SHADING_LANGUAGE_VERSION) query.
- */
-static const GLubyte *
-shading_language_version(struct gl_context *ctx)
-{
-   if (!ctx->Extensions.ARB_shader_objects) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetString");
-      return (const GLubyte *) 0;
-   }
-
-   switch (ctx->Const.GLSLVersion) {
-      case 110:
-         return (const GLubyte *) "1.10";
-      case 120:
-         return (const GLubyte *) "1.20";
-      case 130:
-         return (const GLubyte *) "1.30";
-      default:
-         _mesa_problem(ctx,
-                       "Invalid GLSL version in shading_language_version()");
-         return (const GLubyte *) 0;
-   }
-}
-
-
-/**
  * Query string-valued state.  The return value should _not_ be freed by
  * the caller.
  *
@@ -100,21 +74,6 @@ _mesa_GetString( GLenum name )
          return (const GLubyte *) ctx->VersionString;
       case GL_EXTENSIONS:
          return (const GLubyte *) ctx->Extensions.String;
-#if FEATURE_ARB_shading_language_100 || FEATURE_ES2
-      case GL_SHADING_LANGUAGE_VERSION:
-	 return shading_language_version(ctx);
-#endif
-#if FEATURE_NV_fragment_program || FEATURE_ARB_fragment_program || \
-    FEATURE_NV_vertex_program || FEATURE_ARB_vertex_program
-      case GL_PROGRAM_ERROR_STRING_NV:
-         if (ctx->Extensions.NV_fragment_program ||
-             ctx->Extensions.ARB_fragment_program ||
-             ctx->Extensions.NV_vertex_program ||
-             ctx->Extensions.ARB_vertex_program) {
-            return (const GLubyte *) ctx->Program.ErrorString;
-         }
-         /* FALL-THROUGH */
-#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetString" );
          return (const GLubyte *) 0;
@@ -165,7 +124,6 @@ void GLAPIENTRY
 _mesa_GetPointerv( GLenum pname, GLvoid **params )
 {
    GET_CURRENT_CONTEXT(ctx);
-   const GLuint clientUnit = ctx->Array.ActiveTexture;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (!params)
@@ -194,7 +152,7 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
          *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Ptr;
          break;
       case GL_TEXTURE_COORD_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX(clientUnit)].Ptr;
+         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX].Ptr;
          break;
       case GL_EDGE_FLAG_ARRAY_POINTER:
          *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Ptr;

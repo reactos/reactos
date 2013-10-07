@@ -2520,92 +2520,6 @@ _mesa_texstore_ycbcr(TEXSTORE_PARAMS)
    return GL_TRUE;
 }
 
-static GLboolean
-_mesa_texstore_dudv8(TEXSTORE_PARAMS)
-{
-   const GLboolean littleEndian = _mesa_little_endian();
-   const GLuint texelBytes = _mesa_get_format_bytes(dstFormat);
-
-   ASSERT(dstFormat == MESA_FORMAT_DUDV8);
-   ASSERT(texelBytes == 2);
-   ASSERT(ctx->Extensions.ATI_envmap_bumpmap);
-   ASSERT((srcFormat == GL_DU8DV8_ATI) ||
-	  (srcFormat == GL_DUDV_ATI));
-   ASSERT(baseInternalFormat == GL_DUDV_ATI);
-
-   if (!srcPacking->SwapBytes && srcType == GL_BYTE &&
-       littleEndian) {
-      /* simple memcpy path */
-      memcpy_texture(ctx, dims,
-                     dstFormat,
-                     dstRowStride, dstSlices,
-                     srcWidth, srcHeight, srcDepth, srcFormat, srcType,
-                     srcAddr, srcPacking);
-   }
-   else if (srcType == GL_BYTE) {
-      GLubyte dstmap[4];
-
-      /* dstmap - how to swizzle from RGBA to dst format:
-       */
-      if (littleEndian) {
-	 dstmap[0] = 0;
-	 dstmap[1] = 3;
-      }
-      else {
-	 dstmap[0] = 3;
-	 dstmap[1] = 0;
-      }
-      dstmap[2] = ZERO;		/* ? */
-      dstmap[3] = ONE;		/* ? */
-      
-      _mesa_swizzle_ubyte_image(ctx, dims,
-				GL_LUMINANCE_ALPHA, /* hack */
-				GL_UNSIGNED_BYTE, /* hack */
-				GL_LUMINANCE_ALPHA, /* hack */
-				dstmap, 2,
-				dstRowStride, dstSlices,
-				srcWidth, srcHeight, srcDepth, srcAddr,
-				srcPacking);      
-   }   
-   else {
-      /* general path - note this is defined for 2d textures only */
-      const GLint components = _mesa_components_in_format(baseInternalFormat);
-      const GLint srcStride = _mesa_image_row_stride(srcPacking, srcWidth,
-                                                     srcFormat, srcType);
-      GLbyte *tempImage, *dst, *src;
-      GLint row;
-
-      tempImage = (GLbyte *) malloc(srcWidth * srcHeight * srcDepth
-                                          * components * sizeof(GLbyte));
-      if (!tempImage)
-         return GL_FALSE;
-
-      src = (GLbyte *) _mesa_image_address(dims, srcPacking, srcAddr,
-                                           srcWidth, srcHeight,
-                                           srcFormat, srcType,
-                                           0, 0, 0);
-
-      dst = tempImage;
-      for (row = 0; row < srcHeight; row++) {
-         _mesa_unpack_dudv_span_byte(ctx, srcWidth, baseInternalFormat,
-                                     dst, srcFormat, srcType, src,
-                                     srcPacking, 0);
-         dst += srcWidth * components;
-         src += srcStride;
-      }
- 
-      src = tempImage;
-      dst = (GLbyte *) dstSlices[0];
-      for (row = 0; row < srcHeight; row++) {
-         memcpy(dst, src, srcWidth * texelBytes);
-         dst += dstRowStride;
-         src += srcWidth * texelBytes;
-      }
-      free((void *) tempImage);
-   }
-   return GL_TRUE;
-}
-
 /**
  * Store simple 8-bit/value stencil texture data.
  */
@@ -3298,7 +3212,6 @@ _mesa_get_texstore_func(gl_format format)
       table[MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16] = _mesa_texstore_rgba_float16;
       table[MESA_FORMAT_INTENSITY_FLOAT32] = _mesa_texstore_rgba_float32;
       table[MESA_FORMAT_INTENSITY_FLOAT16] = _mesa_texstore_rgba_float16;
-      table[MESA_FORMAT_DUDV8] = _mesa_texstore_dudv8;
       table[MESA_FORMAT_SIGNED_RGBA_16] = _mesa_texstore_signed_rgba_16;
       table[MESA_FORMAT_RGBA_16] = _mesa_texstore_rgba_16;
 

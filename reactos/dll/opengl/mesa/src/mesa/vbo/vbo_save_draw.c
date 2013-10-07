@@ -134,7 +134,6 @@ static void vbo_bind_vertex_list(struct gl_context *ctx,
    struct vbo_save_context *save = &vbo->save;
    struct gl_client_array *arrays = save->arrays;
    GLuint buffer_offset = node->buffer_offset;
-   const GLuint *map;
    GLuint attr;
    GLubyte node_attrsz[VBO_ATTRIB_MAX];  /* copy of node->attrsz[] */
    GLbitfield64 varying_inputs = 0x0;
@@ -144,54 +143,18 @@ static void vbo_bind_vertex_list(struct gl_context *ctx,
    /* Install the default (ie Current) attributes first, then overlay
     * all active ones.
     */
-   switch (get_program_mode(ctx)) {
-   case VP_NONE:
-      for (attr = 0; attr < VERT_ATTRIB_FF_MAX; attr++) {
-         save->inputs[attr] = &vbo->legacy_currval[attr];
-      }
-      for (attr = 0; attr < MAT_ATTRIB_MAX; attr++) {
-         save->inputs[VERT_ATTRIB_GENERIC(attr)] = &vbo->mat_currval[attr];
-      }
-      map = vbo->map_vp_none;
-      break;
-   case VP_NV:
-   case VP_ARB:
-      /* The aliasing of attributes for NV vertex programs has already
-       * occurred.  NV vertex programs cannot access material values,
-       * nor attributes greater than VERT_ATTRIB_TEX7.  
-       */
-      for (attr = 0; attr < VERT_ATTRIB_FF_MAX; attr++) {
-         save->inputs[attr] = &vbo->legacy_currval[attr];
-      }
-      for (attr = 0; attr < VERT_ATTRIB_GENERIC_MAX; attr++) {
-         save->inputs[VERT_ATTRIB_GENERIC(attr)] = &vbo->generic_currval[attr];
-      }
-      map = vbo->map_vp_arb;
-
-      /* check if VERT_ATTRIB_POS is not read but VERT_BIT_GENERIC0 is read.
-       * In that case we effectively need to route the data from
-       * glVertexAttrib(0, val) calls to feed into the GENERIC0 input.
-       */
-      if ((ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_POS) == 0 &&
-          (ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_GENERIC0)) {
-         save->inputs[VERT_ATTRIB_GENERIC0] = save->inputs[0];
-         node_attrsz[VERT_ATTRIB_GENERIC0] = node_attrsz[0];
-         node_attrsz[0] = 0;
-      }
-      break;
-   default:
-      assert(0);
+   for (attr = 0; attr < VBO_ATTRIB_MAX; attr++) {
+      save->inputs[attr] = &vbo->currval[attr];
    }
 
-   for (attr = 0; attr < VERT_ATTRIB_MAX; attr++) {
-      const GLuint src = map[attr];
+   for (attr = 0; attr < VBO_ATTRIB_MAX; attr++) {
 
-      if (node_attrsz[src]) {
+      if (node_attrsz[attr]) {
          /* override the default array set above */
          save->inputs[attr] = &arrays[attr];
 
 	 arrays[attr].Ptr = (const GLubyte *) NULL + buffer_offset;
-	 arrays[attr].Size = node_attrsz[src];
+	 arrays[attr].Size = node_attrsz[attr];
 	 arrays[attr].StrideB = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Type = GL_FLOAT;
@@ -204,7 +167,7 @@ static void vbo_bind_vertex_list(struct gl_context *ctx,
 	 
 	 assert(arrays[attr].BufferObj->Name);
 
-	 buffer_offset += node_attrsz[src] * sizeof(GLfloat);
+	 buffer_offset += node_attrsz[attr] * sizeof(GLfloat);
          varying_inputs |= VERT_BIT(attr);
          ctx->NewState |= _NEW_ARRAY;
       }
@@ -275,14 +238,6 @@ vbo_save_playback_vertex_list(struct gl_context *ctx, void *data)
       
       if (ctx->NewState)
 	 _mesa_update_state( ctx );
-
-      /* XXX also need to check if shader enabled, but invalid */
-      if ((ctx->VertexProgram.Enabled && !ctx->VertexProgram._Enabled) ||
-          (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glBegin (invalid vertex/fragment program)");
-         return;
-      }
 
       vbo_bind_vertex_list( ctx, node );
 

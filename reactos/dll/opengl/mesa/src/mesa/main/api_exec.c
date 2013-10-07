@@ -33,9 +33,6 @@
 #include "accum.h"
 #include "api_loopback.h"
 #include "api_exec.h"
-#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-#include "arbprogram.h"
-#endif
 #include "attrib.h"
 #include "blend.h"
 #include "bufferobj.h"
@@ -84,13 +81,6 @@
 #include "mtypes.h"
 #include "varray.h"
 #include "viewport.h"
-#if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
-#include "nvprogram.h"
-#endif
-#if FEATURE_ARB_shader_objects
-#include "shaderapi.h"
-#include "uniforms.h"
-#endif
 #include "main/dispatch.h"
 
 
@@ -291,11 +281,6 @@ _mesa_create_exec_table(void)
    SET_StencilMaskSeparate(exec, _mesa_StencilMaskSeparate);
    SET_StencilOpSeparate(exec, _mesa_StencilOpSeparate);
 
-#if FEATURE_ARB_shader_objects
-   _mesa_init_shader_dispatch(exec);
-   _mesa_init_shader_uniform_dispatch(exec);
-#endif
-
    /* 2. GL_EXT_blend_color */
 #if 0
 /*    SET_BlendColorEXT(exec, _mesa_BlendColorEXT); */
@@ -380,8 +365,6 @@ _mesa_create_exec_table(void)
 
    /* 233. GL_NV_vertex_program */
 #if FEATURE_NV_vertex_program
-   SET_BindProgramNV(exec, _mesa_BindProgram);
-   SET_DeleteProgramsNV(exec, _mesa_DeletePrograms);
    SET_ExecuteProgramNV(exec, _mesa_ExecuteProgramNV);
    SET_GenProgramsNV(exec, _mesa_GenPrograms);
    SET_AreProgramsResidentNV(exec, _mesa_AreProgramsResidentNV);
@@ -389,13 +372,7 @@ _mesa_create_exec_table(void)
    SET_GetProgramParameterfvNV(exec, _mesa_GetProgramParameterfvNV);
    SET_GetProgramParameterdvNV(exec, _mesa_GetProgramParameterdvNV);
    SET_GetProgramivNV(exec, _mesa_GetProgramivNV);
-   SET_GetProgramStringNV(exec, _mesa_GetProgramStringNV);
    SET_GetTrackMatrixivNV(exec, _mesa_GetTrackMatrixivNV);
-   SET_GetVertexAttribdvNV(exec, _mesa_GetVertexAttribdvNV);
-   SET_GetVertexAttribfvNV(exec, _mesa_GetVertexAttribfvNV);
-   SET_GetVertexAttribivNV(exec, _mesa_GetVertexAttribivNV);
-   SET_GetVertexAttribPointervNV(exec, _mesa_GetVertexAttribPointervNV);
-   SET_IsProgramNV(exec, _mesa_IsProgramARB);
    SET_LoadProgramNV(exec, _mesa_LoadProgramNV);
    SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB); /* alias to ProgramParameter4dNV */
    SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);  /* alias to ProgramParameter4dvNV */
@@ -404,7 +381,6 @@ _mesa_create_exec_table(void)
    SET_ProgramParameters4dvNV(exec, _mesa_ProgramParameters4dvNV);
    SET_ProgramParameters4fvNV(exec, _mesa_ProgramParameters4fvNV);
    SET_TrackMatrixNV(exec, _mesa_TrackMatrixNV);
-   SET_VertexAttribPointerNV(exec, _mesa_VertexAttribPointerNV);
    /* glVertexAttrib*NV functions handled in api_loopback.c */
 #endif
 
@@ -422,12 +398,6 @@ _mesa_create_exec_table(void)
    SET_ProgramNamedParameter4dvNV(exec, _mesa_ProgramNamedParameter4dvNV);
    SET_GetProgramNamedParameterfvNV(exec, _mesa_GetProgramNamedParameterfvNV);
    SET_GetProgramNamedParameterdvNV(exec, _mesa_GetProgramNamedParameterdvNV);
-   SET_ProgramLocalParameter4dARB(exec, _mesa_ProgramLocalParameter4dARB);
-   SET_ProgramLocalParameter4dvARB(exec, _mesa_ProgramLocalParameter4dvARB);
-   SET_ProgramLocalParameter4fARB(exec, _mesa_ProgramLocalParameter4fARB);
-   SET_ProgramLocalParameter4fvARB(exec, _mesa_ProgramLocalParameter4fvARB);
-   SET_GetProgramLocalParameterdvARB(exec, _mesa_GetProgramLocalParameterdvARB);
-   SET_GetProgramLocalParameterfvARB(exec, _mesa_GetProgramLocalParameterfvARB);
 #endif
 
    /* 262. GL_NV_point_sprite */
@@ -444,12 +414,6 @@ _mesa_create_exec_table(void)
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
-   /* ARB 1. GL_ARB_multitexture */
-#if _HAVE_FULL_GL
-   SET_ActiveTextureARB(exec, _mesa_ActiveTextureARB);
-   SET_ClientActiveTextureARB(exec, _mesa_ClientActiveTextureARB);
-#endif
-
    /* ARB 3. GL_ARB_transpose_matrix */
 #if _HAVE_FULL_GL
    SET_LoadTransposeMatrixdARB(exec, _mesa_LoadTransposeMatrixdARB);
@@ -465,73 +429,6 @@ _mesa_create_exec_table(void)
 
    /* ARB 14. GL_ARB_point_parameters */
    /* reuse EXT_point_parameters functions */
-
-   /* ARB 26. GL_ARB_vertex_program */
-   /* ARB 27. GL_ARB_fragment_program */
-#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-   /* glVertexAttrib1sARB aliases glVertexAttrib1sNV */
-   /* glVertexAttrib1fARB aliases glVertexAttrib1fNV */
-   /* glVertexAttrib1dARB aliases glVertexAttrib1dNV */
-   /* glVertexAttrib2sARB aliases glVertexAttrib2sNV */
-   /* glVertexAttrib2fARB aliases glVertexAttrib2fNV */
-   /* glVertexAttrib2dARB aliases glVertexAttrib2dNV */
-   /* glVertexAttrib3sARB aliases glVertexAttrib3sNV */
-   /* glVertexAttrib3fARB aliases glVertexAttrib3fNV */
-   /* glVertexAttrib3dARB aliases glVertexAttrib3dNV */
-   /* glVertexAttrib4sARB aliases glVertexAttrib4sNV */
-   /* glVertexAttrib4fARB aliases glVertexAttrib4fNV */
-   /* glVertexAttrib4dARB aliases glVertexAttrib4dNV */
-   /* glVertexAttrib4NubARB aliases glVertexAttrib4NubNV */
-   /* glVertexAttrib1svARB aliases glVertexAttrib1svNV */
-   /* glVertexAttrib1fvARB aliases glVertexAttrib1fvNV */
-   /* glVertexAttrib1dvARB aliases glVertexAttrib1dvNV */
-   /* glVertexAttrib2svARB aliases glVertexAttrib2svNV */
-   /* glVertexAttrib2fvARB aliases glVertexAttrib2fvNV */
-   /* glVertexAttrib2dvARB aliases glVertexAttrib2dvNV */
-   /* glVertexAttrib3svARB aliases glVertexAttrib3svNV */
-   /* glVertexAttrib3fvARB aliases glVertexAttrib3fvNV */
-   /* glVertexAttrib3dvARB aliases glVertexAttrib3dvNV */
-   /* glVertexAttrib4svARB aliases glVertexAttrib4svNV */
-   /* glVertexAttrib4fvARB aliases glVertexAttrib4fvNV */
-   /* glVertexAttrib4dvARB aliases glVertexAttrib4dvNV */
-   /* glVertexAttrib4NubvARB aliases glVertexAttrib4NubvNV */
-   /* glVertexAttrib4bvARB handled in api_loopback.c */
-   /* glVertexAttrib4ivARB handled in api_loopback.c */
-   /* glVertexAttrib4ubvARB handled in api_loopback.c */
-   /* glVertexAttrib4usvARB handled in api_loopback.c */
-   /* glVertexAttrib4uivARB handled in api_loopback.c */
-   /* glVertexAttrib4NbvARB handled in api_loopback.c */
-   /* glVertexAttrib4NsvARB handled in api_loopback.c */
-   /* glVertexAttrib4NivARB handled in api_loopback.c */
-   /* glVertexAttrib4NusvARB handled in api_loopback.c */
-   /* glVertexAttrib4NuivARB handled in api_loopback.c */
-   SET_VertexAttribPointerARB(exec, _mesa_VertexAttribPointerARB);
-   SET_EnableVertexAttribArrayARB(exec, _mesa_EnableVertexAttribArrayARB);
-   SET_DisableVertexAttribArrayARB(exec, _mesa_DisableVertexAttribArrayARB);
-   SET_ProgramStringARB(exec, _mesa_ProgramStringARB);
-   /* glBindProgramARB aliases glBindProgramNV */
-   /* glDeleteProgramsARB aliases glDeleteProgramsNV */
-   /* glGenProgramsARB aliases glGenProgramsNV */
-   /* glIsProgramARB aliases glIsProgramNV */
-   SET_GetVertexAttribdvARB(exec, _mesa_GetVertexAttribdvARB);
-   SET_GetVertexAttribfvARB(exec, _mesa_GetVertexAttribfvARB);
-   SET_GetVertexAttribivARB(exec, _mesa_GetVertexAttribivARB);
-   /* glGetVertexAttribPointervARB aliases glGetVertexAttribPointervNV */
-   SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB);
-   SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);
-   SET_ProgramEnvParameter4fARB(exec, _mesa_ProgramEnvParameter4fARB);
-   SET_ProgramEnvParameter4fvARB(exec, _mesa_ProgramEnvParameter4fvARB);
-   SET_ProgramLocalParameter4dARB(exec, _mesa_ProgramLocalParameter4dARB);
-   SET_ProgramLocalParameter4dvARB(exec, _mesa_ProgramLocalParameter4dvARB);
-   SET_ProgramLocalParameter4fARB(exec, _mesa_ProgramLocalParameter4fARB);
-   SET_ProgramLocalParameter4fvARB(exec, _mesa_ProgramLocalParameter4fvARB);
-   SET_GetProgramEnvParameterdvARB(exec, _mesa_GetProgramEnvParameterdvARB);
-   SET_GetProgramEnvParameterfvARB(exec, _mesa_GetProgramEnvParameterfvARB);
-   SET_GetProgramLocalParameterdvARB(exec, _mesa_GetProgramLocalParameterdvARB);
-   SET_GetProgramLocalParameterfvARB(exec, _mesa_GetProgramLocalParameterfvARB);
-   SET_GetProgramivARB(exec, _mesa_GetProgramivARB);
-   SET_GetProgramStringARB(exec, _mesa_GetProgramStringARB);
-#endif
 
    /* ARB 28. GL_ARB_vertex_buffer_object */
    SET_BindBufferARB(exec, _mesa_BindBufferARB);
@@ -551,18 +448,6 @@ _mesa_create_exec_table(void)
    SET_GetnPolygonStippleARB(exec, _mesa_GetnPolygonStippleARB);
    SET_GetnTexImageARB(exec, _mesa_GetnTexImageARB);
    SET_ReadnPixelsARB(exec, _mesa_ReadnPixelsARB);
-
-  /* GL_ATI_envmap_bumpmap */
-   SET_GetTexBumpParameterivATI(exec, _mesa_GetTexBumpParameterivATI);
-   SET_GetTexBumpParameterfvATI(exec, _mesa_GetTexBumpParameterfvATI);
-   SET_TexBumpParameterivATI(exec, _mesa_TexBumpParameterivATI);
-   SET_TexBumpParameterfvATI(exec, _mesa_TexBumpParameterfvATI);
-
-   /* GL_EXT_gpu_program_parameters */
-#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-   SET_ProgramEnvParameters4fvEXT(exec, _mesa_ProgramEnvParameters4fvEXT);
-   SET_ProgramLocalParameters4fvEXT(exec, _mesa_ProgramLocalParameters4fvEXT);
-#endif
 
    /* GL_ATI_separate_stencil */
    SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
@@ -589,11 +474,6 @@ _mesa_create_exec_table(void)
    SET_GetTexParameterIuivEXT(exec, _mesa_GetTexParameterIuiv);
    SET_TexParameterIivEXT(exec, _mesa_TexParameterIiv);
    SET_TexParameterIuivEXT(exec, _mesa_TexParameterIuiv);
-
-   /* GL_EXT_gpu_shader4 / OpenGL 3.0 */
-   SET_GetVertexAttribIivEXT(exec, _mesa_GetVertexAttribIiv);
-   SET_GetVertexAttribIuivEXT(exec, _mesa_GetVertexAttribIuiv);
-   SET_VertexAttribIPointerEXT(exec, _mesa_VertexAttribIPointer);
 
    /* GL 3.0 (functions not covered by other extensions) */
    SET_GetStringi(exec, _mesa_GetStringi);

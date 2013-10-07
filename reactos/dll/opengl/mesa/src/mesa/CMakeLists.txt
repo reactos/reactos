@@ -1,9 +1,6 @@
 
-set_cpp(WITH_STL)
-
 include_directories(
     ../mapi
-    ../glsl
     .
 )
 
@@ -27,7 +24,6 @@ endif()
 add_subdirectory(drivers/common)
 add_subdirectory(main)
 add_subdirectory(math)
-add_subdirectory(program)
 add_subdirectory(swrast)
 add_subdirectory(swrast_setup)
 add_subdirectory(tnl)

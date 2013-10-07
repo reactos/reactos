@@ -202,7 +202,7 @@ fast_draw_rgba_pixels(struct gl_context *ctx, GLint x, GLint y,
       return GL_TRUE; /* no-op */
 
    if ((swrast->_RasterMask & ~CLIP_BIT) ||
-       ctx->Texture._EnabledCoordUnits ||
+       ctx->Texture._EnabledCoord ||
        userUnpack->SwapBytes ||
        ctx->Pixel.ZoomX != 1.0f ||
        fabsf(ctx->Pixel.ZoomY) != 1.0f ||
@@ -504,17 +504,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
 		    const GLvoid *pixels )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLboolean save_vp_override = ctx->VertexProgram._Overriden;
-
-   /* We are creating fragments directly, without going through vertex
-    * programs.
-    *
-    * This override flag tells the fragment processing code that its input
-    * comes from a non-standard source, and it may therefore not rely on
-    * optimizations that assume e.g. constant color if there is no color
-    * vertex array.
-    */
-   _mesa_set_vp_override(ctx, GL_TRUE);
 
    if (ctx->NewState)
       _mesa_update_state(ctx);
@@ -524,7 +513,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
 
    pixels = _mesa_map_pbo_source(ctx, unpack, pixels);
    if (!pixels) {
-      _mesa_set_vp_override(ctx, save_vp_override);
       return;
    }
 
@@ -546,8 +534,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
       /* all other formats should be color formats */
       draw_rgba_pixels(ctx, x, y, width, height, format, type, unpack, pixels);
    }
-
-   _mesa_set_vp_override(ctx, save_vp_override);
 
    _mesa_unmap_pbo_source(ctx, unpack);
 }

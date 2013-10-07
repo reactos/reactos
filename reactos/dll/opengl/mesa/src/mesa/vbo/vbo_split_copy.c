@@ -36,6 +36,7 @@
 #include "main/macros.h"
 #include "main/mtypes.h"
 
+#include "vbo_attrib.h"
 #include "vbo_split.h"
 #include "vbo.h"
 
@@ -66,10 +67,10 @@ struct copy_context {
 
       struct gl_client_array dstarray;
 
-   } varying[VERT_ATTRIB_MAX];
+   } varying[VBO_ATTRIB_MAX];
    GLuint nr_varying;
 
-   const struct gl_client_array *dstarray_ptr[VERT_ATTRIB_MAX];
+   const struct gl_client_array *dstarray_ptr[VBO_ATTRIB_MAX];
    struct _mesa_index_buffer dstib;
 
    GLuint *translated_elt_buf;
@@ -152,7 +153,7 @@ dump_draw_info(struct gl_context *ctx,
       printf("Prim %u of %u\n", i, nr_prims);
       printf("  Prim mode 0x%x\n", prims[i].mode);
       printf("  IB: %p\n", (void*) ib);
-      for (j = 0; j < VERT_ATTRIB_MAX; j++) {
+      for (j = 0; j < VBO_ATTRIB_MAX; j++) {
          printf("    array %d at %p:\n", j, (void*) arrays[j]);
          printf("      enabled %d, ptr %p, size %d, type 0x%x, stride %d\n",
 		arrays[j]->Enabled, arrays[j]->Ptr,
@@ -429,7 +430,7 @@ replay_init( struct copy_context *copy )
     * calculate vertex size.
     */
    copy->vertex_size = 0;
-   for (i = 0; i < VERT_ATTRIB_MAX; i++) {
+   for (i = 0; i < VBO_ATTRIB_MAX; i++) {
       struct gl_buffer_object *vbo = copy->array[i]->BufferObj;
 
       if (copy->array[i]->StrideB == 0) {

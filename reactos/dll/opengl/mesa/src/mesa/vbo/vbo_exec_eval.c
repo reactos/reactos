@@ -84,22 +84,22 @@ void vbo_exec_eval_update( struct vbo_exec_context *exec )
       set_active_eval2( exec, VBO_ATTRIB_COLOR0, 4, &ctx->EvalMap.Map2Color4 );
 
    if (ctx->Eval.Map1TextureCoord4) 
-      set_active_eval1( exec, VBO_ATTRIB_TEX0, 4, &ctx->EvalMap.Map1Texture4 );
+      set_active_eval1( exec, VBO_ATTRIB_TEX, 4, &ctx->EvalMap.Map1Texture4 );
    else if (ctx->Eval.Map1TextureCoord3) 
-      set_active_eval1( exec, VBO_ATTRIB_TEX0, 3, &ctx->EvalMap.Map1Texture3 );
+      set_active_eval1( exec, VBO_ATTRIB_TEX, 3, &ctx->EvalMap.Map1Texture3 );
    else if (ctx->Eval.Map1TextureCoord2) 
-      set_active_eval1( exec, VBO_ATTRIB_TEX0, 2, &ctx->EvalMap.Map1Texture2 );
+      set_active_eval1( exec, VBO_ATTRIB_TEX, 2, &ctx->EvalMap.Map1Texture2 );
    else if (ctx->Eval.Map1TextureCoord1) 
-      set_active_eval1( exec, VBO_ATTRIB_TEX0, 1, &ctx->EvalMap.Map1Texture1 );
+      set_active_eval1( exec, VBO_ATTRIB_TEX, 1, &ctx->EvalMap.Map1Texture1 );
 
    if (ctx->Eval.Map2TextureCoord4) 
-      set_active_eval2( exec, VBO_ATTRIB_TEX0, 4, &ctx->EvalMap.Map2Texture4 );
+      set_active_eval2( exec, VBO_ATTRIB_TEX, 4, &ctx->EvalMap.Map2Texture4 );
    else if (ctx->Eval.Map2TextureCoord3) 
-      set_active_eval2( exec, VBO_ATTRIB_TEX0, 3, &ctx->EvalMap.Map2Texture3 );
+      set_active_eval2( exec, VBO_ATTRIB_TEX, 3, &ctx->EvalMap.Map2Texture3 );
    else if (ctx->Eval.Map2TextureCoord2) 
-      set_active_eval2( exec, VBO_ATTRIB_TEX0, 2, &ctx->EvalMap.Map2Texture2 );
+      set_active_eval2( exec, VBO_ATTRIB_TEX, 2, &ctx->EvalMap.Map2Texture2 );
    else if (ctx->Eval.Map2TextureCoord1) 
-      set_active_eval2( exec, VBO_ATTRIB_TEX0, 1, &ctx->EvalMap.Map2Texture1 );
+      set_active_eval2( exec, VBO_ATTRIB_TEX, 1, &ctx->EvalMap.Map2Texture1 );
 
    if (ctx->Eval.Map1Normal) 
       set_active_eval1( exec, VBO_ATTRIB_NORMAL, 3, &ctx->EvalMap.Map1Normal );
@@ -117,23 +117,6 @@ void vbo_exec_eval_update( struct vbo_exec_context *exec )
    else if (ctx->Eval.Map2Vertex3) 
       set_active_eval2( exec, VBO_ATTRIB_POS, 3, &ctx->EvalMap.Map2Vertex3 );
 
-   /* _NEW_PROGRAM */
-   if (ctx->VertexProgram._Enabled) {
-      /* These are the 16 evaluators which GL_NV_vertex_program defines.
-       * They alias and override the conventional vertex attributs.
-       */
-      for (attr = 0; attr < 16; attr++) {
-         /* _NEW_EVAL */
-         assert(attr < Elements(ctx->Eval.Map1Attrib));
-         if (ctx->Eval.Map1Attrib[attr]) 
-            set_active_eval1( exec, attr, 4, &ctx->EvalMap.Map1Attrib[attr] );
-
-         assert(attr < Elements(ctx->Eval.Map2Attrib));
-         if (ctx->Eval.Map2Attrib[attr]) 
-            set_active_eval2( exec, attr, 4, &ctx->EvalMap.Map2Attrib[attr] );
-      }
-   }
-
    exec->eval.recalculate_maps = 0;
 }
 
@@ -143,7 +126,7 @@ void vbo_exec_do_EvalCoord1f(struct vbo_exec_context *exec, GLfloat u)
 {
    GLuint attr;
 
-   for (attr = 1; attr <= VBO_ATTRIB_TEX7; attr++) {
+   for (attr = 1; attr <= VBO_ATTRIB_TEX; attr++) {
       struct gl_1d_map *map = exec->eval.map1[attr].map;
       if (map) {
 	 GLfloat uu = (u - map->u1) * map->du;
@@ -188,7 +171,7 @@ void vbo_exec_do_EvalCoord2f( struct vbo_exec_context *exec,
 {   
    GLuint attr;
 
-   for (attr = 1; attr <= VBO_ATTRIB_TEX7; attr++) {
+   for (attr = 1; attr <= VBO_ATTRIB_TEX; attr++) {
       struct gl_2d_map *map = exec->eval.map2[attr].map;
       if (map) {
 	 GLfloat uu = (u - map->u1) * map->du;

@@ -32,23 +32,27 @@
  */
 static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e2 )
 {
+#if IND & SS_TWOSIDE_BIT
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
-   SWvertex *verts = SWSETUP_CONTEXT(ctx)->verts;
-   SWvertex *v[3];
-   GLfloat z[3];
-   GLfloat offset, oz0, oz1, oz2;
-   GLenum mode = GL_FILL;
-   GLuint facing = 0;
    GLchan saved_color[3][4] = { { 0 } };
    GLfloat saved_col0[3][4] = { { 0 } };
    GLfloat saved_spec[3][4] = { { 0 } };
+#endif
+   SWvertex *verts = SWSETUP_CONTEXT(ctx)->verts;
+   SWvertex *v[3];
+#if IND & SS_OFFSET_BIT
+   GLfloat z[3];
+#endif
+   GLfloat oz0, oz1, oz2;
+   GLenum mode = GL_FILL;
+   GLuint facing = 0;
 
    v[0] = &verts[e0];
    v[1] = &verts[e1];
    v[2] = &verts[e2];
 
-   if (IND & (SS_TWOSIDE_BIT | SS_OFFSET_BIT | SS_UNFILLED_BIT))
+#if IND & (SS_TWOSIDE_BIT | SS_OFFSET_BIT | SS_UNFILLED_BIT)
    {
       GLfloat ex = v[0]->attrib[FRAG_ATTRIB_WPOS][0] - v[2]->attrib[FRAG_ATTRIB_WPOS][0];
       GLfloat ey = v[0]->attrib[FRAG_ATTRIB_WPOS][1] - v[2]->attrib[FRAG_ATTRIB_WPOS][1];
@@ -56,15 +60,16 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
       GLfloat fy = v[1]->attrib[FRAG_ATTRIB_WPOS][1] - v[2]->attrib[FRAG_ATTRIB_WPOS][1];
       GLfloat cc  = ex*fy - ey*fx;
 
-      if (IND & (SS_TWOSIDE_BIT | SS_UNFILLED_BIT))
+#if IND & (SS_TWOSIDE_BIT | SS_UNFILLED_BIT)
       {
 	 facing = (cc < 0.0) ^ ctx->Polygon._FrontBit;
 
-	 if (IND & SS_UNFILLED_BIT)
+#if IND & SS_UNFILLED_BIT
 	    mode = facing ? ctx->Polygon.BackMode : ctx->Polygon.FrontMode;
+#endif
 
+#if IND & SS_TWOSIDE_BIT
 	 if (facing == 1) {
-	    if (IND & SS_TWOSIDE_BIT) {
                if (VB->BackfaceColorPtr) {
                   GLfloat (*vbcolor)[4] = VB->BackfaceColorPtr->data;
 
@@ -125,10 +130,13 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
 		  }
 	       }
 	    }
-	 }
+#endif
       }
+#endif
 
-      if (IND & SS_OFFSET_BIT) {
+#if IND & SS_OFFSET_BIT
+      {
+         GLfloat offset;
          const GLfloat max = ctx->DrawBuffer->_DepthMaxF;
          /* save original Z values (restored later) */
 	 z[0] = v[0]->attrib[FRAG_ATTRIB_WPOS][2];
@@ -151,7 +159,9 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
          oz1 = CLAMP(v[1]->attrib[FRAG_ATTRIB_WPOS][2] + offset, 0.0F, max);
          oz2 = CLAMP(v[2]->attrib[FRAG_ATTRIB_WPOS][2] + offset, 0.0F, max);
       }
+#endif
    }
+#endif
 
    if (mode == GL_POINT) {
       if ((IND & SS_OFFSET_BIT) && ctx->Polygon.OffsetPoint) {
@@ -167,25 +177,31 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
 	 v[2]->attrib[FRAG_ATTRIB_WPOS][2] = oz2;
       }
       _swsetup_render_tri(ctx, e0, e1, e2, facing, _swsetup_edge_render_line_tri);
-   } else {
-      if ((IND & SS_OFFSET_BIT) && ctx->Polygon.OffsetFill) {
+   }
+   else {
+#if IND & SS_OFFSET_BIT
+      if (ctx->Polygon.OffsetFill) {
 	 v[0]->attrib[FRAG_ATTRIB_WPOS][2] = oz0;
 	 v[1]->attrib[FRAG_ATTRIB_WPOS][2] = oz1;
 	 v[2]->attrib[FRAG_ATTRIB_WPOS][2] = oz2;
       }
+#endif
       _swrast_Triangle( ctx, v[0], v[1], v[2] );
    }
 
    /*
     * Restore original vertex colors, etc.
     */
-   if (IND & SS_OFFSET_BIT) {
+#if IND & SS_OFFSET_BIT
+   {
       v[0]->attrib[FRAG_ATTRIB_WPOS][2] = z[0];
       v[1]->attrib[FRAG_ATTRIB_WPOS][2] = z[1];
       v[2]->attrib[FRAG_ATTRIB_WPOS][2] = z[2];
    }
+#endif
 
-   if (IND & SS_TWOSIDE_BIT) {
+#if IND & SS_TWOSIDE_BIT
+   {
       if (facing == 1) {
 	if (VB->BackfaceColorPtr) {
 	  if (swsetup->intColors) {
@@ -207,6 +223,7 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
 	}
       }
    }
+#endif
 }
 
 

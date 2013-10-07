@@ -52,30 +52,6 @@ override_version(struct gl_context *ctx, GLuint *major, GLuint *minor)
 }
 
 /**
- * Override the context's GLSL version if the environment variable
- * MESA_GLSL_VERSION_OVERRIDE is set. Valid values for
- * MESA_GLSL_VERSION_OVERRIDE are integers, such as "130".
- */
-void
-_mesa_override_glsl_version(struct gl_context *ctx)
-{
-   const char *env_var = "MESA_GLSL_VERSION_OVERRIDE";
-   const char *version;
-   int n;
-
-   version = getenv(env_var);
-   if (!version) {
-      return;
-   }
-
-   n = sscanf(version, "%u", &ctx->Const.GLSLVersion);
-   if (n != 1) {
-      fprintf(stderr, "error: invalid value for %s: %s\n", env_var, version);
-      return;
-   }
-}
-
-/**
  * Examine enabled GL extensions to determine GL version.
  * Return major and minor version numbers.
  */
@@ -102,9 +78,6 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_shadow_funcs);
    const GLboolean ver_2_0 = (ver_1_5 &&
                               ctx->Extensions.ARB_point_sprite &&
-                              ctx->Extensions.ARB_shader_objects &&
-                              ctx->Extensions.ARB_vertex_shader &&
-                              ctx->Extensions.ARB_fragment_shader &&
                               ctx->Extensions.ARB_texture_non_power_of_two &&
                               ctx->Extensions.EXT_blend_equation_separate &&
 
@@ -117,14 +90,11 @@ compute_version(struct gl_context *ctx)
 			      (ctx->Extensions.EXT_stencil_two_side
 			       || ctx->Extensions.ATI_separate_stencil));
    const GLboolean ver_2_1 = (ver_2_0 &&
-                              ctx->Const.GLSLVersion >= 120 &&
                               ctx->Extensions.EXT_pixel_buffer_object);
    const GLboolean ver_3_0 = (ver_2_1 &&
-                              ctx->Const.GLSLVersion >= 130 &&
                               ctx->Extensions.ARB_half_float_pixel &&
                               ctx->Extensions.ARB_half_float_vertex &&
                               ctx->Extensions.ARB_map_buffer_range &&
-                              ctx->Extensions.ARB_shader_texture_lod &&
                               ctx->Extensions.ARB_texture_float &&
                               ctx->Extensions.APPLE_vertex_array_object);
 

@@ -107,56 +107,56 @@ static void GLAPIENTRY
 TAG(TexCoord1f)(GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR1F(VBO_ATTRIB_TEX0, x);
+   ATTR1F(VBO_ATTRIB_TEX, x);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord1fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR1FV(VBO_ATTRIB_TEX0, v);
+   ATTR1FV(VBO_ATTRIB_TEX, v);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord2f)(GLfloat x, GLfloat y)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR2F(VBO_ATTRIB_TEX0, x, y);
+   ATTR2F(VBO_ATTRIB_TEX, x, y);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord2fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR2FV(VBO_ATTRIB_TEX0, v);
+   ATTR2FV(VBO_ATTRIB_TEX, v);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord3f)(GLfloat x, GLfloat y, GLfloat z)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR3F(VBO_ATTRIB_TEX0, x, y, z);
+   ATTR3F(VBO_ATTRIB_TEX, x, y, z);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord3fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR3FV(VBO_ATTRIB_TEX0, v);
+   ATTR3FV(VBO_ATTRIB_TEX, v);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR4F(VBO_ATTRIB_TEX0, x, y, z, w);
+   ATTR4F(VBO_ATTRIB_TEX, x, y, z, w);
 }
 
 static void GLAPIENTRY
 TAG(TexCoord4fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR4FV(VBO_ATTRIB_TEX0, v);
+   ATTR4FV(VBO_ATTRIB_TEX, v);
 }
 
 
@@ -260,348 +260,6 @@ TAG(Indexfv)(const GLfloat * f)
 {
    GET_CURRENT_CONTEXT(ctx);
    ATTR1FV(VBO_ATTRIB_INDEX, f);
-}
-
-
-
-static void GLAPIENTRY
-TAG(MultiTexCoord1f)(GLenum target, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR1F(attr, x);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord1fv)(GLenum target, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR1FV(attr, v);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord2f)(GLenum target, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR2F(attr, x, y);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord2fv)(GLenum target, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR2FV(attr, v);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord3f)(GLenum target, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR3F(attr, x, y, z);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord3fv)(GLenum target, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR3FV(attr, v);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord4f)(GLenum target, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR4F(attr, x, y, z, w);
-}
-
-static void GLAPIENTRY
-TAG(MultiTexCoord4fv)(GLenum target, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLuint attr = (target & 0x7) + VBO_ATTRIB_TEX0;
-   ATTR4FV(attr, v);
-}
-
-
-
-static void GLAPIENTRY
-TAG(VertexAttrib1fARB)(GLuint index, GLfloat x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR1F(0, x);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR1F(VBO_ATTRIB_GENERIC0 + index, x);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib1fvARB)(GLuint index, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR1FV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR1FV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib2fARB)(GLuint index, GLfloat x, GLfloat y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2F(0, x, y);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2F(VBO_ATTRIB_GENERIC0 + index, x, y);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib2fvARB)(GLuint index, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2FV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2FV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib3fARB)(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3F(0, x, y, z);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3F(VBO_ATTRIB_GENERIC0 + index, x, y, z);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib3fvARB)(GLuint index, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3FV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3FV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib4fARB)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4F(0, x, y, z, w);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4F(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttrib4fvARB)(GLuint index, const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4FV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4FV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-
-
-/* Integer-valued generic attributes.
- * XXX: the integers just get converted to floats at this time
- */
-static void GLAPIENTRY
-TAG(VertexAttribI1i)(GLuint index, GLint x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR1I(0, x);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR1I(VBO_ATTRIB_GENERIC0 + index, x);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI2i)(GLuint index, GLint x, GLint y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2I(0, x, y);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2I(VBO_ATTRIB_GENERIC0 + index, x, y);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI3i)(GLuint index, GLint x, GLint y, GLint z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3I(0, x, y, z);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3I(VBO_ATTRIB_GENERIC0 + index, x, y, z);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI4i)(GLuint index, GLint x, GLint y, GLint z, GLint w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4I(0, x, y, z, w);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4I(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI2iv)(GLuint index, const GLint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2IV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2IV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI3iv)(GLuint index, const GLint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3IV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3IV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI4iv)(GLuint index, const GLint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4IV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4IV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-
-
-/* Unsigned integer-valued generic attributes.
- * XXX: the integers just get converted to floats at this time
- */
-static void GLAPIENTRY
-TAG(VertexAttribI1ui)(GLuint index, GLuint x)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR1UI(0, x);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR1UI(VBO_ATTRIB_GENERIC0 + index, x);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI2ui)(GLuint index, GLuint x, GLuint y)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2UI(0, x, y);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2UI(VBO_ATTRIB_GENERIC0 + index, x, y);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI3ui)(GLuint index, GLuint x, GLuint y, GLuint z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3UI(0, x, y, z);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3UI(VBO_ATTRIB_GENERIC0 + index, x, y, z);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI4ui)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4UI(0, x, y, z, w);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4UI(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI2uiv)(GLuint index, const GLuint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR2UIV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR2UIV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI3uiv)(GLuint index, const GLuint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR3UIV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR3UIV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
-}
-
-static void GLAPIENTRY
-TAG(VertexAttribI4uiv)(GLuint index, const GLuint *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
-      ATTR4UIV(0, v);
-   else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
-      ATTR4UIV(VBO_ATTRIB_GENERIC0 + index, v);
-   else
-      ERROR(GL_INVALID_VALUE);
 }
 
 

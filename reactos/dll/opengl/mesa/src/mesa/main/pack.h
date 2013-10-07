@@ -82,14 +82,6 @@ _mesa_unpack_color_span_uint(struct gl_context *ctx,
                              const struct gl_pixelstore_attrib *srcPacking);
 
 extern void
-_mesa_unpack_dudv_span_byte(struct gl_context *ctx,
-                            GLuint n, GLenum dstFormat, GLbyte dest[],
-                            GLenum srcFormat, GLenum srcType,
-                            const GLvoid *source,
-                            const struct gl_pixelstore_attrib *srcPacking,
-                            GLbitfield transferOps);
-
-extern void
 _mesa_unpack_index_span(struct gl_context *ctx, GLuint n,
                         GLenum dstType, GLvoid *dest,
                         GLenum srcType, const GLvoid *source,

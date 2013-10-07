@@ -34,7 +34,6 @@
 #include "main/glheader.h"
 #include "main/mtypes.h"
 #include "main/imports.h"
-#include "main/arbprogram.h"
 #include "main/arrayobj.h"
 #include "main/blend.h"
 #include "main/bufferobj.h"
@@ -53,8 +52,6 @@
 #include "main/polygon.h"
 #include "main/readpix.h"
 #include "main/scissor.h"
-#include "main/shaderapi.h"
-#include "main/shaderobj.h"
 #include "main/state.h"
 #include "main/stencil.h"
 #include "main/texobj.h"
@@ -63,10 +60,8 @@
 #include "main/teximage.h"
 #include "main/texparam.h"
 #include "main/texstate.h"
-#include "main/uniforms.h"
 #include "main/varray.h"
 #include "main/viewport.h"
-#include "program/program.h"
 #include "swrast/swrast.h"
 #include "drivers/common/meta.h"
 
@@ -121,15 +116,6 @@ struct save_state
    /** MESA_META_SCISSOR */
    struct gl_scissor_attrib Scissor;
 
-   /** MESA_META_SHADER */
-   GLboolean VertexProgramEnabled;
-   struct gl_vertex_program *VertexProgram;
-   GLboolean FragmentProgramEnabled;
-   struct gl_fragment_program *FragmentProgram;
-   struct gl_shader_program *VertexShader;
-   struct gl_shader_program *FragmentShader;
-   struct gl_shader_program *ActiveShader;
-
    /** MESA_META_STENCIL_TEST */
    struct gl_stencil_attrib Stencil;
 
@@ -143,13 +129,10 @@ struct save_state
    GLbitfield ClipPlanesEnabled;
 
    /** MESA_META_TEXTURE */
-   GLuint ActiveUnit;
-   GLuint ClientActiveUnit;
-   /** for unit[0] only */
    struct gl_texture_object *CurrentTexture[NUM_TEXTURE_TARGETS];
    /** mask of TEXTURE_2D_BIT, etc */
-   GLbitfield TexEnabled[MAX_TEXTURE_UNITS];
-   GLbitfield TexGenEnabled[MAX_TEXTURE_UNITS];
+   GLbitfield TexEnabled;
+   GLbitfield TexGenEnabled;
    GLuint EnvMode;  /* unit[0] only */
 
    /** MESA_META_VERTEX */
@@ -381,33 +364,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
       _mesa_set_enable(ctx, GL_SCISSOR_TEST, GL_FALSE);
    }
 
-   if (state & MESA_META_SHADER) {
-      if (ctx->Extensions.ARB_vertex_program) {
-         save->VertexProgramEnabled = ctx->VertexProgram.Enabled;
-         _mesa_reference_vertprog(ctx, &save->VertexProgram,
-				  ctx->VertexProgram.Current);
-         _mesa_set_enable(ctx, GL_VERTEX_PROGRAM_ARB, GL_FALSE);
-      }
-
-      if (ctx->Extensions.ARB_fragment_program) {
-         save->FragmentProgramEnabled = ctx->FragmentProgram.Enabled;
-         _mesa_reference_fragprog(ctx, &save->FragmentProgram,
-				  ctx->FragmentProgram.Current);
-         _mesa_set_enable(ctx, GL_FRAGMENT_PROGRAM_ARB, GL_FALSE);
-      }
-
-      if (ctx->Extensions.ARB_shader_objects) {
-	 _mesa_reference_shader_program(ctx, &save->VertexShader,
-					ctx->Shader.CurrentVertexProgram);
-	 _mesa_reference_shader_program(ctx, &save->FragmentShader,
-					ctx->Shader.CurrentFragmentProgram);
-	 _mesa_reference_shader_program(ctx, &save->ActiveShader,
-					ctx->Shader.ActiveProgram);
-
-         _mesa_UseProgramObjectARB(0);
-      }
-   }
-
    if (state & MESA_META_STENCIL_TEST) {
       save->Stencil = ctx->Stencil; /* struct copy */
       if (ctx->Stencil.Enabled)
@@ -416,57 +372,45 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
    }
 
    if (state & MESA_META_TEXTURE) {
-      GLuint u, tgt;
+      GLuint tgt;
 
-      save->ActiveUnit = ctx->Texture.CurrentUnit;
-      save->ClientActiveUnit = ctx->Array.ActiveTexture;
-      save->EnvMode = ctx->Texture.Unit[0].EnvMode;
+      save->EnvMode = ctx->Texture.Unit.EnvMode;
 
       /* Disable all texture units */
-      for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
-         save->TexEnabled[u] = ctx->Texture.Unit[u].Enabled;
-         save->TexGenEnabled[u] = ctx->Texture.Unit[u].TexGenEnabled;
-         if (ctx->Texture.Unit[u].Enabled ||
-             ctx->Texture.Unit[u].TexGenEnabled) {
-            _mesa_ActiveTextureARB(GL_TEXTURE0 + u);
-            _mesa_set_enable(ctx, GL_TEXTURE_1D, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_2D, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_3D, GL_FALSE);
-            if (ctx->Extensions.ARB_texture_cube_map)
-               _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_GEN_S, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_GEN_T, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_GEN_R, GL_FALSE);
-            _mesa_set_enable(ctx, GL_TEXTURE_GEN_Q, GL_FALSE);
-         }
+      save->TexEnabled = ctx->Texture.Unit.Enabled;
+      save->TexGenEnabled = ctx->Texture.Unit.TexGenEnabled;
+      if (ctx->Texture.Unit.Enabled ||
+          ctx->Texture.Unit.TexGenEnabled) {
+         _mesa_set_enable(ctx, GL_TEXTURE_1D, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_2D, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_3D, GL_FALSE);
+         if (ctx->Extensions.ARB_texture_cube_map)
+            _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_GEN_S, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_GEN_T, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_GEN_R, GL_FALSE);
+         _mesa_set_enable(ctx, GL_TEXTURE_GEN_Q, GL_FALSE);
       }
 
       /* save current texture objects for unit[0] only */
       for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++) {
          _mesa_reference_texobj(&save->CurrentTexture[tgt],
-                                ctx->Texture.Unit[0].CurrentTex[tgt]);
+                                ctx->Texture.Unit.CurrentTex[tgt]);
       }
-
-      /* set defaults for unit[0] */
-      _mesa_ActiveTextureARB(GL_TEXTURE0);
-      _mesa_ClientActiveTextureARB(GL_TEXTURE0);
       _mesa_TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
    }
 
    if (state & MESA_META_TRANSFORM) {
-      GLuint activeTexture = ctx->Texture.CurrentUnit;
       memcpy(save->ModelviewMatrix, ctx->ModelviewMatrixStack.Top->m,
              16 * sizeof(GLfloat));
       memcpy(save->ProjectionMatrix, ctx->ProjectionMatrixStack.Top->m,
              16 * sizeof(GLfloat));
-      memcpy(save->TextureMatrix, ctx->TextureMatrixStack[0].Top->m,
+      memcpy(save->TextureMatrix, ctx->TextureMatrixStack.Top->m,
              16 * sizeof(GLfloat));
       save->MatrixMode = ctx->Transform.MatrixMode;
       /* set 1:1 vertex:pixel coordinate transform */
-      _mesa_ActiveTextureARB(GL_TEXTURE0);
       _mesa_MatrixMode(GL_TEXTURE);
       _mesa_LoadIdentity();
-      _mesa_ActiveTextureARB(GL_TEXTURE0 + activeTexture);
       _mesa_MatrixMode(GL_MODELVIEW);
       _mesa_LoadIdentity();
       _mesa_MatrixMode(GL_PROJECTION);
@@ -614,38 +558,6 @@ _mesa_meta_end(struct gl_context *ctx)
                     save->Scissor.Width, save->Scissor.Height);
    }
 
-   if (state & MESA_META_SHADER) {
-      if (ctx->Extensions.ARB_vertex_program) {
-         _mesa_set_enable(ctx, GL_VERTEX_PROGRAM_ARB,
-                          save->VertexProgramEnabled);
-         _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current, 
-                                  save->VertexProgram);
-	 _mesa_reference_vertprog(ctx, &save->VertexProgram, NULL);
-      }
-
-      if (ctx->Extensions.ARB_fragment_program) {
-         _mesa_set_enable(ctx, GL_FRAGMENT_PROGRAM_ARB,
-                          save->FragmentProgramEnabled);
-         _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current,
-                                  save->FragmentProgram);
-	 _mesa_reference_fragprog(ctx, &save->FragmentProgram, NULL);
-      }
-
-      if (ctx->Extensions.ARB_vertex_shader)
-	 _mesa_use_shader_program(ctx, GL_VERTEX_SHADER, save->VertexShader);
-
-      if (ctx->Extensions.ARB_fragment_shader)
-	 _mesa_use_shader_program(ctx, GL_FRAGMENT_SHADER,
-				  save->FragmentShader);
-
-      _mesa_reference_shader_program(ctx, &ctx->Shader.ActiveProgram,
-				     save->ActiveShader);
-
-      _mesa_reference_shader_program(ctx, &save->VertexShader, NULL);
-      _mesa_reference_shader_program(ctx, &save->FragmentShader, NULL);
-      _mesa_reference_shader_program(ctx, &save->ActiveShader, NULL);
-   }
-
    if (state & MESA_META_STENCIL_TEST) {
       const struct gl_stencil_attrib *stencil = &save->Stencil;
 
@@ -678,47 +590,36 @@ _mesa_meta_end(struct gl_context *ctx)
    }
 
    if (state & MESA_META_TEXTURE) {
-      GLuint u, tgt;
-
-      ASSERT(ctx->Texture.CurrentUnit == 0);
+      GLuint tgt;
 
       /* restore texenv for unit[0] */
       _mesa_TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, save->EnvMode);
 
       /* restore texture objects for unit[0] only */
       for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++) {
-	 if (ctx->Texture.Unit[0].CurrentTex[tgt] != save->CurrentTexture[tgt]) {
+	 if (ctx->Texture.Unit.CurrentTex[tgt] != save->CurrentTexture[tgt]) {
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    _mesa_reference_texobj(&ctx->Texture.Unit[0].CurrentTex[tgt],
+	    _mesa_reference_texobj(&ctx->Texture.Unit.CurrentTex[tgt],
 				   save->CurrentTexture[tgt]);
 	 }
          _mesa_reference_texobj(&save->CurrentTexture[tgt], NULL);
       }
 
       /* Restore fixed function texture enables, texgen */
-      for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
-	 if (ctx->Texture.Unit[u].Enabled != save->TexEnabled[u]) {
+	 if (ctx->Texture.Unit.Enabled != save->TexEnabled) {
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    ctx->Texture.Unit[u].Enabled = save->TexEnabled[u];
+	    ctx->Texture.Unit.Enabled = save->TexEnabled;
 	 }
 
-	 if (ctx->Texture.Unit[u].TexGenEnabled != save->TexGenEnabled[u]) {
+	 if (ctx->Texture.Unit.TexGenEnabled != save->TexGenEnabled) {
 	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    ctx->Texture.Unit[u].TexGenEnabled = save->TexGenEnabled[u];
+	    ctx->Texture.Unit.TexGenEnabled = save->TexGenEnabled;
 	 }
-      }
-
-      /* restore current unit state */
-      _mesa_ActiveTextureARB(GL_TEXTURE0 + save->ActiveUnit);
-      _mesa_ClientActiveTextureARB(GL_TEXTURE0 + save->ClientActiveUnit);
    }
 
    if (state & MESA_META_TRANSFORM) {
-      GLuint activeTexture = ctx->Texture.CurrentUnit;
-      _mesa_ActiveTextureARB(GL_TEXTURE0);
       _mesa_MatrixMode(GL_TEXTURE);
       _mesa_LoadMatrixf(save->TextureMatrix);
-      _mesa_ActiveTextureARB(GL_TEXTURE0 + activeTexture);
 
       _mesa_MatrixMode(GL_MODELVIEW);
       _mesa_LoadMatrixf(save->ModelviewMatrix);
@@ -965,7 +866,6 @@ _mesa_meta_CopyPixels(struct gl_context *ctx, GLint srcX, GLint srcY,
     * we need to override:
     */
    _mesa_meta_begin(ctx, (MESA_META_RASTERIZATION |
-                          MESA_META_SHADER |
                           MESA_META_TEXTURE |
                           MESA_META_TRANSFORM |
                           MESA_META_CLIP |

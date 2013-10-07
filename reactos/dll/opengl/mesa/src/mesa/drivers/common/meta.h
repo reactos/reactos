@@ -44,7 +44,6 @@
 #define MESA_META_PIXEL_TRANSFER           0x40
 #define MESA_META_RASTERIZATION            0x80
 #define MESA_META_SCISSOR                 0x100
-#define MESA_META_SHADER                  0x200
 #define MESA_META_STENCIL_TEST            0x400
 #define MESA_META_TRANSFORM               0x800 /**< modelview/projection matrix state */
 #define MESA_META_TEXTURE                0x1000

@@ -201,8 +201,8 @@ static GLboolean run_lighting( struct gl_context *ctx,
    GLvector4f *input = ctx->_NeedEyeCoords ? VB->EyePtr : VB->AttribPtr[_TNL_ATTRIB_POS];
    GLuint idx;
 
-   if (!ctx->Light.Enabled || ctx->VertexProgram._Current)
-      return GL_TRUE;
+  if (!ctx->Light.Enabled)
+     return GL_TRUE;
 
    /* Make sure we can talk about position x,y and z:
     */
@@ -255,7 +255,7 @@ static void validate_lighting( struct gl_context *ctx,
 {
    light_func *tab;
 
-   if (!ctx->Light.Enabled || ctx->VertexProgram._Current)
+   if (!ctx->Light.Enabled)
       return;
 
    if (ctx->Light._NeedVertices) {

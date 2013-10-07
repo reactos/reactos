@@ -41,7 +41,6 @@
 #include "texobj.h"
 #include "texstate.h"
 #include "mtypes.h"
-#include "program/prog_instruction.h"
 
 
 
@@ -582,7 +581,7 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
 		     return;
 		  }
 		  /* Don't support GL_DEPTH_COMPONENT for cube maps */
-                  if (ctx->VersionMajor < 3 && !ctx->Extensions.EXT_gpu_shader4) {
+                  if (ctx->VersionMajor < 3) {
                      if (t->Image[face][i]->_BaseFormat == GL_DEPTH_COMPONENT) {
                         incomplete(t, "GL_DEPTH_COMPONENT only works with 1/2D tex");
                         return;
@@ -794,17 +793,14 @@ static void
 unbind_texobj_from_texunits(struct gl_context *ctx,
                             struct gl_texture_object *texObj)
 {
-   GLuint u, tex;
-
-   for (u = 0; u < Elements(ctx->Texture.Unit); u++) {
-      struct gl_texture_unit *unit = &ctx->Texture.Unit[u];
-      for (tex = 0; tex < NUM_TEXTURE_TARGETS; tex++) {
-         if (texObj == unit->CurrentTex[tex]) {
-            _mesa_reference_texobj(&unit->CurrentTex[tex],
-                                   ctx->Shared->DefaultTex[tex]);
-            ASSERT(unit->CurrentTex[tex]);
-            break;
-         }
+   GLuint tex;
+   struct gl_texture_unit *unit = &ctx->Texture.Unit;
+   for (tex = 0; tex < NUM_TEXTURE_TARGETS; tex++) {
+      if (texObj == unit->CurrentTex[tex]) {
+         _mesa_reference_texobj(&unit->CurrentTex[tex],
+                                ctx->Shared->DefaultTex[tex]);
+         ASSERT(unit->CurrentTex[tex]);
+         break;
       }
    }
 }
@@ -911,7 +907,7 @@ void GLAPIENTRY
 _mesa_BindTexture( GLenum target, GLuint texName )
 {
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
+   struct gl_texture_unit *texUnit = &ctx->Texture.Unit;
    struct gl_texture_object *newTexObj = NULL;
    GLint targetIndex;
    ASSERT_OUTSIDE_BEGIN_END(ctx);

@@ -286,17 +286,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
       }
    }
 
-   if (ctx->Extensions.ATI_envmap_bumpmap) {
-      switch (internalFormat) {
-         case GL_DUDV_ATI:
-         case GL_DU8DV8_ATI:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_DUDV8);
-	    break;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    if (ctx->Extensions.EXT_texture_integer) {
       switch (internalFormat) {
       case GL_ALPHA8UI_EXT:

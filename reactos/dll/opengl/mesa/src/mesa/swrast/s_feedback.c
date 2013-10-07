@@ -37,7 +37,7 @@ static void
 feedback_vertex(struct gl_context * ctx, const SWvertex * v, const SWvertex * pv)
 {
    GLfloat win[4];
-   const GLfloat *vtc = v->attrib[FRAG_ATTRIB_TEX0];
+   const GLfloat *vtc = v->attrib[FRAG_ATTRIB_TEX];
    const GLfloat *color = v->attrib[FRAG_ATTRIB_COL0];
 
    win[0] = v->attrib[FRAG_ATTRIB_WPOS][0];

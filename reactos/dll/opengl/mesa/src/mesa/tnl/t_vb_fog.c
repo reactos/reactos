@@ -151,7 +151,7 @@ run_fog_stage(struct gl_context *ctx, struct tnl_pipeline_stage *stage)
    if (!ctx->Fog.Enabled)
       return GL_TRUE;
 
-   if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT && !ctx->VertexProgram._Current) {
+   if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT) {
       GLuint i;
       GLfloat *coord;
       /* Fog is computed from vertex or fragment Z values */

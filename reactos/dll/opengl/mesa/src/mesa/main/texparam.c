@@ -43,7 +43,6 @@
 #include "main/texparam.h"
 #include "main/teximage.h"
 #include "main/texstate.h"
-#include "program/prog_instruction.h"
 
 
 /**
@@ -95,13 +94,7 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
 {
    struct gl_texture_unit *texUnit;
 
-   if (ctx->Texture.CurrentUnit >= ctx->Const.MaxCombinedTextureImageUnits) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "gl%sTexParameter(current unit)", get ? "Get" : "");
-      return NULL;
-   }
-
-   texUnit = _mesa_get_current_tex_unit(ctx);
+   texUnit = &ctx->Texture.Unit;
 
    switch (target) {
    case GL_TEXTURE_1D:
@@ -595,21 +588,12 @@ void GLAPIENTRY
 _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
                               GLenum pname, GLint *params )
 {
-   const struct gl_texture_unit *texUnit;
    struct gl_texture_object *texObj;
    const struct gl_texture_image *img = NULL;
    GLint maxLevels;
    gl_format texFormat;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (ctx->Texture.CurrentUnit >= ctx->Const.MaxCombinedTextureImageUnits) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glGetTexLevelParameteriv(current unit)");
-      return;
-   }
-
-   texUnit = _mesa_get_current_tex_unit(ctx);
 
    /* this will catch bad target values */
    maxLevels = _mesa_max_texture_levels(ctx, target);
@@ -624,7 +608,7 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
       return;
    }
 
-   texObj = _mesa_select_tex_object(ctx, texUnit, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    img = _mesa_select_tex_image(ctx, texObj, target, level);
    if (!img || img->TexFormat == MESA_FORMAT_NONE) {

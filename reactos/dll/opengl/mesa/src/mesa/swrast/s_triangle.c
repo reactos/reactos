@@ -36,7 +36,6 @@
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/state.h"
-#include "program/prog_instruction.h"
 
 #include "s_aatriangle.h"
 #include "s_context.h"
@@ -76,7 +75,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define NAME flat_rgba_triangle
 #define INTERP_Z 1
 #define SETUP_CODE				\
-   ASSERT(ctx->Texture._EnabledCoordUnits == 0);\
+   ASSERT(!ctx->Texture._EnabledCoord);\
    ASSERT(ctx->Light.ShadeModel==GL_FLAT);	\
    span.interpMask |= SPAN_RGBA;		\
    span.red = ChanToFixed(v2->color[0]);	\
@@ -102,7 +101,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define SETUP_CODE				\
    {						\
       /* texturing must be off */		\
-      ASSERT(ctx->Texture._EnabledCoordUnits == 0);	\
+      ASSERT(!ctx->Texture._EnabledCoord);	\
       ASSERT(ctx->Light.ShadeModel==GL_SMOOTH);	\
    }
 #define RENDER_SPAN( span )  _swrast_write_rgba_span(ctx, &span);
@@ -124,7 +123,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define SETUP_CODE							\
    struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;	\
    const struct gl_texture_object *obj = 				\
-      ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
+      ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg =				\
       obj->Image[0][obj->BaseLevel];					\
    const struct swrast_texture_image *swImg =				\
@@ -182,7 +181,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define SETUP_CODE							\
    struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;	\
    const struct gl_texture_object *obj = 				\
-      ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
+      ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg = 				\
        obj->Image[0][obj->BaseLevel]; 					\
    const struct swrast_texture_image *swImg =				\
@@ -269,7 +268,7 @@ affine_span(struct gl_context *ctx, SWspan *span,
             struct affine_info *info)
 {
    GLchan sample[4];  /* the filtered texture sample */
-   const GLuint texEnableSave = ctx->Texture._EnabledCoordUnits;
+   const GLboolean texEnableSave = ctx->Texture._EnabledCoord;
 
    /* Instead of defining a function for each mode, a test is done
     * between the outer and inner loops. This is to reduce code size
@@ -408,7 +407,7 @@ affine_span(struct gl_context *ctx, SWspan *span,
    GLchan *dest = span->array->rgba[0];
 
    /* Disable tex units so they're not re-applied in swrast_write_rgba_span */
-   ctx->Texture._EnabledCoordUnits = 0x0;
+   ctx->Texture._EnabledCoord = GL_FALSE;
 
    span->intTex[0] -= FIXED_HALF;
    span->intTex[1] -= FIXED_HALF;
@@ -515,7 +514,7 @@ affine_span(struct gl_context *ctx, SWspan *span,
    _swrast_write_rgba_span(ctx, span);
 
    /* re-enable texture units */
-   ctx->Texture._EnabledCoordUnits = texEnableSave;
+   ctx->Texture._EnabledCoord = texEnableSave;
 
 #undef SPAN_NEAREST
 #undef SPAN_LINEAR
@@ -536,9 +535,9 @@ affine_span(struct gl_context *ctx, SWspan *span,
 
 #define SETUP_CODE							\
    struct affine_info info;						\
-   struct gl_texture_unit *unit = ctx->Texture.Unit+0;			\
+   struct gl_texture_unit *unit = &ctx->Texture.Unit;			\
    const struct gl_texture_object *obj = 				\
-      ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
+      ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg = 				\
       obj->Image[0][obj->BaseLevel]; 					\
    const struct swrast_texture_image *swImg =				\
@@ -673,16 +672,16 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
    GLfloat tex_coord[3], tex_step[3];
    GLchan *dest = span->array->rgba[0];
 
-   const GLuint texEnableSave = ctx->Texture._EnabledCoordUnits;
-   ctx->Texture._EnabledCoordUnits = 0;
+   const GLboolean texEnableSave = ctx->Texture._EnabledCoord;
+   ctx->Texture._EnabledCoord = GL_FALSE;
 
-   tex_coord[0] = span->attrStart[FRAG_ATTRIB_TEX0][0]  * (info->smask + 1);
-   tex_step[0] = span->attrStepX[FRAG_ATTRIB_TEX0][0] * (info->smask + 1);
-   tex_coord[1] = span->attrStart[FRAG_ATTRIB_TEX0][1] * (info->tmask + 1);
-   tex_step[1] = span->attrStepX[FRAG_ATTRIB_TEX0][1] * (info->tmask + 1);
+   tex_coord[0] = span->attrStart[FRAG_ATTRIB_TEX][0]  * (info->smask + 1);
+   tex_step[0] = span->attrStepX[FRAG_ATTRIB_TEX][0] * (info->smask + 1);
+   tex_coord[1] = span->attrStart[FRAG_ATTRIB_TEX][1] * (info->tmask + 1);
+   tex_step[1] = span->attrStepX[FRAG_ATTRIB_TEX][1] * (info->tmask + 1);
    /* span->attrStart[FRAG_ATTRIB_TEX0][2] only if 3D-texturing, here only 2D */
-   tex_coord[2] = span->attrStart[FRAG_ATTRIB_TEX0][3];
-   tex_step[2] = span->attrStepX[FRAG_ATTRIB_TEX0][3];
+   tex_coord[2] = span->attrStart[FRAG_ATTRIB_TEX][3];
+   tex_step[2] = span->attrStepX[FRAG_ATTRIB_TEX][3];
 
    switch (info->filter) {
    case GL_NEAREST:
@@ -787,7 +786,7 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
 #undef SPAN_LINEAR
 
    /* restore state */
-   ctx->Texture._EnabledCoordUnits = texEnableSave;
+   ctx->Texture._EnabledCoord = texEnableSave;
 }
 
 
@@ -805,9 +804,9 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
 
 #define SETUP_CODE							\
    struct persp_info info;						\
-   const struct gl_texture_unit *unit = ctx->Texture.Unit+0;		\
+   const struct gl_texture_unit *unit = &ctx->Texture.Unit;		\
    const struct gl_texture_object *obj = 				\
-      ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
+      ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg = 				\
       obj->Image[0][obj->BaseLevel];			 		\
    const struct swrast_texture_image *swImg =				\
@@ -984,7 +983,7 @@ _swrast_choose_triangle( struct gl_context *ctx )
        * XXX should examine swrast->_ActiveAttribMask to determine what
        * needs to be interpolated.
        */
-      if (ctx->Texture._EnabledCoordUnits ||
+      if (ctx->Texture._EnabledCoord ||
           _mesa_need_secondary_color(ctx) ||
           swrast->_FogEnabled) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
@@ -993,7 +992,7 @@ _swrast_choose_triangle( struct gl_context *ctx )
          const struct swrast_texture_image *swImg;
          GLenum minFilter, magFilter, envMode;
          gl_format format;
-         texObj2D = ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];
+         texObj2D = ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];
 
          texImg = texObj2D ? texObj2D->Image[0][texObj2D->BaseLevel] : NULL;
          swImg = swrast_texture_image_const(texImg);
@@ -1001,12 +1000,12 @@ _swrast_choose_triangle( struct gl_context *ctx )
          format = texImg ? texImg->TexFormat : MESA_FORMAT_NONE;
          minFilter = texObj2D ? texObj2D->Sampler.MinFilter : GL_NONE;
          magFilter = texObj2D ? texObj2D->Sampler.MagFilter : GL_NONE;
-         envMode = ctx->Texture.Unit[0].EnvMode;
+         envMode = ctx->Texture.Unit.EnvMode;
 
          /* First see if we can use an optimized 2-D texture function */
-         if (ctx->Texture._EnabledCoordUnits == 0x1
-             && ctx->Texture._EnabledUnits == 0x1
-             && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
+         if (ctx->Texture._EnabledCoord
+             && ctx->Texture._Enabled
+             && ctx->Texture.Unit._ReallyEnabled == TEXTURE_2D_BIT
              && texObj2D->Sampler.WrapS == GL_REPEAT
              && texObj2D->Sampler.WrapT == GL_REPEAT
              && swImg->_IsPowerOfTwo
@@ -1016,8 +1015,8 @@ _swrast_choose_triangle( struct gl_context *ctx )
              && minFilter == magFilter
              && ctx->Light.Model.ColorControl == GL_SINGLE_COLOR
              && !swrast->_FogEnabled
-             && ctx->Texture.Unit[0].EnvMode != GL_COMBINE_EXT
-             && ctx->Texture.Unit[0].EnvMode != GL_COMBINE4_NV) {
+             && ctx->Texture.Unit.EnvMode != GL_COMBINE_EXT
+             && ctx->Texture.Unit.EnvMode != GL_COMBINE4_NV) {
 	    if (ctx->Hint.PerspectiveCorrection==GL_FASTEST) {
 	       if (minFilter == GL_NEAREST
 		   && format == MESA_FORMAT_RGB888

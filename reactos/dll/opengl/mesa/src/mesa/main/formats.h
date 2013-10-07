@@ -179,7 +179,6 @@ typedef enum
     * \name Signed fixed point texture formats.
     */
    /*@{*/
-   MESA_FORMAT_DUDV8,             /*                     DUDU DUDU DVDV DVDV */
    MESA_FORMAT_SIGNED_RGBA_16,    /* ... */
    MESA_FORMAT_RGBA_16,           /* ... */
    /*@}*/

@@ -87,7 +87,7 @@ typedef struct sw_span_arrays
    GLint   y[MAX_WIDTH];  /**< fragment Y coords */
    GLuint  z[MAX_WIDTH];  /**< fragment Z coords */
    GLuint  index[MAX_WIDTH];  /**< Color indexes */
-   GLfloat lambda[MAX_TEXTURE_COORD_UNITS][MAX_WIDTH]; /**< Texture LOD */
+   GLfloat lambda[MAX_WIDTH]; /**< Texture LOD */
    GLfloat coverage[MAX_WIDTH];  /**< Fragment coverage for AA/smoothing */
    /*@}*/
 } SWspanarrays;

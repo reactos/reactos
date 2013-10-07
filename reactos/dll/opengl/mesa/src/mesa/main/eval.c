@@ -122,25 +122,6 @@ get_1d_map( struct gl_context *ctx, GLenum target )
          return &ctx->EvalMap.Map1Texture3;
       case GL_MAP1_TEXTURE_COORD_4:
          return &ctx->EvalMap.Map1Texture4;
-      case GL_MAP1_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP1_VERTEX_ATTRIB15_4_NV:
-         if (!ctx->Extensions.NV_vertex_program)
-            return NULL;
-         return &ctx->EvalMap.Map1Attrib[target - GL_MAP1_VERTEX_ATTRIB0_4_NV];
       default:
          return NULL;
    }
@@ -172,25 +153,6 @@ get_2d_map( struct gl_context *ctx, GLenum target )
          return &ctx->EvalMap.Map2Texture3;
       case GL_MAP2_TEXTURE_COORD_4:
          return &ctx->EvalMap.Map2Texture4;
-      case GL_MAP2_VERTEX_ATTRIB0_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB1_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB2_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB3_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB4_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB5_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB6_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB7_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB8_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB9_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB10_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB11_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB12_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB13_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB14_4_NV:
-      case GL_MAP2_VERTEX_ATTRIB15_4_NV:
-         if (!ctx->Extensions.NV_vertex_program)
-            return NULL;
-         return &ctx->EvalMap.Map2Attrib[target - GL_MAP2_VERTEX_ATTRIB0_4_NV];
       default:
          return NULL;
    }
@@ -391,12 +353,6 @@ map1(GLenum target, GLfloat u1, GLfloat u2, GLint ustride,
       return;
    }
 
-   if (ctx->Texture.CurrentUnit != 0) {
-      /* See OpenGL 1.2.1 spec, section F.2.13 */
-      _mesa_error( ctx, GL_INVALID_OPERATION, "glMap2(ACTIVE_TEXTURE != 0)" );
-      return;
-   }
-
    map = get_1d_map(ctx, target);
    if (!map) {
       _mesa_error( ctx, GL_INVALID_ENUM, "glMap1(target)" );
@@ -482,12 +438,6 @@ map2( GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
    }
    if (vstride < k) {
       _mesa_error( ctx, GL_INVALID_VALUE, "glMap2(vstride)" );
-      return;
-   }
-
-   if (ctx->Texture.CurrentUnit != 0) {
-      /* See OpenGL 1.2.1 spec, section F.2.13 */
-      _mesa_error( ctx, GL_INVALID_OPERATION, "glMap2(ACTIVE_TEXTURE != 0)" );
       return;
    }
 
@@ -972,7 +922,6 @@ init_2d_map( struct gl_2d_map *map, int n, const float *initial )
 
 void _mesa_init_eval( struct gl_context *ctx )
 {
-   int i;
 
    /* Evaluators group */
    ctx->Eval.Map1Color4 = GL_FALSE;
@@ -984,7 +933,6 @@ void _mesa_init_eval( struct gl_context *ctx )
    ctx->Eval.Map1TextureCoord4 = GL_FALSE;
    ctx->Eval.Map1Vertex3 = GL_FALSE;
    ctx->Eval.Map1Vertex4 = GL_FALSE;
-   memset(ctx->Eval.Map1Attrib, 0, sizeof(ctx->Eval.Map1Attrib));
    ctx->Eval.Map2Color4 = GL_FALSE;
    ctx->Eval.Map2Index = GL_FALSE;
    ctx->Eval.Map2Normal = GL_FALSE;
@@ -994,7 +942,6 @@ void _mesa_init_eval( struct gl_context *ctx )
    ctx->Eval.Map2TextureCoord4 = GL_FALSE;
    ctx->Eval.Map2Vertex3 = GL_FALSE;
    ctx->Eval.Map2Vertex4 = GL_FALSE;
-   memset(ctx->Eval.Map2Attrib, 0, sizeof(ctx->Eval.Map2Attrib));
    ctx->Eval.AutoNormal = GL_FALSE;
    ctx->Eval.MapGrid1un = 1;
    ctx->Eval.MapGrid1u1 = 0.0;
@@ -1013,7 +960,6 @@ void _mesa_init_eval( struct gl_context *ctx )
       static GLfloat index[1] = { 1.0 };
       static GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
       static GLfloat texcoord[4] = { 0.0, 0.0, 0.0, 1.0 };
-      static GLfloat attrib[4] = { 0.0, 0.0, 0.0, 1.0 };
 
       init_1d_map( &ctx->EvalMap.Map1Vertex3, 3, vertex );
       init_1d_map( &ctx->EvalMap.Map1Vertex4, 4, vertex );
@@ -1024,8 +970,6 @@ void _mesa_init_eval( struct gl_context *ctx )
       init_1d_map( &ctx->EvalMap.Map1Texture2, 2, texcoord );
       init_1d_map( &ctx->EvalMap.Map1Texture3, 3, texcoord );
       init_1d_map( &ctx->EvalMap.Map1Texture4, 4, texcoord );
-      for (i = 0; i < 16; i++)
-         init_1d_map( ctx->EvalMap.Map1Attrib + i, 4, attrib );
 
       init_2d_map( &ctx->EvalMap.Map2Vertex3, 3, vertex );
       init_2d_map( &ctx->EvalMap.Map2Vertex4, 4, vertex );
@@ -1036,16 +980,12 @@ void _mesa_init_eval( struct gl_context *ctx )
       init_2d_map( &ctx->EvalMap.Map2Texture2, 2, texcoord );
       init_2d_map( &ctx->EvalMap.Map2Texture3, 3, texcoord );
       init_2d_map( &ctx->EvalMap.Map2Texture4, 4, texcoord );
-      for (i = 0; i < 16; i++)
-         init_2d_map( ctx->EvalMap.Map2Attrib + i, 4, attrib );
    }
 }
 
 
 void _mesa_free_eval_data( struct gl_context *ctx )
 {
-   int i;
-
    /* Free evaluator data */
    if (ctx->EvalMap.Map1Vertex3.Points)
       FREE( ctx->EvalMap.Map1Vertex3.Points );
@@ -1065,8 +1005,6 @@ void _mesa_free_eval_data( struct gl_context *ctx )
       FREE( ctx->EvalMap.Map1Texture3.Points );
    if (ctx->EvalMap.Map1Texture4.Points)
       FREE( ctx->EvalMap.Map1Texture4.Points );
-   for (i = 0; i < 16; i++)
-      FREE((ctx->EvalMap.Map1Attrib[i].Points));
 
    if (ctx->EvalMap.Map2Vertex3.Points)
       FREE( ctx->EvalMap.Map2Vertex3.Points );
@@ -1086,6 +1024,4 @@ void _mesa_free_eval_data( struct gl_context *ctx )
       FREE( ctx->EvalMap.Map2Texture3.Points );
    if (ctx->EvalMap.Map2Texture4.Points)
       FREE( ctx->EvalMap.Map2Texture4.Points );
-   for (i = 0; i < 16; i++)
-      FREE((ctx->EvalMap.Map2Attrib[i].Points));
 }

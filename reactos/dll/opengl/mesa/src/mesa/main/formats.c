@@ -43,7 +43,7 @@ struct gl_format_info
    /**
     * Base format is one of GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_ALPHA,
     * GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_INTENSITY, GL_YCBCR_MESA,
-    * GL_DEPTH_COMPONENT, GL_STENCIL_INDEX, GL_DEPTH_STENCIL, GL_DUDV_ATI.
+    * GL_DEPTH_COMPONENT, GL_STENCIL_INDEX, GL_DEPTH_STENCIL.
     */
    GLenum BaseFormat;
 
@@ -849,15 +849,6 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
 
 
    {
-      MESA_FORMAT_DUDV8,
-      "MESA_FORMAT_DUDV8",
-      GL_DUDV_ATI,
-      GL_SIGNED_NORMALIZED,
-      0, 0, 0, 0,
-      0, 0, 0, 0, 0,
-      1, 1, 2
-   },
-   {
       MESA_FORMAT_SIGNED_RGBA_16,
       "MESA_FORMAT_SIGNED_RGBA_16",
       GL_RGBA,
@@ -1359,11 +1350,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *comps = 1;
       return;
 
-   case MESA_FORMAT_DUDV8:
-      *datatype = GL_BYTE;
-      *comps = 2;
-      return;
-
    case MESA_FORMAT_RGBA_16:
       *datatype = GL_UNSIGNED_SHORT;
       *comps = 4;
@@ -1752,7 +1738,6 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
    case MESA_FORMAT_RGBA_UINT32:
       return GL_FALSE;
 
-   case MESA_FORMAT_DUDV8:
    case MESA_FORMAT_SIGNED_RGBA_16:
    case MESA_FORMAT_RGBA_16:
       /* FINISHME: SNORM */

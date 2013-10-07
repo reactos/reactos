@@ -110,7 +110,6 @@
 #include "rastpos.h"
 #include "scissor.h"
 #include "shared.h"
-#include "shaderobj.h"
 #include "simple_list.h"
 #include "state.h"
 #include "stencil.h"
@@ -120,8 +119,6 @@
 #include "version.h"
 #include "viewport.h"
 #include "vtxfmt.h"
-#include "program/program.h"
-#include "program/prog_print.h"
 #if _HAVE_FULL_GL
 #include "math/m_matrix.h"
 #endif
@@ -131,7 +128,6 @@
 #include "sparc/sparc.h"
 #endif
 
-#include "glsl_parser_extras.h"
 #include <stdbool.h>
 
 
@@ -333,16 +329,12 @@ dummy_enum_func(void)
    gl_buffer_index bi = BUFFER_FRONT_LEFT;
    gl_face_index fi = FACE_POS_X;
    gl_frag_attrib fa = FRAG_ATTRIB_WPOS;
-   gl_frag_result fr = FRAG_RESULT_DEPTH;
    gl_vert_attrib va = VERT_ATTRIB_POS;
-   gl_vert_result vr = VERT_RESULT_HPOS;
 
    (void) bi;
    (void) fi;
    (void) fa;
-   (void) fr;
    (void) va;
-   (void) vr;
 }
 
 
@@ -410,11 +402,6 @@ one_time_init( struct gl_context *ctx )
 
    _glthread_UNLOCK_MUTEX(OneTimeLock);
 
-   /* Hopefully atexit() is widely available.  If not, we may need some
-    * #ifdef tests here.
-    */
-   atexit(_mesa_destroy_shader_compiler);
-
    dummy_enum_func();
 }
 
@@ -441,54 +428,6 @@ _mesa_init_current(struct gl_context *ctx)
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_EDGEFLAG], 1.0, 0.0, 0.0, 1.0 );
 }
 
-
-/**
- * Init vertex/fragment/geometry program limits.
- * Important: drivers should override these with actual limits.
- */
-static void
-init_program_limits(GLenum type, struct gl_program_constants *prog)
-{
-   prog->MaxInstructions = MAX_PROGRAM_INSTRUCTIONS;
-   prog->MaxAluInstructions = MAX_PROGRAM_INSTRUCTIONS;
-   prog->MaxTexInstructions = MAX_PROGRAM_INSTRUCTIONS;
-   prog->MaxTexIndirections = MAX_PROGRAM_INSTRUCTIONS;
-   prog->MaxTemps = MAX_PROGRAM_TEMPS;
-   prog->MaxEnvParams = MAX_PROGRAM_ENV_PARAMS;
-   prog->MaxLocalParams = MAX_PROGRAM_LOCAL_PARAMS;
-   prog->MaxAddressOffset = MAX_PROGRAM_LOCAL_PARAMS;
-
-   switch (type) {
-   case GL_VERTEX_PROGRAM_ARB:
-      prog->MaxParameters = MAX_VERTEX_PROGRAM_PARAMS;
-      prog->MaxAttribs = MAX_NV_VERTEX_PROGRAM_INPUTS;
-      prog->MaxAddressRegs = MAX_VERTEX_PROGRAM_ADDRESS_REGS;
-      prog->MaxUniformComponents = 4 * MAX_UNIFORMS;
-      break;
-   case GL_FRAGMENT_PROGRAM_ARB:
-      prog->MaxParameters = MAX_NV_FRAGMENT_PROGRAM_PARAMS;
-      prog->MaxAttribs = MAX_NV_FRAGMENT_PROGRAM_INPUTS;
-      prog->MaxAddressRegs = MAX_FRAGMENT_PROGRAM_ADDRESS_REGS;
-      prog->MaxUniformComponents = 4 * MAX_UNIFORMS;
-      break;
-   default:
-      assert(0 && "Bad program type in init_program_limits()");
-   }
-
-   /* Set the native limits to zero.  This implies that there is no native
-    * support for shaders.  Let the drivers fill in the actual values.
-    */
-   prog->MaxNativeInstructions = 0;
-   prog->MaxNativeAluInstructions = 0;
-   prog->MaxNativeTexInstructions = 0;
-   prog->MaxNativeTexIndirections = 0;
-   prog->MaxNativeAttribs = 0;
-   prog->MaxNativeTemps = 0;
-   prog->MaxNativeAddressRegs = 0;
-   prog->MaxNativeParameters = 0;
-}
-
-
 /**
  * Initialize fields of gl_constants (aka ctx->Const.*).
  * Use defaults from config.h.  The device drivers will often override
@@ -504,10 +443,6 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxTextureLevels = MAX_TEXTURE_LEVELS;
    ctx->Const.Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    ctx->Const.MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
-   ctx->Const.MaxTextureCoordUnits = MAX_TEXTURE_COORD_UNITS;
-   ctx->Const.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
-   ctx->Const.MaxTextureUnits = MIN2(ctx->Const.MaxTextureCoordUnits,
-                                     ctx->Const.MaxTextureImageUnits);
    ctx->Const.MaxTextureMaxAnisotropy = MAX_TEXTURE_MAX_ANISOTROPY;
    ctx->Const.MaxArrayLockSize = MAX_ARRAY_LOCK_SIZE;
    ctx->Const.SubPixelBits = SUB_PIXEL_BITS;
@@ -528,36 +463,12 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxSpotExponent = 128.0;
    ctx->Const.MaxViewportWidth = MAX_WIDTH;
    ctx->Const.MaxViewportHeight = MAX_HEIGHT;
-#if FEATURE_ARB_vertex_program
-   init_program_limits(GL_VERTEX_PROGRAM_ARB, &ctx->Const.VertexProgram);
-#endif
-#if FEATURE_ARB_fragment_program
-   init_program_limits(GL_FRAGMENT_PROGRAM_ARB, &ctx->Const.FragmentProgram);
-#endif
-   ctx->Const.MaxProgramMatrices = MAX_PROGRAM_MATRICES;
-   ctx->Const.MaxProgramMatrixStackDepth = MAX_PROGRAM_MATRIX_STACK_DEPTH;
 
    /* CheckArrayBounds is overriden by drivers/x11 for X server */
    ctx->Const.CheckArrayBounds = GL_FALSE;
 
-#if FEATURE_ARB_vertex_shader
-   ctx->Const.MaxVertexTextureImageUnits = MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-   ctx->Const.MaxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
-   ctx->Const.MaxVarying = MAX_VARYING;
-#endif
-
-   ctx->Const.GLSLVersion = 120;
-   _mesa_override_glsl_version(ctx);
-
-   /* GL_ATI_envmap_bumpmap */
-   ctx->Const.SupportedBumpUnits = SUPPORTED_ATI_BUMP_UNITS;
-
    /* GL 3.2: hard-coded for now: */
    ctx->Const.ProfileMask = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
-
-   /** GL_EXT_gpu_shader4 */
-   ctx->Const.MinProgramTexelOffset = -8;
-   ctx->Const.MaxProgramTexelOffset = 7;
 
    /* GL_ARB_robustness */
    ctx->Const.ResetStrategy = GL_NO_RESET_NOTIFICATION_ARB;
@@ -571,40 +482,6 @@ _mesa_init_constants(struct gl_context *ctx)
 static void
 check_context_limits(struct gl_context *ctx)
 {
-   /* check that we don't exceed the size of various bitfields */
-   assert(VERT_RESULT_MAX <=
-	  (8 * sizeof(ctx->VertexProgram._Current->Base.OutputsWritten)));
-   assert(FRAG_ATTRIB_MAX <=
-	  (8 * sizeof(ctx->FragmentProgram._Current->Base.InputsRead)));
-
-   assert(MAX_COMBINED_TEXTURE_IMAGE_UNITS <= 8 * sizeof(GLbitfield));
-
-   /* shader-related checks */
-   assert(ctx->Const.FragmentProgram.MaxLocalParams <= MAX_PROGRAM_LOCAL_PARAMS);
-   assert(ctx->Const.VertexProgram.MaxLocalParams <= MAX_PROGRAM_LOCAL_PARAMS);
-
-   assert(MAX_NV_FRAGMENT_PROGRAM_TEMPS <= MAX_PROGRAM_TEMPS);
-   assert(MAX_NV_VERTEX_PROGRAM_TEMPS <= MAX_PROGRAM_TEMPS);
-   assert(MAX_NV_VERTEX_PROGRAM_INPUTS <= VERT_ATTRIB_MAX);
-   assert(MAX_NV_VERTEX_PROGRAM_OUTPUTS <= VERT_RESULT_MAX);
-
-   /* Texture unit checks */
-   assert(ctx->Const.MaxTextureImageUnits > 0);
-   assert(ctx->Const.MaxTextureImageUnits <= MAX_TEXTURE_IMAGE_UNITS);
-   assert(ctx->Const.MaxTextureCoordUnits > 0);
-   assert(ctx->Const.MaxTextureCoordUnits <= MAX_TEXTURE_COORD_UNITS);
-   assert(ctx->Const.MaxTextureUnits > 0);
-   assert(ctx->Const.MaxTextureUnits <= MAX_TEXTURE_IMAGE_UNITS);
-   assert(ctx->Const.MaxTextureUnits <= MAX_TEXTURE_COORD_UNITS);
-   assert(ctx->Const.MaxTextureUnits == MIN2(ctx->Const.MaxTextureImageUnits,
-                                             ctx->Const.MaxTextureCoordUnits));
-   assert(ctx->Const.MaxCombinedTextureImageUnits > 0);
-   assert(ctx->Const.MaxCombinedTextureImageUnits <= MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-   assert(ctx->Const.MaxTextureCoordUnits <= MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-   /* number of coord units cannot be greater than number of image units */
-   assert(ctx->Const.MaxTextureCoordUnits <= ctx->Const.MaxTextureImageUnits);
-
-
    /* Texture size checks */
    assert(ctx->Const.MaxTextureLevels <= MAX_TEXTURE_LEVELS);
    assert(ctx->Const.Max3DTextureLevels <= MAX_3D_TEXTURE_LEVELS);
@@ -666,10 +543,8 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_pixelstore( ctx );
    _mesa_init_point( ctx );
    _mesa_init_polygon( ctx );
-   _mesa_init_program( ctx );
    _mesa_init_rastpos( ctx );
    _mesa_init_scissor( ctx );
-   _mesa_init_shader_state( ctx );
    _mesa_init_stencil( ctx );
    _mesa_init_transform( ctx );
    _mesa_init_varray( ctx );
@@ -702,7 +577,6 @@ update_default_objects(struct gl_context *ctx)
 {
    assert(ctx);
 
-   _mesa_update_default_objects_program(ctx);
    _mesa_update_default_objects_texture(ctx);
    _mesa_update_default_objects_buffer_objects(ctx);
 
@@ -922,12 +796,6 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_reference_framebuffer(&ctx->DrawBuffer, NULL);
    _mesa_reference_framebuffer(&ctx->ReadBuffer, NULL);
 
-   _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current, NULL);
-   _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, NULL);
-
-   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current, NULL);
-   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
-
    _mesa_free_attrib_data(ctx);
    _mesa_free_buffer_objects(ctx);
    _mesa_free_lighting_data( ctx );
@@ -935,8 +803,6 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_free_texture_data( ctx );
    _mesa_free_matrix_data( ctx );
    _mesa_free_viewport_data( ctx );
-   _mesa_free_program_data(ctx);
-   _mesa_free_shader_state(ctx);
    _mesa_free_varray_data(ctx);
 
    _mesa_delete_array_object(ctx, ctx->Array.DefaultArrayObj);
@@ -1511,113 +1377,10 @@ _mesa_set_mvp_with_dp4( struct gl_context *ctx,
 GLboolean
 _mesa_valid_to_render(struct gl_context *ctx, const char *where)
 {
-   bool vert_from_glsl_shader = false;
-   bool frag_from_glsl_shader = false;
-
    /* This depends on having up to date derived state (shaders) */
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   if (ctx->Shader.CurrentVertexProgram) {
-      vert_from_glsl_shader = true;
-
-      if (!ctx->Shader.CurrentVertexProgram->LinkStatus) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "%s(shader not linked)", where);
-         return GL_FALSE;
-      }
-#if 0 /* not normally enabled */
-      {
-         char errMsg[100];
-         if (!_mesa_validate_shader_program(ctx,
-					    ctx->Shader.CurrentVertexProgram,
-                                            errMsg)) {
-            _mesa_warning(ctx, "Shader program %u is invalid: %s",
-                          ctx->Shader.CurrentVertexProgram->Name, errMsg);
-         }
-      }
-#endif
-   }
-
-   if (ctx->Shader.CurrentFragmentProgram) {
-      frag_from_glsl_shader = true;
-
-      if (!ctx->Shader.CurrentFragmentProgram->LinkStatus) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "%s(shader not linked)", where);
-         return GL_FALSE;
-      }
-#if 0 /* not normally enabled */
-      {
-         char errMsg[100];
-         if (!_mesa_validate_shader_program(ctx,
-					    ctx->Shader.CurrentFragmentProgram,
-                                            errMsg)) {
-            _mesa_warning(ctx, "Shader program %u is invalid: %s",
-                          ctx->Shader.CurrentFragmentProgram->Name, errMsg);
-         }
-      }
-#endif
-   }
-
-   /* Any shader stages that are not supplied by the GLSL shader and have
-    * assembly shaders enabled must now be validated.
-    */
-   if (!vert_from_glsl_shader
-       && ctx->VertexProgram.Enabled && !ctx->VertexProgram._Enabled) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-		  "%s(vertex program not valid)", where);
-      return GL_FALSE;
-   }
-
-   if (!frag_from_glsl_shader) {
-      if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
-	 _mesa_error(ctx, GL_INVALID_OPERATION,
-		     "%s(fragment program not valid)", where);
-	 return GL_FALSE;
-      }
-
-      /* If drawing to integer-valued color buffers, there must be an
-       * active fragment shader (GL_EXT_texture_integer).
-       */
-      if (ctx->DrawBuffer && ctx->DrawBuffer->_IntegerColor) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "%s(integer format but no fragment shader)", where);
-         return GL_FALSE;
-      }
-   }
-
-#ifdef DEBUG
-   if (ctx->Shader.Flags & GLSL_LOG) {
-      struct gl_shader_program *shProg[MESA_SHADER_TYPES];
-      gl_shader_type i;
-
-      shProg[MESA_SHADER_VERTEX] = ctx->Shader.CurrentVertexProgram;
-      shProg[MESA_SHADER_FRAGMENT] = ctx->Shader.CurrentFragmentProgram;
-
-      for (i = 0; i < MESA_SHADER_TYPES; i++) {
-	 if (shProg[i] == NULL || shProg[i]->_Used
-	     || shProg[i]->_LinkedShaders[i] == NULL)
-	    continue;
-
-	 /* This is the first time this shader is being used.
-	  * Append shader's constants/uniforms to log file.
-	  *
-	  * Only log data for the program target that matches the shader
-	  * target.  It's possible to have a program bound to the vertex
-	  * shader target that also supplied a fragment shader.  If that
-	  * program isn't also bound to the fragment shader target we don't
-	  * want to log its fragment data.
-	  */
-	 _mesa_append_uniforms_to_file(shProg[i]->_LinkedShaders[i]);
-      }
-
-      for (i = 0; i < MESA_SHADER_TYPES; i++) {
-	 if (shProg[i] != NULL)
-	    shProg[i]->_Used = GL_TRUE;
-      }
-   }
-#endif
 
    return GL_TRUE;
 }

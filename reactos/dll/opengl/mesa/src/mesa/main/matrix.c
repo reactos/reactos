@@ -161,62 +161,7 @@ _mesa_MatrixMode( GLenum mode )
       ctx->CurrentStack = &ctx->ProjectionMatrixStack;
       break;
    case GL_TEXTURE:
-      /* This error check is disabled because if we're called from
-       * glPopAttrib() when the active texture unit is >= MaxTextureCoordUnits
-       * we'll generate an unexpected error.
-       * From the GL_ARB_vertex_shader spec it sounds like we should instead
-       * do error checking in other places when we actually try to access
-       * texture matrices beyond MaxTextureCoordUnits.
-       */
-#if 0
-      if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glMatrixMode(invalid tex unit %d)",
-                     ctx->Texture.CurrentUnit);
-         return;
-      }
-#endif
-      ASSERT(ctx->Texture.CurrentUnit < Elements(ctx->TextureMatrixStack));
-      ctx->CurrentStack = &ctx->TextureMatrixStack[ctx->Texture.CurrentUnit];
-      break;
-   case GL_MATRIX0_NV:
-   case GL_MATRIX1_NV:
-   case GL_MATRIX2_NV:
-   case GL_MATRIX3_NV:
-   case GL_MATRIX4_NV:
-   case GL_MATRIX5_NV:
-   case GL_MATRIX6_NV:
-   case GL_MATRIX7_NV:
-      if (ctx->Extensions.NV_vertex_program) {
-         ctx->CurrentStack = &ctx->ProgramMatrixStack[mode - GL_MATRIX0_NV];
-      }
-      else {
-         _mesa_error( ctx,  GL_INVALID_ENUM, "glMatrixMode(mode)" );
-         return;
-      }
-      break;
-   case GL_MATRIX0_ARB:
-   case GL_MATRIX1_ARB:
-   case GL_MATRIX2_ARB:
-   case GL_MATRIX3_ARB:
-   case GL_MATRIX4_ARB:
-   case GL_MATRIX5_ARB:
-   case GL_MATRIX6_ARB:
-   case GL_MATRIX7_ARB:
-      if (ctx->Extensions.ARB_vertex_program ||
-          ctx->Extensions.ARB_fragment_program) {
-         const GLuint m = mode - GL_MATRIX0_ARB;
-         if (m > ctx->Const.MaxProgramMatrices) {
-            _mesa_error(ctx, GL_INVALID_ENUM,
-                        "glMatrixMode(GL_MATRIX%d_ARB)", m);
-            return;
-         }
-         ctx->CurrentStack = &ctx->ProgramMatrixStack[m];
-      }
-      else {
-         _mesa_error( ctx,  GL_INVALID_ENUM, "glMatrixMode(mode)" );
-         return;
-      }
+      ctx->CurrentStack = &ctx->TextureMatrixStack;
       break;
    default:
       _mesa_error( ctx,  GL_INVALID_ENUM, "glMatrixMode(mode)" );
@@ -250,8 +195,7 @@ _mesa_PushMatrix( void )
    if (stack->Depth + 1 >= stack->MaxDepth) {
       if (ctx->Transform.MatrixMode == GL_TEXTURE) {
          _mesa_error(ctx,  GL_STACK_OVERFLOW,
-                     "glPushMatrix(mode=GL_TEXTURE, unit=%d)",
-                      ctx->Texture.CurrentUnit);
+                     "glPushMatrix(mode=GL_TEXTURE)");
       }
       else {
          _mesa_error(ctx,  GL_STACK_OVERFLOW, "glPushMatrix(mode=%s)",
@@ -290,8 +234,7 @@ _mesa_PopMatrix( void )
    if (stack->Depth == 0) {
       if (ctx->Transform.MatrixMode == GL_TEXTURE) {
          _mesa_error(ctx,  GL_STACK_UNDERFLOW,
-                     "glPopMatrix(mode=GL_TEXTURE, unit=%d)",
-                      ctx->Texture.CurrentUnit);
+                     "glPopMatrix(mode=GL_TEXTURE)");
       }
       else {
          _mesa_error(ctx,  GL_STACK_UNDERFLOW, "glPopMatrix(mode=%s)",
@@ -716,19 +659,13 @@ free_matrix_stack( struct gl_matrix_stack *stack )
  */
 void _mesa_init_matrix( struct gl_context * ctx )
 {
-   GLint i;
-
    /* Initialize matrix stacks */
    init_matrix_stack(&ctx->ModelviewMatrixStack, MAX_MODELVIEW_STACK_DEPTH,
                      _NEW_MODELVIEW);
    init_matrix_stack(&ctx->ProjectionMatrixStack, MAX_PROJECTION_STACK_DEPTH,
                      _NEW_PROJECTION);
-   for (i = 0; i < Elements(ctx->TextureMatrixStack); i++)
-      init_matrix_stack(&ctx->TextureMatrixStack[i], MAX_TEXTURE_STACK_DEPTH,
-                        _NEW_TEXTURE_MATRIX);
-   for (i = 0; i < Elements(ctx->ProgramMatrixStack); i++)
-      init_matrix_stack(&ctx->ProgramMatrixStack[i], 
-		        MAX_PROGRAM_MATRIX_STACK_DEPTH, _NEW_TRACK_MATRIX);
+   init_matrix_stack(&ctx->TextureMatrixStack, MAX_TEXTURE_STACK_DEPTH,
+                     _NEW_TEXTURE_MATRIX);
    ctx->CurrentStack = &ctx->ModelviewMatrixStack;
 
    /* Init combined Modelview*Projection matrix */
@@ -746,14 +683,9 @@ void _mesa_init_matrix( struct gl_context * ctx )
  */
 void _mesa_free_matrix_data( struct gl_context *ctx )
 {
-   GLint i;
-
    free_matrix_stack(&ctx->ModelviewMatrixStack);
    free_matrix_stack(&ctx->ProjectionMatrixStack);
-   for (i = 0; i < Elements(ctx->TextureMatrixStack); i++)
-      free_matrix_stack(&ctx->TextureMatrixStack[i]);
-   for (i = 0; i < Elements(ctx->ProgramMatrixStack); i++)
-      free_matrix_stack(&ctx->ProgramMatrixStack[i]);
+   free_matrix_stack(&ctx->TextureMatrixStack);
    /* combined Modelview*Projection matrix */
    _math_matrix_dtr( &ctx->_ModelProjectMatrix );
 

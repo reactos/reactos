@@ -51,6 +51,7 @@
 #include "main/mtypes.h"
 
 #include "vbo.h"
+#include "vbo_attrib.h"
 
 
 #define REBASE(TYPE) 						\
@@ -72,29 +73,6 @@ static void *rebase_##TYPE( const void *ptr,			\
 REBASE(GLuint)
 REBASE(GLushort)
 REBASE(GLubyte)
-
-GLboolean vbo_all_varyings_in_vbos( const struct gl_client_array *arrays[] )
-{
-   GLuint i;
-   
-   for (i = 0; i < VERT_ATTRIB_MAX; i++)
-      if (arrays[i]->StrideB &&
-	  arrays[i]->BufferObj->Name == 0)
-	 return GL_FALSE;
-
-   return GL_TRUE;
-}
-
-GLboolean vbo_any_varyings_in_vbos( const struct gl_client_array *arrays[] )
-{
-   GLuint i;
-
-   for (i = 0; i < VERT_ATTRIB_MAX; i++)
-      if (arrays[i]->BufferObj->Name != 0)
-	 return GL_TRUE;
-
-   return GL_FALSE;
-}
 
 /* Adjust primitives, indices and vertex definitions so that min_index
  * becomes zero. There are lots of reasons for wanting to do this, eg:
@@ -124,8 +102,8 @@ void vbo_rebase_prims( struct gl_context *ctx,
 		       GLuint max_index,
 		       vbo_draw_func draw )
 {
-   struct gl_client_array tmp_arrays[VERT_ATTRIB_MAX];
-   const struct gl_client_array *tmp_array_pointers[VERT_ATTRIB_MAX];
+   struct gl_client_array tmp_arrays[VBO_ATTRIB_MAX];
+   const struct gl_client_array *tmp_array_pointers[VBO_ATTRIB_MAX];
 
    struct _mesa_index_buffer tmp_ib;
    struct _mesa_prim *tmp_prims = NULL;
@@ -203,7 +181,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
     * For drivers with hardware tnl, you only want to do this if you
     * are forced to, eg non-VBO indexed rendering with start != 0.
     */
-   for (i = 0; i < VERT_ATTRIB_MAX; i++) {
+   for (i = 0; i < VBO_ATTRIB_MAX; i++) {
       tmp_arrays[i] = *arrays[i];
       tmp_arrays[i].Ptr += min_index * tmp_arrays[i].StrideB;
       tmp_array_pointers[i] = &tmp_arrays[i];

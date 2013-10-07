@@ -281,7 +281,7 @@ tex_storage_error_check(struct gl_context *ctx, GLuint dims, GLenum target,
    }
 
    /* non-default texture object check */
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
    if (!texObj || (texObj->Name == 0 && !isProxy)) {
       if (!isProxy) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -315,7 +315,7 @@ texstorage(GLuint dims, GLenum target, GLsizei levels, GLenum internalformat,
 
    GET_CURRENT_CONTEXT(ctx);
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    error = tex_storage_error_check(ctx, dims, target, levels,
                                    internalformat, width, height, depth);

@@ -125,9 +125,6 @@ static GLboolean run_vertex_stage( struct gl_context *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
 
-   if (ctx->VertexProgram._Current) 
-      return GL_TRUE;
-
    if (ctx->_NeedEyeCoords) {
       /* Separate modelview transformation:
        * Use combined ModelProject to avoid some depth artifacts

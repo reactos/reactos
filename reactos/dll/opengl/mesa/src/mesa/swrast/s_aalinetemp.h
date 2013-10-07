@@ -66,15 +66,14 @@ NAME(plot)(struct gl_context *ctx, struct LineInfo *line, int ix, int iy)
 #if defined(DO_ATTRIBS)
    ATTRIB_LOOP_BEGIN
       GLfloat (*attribArray)[4] = line->span.array->attribs[attr];
-      if (attr >= FRAG_ATTRIB_TEX0 && attr < FRAG_ATTRIB_VAR0) {
+      if (attr == FRAG_ATTRIB_TEX) {
          /* texcoord w/ divide by Q */
-         const GLuint unit = attr - FRAG_ATTRIB_TEX0;
          const GLfloat invQ = solve_plane_recip(fx, fy, line->attrPlane[attr][3]);
          GLuint c;
          for (c = 0; c < 3; c++) {
             attribArray[i][c] = solve_plane(fx, fy, line->attrPlane[attr][c]) * invQ;
          }
-         line->span.array->lambda[unit][i]
+         line->span.array->lambda[i]
             = compute_lambda(line->attrPlane[attr][0],
                              line->attrPlane[attr][1], invQ,
                              line->texWidth[attr], line->texHeight[attr]);
@@ -175,9 +174,8 @@ NAME(line)(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
             }
          }
          line.span.arrayAttribs |= BITFIELD64_BIT(attr);
-         if (attr >= FRAG_ATTRIB_TEX0 && attr < FRAG_ATTRIB_VAR0) {
-            const GLuint u = attr - FRAG_ATTRIB_TEX0;
-            const struct gl_texture_object *obj = ctx->Texture.Unit[u]._Current;
+         if (attr == FRAG_ATTRIB_TEX) {
+            const struct gl_texture_object *obj = ctx->Texture.Unit._Current;
             const struct gl_texture_image *texImage = obj->Image[0][obj->BaseLevel];
             line.texWidth[attr]  = (GLfloat) texImage->Width;
             line.texHeight[attr] = (GLfloat) texImage->Height;

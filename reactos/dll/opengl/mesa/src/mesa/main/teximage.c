@@ -156,16 +156,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
       }
    }
 
-   if (ctx->Extensions.ATI_envmap_bumpmap) {
-      switch (internalFormat) {
-         case GL_DUDV_ATI:
-         case GL_DU8DV8_ATI:
-            return GL_DUDV_ATI;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    if (ctx->VersionMajor >= 3 ||
        ctx->Extensions.EXT_texture_integer) {
       switch (internalFormat) {
@@ -379,49 +369,25 @@ get_proxy_target(GLenum target)
  */
 struct gl_texture_object *
 _mesa_select_tex_object(struct gl_context *ctx,
-                        const struct gl_texture_unit *texUnit,
                         GLenum target)
 {
    switch (target) {
       case GL_TEXTURE_1D:
-         return texUnit->CurrentTex[TEXTURE_1D_INDEX];
+         return ctx->Texture.Unit.CurrentTex[TEXTURE_1D_INDEX];
       case GL_PROXY_TEXTURE_1D:
          return ctx->Texture.ProxyTex[TEXTURE_1D_INDEX];
       case GL_TEXTURE_2D:
-         return texUnit->CurrentTex[TEXTURE_2D_INDEX];
+         return ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];
       case GL_PROXY_TEXTURE_2D:
          return ctx->Texture.ProxyTex[TEXTURE_2D_INDEX];
       case GL_TEXTURE_3D:
-         return texUnit->CurrentTex[TEXTURE_3D_INDEX];
+         return ctx->Texture.Unit.CurrentTex[TEXTURE_3D_INDEX];
       case GL_PROXY_TEXTURE_3D:
          return ctx->Texture.ProxyTex[TEXTURE_3D_INDEX];
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB:
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB:
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB:
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB:
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB:
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB:
-      case GL_TEXTURE_CUBE_MAP_ARB:
-         return ctx->Extensions.ARB_texture_cube_map
-                ? texUnit->CurrentTex[TEXTURE_CUBE_INDEX] : NULL;
-      case GL_PROXY_TEXTURE_CUBE_MAP_ARB:
-         return ctx->Extensions.ARB_texture_cube_map
-                ? ctx->Texture.ProxyTex[TEXTURE_CUBE_INDEX] : NULL;
       default:
          _mesa_problem(NULL, "bad target in _mesa_select_tex_object()");
          return NULL;
    }
-}
-
-
-/**
- * Return pointer to texture object for given target on current texture unit.
- */
-struct gl_texture_object *
-_mesa_get_current_tex_object(struct gl_context *ctx, GLenum target)
-{
-   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
-   return _mesa_select_tex_object(ctx, texUnit, target);
 }
 
 
@@ -1013,7 +979,7 @@ mutable_tex_object(struct gl_context *ctx, GLenum target)
 {
    if (ctx->Extensions.ARB_texture_storage) {
       struct gl_texture_object *texObj =
-         _mesa_get_current_tex_object(ctx, target);
+         _mesa_select_tex_object(ctx, target);
       return !texObj->Immutable;
    }
    return GL_TRUE;
@@ -1135,8 +1101,7 @@ texture_error_check( struct gl_context *ctx,
    colorFormat = _mesa_is_color_format(format);
    if ((_mesa_is_color_format(internalFormat) && !colorFormat && !indexFormat) ||
        (_mesa_is_depth_format(internalFormat) != _mesa_is_depth_format(format)) ||
-       (_mesa_is_ycbcr_format(internalFormat) != _mesa_is_ycbcr_format(format)) ||
-       (_mesa_is_dudv_format(internalFormat) != _mesa_is_dudv_format(format))) {
+       (_mesa_is_ycbcr_format(internalFormat) != _mesa_is_ycbcr_format(format))) {
       if (!isProxy)
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glTexImage%dD(incompatible internalFormat 0x%x, format 0x%x)",
@@ -1182,7 +1147,7 @@ texture_error_check( struct gl_context *ctx,
           target != GL_TEXTURE_2D &&
           target != GL_PROXY_TEXTURE_2D &&
          !((_mesa_is_cube_face(target) || target == GL_PROXY_TEXTURE_CUBE_MAP) &&
-           (ctx->VersionMajor >= 3 || ctx->Extensions.EXT_gpu_shader4))) {
+           (ctx->VersionMajor >= 3))) {
          if (!isProxy)
             _mesa_error(ctx, GL_INVALID_ENUM,
                         "glTexImage(target/internalFormat)");
@@ -1775,7 +1740,7 @@ teximage(struct gl_context *ctx, GLuint dims,
       else {
          /* no error, set the tex image parameters */
          struct gl_texture_object *texObj =
-            _mesa_get_current_tex_object(ctx, target);
+            _mesa_select_tex_object(ctx, target);
          gl_format texFormat = _mesa_choose_texture_format(ctx, texObj,
                                                            target, level,
                                                            internalFormat,
@@ -1813,7 +1778,7 @@ teximage(struct gl_context *ctx, GLuint dims,
       if (ctx->NewState & _NEW_PIXEL)
 	 _mesa_update_state(ctx);
 
-      texObj = _mesa_get_current_tex_object(ctx, target);
+      texObj = _mesa_select_tex_object(ctx, target);
 
       _mesa_lock_texture(ctx, texObj);
       {
@@ -1962,7 +1927,7 @@ texsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
       return;   /* error was detected */
    }
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    _mesa_lock_texture(ctx, texObj);
    {
@@ -2107,7 +2072,7 @@ copyteximage(struct gl_context *ctx, GLuint dims,
                                width, height, border))
       return;
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    if (border && ctx->Const.StripTextureBorder) {
       x += border;
@@ -2232,7 +2197,7 @@ copytexsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
    if (copytexsubimage_error_check1(ctx, dims, target, level))
       return;
 
-   texObj = _mesa_get_current_tex_object(ctx, target);
+   texObj = _mesa_select_tex_object(ctx, target);
 
    _mesa_lock_texture(ctx, texObj);
    {

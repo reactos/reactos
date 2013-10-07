@@ -830,19 +830,6 @@ unpack_RGBA_UINT32(const void *src, GLfloat dst[][4], GLuint n)
 }
 
 static void
-unpack_DUDV8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLbyte *s = (const GLbyte *) src;
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][RCOMP] = BYTE_TO_FLOAT(s[i*2+0]);
-      dst[i][GCOMP] = BYTE_TO_FLOAT(s[i*2+1]);
-      dst[i][BCOMP] = 0;
-      dst[i][ACOMP] = 0;
-   }
-}
-
-static void
 unpack_SIGNED_RGBA_16(const void *src, GLfloat dst[][4], GLuint n)
 {
    const GLshort *s = (const GLshort *) src;
@@ -938,7 +925,6 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_RGBA_UINT16] = unpack_RGBA_UINT16;
       table[MESA_FORMAT_RGBA_UINT32] = unpack_RGBA_UINT32;
 
-      table[MESA_FORMAT_DUDV8] = unpack_DUDV8;
       table[MESA_FORMAT_SIGNED_RGBA_16] = unpack_SIGNED_RGBA_16;
       table[MESA_FORMAT_RGBA_16] = unpack_RGBA_16;
 

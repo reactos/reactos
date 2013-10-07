@@ -133,23 +133,20 @@ _swrast_span_default_attribs(struct gl_context *ctx, SWspan *span)
 
    /* texcoords */
    {
-      GLuint i;
-      for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
-         const GLuint attr = FRAG_ATTRIB_TEX0 + i;
-         const GLfloat *tc = ctx->Current.RasterTexCoords[i];
-         if (tc[3] > 0.0F) {
-            /* use (s/q, t/q, r/q, 1) */
-            span->attrStart[attr][0] = tc[0] / tc[3];
-            span->attrStart[attr][1] = tc[1] / tc[3];
-            span->attrStart[attr][2] = tc[2] / tc[3];
-            span->attrStart[attr][3] = 1.0;
-         }
-         else {
-            ASSIGN_4V(span->attrStart[attr], 0.0F, 0.0F, 0.0F, 1.0F);
-         }
-         ASSIGN_4V(span->attrStepX[attr], 0.0F, 0.0F, 0.0F, 0.0F);
-         ASSIGN_4V(span->attrStepY[attr], 0.0F, 0.0F, 0.0F, 0.0F);
+      const GLuint attr = FRAG_ATTRIB_TEX;
+      const GLfloat *tc = ctx->Current.RasterTexCoords;
+      if (tc[3] > 0.0F) {
+         /* use (s/q, t/q, r/q, 1) */
+         span->attrStart[attr][0] = tc[0] / tc[3];
+         span->attrStart[attr][1] = tc[1] / tc[3];
+         span->attrStart[attr][2] = tc[2] / tc[3];
+         span->attrStart[attr][3] = 1.0;
       }
+      else {
+         ASSIGN_4V(span->attrStart[attr], 0.0F, 0.0F, 0.0F, 1.0F);
+      }
+      ASSIGN_4V(span->attrStepX[attr], 0.0F, 0.0F, 0.0F, 0.0F);
+      ASSIGN_4V(span->attrStepY[attr], 0.0F, 0.0F, 0.0F, 0.0F);
    }
 }
 
@@ -462,105 +459,98 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
 static void
 interpolate_texcoords(struct gl_context *ctx, SWspan *span)
 {
-   const GLuint maxUnit
-      = (ctx->Texture._EnabledCoordUnits > 1) ? ctx->Const.MaxTextureUnits : 1;
-   GLuint u;
+   if (ctx->Texture._EnabledCoord) {
+      const GLuint attr = FRAG_ATTRIB_TEX;
+      const struct gl_texture_object *obj = ctx->Texture.Unit._Current;
+      GLfloat texW, texH;
+      GLboolean needLambda;
+      GLfloat (*texcoord)[4] = span->array->attribs[attr];
+      GLfloat *lambda = span->array->lambda;
+      const GLfloat dsdx = span->attrStepX[attr][0];
+      const GLfloat dsdy = span->attrStepY[attr][0];
+      const GLfloat dtdx = span->attrStepX[attr][1];
+      const GLfloat dtdy = span->attrStepY[attr][1];
+      const GLfloat drdx = span->attrStepX[attr][2];
+      const GLfloat dqdx = span->attrStepX[attr][3];
+      const GLfloat dqdy = span->attrStepY[attr][3];
+      GLfloat s = span->attrStart[attr][0] + span->leftClip * dsdx;
+      GLfloat t = span->attrStart[attr][1] + span->leftClip * dtdx;
+      GLfloat r = span->attrStart[attr][2] + span->leftClip * drdx;
+      GLfloat q = span->attrStart[attr][3] + span->leftClip * dqdx;
 
-   /* XXX CoordUnits vs. ImageUnits */
-   for (u = 0; u < maxUnit; u++) {
-      if (ctx->Texture._EnabledCoordUnits & (1 << u)) {
-         const GLuint attr = FRAG_ATTRIB_TEX0 + u;
-         const struct gl_texture_object *obj = ctx->Texture.Unit[u]._Current;
-         GLfloat texW, texH;
-         GLboolean needLambda;
-         GLfloat (*texcoord)[4] = span->array->attribs[attr];
-         GLfloat *lambda = span->array->lambda[u];
-         const GLfloat dsdx = span->attrStepX[attr][0];
-         const GLfloat dsdy = span->attrStepY[attr][0];
-         const GLfloat dtdx = span->attrStepX[attr][1];
-         const GLfloat dtdy = span->attrStepY[attr][1];
-         const GLfloat drdx = span->attrStepX[attr][2];
-         const GLfloat dqdx = span->attrStepX[attr][3];
-         const GLfloat dqdy = span->attrStepY[attr][3];
-         GLfloat s = span->attrStart[attr][0] + span->leftClip * dsdx;
-         GLfloat t = span->attrStart[attr][1] + span->leftClip * dtdx;
-         GLfloat r = span->attrStart[attr][2] + span->leftClip * drdx;
-         GLfloat q = span->attrStart[attr][3] + span->leftClip * dqdx;
+      if (obj) {
+         const struct gl_texture_image *img = obj->Image[0][obj->BaseLevel];
+         const struct swrast_texture_image *swImg =
+            swrast_texture_image_const(img);
 
-         if (obj) {
-            const struct gl_texture_image *img = obj->Image[0][obj->BaseLevel];
-            const struct swrast_texture_image *swImg =
-               swrast_texture_image_const(img);
-
-            needLambda = (obj->Sampler.MinFilter != obj->Sampler.MagFilter);
-            /* LOD is calculated directly in the ansiotropic filter, we can
-             * skip the normal lambda function as the result is ignored.
-             */
-            if (obj->Sampler.MaxAnisotropy > 1.0 &&
-                obj->Sampler.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
-               needLambda = GL_FALSE;
-            }
-            texW = swImg->WidthScale;
-            texH = swImg->HeightScale;
-         }
-         else {
-            /* using a fragment program */
-            texW = 1.0;
-            texH = 1.0;
+         needLambda = (obj->Sampler.MinFilter != obj->Sampler.MagFilter);
+         /* LOD is calculated directly in the ansiotropic filter, we can
+          * skip the normal lambda function as the result is ignored.
+          */
+         if (obj->Sampler.MaxAnisotropy > 1.0 &&
+             obj->Sampler.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
             needLambda = GL_FALSE;
          }
+         texW = swImg->WidthScale;
+         texH = swImg->HeightScale;
+      }
+      else {
+         /* using a fragment program */
+         texW = 1.0;
+         texH = 1.0;
+         needLambda = GL_FALSE;
+      }
 
-         if (needLambda) {
-            GLuint i;
+      if (needLambda) {
+         GLuint i;
+         for (i = 0; i < span->end; i++) {
+            const GLfloat invQ = (q == 0.0F) ? 1.0F : (1.0F / q);
+            texcoord[i][0] = s * invQ;
+            texcoord[i][1] = t * invQ;
+            texcoord[i][2] = r * invQ;
+            texcoord[i][3] = q;
+            lambda[i] = _swrast_compute_lambda(dsdx, dsdy, dtdx, dtdy,
+                                               dqdx, dqdy, texW, texH,
+                                               s, t, q, invQ);
+            s += dsdx;
+            t += dtdx;
+            r += drdx;
+            q += dqdx;
+         }
+         span->arrayMask |= SPAN_LAMBDA;
+      }
+      else {
+         GLuint i;
+         if (dqdx == 0.0F) {
+            /* Ortho projection or polygon's parallel to window X axis */
+            const GLfloat invQ = (q == 0.0F) ? 1.0F : (1.0F / q);
+            for (i = 0; i < span->end; i++) {
+               texcoord[i][0] = s * invQ;
+               texcoord[i][1] = t * invQ;
+               texcoord[i][2] = r * invQ;
+               texcoord[i][3] = q;
+               lambda[i] = 0.0;
+               s += dsdx;
+               t += dtdx;
+               r += drdx;
+            }
+         }
+         else {
             for (i = 0; i < span->end; i++) {
                const GLfloat invQ = (q == 0.0F) ? 1.0F : (1.0F / q);
                texcoord[i][0] = s * invQ;
                texcoord[i][1] = t * invQ;
                texcoord[i][2] = r * invQ;
                texcoord[i][3] = q;
-               lambda[i] = _swrast_compute_lambda(dsdx, dsdy, dtdx, dtdy,
-                                                  dqdx, dqdy, texW, texH,
-                                                  s, t, q, invQ);
+               lambda[i] = 0.0;
                s += dsdx;
                t += dtdx;
                r += drdx;
                q += dqdx;
             }
-            span->arrayMask |= SPAN_LAMBDA;
          }
-         else {
-            GLuint i;
-            if (dqdx == 0.0F) {
-               /* Ortho projection or polygon's parallel to window X axis */
-               const GLfloat invQ = (q == 0.0F) ? 1.0F : (1.0F / q);
-               for (i = 0; i < span->end; i++) {
-                  texcoord[i][0] = s * invQ;
-                  texcoord[i][1] = t * invQ;
-                  texcoord[i][2] = r * invQ;
-                  texcoord[i][3] = q;
-                  lambda[i] = 0.0;
-                  s += dsdx;
-                  t += dtdx;
-                  r += drdx;
-               }
-            }
-            else {
-               for (i = 0; i < span->end; i++) {
-                  const GLfloat invQ = (q == 0.0F) ? 1.0F : (1.0F / q);
-                  texcoord[i][0] = s * invQ;
-                  texcoord[i][1] = t * invQ;
-                  texcoord[i][2] = r * invQ;
-                  texcoord[i][3] = q;
-                  lambda[i] = 0.0;
-                  s += dsdx;
-                  t += dtdx;
-                  r += drdx;
-                  q += dqdx;
-               }
-            }
-         } /* lambda */
-      } /* if */
-   } /* for */
+      } /* lambda */
+   } /* if */
 }
 
 
@@ -748,9 +738,7 @@ clip_span( struct gl_context *ctx, SWspan *span )
          SHIFT_ARRAY(span->array->y, leftClip, n - leftClip);
          SHIFT_ARRAY(span->array->z, leftClip, n - leftClip);
          SHIFT_ARRAY(span->array->index, leftClip, n - leftClip);
-         for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
-            SHIFT_ARRAY(span->array->lambda[i], leftClip, n - leftClip);
-         }
+         SHIFT_ARRAY(span->array->lambda, leftClip, n - leftClip);
          SHIFT_ARRAY(span->array->coverage, leftClip, n - leftClip);
 
 #undef SHIFT_ARRAY
@@ -923,7 +911,7 @@ convert_color_type(SWspan *span, GLenum newType, GLuint output)
 static inline void
 shade_texture_span(struct gl_context *ctx, SWspan *span)
 {
-   if (ctx->Texture._EnabledCoordUnits) {
+   if (ctx->Texture._EnabledCoord) {
       /* conventional texturing */
 
 #if CHAN_BITS == 32
@@ -934,7 +922,7 @@ shade_texture_span(struct gl_context *ctx, SWspan *span)
       if (!(span->arrayMask & SPAN_RGBA))
          interpolate_int_colors(ctx, span);
 #endif
-      if ((span->arrayAttribs & FRAG_BITS_TEX_ANY) == 0x0)
+      if (!(span->arrayAttribs & FRAG_BIT_TEX))
          interpolate_texcoords(ctx, span);
 
       _swrast_texture_span(ctx, span);
@@ -1048,7 +1036,7 @@ _swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
    const GLbitfield64 origArrayAttribs = span->arrayAttribs;
    const GLenum origChanType = span->array->ChanType;
    void * const origRgba = span->array->rgba;
-   const GLboolean texture = ctx->Texture._EnabledCoordUnits;
+   const GLboolean texture = ctx->Texture._EnabledCoord;
    struct gl_framebuffer *fb = ctx->DrawBuffer;
 
    /*

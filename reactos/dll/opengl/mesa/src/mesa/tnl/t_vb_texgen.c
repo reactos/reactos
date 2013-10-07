@@ -55,16 +55,15 @@
 struct texgen_stage_data;
 
 typedef void (*texgen_func)( struct gl_context *ctx,
-			     struct texgen_stage_data *store,
-			     GLuint unit);
+			     struct texgen_stage_data *store);
 
 
 struct texgen_stage_data {
 
    /* Per-texunit derived state.
     */
-   GLuint TexgenSize[MAX_TEXTURE_COORD_UNITS];
-   texgen_func TexgenFunc[MAX_TEXTURE_COORD_UNITS];
+   GLuint TexgenSize;
+   texgen_func TexgenFunc;
 
    /* Temporary values used in texgen.
     */
@@ -73,7 +72,7 @@ struct texgen_stage_data {
 
    /* Buffered outputs of the stage.
     */
-   GLvector4f texcoord[MAX_TEXTURE_COORD_UNITS];
+   GLvector4f texcoord;
 };
 
 
@@ -249,12 +248,11 @@ static build_f_func build_f_tab[5] = {
 /* Special case texgen functions.
  */
 static void texgen_reflection_map_nv( struct gl_context *ctx,
-				      struct texgen_stage_data *store,
-				      GLuint unit )
+				      struct texgen_stage_data *store)
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
-   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX0 + unit];
-   GLvector4f *out = &store->texcoord[unit];
+   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX];
+   GLvector4f *out = &store->texcoord;
 
    build_f_tab[VB->EyePtr->size]( out->start,
 				  out->stride,
@@ -271,12 +269,11 @@ static void texgen_reflection_map_nv( struct gl_context *ctx,
 
 
 static void texgen_normal_map_nv( struct gl_context *ctx,
-				  struct texgen_stage_data *store,
-				  GLuint unit )
+				  struct texgen_stage_data *store)
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
-   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX0 + unit];
-   GLvector4f *out = &store->texcoord[unit];
+   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX];
+   GLvector4f *out = &store->texcoord;
    GLvector4f *normal = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
    GLfloat (*texcoord)[4] = (GLfloat (*)[4])out->start;
    GLuint count = VB->Count;
@@ -299,12 +296,11 @@ static void texgen_normal_map_nv( struct gl_context *ctx,
 
 
 static void texgen_sphere_map( struct gl_context *ctx,
-			       struct texgen_stage_data *store,
-			       GLuint unit )
+			       struct texgen_stage_data *store)
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
-   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX0 + unit];
-   GLvector4f *out = &store->texcoord[unit];
+   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX];
+   GLvector4f *out = &store->texcoord;
    GLfloat (*texcoord)[4] = (GLfloat (*)[4]) out->start;
    GLuint count = VB->Count;
    GLuint i;
@@ -332,14 +328,13 @@ static void texgen_sphere_map( struct gl_context *ctx,
 
 
 static void texgen( struct gl_context *ctx,
-		    struct texgen_stage_data *store,
-		    GLuint unit )
+		    struct texgen_stage_data *store)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
-   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX0 + unit];
-   GLvector4f *out = &store->texcoord[unit];
-   const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
+   GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX];
+   GLvector4f *out = &store->texcoord;
+   const struct gl_texture_unit *texUnit = &ctx->Texture.Unit;
    const GLvector4f *obj = VB->AttribPtr[_TNL_ATTRIB_POS];
    const GLvector4f *eye = VB->EyePtr;
    const GLvector4f *normal = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
@@ -356,7 +351,7 @@ static void texgen( struct gl_context *ctx,
    }
 
 
-   out->size = MAX2(in->size, store->TexgenSize[unit]);
+   out->size = MAX2(in->size, store->TexgenSize);
    out->flags |= (in->flags & VEC_SIZE_FLAGS) | texUnit->TexGenEnabled;
    out->count = count;
 
@@ -485,19 +480,18 @@ static GLboolean run_texgen_stage( struct gl_context *ctx,
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
-   GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current) 
+   if (!ctx->Texture._TexGenEnabled) 
       return GL_TRUE;
 
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
-      struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
+   {
+      struct gl_texture_unit *texUnit = &ctx->Texture.Unit;
 
       if (texUnit->TexGenEnabled) {
 
-	 store->TexgenFunc[i]( ctx, store, i );
+         store->TexgenFunc( ctx, store);
 
-         VB->AttribPtr[VERT_ATTRIB_TEX0 + i] = &store->texcoord[i];
+         VB->AttribPtr[VERT_ATTRIB_TEX] = &store->texcoord;
       }
    }
 
@@ -509,41 +503,40 @@ static void validate_texgen_stage( struct gl_context *ctx,
 				   struct tnl_pipeline_stage *stage )
 {
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
-   GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Current) 
+   if (!ctx->Texture._TexGenEnabled) 
       return;
 
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
-      struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
+   {
+      struct gl_texture_unit *texUnit = &ctx->Texture.Unit;
 
       if (texUnit->TexGenEnabled) {
-	 GLuint sz;
+         GLuint sz;
 
-	 if (texUnit->TexGenEnabled & Q_BIT)
-	    sz = 4;
-	 else if (texUnit->TexGenEnabled & R_BIT)
-	    sz = 3;
-	 else if (texUnit->TexGenEnabled & T_BIT)
-	    sz = 2;
-	 else
-	    sz = 1;
+      if (texUnit->TexGenEnabled & Q_BIT)
+	     sz = 4;
+	  else if (texUnit->TexGenEnabled & R_BIT)
+	     sz = 3;
+      else if (texUnit->TexGenEnabled & T_BIT)
+         sz = 2;
+      else
+         sz = 1;
 
-	 store->TexgenSize[i] = sz;
-	 store->TexgenFunc[i] = texgen; /* general solution */
+      store->TexgenSize = sz;
+      store->TexgenFunc = texgen; /* general solution */
 
-         /* look for special texgen cases */
-	 if (texUnit->TexGenEnabled == (S_BIT|T_BIT|R_BIT)) {
-	    if (texUnit->_GenFlags == TEXGEN_REFLECTION_MAP_NV) {
-	       store->TexgenFunc[i] = texgen_reflection_map_nv;
-	    }
-	    else if (texUnit->_GenFlags == TEXGEN_NORMAL_MAP_NV) {
-	       store->TexgenFunc[i] = texgen_normal_map_nv;
-	    }
-	 }
+      /* look for special texgen cases */
+      if (texUnit->TexGenEnabled == (S_BIT|T_BIT|R_BIT)) {
+         if (texUnit->_GenFlags == TEXGEN_REFLECTION_MAP_NV) {
+            store->TexgenFunc = texgen_reflection_map_nv;
+         }
+         else if (texUnit->_GenFlags == TEXGEN_NORMAL_MAP_NV) {
+            store->TexgenFunc = texgen_normal_map_nv;
+         }
+      }
 	 else if (texUnit->TexGenEnabled == (S_BIT|T_BIT) &&
 		  texUnit->_GenFlags == TEXGEN_SPHERE_MAP) {
-	    store->TexgenFunc[i] = texgen_sphere_map;
+	    store->TexgenFunc = texgen_sphere_map;
 	 }
       }
    }
@@ -560,15 +553,13 @@ static GLboolean alloc_texgen_data( struct gl_context *ctx,
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
    struct texgen_stage_data *store;
-   GLuint i;
 
    stage->privatePtr = CALLOC(sizeof(*store));
    store = TEXGEN_STAGE_DATA(stage);
    if (!store)
       return GL_FALSE;
 
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-      _mesa_vector4f_alloc( &store->texcoord[i], 0, VB->Size, 32 );
+   _mesa_vector4f_alloc( &store->texcoord, 0, VB->Size, 32 );
 
    store->tmp_f = (GLfloat (*)[3]) MALLOC(VB->Size * sizeof(GLfloat) * 3);
    store->tmp_m = (GLfloat *) MALLOC(VB->Size * sizeof(GLfloat));
@@ -581,12 +572,10 @@ static void free_texgen_data( struct tnl_pipeline_stage *stage )
 
 {
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
-   GLuint i;
 
    if (store) {
-      for (i = 0 ; i < MAX_TEXTURE_COORD_UNITS ; i++)
-	 if (store->texcoord[i].data)
-	    _mesa_vector4f_free( &store->texcoord[i] );
+	 if (store->texcoord.data)
+	    _mesa_vector4f_free( &store->texcoord );
 
 
       if (store->tmp_f) FREE( store->tmp_f );

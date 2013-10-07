@@ -102,14 +102,11 @@ void
 _tnl_InvalidateState( struct gl_context *ctx, GLuint new_state )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   const struct gl_vertex_program *vp = ctx->VertexProgram._Current;
-   const struct gl_fragment_program *fp = ctx->FragmentProgram._Current;
-   GLuint i;
 
-   if (new_state & (_NEW_HINT | _NEW_PROGRAM)) {
+   if (new_state & _NEW_HINT) {
       ASSERT(tnl->AllowVertexFog || tnl->AllowPixelFog);
       tnl->_DoVertexFog = ((tnl->AllowVertexFog && (ctx->Hint.Fog != GL_NICEST))
-         || !tnl->AllowPixelFog) && !fp;
+         || !tnl->AllowPixelFog);
    }
 
    tnl->pipeline.new_state |= new_state;
@@ -119,22 +116,16 @@ _tnl_InvalidateState( struct gl_context *ctx, GLuint new_state )
     */
    tnl->render_inputs_bitset = BITFIELD64_BIT(_TNL_ATTRIB_POS);
 
-   if (!fp || (fp->Base.InputsRead & FRAG_BIT_COL0)) {
-     tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR0);
-   }
+   tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR0);
 
    if (_mesa_need_secondary_color(ctx))
      tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR1);
 
-   for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
-     if (ctx->Texture._EnabledCoordUnits & (1 << i) ||
-	 (fp && fp->Base.InputsRead & FRAG_BIT_TEX(i))) {
-       tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX(i));
-     }
+   if (ctx->Texture._EnabledCoord) {
+      tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX);
    }
 
-   if (ctx->Fog.Enabled
-       || (fp != NULL && (fp->Base.InputsRead & FRAG_BIT_FOGC) != 0)) {
+   if (ctx->Fog.Enabled) {
       /* Either fixed-function fog or a fragment program needs fog coord.
        */
       tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_FOG);
@@ -145,20 +136,10 @@ _tnl_InvalidateState( struct gl_context *ctx, GLuint new_state )
       tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_EDGEFLAG);
 
    if (ctx->RenderMode == GL_FEEDBACK)
-      tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX0);
+      tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX);
 
-   if (ctx->Point._Attenuated || ctx->VertexProgram.PointSizeEnabled)
+   if (ctx->Point._Attenuated)
       tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_POINTSIZE);
-
-   /* check for varying vars which are written by the vertex program */
-   if (vp) {
-      GLuint i;
-      for (i = 0; i < MAX_VARYING; i++) {
-	 if (vp->Base.OutputsWritten & BITFIELD64_BIT(VERT_RESULT_VAR0 + i)) {
-            tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_GENERIC(i));
-         }
-      }
-   }
 }
 
 
@@ -198,7 +179,7 @@ _tnl_allow_vertex_fog( struct gl_context *ctx, GLboolean value )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    tnl->AllowVertexFog = value;
    tnl->_DoVertexFog = ((tnl->AllowVertexFog && (ctx->Hint.Fog != GL_NICEST))
-      || !tnl->AllowPixelFog) && !ctx->FragmentProgram._Current;
+      || !tnl->AllowPixelFog);
 
 }
 
@@ -208,6 +189,6 @@ _tnl_allow_pixel_fog( struct gl_context *ctx, GLboolean value )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    tnl->AllowPixelFog = value;
    tnl->_DoVertexFog = ((tnl->AllowVertexFog && (ctx->Hint.Fog != GL_NICEST))
-      || !tnl->AllowPixelFog) && !ctx->FragmentProgram._Current;
+      || !tnl->AllowPixelFog);
 }
 

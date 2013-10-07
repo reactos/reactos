@@ -96,47 +96,6 @@ _mesa_noop_Color3fv(const GLfloat * v)
 }
 
 static void GLAPIENTRY
-_mesa_noop_MultiTexCoord1fARB(GLenum target, GLfloat a)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord1fvARB(GLenum target, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord2fARB(GLenum target, GLfloat a, GLfloat b)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord2fvARB(GLenum target, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord3fARB(GLenum target, GLfloat a, GLfloat b, GLfloat c)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord3fvARB(GLenum target, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord4fARB(GLenum target, GLfloat a, GLfloat b,
-                              GLfloat c, GLfloat d)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiTexCoord4fvARB(GLenum target, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
 _mesa_noop_SecondaryColor3fEXT(GLfloat a, GLfloat b, GLfloat c)
 {
 }
@@ -224,48 +183,6 @@ _mesa_noop_VertexAttrib4fNV(GLuint index, GLfloat x,
 
 static void GLAPIENTRY
 _mesa_noop_VertexAttrib4fvNV(GLuint index, const GLfloat * v)
-{
-}
-
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib1fARB(GLuint index, GLfloat x)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib1fvARB(GLuint index, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib2fARB(GLuint index, GLfloat x, GLfloat y)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib2fvARB(GLuint index, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib3fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib3fvARB(GLuint index, const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib4fARB(GLuint index, GLfloat x,
-                             GLfloat y, GLfloat z, GLfloat w)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_VertexAttrib4fvARB(GLuint index, const GLfloat * v)
 {
 }
 
@@ -376,12 +293,6 @@ _mesa_noop_DrawRangeElements(GLenum mode,
 }
 
 static void GLAPIENTRY
-_mesa_noop_MultiDrawElements(GLenum mode, const GLsizei * count, GLenum type,
-                             const GLvoid ** indices, GLsizei primcount)
-{
-}
-
-static void GLAPIENTRY
 _mesa_noop_EvalMesh1(GLenum mode, GLint i1, GLint i2)
 {
 }
@@ -420,14 +331,6 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->Indexf = _mesa_noop_Indexf;
    vfmt->Indexfv = _mesa_noop_Indexfv;
    vfmt->Materialfv = _mesa_noop_Materialfv;
-   vfmt->MultiTexCoord1fARB = _mesa_noop_MultiTexCoord1fARB;
-   vfmt->MultiTexCoord1fvARB = _mesa_noop_MultiTexCoord1fvARB;
-   vfmt->MultiTexCoord2fARB = _mesa_noop_MultiTexCoord2fARB;
-   vfmt->MultiTexCoord2fvARB = _mesa_noop_MultiTexCoord2fvARB;
-   vfmt->MultiTexCoord3fARB = _mesa_noop_MultiTexCoord3fARB;
-   vfmt->MultiTexCoord3fvARB = _mesa_noop_MultiTexCoord3fvARB;
-   vfmt->MultiTexCoord4fARB = _mesa_noop_MultiTexCoord4fARB;
-   vfmt->MultiTexCoord4fvARB = _mesa_noop_MultiTexCoord4fvARB;
    vfmt->Normal3f = _mesa_noop_Normal3f;
    vfmt->Normal3fv = _mesa_noop_Normal3fv;
    vfmt->SecondaryColor3fEXT = _mesa_noop_SecondaryColor3fEXT;
@@ -454,21 +357,12 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->VertexAttrib3fvNV = _mesa_noop_VertexAttrib3fvNV;
    vfmt->VertexAttrib4fNV = _mesa_noop_VertexAttrib4fNV;
    vfmt->VertexAttrib4fvNV = _mesa_noop_VertexAttrib4fvNV;
-   vfmt->VertexAttrib1fARB = _mesa_noop_VertexAttrib1fARB;
-   vfmt->VertexAttrib1fvARB = _mesa_noop_VertexAttrib1fvARB;
-   vfmt->VertexAttrib2fARB = _mesa_noop_VertexAttrib2fARB;
-   vfmt->VertexAttrib2fvARB = _mesa_noop_VertexAttrib2fvARB;
-   vfmt->VertexAttrib3fARB = _mesa_noop_VertexAttrib3fARB;
-   vfmt->VertexAttrib3fvARB = _mesa_noop_VertexAttrib3fvARB;
-   vfmt->VertexAttrib4fARB = _mesa_noop_VertexAttrib4fARB;
-   vfmt->VertexAttrib4fvARB = _mesa_noop_VertexAttrib4fvARB;
 
    vfmt->Rectf = _mesa_noop_Rectf;
 
    vfmt->DrawArrays = _mesa_noop_DrawArrays;
    vfmt->DrawElements = _mesa_noop_DrawElements;
    vfmt->DrawRangeElements = _mesa_noop_DrawRangeElements;
-   vfmt->MultiDrawElementsEXT = _mesa_noop_MultiDrawElements;
 }
 
 
