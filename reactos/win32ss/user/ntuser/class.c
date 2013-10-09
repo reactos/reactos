@@ -997,19 +997,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->cbclsExtra = lpwcx->cbClsExtra;
             Class->cbwndExtra = lpwcx->cbWndExtra;
             Class->hModule = lpwcx->hInstance;
+            //// FIXME handles to pointers
             Class->hIcon = lpwcx->hIcon;
             Class->hIconSm = lpwcx->hIconSm;
-            //// Sure W2k3 does not do this..... wine test inconclusive.
-            if (lpwcx->hIcon && !lpwcx->hIconSm)
-            {
-               Class->hIconSmIntern = co_IntCopyImage( lpwcx->hIcon, IMAGE_ICON,
-                                                            UserGetSystemMetrics( SM_CXSMICON ),
-                                                            UserGetSystemMetrics( SM_CYSMICON ), 0 );
-               ERR("IntCreateClass hIconSmIntern %p\n",Class->hIconSmIntern);
-               Class->CSF_flags |= CSF_CACHEDSMICON;
-            }
-            ////
             Class->hCursor = lpwcx->hCursor;
+            ////
             Class->hbrBackground = lpwcx->hbrBackground;
 
             /* Make a copy of the string */
@@ -1838,6 +1830,11 @@ UserSetClassLongPtr(IN PCLS Class,
             }
             break;
 
+        // MSDN:
+        // hIconSm, A handle to a small icon that is associated with the window class.
+        // If this member is NULL, the system searches the icon resource specified by
+        // the hIcon member for an icon of the appropriate size to use as the small icon.
+        //       
         case GCLP_HICON:
             /* FIXME: Get handle from pointer to ICON object */
             Ret = (ULONG_PTR)Class->hIcon;

@@ -1104,6 +1104,7 @@ RealGetWindowClassA(
 /*
  * Create a small icon based on a standard icon
  */
+#if 0 // Keep vintage code from revision 18764 by GvG!
 static HICON
 CreateSmallIcon(HICON StdIcon)
 {
@@ -1249,7 +1250,7 @@ cleanup:
 
    return SmallIcon;
 }
-
+#endif
 
 ATOM WINAPI
 RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
@@ -1299,12 +1300,12 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
       ((WNDCLASSEXW*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
-
+/*
    if (NULL == WndClass.hIconSm)
    {
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
-
+*/
    if (WndClass.lpszMenuName != NULL)
    {
       if (!IS_INTRESOURCE(WndClass.lpszMenuName))
