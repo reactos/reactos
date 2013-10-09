@@ -273,7 +273,7 @@ Soft386RotateOperation(PSOFT386_STATE State,
             if (Value & HighestBit) Result |= ((1 << Count) - 1) << (Bits - Count);
 
             /* Update CF and OF */
-            State->Flags.Cf = Value & 1;
+            State->Flags.Cf = (Value & (1 << (Count - 1))) ? TRUE : FALSE;
             if (Count == 1) State->Flags.Of = FALSE;
 
             break;
