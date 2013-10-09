@@ -549,8 +549,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeDecrement)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushReg)
 {
-    if ((State->PrefixFlags != SOFT386_PREFIX_OPSIZE)
-        && (State->PrefixFlags != 0))
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -569,12 +568,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePopReg)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -3880,12 +3880,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePushAll)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x60);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -3928,12 +3929,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePopAll)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x61);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -5437,10 +5439,34 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeAad)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeXlat)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR Value;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    /* Read a byte from DS:[(E)BX + AL] */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_DS,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_EBX].Long
+                                       : State->GeneralRegs[SOFT386_REG_EBX].LowWord
+                           + State->GeneralRegs[SOFT386_REG_EAX].LowByte,
+                           FALSE,
+                           &Value,
+                           sizeof(UCHAR)))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Set AL to the result */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = Value;
+
+    /* Return success */
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLoop)
