@@ -306,5 +306,14 @@ Soft386SetStack(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
     State->GeneralRegs[SOFT386_REG_ESP].Long = Offset;
 }
 
+VOID
+NTAPI
+Soft386SetSegment(PSOFT386_STATE State,
+                  SOFT386_SEG_REGS Segment,
+                  USHORT Selector)
+{
+    /* Call the internal function */
+    Soft386LoadSegment(State, Segment, Selector);
+}
 
 /* EOF */

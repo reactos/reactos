@@ -521,16 +521,23 @@ ULONG EmulatorGetProgramCounter(VOID)
 VOID EmulatorSetRegister(ULONG Register, ULONG Value)
 {
 #ifndef NEW_EMULATOR
-    if (Register < EMULATOR_REG_CS)
+    if (Register < EMULATOR_REG_ES)
     {
         EmulatorContext.state->general_reg[Register].val = Value;
     }
     else
     {
-        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = (WORD)Value;
+        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = (USHORT)Value;
     }
 #else
-    // TODO: NOT IMPLEMENTED
+    if (Register < EMULATOR_REG_ES)
+    {
+        EmulatorContext.GeneralRegs[Register].Long = Value;
+    }
+    else
+    {
+        Soft386SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
+    }
 #endif
 }
 
@@ -596,7 +603,7 @@ VOID EmulatorStep(VOID)
     }
 #else
     /* Dump the state for debugging purposes */
-    Soft386DumpState(&EmulatorContext);
+    // Soft386DumpState(&EmulatorContext);
 
     /* Execute the next instruction */
     Soft386StepInto(&EmulatorContext);
