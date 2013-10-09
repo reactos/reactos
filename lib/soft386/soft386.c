@@ -77,13 +77,19 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
             /* A non-prefix opcode has been executed, reset the prefix flags */
             State->PrefixFlags = 0;
         }
+        else
+        {
+            /* This is a prefix, go to the next instruction immediately */
+            continue;
+        }
 
         /* Increment the time stamp counter */
         State->TimeStampCounter++;
     }
     while ((Command == SOFT386_CONTINUE)
            || (Command == SOFT386_STEP_OVER && ProcedureCallCount > 0)
-           || (Command == SOFT386_STEP_OUT && ProcedureCallCount >= 0));
+           || (Command == SOFT386_STEP_OUT && ProcedureCallCount >= 0)
+           || (Soft386OpcodeHandlers[Opcode] == Soft386OpcodePrefix));
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
