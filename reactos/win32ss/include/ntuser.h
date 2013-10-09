@@ -476,6 +476,9 @@ typedef struct _CLS
     HANDLE hIconSm; /* FIXME - Use pointer! */
     //PCURSOR spicnSm;
 
+    //// ReactOS dosn't suppot cache icons.
+    HICON hIconSmIntern; /* Internal small icon, derived from hIcon */
+    ////
     UINT Unicode : 1; // !CSF_ANSIPROC
     UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
     UINT MenuNameIsString : 1;

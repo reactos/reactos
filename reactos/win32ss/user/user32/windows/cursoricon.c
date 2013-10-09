@@ -2190,3 +2190,20 @@ BOOL get_icon_size(HICON hIcon, SIZE *size)
 
     return TRUE;
 }
+
+NTSTATUS WINAPI
+User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PCOPYIMAGE_CALLBACK_ARGUMENTS Common;
+  HANDLE Result;
+  Common = (PCOPYIMAGE_CALLBACK_ARGUMENTS) Arguments;
+
+  Result = CopyImage(Common->hImage,
+                     Common->uType,
+                     Common->cxDesired,
+                     Common->cyDesired,
+                     Common->fuFlags);
+
+  return ZwCallbackReturn(&Result, sizeof(HANDLE), STATUS_SUCCESS);
+}
+

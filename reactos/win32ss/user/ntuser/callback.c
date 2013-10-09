@@ -881,6 +881,59 @@ co_IntClientThreadSetup(VOID)
    return Status;
 }
 
+
+HANDLE FASTCALL
+co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   HANDLE Handle;
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PCOPYIMAGE_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(COPYIMAGE_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("CopyImage callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PCOPYIMAGE_CALLBACK_ARGUMENTS) Argument;
+
+   Common->hImage = hnd;
+   Common->uType = type;
+   Common->cxDesired = desiredx;
+   Common->cyDesired = desiredy;
+   Common->fuFlags = flags;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_COPYIMAGE,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   Handle = *(HANDLE*)ResultPointer;
+
+   IntCbFreeMemory(Argument);
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("CopyImage callback failed!\n");
+      return 0;
+   }
+
+   return Handle;
+}
+
 BOOL
 APIENTRY
 co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)

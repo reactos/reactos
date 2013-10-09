@@ -562,7 +562,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
 
             case GCLP_HICONSM:
                 /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
+                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
 
             case GCLP_WNDPROC:
@@ -639,7 +639,7 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
 
             case GCLP_HICONSM:
                 /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
+                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
 
             case GCLP_WNDPROC:

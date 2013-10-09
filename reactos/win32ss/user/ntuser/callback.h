@@ -67,3 +67,5 @@ co_IntClientLoadLibrary(PUNICODE_STRING strLibName,
 BOOL
 APIENTRY
 co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs);
+
+HANDLE FASTCALL co_IntCopyImage(HANDLE,UINT,INT,INT,UINT);

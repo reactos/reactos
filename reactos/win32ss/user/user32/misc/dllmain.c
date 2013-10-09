@@ -206,6 +206,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallClientThreadSetupFromKernel,
     User32CallClientLoadLibraryFromKernel,
     User32CallGetCharsetInfo,
+    User32CallCopyImageFromKernel,
 };
 
 /*

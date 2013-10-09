@@ -997,9 +997,13 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->cbclsExtra = lpwcx->cbClsExtra;
             Class->cbwndExtra = lpwcx->cbWndExtra;
             Class->hModule = lpwcx->hInstance;
-            Class->hIcon = lpwcx->hIcon; /* FIXME */
-            Class->hIconSm = lpwcx->hIconSm; /* FIXME */
-            Class->hCursor = lpwcx->hCursor; /* FIXME */
+            Class->hIcon = lpwcx->hIcon;
+            Class->hIconSm = lpwcx->hIconSm;
+            Class->hIconSmIntern = lpwcx->hIcon && !lpwcx->hIconSm ?
+                                                   co_IntCopyImage( lpwcx->hIcon, IMAGE_ICON,
+                                                            UserGetSystemMetrics( SM_CXSMICON ),
+                                                            UserGetSystemMetrics( SM_CYSMICON ), 0 ) : NULL;
+            Class->hCursor = lpwcx->hCursor;
             Class->hbrBackground = lpwcx->hbrBackground;
 
             /* Make a copy of the string */
@@ -1711,6 +1715,30 @@ IntSetClassMenuName(IN PCLS Class,
     return Ret;
 }
 
+//// Do this for now in anticipation of new cursor icon code.
+BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT, PPROCESSINFO);
+
+BOOL FASTCALL
+IntClassDestroyIcon(HANDLE hCurIcon)
+{
+    PCURICON_OBJECT CurIcon;
+    BOOL Ret;
+
+    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
+    {
+
+        ERR("hCurIcon was not found!\n");
+        return FALSE;
+    }
+    Ret = IntDestroyCurIconObject(CurIcon, PsGetCurrentProcessWin32Process());
+    /* Note: IntDestroyCurIconObject will remove our reference for us! */
+    if (!Ret)
+    {
+       ERR("hCurIcon was not Destroyed!\n");
+    }
+    return Ret;
+}
+
 ULONG_PTR
 UserSetClassLongPtr(IN PCLS Class,
                     IN INT Index,
@@ -1718,6 +1746,7 @@ UserSetClassLongPtr(IN PCLS Class,
                     IN BOOL Ansi)
 {
     ULONG_PTR Ret = 0;
+    HANDLE hIconSmIntern = NULL;
 
     /* NOTE: For GCLP_MENUNAME and GCW_ATOM this function may raise an exception! */
 
@@ -1806,6 +1835,20 @@ UserSetClassLongPtr(IN PCLS Class,
         case GCLP_HICON:
             /* FIXME: Get handle from pointer to ICON object */
             Ret = (ULONG_PTR)Class->hIcon;
+            if (Class->hIcon == (HANDLE)NewLong) break;
+            if (Ret && Class->hIconSmIntern)
+            {
+               IntClassDestroyIcon(Class->hIconSmIntern);
+               Class->CSF_flags &= ~CSF_CACHEDSMICON;
+               Class->hIconSmIntern = NULL;
+            }
+            if (NewLong && !Class->hIconSm)
+            {
+               hIconSmIntern = Class->hIconSmIntern = co_IntCopyImage( (HICON)NewLong, IMAGE_ICON,
+                                            UserGetSystemMetrics( SM_CXSMICON ),
+                                            UserGetSystemMetrics( SM_CYSMICON ), 0 );
+               Class->CSF_flags |= CSF_CACHEDSMICON;
+            }
             Class->hIcon = (HANDLE)NewLong;
 
             /* Update the clones */
@@ -1813,6 +1856,7 @@ UserSetClassLongPtr(IN PCLS Class,
             while (Class != NULL)
             {
                 Class->hIcon = (HANDLE)NewLong;
+                Class->hIconSmIntern = hIconSmIntern;
                 Class = Class->pclsNext;
             }
             break;
@@ -1820,6 +1864,35 @@ UserSetClassLongPtr(IN PCLS Class,
         case GCLP_HICONSM:
             /* FIXME: Get handle from pointer to ICON object */
             Ret = (ULONG_PTR)Class->hIconSm;
+            if (Class->hIconSm == (HANDLE)NewLong) break;
+/*            if (Ret && !NewLong)
+            {
+               hIconSmIntern = Class->hIconSmIntern = Class->hIcon ? co_IntCopyImage( Class->hIcon, IMAGE_ICON,
+                                                            UserGetSystemMetrics( SM_CXSMICON ),
+                                                            UserGetSystemMetrics( SM_CYSMICON ), 0 ) : NULL;
+               Class->CSF_flags |= CSF_CACHEDSMICON;
+            }
+            else if (!Ret && NewLong && Class->hIconSmIntern)
+            {
+               IntClassDestroyIcon(Class->hIconSmIntern);
+               Class->CSF_flags &= ~CSF_CACHEDSMICON;
+               Class->hIconSmIntern = NULL;
+            }
+*/
+            if (Class->CSF_flags & CSF_CACHEDSMICON)
+            {
+               if (Class->hIconSmIntern) IntClassDestroyIcon(Class->hIconSmIntern);
+               Class->CSF_flags &= ~CSF_CACHEDSMICON;
+               Class->hIconSmIntern = NULL;
+               Ret = 0;
+            }
+            if (Class->hIcon && !Class->hIconSmIntern)
+            {
+               hIconSmIntern = Class->hIconSmIntern = co_IntCopyImage( Class->hIcon, IMAGE_ICON,
+                                                            UserGetSystemMetrics( SM_CXSMICON ),
+                                                            UserGetSystemMetrics( SM_CYSMICON ), 0 );
+               if (hIconSmIntern) Class->CSF_flags |= CSF_CACHEDSMICON;
+            }
             Class->hIconSm = (HANDLE)NewLong;
 
             /* Update the clones */
@@ -1827,6 +1900,7 @@ UserSetClassLongPtr(IN PCLS Class,
             while (Class != NULL)
             {
                 Class->hIconSm = (HANDLE)NewLong;
+                Class->hIconSmIntern = hIconSmIntern;
                 Class = Class->pclsNext;
             }
             break;
@@ -1952,7 +2026,8 @@ UserGetClassInfo(IN PCLS Class,
     /* FIXME: Return the string? Okay! This is performed in User32! */
     //lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->atomClassName);
 
-    lpwcx->hIconSm = Class->hIconSm; /* FIXME: Get handle from pointer */
+    /* FIXME: Get handle from pointer */
+    lpwcx->hIconSm = Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern;
 
     return TRUE;
 }
