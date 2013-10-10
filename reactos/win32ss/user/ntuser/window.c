@@ -1767,7 +1767,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       Class->hIconSmIntern = co_IntCopyImage( Class->hIcon, IMAGE_ICON,
                                               UserGetSystemMetrics( SM_CXSMICON ),
                                               UserGetSystemMetrics( SM_CYSMICON ), 0 );
-      ERR("IntCreateWindow hIconSmIntern %p\n",Class->hIconSmIntern);
+      TRACE("IntCreateWindow hIconSmIntern %p\n",Class->hIconSmIntern);
       Class->CSF_flags |= CSF_CACHEDSMICON;
    }
 
