@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "lineinput.h"
 
@@ -128,6 +128,11 @@ PurgeInputBuffer(PCONSOLE Console)
     CloseHandle(Console->InputBuffer.ActiveEvent);
 }
 
+/*
+ * This function explicitely references Console->ActiveBuffer
+ * (and also makes use of keyboard functions...).
+ * It is possible that it will move into frontends...
+ */
 VOID NTAPI
 ConDrvProcessKey(IN PCONSOLE Console,
                  IN BOOLEAN Down,

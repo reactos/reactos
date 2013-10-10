@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "include/settings.h"
 
 #include <stdio.h> // for swprintf
@@ -440,6 +440,11 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     }
 }
 
+
+/*
+ * NOTE: This function explicitely references Console->ActiveBuffer.
+ * It is possible that it should go into some frontend...
+ */
 VOID
 ConSrvApplyUserSettings(IN PCONSOLE Console,
                         IN PCONSOLE_INFO ConsoleInfo)
@@ -534,7 +539,7 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
                     SizeChanged = TRUE;
             }
 
-            if (SizeChanged) ConioResizeTerminal(Console);
+            if (SizeChanged) TermResizeTerminal(Console);
         }
     }
     else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)

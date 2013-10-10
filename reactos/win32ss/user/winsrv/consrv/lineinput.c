@@ -4,6 +4,8 @@
  * FILE:            win32ss/user/winsrv/consrv/lineinput.c
  * PURPOSE:         Console line input functions
  * PROGRAMMERS:     Jeffrey Morlan
+ *
+ * NOTE: It's something frontend-related... (--> read my mind... ;) )
  */
 
 /* INCLUDES *******************************************************************/
@@ -11,7 +13,7 @@
 #include "consrv.h"
 #include "console.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -184,7 +186,7 @@ LineInputSetPos(PCONSOLE Console, UINT Pos)
 
         Buffer->CursorPosition.X = XY % Buffer->ScreenBufferSize.X;
         Buffer->CursorPosition.Y = XY / Buffer->ScreenBufferSize.X;
-        ConioSetScreenInfo(Console, Buffer, OldCursorX, OldCursorY);
+        TermSetScreenInfo(Console, Buffer, OldCursorX, OldCursorY);
     }
 
     Console->LinePos = Pos;
@@ -309,7 +311,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
     case VK_INSERT:
         /* Toggle between insert and overstrike */
         Console->LineInsertToggle = !Console->LineInsertToggle;
-        ConioSetCursorInfo(Console, Console->ActiveBuffer);
+        TermSetCursorInfo(Console, Console->ActiveBuffer);
         return;
     case VK_DELETE:
         /* Remove character to right of cursor */

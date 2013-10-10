@@ -12,7 +12,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "include/console.h"
 #include "console.h"
@@ -551,7 +551,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     _InterlockedIncrement(&Console->ReferenceCount);
 
     /* Update the internal info of the terminal */
-    ConioRefreshInternalInfo(Console);
+    TermRefreshInternalInfo(Console);
 
     return STATUS_SUCCESS;
 }
@@ -629,7 +629,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     _InterlockedIncrement(&Console->ReferenceCount);
 
     /* Update the internal info of the terminal */
-    ConioRefreshInternalInfo(Console);
+    TermRefreshInternalInfo(Console);
 
     Status = STATUS_SUCCESS;
 
@@ -666,7 +666,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         RemoveEntryList(&ProcessData->ConsoleLink);
 
         /* Update the internal info of the terminal */
-        ConioRefreshInternalInfo(Console);
+        TermRefreshInternalInfo(Console);
 
         /* Release the console */
         DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);

@@ -10,7 +10,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "conoutput.h"
 #include "console.h"
 #include "handle.h"
@@ -132,7 +132,7 @@ CSR_API(SrvGetConsoleDisplayMode)
                               &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    GetDisplayModeRequest->DisplayMode = ConioGetDisplayMode(Console);
+    GetDisplayModeRequest->DisplayMode = TermGetDisplayMode(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
@@ -154,7 +154,7 @@ CSR_API(SrvSetConsoleDisplayMode)
 
     Console = Buff->Header.Console;
 
-    if (ConioSetDisplayMode(Console, SetDisplayModeRequest->DisplayMode))
+    if (TermSetDisplayMode(Console, SetDisplayModeRequest->DisplayMode))
     {
         SetDisplayModeRequest->NewSBDim = Buff->ScreenBufferSize;
         Status = STATUS_SUCCESS;
@@ -183,7 +183,7 @@ CSR_API(SrvGetLargestConsoleWindowSize)
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
-    ConioGetLargestConsoleWindowSize(Console, &GetLargestWindowSizeRequest->Size);
+    TermGetLargestConsoleWindowSize(Console, &GetLargestWindowSizeRequest->Size);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
@@ -205,7 +205,7 @@ CSR_API(SrvShowConsoleCursor)
 
     Console = Buff->Header.Console;
 
-    ShowCursorRequest->RefCount = ConioShowMouseCursor(Console, ShowCursorRequest->Show);
+    ShowCursorRequest->RefCount = TermShowMouseCursor(Console, ShowCursorRequest->Show);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
@@ -231,7 +231,7 @@ CSR_API(SrvSetConsoleCursor)
 
     Console = Buff->Header.Console;
 
-    Success = ConioSetMouseCursor(Console, SetCursorRequest->hCursor);
+    Success = TermSetMouseCursor(Console, SetCursorRequest->hCursor);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
@@ -253,9 +253,9 @@ CSR_API(SrvConsoleMenuControl)
 
     Console = Buff->Header.Console;
 
-    MenuControlRequest->hMenu = ConioMenuControl(Console,
-                                                 MenuControlRequest->dwCmdIdLow,
-                                                 MenuControlRequest->dwCmdIdHigh);
+    MenuControlRequest->hMenu = TermMenuControl(Console,
+                                                MenuControlRequest->dwCmdIdLow,
+                                                MenuControlRequest->dwCmdIdHigh);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
@@ -272,7 +272,7 @@ CSR_API(SrvSetConsoleMenuClose)
                               &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Success = ConioSetMenuClose(Console, SetMenuCloseRequest->Enable);
+    Success = TermSetMenuClose(Console, SetMenuCloseRequest->Enable);
 
     ConSrvReleaseConsole(Console, TRUE);
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
@@ -287,7 +287,7 @@ CSR_API(SrvGetConsoleWindow)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    GetWindowRequest->WindowHandle = ConioGetConsoleWindowHandle(Console);
+    GetWindowRequest->WindowHandle = TermGetConsoleWindowHandle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
@@ -302,7 +302,7 @@ CSR_API(SrvSetConsoleIcon)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Status = (ConioChangeIcon(Console, SetIconRequest->WindowIcon)
+    Status = (TermChangeIcon(Console, SetIconRequest->WindowIcon)
                 ? STATUS_SUCCESS
                 : STATUS_UNSUCCESSFUL);
 

@@ -65,6 +65,7 @@ typedef struct _GUI_CONSOLE_DATA
     UINT CharHeight;
 
     PCONSOLE Console;           /* Pointer to the owned console */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to the active screen buffer (then maybe the previous Console member is redundant?? Or not...) */
     GUI_CONSOLE_INFO GuiInfo;   /* GUI terminal settings */
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 

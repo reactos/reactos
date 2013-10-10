@@ -482,7 +482,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
 
     // /* The console cannot be resized anymore */
     // Console->FixedSize = TRUE; // MUST be placed AFTER the call to ConioResizeBuffer !!
-    // // ConioResizeTerminal(Console);
+    // // TermResizeTerminal(Console);
 
     /*
      * Contrary to what we do in the GUI front-end, here we create

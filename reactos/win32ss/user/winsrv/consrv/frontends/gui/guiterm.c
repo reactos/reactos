@@ -64,16 +64,18 @@ typedef struct _GUI_INIT_INFO
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-#define SetConsoleWndConsoleLeaderCID(GuiData)  \
-do {                                            \
-    PCONSOLE_PROCESS_DATA ProcessData;          \
-    CLIENT_ID ConsoleLeaderCID;                 \
+#define SetConsoleWndConsoleLeaderCID(GuiData)                              \
+do {                                                                        \
+    PCONSOLE_PROCESS_DATA ProcessData;                                      \
+    CLIENT_ID ConsoleLeaderCID;                                             \
     ProcessData = CONTAINING_RECORD((GuiData)->Console->ProcessList.Blink,  \
                                     CONSOLE_PROCESS_DATA,                   \
                                     ConsoleLink);                           \
     ConsoleLeaderCID = ProcessData->Process->ClientId;                      \
-    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));  \
-    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));  \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID,          \
+                      (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));          \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID,          \
+                      (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));          \
 } while (0)
 /**************************************************************/
 
@@ -264,7 +266,8 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
         Ret = FALSE;
         goto Quit;
     }
-    ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    ActiveBuffer = GuiData->ActiveBuffer;
 
     /*
      * In case the selected menu item belongs to the user-reserved menu id range,
@@ -392,8 +395,8 @@ GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
 static VOID
 GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buff = ConDrvGetActiveScreenBuffer(Console);
+    // PCONSOLE Console = GuiData->Console;
+    PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
     SCROLLINFO sInfo;
 
     DWORD Width, Height;
@@ -471,8 +474,8 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
         memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
         dmScreenSettings.dmSize       = sizeof(dmScreenSettings);
         dmScreenSettings.dmDisplayFixedOutput = DMDFO_CENTER; // DMDFO_STRETCH // DMDFO_DEFAULT
-        dmScreenSettings.dmPelsWidth  = 640; // Console->ActiveBuffer->ViewSize.X * GuiData->CharWidth;
-        dmScreenSettings.dmPelsHeight = 480; // Console->ActiveBuffer->ViewSize.Y * GuiData->CharHeight;
+        dmScreenSettings.dmPelsWidth  = 640; // GuiData->ActiveBuffer->ViewSize.X * GuiData->CharWidth;
+        dmScreenSettings.dmPelsHeight = 480; // GuiData->ActiveBuffer->ViewSize.Y * GuiData->CharHeight;
         dmScreenSettings.dmBitsPerPel = 32;
         dmScreenSettings.dmFields     = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
         ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
@@ -588,8 +591,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 static VOID
 SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
 {
-    PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
+    // PCONSOLE Console = GuiData->Console;
+    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
     UINT WidthUnit, HeightUnit;
 
     GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
@@ -687,7 +690,8 @@ GuiConsoleHandlePaint(PGUI_CONSOLE_DATA GuiData)
         Success = FALSE;
         goto Quit;
     }
-    ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    ActiveBuffer = GuiData->ActiveBuffer;
 
     hDC = BeginPaint(GuiData->hWindow, &ps);
     if (hDC != NULL &&
@@ -768,7 +772,8 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    ActiveBuffer = GuiData->ActiveBuffer;
 
     if (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
     {
@@ -940,7 +945,7 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    Buff = ConDrvGetActiveScreenBuffer(Console);
+    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
 
     if (GetType(Buff) == TEXTMODE_BUFFER)
     {
@@ -1063,8 +1068,8 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
 static COORD
 PointToCoord(PGUI_CONSOLE_DATA GuiData, LPARAM lParam)
 {
-    PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
+    // PCONSOLE Console = GuiData->Console;
+    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
     COORD Coord;
     UINT  WidthUnit, HeightUnit;
 
@@ -1343,7 +1348,7 @@ GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
     if (OpenClipboard(GuiData->hWindow) == TRUE)
     {
         PCONSOLE Console = GuiData->Console;
-        PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
+        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
@@ -1370,8 +1375,8 @@ GuiConsolePaste(PGUI_CONSOLE_DATA GuiData)
 {
     if (OpenClipboard(GuiData->hWindow) == TRUE)
     {
-        PCONSOLE Console = GuiData->Console;
-        PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
+        // PCONSOLE Console = GuiData->Console;
+        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
@@ -1396,7 +1401,8 @@ GuiConsoleGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
+    ActiveBuffer = GuiData->ActiveBuffer;
 
     GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
 
@@ -1428,7 +1434,7 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     if ((GuiData->WindowSizeLock == FALSE) &&
         (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
-        PCONSOLE_SCREEN_BUFFER Buff = ConDrvGetActiveScreenBuffer(Console);
+        PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
         DWORD windx, windy, charx, chary;
         UINT  WidthUnit, HeightUnit;
 
@@ -1522,7 +1528,7 @@ GuiConsoleHandleScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return 0;
 
-    Buff = ConDrvGetActiveScreenBuffer(Console);
+    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
 
     if (uMsg == WM_HSCROLL)
     {
@@ -1646,6 +1652,9 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
      */
     GuiData = GuiGetGuiData(hWnd);
     if (GuiData == NULL) return DefWindowProcW(hWnd, msg, wParam, lParam);
+
+    // TEMPORARY HACK until all of the functions can deal with a NULL GuiData->ActiveBuffer ...
+    if (GuiData->ActiveBuffer == NULL) return DefWindowProcW(hWnd, msg, wParam, lParam);
 
     /*
      * Just retrieve a pointer to the console in case somebody needs it.
@@ -1865,14 +1874,16 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             if (ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
             {
+                BOOL SetFocus = (msg == WM_SETFOCUS);
                 INPUT_RECORD er;
+
                 er.EventType = FOCUS_EVENT;
-                er.Event.FocusEvent.bSetFocus = (msg == WM_SETFOCUS);
+                er.Event.FocusEvent.bSetFocus = SetFocus;
                 ConioProcessInputEvent(Console, &er);
 
-                if (msg == WM_SETFOCUS)
+                if (SetFocus)
                     DPRINT1("TODO: Create console caret\n");
-                else // if (msg == WM_KILLFOCUS)
+                else
                     DPRINT1("TODO: Destroy console caret\n");
 
                 LeaveCriticalSection(&Console->Lock);
@@ -2247,7 +2258,8 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         return STATUS_UNSUCCESSFUL;
     }
     /* HACK */ Console->TermIFace.Data = (PVOID)GuiData; /* HACK */
-    GuiData->Console = Console;
+    GuiData->Console      = Console;
+    GuiData->ActiveBuffer = Console->ActiveBuffer;
     GuiData->hWindow = NULL;
 
     /* The console can be resized */
@@ -2441,7 +2453,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
 
     if (NULL == GuiData || NULL == GuiData->hWindow) return;
 
-    Buff = ConDrvGetActiveScreenBuffer(GuiData->Console);
+    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
     if (GetType(Buff) != TEXTMODE_BUFFER) return;
 
     if (0 != ScrolledLines)
@@ -2490,7 +2502,7 @@ GuiSetCursorInfo(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    if (ConDrvGetActiveScreenBuffer(GuiData->Console) == Buff)
+    if (/*ConDrvGetActiveScreenBuffer(GuiData->Console)*/GuiData->ActiveBuffer == Buff)
     {
         GuiInvalidateCell(This, Buff->CursorPosition.X, Buff->CursorPosition.Y);
     }
@@ -2506,7 +2518,7 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    if (ConDrvGetActiveScreenBuffer(GuiData->Console) == Buff)
+    if (/*ConDrvGetActiveScreenBuffer(GuiData->Console)*/GuiData->ActiveBuffer == Buff)
     {
         /* Redraw char at old position (remove cursor) */
         GuiInvalidateCell(This, OldCursorX, OldCursorY);
@@ -2529,6 +2541,62 @@ GuiResizeTerminal(IN OUT PFRONTEND This)
     // NOTE: This code ^^ causes deadlocks...
 
     PostMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
+}
+
+static VOID WINAPI
+GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
+{
+    PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    EnterCriticalSection(&GuiData->Lock);
+    GuiData->WindowSizeLock = TRUE;
+
+    InterlockedExchangePointer(&GuiData->ActiveBuffer,
+                                GuiData->Console->ActiveBuffer);
+
+    GuiData->WindowSizeLock = FALSE;
+    LeaveCriticalSection(&GuiData->Lock);
+
+    GuiResizeTerminal(This);
+    // ConioDrawConsole(Console);
+
+    // FIXME: Change the palette.
+}
+
+static VOID WINAPI
+GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
+                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
+{
+    PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    /*
+     * If we were notified to release a screen buffer that is not actually
+     * ours, then just ignore the notification...
+     */
+    if (ScreenBuffer != GuiData->ActiveBuffer) return;
+
+    /*
+     * ... else, we must release our active buffer. Two cases are present:
+     * - If ScreenBuffer (== GuiData->ActiveBuffer) IS NOT the console
+     *   active screen buffer, then we can safely switch to it.
+     * - If ScreenBuffer IS the console active screen buffer, we must release
+     *   it BUT and that's all.
+     */
+
+    if (ScreenBuffer != GuiData->Console->ActiveBuffer)
+    {
+        GuiSetActiveScreenBuffer(This);
+    }
+    else
+    {
+        EnterCriticalSection(&GuiData->Lock);
+        GuiData->WindowSizeLock = TRUE;
+
+        InterlockedExchangePointer(&GuiData->ActiveBuffer, NULL);
+
+        GuiData->WindowSizeLock = FALSE;
+        LeaveCriticalSection(&GuiData->Lock);
+    }
 }
 
 static BOOL WINAPI
@@ -2653,7 +2721,8 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
         return;
     }
 
-    ActiveBuffer = ConDrvGetActiveScreenBuffer(GuiData->Console);
+    // ActiveBuffer = ConDrvGetActiveScreenBuffer(GuiData->Console);
+    ActiveBuffer = GuiData->ActiveBuffer;
     if (ActiveBuffer)
     {
         GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
@@ -2783,6 +2852,8 @@ static FRONTEND_VTBL GuiVtbl =
     GuiSetCursorInfo,
     GuiSetScreenInfo,
     GuiResizeTerminal,
+    GuiSetActiveScreenBuffer,
+    GuiReleaseScreenBuffer,
     GuiProcessKeyCallback,
     GuiRefreshInternalInfo,
     GuiChangeTitle,

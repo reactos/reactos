@@ -12,7 +12,7 @@
 #include "consrv.h"
 #include "console.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "conoutput.h"
 #include "handle.h"
 
@@ -84,14 +84,12 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     if (BufferType == CONSOLE_TEXTMODE_BUFFER)
     {
-        Status = TEXTMODE_BUFFER_Initialize(Buffer,
-                                            Console,
+        Status = TEXTMODE_BUFFER_Initialize(Buffer, Console,
                                             (PTEXTMODE_BUFFER_INFO)ScreenBufferInfo);
     }
     else if (BufferType == CONSOLE_GRAPHICS_BUFFER)
     {
-        Status = GRAPHICS_BUFFER_Initialize(Buffer,
-                                            Console,
+        Status = GRAPHICS_BUFFER_Initialize(Buffer, Console,
                                             (PGRAPHICS_BUFFER_INFO)ScreenBufferInfo);
     }
     else
@@ -115,17 +113,32 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     PCONSOLE Console = Buffer->Header.Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
 
+    /*
+     * We should notify temporarily the frontend because we are susceptible
+     * to delete the screen buffer it is using (which may be different from
+     * the active screen buffer in some cases), and because, if it actually
+     * uses the active screen buffer, we are going to nullify its pointer to
+     * change it.
+     */
+    TermReleaseScreenBuffer(Console, Buffer);
+
     RemoveEntryList(&Buffer->ListEntry);
     if (Buffer == Console->ActiveBuffer)
     {
         /* Delete active buffer; switch to most recently created */
-        Console->ActiveBuffer = NULL;
         if (!IsListEmpty(&Console->BufferList))
         {
             NewBuffer = CONTAINING_RECORD(Console->BufferList.Flink,
                                           CONSOLE_SCREEN_BUFFER,
                                           ListEntry);
+
+            /* Tie console to new buffer and signal the change to the frontend */
             ConioSetActiveScreenBuffer(NewBuffer);
+        }
+        else
+        {
+            Console->ActiveBuffer = NULL;
+            // InterlockedExchangePointer(&Console->ActiveBuffer, NULL);
         }
     }
 
@@ -141,7 +154,7 @@ ConioDrawConsole(PCONSOLE Console)
     if (ActiveBuffer)
     {
         ConioInitRect(&Region, 0, 0, ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
-        ConioDrawRegion(Console, &Region);
+        TermDrawRegion(Console, &Region);
     }
 }
 
@@ -150,8 +163,8 @@ ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
     Console->ActiveBuffer = Buffer;
-    ConioResizeTerminal(Console);
-    // ConioDrawConsole(Console);
+    // InterlockedExchangePointer(&Console->ActiveBuffer, Buffer);
+    TermSetActiveScreenBuffer(Console);
 }
 
 NTSTATUS NTAPI
@@ -172,7 +185,7 @@ ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
         ConioDeleteScreenBuffer(Console->ActiveBuffer);
     }
 
-    /* Tie console to new buffer */
+    /* Tie console to new buffer and signal the change to the frontend */
     ConioSetActiveScreenBuffer(Buffer);
 
     return STATUS_SUCCESS;
@@ -198,7 +211,7 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
 
     /* If the output buffer is the current one, redraw the correct portion of the screen */
-    if (Buffer == Console->ActiveBuffer) ConioDrawRegion(Console, Region);
+    if (Buffer == Console->ActiveBuffer) TermDrawRegion(Console, Region);
 
     return STATUS_SUCCESS;
 }
@@ -255,7 +268,7 @@ ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
         Buffer->CursorInfo.dwSize   = Size;
         Buffer->CursorInfo.bVisible = Visible;
 
-        Success = ConioSetCursorInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer);
+        Success = TermSetCursorInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer);
     }
 
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
@@ -286,7 +299,7 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
     // Buffer->CursorPosition.X = Position->X;
     // Buffer->CursorPosition.Y = Position->Y;
     if ( ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer) &&
-         (!ConioSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
+         (!TermSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
     {
         return STATUS_UNSUCCESSFUL;
     }

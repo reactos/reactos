@@ -12,7 +12,7 @@
 #include "consrv.h"
 #include "console.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "conoutput.h"
 #include "handle.h"
 

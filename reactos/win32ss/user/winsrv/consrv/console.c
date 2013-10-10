@@ -12,7 +12,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "procinit.h"
 #include "alias.h"
@@ -545,7 +545,7 @@ CSR_API(SrvSetConsoleTitle)
                                    TitleRequest->Title,
                                    TitleRequest->Length);
 
-    if (NT_SUCCESS(Status)) ConioChangeTitle(Console);
+    if (NT_SUCCESS(Status)) TermChangeTitle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;

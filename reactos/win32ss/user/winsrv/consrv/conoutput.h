@@ -40,7 +40,7 @@ NTSTATUS FASTCALL ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 // VOID FASTCALL ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 
-PCONSOLE_SCREEN_BUFFER
-ConDrvGetActiveScreenBuffer(IN PCONSOLE Console);
+// PCONSOLE_SCREEN_BUFFER
+// ConDrvGetActiveScreenBuffer(IN PCONSOLE Console);
 
 /* EOF */

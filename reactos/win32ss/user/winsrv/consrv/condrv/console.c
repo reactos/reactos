@@ -12,7 +12,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "procinit.h"
 #include "alias.h"
@@ -1010,7 +1010,7 @@ ConDrvSetConsoleTitle(IN PCONSOLE Console,
     RtlCopyMemory(Console->Title.Buffer, Title, Console->Title.Length);
     Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
 
-    // ConioChangeTitle(Console);
+    // TermChangeTitle(Console);
     return STATUS_SUCCESS;
 }
 

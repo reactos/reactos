@@ -67,6 +67,17 @@ DummyResizeTerminal(IN OUT PFRONTEND This)
 {
 }
 
+static VOID NTAPI
+DummySetActiveScreenBuffer(IN OUT PFRONTEND This)
+{
+}
+
+static VOID NTAPI
+DummyReleaseScreenBuffer(IN OUT PFRONTEND This,
+                         IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
+{
+}
+
 static BOOL NTAPI
 DummyProcessKeyCallback(IN OUT PFRONTEND This,
                         MSG* msg,
@@ -158,6 +169,8 @@ static FRONTEND_VTBL DummyVtbl =
     DummySetCursorInfo,
     DummySetScreenInfo,
     DummyResizeTerminal,
+    DummySetActiveScreenBuffer,
+    DummyReleaseScreenBuffer,
     DummyProcessKeyCallback,
     DummyRefreshInternalInfo,
     DummyChangeTitle,

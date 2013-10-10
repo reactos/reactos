@@ -203,6 +203,9 @@ typedef struct _FRONTEND_VTBL
                                  SHORT OldCursorX,
                                  SHORT OldCursorY);
     VOID (WINAPI *ResizeTerminal)(IN OUT PFRONTEND This);
+    VOID (WINAPI *SetActiveScreenBuffer)(IN OUT PFRONTEND This);
+    VOID (WINAPI *ReleaseScreenBuffer)(IN OUT PFRONTEND This,
+                                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (WINAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
                                       MSG* msg,
                                       BYTE KeyStateMenu,

@@ -227,7 +227,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 {
     NTSTATUS Status;
     PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL, hClientSection = NULL;
     LARGE_INTEGER SectionSize;
