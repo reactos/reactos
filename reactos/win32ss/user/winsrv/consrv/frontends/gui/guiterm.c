@@ -2580,7 +2580,7 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
      * - If ScreenBuffer (== GuiData->ActiveBuffer) IS NOT the console
      *   active screen buffer, then we can safely switch to it.
      * - If ScreenBuffer IS the console active screen buffer, we must release
-     *   it BUT and that's all.
+     *   it ONLY.
      */
 
     if (ScreenBuffer != GuiData->Console->ActiveBuffer)
