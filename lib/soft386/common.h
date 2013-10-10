@@ -34,6 +34,9 @@
 #define REAL_MODE_FLAGS_MASK 0x17FD5
 #define PROT_MODE_FLAGS_MASK 0x10DD5
 
+/* Block size for string operations */
+#define STRING_BLOCK_SIZE 4096
+
 #define GET_SEGMENT_RPL(s)          ((s) & 3)
 #define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8)
 #define EXCEPTION_HAS_ERROR_CODE(x) (((x) == 8) || ((x) >= 10 && (x) <= 14))
