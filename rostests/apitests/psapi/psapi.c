@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for GetDeviceDriverFileName
+ * PURPOSE:         Test for GetDeviceDriverFileName & GetDeviceDriverBaseName
  * PROGRAMMER:      Pierre Schweitzer
  */
 
@@ -25,14 +25,14 @@ static LPVOID IntGetImageBase(LPCSTR Image)
     Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
     if (Snap == INVALID_HANDLE_VALUE)
     {
-        return (LPVOID)0x00000000;
+        return NULL;
     }
 
     Module.dwSize = sizeof(MODULEENTRY32);
     if(!Module32First(Snap, &Module))
     {
         CloseHandle(Snap);
-        return (LPVOID)0x00000000;
+        return NULL;
     }
 
     do
@@ -45,10 +45,10 @@ static LPVOID IntGetImageBase(LPCSTR Image)
     } while(Module32Next(Snap, &Module));
 
     CloseHandle(Snap);
-    return (LPVOID)0x00000000;
+    return NULL;
 }
 
-static BOOLEAN IntGetModuleInformation(LPCSTR Module, BOOLEAN IsDriver, BOOLEAN IsProcMod, TEST_MODULE_INFO * Info)
+static BOOLEAN IntGetModuleInformation(LPCSTR Module, BOOLEAN IsDriver, BOOLEAN IsProcMod, BOOLEAN BaseName, TEST_MODULE_INFO * Info)
 {
     CHAR System[255];
     UINT Len;
@@ -85,9 +85,17 @@ static BOOLEAN IntGetModuleInformation(LPCSTR Module, BOOLEAN IsDriver, BOOLEAN 
         return FALSE;
     }
 
-    /* Skip disk */
-    strcpy(Info->Path, System + 2);
-    Info->Len = strlen(Info->Path);
+    if (BaseName)
+    {
+        strcpy(Info->Path, Module);
+        Info->Len = strlen(Info->Path);
+    }
+    else
+    {
+        /* Skip disk */
+        strcpy(Info->Path, System + 2);
+        Info->Len = strlen(Info->Path);
+    }
 
     return TRUE;
 }
@@ -103,7 +111,7 @@ START_TEST(GetDeviceDriverFileName)
     ok(Len == 0, "Len: %lu\n", Len);
     ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
 
-    if (IntGetModuleInformation("ntdll.dll", FALSE, TRUE, &ModInfo))
+    if (IntGetModuleInformation("ntdll.dll", FALSE, TRUE, FALSE, &ModInfo))
     {
         SetLastError(0xDEADBEEF);
         Len = GetDeviceDriverFileNameA(ModInfo.ImageBase, FileName, 255);
@@ -126,7 +134,7 @@ START_TEST(GetDeviceDriverFileName)
         skip("Couldn't find info about ntdll.dll\n");
     }
 
-    if (IntGetModuleInformation("msvcrt.dll", FALSE, TRUE, &ModInfo))
+    if (IntGetModuleInformation("msvcrt.dll", FALSE, TRUE, FALSE, &ModInfo))
     {
         SetLastError(0xDEADBEEF);
         Len = GetDeviceDriverFileNameA(ModInfo.ImageBase, FileName, 255);
@@ -138,10 +146,69 @@ START_TEST(GetDeviceDriverFileName)
         skip("Couldn't find info about msvcrt.dll\n");
     }
 
-    if (IntGetModuleInformation("psapi.dll", FALSE, TRUE, &ModInfo))
+    if (IntGetModuleInformation("psapi.dll", FALSE, TRUE, FALSE, &ModInfo))
     {
         SetLastError(0xDEADBEEF);
         Len = GetDeviceDriverFileNameA(ModInfo.ImageBase, FileName, 255);
+        ok(Len == 0, "Len: %lu\n", Len);
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
+    }
+    else
+    {
+        skip("Couldn't find info about psapi.dll\n");
+    }
+}
+
+START_TEST(GetDeviceDriverBaseName)
+{
+    DWORD Len;
+    CHAR FileName[255];
+    TEST_MODULE_INFO ModInfo;
+
+    SetLastError(0xDEADBEEF);
+    Len = GetDeviceDriverBaseNameA(0, FileName, 255);
+    ok(Len == 0, "Len: %lu\n", Len);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
+
+    if (IntGetModuleInformation("ntdll.dll", FALSE, TRUE, TRUE, &ModInfo))
+    {
+        SetLastError(0xDEADBEEF);
+        Len = GetDeviceDriverBaseNameA(ModInfo.ImageBase, FileName, 255);
+        ok(Len == ModInfo.Len, "Len: %lu\n", Len);
+        ok(GetLastError() == 0xDEADBEEF, "Error: %lx\n", GetLastError());
+        ok(lstrcmpiA(ModInfo.Path, FileName) == 0, "File name: %s\n", FileName);
+
+        /* Test with too small buffer */
+        SetLastError(0xDEADBEEF);
+        ModInfo.Len--;
+        ModInfo.Path[ModInfo.Len] = 0;
+        FileName[ModInfo.Len] = 0;
+        Len = GetDeviceDriverBaseNameA(ModInfo.ImageBase, FileName, ModInfo.Len);
+        ok(Len == ModInfo.Len, "Len: %lu\n", Len);
+        ok(GetLastError() == 0xDEADBEEF, "Error: %lx\n", GetLastError());
+        ok(lstrcmpiA(ModInfo.Path, FileName) == 0, "File name: %s\n", FileName);
+    }
+    else
+    {
+        skip("Couldn't find info about ntdll.dll\n");
+    }
+
+    if (IntGetModuleInformation("msvcrt.dll", FALSE, TRUE, TRUE, &ModInfo))
+    {
+        SetLastError(0xDEADBEEF);
+        Len = GetDeviceDriverBaseNameA(ModInfo.ImageBase, FileName, 255);
+        ok(Len == 0, "Len: %lu\n", Len);
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
+    }
+    else
+    {
+        skip("Couldn't find info about msvcrt.dll\n");
+    }
+
+    if (IntGetModuleInformation("psapi.dll", FALSE, TRUE, TRUE, &ModInfo))
+    {
+        SetLastError(0xDEADBEEF);
+        Len = GetDeviceDriverBaseNameA(ModInfo.ImageBase, FileName, 255);
         ok(Len == 0, "Len: %lu\n", Len);
         ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
     }
