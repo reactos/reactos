@@ -9,6 +9,9 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserClass);
 
+BOOL FASTCALL IntClassDestroyIcon(HANDLE hCurIcon);
+static NTSTATUS IntDeregisterClassAtom(IN RTL_ATOM Atom);
+
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
@@ -227,6 +230,13 @@ IntDestroyClass(IN OUT PCLS Class)
             CallProc = NextCallProc;
         }
 
+        // Fixes running the static test then run class test issue.
+        // Some applications do not use UnregisterClass before exiting.
+        // Keep from reusing the same atom with case insensitive 
+        // comparisons, remove registration of the atom if not zeroed.
+        if (Class->atomClassName)
+            IntDeregisterClassAtom(Class->atomClassName);
+
         if (Class->pdce)
         {
            DceFreeClassDCE(((PDCE)Class->pdce)->hDC);
@@ -235,6 +245,9 @@ IntDestroyClass(IN OUT PCLS Class)
 
         IntFreeClassMenuName(Class);
     }
+
+    if (Class->hIconSmIntern)
+        IntClassDestroyIcon(Class->hIconSmIntern);
 
     pDesk = Class->rpdeskParent;
     Class->rpdeskParent = NULL;
@@ -1481,6 +1494,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
     {
         TRACE("Class 0x%p\n", Class);
         TRACE("UserUnregisterClass: Good Exit!\n");
+        Class->atomClassName = 0; // Don't let it linger...
         /* Finally free the resources */
         IntDestroyClass(Class);
         return TRUE;
