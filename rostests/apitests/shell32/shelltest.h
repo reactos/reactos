@@ -9,7 +9,7 @@
 #include <winuser.h>
 #include <winreg.h>
 
-#include <CommCtrl.h>
+#include <commctrl.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
