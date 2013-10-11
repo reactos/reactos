@@ -1,29 +1,16 @@
 
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(msdmo.dll msdmo.spec)
 
-add_library(msdmo SHARED
+list(APPEND SOURCE
     dmoreg.c
     dmort.c
     stubs.c
-    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
-set_module_type(msdmo win32dll UNICODE)
-
+add_library(msdmo SHARED ${SOURCE} rsrc.rc)
+set_module_type(msdmo win32dll)
 target_link_libraries(msdmo uuid wine mediaobj_guid)
-
-add_importlibs(msdmo
-    msvcrt
-    user32
-    advapi32
-    ole32
-    kernel32
-    ntdll)
-
-add_dependencies(msdmo dxsdk psdk)
-
+add_importlibs(msdmo user32 advapi32 ole32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msdmo DESTINATION reactos/system32 FOR all)
