@@ -33,8 +33,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(qedit);
 
 typedef struct MediaDetImpl {
-    const IMediaDetVtbl *MediaDet_Vtbl;
-    LONG refCount;
+    IUnknown IUnknown_inner;
+    IMediaDet IMediaDet_iface;
+    IUnknown *outer_unk;
+    LONG ref;
     IGraphBuilder *graph;
     IBaseFilter *source;
     IBaseFilter *splitter;
@@ -42,6 +44,16 @@ typedef struct MediaDetImpl {
     LONG cur_stream;
     IPin *cur_pin;
 } MediaDetImpl;
+
+static inline MediaDetImpl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, MediaDetImpl, IUnknown_inner);
+}
+
+static inline MediaDetImpl *impl_from_IMediaDet(IMediaDet *iface)
+{
+    return CONTAINING_RECORD(iface, MediaDetImpl, IMediaDet_iface);
+}
 
 static void MD_cleanup(MediaDetImpl *This)
 {
@@ -57,64 +69,98 @@ static void MD_cleanup(MediaDetImpl *This)
     This->cur_stream = 0;
 }
 
-static ULONG WINAPI MediaDet_AddRef(IMediaDet* iface)
+/* MediaDet inner IUnknown */
+static HRESULT WINAPI MediaDet_inner_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
-    ULONG refCount = InterlockedIncrement(&This->refCount);
-    TRACE("(%p)->() AddRef from %d\n", This, refCount - 1);
-    return refCount;
+    MediaDetImpl *This = impl_from_IUnknown(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IUnknown))
+        *ppv = &This->IUnknown_inner;
+    else if (IsEqualIID(riid, &IID_IMediaDet))
+        *ppv = &This->IMediaDet_iface;
+    else
+        WARN("(%p, %s,%p): not found\n", This, debugstr_guid(riid), ppv);
+
+    if (!*ppv)
+        return E_NOINTERFACE;
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
-static ULONG WINAPI MediaDet_Release(IMediaDet* iface)
+static ULONG WINAPI MediaDet_inner_AddRef(IUnknown *iface)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
-    ULONG refCount = InterlockedDecrement(&This->refCount);
-    TRACE("(%p)->() Release from %d\n", This, refCount + 1);
+    MediaDetImpl *This = impl_from_IUnknown(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-    if (refCount == 0)
+    TRACE("(%p) new ref = %u\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI MediaDet_inner_Release(IUnknown *iface)
+{
+    MediaDetImpl *This = impl_from_IUnknown(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) new ref = %u\n", This, ref);
+
+    if (ref == 0)
     {
         MD_cleanup(This);
         CoTaskMemFree(This);
         return 0;
     }
 
-    return refCount;
+    return ref;
 }
 
-static HRESULT WINAPI MediaDet_QueryInterface(IMediaDet* iface, REFIID riid,
-                                              void **ppvObject)
+static const IUnknownVtbl mediadet_vtbl =
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
-    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
+    MediaDet_inner_QueryInterface,
+    MediaDet_inner_AddRef,
+    MediaDet_inner_Release,
+};
 
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IMediaDet)) {
-        MediaDet_AddRef(iface);
-        *ppvObject = This;
-        return S_OK;
-    }
-    *ppvObject = NULL;
-    WARN("(%p, %s,%p): not found\n", This, debugstr_guid(riid), ppvObject);
-    return E_NOINTERFACE;
+/* IMediaDet implementation */
+static HRESULT WINAPI MediaDet_QueryInterface(IMediaDet *iface, REFIID riid, void **ppv)
+{
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
+}
+
+static ULONG WINAPI MediaDet_AddRef(IMediaDet *iface)
+{
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
+    return IUnknown_AddRef(This->outer_unk);
+}
+
+static ULONG WINAPI MediaDet_Release(IMediaDet *iface)
+{
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT WINAPI MediaDet_get_Filter(IMediaDet* iface, IUnknown **pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%p): not implemented!\n", This, pVal);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MediaDet_put_Filter(IMediaDet* iface, IUnknown *newVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%p): not implemented!\n", This, newVal);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MediaDet_get_OutputStreams(IMediaDet* iface, LONG *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     IEnumPins *pins;
     IPin *pin;
     HRESULT hr;
@@ -158,7 +204,7 @@ static HRESULT WINAPI MediaDet_get_OutputStreams(IMediaDet* iface, LONG *pVal)
 
 static HRESULT WINAPI MediaDet_get_CurrentStream(IMediaDet* iface, LONG *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     TRACE("(%p)\n", This);
 
     if (!pVal)
@@ -211,7 +257,7 @@ static HRESULT SetCurPin(MediaDetImpl *This, LONG strm)
 
 static HRESULT WINAPI MediaDet_put_CurrentStream(IMediaDet* iface, LONG newVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     HRESULT hr;
 
     TRACE("(%p)->(%d)\n", This, newVal);
@@ -237,28 +283,28 @@ static HRESULT WINAPI MediaDet_put_CurrentStream(IMediaDet* iface, LONG newVal)
 
 static HRESULT WINAPI MediaDet_get_StreamType(IMediaDet* iface, GUID *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
-    FIXME("(%p)->(%p): not implemented!\n", This, debugstr_guid(pVal));
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
+    FIXME("(%p)->(%s): not implemented!\n", This, debugstr_guid(pVal));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MediaDet_get_StreamTypeB(IMediaDet* iface, BSTR *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%p): not implemented!\n", This, pVal);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MediaDet_get_StreamLength(IMediaDet* iface, double *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p): stub!\n", This);
     return VFW_E_INVALIDMEDIATYPE;
 }
 
 static HRESULT WINAPI MediaDet_get_Filename(IMediaDet* iface, BSTR *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     IFileSourceFilter *file;
     LPOLESTR name;
     HRESULT hr;
@@ -378,52 +424,56 @@ static HRESULT GetSplitter(MediaDetImpl *This)
     if (FAILED(hr))
         return hr;
 
-    hr = IEnumMoniker_Next(filters, 1, &mon, NULL);
-    IEnumMoniker_Release(filters);
-    if (hr != S_OK)    /* No matches, what do we do?  */
-        return E_NOINTERFACE;
-
-    hr = GetFilterInfo(mon, &clsid, &var);
-    IMoniker_Release(mon);
-    if (FAILED(hr))
-        return hr;
-
-    hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IBaseFilter, (void **) &splitter);
-    if (FAILED(hr))
+    hr = E_NOINTERFACE;
+    while (IEnumMoniker_Next(filters, 1, &mon, NULL) == S_OK)
     {
+        hr = GetFilterInfo(mon, &clsid, &var);
+        IMoniker_Release(mon);
+        if (FAILED(hr))
+            continue;
+
+        hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER,
+                              &IID_IBaseFilter, (void **) &splitter);
+        if (FAILED(hr))
+        {
+            VariantClear(&var);
+            continue;
+        }
+
+        hr = IGraphBuilder_AddFilter(This->graph, splitter,
+                                     V_UNION(&var, bstrVal));
         VariantClear(&var);
-        return hr;
-    }
+        This->splitter = splitter;
+        if (FAILED(hr))
+            goto retry;
 
-    hr = IGraphBuilder_AddFilter(This->graph, splitter,
-                                 V_UNION(&var, bstrVal));
-    VariantClear(&var);
-    if (FAILED(hr))
-    {
-        IBaseFilter_Release(splitter);
-        return hr;
-    }
-    This->splitter = splitter;
+        hr = IBaseFilter_EnumPins(This->source, &pins);
+        if (FAILED(hr))
+            goto retry;
+        IEnumPins_Next(pins, 1, &source_pin, NULL);
+        IEnumPins_Release(pins);
 
-    hr = IBaseFilter_EnumPins(This->source, &pins);
-    if (FAILED(hr))
-        return hr;
-    IEnumPins_Next(pins, 1, &source_pin, NULL);
-    IEnumPins_Release(pins);
+        hr = IBaseFilter_EnumPins(splitter, &pins);
+        if (FAILED(hr))
+        {
+            IPin_Release(source_pin);
+            goto retry;
+        }
+        IEnumPins_Next(pins, 1, &splitter_pin, NULL);
+        IEnumPins_Release(pins);
 
-    hr = IBaseFilter_EnumPins(splitter, &pins);
-    if (FAILED(hr))
-    {
+        hr = IPin_Connect(source_pin, splitter_pin, NULL);
         IPin_Release(source_pin);
-        return hr;
-    }
-    IEnumPins_Next(pins, 1, &splitter_pin, NULL);
-    IEnumPins_Release(pins);
+        IPin_Release(splitter_pin);
+        if (SUCCEEDED(hr))
+            break;
 
-    hr = IPin_Connect(source_pin, splitter_pin, NULL);
-    IPin_Release(source_pin);
-    IPin_Release(splitter_pin);
+retry:
+        IBaseFilter_Release(splitter);
+        This->splitter = NULL;
+    }
+
+    IEnumMoniker_Release(filters);
     if (FAILED(hr))
         return hr;
 
@@ -433,7 +483,7 @@ static HRESULT GetSplitter(MediaDetImpl *This)
 static HRESULT WINAPI MediaDet_put_Filename(IMediaDet* iface, BSTR newVal)
 {
     static const WCHAR reader[] = {'R','e','a','d','e','r',0};
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     IGraphBuilder *gb;
     IBaseFilter *bf;
     HRESULT hr;
@@ -472,7 +522,7 @@ static HRESULT WINAPI MediaDet_GetBitmapBits(IMediaDet* iface,
                                              LONG *pBufferSize, char *pBuffer,
                                              LONG Width, LONG Height)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%f %p %p %d %d): not implemented!\n", This, StreamTime, pBufferSize, pBuffer,
           Width, Height);
     return E_NOTIMPL;
@@ -482,7 +532,7 @@ static HRESULT WINAPI MediaDet_WriteBitmapBits(IMediaDet* iface,
                                                double StreamTime, LONG Width,
                                                LONG Height, BSTR Filename)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%f %d %d %p): not implemented!\n", This, StreamTime, Width, Height, Filename);
     return E_NOTIMPL;
 }
@@ -490,7 +540,7 @@ static HRESULT WINAPI MediaDet_WriteBitmapBits(IMediaDet* iface,
 static HRESULT WINAPI MediaDet_get_StreamMediaType(IMediaDet* iface,
                                                    AM_MEDIA_TYPE *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     IEnumMediaTypes *types;
     AM_MEDIA_TYPE *pmt;
     HRESULT hr;
@@ -524,14 +574,14 @@ static HRESULT WINAPI MediaDet_get_StreamMediaType(IMediaDet* iface,
 static HRESULT WINAPI MediaDet_GetSampleGrabber(IMediaDet* iface,
                                                 ISampleGrabber **ppVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%p): not implemented!\n", This, ppVal);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MediaDet_get_FrameRate(IMediaDet* iface, double *pVal)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     AM_MEDIA_TYPE mt;
     VIDEOINFOHEADER *vh;
     HRESULT hr;
@@ -561,7 +611,7 @@ static HRESULT WINAPI MediaDet_get_FrameRate(IMediaDet* iface, double *pVal)
 static HRESULT WINAPI MediaDet_EnterBitmapGrabMode(IMediaDet* iface,
                                                    double SeekTime)
 {
-    MediaDetImpl *This = (MediaDetImpl *)iface;
+    MediaDetImpl *This = impl_from_IMediaDet(iface);
     FIXME("(%p)->(%f): not implemented!\n", This, SeekTime);
     return E_NOTIMPL;
 }
@@ -594,9 +644,6 @@ HRESULT MediaDet_create(IUnknown * pUnkOuter, LPVOID * ppv) {
 
     TRACE("(%p,%p)\n", ppv, pUnkOuter);
 
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
-
     obj = CoTaskMemAlloc(sizeof(MediaDetImpl));
     if (NULL == obj) {
         *ppv = NULL;
@@ -604,8 +651,9 @@ HRESULT MediaDet_create(IUnknown * pUnkOuter, LPVOID * ppv) {
     }
     ZeroMemory(obj, sizeof(MediaDetImpl));
 
-    obj->refCount = 1;
-    obj->MediaDet_Vtbl = &IMediaDet_VTable;
+    obj->ref = 1;
+    obj->IUnknown_inner.lpVtbl = &mediadet_vtbl;
+    obj->IMediaDet_iface.lpVtbl = &IMediaDet_VTable;
     obj->graph = NULL;
     obj->source = NULL;
     obj->splitter = NULL;
@@ -614,5 +662,11 @@ HRESULT MediaDet_create(IUnknown * pUnkOuter, LPVOID * ppv) {
     obj->cur_stream = 0;
     *ppv = obj;
 
+    if (pUnkOuter)
+        obj->outer_unk = pUnkOuter;
+    else
+        obj->outer_unk = &obj->IUnknown_inner;
+
+    *ppv = &obj->IUnknown_inner;
     return S_OK;
 }
