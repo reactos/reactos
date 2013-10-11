@@ -1414,21 +1414,22 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFE)
 
     if (ModRegRm.Register == 0)
     {
-        /* Increment and update OF */
+        /* Increment and update OF and AF */
         Value++;
         State->Flags.Of = (Value == SIGN_FLAG_BYTE) ? TRUE : FALSE;
+        State->Flags.Af = ((Value & 0x0F) == 0);
     }
     else
     {
-        /* Decrement and update OF */
+        /* Decrement and update OF and AF */
         State->Flags.Of = (Value == SIGN_FLAG_BYTE) ? TRUE : FALSE;
         Value--;
+        State->Flags.Af = ((Value & 0x0F) == 0x0F);
     }
 
     /* Update flags */
     State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
     State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-    State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
     State->Flags.Pf = Soft386CalculateParity(Value);
 
     /* Write back the result */
@@ -1483,15 +1484,17 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
 
         if (ModRegRm.Register == 0)
         {
-            /* Increment and update OF */
+            /* Increment and update OF and AF */
             Value++;
             State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
+            State->Flags.Af = ((Value & 0x0F) == 0);
         }
         else if (ModRegRm.Register == 1)
         {
-            /* Decrement and update OF */
+            /* Decrement and update OF and AF */
             State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
             Value--;
+            State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
 
         if (ModRegRm.Register <= 1)
@@ -1499,7 +1502,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             /* Update flags */
             State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
             State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-            State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
             State->Flags.Pf = Soft386CalculateParity(Value);
 
             /* Write back the result */
@@ -1524,12 +1526,14 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             /* Increment and update OF */
             Value++;
             State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
+            State->Flags.Af = ((Value & 0x0F) == 0);
         }
         else if (ModRegRm.Register == 1)
         {
             /* Decrement and update OF */
             State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
             Value--;
+            State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
 
         if (ModRegRm.Register <= 1)
@@ -1537,7 +1541,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             /* Update flags */
             State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
             State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-            State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
             State->Flags.Pf = Soft386CalculateParity(Value);
 
             /* Write back the result */

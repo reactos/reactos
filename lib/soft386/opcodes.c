@@ -6168,6 +6168,15 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
         {
             ULONG Processed = min(Count, STRING_BLOCK_SIZE / DataSize);
 
+            /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
+            if (!AddressSize)
+            {
+                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+
+                Processed = min(Processed, MaxBytes / DataSize);
+                if (Processed == 0) Processed = 1;
+            }
+
             if (State->Flags.Df)
             {
                 /* Reduce EDI by the number of bytes to transfer */
@@ -6437,6 +6446,15 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIns)
         {
             ULONG Processed = min(Count, STRING_BLOCK_SIZE / DataSize);
 
+            /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
+            if (!AddressSize)
+            {
+                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+
+                Processed = min(Processed, MaxBytes / DataSize);
+                if (Processed == 0) Processed = 1;
+            }
+
             /* Read from the I/O port */
             State->IoReadCallback(State,
                                   State->GeneralRegs[SOFT386_REG_EDX].LowWord,
@@ -6573,6 +6591,15 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeOuts)
         while (Count)
         {
             ULONG Processed = min(Count, STRING_BLOCK_SIZE / DataSize);
+
+            /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
+            if (!AddressSize)
+            {
+                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+
+                Processed = min(Processed, MaxBytes / DataSize);
+                if (Processed == 0) Processed = 1;
+            }
 
             /* Read from memory */
             if (!Soft386ReadMemory(State,

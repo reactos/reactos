@@ -494,7 +494,8 @@ Soft386ExceptionWithErrorCode(PSOFT386_STATE State,
         return;
     }
 
-    if (EXCEPTION_HAS_ERROR_CODE(ExceptionCode))
+    if (EXCEPTION_HAS_ERROR_CODE(ExceptionCode)
+        && (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE))
     {
         /* Push the error code */
         Soft386StackPush(State, ErrorCode);
