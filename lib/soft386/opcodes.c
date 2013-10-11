@@ -6135,7 +6135,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
         /* Fill the memory block with the data */
         if (DataSize == sizeof(UCHAR))
         {
-            RtlFillMemory(Block, State->GeneralRegs[SOFT386_REG_EAX].LowByte, sizeof(Block));
+            RtlFillMemory(Block, sizeof(Block), State->GeneralRegs[SOFT386_REG_EAX].LowByte);
         }
         else
         {
