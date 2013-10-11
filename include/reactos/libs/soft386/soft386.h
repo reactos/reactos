@@ -319,7 +319,7 @@ struct _SOFT386_STATE
     SOFT386_BOP_PROC BopCallback;
     SOFT386_REG GeneralRegs[SOFT386_NUM_GEN_REGS];
     SOFT386_SEG_REG SegmentRegs[SOFT386_NUM_SEG_REGS];
-    SOFT386_REG InstPtr;
+    SOFT386_REG InstPtr, SavedInstPtr;
     SOFT386_FLAGS_REG Flags;
     SOFT386_TABLE_REG Gdtr, Idtr, Ldtr, Tss;
     ULONGLONG TimeStampCounter;

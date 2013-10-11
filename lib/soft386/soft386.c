@@ -56,6 +56,9 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
     /* Main execution loop */
     do
     {
+        /* If this is a new instruction, save the IP */
+        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+
         /* Perform an instruction fetch */
         if (!Soft386FetchByte(State, &Opcode)) continue;
 

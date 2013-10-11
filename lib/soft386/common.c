@@ -469,6 +469,9 @@ Soft386ExceptionWithErrorCode(PSOFT386_STATE State,
         return;
     }
 
+    /* Restore the IP to the saved IP */
+    State->InstPtr = State->SavedInstPtr;
+
     if (!Soft386GetIntVector(State, ExceptionCode, &IdtEntry))
     {
         /*
