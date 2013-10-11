@@ -223,8 +223,8 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
         /* Release the working set lock */
         MiUnlockProcessWorkingSetForFault(CurrentProcess,
                                           CurrentThread,
-                                          WsSafe,
-                                          WsShared);
+                                          &WsSafe,
+                                          &WsShared);
 
         /* Fault it in */
         Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
