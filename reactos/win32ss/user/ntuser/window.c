@@ -426,6 +426,8 @@ static LRESULT co_UserFreeWindow(PWND Window,
    PWND Child;
    PMENU_OBJECT Menu;
    BOOLEAN BelongsToThreadData;
+   PLIST_ENTRY ListEntry;
+   PPROPERTY Property;
 
    ASSERT(Window);
 
@@ -553,6 +555,14 @@ static LRESULT co_UserFreeWindow(PWND Window,
 #endif
 
    IntUnlinkWindow(Window);
+
+   ListEntry = Window->PropListHead.Flink;
+   while (ListEntry != &Window->PropListHead)
+   {
+       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+       ListEntry = ListEntry->Flink;
+       IntRemoveProp(Window, Property->Atom);
+   }
 
    UserReferenceObject(Window);
    UserDeleteObject(Window->head.h, TYPE_WINDOW);

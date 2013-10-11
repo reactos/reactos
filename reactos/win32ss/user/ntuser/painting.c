@@ -1987,9 +1987,7 @@ BOOL UserDrawCaption(
 
       if (!hIcon && pWnd)
       {
-          hIcon = pWnd->pcls->hIconSm; // FIXME: Windows does not do that
-          if(!hIcon)
-             hIcon = pWnd->pcls->hIcon;
+          hIcon = NC_IconForWindow( pWnd );
       }
 
       if (hIcon)

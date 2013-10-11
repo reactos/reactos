@@ -32,6 +32,7 @@ extern HINSTANCE hImmInstance;
 extern RTL_CRITICAL_SECTION gcsUserApiHook;
 extern USERAPIHOOK guah;
 extern HINSTANCE ghmodUserApiHook;
+extern HICON hIconSmWindows, hIconWindows;
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -101,5 +102,6 @@ BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 HWND* WIN_ListChildren (HWND hWndparent);
 VOID DeleteFrameBrushes(VOID);
 BOOL WINAPI GdiValidateHandle(HGDIOBJ);
+HANDLE FASTCALL UserGetProp(HWND hWnd, ATOM Atom);
 
 /* EOF */

@@ -15,6 +15,7 @@ PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
 BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
+HICON hIconSmWindows = NULL, hIconWindows = NULL;
 
 WCHAR szAppInit[KEY_LENGTH];
 
@@ -207,6 +208,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallClientLoadLibraryFromKernel,
     User32CallGetCharsetInfo,
     User32CallCopyImageFromKernel,
+    User32CallSetWndIconsFromKernel,
 };
 
 /*
@@ -352,11 +354,38 @@ DllMain(
    return TRUE;
 }
 
+
+VOID
+FASTCALL
+GetConnected(VOID)
+{
+  USERCONNECT UserCon;
+//  ERR("GetConnected\n");
+
+  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+     NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+
+  if (gpsi && g_ppi) return;
+// FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
+  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
+
+  NtUserProcessConnect( NtCurrentProcess(),
+                         &UserCon,
+                         sizeof(USERCONNECT));
+
+  g_ppi = GetWin32ClientInfo()->ppi;
+  g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+  gpsi = SharedPtrToUser(UserCon.siClient.psi);
+  gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+  gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
+
+}
+
 NTSTATUS
 WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-  ERR("GetConnected\n");
+  ERR("ClientThreadSetup\n");
   ClientThreadSetup();
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
 }
@@ -373,4 +402,21 @@ User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength)
   Ret = TranslateCharsetInfo((DWORD *)pgci->Locale, &pgci->Cs, TCI_SRCLOCALE);
 
   return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);  
+}
+
+NTSTATUS
+WINAPI
+User32CallSetWndIconsFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PSETWNDICONS_CALLBACK_ARGUMENTS Common = Arguments;
+
+  if (!hIconSmWindows)
+  {
+      hIconSmWindows = LoadImageW(0, IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
+      hIconWindows   = LoadImageW(0, IDI_WINLOGO, IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+  }
+  Common->hIconSmWindows = hIconSmWindows;
+  Common->hIconWindows = hIconWindows;
+
+  return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }

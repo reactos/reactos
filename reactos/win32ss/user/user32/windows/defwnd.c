@@ -982,6 +982,68 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+// WM_SETICON
+LRESULT FASTCALL
+DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    HICON hIcon, hIconSmall, hIconOld;
+ 
+    if ( wParam > ICON_SMALL2 )
+    {  
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    hIconSmall = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp);
+    hIcon = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp);
+
+    hIconOld = wParam == ICON_BIG ? hIcon : hIconSmall;
+
+    switch(wParam)
+    {
+        case ICON_BIG:
+            hIcon = (HICON)lParam;
+            break;
+        case ICON_SMALL:
+            hIconSmall = (HICON)lParam;
+            break;
+        case ICON_SMALL2:
+            ERR("FIXME: Set ICON_SMALL2 support!\n");
+        default:
+            break;
+    }
+
+    NtUserSetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp, hIcon);
+    NtUserSetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, hIconSmall);
+
+    if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
+       DefWndNCPaint(UserHMGetHandle(pWnd), HRGN_WINDOW, -1);  /* Repaint caption */
+
+    return (LRESULT)hIconOld;
+}
+
+LRESULT FASTCALL
+DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+    HICON hIconRet;
+    if ( wParam > ICON_SMALL2 )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    switch(wParam)
+    {
+        case ICON_BIG:
+            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconProp);
+            break;
+        case ICON_SMALL:
+        case ICON_SMALL2:
+            hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp);
+            break;
+        default:
+            break;
+    }
+    return (LRESULT)hIconRet;
+}
 
 VOID FASTCALL
 DefWndScreenshot(HWND hWnd)
@@ -1523,19 +1585,12 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETICON:
         {
-           INT Index = (wParam != 0) ? GCL_HICON : GCL_HICONSM;
-           HICON hOldIcon = (HICON)GetClassLongPtrW(hWnd, Index);
-           SetClassLongPtrW(hWnd, Index, lParam);
-           SetWindowPos(hWnd, 0, 0, 0, 0, 0,
-		       SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
-		       SWP_NOACTIVATE | SWP_NOZORDER);
-           return ((LRESULT)hOldIcon);
+           return DefWndSetIcon(pWnd, wParam, lParam);
         }
 
         case WM_GETICON:
         {
-            INT Index = (wParam == ICON_BIG) ? GCL_HICON : GCL_HICONSM;
-            return (GetClassLongPtrW(hWnd, Index));
+           return DefWndGetIcon(pWnd, wParam, lParam);
         }
 
         case WM_HELP:

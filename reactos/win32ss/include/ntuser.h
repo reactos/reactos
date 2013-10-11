@@ -69,6 +69,7 @@ typedef enum _USERTHREADINFOCLASS
     UserThreadWOWInformation,
     UserThreadHungStatus,
     UserThreadInitiateShutdown,
+
     UserThreadEndShutdown,
     UserThreadUseActiveDesktop,
     UserThreadUseDesktop,
@@ -119,6 +120,7 @@ typedef struct _DESKTOPINFO
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
+    struct _WND * spwndShell;
 
     PPROCESSINFO ppiShellProcess;
 
@@ -857,7 +859,7 @@ typedef struct _PERUSERSERVERINFO
     TEXTMETRICW   tmSysFont;
     DPISERVERINFO dpiSystem;
     HICON         hIconSmWindows;
-    HICON         hIcoWindows;
+    HICON         hIconWindows;
     DWORD         dwKeyCache;
     DWORD         dwAsyncKeyCache;
     ULONG         cCaptures;

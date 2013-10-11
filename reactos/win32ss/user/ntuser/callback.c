@@ -881,7 +881,6 @@ co_IntClientThreadSetup(VOID)
    return Status;
 }
 
-
 HANDLE FASTCALL
 co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 {
@@ -987,6 +986,55 @@ co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)
    if (!NT_SUCCESS(Status))
    {
       ERR("GetCharsetInfo Failed!!\n");
+      return FALSE;
+   }
+
+   return TRUE;
+}
+
+BOOL FASTCALL
+co_IntSetWndIcons(VOID)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PSETWNDICONS_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(SETWNDICONS_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("Set Window Icons callback failed: out of memory\n");
+      return FALSE;
+   }
+   Common = (PSETWNDICONS_CALLBACK_ARGUMENTS) Argument;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_SETWNDICONS,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
+   gpsi->hIconSmWindows = Common->hIconSmWindows;
+   gpsi->hIconWindows   = Common->hIconWindows;
+
+   ERR("hIconSmWindows %p hIconWindows %p \n",gpsi->hIconSmWindows,gpsi->hIconWindows);
+
+   IntCbFreeMemory(Argument);
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Set Window Icons callback failed!\n");
       return FALSE;
    }
 

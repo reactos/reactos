@@ -742,5 +742,6 @@ ASSERT_PFN(DeriveSurface);
 ASSERT_PFN(QueryGlyphAttrs);
 ASSERT_PFN(Notify);
 ASSERT_PFN(SynchronizeSurface);
+ASSERT_PFN(ResetDevice);
 
 #endif

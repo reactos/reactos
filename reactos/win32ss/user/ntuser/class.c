@@ -1899,8 +1899,6 @@ UserSetClassLongPtr(IN PCLS Class,
 
                if (hIconSmIntern) Class->CSF_flags |= CSF_CACHEDSMICON;
                //// FIXME: Very hacky here but it passes the tests....
-               //// We should not kill a users handle!!! 
-               if (Class->hIconSm) IntClassDestroyIcon(Class->hIconSm); // Fixes 1013
                Ret = 0;                                                 // Fixes 1009
             }
             Class->hIconSm = (HANDLE)NewLong;

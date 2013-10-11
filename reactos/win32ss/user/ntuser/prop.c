@@ -30,6 +30,15 @@ IntGetProp(PWND Window, ATOM Atom)
    return(NULL);
 }
 
+HANDLE
+FASTCALL
+UserGetProp(PWND pWnd, ATOM Atom)
+{
+  PPROPERTY Prop;
+  Prop = IntGetProp(pWnd, Atom);
+  return Prop ? Prop->Data : NULL;
+}
+
 BOOL FASTCALL
 IntRemoveProp(PWND Window, ATOM Atom)
 {

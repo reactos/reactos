@@ -12,7 +12,8 @@
 #define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
 #define USER32_CALLBACK_GETCHARSETINFO        (9)
 #define USER32_CALLBACK_COPYIMAGE             (10)
-#define USER32_CALLBACK_MAXIMUM               (10)
+#define USER32_CALLBACK_SETWNDICONS           (11)
+#define USER32_CALLBACK_MAXIMUM               (11)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -105,8 +106,16 @@ typedef struct _GET_CHARSET_INFO
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
 
+typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
+{
+    HICON hIconSmWindows;
+    HICON hIconWindows;
+} SETWNDICONS_CALLBACK_ARGUMENTS, *PSETWNDICONS_CALLBACK_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallSetWndIconsFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
