@@ -318,13 +318,33 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             SIZE_T Length = 0;
 
             /*
-             * We select all the characters from line 1 to
-             * the line where the cursor is positioned.
+             * The selection area extends to the whole screen buffer's width.
              */
             Console->Selection.dwSelectionAnchor.X = 0;
             Console->Selection.dwSelectionAnchor.Y = 0;
-            Console->dwSelectionCursor.X = ActiveBuffer->ViewSize.X - 1;
-            Console->dwSelectionCursor.Y = ActiveBuffer->CursorPosition.Y;
+            Console->dwSelectionCursor.X = ActiveBuffer->ScreenBufferSize.X - 1;
+
+            /*
+             * Determine whether the selection must extend to just some part
+             * (for text-mode screen buffers) or to all of the screen buffer's
+             * height (for graphics ones).
+             */
+            if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
+            {
+                /*
+                 * We select all the characters from the first line
+                 * to the line where the cursor is positioned.
+                 */
+                Console->dwSelectionCursor.Y = ActiveBuffer->CursorPosition.Y;
+            }
+            else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
+            {
+                /*
+                 * We select all the screen buffer area.
+                 */
+                Console->dwSelectionCursor.Y = ActiveBuffer->ScreenBufferSize.Y - 1;
+            }
+
             Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION;
             GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
 
