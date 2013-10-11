@@ -466,12 +466,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIncrement)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -509,12 +510,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeDecrement)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+    
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -618,12 +620,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeExchangeEax)
     INT Reg = Opcode & 0x07;
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -974,12 +977,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIn)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF7) == 0xE5);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -1073,12 +1077,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeOut)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF7) == 0xE7);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -4533,12 +4538,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCwde)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x98);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -4573,12 +4579,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCdq)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x99);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -4825,7 +4832,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeRet)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
@@ -5538,7 +5545,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeJecxz)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
@@ -5570,12 +5577,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xE8);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
@@ -5635,12 +5643,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeJmp)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xE9);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
-    else if (State->PrefixFlags != 0)
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
