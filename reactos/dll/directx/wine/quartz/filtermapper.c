@@ -305,7 +305,7 @@ static HRESULT WINAPI FilterMapper3_CreateCategory(
         hr = HRESULT_FROM_WIN32(lRet);
     }
 
-    CloseHandle(hKey);
+    RegCloseKey(hKey);
     CoTaskMemFree(wClsidCategory);
     CoTaskMemFree(wClsidAMCat);
 
@@ -1285,7 +1285,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         lRet = RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szName, (strlenW(szName) + 1) * sizeof(WCHAR));
         hr = HRESULT_FROM_WIN32(lRet);
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
     }
 
     if (SUCCEEDED(hr))
@@ -1301,7 +1301,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         lRet = RegSetValueExW(hKey, wszMeritName, 0, REG_DWORD, (LPBYTE)&dwMerit, sizeof(dwMerit));
         hr = HRESULT_FROM_WIN32(lRet);
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
     }
     
     CoTaskMemFree(wszClsid);
@@ -1405,9 +1405,9 @@ static HRESULT WINAPI FilterMapper_RegisterPin(
 
     CoTaskMemFree(wszClsid);
     if (hKey)
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
     if (hPinsKey)
-        CloseHandle(hPinsKey);
+        RegCloseKey(hPinsKey);
 
     return hr;
 }
@@ -1478,7 +1478,7 @@ static HRESULT WINAPI FilterMapper_RegisterPinType(
 
         lRet = RegCreateKeyExW(hKey, wszKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkeyDummy, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
 
         if (hkeyDummy) RegCloseKey(hkeyDummy);
     }
@@ -1512,7 +1512,7 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
     {
         lRet = RegDeleteKeyW(hKey, wszClsid);
         hr = HRESULT_FROM_WIN32(lRet);
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
     }
 
     if (SUCCEEDED(hr))
@@ -1534,7 +1534,7 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
         if (lRet != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(lRet);
 
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
     }
 
     CoTaskMemFree(wszClsid);
@@ -1596,7 +1596,7 @@ static HRESULT WINAPI FilterMapper_UnregisterPin(IFilterMapper * iface, CLSID Fi
 
     CoTaskMemFree(wszClsid);
     if (hKey)
-        CloseHandle(hKey);
+        RegCloseKey(hKey);
 
     return hr;
 }
