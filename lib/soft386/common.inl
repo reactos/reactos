@@ -436,10 +436,7 @@ FORCEINLINE
 BOOLEAN
 Soft386CalculateParity(UCHAR Number)
 {
-    Number ^= Number >> 1;
-    Number ^= Number >> 2;
-    Number ^= Number >> 4;
-    return !(Number & 1);
+    return (0x9669 >> ((Number & 0x0F) ^ (Number >> 4))) & 1;
 }
 
 FORCEINLINE
