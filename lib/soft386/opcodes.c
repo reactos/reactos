@@ -5960,7 +5960,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
     /* Increment/decrement ESI and EDI */
     if (OperandSize)
     {
-        if (State->Flags.Df)
+        if (!State->Flags.Df)
         {
             State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
             State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
@@ -5973,7 +5973,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
     }
     else
     {
-        if (State->Flags.Df)
+        if (!State->Flags.Df)
         {
             State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
             State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
@@ -6071,7 +6071,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
     /* Increment/decrement ESI and EDI */
     if (OperandSize)
     {
-        if (State->Flags.Df)
+        if (!State->Flags.Df)
         {
             State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
             State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
@@ -6084,7 +6084,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
     }
     else
     {
-        if (State->Flags.Df)
+        if (!State->Flags.Df)
         {
             State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
             State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
@@ -6214,12 +6214,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
         /* Increment/decrement EDI */
         if (OperandSize)
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
             else State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
         }
         else
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
             else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
         }
     }
@@ -6291,12 +6291,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
     /* Increment/decrement ESI */
     if (OperandSize)
     {
-        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+        if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
         else State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
     }
     else
     {
-        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+        if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
         else State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
     }
 
@@ -6375,12 +6375,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeScas)
     /* Increment/decrement EDI */
     if (OperandSize)
     {
-        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
         else State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
     }
     else
     {
-        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
         else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
     }
 
@@ -6511,12 +6511,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIns)
         /* Increment/decrement EDI */
         if (OperandSize)
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
             else State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
         }
         else
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
             else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
         }
     }
@@ -6650,12 +6650,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeOuts)
         /* Increment/decrement ESI */
         if (OperandSize)
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
             else State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
         }
         else
         {
-            if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+            if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
             else State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
         }
     }
