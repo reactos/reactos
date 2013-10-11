@@ -6341,6 +6341,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIns)
         ULONG Count = OperandSize ? State->GeneralRegs[SOFT386_REG_ECX].Long
                                   : State->GeneralRegs[SOFT386_REG_ECX].LowWord;
 
+        /* Clear the memory block */
+        RtlZeroMemory(Block, sizeof(Block));
+
         /* Transfer until finished */
         while (Count)
         {
