@@ -4137,7 +4137,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
        MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
        MemoryArea->DeleteInProgress)
    {
-      ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
+      if (MemoryArea) NT_ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
       MmUnlockAddressSpace(AddressSpace);
       return STATUS_NOT_MAPPED_VIEW;
    }
