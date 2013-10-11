@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #define COBJMACROS
 
 #include "wine/test.h"
@@ -71,9 +69,9 @@ static void CommitDecommitTest(void)
 
             hr = IMemAllocator_GetBuffer(pMemAllocator, &sample2, NULL, NULL, 0);
             ok(hr==S_OK, "Could not get a buffer: %x\n", hr);
-            IUnknown_Release(sample);
+            IMediaSample_Release(sample);
             if (sample2)
-                IUnknown_Release(sample2);
+                IMediaSample_Release(sample2);
 
             hr = IMemAllocator_Decommit(pMemAllocator);
             ok(hr==S_OK, "Cecommit returned: %x\n", hr);

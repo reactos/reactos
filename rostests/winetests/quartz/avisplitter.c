@@ -89,29 +89,23 @@ static void test_query_interface(void)
     ULONG ref;
     IUnknown *iface= NULL;
 
-    hr = IUnknown_QueryInterface(pAviSplitter, &IID_IBaseFilter,
-        (void**)&iface);
+#define TEST_INTERFACE(riid,expected) do { \
+    hr = IUnknown_QueryInterface(pAviSplitter, &riid, (void**)&iface); \
+    ok( hr == expected, #riid" should %s got %08X\n", expected==S_OK ? "exist" : "not be present", GetLastError() ); \
+    if (hr == S_OK) { \
+        ref = IUnknown_Release(iface); \
+        ok(ref == 1, "Reference is %u, expected 1\n", ref); \
+    } \
+    iface = NULL; \
+    } while(0)
 
-    ok(hr == S_OK,
-        "IID_IBaseFilter should exist, got %08x!\n", GetLastError());
-    if (hr == S_OK)
-    {
-        ref = IUnknown_Release(iface);
-        iface = NULL;
-        ok(ref == 1, "Reference is %u, expected 1\n", ref);
-    }
-
-    hr = IUnknown_QueryInterface(pAviSplitter, &IID_IMediaSeeking,
-        (void**)&iface);
-    if (hr == S_OK)
-        ref = IUnknown_Release(iface);
-    iface = NULL;
-    todo_wine ok(hr == E_NOINTERFACE,
-        "Query for IMediaSeeking returned: %08x\n", hr);
-
-/* These interfaces should not be present:
-    IID_IKsPropertySet, IID_IMediaPosition, IID_IQualityControl, IID_IQualProp
-*/
+    TEST_INTERFACE(IID_IBaseFilter,S_OK);
+    TEST_INTERFACE(IID_IMediaSeeking,E_NOINTERFACE);
+    TEST_INTERFACE(IID_IKsPropertySet,E_NOINTERFACE);
+    TEST_INTERFACE(IID_IMediaPosition,E_NOINTERFACE);
+    TEST_INTERFACE(IID_IQualityControl,E_NOINTERFACE);
+    TEST_INTERFACE(IID_IQualProp,E_NOINTERFACE);
+#undef TEST_INTERFACE
 }
 
 static void test_pin(IPin *pin)
@@ -179,10 +173,10 @@ static const WCHAR wfile[] = {'t','e','s','t','.','a','v','i',0};
 static const char afile[] = "test.avi";
 
 /* This test doesn't use the quartz filtergraph because it makes it impossible
- * to be certain that a thread is really one owned by the avi splitter
- * A lot of the decoder filters will also have their own thread, and windows'
+ * to be certain that a thread is really one owned by the avi splitter.
+ * A lot of the decoder filters will also have their own thread, and Windows'
  * filtergraph has a separate thread for start/stop/seeking requests.
- * By avoiding the filtergraph all together and connecting streams directly to
+ * By avoiding the filtergraph altogether and connecting streams directly to
  * the null renderer I am sure that this is not the case here.
  */
 static void test_threads(void)
@@ -206,7 +200,7 @@ static void test_threads(void)
         return;
     }
 
-    /* Before doing anything (number of threads at the start differs per OS) */
+    /* Before doing anything (the thread count at the start differs per OS) */
     baselevel = count_threads();
 
     file = CreateFileW(wfile, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
@@ -233,7 +227,7 @@ static void test_threads(void)
     ok(hr == E_NOINTERFACE,
         "Avi splitter returns unexpected error: %08x\n", hr);
     if (pfile)
-        IUnknown_Release(pfile);
+        IFileSourceFilter_Release(pfile);
     pfile = NULL;
 
     hr = CoCreateInstance(&CLSID_AsyncReader, NULL, CLSCTX_INPROC_SERVER,
@@ -242,7 +236,7 @@ static void test_threads(void)
     if (hr != S_OK)
         goto fail;
 
-    hr = IUnknown_QueryInterface(preader, &IID_IFileSourceFilter,
+    hr = IBaseFilter_QueryInterface(preader, &IID_IFileSourceFilter,
         (void**)&pfile);
     ok(hr == S_OK, "Could not get IFileSourceFilter: %08x\n", hr);
     if (hr != S_OK)
@@ -271,7 +265,7 @@ static void test_threads(void)
     if (hr != S_OK)
         goto fail;
 
-    IUnknown_Release(enumpins);
+    IEnumPins_Release(enumpins);
     enumpins = NULL;
 
     hr = IBaseFilter_EnumPins(pavi, &enumpins);
@@ -286,7 +280,7 @@ static void test_threads(void)
 
     curlevel = count_threads();
     ok(curlevel == baselevel,
-        "Amount of threads should be %d not %d\n", baselevel, curlevel);
+        "The thread count should be %d not %d\n", baselevel, curlevel);
 
     hr = IPin_Connect(filepin, avipin, NULL);
     ok(hr == S_OK, "Could not connect: %08x\n", hr);
@@ -296,9 +290,9 @@ static void test_threads(void)
     expected = 1 + baselevel;
     curlevel = count_threads();
     ok(curlevel == expected,
-        "Amount of threads should be %d not %d\n", expected, curlevel);
+        "The thread count should be %d not %d\n", expected, curlevel);
 
-    IUnknown_Release(avipin);
+    IPin_Release(avipin);
     avipin = NULL;
 
     IEnumPins_Reset(enumpins);
@@ -309,7 +303,6 @@ static void test_threads(void)
      */
     while (IEnumPins_Next(enumpins, 1, &avipin, NULL) == S_OK)
     {
-        ok(hr == S_OK, "hr: %08x\n", hr);
         IPin_QueryDirection(avipin, &dir);
         if (dir == PINDIR_OUTPUT)
         {
@@ -341,18 +334,18 @@ static void test_threads(void)
             ++expected;
         }
 
-        IUnknown_Release(avipin);
+        IPin_Release(avipin);
         avipin = NULL;
     }
 
     if (avipin)
-        IUnknown_Release(avipin);
+        IPin_Release(avipin);
     avipin = NULL;
 
     if (hr != S_OK)
         goto fail2;
     /* At this point there is a minimalistic connected avi splitter that can
-     * Be used for all sorts of source filter tests, however that still needs
+     * be used for all sorts of source filter tests. However that still needs
      * to be written at a later time.
      *
      * Interesting tests:
@@ -372,7 +365,7 @@ static void test_threads(void)
 
     curlevel = count_threads();
     ok(curlevel == expected,
-        "Amount of threads should be %d not %d\n", expected, curlevel);
+        "The thread count should be %d not %d\n", expected, curlevel);
 
     IBaseFilter_Pause(pavi);
     IBaseFilter_Pause(preader);
@@ -421,10 +414,10 @@ fail:
     if (hr != S_OK)
         skip("Prerequisites not matched, skipping remainder of test\n");
     if (enumpins)
-        IUnknown_Release(enumpins);
+        IEnumPins_Release(enumpins);
 
     if (avipin)
-        IUnknown_Release(avipin);
+        IPin_Release(avipin);
     if (filepin)
     {
         IPin *to = NULL;
@@ -435,20 +428,20 @@ fail:
             IPin_Disconnect(filepin);
             IPin_Disconnect(to);
         }
-        IUnknown_Release(filepin);
+        IPin_Release(filepin);
     }
 
     if (preader)
-        IUnknown_Release(preader);
+        IBaseFilter_Release(preader);
     if (pavi)
-        IUnknown_Release(pavi);
+        IBaseFilter_Release(pavi);
     if (pfile)
-        IUnknown_Release(pfile);
+        IFileSourceFilter_Release(pfile);
 
     curlevel = count_threads();
     todo_wine
     ok(curlevel == baselevel,
-        "Amount of threads should be %d not %d\n", baselevel, curlevel);
+        "The thread count should be %d not %d\n", baselevel, curlevel);
 }
 
 START_TEST(avisplitter)
