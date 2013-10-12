@@ -513,7 +513,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
     PCONSOLE Console;
-    HDC Dc;
+    HDC hDC;
     HFONT OldFont;
     TEXTMETRICW Metrics;
     SIZE CharSize;
@@ -552,8 +552,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
-    Dc = GetDC(GuiData->hWindow);
-    if (NULL == Dc)
+    hDC = GetDC(GuiData->hWindow);
+    if (NULL == hDC)
     {
         DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
         DeleteObject(GuiData->Font);
@@ -561,21 +561,21 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
-    OldFont = SelectObject(Dc, GuiData->Font);
+    OldFont = SelectObject(hDC, GuiData->Font);
     if (NULL == OldFont)
     {
         DPRINT1("GuiConsoleNcCreate: SelectObject failed\n");
-        ReleaseDC(GuiData->hWindow, Dc);
+        ReleaseDC(GuiData->hWindow, hDC);
         DeleteObject(GuiData->Font);
         GuiData->hWindow = NULL;
         SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
-    if (!GetTextMetricsW(Dc, &Metrics))
+    if (!GetTextMetricsW(hDC, &Metrics))
     {
         DPRINT1("GuiConsoleNcCreate: GetTextMetrics failed\n");
-        SelectObject(Dc, OldFont);
-        ReleaseDC(GuiData->hWindow, Dc);
+        SelectObject(hDC, OldFont);
+        ReleaseDC(GuiData->hWindow, hDC);
         DeleteObject(GuiData->Font);
         GuiData->hWindow = NULL;
         SetEvent(GuiData->hGuiInitEvent);
@@ -585,12 +585,12 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
 
     /* Measure real char width more precisely if possible. */
-    if (GetTextExtentPoint32W(Dc, L"R", 1, &CharSize))
+    if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
         GuiData->CharWidth = CharSize.cx;
 
-    SelectObject(Dc, OldFont);
+    SelectObject(hDC, OldFont);
 
-    ReleaseDC(GuiData->hWindow, Dc);
+    ReleaseDC(GuiData->hWindow, hDC);
 
     // FIXME: Keep these instructions here ? ///////////////////////////////////
     Console->ActiveBuffer->CursorBlinkOn = TRUE;
@@ -1700,6 +1700,52 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             GuiConsoleHandlePaint(GuiData);
             break;
 
+        case WM_PALETTECHANGED:
+        {
+            PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
+
+            DPRINT1("WM_PALETTECHANGED called\n");
+
+            /*
+             * Protects against infinite loops:
+             * "... A window that receives this message must not realize
+             * its palette, unless it determines that wParam does not contain
+             * its own window handle." (WM_PALETTECHANGED description - MSDN)
+             *
+             * This message is sent to all windows, including the one that
+             * changed the system palette and caused this message to be sent.
+             * The wParam of this message contains the handle of the window
+             * that caused the system palette to change. To avoid an infinite
+             * loop, care must be taken to check that the wParam of this message
+             * does not match the window's handle.
+             */
+            if ((HWND)wParam == hWnd) break;
+
+            DPRINT1("WM_PALETTECHANGED ok\n");
+
+            // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
+            if (ActiveBuffer->PaletteHandle)
+            {
+                /* Get the Device Context of the console window */
+                HDC hDC = GetDC(GuiData->hWindow);
+
+                DPRINT1("WM_PALETTECHANGED changing palette\n");
+
+                /* Specify the use of the system palette */
+                SetSystemPaletteUse(hDC, ActiveBuffer->PaletteUsage);
+
+                /* Realize the (logical) palette */
+                RealizePalette(hDC);
+
+                /* Release the Device Context and return */
+                ReleaseDC(GuiData->hWindow, hDC);
+            }
+
+            DPRINT1("WM_PALETTECHANGED quit\n");
+
+            break;
+        }
+
         case WM_KEYDOWN:
         case WM_KEYUP:
         case WM_CHAR:
@@ -1805,14 +1851,16 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
              * call after that DefWindowProc, on ReactOS, right-clicks on the
              * (non-client) application title-bar does not display the system
              * menu and does not trigger a WM_NCRBUTTONUP message too.
-             * See: http://git.reactos.org/?p=reactos.git;a=blob;f=reactos/win32ss/user/user32/windows/defwnd.c;hb=HEAD#l1103
+             * See: http://git.reactos.org/?p=reactos.git;a=blob;f=reactos/win32ss/user/user32/windows/defwnd.c;hb=332bc8f482f40fd05ab510f78276576719fbfba8#l1103
              * and line 1135 too.
              */
+#if 0
             if (DefWindowProcW(hWnd, WM_NCHITTEST, 0, lParam) == HTCAPTION)
             {
                 /* Call DefWindowProcW with the WM_CONTEXTMENU message */
                 msg = WM_CONTEXTMENU;
             }
+#endif
             goto Default;
         }
         // case WM_NCRBUTTONUP:
@@ -2370,6 +2418,9 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         }
     }
 
+    /* Original system palette */
+    GuiData->hSysPalette = NULL;
+
     /* Mouse is shown by default with its default cursor shape */
     GuiData->hCursor = ghDefaultCursor;
     GuiData->MouseCursorRefCount = 0;
@@ -2567,6 +2618,9 @@ static VOID WINAPI
 GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer; // = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
+    HDC hDC;
+    HPALETTE hPalette;
 
     EnterCriticalSection(&GuiData->Lock);
     GuiData->WindowSizeLock = TRUE;
@@ -2577,10 +2631,37 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
     GuiData->WindowSizeLock = FALSE;
     LeaveCriticalSection(&GuiData->Lock);
 
+    ActiveBuffer = GuiData->ActiveBuffer;
+
+    /* Change the current palette */
+    if (ActiveBuffer->PaletteHandle == NULL)
+    {
+        hPalette = GuiData->hSysPalette;
+    }
+    else
+    {
+        hPalette = ActiveBuffer->PaletteHandle;
+    }
+
+    DPRINT1("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
+
+    /* Get the Device Context of the console window */
+    hDC = GetDC(GuiData->hWindow);
+
+    /* Set the new palette */
+    SelectPalette(hDC, hPalette, FALSE);
+
+    /* Specify the use of the system palette */
+    SetSystemPaletteUse(hDC, ActiveBuffer->PaletteUsage);
+
+    /* Realize the (logical) palette */
+    RealizePalette(hDC);
+
+    /* Release the Device Context */
+    ReleaseDC(GuiData->hWindow, hDC);
+
     GuiResizeTerminal(This);
     // ConioDrawConsole(Console);
-
-    // FIXME: Change the palette.
 }
 
 static VOID WINAPI
@@ -2588,6 +2669,7 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
                        IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+    HDC hDC;
 
     /*
      * If we were notified to release a screen buffer that is not actually
@@ -2603,6 +2685,20 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
      *   it ONLY.
      */
 
+    /* Get the Device Context of the console window */
+    hDC = GetDC(GuiData->hWindow);
+
+    /* Release the old active palette and set the default one */
+    if (GetCurrentObject(hDC, OBJ_PAL) == ScreenBuffer->PaletteHandle)
+    {
+        /* Set the new palette */
+        SelectPalette(hDC, GuiData->hSysPalette, FALSE);
+    }
+
+    /* Release the Device Context */
+    ReleaseDC(GuiData->hWindow, hDC);
+
+    /* Set the adequate active screen buffer */
     if (ScreenBuffer != GuiData->Console->ActiveBuffer)
     {
         GuiSetActiveScreenBuffer(This);
@@ -2767,6 +2863,61 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
     pSize->Y = (SHORT)(height / (int)HeightUnit) /* HACK */ + 1;
 }
 
+static BOOL WINAPI
+GuiSetPalette(IN OUT PFRONTEND This,
+              HPALETTE PaletteHandle,
+              UINT PaletteUsage)
+{
+    BOOL Success = TRUE;
+    PGUI_CONSOLE_DATA GuiData = This->Data;
+    // PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
+    HDC hDC;
+    HPALETTE OldPalette;
+
+    DPRINT1("GuiSetPalette checkpt 0\n");
+
+    // if (GetType(ActiveBuffer) != GRAPHICS_BUFFER) return FALSE;
+    if (PaletteHandle == NULL) return FALSE;
+
+    DPRINT1("GuiSetPalette checkpt 1\n");
+
+    /* Get the Device Context of the console window */
+    hDC = GetDC(GuiData->hWindow);
+
+    DPRINT1("GuiSetPalette calling SelectPalette(0x%p, 0x%p, FALSE)\n", hDC, PaletteHandle);
+
+    /* Set the new palette */
+    OldPalette = SelectPalette(hDC, PaletteHandle, FALSE);
+    DPRINT1("OldPalette = 0x%p\n", OldPalette);
+    if (OldPalette == NULL)
+    {
+        DPRINT1("SelectPalette failed\n");
+        Success = FALSE;
+        goto Quit;
+    }
+
+    DPRINT1("GuiSetPalette checkpt 2\n");
+
+    /* Specify the use of the system palette */
+    SetSystemPaletteUse(hDC, PaletteUsage);
+
+    /* Realize the (logical) palette */
+    RealizePalette(hDC);
+
+    DPRINT1("GuiData->hSysPalette before == 0x%p\n", GuiData->hSysPalette);
+
+    /* Save the original system palette handle */
+    if (GuiData->hSysPalette == NULL) GuiData->hSysPalette = OldPalette;
+
+    DPRINT1("GuiData->hSysPalette after == 0x%p\n", GuiData->hSysPalette);
+
+Quit:
+    DPRINT1("GuiSetPalette Quit\n");
+    /* Release the Device Context and return */
+    ReleaseDC(GuiData->hWindow, hDC);
+    return Success;
+}
+
 static ULONG WINAPI
 GuiGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -2880,6 +3031,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiChangeIcon,
     GuiGetConsoleWindowHandle,
     GuiGetLargestConsoleWindowSize,
+    GuiSetPalette,
     GuiGetDisplayMode,
     GuiSetDisplayMode,
     GuiShowMouseCursor,

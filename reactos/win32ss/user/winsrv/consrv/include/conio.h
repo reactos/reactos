@@ -64,6 +64,8 @@ struct _CONSOLE_SCREEN_BUFFER
 
     LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
 
+    // PVOID Data;                         /* Private data for the frontend to use */
+
     COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics */
     COORD   ViewSize;                   /* Associated "view" (i.e. console) size */
 
@@ -81,6 +83,9 @@ struct _CONSOLE_SCREEN_BUFFER
 //  ULONG   CursorSize;
     CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
 /*********************************************/
+
+    HPALETTE PaletteHandle;             /* Handle to the color palette associated to this buffer */
+    UINT     PaletteUsage;              /* The new use of the system palette. See SetSystemPaletteUse 'uUsage' parameter */
 
 //  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
 //  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
@@ -223,6 +228,9 @@ typedef struct _FRONTEND_VTBL
     HWND (WINAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (WINAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                                PCOORD pSize);
+    BOOL (WINAPI *SetPalette)(IN OUT PFRONTEND This,
+                              HPALETTE PaletteHandle,
+                              UINT PaletteUsage);
     ULONG (WINAPI *GetDisplayMode)(IN OUT PFRONTEND This);
     BOOL  (WINAPI *SetDisplayMode)(IN OUT PFRONTEND This,
                                    ULONG NewMode);

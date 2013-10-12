@@ -118,6 +118,14 @@ DummyGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
 {
 }
 
+static BOOL NTAPI
+DummySetPalette(IN OUT PFRONTEND This,
+                HPALETTE PaletteHandle,
+                UINT PaletteUsage)
+{
+    return TRUE;
+}
+
 static ULONG NTAPI
 DummyGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -177,6 +185,7 @@ static FRONTEND_VTBL DummyVtbl =
     DummyChangeIcon,
     DummyGetConsoleWindowHandle,
     DummyGetLargestConsoleWindowSize,
+    DummySetPalette,
     DummyGetDisplayMode,
     DummySetDisplayMode,
     DummyShowMouseCursor,

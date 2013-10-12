@@ -220,7 +220,7 @@ CSR_API(SrvSetConsoleCursor)
     PCONSOLE_SCREEN_BUFFER Buff;
 
     // FIXME: Tests show that this function is used only for graphics screen buffers
-    // and otherwise it returns false + sets last error to invalid handle.
+    // and otherwise it returns FALSE + sets last error to invalid handle.
     // NOTE: I find that behaviour is ridiculous but ok, let's accept that at the moment...
     Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      SetCursorRequest->OutputHandle,

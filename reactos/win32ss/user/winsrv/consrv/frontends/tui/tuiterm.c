@@ -746,6 +746,14 @@ TuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
     *pSize = PhysicalConsoleSize;
 }
 
+static BOOL WINAPI
+TuiSetPalette(IN OUT PFRONTEND This,
+              HPALETTE PaletteHandle,
+              UINT PaletteUsage)
+{
+    return TRUE;
+}
+
 static ULONG WINAPI
 TuiGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -805,6 +813,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiChangeIcon,
     TuiGetConsoleWindowHandle,
     TuiGetLargestConsoleWindowSize,
+    TuiSetPalette,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
     TuiShowMouseCursor,

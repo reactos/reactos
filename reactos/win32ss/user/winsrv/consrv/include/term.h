@@ -38,6 +38,8 @@
     (Console)->TermIFace.Vtbl->GetConsoleWindowHandle(&(Console)->TermIFace)
 #define TermGetLargestConsoleWindowSize(Console, pSize) \
     (Console)->TermIFace.Vtbl->GetLargestConsoleWindowSize(&(Console)->TermIFace, (pSize))
+#define TermSetPalette(Console, PaletteHandle, PaletteUsage) \
+    (Console)->TermIFace.Vtbl->SetPalette(&(Console)->TermIFace, (PaletteHandle), (PaletteUsage))
 #define TermGetDisplayMode(Console) \
     (Console)->TermIFace.Vtbl->GetDisplayMode(&(Console)->TermIFace)
 #define TermSetDisplayMode(Console, NewMode) \

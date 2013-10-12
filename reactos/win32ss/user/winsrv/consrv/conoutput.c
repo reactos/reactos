@@ -52,29 +52,42 @@ CSR_API(SrvInvalidateBitMapRect)
 
 NTSTATUS NTAPI
 ConDrvSetConsolePalette(IN PCONSOLE Console,
-                        IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        // IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        IN PCONSOLE_SCREEN_BUFFER Buffer,
                         IN HPALETTE PaletteHandle,
-                        IN UINT Usage);
+                        IN UINT PaletteUsage);
 CSR_API(SrvSetConsolePalette)
 {
     NTSTATUS Status;
     PCONSOLE_SETPALETTE SetPaletteRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetPaletteRequest;
-    // PCONSOLE_SCREEN_BUFFER Buffer;
-    PGRAPHICS_SCREEN_BUFFER Buffer;
+    // PGRAPHICS_SCREEN_BUFFER Buffer;
+    PCONSOLE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsolePalette\n");
+    DPRINT1("SrvSetConsolePalette\n");
 
     // NOTE: Tests show that this function is used only for graphics screen buffers
-    // and otherwise it returns false + sets last error to invalid handle.
+    // and otherwise it returns FALSE + sets last error to invalid handle.
+    // I think it's ridiculous, because if you are in text mode, simulating
+    // a change of VGA palette via DAC registers (done by a call to SetConsolePalette)
+    // cannot be done... So I allow it in ReactOS !
+    /*
     Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      SetPaletteRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
+    */
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   SetPaletteRequest->OutputHandle,
+                                   &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
+
+    DPRINT1("ConDrvSetConsolePalette calling...\n");
 
     Status = ConDrvSetConsolePalette(Buffer->Header.Console,
                                      Buffer,
                                      SetPaletteRequest->PaletteHandle,
                                      SetPaletteRequest->Usage);
+
+    DPRINT1("ConDrvSetConsolePalette returned Status 0x%08lx\n", Status);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
