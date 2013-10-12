@@ -45,7 +45,7 @@
 
 
 /* Not defined in any header file */
-extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
+extern VOID NTAPI PrivateCsrssManualGuiCheck(LONG Check);
 // See winsrv/usersrv/init.c line 234
 
 
@@ -248,7 +248,7 @@ static VOID
 GuiConsolePaste(PGUI_CONSOLE_DATA GuiData);
 static VOID
 GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord);
-static VOID WINAPI
+static VOID NTAPI
 GuiDrawRegion(IN OUT PFRONTEND This, SMALL_RECT* Region);
 static VOID
 GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData);
@@ -484,7 +484,7 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
     // TODO: Change window appearance.
     // See:
     // http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
-    // http://stackoverflow.com/questions/3549148/fullscreen-management-with-winapi
+    // http://stackoverflow.com/questions/3549148/fullscreen-management-with-NTAPI
     // http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
     // http://stackoverflow.com/questions/1400654/how-do-i-put-my-opengl-app-into-fullscreen-mode
     // http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/
@@ -2117,7 +2117,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-static DWORD WINAPI
+static DWORD NTAPI
 GuiConsoleGuiThread(PVOID Data)
 {
     MSG msg;
@@ -2283,7 +2283,7 @@ GuiInit(VOID)
  *                             GUI Console Driver                             *
  ******************************************************************************/
 
-static VOID WINAPI
+static VOID NTAPI
 GuiDeinitFrontEnd(IN OUT PFRONTEND This);
 
 NTSTATUS NTAPI
@@ -2469,7 +2469,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     return STATUS_SUCCESS;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2496,7 +2496,7 @@ GuiDeinitFrontEnd(IN OUT PFRONTEND This)
     DPRINT("Quit GuiDeinitFrontEnd\n");
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
@@ -2508,7 +2508,7 @@ GuiDrawRegion(IN OUT PFRONTEND This,
     InvalidateRect(GuiData->hWindow, &RegionRect, FALSE);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiWriteStream(IN OUT PFRONTEND This,
                SMALL_RECT* Region,
                SHORT CursorStartX,
@@ -2567,7 +2567,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetCursorInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff)
 {
@@ -2581,7 +2581,7 @@ GuiSetCursorInfo(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetScreenInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff,
                  SHORT OldCursorX,
@@ -2600,7 +2600,7 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiResizeTerminal(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2614,7 +2614,7 @@ GuiResizeTerminal(IN OUT PFRONTEND This)
     PostMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2664,7 +2664,7 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
     // ConioDrawConsole(Console);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
                        IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
@@ -2715,7 +2715,7 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
     }
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiProcessKeyCallback(IN OUT PFRONTEND This,
                       MSG* msg,
                       BYTE KeyStateMenu,
@@ -2733,11 +2733,11 @@ GuiProcessKeyCallback(IN OUT PFRONTEND This,
     return FALSE;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR hCursor);
 
-static VOID WINAPI
+static VOID NTAPI
 GuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2759,7 +2759,7 @@ GuiRefreshInternalInfo(IN OUT PFRONTEND This)
     GuiSetMouseCursor(This, NULL);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiChangeTitle(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2767,7 +2767,7 @@ GuiChangeTitle(IN OUT PFRONTEND This)
     SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiChangeIcon(IN OUT PFRONTEND This,
               HICON hWindowIcon)
 {
@@ -2812,14 +2812,14 @@ GuiChangeIcon(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static HWND WINAPI
+static HWND NTAPI
 GuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
     return GuiData->hWindow;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
                                PCOORD pSize)
 {
@@ -2863,7 +2863,7 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
     pSize->Y = (SHORT)(height / (int)HeightUnit) /* HACK */ + 1;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetPalette(IN OUT PFRONTEND This,
               HPALETTE PaletteHandle,
               UINT PaletteUsage)
@@ -2918,7 +2918,7 @@ Quit:
     return Success;
 }
 
-static ULONG WINAPI
+static ULONG NTAPI
 GuiGetDisplayMode(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
@@ -2932,7 +2932,7 @@ GuiGetDisplayMode(IN OUT PFRONTEND This)
     return DisplayMode;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetDisplayMode(IN OUT PFRONTEND This,
                   ULONG NewMode)
 {
@@ -2946,7 +2946,7 @@ GuiSetDisplayMode(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static INT WINAPI
+static INT NTAPI
 GuiShowMouseCursor(IN OUT PFRONTEND This,
                    BOOL Show)
 {
@@ -2962,7 +2962,7 @@ GuiShowMouseCursor(IN OUT PFRONTEND This,
     return GuiData->MouseCursorRefCount;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR hCursor)
 {
@@ -2980,7 +2980,7 @@ GuiSetMouseCursor(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static HMENU WINAPI
+static HMENU NTAPI
 GuiMenuControl(IN OUT PFRONTEND This,
                UINT cmdIdLow,
                UINT cmdIdHigh)
@@ -2993,7 +2993,7 @@ GuiMenuControl(IN OUT PFRONTEND This,
     return GetSystemMenu(GuiData->hWindow, FALSE);
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 GuiSetMenuClose(IN OUT PFRONTEND This,
                 BOOL Enable)
 {

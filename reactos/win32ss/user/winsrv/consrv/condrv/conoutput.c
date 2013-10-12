@@ -119,7 +119,7 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 
-VOID WINAPI
+VOID NTAPI
 ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;

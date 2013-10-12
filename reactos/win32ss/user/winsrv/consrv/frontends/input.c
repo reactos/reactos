@@ -54,7 +54,7 @@ ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
     return ssOut;
 }
 
-VOID WINAPI
+VOID NTAPI
 ConioProcessKey(PCONSOLE Console, MSG* msg)
 {
     static BYTE KeyState[256] = { 0 };

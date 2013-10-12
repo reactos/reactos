@@ -164,7 +164,7 @@ ConSrvReleaseConsole(PCONSOLE Console,
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSOLE* NewConsole,
                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
@@ -295,7 +295,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     return STATUS_SUCCESS;
 }
 
-VOID WINAPI
+VOID NTAPI
 ConSrvDeleteConsole(PCONSOLE Console)
 {
     DPRINT("ConSrvDeleteConsole\n");
