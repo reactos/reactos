@@ -3,7 +3,7 @@
  * LICENSE:         LGPLv2+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Ob Regressions KM-Test
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>
- *                  Thomas Faber <thfabba@gmx.de>
+ *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
 /* TODO: split this into multiple tests! ObLife, ObHandle, ObName, ... */

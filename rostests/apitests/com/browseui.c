@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         COM interface test for browseui classes
- * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include "com_apitest.h"

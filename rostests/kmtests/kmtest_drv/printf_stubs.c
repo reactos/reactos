@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite stub functions for any-IRQL vsnprintf
- * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
 #undef wctomb

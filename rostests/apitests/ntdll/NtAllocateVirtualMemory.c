@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS API Tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Stress Test for virtual memory allocation
- * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <apitest.h>

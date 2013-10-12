@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Interlocked function test
- * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <stddef.h>

@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS API tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for DeferWindowPos function family
- * PROGRAMMERS:     Thomas Faber
+ * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <apitest.h>

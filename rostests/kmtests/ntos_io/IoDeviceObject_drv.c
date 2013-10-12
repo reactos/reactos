@@ -3,7 +3,7 @@
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Driver Object Test Driver
  * PROGRAMMER:      Michael Martin <martinmnet@hotmail.com>
- *                  Thomas Faber <thfabba@gmx.de>
+ *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <kmt_test.h>
