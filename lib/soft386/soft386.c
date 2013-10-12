@@ -273,10 +273,27 @@ Soft386Reset(PSOFT386_STATE State)
 
 VOID
 NTAPI
-Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
+Soft386Interrupt(PSOFT386_STATE State, UCHAR Number, BOOLEAN Hardware)
 {
-    // TODO: NOT IMPLEMENTED!!!
-    UNIMPLEMENTED;
+    SOFT386_IDT_ENTRY IdtEntry;
+
+    if (Hardware)
+    {
+        /* Set the hardware interrupt flag */
+        State->HardwareInt = TRUE;
+    }
+
+    if (!Soft386GetIntVector(State, Number, &IdtEntry))
+    {
+        /* An exception occurred, let the handler execute */
+        return;
+    }
+
+    /* Perform the interrupt */
+    Soft386InterruptInternal(State,
+                             IdtEntry.Selector,
+                             MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                             IdtEntry.Type);
 }
 
 VOID

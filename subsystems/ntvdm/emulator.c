@@ -461,6 +461,7 @@ VOID EmulatorExecute(WORD Segment, WORD Offset)
 
 VOID EmulatorInterrupt(BYTE Number)
 {
+#ifndef NEW_EMULATOR
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     UINT Segment, Offset;
 
@@ -468,13 +469,11 @@ VOID EmulatorInterrupt(BYTE Number)
     Segment = HIWORD(IntVecTable[Number]);
     Offset = LOWORD(IntVecTable[Number]);
 
-#ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
 #else
-    UNREFERENCED_PARAMETER(Segment);
-    UNREFERENCED_PARAMETER(Offset);
-    // TODO: NOT IMPLEMENTED
+    /* Call the Soft386 API */
+    Soft386Interrupt(&EmulatorContext, Number, FALSE);
 #endif
 }
 
@@ -483,6 +482,9 @@ VOID EmulatorExternalInterrupt(BYTE Number)
 #ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_ext_hw_signal(&EmulatorContext, Number);
+#else
+    /* Call the Soft386 API */
+    Soft386Interrupt(&EmulatorContext, Number, TRUE);
 #endif
 }
 

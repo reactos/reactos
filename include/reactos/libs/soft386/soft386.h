@@ -359,7 +359,7 @@ Soft386Reset(PSOFT386_STATE State);
 
 VOID
 NTAPI
-Soft386Interrupt(PSOFT386_STATE State, UCHAR Number);
+Soft386Interrupt(PSOFT386_STATE State, UCHAR Number, BOOLEAN Hardware);
 
 VOID
 NTAPI
