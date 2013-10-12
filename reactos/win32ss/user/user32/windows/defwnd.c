@@ -22,6 +22,7 @@ LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
+LRESULT NC_HandleNCRButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam );
 void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest );
 void MENU_EndMenu( HWND );
 
@@ -1163,14 +1164,7 @@ User32DefWindowProc(HWND hWnd,
         }
 
         case WM_NCRBUTTONDOWN:
-        {
-            /* in Windows, capture is taken when right-clicking on the caption bar */
-            if (wParam == HTCAPTION)
-            {
-                SetCapture(hWnd);
-            }
-            break;
-        }
+            return NC_HandleNCRButtonDown( hWnd, wParam, lParam );
 
         case WM_RBUTTONUP:
         {
