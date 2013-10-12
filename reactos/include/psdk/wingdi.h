@@ -1188,9 +1188,23 @@ extern "C" {
 #define DMTT_DOWNLOAD_OUTLINE	4
 #define DMCOLLATE_FALSE	0
 #define DMCOLLATE_TRUE	1
-#define DM_SPECVERSION	800
-#define DM_GRAYSCALE	1
-#define DM_INTERLACED	2
+
+
+#define DMDO_DEFAULT    0
+#define DMDO_90         1
+#define DMDO_180        2
+#define DMDO_270        3
+
+#define DMDFO_DEFAULT   0
+#define DMDFO_STRETCH   1
+#define DMDFO_CENTER    2
+
+
+#define DM_GRAYSCALE            0x00000001
+#define DM_INTERLACED           0x00000002
+#define DMDISPLAYFLAGS_TEXTMODE 0x00000004
+
+
 #define DM_UPDATE	1
 #define DM_COPY	2
 #define DM_PROMPT	4
@@ -1199,6 +1213,15 @@ extern "C" {
 #define DM_IN_PROMPT	DM_PROMPT
 #define DM_OUT_BUFFER	DM_COPY
 #define DM_OUT_DEFAULT	DM_UPDATE
+
+
+#if (WINVER >= 0x0500) || (_WIN32_WINNT >= _WIN32_WINNT_NT4)
+#define DM_SPECVERSION 0x0401
+#elif (WINVER >= 0x0400)
+#define DM_SPECVERSION 0x0400
+#else
+#define DM_SPECVERSION 0x0320
+#endif
 
 #define DM_ORIENTATION        0x00000001
 #define DM_PAPERSIZE          0x00000002
@@ -1232,11 +1255,6 @@ extern "C" {
 #if (WINVER >= 0x0501)
 #define DM_DISPLAYFIXEDOUTPUT 0x20000000
 #endif
-
-#define DMDO_DEFAULT            0
-#define DMDO_90                 1
-#define DMDO_180                2
-#define DMDO_270                3
 
 #define DMICMMETHOD_NONE	1
 #define DMICMMETHOD_SYSTEM	2
