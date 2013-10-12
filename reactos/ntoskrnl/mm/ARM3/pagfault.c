@@ -69,7 +69,8 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     if ((Address >= StackBase) || (Address < DeallocationStack))
     {
         /* That's odd... */
-        DPRINT1("Faulting address outside of stack bounds\n");
+        DPRINT1("Faulting address outside of stack bounds. Address=%p, StackBase=%p, DeallocationStack=%p\n",
+                Address, StackBase, DeallocationStack);
         return STATUS_GUARD_PAGE_VIOLATION;
     }
 
