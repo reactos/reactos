@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Stamina
+Name = Stamina 2.5
 Description = Free typing tutor.
 URLSite = http://stamina.ru
 Size = 4.7MB

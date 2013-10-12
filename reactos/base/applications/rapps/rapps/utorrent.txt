@@ -2,7 +2,7 @@
 
 [Section]
 Name = µTorrent
-Version = 3.3
+Version = 3.3.2
 Licence = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
 Size = 1020.58kB
