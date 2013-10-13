@@ -12,4 +12,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "kmtest.exe\0"
 #include <reactos/version.rc>
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "kmtest/kmtest.exe.manifest"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "kmtest/kmtest.exe.manifest"

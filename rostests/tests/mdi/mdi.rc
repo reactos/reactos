@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "resource.h"
 
-IDR_MAINMENU MENU DISCARDABLE
+IDR_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
