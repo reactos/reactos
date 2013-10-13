@@ -16,24 +16,29 @@ HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
+BOOL
+WINAPI
+DllMain(HINSTANCE hInstance,
+        ULONG Reason,
+        PVOID Reserved)
 {
-   switch (Reason)
-     {
-      case DLL_PROCESS_ATTACH:
-	Secur32Heap = RtlCreateHeap(0, NULL, 0, 4096, NULL, NULL);
-	if (Secur32Heap == 0)
-	  {
-	     return(FALSE);
-	  }
-	break;
+    switch (Reason)
+    {
+        case DLL_PROCESS_ATTACH:
+            Secur32Heap = RtlCreateHeap(0, NULL, 0, 4096, NULL, NULL);
+            if (Secur32Heap == 0)
+            {
+                return FALSE;
+            }
+            break;
 
-      case DLL_PROCESS_DETACH:
-	if (!RtlDestroyHeap(Secur32Heap))
-	  {
-	     return(FALSE);
-	  }
-	break;
-     }
-   return(TRUE);
+        case DLL_PROCESS_DETACH:
+            if (!RtlDestroyHeap(Secur32Heap))
+            {
+                return FALSE;
+            }
+            break;
+    }
+
+    return TRUE;
 }
