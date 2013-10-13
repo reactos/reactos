@@ -208,7 +208,7 @@ IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
     if (!KeLoaderBlock) return;
     RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
     snprintf(TextBuffer, sizeof(TextBuffer),
-            "%s%sSystem32\\Drivers\\%wZ%s\n",
+            "%s%sSystem32\\Drivers\\%wZ%s\r\n",
             KeLoaderBlock->ArcBootDeviceName,
             KeLoaderBlock->NtBootPathName,
             ServiceName,

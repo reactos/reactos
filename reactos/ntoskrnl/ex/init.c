@@ -1483,7 +1483,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Remaining, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Remaining, "REACTOS (R)\r\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
@@ -1586,7 +1586,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                 sizeof(InitBuffer->VersionBuffer),
                                 NT_SUCCESS(MsgStatus) ?
                                 (PCHAR)MsgEntry->Text :
-                                "%u System Processor [%u MB Memory] %Z\n",
+                                "%u System Processor [%u MB Memory] %Z\r\n",
                                 KeNumberProcessors,
                                 Size,
                                 &TempString);

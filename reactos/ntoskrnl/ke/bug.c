@@ -614,7 +614,7 @@ KiDumpParameterImages(IN PCHAR Message,
 
         /* Format driver name */
         sprintf(Message,
-                "%s**  %12s - Address %p base at %p, DateStamp %08lx\n",
+                "%s**  %12s - Address %p base at %p, DateStamp %08lx\r\n",
                 FirstRun ? "\r\n*":"*",
                 AnsiName,
                 (PVOID)Parameters[i],

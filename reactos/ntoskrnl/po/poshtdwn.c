@@ -54,9 +54,9 @@ PopShutdownHandler(VOID)
     else
     {
         /* Do it in text-mode */
-        for (i = 0; i < 25; i++) InbvDisplayString("\n");
+        for (i = 0; i < 25; i++) InbvDisplayString("\r\n");
         InbvDisplayString("                       ");
-        InbvDisplayString("The system may be powered off now.\n");
+        InbvDisplayString("The system may be powered off now.\r\n");
     }
 
     /* Hang the system */
