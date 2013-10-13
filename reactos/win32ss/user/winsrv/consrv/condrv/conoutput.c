@@ -237,45 +237,14 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
 {
     BOOL Success;
 
-/******************************************************************************\
-|************** HACK! HACK! HACK! HACK! HACK! HACK! HACK! HACK! ***************|
-\******************************************************************************/
+    DPRINT1("ConDrvSetConsolePalette\n");
 
-#define PALETTESIZE 256
-
-    UINT i;
-    LPLOGPALETTE LogPalette;                  /* Pointer to logical palette */
-
-PALETTEENTRY MyPalette[] =
-{ {0,   0,   0x80,0} ,       // 1
-  {0,   0x80,0,   0} ,       // 2
-  {0,   0,   0,   0} ,       // 0
-  {0,   0x80,0x80,0} ,       // 3
-  {0x80,0,   0,   0} ,       // 4
-  {0x80,0,   0x80,0} ,       // 5
-  {0x80,0x80,0,   0} ,       // 6
-  {0xC0,0xC0,0xC0,0} ,       // 7
-  {0x80,0x80,0x80,0} ,       // 8
-  {0,   0,   0xFF,0} ,       // 9
-  {0,   0xFF,0,   0} ,       // 10
-  {0,   0xFF,0xFF,0} ,       // 11
-  {0xFF,0,   0,   0} ,       // 12
-  {0xFF,0,   0xFF,0} ,       // 13
-  {0xFF,0xFF,0,   0} ,       // 14
-  {0xFF,0xFF,0xFF,0} };      // 15
-
-/******************************************************************************\
-|************** HACK! HACK! HACK! HACK! HACK! HACK! HACK! HACK! ***************|
-\******************************************************************************/
-
-    DPRINT1("ConDrvSetConsolePalette checkpt 0\n");
-
+    /*
+     * Parameters validation
+     */
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    DPRINT1("ConDrvSetConsolePalette checkpt 1\n");
-
-    // FIXME: Is it useful ?
     if ( PaletteUsage != SYSPAL_STATIC   &&
          PaletteUsage != SYSPAL_NOSTATIC &&
          PaletteUsage != SYSPAL_NOSTATIC256 )
@@ -283,48 +252,8 @@ PALETTEENTRY MyPalette[] =
         return STATUS_INVALID_PARAMETER;
     }
 
-    DPRINT1("ConDrvSetConsolePalette checkpt 2\n");
-
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
-
-
-
-/******************************************************************************\
-|************** HACK! HACK! HACK! HACK! HACK! HACK! HACK! HACK! ***************|
-\******************************************************************************/
-
-    DPRINT1("HACK: FIXME: ConDrvSetConsolePalette - Use hacked palette for testing purposes!!\n");
-
-    LogPalette = (LPLOGPALETTE)ConsoleAllocHeap(HEAP_ZERO_MEMORY,
-                                                (sizeof(LOGPALETTE) +
-                                                (sizeof(PALETTEENTRY) * PALETTESIZE)));
-
-    if (LogPalette)
-    {
-        LogPalette->palVersion = 0x300;
-        LogPalette->palNumEntries = PALETTESIZE;
-
-        for(i=0; i < PALETTESIZE;i++)
-        {
-            LogPalette->palPalEntry[i] = MyPalette[i % sizeof(MyPalette)/sizeof(MyPalette[0])];
-        }
-
-        PaletteHandle = CreatePalette(LogPalette);
-        PaletteUsage = SYSPAL_NOSTATIC256;
-        ConsoleFreeHeap(LogPalette);
-    }
-    else
-    {
-        DPRINT1("ConDrvSetConsolePalette - Hacked LogPalette is NULL\n");
-    }
-
-/******************************************************************************\
-|************** HACK! HACK! HACK! HACK! HACK! HACK! HACK! HACK! ***************|
-\******************************************************************************/
-
-
-
 
     /* Change the palette */
     DPRINT1("ConDrvSetConsolePalette calling TermSetPalette\n");
