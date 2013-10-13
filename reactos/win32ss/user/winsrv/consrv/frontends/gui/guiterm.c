@@ -467,147 +467,6 @@ GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
     // to: InvalidateRect(GuiData->hWindow, NULL, TRUE);
 }
 
-
-
-static BOOL
-EnterFullScreen(PGUI_CONSOLE_DATA GuiData)
-{
-    DEVMODEW DevMode;
-
-    ZeroMemory(&DevMode, sizeof(DevMode));
-    DevMode.dmSize = sizeof(DevMode);
-
-    // DevMode.dmDisplayFixedOutput = DMDFO_CENTER; // DMDFO_STRETCH // DMDFO_DEFAULT
-    // DevMode.dmDisplayFlags = DMDISPLAYFLAGS_TEXTMODE;
-    DevMode.dmPelsWidth  = 640; // GuiData->ActiveBuffer->ViewSize.X * GuiData->CharWidth;
-    DevMode.dmPelsHeight = 480; // GuiData->ActiveBuffer->ViewSize.Y * GuiData->CharHeight;
-    // DevMode.dmBitsPerPel = 32;
-    DevMode.dmFields     = /* DM_DISPLAYFIXEDOUTPUT | DM_DISPLAYFLAGS | DM_BITSPERPEL | */ DM_PELSWIDTH | DM_PELSHEIGHT;
-
-    return (ChangeDisplaySettingsW(&DevMode, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL);
-}
-
-static BOOL
-LeaveFullScreen(PGUI_CONSOLE_DATA GuiData)
-{
-    return (ChangeDisplaySettingsW(NULL, CDS_RESET) == DISP_CHANGE_SUCCESSFUL);
-}
-
-static VOID
-GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam);
-
-VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen)
-{
-    PCONSOLE Console = GuiData->Console;
-
-    /*
-     * See:
-     * http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
-     * http://stackoverflow.com/questions/3549148/fullscreen-management-with-winapi
-     * http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
-     * http://blogs.msdn.com/b/oldnewthing/archive/2005/05/05/414910.aspx
-     * http://stackoverflow.com/questions/1400654/how-do-i-put-my-opengl-app-into-fullscreen-mode
-     * http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/
-     * http://www.reocities.com/pcgpe/dibs.html
-     */
-
-    if (FullScreen)
-    {
-        SendMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-
-        /* Switch to full screen */
-        if (EnterFullScreen(GuiData))
-        {
-            /* Save the new state */
-            GuiData->GuiInfo.FullScreen = TRUE;
-            Console->FixedSize = TRUE;
-
-            GuiData->ActiveBuffer->OldViewSize = GuiData->ActiveBuffer->ViewSize;
-            // GuiData->ActiveBuffer->OldScreenBufferSize = GuiData->ActiveBuffer->ScreenBufferSize;
-
-            /* Save the old window styles */
-            GuiData->WndStyle   = GetWindowLongPtr(GuiData->hWindow, GWL_STYLE  );
-            GuiData->WndStyleEx = GetWindowLongPtr(GuiData->hWindow, GWL_EXSTYLE);
-
-            /* Change the window styles */
-            SetWindowLongPtr(GuiData->hWindow, GWL_STYLE,
-                             WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
-            SetWindowLongPtr(GuiData->hWindow, GWL_EXSTYLE,
-                             WS_EX_APPWINDOW);
-
-            /* Reposition the window to the upper-left corner */
-            SetWindowPos(GuiData->hWindow,
-                         HWND_TOPMOST,
-                         0, 0,
-                         0, 0,
-                         SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-            /* Make it the foreground window */
-            SetForegroundWindow(GuiData->hWindow);
-            /* Resize it */
-            // GuiConsoleResizeWindow(GuiData);
-            GuiConsoleResize(GuiData, SIZE_RESTORED, MAKELPARAM(640, 480));
-
-            PostMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-        }
-        else
-        {
-            PostMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
-        }
-    }
-    else
-    {
-        SendMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-
-        /* Restore windowing mode */
-        if (LeaveFullScreen(GuiData))
-        {
-            /* Save the new state */
-            GuiData->GuiInfo.FullScreen = FALSE;
-            Console->FixedSize = FALSE;
-
-            /*
-             * Restore possible saved dimensions
-             * of the active screen buffer view.
-             */
-            GuiData->ActiveBuffer->ViewSize = GuiData->ActiveBuffer->OldViewSize;
-            // GuiData->ActiveBuffer->ScreenBufferSize = GuiData->ActiveBuffer->OldScreenBufferSize;
-
-            /* Restore the window styles */
-            SetWindowLongPtr(GuiData->hWindow, GWL_STYLE,
-                             GuiData->WndStyle);
-            SetWindowLongPtr(GuiData->hWindow, GWL_EXSTYLE,
-                             GuiData->WndStyleEx);
-
-            /* Resize it */
-            GuiConsoleResizeWindow(GuiData);
-
-            // PostMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
-        }
-        PostMessageW(GuiData->hWindow, WM_SYSCOMMAND, SC_RESTORE, 0);
-    }
-}
-
-static VOID
-GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
-{
-    PCONSOLE Console = GuiData->Console;
-    BOOL FullScreen;
-
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
-
-    /* Switch to full-screen or to windowed mode */
-    FullScreen = !GuiData->GuiInfo.FullScreen;
-    DPRINT1("GuiConsoleSwitchFullScreen - Switch to %s ...\n",
-            (FullScreen ? "full-screen" : "windowed mode"));
-
-    SwitchFullScreen(GuiData, FullScreen);
-
-    LeaveCriticalSection(&Console->Lock);
-}
-
-
-
 static BOOL
 GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
@@ -1743,6 +1602,16 @@ Quit:
     return 0;
 }
 
+
+BOOL
+EnterFullScreen(PGUI_CONSOLE_DATA GuiData);
+VOID
+LeaveFullScreen(PGUI_CONSOLE_DATA GuiData);
+VOID
+SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
+VOID
+GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
+
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1789,6 +1658,8 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_ACTIVATE:
         {
             WORD ActivationState = LOWORD(wParam);
+
+            DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
 
             if ( ActivationState == WA_ACTIVE ||
                  ActivationState == WA_CLICKACTIVE )
@@ -1883,7 +1754,9 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (msg == WM_SYSKEYDOWN && (HIWORD(lParam) & KF_ALTDOWN) && wParam == VK_RETURN)
             {
                 /* Switch only at first Alt-Enter press, and ignore subsequent key repetitions */
-                if ((HIWORD(lParam) & (KF_UP | KF_REPEAT)) != KF_REPEAT) GuiConsoleSwitchFullScreen(GuiData);
+                if ((HIWORD(lParam) & (KF_UP | KF_REPEAT)) != KF_REPEAT)
+                    GuiConsoleSwitchFullScreen(GuiData);
+
                 break;
             }
 
@@ -3069,12 +2942,18 @@ GuiSetDisplayMode(IN OUT PFRONTEND This,
                   ULONG NewMode)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+    BOOL FullScreen;
 
     if (NewMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
         return FALSE;
 
-    GuiData->GuiInfo.FullScreen = (NewMode & CONSOLE_FULLSCREEN_MODE);
-    // TODO: Change the display mode
+    FullScreen = ((NewMode & CONSOLE_FULLSCREEN_MODE) != 0);
+
+    if (FullScreen != GuiData->GuiInfo.FullScreen)
+    {
+        SwitchFullScreen(GuiData, FullScreen);
+    }
+
     return TRUE;
 }
 

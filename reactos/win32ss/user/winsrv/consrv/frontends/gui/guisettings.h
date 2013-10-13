@@ -51,6 +51,8 @@ typedef struct _GUI_CONSOLE_DATA
 
     LONG_PTR WndStyle;
     LONG_PTR WndStyleEx;
+    BOOL IsWndMax;
+    WINDOWPLACEMENT WndPl;
 
     HPALETTE hSysPalette;       /* Handle to the original system palette */
 
