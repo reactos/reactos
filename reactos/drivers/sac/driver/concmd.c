@@ -6,55 +6,55 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 PVOID GlobalBuffer;
 ULONG GlobalBufferSize;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 DoChannelListCommand(
-	VOID
-	)
+    VOID
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 DoChannelCloseByNameCommand(
-	IN PCHAR Count
-	)
+    IN PCHAR Count
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 DoChannelCloseByIndexCommand(
-	IN ULONG ChannelIndex
-	)
+    IN ULONG ChannelIndex
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 DoChannelSwitchByNameCommand(
-	IN PCHAR Count
-	)
+    IN PCHAR Count
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 DoChannelSwitchByIndexCommand(
-	IN ULONG ChannelIndex
-	)
+    IN ULONG ChannelIndex
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 typedef struct _SAC_SYSTEM_INFORMATION
@@ -324,28 +324,28 @@ PutMore(OUT PBOOLEAN ScreenFull)
 
 BOOLEAN
 RetrieveIpAddressFromString(
-	IN PWCHAR IpString,
-	OUT PULONG IpAddress
-	)
+    IN PWCHAR IpString,
+    OUT PULONG IpAddress
+    )
 {
-	return FALSE;
+    return FALSE;
 }
 
 NTSTATUS
 CallQueryIPIOCTL(
-	IN HANDLE DriverHandle,
-	IN PVOID DriverObject,
-	IN HANDLE WaitEvent,
-	IN PIO_STATUS_BLOCK IoStatusBlock,
-	IN PVOID InputBuffer,
-	IN ULONG InputBufferLength,
-	IN PVOID OutputBuffer,
-	IN ULONG OutputBufferLength, 
-	IN BOOLEAN PrintMessage,
-	OUT PBOOLEAN MessagePrinted
-	)
+    IN HANDLE DriverHandle,
+    IN PVOID DriverObject,
+    IN HANDLE WaitEvent,
+    IN PIO_STATUS_BLOCK IoStatusBlock,
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferLength,
+    IN PVOID OutputBuffer,
+    IN ULONG OutputBufferLength, 
+    IN BOOLEAN PrintMessage,
+    OUT PBOOLEAN MessagePrinted
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID

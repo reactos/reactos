@@ -6,7 +6,7 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
 #include <intrin.h>
@@ -19,7 +19,7 @@
 #include <initguid.h>
 #include <sacmsg.h>
 
-/* DEFINES *******************************************************************/
+/* DEFINES ********************************************************************/
 
 //
 // SAC Heap Allocator Macros
@@ -48,12 +48,12 @@
 // SAC Parameter Checking Macros
 //
 #define CHECK_PARAMETER_WITH_STATUS(Parameter, Status)  \
-{   \
-    ASSERT(((PVOID)(Parameter)) != NULL);    \
-    if (((PVOID)(Parameter)) == NULL) \
-    {   \
-    	return Status;  \
-    }   \
+{                                                       \
+    ASSERT(((PVOID)(Parameter)) != NULL);               \
+    if (((PVOID)(Parameter)) == NULL)                   \
+    {                                                   \
+        return Status;                                  \
+    }                                                   \
 }
 #define CHECK_PARAMETER(x)      \
     CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER)
@@ -71,63 +71,63 @@
 //
 // SAC Channel Event Macros
 //
-#define ChannelInitializeEvent(Channel, Attributes, x)  \
-{   \
-    PVOID Object, WaitObject;   \
-    if (Attributes->x)  \
-    {   \
+#define ChannelInitializeEvent(Channel, Attributes, x)                  \
+{                                                                       \
+    PVOID Object, WaitObject;                                           \
+    if (Attributes->x)                                                  \
+    {                                                                   \
         if (!VerifyEventWaitable(Attributes->x, &Object, &WaitObject))  \
-        {   \
-            goto FailChannel;   \
-        } \
-        Channel->x = Attributes->x; \
-        Channel->x##ObjectBody = Object;    \
-        Channel->x##WaitObjectBody = WaitObject;    \
-    }   \
+        {                                                               \
+            goto FailChannel;                                           \
+        }                                                               \
+        Channel->x = Attributes->x;                                     \
+        Channel->x##ObjectBody = Object;                                \
+        Channel->x##WaitObjectBody = WaitObject;                        \
+    }                                                                   \
 }
-#define ChannelUninitializeEvent(Channel, x, f)                     \
-{                                                                   \
-    ASSERT(ChannelGetFlags(Channel) & (f));                         \
-    ASSERT(Channel->x##ObjectBody);                                 \
-    ASSERT(Channel->x##WaitObjectBody);                             \
-    if (Channel->x##ObjectBody)                                     \
-    {                                                               \
-        ObDereferenceObject(Channel->x##ObjectBody);                \
-        Channel->Flags &= ~(f);                                     \
-        Channel->x = NULL;                                          \
-        Channel->x##ObjectBody = NULL;                              \
-        Channel->x##WaitObjectBody = NULL;                          \
-    }   \
+#define ChannelUninitializeEvent(Channel, x, f)         \
+{                                                       \
+    ASSERT(ChannelGetFlags(Channel) & (f));             \
+    ASSERT(Channel->x##ObjectBody);                     \
+    ASSERT(Channel->x##WaitObjectBody);                 \
+    if (Channel->x##ObjectBody)                         \
+    {                                                   \
+        ObDereferenceObject(Channel->x##ObjectBody);    \
+        Channel->Flags &= ~(f);                         \
+        Channel->x = NULL;                              \
+        Channel->x##ObjectBody = NULL;                  \
+        Channel->x##WaitObjectBody = NULL;              \
+    }                                                   \
 }
-#define ChannelSetEvent(Channel, x) \
-{   \
-    ASSERT(Channel->x); \
-    ASSERT(Channel->x##ObjectBody); \
-    ASSERT(Channel->x##WaitObjectBody); \
-    if (Channel->x##WaitObjectBody) \
-    {   \
+#define ChannelSetEvent(Channel, x)                                     \
+{                                                                       \
+    ASSERT(Channel->x);                                                 \
+    ASSERT(Channel->x##ObjectBody);                                     \
+    ASSERT(Channel->x##WaitObjectBody);                                 \
+    if (Channel->x##WaitObjectBody)                                     \
+    {                                                                   \
         KeSetEvent(Channel->x##WaitObjectBody, EVENT_INCREMENT, FALSE); \
-        Status = STATUS_SUCCESS;    \
-    }   \
-    else    \
-    {   \
-        Status = STATUS_UNSUCCESSFUL;   \
-    }   \
+        Status = STATUS_SUCCESS;                                        \
+    }                                                                   \
+    else                                                                \
+    {                                                                   \
+        Status = STATUS_UNSUCCESSFUL;                                   \
+    }                                                                   \
 }
-#define ChannelClearEvent(Channel, x)   \
-{   \
-    ASSERT(Channel->x); \
-    ASSERT(Channel->x##ObjectBody); \
-    ASSERT(Channel->x##WaitObjectBody); \
-    if (Channel->x##WaitObjectBody) \
-    {   \
-    	KeClearEvent(Channel->x##WaitObjectBody);   \
-    	Status = STATUS_SUCCESS;    \
-    }   \
-    else    \
-    {   \
-    	Status = STATUS_UNSUCCESSFUL;   \
-    }   \
+#define ChannelClearEvent(Channel, x)               \
+{                                                   \
+    ASSERT(Channel->x);                             \
+    ASSERT(Channel->x##ObjectBody);                 \
+    ASSERT(Channel->x##WaitObjectBody);             \
+    if (Channel->x##WaitObjectBody)                 \
+    {                                               \
+        KeClearEvent(Channel->x##WaitObjectBody);   \
+        Status = STATUS_SUCCESS;                    \
+    }                                               \
+    else                                            \
+    {                                               \
+        Status = STATUS_UNSUCCESSFUL;               \
+    }                                               \
 }
 
 //
@@ -145,7 +145,7 @@
 #define GLOBAL_BLOCK_TAG                    'GpcR'
 #define CHANNEL_BLOCK_TAG                   'CpcR'
 #define LOCAL_MEMORY_SIGNATURE              'SSEL'
-#define GLOBAL_MEMORY_SIGNATURE	            'DAEH'
+#define GLOBAL_MEMORY_SIGNATURE             'DAEH'
 
 //
 // Size Definitions
@@ -172,16 +172,16 @@
 #define SAC_CHANNEL_FLAG_INTERNAL           0x1
 #define SAC_CHANNEL_FLAG_CLOSE_EVENT        0x2
 #define SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT 0x4
-#define SAC_CHANNEL_FLAG_LOCK_EVENT	        0x8
+#define SAC_CHANNEL_FLAG_LOCK_EVENT         0x8
 #define SAC_CHANNEL_FLAG_REDRAW_EVENT       0x10
 #define SAC_CHANNEL_FLAG_APPLICATION        0x20
 
 //
-// Cursor Flags
+// Cell Flags
 //
-#define SAC_CURSOR_FLAG_BLINK               1
-#define SAC_CURSOR_FLAG_BOLD                2
-#define SAC_CURSOR_FLAG_INVERTED            4
+#define SAC_CELL_FLAG_BLINK                 1
+#define SAC_CELL_FLAG_BOLD                  2
+#define SAC_CELL_FLAG_INVERTED              4
 
 //
 // Forward definitions
@@ -312,21 +312,21 @@ typedef struct _SAC_CHANNEL_LOCK
 //
 // Structure of the cell-buffer when in VT-UTF8 Mode
 //
-typedef struct _SAC_CURSOR_DATA
+typedef struct _SAC_CELL_DATA
 {
-    UCHAR CursorBackColor;
-    UCHAR CursorColor;
-    UCHAR CursorFlags;
-    WCHAR CursorValue;
-} SAC_CURSOR_DATA, *PSAC_CURSOR_DATA;
-C_ASSERT(sizeof(SAC_CURSOR_DATA) == 6);
+    UCHAR CellBackColor;
+    UCHAR CellForeColor;
+    UCHAR CellFlags;
+    WCHAR Char;
+} SAC_CELL_DATA, *PSAC_CELL_DATA;
+C_ASSERT(sizeof(SAC_CELL_DATA) == 6);
 
 //
 // Screen buffer when in VT-UTF8 Mode
 //
 typedef struct _SAC_VTUTF8_SCREEN
 {
-    SAC_CURSOR_DATA Cell[SAC_VTUTF8_ROW_HEIGHT][SAC_VTUTF8_COL_WIDTH];
+    SAC_CELL_DATA Cell[SAC_VTUTF8_ROW_HEIGHT][SAC_VTUTF8_COL_WIDTH];
 } SAC_VTUTF8_SCREEN, *PSAC_VTUTF8_SCREEN;
 
 //
@@ -453,9 +453,9 @@ typedef struct _SAC_CHANNEL
     LONG ChannelHasNewIBufferData;
     UCHAR CursorRow;
     UCHAR CursorCol;
-    UCHAR CursorColor;
-    UCHAR CursorBackColor;
-    UCHAR CursorFlags;
+    UCHAR CellForeColor;
+    UCHAR CellBackColor;
+    UCHAR CellFlags;
     PCHAR OBuffer;
     ULONG OBufferIndex;
     ULONG OBufferFirstGoodIndex;
@@ -479,8 +479,8 @@ typedef struct _SAC_CHANNEL
 typedef struct _SAC_CHANNEL_ATTRIBUTES
 {
     SAC_CHANNEL_TYPE ChannelType;
-    WCHAR NameBuffer[64 + 1];
-    WCHAR DescriptionBuffer[256 + 1];
+    WCHAR NameBuffer[SAC_CHANNEL_NAME_SIZE + 1];
+    WCHAR DescriptionBuffer[SAC_CHANNEL_DESCRIPTION_SIZE + 1];
     ULONG Flag;
     HANDLE CloseEvent;
     HANDLE HasNewDataEvent;

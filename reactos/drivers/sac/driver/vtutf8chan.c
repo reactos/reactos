@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 CHAR IncomingUtf8ConversionBuffer[4];
 WCHAR IncomingUnicodeValue;
@@ -30,7 +30,7 @@ SAC_STATIC_ESCAPE_STRING SacStaticEscapeStrings [] =
     { VT_ANSI_ERASE_ENTIRE_SCREEN, 3, SacEraseScreen },
 };
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 FORCEINLINE
 VOID
@@ -114,7 +114,7 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
             Tmp = LocalBuffer;
             break;
 
-        /* Send the [#;#H (Cursor Positio) sequence */
+        /* Send the [#;#H (Cursor Position) sequence */
         case SacAnsiSetPosition:
 
             /* Allocate a small local buffer for it */
@@ -203,7 +203,7 @@ VTUTF8ChannelProcessAttributes(IN PSAC_CHANNEL Channel,
 
     /* Set bold if needed */
     Status = VTUTF8ChannelAnsiDispatch(Channel,
-                                       Attribute & SAC_CURSOR_FLAG_BOLD ?
+                                       Attribute & SAC_CELL_FLAG_BOLD ?
                                        SacAnsiSetBoldAttribute :
                                        SacAnsiClearBoldAttribute,
                                        NULL,
@@ -212,7 +212,7 @@ VTUTF8ChannelProcessAttributes(IN PSAC_CHANNEL Channel,
     
     /* Set blink if needed */
     Status = VTUTF8ChannelAnsiDispatch(Channel,
-                                       Attribute & SAC_CURSOR_FLAG_BLINK ?
+                                       Attribute & SAC_CELL_FLAG_BLINK ?
                                        SacAnsiSetBlinkAttribute :
                                        SacAnsiClearBlinkAttribute,
                                        NULL,
@@ -221,7 +221,7 @@ VTUTF8ChannelProcessAttributes(IN PSAC_CHANNEL Channel,
 
     /* Set inverse if needed */
     return VTUTF8ChannelAnsiDispatch(Channel,
-                                     Attribute & SAC_CURSOR_FLAG_INVERTED ?
+                                     Attribute & SAC_CELL_FLAG_INVERTED ?
                                      SacAnsiSetInverseAttribute :
                                      SacAnsiClearInverseAttribute,
                                      NULL,
@@ -244,7 +244,7 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
 {
     ULONG Number, Number2, Number3, i, Action, Result;
     PWCHAR Sequence;
-    PSAC_VTUTF8_SCREEN Cursor;
+    PSAC_VTUTF8_SCREEN Screen;
     ASSERT(String[0] == VT_ANSI_ESCAPE);
 
     /* Microsoft's driver does this after the O(n) check below. Be smarter. */
@@ -441,7 +441,7 @@ ProcessString:
     if (!Result) Result = Sequence - String + 1;
 
     /* Get the current cell buffer */
-    Cursor = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
+    Screen = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
     VTUTF8ChannelAssertCursor(Channel);
 
     /* Handle all the supported SAC ANSI commands */
@@ -516,40 +516,40 @@ ProcessString:
             break;
 
         case SacFontNormal:
-            /* Reset the cursor attributes */
-            Channel->CursorFlags = 0;
-            Channel->CursorBackColor = SetBackColorBlack;
-            Channel->CursorColor = SetColorWhite;
+            /* Reset the cell attributes */
+            Channel->CellFlags = 0;
+            Channel->CellBackColor = SetBackColorBlack;
+            Channel->CellForeColor = SetColorWhite;
             break;
 
         case SacFontBlink:
             /* Set the appropriate flag */
-            Channel->CursorFlags |= SAC_CURSOR_FLAG_BLINK;
+            Channel->CellFlags |= SAC_CELL_FLAG_BLINK;
             break;
 
         case SacFontBlinkOff:
             /* Clear the appropriate flag */
-            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BLINK;
+            Channel->CellFlags &= ~SAC_CELL_FLAG_BLINK;
             break;
 
         case SacFontBold:
             /* Set the appropriate flag */
-            Channel->CursorFlags |= SAC_CURSOR_FLAG_BOLD;
+            Channel->CellFlags |= SAC_CELL_FLAG_BOLD;
             break;
 
         case SacFontBoldOff:
             /* Clear the appropriate flag */
-            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BOLD;
+            Channel->CellFlags &= ~SAC_CELL_FLAG_BOLD;
             break;
 
         case SacFontInverse:
             /* Set the appropriate flag */
-            Channel->CursorFlags |= SAC_CURSOR_FLAG_INVERTED;
+            Channel->CellFlags |= SAC_CELL_FLAG_INVERTED;
             break;
 
         case SacFontInverseOff:
             /* Clear the appropriate flag */
-            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_INVERTED;
+            Channel->CellFlags &= ~SAC_CELL_FLAG_INVERTED;
             break;
 
         case SacEraseEndOfLine:
@@ -557,10 +557,10 @@ ProcessString:
             for (i = Channel->CursorCol; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 /* Replace everything after the current position with blanks */
-                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
-                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
+                Screen->Cell[Channel->CursorRow][i].CellFlags = Channel->CellFlags;
+                Screen->Cell[Channel->CursorRow][i].CellBackColor = Channel->CellForeColor;
+                Screen->Cell[Channel->CursorRow][i].CellForeColor = Channel->CellBackColor;
+                Screen->Cell[Channel->CursorRow][i].Char = L' ';
             }
             break;
 
@@ -569,10 +569,10 @@ ProcessString:
             for (i = 0; i < (Channel->CursorCol + 1); i++)
             {
                 /* Replace everything after the current position with blanks */
-                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
-                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
+                Screen->Cell[Channel->CursorRow][i].CellFlags = Channel->CellFlags;
+                Screen->Cell[Channel->CursorRow][i].CellBackColor = Channel->CellForeColor;
+                Screen->Cell[Channel->CursorRow][i].CellForeColor = Channel->CellBackColor;
+                Screen->Cell[Channel->CursorRow][i].Char = L' ';
             }
             break;
 
@@ -581,10 +581,10 @@ ProcessString:
             for (i = 0; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 /* Replace them all with blanks */
-                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
-                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
-                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
+                Screen->Cell[Channel->CursorRow][i].CellFlags = Channel->CellFlags;
+                Screen->Cell[Channel->CursorRow][i].CellBackColor = Channel->CellForeColor;
+                Screen->Cell[Channel->CursorRow][i].CellForeColor = Channel->CellBackColor;
+                Screen->Cell[Channel->CursorRow][i].Char = L' ';
             }
             break;
 
@@ -609,26 +609,26 @@ ProcessString:
             break;
 
         case SacSetColors:
-            /* Set the cursor colors */
-            Channel->CursorColor = Number;
-            Channel->CursorBackColor = Number2;
+            /* Set the cell colors */
+            Channel->CellForeColor = Number;
+            Channel->CellBackColor = Number2;
             break;
 
         case SacSetBackgroundColor:
-            /* Set the cursor back color */
-            Channel->CursorBackColor = Number;
+            /* Set the cell back color */
+            Channel->CellBackColor = Number;
             break;
 
         case SacSetFontColor:
-            /* Set the cursor text color */
-            Channel->CursorColor = Number;
+            /* Set the cell text color */
+            Channel->CellForeColor = Number;
             break;
 
         case SacSetColorsAndAttributes:
-            /* Set the cursor flag and colors */
-            Channel->CursorFlags = Number;
-            Channel->CursorColor = Number2;
-            Channel->CursorBackColor = Number3;
+            /* Set the cell flag and colors */
+            Channel->CellFlags = Number;
+            Channel->CellForeColor = Number2;
+            Channel->CellBackColor = Number3;
             break;
 
         default:
@@ -644,32 +644,29 @@ NTSTATUS
 NTAPI
 VTUTF8ChannelOInit(IN PSAC_CHANNEL Channel)
 {
-    PSAC_CURSOR_DATA Cursor;
-    ULONG x, y;
+    PSAC_VTUTF8_SCREEN Screen;
+    ULONG R, C;
     CHECK_PARAMETER(Channel);
 
-    /* Set the current channel cursor parameters */
-    Channel->CursorFlags = 0;
-    Channel->CursorBackColor = SetBackColorBlack;
-    Channel->CursorColor = SetColorWhite;
+    /* Set the current channel cell parameters */
+    Channel->CellFlags = 0;
+    Channel->CellBackColor = SetBackColorBlack;
+    Channel->CellForeColor = SetColorWhite;
+
+    /* Set the cell buffer position */
+    Screen = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
 
     /* Loop the output buffer height by width */
-    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
-    y = SAC_VTUTF8_ROW_HEIGHT;
-    do
+    for (R = 0; R < SAC_VTUTF8_ROW_HEIGHT; R++)
     {
-        x = SAC_VTUTF8_COL_WIDTH;
-        do
+        for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
         {
             /* For every character, set the defaults */
-            Cursor->CursorValue = ' ';
-            Cursor->CursorBackColor = SetBackColorBlack;
-            Cursor->CursorColor = SetColorWhite;
-
-            /* Move to the next character */
-            Cursor++;
-        } while (--x);
-    } while (--y);
+            Screen->Cell[R][C].Char = L' ';
+            Screen->Cell[R][C].CellBackColor = SetBackColorBlack;
+            Screen->Cell[R][C].CellForeColor = SetColorWhite;
+        }
+    }
 
     /* All done */
     return STATUS_SUCCESS;
@@ -728,7 +725,7 @@ NTAPI
 VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
 {
     NTSTATUS Status;
-    PSAC_VTUTF8_SCREEN Cursor;
+    PSAC_VTUTF8_SCREEN Screen;
     INT Color[2], Position[2];
     ULONG Utf8ProcessedCount, Utf8Count, R, C, ForeColor, BackColor, Attribute;
     PWCHAR TmpBuffer;
@@ -736,7 +733,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
     CHECK_PARAMETER(Channel);
 
     /* Set the cell buffer position */
-    Cursor = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
+    Screen = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
 
     /* Allocate a temporary buffer */
     TmpBuffer = SacAllocatePool(40, GLOBAL_BLOCK_TAG);
@@ -769,14 +766,14 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                                        0);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    /* Now set the current cursor attributes */
-    Attribute = Channel->CursorFlags;
+    /* Now set the current cell attributes */
+    Attribute = Channel->CellFlags;
     Status = VTUTF8ChannelProcessAttributes(Channel, Attribute);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    /* And set the current cursor colors */
-    ForeColor = Channel->CursorColor;
-    BackColor = Channel->CursorBackColor;
+    /* And set the current cell colors */
+    ForeColor = Channel->CellForeColor;
+    BackColor = Channel->CellBackColor;
     Color[1] = BackColor;
     Color[0] = ForeColor;
     Status = VTUTF8ChannelAnsiDispatch(Channel,
@@ -788,12 +785,12 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
     /* Now loop all the characters in the cell buffer */
     for (R = 0; R < SAC_VTUTF8_ROW_HEIGHT; R++)
     {
-        /* Accross every row */
+        /* Across every row */
         for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
         {
             /* Check if there's been a change in colors */
-            if ((Cursor->Cell[R][C].CursorBackColor != BackColor) ||
-                (Cursor->Cell[R][C].CursorColor != ForeColor))
+            if ((Screen->Cell[R][C].CellBackColor != BackColor) ||
+                (Screen->Cell[R][C].CellForeColor != ForeColor))
             {
                 /* New colors are being drawn -- are we also on a new row now? */
                 if (Overflow)
@@ -810,8 +807,8 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 }
 
                 /* Cache the new colors */
-                ForeColor = Cursor->Cell[R][C].CursorColor;
-                BackColor = Cursor->Cell[R][C].CursorBackColor;
+                ForeColor = Screen->Cell[R][C].CellForeColor;
+                BackColor = Screen->Cell[R][C].CellBackColor;
 
                 /* Set them on the screen */
                 Color[1] = BackColor;
@@ -824,7 +821,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
             }
 
             /* Check if there's been a change in attributes */
-            if (Cursor->Cell[R][C].CursorFlags != Attribute)
+            if (Screen->Cell[R][C].CellFlags != Attribute)
             {
                 /* Yep! Are we also on a new row now? */
                 if (Overflow)
@@ -841,7 +838,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 }
 
                 /* Set the new attributes on screen */
-                Attribute = Cursor->Cell[R][C].CursorFlags;
+                Attribute = Screen->Cell[R][C].CellFlags;
                 Status = VTUTF8ChannelProcessAttributes(Channel, Attribute);
                 if (!NT_SUCCESS(Status)) goto Quickie;
             }
@@ -861,7 +858,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
             }
 
             /* Write the character into our temporary buffer */
-            *TmpBuffer = Cursor->Cell[R][C].CursorValue;
+            *TmpBuffer = Screen->Cell[R][C].Char;
             TmpBuffer[1] = UNICODE_NULL;
 
             /* Convert it to UTF-8 */
@@ -900,12 +897,12 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
     if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Set the current attribute one last time */
-    Status = VTUTF8ChannelProcessAttributes(Channel, Channel->CursorFlags);
+    Status = VTUTF8ChannelProcessAttributes(Channel, Channel->CellFlags);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Set the current colors one last time */
-    Color[1] = Channel->CursorBackColor;
-    Color[0] = Channel->CursorColor;
+    Color[1] = Channel->CellBackColor;
+    Color[0] = Channel->CellForeColor;
     Status = VTUTF8ChannelAnsiDispatch(Channel,
                                        SacAnsiSetColors,
                                        Color,
@@ -935,7 +932,7 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                      IN PWCHAR String,
                      IN ULONG Size)
 {
-    PSAC_VTUTF8_SCREEN Cursor;
+    PSAC_VTUTF8_SCREEN Screen;
     ULONG i, EscapeSize, R, C;
     PWSTR pwch;
     CHECK_PARAMETER1(Channel);
@@ -943,7 +940,7 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
     VTUTF8ChannelAssertCursor(Channel);
 
     /* Loop every character */
-    Cursor = (PSAC_VTUTF8_SCREEN) Channel->OBuffer;
+    Screen = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
     for (i = 0; i < Size; i++)
     {
         /* Check what the character is */
@@ -995,13 +992,13 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                         for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
                         {
                             /* And replace it with one from the row below */
-                            Cursor->Cell[R][C] = Cursor->Cell[R + 1][C];
+                            Screen->Cell[R][C] = Screen->Cell[R + 1][C];
                         }
                     }
 
                     /* Now we're left with the before-last row, zero it out */
                     ASSERT(R == (SAC_VTUTF8_ROW_HEIGHT - 1));
-                    RtlZeroMemory(&Cursor->Cell[R], sizeof(Cursor->Cell[R]));
+                    RtlZeroMemory(&Screen->Cell[R], sizeof(Screen->Cell[R]));
 
                     /* Reset the row back by one */
                     Channel->CursorRow--;
@@ -1018,10 +1015,10 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                 {
                     /* Fill each remaining character with a space */
                     VTUTF8ChannelAssertCursor(Channel);
-                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorFlags = Channel->CursorFlags;
-                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorBackColor = Channel->CursorBackColor;
-                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorColor = Channel->CursorColor;
-                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorValue = ' ';
+                    Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellFlags = Channel->CellFlags;
+                    Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellBackColor = Channel->CellBackColor;
+                    Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellForeColor = Channel->CellForeColor;
+                    Screen->Cell[Channel->CursorRow][Channel->CursorCol].Char = L' ';
 
                     /* Move to the next character position, but don't overflow */
                     Channel->CursorCol++;
@@ -1052,10 +1049,10 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
 
                 /* Otherwise, print it out with the current attributes */
                 VTUTF8ChannelAssertCursor(Channel);
-                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorFlags = Channel->CursorFlags;
-                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorBackColor = Channel->CursorBackColor;
-                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorColor = Channel->CursorColor;
-                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorValue = *pwch;
+                Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellFlags = Channel->CellFlags;
+                Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellBackColor = Channel->CellBackColor;
+                Screen->Cell[Channel->CursorRow][Channel->CursorCol].CellForeColor = Channel->CellForeColor;
+                Screen->Cell[Channel->CursorRow][Channel->CursorCol].Char = *pwch;
 
                 /* Move forward one character, but make sure not to overflow */
                 Channel->CursorCol++;

@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 DEFINE_GUID(PRIMARY_SAC_CHANNEL_APPLICATION_GUID,
             0x63D02270,
@@ -32,7 +32,7 @@ CHAR InputBuffer[80];
 
 BOOLEAN GlobalPagingNeeded, GlobalDoThreads;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
