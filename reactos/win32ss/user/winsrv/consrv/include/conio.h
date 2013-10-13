@@ -66,7 +66,7 @@ struct _CONSOLE_SCREEN_BUFFER
 
     // PVOID Data;                         /* Private data for the frontend to use */
 
-    COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics */
+    COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics-mode */
     COORD   ViewSize;                   /* Associated "view" (i.e. console) size */
 
     COORD   OldScreenBufferSize;        /* Old size of this screen buffer */

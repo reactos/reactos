@@ -19,6 +19,7 @@
 
 
 VOID GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
+VOID SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -507,8 +508,10 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             /*
              * Apply full-screen mode.
              */
-            GuiData->GuiInfo.FullScreen = GuiInfo->FullScreen;
-            // TODO: Apply it really
+            if (GuiInfo->FullScreen != GuiData->GuiInfo.FullScreen)
+            {
+                SwitchFullScreen(GuiData, GuiInfo->FullScreen);
+            }
         }
 
         /*

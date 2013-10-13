@@ -49,6 +49,9 @@ typedef struct _GUI_CONSOLE_DATA
     HICON hIcon;                /* Handle to the console's icon (big)   */
     HICON hIconSm;              /* Handle to the console's icon (small) */
 
+    LONG_PTR WndStyle;
+    LONG_PTR WndStyleEx;
+
     HPALETTE hSysPalette;       /* Handle to the original system palette */
 
 /*** The following may be put per-screen-buffer !! ***/
