@@ -174,7 +174,7 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
     {
         /* It wasn't, so create an error message to print on the screen */
         sprintf_nt(MessageBuffer,
-                   "%wZ program not found - skipping AUTOCHECK\n",
+                   "%wZ program not found - skipping AUTOCHECK\r\n",
                    FileName);
         RtlInitAnsiString(&MessageString, MessageBuffer);
         if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&Destination,
