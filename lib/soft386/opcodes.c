@@ -6200,6 +6200,43 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
         }
     }
 
+    // FIXME: This method is slow!
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        BOOLEAN Repeat = TRUE;
+        
+        if (OperandSize)
+        {
+            if ((--State->GeneralRegs[SOFT386_REG_ECX].Long) == 0)
+            {
+                /* ECX is 0 */
+                Repeat = FALSE;
+            }
+        }
+        else
+        {
+            if ((--State->GeneralRegs[SOFT386_REG_ECX].LowWord) == 0)
+            {
+                /* CX is 0 */
+                Repeat = FALSE;
+            }
+        }
+
+        if (((State->PrefixFlags & SOFT386_PREFIX_REP) && !State->Flags.Zf)
+            || ((State->PrefixFlags & SOFT386_PREFIX_REPNZ) && State->Flags.Zf))
+        {
+            /* REPZ with ZF = 0 or REPNZ with ZF = 1 */
+            Repeat = FALSE;
+        }
+
+        if (Repeat)
+        {
+            /* Repeat the instruction */
+            State->InstPtr = State->SavedInstPtr;
+        }
+    }
+
     /* Return success */
     return TRUE;
 }
@@ -6444,16 +6481,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeScas)
         AddressSize = !AddressSize;
     }
 
-    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
-        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
-    {
-        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
-        Soft386Exception(State, SOFT386_EXCEPTION_UD);
-        return FALSE;
-    }
-
     /* Calculate the size */
-    if (Opcode == 0xA6) DataSize = sizeof(UCHAR);
+    if (Opcode == 0xAE) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
     /* Calculate the mask and sign flag */
@@ -6497,6 +6526,43 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeScas)
     {
         if (!State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
         else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+    }
+
+    // FIXME: This method is slow!
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        BOOLEAN Repeat = TRUE;
+        
+        if (OperandSize)
+        {
+            if ((--State->GeneralRegs[SOFT386_REG_ECX].Long) == 0)
+            {
+                /* ECX is 0 */
+                Repeat = FALSE;
+            }
+        }
+        else
+        {
+            if ((--State->GeneralRegs[SOFT386_REG_ECX].LowWord) == 0)
+            {
+                /* CX is 0 */
+                Repeat = FALSE;
+            }
+        }
+
+        if (((State->PrefixFlags & SOFT386_PREFIX_REP) && !State->Flags.Zf)
+            || ((State->PrefixFlags & SOFT386_PREFIX_REPNZ) && State->Flags.Zf))
+        {
+            /* REPZ with ZF = 0 or REPNZ with ZF = 1 */
+            Repeat = FALSE;
+        }
+
+        if (Repeat)
+        {
+            /* Repeat the instruction */
+            State->InstPtr = State->SavedInstPtr;
+        }
     }
 
     /* Return success */
