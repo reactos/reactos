@@ -5929,68 +5929,163 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
         AddressSize = !AddressSize;
     }
 
-    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
-        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
-    {
-        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
-        Soft386Exception(State, SOFT386_EXCEPTION_UD);
-        return FALSE;
-    }
-
     /* Calculate the size */
     if (Opcode == 0xA4) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    /* Read from the source operand */
-    if (!Soft386ReadMemory(State,
-                           SOFT386_REG_DS,
-                           AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
-                                       : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
-                           FALSE,
-                           &Data,
-                           DataSize))
+    if (State->PrefixFlags & SOFT386_PREFIX_REP)
     {
-        /* Exception occurred */
-        return FALSE;
-    }
+        UCHAR Block[STRING_BLOCK_SIZE];
+        ULONG Count = OperandSize ? State->GeneralRegs[SOFT386_REG_ECX].Long
+                                  : State->GeneralRegs[SOFT386_REG_ECX].LowWord;
 
-    /* Write to the destination operand */
-    if (!Soft386WriteMemory(State,
-                            SOFT386_REG_ES,
-                            AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
-                                        : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
-                            &Data,
-                            DataSize))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
+        /* Clear the memory block */
+        RtlZeroMemory(Block, sizeof(Block));
 
-    /* Increment/decrement ESI and EDI */
-    if (OperandSize)
-    {
-        if (!State->Flags.Df)
+        /* Transfer until finished */
+        while (Count)
         {
-            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+            ULONG Processed = min(Count, STRING_BLOCK_SIZE / DataSize);
+
+            /* Simulate the 16-bit wrap-around of SI and DI in 16-bit address mode */
+            if (!AddressSize)
+            {
+                ULONG MaxBytesSrc = State->Flags.Df
+                                    ? (ULONG)State->GeneralRegs[SOFT386_REG_ESI].LowWord
+                                    : (0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_ESI].LowWord);
+                ULONG MaxBytesDest = State->Flags.Df
+                                     ? (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord
+                                     : (0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord);
+
+
+                Processed = min(Processed, min(MaxBytesSrc, MaxBytesDest) / DataSize);
+                if (Processed == 0) Processed = 1;
+            }
+
+            if (State->Flags.Df)
+            {
+                /* Reduce ESI and EDI by the number of bytes to transfer */
+                if (AddressSize)
+                {
+                    State->GeneralRegs[SOFT386_REG_ESI].Long -= Processed * DataSize;
+                    State->GeneralRegs[SOFT386_REG_EDI].Long -= Processed * DataSize;
+                }
+                else
+                {
+                    State->GeneralRegs[SOFT386_REG_ESI].LowWord -= Processed * DataSize;
+                    State->GeneralRegs[SOFT386_REG_EDI].LowWord -= Processed * DataSize;
+                }
+            }
+
+            /* Read from memory */
+            if (!Soft386ReadMemory(State,
+                                   SOFT386_REG_DS,
+                                   AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
+                                               : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
+                                   FALSE,
+                                   Block,
+                                   Processed * DataSize))
+            {
+                /* Set ECX */
+                if (OperandSize) State->GeneralRegs[SOFT386_REG_ECX].Long = Count;
+                else State->GeneralRegs[SOFT386_REG_ECX].LowWord = LOWORD(Count);
+
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Write to memory */
+            if (!Soft386WriteMemory(State,
+                                    SOFT386_REG_ES,
+                                    AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                                : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                                    Block,
+                                    Processed * DataSize))
+            {
+                /* Set ECX */
+                if (OperandSize) State->GeneralRegs[SOFT386_REG_ECX].Long = Count;
+                else State->GeneralRegs[SOFT386_REG_ECX].LowWord = LOWORD(Count);
+
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            if (!State->Flags.Df)
+            {
+                /* Increase ESI and EDI by the number of bytes transfered */
+                if (AddressSize)
+                {
+                    State->GeneralRegs[SOFT386_REG_ESI].Long += Processed * DataSize;
+                    State->GeneralRegs[SOFT386_REG_EDI].Long += Processed * DataSize;
+                }
+                else
+                {
+                    State->GeneralRegs[SOFT386_REG_ESI].LowWord += Processed * DataSize;
+                    State->GeneralRegs[SOFT386_REG_EDI].LowWord += Processed * DataSize;
+                }
+            }
+
+            /* Reduce the total count by the number processed in this run */
+            Count -= Processed;
         }
-        else
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
-        }
+
+        /* Clear ECX */
+        if (OperandSize) State->GeneralRegs[SOFT386_REG_ECX].Long = 0;
+        else State->GeneralRegs[SOFT386_REG_ECX].LowWord = 0;
     }
     else
     {
-        if (!State->Flags.Df)
+        /* Read from the source operand */
+        if (!Soft386ReadMemory(State,
+                               SOFT386_REG_DS,
+                               AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
+                                           : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
+                               FALSE,
+                               &Data,
+                               DataSize))
         {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Write to the destination operand */
+        if (!Soft386WriteMemory(State,
+                                SOFT386_REG_ES,
+                                AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                            : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                                &Data,
+                                DataSize))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Increment/decrement ESI and EDI */
+        if (OperandSize)
+        {
+            if (!State->Flags.Df)
+            {
+                State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+                State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+            }
+            else
+            {
+                State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
+                State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+            }
         }
         else
         {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+            if (!State->Flags.Df)
+            {
+                State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+                State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+            }
+            else
+            {
+                State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
+                State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+            }
         }
     }
 
@@ -6171,7 +6266,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
             /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
             if (!AddressSize)
             {
-                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+                ULONG MaxBytes = State->Flags.Df
+                                 ? (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord
+                                 : (0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord);
 
                 Processed = min(Processed, MaxBytes / DataSize);
                 if (Processed == 0) Processed = 1;
@@ -6449,7 +6546,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIns)
             /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
             if (!AddressSize)
             {
-                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+                ULONG MaxBytes = State->Flags.Df
+                                 ? (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord
+                                 : (0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord);
 
                 Processed = min(Processed, MaxBytes / DataSize);
                 if (Processed == 0) Processed = 1;
@@ -6595,7 +6694,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeOuts)
             /* Simulate the 16-bit wrap-around of DI in 16-bit address mode */
             if (!AddressSize)
             {
-                ULONG MaxBytes = 0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+                ULONG MaxBytes = State->Flags.Df
+                                 ? (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord
+                                 : (0x10000 - (ULONG)State->GeneralRegs[SOFT386_REG_EDI].LowWord);
 
                 Processed = min(Processed, MaxBytes / DataSize);
                 if (Processed == 0) Processed = 1;
