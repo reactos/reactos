@@ -53,7 +53,6 @@ KdPortInitializeEx(
     IN ULONG ComPortNumber)
 {
     NTSTATUS Status;
-    CHAR buffer[80];
 
 #if 0 // Deactivated because never used in fact (was in KdPortInitialize but we use KdPortInitializeEx)
     /*
@@ -109,6 +108,8 @@ KdPortInitializeEx(
     else
     {
 #ifndef NDEBUG
+        CHAR buffer[80];
+
         /* Print message to blue screen */
         sprintf(buffer,
                 "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%lx) BaudRate %ld\r\n\r\n",
