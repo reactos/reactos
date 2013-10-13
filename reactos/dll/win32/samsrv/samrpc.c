@@ -7330,13 +7330,13 @@ SampSetUserInternal1(PSAM_DB_OBJECT UserObject,
 
     if (Buffer->Internal1.PasswordExpired)
     {
-        /* The pasword was last set ages ago */
+        /* The password was last set ages ago */
         FixedData.PasswordLastSet.LowPart = 0;
         FixedData.PasswordLastSet.HighPart = 0;
     }
     else
     {
-        /* The pasword was last set right now */
+        /* The password was last set right now */
         Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
         if (!NT_SUCCESS(Status))
             goto done;
