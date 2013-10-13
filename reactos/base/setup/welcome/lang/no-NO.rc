@@ -3,7 +3,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_APPTITLE            "ReactOS - Velkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -13,7 +13,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Innstaller ReactOS"
     IDS_TOPICBUTTON1        "Utforsk denne CD"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Innstaller ReactOS"
     IDS_TOPICTITLE1         "Utforsk denne CD"
@@ -43,7 +43,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Opprett en ny ReactOS innstallasjon på din datamaskin eller oppgrader eksisterende innstallasjon."
     IDS_TOPICDESC1          "Utforsk CDen."

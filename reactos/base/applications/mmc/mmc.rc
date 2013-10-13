@@ -9,6 +9,6 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-IDI_MAINAPP ICON DISCARDABLE resources/mmc.ico
+IDI_MAINAPP ICON resources/mmc.ico
 
 #include "rsrc.rc"

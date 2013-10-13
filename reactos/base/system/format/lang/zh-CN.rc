@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "用法：%s 驱动器: [-FS:文件系统] [-V:卷标] [-Q] [-A:大小] [-C]\n\n\
   [驱动器:]           指定要格式化的驱动器。\n\

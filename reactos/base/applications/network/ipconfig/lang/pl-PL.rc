@@ -7,7 +7,7 @@
  
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Broadcast"
   IDS_P2P     "Peer To Peer"
@@ -16,7 +16,7 @@ BEGIN
   IDS_UNKNOWN "nieznany"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "inny rodzaj karty"
   IDS_ETH     "karta Ethernet"
@@ -27,7 +27,7 @@ BEGIN
   IDS_SLIP    "karta SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

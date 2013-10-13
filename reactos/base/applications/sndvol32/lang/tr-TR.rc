@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Seçenekler"
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Ses Düzeyi Denetleyicisi"
     IDS_NOMIXERDEVICES "Etkin bir karıştırıcı aygıt yok. Uygulamadan çıkılacaktır."

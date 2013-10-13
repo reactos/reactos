@@ -1,6 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -132,7 +132,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Start"
     IDS_PROPERTIES        "E&igenschaften"
@@ -141,7 +141,7 @@ BEGIN
     IDS_STARTUP_ERROR     "Das System kann den Explorer nicht starten, weil die Registrierung nicht verfügbar bzw. fehlerhaft ist."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskleisten- und Startmenüeinstellungen"
 END

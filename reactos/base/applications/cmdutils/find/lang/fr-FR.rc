@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Affiche toutes les lignes d'un fichier qui contiennent un morceau de texte.\n\n\

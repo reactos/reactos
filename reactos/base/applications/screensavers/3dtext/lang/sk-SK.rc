@@ -15,7 +15,7 @@ BEGIN
     LTEXT           "Ľubovoľný text",IDC_STATIC,18,17,65,8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "3D text - šetrič obrazovky"
 END

@@ -6,12 +6,12 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_NO_ENTRY, "Cette commande n'est pas prise en charge par l'utilitaire d'aide.\nEssayez ""%s /?"".\n"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\

@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Ändert Datei-ACLs (Access Control List) oder zeigt sie an.\n\n\

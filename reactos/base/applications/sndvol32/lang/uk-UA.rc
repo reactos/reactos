@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Параметри"
     BEGIN
@@ -25,7 +25,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Регулятор гучності"
     IDS_NOMIXERDEVICES "Активні пристрої-мікшери недоступні! Додаток закінчує роботу."

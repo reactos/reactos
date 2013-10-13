@@ -40,7 +40,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Plik"
     BEGIN
@@ -52,7 +52,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Rejestr"
     BEGIN
@@ -121,7 +121,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -294,21 +294,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Nazwa"
     IDS_LIST_COLUMN_TYPE    "Typ"
     IDS_LIST_COLUMN_DATA    "Dane"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Edytor rejestru"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Zawiera polecenia do pracy z całym rejestrem"
     ID_EDIT_MENU            "Zawiera polecenia do edycji wartości lub kluczy"
@@ -318,7 +318,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Zawiera polecenia do tworzenia nowych kluczy lub wartości"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Zmienia dane wartości"
     ID_EDIT_NEW_KEY         "Dodaje nowy klucz"
@@ -341,7 +341,7 @@ BEGIN
     ID_HELP_ABOUT           "Wyświetla informacje o programie, numerze wersji i prawach autorskich"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Kończy działanie Edytora rejestru"
     ID_FAVOURITES_ADDTOFAVOURITES "Dodaje klawisze do listy elementów ulubionych"
@@ -356,7 +356,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Znajduje następne wystąpienie tekstu określonego przy poprzednim szukaniu"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Błąd"
     IDS_WARNING             "Ostrzeżenie"
@@ -381,7 +381,7 @@ BEGIN
     IDS_NEW_VALUE           "Nowa wartość #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(wartość binarna o długości zero)"
     IDS_DEFAULT_VALUE_NAME  "(domyślna)"
@@ -395,7 +395,7 @@ BEGIN
     IDS_INVALID_DWORD       "(niewłaściwa wartość DWORD)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Plik rejestru"
     IDS_FLT_REGFILES        "Pliki rejestru (*.reg)"
@@ -408,7 +408,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Pełna kontrola"
   IDS_ACCESS_READ               "Odczyt"
@@ -424,14 +424,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Kontrola odczytu"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Tylko ten klucz"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Ten klucz i podklucze"
   IDS_INHERIT_SUBKEYSONLY        "Tylko podklucze"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Rozwiń"
   IDS_COLLAPSE                   "&Zwiń"
@@ -439,7 +439,7 @@ BEGIN
   IDS_FINISHEDFIND               "Przeszukiwanie rejestru zakończone."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Dodawanie danych do rejestru może zmienić lub skasować pewne wartości, przez co pewne składniki systemu mogą przestać poprawnie funkcjonować.\nJeśli nie ufasz źródłu danch w '%s', nie dodawaj ich do rejestru.\n\nCzy na pewno chcesz kontynuować?"
   IDS_IMPORT_OK                  "Klucze i wartości w '%s' zostały z powodzeniem dodane do rejestru."
@@ -447,7 +447,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Nie można wyeksportować '%s': Błąd podczas tworzenia bądź zapisywania pliku. Może to oznaczać problem z dyskiem lub systemem plików."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Numer Szyny"
     IDS_INTERFACE                 "Interfejs"
@@ -468,7 +468,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Rozmiar danych"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Pamięć"
@@ -479,7 +479,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Odczyt / Zapis"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Niezdefiniowane"
     IDS_BUS_INTERNAL              "Wewnętrzne"
@@ -508,7 +508,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -518,7 +518,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ładuj drzewo"
 FONT 8, "Ms Shell Dlg"
@@ -529,7 +529,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Anuluj", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dodaj do ulubionych"
 FONT 8, "MS Shell Dlg"
@@ -540,7 +540,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Usuń z ulubionych"
 FONT 8, "MS Shell Dlg"
@@ -552,7 +552,7 @@ BEGIN
     LTEXT           "Wybierz ulubione:",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Znajdź"
 FONT 8, "MS Shell Dlg"
@@ -589,7 +589,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -601,7 +601,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Otwiera pomoc Edytora Rejestru."
  *    ID_HELP_ABOUT           "Wyświetla informacje o programie, numerze wersji, licencji."

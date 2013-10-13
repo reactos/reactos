@@ -285,7 +285,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Уредба"
     IDS_CPLSYSTEMDESCRIPTION "Можете да видите сведения за компютъра ви и за различни настройки"

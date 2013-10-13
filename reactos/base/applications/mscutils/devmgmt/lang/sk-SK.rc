@@ -56,12 +56,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_LICENSE "Tento program je voľný softvér; môžete ho šíriť a/alebo modifikovať podľa podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buď verzie 2 tejto licencie, alebo (podľa Vášho uváženia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovaný v nádeji, že bude užitočný, avšak BEZ AKEJKOĽVEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URČITÝ ÚČEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dostať spolu s týmto programom; ak nie, napíšte si o ňu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Vlastnosti"
   IDS_TOOLTIP_REFRESH   "Obnoviť"
@@ -70,7 +70,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "Správca zariadení systému ReactOS"
   IDS_HINT_BLANK        " "

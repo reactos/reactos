@@ -102,7 +102,7 @@ BEGIN
 
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Preferințe Internet"
     IDS_CPL_INFO        "Configurarea Navigatorului de Internet Wine și preferințele aferente"

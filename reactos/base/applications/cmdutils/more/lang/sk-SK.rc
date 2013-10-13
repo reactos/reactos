@@ -4,7 +4,7 @@
  
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Zobrazuje údaje, stránku za stránkou, na obrazovke.\n\n\
   MORE < [Jednotka:][Cesta]Názov súboru\n\

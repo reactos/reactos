@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opciones"
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Control de Volumen"
     IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento! \n\

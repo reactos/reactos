@@ -8,7 +8,7 @@
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_ASSOC_HELP,    "Modifică asocierile extensiilor de fișiere.\n\n\

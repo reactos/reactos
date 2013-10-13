@@ -10,7 +10,7 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - ยินดีต้อนรับ"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -20,7 +20,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "ติดตั้ง ReactOS"
     IDS_TOPICBUTTON1        "ดูรายละเอียดของแผ่นซีดีนี้"
@@ -35,7 +35,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "ติดตั้ง ReactOS"
     IDS_TOPICTITLE1         "ดูรายละเอียดของแผ่นซีดีนี้"
@@ -50,7 +50,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "คุณต้องการติดตั้ง ReactOS ลงในเครื่องคอมพิวเตอร์ของคุณ\n\nหรือต้องการปรับแต่งเพิ่มเติมจากที่มีอยู่เดิม."
     IDS_TOPICDESC1          "ดูรายละเอียดของแผ่นซีดีนี้."

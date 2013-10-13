@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nВикористання: ping [-t] [-n count] [-l size] [-w timeout] хост\n\n\
 Опції:\n\

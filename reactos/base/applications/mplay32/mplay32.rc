@@ -10,7 +10,7 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_MAIN ICON DISCARDABLE "resources/mplay32.ico"
+IDI_MAIN ICON "resources/mplay32.ico"
 
 /* Bitmaps */
 IDB_PLAYICON     BITMAP "resources/play.bmp"

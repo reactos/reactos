@@ -187,7 +187,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FIRSTCOLUMN "Ad"
     IDS_SECONDCOLUMN "Tanım"
@@ -196,7 +196,7 @@ BEGIN
     IDS_FITHCOLUMN "Olarak Oturum Aç"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SERVICES_STARTED "Başladı"
     IDS_SERVICES_STOPPED "Durdu"
@@ -205,7 +205,7 @@ BEGIN
     IDS_SERVICES_DIS "Devre Dışı"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_NUM_SERVICES "Hizmet Sayısı: %d"
     IDS_STOP_DEPENDS "%s durduğunda, bu hizmetler de durur:"
@@ -213,7 +213,7 @@ BEGIN
     IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOOLTIP_PROP "Husûsiyetler"
     IDS_TOOLTIP_REFRESH "Yenile"
@@ -226,7 +226,7 @@ BEGIN
     IDS_TOOLTIP_RESTART "Hizmeti Yeniden Başlat"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PROGRESS_INFO_START  "ReactOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
     IDS_PROGRESS_INFO_STOP   "ReactOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
@@ -238,13 +238,13 @@ BEGIN
     IDS_DELETE_STOP "Hizmeti silmeden önce onu, elle durdurmalısınız."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_OPTIONS "EK SEÇENEKLER:\r\nUYARI: Seçenek adı, eşittir imini de kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Öntanımlı = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Öntanımlı = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Öntanımlı = normal)\r\n group= <Yükleme sırası takımı>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap Adı|Nesne Adı>\r\n       (Öntanımlı = LocalSystem)\r\n password= <Şifre>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HINT_BLANK        " "
     IDS_HINT_EXPORT       " Şimdiki dizelgeyi, bir kütüğe aktarır."
@@ -280,7 +280,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPNAME "Hizmet Yöneticisi"
 END

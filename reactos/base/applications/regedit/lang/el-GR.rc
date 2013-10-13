@@ -33,7 +33,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Αρχείο"
     BEGIN
@@ -45,7 +45,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Αρχείο"
     BEGIN
@@ -114,7 +114,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -287,21 +287,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Όνομα"
     IDS_LIST_COLUMN_TYPE    "Τύπος"
     IDS_LIST_COLUMN_DATA    "Δεδομένα"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Registry Editor"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Περιέχει εντολές για εργασία σε όλη τη registry"
     ID_EDIT_MENU            "Περιέχει εντολές για την επεξεργασία τιμών ή κλειδιών"
@@ -311,7 +311,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Περιέχει εντολές για τη δημηιουργία νέων τιμών ή κλειδιών"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Τροποποιεί τα δεδομένα της τιμής"
     ID_EDIT_NEW_KEY         "Προσθέτει νέο κλειδί"
@@ -334,7 +334,7 @@ BEGIN
     ID_HELP_ABOUT           "Εμφανίζει τις πληροφορίες προγράμματος, τον αριθμό έκδοσης και τα δικαιώματα"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Κλείνει τον registry editor"
     ID_FAVOURITES_ADDTOFAVOURITES "Προσθέτει κλειδιά στη λίστα αγαπημένων"
@@ -349,7 +349,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Βρίσκει την επόμενη τοποθεσία του επιλεγμένου αλφαριθμητικού της προηγούμενης αναζήτησης"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Σφάλμα"
     IDS_WARNING             "Προειδοποίηση"
@@ -374,7 +374,7 @@ BEGIN
     IDS_NEW_VALUE           "Νέα Τιμή #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(δυαδική τιμή μηδενικού μεγέθους)"
     IDS_DEFAULT_VALUE_NAME  "(Προεπιλεγμένο)"
@@ -388,7 +388,7 @@ BEGIN
     IDS_INVALID_DWORD       "(μη έγκυρη DWORD τιμή)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Registration File"
     IDS_FLT_REGFILES        "Registration αρχεία (*.reg)"
@@ -401,7 +401,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Πλήρης Έλεγχος"
   IDS_ACCESS_READ               "Διάβασμα"
@@ -417,14 +417,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Read Control"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Μόνο αυτό το κλειδί"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Αυτό το κλειδί και τα υποκλειδιά"
   IDS_INHERIT_SUBKEYSONLY        "Μόνο τα υποκλειδιά"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Expand"
   IDS_COLLAPSE                   "&Collapse"
@@ -432,7 +432,7 @@ BEGIN
   IDS_FINISHEDFIND               "Τέλος αναζήτησης στη registry."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -440,7 +440,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
     IDS_INTERFACE                 "Interface"
@@ -461,7 +461,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Data Size"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memory"
@@ -472,7 +472,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Read / Write"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Undefined"
     IDS_BUS_INTERNAL              "Internal"
@@ -501,7 +501,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -511,7 +511,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
 FONT 8, "Ms Shell Dlg"
@@ -522,7 +522,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Προσθήκη στα αγαπημένα"
 FONT 8, "MS Shell Dlg"
@@ -533,7 +533,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Αφαίρεση Αγαπημένων"
 FONT 8, "MS Shell Dlg"
@@ -545,7 +545,7 @@ BEGIN
     LTEXT           "Επιλογή Αγαπημένου(ων):",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Εύρεση"
 FONT 8, "MS Shell Dlg"
@@ -582,7 +582,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -594,7 +594,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
  *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."

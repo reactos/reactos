@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Wyświetla wszystkie linie danego pliku, zawierające szukany ciąg znaków.\n\n\

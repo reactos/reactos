@@ -1,6 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE, "Wyœwietla obecn¹ nazwê komputera.\n\nhostname"
     IDS_NOSET, "Opcja hostname -s nie jest wspierana."

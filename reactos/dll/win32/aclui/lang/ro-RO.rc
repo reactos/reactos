@@ -25,7 +25,7 @@ BEGIN
   PUSHBUTTON  "A&vansate",   IDC_ADVANCED, 165, 194, 55, 14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_PSP_TITLE            "Permisiuni pentru %1"
   IDS_UNKNOWN              "Necunoscut"

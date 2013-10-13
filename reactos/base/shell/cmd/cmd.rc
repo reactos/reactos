@@ -11,7 +11,7 @@
 
 #include <reactos/version.rc>
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_FREEDOS_DEV, "    Tim Norman        Matt Rains\n\
         Evan Jeffrey      Steffen Kaiser\n\
@@ -25,6 +25,6 @@ BEGIN
         Sylvain Petreolle\n"
 END
 
-1   ICON    DISCARDABLE res/terminal.ico
+1   ICON     res/terminal.ico
 
 #include "rsrc.rc"

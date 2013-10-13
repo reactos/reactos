@@ -1,6 +1,6 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Pemakaian: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Menetapkan drive yang akan diformat.\n\

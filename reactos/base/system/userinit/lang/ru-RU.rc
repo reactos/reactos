@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_USERINIT_FAIL, "Ошибка запуска оболочки при инициализации пользовательского сеанса!\n"

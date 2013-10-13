@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Utilisation : %s disque: [-FS:système de fichier] [-V:nom] [-Q] [-A:taille] [-C]\n\n\
   [disque:]        Indique le disque à formater.\n\

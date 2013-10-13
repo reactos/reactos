@@ -1,6 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Visualizza dati una schermata per volta.\n\n\
   MORE < [Drive:][Path]File\n\

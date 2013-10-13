@@ -17,7 +17,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"console.dll\0"
 #include <reactos/version.rc>
 
-IDC_CPLICON ICON    DISCARDABLE "res/terminal.ico"
+IDC_CPLICON ICON     "res/terminal.ico"
 
 #include <reactos/manifest_dll.rc>
 

@@ -1,6 +1,6 @@
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "ACL's (Access Control Lists, toegangslijsten) van bestanden weergeven\nof bewerken\n\nCACLS bestandsnaam [/T] [/E] [/C] [/G gebr:toeg] [/R gebruiker [...]]\n\

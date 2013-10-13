@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nPoužití: ping [-t] [-n počet] [-l velikost] [-w timeout] cíl\n\n\
 Options:\n\

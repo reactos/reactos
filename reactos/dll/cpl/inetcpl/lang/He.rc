@@ -67,7 +67,7 @@ BEGIN
 
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "הגדרות אינטרנט"
     IDS_CPL_INFO        "הגדר את דפדפן האינטרנט של Wine והגדרות קשורות."

@@ -1,6 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nSyntax: ping [-t] [-n Anzahl] [-l Größe] [-w Zeitlimit] Zielhost\n\n\
 Optionen:\n\

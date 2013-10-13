@@ -1,5 +1,5 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Syntax: %s Datenträger: [-FS:Dateisystem] [-V:Label] [-Q] [-A:Größe] [-C]\n\n\
   [Datenträger:]   Legt das zu formatierende Laufwerk fest.\n\

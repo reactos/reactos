@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Možnosti"
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Ovládanie hlasitosti"
     IDS_NOMIXERDEVICES "Nie sú dostupné žiadne zariadenie zmiešavača! Program sa teraz ukončí."

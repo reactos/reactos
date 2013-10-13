@@ -8,7 +8,7 @@
 */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "Supporto di ReactOS per la macchina virtuale DOS.\n"

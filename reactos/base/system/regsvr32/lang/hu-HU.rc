@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nHasználat: regsvr32 [/u] [/s] [/c] [/n] [/i[:parancssor]] dll_neve\n\

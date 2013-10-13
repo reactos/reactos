@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "Поддръжка на РеактОС за привидна ДОС машина.\n"

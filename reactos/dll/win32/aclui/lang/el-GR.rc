@@ -17,7 +17,7 @@ BEGIN
   PUSHBUTTON "Γ&ια Προχωρημένους", IDC_ADVANCED, 165, 194, 55, 14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_PSP_TITLE "Δικαιώματα για το %1"
   IDS_UNKNOWN "Άγνωστο"

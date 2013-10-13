@@ -11,7 +11,7 @@ BEGIN
     LTEXT           "טקסט מותאם אישית:",IDC_STATIC,18,17,77,8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "שומר מסר של טקסט תלת מימדי"
 END

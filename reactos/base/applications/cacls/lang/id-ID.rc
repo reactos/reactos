@@ -1,6 +1,6 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Menampilkan atau memodifikasi daftar kontrol akses (ACL) file\n\n\

@@ -5,7 +5,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Benvenuto"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -15,7 +15,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Installa ReactOS"
     IDS_TOPICBUTTON1        "Esplora il CD"
@@ -30,7 +30,7 @@ BEGIN
 END
 
 /* Topic Titolos */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Installa ReactOS"
     IDS_TOPICTITLE1         "Esplora il CD"
@@ -45,7 +45,7 @@ BEGIN
 END
 
 /* Descrizione argomentos */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Crea una nuova installazione di ReactOS sul tuo computer o aggiorna l'installazione esistente."
     IDS_TOPICDESC1          "Esplora il CD."

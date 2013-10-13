@@ -36,7 +36,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
@@ -48,7 +48,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
@@ -111,7 +111,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -284,21 +284,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Nom"
     IDS_LIST_COLUMN_TYPE    "Type"
     IDS_LIST_COLUMN_DATA    "Valeur"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Éditeur de registres"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Contient des commandes pour travailler sur les registres de manière globale"
     ID_EDIT_MENU            "Contient des commandes pour éditer des valeurs ou des clés"
@@ -308,7 +308,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Contient des commandes pour créer de nouvelles clés ou valeurs"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Modifie les données d'une valeur"
     ID_EDIT_NEW_KEY         "Ajoute une nouvelle clé"
@@ -330,7 +330,7 @@ BEGIN
     ID_HELP_ABOUT           "Affiche de l'information sur le programme, le numéro de version et le copyright"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Quitte l'éditeur de registres"
     ID_FAVOURITES_ADDTOFAVOURITES "Ajoute des clés à la liste des Favoris"
@@ -345,7 +345,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Recherche l'occurrence suivante du texte de la dernière recherche"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Erreur"
     IDS_WARNING             "Attention"
@@ -370,7 +370,7 @@ BEGIN
     IDS_NEW_VALUE           "Nouvelle valeur #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY        "(valeur binaire de longueur nulle)"
     IDS_DEFAULT_VALUE_NAME  "(Défaut)"
@@ -384,7 +384,7 @@ BEGIN
     IDS_INVALID_DWORD       "(valeur mot double invalide)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Fichier d'enregistrement"
     IDS_FLT_REGFILES        "Fichiers d'enregistrement (*.reg)"
@@ -397,7 +397,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Contrôle total"
   IDS_ACCESS_READ               "Lecture"
@@ -413,14 +413,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Contrôle en lecture"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Seulement cette clé"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Cette clé et les sous-clés"
   IDS_INHERIT_SUBKEYSONLY        "Les sous-clés seulement"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "Dérouler"
   IDS_COLLAPSE                   "Réduire"
@@ -428,7 +428,7 @@ BEGIN
   IDS_FINISHEDFIND               "Recherche dans le registre terminée."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "L'ajout d'informations peut involontairement modifier ou supprimer des valeurs et endommager le fonctionnement de composants.\nSi vous n'êtes pas sûr de la source de ces informations dans '%s', ne les ajoutez pas au Registre.\n\nÊtes-vous sûr de vouloir continuer ?"
   IDS_IMPORT_OK                  "Les clés et valeurs contenues dans '%s' ont été correctement ajoutées au Registre."
@@ -436,7 +436,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Impossible d'exporter dans le fichier '%s' à la suite d'une erreur lors de sa création ou d'une tentative d'écriture, pouvant être due à une erreur de disque ou de système de fichiers."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Numéro de bus"
     IDS_INTERFACE                 "Interface"
@@ -457,7 +457,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Taille des données"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Mémoire"
@@ -468,7 +468,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Lecture / Écriture"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Indéfini"
     IDS_BUS_INTERNAL              "Interne"
@@ -497,7 +497,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -507,7 +507,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Charger une ruche"
 FONT 8, "Ms Shell Dlg"
@@ -518,7 +518,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ajouter aux favoris"
 FONT 8, "MS Shell Dlg"
@@ -529,7 +529,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Supprimer des favoris"
 FONT 8, "MS Shell Dlg"
@@ -541,7 +541,7 @@ BEGIN
     LTEXT           "Sélectionnez le(s) favori(s) :",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Chercher"
 FONT 8, "MS Shell Dlg"
@@ -578,7 +578,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -590,7 +590,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Ouvre l'aide de l'éditeur de registres."
  *    ID_HELP_ABOUT           "Affiche de l'information sur le programme, le numéro de version et le copyright."

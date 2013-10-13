@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Utilizare: %s unitate: [-FS:sistem-de-fișiere] [-V:etichetă]\n\
                        [-Q] [-A:dimensiune] [-C]\n\n\

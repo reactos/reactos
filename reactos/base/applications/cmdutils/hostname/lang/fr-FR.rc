@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE, "Affiche le nom de l'hôte actuel.\n\nhostname"
     IDS_NOSET, "hostname -s n'est pas pris en charge."

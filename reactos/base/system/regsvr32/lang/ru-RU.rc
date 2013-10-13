@@ -1,5 +1,5 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nИспользование: regsvr32 [/u] [/s] [/c] [/n] [/i[:параметр]] имя_dll\n\

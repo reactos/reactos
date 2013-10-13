@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Difuzare"
   IDS_P2P     "Egal la egal"
@@ -17,7 +17,7 @@ BEGIN
   IDS_UNKNOWN "necunoscută"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "alt tip de adaptor"
   IDS_ETH     "adaptor Ethernet"
@@ -28,7 +28,7 @@ BEGIN
   IDS_SLIP    "adaptor SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

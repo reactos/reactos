@@ -1,6 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Broadcast"
   IDS_P2P     "Peer To Peer"
@@ -9,7 +9,7 @@ BEGIN
   IDS_UNKNOWN "Ukjent"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Other Type Of Adapter"
   IDS_ETH     "Ethernet Adapter"
@@ -20,7 +20,7 @@ BEGIN
   IDS_SLIP    "SLIP Adapter"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

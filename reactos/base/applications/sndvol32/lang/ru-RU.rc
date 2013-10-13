@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Параметры"
     BEGIN
@@ -19,7 +19,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Управление громкостью"
     IDS_NOMIXERDEVICES "Нет доступных микшерных устройств! Приложение будет завершено."

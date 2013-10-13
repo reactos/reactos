@@ -1,6 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "O&pzioni"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Controllo Volume"
     IDS_NOMIXERDEVICES "Non ci sono dispositivi mixer disponibili! Il programma si chiuderà."

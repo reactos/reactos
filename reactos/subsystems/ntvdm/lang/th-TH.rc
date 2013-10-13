@@ -1,6 +1,6 @@
 
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "รองรับการทำงานระบบดอสเสมือนของ ReactOS\n"

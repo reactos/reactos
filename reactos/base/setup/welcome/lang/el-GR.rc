@@ -3,7 +3,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Καλώς Ήλθατε"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -13,7 +13,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Εγκατάσταση του ReactOS"
     IDS_TOPICBUTTON1        "Εξερεύνηση αυτού του CD"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Εγκατάσταση του ReactOS"
     IDS_TOPICTITLE1         "Εξερεύνηση αυτού του CD"
@@ -43,7 +43,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Δημιουργία νέας εγκατάστασης του ReactOS στον υπολογιστή ή αναβάθμιση μιας ήδη υπάρχουσας εγκατάστασης."
     IDS_TOPICDESC1          "Εξερεύνηση αυτού του CD."

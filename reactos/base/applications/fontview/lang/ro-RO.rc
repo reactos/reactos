@@ -1,7 +1,7 @@
 //2012.09.09 - Fulea Ștefan: update caused by r56898, corrections
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 	IDS_INSTALL,        "Inst&alează"
     IDS_PRINT,          "I&mprimă"

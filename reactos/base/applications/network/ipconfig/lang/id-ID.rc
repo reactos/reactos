@@ -1,6 +1,6 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Siarkan"
   IDS_P2P     "Peer To Peer"
@@ -9,7 +9,7 @@ BEGIN
   IDS_UNKNOWN "tidak dikenal"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Adapter Tipe Lainnya"
   IDS_ETH     "Adapter Ethernet"
@@ -20,7 +20,7 @@ BEGIN
   IDS_SLIP    "Adapter SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

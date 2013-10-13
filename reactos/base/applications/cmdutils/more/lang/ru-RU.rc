@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Показывать данные постранично заполняя экран.\n\n\
   MORE < [Том:][Путь]Имя файла\n\

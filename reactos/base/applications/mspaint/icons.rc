@@ -1,4 +1,4 @@
-IDI_APPICON     ICON LOADONCALL DISCARDABLE "icons/paint.ico"
+IDI_APPICON     ICON  "icons/paint.ico"
 
 IDB_TOOLBARICONS    BITMAP "icons/iconbar.bmp"
 

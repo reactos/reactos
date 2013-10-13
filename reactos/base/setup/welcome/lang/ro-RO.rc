@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Bun venit"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -20,7 +20,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Instalare ReactOS"
     IDS_TOPICBUTTON1        "Explorare CD"
@@ -35,7 +35,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Instalare ReactOS"
     IDS_TOPICTITLE1         "Explorare CD"
@@ -50,7 +50,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Creați o instalare nouă sau actualizați o instalare existentă."
     IDS_TOPICDESC1          "Explorați conținutul acestui CD."

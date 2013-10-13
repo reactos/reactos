@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DllNotLoaded,   """%s"" kitaplığı yüklenemedi."
     IDS_MissingEntry,   "%s giriş noktası %s içinde bulunamadı."

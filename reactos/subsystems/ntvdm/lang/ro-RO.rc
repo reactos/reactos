@@ -6,7 +6,7 @@
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "Asistență pentru mașina virtuală DOS.\n"

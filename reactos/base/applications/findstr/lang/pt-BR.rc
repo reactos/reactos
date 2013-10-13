@@ -1,6 +1,6 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Localiza uma seqüência de texto em um ou mais arquivos.\n\n\

@@ -282,7 +282,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Rendszer"
     IDS_CPLSYSTEMDESCRIPTION "A számítógéppel kapcsolatos információk megjelenítése, különböző rendszer és hardver beállítások módosítása."

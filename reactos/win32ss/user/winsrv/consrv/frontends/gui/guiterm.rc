@@ -10,7 +10,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // #define REACTOS_STR_ORIGINAL_FILENAME   "consrv.dll"
 // #include <reactos/version.rc>
 
-// IDI_TERMINAL ICON    DISCARDABLE "res/terminal.ico"
-IDI_TERMINAL ICON    DISCARDABLE "frontends/gui/res/terminal.ico"
+// IDI_TERMINAL ICON     "res/terminal.ico"
+IDI_TERMINAL ICON     "frontends/gui/res/terminal.ico"
 
 #include "rsrc.rc"

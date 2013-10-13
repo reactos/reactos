@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUtilisation : regsvr32 [/u] [/s] [/c] [/n] [/i[:lignedecommande]] nomDLL\n\

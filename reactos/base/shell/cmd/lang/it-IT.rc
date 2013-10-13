@@ -1,5 +1,5 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_ASSOC_HELP,    "Modifica le associazioni per le estensioni dei file.\n\n\

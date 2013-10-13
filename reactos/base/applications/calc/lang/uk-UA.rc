@@ -311,7 +311,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
 END
 
-IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+IDD_DIALOG_ABOUT DIALOGEX 0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Про Калькулятор ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -330,7 +330,7 @@ BEGIN
                     WS_VSCROLL
 END
 
-IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Статистика"
 FONT 8, "MS Shell Dlg"
@@ -347,7 +347,7 @@ END
 
 // Menus
 
-IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Правка"
     BEGIN
@@ -379,7 +379,7 @@ BEGIN
     END
 END
 
-IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Правка"
     BEGIN
@@ -412,7 +412,7 @@ BEGIN
     END
 END
 
-IDR_MENU_STANDARD MENU DISCARDABLE
+IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Правка"
     BEGIN
@@ -437,7 +437,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_STRING_LICENSE      "Калькулятор ReactOS - вільне програмне забезпечення, випущене за ліцензією GNU GPL.\r\n\r\nВи можете отримати копію ліцензії GNU GPL тут:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nВи можете також отримати переклад ліцензії GNU GPL тут:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Помилка"
@@ -445,7 +445,7 @@ BEGIN
 END
 
 // types of conversion
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE          "Кут"
     IDS_CONV_AREA           "Площа"
@@ -463,7 +463,7 @@ BEGIN
 END
 
 // TYPES OF ANGLES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ANGLE_DEGREES       "Градус"
     IDS_ANGLE_GRADIANS      "Град"
@@ -471,7 +471,7 @@ BEGIN
 END
 
 // TYPES OF AREAS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_AREA_ACRES                  "Акр"
     IDS_AREA_ACRES_BRAZIL           "Акр (бразильський)"
@@ -510,7 +510,7 @@ BEGIN
 END
 
 // TYPES OF COMSUMPTIONS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L        "Кілометр/літр"
     IDS_CONSUMPTION_L_PER_100_KM    "Літрів/100 кілометрів"
@@ -519,7 +519,7 @@ BEGIN
 END
 
 // TYPES OF CURRENCIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Австралійський шилінг"
     IDS_CURRENCY_BELGIAN_FRANC      "Бельгійський франк"
@@ -542,7 +542,7 @@ BEGIN
 END
 
 // TYPES OF ENERGIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "Калорія 15-градусна"
     IDS_ENERGY_BTUS                 "Британська теплова одиниця"
@@ -559,7 +559,7 @@ BEGIN
 END
 
 // TYPES OF LENGTHS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Ангстрем"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Астрономічна одиниця"
@@ -611,7 +611,7 @@ BEGIN
 END
 
 // TYPES OF POWERS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_POWER_BTUS_PER_MINUTE       "Британська теплова одиниця за хвилину"
     IDS_POWER_FPS_PER_MINUTE        "Футо-фунт за хвилину"
@@ -622,7 +622,7 @@ BEGIN
 END
 
 // TYPE OF PRESSURES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Атмосфера (Фізична)"
     IDS_PRESSURE_BARS               "Бар"
@@ -634,7 +634,7 @@ BEGIN
 END
 
 // TYPES OF TEMPERATURES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TEMPERATURE_CELSIUS         "Градус (за шкалою Цельсія)"
     IDS_TEMPERATURE_FAHRENHEIT      "Градус (за шкалою Фаренгейта)"
@@ -643,7 +643,7 @@ BEGIN
 END
 
 // TYPES OF TIME
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TIME_DAYS         "Доба"
     IDS_TIME_HOURS        "Година"
@@ -657,7 +657,7 @@ BEGIN
 END
 
 // TYPES OF VELOCITIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Сантиметр за годину"
     IDS_VELOCITY_FEET_HOUR          "Фут за годину"
@@ -670,7 +670,7 @@ BEGIN
 END
 
 // TYPES OF VOLUMES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VOLUME_BARRELS_UK           "Барель (британський)"
     IDS_VOLUME_BARRELS_OIL          "Барель нафти"
@@ -709,7 +709,7 @@ BEGIN
 END
 
 // TYPES OF WEIGHTS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Бат"
     IDS_WEIGHT_CARATS               "Карат"

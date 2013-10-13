@@ -3,7 +3,7 @@
 /* LOCATION: \base\applications\format\lang */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Употреба: %s устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
   [drive:]         Указва устройството за оразмеряване.\n\

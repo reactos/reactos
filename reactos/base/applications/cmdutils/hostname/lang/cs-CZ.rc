@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE, "Vypíše současný název hostitele.\n\nhostname"
     IDS_NOSET, "hostname -s není podporováno."

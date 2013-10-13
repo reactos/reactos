@@ -1,6 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Разпръскване"
   IDS_P2P     "Равен с равен (P2P)"
@@ -9,7 +9,7 @@ BEGIN
   IDS_UNKNOWN "неизвестен"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Друг вид карта"
   IDS_ETH     "Карта Ethernet"
@@ -20,7 +20,7 @@ BEGIN
   IDS_SLIP    "Карта SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

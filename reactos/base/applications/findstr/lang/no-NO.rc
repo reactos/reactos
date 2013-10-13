@@ -1,6 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FINN: Skriv alle linjene for filen som inneholder en streng.\n\n\

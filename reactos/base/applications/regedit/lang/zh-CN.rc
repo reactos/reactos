@@ -33,7 +33,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
@@ -45,7 +45,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
@@ -114,7 +114,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -287,21 +287,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "名称"
     IDS_LIST_COLUMN_TYPE    "类型"
     IDS_LIST_COLUMN_DATA    "数据"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "注册表编辑器"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "包含与整个注册表工作相关的命令。"
     ID_EDIT_MENU            "包含编辑值或项的命令。"
@@ -311,7 +311,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "包含创建新项或值的命令。"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "修改该值的数据。"
     ID_EDIT_NEW_KEY         "添加新项。"
@@ -334,7 +334,7 @@ BEGIN
     ID_HELP_ABOUT           "显示程序信息、版本号和版权。"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "退出注册表编辑器。"
     ID_FAVOURITES_ADDTOFAVOURITES "将项添加到收藏夹列表中。"
@@ -349,7 +349,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "继续查找上次搜索的文本。"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "错误"
     IDS_WARNING             "警告"
@@ -374,7 +374,7 @@ BEGIN
     IDS_NEW_VALUE           "新值 #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(长度为零的二进位值)"
     IDS_DEFAULT_VALUE_NAME  "(默认)"
@@ -388,7 +388,7 @@ BEGIN
     IDS_INVALID_DWORD       "(不正确的 DWORD 值)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "注册文件"
     IDS_FLT_REGFILES        "注册文件 (*.reg)"
@@ -401,7 +401,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "完全控制"
   IDS_ACCESS_READ               "读取"
@@ -417,14 +417,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "读取控制"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "只有该项"
   IDS_INHERIT_THISKEYANDSUBKEYS  "该项及其子项"
   IDS_INHERIT_SUBKEYSONLY        "只有子项"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "展开"
   IDS_COLLAPSE                   "折叠"
@@ -432,7 +432,7 @@ BEGIN
   IDS_FINISHEDFIND               "注册表搜索完毕。"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -440,7 +440,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
     IDS_INTERFACE                 "Interface"
@@ -461,7 +461,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Data Size"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memory"
@@ -472,7 +472,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Read / Write"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Undefined"
     IDS_BUS_INTERNAL              "Internal"
@@ -501,7 +501,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 380, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 380, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -514,7 +514,7 @@ END
 //
 // Dialog resources
 //
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
 FONT 8, "Ms Shell Dlg"
@@ -525,7 +525,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "添加到收藏夹"
 FONT 8, "MS Shell Dlg"
@@ -536,7 +536,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "删除收藏夹"
 FONT 8, "MS Shell Dlg"
@@ -548,7 +548,7 @@ BEGIN
     LTEXT           "选择收藏夹(&S):",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 275, 82
+IDD_FIND DIALOGEX 0, 0, 275, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "查找"
 FONT 8, "MS Shell Dlg"
@@ -585,7 +585,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -597,7 +597,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
  *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."

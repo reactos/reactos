@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
+IDI_SOLITAIRE ICON "solitaire.ico"
 
 #include <reactos/manifest_exe.rc>
 

@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Zobrazí alebo zmení zoznamy prístupových práv (Access Control List) súborov.\n\n\

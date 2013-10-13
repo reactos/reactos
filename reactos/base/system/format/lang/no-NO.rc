@@ -1,5 +1,5 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "bruk: %s stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
   [stasjon:]         Spesifisere stasjon til formater.\n\

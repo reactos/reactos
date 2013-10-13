@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nSyntaxis: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] DLL-naam\n\

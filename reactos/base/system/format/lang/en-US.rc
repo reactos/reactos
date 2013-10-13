@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Usage: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifies the drive to format.\n\

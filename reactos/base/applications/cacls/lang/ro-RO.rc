@@ -7,7 +7,7 @@
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Afișează sau modifică lista de control acces (ACL) pentru fișiere\n\n\

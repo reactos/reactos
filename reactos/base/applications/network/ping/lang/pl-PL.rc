@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nSposób użycia: ping [-t] [-n ilość] [-l bajtów] [-w czas] host-docelowy\n\n\
 Opcje:\n\

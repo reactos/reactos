@@ -1,6 +1,6 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "O&psi"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Kontrol Volume"
     IDS_NOMIXERDEVICES "Tidak ada device mixer yang aktif yang tersedia! Aplikasi akan keluar sekarang."

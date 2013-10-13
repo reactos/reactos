@@ -1,6 +1,6 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_MAINAPP ICON DISCARDABLE resources/sndvol32.ico
+IDI_MAINAPP ICON  resources/sndvol32.ico
 
 // UTF-8
 #pragma code_page(65001)

@@ -17,7 +17,7 @@ BEGIN
   PUSHBUTTON "До&полнительно", IDC_ADVANCED, 160, 194, 60, 14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_PSP_TITLE "Разрешения для %1"
   IDS_UNKNOWN "Неизвестный"

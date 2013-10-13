@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Broadcast"
   IDS_P2P     "Peer To Peer"
@@ -11,7 +11,7 @@ BEGIN
   IDS_UNKNOWN "sconosciuto"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Altro tipo di adattatore"
   IDS_ETH     "Adattatore Ethernet"
@@ -22,7 +22,7 @@ BEGIN
   IDS_SLIP    "Adattatore SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

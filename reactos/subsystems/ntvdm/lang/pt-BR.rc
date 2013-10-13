@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "ReactOS subsistema para suporte DOS de 16 bits.\n"

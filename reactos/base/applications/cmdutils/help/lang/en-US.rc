@@ -4,12 +4,12 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\

@@ -190,7 +190,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN "Namn"
   IDS_SECONDCOLUMN "Beskrivning"
@@ -199,7 +199,7 @@ BEGIN
   IDS_FITHCOLUMN "Logga på som"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "Startad"
   IDS_SERVICES_STOPPED "Stoppad"
@@ -208,7 +208,7 @@ BEGIN
   IDS_SERVICES_DIS "Inaktiverad"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "Num tjänster: %d"
   IDS_STOP_DEPENDS "När %s stoppas, kommer också dessa tjänster att stanna"
@@ -216,7 +216,7 @@ BEGIN
   IDS_LICENSE "Detta programmet är fri programvara; du kan distribuera det och/eller ändra det under villkoren enligt GNU General Public License som är utgivet av Free Software Foundation;  version 2, eller (om du så önskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne användas, men DET FINNS INGA GARANTIER; även utan underförstådd garanti om SÄLJBARHET eller LÄMPLIGHET FÖR ETT VISST ÄNDAMÅL.  Se på GNU General Public Licensen för mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har fått det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP "Egenskaper"
   IDS_TOOLTIP_REFRESH "Uppdatera"
@@ -229,7 +229,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "Starta om tjänest"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START  "ReactOS försöker att starta följande tjänst"
   IDS_PROGRESS_INFO_STOP   "ReactOS försöker att stoppa följande tjänst"
@@ -241,13 +241,13 @@ BEGIN
   IDS_DELETE_STOP "Du måste manuellt stoppa tjänsten före den kan raderas!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Exportera nuvarende lista till en fil."
@@ -283,7 +283,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "ReactOS tjänster"
 END

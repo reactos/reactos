@@ -1,6 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Vis data side-etter-side på skjermen.\n\n\
   MORE < [Stasjon:][Mappe]Filnavn\n\

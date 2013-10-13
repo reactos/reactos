@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nPoužití: regsvr32 [/u] [/s] [/c] [/n] [/i[:příkaz]] názevdll\n\

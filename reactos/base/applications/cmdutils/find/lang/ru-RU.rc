@@ -1,6 +1,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Поиск текстовой строки в одном или нескольких файлах.\n\n\

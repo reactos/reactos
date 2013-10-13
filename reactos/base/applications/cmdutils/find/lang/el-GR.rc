@@ -1,6 +1,6 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Εκτυπώνει όλες τις γραμμές ενός αρχείου που περιέχουν ένα αλφαριθμητικό.\n\n\

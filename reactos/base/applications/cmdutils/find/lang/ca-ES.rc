@@ -1,6 +1,6 @@
 LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Mostra totes les linies que continguin una determinada cadena de caràcters.\n\n\

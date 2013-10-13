@@ -7,7 +7,7 @@
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Afișează date pe ecran, pagină-cu-pagină.\n\n\
   MORE < [Unitate:][Cale]Nume fișier\n\

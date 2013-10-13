@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_WelcomeMsg,      "Виртуальная машина поддержки DOS для ReactOS.\n"

@@ -1,6 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Gestisce le impostazioni della riga di comando di editing, la cronologia e le macro.\n\

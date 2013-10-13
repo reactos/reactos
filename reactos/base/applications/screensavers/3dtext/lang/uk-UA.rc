@@ -19,7 +19,7 @@ BEGIN
     LTEXT           "Текст",IDC_STATIC,18,17,65,8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Заставка ""Об'ємний текст"""
 END

@@ -1,6 +1,6 @@
 LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Administra la configuración de edición en línea de comandos del historial y de las macros.\n\

@@ -7,7 +7,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Hoşgeldiniz Uygulaması"
     IDS_DEFAULTTOPICTITLE   "ReactOS - Hoşgeldiniz Uygulaması"
@@ -17,7 +17,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "ReactOS'u Kur"
     IDS_TOPICBUTTON1        "CD'nin İçini Araştır"
@@ -32,7 +32,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "ReactOS'u Kur"
     IDS_TOPICTITLE1         "CD'nin İçini Araştır"
@@ -47,7 +47,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Bu seçenek ile bilgisayarınıza ReactOS yükleyebilir ya da bilgisayarınızda var olan bir ReactOS yüklemesini yükseltebilirsiniz."
     IDS_TOPICDESC1          "CD'deki kütükleri gösterir."

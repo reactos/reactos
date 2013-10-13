@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Zarządza ustawieniami linii komend, historii i makr.\n\

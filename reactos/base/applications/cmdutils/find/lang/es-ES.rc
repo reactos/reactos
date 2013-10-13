@@ -1,6 +1,6 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Imprime todas las líneas de un fichero que contiene una cadena.\n\n\

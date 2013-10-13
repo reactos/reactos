@@ -1,6 +1,6 @@
 LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Mostra o modifica la llista de control d'accés (ACLs) dels fitxers\n\n\

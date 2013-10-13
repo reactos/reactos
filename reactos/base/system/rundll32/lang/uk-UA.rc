@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DllNotLoaded,   "LoadLibrary не вдалося завантажити '%s'"
     IDS_MissingEntry,   "Неможливо знайти точку входу:%s\nВ бібліотеці %s"

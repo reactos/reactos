@@ -1,6 +1,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Отображает или изменяет списки доступа (ACLs) к файлам\n\n\

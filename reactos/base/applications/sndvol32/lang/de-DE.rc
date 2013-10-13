@@ -1,6 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Optionen"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Lautstärke-Einstellungen"
     IDS_NOMIXERDEVICES "Es sind keine aktiven Mixer vorhanden! Die Anwendung wird jetzt beendet."
