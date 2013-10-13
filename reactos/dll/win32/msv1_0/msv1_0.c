@@ -731,13 +731,13 @@ done:
 
 static
 NTSTATUS
-ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
-               IN PVOID ProtocolSubmitBuffer,
-               IN PVOID ClientBufferBase,
-               IN ULONG SubmitBufferLength,
-               OUT PVOID *ProtocolReturnBuffer,
-               OUT PULONG ReturnBufferLength,
-               OUT PNTSTATUS ProtocolStatus)
+MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
+                   IN PVOID ProtocolSubmitBuffer,
+                   IN PVOID ClientBufferBase,
+                   IN ULONG SubmitBufferLength,
+                   OUT PVOID *ProtocolReturnBuffer,
+                   OUT PULONG ReturnBufferLength,
+                   OUT PNTSTATUS ProtocolStatus)
 {
     PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer;
     ULONG_PTR PtrOffset;
@@ -749,10 +749,10 @@ ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Fix-up pointers in the request buffer info */
     PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
-    RequestBuffer->DomainName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->DomainName.Buffer + PtrOffset);
-    RequestBuffer->AccountName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->AccountName.Buffer + PtrOffset);
-    RequestBuffer->OldPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->OldPassword.Buffer + PtrOffset);
-    RequestBuffer->NewPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->NewPassword.Buffer + PtrOffset);
+    RequestBuffer->DomainName.Buffer = FIXUP_POINTER(RequestBuffer->DomainName.Buffer, PtrOffset);
+    RequestBuffer->AccountName.Buffer = FIXUP_POINTER(RequestBuffer->AccountName.Buffer, PtrOffset);
+    RequestBuffer->OldPassword.Buffer = FIXUP_POINTER(RequestBuffer->OldPassword.Buffer, PtrOffset);
+    RequestBuffer->NewPassword.Buffer = FIXUP_POINTER(RequestBuffer->NewPassword.Buffer, PtrOffset);
 
     TRACE("Domain: %S\n", RequestBuffer->DomainName.Buffer);
     TRACE("Account: %S\n", RequestBuffer->AccountName.Buffer);
@@ -807,36 +807,49 @@ MsvpCheckPassword(PUNICODE_STRING UserPassword,
         UserNtPasswordPresent = TRUE;
     }
 
-    Status = STATUS_SUCCESS;
+    Status = STATUS_WRONG_PASSWORD;
 
+    /* Succeed, if no password has been set */
+    if (UserInfo->All.NtPasswordPresent == FALSE &&
+        UserInfo->All.LmPasswordPresent == FALSE)
+    {
+        TRACE("No password check!\n");
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
+    /* Succeed, if NT password matches */
     if (UserNtPasswordPresent && UserInfo->All.NtPasswordPresent)
     {
         TRACE("Check NT password hashes:\n");
-        if (!RtlEqualMemory(&UserNtPassword,
-                            UserInfo->All.NtOwfPassword.Buffer,
-                            sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+        if (RtlEqualMemory(&UserNtPassword,
+                           UserInfo->All.NtOwfPassword.Buffer,
+                           sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
         {
-            TRACE("  failed!\n");
-            Status = STATUS_WRONG_PASSWORD;
+            TRACE("  success!\n");
+            Status = STATUS_SUCCESS;
+            goto done;
         }
-    }
-    else if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
-    {
-        TRACE("Check LM password hashes:\n");
-        if (!RtlEqualMemory(&UserLmPassword,
-                            UserInfo->All.LmOwfPassword.Buffer,
-                            sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
-        {
-            TRACE("  failed!\n");
-            Status = STATUS_WRONG_PASSWORD;
-        }
-    }
-    else
-    {
-        TRACE("No matching hashes available!\n");
-        Status = STATUS_WRONG_PASSWORD;
+
+        TRACE("  failed!\n");
     }
 
+    /* Succeed, if LM password matches */
+    if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
+    {
+        TRACE("Check LM password hashes:\n");
+        if (RtlEqualMemory(&UserLmPassword,
+                           UserInfo->All.LmOwfPassword.Buffer,
+                           sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+        {
+            TRACE("  success!\n");
+            Status = STATUS_SUCCESS;
+            goto done;
+        }
+        TRACE("  failed!\n");
+    }
+
+done:
     return Status;
 }
 
@@ -878,13 +891,13 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
             break;
 
         case MsV1_0ChangePassword:
-            Status = ChangePassword(ClientRequest,
-                                    ProtocolSubmitBuffer,
-                                    ClientBufferBase,
-                                    SubmitBufferLength,
-                                    ProtocolReturnBuffer,
-                                    ReturnBufferLength,
-                                    ProtocolStatus);
+            Status = MsvpChangePassword(ClientRequest,
+                                        ProtocolSubmitBuffer,
+                                        ClientBufferBase,
+                                        SubmitBufferLength,
+                                        ProtocolReturnBuffer,
+                                        ReturnBufferLength,
+                                        ProtocolStatus);
             break;
 
         case MsV1_0ChangeCachedPassword:
