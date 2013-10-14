@@ -75,5 +75,6 @@ list(APPEND SOURCE
 )
 
 add_library(mesa_main STATIC ${SOURCE})
-
-allow_warnings(mesa_main)
+if(NOT MSVC)
+    allow_warnings(mesa_main)
+endif()
