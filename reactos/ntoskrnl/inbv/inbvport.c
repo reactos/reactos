@@ -35,11 +35,20 @@ InbvPortPollOnly(IN ULONG PortId)
 
 BOOLEAN
 NTAPI
-InbvPortGetByte(IN ULONG PortId,
-                OUT PUCHAR Char)
+InbvPortGetByte(IN  ULONG  PortId,
+                OUT PUCHAR Byte)
 {
     /* Read a byte from the port */
-    return CpGetByte(&Port[PortId], Char, TRUE, FALSE) == CP_GET_SUCCESS;
+    return CpGetByte(&Port[PortId], Byte, TRUE, FALSE) == CP_GET_SUCCESS;
+}
+
+VOID
+NTAPI
+InbvPortPutByte(IN ULONG PortId,
+                IN UCHAR Byte)
+{
+    /* Send the byte */
+    CpPutByte(&Port[PortId], Byte);
 }
 
 VOID
@@ -49,15 +58,6 @@ InbvPortEnableFifo(IN ULONG   PortId,
 {
     /* Set FIFO as requested */
     CpEnableFifo(Port[PortId].Address, Enable);
-}
-
-VOID
-NTAPI
-InbvPortPutByte(IN ULONG   PortId,
-                IN BOOLEAN Output)
-{
-    /* Send the byte */
-    CpPutByte(&Port[PortId], Output);
 }
 
 VOID

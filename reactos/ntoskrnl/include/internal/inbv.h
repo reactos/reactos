@@ -84,11 +84,18 @@ InbvPortEnableFifo(
     IN BOOLEAN Enable
 );
 
+BOOLEAN
+NTAPI
+InbvPortGetByte(
+    IN ULONG PortId,
+    OUT PUCHAR Byte
+);
+
 VOID
 NTAPI
 InbvPortPutByte(
     IN ULONG PortId,
-    IN BOOLEAN Output
+    IN UCHAR Byte
 );
 
 VOID
@@ -111,13 +118,6 @@ BOOLEAN
 NTAPI
 InbvPortPollOnly(
     IN ULONG PortId
-);
-
-BOOLEAN
-NTAPI
-InbvPortGetByte(
-    IN ULONG PortId,
-    OUT PUCHAR Char
 );
 
 extern BOOLEAN InbvBootDriverInstalled;
