@@ -38,7 +38,7 @@ HdlspAcquireGlobalLock(VOID)
 
 FORCEINLINE
 VOID
-HdlspReleaselobalLock(IN KIRQL OldIrql)
+HdlspReleaseGlobalLock(IN KIRQL OldIrql)
 {
     /* Only release the lock if we aren't bugchecking */
     if (OldIrql != 0xFF)
@@ -56,10 +56,91 @@ NTAPI
 HdlspSendStringAtBaud(IN PUCHAR String)
 {
     /* Send every byte */
-    while (*String++ != ANSI_NULL)
+    while (*String != ANSI_NULL)
     {
-        InbvPortPutByte(HeadlessGlobals->TerminalPort, *String);
+        InbvPortPutByte(HeadlessGlobals->TerminalPort, *String++);
     }
+}
+
+VOID
+NTAPI
+HdlspPutData(IN PUCHAR Data,
+             IN ULONG DataSize)
+{
+    ULONG i;
+    for (i = 0; i < DataSize; i++)
+    {
+        InbvPortPutByte(HeadlessGlobals->TerminalPort, Data[i]);
+    }
+}
+
+VOID
+NTAPI
+HdlspPutString(IN PUCHAR String)
+{
+    PUCHAR Dest = HeadlessGlobals->TmpBuffer;
+    UCHAR Char = 0;
+
+    /* Scan each character */
+    while (*String != ANSI_NULL)
+    {
+        /* Check for rotate, send existing buffer and restart from where we are */
+        if (Dest >= &HeadlessGlobals->TmpBuffer[79])
+        {
+            HeadlessGlobals->TmpBuffer[79] = ANSI_NULL;
+            HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
+            Dest = HeadlessGlobals->TmpBuffer;
+        }
+        else
+        {
+            /* Get the current character and check for special graphical chars */
+            Char = *String;
+            if (Char & 0x80)
+            {
+                switch (Char)
+                {
+                    case 0xB0: case 0xB3: case 0xBA:
+                        Char = '|';
+                        break;
+                    case 0xB1: case 0xDC: case 0xDD: case 0xDE: case 0xDF:
+                        Char = '%';
+                        break;
+                    case 0xB2: case 0xDB:
+                        Char = '#';
+                        break;
+                    case 0xA9: case 0xAA: case 0xBB: case 0xBC: case 0xBF:
+                    case 0xC0: case 0xC8: case 0xC9: case 0xD9: case 0xDA:
+                        Char = '+';
+                        break;
+                    case 0xC4:
+                        Char = '-';
+                        break;
+                    case 0xCD:
+                        Char = '=';
+                        break;
+                }
+            }
+
+            /* Anything else must be Unicode */
+            if (Char & 0x80)
+            {
+                /* Can't do Unicode yet */
+                UNIMPLEMENTED;
+            }
+            else
+            {
+                /* Add the modified char to the temporary buffer */
+                *Dest++ = Char;
+            }
+            
+            /* Check the next char */
+            String++;
+        }
+    }
+
+    /* Finish and send */
+    *Dest = ANSI_NULL;
+    HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
 }
 
 NTSTATUS
@@ -169,87 +250,6 @@ HeadlessInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HdlspEnableTerminal(TRUE);
 }
 
-VOID
-NTAPI
-HdlspPutData(IN PUCHAR Data,
-             IN ULONG DataSize)
-{
-    ULONG i;
-    for (i = 0; i < DataSize; i++)
-    {
-        InbvPortPutByte(HeadlessGlobals->TerminalPort, Data[i]++);
-    }
-}
-
-VOID
-NTAPI
-HdlspPutString(IN PUCHAR String)
-{
-    PUCHAR Dest = HeadlessGlobals->TmpBuffer;
-    UCHAR Char = 0;
-
-    /* Scan each character */
-    while (*String != ANSI_NULL)
-    {
-        /* Check for rotate, send existing buffer and restart from where we are */
-        if (Dest >= &HeadlessGlobals->TmpBuffer[79])
-        {
-            HeadlessGlobals->TmpBuffer[79] = ANSI_NULL;
-            HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
-            Dest = HeadlessGlobals->TmpBuffer;
-        }
-        else
-        {
-            /* Get the current character and check for special graphical chars */
-            Char = *String;
-            if (Char & 0x80)
-            {
-                switch (Char)
-                {
-                    case 0xB0: case 0xB3: case 0xBA:
-                        Char = '|';
-                        break;
-                    case 0xB1: case 0xDC: case 0xDD: case 0xDE: case 0xDF:
-                        Char = '%';
-                        break;
-                    case 0xB2: case 0xDB:
-                        Char = '#';
-                        break;
-                    case 0xA9: case 0xAA: case 0xBB: case 0xBC: case 0xBF:
-                    case 0xC0: case 0xC8: case 0xC9: case 0xD9: case 0xDA:
-                        Char = '+';
-                        break;
-                    case 0xC4:
-                        Char = '-';
-                        break;
-                    case 0xCD:
-                        Char = '=';
-                        break;
-                }
-            }
-
-            /* Anything else must be Unicode */
-            if (Char & 0x80)
-            {
-                /* Can't do Unicode yet */
-                UNIMPLEMENTED;
-            }
-            else
-            {
-                /* Add the modified char to the temporary buffer */
-                *Dest++ = Char;
-            }
-            
-            /* Check the next char */
-            String++;
-        }
-    }
-
-    /* Finish and send */
-    *Dest = ANSI_NULL;
-    HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
-}
-
 NTSTATUS
 NTAPI
 HdlspDispatch(IN HEADLESS_CMD Command,
@@ -277,13 +277,13 @@ HdlspDispatch(IN HEADLESS_CMD Command,
 
         if (HeadlessGlobals->ProcessingCmd)
         {
-            HdlspReleaselobalLock(OldIrql);
+            HdlspReleaseGlobalLock(OldIrql);
             return STATUS_UNSUCCESSFUL;
         }
 
         /* Don't allow these commands next time */
         HeadlessGlobals->ProcessingCmd = TRUE;
-        HdlspReleaselobalLock(OldIrql);
+        HdlspReleaseGlobalLock(OldIrql);
     }
 
     /* Handle each command */
