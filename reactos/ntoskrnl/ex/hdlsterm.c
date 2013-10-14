@@ -6,16 +6,16 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 PHEADLESS_GLOBALS HeadlessGlobals;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 FORCEINLINE
 KIRQL
@@ -185,69 +185,69 @@ VOID
 NTAPI
 HdlspPutString(IN PUCHAR String)
 {
-	PUCHAR Dest = HeadlessGlobals->TmpBuffer;
-	UCHAR Char = 0;
+    PUCHAR Dest = HeadlessGlobals->TmpBuffer;
+    UCHAR Char = 0;
 
-	/* Scan each character */
-	while (*String != ANSI_NULL)
-	{
-		/* Check for rotate, send existing buffer and restart from where we are */
-		if (Dest >= &HeadlessGlobals->TmpBuffer[79])
-		{
-			HeadlessGlobals->TmpBuffer[79] = ANSI_NULL;
-			HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
-			Dest = HeadlessGlobals->TmpBuffer;
-		}
-		else
-		{
-			/* Get the current character and check for special graphical chars */
-			Char = *String;
-			if (Char & 0x80)
-			{
-				switch (Char)
-				{
-					case 0xB0: case 0xB3: case 0xBA:
-						Char = '|';
-						break;
-					case 0xB1: case 0xDC: case 0xDD: case 0xDE: case 0xDF:
-						Char = '%';
-						break;
-					case 0xB2: case 0xDB:
-						Char = '#';
-						break;
-					case 0xA9: case 0xAA: case 0xBB: case 0xBC: case 0xBF:
-					case 0xC0: case 0xC8: case 0xC9: case 0xD9: case 0xDA:
-						Char = '+';
-						break;
-					case 0xC4:
-						Char = '-';
-						break;
-					case 0xCD:
-						Char = '=';
-						break;
-					}
-			}
+    /* Scan each character */
+    while (*String != ANSI_NULL)
+    {
+        /* Check for rotate, send existing buffer and restart from where we are */
+        if (Dest >= &HeadlessGlobals->TmpBuffer[79])
+        {
+            HeadlessGlobals->TmpBuffer[79] = ANSI_NULL;
+            HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
+            Dest = HeadlessGlobals->TmpBuffer;
+        }
+        else
+        {
+            /* Get the current character and check for special graphical chars */
+            Char = *String;
+            if (Char & 0x80)
+            {
+                switch (Char)
+                {
+                    case 0xB0: case 0xB3: case 0xBA:
+                        Char = '|';
+                        break;
+                    case 0xB1: case 0xDC: case 0xDD: case 0xDE: case 0xDF:
+                        Char = '%';
+                        break;
+                    case 0xB2: case 0xDB:
+                        Char = '#';
+                        break;
+                    case 0xA9: case 0xAA: case 0xBB: case 0xBC: case 0xBF:
+                    case 0xC0: case 0xC8: case 0xC9: case 0xD9: case 0xDA:
+                        Char = '+';
+                        break;
+                    case 0xC4:
+                        Char = '-';
+                        break;
+                    case 0xCD:
+                        Char = '=';
+                        break;
+                }
+            }
 
-			/* Anything else must be Unicode */
-			if (Char & 0x80)
-			{
-				/* Can't do Unicode yet */
-				UNIMPLEMENTED;
-			}
-			else
-			{
-				/* Add the modified char to the temporary buffer */
-				*Dest++ = Char;
-			}
-			
-			/* Check the next char */
-			String++;
-		}
-	}
+            /* Anything else must be Unicode */
+            if (Char & 0x80)
+            {
+                /* Can't do Unicode yet */
+                UNIMPLEMENTED;
+            }
+            else
+            {
+                /* Add the modified char to the temporary buffer */
+                *Dest++ = Char;
+            }
+            
+            /* Check the next char */
+            String++;
+        }
+    }
 
-	/* Finish and send */
-	*Dest = ANSI_NULL;
-	HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
+    /* Finish and send */
+    *Dest = ANSI_NULL;
+    HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
 }
 
 NTSTATUS
@@ -265,7 +265,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
     PHEADLESS_RSP_GET_BYTE GetByte;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     ASSERT(HeadlessGlobals != NULL);
-//	ASSERT(HeadlessGlobals->PageLockHandle != NULL);
+    // ASSERT(HeadlessGlobals->PageLockHandle != NULL);
 
     /* Ignore non-reentrant commands */
     if ((Command != HeadlessCmdAddLogEntry) &&
@@ -290,7 +290,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
     switch (Command)
     {
         case HeadlessCmdEnableTerminal:
-
+        {
             /* Make sure the caller passed valid data */
             if (!(InputBuffer) ||
                 (InputBufferSize != sizeof(*EnableTerminal)))
@@ -304,12 +304,13 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             EnableTerminal = InputBuffer;
             Status = HdlspEnableTerminal(EnableTerminal->Enable);
             break;
+        }
 
-		case HeadlessCmdCheckForReboot:
-			break;
+        case HeadlessCmdCheckForReboot:
+            break;
 
-		case HeadlessCmdPutString:
-
+        case HeadlessCmdPutString:
+        {
             /* Validate the existence of an input buffer */
             if (!InputBuffer)
             {
@@ -328,9 +329,10 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             /* Return success either way */
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case HeadlessCmdClearDisplay:
-
+        {
             /* Send the VT100 clear screen command if the terminal is enabled */
             if (HeadlessGlobals->TerminalEnabled)
             {
@@ -340,24 +342,25 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             /* Return success either way */
             Status = STATUS_SUCCESS;
             break;
+        }
 
-		case HeadlessCmdClearToEndOfDisplay:
-			break;
-		case HeadlessCmdClearToEndOfLine:
-			break;
-		case HeadlessCmdDisplayAttributesOff:
-			break;
-		case HeadlessCmdDisplayInverseVideo:
-			break;
-		case HeadlessCmdSetColor:
-			break;
-		case HeadlessCmdPositionCursor:
-			break;
-		case HeadlessCmdTerminalPoll:
-			break;
+        case HeadlessCmdClearToEndOfDisplay:
+            break;
+        case HeadlessCmdClearToEndOfLine:
+            break;
+        case HeadlessCmdDisplayAttributesOff:
+            break;
+        case HeadlessCmdDisplayInverseVideo:
+            break;
+        case HeadlessCmdSetColor:
+            break;
+        case HeadlessCmdPositionCursor:
+            break;
+        case HeadlessCmdTerminalPoll:
+            break;
 
         case HeadlessCmdGetByte:
-
+        {
             /* Make sure the caller passed valid data */
             if (!(OutputBuffer) ||
                 !(OutputBufferSize) ||
@@ -394,15 +397,17 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             /* Return success either way */
             Status = STATUS_SUCCESS;
             break;
+        }
 
-		case HeadlessCmdGetLine:
-			break;
-		case HeadlessCmdStartBugCheck:
-			break;
-		case HeadlessCmdDoBugCheckProcessing:
-			break;
-		case HeadlessCmdQueryInformation:
+        case HeadlessCmdGetLine:
+            break;
+        case HeadlessCmdStartBugCheck:
+            break;
+        case HeadlessCmdDoBugCheckProcessing:
+            break;
 
+        case HeadlessCmdQueryInformation:
+        {
             /* Make sure the caller passed valid data */
             if (!(OutputBuffer) ||
                 !(OutputBufferSize) ||
@@ -441,12 +446,15 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             /* All done */
             Status = STATUS_SUCCESS;
             break;
-		case HeadlessCmdAddLogEntry:
-			break;
-		case HeadlessCmdDisplayLog:
-			break;
-        case HeadlessCmdSetBlueScreenData:
+        }
 
+        case HeadlessCmdAddLogEntry:
+            break;
+        case HeadlessCmdDisplayLog:
+            break;
+
+        case HeadlessCmdSetBlueScreenData:
+        {
             /* Validate the existence of an input buffer */
             if (!InputBuffer)
             {
@@ -458,12 +466,15 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             UNIMPLEMENTED;
             Status = STATUS_SUCCESS;
             break;
-		case HeadlessCmdSendBlueScreenData:
-			break;
-		case HeadlessCmdQueryGUID:
-			break;
-		case HeadlessCmdPutData:
+        }
 
+        case HeadlessCmdSendBlueScreenData:
+            break;
+        case HeadlessCmdQueryGUID:
+            break;
+
+        case HeadlessCmdPutData:
+        {
             /* Validate the existence of an input buffer */
             if (!(InputBuffer) || !(InputBufferSize))
             {
@@ -482,6 +493,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             /* Return success either way */
             Status = STATUS_SUCCESS;
             break;
+        }
 
         default:
             break;
@@ -532,6 +544,7 @@ HeadlessDispatch(IN HEADLESS_CMD Command,
 
             RtlZeroMemory(OutputBuffer, *OutputBufferSize);
         }
+
         return STATUS_SUCCESS;
     }
 
