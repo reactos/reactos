@@ -62,26 +62,26 @@ RtlAssert(
 #endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
 
 #ifndef assert
-#ifndef NASSERT
+#if DBG && !defined(NASSERT)
 #define assert(x) if (!(x)) { RtlAssert((PVOID)#x, (PVOID)__FILE__, __LINE__, ""); }
 #else
-#define assert(x)
+#define assert(x) ((VOID) 0)
 #endif
 #endif
 
 #ifndef ASSERT
-#ifndef NASSERT
+#if DBG && !defined(NASSERT)
 #define ASSERT(x) if (!(x)) { RtlAssert((PVOID)#x, (PVOID)__FILE__, __LINE__, ""); }
 #else
-#define ASSERT(x)
+#define ASSERT(x) ((VOID) 0)
 #endif
 #endif
 
 #ifndef ASSERTMSG
-#ifndef NASSERT
+#if DBG && !defined(NASSERT)
 #define ASSERTMSG(m, x) if (!(x)) { RtlAssert((PVOID)#x, __FILE__, __LINE__, m); }
 #else
-#define ASSERTMSG(m, x)
+#define ASSERTMSG(m, x) ((VOID) 0)
 #endif
 #endif
 
