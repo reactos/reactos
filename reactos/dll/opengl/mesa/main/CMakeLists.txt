@@ -75,3 +75,5 @@ list(APPEND SOURCE
 )
 
 add_library(mesa_main STATIC ${SOURCE})
+
+allow_warnings(mesa_main)

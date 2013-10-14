@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Keyboard functions
- * FILE:             subsystems/win32/win32k/ntuser/keyboard.c
+ * FILE:             win32ss/user/ntuser/keyboard.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -14,6 +14,7 @@ BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
+KEYBOARD_ATTRIBUTES gKeyboardInfo;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,6 +30,10 @@ InitKeyboardImpl(VOID)
 {
     RtlZeroMemory(&gafAsyncKeyState, sizeof(gafAsyncKeyState));
     RtlZeroMemory(&gafAsyncKeyStateRecentDown, sizeof(gafAsyncKeyStateRecentDown));
+    // Clear and set default information.
+    RtlZeroMemory(&gKeyboardInfo, sizeof(gKeyboardInfo));
+    gKeyboardInfo.KeyboardIdentifier.Type = 4; /* AT-101 */
+    gKeyboardInfo.NumberOfFunctionKeys = 12; /* We're doing an 101 for now, so return 12 F-keys */
     return STATUS_SUCCESS;
 }
 
@@ -38,7 +43,7 @@ InitKeyboardImpl(VOID)
  * Asks the keyboard driver to send a small table that shows which
  * lights should connect with which scancodes
  */
-static
+//static
 NTSTATUS APIENTRY
 IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
                              PKEYBOARD_INDICATOR_TRANSLATION *ppIndicatorTrans)
@@ -159,7 +164,7 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK Block;
-
+/*
     IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
 
     Status = NtDeviceIoControlFile(hKeyboardDevice,
@@ -175,13 +180,31 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
     {
         WARN("NtDeviceIoControlFile() failed, ignored\n");
     }
-
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,
                    gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
                    gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
+*/
+    // FIXME: Need device driver to work! HID support more than one!!!!
+    Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Block,
+                                   IOCTL_KEYBOARD_QUERY_ATTRIBUTES,
+                                   NULL, 0,
+                                   &gKeyboardInfo, sizeof(gKeyboardInfo));
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtDeviceIoControlFile() failed, ignored\n");
+    }
+    ERR("Keyboard type %d, subtype %d and number of func keys %d\n",
+             gKeyboardInfo.KeyboardIdentifier.Type,
+             gKeyboardInfo.KeyboardIdentifier.Subtype,
+             gKeyboardInfo.NumberOfFunctionKeys);
 }
 
 /*
@@ -798,8 +821,10 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* Check if this is a hotkey */
     if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
+    {
+        TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
-
+    }
     wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
@@ -1459,11 +1484,11 @@ UserGetKeyboardType(
     switch (dwTypeFlag)
     {
         case 0:        /* Keyboard type */
-            return 4;    /* AT-101 */
+            return (DWORD)gKeyboardInfo.KeyboardIdentifier.Type;
         case 1:        /* Keyboard Subtype */
-            return 0;    /* There are no defined subtypes */
+            return (DWORD)gKeyboardInfo.KeyboardIdentifier.Subtype;
         case 2:        /* Number of F-keys */
-            return 12;   /* We're doing an 101 for now, so return 12 F-keys */
+            return (DWORD)gKeyboardInfo.NumberOfFunctionKeys;
         default:
             ERR("Unknown type!\n");
             return 0;    /* Note: we don't have to set last error here */

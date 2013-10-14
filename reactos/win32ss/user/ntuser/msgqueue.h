@@ -198,7 +198,6 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
 
 LRESULT FASTCALL IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);
-VOID FASTCALL MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL FASTCALL MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL MsqIsDblClk(LPMSG Msg, BOOL Remove);
@@ -274,5 +273,10 @@ co_IntGetPeekMessage( PMSG pMsg,
                       UINT MsgFilterMax,
                       UINT RemoveMsg,
                       BOOL bGMSG );
+BOOL FASTCALL
+UserPostThreadMessage( PTHREADINFO pti,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam );
 
 /* EOF */

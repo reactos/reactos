@@ -13,12 +13,10 @@ DBG_DEFAULT_CHANNEL(UserInput);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
-PTHREADINFO ptiKeyboard;
-PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 INT paiCount = 0;
-HANDLE ghKeyboardDevice;
+HANDLE ghKeyboardDevice = NULL;
 
 static DWORD LastInputTick = 0;
 static HANDLE ghMouseDevice;
@@ -131,7 +129,7 @@ RawInputThreadMain()
 {
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
     IO_STATUS_BLOCK MouIosb, KbdIosb;
-    PFILE_OBJECT pKbdDevice, pMouDevice;
+    PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
     LARGE_INTEGER ByteOffset;
     //LARGE_INTEGER WaitTimeout;
     PVOID WaitObjects[3], pSignaledObject = NULL;
@@ -175,6 +173,14 @@ RawInputThreadMain()
             {
                 ++cMaxWaitObjects;
                 TRACE("Keyboard connected!\n");
+                // Get and load keyboard attributes.
+                UserInitKeyboard(ghKeyboardDevice);
+                UserEnterExclusive();
+                // Register the Window hotkey.
+                UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
+                // Register the debug hotkeys.
+                StartDebugHotKeys();
+                UserLeave();
             }
         }
 

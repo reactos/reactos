@@ -233,7 +233,7 @@ IntDefWindowProc(
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
       case WM_GETHOTKEY:
-         return DefWndGetHotKey(UserHMGetHandle(Wnd));
+         return DefWndGetHotKey(Wnd);
       case WM_SETHOTKEY:
          return DefWndSetHotKey(Wnd, wParam);
 

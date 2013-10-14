@@ -804,6 +804,10 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
 	break;
 
+      case SC_TASKLIST:
+        WinExec( "taskman.exe", SW_SHOWNORMAL );
+        break;
+
       case SC_SCREENSAVE:
         NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         break;

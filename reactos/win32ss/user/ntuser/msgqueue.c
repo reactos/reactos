@@ -638,54 +638,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    }
 }
 
-VOID FASTCALL
-MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-   PWND Window;
-   PTHREADINFO Win32Thread;
-   MSG Mesg;
-   LARGE_INTEGER LargeTickCount;
-   NTSTATUS Status;
-   INT id;
-   DWORD Type;
-
-   Status = ObReferenceObjectByPointer (Thread,
-                                        THREAD_ALL_ACCESS,
-                                        PsThreadType,
-                                        KernelMode);
-   if (!NT_SUCCESS(Status))
-      return;
-
-   Win32Thread = ((PETHREAD)Thread)->Tcb.Win32Thread;
-   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
-   {
-      ObDereferenceObject ((PETHREAD)Thread);
-      return;
-   }
-
-   Window = IntGetWindowObject(hWnd);
-   if (!Window)
-   {
-      ObDereferenceObject ((PETHREAD)Thread);
-      return;
-   }
-
-   id = wParam; // Check for hot keys unrelated to the hot keys set by RegisterHotKey.
-
-   Mesg.hwnd    = hWnd;
-   Mesg.message = id != IDHK_REACTOS ? WM_HOTKEY : WM_SYSCOMMAND;
-   Mesg.wParam  = id != IDHK_REACTOS ? wParam    : SC_HOTKEY;
-   Mesg.lParam  = id != IDHK_REACTOS ? lParam    : (LPARAM)hWnd;
-   Type         = id != IDHK_REACTOS ? QS_HOTKEY : QS_POSTMESSAGE;
-   KeQueryTickCount(&LargeTickCount);
-   Mesg.time    = MsqCalculateMessageTime(&LargeTickCount);
-   Mesg.pt      = gpsi->ptCursor;
-   MsqPostMessage(Window->head.pti, &Mesg, FALSE, Type, 0);
-   UserDereferenceObject(Window);
-   ObDereferenceObject (Thread);
-
-}
-
 PUSER_MESSAGE FASTCALL
 MsqCreateMessage(LPMSG Msg)
 {
@@ -1251,6 +1203,7 @@ MsqPostMessage(PTHREADINFO pti,
                       &Message->ListEntry);
    }
 
+   if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
    Message->dwQEvent = dwQEvent;
    Message->QS_Flags = MessageBits;
    //Message->pti = pti; Fixed in ATI changes. See CORE-6551

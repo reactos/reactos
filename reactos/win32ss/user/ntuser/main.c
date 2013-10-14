@@ -544,7 +544,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         EVENT_DestroyThreadEvents(Thread);
         DestroyTimersForThread(ptiCurrent);
         KeSetEvent(ptiCurrent->pEventQueueServer, IO_NO_INCREMENT, FALSE);
-        UnregisterThreadHotKeys(Thread);
+        UnregisterThreadHotKeys(ptiCurrent);
 /*
         if (IsListEmpty(&ptiCurrent->WindowListHead))
         {

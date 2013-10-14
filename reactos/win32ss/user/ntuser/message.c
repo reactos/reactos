@@ -1058,53 +1058,29 @@ co_IntGetPeekMessage( PMSG pMsg,
 }
 
 BOOL FASTCALL
-UserPostThreadMessage( DWORD idThread,
+UserPostThreadMessage( PTHREADINFO pti,
                        UINT Msg,
                        WPARAM wParam,
                        LPARAM lParam )
 {
     MSG Message;
-    PETHREAD peThread;
-    PTHREADINFO pThread;
     LARGE_INTEGER LargeTickCount;
-    NTSTATUS Status;
 
     if (is_pointer_message(Msg))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
     }
+    Message.hwnd = NULL;
+    Message.message = Msg;
+    Message.wParam = wParam;
+    Message.lParam = lParam;
+    Message.pt = gpsi->ptCursor;
 
-    Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
-
-    if( Status == STATUS_SUCCESS )
-    {
-        pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
-        if( !pThread ||
-            !pThread->MessageQueue ||
-            (pThread->TIF_flags & TIF_INCLEANUP))
-        {
-            ObDereferenceObject( peThread );
-            return FALSE;
-        }
-
-        Message.hwnd = NULL;
-        Message.message = Msg;
-        Message.wParam = wParam;
-        Message.lParam = lParam;
-        Message.pt = gpsi->ptCursor;
-
-        KeQueryTickCount(&LargeTickCount);
-        Message.time = MsqCalculateMessageTime(&LargeTickCount);
-        MsqPostMessage(pThread, &Message, FALSE, QS_POSTMESSAGE, 0);
-        ObDereferenceObject( peThread );
-        return TRUE;
-    }
-    else
-    {
-        SetLastNtError( Status );
-    }
-    return FALSE;
+    KeQueryTickCount(&LargeTickCount);
+    Message.time = MsqCalculateMessageTime(&LargeTickCount);
+    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+    return TRUE;
 }
 
 BOOL FASTCALL
@@ -1157,7 +1133,8 @@ UserPostMessage( HWND Wnd,
 
     if (!Wnd)
     {
-        return UserPostThreadMessage( PtrToInt(PsGetCurrentThreadId()),
+        pti = PsGetCurrentThreadWin32Thread();
+        return UserPostThreadMessage( pti,
                                       Msg,
                                       wParam,
                                       lParam);
@@ -1983,13 +1960,33 @@ NtUserPostThreadMessage(DWORD idThread,
                         LPARAM lParam)
 {
     BOOL ret;
+    PETHREAD peThread;
+    PTHREADINFO pThread;
+    NTSTATUS Status;
 
     UserEnterExclusive();
 
-    ret = UserPostThreadMessage( idThread, Msg, wParam, lParam);
+    Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
 
+    if ( Status == STATUS_SUCCESS )
+    {
+        pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
+        if( !pThread ||
+            !pThread->MessageQueue ||
+            (pThread->TIF_flags & TIF_INCLEANUP))
+        {
+            ObDereferenceObject( peThread );
+            goto exit;
+        }
+        ret = UserPostThreadMessage( pThread, Msg, wParam, lParam);
+        ObDereferenceObject( peThread );
+    }
+    else
+    {
+        SetLastNtError( Status );
+    }
+exit:
     UserLeave();
-
     return ret;
 }
 
