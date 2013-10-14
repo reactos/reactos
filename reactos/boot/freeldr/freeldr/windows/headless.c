@@ -45,7 +45,7 @@ VOID
 WinLdrLoadGUID(OUT PGUID SystemGuid)
 {
     PSYSID_UUID_ENTRY CurrentAddress;
-    
+
     CurrentAddress = (PSYSID_UUID_ENTRY)0xE0000;
     while (CurrentAddress < (PSYSID_UUID_ENTRY)0x100000)
     {
@@ -56,7 +56,7 @@ WinLdrLoadGUID(OUT PGUID SystemGuid)
         }
         CurrentAddress = (PSYSID_UUID_ENTRY)((ULONG_PTR)CurrentAddress + 1);
     }
-    
+
     RtlZeroMemory(SystemGuid, SYSID_UUID_DATA_SIZE);
 }
 
@@ -78,7 +78,7 @@ WinLdrPortInitialize(IN ULONG BaudRate,
         {
             switch (PortNumber)
             {
-                    case 1:
+                case 1:
                     PortAddress = (PUCHAR)0x3F8;
                     break;
 
@@ -111,7 +111,7 @@ WinLdrPortInitialize(IN ULONG BaudRate,
             PortNumber = 1;
          }
     }
-    
+
     /* Not yet supported */
     ASSERT(LoaderRedirectionInformation.IsMMIODevice == FALSE);
 
@@ -128,22 +128,22 @@ WinLdrPortInitialize(IN ULONG BaudRate,
             return TRUE;
         }
     }
-    
+
     return FALSE;
 }
 
 VOID
 WinLdrPortPutByte(IN ULONG PortId,
-                  IN UCHAR Data)
+                  IN UCHAR Byte)
 {
-    CpPutByte(&Port[PortId], Data);
+    CpPutByte(&Port[PortId], Byte);
 }
 
 BOOLEAN
-WinLdrPortGetByte(IN ULONG PortId,
-                  OUT PUCHAR Data)
+WinLdrPortGetByte(IN  ULONG  PortId,
+                  OUT PUCHAR Byte)
 {
-    return CpGetByte(&Port[PortId], Data, TRUE, FALSE) == CP_GET_SUCCESS;
+    return CpGetByte(&Port[PortId], Byte, TRUE, FALSE) == CP_GET_SUCCESS;
 }
 
 BOOLEAN
@@ -156,7 +156,7 @@ WinLdrPortPollOnly(IN ULONG PortId)
 
 VOID
 WinLdrEnableFifo(IN ULONG PortId,
-                    IN BOOLEAN Enable)
+                 IN BOOLEAN Enable)
 {
     CpEnableFifo(Port[PortId].Address, Enable);
 }
@@ -168,11 +168,11 @@ WinLdrInitializeHeadlessPort(VOID)
     PUCHAR PortAddress;
     PCHAR AnsiReset = "\x1B[m";
     ULONG i;
-    
+
     PortNumber = LoaderRedirectionInformation.PortNumber;
     PortAddress = LoaderRedirectionInformation.PortAddress;
     BaudRate = LoaderRedirectionInformation.BaudRate;
-    
+
     /* Pick a port address */
     if (PortNumber)
     {
@@ -204,7 +204,7 @@ WinLdrInitializeHeadlessPort(VOID)
         WinLdrTerminalConnected = FALSE;
         return;
     }
-    
+
     /* Call arch code to initialize the port */
     PortAddress = LoaderRedirectionInformation.PortAddress;
     WinLdrTerminalConnected = WinLdrPortInitialize(
@@ -227,9 +227,9 @@ WinLdrInitializeHeadlessPort(VOID)
             BaudRate = 9600;
             LoaderRedirectionInformation.BaudRate = BaudRate;
         }
-        
+
         WinLdrTerminalDelay = (10 * 1000 * 1000) / (BaudRate / 10) / 6;
-                                        
+
         /* Sent an ANSI reset sequence to get the terminal up and running */
         for (i = 0; i < strlen(AnsiReset); i++)
         {
@@ -277,7 +277,7 @@ WinLdrSetupEms(IN PCHAR BootOptions)
             }
         }
     }
-    
+
     /* Use a direction baudrate if one was given */
     RedirectPort = strstr(BootOptions, "/redirectbaudrate=");
     if (RedirectPort)
@@ -299,7 +299,7 @@ WinLdrSetupEms(IN PCHAR BootOptions)
             LoaderRedirectionInformation.BaudRate = 9600;
         }    
     }
-    
+
     /* Enable headless support if parameters were found */
     if (LoaderRedirectionInformation.PortNumber)
     {
@@ -307,7 +307,9 @@ WinLdrSetupEms(IN PCHAR BootOptions)
         {
             LoaderRedirectionInformation.BaudRate = 9600;
         }
-        
+
         WinLdrInitializeHeadlessPort();
     }
 }
+
+/* EOF */
