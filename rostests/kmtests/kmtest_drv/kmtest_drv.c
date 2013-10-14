@@ -150,9 +150,11 @@ DriverUnload(
 
     if (MainDeviceObject)
     {
+#if DBG
         PKMT_DEVICE_EXTENSION DeviceExtension = MainDeviceObject->DeviceExtension;
         ASSERT(!DeviceExtension->Mdl);
         ASSERT(!DeviceExtension->ResultBuffer);
+#endif
         ASSERT(!ResultBuffer);
         IoDeleteDevice(MainDeviceObject);
     }
