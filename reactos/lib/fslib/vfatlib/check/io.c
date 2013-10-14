@@ -150,7 +150,9 @@ void fs_read(loff_t pos,int size,void *data)
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
  	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
  	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
+#if DBG
 	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
+#endif
 	char* tmpBuf = vfalloc(readsize_aligned);                                    // TMN:
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %I64d",pos);
     if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %I64d",size,pos);
