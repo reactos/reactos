@@ -512,6 +512,7 @@ NtUserRegisterHotKey(HWND hWnd,
         /* Fix wine msg "Window on another thread" test_hotkey */
         if (pWnd->head.pti != gptiCurrent)
         {
+           EngSetLastError(ERROR_WINDOW_OF_OTHER_THREAD);
            WARN("Must be from the same Thread.\n");
            goto cleanup;
         }
