@@ -242,7 +242,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeGroupC7,
     Soft386OpcodeEnter,
     Soft386OpcodeLeave,
-    Soft386OpcodeRetFarImm,
+    Soft386OpcodeRetFar,
     Soft386OpcodeRetFar,
     Soft386OpcodeInt,
     Soft386OpcodeInt,
@@ -5075,20 +5075,69 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLeave)
     }
 }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFarImm)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
 SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFar)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    ULONG Segment = 0;
+    ULONG Offset = 0;
+    USHORT BytesToPop = 0;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xCA);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Opcode == 0xCA)
+    {
+        /* Fetch the number of bytes to pop after the return */
+        if (!Soft386FetchWord(State, &BytesToPop)) return FALSE;
+    }
+
+    /* Pop the offset */
+    if (!Soft386StackPop(State, &Offset))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Pop the segment */
+    if (!Soft386StackPop(State, &Segment))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Load the new CS */
+    if (!Soft386LoadSegment(State, SOFT386_REG_CS, Segment))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Load new (E)IP, and if necessary, pop the parameters */
+    if (Size)
+    {
+        State->InstPtr.Long = Offset;
+        State->GeneralRegs[SOFT386_REG_ESP].Long += BytesToPop;
+    }
+    else
+    {
+        State->InstPtr.LowWord = LOWORD(Offset);
+        State->GeneralRegs[SOFT386_REG_ESP].LowWord += BytesToPop;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeInt)
