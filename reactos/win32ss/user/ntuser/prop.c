@@ -21,6 +21,7 @@ IntGetProp(PWND Window, ATOM Atom)
    while (ListEntry != &Window->PropListHead)
    {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      if (!Property) break;
       if (Property->Atom == Atom)
       {
          return(Property);
