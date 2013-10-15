@@ -195,7 +195,8 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 
     if (pHotKey)
     {
-        TRACE("Hot key Found\n");
+        TRACE("Hot key pressed (pWnd %p, id %d)\n", pHotKey->pWnd, pHotKey->id);
+
         /* FIXME: See comment about "UserDebuggerHotKey" on top of this file. */
         if (pHotKey->id == IDHK_SHIFTF12 || pHotKey->id == IDHK_F12)
         {
@@ -210,8 +211,6 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         /* Process hotkey if it is key up event */
         if (!bIsDown)
         {
-            TRACE("Hot key pressed (pWnd %p, id %d)\n", pHotKey->pWnd, pHotKey->id);
-
             /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
             if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive == TRUE)
             {
@@ -222,15 +221,27 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                    UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
                    //ptiLastInput = pWnd->head.pti;
                    bWinHotkeyActive = FALSE;
-                   return TRUE;
+                   return FALSE;
                 }
             }
+        }
+        else
+        {    /* The user pressed the win key */
+            if (pHotKey->id == IDHK_WINKEY)
+            {
+               bWinHotkeyActive = TRUE;
+               return FALSE;
+            }
+        }
 
+        if (bIsDown)
+        {
             if (!pHotKey->pWnd)
             {
                 TRACE("UPTM Hot key Id %d Key %d\n",pHotKey->id, wVk );
                 UserPostThreadMessage(pHotKey->pti, WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
                 //ptiLastInput = pHotKey->pti;
+                return TRUE; /* Don't send any message */
             }
             else
             {
@@ -248,23 +259,22 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                    pWnd = pHotKey->pWnd;
                 }
                 if (pWnd)
-                {
-                   if (pWnd == pWnd->head.rpdesk->pDeskInfo->spwndShell && pHotKey->id == SC_TASKLIST)
+                {          //  pWnd->head.rpdesk->pDeskInfo->spwndShell needs testing.
+                   if (pWnd == ValidateHwndNoErr(InputWindowStation->ShellWindow) && pHotKey->id == SC_TASKLIST)
                    {
                       ERR("Sending to shell window w/o IDHK_WINKEY..\n");
                       UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
                    }
                    else
                    {
+                      TRACE("UPM Hot key Id %d Key %d\n",pHotKey->id, wVk );
                       UserPostMessage(UserHMGetHandle(pWnd), WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
                    }
                    //ptiLastInput = pWnd->head.pti;
+                   return TRUE; /* Don't send any message */
                 }
             }
-            return TRUE; /* Don't send any message */
         }
-        else /* The user pressed the win key */
-            if (pHotKey->id == IDHK_WINKEY) bWinHotkeyActive = TRUE;
     }
     return FALSE;
 }
@@ -558,7 +568,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
 {
     PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
     BOOL bRet = FALSE;
-    PWND pWnd;
+    PWND pWnd = NULL;
 
     TRACE("Enter NtUserUnregisterHotKey\n");
     UserEnterExclusive();
