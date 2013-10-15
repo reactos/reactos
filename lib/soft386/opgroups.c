@@ -1496,6 +1496,11 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             Value--;
             State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
+        else if (ModRegRm.Register == 6)
+        {
+            /* Push the value on to the stack */
+            return Soft386StackPush(State, Value);
+        }
 
         if (ModRegRm.Register <= 1)
         {
@@ -1535,6 +1540,11 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             Value--;
             State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
+        else if (ModRegRm.Register == 6)
+        {
+            /* Push the value on to the stack */
+            return Soft386StackPush(State, Value);
+        }
 
         if (ModRegRm.Register <= 1)
         {
@@ -1551,7 +1561,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
         }
     }
 
-    if (ModRegRm.Register > 1)
+    if ((ModRegRm.Register > 1) && (ModRegRm.Register != 6))
     {
         UNIMPLEMENTED;
         return FALSE; // NOT IMPLEMENTED
