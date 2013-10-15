@@ -992,13 +992,13 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Instalar cargador de arranque en el disco duro (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Instalar cargador de arranque en el disco duro (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {

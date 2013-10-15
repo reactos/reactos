@@ -1009,13 +1009,13 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "„š¡˜«á©«˜©ž «¦¬ bootloader ©«¦ ©¡¢ž¨æ ›å©¡¦ (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "„š¡˜«á©«˜©ž «¦¬ bootloader ©«¦ ©¡¢ž¨æ ›å©¡¦ (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
