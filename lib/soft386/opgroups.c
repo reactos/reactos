@@ -1496,6 +1496,23 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             Value--;
             State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
+        else if (ModRegRm.Register == 2)
+        {
+            /* Push the current value of EIP */
+            if (!Soft386StackPush(State, State->InstPtr.Long))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Set the EIP to the address */
+            State->InstPtr.Long = Value;
+        }
+        else if (ModRegRm.Register == 4)
+        {
+            /* Set the EIP to the address */
+            State->InstPtr.Long = Value;
+        }
         else if (ModRegRm.Register == 6)
         {
             /* Push the value on to the stack */
@@ -1540,6 +1557,23 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             Value--;
             State->Flags.Af = ((Value & 0x0F) == 0x0F);
         }
+        else if (ModRegRm.Register == 2)
+        {
+            /* Push the current value of IP */
+            if (!Soft386StackPush(State, State->InstPtr.LowWord))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Set the IP to the address */
+            State->InstPtr.LowWord = Value;
+        }
+        else if (ModRegRm.Register == 4)
+        {
+            /* Set the IP to the address */
+            State->InstPtr.LowWord = Value;
+        }
         else if (ModRegRm.Register == 6)
         {
             /* Push the value on to the stack */
@@ -1561,7 +1595,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
         }
     }
 
-    if ((ModRegRm.Register > 1) && (ModRegRm.Register != 6))
+    if ((ModRegRm.Register == 3)
+        || (ModRegRm.Register == 5)
+        || (ModRegRm.Register == 7))
     {
         UNIMPLEMENTED;
         return FALSE; // NOT IMPLEMENTED
