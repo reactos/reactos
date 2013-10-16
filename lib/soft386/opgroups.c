@@ -1508,8 +1508,90 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             /* Set the EIP to the address */
             State->InstPtr.Long = Value;
         }
+        else if (ModRegRm.Register == 3)
+        {
+            USHORT Selector;
+            INT Segment = SOFT386_REG_DS;
+
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read the selector */
+            if (!Soft386ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress + sizeof(ULONG),
+                                   FALSE,
+                                   &Selector,
+                                   sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Push the current value of CS */
+            if (!Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Push the current value of EIP */
+            if (!Soft386StackPush(State, State->InstPtr.Long))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new code segment */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Set the EIP to the address */
+            State->InstPtr.Long = Value;
+        }
         else if (ModRegRm.Register == 4)
         {
+            /* Set the EIP to the address */
+            State->InstPtr.Long = Value;
+        }
+        else if (ModRegRm.Register == 5)
+        {
+            USHORT Selector;
+            INT Segment = SOFT386_REG_DS;
+
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read the selector */
+            if (!Soft386ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress + sizeof(ULONG),
+                                   FALSE,
+                                   &Selector,
+                                   sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new code segment */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
             /* Set the EIP to the address */
             State->InstPtr.Long = Value;
         }
@@ -1569,8 +1651,91 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
             /* Set the IP to the address */
             State->InstPtr.LowWord = Value;
         }
+        else if (ModRegRm.Register == 3)
+        {
+            USHORT Selector;
+            INT Segment = SOFT386_REG_DS;
+
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read the selector */
+            if (!Soft386ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress + sizeof(USHORT),
+                                   FALSE,
+                                   &Selector,
+                                   sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Push the current value of CS */
+            if (!Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Push the current value of IP */
+            if (!Soft386StackPush(State, State->InstPtr.LowWord))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new code segment */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Set the IP to the address */
+            State->InstPtr.LowWord = Value;
+
+        }
         else if (ModRegRm.Register == 4)
         {
+            /* Set the IP to the address */
+            State->InstPtr.LowWord = Value;
+        }
+        else if (ModRegRm.Register == 5)
+        {
+            USHORT Selector;
+            INT Segment = SOFT386_REG_DS;
+
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read the selector */
+            if (!Soft386ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress + sizeof(USHORT),
+                                   FALSE,
+                                   &Selector,
+                                   sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new code segment */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
             /* Set the IP to the address */
             State->InstPtr.LowWord = Value;
         }
@@ -1578,6 +1743,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
         {
             /* Push the value on to the stack */
             return Soft386StackPush(State, Value);
+        }
+        else
+        {
+            /* Invalid */
+            Soft386Exception(State, SOFT386_EXCEPTION_UD);
+            return FALSE;
         }
 
         if (ModRegRm.Register <= 1)
@@ -1595,14 +1766,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
         }
     }
 
-    if ((ModRegRm.Register == 3)
-        || (ModRegRm.Register == 5)
-        || (ModRegRm.Register == 7))
-    {
-        UNIMPLEMENTED;
-        return FALSE; // NOT IMPLEMENTED
-    }
-    
     return TRUE;
 }
 
