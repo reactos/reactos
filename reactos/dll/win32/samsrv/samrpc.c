@@ -6793,7 +6793,14 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
     if (InfoBuffer->All.WhichFields & USER_ALL_PRIVATEDATA)
     {
-        /* FIXME */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"PrivateData",
+                                              &InfoBuffer->All.PrivateData);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
     }
 
     if (InfoBuffer->All.WhichFields & USER_ALL_PASSWORDEXPIRED)
@@ -6803,7 +6810,32 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
     if (InfoBuffer->All.WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
-        /* FIXME */
+        Length = 0;
+        SampGetObjectAttribute(UserObject,
+                               L"SecDesc",
+                               NULL,
+                               NULL,
+                               &Length);
+
+        if (Length > 0)
+        {
+            InfoBuffer->All.SecurityDescriptor.SecurityDescriptor = midl_user_allocate(Length);
+            if (InfoBuffer->All.SecurityDescriptor.SecurityDescriptor == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            InfoBuffer->All.SecurityDescriptor.Length = Length;
+
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"SecDesc",
+                                            NULL,
+                                            (PVOID)InfoBuffer->All.SecurityDescriptor.SecurityDescriptor,
+                                            &Length);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
     }
 
     *Buffer = InfoBuffer;
@@ -6851,6 +6883,12 @@ done:
 
             if (InfoBuffer->All.NtOwfPassword.Buffer != NULL)
                 midl_user_free(InfoBuffer->All.NtOwfPassword.Buffer);
+
+            if (InfoBuffer->All.PrivateData.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.PrivateData.Buffer);
+
+            if (InfoBuffer->All.SecurityDescriptor.SecurityDescriptor != NULL)
+                midl_user_free(InfoBuffer->All.SecurityDescriptor.SecurityDescriptor);
 
             midl_user_free(InfoBuffer);
         }
@@ -7539,6 +7577,15 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
         WriteFixedData = TRUE;
     }
 
+    if (WhichFields & USER_ALL_PRIVATEDATA)
+    {
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"PrivateData",
+                                              &Buffer->All.PrivateData);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
     if (WhichFields & USER_ALL_PASSWORDEXPIRED)
     {
         if (Buffer->All.PasswordExpired)
@@ -7556,6 +7603,15 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
         }
 
         WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & USER_ALL_SECURITYDESCRIPTOR)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"SecDesc",
+                                        REG_BINARY,
+                                        Buffer->All.SecurityDescriptor.SecurityDescriptor,
+                                        Buffer->All.SecurityDescriptor.Length);
     }
 
     if (WriteFixedData == TRUE)
