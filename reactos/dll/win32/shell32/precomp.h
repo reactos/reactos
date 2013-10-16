@@ -32,6 +32,7 @@
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <sddl.h>
+#include <commoncontrols.h>
 
 #include <tchar.h>
 #include <strsafe.h>

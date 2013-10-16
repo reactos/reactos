@@ -1,4 +1,30 @@
 
+class CMenuBand;
+
+class CMenuStaticToolbar
+{
+public:
+    CMenuStaticToolbar(CMenuBand *menuBand);
+
+    HRESULT CreateToolbar(HWND hwndParent, DWORD dwFlags);
+    HRESULT FillToolbar();
+    HRESULT GetWindow(HWND *phwnd);
+    HRESULT SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags);
+    HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
+    HRESULT ShowWindow(BOOL fShow);
+    HRESULT Close();
+
+private:
+
+    static const UINT WM_USER_SHOWPOPUPMENU = WM_USER + 1;
+
+    CMenuBand *m_menuBand;
+    HWND m_hwnd;
+    HMENU m_hmenu;
+    HWND m_hwndOwner;
+    DWORD m_dwMenuFlags;
+};
+
 class CMenuBand :
     public CComCoClass<CMenuBand, &CLSID_MenuBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -14,6 +40,19 @@ class CMenuBand :
     public IWinEventHandler,
     public IShellMenuAcc
 {
+public:
+    CMenuBand();
+    ~CMenuBand();
+
+private:
+
+    IOleWindow *m_site;
+    CMenuStaticToolbar *m_staticToolbar;
+
+    IShellMenuCallback *m_psmc;
+    UINT m_uId;
+    UINT m_uIdAncestor;
+    DWORD m_dwFlags;
 public :
 
     // *** IDeskBand methods ***
@@ -103,19 +142,18 @@ DECLARE_NOT_AGGREGATABLE(CMenuBand)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CMenuBand)
-    COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
-    COM_INTERFACE_ENTRY_IID(IID_IMenuBand, IMenuBand)
+    COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IMenuPopup)
     COM_INTERFACE_ENTRY_IID(IID_IShellMenu, IShellMenu)
     COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
     COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IDeskBand)
     COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
-    COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IDeskBar)
     COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
     COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
     COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-    COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+    COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersistStream)
     COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+    COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
     COM_INTERFACE_ENTRY_IID(IID_IMenuBand, IMenuBand)
     COM_INTERFACE_ENTRY_IID(IID_IShellMenu2, IShellMenu2)
     COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
