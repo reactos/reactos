@@ -6080,6 +6080,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
 {
     ULONG Data, DataSize;
     BOOLEAN OperandSize, AddressSize;
+    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
 
     OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
@@ -6096,6 +6097,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
     {
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+    {
+        /* Use the override segment instead of DS */
+        Segment = State->SegmentOverride;
     }
 
     /* Calculate the size */
@@ -6148,7 +6155,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
 
             /* Read from memory */
             if (!Soft386ReadMemory(State,
-                                   SOFT386_REG_DS,
+                                   Segment,
                                    AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
                                                : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
                                    FALSE,
@@ -6267,6 +6274,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
     ULONG FirstValue = 0, SecondValue = 0, Result;
     ULONG DataSize, DataMask, SignFlag;
     BOOLEAN OperandSize, AddressSize;
+    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
 
     OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
@@ -6285,12 +6293,10 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
         AddressSize = !AddressSize;
     }
 
-    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
-        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    if (State->PrefixFlags & SOFT386_PREFIX_SEG)
     {
-        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
-        Soft386Exception(State, SOFT386_EXCEPTION_UD);
-        return FALSE;
+        /* Use the override segment instead of DS */
+        Segment = State->SegmentOverride;
     }
 
     /* Calculate the size */
@@ -6303,7 +6309,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
 
     /* Read from the first source operand */
     if (!Soft386ReadMemory(State,
-                           SOFT386_REG_DS,
+                           Segment,
                            AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
                                        : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
                            FALSE,
@@ -6553,6 +6559,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
 {
     ULONG DataSize;
     BOOLEAN OperandSize, AddressSize;
+    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
 
     OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
@@ -6569,6 +6576,12 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
     {
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+    {
+        /* Use the override segment instead of DS */
+        Segment = State->SegmentOverride;
     }
 
     /* Calculate the size */
@@ -6598,7 +6611,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
 
     /* Read from the source operand */
     if (!Soft386ReadMemory(State,
-                           SOFT386_REG_DS,
+                           Segment,
                            AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
                                        : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
                            FALSE,
