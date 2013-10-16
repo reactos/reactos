@@ -16,12 +16,12 @@ IntGetProp(PWND Window, ATOM Atom)
 {
    PLIST_ENTRY ListEntry;
    PPROPERTY Property;
+   int i;
 
    ListEntry = Window->PropListHead.Flink;
-   while (ListEntry != &Window->PropListHead)
+   for (i = 0; i < Window->PropListItems; i++ )
    {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (!Property) break;
       if (Property->Atom == Atom)
       {
          return(Property);
@@ -77,6 +77,25 @@ IntSetProp(PWND pWnd, ATOM Atom, HANDLE Data)
 
    Prop->Data = Data;
    return TRUE;
+}
+
+VOID FASTCALL
+IntRemoveWindowProp(PWND Window)
+{
+   PLIST_ENTRY ListEntry;
+   PPROPERTY Property;
+   int i, Count = Window->PropListItems;
+
+   ListEntry = Window->PropListHead.Flink;
+   for (i = 0; i < Count; i++ )
+   {
+      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      ListEntry = ListEntry->Flink;
+      RemoveEntryList(&Property->PropListEntry);
+      UserHeapFree(Property);
+      Window->PropListItems--;
+   }
+   return;
 }
 
 /* FUNCTIONS *****************************************************************/
