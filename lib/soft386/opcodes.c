@@ -1663,7 +1663,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeOrModrm)
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
         State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
         State->Flags.Pf = Soft386CalculateParity(Result);
 
         /* Write back the result */
@@ -1930,7 +1930,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeAndModrm)
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
         State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
         State->Flags.Pf = Soft386CalculateParity(Result);
 
         /* Write back the result */
@@ -2197,7 +2197,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeXorModrm)
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
         State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
         State->Flags.Pf = Soft386CalculateParity(Result);
 
         /* Write back the result */
@@ -2454,7 +2454,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeTestModrm)
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
         State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
         State->Flags.Pf = Soft386CalculateParity(Result);
     }
 
