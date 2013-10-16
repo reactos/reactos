@@ -230,6 +230,19 @@ typedef struct
 
 typedef struct
 {
+    ULONG Offset : 16;
+    ULONG Selector : 16;
+    ULONG ParamCount : 5;
+    ULONG Reserved : 3;
+    ULONG Type : 4;
+    ULONG SystemType : 1;
+    ULONG Dpl : 2;
+    ULONG Present : 1;
+    ULONG OffsetHigh : 16;
+} SOFT386_CALL_GATE, *PSOFT386_CALL_GATE;
+
+typedef struct
+{
     ULONG Offset        : 16;
     ULONG Selector      : 16;
     ULONG Zero          : 8;

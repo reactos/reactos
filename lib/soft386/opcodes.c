@@ -4612,10 +4612,77 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCdq)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeCallAbs)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    USHORT Segment = 0;
+    ULONG Offset = 0;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x9A);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Fetch the offset */
+    if (Size)
+    {
+        if (!Soft386FetchDword(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (!Soft386FetchWord(State, (PUSHORT)&Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    /* Fetch the segment */
+    if (!Soft386FetchWord(State, &Segment))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Push the current code segment selector */
+    if (!Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Push the current value of the instruction pointer */
+    if (!Soft386StackPush(State, State->InstPtr.Long))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Load the new CS */
+    if (!Soft386LoadSegment(State, SOFT386_REG_CS, Segment))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Load new (E)IP */
+    if (Size) State->InstPtr.Long = Offset;
+    else State->InstPtr.LowWord = LOWORD(Offset);
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeWait)

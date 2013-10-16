@@ -202,11 +202,19 @@ Soft386LoadSegment(PSOFT386_STATE State,
                           sizeof(GdtEntry));
         }
 
-        /* Check if we are loading SS */
         if (Segment == SOFT386_REG_SS)
         {
+            /* Loading the stack segment */
+
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!GdtEntry.SystemType)
+            {
+                /* This is a special descriptor */
                 Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
@@ -230,8 +238,22 @@ Soft386LoadSegment(PSOFT386_STATE State,
                 return FALSE;
             }
         }
+        else if (Segment == SOFT386_REG_CS)
+        {
+            /* Loading the code segment */
+            // TODO: NOT IMPLEMENTED
+        }
         else
         {
+            /* Loading a data segment */
+
+            if (!GdtEntry.SystemType)
+            {
+                /* This is a special descriptor */
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                return FALSE;
+            }
+
             if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
                 && (Soft386GetCurrentPrivLevel(State) > GdtEntry.Dpl))
             {
