@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common tables validation (body).                      */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2009, 2010                                       */
+/*  Copyright 2004, 2005, 2009, 2010, 2013                                 */
 /*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -304,8 +304,7 @@
                   binSrchHeader->unitSize, binSrchHeader->nUnits,
                   searchRange, entrySelector, rangeShift ));
 
-      if ( valid->root->level >= FT_VALIDATE_PARANOID )
-        FT_INVALID_DATA;
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
     }
   }
 
@@ -442,8 +441,7 @@
       {
         GXV_TRACE(( "too short, glyphs %d - %d are missing\n",
                     i, valid->face->num_glyphs ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
         break;
       }
 
@@ -531,8 +529,7 @@
         GXV_TRACE(( "reverse ordered segment specification:"
                     " lastGlyph[%d]=%d < lastGlyph[%d]=%d\n",
                     unit, lastGlyph, unit - 1 , gid ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
       }
 
       if ( lastGlyph < firstGlyph )
@@ -540,8 +537,7 @@
         GXV_TRACE(( "reverse ordered range specification at unit %d:",
                     " lastGlyph %d < firstGlyph %d ",
                     unit, lastGlyph, firstGlyph ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
 
         if ( valid->root->level == FT_VALIDATE_TIGHT )
           continue;     /* ftxvalidator silently skips such an entry */
@@ -604,8 +600,7 @@
         GXV_TRACE(( "reverse ordered segment specification:"
                     " lastGlyph[%d]=%d < lastGlyph[%d]=%d\n",
                     unit, lastGlyph, unit - 1 , gid ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
       }
 
       if ( lastGlyph < firstGlyph )
@@ -613,8 +608,7 @@
         GXV_TRACE(( "reverse ordered range specification at unit %d:",
                     " lastGlyph %d < firstGlyph %d ",
                     unit, lastGlyph, firstGlyph ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
 
         if ( valid->root->level == FT_VALIDATE_TIGHT )
           continue; /* ftxvalidator silently skips such an entry */
@@ -705,8 +699,7 @@
       {
         GXV_TRACE(( "current gid 0x%04x < previous gid 0x%04x\n",
                     glyph, prev_glyph ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
       }
       prev_glyph = glyph;
 
@@ -834,8 +827,7 @@
     {
       GXV_TRACE(( " gxv_glyphid_check() gid overflow: num_glyphs %d < %d\n",
                   face->num_glyphs, gid ));
-      if ( valid->root->level >= FT_VALIDATE_PARANOID )
-        FT_INVALID_GLYPH_ID;
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
     }
 
     return 0;
@@ -908,7 +900,7 @@
     nnames = FT_Get_Sfnt_Name_Count( valid->face );
     for ( i = 0; i < nnames; i++ )
     {
-      if ( FT_Get_Sfnt_Name( valid->face, i, &name ) != GXV_Err_Ok )
+      if ( FT_Get_Sfnt_Name( valid->face, i, &name ) != FT_Err_Ok )
         continue ;
 
       if ( name.name_id == name_index )
@@ -1101,8 +1093,7 @@
 
     if ( ( maxEntry + 1 ) * entrySize > *length_p )
     {
-      if ( valid->root->level >= FT_VALIDATE_PARANOID )
-        FT_INVALID_TOO_SHORT;
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_TOO_SHORT );
 
       /* ftxvalidator and FontValidator both warn and continue */
       maxEntry = (FT_Byte)( *length_p / entrySize - 1 );
@@ -1126,8 +1117,7 @@
       {
         GXV_TRACE(( " newState offset 0x%04x is out of stateArray\n",
                     newState ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_OFFSET;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
         continue;
       }
 
@@ -1135,8 +1125,7 @@
       {
         GXV_TRACE(( " newState offset 0x%04x is not aligned to %d-classes\n",
                     newState,  1 + maxClassID ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_OFFSET;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
         continue;
       }
 
@@ -1173,8 +1162,7 @@
         break;
 
       default:
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_FORMAT;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_FORMAT );
         goto Exit;
       }
 
@@ -1346,7 +1334,7 @@
     l[1] = stateArray_length_p;
     l[2] = entryTable_length_p;
 
-    gxv_set_length_by_ulong_offset( o, l, buff, 4, table_size, valid );
+    gxv_set_length_by_ulong_offset( o, l, buff, 3, table_size, valid );
   }
 
 
@@ -1503,8 +1491,7 @@
       {
         GXV_TRACE(( "  newState index 0x%04x points out of stateArray\n",
                     newState_idx ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_OFFSET;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
       }
 
       state = (FT_UShort)( newState_idx / ( 1 + maxClassID ) );
@@ -1513,8 +1500,7 @@
         FT_TRACE4(( "-> new state = %d (supposed)\n"
                     "but newState index 0x%04x is not aligned to %d-classes\n",
                     state, newState_idx,  1 + maxClassID ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_OFFSET;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
       }
 
       switch ( GXV_GLYPHOFFSET_FMT( xstatetable ) )
@@ -1548,8 +1534,7 @@
         break;
 
       default:
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_FORMAT;
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_FORMAT );
         goto Exit;
       }
 
@@ -1719,9 +1704,9 @@
                         const FT_String*  name,
                         GXV_odtect_Range  odtect )
   {
-    odtect->range[ odtect->nRanges ].start  = start;
-    odtect->range[ odtect->nRanges ].length = length;
-    odtect->range[ odtect->nRanges ].name   = (FT_String*)name;
+    odtect->range[odtect->nRanges].start  = start;
+    odtect->range[odtect->nRanges].length = length;
+    odtect->range[odtect->nRanges].name   = (FT_String*)name;
     odtect->nRanges++;
   }
 

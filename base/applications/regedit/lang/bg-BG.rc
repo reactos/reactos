@@ -38,7 +38,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
@@ -50,7 +50,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
@@ -119,7 +119,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -180,7 +180,7 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Зареждане на рой"
 FONT 8, "Ms Shell Dlg"
@@ -302,21 +302,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Име"
     IDS_LIST_COLUMN_TYPE    "Вид"
     IDS_LIST_COLUMN_DATA    "Данни"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Регистърен обработчик"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Съдържа команди за работа с целия регистър"
     ID_EDIT_MENU            "Съдържа команди за промяна на стойности или ключове"
@@ -326,7 +326,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Съдържа команди за създаване на нови ключове или стойности"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Променя стойността"
     ID_EDIT_NEW_KEY         "Добавя нов ключ"
@@ -349,7 +349,7 @@ BEGIN
     ID_HELP_ABOUT           "Показва сведения за приложението, версия и възпроизводствени права"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Затваря регистърния обработчик"
     ID_FAVOURITES_ADDTOFAVOURITES "Добавя ключове в списъка с любимките"
@@ -364,7 +364,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Намира следваща поява на указания за предишното търсене текст"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Грешка"
     IDS_WARNING             "Предупреждение"
@@ -389,7 +389,7 @@ BEGIN
     IDS_NEW_VALUE           "Нова стойност #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(двоична стойност с нулева дължина)"
     IDS_DEFAULT_VALUE_NAME  "(Подразбрана)"
@@ -403,7 +403,7 @@ BEGIN
     IDS_INVALID_DWORD       "(самостоятелна стойност на двойна дума)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Вписващ файл"
     IDS_FLT_REGFILES        "Вписващи (регистърни) файлове (*.reg)"
@@ -416,7 +416,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Пълен достъп"
   IDS_ACCESS_READ               "Четене"
@@ -432,14 +432,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Право на четене"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Само този ключ"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Този ключ и подключовете му"
   IDS_INHERIT_SUBKEYSONLY        "Само подключовете"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Разгръщане"
   IDS_COLLAPSE                   "&Свиване"
@@ -447,7 +447,7 @@ BEGIN
   IDS_FINISHEDFIND               "Търсенето в регистъра приключи."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -455,7 +455,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Шина №"
     IDS_INTERFACE                 "Интерфейс"
@@ -476,7 +476,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Размер на данните"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Извод"
     IDS_PORT_MEMORY_IO            "Памет"
@@ -487,7 +487,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Четене/ запис"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Неуказан"
     IDS_BUS_INTERNAL              "Вътрешен"
@@ -516,7 +516,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -526,7 +526,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Добавяне в любимките"
 FONT 8, "MS Shell Dlg"
@@ -537,7 +537,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Премахване на любимки"
 FONT 8, "MS Shell Dlg"
@@ -549,7 +549,7 @@ BEGIN
     LTEXT           "Избор на любимки:",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Търсене"
 FONT 8, "MS Shell Dlg"
@@ -586,7 +586,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -598,7 +598,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Отваря помощта за Регистърния обработчик."
  *    ID_HELP_ABOUT           "Показва сведения за приложението, версията и възпроизводственото право."

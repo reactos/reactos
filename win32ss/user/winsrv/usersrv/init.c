@@ -26,15 +26,15 @@ HANDLE UserServerHeap = NULL;   // Our own heap.
 PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 {
     SrvExitWindowsEx,
-    // SrvEndTask,
-    // SrvLogon,
+    SrvEndTask,
+    SrvLogon,
     SrvRegisterServicesProcess, // Not present in Win7
-    // SrvActivateDebugger,
-    // SrvGetThreadConsoleDesktop, // Not present in Win7
-    // SrvDeviceEvent,
+    SrvActivateDebugger,
+    SrvGetThreadConsoleDesktop, // Not present in Win7
+    SrvDeviceEvent,
     SrvRegisterLogonProcess,    // Not present in Win7
-    // SrvCreateSystemThreads,
-    // SrvRecordShutdownReason,
+    SrvCreateSystemThreads,
+    SrvRecordShutdownReason,
     // SrvCancelShutdown,              // Added in Vista
     // SrvConsoleHandleOperation,      // Added in Win7
     // SrvGetSetShutdownBlockReason,   // Added in Vista
@@ -43,37 +43,42 @@ PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber - USERSRV_FIRST_AP
 BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 {
     FALSE,   // SrvExitWindowsEx
-    // FALSE,   // SrvEndTask
-    // FALSE,   // SrvLogon
+    FALSE,   // SrvEndTask
+    FALSE,   // SrvLogon
     FALSE,   // SrvRegisterServicesProcess
-    // FALSE,   // SrvActivateDebugger
-    // TRUE,    // SrvGetThreadConsoleDesktop
-    // FALSE,   // SrvDeviceEvent
+    FALSE,   // SrvActivateDebugger
+    TRUE,    // SrvGetThreadConsoleDesktop
+    FALSE,   // SrvDeviceEvent
     FALSE,   // SrvRegisterLogonProcess
-    // FALSE,   // SrvCreateSystemThreads
-    // FALSE,   // SrvRecordShutdownReason
+    FALSE,   // SrvCreateSystemThreads
+    FALSE,   // SrvRecordShutdownReason
     // FALSE,   // SrvCancelShutdown
     // FALSE,   // SrvConsoleHandleOperation
     // FALSE,   // SrvGetSetShutdownBlockReason
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR UserServerApiNameTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 {
     "SrvExitWindowsEx",
-    // "SrvEndTask",
-    // "SrvLogon",
+    "SrvEndTask",
+    "SrvLogon",
     "SrvRegisterServicesProcess",
-    // "SrvActivateDebugger",
-    // "SrvGetThreadConsoleDesktop",
-    // "SrvDeviceEvent",
+    "SrvActivateDebugger",
+    "SrvGetThreadConsoleDesktop",
+    "SrvDeviceEvent",
     "SrvRegisterLogonProcess",
-    // "SrvCreateSystemThreads",
-    // "SrvRecordShutdownReason",
+    "SrvCreateSystemThreads",
+    "SrvRecordShutdownReason",
     // "SrvCancelShutdown",
     // "SrvConsoleHandleOperation",
     // "SrvGetSetShutdownBlockReason",
 };
-
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -236,13 +241,37 @@ PrivateCsrssManualGuiCheck(LONG Check)
     NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
-DWORD
-WINAPI
+ULONG
+NTAPI
 CreateSystemThreads(PVOID pParam)
 {
     NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
     DPRINT1("This thread should not terminate!\n");
     return 0;
+}
+
+CSR_API(SrvCreateSystemThreads)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvActivateDebugger)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetThreadConsoleDesktop)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvDeviceEvent)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)
@@ -267,7 +296,9 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->HighestApiSupported = UserpMaxApiNumber;
     LoadedServerDll->DispatchTable = UserServerApiDispatchTable;
     LoadedServerDll->ValidTable = UserServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = UserServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
@@ -280,7 +311,10 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     /* Start the Raw Input Thread and the Desktop Thread */
     for (i = 0; i < 2; ++i)
     {
-        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)i, &ServerThread, &ClientId);
+        Status = RtlCreateUserThread(NtCurrentProcess(),
+                                     NULL, TRUE, 0, 0, 0,
+                                     CreateSystemThreads,
+                                     (PVOID)i, &ServerThread, &ClientId);
         if (NT_SUCCESS(Status))
         {
             NtResumeThread(ServerThread, NULL);

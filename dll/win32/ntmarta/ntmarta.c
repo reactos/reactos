@@ -887,7 +887,7 @@ AccpOpenNamedObject(LPWSTR pObjectName,
                                        NULL);
 
             Status = NtOpenFile(Handle,
-                                DesiredAccess /* | SYNCHRONIZE */,
+                                DesiredAccess | SYNCHRONIZE,
                                 &ObjectAttributes,
                                 &IoStatusBlock,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -1332,6 +1332,10 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
         if (needToClean)
             LocalFree((HLOCAL)pSid1);
     }
+
+    /* Succeed, if no ACL needs to be allocated */
+    if (SizeInformation.AclBytesInUse == 0)
+        goto Cleanup;
 
     /* OK, now create the new ACL */
     DPRINT("Allocating %u bytes for the new ACL\n", SizeInformation.AclBytesInUse);

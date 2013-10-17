@@ -143,7 +143,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "キャンセル", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS メモ帳について"
 FONT 9, "MS UI Gothic"
@@ -158,12 +158,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "&s ページ" /* FIXME */

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#if 0 // Win 7
+#ifndef __REACTOS__ /* Win 7 */
 
 #include <stdarg.h>
 
@@ -127,6 +127,8 @@ typedef struct FileDialogImpl {
     HWND cctrls_hwnd;
     struct list cctrls;
     UINT_PTR cctrl_next_dlgid;
+
+    GUID client_guid;
 } FileDialogImpl;
 
 /**************************************************************************
@@ -409,7 +411,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
     IShellFolder *psf_parent, *psf_desktop;
     LPITEMIDLIST *pidla;
     LPITEMIDLIST current_folder;
-    LPWSTR fn_iter, files, tmp_files;
+    LPWSTR fn_iter, files = NULL, tmp_files;
     UINT file_count = 0, len, i;
     int open_action;
     HRESULT hr, ret = E_FAIL;
@@ -419,6 +421,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
     {
         UINT size_used;
         file_count = COMDLG32_SplitFileNames(tmp_files, len, &files, &size_used);
+        CoTaskMemFree(tmp_files);
     }
     if(!file_count) return E_FAIL;
 
@@ -426,6 +429,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
     if(FAILED(hr))
     {
         ERR("Failed to get pidl for current directory.\n");
+        HeapFree(GetProcessHeap(), 0, files);
         return hr;
     }
 
@@ -508,7 +512,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
         pidla[i] = COMDLG32_SHSimpleIDListFromPathAW(canon_filename);
 
         if(psf_parent && !(open_action == ONOPEN_BROWSE))
-            IShellItem_Release(psf_parent);
+            IShellFolder_Release(psf_parent);
 
         fn_iter += (WCHAR)lstrlenW(fn_iter) + 1;
     }
@@ -530,7 +534,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
         if(FAILED(hr))
             ERR("Failed to browse to directory: %08x\n", hr);
 
-        IShellItem_Release(psf_parent);
+        IShellFolder_Release(psf_parent);
         break;
 
     case ONOPEN_OPEN:
@@ -1215,17 +1219,17 @@ static SIZE update_layout(FileDialogImpl *This)
     }
 
     /* The custom controls */
-    customctrls_rc.left = dialog_rc.left + vspacing;
-    customctrls_rc.right = dialog_rc.right - vspacing;
-    customctrls_rc.bottom = filename_rc.top - hspacing;
+    customctrls_rc.left = dialog_rc.left + hspacing;
+    customctrls_rc.right = dialog_rc.right - hspacing;
+    customctrls_rc.bottom = filename_rc.top - vspacing;
     customctrls_rc.top = customctrls_rc.bottom -
         ctrl_container_resize(This, customctrls_rc.right - customctrls_rc.left);
 
     /* The ExplorerBrowser control. */
-    ebrowser_rc.left = dialog_rc.left + vspacing;
+    ebrowser_rc.left = dialog_rc.left + hspacing;
     ebrowser_rc.top = toolbar_rc.bottom + vspacing;
     ebrowser_rc.right = dialog_rc.right - hspacing;
-    ebrowser_rc.bottom = customctrls_rc.top - hspacing;
+    ebrowser_rc.bottom = customctrls_rc.top - vspacing;
 
     /****
      * Move everything to the right place.
@@ -2032,8 +2036,9 @@ static HRESULT WINAPI IFileDialog2_fnClose(IFileDialog2 *iface, HRESULT hr)
 static HRESULT WINAPI IFileDialog2_fnSetClientGuid(IFileDialog2 *iface, REFGUID guid)
 {
     FileDialogImpl *This = impl_from_IFileDialog2(iface);
-    FIXME("stub - %p (%s)\n", This, debugstr_guid(guid));
-    return E_NOTIMPL;
+    TRACE("%p (%s)\n", This, debugstr_guid(guid));
+    This->client_guid = *guid;
+    return S_OK;
 }
 
 static HRESULT WINAPI IFileDialog2_fnClearClientData(IFileDialog2 *iface)
@@ -2730,7 +2735,7 @@ static HRESULT WINAPI IServiceProvider_fnQueryService(IServiceProvider *iface,
                                                       REFIID riid, void **ppv)
 {
     FileDialogImpl *This = impl_from_IServiceProvider(iface);
-    HRESULT hr = E_FAIL;
+    HRESULT hr = E_NOTIMPL;
     TRACE("%p (%s, %s, %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
 
     *ppv = NULL;
@@ -3043,6 +3048,7 @@ static HRESULT WINAPI IFileDialogCustomize_fnAddMenu(IFileDialogCustomize *iface
                           This->cctrl_def_height, &ctrl);
     if(SUCCEEDED(hr))
     {
+        SendMessageW(ctrl->hwnd, TB_BUTTONSTRUCTSIZE, sizeof(tbb), 0);
         ctrl->type = IDLG_CCTRL_MENU;
 
         /* Add the actual button with a popup menu. */
@@ -3382,7 +3388,7 @@ static HRESULT WINAPI IFileDialogCustomize_fnRemoveControlItem(IFileDialogCustom
             return E_FAIL;
 
         for(i = 0; i < count; i++)
-            if(SendMessageW(ctrl->hwnd, CB_GETITEMDATA, 0, 0) == dwIDItem)
+            if(SendMessageW(ctrl->hwnd, CB_GETITEMDATA, i, 0) == dwIDItem)
             {
                 if(SendMessageW(ctrl->hwnd, CB_DELETESTRING, i, 0) == CB_ERR)
                     return E_FAIL;
@@ -3529,7 +3535,7 @@ static HRESULT WINAPI IFileDialogCustomize_fnSetControlItemText(IFileDialogCusto
                                                                 LPCWSTR pszLabel)
 {
     FileDialogImpl *This = impl_from_IFileDialogCustomize(iface);
-    FIXME("stub - %p (%d, %d, %p)\n", This, dwIDCtl, dwIDItem, debugstr_w(pszLabel));
+    FIXME("stub - %p (%d, %d, %s)\n", This, dwIDCtl, dwIDItem, debugstr_w(pszLabel));
     return E_NOTIMPL;
 }
 
@@ -3626,6 +3632,8 @@ static HRESULT FileDialog_constructor(IUnknown *pUnkOuter, REFIID riid, void **p
     fdimpl->default_ext = NULL;
     fdimpl->custom_cancelbutton = fdimpl->custom_filenamelabel = NULL;
 
+    fdimpl->client_guid = GUID_NULL;
+
     /* FIXME: The default folder setting should be restored for the
      * application if it was previously set. */
     SHGetDesktopFolder(&psf);
@@ -3655,4 +3663,4 @@ HRESULT FileSaveDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
     return FileDialog_constructor(pUnkOuter, riid, ppv, ITEMDLG_TYPE_SAVE);
 }
 
-#endif // Win 7
+#endif /* Win 7 */

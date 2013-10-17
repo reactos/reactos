@@ -881,6 +881,7 @@ static UINT HANDLE_CustomType50( MSIPACKAGE *package, const WCHAR *source, const
     TRACE("exe %s arg %s\n", debugstr_w(exe), debugstr_w(arg));
 
     handle = execute_command( exe, arg, szCRoot );
+    msi_free( exe );
     msi_free( arg );
     if (handle == INVALID_HANDLE_VALUE) return ERROR_SUCCESS;
     return wait_process_handle( package, type, handle, action );
@@ -1120,7 +1121,7 @@ static UINT HANDLE_CustomType53_54( MSIPACKAGE *package, const WCHAR *source, co
     return wait_thread_handle( info );
 }
 
-static BOOL action_type_matches_script( MSIPACKAGE *package, UINT type, UINT script )
+static BOOL action_type_matches_script( UINT type, UINT script )
 {
     switch (script)
     {
@@ -1174,7 +1175,7 @@ static UINT defer_custom_action( MSIPACKAGE *package, const WCHAR *action, UINT 
     return ERROR_SUCCESS;
 }
 
-UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL execute)
+UINT ACTION_CustomAction( MSIPACKAGE *package, LPCWSTR action, UINT script )
 {
     static const WCHAR query[] = {
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
@@ -1214,7 +1215,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL 
         if (type & msidbCustomActionTypeNoImpersonate)
             WARN("msidbCustomActionTypeNoImpersonate not handled\n");
 
-        if (!execute || !action_type_matches_script( package, type, script ))
+        if (!action_type_matches_script( type, script ))
         {
             rc = defer_custom_action( package, action, type );
             goto end;

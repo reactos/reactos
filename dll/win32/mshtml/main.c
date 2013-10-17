@@ -167,13 +167,14 @@ HDC get_display_dc(void)
     return display_dc;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
         hInst = hInstDLL;
         break;
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
         process_detach();
         break;
     case DLL_THREAD_DETACH:

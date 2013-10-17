@@ -13,6 +13,14 @@
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+WINAPI
+BasepInitializeTermsrvFpns(VOID)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 DWORD
 WINAPI
 BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
@@ -544,7 +552,7 @@ GetModuleFileNameA(HINSTANCE hModule,
     }
 
     /* Call unicode API */
-    FilenameW.Length = GetModuleFileNameW(hModule, FilenameW.Buffer, nSize) * sizeof(WCHAR);
+    FilenameW.Length = (USHORT)GetModuleFileNameW(hModule, FilenameW.Buffer, nSize) * sizeof(WCHAR);
     FilenameW.MaximumLength = FilenameW.Length + sizeof(WCHAR);
 
     if (FilenameW.Length)
@@ -1115,7 +1123,7 @@ BaseQueryModuleData(IN LPSTR ModuleName,
                     IN PVOID Unknown3,
                     IN PVOID Unknown4)
 {
-    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
+    DPRINT1("BaseQueryModuleData called: %s %s %p %p %p\n",
             ModuleName,
             Unknown,
             Unknown2,
@@ -1125,12 +1133,20 @@ BaseQueryModuleData(IN LPSTR ModuleName,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
 BaseProcessInitPostImport(VOID)
 {
+    /* Check if this is a terminal server */
+    DPRINT1("Post-init called\n");
+    if (SharedUserData->SuiteMask & VER_SUITE_TERMINAL)
+    {
+        /* Initialize TS pointers */
+        return BasepInitializeTermsrvFpns();
+    }
+
     /* FIXME: Initialize TS pointers */
     return STATUS_SUCCESS;
 }

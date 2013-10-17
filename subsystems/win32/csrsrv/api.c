@@ -76,22 +76,28 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
             ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
+            DPRINT1("API: %d\n", ApiId);
+#ifdef CSR_DBG
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
-                    ServerDll->ValidTable[ApiId],
+                    ApiId,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
-                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***", &ServerDll->Name);
+                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
+                    &ServerDll->Name);
+#endif
             // DbgBreakPoint();
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
     }
 
+#ifdef CSR_DBG
     if (CsrDebug & 2)
     {
         DPRINT1("CSRSS: %s Api Request received from server process\n",
                 ServerDll->NameTable[ApiId]);
     }
+#endif
 
     /* Validation complete, start SEH */
     _SEH2_TRY
@@ -180,7 +186,12 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
                 Status = CsrSrvAttachSharedSection(CsrProcess, ConnectInfo);
 
                 /* Check how this went */
-                if (NT_SUCCESS(Status)) AllowConnection = TRUE;
+                if (NT_SUCCESS(Status))
+                {
+                    /* Allow the connection, and return debugging flag */
+                    ConnectInfo->DebugFlags = CsrDebug;
+                    AllowConnection = TRUE;
+                }
             }
 
             /* Dereference the project */
@@ -197,7 +208,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     RemotePortView.ViewBase = NULL;
 
     /* Save the Process ID */
-    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
+    ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
     Status = NtAcceptConnectPort(&ServerPort,
@@ -570,6 +581,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     continue;
                 }
 
+#ifdef CSR_DBG
                 if (CsrDebug & 2)
                 {
                     DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x\n",
@@ -579,6 +591,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                             ServerDll->NameTable[ApiId],
                             NULL);
                 }
+#endif
 
                 /* Assume success */
                 ReceiveMsg.Status = STATUS_SUCCESS;
@@ -774,6 +787,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             continue;
         }
 
+#ifdef CSR_DBG
         if (CsrDebug & 2)
         {
             DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x, Process %08x - %08x\n",
@@ -785,6 +799,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     CsrThread->Process,
                     CsrProcess);
         }
+#endif
 
         /* Assume success */
         ReplyMsg = &ReceiveMsg;
@@ -1009,7 +1024,6 @@ PCSR_THREAD
 NTAPI
 CsrConnectToUser(VOID)
 {
-#if 0 // FIXME: This code is OK, however it is ClientThreadSetup which sucks.
     NTSTATUS Status;
     ANSI_STRING DllName;
     UNICODE_STRING TempName;
@@ -1066,21 +1080,6 @@ CsrConnectToUser(VOID)
 
     /* Return it */
     return CsrThread;
-
-#else
-
-    PTEB Teb = NtCurrentTeb();
-    PCSR_THREAD CsrThread;
-
-    /* Save pointer to this thread in TEB */
-    CsrAcquireProcessLock();
-    CsrThread = CsrLocateThreadInProcess(NULL, &Teb->ClientId);
-    CsrReleaseProcessLock();
-    if (CsrThread) Teb->CsrClientThread = CsrThread;
-
-    /* Return it */
-    return CsrThread;
-#endif
 }
 
 /*++
@@ -1154,7 +1153,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         /* Check if the Length is valid */
         if ((FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
                 (LocalCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
-            (Length > MAXWORD))
+            (LocalCaptureBuffer->PointerCount > MAXUSHORT))
         {
             /* Return failure */
             DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", LocalCaptureBuffer);

@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Zobrazí výstup po jednotlivých stránkách na obrazovku.\n\n\
   MORE < [Jednotka:][Cesta]Název souboru\n\

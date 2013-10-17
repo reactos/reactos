@@ -1,5 +1,5 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "使用法: %s ドライブ: [-FS:ファイルシステム] [-V:ラベル] [-Q] [-A:サイズ] [-C]\n\n\
   [ドライブ:]         フォーマットするドライブを指定します。\n\

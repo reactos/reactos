@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "coninput.h"
 
 #define NDEBUG
@@ -54,7 +54,7 @@ ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
     return ssOut;
 }
 
-VOID WINAPI
+VOID NTAPI
 ConioProcessKey(PCONSOLE Console, MSG* msg)
 {
     static BYTE KeyState[256] = { 0 };
@@ -104,12 +104,12 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
         UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
-    if (ConioProcessKeyCallback(Console,
-                                msg,
-                                KeyState[VK_MENU],
-                                ShiftState,
-                                VirtualKeyCode,
-                                Down))
+    if (TermProcessKeyCallback(Console,
+                               msg,
+                               KeyState[VK_MENU],
+                               ShiftState,
+                               VirtualKeyCode,
+                               Down))
     {
         return;
     }

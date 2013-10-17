@@ -383,7 +383,7 @@ FindNextFileW(IN HANDLE hFindFile,
     NTSTATUS Status = STATUS_SUCCESS;
     DIR_INFORMATION FoundFile = {NULL};
 
-    TRACE("FindNextFileW(%lx, 0x%p)\n", hFindFile, lpFindFileData);
+    TRACE("FindNextFileW(%p, 0x%p)\n", hFindFile, lpFindFileData);
 
     if (hFindFile != FIND_DEVICE_HANDLE)
     {
@@ -499,7 +499,7 @@ BOOL
 WINAPI
 FindClose(HANDLE hFindFile)
 {
-    TRACE("FindClose(hFindFile %x)\n", hFindFile);
+    TRACE("FindClose(hFindFile %p)\n", hFindFile);
 
     if (hFindFile == FIND_DEVICE_HANDLE)
         return TRUE;

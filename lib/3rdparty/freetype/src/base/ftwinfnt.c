@@ -32,7 +32,7 @@
     FT_Error           error;
 
 
-    error = FT_Err_Invalid_Argument;
+    error = FT_ERR( Invalid_Argument );
 
     if ( face != NULL )
     {

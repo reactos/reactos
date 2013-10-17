@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2005, 2007, 2010 by                              */
+/*  Copyright 2002, 2003, 2005, 2007, 2010, 2013 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -135,7 +135,7 @@
     /* check that we have begun a new path */
     if ( !glyph->path_begun )
     {
-      error = PFR_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       FT_ERROR(( "pfr_glyph_line_to: invalid glyph data\n" ));
       goto Exit;
     }
@@ -171,7 +171,7 @@
     /* check that we have begun a new path */
     if ( !glyph->path_begun )
     {
-      error = PFR_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       FT_ERROR(( "pfr_glyph_line_to: invalid glyph data\n" ));
       goto Exit;
     }
@@ -248,7 +248,7 @@
                          FT_Byte*   p,
                          FT_Byte*   limit )
   {
-    FT_Error   error  = PFR_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
     FT_Memory  memory = glyph->loader->memory;
     FT_UInt    flags, x_count, y_count, i, count, mask;
     FT_Int     x;
@@ -546,7 +546,7 @@
 
   Failure:
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_glyph_load_simple: invalid glyph data\n" ));
     goto Exit;
   }
@@ -558,7 +558,7 @@
                            FT_Byte*   p,
                            FT_Byte*   limit )
   {
-    FT_Error        error  = PFR_Err_Ok;
+    FT_Error        error  = FT_Err_Ok;
     FT_GlyphLoader  loader = glyph->loader;
     FT_Memory       memory = loader->memory;
     PFR_SubGlyph    subglyph;
@@ -602,7 +602,7 @@
       /* to avoid endless recursion                   */
       if ( new_max > 64 )
       {
-        error = PFR_Err_Invalid_Table;
+        error = FT_THROW( Invalid_Table );
         FT_ERROR(( "pfr_glyph_load_compound:"
                    " too many compound glyphs components\n" ));
         goto Exit;
@@ -709,7 +709,7 @@
 
   Failure:
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_glyph_load_compound: invalid glyph data\n" ));
     goto Exit;
   }

@@ -5,21 +5,42 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Uk&ončit\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O konzoli řízení systému ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Nápověda"
+    BEGIN
+        MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Konzole řízení systému ReactOS"
     IDS_CONSOLETITLE "Konzole%1!u!"

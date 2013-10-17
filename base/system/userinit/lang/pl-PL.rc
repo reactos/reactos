@@ -6,7 +6,7 @@
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_USERINIT_FAIL, "Nie powiodło się uruchomienie powłoki przez userinit!\n"

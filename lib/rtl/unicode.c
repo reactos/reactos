@@ -28,6 +28,16 @@ extern USHORT NlsUnicodeDefaultChar;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+RtlMultiAppendUnicodeStringBuffer(IN PVOID Unknown,
+                                  IN ULONG Unknown2,
+                                  IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
 * @implemented
 */
@@ -825,17 +835,18 @@ RtlInt64ToUnicodeString (
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PANSI_STRING String1,
-    PANSI_STRING String2,
-    BOOLEAN  CaseInsensitive)
+    PSTRING String1,
+    PSTRING String2,
+    BOOLEAN CaseInsensitive)
 {
     PCHAR pc1;
     PCHAR pc2;
-    ULONG Length;
+    ULONG NumChars;
 
-    if (String2->Length < String1->Length) return FALSE;
+    if (String2->Length < String1->Length)
+        return FALSE;
 
-    Length = String1->Length;
+    NumChars = String1->Length;
     pc1 = String1->Buffer;
     pc2 = String2->Buffer;
 
@@ -843,15 +854,15 @@ RtlPrefixString(
     {
         if (CaseInsensitive)
         {
-            while (Length--)
+            while (NumChars--)
             {
-                if (RtlUpperChar (*pc1++) != RtlUpperChar (*pc2++))
+                if (RtlUpperChar(*pc1++) != RtlUpperChar(*pc2++))
                     return FALSE;
             }
         }
         else
         {
-            while (Length--)
+            while (NumChars--)
             {
                 if (*pc1++ != *pc2++)
                     return FALSE;
@@ -879,7 +890,7 @@ RtlPrefixUnicodeString(
 {
     PWCHAR pc1;
     PWCHAR pc2;
-    ULONG NumChars;
+    ULONG  NumChars;
 
     if (String2->Length < String1->Length)
         return FALSE;
@@ -913,6 +924,7 @@ RtlPrefixUnicodeString(
 
     return FALSE;
 }
+
 /*
  * @implemented
  */

@@ -481,7 +481,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 /* Return the handle */
                 *PortHandle = Handle;
                 LPCTRACE(LPC_CONNECT_DEBUG,
-                         "Handle: %lx. Length: %lx\n",
+                         "Handle: %p. Length: %lx\n",
                          Handle,
                          PortMessageLength);
 

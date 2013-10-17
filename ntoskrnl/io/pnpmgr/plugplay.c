@@ -827,7 +827,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
 {
-    DPRINT("NtPlugPlayControl(%lu %p %lu) called\n",
+    DPRINT("NtPlugPlayControl(%d %p %lu) called\n",
            PlugPlayControlClass, Buffer, BufferLength);
 
     /* Function can only be called from user-mode */

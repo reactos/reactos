@@ -3,7 +3,7 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Tere tulemast"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -13,7 +13,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Paigalda ReactOS"
     IDS_TOPICBUTTON1        "Sirvi CD sisu"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Paigalda ReactOS"
     IDS_TOPICTITLE1         "Sirvi CD sisu"
@@ -43,7 +43,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Paigalda ReactOS oma arvutisse või uuenda olemasolevat installatsiooni."
     IDS_TOPICDESC1          "Sirvi CD sisu."

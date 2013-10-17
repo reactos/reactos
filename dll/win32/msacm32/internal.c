@@ -362,8 +362,8 @@ void MSACM_RegisterAllDrivers(void)
 				   'W','i','n','d','o','w','s',' ','N','T','\\',
 				   'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
 				   'D','r','i','v','e','r','s','3','2','\0'};
-    DWORD i, cnt = 0, bufLen, lRet;
-    WCHAR buf[2048], *name, *s;
+    DWORD i, cnt, bufLen, lRet, type;
+    WCHAR buf[2048], valname[64], *name, *s;
     FILETIME lastWrite;
     HKEY hKey;
 
@@ -382,6 +382,15 @@ void MSACM_RegisterAllDrivers(void)
 	    if (!(name = strchrW(buf, '='))) continue;
 	    *name = 0;
 	    MSACM_RegisterDriver(buf, name + 1, 0);
+	}
+	i = 0;
+	cnt = sizeof(valname) / sizeof(*valname);
+	bufLen = sizeof(buf);
+	while(RegEnumValueW(hKey, i, valname, &cnt, 0,
+		    &type, (BYTE*)buf, &bufLen) == ERROR_SUCCESS){
+	    if(!strncmpiW(valname, msacmW, sizeof(msacmW) / sizeof(*msacmW)))
+		MSACM_RegisterDriver(valname, buf, 0);
+	    ++i;
 	}
     	RegCloseKey( hKey );
     }

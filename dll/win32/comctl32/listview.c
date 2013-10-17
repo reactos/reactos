@@ -132,13 +132,6 @@
  *
  * Functions:
  *   -- LVGroupComparE
- *
- * Known differences in message stream from native control (not known if
- * these differences cause problems):
- *   LVM_INSERTITEM issues LVM_SETITEMSTATE and LVM_SETITEM in certain cases.
- *   LVM_SETITEM does not always issue LVN_ITEMCHANGING/LVN_ITEMCHANGED.
- *   WM_CREATE does not issue WM_QUERYUISTATE and associated registry
- *     processing for "USEDOUBLECLICKTIME".
  */
 
 #include <config.h>
@@ -6284,6 +6277,7 @@ again:
     {
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
+        lvItem.pszText = szDispText;
         if (!LISTVIEW_GetItemW(infoPtr, &lvItem)) continue;
 
 	if (lvItem.mask & LVIF_PARAM)
@@ -7923,17 +7917,6 @@ static BOOL LISTVIEW_RedrawItems(const LISTVIEW_INFO *infoPtr, INT nFirst, INT n
  *  nearest number of pixels that are a whole line. Ex: if line height
  *  is 16 and an 8 is passed, the list will be scrolled by 16. If a 7
  *  is passed, then the scroll will be 0.  (per MSDN 7/2002)
- *
- *  For:  (per experimentation with native control and CSpy ListView)
- *     LV_VIEW_ICON       scrolling in any direction is allowed
- *     LV_VIEW_SMALLICON  scrolling in any direction is allowed
- *     LV_VIEW_LIST       dx=1 = 1 column (horizontal only)
- *                           but will only scroll 1 column per message
- *                           no matter what the value.
- *                        dy must be 0 or FALSE returned.
- *     LV_VIEW_DETAILS    dx=1 = 1 pixel
- *                        dy=  see above
- *
  */
 static BOOL LISTVIEW_Scroll(LISTVIEW_INFO *infoPtr, INT dx, INT dy)
 {

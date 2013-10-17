@@ -835,7 +835,7 @@ struct chmFile *chm_dup(struct chmFile *oldHandle)
     struct chmFile *newHandle=NULL;
 
     newHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(struct chmFile));
-    memcpy(newHandle, oldHandle, sizeof(struct chmFile));
+    *newHandle = *oldHandle;
 
     /* duplicate fd handle */
     DuplicateHandle(GetCurrentProcess(), oldHandle->fd,

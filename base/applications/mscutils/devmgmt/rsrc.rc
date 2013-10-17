@@ -4,10 +4,10 @@ IDI_MAIN_ICON   ICON    "res/computer.ico"
 IDB_ROOT_IMAGE  BITMAP  "res/root.bmp"
 
 /* main toolbar icons */
-IDB_PROP    BITMAP DISCARDABLE "res/properties.bmp"
-IDB_REFRESH BITMAP DISCARDABLE "res/refresh.bmp"
-IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
-IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
+IDB_PROP    BITMAP "res/properties.bmp"
+IDB_REFRESH BITMAP "res/refresh.bmp"
+IDB_HELP    BITMAP "res/help.bmp"
+IDB_EXIT    BITMAP "res/exit.bmp"
 
 // UTF-8
 #pragma code_page(65001)

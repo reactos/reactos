@@ -1,0 +1,13 @@
+﻿; UTF-8
+
+[Section]
+Name = Stamina 2.5
+Description = Free typing tutor.
+URLSite = http://stamina.ru
+Size = 4.7MB
+Category = 8
+URLDownload = http://stamina.ru/files/StaminaSetup.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein freies Schreiblernprogramm.

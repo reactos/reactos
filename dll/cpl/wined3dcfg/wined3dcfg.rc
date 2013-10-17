@@ -14,4 +14,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* Icons */
 IDI_CPLICON         ICON "resources/wined3dcfg.ico"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

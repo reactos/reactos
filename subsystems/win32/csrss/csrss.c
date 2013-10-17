@@ -60,7 +60,7 @@ _main(int argc,
     if (!NT_SUCCESS(Status))
     {
         /* Raise a hard error */
-        DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
+        DPRINT1("CSRSS: Could not raise IOPL, Status: 0x%08lx\n", Status);
 #if 0
         Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
                                   0,
@@ -76,7 +76,7 @@ _main(int argc,
     if (!NT_SUCCESS(Status))
     {
         /* Kill us */
-        DPRINT1("CSRSS: CsrServerInitialization failed:% lx\n", Status);
+        DPRINT1("CSRSS: Unable to initialize server, Status: 0x%08lx\n", Status);
         NtTerminateProcess(NtCurrentProcess(), Status);
     }
 

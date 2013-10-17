@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Oturum Açma Görüntülük Koruyucusu"
     IDS_TEXT        "Bu görüntülük koruyucusu için hiçbir seçenek yok."

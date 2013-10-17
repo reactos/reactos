@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -30,7 +30,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -141,7 +141,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Start"
     IDS_PROPERTIES        "Właś&ciwości"
@@ -150,7 +150,7 @@ BEGIN
     IDS_STARTUP_ERROR     "System nie może uruchomić eksploratora, ponieważ rejestr jest niedostępny lub uszkodzony."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Właściwości paska zadań i Menu Start"
 END

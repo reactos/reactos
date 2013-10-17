@@ -115,6 +115,9 @@ static PFN_COUNT MiReservedSwapPages;
 #define OFFSET_FROM_ENTRY(i) ((i) >> 11)
 #define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | ((j) << 11) | 0x400)
 
+/* Make sure there can be only 16 paging files */
+C_ASSERT(FILE_FROM_ENTRY(0xffffffff) < MAX_PAGING_FILES);
+
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 /* FUNCTIONS *****************************************************************/
@@ -239,11 +242,6 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
@@ -301,11 +299,6 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
@@ -426,12 +419,6 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
-
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
@@ -647,7 +634,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     * bytes) to the physical location of cluster 3042 then. */
    if (BytesPerAllocationUnit % PAGE_SIZE)
    {
-      DPRINT1("BytesPerAllocationUnit %d is not a multiple of PAGE_SIZE %d\n",
+      DPRINT1("BytesPerAllocationUnit %lu is not a multiple of PAGE_SIZE %d\n",
               BytesPerAllocationUnit, PAGE_SIZE);
       ZwClose(FileHandle);
       return STATUS_UNSUCCESSFUL;
@@ -784,7 +771,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       ZwClose(FileHandle);
       return(STATUS_NO_MEMORY);
    }
-   DPRINT("ExtentCount: %d\n", ExtentCount);
+   DPRINT("ExtentCount: %lu\n", ExtentCount);
    Size = sizeof(RETRIEVAL_POINTERS_BUFFER) + ExtentCount * 2 * sizeof(LARGE_INTEGER);
    PagingFile->RetrievalPointers = ExAllocatePool(NonPagedPool, Size);
    if (PagingFile->RetrievalPointers == NULL)

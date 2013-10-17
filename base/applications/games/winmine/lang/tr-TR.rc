@@ -87,5 +87,5 @@ BEGIN
     EDITTEXT             IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT            IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
     DEFPUSHBUTTON   "Tamam",  IDOK,     40,  30,  50,  15
-    PUSHBUTTON      "Vazgeç", IDCANCEL, 40,  50,  50,  15
+    PUSHBUTTON      "İptal", IDCANCEL, 40,  50,  50,  15
 END

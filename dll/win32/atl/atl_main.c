@@ -2,6 +2,7 @@
  * Implementation of Active Template Library (atl.dll)
  *
  * Copyright 2004 Aric Stewart for CodeWeavers
+ * Copyright 2005 Jacek Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <objbase.h>
+#include <ole2.h>
 #include <oleauto.h>
 
 //#include "objidl.h"
@@ -40,7 +41,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
-DECLSPEC_HIDDEN HINSTANCE hInst;
+static HINSTANCE hInst;
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -60,7 +61,7 @@ HRESULT WINAPI AtlModuleInit(_ATL_MODULEW* pM, _ATL_OBJMAP_ENTRYW* p, HINSTANCE 
     INT i;
     UINT size;
 
-    //FIXME("SEMI-STUB (%p %p %p)\n",pM,p,h);
+    TRACE("(%p %p %p)\n", pM, p, h);
 
     size = pM->cbSize;
     switch (size)
@@ -120,41 +121,31 @@ static _ATL_OBJMAP_ENTRYW_V1 *get_objmap_entry( _ATL_MODULEW *mod, unsigned int 
 HRESULT WINAPI AtlModuleLoadTypeLib(_ATL_MODULEW *pM, LPCOLESTR lpszIndex,
                                     BSTR *pbstrPath, ITypeLib **ppTypeLib)
 {
-    HRESULT hRes;
-    OLECHAR path[MAX_PATH+8]; /* leave some space for index */
-
     TRACE("(%p, %s, %p, %p)\n", pM, debugstr_w(lpszIndex), pbstrPath, ppTypeLib);
 
     if (!pM)
         return E_INVALIDARG;
 
-    GetModuleFileNameW(pM->m_hInstTypeLib, path, MAX_PATH);
-    if (lpszIndex)
-        lstrcatW(path, lpszIndex);
-
-    hRes = LoadTypeLib(path, ppTypeLib);
-    if (FAILED(hRes))
-        return hRes;
-
-    *pbstrPath = SysAllocString(path);
-
-    return S_OK;
+    return AtlLoadTypeLib(pM->m_hInstTypeLib, lpszIndex, pbstrPath, ppTypeLib);
 }
 
-HRESULT WINAPI AtlModuleTerm(_ATL_MODULEW* pM)
+HRESULT WINAPI AtlModuleTerm(_ATL_MODULE *pM)
 {
-    _ATL_TERMFUNC_ELEM *iter = pM->m_pTermFuncs, *tmp;
+    _ATL_TERMFUNC_ELEM *iter, *tmp;
 
     TRACE("(%p)\n", pM);
 
-    while(iter) {
-        iter->pFunc(iter->dw);
-        tmp = iter;
-        iter = iter->pNext;
-        HeapFree(GetProcessHeap(), 0, tmp);
-    }
+    if (pM->cbSize > ATLVer1Size)
+    {
+        iter = pM->m_pTermFuncs;
 
-    HeapFree(GetProcessHeap(), 0, pM);
+        while(iter) {
+            iter->pFunc(iter->dw);
+            tmp = iter;
+            iter = iter->pNext;
+            HeapFree(GetProcessHeap(), 0, tmp);
+        }
+    }
 
     return S_OK;
 }
@@ -165,12 +156,15 @@ HRESULT WINAPI AtlModuleAddTermFunc(_ATL_MODULEW *pM, _ATL_TERMFUNC *pFunc, DWOR
 
     TRACE("(%p %p %ld)\n", pM, pFunc, dw);
 
-    termfunc_elem = HeapAlloc(GetProcessHeap(), 0, sizeof(_ATL_TERMFUNC_ELEM));
-    termfunc_elem->pFunc = pFunc;
-    termfunc_elem->dw = dw;
-    termfunc_elem->pNext = pM->m_pTermFuncs;
+    if (pM->cbSize > ATLVer1Size)
+    {
+        termfunc_elem = HeapAlloc(GetProcessHeap(), 0, sizeof(_ATL_TERMFUNC_ELEM));
+        termfunc_elem->pFunc = pFunc;
+        termfunc_elem->dw = dw;
+        termfunc_elem->pNext = pM->m_pTermFuncs;
 
-    pM->m_pTermFuncs = termfunc_elem;
+        pM->m_pTermFuncs = termfunc_elem;
+    }
 
     return S_OK;
 }
@@ -242,12 +236,23 @@ HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const
             hRes = obj->pfnUpdateRegistry(TRUE); /* register */
             if (FAILED(hRes))
                 return hRes;
+
+            if(pM->cbSize > ATLVer1Size) {
+                const struct _ATL_CATMAP_ENTRY *catmap;
+
+                catmap = ((const _ATL_OBJMAP_ENTRYW*)obj)->pfnGetCategoryMap();
+                if(catmap) {
+                    hRes = AtlRegisterClassCategoriesHelper(obj->pclsid, catmap, TRUE);
+                    if(FAILED(hRes))
+                        return hRes;
+                }
+            }
         }
     }
 
     if (bRegTypeLib)
     {
-        hRes = AtlModuleRegisterTypeLib(pM, NULL);
+        hRes = AtlRegisterTypeLib(pM->m_hInstTypeLib, NULL);
         if (FAILED(hRes))
             return hRes;
     }
@@ -298,25 +303,12 @@ HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
  */
 HRESULT WINAPI AtlModuleRegisterTypeLib(_ATL_MODULEW *pm, LPCOLESTR lpszIndex)
 {
-    HRESULT hRes;
-    BSTR path;
-    ITypeLib *typelib;
-
     TRACE("%p %s\n", pm, debugstr_w(lpszIndex));
 
     if (!pm)
         return E_INVALIDARG;
 
-    hRes = AtlModuleLoadTypeLib(pm, lpszIndex, &path, &typelib);
-
-    if (SUCCEEDED(hRes))
-    {
-        hRes = RegisterTypeLib(typelib, path, NULL); /* FIXME: pass help directory */
-        ITypeLib_Release(typelib);
-        SysFreeString(path);
-    }
-
-    return hRes;
+    return AtlRegisterTypeLib(pm->m_hInstTypeLib, lpszIndex);
 }
 
 /***********************************************************************
@@ -452,23 +444,28 @@ void WINAPI AtlModuleAddCreateWndData(_ATL_MODULEW *pM, _AtlCreateWndData *pData
 
     pData->m_pThis = pvObject;
     pData->m_dwThreadID = GetCurrentThreadId();
+
+    EnterCriticalSection(&pM->m_csWindowCreate);
     pData->m_pNext = pM->m_pCreateWndList;
     pM->m_pCreateWndList = pData;
+    LeaveCriticalSection(&pM->m_csWindowCreate);
 }
 
 /***********************************************************************
  *           AtlModuleExtractCreateWndData      [ATL.@]
  *
- *  NOTE: I failed to find any good description of this function.
- *        Tests show that this function extracts one of _AtlCreateWndData
+ *  NOTE: Tests show that this function extracts one of _AtlCreateWndData
  *        records from the current thread from a list
  *
  */
 void* WINAPI AtlModuleExtractCreateWndData(_ATL_MODULEW *pM)
 {
     _AtlCreateWndData **ppData;
+    void *ret = NULL;
 
     TRACE("(%p)\n", pM);
+
+    EnterCriticalSection(&pM->m_csWindowCreate);
 
     for(ppData = &pM->m_pCreateWndList; *ppData!=NULL; ppData = &(*ppData)->m_pNext)
     {
@@ -476,10 +473,172 @@ void* WINAPI AtlModuleExtractCreateWndData(_ATL_MODULEW *pM)
         {
             _AtlCreateWndData *pData = *ppData;
             *ppData = pData->m_pNext;
-            return pData->m_pThis;
+            ret = pData->m_pThis;
+            break;
         }
     }
-    return NULL;
+
+    LeaveCriticalSection(&pM->m_csWindowCreate);
+    return ret;
+}
+
+/***********************************************************************
+ *           AtlModuleUpdateRegistryFromResourceD         [ATL.@]
+ *
+ */
+HRESULT WINAPI AtlModuleUpdateRegistryFromResourceD(_ATL_MODULEW* pM, LPCOLESTR lpszRes,
+        BOOL bRegister, struct _ATL_REGMAP_ENTRY* pMapEntries, IRegistrar* pReg)
+{
+    TRACE("(%p %s %d %p %p)\n", pM, debugstr_w(lpszRes), bRegister, pMapEntries, pReg);
+
+    return AtlUpdateRegistryFromResourceD(pM->m_hInst, lpszRes, bRegister, pMapEntries, pReg);
+}
+
+static HRESULT WINAPI RegistrarCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppvObject)
+{
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IClassFactory, riid)) {
+        *ppvObject = iface;
+        IClassFactory_AddRef( iface );
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI RegistrarCF_AddRef(IClassFactory *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI RegistrarCF_Release(IClassFactory *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI RegistrarCF_CreateInstance(IClassFactory *iface, LPUNKNOWN pUnkOuter,
+                                                REFIID riid, void **ppv)
+{
+    IRegistrar *registrar;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
+
+    if(pUnkOuter) {
+        *ppv = NULL;
+        return CLASS_E_NOAGGREGATION;
+    }
+
+    hres = AtlCreateRegistrar(&registrar);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IRegistrar_QueryInterface(registrar, riid, ppv);
+    IRegistrar_Release(registrar);
+    return hres;
+}
+
+static HRESULT WINAPI RegistrarCF_LockServer(IClassFactory *iface, BOOL lock)
+{
+    TRACE("(%p)->(%x)\n", iface, lock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl IRegistrarCFVtbl = {
+    RegistrarCF_QueryInterface,
+    RegistrarCF_AddRef,
+    RegistrarCF_Release,
+    RegistrarCF_CreateInstance,
+    RegistrarCF_LockServer
+};
+
+static IClassFactory RegistrarCF = { &IRegistrarCFVtbl };
+
+static HRESULT do_register_dll_server(IRegistrar *pRegistrar, LPCOLESTR wszDll,
+                                      LPCOLESTR wszId, BOOL do_register,
+                                      const struct _ATL_REGMAP_ENTRY* pMapEntries)
+{
+    IRegistrar *registrar;
+    HRESULT hres;
+    const struct _ATL_REGMAP_ENTRY *pMapEntry;
+
+    static const WCHAR wszModule[] = {'M','O','D','U','L','E',0};
+    static const WCHAR wszRegistry[] = {'R','E','G','I','S','T','R','Y',0};
+
+    if(pRegistrar) {
+        registrar = pRegistrar;
+    }else {
+        hres = AtlCreateRegistrar(&registrar);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    IRegistrar_AddReplacement(registrar, wszModule, wszDll);
+
+    for (pMapEntry = pMapEntries; pMapEntry && pMapEntry->szKey; pMapEntry++)
+        IRegistrar_AddReplacement(registrar, pMapEntry->szKey, pMapEntry->szData);
+
+    if(do_register)
+        hres = IRegistrar_ResourceRegisterSz(registrar, wszDll, wszId, wszRegistry);
+    else
+        hres = IRegistrar_ResourceUnregisterSz(registrar, wszDll, wszId, wszRegistry);
+
+    if(registrar != pRegistrar)
+        IRegistrar_Release(registrar);
+    return hres;
+}
+
+static HRESULT do_register_server(BOOL do_register)
+{
+    static const WCHAR CLSID_RegistrarW[] =
+            {'C','L','S','I','D','_','R','e','g','i','s','t','r','a','r',0};
+    static const WCHAR atl_dllW[] = {'a','t','l','.','d','l','l',0};
+
+    WCHAR clsid_str[40];
+    const struct _ATL_REGMAP_ENTRY reg_map[] = {{CLSID_RegistrarW, clsid_str}, {NULL,NULL}};
+
+    StringFromGUID2(&CLSID_Registrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
+    return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
+}
+
+/**************************************************************
+ * DllGetClassObject (ATL.2)
+ */
+HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID riid, LPVOID *ppvObject)
+{
+    TRACE("(%s %s %p)\n", debugstr_guid(clsid), debugstr_guid(riid), ppvObject);
+
+    if(IsEqualGUID(&CLSID_Registrar, clsid))
+        return IClassFactory_QueryInterface( &RegistrarCF, riid, ppvObject );
+
+    FIXME("Not supported class %s\n", debugstr_guid(clsid));
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *              DllRegisterServer (ATL.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
+    return do_register_server(TRUE);
+}
+
+/***********************************************************************
+ *              DllUnRegisterServer (ATL.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return do_register_server(FALSE);
+}
+
+/***********************************************************************
+ *              DllCanUnloadNow (ATL.@)
+ */
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_FALSE;
 }
 
 /***********************************************************************
@@ -487,5 +646,53 @@ void* WINAPI AtlModuleExtractCreateWndData(_ATL_MODULEW *pM)
  */
 DWORD WINAPI AtlGetVersion(void *pReserved)
 {
-   return 0x0300;
+   return _ATL_VER;
+}
+
+/**********************************************************************
+ * AtlAxWin class window procedure
+ */
+static LRESULT CALLBACK AtlAxWin_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam )
+{
+    if ( wMsg == WM_CREATE )
+    {
+            DWORD len = GetWindowTextLengthW( hWnd ) + 1;
+            WCHAR *ptr = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+            if (!ptr)
+                return 1;
+            GetWindowTextW( hWnd, ptr, len );
+            AtlAxCreateControlEx( ptr, hWnd, NULL, NULL, NULL, NULL, NULL );
+            HeapFree( GetProcessHeap(), 0, ptr );
+            return 0;
+    }
+    return DefWindowProcW( hWnd, wMsg, wParam, lParam );
+}
+
+BOOL WINAPI AtlAxWinInit(void)
+{
+    WNDCLASSEXW wcex;
+    const WCHAR AtlAxWin[] = {'A','t','l','A','x','W','i','n',0};
+
+    FIXME("semi-stub\n");
+
+    if ( FAILED( OleInitialize(NULL) ) )
+        return FALSE;
+
+    wcex.cbSize        = sizeof(wcex);
+    wcex.style         = CS_GLOBALCLASS;
+    wcex.cbClsExtra    = 0;
+    wcex.cbWndExtra    = 0;
+    wcex.hInstance     = GetModuleHandleW( NULL );
+    wcex.hIcon         = NULL;
+    wcex.hCursor       = NULL;
+    wcex.hbrBackground = NULL;
+    wcex.lpszMenuName  = NULL;
+    wcex.hIconSm       = 0;
+
+    wcex.lpfnWndProc   = AtlAxWin_wndproc;
+    wcex.lpszClassName = AtlAxWin;
+    if ( !RegisterClassExW( &wcex ) )
+        return FALSE;
+
+    return TRUE;
 }

@@ -14,6 +14,7 @@ list(APPEND CONSRV_SOURCE
     consrv/init.c
     consrv/lineinput.c
     consrv/settings.c
+    consrv/subsysreg.c
     consrv/condrv/coninput.c
     consrv/condrv/conoutput.c
     consrv/condrv/console.c
@@ -21,6 +22,7 @@ list(APPEND CONSRV_SOURCE
     consrv/condrv/graphics.c
     consrv/condrv/text.c
     consrv/frontends/input.c
+    consrv/frontends/gui/fullscreen.c
     consrv/frontends/gui/guiterm.c
     consrv/frontends/gui/guisettings.c
     consrv/frontends/gui/graphics.c

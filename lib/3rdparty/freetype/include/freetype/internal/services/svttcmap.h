@@ -7,7 +7,7 @@
 /*  Copyright 2003 by                                                      */
 /*  Masatake YAMATO, Redhat K.K.                                           */
 /*                                                                         */
-/*  Copyright 2003, 2008 by                                                */
+/*  Copyright 2003, 2008, 2009, 2012 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,7 +31,7 @@
 FT_BEGIN_HEADER
 
 
-#define FT_SERVICE_ID_TT_CMAP "tt-cmaps"
+#define FT_SERVICE_ID_TT_CMAP  "tt-cmaps"
 
 
   /*************************************************************************/
@@ -58,8 +58,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_CMapInfo_
   {
-    FT_ULong language;
-    FT_Long  format;
+    FT_ULong  language;
+    FT_Long   format;
 
   } TT_CMapInfo;
 
@@ -76,24 +76,25 @@ FT_BEGIN_HEADER
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_TTCMAPSREC(class_, get_cmap_info_)  \
-  static const FT_Service_TTCMapsRec class_ =                 \
-  {                                                           \
-    get_cmap_info_                                            \
+#define FT_DEFINE_SERVICE_TTCMAPSREC( class_, get_cmap_info_ )  \
+  static const FT_Service_TTCMapsRec  class_ =                  \
+  {                                                             \
+    get_cmap_info_                                              \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_TTCMAPSREC(class_, get_cmap_info_) \
-  void                                                       \
-  FT_Init_Class_##class_( FT_Library library,                \
-                          FT_Service_TTCMapsRec*  clazz)     \
-  {                                                          \
-    FT_UNUSED(library);                                      \
-    clazz->get_cmap_info = get_cmap_info_;                   \
-  } 
+#define FT_DEFINE_SERVICE_TTCMAPSREC( class_, get_cmap_info_ )  \
+  void                                                          \
+  FT_Init_Class_ ## class_( FT_Library              library,    \
+                            FT_Service_TTCMapsRec*  clazz )     \
+  {                                                             \
+    FT_UNUSED( library );                                       \
+                                                                \
+    clazz->get_cmap_info = get_cmap_info_;                      \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

@@ -13,7 +13,33 @@
 #define NDEBUG
 #include <debug.h>
 
+HFONT APIENTRY HfontCreate( IN PENUMLOGFONTEXDVW pelfw,IN ULONG cjElfw,IN LFTYPE lft,IN FLONG fl,IN PVOID pvCliData );
+
 /** Internal ******************************************************************/
+
+HFONT FASTCALL
+GreCreateFontIndirectW( LOGFONTW *lplf )
+{
+    if (lplf)
+    {
+        ENUMLOGFONTEXDVW Logfont;
+
+        RtlCopyMemory( &Logfont.elfEnumLogfontEx.elfLogFont, lplf, sizeof(LOGFONTW));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfFullName,
+                       sizeof(Logfont.elfEnumLogfontEx.elfFullName));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfStyle,
+                       sizeof(Logfont.elfEnumLogfontEx.elfStyle));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
+                       sizeof(Logfont.elfEnumLogfontEx.elfScript));
+
+        Logfont.elfDesignVector.dvNumAxes = 0;
+
+        RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
+
+        return HfontCreate((PENUMLOGFONTEXDVW)&Logfont, 0, 0, 0, NULL );
+    }
+    else return NULL;
+}
 
 DWORD
 FASTCALL
@@ -1003,6 +1029,61 @@ NtGdiGetRealizationInfo(
   return Ret;
 }
 
+
+HFONT
+APIENTRY
+HfontCreate(
+  IN PENUMLOGFONTEXDVW pelfw,
+  IN ULONG cjElfw,
+  IN LFTYPE lft,
+  IN FLONG  fl,
+  IN PVOID pvCliData )
+{
+  HFONT hNewFont;
+  PLFONT plfont;
+
+  if (!pelfw)
+  {
+      return NULL;
+  }
+
+  plfont = LFONT_AllocFontWithHandle();
+  if (!plfont)
+  {
+      return NULL;
+  }
+  hNewFont = plfont->BaseObject.hHmgr;
+
+  plfont->lft = lft;
+  plfont->fl  = fl;
+  RtlCopyMemory (&plfont->logfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+  ExInitializePushLock(&plfont->lock);
+
+  if (pelfw->elfEnumLogfontEx.elfLogFont.lfEscapement !=
+      pelfw->elfEnumLogfontEx.elfLogFont.lfOrientation)
+  {
+    /* This should really depend on whether GM_ADVANCED is set */
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+  }
+  LFONT_UnlockFont(plfont);
+
+  if (pvCliData && hNewFont)
+  {
+    // FIXME: Use GDIOBJ_InsertUserData
+    KeEnterCriticalRegion();
+    {
+       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
+       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+       Entry->UserData = pvCliData;
+    }
+    KeLeaveCriticalRegion();
+  }
+
+  return hNewFont;
+}
+
+
 HFONT
 APIENTRY
 NtGdiHfontCreate(
@@ -1013,8 +1094,6 @@ NtGdiHfontCreate(
   IN PVOID pvCliData )
 {
   ENUMLOGFONTEXDVW SafeLogfont;
-  HFONT hNewFont;
-  PLFONT plfont;
   NTSTATUS Status = STATUS_SUCCESS;
 
   /* Silence GCC warnings */
@@ -1042,40 +1121,7 @@ NtGdiHfontCreate(
       return NULL;
   }
 
-  plfont = LFONT_AllocFontWithHandle();
-  if (!plfont)
-  {
-      return NULL;
-  }
-  hNewFont = plfont->BaseObject.hHmgr;
-
-  plfont->lft = lft;
-  plfont->fl  = fl;
-  RtlCopyMemory (&plfont->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
-  ExInitializePushLock(&plfont->lock);
-
-  if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
-      SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
-  {
-    /* This should really depend on whether GM_ADVANCED is set */
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-  }
-  LFONT_UnlockFont(plfont);
-
-  if (pvCliData && hNewFont)
-  {
-    // FIXME: Use GDIOBJ_InsertUserData
-    KeEnterCriticalRegion();
-    {
-       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
-       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-       Entry->UserData = pvCliData;
-    }
-    KeLeaveCriticalRegion();
-  }
-
-  return hNewFont;
+  return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
 }
 
 

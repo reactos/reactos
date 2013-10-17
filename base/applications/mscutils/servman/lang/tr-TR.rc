@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Dizelge",            ID_VIEW_LIST
         MENUITEM "&Ayrıntılar",         ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "D&eğiştir...",        ID_VIEW_CUST, GRAYED
+        MENUITEM "&Husûsileştir...",    ID_VIEW_CUST, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
@@ -81,7 +81,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Başlıca"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -108,7 +108,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Bağımlılıklar"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |  TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -120,7 +120,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Bir Hizmet Oluşturma"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
     EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -132,7 +132,7 @@ BEGIN
     LTEXT "&Çalıştırma Yolu*:", IDC_STATIC, 10, 51, 68, 9
     LTEXT "&Açıklaması:", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "Tamam", IDOK, 126, 192, 44, 13
-    PUSHBUTTON "Vazgeç", IDCANCEL, 176, 192, 46, 13
+    PUSHBUTTON "İptal", IDCANCEL, 176, 192, 46, 13
     LTEXT "&Ek Seçenekler (Ayrıntılar için Yardım'a tıklayınız.)", IDC_STATIC, 10, 151, 134, 9
     PUSHBUTTON "&Yardım", ID_CREATE_HELP, 10, 192, 44, 13
 END
@@ -187,7 +187,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FIRSTCOLUMN "Ad"
     IDS_SECONDCOLUMN "Tanım"
@@ -196,24 +196,24 @@ BEGIN
     IDS_FITHCOLUMN "Olarak Oturum Aç"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SERVICES_STARTED "Başladı"
     IDS_SERVICES_STOPPED "Durdu"
-    IDS_SERVICES_AUTO "Kendi Kendine"
+    IDS_SERVICES_AUTO "Kendiliğinden"
     IDS_SERVICES_MAN "Elle"
     IDS_SERVICES_DIS "Devre Dışı"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_NUM_SERVICES "Hizmet Sayısı: %d"
     IDS_STOP_DEPENDS "%s durduğunda, bu hizmetler de durur:"
     IDS_NO_DEPENDS "<Bağımlılık Yok>"
-    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Lisansı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Lisansı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Lisansı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOOLTIP_PROP "Husûsiyetler"
     IDS_TOOLTIP_REFRESH "Yenile"
@@ -226,7 +226,7 @@ BEGIN
     IDS_TOOLTIP_RESTART "Hizmeti Yeniden Başlat"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PROGRESS_INFO_START  "ReactOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
     IDS_PROGRESS_INFO_STOP   "ReactOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
@@ -238,13 +238,13 @@ BEGIN
     IDS_DELETE_STOP "Hizmeti silmeden önce onu, elle durdurmalısınız."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "EK SEÇENEKLER:\r\nDİKKAT: Seçenek adı, eşittir imini de kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Ön tanımlı = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Ön tanımlı = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Ön tanımlı = normal)\r\n group= <Yükleme sırası takımı>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap Adı|Nesne Adı>\r\n       (Ön tanımlı = LocalSystem)\r\n password= <Şifre>\r\n"
+    IDS_HELP_OPTIONS "EK SEÇENEKLER:\r\nUYARI: Seçenek adı, eşittir imini de kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Öntanımlı = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Öntanımlı = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Öntanımlı = normal)\r\n group= <Yükleme sırası takımı>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap Adı|Nesne Adı>\r\n       (Öntanımlı = LocalSystem)\r\n password= <Şifre>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HINT_BLANK        " "
     IDS_HINT_EXPORT       " Şimdiki dizelgeyi, bir kütüğe aktarır."
@@ -280,7 +280,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPNAME "Hizmet Yöneticisi"
 END

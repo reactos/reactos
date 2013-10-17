@@ -23,7 +23,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - 欢迎"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -33,7 +33,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "安装 ReactOS"
     IDS_TOPICBUTTON1        "浏览 CD"
@@ -48,7 +48,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "安装 ReactOS"
     IDS_TOPICTITLE1         "浏览 CD"
@@ -63,7 +63,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "重新安装 ReactOS 或 更新你的ReactOS 。"
     IDS_TOPICDESC1          "浏览 CD 的内容。"

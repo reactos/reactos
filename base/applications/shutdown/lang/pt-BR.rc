@@ -1,7 +1,7 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 /* Dialog */
-IDD_GUI DIALOGEX DISCARDABLE 0, 0, 240, 255
+IDD_GUI DIALOGEX 0, 0, 240, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Remote Shutdown"
 FONT 8, "MS Shell Dlg"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Information and error messages */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE,  "ReactOS Shutdown Utility\n\
 \n\
@@ -79,7 +79,7 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
 END
 
 /* Remote shutdown action strings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ACTION_SHUTDOWN,                "Shutdown the system"
     IDS_ACTION_RESTART,                 "Restart the system"
@@ -87,7 +87,7 @@ BEGIN
 END
 
 /* Remote shutdown reason strings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_REASON_OTHER,                   "Other"
     IDS_REASON_HARDWARE_MAINTENANCE,    "Hardware: Maintenance"

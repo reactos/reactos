@@ -223,8 +223,8 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
         /* Release the working set lock */
         MiUnlockProcessWorkingSetForFault(CurrentProcess,
                                           CurrentThread,
-                                          WsSafe,
-                                          WsShared);
+                                          &WsSafe,
+                                          &WsShared);
 
         /* Fault it in */
         Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
@@ -883,7 +883,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                 //
                 // Return the error
                 //
-                return STATUS_WORKING_SET_QUOTA;
+                _SEH2_YIELD(return STATUS_WORKING_SET_QUOTA);
             }
 
             //
@@ -1533,6 +1533,26 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
     }
 
+    /* Lock the address space and make sure the process isn't already dead */
+    MmLockAddressSpace(&TargetProcess->Vm);
+    if (TargetProcess->VmDeleted)
+    {
+        /* Unlock the address space of the process */
+        MmUnlockAddressSpace(&TargetProcess->Vm);
+
+        /* Check if we were attached */
+        if (ProcessHandle != NtCurrentProcess())
+        {
+            /* Detach and dereference the process */
+            KeUnstackDetachProcess(&ApcState);
+            ObDereferenceObject(TargetProcess);
+        }
+
+        /* Bail out */
+        DPRINT1("Process is dying\n");
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
+
     /* Loop the VADs */
     ASSERT(TargetProcess->VadRoot.NumberGenericTableElements);
     if (TargetProcess->VadRoot.NumberGenericTableElements)
@@ -1609,6 +1629,9 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
             MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
         }
 
+        /* Unlock the address space of the process */
+        MmUnlockAddressSpace(&TargetProcess->Vm);
+
         /* Check if we were attached */
         if (ProcessHandle != NtCurrentProcess())
         {
@@ -1662,9 +1685,6 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     {
         MemoryInfo.Type = MEM_MAPPED;
     }
-
-    /* Lock the address space of the process */
-    MmLockAddressSpace(&TargetProcess->Vm);
 
     /* Find the memory area the specified address belongs to */
     MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
@@ -3323,7 +3343,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
             //
             // Catch illegal base address
             //
-            if (BaseAddress > MM_HIGHEST_USER_ADDRESS) return STATUS_INVALID_PARAMETER_2;
+            if (BaseAddress > MM_HIGHEST_USER_ADDRESS) _SEH2_YIELD(return STATUS_INVALID_PARAMETER_2);
 
             //
             // Catch illegal region size
@@ -3333,7 +3353,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
                 //
                 // Fail
                 //
-                return STATUS_INVALID_PARAMETER_3;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER_3);
             }
 
             //
@@ -3350,7 +3370,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
             //
             // Must have a count
             //
-            if (CapturedEntryCount == 0) return STATUS_INVALID_PARAMETER_5;
+            if (CapturedEntryCount == 0) _SEH2_YIELD(return STATUS_INVALID_PARAMETER_5);
 
             //
             // Can't be larger than the maximum
@@ -3360,7 +3380,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
                 //
                 // Fail
                 //
-                return STATUS_INVALID_PARAMETER_5;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER_5);
             }
 
             //
@@ -4095,7 +4115,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // Make sure this is an ARM3 section
     //
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
+    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    {
+        DPRINT1("Illegal commit of non-ARM3 section!\n");
+        Status = STATUS_ALREADY_COMMITTED;
+        goto FailPath;
+    }
 
     // Is this a previously reserved section being committed? If so, enter the
     // special section path

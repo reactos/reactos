@@ -1,0 +1,10 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded,   """%s"" kitaplığı yüklenemedi."
+    IDS_MissingEntry,   "%s giriş noktası %s içinde bulunamadı."
+END

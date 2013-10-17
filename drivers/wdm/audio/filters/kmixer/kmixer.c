@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/wdm/audio/filters/kmixer/kmixer.c
  * PURPOSE:         main entry point
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "kmixer.h"

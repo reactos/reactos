@@ -78,7 +78,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT       "",                IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT                       IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -105,7 +105,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Dependențe"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL  "",     IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL  "",     IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -117,7 +117,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Creare serviciu"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT         IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT         IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -184,7 +184,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN   "Nume"
   IDS_SECONDCOLUMN  "Descriere"
@@ -193,7 +193,7 @@ BEGIN
   IDS_FITHCOLUMN    "Autentificare ca"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED  "Pornit"
   IDS_SERVICES_STOPPED  "Oprit"
@@ -202,7 +202,7 @@ BEGIN
   IDS_SERVICES_DIS      "Inactivă"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES  "Nr. servicii: %d"
   IDS_STOP_DEPENDS  "Dacă %s se oprește aceste procese se vor opri de asemenea."
@@ -210,7 +210,7 @@ BEGIN
   IDS_LICENSE       "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP     "Proprietăți"
   IDS_TOOLTIP_REFRESH  "Împrospătare"
@@ -223,7 +223,7 @@ BEGIN
   IDS_TOOLTIP_RESTART  "Repornește serviciul"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START   "Se încearcă pornirea următorului serviciu"
   IDS_PROGRESS_INFO_STOP    "Se încearcă oprirea următorului serviciu"
@@ -235,13 +235,13 @@ BEGIN
   IDS_DELETE_STOP           "Este necesară oprirea manuală a serviciului înainte de a-l eliminăra!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "OPȚIUNI DE CREARE:\r\nNOTĂ: Numele opțiunii include semnul de egalitate.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (implicit = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (implicit = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (implicit = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separate de / (simbolul „solidus”))>\r\n obj= <AccountName|ObjectName>\r\n       (implicit = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Exportă lista curentă într-un fișier."
@@ -277,7 +277,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "Gestionar de servicii"
 END

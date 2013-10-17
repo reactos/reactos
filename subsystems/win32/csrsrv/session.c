@@ -289,7 +289,17 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     CsrThread->Flags = 0;
 
     /* Insert it into the Process List */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrDeallocateProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+
+        /* Strange as it seems, NTSTATUSes are actually returned */
+        return (BOOLEAN)Status;
+    }
 
     /* Setup Process Data */
     CsrProcess->ClientId = CreateSession->ProcessInfo.ClientId;
@@ -433,7 +443,7 @@ CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message)
     /* Accept the connection */
     Status = NtAcceptConnectPort(&hPort,
                                  NULL,
-                                 (PPORT_MESSAGE)Message,
+                                 &Message->h,
                                  TRUE,
                                  NULL,
                                  &RemotePortView);

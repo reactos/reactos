@@ -2038,6 +2038,9 @@ QISearch(
   _In_ REFIID riid,
   _Outptr_ void **ppv);
 
+#define OFFSETOFCLASS(base, derived) \
+    ((DWORD)(DWORD_PTR)(static_cast<base*>((derived*)8))-8)
+
 #include <poppack.h> 
 
 #ifdef __cplusplus

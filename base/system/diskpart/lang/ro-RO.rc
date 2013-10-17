@@ -13,7 +13,7 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Basic application information */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_HEADER, "ReactOS DiskPart"
     IDS_APP_USAGE, "Interpretor pentru partiționare discuri.\n\nUtilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
@@ -27,7 +27,7 @@ BEGIN
 END
 
 /* Disk Information Labels */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DETAIL_INFO_DISK_ID,         "Disc"
     IDS_DETAIL_INFO_TYPE,            "Tip"
@@ -46,7 +46,7 @@ BEGIN
 END
 
 /* Detail header titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_DISK_HEAD    "Disc ###  Stare\tDimensiune\tLiber\tDyn\tGpt\n"
     IDS_LIST_DISK_LINE    "--------  ------\t----\t----\t---\t---\n"
@@ -54,7 +54,7 @@ BEGIN
 END
 
 /* Disk Status */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_STATUS_YES			"Da"
     IDS_STATUS_NO			"Nu"
@@ -67,7 +67,7 @@ BEGIN
 END
 
 /* CMD Messages for commands */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_MSG_CURRENT_DSK_STATUS		" a devenit discul curent."
     IDS_MSG_NO_DISK					"Momentan nici un disc nu este selectat.\nAlegeți un disc apoi reîncercați."
@@ -76,7 +76,7 @@ END
 
 
 /* Help Command Descripions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DESC_ACTIVE        "ACTIVE\t\t- Desemnează ca activă partiția selectată.\n"
     IDS_HELP_CMD_DESC_ADD           "ADD\t\t- Adaugă o oglindă la un volum simplu.\n"
@@ -119,7 +119,7 @@ BEGIN
 END
 
 /* Common Error Messages */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Eroare la deschiderea fișierului script: %s\n"
     IDS_ERROR_MSG_BAD_ARG   "Eroare la prelucrarea argumentului: %s\n"
@@ -128,77 +128,77 @@ END
 
 
 /* Active help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ACTIVE "\n\
 <Adăugare manual pentru comanda «active»>\n\n"
 END
 
 /* Add help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ADD "\n\
 <Adăugare manual pentru comanda «add»>\n\n"
 END
 
 /* Assign help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ASSIGN "\n\
 <Adăugare manual pentru comanda «assign»>\n\n"
 END
 
 /* Attach help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTACH "\n\
 <Adăugare manual pentru comanda «attach»>\n\n"
 END
 
 /* Attributes Command Messages */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTRIBUTES "\n\
 <Adăugare manual pentru comanda «attributes»>\n\n"
 END
 
 /* Automount help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_AUTOMOUNT "\n\
 <Adăugare manual pentru comanda «automount»>\n\n"
 END
 
 /* Break help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_BREAK "\n\
 <Adăugare manual pentru comanda «break»>\n\n"
 END
 
 /* Clean help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CLEAN "\n\
 <Adăugare manual pentru comanda «clean»>\n\n"
 END
 
 /* Compact help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_COMPACT "\n\
 <Adăugare manual pentru comanda «compact»>\n\n"
 END
 
 /* Convert help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CONVERT "\n\
 <Adăugare manual pentru comanda «convert»>\n\n"
 END
 
 /* Convert help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CREATE "\n\
 <Adăugare manual pentru comanda «create»>\n\n"
@@ -206,175 +206,175 @@ END
 
 
 /* Delete help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DELETE "\n\
 <Adăugare manual pentru comanda «delete»>\n\n"
 END
 
 /* Delete help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETAIL "\n\
 <Adăugare manual pentru comanda «detail»>\n\n"
 END
 
 /* Detach help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETACH "\n\
 <Adăugare manual pentru comanda «detach»>\n\n"
 END
 
 /* Expand help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXPAND "\n\
 <Adăugare manual pentru comanda «expand»>\n\n"
 END
 
 /* Extend help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXTEND "\n\
 <Adăugare manual pentru comanda «extend»>\n\n"
 END
 
 /* Filesystems help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FILESYSTEMS "\n\
 <Adăugare manual pentru comanda «filesystems»>\n\n"
 END
 
 /* Format help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FORMAT "\n\
 <Adăugare manual pentru comanda «format»>\n\n"
 END
 
 /* GPT help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_GPT "\n\
 <Adăugare manual pentru comanda «gpt»>\n\n"
 END
 
 /* Help help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_HELP "\n\
 <Adăugare manual pentru comanda «help»>\n\n"
 END
 
 /* Import help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_IMPORT "\n\
 <Adăugare manual pentru comanda «import»>\n\n"
 END
 
 /* Inactive help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_INACTIVE "\n\
 <Adăugare manual pentru comanda «inactive»>\n\n"
 END
 
 /* List help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_LIST "\n\
 <Adăugare manual pentru comanda «list»>\n\n"
 END
 
 /* Merge help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_MERGE "\n\
 <Adăugare manual pentru comanda «merge»>\n\n"
 END
 
 /* Offline help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_OFFLINE "\n\
 <Adăugare manual pentru comanda «OFFLINE»>\n\n"
 END
 
 /* Online help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ONLINE "\n\
 <Adăugare manual pentru comanda «ONLINE»>\n\n"
 END
 
 /* Recover help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RECOVER "\n\
 <Adăugare manual pentru comanda «RECOVER»>\n\n"
 END
 
 /* Remove help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REMOVE "\n\
 <Adăugare manual pentru comanda «REMOVE»>\n\n"
 END
 
 /* Repair help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REPAIR "\n\
 <Adăugare manual pentru comanda «REPAIR»>\n\n"
 END
 
 /* Rescan help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RESCAN "\n\
 <Adăugare manual pentru comanda «RESCAN»>\n\n"
 END
 
 /* Retain help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RETAIN "\n\
 <Adăugare manual pentru comanda «RETAIN»>\n\n"
 END
 
 /* San help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SAN "\n\
 <Adăugare manual pentru comanda «SAN»>\n\n"
 END
 
 /* Select help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SELECT "\n\
 <Adăugare manual pentru comanda «SELECT»>\n\n"
 END
 
 /* Setid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SETID "\n\
 <Adăugare manual pentru comanda «SETID»>\n\n"
 END
 
 /* Setid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SHRINK "\n\
 <Adăugare manual pentru comanda «SHRINK»>\n\n"
 END
 
 /* Uniqueid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_UNIQUEID "\n\
 <Adăugare manual pentru comanda «UNIQUEID»>\n\n"

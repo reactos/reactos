@@ -4,7 +4,7 @@
  * FILE:            dll/directx/ksproxy/cvpconfig.cpp
  * PURPOSE:         IVPConfig interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

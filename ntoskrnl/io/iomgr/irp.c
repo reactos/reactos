@@ -591,9 +591,7 @@ IoAllocateIrp(IN CCHAR StackSize,
         /* Check if we should charge quota */
         if (ChargeQuota)
         {
-            /* Irp = ExAllocatePoolWithQuotaTag(NonPagedPool, Size, TAG_IRP); */
-            /* FIXME */
-            Irp = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_IRP);
+            Irp = ExAllocatePoolWithQuotaTag(NonPagedPool, Size, TAG_IRP);
         }
         else
         {

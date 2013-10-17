@@ -9,10 +9,9 @@ list(APPEND SOURCE
     mciavi.c
     mmoutput.c
     wnd.c
-    mciavi_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mciavi32.def)
 
-add_library(mciavi32 SHARED ${SOURCE})
+add_library(mciavi32 SHARED ${SOURCE} mciavi_res.rc)
 set_module_type(mciavi32 win32dll)
 target_link_libraries(mciavi32 wine)
 add_importlibs(mciavi32 msvfw32 winmm user32 gdi32 msvcrt kernel32 ntdll)

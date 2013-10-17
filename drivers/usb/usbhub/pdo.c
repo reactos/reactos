@@ -237,22 +237,22 @@ USBHUB_PdoHandleInternalDeviceControl(
                 // Debugging only
                 //
                 case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
-                    DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE\n");
+                    DPRINT("URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE\n");
                     break;
                 case URB_FUNCTION_CLASS_DEVICE:
-                    DPRINT1("URB_FUNCTION_CLASS_DEVICE\n");
+                    DPRINT("URB_FUNCTION_CLASS_DEVICE\n");
                     break;
                 case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
-                    DPRINT1("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
+                    DPRINT("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
                     break;
                 case URB_FUNCTION_SELECT_CONFIGURATION:
-                    DPRINT1("URB_FUNCTION_SELECT_CONFIGURATION\n");
+                    DPRINT("URB_FUNCTION_SELECT_CONFIGURATION\n");
                     break;
                 case URB_FUNCTION_SELECT_INTERFACE:
-                    DPRINT1("URB_FUNCTION_SELECT_INTERFACE\n");
+                    DPRINT("URB_FUNCTION_SELECT_INTERFACE\n");
                     break;
                 case URB_FUNCTION_CLASS_OTHER:
-                    DPRINT1("URB_FUNCTION_CLASS_OTHER\n");
+                    DPRINT("URB_FUNCTION_CLASS_OTHER\n");
                     break;
                 case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
                 {
@@ -273,7 +273,7 @@ USBHUB_PdoHandleInternalDeviceControl(
 
                 }
                 case URB_FUNCTION_CLASS_INTERFACE:
-                    DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
+                    DPRINT("URB_FUNCTION_CLASS_INTERFACE\n");
                     break;
                 case URB_FUNCTION_VENDOR_DEVICE:
                     DPRINT("URB_FUNCTION_VENDOR_DEVICE\n");

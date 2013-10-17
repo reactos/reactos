@@ -16,9 +16,10 @@ IntGetProp(PWND Window, ATOM Atom)
 {
    PLIST_ENTRY ListEntry;
    PPROPERTY Property;
+   int i;
 
    ListEntry = Window->PropListHead.Flink;
-   while (ListEntry != &Window->PropListHead)
+   for (i = 0; i < Window->PropListItems; i++ )
    {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
       if (Property->Atom == Atom)
@@ -28,6 +29,15 @@ IntGetProp(PWND Window, ATOM Atom)
       ListEntry = ListEntry->Flink;
    }
    return(NULL);
+}
+
+HANDLE
+FASTCALL
+UserGetProp(PWND pWnd, ATOM Atom)
+{
+  PPROPERTY Prop;
+  Prop = IntGetProp(pWnd, Atom);
+  return Prop ? Prop->Data : NULL;
 }
 
 BOOL FASTCALL
@@ -67,6 +77,25 @@ IntSetProp(PWND pWnd, ATOM Atom, HANDLE Data)
 
    Prop->Data = Data;
    return TRUE;
+}
+
+VOID FASTCALL
+IntRemoveWindowProp(PWND Window)
+{
+   PLIST_ENTRY ListEntry;
+   PPROPERTY Property;
+   int i, Count = Window->PropListItems;
+
+   ListEntry = Window->PropListHead.Flink;
+   for (i = 0; i < Count; i++ )
+   {
+      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      ListEntry = ListEntry->Flink;
+      RemoveEntryList(&Property->PropListEntry);
+      UserHeapFree(Property);
+      Window->PropListItems--;
+   }
+   return;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -174,7 +203,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
    RETURN(Data);
 
 CLEANUP:
-   TRACE("Leave NtUserRemoveProp, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRemoveProp, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }

@@ -69,8 +69,8 @@ static HRESULT WINAPI ITS_IMonikerImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IMoniker_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 
@@ -358,7 +358,7 @@ static HRESULT ITS_IMoniker_create( IMoniker **ppObj, LPCWSTR name, DWORD n )
     DWORD sz;
 
     /* szFile[1] has space for one character already */
-    sz = sizeof(ITS_IMonikerImpl) + strlenW( name )*sizeof(WCHAR);
+    sz = FIELD_OFFSET( ITS_IMonikerImpl, szFile[strlenW( name ) + 1] );
 
     itsmon = HeapAlloc( GetProcessHeap(), 0, sz );
     itsmon->IMoniker_iface.lpVtbl = &ITS_IMonikerImpl_Vtbl;
@@ -399,8 +399,8 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IParseDisplayName_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 

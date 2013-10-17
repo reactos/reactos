@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "用法：ping [-t] [-n 次数] [-l 大小] [-w 超时] 目标主机\n\n\
 选项：\n\

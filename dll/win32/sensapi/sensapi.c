@@ -46,28 +46,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(sensapi);
 
-static HMODULE SENSAPI_hModule;
-
-BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-        {
-            DisableThreadLibraryCalls(hinstDLL);
-            SENSAPI_hModule = hinstDLL;
-            break;
-        }
-        case DLL_PROCESS_DETACH:
-        {
-            break;
-        }
-    }
-
-    return TRUE;
-}
-
 BOOL WINAPI IsDestinationReachableA(LPCSTR lpszDestination, LPQOCINFO lpQOCInfo)
 {
     FIXME("%s,%p\n", lpszDestination, lpQOCInfo);

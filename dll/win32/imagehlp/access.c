@@ -37,7 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
  */
 
 static PLOADED_IMAGE IMAGEHLP_pFirstLoadedImage=NULL;
-static PLOADED_IMAGE IMAGEHLP_pLastLoadedImage=NULL;
 
 static LOADED_IMAGE IMAGEHLP_EmptyLoadedImage = {
   NULL,       /* ModuleName */
@@ -138,9 +137,6 @@ BOOL WINAPI ImageUnload(PLOADED_IMAGE pLoadedImage)
 
   if(pCurrent->Flink)
     pCurrent->Flink->Blink = pCurrent->Blink;
-  else
-    IMAGEHLP_pLastLoadedImage = pCurrent->Blink?CONTAINING_RECORD(
-      pCurrent->Blink, LOADED_IMAGE, Links):NULL;
 
   return FALSE;
 }

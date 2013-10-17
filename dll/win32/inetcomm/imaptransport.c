@@ -54,7 +54,7 @@ static HRESULT WINAPI IMAPTransport_QueryInterface(IIMAPTransport *iface, REFIID
         IsEqualIID(riid, &IID_IIMAPTransport))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IIMAPTransport_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
@@ -447,30 +447,30 @@ HRESULT WINAPI CreateIMAPTransport(IIMAPTransport **ppTransport)
     return S_OK;
 }
 
-static HRESULT WINAPI IMAPTransportCF_QueryInterface(LPCLASSFACTORY iface,
+static HRESULT WINAPI IMAPTransportCF_QueryInterface(IClassFactory *iface,
     REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IMAPTransportCF_AddRef(LPCLASSFACTORY iface)
+static ULONG WINAPI IMAPTransportCF_AddRef(IClassFactory *iface)
 {
     return 2; /* non-heap based object */
 }
 
-static ULONG WINAPI IMAPTransportCF_Release(LPCLASSFACTORY iface)
+static ULONG WINAPI IMAPTransportCF_Release(IClassFactory *iface)
 {
     return 1; /* non-heap based object */
 }
 
-static HRESULT WINAPI IMAPTransportCF_CreateInstance(LPCLASSFACTORY iface,
+static HRESULT WINAPI IMAPTransportCF_CreateInstance(IClassFactory *iface,
     LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
@@ -493,7 +493,7 @@ static HRESULT WINAPI IMAPTransportCF_CreateInstance(LPCLASSFACTORY iface,
     return hr;
 }
 
-static HRESULT WINAPI IMAPTransportCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+static HRESULT WINAPI IMAPTransportCF_LockServer(IClassFactory *iface, BOOL fLock)
 {
     FIXME("(%d), stub!\n",fLock);
     return S_OK;

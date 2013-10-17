@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -23,7 +23,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -134,7 +134,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Iniciar"
     IDS_PROPERTIES        "P&ropriedades"
@@ -143,7 +143,7 @@ BEGIN
     IDS_STARTUP_ERROR     "O sistema não pode iniciar o explorer porque o registro está corrompido ou inacessível."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propriedades do Barra de Tarefas e Menu Iniciar"
 END

@@ -283,7 +283,7 @@ static HRESULT WINAPI ThreadMgr_QueryInterface(ITfThreadMgr *iface, REFIID iid, 
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfThreadMgr_AddRef(iface);
         return S_OK;
     }
 
@@ -426,7 +426,7 @@ static HRESULT WINAPI ThreadMgr_SetFocus( ITfThreadMgr* iface, ITfDocumentMgr *p
 
     if (!pdimFocus)
         check = NULL;
-    else if (FAILED(IUnknown_QueryInterface(pdimFocus,&IID_ITfDocumentMgr,(LPVOID*) &check)))
+    else if (FAILED(ITfDocumentMgr_QueryInterface(pdimFocus,&IID_ITfDocumentMgr,(LPVOID*) &check)))
         return E_INVALIDARG;
 
     ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, check, This->focus);
@@ -666,7 +666,7 @@ static HRESULT WINAPI ThreadMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCo
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_TMSINK)
         return E_INVALIDARG;
 
-    sink = (ThreadMgrSink*)remove_Cookie(pdwCookie);
+    sink = remove_Cookie(pdwCookie);
     if (!sink)
         return CONNECT_E_NOCONNECTION;
 
@@ -728,7 +728,7 @@ static HRESULT WINAPI KeystrokeMgr_AdviseKeyEventSink(ITfKeystrokeMgr *iface,
     if (check != NULL)
         return CONNECT_E_ADVISELIMIT;
 
-    if (FAILED(IUnknown_QueryInterface(pSink,&IID_ITfKeyEventSink,(LPVOID*) &check)))
+    if (FAILED(ITfKeyEventSink_QueryInterface(pSink,&IID_ITfKeyEventSink,(LPVOID*) &check)))
         return E_INVALIDARG;
 
     set_textservice_sink(tid, &IID_ITfKeyEventSink, (IUnknown*)check);
@@ -1337,7 +1337,7 @@ static HRESULT WINAPI EnumTfDocumentMgr_QueryInterface(IEnumTfDocumentMgrs *ifac
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        IEnumTfDocumentMgrs_AddRef(iface);
         return S_OK;
     }
 
@@ -1396,7 +1396,7 @@ static HRESULT WINAPI EnumTfDocumentMgr_Next(IEnumTfDocumentMgrs *iface,
 
 static HRESULT WINAPI EnumTfDocumentMgr_Skip( IEnumTfDocumentMgrs* iface, ULONG celt)
 {
-    INT i;
+    ULONG i;
     EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
     TRACE("(%p)\n",This);
     for(i = 0; i < celt && This->index != NULL; i++)

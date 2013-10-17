@@ -28,7 +28,7 @@
 @ stdcall DwmExtendFrameIntoClientArea(long ptr)
 @ stdcall DwmFlush()
 @ stdcall DwmGetColorizationColor(ptr long)
-@ stub DwmGetCompositionTimingInfo
+@ stdcall DwmGetCompositionTimingInfo(long ptr)
 @ stdcall DwmGetGraphicsStreamClient(long ptr)
 @ stdcall DwmGetGraphicsStreamTransformHint(long ptr)
 @ stdcall DwmGetTransportAttributes(ptr ptr ptr)

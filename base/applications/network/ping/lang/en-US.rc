@@ -1,6 +1,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n\
 Options:\n\

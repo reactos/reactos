@@ -87,7 +87,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6,6,253,225
 CAPTION "Ogólny"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -114,7 +114,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Zależności"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -126,7 +126,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Utwórz usługę"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -191,7 +191,7 @@ BEGIN
   PUSHBUTTON "&Zamknij", IDOK, 100, 70, 54, 13
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN "Nazwa"
   IDS_SECONDCOLUMN "Opis"
@@ -200,7 +200,7 @@ BEGIN
   IDS_FITHCOLUMN "Logowanie jako"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "Uruchomiono"
   IDS_SERVICES_STOPPED "Zatrzymano"
@@ -209,7 +209,7 @@ BEGIN
   IDS_SERVICES_DIS "Wyłączony"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "Numer usługi: %d"
   IDS_STOP_DEPENDS "Kiedy %s się zatrzyma, inne usługi od niej zależne również się zatrzymają"
@@ -217,7 +217,7 @@ BEGIN
   IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; możesz go rozprowadzać dalej i/lub modyfikować na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundację Wolnego Oprogramowania - według wersji 2 tej Licencji lub (według twojego wyboru) którejś z późniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnością wraz z niniejszym programem otrzymałeś też egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeśli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP "Właściwości"
   IDS_TOOLTIP_REFRESH "Odśwież"
@@ -230,7 +230,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "Wznów usługę"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS usiłuje uruchomić następującą usługę"
   IDS_PROGRESS_INFO_STOP  "ReactOS usiłuje zatrzymać następującą usługę"
@@ -242,13 +242,13 @@ BEGIN
   IDS_DELETE_STOP "Musisz ręcznie zatrzymać usługę przed jej usunięciem!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "OPCJE TWORZENIA:\r\nUWAGA: Nazwa opcji zawiera znak równości.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (domyślnie = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (domyślnie = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (domyślnie = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(oddzielone / (slash))>\r\n obj= <AccountName|ObjectName>\r\n       (domyślnie = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Eksportuj aktualną listę do pliku."
@@ -284,7 +284,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "Menedżer Usług ReactOS"
 END

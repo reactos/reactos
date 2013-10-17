@@ -11,7 +11,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 /* Basic application information */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_HEADER, "ReactOS DiskPart"
     IDS_APP_USAGE, "\nDisk Partitioning Interpreter.\n\n\
@@ -26,7 +26,7 @@ Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 END
 
 /* Disk Information Labels */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DETAIL_INFO_DISK_ID, "Disk"
     IDS_DETAIL_INFO_TYPE, "Type"
@@ -45,7 +45,7 @@ BEGIN
 END
 
 /* Detail header titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_DISK_HEAD "Disk ###  Status\tSize\tFree\tDyn\tGpt\n"
     IDS_LIST_DISK_LINE "--------  ------\t----\t----\t---\t---\n"
@@ -53,7 +53,7 @@ BEGIN
 END
 
 /* Disk Status */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_STATUS_YES			"Yes"
     IDS_STATUS_NO			"No"
@@ -66,7 +66,7 @@ BEGIN
 END
 
 /* CMD Messages for commands */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_MSG_CURRENT_DSK_STATUS		"is now the selected disk."
     IDS_MSG_NO_DISK					"There is no disk currently selected.\nPlease select a disk and try again."
@@ -75,7 +75,7 @@ END
 
 
 /* Help Command Descripions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DESC_ACTIVE        "ACTIVE\t\t- Mark the selected partition as active.\n"
     IDS_HELP_CMD_DESC_ADD           "ADD\t\t- Add a mirror to a simple volume.\n"
@@ -118,7 +118,7 @@ BEGIN
 END
 
 /* Common Error Messages */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Error opening script: %s\n"
     IDS_ERROR_MSG_BAD_ARG   "Error processing argument: %s\n"
@@ -127,252 +127,252 @@ END
 
 
 /* Active help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ACTIVE "\n\
 <Add active command help text here>\n\n"
 END
 
 /* Add help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ADD "\n\
 <Add add command help text here>\n\n"
 END
 
 /* Assign help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ASSIGN "\n\
 <Add assign command help text here>\n\n"
 END
 
 /* Attach help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTACH "\n\
 <Add attach command help text here>\n\n"
 END
 
 /* Attributes Command Messages */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTRIBUTES "\n\
 <Add attributes command help text here>\n\n"
 END
 
 /* Automount help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_AUTOMOUNT "\n\
 <Add automount command help text here>\n\n"
 END
 
 /* Break help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_BREAK "\n\
 <Add break command help text here>\n\n"
 END
 
 /* Clean help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CLEAN "\n\
 <Add clean command help text here>\n\n"
 END
 
 /* Compact help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_COMPACT "\n\
 <Add compact command help text here>\n\n"
 END
 
 /* Convert help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CONVERT "\n\
 <Add convert command help text here>\n\n"
 END
 
 /* Convert help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CREATE "\n\
 <Add create command help text here>\n\n"
 END
 
 /* Delete help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DELETE "\n\
 <Add delete command help text here>\n\n"
 END
 
 /* Delete help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETAIL "\n\
 <Add detail command help text here>\n\n"
 END
 
 /* Detach help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETACH "\n\
 <Add detach command help text here>\n\n"
 END
 
 /* Expand help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXPAND "\n\
 <Add expand command help text here>\n\n"
 END
 
 /* Extend help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXTEND "\n\
 <Add extend command help text here>\n\n"
 END
 
 /* Filesystems help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FILESYSTEMS "\n\
 <Add filesystems command help text here>\n\n"
 END
 
 /* Format help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FORMAT "\n\
 <Add format command help text here>\n\n"
 END
 
 /* GPT help description */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_GPT "\n\
 <Add gpt command help text here>\n\n"
 END
 
 /* Help help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_HELP "\n\
 <Add help command help text here>\n\n"
 END
 
 /* Import help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_IMPORT "\n\
 <Add import command help text here>\n\n"
 END
 
 /* Inactive help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_INACTIVE "\n\
 <Add inactive command help text here>\n\n"
 END
 
 /* List help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_LIST "\n\
 <Add list command help text here>\n\n"
 END
 
 /* Merge help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_MERGE "\n\
 <Add merge command help text here>\n\n"
 END
 
 /* Offline help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_OFFLINE "\n\
 <Add OFFLINE command help text here>\n\n"
 END
 
 /* Online help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ONLINE "\n\
 <Add ONLINE command help text here>\n\n"
 END
 
 /* Recover help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RECOVER "\n\
 <Add RECOVER command help text here>\n\n"
 END
 
 /* Remove help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REMOVE "\n\
 <Add REMOVE command help text here>\n\n"
 END
 
 /* Repair help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REPAIR "\n\
 <Add REPAIR command help text here>\n\n"
 END
 
 /* Rescan help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RESCAN "\n\
 <Add RESCAN command help text here>\n\n"
 END
 
 /* Retain help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RETAIN "\n\
 <Add RETAIN command help text here>\n\n"
 END
 
 /* San help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SAN "\n\
 <Add SAN command help text here>\n\n"
 END
 
 /* Select help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SELECT "\n\
 <Add SELECT command help text here>\n\n"
 END
 
 /* Setid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SETID "\n\
 <Add SETID command help text here>\n\n"
 END
 
 /* Setid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SHRINK "\n\
 <Add SHRINK command help text here>\n\n"
 END
 
 /* Uniqueid help descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_HELP_CMD_UNIQUEID "\n\
 <Add UNIQUEID command help text here>\n\n"

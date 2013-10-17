@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009 by             */
+/*  Copyright 1996-2005, 2008, 2009, 2012, 2013 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -119,10 +119,10 @@
 
     if ( !FT_FRAME_ENTER( header_length ) )
     {
-      error = T1_Err_Ok;
+      error = FT_Err_Ok;
 
       if ( ft_memcmp( stream->cursor, header_string, header_length ) != 0 )
-        error = T1_Err_Unknown_File_Format;
+        error = FT_THROW( Unknown_File_Format );
 
       FT_FRAME_EXIT();
     }
@@ -158,13 +158,13 @@
     error = check_type1_format( stream, "%!PS-AdobeFont", 14 );
     if ( error )
     {
-      if ( error != T1_Err_Unknown_File_Format )
+      if ( FT_ERR_NEQ( error, Unknown_File_Format ) )
         goto Exit;
 
       error = check_type1_format( stream, "%!FontType", 10 );
       if ( error )
       {
-        FT_TRACE2(( "[not a Type1 font]\n" ));
+        FT_TRACE2(( "  not a Type 1 font\n" ));
         goto Exit;
       }
     }
@@ -263,7 +263,7 @@
   {
     FT_Stream  stream = parser->stream;
     FT_Memory  memory = parser->root.memory;
-    FT_Error   error  = T1_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
     FT_ULong   size;
 
 
@@ -299,7 +299,7 @@
       {
         FT_ERROR(( "T1_Get_Private_Dict:"
                    " invalid private dictionary section\n" ));
-        error = T1_Err_Invalid_File_Format;
+        error = FT_THROW( Invalid_File_Format );
         goto Fail;
       }
 
@@ -313,7 +313,7 @@
         error = read_pfb_tag( stream, &tag, &size );
         if ( error || tag != 0x8002U )
         {
-          error = T1_Err_Ok;
+          error = FT_Err_Ok;
           break;
         }
 
@@ -342,7 +342,7 @@
       {
         c = cur[0];
         if ( c == 'e' && cur + 9 < limit )  /* 9 = 5 letters for `eexec' + */
-                                            /* newline + 4 chars           */
+                                            /* whitespace + 4 chars        */
         {
           if ( cur[1] == 'e' &&
                cur[2] == 'x' &&
@@ -355,7 +355,7 @@
         {
           FT_ERROR(( "T1_Get_Private_Dict:"
                      " could not find `eexec' keyword\n" ));
-          error = T1_Err_Invalid_File_Format;
+          error = FT_THROW( Invalid_File_Format );
           goto Exit;
         }
       }
@@ -364,7 +364,8 @@
       /* or string (as e.g. in u003043t.gsf from ghostscript)       */
 
       parser->root.cursor = parser->base_dict;
-      parser->root.limit  = cur + 9;
+      /* set limit to `eexec' + whitespace + 4 characters */
+      parser->root.limit  = cur + 10;
 
       cur   = parser->root.cursor;
       limit = parser->root.limit;
@@ -396,7 +397,8 @@
       parser->root.limit = parser->base_dict + parser->base_len;
 
       T1_Skip_PS_Token( parser );
-      cur = parser->root.cursor;
+      cur   = parser->root.cursor;
+      limit = parser->root.limit;
 
       /* according to the Type1 spec, the first cipher byte must not be  */
       /* an ASCII whitespace character code (blank, tab, carriage return */
@@ -404,7 +406,7 @@
       /* characters...  So skip now all whitespace character codes.      */
       while ( cur < limit       &&
               ( *cur == ' '  ||
-                *cur == '\t' || 
+                *cur == '\t' ||
                 *cur == '\r' ||
                 *cur == '\n' ) )
         ++cur;
@@ -412,11 +414,11 @@
       {
         FT_ERROR(( "T1_Get_Private_Dict:"
                    " `eexec' not properly terminated\n" ));
-        error = T1_Err_Invalid_File_Format;
+        error = FT_THROW( Invalid_File_Format );
         goto Exit;
       }
 
-      size = parser->base_len - ( cur - parser->base_dict );
+      size = (FT_ULong)( parser->base_len - ( cur - parser->base_dict ) );
 
       if ( parser->in_memory )
       {
@@ -437,11 +439,12 @@
       /* now determine whether the private dictionary is encoded in binary */
       /* or hexadecimal ASCII format -- decode it accordingly              */
 
-      /* we need to access the next 4 bytes (after the final \r following */
-      /* the `eexec' keyword); if they all are hexadecimal digits, then   */
-      /* we have a case of ASCII storage                                  */
+      /* we need to access the next 4 bytes (after the final whitespace */
+      /* following the `eexec' keyword); if they all are hexadecimal    */
+      /* digits, then we have a case of ASCII storage                   */
 
-      if ( ft_isxdigit( cur[0] ) && ft_isxdigit( cur[1] ) &&
+      if ( cur + 3 < limit                                &&
+           ft_isxdigit( cur[0] ) && ft_isxdigit( cur[1] ) &&
            ft_isxdigit( cur[2] ) && ft_isxdigit( cur[3] ) )
       {
         /* ASCII hexadecimal encoding */
@@ -466,6 +469,14 @@
 
     /* we now decrypt the encoded binary private dictionary */
     psaux->t1_decrypt( parser->private_dict, parser->private_len, 55665U );
+
+    if ( parser->private_len < 4 )
+    {
+      FT_ERROR(( "T1_Get_Private_Dict:"
+                 " invalid private dictionary section\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Fail;
+    }
 
     /* replace the four random bytes at the beginning with whitespace */
     parser->private_dict[0] = ' ';

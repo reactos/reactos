@@ -3,7 +3,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Welcome"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -13,7 +13,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "ReactOS をインストールする"
     IDS_TOPICBUTTON1        "この CD を開く"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "ReactOS をインストールする"
     IDS_TOPICTITLE1         "この CD を開く"
@@ -43,7 +43,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "コンピュータに新しく ReactOS をインストールしたり、既存の ReactOS をアップグレードします。"
     IDS_TOPICDESC1          "CD の内容を参照します。"

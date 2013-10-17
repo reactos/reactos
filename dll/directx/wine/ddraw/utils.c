@@ -30,26 +30,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static void DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf);
 
-/*****************************************************************************
- * PixelFormat_WineD3DtoDD
- *
- * Converts an wined3d format ID into a DDPIXELFORMAT structure
- *
- * Params:
- *  DDPixelFormat: Address of the structure to write the pixel format to
- *  WineD3DFormat: Source format
- *
- *****************************************************************************/
-void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id WineD3DFormat)
+void ddrawformat_from_wined3dformat(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id wined3d_format)
 {
     DWORD Size = DDPixelFormat->dwSize;
-    TRACE("Converting wined3d format %#x to DDRAW.\n", WineD3DFormat);
 
     if(Size==0) return;
 
     memset(DDPixelFormat, 0x00, Size);
     DDPixelFormat->dwSize = Size;
-    switch(WineD3DFormat)
+    switch (wined3d_format)
     {
         case WINED3DFMT_B8G8R8_UNORM:
             DDPixelFormat->dwFlags = DDPF_RGB;
@@ -247,13 +236,13 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         case WINED3DFMT_YUY2:
             DDPixelFormat->u1.dwYUVBitCount = 16;
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         case WINED3DFMT_YV12:
             DDPixelFormat->u1.dwYUVBitCount = 12;
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         case WINED3DFMT_DXT1:
@@ -265,7 +254,7 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         case WINED3DFMT_G8R8_G8B8:
         case WINED3DFMT_R8G8_B8G8:
             DDPixelFormat->dwFlags = DDPF_FOURCC;
-            DDPixelFormat->dwFourCC = WineD3DFormat;
+            DDPixelFormat->dwFourCC = wined3d_format;
             break;
 
         /* Luminance */
@@ -341,7 +330,8 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
             break;
 
         default:
-            ERR("Can't translate this Pixelformat %d\n", WineD3DFormat);
+            FIXME("Unhandled wined3d format %#x.\n", wined3d_format);
+            break;
     }
 
     if(TRACE_ON(ddraw)) {
@@ -349,20 +339,8 @@ void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_i
         DDRAW_dump_pixelformat(DDPixelFormat);
     }
 }
-/*****************************************************************************
- * PixelFormat_DD2WineD3D
- *
- * Reads a DDPIXELFORMAT structure and returns the equivalent wined3d
- * format ID.
- *
- * Params:
- *  DDPixelFormat: The source format
- *
- * Returns:
- *  The wined3d format ID equivalent to the DDraw format
- *  WINED3DFMT_UNKNOWN if a matching format wasn't found
- *****************************************************************************/
-enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
+
+enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *DDPixelFormat)
 {
     TRACE("Convert a DirectDraw Pixelformat to a WineD3D Pixelformat\n");
     if(TRACE_ON(ddraw))

@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Parametrai"
     BEGIN
@@ -19,7 +19,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Garso valdiklis"
     IDS_NOMIXERDEVICES "Šiuo metu nėra aktyvių garso maišymo įrenginių! Programa darbą baigė."

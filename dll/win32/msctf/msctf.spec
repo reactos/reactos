@@ -12,7 +12,7 @@
 @ stub TF_CreateCicLoadMutex
 @ stub TF_CreateDisplayAttributeMgr
 @ stdcall TF_CreateInputProcessorProfiles(ptr)
-@ stub TF_CreateLangBarItemMgr
+@ stdcall TF_CreateLangBarItemMgr(ptr)
 @ stdcall TF_CreateLangBarMgr(ptr)
 @ stdcall TF_CreateThreadMgr(ptr)
 @ stub TF_DllDetachInOther

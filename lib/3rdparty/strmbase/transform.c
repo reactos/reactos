@@ -343,8 +343,8 @@ ULONG WINAPI TransformFilterImpl_Release(IBaseFilter * iface)
         DeleteCriticalSection(&This->csReceive);
         FreeMediaType(&This->pmt);
         QualityControlImpl_Destroy(This->qcimpl);
-        CoTaskMemFree(This);
         IUnknown_Release(This->seekthru_unk);
+        CoTaskMemFree(This);
 
         return 0;
     }

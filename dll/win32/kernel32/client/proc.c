@@ -102,7 +102,7 @@ BuildSubSysCommandLine(IN LPCWSTR SubsystemName,
     /* Allocate buffer for the output string */
     Length = CommandLineString.MaximumLength + ApplicationNameString.MaximumLength + 32;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, Length);
+    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, (USHORT)Length);
     if (!Buffer)
     {
         /* Fail, no memory */
@@ -503,7 +503,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     BASE_API_MESSAGE ApiMessage;
     PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
-    DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
+    DPRINT("BasepNotifyCsrOfThread: Thread: %p, Handle %p\n",
             ClientId->UniqueThread, ThreadHandle);
 
     /* Fill out the request */
@@ -629,8 +629,14 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
-    DPRINT1("Image Name: %wZ Dll Path: %wZ current directory: %wZ, CmdLine: %wZ, Title: %wZ, Desktop: %wZ, Shell: %wZ, Runtime: %wZ\n",
-        &ImageName, &DllPath, &CurrentDirectory, &CommandLine, &Title, &Desktop, &Shell, &Runtime);
+    DPRINT("ImageName: '%wZ'\n", &ImageName);
+    DPRINT("DllPath  : '%wZ'\n", &DllPath);
+    DPRINT("CurDir   : '%wZ'\n", &CurrentDirectory);
+    DPRINT("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT("Title    : '%wZ'\n", &Title);
+    DPRINT("Desktop  : '%wZ'\n", &Desktop);
+    DPRINT("Shell    : '%wZ'\n", &Shell);
+    DPRINT("Runtime  : '%wZ'\n", &Runtime);
     Status = RtlCreateProcessParameters(&ProcessParameters,
                                         &ImageName,
                                         &DllPath,
@@ -1832,7 +1838,7 @@ GetProcessVersion(IN DWORD ProcessId)
             ProcessHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
                                         FALSE,
                                         ProcessId);
-            if (!ProcessHandle) return 0;
+            if (!ProcessHandle) _SEH2_YIELD(return 0);
 
             /* Try to find out where its PEB lives */
             Status = NtQueryInformationProcess(ProcessHandle,
@@ -2289,7 +2295,8 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SECTION_IMAGE_INFORMATION ImageInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     CLIENT_ID ClientId;
-    ULONG NoWindow, RegionSize, StackSize, ImageMachine, ErrorCode, Flags;
+    ULONG NoWindow, RegionSize, StackSize, ErrorCode, Flags;
+    USHORT ImageMachine;
     ULONG ParameterFlags, PrivilegeValue, HardErrorMode, ErrorResponse;
     ULONG_PTR ErrorParameters[2];
     BOOLEAN InJob, SaferNeeded, UseLargePages, HavePrivilege;
@@ -2376,7 +2383,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
     InJob = FALSE;
-    SkipSaferAndAppCompat = FALSE;
+    SkipSaferAndAppCompat = TRUE; // HACK for making .bat/.cmd launch working again.
     ParameterFlags = 0;
     Flags = 0;
     DebugHandle = NULL;
@@ -2462,7 +2469,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     PolicyPathPair.Nt = &SxsNtPolicyPath.String;
 #endif
 
-    DPRINT1("CreateProcessInternalW: %S %S %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
+    DPRINT("CreateProcessInternalW: %S %S %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
 
     /* Finally, set our TEB and PEB */
     Teb = NtCurrentTeb();
@@ -2570,7 +2577,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
         }
 
         /* Use the allocated size and convert */
-        UnicodeEnv.MaximumLength = RegionSize;
+        UnicodeEnv.MaximumLength = (USHORT)RegionSize;
         Status = RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
         if (!NT_SUCCESS(Status))
         {
@@ -2704,7 +2711,7 @@ StartScan:
 
         /* Now compute the final EXE path based on the name */
         SearchPath = BaseComputeProcessExePath((LPWSTR)lpApplicationName);
-        DPRINT1("Search Path: %S\n", SearchPath);
+        DPRINT("Search Path: %S\n", SearchPath);
         if (!SearchPath)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2738,7 +2745,7 @@ StartScan:
             }
         }
 
-        DPRINT1("Length: %lx Buffer: %S\n", Length, NameBuffer);
+        DPRINT("Length: %lu Buffer: %S\n", Length, NameBuffer);
 
         /* Check if there was a failure in SearchPathW */
         if ((Length) && (Length < MAX_PATH))
@@ -2866,7 +2873,7 @@ StartScan:
         SxsWin32ExePath = PathBufferString;
         PathBuffer = PathBufferString.Buffer;
         PathBufferString.Buffer = NULL;
-        DPRINT1("SxS Path: %S\n", PathBuffer);
+        DPRINT("SxS Path: %S\n", PathBuffer);
     }
 
     /* Also set the .EXE path based on the path name */
@@ -2885,7 +2892,7 @@ StartScan:
     }
 
     /* Now use the path name, and the root path, to try opening the app */
-    DPRINT1("Path: %wZ. Dir: %lx\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
+    DPRINT("Path: %wZ. Dir: %p\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
     InitializeObjectAttributes(&LocalObjectAttributes,
                                &PathName,
                                OBJ_CASE_INSENSITIVE,
@@ -2950,7 +2957,7 @@ StartScan:
                              PAGE_EXECUTE,
                              SEC_IMAGE,
                              FileHandle);
-    DPRINT1("Section status: %lx\n", Status);
+    DPRINT("Section status: %lx\n", Status);
     if (NT_SUCCESS(Status))
     {
         /* Are we running on Windows Embedded, Datacenter, Blade or Starter? */
@@ -3168,6 +3175,7 @@ StartScan:
     switch (Status)
     {
         case STATUS_INVALID_IMAGE_WIN_16:
+        {
             /* 16-bit binary. Should we use WOW or does the caller force VDM? */
             if (!(dwCreationFlags & CREATE_FORCEDOS))
             {
@@ -3302,9 +3310,12 @@ StartScan:
             }
 
             // There is no break here on purpose, so FORCEDOS drops down!
+        }
+
         case STATUS_INVALID_IMAGE_PROTECT:
         case STATUS_INVALID_IMAGE_NOT_MZ:
         case STATUS_INVALID_IMAGE_NE_FORMAT:
+        {
             /* We're launching an executable application */
             BinarySubType = BINARY_TYPE_EXE;
 
@@ -3429,7 +3440,7 @@ StartScan:
                     ((_wcsnicmp(ExtBuffer, L".bat", 4)) &&
                      (_wcsnicmp(ExtBuffer, L".cmd", 4))))
                 {
-                    DPRINT1("Invalid EXE, and not a batch or script file\n");
+                    DPRINT1("'%wZ': Invalid EXE, and not a batch or script file\n", &PathName);
                     SetLastError(ERROR_BAD_EXE_FORMAT);
                     Result = FALSE;
                     goto Quickie;
@@ -3487,21 +3498,27 @@ StartScan:
             /* We've already done all these checks, don't do them again */
             SkipSaferAndAppCompat = TRUE;
             goto AppNameRetry;
+        }
 
         case STATUS_INVALID_IMAGE_WIN_64:
+        {
             /* 64-bit binaries are not allowed to run on 32-bit ReactOS */
             DPRINT1("64-bit binary, failing\n");
             SetLastError(ERROR_EXE_MACHINE_TYPE_MISMATCH);
             Result = FALSE;
             goto Quickie;
+        }
 
         case STATUS_FILE_IS_OFFLINE:
+        {
             /* Set the correct last error for this */
             DPRINT1("File is offline, failing\n");
             SetLastError(ERROR_FILE_OFFLINE);
             break;
+        }
 
         default:
+        {
             /* Any other error, convert it to a generic Win32 error */
             if (!NT_SUCCESS(Status))
             {
@@ -3514,6 +3531,7 @@ StartScan:
             /* Otherwise, this must be success */
             ASSERT(Status == STATUS_SUCCESS);
             break;
+        }
     }
 
     /* Is this not a WOW application, but a WOW32 VDM was requested for it? */
@@ -3705,7 +3723,7 @@ StartScan:
     if (!Result)
     {
         /* It was not, bail out */
-        DPRINT1("Invalid subsystem version: %d.%d\n",
+        DPRINT1("Invalid subsystem version: %hu.%hu\n",
                 ImageInformation.SubSystemMajorVersion,
                 ImageInformation.SubSystemMinorVersion);
         SetLastError(ERROR_BAD_EXE_FORMAT);
@@ -3767,7 +3785,7 @@ StartScan:
         /* Set the length */
         RtlInitEmptyUnicodeString(&DebuggerString,
                                   DebuggerString.Buffer,
-                                  n);
+                                  (USHORT)n);
 
         /* Now perform the command line creation */
         ImageDbgStatus = RtlAppendUnicodeToString(&DebuggerString,
@@ -4640,8 +4658,8 @@ CreateProcessInternalA(HANDLE hToken,
     BOOL bRetVal;
     STARTUPINFOW StartupInfo;
 
-    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
-            "lpStartupInfo %x, lpProcessInformation %x\n",
+    DPRINT("dwCreationFlags %x, lpEnvironment %p, lpCurrentDirectory %p, "
+            "lpStartupInfo %p, lpProcessInformation %p\n",
             dwCreationFlags, lpEnvironment, lpCurrentDirectory,
             lpStartupInfo, lpProcessInformation);
 

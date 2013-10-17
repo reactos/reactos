@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for color filtering of subpixel bitmap glyphs (body).   */
 /*                                                                         */
-/*  Copyright 2006, 2008, 2009, 2010 by                                    */
+/*  Copyright 2006, 2008-2010, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,6 +17,8 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
+
 #include FT_LCD_FILTER_H
 #include FT_IMAGE_H
 #include FT_INTERNAL_OBJECTS_H
@@ -271,7 +273,7 @@
                                   unsigned char  *weights )
   {
     if ( !library || !weights )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     ft_memcpy( library->lcd_weights, weights, 5 );
 
@@ -292,7 +294,7 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     switch ( filter )
     {
@@ -339,7 +341,7 @@
 #endif
 
     default:
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
     }
 
     library->lcd_filter = filter;
@@ -356,7 +358,7 @@
     FT_UNUSED( library );
     FT_UNUSED( weights );
 
-    return FT_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
   }
 
 
@@ -367,7 +369,7 @@
     FT_UNUSED( library );
     FT_UNUSED( filter );
 
-    return FT_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
   }
 
 #endif /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */

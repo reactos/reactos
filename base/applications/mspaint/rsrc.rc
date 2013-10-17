@@ -21,6 +21,8 @@
 
 #include "icons.rc"
 
+#include <reactos/manifest_exe.rc>
+
 // UTF-8
 #pragma code_page(65001)
 #ifdef LANGUAGE_BG_BG

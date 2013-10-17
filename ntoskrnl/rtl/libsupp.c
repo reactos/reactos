@@ -229,11 +229,22 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
 {
   if(KeGetCurrentIrql() > APC_LEVEL)
   {
-    DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n", file, line, KeGetCurrentIrql());
+    DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%u)\n", file, line, KeGetCurrentIrql());
     ASSERT(FALSE);
   }
 }
 #endif
+
+VOID
+NTAPI
+RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters)
+{
+    /* Apply defaults for non-set parameters */
+    if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
+    if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
+    if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
+    if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+}
 
 VOID
 NTAPI
@@ -407,7 +418,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 #endif
 
             /* Validate them */
-            if (StackEnd <= StackBegin) return 0;
+            if (StackEnd <= StackBegin) _SEH2_YIELD(return 0);
             ProbeForRead((PVOID)StackBegin,
                          StackEnd - StackBegin,
                          sizeof(CHAR));

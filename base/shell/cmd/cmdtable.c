@@ -119,8 +119,6 @@ COMMAND cmds[] =
 
     {_T("goto"), CMD_BATCHONLY, cmd_goto},
 
-    {_T("help"), 0, CommandShowCommandsDetail},
-
 #ifdef FEATURE_HISTORY
     {_T("history"), 0, CommandHistory},
 #endif
@@ -244,7 +242,6 @@ COMMAND cmds[] =
     {NULL, 0, NULL}
 };
 
-
 VOID PrintCommandList(VOID)
 {
     LPCOMMAND cmdptr;
@@ -272,12 +269,6 @@ VOID PrintCommandList(VOID)
 
     if (y != 0)
         ConOutChar(_T('\n'));
-}
-
-VOID PrintCommandListDetail(VOID)
-{
-    ConOutResPaging(TRUE , STRING_HELP1);
-    ConOutResPaging(FALSE, STRING_HELP2);
 }
 
 /* EOF */

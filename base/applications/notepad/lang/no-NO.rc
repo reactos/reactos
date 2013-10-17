@@ -143,7 +143,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Avbryt", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Om ReactOS Notisblokk"
 FONT 8, "MS Shell Dlg"
@@ -158,12 +158,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Side &r"   /* FIXME */

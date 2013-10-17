@@ -41,60 +41,6 @@ enum param_direction
 
 typedef HRESULT (class_method)(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **);
 
-struct column
-{
-    const WCHAR *name;
-    UINT type;
-    VARTYPE vartype; /* 0 for default mapping */
-};
-
-#define TABLE_FLAG_DYNAMIC 0x00000001
-
-struct table
-{
-    const WCHAR *name;
-    UINT num_cols;
-    const struct column *columns;
-    UINT num_rows;
-    BYTE *data;
-    void (*fill)(struct table *);
-    UINT flags;
-    struct list entry;
-    LONG refs;
-};
-
-struct property
-{
-    const WCHAR *name;
-    const WCHAR *class;
-    const struct property *next;
-};
-
-struct array
-{
-    UINT count;
-    void *ptr;
-};
-
-struct field
-{
-    UINT type;
-    VARTYPE vartype; /* 0 for default mapping */
-    union
-    {
-        LONGLONG ival;
-        WCHAR *sval;
-        struct array *aval;
-    } u;
-};
-
-struct record
-{
-    UINT count;
-    struct field *fields;
-    struct table *table;
-};
-
 enum operator
 {
     OP_EQ      = 1,
@@ -140,6 +86,68 @@ struct expr
     } u;
 };
 
+struct column
+{
+    const WCHAR *name;
+    UINT type;
+    VARTYPE vartype; /* 0 for default mapping */
+};
+
+enum fill_status
+{
+    FILL_STATUS_FAILED = -1,
+    FILL_STATUS_UNFILTERED,
+    FILL_STATUS_FILTERED
+};
+
+#define TABLE_FLAG_DYNAMIC 0x00000001
+
+struct table
+{
+    const WCHAR *name;
+    UINT num_cols;
+    const struct column *columns;
+    UINT num_rows;
+    UINT num_rows_allocated;
+    BYTE *data;
+    enum fill_status (*fill)(struct table *, const struct expr *cond);
+    UINT flags;
+    struct list entry;
+    LONG refs;
+};
+
+struct property
+{
+    const WCHAR *name;
+    const WCHAR *class;
+    const struct property *next;
+};
+
+struct array
+{
+    UINT count;
+    void *ptr;
+};
+
+struct field
+{
+    UINT type;
+    VARTYPE vartype; /* 0 for default mapping */
+    union
+    {
+        LONGLONG ival;
+        WCHAR *sval;
+        struct array *aval;
+    } u;
+};
+
+struct record
+{
+    UINT count;
+    struct field *fields;
+    struct table *table;
+};
+
 struct view
 {
     const struct property *proplist;
@@ -156,6 +164,8 @@ struct query
     struct list mem;
 };
 
+struct query *create_query(void) DECLSPEC_HIDDEN;
+void free_query( struct query * ) DECLSPEC_HIDDEN;
 struct query *addref_query( struct query * ) DECLSPEC_HIDDEN;
 void release_query( struct query *query ) DECLSPEC_HIDDEN;
 HRESULT exec_query( const WCHAR *, IEnumWbemClassObject ** ) DECLSPEC_HIDDEN;
@@ -163,16 +173,20 @@ HRESULT parse_query( const WCHAR *, struct view **, struct list * ) DECLSPEC_HID
 HRESULT create_view( const struct property *, const WCHAR *, const struct expr *,
                      struct view ** ) DECLSPEC_HIDDEN;
 void destroy_view( struct view * ) DECLSPEC_HIDDEN;
+HRESULT execute_view( struct view * ) DECLSPEC_HIDDEN;
 void init_table_list( void ) DECLSPEC_HIDDEN;
 struct table *grab_table( const WCHAR * ) DECLSPEC_HIDDEN;
 struct table *addref_table( struct table * ) DECLSPEC_HIDDEN;
 void release_table( struct table * ) DECLSPEC_HIDDEN;
-struct table *create_table( const WCHAR *, UINT, const struct column *, UINT,
-                            BYTE *, void (*)(struct table *)) DECLSPEC_HIDDEN;
+struct table *create_table( const WCHAR *, UINT, const struct column *, UINT, UINT, BYTE *,
+                            enum fill_status (*)(struct table *, const struct expr *) ) DECLSPEC_HIDDEN;
 BOOL add_table( struct table * ) DECLSPEC_HIDDEN;
 void free_columns( struct column *, UINT ) DECLSPEC_HIDDEN;
+void free_row_values( const struct table *, UINT ) DECLSPEC_HIDDEN;
+void clear_table( struct table * ) DECLSPEC_HIDDEN;
 void free_table( struct table * ) DECLSPEC_HIDDEN;
 UINT get_type_size( CIMTYPE ) DECLSPEC_HIDDEN;
+HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG * ) DECLSPEC_HIDDEN;
 HRESULT get_column_index( const struct table *, const WCHAR *, UINT * ) DECLSPEC_HIDDEN;
 HRESULT get_value( const struct table *, UINT, UINT, LONGLONG * ) DECLSPEC_HIDDEN;
 BSTR get_value_bstr( const struct table *, UINT, UINT ) DECLSPEC_HIDDEN;

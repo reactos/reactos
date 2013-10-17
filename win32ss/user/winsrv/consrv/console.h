@@ -11,12 +11,12 @@
 // FIXME: Fix compilation
 struct _CONSOLE;
 
-NTSTATUS WINAPI
+NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT struct _CONSOLE** /* PCONSOLE* */ NewConsole,
                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                   IN ULONG ConsoleLeaderProcessId);
-VOID WINAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
+VOID NTAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
 
 NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                    struct _CONSOLE** /* PCONSOLE* */ Console,

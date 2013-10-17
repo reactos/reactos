@@ -5,7 +5,7 @@
  * PURPOSE:         Win32 Console Client Alias support functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net) (welch@mcmail.com)
  *                  Christoph von Wittich (christoph_vw@reactos.org)
- *                  Johannes Anderwald (janderwald@reactos.org)
+ *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/

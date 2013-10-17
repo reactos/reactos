@@ -1,5 +1,5 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdlinje]] dllnavn\n\

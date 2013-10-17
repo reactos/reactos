@@ -47,7 +47,7 @@
 #endif
 
 /* use LoadString */
-static const WCHAR wszAppTitle[] = {'W','i','n','e',' ','W','o','r','d','p','a','d',0};
+static const WCHAR wszAppTitle[] = {'W','o','r','d','p','a','d',0};
 
 static const WCHAR wszMainWndClass[] = {'W','O','R','D','P','A','D','T','O','P',0};
 

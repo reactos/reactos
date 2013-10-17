@@ -72,7 +72,7 @@ static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
     Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, TAG_TABLE);
-    DPRINT("LockAllocate(%d) => %p\n", Bytes, Result);
+    DPRINT("LockAllocate(%lu) => %p\n", Bytes, Result);
     return Result;
 }
 
@@ -347,7 +347,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     ULARGE_INTEGER UnsignedStart;
     ULARGE_INTEGER UnsignedEnd;
     
-    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x, FailImmediately %d, Exclusive %d)\n", 
+    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x, FailImmediately %u, Exclusive %u)\n", 
            &FileObject->FileName, 
            FileOffset->HighPart,
            FileOffset->LowPart, 
@@ -432,7 +432,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     {
         if (Conflict->Exclusive.FileLock.ExclusiveLock || ExclusiveLock)
         {
-            DPRINT("Conflict %08x%08x:%08x%08x Exc %d (Want Exc %d)\n",
+            DPRINT("Conflict %08x%08x:%08x%08x Exc %u (Want Exc %u)\n",
                    Conflict->Exclusive.FileLock.StartingByte.HighPart,
                    Conflict->Exclusive.FileLock.StartingByte.LowPart,
                    Conflict->Exclusive.FileLock.EndingByte.HighPart,
@@ -613,7 +613,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     }
     else
     {
-        DPRINT("Inserted new lock %wZ %08x%08x %08x%08x exclusive %d\n",
+        DPRINT("Inserted new lock %wZ %08x%08x %08x%08x exclusive %u\n",
                &FileObject->FileName,
                Conflict->Exclusive.FileLock.StartingByte.HighPart,
                Conflict->Exclusive.FileLock.StartingByte.LowPart,
@@ -868,7 +868,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         return STATUS_RANGE_NOT_LOCKED;
     }
 
-    DPRINT("Found lock entry: Exclusive %d %08x%08x:%08x%08x %wZ\n",
+    DPRINT("Found lock entry: Exclusive %u %08x%08x:%08x%08x %wZ\n",
            Entry->Exclusive.FileLock.ExclusiveLock,
            Entry->Exclusive.FileLock.StartingByte.HighPart,
            Entry->Exclusive.FileLock.StartingByte.LowPart,

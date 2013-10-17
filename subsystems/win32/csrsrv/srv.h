@@ -49,7 +49,7 @@
 #define SESSION_ROOT        L"\\Sessions"
 #define GLOBAL_ROOT         L"\\GLOBAL??"
 #define SYMLINK_NAME        L"SymbolicLink"
-#define SB_PORT_NAME        L"SbAbiPort"
+#define SB_PORT_NAME        L"SbApiPort"
 #define CSR_PORT_NAME       L"ApiPort"
 #define UNICODE_PATH_SEP    L"\\"
 

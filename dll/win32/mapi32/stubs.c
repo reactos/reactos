@@ -75,17 +75,6 @@ RTFSync(
 
 HRESULT
 WINAPI
-WrapCompressedRTFStream(
-    LPSTREAM lpCompressedRTFStream,
-    ULONG ulflags,
-    LPSTREAM *lpUncompressedRTFStream)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT
-WINAPI
 HrGetOmiProvidersFlags(
     DWORD dwUnknown1,
     DWORD dwUnknown2)

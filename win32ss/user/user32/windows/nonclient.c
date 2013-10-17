@@ -24,6 +24,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
@@ -124,18 +125,15 @@ UserGetWindowIcon(HWND hwnd)
 
    SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
-   if (!hIcon)
-      SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
-
-   if (!hIcon)
-      SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
-
-   if (!hIcon)
-      hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
-
-   if (!hIcon)
-      hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
-
+   if (!hIcon) hIcon = UserGetProp(hwnd, gpsi->atomIconSmProp);
+   if (!hIcon) hIcon = UserGetProp(hwnd, gpsi->atomIconProp);
+   if (!hIcon) hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
+   if (!hIcon) hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
+   if (!hIcon && (GetWindowLongW( hwnd, GWL_STYLE ) & DS_MODALFRAME))
+   {
+      if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
+      if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
+   }
    return hIcon;
 }
 
@@ -1035,6 +1033,14 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTBOTTOMLEFT:
         case HTBOTTOMRIGHT:
         {
+           /* Old comment:
+            * "make sure hittest fits into 0xf and doesn't overlap with HTSYSMENU"
+            * This was previously done by setting wParam=SC_SIZE + wParam - 2
+            */
+           /* But that is not what WinNT does. Instead it sends this. This
+            * is easy to differentiate from HTSYSMENU, because HTSYSMENU adds
+            * SC_MOUSEMENU into wParam.
+            */
             SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - (HTLEFT - WMSZ_LEFT), lParam);
             break;
         }
@@ -1073,25 +1079,125 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
   return(0);
 }
 
-VOID
-DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
+/***********************************************************************
+ *           NC_HandleNCRButtonDown
+ *
+ * Handle a WM_NCRBUTTONDOWN message. Called from DefWindowProc().
+ */
+LRESULT NC_HandleNCRButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam ) 
 {
-   //INT ScrollBar;
+  MSG msg;
+  INT hittest = wParam;
 
-   if ((wParam & 0xfff0) == SC_HSCROLL)
-   {
-      if ((wParam & 0x0f) != HTHSCROLL)
-         return;
-      //ScrollBar = SB_HORZ;
-   }
-   else
-   {
-      if ((wParam & 0x0f) != HTVSCROLL)
-         return;
-      //ScrollBar = SB_VERT;
-   }
+  switch (hittest)
+  {
+  case HTCAPTION:
+  case HTSYSMENU:
+      if (!GetSystemMenu( hwnd, FALSE )) break;
 
-   /* FIXME */
+      SetCapture( hwnd );
+      for (;;)
+      {
+          if (!GetMessageW( &msg, 0, WM_MOUSEFIRST, WM_MOUSELAST )) break;
+          if (CallMsgFilterW( &msg, MSGF_MAX )) continue;
+          if (msg.message == WM_RBUTTONUP)
+          {
+             hittest = DefWndNCHitTest( hwnd, msg.pt );
+             break;
+          }
+          if (hwnd != GetCapture()) return 0;
+      }
+      ReleaseCapture();
+      if (hittest == HTCAPTION || hittest == HTSYSMENU)
+      {
+         ERR("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
+         SendMessageW( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, msg.lParam );
+      }
+      break;
+  }
+  return 0;
+}
+
+/***********************************************************************
+ *           NcGetInsideRect
+ *
+ * Get the 'inside' rectangle of a window, i.e. the whole window rectangle
+ * but without the borders (if any).
+ * The rectangle is in window coordinates (for drawing with GetWindowDC()).
+ */
+static void FASTCALL
+NcGetInsideRect(HWND Wnd, RECT *Rect)
+{
+  DWORD Style;
+  DWORD ExStyle;
+
+  GetWindowRect(Wnd, Rect);
+  Rect->right = Rect->right - Rect->left;
+  Rect->left = 0;
+  Rect->bottom = Rect->bottom - Rect->top;
+  Rect->top = 0;
+
+  Style = GetWindowLongPtrW(Wnd, GWL_STYLE);
+  if (0 != (Style & WS_ICONIC))
+    {
+      return;
+    }
+
+  /* Remove frame from rectangle */
+  ExStyle = GetWindowLongPtrW(Wnd, GWL_EXSTYLE);
+  if (HAS_THICKFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXFRAME), - GetSystemMetrics(SM_CYFRAME));
+    }
+  else if (HAS_DLGFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXDLGFRAME), - GetSystemMetrics(SM_CYDLGFRAME));
+    }
+  else if (HAS_THINFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
+    }
+
+  /* We have additional border information if the window
+   * is a child (but not an MDI child) */
+  if (0 != (Style & WS_CHILD)
+      && 0 == (ExStyle & WS_EX_MDICHILD))
+    {
+      if (0 != (ExStyle & WS_EX_CLIENTEDGE))
+        {
+          InflateRect(Rect, - GetSystemMetrics(SM_CXEDGE), - GetSystemMetrics(SM_CYEDGE));
+        }
+      if (0 != (ExStyle & WS_EX_STATICEDGE))
+        {
+          InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
+        }
+    }
+}
+
+/***********************************************************************
+ *           NcGetSysPopupPos
+ */
+void FASTCALL
+NcGetSysPopupPos(HWND Wnd, RECT *Rect)
+{
+  RECT WindowRect;
+
+  if (IsIconic(Wnd))
+    {
+      GetWindowRect(Wnd, Rect);
+    }
+  else
+    {
+      NcGetInsideRect(Wnd, Rect);
+      GetWindowRect(Wnd, &WindowRect);
+      OffsetRect(Rect, WindowRect.left, WindowRect.top);
+      if (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_CHILD))
+        {
+          ClientToScreen(GetParent(Wnd), (POINT *) Rect);
+        }
+      Rect->right = Rect->left + GetSystemMetrics(SM_CYCAPTION) - 1;
+      Rect->bottom = Rect->top + GetSystemMetrics(SM_CYCAPTION) - 1;
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -1250,86 +1356,4 @@ DrawCaptionTempA(
     HeapFree(GetProcessHeap(), 0, strW);
   }
   return ret;
-}
-
-/***********************************************************************
- *           NcGetInsideRect
- *
- * Get the 'inside' rectangle of a window, i.e. the whole window rectangle
- * but without the borders (if any).
- * The rectangle is in window coordinates (for drawing with GetWindowDC()).
- */
-static void FASTCALL
-NcGetInsideRect(HWND Wnd, RECT *Rect)
-{
-  DWORD Style;
-  DWORD ExStyle;
-
-  GetWindowRect(Wnd, Rect);
-  Rect->right = Rect->right - Rect->left;
-  Rect->left = 0;
-  Rect->bottom = Rect->bottom - Rect->top;
-  Rect->top = 0;
-
-  Style = GetWindowLongPtrW(Wnd, GWL_STYLE);
-  if (0 != (Style & WS_ICONIC))
-    {
-      return;
-    }
-
-  /* Remove frame from rectangle */
-  ExStyle = GetWindowLongPtrW(Wnd, GWL_EXSTYLE);
-  if (HAS_THICKFRAME(Style, ExStyle))
-    {
-      InflateRect(Rect, - GetSystemMetrics(SM_CXFRAME), - GetSystemMetrics(SM_CYFRAME));
-    }
-  else if (HAS_DLGFRAME(Style, ExStyle))
-    {
-      InflateRect(Rect, - GetSystemMetrics(SM_CXDLGFRAME), - GetSystemMetrics(SM_CYDLGFRAME));
-    }
-  else if (HAS_THINFRAME(Style, ExStyle))
-    {
-      InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
-    }
-
-  /* We have additional border information if the window
-   * is a child (but not an MDI child) */
-  if (0 != (Style & WS_CHILD)
-      && 0 == (ExStyle & WS_EX_MDICHILD))
-    {
-      if (0 != (ExStyle & WS_EX_CLIENTEDGE))
-        {
-          InflateRect(Rect, - GetSystemMetrics(SM_CXEDGE), - GetSystemMetrics(SM_CYEDGE));
-        }
-      if (0 != (ExStyle & WS_EX_STATICEDGE))
-        {
-          InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
-        }
-    }
-}
-
-/***********************************************************************
- *           NcGetSysPopupPos
- */
-void FASTCALL
-NcGetSysPopupPos(HWND Wnd, RECT *Rect)
-{
-  RECT WindowRect;
-
-  if (IsIconic(Wnd))
-    {
-      GetWindowRect(Wnd, Rect);
-    }
-  else
-    {
-      NcGetInsideRect(Wnd, Rect);
-      GetWindowRect(Wnd, &WindowRect);
-      OffsetRect(Rect, WindowRect.left, WindowRect.top);
-      if (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_CHILD))
-        {
-          ClientToScreen(GetParent(Wnd), (POINT *) Rect);
-        }
-      Rect->right = Rect->left + GetSystemMetrics(SM_CYCAPTION) - 1;
-      Rect->bottom = Rect->top + GetSystemMetrics(SM_CYCAPTION) - 1;
-    }
 }

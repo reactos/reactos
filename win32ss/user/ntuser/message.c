@@ -526,7 +526,7 @@ IdlePing(VOID)
       }
    }
 
-   TRACE("IdlePing ppi 0x%x\n",ppi);
+   TRACE("IdlePing ppi %p\n", ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       TRACE("InputIdleEvent\n");
@@ -539,7 +539,7 @@ IdlePong(VOID)
 {
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   TRACE("IdlePong ppi 0x%x\n",ppi);
+   TRACE("IdlePong ppi %p\n", ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       KeClearEvent(ppi->InputIdleEvent);
@@ -608,7 +608,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    TRACE("Internal Event Msg %p hWnd 0x%x\n",msg,pWnd->head.h);
+    TRACE("Internal Event Msg %u hWnd %p\n", msg, pWnd->head.h);
 
     switch(msg)
     {
@@ -1058,53 +1058,29 @@ co_IntGetPeekMessage( PMSG pMsg,
 }
 
 BOOL FASTCALL
-UserPostThreadMessage( DWORD idThread,
+UserPostThreadMessage( PTHREADINFO pti,
                        UINT Msg,
                        WPARAM wParam,
                        LPARAM lParam )
 {
     MSG Message;
-    PETHREAD peThread;
-    PTHREADINFO pThread;
     LARGE_INTEGER LargeTickCount;
-    NTSTATUS Status;
 
     if (is_pointer_message(Msg))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
     }
+    Message.hwnd = NULL;
+    Message.message = Msg;
+    Message.wParam = wParam;
+    Message.lParam = lParam;
+    Message.pt = gpsi->ptCursor;
 
-    Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
-
-    if( Status == STATUS_SUCCESS )
-    {
-        pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
-        if( !pThread ||
-            !pThread->MessageQueue ||
-            (pThread->TIF_flags & TIF_INCLEANUP))
-        {
-            ObDereferenceObject( peThread );
-            return FALSE;
-        }
-
-        Message.hwnd = NULL;
-        Message.message = Msg;
-        Message.wParam = wParam;
-        Message.lParam = lParam;
-        Message.pt = gpsi->ptCursor;
-
-        KeQueryTickCount(&LargeTickCount);
-        Message.time = MsqCalculateMessageTime(&LargeTickCount);
-        MsqPostMessage(pThread, &Message, FALSE, QS_POSTMESSAGE, 0);
-        ObDereferenceObject( peThread );
-        return TRUE;
-    }
-    else
-    {
-        SetLastNtError( Status );
-    }
-    return FALSE;
+    KeQueryTickCount(&LargeTickCount);
+    Message.time = MsqCalculateMessageTime(&LargeTickCount);
+    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+    return TRUE;
 }
 
 BOOL FASTCALL
@@ -1157,7 +1133,8 @@ UserPostMessage( HWND Wnd,
 
     if (!Wnd)
     {
-        return UserPostThreadMessage( PtrToInt(PsGetCurrentThreadId()),
+        pti = PsGetCurrentThreadWin32Thread();
+        return UserPostThreadMessage( pti,
                                       Msg,
                                       wParam,
                                       lParam);
@@ -1202,13 +1179,13 @@ UserPostMessage( HWND Wnd,
         pti = Window->head.pti;
         if ( pti->TIF_flags & TIF_INCLEANUP )
         {
-            ERR("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
+            ERR("Attempted to post message to window %p when the thread is in cleanup!\n", Wnd);
             return FALSE;
         }
 
         if ( Window->state & WNDS_DESTROYED )
         {
-            ERR("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
+            ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
             /* FIXME: Last error code? */
             return FALSE;
         }
@@ -1366,7 +1343,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: Last error? */
-        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN( FALSE);
     }
 
@@ -1531,7 +1508,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: last error? */
-        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN(FALSE);
     }
 
@@ -1900,7 +1877,7 @@ NtUserDragDetect(
     ULONG wDragWidth, wDragHeight;
     DECLARE_RETURN(BOOL);
 
-    TRACE("Enter NtUserDragDetect(%x)\n", hWnd);
+    TRACE("Enter NtUserDragDetect(%p)\n", hWnd);
     UserEnterExclusive();
 
     wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
@@ -1983,13 +1960,33 @@ NtUserPostThreadMessage(DWORD idThread,
                         LPARAM lParam)
 {
     BOOL ret;
+    PETHREAD peThread;
+    PTHREADINFO pThread;
+    NTSTATUS Status;
 
     UserEnterExclusive();
 
-    ret = UserPostThreadMessage( idThread, Msg, wParam, lParam);
+    Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
 
+    if ( Status == STATUS_SUCCESS )
+    {
+        pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
+        if( !pThread ||
+            !pThread->MessageQueue ||
+            (pThread->TIF_flags & TIF_INCLEANUP))
+        {
+            ObDereferenceObject( peThread );
+            goto exit;
+        }
+        ret = UserPostThreadMessage( pThread, Msg, wParam, lParam);
+        ObDereferenceObject( peThread );
+    }
+    else
+    {
+        SetLastNtError( Status );
+    }
+exit:
     UserLeave();
-
     return ret;
 }
 
@@ -2190,7 +2187,7 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     }
     else
     {
-        TRACE("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message);
+        TRACE("No Window for Translate. hwnd 0x%p Msg %u\n", SafeMsg.hwnd, SafeMsg.message);
         Ret = FALSE;
     }
     UserLeave();
@@ -2691,13 +2688,15 @@ NtUserMessageCall( HWND hWnd,
                 CWP.message = Msg;
                 CWP.wParam  = wParam;
                 CWP.lParam  = lParam;
-                TRACE("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+                TRACE("WH_CALLWNDPROC: Hook %p NextHook %p\n", Hook, NextObj);
 
                 lResult = co_IntCallHookProc( Hook->HookId,
                                               HC_ACTION,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWP,
                                               Hook->Proc,
+                                              Hook->ihmod, 
+                                              Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
             }
@@ -2715,6 +2714,8 @@ NtUserMessageCall( HWND hWnd,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWPR,
                                               Hook->Proc,
+                                              Hook->ihmod, 
+                                              Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
             }
@@ -2819,7 +2820,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
 
-    TRACE("WFII: ppi 0x%x\n",W32Process);
+    TRACE("WFII: ppi %p\n", W32Process);
     TRACE("WFII: waiting for %p\n", Handles[1] );
     do
     {

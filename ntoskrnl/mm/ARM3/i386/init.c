@@ -287,7 +287,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                   MmSizeOfNonPagedPoolInBytes);
     MmNonPagedPoolStart = (PVOID)PAGE_ALIGN(MmNonPagedPoolStart);
     NonPagedPoolExpansionVa = MmNonPagedPoolStart;
-    DPRINT("NP Pool has been tuned to: %d bytes and %d bytes\n",
+    DPRINT("NP Pool has been tuned to: %lu bytes and %lu bytes\n",
            MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
 
     //
@@ -471,7 +471,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
                            PointerPte;
     MmNumberOfSystemPtes--;
-    DPRINT("Final System PTE count: %d (%d bytes)\n",
+    DPRINT("Final System PTE count: %lu (%lu bytes)\n",
            MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
 
     //

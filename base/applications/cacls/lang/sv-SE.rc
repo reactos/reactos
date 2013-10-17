@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Visar eller ändrar rättighets-kontroll-listor (ACL) av filer\n\n\

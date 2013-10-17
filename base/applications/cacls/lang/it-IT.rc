@@ -1,6 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Visualizza o modifica le liste di controllo di accesso ai file.\n\

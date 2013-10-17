@@ -409,15 +409,55 @@ static HRESULT WINAPI HTMLDocument_get_title(IHTMLDocument2 *iface, BSTR *p)
 static HRESULT WINAPI HTMLDocument_get_scripts(IHTMLDocument2 *iface, IHTMLElementCollection **p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMHTMLCollection *nscoll = NULL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!p)
+        return E_INVALIDARG;
+
+    *p = NULL;
+
+    if(!This->doc_node->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
+
+    nsres = nsIDOMHTMLDocument_GetScripts(This->doc_node->nsdoc, &nscoll);
+    if(NS_FAILED(nsres)) {
+        ERR("GetImages failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    if(nscoll) {
+        *p = create_collection_from_htmlcol(This->doc_node, nscoll);
+        nsIDOMHTMLCollection_Release(nscoll);
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_put_designMode(IHTMLDocument2 *iface, BSTR v)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    HRESULT hres;
+
+    static const WCHAR onW[] = {'o','n',0};
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(strcmpiW(v, onW)) {
+        FIXME("Unsupported arg %s\n", debugstr_w(v));
+        return E_NOTIMPL;
+    }
+
+    hres = setup_edit_mode(This->doc_obj);
+    if(FAILED(hres))
+        return hres;
+
+    call_property_onchanged(&This->cp_container, DISPID_IHTMLDOCUMENT2_DESIGNMODE);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_get_designMode(IHTMLDocument2 *iface, BSTR *p)
@@ -696,7 +736,7 @@ static HRESULT WINAPI HTMLDocument_get_cookie(IHTMLDocument2 *iface, BSTR *p)
         return S_OK;
     }
 
-    *p = SysAllocStringLen(NULL, size-1);
+    *p = SysAllocStringLen(NULL, size/sizeof(WCHAR)-1);
     if(!*p)
         return E_OUTOFMEMORY;
 
@@ -821,6 +861,7 @@ static HRESULT WINAPI HTMLDocument_get_nameProp(IHTMLDocument2 *iface, BSTR *p)
 static HRESULT document_write(HTMLDocument *This, SAFEARRAY *psarray, BOOL ln)
 {
     VARIANT *var, tmp;
+    JSContext *jsctx;
     nsAString nsstr;
     ULONG i, argc;
     nsresult nsres;
@@ -847,6 +888,7 @@ static HRESULT document_write(HTMLDocument *This, SAFEARRAY *psarray, BOOL ln)
 
     V_VT(&tmp) = VT_EMPTY;
 
+    jsctx = get_context_from_document(This->doc_node->nsdoc);
     argc = psarray->rgsabound[0].cElements;
     for(i=0; i < argc; i++) {
         if(V_VT(var+i) == VT_BSTR) {
@@ -861,9 +903,9 @@ static HRESULT document_write(HTMLDocument *This, SAFEARRAY *psarray, BOOL ln)
         }
 
         if(!ln || i != argc-1)
-            nsres = nsIDOMHTMLDocument_Write(This->doc_node->nsdoc, &nsstr, NULL /* FIXME! */);
+            nsres = nsIDOMHTMLDocument_Write(This->doc_node->nsdoc, &nsstr, jsctx);
         else
-            nsres = nsIDOMHTMLDocument_Writeln(This->doc_node->nsdoc, &nsstr, NULL /* FIXME! */);
+            nsres = nsIDOMHTMLDocument_Writeln(This->doc_node->nsdoc, &nsstr, jsctx);
         nsAString_Finish(&nsstr);
         if(V_VT(var+i) != VT_BSTR)
             VariantClear(&tmp);
@@ -918,7 +960,8 @@ static HRESULT WINAPI HTMLDocument_open(IHTMLDocument2 *iface, BSTR url, VARIANT
        || V_VT(&features) != VT_ERROR || V_VT(&replace) != VT_ERROR)
         FIXME("unsupported args\n");
 
-    nsres = nsIDOMHTMLDocument_Open(This->doc_node->nsdoc, NULL, NULL, NULL, NULL, 0, &tmp);
+    nsres = nsIDOMHTMLDocument_Open(This->doc_node->nsdoc, NULL, NULL, NULL,
+            get_context_from_document(This->doc_node->nsdoc), 0, &tmp);
     if(NS_FAILED(nsres)) {
         ERR("Open failed: %08x\n", nsres);
         return E_FAIL;

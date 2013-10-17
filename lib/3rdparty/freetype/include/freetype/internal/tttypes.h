@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008 by             */
+/*  Copyright 1996-2002, 2004-2008, 2012-2013 by                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -309,87 +309,6 @@ FT_BEGIN_HEADER
     TT_GaspRange  gaspRanges;
 
   } TT_GaspRec;
-
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    TT_HdmxEntryRec                                                    */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A small structure used to model the pre-computed widths of a given */
-  /*    size.  They are found in the `hdmx' table.                         */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    ppem      :: The pixels per EM value at which these metrics apply. */
-  /*                                                                       */
-  /*    max_width :: The maximum advance width for this metric.            */
-  /*                                                                       */
-  /*    widths    :: An array of widths.  Note: These are 8-bit bytes.     */
-  /*                                                                       */
-  typedef struct  TT_HdmxEntryRec_
-  {
-    FT_Byte   ppem;
-    FT_Byte   max_width;
-    FT_Byte*  widths;
-
-  } TT_HdmxEntryRec, *TT_HdmxEntry;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    TT_HdmxRec                                                         */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A structure used to model the `hdmx' table, which contains         */
-  /*    pre-computed widths for a set of given sizes/dimensions.           */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    version     :: The version number.                                 */
-  /*                                                                       */
-  /*    num_records :: The number of hdmx records.                         */
-  /*                                                                       */
-  /*    records     :: An array of hdmx records.                           */
-  /*                                                                       */
-  typedef struct  TT_HdmxRec_
-  {
-    FT_UShort     version;
-    FT_Short      num_records;
-    TT_HdmxEntry  records;
-
-  } TT_HdmxRec, *TT_Hdmx;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    TT_Kern0_PairRec                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A structure used to model a kerning pair for the kerning table     */
-  /*    format 0.  The engine now loads this table if it finds one in the  */
-  /*    font file.                                                         */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    left  :: The index of the left glyph in pair.                      */
-  /*                                                                       */
-  /*    right :: The index of the right glyph in pair.                     */
-  /*                                                                       */
-  /*    value :: The kerning distance.  A positive value spaces the        */
-  /*             glyphs, a negative one makes them closer.                 */
-  /*                                                                       */
-  typedef struct  TT_Kern0_PairRec_
-  {
-    FT_UShort  left;   /* index of left  glyph in pair */
-    FT_UShort  right;  /* index of right glyph in pair */
-    FT_FWord   value;  /* kerning value                */
-
-  } TT_Kern0_PairRec, *TT_Kern0_Pair;
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   /*************************************************************************/
@@ -1269,9 +1188,6 @@ FT_BEGIN_HEADER
     TT_HoriHeader         horizontal;   /* TrueType horizontal header     */
 
     TT_MaxProfile         max_profile;
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    FT_ULong              max_components;  /* stubbed to 0 */
-#endif
 
     FT_Bool               vertical_info;
     TT_VertHeader         vertical;     /* TT Vertical header, if present */
@@ -1308,11 +1224,6 @@ FT_BEGIN_HEADER
     /*                                                                     */
     /***********************************************************************/
 
-    /* horizontal device metrics */
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    TT_HdmxRec            hdmx;
-#endif
-
     /* grid-fitting and scaling table */
     TT_GaspRec            gasp;                 /* the `gasp' table */
 
@@ -1320,11 +1231,6 @@ FT_BEGIN_HEADER
     TT_PCLT               pclt;
 
     /* embedded bitmaps support */
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    FT_ULong              num_sbit_strikes;
-    TT_SBit_Strike        sbit_strikes;
-#endif
-
     FT_ULong              num_sbit_scales;
     TT_SBit_Scale         sbit_scales;
 
@@ -1338,12 +1244,6 @@ FT_BEGIN_HEADER
     /*                                                                     */
     /***********************************************************************/
 
-    /* the glyph locations */
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    FT_UShort             num_locations_stub;
-    FT_Long*              glyph_locations_stub;
-#endif
-
     /* the font program, if any */
     FT_ULong              font_program_size;
     FT_Byte*              font_program;
@@ -1355,13 +1255,6 @@ FT_BEGIN_HEADER
     /* the original, unscaled, control value table */
     FT_ULong              cvt_size;
     FT_Short*             cvt;
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    /* the format 0 kerning table, if any */
-    FT_Int                num_kern_pairs;
-    FT_Int                kern_table_index;
-    TT_Kern0_Pair         kern_pairs;
-#endif
 
     /* A pointer to the bytecode interpreter to use.  This is also */
     /* used to hook the debugger for the `ttdebug' utility.        */
@@ -1383,11 +1276,8 @@ FT_BEGIN_HEADER
 
     const char*           postscript_name;
 
-    /* since version 2.1.8, but was originally placed after */
-    /* `glyph_locations_stub'                               */
     FT_ULong              glyf_len;
 
-    /* since version 2.1.8, but was originally placed before `extra' */
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
     FT_Bool               doblend;
     GX_Blend              blend;
@@ -1401,7 +1291,7 @@ FT_BEGIN_HEADER
     FT_Byte*              vert_metrics;
     FT_ULong              vert_metrics_size;
 
-    FT_ULong              num_locations; /* in broken TTF, gid > 0xFFFF */ 
+    FT_ULong              num_locations; /* in broken TTF, gid > 0xFFFF */
     FT_Byte*              glyph_locations;
 
     FT_Byte*              hdmx_table;
@@ -1428,6 +1318,13 @@ FT_BEGIN_HEADER
     FT_ULong              horz_metrics_offset;
     FT_ULong              vert_metrics_offset;
 
+#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+    /* since 2.4.12 */
+    FT_ULong              sph_found_func_flags; /* special functions found */
+                                                /* for this face           */
+    FT_Bool               sph_compatibility_mode;
+#endif /* TT_CONFIG_OPTION_SUBPIXEL_HINTING */
+
   } TT_FaceRec;
 
 
@@ -1443,7 +1340,7 @@ FT_BEGIN_HEADER
   /*  <Fields>                                                             */
   /*     memory       :: A handle to the memory manager.                   */
   /*                                                                       */
-  /*     max_points   :: The maximal size in points of the zone.           */
+  /*     max_points   :: The maximum size in points of the zone.           */
   /*                                                                       */
   /*     max_contours :: Max size in links contours of the zone.           */
   /*                                                                       */

@@ -92,7 +92,7 @@ DllMain(HANDLE hDll,
     ULONG DummySize = sizeof(Dummy);
     WCHAR SessionDir[256];
 
-    DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
+    DPRINT("DllMain(hInst %p, dwReason %lu)\n",
            hDll, dwReason);
 
     Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;

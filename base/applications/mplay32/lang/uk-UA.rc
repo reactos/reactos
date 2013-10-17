@@ -23,7 +23,7 @@ BEGIN
 	END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 	IDS_ALL_TYPES_FILTER "Всі підтримувані (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
 	IDS_TOOLTIP_PLAY "Відтворення"

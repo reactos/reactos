@@ -15,7 +15,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ALL_TYPES_FILTER "Tutti i tipi supportati (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
     IDS_TOOLTIP_PLAY     "Riproduci"

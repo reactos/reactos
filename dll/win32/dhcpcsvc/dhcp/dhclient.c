@@ -221,7 +221,7 @@ ServiceMain(DWORD argc, LPWSTR *argv)
 
     DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
 
-    DbgPrint("DHCPCSVC: DHCP service is starting up\n");
+    DH_DbgPrint(MID_TRACE, ("DHCPCSVC: DHCP service is starting up\n"));
 
     dispatch();
 

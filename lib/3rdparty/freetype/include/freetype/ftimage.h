@@ -5,8 +5,7 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2010, 2013 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +53,7 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    The type FT_Pos is used to store vectorial coordinates.  Depending */
   /*    on the context, these can represent distances in integer font      */
-  /*    units, or 16.16, or 26.6 fixed float pixel coordinates.            */
+  /*    units, or 16.16, or 26.6 fixed-point pixel coordinates.            */
   /*                                                                       */
   typedef signed long  FT_Pos;
 
@@ -169,6 +168,15 @@ FT_BEGIN_HEADER
   /*      times taller than the original glyph image.  See also            */
   /*      @FT_RENDER_MODE_LCD_V.                                           */
   /*                                                                       */
+  /*    FT_PIXEL_MODE_BGRA ::                                              */
+  /*      An image with four 8-bit channels per pixel, representing a      */
+  /*      color image (such as emoticons) with alpha channel.  For each    */
+  /*      pixel, the format is BGRA, which means, the blue channel comes   */
+  /*      first in memory.  The color channels are pre-multiplied and in   */
+  /*      the sRGB colorspace.  For example, full red at half-translucent  */
+  /*      opacity will be represented as `00,00,80,80', not `00,00,FF,80'. */
+  /*      See also @FT_LOAD_COLOR.                                         */
+  /*                                                                       */
   typedef enum  FT_Pixel_Mode_
   {
     FT_PIXEL_MODE_NONE = 0,
@@ -178,6 +186,7 @@ FT_BEGIN_HEADER
     FT_PIXEL_MODE_GRAY4,
     FT_PIXEL_MODE_LCD,
     FT_PIXEL_MODE_LCD_V,
+    FT_PIXEL_MODE_BGRA,
 
     FT_PIXEL_MODE_MAX      /* do not remove */
 

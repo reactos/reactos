@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "O&ptions"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Contrôle du volume"
     IDS_NOMIXERDEVICES "Il n'y a pas de périphérique de mixage disponible ! L'application va se terminer."

@@ -72,7 +72,7 @@ END
 // MOFDATA
 //
 
-MOFRESOURCE             MOFDATA MOVEABLE PURE   "BT958.bmf"
+MOFRESOURCE             MOFDATA "BT958.bmf"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -80,18 +80,18 @@ MOFRESOURCE             MOFDATA MOVEABLE PURE   "BT958.bmf"
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"

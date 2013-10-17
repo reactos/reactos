@@ -29,6 +29,8 @@ co_IntCallHookProc(INT HookId,
                 WPARAM wParam,
                 LPARAM lParam,
                 HOOKPROC Proc,
+                INT Mod,
+                ULONG_PTR offPfn,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
 
@@ -65,3 +67,7 @@ co_IntClientLoadLibrary(PUNICODE_STRING strLibName,
 BOOL
 APIENTRY
 co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs);
+
+HANDLE FASTCALL co_IntCopyImage(HANDLE,UINT,INT,INT,UINT);
+
+BOOL FASTCALL co_IntSetWndIcons(VOID);

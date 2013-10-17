@@ -107,7 +107,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Setup the connection info */
-    ConnectionInfo.Version = CSRSRV_VERSION;
+    ConnectionInfo.DebugFlags = 0;
 
     /* Create a SID for us */
     Status = RtlAllocateAndInitializeSid(&NtSidAuthority,
@@ -153,12 +153,12 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
                          (ULONG_PTR)LpcWrite.ViewBase;
 
     /* Save the Process */
-    CsrProcessId = ConnectionInfo.ProcessId;
+    CsrProcessId = ConnectionInfo.ServerProcessId;
 
     /* Save CSR Section data */
     NtCurrentPeb()->ReadOnlySharedMemoryBase = ConnectionInfo.SharedSectionBase;
     NtCurrentPeb()->ReadOnlySharedMemoryHeap = ConnectionInfo.SharedSectionHeap;
-    NtCurrentPeb()->ReadOnlyStaticServerData = ConnectionInfo.SharedSectionData;
+    NtCurrentPeb()->ReadOnlyStaticServerData = ConnectionInfo.SharedStaticServerData;
 
     /* Create the port heap */
     CsrPortHeap = RtlCreateHeap(0,
@@ -233,7 +233,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     if (InsideCsrProcess)
     {
         /* We're inside, so let's find csrsrv */
-        DPRINT1("Next-GEN CSRSS support\n");
+        DPRINT("Next-GEN CSRSS support\n");
         RtlInitUnicodeString(&CsrSrvName, L"csrsrv");
         Status = LdrGetDllHandle(NULL,
                                  NULL,
@@ -321,6 +321,33 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     return Status;
 }
 
+#if 0 
+//
+// Structures can be padded at the end, causing the size of the entire structure
+// minus the size of the last field, not to be equal to the offset of the last
+// field.
+//
+typedef struct _TEST_EMBEDDED
+{
+    ULONG One;
+    ULONG Two;
+    ULONG Three;
+} TEST_EMBEDDED;
+
+typedef struct _TEST
+{
+    PORT_MESSAGE h;
+    TEST_EMBEDDED Three;
+} TEST;
+
+C_ASSERT(sizeof(PORT_MESSAGE) == 0x18);
+C_ASSERT(FIELD_OFFSET(TEST, Three) == 0x18);
+C_ASSERT(sizeof(TEST_EMBEDDED) == 0xC);
+
+C_ASSERT(sizeof(TEST) != (sizeof(TEST_EMBEDDED) + sizeof(PORT_MESSAGE)));
+C_ASSERT((sizeof(TEST) - sizeof(TEST_EMBEDDED)) != FIELD_OFFSET(TEST, Three));
+#endif
+
 /*
  * @implemented
  */
@@ -337,10 +364,10 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
 
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength =
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength =
-        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+    ApiMessage->Header.u1.s1.TotalLength = DataLength +
+        sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+    ApiMessage->Header.u1.s1.DataLength = DataLength +
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header);// ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
@@ -429,7 +456,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     else
     {
         /* This is a server-to-server call. Save our CID and do a direct call. */
-        DPRINT1("Next gen server-to-server call\n");
+        DPRINT("Next gen server-to-server call\n");
 
         /* We check this equality inside CsrValidateMessageBuffer */
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;

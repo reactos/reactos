@@ -623,7 +623,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ObCreateObject() failed (Status %lx)\n");
+        DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
         return Status;
     }
 
@@ -1065,7 +1065,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
     PTOKEN Token;
     ULONG RequiredLength;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
@@ -2429,6 +2429,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     PACL Dacl = NULL;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
+    BOOLEAN RestoreImpersonation = FALSE;
 
     PAGED_CODE();
 
@@ -2482,7 +2483,8 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (OpenAsSelf)
     {
-        PsDisableImpersonation(PsGetCurrentThread(), &ImpersonationState);
+        RestoreImpersonation = PsDisableImpersonation(PsGetCurrentThread(),
+                                                      &ImpersonationState);
     }
 
     if (CopyOnOpen)
@@ -2533,7 +2535,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (Dacl) ExFreePoolWithTag(Dacl, TAG_TOKEN_ACL);
 
-    if (OpenAsSelf)
+    if (RestoreImpersonation)
     {
         PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
     }

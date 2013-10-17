@@ -365,7 +365,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         if (Error == FT_Err_Unknown_File_Format)
             DPRINT("Unknown font file format\n");
         else
-            DPRINT("Error reading font file (error code: %u)\n", Error);
+            DPRINT("Error reading font file (error code: %d)\n", Error);
         return 0;
     }
 
@@ -400,7 +400,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     FontGDI->face = Face;
 
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
-    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
+    DPRINT("Num glyphs: %d\n", Face->num_glyphs);
 
     /* Add this font resource to the font table */
 
@@ -1127,7 +1127,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
                         wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
                     else
                     {
-                        DPRINT1("Unknown elfscript for bit %d\n", i);
+                        DPRINT1("Unknown elfscript for bit %u\n", i);
                     }
                 }
             }
@@ -1529,7 +1529,7 @@ ftGdiGetGlyphOutline(
     FT_CharMap found = 0, charmap;
     XFORM xForm;
 
-    DPRINT("%d, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
+    DPRINT("%u, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
            cjBuf, pvBuf, pmat2);
 
     pdcattr = dc->pdcattr;
@@ -1771,7 +1771,7 @@ ftGdiGetGlyphOutline(
     gm.gmptGlyphOrigin.x = left >> 6;
     gm.gmptGlyphOrigin.y = top >> 6;
 
-    DPRINT("CX %d CY %d BBX %d BBY %d GOX %d GOY %d\n",
+    DPRINT("CX %d CY %d BBX %u BBY %u GOX %d GOY %d\n",
            gm.gmCellIncX, gm.gmCellIncY,
            gm.gmBlackBoxX, gm.gmBlackBoxY,
            gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y);
@@ -2129,11 +2129,11 @@ ftGdiGetGlyphOutline(
     }
 
     default:
-        DPRINT1("Unsupported format %d\n", iFormat);
+        DPRINT1("Unsupported format %u\n", iFormat);
         return GDI_ERROR;
     }
 
-    DPRINT("ftGdiGetGlyphOutline END and needed %d\n", needed);
+    DPRINT("ftGdiGetGlyphOutline END and needed %lu\n", needed);
     return needed;
 }
 
@@ -2211,7 +2211,7 @@ TextIntGetTextExtentPoint(PDC dc,
 							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
-        DPRINT1("Error in setting pixel sizes: %u\n", error);
+        DPRINT1("Error in setting pixel sizes: %d\n", error);
     }
 
     /* Get the DC's world-to-device transformation matrix */
@@ -2235,7 +2235,7 @@ TextIntGetTextExtentPoint(PDC dc,
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+                DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
                 break;
             }
 
@@ -2248,7 +2248,7 @@ TextIntGetTextExtentPoint(PDC dc,
                                            RenderMode);
             if (!realglyph)
             {
-                DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 break;
             }
         }
@@ -2392,7 +2392,7 @@ ftGdiGetTextCharsetInfo(
         }
     }
 Exit:
-    DPRINT("CharSet %d CodePage %d\n",csi.ciCharset, csi.ciACP);
+    DPRINT("CharSet %u CodePage %u\n", csi.ciCharset, csi.ciACP);
     return (MAKELONG(csi.ciACP, csi.ciCharset));
 }
 
@@ -3378,7 +3378,7 @@ GreExtTextOutW(
                 dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
-        DPRINT1("Error in setting pixel sizes: %u\n", error);
+        DPRINT1("Error in setting pixel sizes: %d\n", error);
         IntUnLockFreeType;
         goto fail;
     }
@@ -3442,7 +3442,7 @@ GreExtTextOutW(
                 error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
                 if (error)
                 {
-                    DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+                    DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
                 }
 
                 glyph = face->glyph;
@@ -3454,7 +3454,7 @@ GreExtTextOutW(
                                                RenderMode);
                 if (!realglyph)
                 {
-                    DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+                    DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                     IntUnLockFreeType;
                     goto fail;
                 }
@@ -3523,7 +3523,7 @@ GreExtTextOutW(
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
-                DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
+                DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
                 goto fail2;
             }
@@ -3536,7 +3536,7 @@ GreExtTextOutW(
                                            RenderMode);
             if (!realglyph)
             {
-                DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
                 goto fail2;
             }
@@ -3549,8 +3549,8 @@ GreExtTextOutW(
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft += delta.x;
         }
-        DPRINT("TextLeft: %d\n", TextLeft);
-        DPRINT("TextTop: %d\n", TextTop);
+        DPRINT("TextLeft: %I64d\n", TextLeft);
+        DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
         if (fuOptions & ETO_OPAQUE)
@@ -3655,12 +3655,12 @@ GreExtTextOutW(
         if (NULL == Dx)
         {
             TextLeft += realglyph->root.advance.x >> 10;
-             DPRINT("New TextLeft: %d\n", TextLeft);
+             DPRINT("New TextLeft: %I64d\n", TextLeft);
         }
         else
         {
             TextLeft += Dx[i<<DxShift] << 6;
-             DPRINT("New TextLeft2: %d\n", TextLeft);
+             DPRINT("New TextLeft2: %I64d\n", TextLeft);
         }
 
         if (DxShift)

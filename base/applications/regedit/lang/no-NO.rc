@@ -33,7 +33,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Fil"
     BEGIN
@@ -45,7 +45,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fil"
     BEGIN
@@ -114,7 +114,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -287,21 +287,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Navn"
     IDS_LIST_COLUMN_TYPE    "Type"
     IDS_LIST_COLUMN_DATA    "Data"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Registerredigering"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Inneholder kommandoer for å arbeide med hele registret"
     ID_EDIT_MENU            "Inneholder kommandoer for redigering av nøkler eller verdier."
@@ -311,7 +311,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Inneholder kommandoer for å opprette nye nøkler eller verdier"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Endrer verdiens data"
     ID_EDIT_NEW_KEY         "Legger til en ny nøkkel"
@@ -334,7 +334,7 @@ BEGIN
     ID_HELP_ABOUT           "Viser informasjon om program, version og opphavsrett"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Avslutter Registerredigering"
     ID_FAVOURITES_ADDTOFAVOURITES "Legger til nøkler i Favoritt-listen"
@@ -349,7 +349,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Søker etter neste forekomst av den forige søkestrengen"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Feil"
     IDS_WARNING             "Advarsel"
@@ -374,7 +374,7 @@ BEGIN
     IDS_NEW_VALUE           "Ny verdi #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(binær nullverdi)"
     IDS_DEFAULT_VALUE_NAME  "(Standard)"
@@ -388,7 +388,7 @@ BEGIN
     IDS_INVALID_DWORD       "(ugyldig DWORD-verdi)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Registration File"
     IDS_FLT_REGFILES        "Registerfiler (*.reg)"
@@ -401,7 +401,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Full tilgang"
   IDS_ACCESS_READ               "Les"
@@ -417,14 +417,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Lesetilgang"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Kun denne nøkkelen"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Denne nøkkelen og undernøkler"
   IDS_INHERIT_SUBKEYSONLY        "Kun undernøkler"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Utvid"
   IDS_COLLAPSE                   "&Minimer"
@@ -432,7 +432,7 @@ BEGIN
   IDS_FINISHEDFIND               "Søket i registret er fullført."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -440,7 +440,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
     IDS_INTERFACE                 "Interface"
@@ -461,7 +461,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Data Size"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memory"
@@ -472,7 +472,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Read / Write"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Undefined"
     IDS_BUS_INTERNAL              "Internal"
@@ -501,7 +501,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -511,7 +511,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
 FONT 8, "Ms Shell Dlg"
@@ -522,7 +522,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Legg til i Favoritter"
 FONT 8, "MS Shell Dlg"
@@ -533,7 +533,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Fjern favoritter"
 FONT 8, "MS Shell Dlg"
@@ -545,7 +545,7 @@ BEGIN
     LTEXT           "Velg favoritt(er):",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Søk"
 FONT 8, "MS Shell Dlg"
@@ -582,7 +582,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -594,7 +594,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Åpne registerredigering hjelpen."
  *    ID_HELP_ABOUT           "Vis program informasjon, versjon nummer, og enerett."

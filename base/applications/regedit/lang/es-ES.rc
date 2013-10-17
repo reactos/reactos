@@ -36,7 +36,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Archivo"
     BEGIN
@@ -48,7 +48,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Registro"
     BEGIN
@@ -117,7 +117,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -290,21 +290,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Nombre"
     IDS_LIST_COLUMN_TYPE    "Tipo"
     IDS_LIST_COLUMN_DATA    "Datos"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Editor de registro"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Contiene comandos para trabajar con el registro completo"
     ID_EDIT_MENU            "Contiene comandos para editar valores o claves"
@@ -314,7 +314,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Contiene comandos para crear nuevas claves o valores"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "Modifica los datos del valor"
     ID_EDIT_NEW_KEY         "Añade una nueva clave"
@@ -337,7 +337,7 @@ BEGIN
     ID_HELP_ABOUT           "Muestra información del programa, número de versión y derechos de autor"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "Sale del editor de registro"
     ID_FAVOURITES_ADDTOFAVOURITES "Añade claves a la lista de favoritos"
@@ -352,7 +352,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "Busca la siguiente ocurrencia del texto especificado en la búsqueda anterior"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "Error"
     IDS_WARNING             "Aviso"
@@ -377,7 +377,7 @@ BEGIN
     IDS_NEW_VALUE           "Nuevo Valor #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(valor binario de longitud cero)"
     IDS_DEFAULT_VALUE_NAME  "(Por Defecto)"
@@ -391,7 +391,7 @@ BEGIN
     IDS_INVALID_DWORD       "(valor DWORD invalido)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Fichero de Registro"
     IDS_FLT_REGFILES        "Fichero de Registro (*.reg)"
@@ -404,7 +404,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Control Total"
   IDS_ACCESS_READ               "Lectura"
@@ -420,14 +420,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Controles de Lectura"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Esta clave solamente"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Esta clave y sus subclaves"
   IDS_INHERIT_SUBKEYSONLY        "Subclaves solamente"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Expandir"
   IDS_COLLAPSE                   "&Colapsar"
@@ -435,7 +435,7 @@ BEGIN
   IDS_FINISHEDFIND               "Finalizado la busqueda del registro."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -443,7 +443,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
     IDS_INTERFACE                 "Interface"
@@ -464,7 +464,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Data Size"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memory"
@@ -475,7 +475,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Read / Write"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Undefined"
     IDS_BUS_INTERNAL              "Internal"
@@ -504,7 +504,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -514,7 +514,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,25,34,245,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
 FONT 8, "Ms Shell Dlg"
@@ -525,7 +525,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Añadir a Favoritos"
 FONT 8, "MS Shell Dlg"
@@ -536,7 +536,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Quitar favoritos"
 FONT 8, "MS Shell Dlg"
@@ -548,7 +548,7 @@ BEGIN
     LTEXT           "Seleccionar favorito(s):",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Buscar"
 FONT 8, "MS Shell Dlg"
@@ -585,7 +585,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -597,7 +597,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Abre la ayuda del Editor de registro."
  *    ID_HELP_ABOUT           "Despliega información del programa, versión y licencia."

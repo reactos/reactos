@@ -94,10 +94,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         register_clipboard_formats();
         register_messages();
         break;
-
-    case DLL_PROCESS_DETACH:
-        OLEDLG_hInstance = 0;
-        break;
     }
     return TRUE;
 }

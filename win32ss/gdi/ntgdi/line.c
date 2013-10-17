@@ -54,6 +54,21 @@ IntGdiMoveToEx(DC      *dc,
     return TRUE;
 }
 
+BOOL FASTCALL
+GreMoveTo( HDC hdc,
+           INT x,
+           INT y,
+           LPPOINT pptOut)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   return IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+}
+
 // Should use Fx in pt
 //
 VOID FASTCALL

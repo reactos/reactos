@@ -1,0 +1,15 @@
+﻿; UTF-8
+
+[Section]
+Name = Lautus UXTheme
+Version = 1.0
+License = GPLv2
+Description = Theme made specially for ReactOS. Unzip in the "ReactOS" folder, then set the themeing service to "Automatic" and start it.
+URLSite = http://www.reactos.org/forum/viewtopic.php?f=25&t=9293
+Size = 341kB
+Category = 15
+URLDownload = http://svn.reactos.org/packages/Lautus.exe
+CDPath = none
+
+[Section.0407]
+Description = Theme, der speziell für ReactOS entwickelt wird. Entpacken in das "ReactOS"-Verzeichnis, dann den Design Dienst auf "Automatisch" stellen und starten.

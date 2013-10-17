@@ -41,7 +41,7 @@ BEGIN
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_LICENSE   "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
   IDS_ABOUT     "&Informazioni su..."

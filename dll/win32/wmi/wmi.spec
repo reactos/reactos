@@ -11,12 +11,12 @@
 @ stdcall ProcessTrace(ptr long ptr ptr) advapi32.ProcessTrace
 @ stdcall QueryAllTracesA(ptr long ptr) advapi32.QueryAllTracesA
 @ stdcall QueryAllTracesW(ptr long ptr) advapi32.QueryAllTracesW
-@ stdcall RegisterTraceGuidsA(ptr ptr ptr long ptr ptr ptr ptr) advapi32.RegisterTraceGuidsA
-@ stdcall RegisterTraceGuidsW(ptr ptr ptr long ptr ptr ptr ptr) advapi32.RegisterTraceGuidsW
+@ stdcall RegisterTraceGuidsA(ptr ptr ptr long ptr str str ptr) advapi32.RegisterTraceGuidsA
+@ stdcall RegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr) advapi32.RegisterTraceGuidsW
 @ stdcall RemoveTraceCallback(ptr) advapi32.RemoveTraceCallback
 @ stdcall SetTraceCallback(ptr ptr) advapi32.SetTraceCallback
-@ stdcall StartTraceA(ptr ptr ptr) advapi32.StartTraceA
-@ stdcall StartTraceW(ptr ptr ptr) advapi32.StartTraceW
+@ stdcall StartTraceA(ptr str ptr) advapi32.StartTraceA
+@ stdcall StartTraceW(ptr wstr ptr) advapi32.StartTraceW
 @ stdcall TraceEvent(long ptr) advapi32.TraceEvent
 @ stdcall TraceEventInstance(long ptr ptr ptr) advapi32.TraceEventInstance
 @ stdcall UnregisterTraceGuids(long) advapi32.UnregisterTraceGuids

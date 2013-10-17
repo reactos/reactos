@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* menovka zväzku = volume label, drive = jednotka */
 STRING_HELP,  "Použitie: %s jednotka: [-FS:systém súborov] [-V:menovka] [-Q] [-A:veľkosť] [-C]\n\n\

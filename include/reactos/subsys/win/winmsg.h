@@ -19,15 +19,15 @@
 typedef enum _USERSRV_API_NUMBER
 {
     UserpExitWindowsEx = USERSRV_FIRST_API_NUMBER,
-    // UserpEndTask,
-    // UserpLogon,
+    UserpEndTask,
+    UserpLogon,
     UserpRegisterServicesProcess, // Not present in Win7
-    // UserpActivateDebugger,
-    // UserpGetThreadConsoleDesktop, // Not present in Win7
-    // UserpDeviceEvent,
+    UserpActivateDebugger,
+    UserpGetThreadConsoleDesktop, // Not present in Win7
+    UserpDeviceEvent,
     UserpRegisterLogonProcess,    // Not present in Win7
-    // UserpCreateSystemThreads,
-    // UserpRecordShutdownReason,
+    UserpCreateSystemThreads,
+    UserpRecordShutdownReason,
     // UserpCancelShutdown,              // Added in Vista
     // UserpConsoleHandleOperation,      // Added in Win7
     // UserpGetSetShutdownBlockReason,   // Added in Vista

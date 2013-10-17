@@ -18,8 +18,8 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
- * PURPOSE:         Input
+ * FILE:            user/user32/windows/prop.c
+ * PURPOSE:         Window Property
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
@@ -53,6 +53,7 @@ IntGetProp(HWND hWnd, ATOM Atom)
   for (i = 0; i < pWnd->PropListItems; i++ )
   {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      if (!Property) break;
       if (Property->Atom == Atom)
       {
          return(Property);
@@ -63,6 +64,14 @@ IntGetProp(HWND hWnd, ATOM Atom)
   return NULL;
 }
 
+HANDLE
+FASTCALL
+UserGetProp(HWND hWnd, ATOM Atom)
+{
+  PPROPERTY Prop;
+  Prop = IntGetProp(hWnd, Atom);
+  return Prop ? Prop->Data : NULL;
+}
 
 /* FUNCTIONS *****************************************************************/
 

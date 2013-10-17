@@ -233,7 +233,22 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
 
     hres = IBindCtx_GetRunningObjectTable(pbc, &obj_tbl);
     if(SUCCEEDED(hres)) {
-        FIXME("use running object table\n");
+        hres = IRunningObjectTable_IsRunning(obj_tbl, &This->IMoniker_iface);
+        if(hres == S_OK) {
+            IUnknown *unk = NULL;
+
+            TRACE("Found in running object table\n");
+
+            hres = IRunningObjectTable_GetObject(obj_tbl, &This->IMoniker_iface, &unk);
+            if(SUCCEEDED(hres)) {
+                hres = IUnknown_QueryInterface(unk, riid, ppv);
+                IUnknown_Release(unk);
+            }
+
+            IRunningObjectTable_Release(obj_tbl);
+            return hres;
+        }
+
         IRunningObjectTable_Release(obj_tbl);
     }
 

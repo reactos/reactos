@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nUtilizare: ping [-t] [-n număr] [-l dimensiune] [-w expirare] gazdă-destinație\n\n\
 Opțiuni:\n\

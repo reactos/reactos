@@ -210,7 +210,7 @@ SetFilePointer(HANDLE hFile,
    IO_STATUS_BLOCK IoStatusBlock;
    LARGE_INTEGER Distance;
 
-   TRACE("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
+   TRACE("SetFilePointer(hFile %p, lDistanceToMove %d, dwMoveMethod %lu)\n",
       hFile,lDistanceToMove,dwMoveMethod);
 
    if(IsConsoleHandle(hFile))

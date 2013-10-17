@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2007, 2009, 2010 by                  */
+/*  Copyright 2002-2005, 2007, 2009, 2010, 2013 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -49,7 +49,7 @@
                          PFR_ExtraItem   item_list,
                          FT_Pointer      item_data )
   {
-    FT_Error  error = PFR_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_Byte*  p     = *pp;
     FT_UInt   num_items, item_type, item_size;
 
@@ -91,7 +91,7 @@
 
   Too_Short:
     FT_ERROR(( "pfr_extra_items_parse: invalid extra items table\n" ));
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     goto Exit;
   }
 
@@ -236,7 +236,7 @@
       goto Exit;
 
     if ( idx >= num_log_fonts )
-      return PFR_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( FT_STREAM_SKIP( idx * 5 ) ||
          FT_READ_USHORT( size )    ||
@@ -329,7 +329,7 @@
 
   Too_Short:
     FT_ERROR(( "pfr_log_font_load: invalid logical font table\n" ));
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     goto Fail;
   }
 
@@ -353,7 +353,7 @@
     PFR_Strike  strike;
     FT_UInt     flags0;
     FT_UInt     n, count, size1;
-    FT_Error    error = PFR_Err_Ok;
+    FT_Error    error = FT_Err_Ok;
 
 
     PFR_CHECK( 5 );
@@ -427,7 +427,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_extra_item_load_bitmap_info:"
                " invalid bitmap info table\n" ));
     goto Exit;
@@ -449,7 +449,7 @@
                                FT_Byte*     limit,
                                PFR_PhyFont  phy_font )
   {
-    FT_Error    error  = PFR_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_Memory   memory = phy_font->memory;
     FT_PtrDist  len    = limit - p;
 
@@ -476,8 +476,8 @@
                                   PFR_PhyFont  phy_font )
   {
     FT_UInt    count, num_vert, num_horz;
-    FT_Int*    snaps;
-    FT_Error   error  = PFR_Err_Ok;
+    FT_Int*    snaps  = NULL;
+    FT_Error   error  = FT_Err_Ok;
     FT_Memory  memory = phy_font->memory;
 
 
@@ -506,7 +506,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_exta_item_load_stem_snaps:"
                " invalid stem snaps table\n" ));
     goto Exit;
@@ -521,7 +521,7 @@
                                      PFR_PhyFont  phy_font )
   {
     PFR_KernItem  item   = NULL;
-    FT_Error      error  = PFR_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = phy_font->memory;
 
 
@@ -604,7 +604,7 @@
   Too_Short:
     FT_FREE( item );
 
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_extra_item_load_kerning_pairs:"
                " invalid kerning pairs table\n" ));
     goto Exit;
@@ -631,7 +631,7 @@
                      FT_Memory    memory,
                      FT_String*  *astring )
   {
-    FT_Error    error = PFR_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_String*  result = NULL;
     FT_UInt     n, ok;
 
@@ -932,7 +932,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_phy_font_load: invalid physical font table\n" ));
     goto Fail;
   }

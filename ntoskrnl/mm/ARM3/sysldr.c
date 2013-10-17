@@ -156,7 +156,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Reserve system PTEs needed */
-    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageSize) >> PAGE_SHIFT;
+    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte)
     {
@@ -827,9 +827,9 @@ MiSnapThunk(IN PVOID DllBase,
                                              InLoadOrderLinks);
 
                 /* Check if it matches */
-                if (RtlPrefixString((PSTRING)&ForwarderName,
-                                    (PSTRING)&LdrEntry->BaseDllName,
-                                    TRUE))
+                if (RtlPrefixUnicodeString(&ForwarderName,
+                                           &LdrEntry->BaseDllName,
+                                           TRUE))
                 {
                     /* Get the forwarder export directory */
                     ForwardExportDirectory =
@@ -1064,8 +1064,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1078,8 +1081,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
             !(_strnicmp(ImportName, "gdi32", sizeof("gdi32") - 1)))
         {
             /* This is not kernel code */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1103,8 +1109,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if (!NT_SUCCESS(Status))
         {
             /* Failed */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return Status;
         }
 
@@ -1226,8 +1235,11 @@ CheckDllState:
             {
                 /* Cleanup and return */
                 RtlFreeUnicodeString(&NameString);
-                MiDereferenceImports(LoadedImports);
-                if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                if (LoadedImports)
+                {
+                    MiDereferenceImports(LoadedImports);
+                    ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                }
                 return Status;
             }
 
@@ -1259,8 +1271,11 @@ CheckDllState:
         if (!ExportDirectory)
         {
             /* Cleanup and return */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             DPRINT1("Warning: Driver failed to load, %S not found\n", *MissingDriver);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
@@ -1289,8 +1304,11 @@ CheckDllState:
                 if (!NT_SUCCESS(Status))
                 {
                     /* Cleanup and return */
-                    MiDereferenceImports(LoadedImports);
-                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                    if (LoadedImports)
+                    {
+                        MiDereferenceImports(LoadedImports);
+                        ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                    }
                     return Status;
                 }
 
@@ -3040,7 +3058,7 @@ LoaderScan:
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
-    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageSize;
+    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageInformation.ImageFileSize;
 
     /* Make sure we're not being loaded into session space */
     if (!Flags)

@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    client/actctx.c
     client/appcache.c
     client/atom.c
     client/compname.c
@@ -94,8 +95,15 @@ endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
 add_library(kernel32 SHARED ${SOURCE} ${kernel32_asm})
+
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
+#############################################
+## HACK FOR MSVC COMPILATION WITH win32dll ##
+set_subsystem(kernel32 console)
+################# END  HACK #################
+
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
+
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)
 add_dependencies(kernel32 psdk errcodes asm)

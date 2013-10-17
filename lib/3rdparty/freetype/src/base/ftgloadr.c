@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2010 by                        */
+/*  Copyright 2002-2006, 2010, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,6 +17,7 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_GLYPH_LOADER_H
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_OBJECTS_H
@@ -219,7 +220,7 @@
       new_max = FT_PAD_CEIL( new_max, 8 );
 
       if ( new_max > FT_OUTLINE_POINTS_MAX )
-        return FT_Err_Array_Too_Large;
+        return FT_THROW( Array_Too_Large );
 
       if ( FT_RENEW_ARRAY( base->points, old_max, new_max ) ||
            FT_RENEW_ARRAY( base->tags,   old_max, new_max ) )
@@ -251,7 +252,7 @@
       new_max = FT_PAD_CEIL( new_max, 4 );
 
       if ( new_max > FT_OUTLINE_CONTOURS_MAX )
-        return FT_Err_Array_Too_Large;
+        return FT_THROW( Array_Too_Large );
 
       if ( FT_RENEW_ARRAY( base->contours, old_max, new_max ) )
         goto Exit;
@@ -264,6 +265,9 @@
       FT_GlyphLoader_Adjust_Points( loader );
 
   Exit:
+    if ( error )
+      FT_GlyphLoader_Reset( loader );
+
     return error;
   }
 
@@ -318,7 +322,7 @@
   }
 
 
-  /* add current glyph to the base image - and prepare for another */
+  /* add current glyph to the base image -- and prepare for another */
   FT_BASE_DEF( void )
   FT_GlyphLoader_Add( FT_GlyphLoader  loader )
   {

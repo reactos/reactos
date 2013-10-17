@@ -1440,6 +1440,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
 
     if (!(stubmgr = get_stub_manager(apt, stdobjref.oid)))
     {
+        apartment_release(apt);
         ERR("could not map object ID to stub manager, oxid=%s, oid=%s\n",
             wine_dbgstr_longlong(stdobjref.oxid), wine_dbgstr_longlong(stdobjref.oid));
         return RPC_E_INVALID_OBJREF;

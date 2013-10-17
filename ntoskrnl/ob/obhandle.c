@@ -683,7 +683,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx for %p. HC PC %lx %lx\n",
+            "%s - Closing handle: %p for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -753,7 +753,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx for %p.\n",
+            "%s - Closed handle: %p for %p.\n",
             __FUNCTION__,
             Handle,
             Body);
@@ -1399,7 +1399,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC PC %lx %lx\n",
+                "%s - Returning Handle: %p HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1645,7 +1645,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC PC %lx %lx\n",
+                "%s - Returning Handle: %p HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1708,7 +1708,7 @@ ObpCloseHandle(IN HANDLE Handle,
     PEPROCESS Process = PsGetCurrentProcess();
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
+            "%s - Closing handle: %p\n", __FUNCTION__, Handle);
 
     if (AccessMode == KernelMode && Handle == (HANDLE)-1)
         return STATUS_INVALID_HANDLE;
@@ -1803,7 +1803,7 @@ ObpCloseHandle(IN HANDLE Handle,
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx S: %lx\n",
+            "%s - Closed handle: %p S: %lx\n",
             __FUNCTION__, Handle, Status);
     return Status;
 }
@@ -2141,7 +2141,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     ULONG AuditMask;
     PAGED_CODE();
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicating handle: %lx for %p into %p\n",
+            "%s - Duplicating handle: %p for %p into %p\n",
             __FUNCTION__,
             SourceHandle,
             SourceProcess,
@@ -2374,7 +2374,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicated handle: %lx for %p into %p. Source: %p HC PC %lx %lx\n",
+            "%s - Duplicated handle: %p for %p into %p. Source: %p HC PC %lx %lx\n",
             __FUNCTION__,
             NewHandle,
             SourceProcess,
@@ -2851,7 +2851,7 @@ ObInsertObject(IN PVOID Object,
     if (!(ObjectHeader->Flags & OB_FLAG_CREATE_INFO))
     {
         /* Display warning and break into debugger */
-        DPRINT1("OB: Attempting to insert existing object %08x\n", Object);
+        DPRINT1("OB: Attempting to insert existing object %p\n", Object);
         DbgBreakPoint();
 
         /* Allow debugger to continue */
@@ -3172,6 +3172,36 @@ ObInsertObject(IN PVOID Object,
 }
 
 /*++
+* @name ObSetHandleAttributes
+* @implemented NT5.1
+*
+*     The ObSetHandleAttributes routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @param HandleFlags
+*        <FILLMEIN>.
+*
+* @param PreviousMode
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObSetHandleAttributes(IN HANDLE Handle,
+                      IN POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+                      IN KPROCESSOR_MODE PreviousMode)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*++
 * @name ObCloseHandle
 * @implemented NT5.1
 *
@@ -3234,7 +3264,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicating handle: %lx for %lx into %lx.\n",
+            "%s - Duplicating handle: %p for %p into %p.\n",
             __FUNCTION__,
             SourceHandle,
             SourceProcessHandle,
@@ -3324,7 +3354,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
 
     /* Dereference the processes */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Duplicated handle: %lx into %lx S %lx\n",
+            "%s - Duplicated handle: %p into %p S %lx\n",
             __FUNCTION__,
             hTarget,
             TargetProcessHandle,

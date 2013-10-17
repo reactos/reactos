@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DllNotLoaded,   "LoadLibrary nu a putut încărca „%s”"
     IDS_MissingEntry,   "Lipsă punct de intrare: %s\nîn %s"

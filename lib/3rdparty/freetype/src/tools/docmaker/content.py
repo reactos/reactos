@@ -1,4 +1,4 @@
-#  Content (c) 2002, 2004, 2006, 2007, 2008, 2009
+#  Content (c) 2002, 2004, 2006-2009, 2012
 #    David Turner <david@freetype.org>
 #
 #  This file contains routines used to parse the content of documentation
@@ -32,7 +32,7 @@ re_code_end   = re.compile( r"(\s*)}\s*$" )
 # this regular expression is used to isolate identifiers from
 # other text
 #
-re_identifier = re.compile( r'(\w*)' )
+re_identifier = re.compile( r'((?:\w|-)*)' )
 
 
 # we collect macros ending in `_H'; while outputting the object data, we use

@@ -63,7 +63,7 @@ BEGIN
 
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Impostazioni Internet"
     IDS_CPL_INFO        "Configura Internet Browser e impostazioni corelate"

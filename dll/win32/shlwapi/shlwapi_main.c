@@ -68,6 +68,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 	    break;
 	  case DLL_PROCESS_DETACH:
+            if (fImpLoad) break;
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
 	    break;
 	}

@@ -176,6 +176,7 @@ struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHL
 struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
 {
     struct stub_manager *sm;
+    HRESULT hres;
 
     assert( apt );
     
@@ -221,6 +222,10 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
      */
     sm->extrefs = 0;
 
+    hres = IUnknown_QueryInterface(object, &IID_IExternalConnection, (void**)&sm->extern_conn);
+    if(FAILED(hres))
+        sm->extern_conn = NULL;
+
     EnterCriticalSection(&apt->cs);
     sm->oid = apt->oidc++;
     list_add_head(&apt->stubmgrs, &sm->entry);
@@ -244,6 +249,9 @@ static void stub_manager_delete(struct stub_manager *m)
         struct ifstub *ifstub = LIST_ENTRY(cursor, struct ifstub, entry);
         stub_manager_delete_ifstub(m, ifstub);
     }
+
+    if(m->extern_conn)
+        IExternalConnection_Release(m->extern_conn);
 
     CoTaskMemFree(m->oxid_info.psa);
     IUnknown_Release(m->object);
@@ -380,9 +388,12 @@ struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid)
 /* add some external references (ie from a client that unmarshaled an ifptr) */
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak)
 {
+    BOOL first_extern_ref;
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
+
+    first_extern_ref = refs && !m->extrefs;
 
     /* make sure we don't overflow extrefs */
     refs = min(refs, (ULONG_MAX-1 - m->extrefs));
@@ -395,12 +406,20 @@ ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak
     
     TRACE("added %u refs to %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
+    /*
+     * NOTE: According to tests, creating a stub causes two AddConnection calls followed by
+     * one ReleaseConnection call (with fLastReleaseCloses=FALSE).
+     */
+    if(first_extern_ref && m->extern_conn)
+        IExternalConnection_AddConnection(m->extern_conn, EXTCONN_STRONG, 0);
+
     return rc;
 }
 
 /* remove some external references */
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases)
 {
+    BOOL last_extern_ref;
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
@@ -414,9 +433,14 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
     if (!last_unlock_releases)
         rc += m->weakrefs;
 
+    last_extern_ref = refs && !m->extrefs;
+
     LeaveCriticalSection(&m->lock);
     
     TRACE("removed %u refs from %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
+
+    if (last_extern_ref && m->extern_conn)
+        IExternalConnection_ReleaseConnection(m->extern_conn, EXTCONN_STRONG, 0, TRUE /* FIXME: Use last_unlock releases? */);
 
     if (rc == 0)
         stub_manager_int_release(m);

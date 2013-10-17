@@ -620,13 +620,11 @@ static HRESULT ITSS_create_chm_storage(
       struct chmFile *chmfile, const WCHAR *dir, IStorage** ppstgOpen )
 {
     ITSS_IStorageImpl *stg;
-    DWORD len;
 
     TRACE("%p %s\n", chmfile, debugstr_w( dir ) );
 
-    len = strlenW( dir ) + 1;
-    stg = HeapAlloc( GetProcessHeap(), 0, 
-                     sizeof (ITSS_IStorageImpl) + len*sizeof(WCHAR) );
+    stg = HeapAlloc( GetProcessHeap(), 0,
+                     FIELD_OFFSET( ITSS_IStorageImpl, dir[strlenW( dir ) + 1] ));
     stg->IStorage_iface.lpVtbl = &ITSS_IStorageImpl_Vtbl;
     stg->ref = 1;
     stg->chmfile = chmfile;

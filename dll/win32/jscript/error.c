@@ -82,12 +82,16 @@ static HRESULT Error_toString(script_ctx_t *ctx, vdisp_t *vthis, WORD flags,
         unsigned msg_len = msg ? jsstr_length(msg) : 0;
 
         if(name_len && msg_len) {
-            ret = jsstr_alloc_buf(name_len + msg_len + 2);
-            if(ret) {
-                jsstr_flush(name, ret->str);
-                ret->str[name_len] = ':';
-                ret->str[name_len+1] = ' ';
-                jsstr_flush(msg, ret->str+name_len+2);
+            WCHAR *ptr;
+
+            ptr = jsstr_alloc_buf(name_len + msg_len + 2, &ret);
+            if(ptr) {
+                jsstr_flush(name, ptr);
+                ptr[name_len] = ':';
+                ptr[name_len+1] = ' ';
+                jsstr_flush(msg, ptr+name_len+2);
+            }else {
+                hres = E_OUTOFMEMORY;
             }
         }else if(name_len) {
             ret = name;

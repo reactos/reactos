@@ -1223,7 +1223,6 @@ RtlCreateHeap(ULONG Flags,
     PVOID CommittedAddress = NULL, UncommittedAddress = NULL;
     PHEAP Heap = NULL;
     RTL_HEAP_PARAMETERS SafeParams = {0};
-    PPEB Peb;
     ULONG_PTR MaximumUserModeAddress;
     SYSTEM_BASIC_INFORMATION SystemInformation;
     MEMORY_BASIC_INFORMATION MemoryInfo;
@@ -1276,32 +1275,10 @@ RtlCreateHeap(ULONG Flags,
 
         if (NtGlobalFlags & FLG_USER_STACK_TRACE_DB)
             Flags |= HEAP_CAPTURE_STACK_BACKTRACES;
-
-        /* Get PEB */
-        Peb = RtlGetCurrentPeb();
-
-        /* Apply defaults for non-set parameters */
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = Peb->HeapSegmentCommit;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = Peb->HeapSegmentReserve;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = Peb->HeapDeCommitFreeBlockThreshold;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = Peb->HeapDeCommitTotalFreeThreshold;
-    }
-    else
-    {
-        /* Apply defaults for non-set parameters */
-#if 0
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
-#endif
     }
 
-    // FIXME: Move to memory manager
-        if (!Parameters->SegmentCommit) Parameters->SegmentCommit = PAGE_SIZE * 2;
-        if (!Parameters->SegmentReserve) Parameters->SegmentReserve = 1048576;
-        if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = PAGE_SIZE;
-        if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = 65536;
+    /* Set tunable parameters */
+    RtlpSetHeapParameters(Parameters);
 
     /* Get the max um address */
     Status = ZwQuerySystemInformation(SystemBasicInformation,

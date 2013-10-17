@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Χρήση: %s τόμος: [-FS:σύστημα-αρχείων] [-V:ετικέτα] [-Q] [-A:μέγεθος] [-C]\n\n\
   [τόμος:]             Καθορίζει το γράμμα μονάδας δίσκου προς διαμόρφωση.\n\

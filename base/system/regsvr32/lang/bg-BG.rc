@@ -1,5 +1,5 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nУпотреба: regsvr32 [/u] [/s] [/c] [/n] [/i[:ключ]] име_на_dll\n\

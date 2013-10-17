@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "conoutput.h"
 #include "handle.h"
 
@@ -584,8 +584,8 @@ ConioWriteConsole(PCONSOLE Console,
 
     if (!ConioIsRectEmpty(&UpdateRect) && (PCONSOLE_SCREEN_BUFFER)Buff == Console->ActiveBuffer)
     {
-        ConioWriteStream(Console, &UpdateRect, CursorStartX, CursorStartY,
-                         ScrolledLines, Buffer, Length);
+        TermWriteStream(Console, &UpdateRect, CursorStartX, CursorStartY,
+                        ScrolledLines, Buffer, Length);
     }
 
     return STATUS_SUCCESS;
@@ -731,7 +731,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
         }
     }
 
-    ConioDrawRegion(Console, &CapturedWriteRegion);
+    TermDrawRegion(Console, &CapturedWriteRegion);
 
     WriteRegion->Left   = CapturedWriteRegion.Left;
     WriteRegion->Top    = CapturedWriteRegion.Top ;
@@ -1053,7 +1053,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
         ConioComputeUpdateRect(Buffer, &UpdateRect, WriteCoord, NumCodesToWrite);
-        ConioDrawRegion(Console, &UpdateRect);
+        TermDrawRegion(Console, &UpdateRect);
     }
 
     // EndCoord->X = X;
@@ -1151,7 +1151,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
         ConioComputeUpdateRect(Buffer, &UpdateRect, WriteCoord, NumCodesToWrite);
-        ConioDrawRegion(Console, &UpdateRect);
+        TermDrawRegion(Console, &UpdateRect);
     }
 
     // CodesWritten = Written; // NumCodesToWrite;
@@ -1212,7 +1212,7 @@ ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
 
     Status = ConioResizeBuffer(Console, Buffer, *Size);
-    if (NT_SUCCESS(Status)) ConioResizeTerminal(Console);
+    if (NT_SUCCESS(Status)) TermResizeTerminal(Console);
 
     return Status;
 }
@@ -1292,7 +1292,7 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
         if (ConioGetIntersection(&UpdateRegion, &UpdateRegion, &CapturedClipRectangle))
         {
             /* Draw update region */
-            ConioDrawRegion(Console, &UpdateRegion);
+            TermDrawRegion(Console, &UpdateRegion);
         }
     }
 

@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -30,7 +30,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -141,7 +141,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Inicio"
     IDS_PROPERTIES        "P&ropiedades"
@@ -150,7 +150,7 @@ BEGIN
     IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propiedades de la Barra de tareas y del Menú Inicio"
 END

@@ -99,4 +99,4 @@ extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 
 
 extern PKL gspklBaseLayout;
-
+extern KEYBOARD_ATTRIBUTES gKeyboardInfo;

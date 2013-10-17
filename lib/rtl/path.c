@@ -400,6 +400,37 @@ RtlpSkipUNCPrefix(PCWSTR FileNameBuffer)
     return (UncPath - FileNameBuffer);
 }
 
+NTSTATUS
+NTAPI
+RtlpApplyLengthFunction(IN ULONG Flags,
+                        IN ULONG Type,
+                        IN PVOID UnicodeStringOrUnicodeStringBuffer,
+                        IN PVOID LengthFunction)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutLastFullDosOrNtPathElement(IN ULONG Flags,
+                                              IN PWCHAR Path,
+                                              OUT PULONG LengthOut)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlComputePrivatizedDllName_U(IN PUNICODE_STRING DllName,
+                              IN PUNICODE_STRING a2,
+                              IN PUNICODE_STRING a3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 ULONG
 NTAPI
 RtlGetFullPathName_Ustr(
@@ -618,7 +649,7 @@ RtlGetFullPathName_Ustr(
                 break;
             }
             /* Fall through */
-            DPRINT1("RtlPathTypeDriveRelative - Using fall-through to RtlPathTypeRelative\n");
+            DPRINT("RtlPathTypeDriveRelative - Using fall-through to RtlPathTypeRelative\n");
 
         case RtlPathTypeRelative:           /* foo     */
             Prefix       = CurDirName->Buffer;
@@ -1218,6 +1249,48 @@ RtlGetLongestNtPathLength(VOID)
      * which claims this is 277. Go figure.
      */
     return MAX_PATH + RtlpDosDevicesUncPrefix.Length / sizeof(WCHAR) + sizeof(ANSI_NULL);
+}
+
+/*
+ * @implemented
+ * @note: the export is called RtlGetLengthWithoutTrailingPathSeperators
+ *        (with a 'e' instead of a 'a' in "Seperators").
+ */
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutTrailingPathSeparators(IN  ULONG Flags,
+                                          IN  PCUNICODE_STRING PathString,
+                                          OUT PULONG Length)
+{
+    ULONG NumChars;
+
+    /* Parameters validation */
+    if (Length == NULL) return STATUS_INVALID_PARAMETER;
+
+    *Length = 0;
+
+    if (PathString == NULL) return STATUS_INVALID_PARAMETER;
+
+    /* No flags are supported yet */
+    if (Flags != 0) return STATUS_INVALID_PARAMETER;
+
+    NumChars = PathString->Length / sizeof(WCHAR);
+
+    /*
+     * Notice that we skip the last character, therefore:
+     * - if we have: "some/path/f" we test for: "some/path/"
+     * - if we have: "some/path/"  we test for: "some/path"
+     * - if we have: "s" we test for: ""
+     * - if we have: "" then NumChars was already zero and we aren't there
+     */
+
+    while (NumChars > 0 && IS_PATH_SEPARATOR(PathString->Buffer[NumChars - 1]))
+    {
+        --NumChars;
+    }
+
+    *Length = NumChars;
+    return STATUS_SUCCESS;
 }
 
 /*

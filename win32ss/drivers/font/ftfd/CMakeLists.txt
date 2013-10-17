@@ -9,6 +9,7 @@ add_library(ftfd SHARED
     glyph.c
     rosglue.c
     sprintf.c
+    freetype.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
 set_entrypoint(ftfd FtfdEnableDriver 12)

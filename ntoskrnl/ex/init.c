@@ -866,7 +866,7 @@ ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MemDescriptor;
 
-    DPRINT1("Burn RAM amount: %d pages\n", PagesToDestroy);
+    DPRINT1("Burn RAM amount: %lu pages\n", PagesToDestroy);
 
     /* Loop the memory descriptors, beginning at the end */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Blink;
@@ -1483,7 +1483,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Remaining, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Remaining, "REACTOS (R)\r\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
@@ -1586,7 +1586,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                 sizeof(InitBuffer->VersionBuffer),
                                 NT_SUCCESS(MsgStatus) ?
                                 (PCHAR)MsgEntry->Text :
-                                "%u System Processor [%u MB Memory] %Z\n",
+                                "%u System Processor [%u MB Memory] %Z\r\n",
                                 KeNumberProcessors,
                                 Size,
                                 &TempString);

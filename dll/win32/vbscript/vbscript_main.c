@@ -332,6 +332,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         vbscript_hinstance = hInstDLL;
         break;
     case DLL_PROCESS_DETACH:
+        if (lpv) break;
         release_typelib();
         release_regexp_typelib();
     }

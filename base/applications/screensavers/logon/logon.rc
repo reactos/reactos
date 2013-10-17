@@ -12,8 +12,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
-IDB_WORKSTATION BITMAP DISCARDABLE	"res/0.bmp"
-IDB_SERVER 	BITMAP DISCARDABLE	"res/1.bmp"
+IDB_WORKSTATION BITMAP 	"res/0.bmp"
+IDB_SERVER 	BITMAP 	"res/1.bmp"
+
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)

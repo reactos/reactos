@@ -1,6 +1,6 @@
 ﻿LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 IDS_USAGE, "\nConfigurazione adattatore WLAN.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\

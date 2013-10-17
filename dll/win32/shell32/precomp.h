@@ -25,12 +25,14 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
+#include <shlwapi_undoc.h>
 #include <appmgmt.h>
 #include <ntquery.h>
 #include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <sddl.h>
+#include <commoncontrols.h>
 
 #include <tchar.h>
 #include <strsafe.h>
@@ -71,6 +73,7 @@
 #include "filedefext.h"
 #include "drvdefext.h"
 #include "CMenuBand.h"
+#include "CMenuDeskBar.h"
 
 #include <wine/debug.h>
 

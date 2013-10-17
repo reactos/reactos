@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph dictionary services (specification).              */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2009, 2012 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,27 +51,33 @@ FT_BEGIN_HEADER
     FT_GlyphDict_NameIndexFunc  name_index;  /* optional */
   };
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_GLYPHDICTREC(class_, get_name_, name_index_) \
-  static const FT_Service_GlyphDictRec class_ =                        \
+#define FT_DEFINE_SERVICE_GLYPHDICTREC( class_,                        \
+                                        get_name_,                     \
+                                        name_index_)                   \
+  static const FT_Service_GlyphDictRec  class_ =                       \
   {                                                                    \
     get_name_, name_index_                                             \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_GLYPHDICTREC(class_, get_name_, name_index_) \
+#define FT_DEFINE_SERVICE_GLYPHDICTREC( class_,                        \
+                                        get_name_,                     \
+                                        name_index_)                   \
   void                                                                 \
-  FT_Init_Class_##class_( FT_Library library,                          \
-                          FT_Service_GlyphDictRec* clazz)              \
+  FT_Init_Class_ ## class_( FT_Library                library,         \
+                            FT_Service_GlyphDictRec*  clazz )          \
   {                                                                    \
-    FT_UNUSED(library);                                                \
-    clazz->get_name = get_name_;                                       \
+    FT_UNUSED( library );                                              \
+                                                                       \
+    clazz->get_name   = get_name_;                                     \
     clazz->name_index = name_index_;                                   \
-  } 
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

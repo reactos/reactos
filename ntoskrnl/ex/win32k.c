@@ -211,10 +211,10 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OkayToCloseProcedure = ExpDesktopOkToClose;
     ObjectTypeInitializer.OpenProcedure = ExpDesktopOpen;
     ObjectTypeInitializer.CloseProcedure = ExpDesktopClose;
-    ObCreateObjectType(&Name,
-                       &ObjectTypeInitializer,
-                       NULL,
-                       &ExDesktopObjectType);
+    Status = ObCreateObjectType(&Name,
+                                &ObjectTypeInitializer,
+                                NULL,
+                                &ExDesktopObjectType);
     if (!NT_SUCCESS(Status)) return FALSE;
     
     return TRUE;

@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Használat: %s kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
   [kötet:]         A meghajtóbetûjelet adja meg (kettõsponttal a végén).\n\

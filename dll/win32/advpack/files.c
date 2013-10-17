@@ -503,8 +503,8 @@ HRESULT WINAPI DelNodeRunDLL32W(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT 
     lstrcpyW(cmdline_copy, cmdline);
 
     /* get the parameters at indexes 0 and 1 respectively */
-    szFilename = get_parameter(&cmdline_ptr, ',');
-    szFlags = get_parameter(&cmdline_ptr, ',');
+    szFilename = get_parameter(&cmdline_ptr, ',', TRUE);
+    szFlags = get_parameter(&cmdline_ptr, ',', TRUE);
 
     if (szFlags)
         dwFlags = atolW(szFlags);

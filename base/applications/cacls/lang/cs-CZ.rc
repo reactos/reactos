@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Zobrazí nebo změní seznamy řízení přístupu (ACL) k souborům\n\n\

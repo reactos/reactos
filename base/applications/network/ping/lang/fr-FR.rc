@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nUtilisation : ping [-t] [-n nombre] [-l taille] [-w délai] hôte-destination\n\n\
 Options :\n\

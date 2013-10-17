@@ -1,6 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -134,7 +134,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Пуск"
     IDS_PROPERTIES        "&Свойства"
@@ -143,7 +143,7 @@ BEGIN
     IDS_STARTUP_ERROR     "Уредбата не  може да пусне изследователя, понеже понеже регистърът е увреден или недостъпен."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Свойства на задачната лента и на пусковия изборник"
 END

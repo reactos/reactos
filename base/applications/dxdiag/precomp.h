@@ -42,6 +42,9 @@ typedef struct
 /* globals */
 extern HINSTANCE hInst;
 
+/* theming hack */
+BOOL EnableDialogTheme(HWND hwnd);
+
 /* dialog wnd proc */
 INT_PTR CALLBACK SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK DisplayPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);

@@ -54,9 +54,9 @@ PopShutdownHandler(VOID)
     else
     {
         /* Do it in text-mode */
-        for (i = 0; i < 25; i++) InbvDisplayString("\n");
+        for (i = 0; i < 25; i++) InbvDisplayString("\r\n");
         InbvDisplayString("                       ");
-        InbvDisplayString("The system may be powered off now.\n");
+        InbvDisplayString("The system may be powered off now.\r\n");
     }
 
     /* Hang the system */
@@ -132,7 +132,7 @@ PopGracefulShutdown(IN PVOID Context)
         if ((Process != PsInitialSystemProcess) && (Process != PsIdleProcess))
         {
             /* Print it */
-            DPRINT1("%15s is still RUNNING (%lx)\n", Process->ImageFileName, Process->UniqueProcessId);
+            DPRINT1("%15s is still RUNNING (%p)\n", Process->ImageFileName, Process->UniqueProcessId);
         }
 
         /* Get the next process */

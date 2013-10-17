@@ -95,7 +95,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
         }
     }
 
-    DPRINT("DriveNumber %d\n", DriveNumber);
+    DPRINT("DriveNumber %lu\n", DriveNumber);
 
     /* Build drive name */
     swprintf(DriveNameBuffer,
@@ -369,7 +369,7 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
         }
     }
 
-    DPRINT("DiskGeometry.BytesPerSector: %d\n",
+    DPRINT("DiskGeometry.BytesPerSector: %lu\n",
         DiskGeometry.BytesPerSector);
 
     if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
@@ -444,7 +444,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     RDiskCount = xHalpGetRDiskCount();
 
-    DPRINT("RDiskCount %d\n", RDiskCount);
+    DPRINT("RDiskCount %lu\n", RDiskCount);
 
     Buffer1 = ExAllocatePoolWithTag(PagedPool,
         64 * sizeof(WCHAR),
@@ -493,14 +493,11 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
     /* Create PhysicalDrive links */
-    DPRINT("Physical disk drives: %d\n", ConfigInfo->DiskCount);
+    DPRINT("Physical disk drives: %lu\n", ConfigInfo->DiskCount);
     for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
-        swprintf(Buffer1,
-            L"\\Device\\Harddisk%d\\Partition0",
-            i);
-        RtlInitUnicodeString(&UnicodeString1,
-            Buffer1);
+        swprintf(Buffer1, L"\\Device\\Harddisk%lu\\Partition0", i);
+        RtlInitUnicodeString(&UnicodeString1, Buffer1);
 
         InitializeObjectAttributes(&ObjectAttributes,
             &UnicodeString1,
@@ -518,11 +515,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         {
             ZwClose(FileHandle);
 
-            swprintf(Buffer2,
-                L"\\??\\PhysicalDrive%d",
-                i);
-            RtlInitUnicodeString(&UnicodeString2,
-                Buffer2);
+            swprintf(Buffer2, L"\\??\\PhysicalDrive%lu", i);
+            RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
             DPRINT("Creating link: %S ==> %S\n",
                 Buffer2,
@@ -551,14 +545,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
     for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
-        swprintf(Buffer1,
-            L"\\Device\\Harddisk%d\\Partition0",
-            i);
-        RtlInitUnicodeString(&UnicodeString1,
-            Buffer1);
+        swprintf(Buffer1, L"\\Device\\Harddisk%lu\\Partition0", i);
+        RtlInitUnicodeString(&UnicodeString1, Buffer1);
 
-        Status = xHalQueryDriveLayout(&UnicodeString1,
-            &LayoutArray[i]);
+        Status = xHalQueryDriveLayout(&UnicodeString1, &LayoutArray[i]);
         if (!NT_SUCCESS(Status))
         {
             DbgPrint("xHalQueryDriveLayout() failed (Status = 0x%lx)\n",
@@ -637,11 +627,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                         LayoutArray[i]->PartitionEntry[j].RewritePartition == FALSE)
                                     {
                                         swprintf(Buffer2,
-                                            L"\\Device\\Harddisk%d\\Partition%d",
-                                            i,
-                                            LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-                                        RtlInitUnicodeString(&UnicodeString2,
-                                            Buffer2);
+                                                 L"\\Device\\Harddisk%lu\\Partition%lu",
+                                                 i,
+                                                 LayoutArray[i]->PartitionEntry[j].PartitionNumber);
+                                        RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                                         /* Assign drive */
                                         DPRINT("  %wZ\n", &UnicodeString2);
@@ -689,11 +678,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     if (LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE)
                     {
                         swprintf(Buffer2,
-                            L"\\Device\\Harddisk%lu\\Partition%d",
-                            DiskNumber,
-                            LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                        RtlInitUnicodeString(&UnicodeString2,
-                            Buffer2);
+                                 L"\\Device\\Harddisk%lu\\Partition%lu",
+                                 DiskNumber,
+                                 LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
+                        RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                         /* Assign drive */
                         DPRINT("  %wZ\n", &UnicodeString2);
@@ -730,11 +718,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
                 {
                     swprintf(Buffer2,
-                        L"\\Device\\Harddisk%d\\Partition%d",
-                        DiskNumber,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2,
-                        Buffer2);
+                             L"\\Device\\Harddisk%lu\\Partition%lu",
+                             DiskNumber,
+                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
+                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                     /* Assign drive */
                     DPRINT("  %wZ\n",
@@ -771,11 +758,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber != 0)
                 {
                     swprintf(Buffer2,
-                        L"\\Device\\Harddisk%d\\Partition%d",
-                        DiskNumber,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2,
-                        Buffer2);
+                             L"\\Device\\Harddisk%lu\\Partition%lu",
+                             DiskNumber,
+                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
+                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                     /* Assign drive */
                     DPRINT("  %wZ\n",
@@ -808,11 +794,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
                 {
                     swprintf(Buffer2,
-                        L"\\Device\\Harddisk%d\\Partition%d",
-                        DiskNumber,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2,
-                        Buffer2);
+                             L"\\Device\\Harddisk%lu\\Partition%lu",
+                             DiskNumber,
+                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
+                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                     /* Assign drive */
                     DPRINT("  %wZ\n",
@@ -846,11 +831,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber != 0)
                 {
                     swprintf(Buffer2,
-                        L"\\Device\\Harddisk%d\\Partition%d",
-                        DiskNumber,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2,
-                        Buffer2);
+                             L"\\Device\\Harddisk%lu\\Partition%lu",
+                             DiskNumber,
+                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
+                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                     /* Assign drive */
                     DPRINT("  %wZ\n",
@@ -880,11 +864,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (LayoutArray[i]->PartitionCount == 1 &&
                 LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
             {
-                swprintf(Buffer2,
-                    L"\\Device\\Harddisk%d\\Partition1",
-                    i);
-                RtlInitUnicodeString(&UnicodeString2,
-                    Buffer2);
+                swprintf(Buffer2, L"\\Device\\Harddisk%lu\\Partition1", i);
+                RtlInitUnicodeString(&UnicodeString2, Buffer2);
 
                 /* Assign drive */
                 DPRINT("  %wZ\n",
@@ -911,14 +892,11 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 end_assign_disks:
 
     /* Assign floppy drives */
-    DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
+    DPRINT("Floppy drives: %lu\n", ConfigInfo->FloppyCount);
     for (i = 0; i < ConfigInfo->FloppyCount; i++)
     {
-        swprintf(Buffer1,
-            L"\\Device\\Floppy%d",
-            i);
-        RtlInitUnicodeString(&UnicodeString1,
-            Buffer1);
+        swprintf(Buffer1, L"\\Device\\Floppy%lu", i);
+        RtlInitUnicodeString(&UnicodeString1, Buffer1);
 
         /* Assign drive letters A: or B: or first free drive letter */
         DPRINT("  %wZ\n",
@@ -934,14 +912,11 @@ end_assign_disks:
     }
 
     /* Assign cdrom drives */
-    DPRINT("CD-Rom drives: %d\n", ConfigInfo->CdRomCount);
+    DPRINT("CD-Rom drives: %lu\n", ConfigInfo->CdRomCount);
     for (i = 0; i < ConfigInfo->CdRomCount; i++)
     {
-        swprintf(Buffer1,
-            L"\\Device\\CdRom%d",
-            i);
-        RtlInitUnicodeString(&UnicodeString1,
-            Buffer1);
+        swprintf(Buffer1, L"\\Device\\CdRom%lu", i);
+        RtlInitUnicodeString(&UnicodeString1, Buffer1);
 
         /* Assign first free drive letter */
         DPRINT("  %wZ\n", &UnicodeString1);
@@ -1731,7 +1706,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
                 /* Also update the maximum sector */
                 MaxSector = GET_PARTITION_LENGTH(PartitionDescriptor);
-                DPRINT1("FSTUB: MaxSector now = %#08lx\n", MaxSector);
+                DPRINT1("FSTUB: MaxSector now = %I64d\n", MaxSector);
                 break;
             }
         }
@@ -1768,7 +1743,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             DPRINT1("FSTUB: Drive %#p has no valid MBR. Make it into a "
                     "super-floppy\n",
                     DeviceObject);
-            DPRINT1("FSTUB: Drive has %#08lx sectors and is %#016I64x "
+            DPRINT1("FSTUB: Drive has %I64d sectors and is %#016I64x "
                     "bytes large\n",
                     EndSector, EndSector * DiskGeometry.BytesPerSector);
 

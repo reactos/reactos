@@ -71,12 +71,13 @@ static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
     if(r) {
         jsstr_t *ret;
+        WCHAR *ptr;
 
-        ret = jsstr_alloc_buf(9+strlenW(str));
-        if(!ret)
+        ptr = jsstr_alloc_buf(9+strlenW(str), &ret);
+        if(!ptr)
             return E_OUTOFMEMORY;
 
-        sprintfW(ret->str, formatW, str);
+        sprintfW(ptr, formatW, str);
         *r = jsval_string(ret);
     }
 
@@ -129,9 +130,14 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
         return hres;
 
     if(is_jsdisp(jsthis)) {
+        const WCHAR *name_str;
         BOOL result;
 
-        hres = jsdisp_is_own_prop(jsthis->u.jsdisp, name->str, &result);
+        name_str = jsstr_flatten(name);
+        if(name_str)
+            hres = jsdisp_is_own_prop(jsthis->u.jsdisp, name_str, &result);
+        else
+            hres = E_OUTOFMEMORY;
         jsstr_release(name);
         if(FAILED(hres))
             return hres;
@@ -163,7 +169,8 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
 static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    jsstr_t *name;
+    const WCHAR *name;
+    jsstr_t *name_str;
     BOOL ret;
     HRESULT hres;
 
@@ -179,12 +186,12 @@ static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, W
         return E_FAIL;
     }
 
-    hres = to_string(ctx, argv[0], &name);
+    hres = to_flat_string(ctx, argv[0], &name_str, &name);
     if(FAILED(hres))
         return hres;
 
-    hres = jsdisp_is_enumerable(jsthis->u.jsdisp, name->str, &ret);
-    jsstr_release(name);
+    hres = jsdisp_is_enumerable(jsthis->u.jsdisp, name, &ret);
+    jsstr_release(name_str);
     if(FAILED(hres))
         return hres;
 

@@ -29,7 +29,8 @@ extern HANDLE Secur32Heap;
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaDeregisterLogonProcess(HANDLE LsaHandle)
 {
     LSA_API_MSG ApiMessage;
@@ -68,7 +69,8 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaConnectUntrusted(PHANDLE LsaHandle)
 {
     UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
@@ -116,7 +118,8 @@ LsaConnectUntrusted(PHANDLE LsaHandle)
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaCallAuthenticationPackage(HANDLE LsaHandle,
                              ULONG AuthenticationPackage,
                              PVOID ProtocolSubmitBuffer,
@@ -165,7 +168,8 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaFreeReturnBuffer(PVOID Buffer)
 {
     ULONG Length = 0;
@@ -180,7 +184,8 @@ LsaFreeReturnBuffer(PVOID Buffer)
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaLookupAuthenticationPackage(HANDLE LsaHandle,
                                PLSA_STRING PackageName,
                                PULONG AuthenticationPackage)
@@ -227,7 +232,8 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaLogonUser(HANDLE LsaHandle,
              PLSA_STRING OriginName,
              SECURITY_LOGON_TYPE LogonType,
@@ -290,7 +296,8 @@ LsaLogonUser(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
                         PHANDLE Handle,
                         PLSA_OPERATIONAL_MODE OperationalMode)

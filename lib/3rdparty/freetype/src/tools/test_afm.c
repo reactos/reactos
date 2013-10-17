@@ -118,7 +118,7 @@
 
 
     if ( argc < 2 )
-      return FT_Err_Invalid_Argument;
+      return FT_ERR( Invalid_Argument );
 
     error = FT_Init_FreeType( &library );
     if ( error )

@@ -61,4 +61,6 @@ IDI_STOP_ICON       ICON "resources/stop.ico"
 /* Bitmaps */
 IDB_SPEAKIMG        BITMAP "resources/speaker.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

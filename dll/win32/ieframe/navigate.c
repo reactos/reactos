@@ -27,6 +27,7 @@
 #include <shlwapi.h>
 #include <wininet.h>
 //#include "mshtml.h"
+#include <perhist.h>
 #include "resource.h"
 
 #include <wine/debug.h>
@@ -1058,27 +1059,54 @@ HRESULT go_home(DocHost *This)
     return navigate_url(This, wszPageName, NULL, NULL, NULL, NULL);
 }
 
-HRESULT go_back(DocHost *This)
+static HRESULT navigate_history(DocHost *This, unsigned travellog_pos)
 {
-    WCHAR *url;
+    IPersistHistory *persist_history;
+    travellog_entry_t *entry;
+    LARGE_INTEGER li;
     HRESULT hres;
 
-    if(!This->travellog_position) {
+    if(!This->doc_navigate) {
+        FIXME("unsupported doc_navigate FALSE\n");
+        return E_NOTIMPL;
+    }
+
+    This->travellog.loading_pos = travellog_pos;
+    entry = This->travellog.log + This->travellog.loading_pos;
+
+    if(!entry->stream)
+        return async_doc_navigate(This, entry->url, NULL, NULL, 0, FALSE);
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IPersistHistory, (void**)&persist_history);
+    if(FAILED(hres))
+        return hres;
+
+    li.QuadPart = 0;
+    IStream_Seek(entry->stream, li, STREAM_SEEK_SET, NULL);
+
+    hres = IPersistHistory_LoadHistory(persist_history, entry->stream, NULL);
+    IPersistHistory_Release(persist_history);
+    return hres;
+}
+
+HRESULT go_back(DocHost *This)
+{
+    if(!This->travellog.position) {
         WARN("No history available\n");
         return E_FAIL;
     }
 
-    url = This->travellog[--This->travellog_position].url;
+    return navigate_history(This, This->travellog.position-1);
+}
 
-    if(This->doc_navigate) {
-        hres = async_doc_navigate(This, url, NULL, NULL, 0, FALSE);
-    }else {
-        FIXME("unsupported doc_navigate FALSE\n");
-        hres = E_NOTIMPL;
+HRESULT go_forward(DocHost *This)
+{
+    if(This->travellog.position >= This->travellog.length) {
+        WARN("No history available\n");
+        return E_FAIL;
     }
 
-    heap_free(url);
-    return hres;
+    return navigate_history(This, This->travellog.position+1);
 }
 
 HRESULT get_location_url(DocHost *This, BSTR *ret)

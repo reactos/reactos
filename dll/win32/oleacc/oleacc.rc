@@ -22,49 +22,49 @@
 //#include "oleacc.h"
 
 #ifdef LANGUAGE_EN_US
-    #include "oleacc_En.rc"
+    #include "lang/oleacc_En.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "oleacc_Ko.rc"
+    #include "lang/oleacc_Ko.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "oleacc_Nl.rc"
+    #include "lang/oleacc_Nl.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "oleacc_Pl.rc"
+    #include "lang/oleacc_Pl.rc"
 #endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
-    #include "oleacc_De.rc"
+    #include "lang/oleacc_De.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "oleacc_Fr.rc"
+    #include "lang/oleacc_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "oleacc_He.rc"
+    #include "lang/oleacc_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "oleacc_Hu.rc"
+    #include "lang/oleacc_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "oleacc_It.rc"
+    #include "lang/oleacc_It.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "oleacc_Lt.rc"
+    #include "lang/oleacc_Lt.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "oleacc_No.rc"
+    #include "lang/oleacc_No.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "oleacc_Pt.rc"
+    #include "lang/oleacc_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "oleacc_Ro.rc"
+    #include "lang/oleacc_Ro.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "oleacc_Si.rc"
+    #include "lang/oleacc_Si.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "oleacc_Uk.rc"
+    #include "lang/oleacc_Uk.rc"
 #endif

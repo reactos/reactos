@@ -104,14 +104,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION_STR "8.00.7601.17601"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 /* @makedep: ietoolbar.bmp */
 IDB_IETOOLBAR BITMAP ietoolbar.bmp
 
 /* @makedep: ieframe.rgs */
-2 WINE_REGISTRY ieframe.rgs
+1 WINE_REGISTRY ieframe.rgs
 
-3 WINE_REGISTRY ieframe_v1.rgs
+2 WINE_REGISTRY ieframe_v1.rgs
+3 WINE_REGISTRY ieframe_v1.tlb.rgs
 
 1 TYPELIB ieframe_v1.tlb

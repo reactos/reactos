@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Spausdina visas bylos eilutes, kuriose yra ieškomas tekstas.\n\n\

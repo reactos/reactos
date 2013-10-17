@@ -481,7 +481,7 @@ QSI_DEF(SystemProcessorInformation)
     Spi->Reserved = 0;
     Spi->ProcessorFeatureBits = KeFeatureBits;
 
-    DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
+    DPRINT("Arch %u Level %u Rev 0x%x\n", Spi->ProcessorArchitecture,
         Spi->ProcessorLevel, Spi->ProcessorRevision);
 
     return STATUS_SUCCESS;
@@ -712,7 +712,7 @@ QSI_DEF(SystemProcessInformation)
                 !(Process->ActiveThreads) &&
                 (IsListEmpty(&Process->Pcb.ThreadListHead)))
             {
-                DPRINT1("Process %p (%s:%lx) is a zombie\n",
+                DPRINT1("Process %p (%s:%p) is a zombie\n",
                         Process, Process->ImageFileName, Process->UniqueProcessId);
                 CurrentSize = 0;
                 ImageNameMaximumLength = 0;
@@ -1287,7 +1287,7 @@ QSI_DEF(SystemFullMemoryInformation)
 
     TheIdleProcess = PsIdleProcess;
 
-    DPRINT("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
+    DPRINT("PID: %p, KernelTime: %u PFFree: %lu PFUsed: %lu\n",
            TheIdleProcess->UniqueProcessId,
            TheIdleProcess->Pcb.KernelTime,
            MiFreeSwapPages,

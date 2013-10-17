@@ -5,7 +5,7 @@
  * PURPOSE:         ActiveMovie Proxy functions
  *
  * PROGRAMMERS:     Dmitry Chapyshev
-                    Johannes Anderwald (janderwald@reactos.org)
+                    Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "precomp.h"

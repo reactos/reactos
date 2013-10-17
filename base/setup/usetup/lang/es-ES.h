@@ -992,13 +992,13 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Instalar cargador de arranque en el disco duro (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Instalar cargador de arranque en el disco duro (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1652,11 +1652,11 @@ MUI_STRING esESStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Reiniciar el equipo"},
     {STRING_CONSOLEFAIL1,
-    "Incapaz de abrir la consola\n\n"},
+    "Incapaz de abrir la consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "La causa m s com£n es la utilizaci¢n de un teclado USB\n"},
+    "La causa m s com£n es la utilizaci¢n de un teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Los teclados USB aun no son soportados completamente\n"},
+    "Los teclados USB aun no son soportados completamente\r\n"},
     {STRING_FORMATTINGDISK,
     "El instalador est  formateando su disco"},
     {STRING_CHECKINGDISK,

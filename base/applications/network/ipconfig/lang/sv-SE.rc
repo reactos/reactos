@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Broadcast"
   IDS_P2P     "Peer To Peer"
@@ -16,7 +16,7 @@ BEGIN
   IDS_UNKNOWN "Okänd"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Annan Typ av Adapter"
   IDS_ETH     "Ethernet Adapter"
@@ -27,7 +27,7 @@ BEGIN
   IDS_SLIP    "SLIP Adapter"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

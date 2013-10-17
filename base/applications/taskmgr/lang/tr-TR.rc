@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-IDR_TASKMANAGER MENU DISCARDABLE
+IDR_TASKMANAGER MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
@@ -58,7 +58,7 @@ BEGIN
     END
 END
 
-IDR_WINDOWSMENU MENU DISCARDABLE
+IDR_WINDOWSMENU MENU
 BEGIN
     MENUITEM "&Yatay Olarak Sırala",                      ID_WINDOWS_TILEHORIZONTALLY
     MENUITEM "&Dikey Olarak Sırala",                      ID_WINDOWS_TILEVERTICALLY
@@ -68,7 +68,7 @@ BEGIN
     MENUITEM "&Öne Getir",                                ID_WINDOWS_BRINGTOFRONT
 END
 
-IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
+IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
     POPUP "SAHTE"
     BEGIN
@@ -80,7 +80,7 @@ BEGIN
     END
 END
 
-IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
+IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
     POPUP "SAHTE"
     BEGIN
@@ -99,7 +99,7 @@ BEGIN
     END
 END
 
-IDR_TRAY_POPUP MENU DISCARDABLE
+IDR_TRAY_POPUP MENU
 BEGIN
     POPUP "SAHTE"
     BEGIN
@@ -110,7 +110,7 @@ BEGIN
     END
 END
 
-IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
+IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP "SAHTE"
     BEGIN
@@ -139,7 +139,7 @@ END
 // Dialog
 //
 
-IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
+IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
@@ -150,7 +150,7 @@ BEGIN
     CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
-IDD_APPLICATION_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
+IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -161,7 +161,7 @@ BEGIN
     PUSHBUTTON      "G&örevi Sonlandır",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
-IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
+IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -174,7 +174,7 @@ BEGIN
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
-IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
+IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -230,7 +230,7 @@ BEGIN
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
-IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
+IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yanlışlık Ayıklama Kanalları"
 FONT 8, "MS Shell Dlg"
@@ -241,13 +241,13 @@ BEGIN
     PUSHBUTTON      "Kapat",IDOK,171,189,69,14
 END
 
-IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
+IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CPU'larla İlişkisini Değiştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,120,133,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,174,133,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,174,133,50,14
     LTEXT           "Bu seçenekler, bu işlemin hangi CPU'larla yürütüleceğini belirler.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "0. CPU",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -316,13 +316,13 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dikeçleri Seç"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,84,178,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,138,178,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,138,178,50,14
     LTEXT           "Bu seçenekler, ""İşlemci"" sekmesindeki dikeçlerin hangisinin görüntülenip görüntülenmeyeceğini belirler.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "Yansıma Adı",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
@@ -345,7 +345,7 @@ BEGIN
                     WS_TABSTOP,7,116,62,10
     CONTROL         "G/Ç Okuma",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "G/Ç Okuma Sekizlikleri",IDC_IOREADBYTES,"Button",
+    CONTROL         "G/Ç Okuma Çokluları",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
     CONTROL         "Oturum Kimliği",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
@@ -369,11 +369,11 @@ BEGIN
                     WS_TABSTOP,107,105,55,10
     CONTROL         "G/Ç Yazma",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "G/Ç Yazma Sekizlikleri",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "G/Ç Yazma Çokluları",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
     CONTROL         "G/Ç Diğer",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,46,10
-    CONTROL         "G/Ç Diğer Sekizlikler",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "G/Ç Diğer Çoklular",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -384,7 +384,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -393,13 +393,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -413,7 +413,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -496,14 +496,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE                "Görev Yöneticisi"
     IDC_TASKMGR                  "Görev Yöneticisi"
     IDS_IDLE_PROCESS             "Çalışmayan İşlemci Yüzdesi İşlemi"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_FILE_NEW                  "Yeni görev çalıştırır."
     ID_OPTIONS_ALWAYSONTOP       "Görev Yöneticisi'ni diğer pencerelerin üstünde tutar."
@@ -518,9 +518,9 @@ BEGIN
     ID_VIEW_UPDATESPEED_LOW      "Her dört sâniyede bir Görev Yöneticisi'ndeki bilgileri yeniler."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED        "Görev Yöneticisi'ndeki bilgilerin kendiliğinden yenilenmesini durdurur. "
+    ID_VIEW_UPDATESPEED_PAUSED        "Görev Yöneticisi'ndeki bilgilerin kendiliğinden yenilenmesini durdurur."
     ID_WINDOWS_TILEHORIZONTALLY       "Masaüstündeki pencereleri yatay olarak sıralar."
     ID_WINDOWS_TILEVERTICALLY         "Masaüstündeki pencereleri dikey olarak sıralar."
     ID_WINDOWS_MINIMIZE               "Pencereleri simge durumuna küçültür."
@@ -538,7 +538,7 @@ BEGIN
     ID_APPLICATION_PAGE_SWITCHTO      "Seçilen görevi öne getirip o göreve odaklatır."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_ENDTASK                              "Seçili görevi sonlandırmaya çalışır."
     ID_GOTOPROCESS                          "Seçili görevin işlemine gider."
@@ -556,7 +556,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TAB_APPS                  "Görevler"
     IDS_TAB_PROCESSES             "İşlemler"
@@ -585,9 +585,9 @@ BEGIN
     IDS_TAB_IOREADS               "G/Ç Okuma"
     IDS_TAB_IOWRITES              "G/Ç Yazma"
     IDS_TAB_IOOTHER               "G/Ç Diğer"
-    IDS_TAB_IOREADBYTES           "G/Ç Okuma Sekizlikleri"
-    IDS_TAB_IOWRITESBYTES         "G/Ç Yazma Sekizlikleri"
-    IDS_TAB_IOOTHERBYTES          "G/Ç Diğer Sekizlikler"
+    IDS_TAB_IOREADBYTES           "G/Ç Okuma Çokluları"
+    IDS_TAB_IOWRITESBYTES         "G/Ç Yazma Çokluları"
+    IDS_TAB_IOOTHERBYTES          "G/Ç Diğer Çoklular"
     IDS_MENU_SELECTCOLUMNS        "&Dikeçleri Seç..."
     IDS_MENU_16BITTASK            "&16 İkillik Görevleri Göster"
     IDS_MENU_WINDOWS              "&Pencereler"

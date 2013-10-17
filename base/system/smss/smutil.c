@@ -213,14 +213,14 @@ SmpParseToken(IN PUNICODE_STRING Input,
         if (!Token->Buffer) return STATUS_NO_MEMORY;
 
         /* Fill in the unicode string to hold it */
-        Token->MaximumLength = TokenLength + sizeof(UNICODE_NULL);
-        Token->Length = TokenLength;
+        Token->MaximumLength = (USHORT)(TokenLength + sizeof(UNICODE_NULL));
+        Token->Length = (USHORT)TokenLength;
         RtlCopyMemory(Token->Buffer, p, TokenLength);
         Token->Buffer[TokenLength / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     /* Modify the input string with the position of where the next token begins */
-    Input->Length -= (ULONG_PTR)pp - (ULONG_PTR)Input->Buffer;
+    Input->Length -= (USHORT)((ULONG_PTR)pp - (ULONG_PTR)Input->Buffer);
     Input->Buffer = pp;
     return STATUS_SUCCESS;
 }
@@ -256,7 +256,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
                  sizeof(L"\\system32;");
         RtlInitEmptyUnicodeString(&FullPathString,
                                   RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                                  Length);
+                                  (USHORT)Length);
         if (FullPathString.Buffer)
         {
             /* Append the root, system32;, and then the current library path */
@@ -308,7 +308,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
     Length = PAGE_SIZE;
     RtlInitEmptyUnicodeString(&PathString,
                               RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                              Length);
+                              (USHORT)Length);
     if (!PathString.Buffer)
     {
         /* Fail if we have no memory for this */
@@ -329,7 +329,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
         Length = PathString.Length + sizeof(UNICODE_NULL);
         RtlInitEmptyUnicodeString(&PathString,
                                   RtlAllocateHeap(SmpHeap, SmBaseTag, Length),
-                                  Length);
+                                  (USHORT)Length);
         if (!PathString.Buffer)
         {
             /* Fail if we have no memory for this */

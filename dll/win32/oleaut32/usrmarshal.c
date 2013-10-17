@@ -1073,15 +1073,16 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     Buffer += sizeof(wiresab[0]) * wiresa->cDims;
 
     if(vt)
+    {
         *ppsa = SafeArrayCreateEx(vt, wiresa->cDims, wiresab, NULL);
+        if (!*ppsa) RpcRaiseException(E_OUTOFMEMORY);
+    }
     else
     {
-        SafeArrayAllocDescriptor(wiresa->cDims, ppsa);
-        if(*ppsa)
-            memcpy((*ppsa)->rgsabound, wiresab, sizeof(SAFEARRAYBOUND) * wiresa->cDims);
+        if (FAILED(SafeArrayAllocDescriptor(wiresa->cDims, ppsa)))
+            RpcRaiseException(E_OUTOFMEMORY);
+        memcpy((*ppsa)->rgsabound, wiresab, sizeof(SAFEARRAYBOUND) * wiresa->cDims);
     }
-    if (!*ppsa)
-        RpcRaiseException(E_OUTOFMEMORY);
 
     /* be careful about which flags we set since they could be a security
      * risk */
@@ -2245,8 +2246,17 @@ HRESULT CALLBACK IClassFactory2_CreateInstanceLic_Proxy(
     BSTR bstrKey,
     PVOID *ppvObj)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%p, %s, %p)\n", pUnkOuter, debugstr_guid(riid), ppvObj);
+
+    *ppvObj = NULL;
+
+    if (pUnkOuter)
+    {
+        ERR("aggregation is not allowed on remote objects\n");
+        return CLASS_E_NOAGGREGATION;
+    }
+
+    return IClassFactory2_RemoteCreateInstanceLic_Proxy(This, riid, bstrKey, (IUnknown**)ppvObj);
 }
 
 HRESULT __RPC_STUB IClassFactory2_CreateInstanceLic_Stub(
@@ -2255,8 +2265,8 @@ HRESULT __RPC_STUB IClassFactory2_CreateInstanceLic_Stub(
     BSTR bstrKey,
     IUnknown **ppvObj)
 {
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppvObj);
+    return IClassFactory2_CreateInstanceLic(This, NULL, NULL, riid, bstrKey, (void**)ppvObj);
 }
 
 HRESULT CALLBACK IEnumConnections_Next_Proxy(

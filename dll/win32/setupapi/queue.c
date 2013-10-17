@@ -283,9 +283,12 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
     INFCONTEXT file_ctx, disk_ctx;
     INT id, diskid;
     DWORD len, len2;
+    WCHAR SectionName[MAX_PATH];
 
     /* find the SourceDisksFiles entry */
-    if (!SetupFindFirstLineW( hinf, SourceDisksFiles, op->src_file, &file_ctx ))
+    if(!SetupDiGetActualSectionToInstallW(hinf, SourceDisksFiles, SectionName, MAX_PATH, NULL, NULL))
+        return;
+    if (!SetupFindFirstLineW( hinf, SectionName, op->src_file, &file_ctx ))
     {
         if ((op->style & (SP_COPY_SOURCE_ABSOLUTE|SP_COPY_SOURCEPATH_ABSOLUTE))) return;
         /* no specific info, use .inf file source directory */
@@ -295,7 +298,9 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
     if (!SetupGetIntField( &file_ctx, 1, &diskid )) return;
 
     /* now find the diskid in the SourceDisksNames section */
-    if (!SetupFindFirstLineW( hinf, SourceDisksNames, NULL, &disk_ctx )) return;
+    if(!SetupDiGetActualSectionToInstallW(hinf, SourceDisksNames, SectionName, MAX_PATH, NULL, NULL))
+        return;
+    if (!SetupFindFirstLineW( hinf, SectionName, NULL, &disk_ctx )) return;
     for (;;)
     {
         if (SetupGetIntField( &disk_ctx, 0, &id ) && (id == diskid)) break;

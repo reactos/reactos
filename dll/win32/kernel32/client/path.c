@@ -401,7 +401,7 @@ WINAPI
 BaseComputeProcessExePath(IN LPWSTR FullPath)
 {
     PBASE_SEARCH_PATH_TYPE PathOrder;
-    DPRINT1("Computing EXE path: %S\n", FullPath);
+    DPRINT("Computing EXE path: %S\n", FullPath);
 
     /* Check if we should use the current directory */
     PathOrder = NeedCurrentDirectoryForExePathW(FullPath) ?
@@ -557,7 +557,7 @@ IsShortName_U(IN PWCHAR Name,
               IN ULONG Length)
 {
     BOOLEAN HasExtension;
-    WCHAR c;
+    UCHAR c;
     NTSTATUS Status;
     UNICODE_STRING UnicodeName;
     ANSI_STRING AnsiName;
@@ -587,7 +587,7 @@ IsShortName_U(IN PWCHAR Name,
 
     /* Initialize our two strings */
     RtlInitEmptyAnsiString(&AnsiName, AnsiBuffer, MAX_PATH);
-    RtlInitEmptyUnicodeString(&UnicodeName, Name, Length * sizeof(WCHAR));
+    RtlInitEmptyUnicodeString(&UnicodeName, Name, (USHORT)Length * sizeof(WCHAR));
     UnicodeName.Length = UnicodeName.MaximumLength;
 
     /* Now do the conversion */
@@ -740,6 +740,19 @@ SkipPathTypeIndicator_U(IN LPWSTR Path)
     /* Check what kind of path this is and how many slashes to skip */
     switch (RtlDetermineDosPathNameType_U(Path))
     {
+        case RtlPathTypeUncAbsolute:
+        case RtlPathTypeLocalDevice:
+        {
+            /* Keep going until we bypass the path indicators */
+            for (ReturnPath = Path + 2, i = 2; (i > 0) && (*ReturnPath); ReturnPath++)
+            {
+                /* We look for 2 slashes, so keep at it until we find them */
+                if ((*ReturnPath == L'\\') || (*ReturnPath == L'/')) i--;
+            }
+
+            return ReturnPath;
+        }
+
         case RtlPathTypeDriveAbsolute:
             return Path + 3;
 
@@ -755,18 +768,6 @@ SkipPathTypeIndicator_U(IN LPWSTR Path)
         case RtlPathTypeRootLocalDevice:
         default:
             return NULL;
-
-        case RtlPathTypeUncAbsolute:
-        case RtlPathTypeLocalDevice:
-
-            /* Keep going until we bypass the path indicators */
-            for (ReturnPath = Path + 2, i = 2; (i > 0) && (*ReturnPath); ReturnPath++)
-            {
-                /* We look for 2 slashes, so keep at it until we find them */
-                if ((*ReturnPath == L'\\') || (*ReturnPath == L'/')) i--;
-            }
-
-            return ReturnPath;
     }
 }
 
@@ -913,7 +914,7 @@ GetDllDirectoryA(IN DWORD nBufferLength,
     ANSI_STRING AnsiDllDirectory;
     ULONG Length;
 
-    RtlInitEmptyAnsiString(&AnsiDllDirectory, lpBuffer, nBufferLength);
+    RtlInitEmptyAnsiString(&AnsiDllDirectory, lpBuffer, (USHORT)nBufferLength);
 
     RtlEnterCriticalSection(&BaseDllDirectoryLock);
 
@@ -1362,7 +1363,7 @@ SearchPathW(IN LPCWSTR lpPath,
         }
 
         /* Set the path size now that we have it */
-        PathString.MaximumLength = PathString.Length = LengthNeeded * sizeof(WCHAR);
+        PathString.MaximumLength = PathString.Length = (USHORT)LengthNeeded * sizeof(WCHAR);
 
         /* Request SxS isolation from RtlDosSearchPath_Ustr */
         Flags |= 1;
@@ -1376,7 +1377,7 @@ SearchPathW(IN LPCWSTR lpPath,
     if (nBufferLength <= UNICODE_STRING_MAX_CHARS)
     {
         /* Add it into the string */
-        CallerBuffer.MaximumLength = nBufferLength * sizeof(WCHAR);
+        CallerBuffer.MaximumLength = (USHORT)nBufferLength * sizeof(WCHAR);
     }
     else
     {
@@ -1706,9 +1707,9 @@ GetLongPathNameA(IN LPCSTR lpszShortPath,
 
     if (!PathLength) goto Quickie;
 
-    ShortPathUni.MaximumLength = PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    ShortPathUni.MaximumLength = (USHORT)PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
     LongPathUni.Buffer = LongPath;
-    LongPathUni.Length = PathLength * sizeof(WCHAR);
+    LongPathUni.Length = (USHORT)PathLength * sizeof(WCHAR);
 
     Status = BasepUnicodeStringTo8BitString(&LongPathAnsi, &LongPathUni, TRUE);
     if (!NT_SUCCESS(Status))
@@ -1787,9 +1788,9 @@ GetShortPathNameA(IN LPCSTR lpszLongPath,
 
     if (!PathLength) goto Quickie;
 
-    LongPathUni.MaximumLength = PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    LongPathUni.MaximumLength = (USHORT)PathLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
     ShortPathUni.Buffer = ShortPath;
-    ShortPathUni.Length = PathLength * sizeof(WCHAR);
+    ShortPathUni.Length = (USHORT)PathLength * sizeof(WCHAR);
 
     Status = BasepUnicodeStringTo8BitString(&ShortPathAnsi, &ShortPathUni, TRUE);
     if (!NT_SUCCESS(Status))
@@ -2149,8 +2150,8 @@ GetCurrentDirectoryA(IN DWORD nBufferLength,
         MaxLength = UNICODE_STRING_MAX_BYTES - 1;
     }
 
-    StaticString->Length = RtlGetCurrentDirectory_U(StaticString->MaximumLength,
-                                                    StaticString->Buffer);
+    StaticString->Length = (USHORT)RtlGetCurrentDirectory_U(StaticString->MaximumLength,
+                                                            StaticString->Buffer);
     Status = RtlUnicodeToMultiByteSize(&nBufferLength,
                                        StaticString->Buffer,
                                        StaticString->Length);
@@ -2166,7 +2167,7 @@ GetCurrentDirectoryA(IN DWORD nBufferLength,
     }
 
     AnsiString.Buffer = lpBuffer;
-    AnsiString.MaximumLength = MaxLength;
+    AnsiString.MaximumLength = (USHORT)MaxLength;
     Status = BasepUnicodeStringTo8BitString(&AnsiString, StaticString, FALSE);
     if (!NT_SUCCESS(Status))
     {

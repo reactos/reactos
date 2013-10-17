@@ -37,12 +37,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 // Icons
 
-IDI_CALC_BIG            ICON    DISCARDABLE     "res/calc.ico"
-IDI_CALC_SMALL          ICON    DISCARDABLE     "res/calc_sm.ico"
+IDI_CALC_BIG            ICON         "res/calc.ico"
+IDI_CALC_SMALL          ICON         "res/calc_sm.ico"
 
 // Bitmaps
 
-IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
+IDB_BITMAP_ROS          BITMAP       "res/ROS_logo.bmp"
+
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)

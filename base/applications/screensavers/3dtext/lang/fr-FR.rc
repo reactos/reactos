@@ -11,7 +11,7 @@ BEGIN
     LTEXT           "Texte personnalisé",IDC_STATIC,18,17,65,8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Écran de veille Texte 3D"
 END

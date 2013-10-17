@@ -36,9 +36,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
-/* The configured default surface */
-enum ddraw_surface_type DefaultSurfaceType = DDRAW_SURFACE_TYPE_OPENGL;
-
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
 
 static HINSTANCE instance;
@@ -371,7 +368,6 @@ HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA callback, void *context)
 HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *context, DWORD flags)
 {
     struct wined3d *wined3d;
-    DWORD wined3d_flags;
 
     TRACE("callback %p, context %p, flags %#x.\n", callback, context, flags);
 
@@ -383,21 +379,16 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
     if (flags)
         FIXME("flags 0x%08x not handled\n", flags);
 
-    wined3d_flags = WINED3D_LEGACY_DEPTH_BIAS;
-    if (DefaultSurfaceType != DDRAW_SURFACE_TYPE_OPENGL)
-        wined3d_flags |= WINED3D_NO3D;
-
     TRACE("Enumerating ddraw interfaces\n");
-    if (!(wined3d = wined3d_create(7, wined3d_flags)))
+    if (!(wined3d = wined3d_create(7, WINED3D_LEGACY_DEPTH_BIAS)))
     {
-        if ((wined3d_flags & WINED3D_NO3D) || !(wined3d = wined3d_create(7, wined3d_flags | WINED3D_NO3D)))
+        if (!(wined3d = wined3d_create(7, WINED3D_LEGACY_DEPTH_BIAS | WINED3D_NO3D)))
         {
             WARN("Failed to create a wined3d object.\n");
             return E_FAIL;
         }
 
         WARN("Created a wined3d object without 3D support.\n");
-        DefaultSurfaceType = DDRAW_SURFACE_TYPE_GDI;
     }
 
     __TRY
@@ -848,21 +839,16 @@ static inline DWORD get_config_key(HKEY defkey, HKEY appkey, const char* name, c
  * app didn't release them properly(Gothic 2, Diablo 2, Moto racer, ...)
  *
  ***********************************************************************/
-BOOL WINAPI
-DllMain(HINSTANCE hInstDLL,
-        DWORD Reason,
-        LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD reason, LPVOID reserved)
 {
-    TRACE("(%p,%x,%p)\n", hInstDLL, Reason, lpv);
-    if (Reason == DLL_PROCESS_ATTACH)
+    TRACE("(%p,%x,%p)\n", hInstDLL, reason, reserved);
+    switch (reason)
+    {
+    case DLL_PROCESS_ATTACH:
     {
         static HMODULE ddraw_self;
-        char buffer[MAX_PATH+10];
-        DWORD size = sizeof(buffer);
         HKEY hkey = 0;
-        HKEY appkey = 0;
         WNDCLASSA wc;
-        DWORD len;
 
         /* Register the window class. This is used to create a hidden window
          * for D3D rendering, if the application didn't pass one. It can also
@@ -881,47 +867,6 @@ DllMain(HINSTANCE hInstDLL,
         {
             ERR("Failed to register ddraw window class, last error %#x.\n", GetLastError());
             return FALSE;
-        }
-
-       /* @@ Wine registry key: HKCU\Software\Wine\Direct3D */
-       if ( RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Direct3D", &hkey ) ) hkey = 0;
-
-       len = GetModuleFileNameA( 0, buffer, MAX_PATH );
-       if (len && len < MAX_PATH)
-       {
-            HKEY tmpkey;
-            /* @@ Wine registry key: HKCU\Software\Wine\AppDefaults\app.exe\Direct3D */
-            if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\AppDefaults", &tmpkey ))
-            {
-                char *p, *appname = buffer;
-                if ((p = strrchr( appname, '/' ))) appname = p + 1;
-                if ((p = strrchr( appname, '\\' ))) appname = p + 1;
-                strcat( appname, "\\Direct3D" );
-                TRACE("appname = [%s]\n", appname);
-                if (RegOpenKeyA( tmpkey, appname, &appkey )) appkey = 0;
-                RegCloseKey( tmpkey );
-            }
-       }
-
-       if ( 0 != hkey || 0 != appkey )
-       {
-            if ( !get_config_key( hkey, appkey, "DirectDrawRenderer", buffer, size) )
-            {
-                if (!strcmp(buffer,"gdi"))
-                {
-                    TRACE("Defaulting to GDI surfaces\n");
-                    DefaultSurfaceType = DDRAW_SURFACE_TYPE_GDI;
-                }
-                else if (!strcmp(buffer,"opengl"))
-                {
-                    TRACE("Defaulting to opengl surfaces\n");
-                    DefaultSurfaceType = DDRAW_SURFACE_TYPE_OPENGL;
-                }
-                else
-                {
-                    ERR("Unknown default surface type. Supported are:\n gdi, opengl\n");
-                }
-            }
         }
 
         /* On Windows one can force the refresh rate that DirectDraw uses by
@@ -946,7 +891,8 @@ DllMain(HINSTANCE hInstDLL,
          */
         if ( !RegOpenKeyA( HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DirectDraw", &hkey ) )
         {
-            DWORD type, data;
+            DWORD type, data, size;
+
             size = sizeof(data);
             if (!RegQueryValueExA( hkey, "ForceRefreshRate", NULL, &type, (LPBYTE)&data, &size ) && type == REG_DWORD)
             {
@@ -968,9 +914,10 @@ DllMain(HINSTANCE hInstDLL,
 
         instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
+        break;
     }
-    else if (Reason == DLL_PROCESS_DETACH)
-    {
+
+    case DLL_PROCESS_DETACH:
         if(!list_empty(&global_ddraw_list))
         {
             struct list *entry, *entry2;
@@ -1034,7 +981,7 @@ DllMain(HINSTANCE hInstDLL,
             }
         }
 
-        /* Unregister the window class. */
+        if (reserved) break;
         UnregisterClassA(DDRAW_WINDOW_CLASS_NAME, hInstDLL);
     }
 

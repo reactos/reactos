@@ -36,6 +36,10 @@
 
 #include <wine/debug.h>
 
+
+#define FIXUP_POINTER(Pointer, Offset) ((Pointer != NULL) ? ((PWSTR)((ULONG_PTR)Pointer + Offset)) : NULL)
+
+
 typedef struct _RPC_SID
 {
     UCHAR Revision;
@@ -292,5 +296,15 @@ WINAPI
 LsarQueryInformationPolicy(IN LSAPR_HANDLE PolicyHandle,
                            IN POLICY_INFORMATION_CLASS InformationClass,
                            OUT PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
+
+NTSTATUS
+WINAPI
+SystemFunction007(PUNICODE_STRING string,
+                  LPBYTE hash);
 
 /* EOF */

@@ -1,6 +1,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "O&ptions"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Volume Control"
     IDS_NOMIXERDEVICES "There are no active mixer devices available! The application will now exit."

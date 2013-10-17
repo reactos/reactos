@@ -247,7 +247,7 @@ Ki386FreeIdentityMap(PLARGE_IDENTITY_MAP IdentityMap)
 {
     ULONG Page;
 
-    DPRINT("Freeing %d pages allocated for identity mapping\n", IdentityMap->PagesCount);
+    DPRINT("Freeing %lu pages allocated for identity mapping\n", IdentityMap->PagesCount);
 
     /* Free all allocated pages, if any */
     for (Page = 0; Page < IdentityMap->PagesCount; Page++)

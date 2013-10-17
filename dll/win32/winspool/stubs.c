@@ -962,14 +962,14 @@ FindFirstPrinterChangeNotification(HANDLE Printer, DWORD Flags, DWORD Options, P
 /*
  * @unimplemented
  */
-HANDLE
+BOOL
 WINAPI
-FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOptions, PVOID* NotifyInfo)
+FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, LPVOID NotifyOptions, LPVOID* NotifyInfo)
 {
   OutputDebugStringW(L"winspool FindNextPrinterChangeNotification stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
-  return INVALID_HANDLE_VALUE;
+  return FALSE;
 }
 
 

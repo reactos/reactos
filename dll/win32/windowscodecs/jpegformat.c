@@ -552,16 +552,23 @@ static HRESULT WINAPI JpegDecoder_Frame_GetResolution(IWICBitmapFrameDecode *ifa
 
     EnterCriticalSection(&This->lock);
 
-    if (This->cinfo.density_unit == 2) /* pixels per centimeter */
+    switch (This->cinfo.density_unit)
     {
+    case 2: /* pixels per centimeter */
         *pDpiX = This->cinfo.X_density * 2.54;
         *pDpiY = This->cinfo.Y_density * 2.54;
-    }
-    else
-    {
-        /* 1 = pixels per inch, 0 = unknown */
+        break;
+
+    case 1: /* pixels per inch */
         *pDpiX = This->cinfo.X_density;
         *pDpiY = This->cinfo.Y_density;
+        break;
+
+    case 0: /* unknown */
+    default:
+        *pDpiX = 96.0;
+        *pDpiY = 96.0;
+        break;
     }
 
     LeaveCriticalSection(&This->lock);

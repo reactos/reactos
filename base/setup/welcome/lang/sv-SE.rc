@@ -23,7 +23,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Välkommen"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -33,7 +33,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Installera ReactOS"
     IDS_TOPICBUTTON1        "Utforska skivan"
@@ -48,7 +48,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Installera ReactOS"
     IDS_TOPICTITLE1         "Utforska skivan"
@@ -63,7 +63,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Skapa en ny ReactOS installation på den här datorn eller uppgradera en befintlig."
     IDS_TOPICDESC1          "Utforska skivan."

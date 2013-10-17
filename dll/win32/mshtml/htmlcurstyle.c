@@ -982,8 +982,11 @@ static HRESULT WINAPI HTMLCurrentStyle2_get_textUnderlinePosition(IHTMLCurrentSt
 static HRESULT WINAPI HTMLCurrentStyle2_get_hasLayout(IHTMLCurrentStyle2 *iface, VARIANT_BOOL *p)
 {
     HTMLCurrentStyle *This = impl_from_IHTMLCurrentStyle2(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    FIXME("(%p)->(%p) returning true\n", This, p);
+
+    *p = VARIANT_TRUE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLCurrentStyle2_get_scrollbarBaseColor(IHTMLCurrentStyle2 *iface, VARIANT *p)

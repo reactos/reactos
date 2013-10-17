@@ -1,6 +1,6 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	5 "パス %s がみつかりませんでした"
 	9 "ディスク %s を挿入してください"

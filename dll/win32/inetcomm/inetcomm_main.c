@@ -62,10 +62,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         MimeInternational_Construct(&international);
         break;
     case DLL_PROCESS_DETACH:
+        if (lpvReserved) break;
         IMimeInternational_Release(international);
         InternetTransport_UnregisterClass(hinstDLL);
-        break;
-    default:
         break;
     }
     return TRUE;

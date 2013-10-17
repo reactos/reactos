@@ -176,7 +176,7 @@ static HRESULT WINAPI InputProcessorProfiles_QueryInterface(ITfInputProcessorPro
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfInputProcessorProfiles_AddRef(iface);
         return S_OK;
     }
 
@@ -743,7 +743,7 @@ static HRESULT WINAPI IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_IPPSINK)
         return E_INVALIDARG;
 
-    sink = (InputProcessorProfilesSink*)remove_Cookie(pdwCookie);
+    sink = remove_Cookie(pdwCookie);
     if (!sink)
         return CONNECT_E_NOCONNECTION;
 
@@ -807,7 +807,7 @@ static HRESULT WINAPI ProfilesEnumGuid_QueryInterface(IEnumGUID *iface, REFIID i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        IEnumGUID_AddRef(iface);
         return S_OK;
     }
 
@@ -963,7 +963,7 @@ static HRESULT WINAPI EnumTfLanguageProfiles_QueryInterface(IEnumTfLanguageProfi
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        IEnumTfLanguageProfiles_AddRef(iface);
         return S_OK;
     }
 

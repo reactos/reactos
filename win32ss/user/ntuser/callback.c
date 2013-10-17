@@ -448,6 +448,8 @@ co_IntCallHookProc(INT HookId,
                    WPARAM wParam,
                    LPARAM lParam,
                    HOOKPROC Proc,
+                   INT Mod,
+                   ULONG_PTR offPfn,
                    BOOLEAN Ansi,
                    PUNICODE_STRING ModuleName)
 {
@@ -575,7 +577,11 @@ co_IntCallHookProc(INT HookId,
    Common->wParam = wParam;
    Common->lParam = lParam;
    Common->Proc = Proc;
+   Common->Mod = Mod;
+   Common->offPfn = offPfn;
    Common->Ansi = Ansi;
+   RtlZeroMemory(&Common->ModuleName, sizeof(Common->ModuleName));
+   RtlCopyMemory(&Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
    Extra = (PCHAR) Common + sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
 
    switch(HookId)
@@ -875,6 +881,58 @@ co_IntClientThreadSetup(VOID)
    return Status;
 }
 
+HANDLE FASTCALL
+co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   HANDLE Handle;
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PCOPYIMAGE_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(COPYIMAGE_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("CopyImage callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PCOPYIMAGE_CALLBACK_ARGUMENTS) Argument;
+
+   Common->hImage = hnd;
+   Common->uType = type;
+   Common->cxDesired = desiredx;
+   Common->cyDesired = desiredy;
+   Common->fuFlags = flags;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_COPYIMAGE,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   Handle = *(HANDLE*)ResultPointer;
+
+   IntCbFreeMemory(Argument);
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("CopyImage callback failed!\n");
+      return 0;
+   }
+
+   return Handle;
+}
+
 BOOL
 APIENTRY
 co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)
@@ -928,6 +986,55 @@ co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)
    if (!NT_SUCCESS(Status))
    {
       ERR("GetCharsetInfo Failed!!\n");
+      return FALSE;
+   }
+
+   return TRUE;
+}
+
+BOOL FASTCALL
+co_IntSetWndIcons(VOID)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PSETWNDICONS_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(SETWNDICONS_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("Set Window Icons callback failed: out of memory\n");
+      return FALSE;
+   }
+   Common = (PSETWNDICONS_CALLBACK_ARGUMENTS) Argument;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_SETWNDICONS,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
+   gpsi->hIconSmWindows = Common->hIconSmWindows;
+   gpsi->hIconWindows   = Common->hIconWindows;
+
+   ERR("hIconSmWindows %p hIconWindows %p \n",gpsi->hIconSmWindows,gpsi->hIconWindows);
+
+   IntCbFreeMemory(Argument);
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Set Window Icons callback failed!\n");
       return FALSE;
    }
 

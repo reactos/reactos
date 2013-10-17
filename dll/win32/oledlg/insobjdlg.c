@@ -199,13 +199,12 @@ static LRESULT UIINSOBJDLG_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     case IDC_ADDCONTROL:
       UIINSERTOBJECTDLG_AddControl(pdlgInfo);
+      break;
 
     case IDC_OBJTYPELIST:
-    {
       if (wNotifyCode == LBN_SELCHANGE)
         UIINSERTOBJECTDLG_SelChange(pdlgInfo);
       break;
-    }
   }
   return 0;
 }
@@ -239,8 +238,8 @@ static void UIINSERTOBJECTDLG_InitDialog(InsertObjectDlgInfo* pdlgInfo)
     IOF_SHOWINSERTCONTROL) ? SW_SHOW : SW_HIDE);
   ShowWindow(pdlgInfo->hwndDisplayIconCB, (pdlgInfo->lpOleUIInsertObject->dwFlags &
     IOF_CHECKDISPLAYASICON) ? SW_SHOW : SW_HIDE);
-  EnableWindow(pdlgInfo->hwndDisplayIconCB, (pdlgInfo->lpOleUIInsertObject->dwFlags &
-    IOF_DISABLEDISPLAYASICON) ? FALSE : TRUE);
+  EnableWindow(pdlgInfo->hwndDisplayIconCB, !(pdlgInfo->lpOleUIInsertObject->dwFlags &
+    IOF_DISABLEDISPLAYASICON));
 
   if (pdlgInfo->lpOleUIInsertObject->dwFlags & IOF_SELECTCREATECONTROL)
     UIINSERTOBJECTDLG_SelectCreateCtrl(pdlgInfo);

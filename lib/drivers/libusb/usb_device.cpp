@@ -1066,7 +1066,7 @@ CUSBDevice::SelectConfiguration(
     }
 
     // informal debug print
-    DPRINT1("[%s] SelectConfiguration New Configuration %x Old Configuration %x Result %lx\n", m_USBType, ConfigurationIndex, m_ConfigurationIndex, Status);
+    DPRINT("[%s] SelectConfiguration New Configuration %x Old Configuration %x Result %lx\n", m_USBType, ConfigurationIndex, m_ConfigurationIndex, Status);
     if (!NT_SUCCESS(Status))
     {
         //

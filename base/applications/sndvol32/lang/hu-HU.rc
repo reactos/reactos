@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Beállítások"
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Hangerõ szabályozó"
     IDS_NOMIXERDEVICES "Nincsenek elérhetõ keverõ eszközök. A program kilép."

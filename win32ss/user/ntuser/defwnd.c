@@ -172,6 +172,7 @@ IntDefWindowProc(
    BOOL Ansi)
 {
    LRESULT lResult = 0;
+   USER_REFERENCE_ENTRY Ref;
 
    if (Msg > WM_USER) return 0;
 
@@ -205,6 +206,20 @@ IntDefWindowProc(
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
+      case WM_APPCOMMAND:
+         ERR("WM_APPCOMMAND\n");
+         if ( (Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
+               Wnd != co_GetDesktopWindow(Wnd) )
+         {
+            if (!co_HOOK_CallHooks(WH_SHELL, HSHELL_APPCOMMAND, wParam, lParam))
+               co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
+            break;
+         }
+         UserRefObjectCo(Wnd->spwndParent, &Ref);
+         lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
+         UserDerefObjectCo(Wnd->spwndParent);
+         break;
+
       case WM_CTLCOLORMSGBOX:
       case WM_CTLCOLOREDIT:
       case WM_CTLCOLORLISTBOX:
@@ -218,7 +233,7 @@ IntDefWindowProc(
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
       case WM_GETHOTKEY:
-         return DefWndGetHotKey(UserHMGetHandle(Wnd));
+         return DefWndGetHotKey(Wnd);
       case WM_SETHOTKEY:
          return DefWndSetHotKey(Wnd, wParam);
 
@@ -303,20 +318,22 @@ IntDefWindowProc(
    return lResult;
 }
 
-static HICON NC_IconForWindow( PWND pWnd )
+HICON FASTCALL NC_IconForWindow( PWND pWnd )
 {
    HICON hIcon = 0;
+   // First thing to do, init the Window Logo icons.
+   if (!gpsi->hIconSmWindows) co_IntSetWndIcons();
 
-   if (!pWnd->pcls || pWnd->fnid == FNID_DESKTOP) return hIcon;
+   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
+   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);
    if (!hIcon) hIcon = pWnd->pcls->hIconSm;
    if (!hIcon) hIcon = pWnd->pcls->hIcon;
 
    if (!hIcon && pWnd->style & DS_MODALFRAME)
-   { // Fake it out for now, we use it as a test.
-      hIcon = (HICON)1;
-   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
+   {
       if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
-      if (!hIcon) hIcon = gpsi->hIcoWindows;    // Reg size.
+      if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
+      hIcon = (HICON)1;
    }
    return hIcon;
 }

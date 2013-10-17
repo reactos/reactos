@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (body).                                 */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010   */
-/*            by                                                           */
+/*  Copyright 2001-2010, 2012, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -402,13 +401,13 @@
                    FT_Fixed        delta,
                    FT_Int          dimension )
   {
-    PSH_Hint  hint;
-    FT_UInt   count;
+    FT_UInt  count;
 
 
     for ( count = 0; count < table->max_hints; count++ )
     {
-      hint = table->hints + count;
+      PSH_Hint  hint = table->hints + count;
+
 
       hint->cur_pos = FT_MulFix( hint->org_pos, scale ) + delta;
       hint->cur_len = FT_MulFix( hint->org_len, scale );
@@ -563,7 +562,7 @@
               else if ( len > 0 )
               {
                 /* This is a very small stem; we simply align it to the
-                 * pixel grid, trying to find the minimal displacement.
+                 * pixel grid, trying to find the minimum displacement.
                  *
                  * left               = pos
                  * right              = pos + len
@@ -1162,8 +1161,8 @@
     int     result = PSH_DIR_NONE;
 
 
-    ax = ( dx >= 0 ) ? dx : -dx;
-    ay = ( dy >= 0 ) ? dy : -dy;
+    ax = FT_ABS( dx );
+    ay = FT_ABS( dy );
 
     if ( ay * 12 < ax )
     {
@@ -2194,7 +2193,7 @@
 
     /* something to do? */
     if ( outline->n_points == 0 || outline->n_contours == 0 )
-      return PSH_Err_Ok;
+      return FT_Err_Ok;
 
 #ifdef DEBUG_HINTER
 

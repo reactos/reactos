@@ -303,7 +303,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
 END
 
-IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+IDD_DIALOG_ABOUT DIALOGEX 0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Informazioni su ReactOS Calc"
 FONT 8, "MS Shell Dlg"
@@ -322,7 +322,7 @@ BEGIN
                     WS_VSCROLL
 END
 
-IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Finestra di statistica"
 FONT 8, "MS Shell Dlg"
@@ -339,7 +339,7 @@ END
 
 // Menus
 
-IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
@@ -371,7 +371,7 @@ BEGIN
     END
 END
 
-IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
@@ -404,7 +404,7 @@ BEGIN
     END
 END
 
-IDR_MENU_STANDARD MENU DISCARDABLE
+IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
@@ -429,7 +429,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_STRING_LICENSE      "ReactOS Calc e` software libero rilasciato sotto licenza GNU GPL.\r\n\r\nE` possibile ottenere una copia del testo della licenza GNU GPL all'indirizzo:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nE` possibile ottenere una traduzione del testo della licenza GNU GPL all'indirizzo:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Errore"
@@ -437,7 +437,7 @@ BEGIN
 END
 
 // Categorie per le conversioni
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE          "Angoli"
     IDS_CONV_AREA           "Area"
@@ -455,7 +455,7 @@ BEGIN
 END
 
 // Tipi di angoli
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ANGLE_DEGREES       "Sessagesimali"
     IDS_ANGLE_GRADIANS      "Centesimali (Gradienti)"
@@ -463,7 +463,7 @@ BEGIN
 END
 
 // Tipi di aree
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_AREA_ACRES                  "Acri"
     IDS_AREA_ACRES_BRAZIL           "Acri (Brasile)"
@@ -502,7 +502,7 @@ BEGIN
 END
 
 // Tipi di consumi
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L        "Chilometri/litro"
     IDS_CONSUMPTION_L_PER_100_KM    "Litri/100 chilometri"
@@ -511,7 +511,7 @@ BEGIN
 END
 
 // Tipi di valute
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Scellino austriaco"
     IDS_CURRENCY_BELGIAN_FRANC      "Franco belga"
@@ -534,7 +534,7 @@ BEGIN
 END
 
 // Tipi di energie
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "15 ^C calorie"
     IDS_ENERGY_BTUS                 "British Thermal Units"
@@ -551,7 +551,7 @@ BEGIN
 END
 
 // Tipi di lunghezze
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstrom"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Unità astronomiche"
@@ -603,7 +603,7 @@ BEGIN
 END
 
 // Tipi di potenze
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_POWER_BTUS_PER_MINUTE       "BTU al minuto"
     IDS_POWER_FPS_PER_MINUTE        "Libbra per piede al minuto"
@@ -614,7 +614,7 @@ BEGIN
 END
 
 // Tipi di pressione
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosfere"
     IDS_PRESSURE_BARS               "Bar"
@@ -626,7 +626,7 @@ BEGIN
 END
 
 // Tipi di temperature
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TEMPERATURE_CELSIUS         "Centigradi"
     IDS_TEMPERATURE_FAHRENHEIT      "Fahrenheit"
@@ -635,7 +635,7 @@ BEGIN
 END
 
 // Tipi di tempi
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TIME_DAYS         "Giorni"
     IDS_TIME_HOURS        "Ore"
@@ -649,7 +649,7 @@ BEGIN
 END
 
 // Tipi di velocità
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Centimetri/ora"
     IDS_VELOCITY_FEET_HOUR          "Piedi/ora"
@@ -662,7 +662,7 @@ BEGIN
 END
 
 // Tipi di volume
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VOLUME_BARRELS_UK           "Barili (GB)"
     IDS_VOLUME_BARRELS_OIL          "Barili petrolio"
@@ -701,7 +701,7 @@ BEGIN
 END
 
 // TYPES OF WEIGHTS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
     IDS_WEIGHT_CARATS               "Carati"

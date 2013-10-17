@@ -7,21 +7,42 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Za&kończ\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Pomoc"
     BEGIN
-        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", ID_HELP_ABOUT
+        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "Pl&ik"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Pomoc"
+    BEGIN
+        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Konsola Zarządzania ReactOS"
     IDS_CONSOLETITLE "Konsola%1!u!"

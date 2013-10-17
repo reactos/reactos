@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 PCHAR Utf8ConversionBuffer;
 ULONG Utf8ConversionBufferSize = PAGE_SIZE;
@@ -32,7 +32,7 @@ ULONG GlobalMessageTableCount;
 LONG SerialPortConsumerIndex, SerialPortProducerIndex;
 PCHAR SerialPortBuffer;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 NTAPI
@@ -1244,61 +1244,61 @@ GetMessageLineCount(IN ULONG MessageIndex)
 
 ULONG
 ConvertAnsiToUnicode(
-	IN PWCHAR pwch,
-	IN PCHAR pch,
-	IN ULONG length
-	)
+    IN PWCHAR pwch,
+    IN PCHAR pch,
+    IN ULONG length
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOLEAN
 IsCmdEventRegistrationProcess(
-	IN PFILE_OBJECT FileObject
-	)
+    IN PFILE_OBJECT FileObject
+    )
 {
-	return FALSE;
+    return FALSE;
 }
 
 NTSTATUS
 InvokeUserModeService(
-	VOID
-	)
+    VOID
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 TranslateMachineInformationText(
-	IN PWCHAR Buffer)
+    IN PWCHAR Buffer)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 CopyAndInsertStringAtInterval(
-	IN PWCHAR SourceStr,
-	IN ULONG Interval,
-	IN PWCHAR InsertStr,
-	OUT PWCHAR pDestStr
-	)
+    IN PWCHAR SourceStr,
+    IN ULONG Interval,
+    IN PWCHAR InsertStr,
+    OUT PWCHAR pDestStr
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 RegisterSacCmdEvent(
-	IN PVOID Object,
-	IN PKEVENT SetupCmdEvent[]
-	)
+    IN PVOID Object,
+    IN PKEVENT SetupCmdEvent[]
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 UnregisterSacCmdEvent(
-	IN PFILE_OBJECT FileObject
-	)
+    IN PFILE_OBJECT FileObject
+    )
 {
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }

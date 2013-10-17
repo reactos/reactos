@@ -29,14 +29,16 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "regedit.exe"
 #include <reactos/version.rc>
 
+#include <reactos/manifest_exe.rc>
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "rsrc.rc"
 
-IDI_OPEN_FILE   ICON    DISCARDABLE    res/folderopen.ico
-IDI_CLOSED_FILE ICON    DISCARDABLE    res/folder.ico
-IDI_ROOT        ICON    DISCARDABLE    res/computer.ico
-IDI_STRING      ICON    DISCARDABLE    res/string.ico
-IDI_BIN         ICON    DISCARDABLE    res/bin.ico
-IDI_REGEDIT     ICON    DISCARDABLE    res/regedit.ico
-IDI_REGFILE     ICON    DISCARDABLE    res/regfile.ico
+IDI_OPEN_FILE   ICON        res/folderopen.ico
+IDI_CLOSED_FILE ICON        res/folder.ico
+IDI_ROOT        ICON        res/computer.ico
+IDI_STRING      ICON        res/string.ico
+IDI_BIN         ICON        res/bin.ico
+IDI_REGEDIT     ICON        res/regedit.ico
+IDI_REGFILE     ICON        res/regfile.ico

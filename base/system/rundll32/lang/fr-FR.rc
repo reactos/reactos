@@ -1,5 +1,5 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DllNotLoaded,   "LoadLibrary a échoué lors du chargement de '%s'"
     IDS_MissingEntry,   "Point d'entrée manquant:%s\ndans %s"

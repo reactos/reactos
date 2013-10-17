@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Vysielací"
   IDS_P2P     "Rovný s rovným"
@@ -13,7 +13,7 @@ BEGIN
   IDS_UNKNOWN "Neznámy"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Iný adaptér"
   IDS_ETH     "Adaptér siete Ethernet"
@@ -24,7 +24,7 @@ BEGIN
   IDS_SLIP    "Adaptér SLIP"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE     

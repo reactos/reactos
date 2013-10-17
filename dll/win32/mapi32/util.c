@@ -492,7 +492,7 @@ BOOL WINAPI FEqualNames(LPMAPINAMEID lpName1, LPMAPINAMEID lpName2)
     if (lpName1->ulKind == MNID_STRING)
         return !strcmpW(lpName1->Kind.lpwstrName, lpName2->Kind.lpwstrName);
 
-    return lpName1->Kind.lID == lpName2->Kind.lID ? TRUE : FALSE;
+    return lpName1->Kind.lID == lpName2->Kind.lID;
 }
 
 /**************************************************************************
@@ -939,6 +939,18 @@ HRESULT WINAPI HrQueryAllRows(LPMAPITABLE lpTable, LPSPropTagArray lpPropTags,
     return MAPI_E_CALL_FAILED;
 }
 
+/**************************************************************************
+ *  WrapCompressedRTFStream   (MAPI32.186)
+ */
+HRESULT WINAPI WrapCompressedRTFStream(LPSTREAM compressed, ULONG flags, LPSTREAM *uncompressed)
+{
+    if (mapiFunctions.WrapCompressedRTFStream)
+        return mapiFunctions.WrapCompressedRTFStream(compressed, flags, uncompressed);
+
+    FIXME("(%p, 0x%08x, %p): stub\n", compressed, flags, uncompressed);
+    return MAPI_E_NO_SUPPORT;
+}
+
 static HMODULE mapi_provider;
 static HMODULE mapi_ex_provider;
 
@@ -1079,6 +1091,7 @@ void load_mapi_providers(void)
         mapiFunctions.MAPISaveMail = (void*) GetProcAddress(mapi_provider, "MAPISaveMail");
         mapiFunctions.MAPISendDocuments = (void*) GetProcAddress(mapi_provider, "MAPISendDocuments");
         mapiFunctions.MAPISendMail = (void*) GetProcAddress(mapi_provider, "MAPISendMail");
+        mapiFunctions.MAPISendMailW = (void*) GetProcAddress(mapi_provider, "MAPISendMailW");
     }
 
     /* Extended MAPI functions */
@@ -1102,6 +1115,7 @@ void load_mapi_providers(void)
         mapiFunctions.MAPIOpenLocalFormContainer = (void *) GetProcAddress(mapi_ex_provider, "MAPIOpenLocalFormContainer");
         mapiFunctions.OpenStreamOnFile = (void*) GetProcAddress(mapi_ex_provider, "OpenStreamOnFile@24");
         mapiFunctions.ScInitMapiUtil = (void*) GetProcAddress(mapi_ex_provider, "ScInitMapiUtil@4");
+        mapiFunctions.WrapCompressedRTFStream = (void*) GetProcAddress(mapi_ex_provider, "WrapCompressedRTFStream@12");
     }
 
 cleanUp:

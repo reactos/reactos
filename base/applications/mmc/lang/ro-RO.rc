@@ -7,21 +7,42 @@
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "I&eșire\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…",        ID_HELP_ABOUT
+        MENUITEM "&Despre…", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&?"
+    BEGIN
+        MENUITEM "&Despre…", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Consola de gestiune ReactOS"
     IDS_CONSOLETITLE "Consola%1!u!"

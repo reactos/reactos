@@ -7,21 +7,42 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Arkiv"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Avsluta\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "&Avsluta\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Hjälp"
     BEGIN
-        MENUITEM "&Om ReactOS Management Console...", ID_HELP_ABOUT
+        MENUITEM "&Om ReactOS Management Console...", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Avsluta\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Hjälp"
+    BEGIN
+        MENUITEM "&Om ReactOS Management Console...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Management Console"
     IDS_CONSOLETITLE "Konsoll%1!u!"

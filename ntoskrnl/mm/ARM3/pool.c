@@ -482,7 +482,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the page bit count
             //
             i = ((SizeInPages - 1) / PTE_COUNT) + 1;
-            DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
+            DPRINT("Paged pool expansion: %lu %x\n", i, SizeInPages);
 
             //
             // Check if there is enougn paged pool expansion space left
@@ -769,7 +769,10 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
 
                 /* Mark it as special pool if needed */
                 ASSERT(Pfn1->u4.VerifierAllocation == 0);
-                if (PoolType & 64) Pfn1->u4.VerifierAllocation = 1;
+                if (PoolType & VERIFIER_POOL_MASK)
+                {
+                    Pfn1->u4.VerifierAllocation = 1;
+                }
 
                 //
                 // Check if the allocation is larger than one page
@@ -879,7 +882,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
 
     /* Mark it as a verifier allocation if needed */
     ASSERT(Pfn1->u4.VerifierAllocation == 0);
-    if (PoolType & 64) Pfn1->u4.VerifierAllocation = 1;
+    if (PoolType & VERIFIER_POOL_MASK) Pfn1->u4.VerifierAllocation = 1;
 
     //
     // Release the PFN and nonpaged pool lock

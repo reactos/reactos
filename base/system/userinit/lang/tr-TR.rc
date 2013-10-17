@@ -1,0 +1,11 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+STRINGTABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Userinit, kabuğu başlatamadı!\n"
+
+END

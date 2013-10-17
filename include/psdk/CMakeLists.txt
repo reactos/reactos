@@ -13,6 +13,7 @@ list(APPEND SOURCE
 #   asysta.idl
     atliface.idl
     audioclient.idl
+    audiopolicy.idl
     bdaiface.idl
 #   binres.idl
     bits.idl
@@ -33,6 +34,7 @@ list(APPEND SOURCE
 #   dbprop.idl
 #   dbs.idl
     devenum.idl
+    devicetopology.idl
     dimm.idl
     dispex.idl
     docobj.idl
@@ -40,6 +42,7 @@ list(APPEND SOURCE
     downloadmgr.idl
     dxgi.idl
 #   dyngraph.idl
+    endpointvolume.idl
     exdisp.idl
     fusion.idl
     hlink.idl
@@ -51,6 +54,7 @@ list(APPEND SOURCE
     imnact.idl
     imnxport.idl
     indexsrv.idl
+    inputscope.idl
     metahost.idl
     mimeinfo.idl
     mimeole.idl

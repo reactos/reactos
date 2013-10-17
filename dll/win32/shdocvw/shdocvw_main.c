@@ -149,9 +149,9 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
         case DLL_PROCESS_ATTACH:
         break;
     case DLL_PROCESS_DETACH:
+        if (fImpLoad) break;
         if (SHDOCVW_hshell32) FreeLibrary(SHDOCVW_hshell32);
-        if(ieframe_instance)
-            FreeLibrary(ieframe_instance);
+        if (ieframe_instance) FreeLibrary(ieframe_instance);
         break;
     }
     return TRUE;
@@ -442,7 +442,7 @@ DWORD WINAPI ParseURLFromOutsideSourceA(LPCSTR url, LPSTR out, LPDWORD plen, LPD
     }
 
     len = sizeof(buffer) / sizeof(buffer[0]);
-    res = ParseURLFromOutsideSourceW(urlW, buffer, &len, unknown);
+    ParseURLFromOutsideSourceW(urlW, buffer, &len, unknown);
     HeapFree(GetProcessHeap(), 0, urlW);
 
     needed = WideCharToMultiByte(CP_ACP, 0, buffer, -1, NULL, 0, NULL, NULL);

@@ -57,12 +57,12 @@ CcMapData (
            Bcb->AllocationSize.QuadPart,
            Bcb->FileSize.QuadPart);
 
-    if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
+    if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)
     {
         return FALSE;
     }
 
-    ROffset = ROUND_DOWN(ReadOffset, Bcb->CacheSegmentSize);
+    ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
     Status = CcRosRequestCacheSegment(Bcb,
                                       ROffset,
                                       pBuffer,
@@ -88,7 +88,7 @@ CcMapData (
         }
     }
 
-    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
+    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + ReadOffset % VACB_MAPPING_GRANULARITY);
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
@@ -96,7 +96,7 @@ CcMapData (
         return FALSE;
     }
 
-    memset(iBcb, 0, sizeof(INTERNAL_BCB));
+    RtlZeroMemory(iBcb, sizeof(*iBcb));
     iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
     iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
     iBcb->PFCB.MappedLength = Length;
@@ -261,7 +261,7 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->CacheSegment->Mutex, 0);
+            KeReleaseMutex(&iBcb->CacheSegment->Mutex, FALSE);
         }
         else
         {

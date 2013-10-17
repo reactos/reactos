@@ -41,7 +41,7 @@ VOID
 WINAPI
 SetDebugErrorLevel( DWORD dwLevel )
 {
-    DbgPrint("(%ld): stub\n", dwLevel);
+    DbgPrint("(%lu): stub\n", dwLevel);
 }
 
 
@@ -214,17 +214,6 @@ GetInputDesktop ( VOID )
 BOOL
 WINAPI
 GetAccCursorInfo ( PCURSORINFO pci )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-ClientThreadSetup ( VOID )
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -564,6 +553,20 @@ BOOL
 WINAPI
 GetReasonTitleFromReasonCode(DWORD dw1, DWORD dw2, DWORD dw3)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+IsSETEnabled(VOID)
+{
+    /*
+     * Determines whether the Shutdown Event Tracker is enabled.
+     *
+     * See http://undoc.airesoft.co.uk/user32.dll/IsSETEnabled.php
+     * for more information.
+     */
     UNIMPLEMENTED;
     return FALSE;
 }

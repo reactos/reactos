@@ -94,7 +94,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     /* Make sure we don't have too many */
     if (SmpNumberOfPagingFiles >= 16)
     {
-        DPRINT1("SMSS:PFILE: Too many paging files specified - %d\n",
+        DPRINT1("SMSS:PFILE: Too many paging files specified - %lu\n",
                 SmpNumberOfPagingFiles);
         return STATUS_TOO_MANY_PAGING_FILES;
     }
@@ -160,10 +160,10 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
             {
                 /* Use the rest of the arguments as a maximum size */
                 SecondArgument.Buffer = &Arguments.Buffer[i];
-                SecondArgument.Length = Arguments.Length -
-                                        i * sizeof(WCHAR);
-                SecondArgument.MaximumLength = Arguments.MaximumLength -
-                                               i * sizeof(WCHAR);
+                SecondArgument.Length = (USHORT)(Arguments.Length -
+                                        i * sizeof(WCHAR));
+                SecondArgument.MaximumLength = (USHORT)(Arguments.MaximumLength -
+                                               i * sizeof(WCHAR));
                 Status = RtlUnicodeStringToInteger(&SecondArgument, 0, &MaxSize);
                 if (!NT_SUCCESS(Status))
                 {

@@ -1,6 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "I&nnstillinger"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Volumkontroll"
     IDS_NOMIXERDEVICES "Det er ingen aktive mikser enheter tilgjengelig! Programmet vil nå avsluttes."

@@ -7,7 +7,7 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Selamat Datang"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -17,7 +17,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Instalasi ReactOS"
     IDS_TOPICBUTTON1        "Lihat CD ini"
@@ -32,7 +32,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Instalasi ReactOS"
     IDS_TOPICTITLE1         "Lihat CD ini"
@@ -47,7 +47,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Buat instalasi baru ReactOS pada komputer anda atau tingkatkan instalasi yang sudah ada."
     IDS_TOPICDESC1          "Lihat CD."

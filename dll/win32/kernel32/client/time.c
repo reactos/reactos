@@ -531,7 +531,7 @@ GetSystemTimes(OUT LPFILETIME lpIdleTime OPTIONAL,
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION ProcPerfInfo;
     LARGE_INTEGER TotalUserTime, TotalKernTime, TotalIdleTime;
     SIZE_T BufferSize, ReturnLength;
-    ULONG i;
+    CCHAR i;
     NTSTATUS Status;
 
     TotalUserTime.QuadPart = TotalKernTime.QuadPart = TotalIdleTime.QuadPart = 0;

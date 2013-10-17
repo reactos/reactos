@@ -1215,6 +1215,7 @@ HRESULT get_node(HTMLDocumentNode *This, nsIDOMNode *nsnode, BOOL create, HTMLDO
 
     if(unk) {
         *ret = get_node_obj((IHTMLDOMNode*)unk);
+        nsISupports_Release(unk);
         return NS_OK;
     }
 

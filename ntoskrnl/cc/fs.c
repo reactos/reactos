@@ -87,7 +87,7 @@ CcInitializeCacheMap (
 
     /* Call old ROS cache init function */
     CcRosInitializeFileCache(FileObject,
-                             /*PAGE_SIZE*/ VACB_MAPPING_GRANULARITY, CallBacks,
+                             CallBacks,
                              LazyWriterContext);
 }
 
@@ -159,10 +159,11 @@ CcSetFileSizes (
         current_entry = Bcb->BcbSegmentListHead.Flink;
         while (current_entry != &Bcb->BcbSegmentListHead)
         {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            current = CONTAINING_RECORD(current_entry,
+                                        CACHE_SEGMENT,
+                                        BcbSegmentListEntry);
             current_entry = current_entry->Flink;
-            if (current->FileOffset > FileSizes->AllocationSize.QuadPart ||
-                    (current->FileOffset == 0 && FileSizes->AllocationSize.QuadPart == 0))
+            if (current->FileOffset >= FileSizes->AllocationSize.QuadPart)
             {
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {
@@ -172,7 +173,7 @@ CcSetFileSizes (
                     if (current->Dirty)
                     {
                         RemoveEntryList(&current->DirtySegmentListEntry);
-                        DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+                        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                     }
                     InsertHeadList(&FreeListHead, &current->BcbSegmentListEntry);
                 }

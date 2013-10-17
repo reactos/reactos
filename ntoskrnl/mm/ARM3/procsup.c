@@ -687,20 +687,19 @@ MmCreatePeb(IN PEPROCESS Process,
         Peb->NumberOfProcessors = KeNumberProcessors;
         Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL);
         Peb->NtGlobalFlag = NtGlobalFlag;
-        /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
-         Peb->HeapSegmentCommit = MmHeapSegmentCommit;
-         Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
-         Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;*/
+        Peb->HeapSegmentReserve = MmHeapSegmentReserve;
+        Peb->HeapSegmentCommit = MmHeapSegmentCommit;
+        Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+        Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
         Peb->CriticalSectionTimeout = MmCriticalSectionTimeout;
-        /*Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
-         */
+        Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
         Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(PVOID);
         Peb->ProcessHeaps = (PVOID*)(Peb + 1);
 
         //
         // Session ID
         //
-        MmGetSessionId(Process);
+        if (Process->Session) Peb->SessionId = MmGetSessionId(Process);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1562,6 +1561,21 @@ MmGetSessionId(IN PEPROCESS Process)
     return SessionGlobal->SessionId;
 }
 
+ULONG
+NTAPI
+MmGetSessionIdEx(IN PEPROCESS Process)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+
+    /* The session leader is always session zero */
+    if (Process->Vm.Flags.SessionLeader == 1) return 0;
+
+    /* Otherwise, get the session global, and read the session ID from it */
+    SessionGlobal = (PMM_SESSION_SPACE)Process->Session;
+    if (!SessionGlobal) return -1;
+    return SessionGlobal->SessionId;
+}
+
 VOID
 NTAPI
 MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
@@ -1577,7 +1591,7 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
 
     /* Get the session ID */
     SessionId = SessionGlobal->SessionId;
-    DPRINT1("Last process in sessino %d going down!!!\n", SessionId);
+    DPRINT1("Last process in session %lu going down!!!\n", SessionId);
 
     /* Free the session page tables */
 #ifndef _M_AMD64
@@ -1987,7 +2001,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     MmSessionSpace->PageTables[PointerPde - MiAddressToPde(MmSessionBase)] = *PointerPde;
 #endif
     InitializeListHead(&MmSessionSpace->ImageList);
-    DPRINT1("Session %d is ready to go: 0x%p 0x%p, %lx 0x%p\n",
+    DPRINT1("Session %lu is ready to go: 0x%p 0x%p, %lx 0x%p\n",
             *SessionId, MmSessionSpace, SessionGlobal, SessionPageDirIndex, PageTables);
 
     /* Initialize session pool */

@@ -29,6 +29,7 @@
 //#include "winuser.h"
 #include <ole2.h>
 #include <mshtmcid.h>
+#include <shlguid.h>
 
 #include <wine/debug.h>
 
@@ -1019,17 +1020,17 @@ static HRESULT query_edit_status(HTMLDocument *This, OLECMD *cmd)
 static INT_PTR CALLBACK hyperlink_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     static const WCHAR wszOther[] = {'(','o','t','h','e','r',')',0};
+    static const WCHAR wszFile[] = {'f','i','l','e',':',0};
+    static const WCHAR wszFtp[] = {'f','t','p',':',0};
+    static const WCHAR wszHttp[] = {'h','t','t','p',':',0};
+    static const WCHAR wszHttps[] = {'h','t','t','p','s',':',0};
+    static const WCHAR wszMailto[] = {'m','a','i','l','t','o',':',0};
+    static const WCHAR wszNews[] = {'n','e','w','s',':',0};
 
     switch (msg)
     {
         case WM_INITDIALOG:
         {
-            static const WCHAR wszFile[] = {'f','i','l','e',':',0};
-            static const WCHAR wszFtp[] = {'f','t','p',':',0};
-            static const WCHAR wszHttp[] = {'h','t','t','p',':',0};
-            static const WCHAR wszHttps[] = {'h','t','t','p','s',':',0};
-            static const WCHAR wszMailto[] = {'m','a','i','l','t','o',':',0};
-            static const WCHAR wszNews[] = {'n','e','w','s',':',0};
             INT def_idx;
             HWND hwndCB = GetDlgItem(hwnd, IDC_TYPE);
             HWND hwndURL = GetDlgItem(hwnd, IDC_URL);
@@ -1105,8 +1106,9 @@ static INT_PTR CALLBACK hyperlink_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LP
                     /* add new protocol */
                     if (*type != '\0')
                     {
-                        memcpy(url, type, strlenW(type) * sizeof(WCHAR));
-                        memcpy(url + strlenW(type), wszSlashSlash, sizeof(wszSlashSlash));
+                        memcpy(url, type, (strlenW(type) + 1) * sizeof(WCHAR));
+                        if (strcmpW(type, wszMailto) && strcmpW(type, wszNews))
+                            memcpy(url + strlenW(type), wszSlashSlash, sizeof(wszSlashSlash));
                     }
 
                     SetWindowTextW(hwndURL, url);
@@ -1264,4 +1266,105 @@ HRESULT editor_is_dirty(HTMLDocument *This)
     nsIEditor_GetDocumentModified(This->doc_obj->nscontainer->editor, &modified);
 
     return modified ? S_OK : S_FALSE;
+}
+
+HRESULT setup_edit_mode(HTMLDocumentObj *doc)
+{
+    IMoniker *mon;
+    HRESULT hres;
+
+    if(doc->usermode == EDITMODE)
+        return S_OK;
+
+    doc->usermode = EDITMODE;
+
+    if(doc->basedoc.window->mon) {
+        CLSID clsid = IID_NULL;
+        hres = IMoniker_GetClassID(doc->basedoc.window->mon, &clsid);
+        if(SUCCEEDED(hres)) {
+            /* We should use IMoniker::Save here */
+            FIXME("Use CLSID %s\n", debugstr_guid(&clsid));
+        }
+    }
+
+    if(doc->frame)
+        IOleInPlaceFrame_SetStatusText(doc->frame, NULL);
+
+    doc->basedoc.window->readystate = READYSTATE_UNINITIALIZED;
+
+    if(doc->client) {
+        IOleCommandTarget *cmdtrg;
+
+        hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&cmdtrg);
+        if(SUCCEEDED(hres)) {
+            VARIANT var;
+
+            V_VT(&var) = VT_I4;
+            V_I4(&var) = 0;
+            IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 37, 0, &var, NULL);
+
+            IOleCommandTarget_Release(cmdtrg);
+        }
+    }
+
+    if(doc->hostui) {
+        DOCHOSTUIINFO hostinfo;
+
+        memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
+        hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
+        hres = IDocHostUIHandler_GetHostInfo(doc->hostui, &hostinfo);
+        if(SUCCEEDED(hres))
+            /* FIXME: use hostinfo */
+            TRACE("hostinfo = {%u %08x %08x %s %s}\n",
+                    hostinfo.cbSize, hostinfo.dwFlags, hostinfo.dwDoubleClick,
+                    debugstr_w(hostinfo.pchHostCss), debugstr_w(hostinfo.pchHostNS));
+    }
+
+    update_doc(&doc->basedoc, UPDATE_UI);
+
+    if(doc->basedoc.window->mon) {
+        /* FIXME: We should find nicer way to do this */
+        remove_target_tasks(doc->basedoc.task_magic);
+
+        mon = doc->basedoc.window->mon;
+        IMoniker_AddRef(mon);
+    }else {
+        static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+
+        hres = CreateURLMoniker(NULL, about_blankW, &mon);
+        if(FAILED(hres)) {
+            FIXME("CreateURLMoniker failed: %08x\n", hres);
+            return hres;
+        }
+    }
+
+    hres = IPersistMoniker_Load(&doc->basedoc.IPersistMoniker_iface, TRUE, mon, NULL, 0);
+    IMoniker_Release(mon);
+    if(FAILED(hres))
+        return hres;
+
+    if(doc->ui_active) {
+        if(doc->ip_window)
+            call_set_active_object(doc->ip_window, NULL);
+        if(doc->hostui)
+            IDocHostUIHandler_HideUI(doc->hostui);
+    }
+
+    if(doc->ui_active) {
+        RECT rcBorderWidths;
+
+        if(doc->hostui)
+            IDocHostUIHandler_ShowUI(doc->hostui, DOCHOSTUITYPE_AUTHOR,
+                    &doc->basedoc.IOleInPlaceActiveObject_iface, &doc->basedoc.IOleCommandTarget_iface,
+                    doc->frame, doc->ip_window);
+
+        if(doc->ip_window)
+            call_set_active_object(doc->ip_window, &doc->basedoc.IOleInPlaceActiveObject_iface);
+
+        memset(&rcBorderWidths, 0, sizeof(rcBorderWidths));
+        if(doc->frame)
+            IOleInPlaceFrame_SetBorderSpace(doc->frame, &rcBorderWidths);
+    }
+
+    return S_OK;
 }

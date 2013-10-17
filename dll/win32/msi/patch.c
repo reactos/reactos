@@ -48,22 +48,22 @@ static BOOL match_language( MSIPACKAGE *package, LANGID langid )
     return FALSE;
 }
 
-static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *patch )
+static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform )
 {
-    LPWSTR prod_code, patch_product, template = NULL;
+    WCHAR *package_product, *transform_product, *template = NULL;
     UINT ret = ERROR_FUNCTION_FAILED;
 
-    prod_code = msi_dup_property( package->db, szProductCode );
-    patch_product = msi_get_suminfo_product( patch );
+    package_product = msi_dup_property( package->db, szProductCode );
+    transform_product = msi_get_suminfo_product( transform );
 
-    TRACE("db = %s patch = %s\n", debugstr_w(prod_code), debugstr_w(patch_product));
+    TRACE("package = %s transform = %s\n", debugstr_w(package_product), debugstr_w(transform_product));
 
-    if (strstrW( patch_product, prod_code ))
+    if (!transform_product || strstrW( transform_product, package_product ))
     {
         MSISUMMARYINFO *si;
         const WCHAR *p;
 
-        si = MSI_GetSummaryInformationW( patch, 0 );
+        si = MSI_GetSummaryInformationW( transform, 0 );
         if (!si)
         {
             ERR("no summary information!\n");
@@ -94,8 +94,8 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *patch )
     }
 
 end:
-    msi_free( patch_product );
-    msi_free( prod_code );
+    msi_free( transform_product );
+    msi_free( package_product );
     msi_free( template );
     return ret;
 }
@@ -555,7 +555,6 @@ static UINT set_patch_offsets( MSIDATABASE *db )
         pos = patch_offset_list_create();
         patch_offset_get_files( db, last_sequence, pos );
         patch_offset_get_patches( db, last_sequence, pos );
-        if (pos->count)
         {
             UINT offset = db->media_transform_offset - pos->min;
             last_sequence = offset + pos->max;
@@ -563,7 +562,8 @@ static UINT set_patch_offsets( MSIDATABASE *db )
             /* FIXME: this is for the patch table, which is not yet properly transformed */
             last_sequence += pos->min;
             pos->offset_to_apply = offset;
-            patch_offset_modify_db( db, pos );
+            if (pos->count)
+                patch_offset_modify_db( db, pos );
 
             MSI_RecordSetInteger( rec, 2, last_sequence );
             r = MSI_ViewModify( view, MSIMODIFY_UPDATE, rec );

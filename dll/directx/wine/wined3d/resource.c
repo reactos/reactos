@@ -4,6 +4,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2009-2010 Henri Verbeet for CodeWeavers
+ * Copyright 2006-2008, 2013 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -52,11 +53,9 @@ static DWORD resource_access_from_pool(enum wined3d_pool pool)
         case WINED3D_POOL_MANAGED:
             return WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU;
 
+        case WINED3D_POOL_SCRATCH:
         case WINED3D_POOL_SYSTEM_MEM:
             return WINED3D_RESOURCE_ACCESS_CPU;
-
-        case WINED3D_POOL_SCRATCH:
-            return WINED3D_RESOURCE_ACCESS_SCRATCH;
 
         default:
             FIXME("Unhandled pool %#x.\n", pool);
@@ -84,6 +83,8 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         void *parent, const struct wined3d_parent_ops *parent_ops,
         const struct wined3d_resource_ops *resource_ops)
 {
+    const struct wined3d *d3d = device->wined3d;
+
     resource->ref = 1;
     resource->device = device;
     resource->type = type;
@@ -109,8 +110,8 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
 
     if (size)
     {
-        resource->heapMemory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + RESOURCE_ALIGNMENT);
-        if (!resource->heapMemory)
+        resource->heap_memory = wined3d_resource_allocate_sysmem(size);
+        if (!resource->heap_memory)
         {
             ERR("Out of memory!\n");
             return WINED3DERR_OUTOFVIDEOMEMORY;
@@ -118,18 +119,17 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
     }
     else
     {
-        resource->heapMemory = NULL;
+        resource->heap_memory = NULL;
     }
-    resource->allocatedMemory = (BYTE *)(((ULONG_PTR)resource->heapMemory
-            + (RESOURCE_ALIGNMENT - 1)) & ~(RESOURCE_ALIGNMENT - 1));
+    resource->allocatedMemory = resource->heap_memory;
 
     /* Check that we have enough video ram left */
-    if (pool == WINED3D_POOL_DEFAULT)
+    if (pool == WINED3D_POOL_DEFAULT && d3d->flags & WINED3D_VIDMEM_ACCOUNTING)
     {
         if (size > wined3d_device_get_available_texture_mem(device))
         {
             ERR("Out of adapter memory\n");
-            HeapFree(GetProcessHeap(), 0, resource->heapMemory);
+            wined3d_resource_free_sysmem(resource->heap_memory);
             return WINED3DERR_OUTOFVIDEOMEMORY;
         }
         adapter_adjust_memory(device->adapter, size);
@@ -142,13 +142,14 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
 
 void resource_cleanup(struct wined3d_resource *resource)
 {
+    const struct wined3d *d3d = resource->device->wined3d;
     struct private_data *data;
     struct list *e1, *e2;
     HRESULT hr;
 
     TRACE("Cleaning up resource %p.\n", resource);
 
-    if (resource->pool == WINED3D_POOL_DEFAULT)
+    if (resource->pool == WINED3D_POOL_DEFAULT && d3d->flags & WINED3D_VIDMEM_ACCOUNTING)
     {
         TRACE("Decrementing device memory pool by %u.\n", resource->size);
         adapter_adjust_memory(resource->device->adapter, 0 - resource->size);
@@ -162,12 +163,11 @@ void resource_cleanup(struct wined3d_resource *resource)
             ERR("Failed to free private data when destroying resource %p, hr = %#x.\n", resource, hr);
     }
 
-    HeapFree(GetProcessHeap(), 0, resource->heapMemory);
-    resource->allocatedMemory = 0;
-    resource->heapMemory = 0;
+    wined3d_resource_free_sysmem(resource->heap_memory);
+    resource->allocatedMemory = NULL;
+    resource->heap_memory = NULL;
 
-    if (resource->device)
-        device_resource_released(resource->device, resource);
+    device_resource_released(resource->device, resource);
 }
 
 void resource_unload(struct wined3d_resource *resource)
@@ -332,4 +332,79 @@ void CDECL wined3d_resource_get_desc(const struct wined3d_resource *resource, st
     desc->height = resource->height;
     desc->depth = resource->depth;
     desc->size = resource->size;
+}
+
+void *wined3d_resource_allocate_sysmem(SIZE_T size)
+{
+    void **p;
+    SIZE_T align = RESOURCE_ALIGNMENT - 1 + sizeof(*p);
+    void *mem;
+
+    if (!(mem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + align)))
+        return NULL;
+
+    p = (void **)(((ULONG_PTR)mem + align) & ~(RESOURCE_ALIGNMENT - 1)) - 1;
+    *p = mem;
+
+    return ++p;
+}
+
+void wined3d_resource_free_sysmem(void *mem)
+{
+    void **p = mem;
+
+    if (!mem)
+        return;
+
+    HeapFree(GetProcessHeap(), 0, *(--p));
+}
+
+DWORD wined3d_resource_sanitize_map_flags(const struct wined3d_resource *resource, DWORD flags)
+{
+    /* Not all flags make sense together, but Windows never returns an error.
+     * Catch the cases that could cause issues. */
+    if (flags & WINED3D_MAP_READONLY)
+    {
+        if (flags & WINED3D_MAP_DISCARD)
+        {
+            WARN("WINED3D_MAP_READONLY combined with WINED3D_MAP_DISCARD, ignoring flags.\n");
+            return 0;
+        }
+        if (flags & WINED3D_MAP_NOOVERWRITE)
+        {
+            WARN("WINED3D_MAP_READONLY combined with WINED3D_MAP_NOOVERWRITE, ignoring flags.\n");
+            return 0;
+        }
+    }
+    else if ((flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+            == (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+    {
+        WARN("WINED3D_MAP_DISCARD and WINED3D_MAP_NOOVERWRITE used together, ignoring.\n");
+        return 0;
+    }
+    else if (flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE)
+            && !(resource->usage & WINED3DUSAGE_DYNAMIC))
+    {
+        WARN("DISCARD or NOOVERWRITE map on non-dynamic buffer, ignoring.\n");
+        return 0;
+    }
+
+    return flags;
+}
+
+GLbitfield wined3d_resource_gl_map_flags(DWORD d3d_flags)
+{
+    GLbitfield ret = 0;
+
+    if (!(d3d_flags & WINED3D_MAP_READONLY))
+        ret |= GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT;
+    if (!(d3d_flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE)))
+        ret |= GL_MAP_READ_BIT;
+
+    if (d3d_flags & WINED3D_MAP_DISCARD)
+        ret |= GL_MAP_INVALIDATE_BUFFER_BIT;
+    if (d3d_flags & WINED3D_MAP_NOOVERWRITE)
+        ret |= GL_MAP_UNSYNCHRONIZED_BIT;
+
+    return ret;
 }

@@ -21,16 +21,19 @@
 
 HINSTANCE hAppInstance;
 HANDLE hAppHeap;
+HWND hwndMainConsole;
+HWND hwndMDIClient;
 
-int
-_tmain(IN int argc,
-       IN const TCHAR *argv[])
+
+int WINAPI
+_tWinMain(HINSTANCE hInstance,
+          HINSTANCE hPrevInstance,
+          LPTSTR lpCmdLine,
+          int nCmdShow)
 {
-    HWND hMainConsole;
     MSG Msg;
-    BOOL bRet;
 
-    hAppInstance = GetModuleHandle(NULL);
+    hAppInstance = hInstance; // GetModuleHandle(NULL);
     hAppHeap = GetProcessHeap();
 
     InitCommonControls();
@@ -41,25 +44,20 @@ _tmain(IN int argc,
         return 1;
     }
 
-    hMainConsole = CreateConsoleWindow(argc > 1 ? argv[1] : NULL);
-    if (hMainConsole != NULL)
+    hwndMainConsole = CreateConsoleWindow(NULL /*argc > 1 ? argv[1] : NULL*/, nCmdShow);
+    if (hwndMainConsole != NULL)
     {
-        for (;;)
+        while (GetMessage(&Msg, NULL, 0, 0))
         {
-            bRet = GetMessage(&Msg,
-                              NULL,
-                              0,
-                              0);
-            if (bRet != 0 && bRet != -1)
+            if (!TranslateMDISysAccel(hwndMDIClient, &Msg))
             {
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);
             }
-            else if (bRet == 0)
-                break;
         }
     }
 
     UnregisterMMCWndClasses();
+
     return 0;
 }

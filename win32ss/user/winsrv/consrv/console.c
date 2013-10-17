@@ -12,7 +12,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "procinit.h"
 #include "alias.h"
@@ -123,7 +123,7 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
         Console->UnpauseEvent = NULL;
 
         CsrNotifyWait(&Console->WriteWaitQueue,
-                      WaitAll,
+                      TRUE,
                       NULL,
                       NULL);
         if (!IsListEmpty(&Console->WriteWaitQueue))
@@ -164,7 +164,7 @@ ConSrvReleaseConsole(PCONSOLE Console,
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSOLE* NewConsole,
                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
@@ -249,17 +249,15 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          */
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
-            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->FillAttribute;
+            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->wFillAttribute;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
         {
-            ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->ScreenBufferSize;
+            ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->dwScreenBufferSize;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
         {
-            // ConsoleInfo.ConsoleSize = ConsoleStartInfo->ConsoleWindowSize;
-            ConsoleInfo.ConsoleSize.X = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cx;
-            ConsoleInfo.ConsoleSize.Y = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cy;
+            ConsoleInfo.ConsoleSize = ConsoleStartInfo->dwWindowSize;
         }
     }
 
@@ -297,7 +295,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     return STATUS_SUCCESS;
 }
 
-VOID WINAPI
+VOID NTAPI
 ConSrvDeleteConsole(PCONSOLE Console)
 {
     DPRINT("ConSrvDeleteConsole\n");
@@ -547,7 +545,7 @@ CSR_API(SrvSetConsoleTitle)
                                    TitleRequest->Title,
                                    TitleRequest->Length);
 
-    if (NT_SUCCESS(Status)) ConioChangeTitle(Console);
+    if (NT_SUCCESS(Status)) TermChangeTitle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -647,6 +645,74 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
+}
+
+CSR_API(SrvConsoleNotifyLastClose)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+
+CSR_API(SrvGetConsoleMouseInfo)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleKeyShortcuts)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleKeyboardLayoutName)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleCharType)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleLocalEUDC)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleCursorMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleCursorMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleNlsMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleNlsMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleLangId)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

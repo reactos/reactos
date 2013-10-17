@@ -478,7 +478,7 @@ Return Value:
         return ERROR_INVALID_PARAMETER;
     }
 
-    VideoPortDebugPrint(0, "vga mapped at %x\n", hwDeviceExtension->VideoMemoryAddress);
+    VideoDebugPrint((0, "vga mapped at %x\n", hwDeviceExtension->VideoMemoryAddress));
 #endif
 // eVb: 1.7 [VDM] - Disable VDM for now
     ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0;
@@ -1508,7 +1508,7 @@ Return Value:
 --*/
 
 {
-    VideoPortDebugPrint(Error, "Detected internal VGA chip on embedded board, todo\n");
+    VideoDebugPrint((Error, "Detected internal VGA chip on embedded board, todo\n"));
     while (TRUE);
     return NO_ERROR;
 

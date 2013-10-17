@@ -7,7 +7,7 @@
  */
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Виводить iнфрмацію поекранно. Використання:\n\n\
   MORE < [Диск:][Шлях]Iм'я_файлу\n\

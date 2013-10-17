@@ -19,4 +19,6 @@ IDI_USER ICON "resources/user.ico"
 IDI_LOCKED_USER ICON "resources/locked.ico"
 IDI_GROUP ICON "resources/group.ico"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

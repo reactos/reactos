@@ -103,15 +103,28 @@ static HRESULT WINAPI HTMLDOMTextNode_Invoke(IHTMLDOMTextNode *iface, DISPID dis
 static HRESULT WINAPI HTMLDOMTextNode_put_data(IHTMLDOMTextNode *iface, BSTR v)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMText_SetData(This->nstext, &nsstr);
+    nsAString_Finish(&nsstr);
+    return NS_SUCCEEDED(nsres) ? S_OK : E_FAIL;
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_get_data(IHTMLDOMTextNode *iface, BSTR *p)
 {
     HTMLDOMTextNode *This = impl_from_IHTMLDOMTextNode(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMText_GetData(This->nstext, &nsstr);
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_toString(IHTMLDOMTextNode *iface, BSTR *String)

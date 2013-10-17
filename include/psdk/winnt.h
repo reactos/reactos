@@ -1084,6 +1084,7 @@ typedef enum {
 #define LANG_CATALAN   0x03
 #define LANG_CHINESE   0x04
 #define LANG_CHINESE_SIMPLIFIED   0x04
+#define LANG_CHINESE_TRADITIONAL  0x7c04
 #define LANG_CORSICAN   0x83
 #define LANG_CROATIAN   0x1a
 #define LANG_CROATIAN   0x1a
@@ -1156,6 +1157,7 @@ typedef enum {
 #define LANG_RUSSIAN   0x19
 #define LANG_SAMI   0x3b
 #define LANG_SANSKRIT   0x4f
+#define LANG_SCOTTISH_GAELIC   0x91
 #define LANG_SERBIAN   0x1a
 #define LANG_SOTHO   0x6c
 #define LANG_TSWANA   0x32
@@ -1194,14 +1196,16 @@ typedef enum {
 /* FIXME: non-standard */
 #define LANG_ESPERANTO      0x8f
 #define LANG_WALON          0x90
-#define LANG_CORNISH        0x91
+#define LANG_CORNISH        0x92
 
 /* FIXME: not present in the official headers */
+#define LANG_MALAGASY       0x8d
 #define LANG_GAELIC         0x94
 #define LANG_SAAMI          0x3b
 #define LANG_SUTU           0x30
 #define LANG_TSONGA         0x31
 #define LANG_VENDA          0x33
+#define LANG_MANX_GAELIC    0x94
 
 #define SUBLANG_CUSTOM_UNSPECIFIED   0x04
 #define SUBLANG_CUSTOM_DEFAULT   0x03
@@ -1645,6 +1649,49 @@ typedef enum {
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
+
+#define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#define RTL_SIZEOF_THROUGH_FIELD(type, field) \
+    (FIELD_OFFSET(type, field) + RTL_FIELD_SIZE(type, field))
+#define RTL_CONTAINS_FIELD(Struct, Size, Field) \
+    ((((PCHAR) (&(Struct)->Field)) + sizeof((Struct)->Field)) <= (((PCHAR) (Struct)) + (Size)))
+#define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
+
+#if defined(__cplusplus) && \
+    !defined(MIDL_PASS) && \
+    !defined(RC_INVOKED) && \
+    !defined(_PREFAST_) && \
+    (_MSC_FULL_VER >= 13009466) && \
+    !defined(SORTPP_PASS)
+#define RTL_NUMBER_OF_V2(A) (sizeof(*RtlpNumberOf(A)))
+#else
+#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
+#endif
+
+#ifdef ENABLE_RTL_NUMBER_OF_V2
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
+#else
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+#endif
+//#define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
+//#define _ARRAYSIZE(A)   RTL_NUMBER_OF_V1(A)
+
+#define RTL_FIELD_TYPE(type, field) (((type*)0)->field)
+#define RTL_NUMBER_OF_FIELD(type, field) (RTL_NUMBER_OF(RTL_FIELD_TYPE(type, field)))
+#define RTL_PADDING_BETWEEN_FIELDS(T, F1, F2) \
+    ((FIELD_OFFSET(T, F2) > FIELD_OFFSET(T, F1)) \
+    ? (FIELD_OFFSET(T, F2) - FIELD_OFFSET(T, F1) - RTL_FIELD_SIZE(T, F1)) \
+    : (FIELD_OFFSET(T, F1) - FIELD_OFFSET(T, F2) - RTL_FIELD_SIZE(T, F2)))
+
+#if defined(__cplusplus)
+#define RTL_CONST_CAST(type) const_cast<type>
+#else
+#define RTL_CONST_CAST(type) (type)
+#endif
+
+#define RTL_BITS_OF(sizeOfArg) (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 /* end winddk.h */
 #define IMAGE_SIZEOF_FILE_HEADER	20
 #define IMAGE_FILE_RELOCS_STRIPPED	1

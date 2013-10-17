@@ -168,16 +168,52 @@
     {
       /* validate entry in ligActionTable */
       FT_ULong   lig_action;
+#ifdef GXV_LOAD_UNUSED_VARS
       FT_UShort  last;
       FT_UShort  store;
+#endif
       FT_ULong   offset;
+      FT_Long    gid_limit;
 
 
       lig_action = FT_NEXT_ULONG( p );
+#ifdef GXV_LOAD_UNUSED_VARS
       last       = (FT_UShort)( ( lig_action >> 31 ) & 1 );
       store      = (FT_UShort)( ( lig_action >> 30 ) & 1 );
+#endif
 
       offset = lig_action & 0x3FFFFFFFUL;
+
+      /* this offset is 30-bit signed value to add to GID */
+      /* it is different from the location offset in mort */
+      if ( ( offset & 0x3FFF0000UL ) == 0x3FFF0000UL )
+      { /* negative offset */
+        gid_limit = valid->face->num_glyphs - ( offset & 0x0000FFFFUL );
+        if ( gid_limit > 0 )
+          return;
+
+        GXV_TRACE(( "ligature action table includes"
+                    " too negative offset moving all GID"
+                    " below defined range: 0x%04x\n",
+                    offset & 0xFFFFU ));
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
+      }
+      else if ( ( offset & 0x3FFF0000UL ) == 0x0000000UL )
+      { /* positive offset */
+        if ( (FT_Long)offset < valid->face->num_glyphs )
+          return;
+
+        GXV_TRACE(( "ligature action table includes"
+                    " too large offset moving all GID"
+                    " over defined range: 0x%04x\n",
+                    offset & 0xFFFFU ));
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
+      }
+
+      GXV_TRACE(( "ligature action table includes"
+                  " invalid offset to add to 16-bit GID:"
+                  " 0x%08x\n", offset ));
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_OFFSET );
     }
   }
 
@@ -191,9 +227,11 @@
     FT_Bytes                        limit,
     GXV_Validator                   valid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_UShort  setComponent;
     FT_UShort  dontAdvance;
     FT_UShort  performAction;
+#endif
     FT_UShort  reserved;
     FT_UShort  ligActionIndex;
 
@@ -201,9 +239,11 @@
     FT_UNUSED( limit );
 
 
+#ifdef GXV_LOAD_UNUSED_VARS
     setComponent   = (FT_UShort)( ( flags >> 15 ) & 1 );
     dontAdvance    = (FT_UShort)( ( flags >> 14 ) & 1 );
     performAction  = (FT_UShort)( ( flags >> 13 ) & 1 );
+#endif
 
     reserved       = (FT_UShort)( flags & 0x1FFF );
     ligActionIndex = glyphOffset_p->u;
@@ -241,6 +281,8 @@
 
         GXV_LIMIT_CHECK( 2 );
         lig_gid = FT_NEXT_USHORT( p );
+        if ( lig_gid < valid->face->num_glyphs )
+          GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
       }
     }
 

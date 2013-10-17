@@ -312,26 +312,26 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
     if( ( in->bmiHeader.biCompression != CRAM_MAGIC ) &&
         ( in->bmiHeader.biCompression != MSVC_MAGIC ) &&
         ( in->bmiHeader.biCompression != WHAM_MAGIC ) )
-        return ICERR_UNSUPPORTED;
+        return ICERR_BADFORMAT;
 
     if( ( in->bmiHeader.biBitCount != 16 ) &&
         ( in->bmiHeader.biBitCount != 8 ) )
     {
         TRACE("can't do %d bpp\n", in->bmiHeader.biBitCount );
-        return ICERR_UNSUPPORTED;
+        return ICERR_BADFORMAT;
     }
 
     /* output must be same dimensions as input */
     if( out )
     {
         if( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount )
-            return ICERR_UNSUPPORTED;
+            return ICERR_BADFORMAT;
         if( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes )
-            return ICERR_UNSUPPORTED;
+            return ICERR_BADFORMAT;
         if( in->bmiHeader.biHeight != out->bmiHeader.biHeight )
-            return ICERR_UNSUPPORTED;
+            return ICERR_BADFORMAT;
         if( in->bmiHeader.biWidth != out->bmiHeader.biWidth )
-            return ICERR_UNSUPPORTED;
+            return ICERR_BADFORMAT;
     }
 
     TRACE("OK!\n");
@@ -583,9 +583,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hModule);
         MSVIDC32_hModule = hModule;
-        break;
-
-    case DLL_PROCESS_DETACH:
         break;
     }
     return TRUE;

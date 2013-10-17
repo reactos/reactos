@@ -364,7 +364,7 @@ IopInitializePlugPlayServices(VOID)
     ULONG Disposition;
     HANDLE KeyHandle, EnumHandle, ParentHandle, TreeHandle, ControlHandle;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
-    UNICODE_STRING PnpManagerDriverName = RTL_CONSTANT_STRING(L"\\Driver\\PnpManager");
+    UNICODE_STRING PnpManagerDriverName = RTL_CONSTANT_STRING(DRIVER_ROOT_NAME L"PnpManager");
     PDEVICE_OBJECT Pdo;
     
     /* Initialize locks and such */

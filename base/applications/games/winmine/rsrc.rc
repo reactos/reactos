@@ -44,6 +44,8 @@ LEDS BITMAP rc/leds.bmp
 /* @makedep: mines.bmp */
 MINES BITMAP rc/mines.bmp
 
+#include <reactos/manifest_exe.rc>
+
 /* include localised resources */
 // UTF-8
 #pragma code_page(65001)

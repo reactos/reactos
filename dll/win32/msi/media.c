@@ -362,8 +362,29 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
 
     if (strcmpiW( mi->cabinet, cab ))
     {
-        ERR("Continuous cabinet does not match the next cabinet in the Media table\n");
-        goto done;
+        char *next_cab;
+        ULONG length;
+
+        WARN("Continuous cabinet %s does not match the next cabinet %s in the media table => use latter one\n", debugstr_w(cab), debugstr_w(mi->cabinet));
+
+        /* Use cabinet name from the media table */
+        next_cab = strdupWtoA(mi->cabinet);
+        /* Modify path to cabinet file with full filename (psz3 points to a 256 bytes buffer that can be modified contrary to psz1 and psz2) */
+        length = strlen(pfdin->psz3) + 1 + strlen(next_cab) + 1;
+        if (length > 256)
+        {
+            WARN("Cannot update next cabinet filename with a string size %u > 256\n", length);
+            msi_free(next_cab);
+            goto done;
+        }
+        else
+        {
+            strcat(pfdin->psz3, "\\");
+            strcat(pfdin->psz3, next_cab);
+        }
+        /* Path psz3 and cabinet psz1 are concatenated by FDI so just reset psz1 */
+        *pfdin->psz1 = 0;
+        msi_free(next_cab);
     }
 
     if (!(cabinet_file = get_cabinet_filename(mi)))

@@ -1263,6 +1263,7 @@ static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT 
 {
     MSICOLUMNINFO columninfo;
     UINT r;
+    int ival;
 
     if ( (iField <= 0) ||
          (iField > tv->num_cols) ||
@@ -1289,16 +1290,21 @@ static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT 
     }
     else if ( bytes_per_column( tv->db, &columninfo, LONG_STR_BYTES ) == 2 )
     {
-        *pvalue = 0x8000 + MSI_RecordGetInteger( rec, iField );
-        if ( *pvalue & 0xffff0000 )
+        ival = MSI_RecordGetInteger( rec, iField );
+        if (ival == 0x80000000) *pvalue = 0x8000;
+        else
         {
-            ERR("field %u value %d out of range\n", iField, *pvalue - 0x8000);
-            return ERROR_FUNCTION_FAILED;
+            *pvalue = 0x8000 + MSI_RecordGetInteger( rec, iField );
+            if (*pvalue & 0xffff0000)
+            {
+                ERR("field %u value %d out of range\n", iField, *pvalue - 0x8000);
+                return ERROR_FUNCTION_FAILED;
+            }
         }
     }
     else
     {
-        INT ival = MSI_RecordGetInteger( rec, iField );
+        ival = MSI_RecordGetInteger( rec, iField );
         *pvalue = ival ^ 0x80000000;
     }
 

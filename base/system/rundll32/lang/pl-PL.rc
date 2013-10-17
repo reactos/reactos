@@ -6,7 +6,7 @@
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DllNotLoaded,   "Funkcja LoadLibrary nie mogła załadować '%s'"
     IDS_MissingEntry,   "Brakujący punkt wejścia:%s\nW %s"

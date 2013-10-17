@@ -562,7 +562,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
 
             case GCLP_HICONSM:
                 /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
+                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
 
             case GCLP_WNDPROC:
@@ -639,7 +639,7 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
 
             case GCLP_HICONSM:
                 /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
+                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
 
             case GCLP_WNDPROC:
@@ -1104,6 +1104,7 @@ RealGetWindowClassA(
 /*
  * Create a small icon based on a standard icon
  */
+#if 0 // Keep vintage code from revision 18764 by GvG!
 static HICON
 CreateSmallIcon(HICON StdIcon)
 {
@@ -1249,7 +1250,7 @@ cleanup:
 
    return SmallIcon;
 }
-
+#endif
 
 ATOM WINAPI
 RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
@@ -1299,12 +1300,12 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
       ((WNDCLASSEXW*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
-
+/*
    if (NULL == WndClass.hIconSm)
    {
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
-
+*/
    if (WndClass.lpszMenuName != NULL)
    {
       if (!IS_INTRESOURCE(WndClass.lpszMenuName))

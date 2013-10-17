@@ -290,7 +290,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "Wyświetl informacje o swoim systemie komputerowym, zmień ustawienia dotyczące sprzętu i wydajności"

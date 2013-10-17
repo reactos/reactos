@@ -1,6 +1,6 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Muestra datos página por página en la pantalla.\n\n\
   MORE < [Unidad:][Ruta]Nombre del archivo\n\

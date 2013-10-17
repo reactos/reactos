@@ -1,6 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE, "Показва данните на екрана, разделени на страници.\n\n\
   MORE < [Устройство:][Път]Файлово име\n\

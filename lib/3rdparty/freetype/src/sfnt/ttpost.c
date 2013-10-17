@@ -5,7 +5,7 @@
 /*    Postcript name table processing for TrueType and OpenType fonts      */
 /*    (body).                                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2007, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2003, 2006-2010, 2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -178,7 +178,7 @@
 
     if ( num_glyphs > face->max_profile.numGlyphs )
     {
-      error = SFNT_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
       goto Exit;
     }
 
@@ -284,7 +284,7 @@
       table->glyph_indices = glyph_indices;
       table->glyph_names   = name_strings;
     }
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
 
   Fail1:
     {
@@ -325,7 +325,7 @@
     /* check the number of glyphs */
     if ( num_glyphs > face->max_profile.numGlyphs || num_glyphs > 258 )
     {
-      error = SFNT_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
       goto Exit;
     }
 
@@ -345,7 +345,7 @@
 
         if ( idx < 0 || idx > num_glyphs )
         {
-          error = SFNT_Err_Invalid_File_Format;
+          error = FT_THROW( Invalid_File_Format );
           goto Fail;
         }
       }
@@ -360,7 +360,7 @@
       table->offsets    = offset_table;
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
 
   Fail:
     FT_FREE( offset_table );
@@ -402,7 +402,7 @@
     else if ( format == 0x00028000L )
       error = load_format_25( face, stream, post_limit );
     else
-      error = SFNT_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
 
     face->postscript_names.loaded = 1;
 
@@ -488,15 +488,15 @@
 
 
     if ( !face )
-      return SFNT_Err_Invalid_Face_Handle;
+      return FT_THROW( Invalid_Face_Handle );
 
     if ( idx >= (FT_UInt)face->max_profile.numGlyphs )
-      return SFNT_Err_Invalid_Glyph_Index;
+      return FT_THROW( Invalid_Glyph_Index );
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
     psnames = (FT_Service_PsCMaps)face->psnames;
     if ( !psnames )
-      return SFNT_Err_Unimplemented_Feature;
+      return FT_THROW( Unimplemented_Feature );
 #endif
 
     names = &face->postscript_names;
@@ -556,7 +556,7 @@
     /* nothing to do for format == 0x00030000L */
 
   End:
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opções"
     BEGIN
@@ -22,7 +22,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Controle de Volume"
     IDS_NOMIXERDEVICES "Não há dispositivos de mixagem disponíveis! O aplicativo irá sair agora."

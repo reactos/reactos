@@ -28,6 +28,7 @@
 #include "objsafe.h"
 #include "htiframe.h"
 #include "tlogstg.h"
+#include <shdeprecated.h>
 
 #include <wine/list.h>
 #include <wine/unicode.h>
@@ -105,6 +106,7 @@ typedef struct event_target_t event_target_t;
     XDIID(DispHTMLSelectElement) \
     XDIID(DispHTMLStyle) \
     XDIID(DispHTMLStyleElement) \
+    XDIID(DispHTMLStyleSheet) \
     XDIID(DispHTMLStyleSheetsCollection) \
     XDIID(DispHTMLTable) \
     XDIID(DispHTMLTableCell) \
@@ -177,6 +179,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLStyle5) \
     XIID(IHTMLStyle6) \
     XIID(IHTMLStyleElement) \
+    XIID(IHTMLStyleSheet) \
     XIID(IHTMLStyleSheetsCollection) \
     XIID(IHTMLTable) \
     XIID(IHTMLTable2) \
@@ -339,6 +342,15 @@ struct HTMLLocation {
 };
 
 typedef struct {
+    DispatchEx dispex;
+    IOmHistory IOmHistory_iface;
+
+    LONG ref;
+
+    HTMLInnerWindow *window;
+} OmHistory;
+
+typedef struct {
     HTMLOuterWindow *window;
     LONG ref;
 }  windowref_t;
@@ -355,6 +367,7 @@ struct HTMLWindow {
     IDispatchEx        IDispatchEx_iface;
     IServiceProvider   IServiceProvider_iface;
     ITravelLogClient   ITravelLogClient_iface;
+    IObjectIdentity    IObjectIdentity_iface;
 
     LONG ref;
 
@@ -403,7 +416,7 @@ struct HTMLInnerWindow {
     HTMLImageElementFactory *image_factory;
     HTMLOptionElementFactory *option_factory;
     IHTMLScreen *screen;
-    IOmHistory *history;
+    OmHistory *history;
     IHTMLStorage *session_storage;
 
     unsigned parser_callback_cnt;
@@ -544,6 +557,9 @@ struct HTMLDocumentObj {
     IOleInPlaceUIWindow *ip_window;
     IAdviseSink *view_sink;
     IDocObjectService *doc_object_service;
+    IUnknown *webbrowser;
+    ITravelLog *travel_log;
+    IUnknown *browser_service;
 
     DOCHOSTUIINFO hostinfo;
 
@@ -557,7 +573,6 @@ struct HTMLDocumentObj {
     BOOL ui_active;
     BOOL window_active;
     BOOL hostui_setup;
-    BOOL is_webbrowser;
     BOOL container_locked;
     BOOL focus;
     BOOL has_popup;
@@ -738,7 +753,7 @@ HRESULT HTMLImageElementFactory_Create(HTMLInnerWindow*,HTMLImageElementFactory*
 HRESULT HTMLLocation_Create(HTMLInnerWindow*,HTMLLocation**) DECLSPEC_HIDDEN;
 IOmNavigator *OmNavigator_Create(void) DECLSPEC_HIDDEN;
 HRESULT HTMLScreen_Create(IHTMLScreen**) DECLSPEC_HIDDEN;
-HRESULT create_history(IOmHistory**) DECLSPEC_HIDDEN;
+HRESULT create_history(HTMLInnerWindow*,OmHistory**) DECLSPEC_HIDDEN;
 
 HRESULT create_storage(IHTMLStorage**) DECLSPEC_HIDDEN;
 
@@ -768,6 +783,7 @@ void NSContainer_Release(NSContainer*) DECLSPEC_HIDDEN;
 void init_mutation(nsIComponentManager*) DECLSPEC_HIDDEN;
 void init_document_mutation(HTMLDocumentNode*) DECLSPEC_HIDDEN;
 void release_document_mutation(HTMLDocumentNode*) DECLSPEC_HIDDEN;
+JSContext *get_context_from_document(nsIDOMHTMLDocument*) DECLSPEC_HIDDEN;
 
 void HTMLDocument_LockContainer(HTMLDocumentObj*,BOOL) DECLSPEC_HIDDEN;
 void show_context_menu(HTMLDocumentObj*,DWORD,POINT*,IDispatch*) DECLSPEC_HIDDEN;
@@ -952,6 +968,7 @@ void update_title(HTMLDocumentObj*) DECLSPEC_HIDDEN;
 HRESULT do_query_service(IUnknown*,REFGUID,REFIID,void**) DECLSPEC_HIDDEN;
 
 /* editor */
+HRESULT setup_edit_mode(HTMLDocumentObj*) DECLSPEC_HIDDEN;
 void init_editor(HTMLDocument*) DECLSPEC_HIDDEN;
 void handle_edit_event(HTMLDocument*,nsIDOMEvent*) DECLSPEC_HIDDEN;
 HRESULT editor_exec_copy(HTMLDocument*,DWORD,VARIANT*,VARIANT*) DECLSPEC_HIDDEN;

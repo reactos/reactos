@@ -346,7 +346,7 @@ static void free_package_structures( MSIPACKAGE *package )
     remove_tracked_tempfiles(package);
 
     /* cleanup control event subscriptions */
-    ControlEvent_CleanupSubscriptions( package );
+    msi_event_cleanup_all_subscriptions( package );
 }
 
 static void MSI_FreePackage( MSIOBJECTHDR *arg)
@@ -874,14 +874,14 @@ static VOID set_installer_properties(MSIPACKAGE *package)
             break;
         case VER_PLATFORM_WIN32_NT:
             msi_set_property( package->db, szVersionNT, verstr, len );
-            len = sprintfW( verstr, szFormat,OSVersion.wProductType );
-            msi_set_property( package->db, szMsiNTProductType, verstr, len );
+            len = sprintfW( bufstr, szFormat,OSVersion.wProductType );
+            msi_set_property( package->db, szMsiNTProductType, bufstr, len );
             break;
     }
-    len = sprintfW( verstr, szFormat, OSVersion.dwBuildNumber );
-    msi_set_property( package->db, szWindowsBuild, verstr, len );
-    len = sprintfW( verstr, szFormat, OSVersion.wServicePackMajor );
-    msi_set_property( package->db, szServicePackLevel, verstr, len );
+    len = sprintfW( bufstr, szFormat, OSVersion.dwBuildNumber );
+    msi_set_property( package->db, szWindowsBuild, bufstr, len );
+    len = sprintfW( bufstr, szFormat, OSVersion.wServicePackMajor );
+    msi_set_property( package->db, szServicePackLevel, bufstr, len );
 
     len = sprintfW( bufstr, szFormat2, MSI_MAJORVERSION, MSI_MINORVERSION );
     msi_set_property( package->db, szVersionMsi, bufstr, len );
@@ -1025,7 +1025,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         if ((computername = msi_alloc( len * sizeof(WCHAR) )))
         {
             if (GetComputerNameW( computername, &len ))
-                msi_set_property( package->db, szComputerName, computername, len - 1 );
+                msi_set_property( package->db, szComputerName, computername, len );
             msi_free( computername );
         }
     }
@@ -1942,7 +1942,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
         MSI_RecordSetStringW(uirow, 1, deformated);
         msi_free(deformated);
 
-        ControlEvent_FireSubscribedEvent(package, szActionData, uirow);
+        msi_event_fire( package, szActionData, uirow );
         msiobj_release(&uirow->hdr);
 
         if (package->action_progress_increment)
@@ -1950,7 +1950,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
             uirow = MSI_CreateRecord(2);
             MSI_RecordSetInteger(uirow, 1, 2);
             MSI_RecordSetInteger(uirow, 2, package->action_progress_increment);
-            ControlEvent_FireSubscribedEvent(package, szSetProgress, uirow);
+            msi_event_fire( package, szSetProgress, uirow );
             msiobj_release(&uirow->hdr);
         }
         break;
@@ -1961,13 +1961,13 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
         MSI_RecordSetStringW(uirow, 1, deformated);
         msi_free(deformated);
 
-        ControlEvent_FireSubscribedEvent(package, szActionText, uirow);
+        msi_event_fire( package, szActionText, uirow );
 
         msiobj_release(&uirow->hdr);
         break;
 
     case INSTALLMESSAGE_PROGRESS:
-        ControlEvent_FireSubscribedEvent(package, szSetProgress, record);
+        msi_event_fire( package, szSetProgress, record );
         break;
     }
 

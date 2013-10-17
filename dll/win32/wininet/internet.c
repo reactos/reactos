@@ -121,6 +121,7 @@ static const WCHAR szInternetSettings[] =
       'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0 };
 static const WCHAR szProxyServer[] = { 'P','r','o','x','y','S','e','r','v','e','r', 0 };
 static const WCHAR szProxyEnable[] = { 'P','r','o','x','y','E','n','a','b','l','e', 0 };
+static const WCHAR szProxyOverride[] = { 'P','r','o','x','y','O','v','e','r','r','i','d','e', 0 };
 
 void *alloc_object(object_header_t *parent, const object_vtbl_t *vtbl, size_t size)
 {
@@ -315,6 +316,7 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
 
         case DLL_PROCESS_DETACH:
+            if (lpvReserved) break;
             collect_connections(COLLECT_CLEANUP);
             NETCON_unload();
             free_urlcache();
@@ -613,9 +615,49 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
 
         TRACE("http proxy (from environment) = %s\n", debugstr_w(lpwpi->proxy));
     }
-    RegCloseKey( key );
 
     lpwpi->proxyBypass = NULL;
+    if (lpwpi->proxyEnabled)
+    {
+        if (!(envproxy = getenv( "no_proxy" )))
+        {
+            /* figure out how much memory the proxy setting takes */
+            if (!RegQueryValueExW( key, szProxyOverride, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
+            {
+                LPWSTR szProxy;
+
+                if (!(szProxy = heap_alloc(len)))
+                {
+                    RegCloseKey( key );
+                    return ERROR_OUTOFMEMORY;
+                }
+                RegQueryValueExW( key, szProxyOverride, NULL, &type, (BYTE*)szProxy, &len );
+
+                lpwpi->proxyBypass = szProxy;
+
+                TRACE("http proxy bypass = %s\n", debugstr_w(lpwpi->proxyBypass));
+            }
+            else
+            {
+                TRACE("No proxy bypass server settings in registry.\n");
+            }
+        }
+        else if (envproxy)
+        {
+            WCHAR *envproxyW;
+
+            len = MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, NULL, 0 );
+            if (!(envproxyW = heap_alloc(len * sizeof(WCHAR))))
+                return ERROR_OUTOFMEMORY;
+            MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, envproxyW, len );
+
+            lpwpi->proxyBypass = envproxyW;
+
+            TRACE("http proxy bypass (from environment) = %s\n", debugstr_w(lpwpi->proxyBypass));
+        }
+    }
+
+    RegCloseKey( key );
 
     return ERROR_SUCCESS;
 }
@@ -625,7 +667,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
  */
 static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
 {
-    proxyinfo_t wpi;
+    proxyinfo_t wpi = {0};
 
     if (INTERNET_LoadProxySettings( &wpi ))
         return FALSE;
@@ -659,13 +701,15 @@ static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
 
             lpwai->accessType = INTERNET_OPEN_TYPE_PROXY;
             lpwai->proxy = heap_strdupW(proxyurl);
+            lpwai->proxyBypass = heap_strdupW(wpi.proxyBypass);
             if (UrlComponents.dwUserNameLength)
             {
                 lpwai->proxyUsername = heap_strdupW(UrlComponents.lpszUserName);
                 lpwai->proxyPassword = heap_strdupW(UrlComponents.lpszPassword);
             }
 
-            TRACE("http proxy = %s\n", debugstr_w(lpwai->proxy));
+            TRACE("http proxy = %s bypass = %s\n", debugstr_w(lpwai->proxy), debugstr_w(lpwai->proxyBypass));
+            FreeProxyInfo(&wpi);
             return TRUE;
         }
         else
@@ -676,6 +720,7 @@ static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
     }
 
     lpwai->accessType = INTERNET_OPEN_TYPE_DIRECT;
+    FreeProxyInfo(&wpi);
     return FALSE;
 }
 
@@ -794,7 +839,7 @@ static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffe
             /* If the buffer is copied, the returned length doesn't include
              * the NULL terminator.
              */
-            *size = len * sizeof(WCHAR);
+            *size = len;
         }else {
             if (ai->agent)
                 *size = WideCharToMultiByte(CP_ACP, 0, ai->agent, -1, NULL, 0, NULL, NULL);
@@ -985,6 +1030,11 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
     /* Clear any error information */
     INTERNET_SetLastError(0);
 
+    if((dwAccessType == INTERNET_OPEN_TYPE_PROXY) && !lpszProxy) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     lpwai = alloc_object(NULL, &APPINFOVtbl, sizeof(appinfo_t));
     if (!lpwai) {
         SetLastError(ERROR_OUTOFMEMORY);
@@ -1001,9 +1051,10 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
     lpwai->agent = heap_strdupW(lpszAgent);
     if(dwAccessType == INTERNET_OPEN_TYPE_PRECONFIG)
         INTERNET_ConfigureProxy( lpwai );
-    else
+    else if(dwAccessType == INTERNET_OPEN_TYPE_PROXY) {
         lpwai->proxy = heap_strdupW(lpszProxy);
-    lpwai->proxyBypass = heap_strdupW(lpszProxyBypass);
+        lpwai->proxyBypass = heap_strdupW(lpszProxyBypass);
+    }
 
     TRACE("returning %p\n", lpwai);
 
@@ -1591,7 +1642,7 @@ static INTERNET_SCHEME GetInternetSchemeW(LPCWSTR lpszScheme, DWORD nMaxCmp)
         return INTERNET_SCHEME_UNKNOWN;
 
     for (i = 0; i < sizeof(url_schemes)/sizeof(url_schemes[0]); i++)
-        if (!strncmpW(lpszScheme, url_schemes[i], nMaxCmp))
+        if (!strncmpiW(lpszScheme, url_schemes[i], nMaxCmp))
             return INTERNET_SCHEME_FIRST + i;
 
     return INTERNET_SCHEME_UNKNOWN;
@@ -2954,11 +3005,11 @@ BOOL WINAPI InternetSetOptionA(HINTERNET hInternet, DWORD dwOption,
     case INTERNET_OPTION_USER_AGENT:
     case INTERNET_OPTION_USERNAME:
     case INTERNET_OPTION_PASSWORD:
-        wlen = MultiByteToWideChar( CP_ACP, 0, lpBuffer, dwBufferLength,
-                                   NULL, 0 );
-        wbuffer = heap_alloc(wlen*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, lpBuffer, dwBufferLength,
-                                   wbuffer, wlen );
+    case INTERNET_OPTION_PROXY_USERNAME:
+    case INTERNET_OPTION_PROXY_PASSWORD:
+        wlen = MultiByteToWideChar( CP_ACP, 0, lpBuffer, -1, NULL, 0 );
+        if (!(wbuffer = heap_alloc( wlen * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
+        MultiByteToWideChar( CP_ACP, 0, lpBuffer, -1, wbuffer, wlen );
         break;
     case INTERNET_OPTION_PER_CONNECTION_OPTION: {
         unsigned int i;

@@ -81,7 +81,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "General"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -108,7 +108,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "종속성"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -120,7 +120,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "서비스 만들기"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -187,7 +187,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN "이름"
   IDS_SECONDCOLUMN "설명"
@@ -196,7 +196,7 @@ BEGIN
   IDS_FITHCOLUMN "..로 로그인"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "시작됨"
   IDS_SERVICES_STOPPED "정지됨"
@@ -205,7 +205,7 @@ BEGIN
   IDS_SERVICES_DIS "사용 안함"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "모든 서비스: %d"
   IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
@@ -213,7 +213,7 @@ BEGIN
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP "속성"
   IDS_TOOLTIP_REFRESH "새로 고침"
@@ -226,7 +226,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "서비스 재시작"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START  "ReactOS는 다음 서비스를 시작하려고 합니다"
   IDS_PROGRESS_INFO_STOP   "ReactOS는 다음 서비스를 중지하려고 합니다"
@@ -238,13 +238,13 @@ BEGIN
   IDS_DELETE_STOP "지우기 전에 수동으로 서비스를 정지해야 됩니다!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "옵션 생성:\r\n참고: 옵션 이름은 등호를 포함합니다.\r\n 타입= <own|share|interact|kernel|filesys|rec>\r\n       (기본 = own)\r\n 시작= <boot|system|auto|demand|disabled>\r\n       (기본 = demand) \r\n 에러= <normal|severe|critical|ignore>\r\n       (기본 = normal)\r\n 그룹= <LoadOrderGroup>\r\n tag= <yes|no>\r\n 종속성= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (기본 = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " 현재 리스트를 파일로 출력합니다."
@@ -280,7 +280,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "ReactOS 서비스 관리자"
 END

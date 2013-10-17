@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Добро пожаловать!"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -14,7 +14,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Установить ReactOS"
     IDS_TOPICBUTTON1        "Обзор диска"
@@ -29,7 +29,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Установить ReactOS"
     IDS_TOPICTITLE1         "Обзор диска"
@@ -44,7 +44,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Установит ReactOS на Ваш компьютер с нуля или обновит уже установленную версию."
     IDS_TOPICDESC1          "Обзор диска."

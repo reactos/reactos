@@ -125,34 +125,33 @@ extern PVOID FrLdrDefaultHeap;
 extern PVOID FrLdrTempHeap;
 
 PVOID
-HeapCreate(
+FrLdrHeapCreate(
     SIZE_T MaximumSize,
     TYPE_OF_MEMORY MemoryType);
 
 VOID
-HeapDestroy(
+FrLdrHeapDestroy(
     PVOID HeapHandle);
 
 VOID
-HeapRelease(
+FrLdrHeapRelease(
     PVOID HeapHandle);
 
 VOID
-HeapVerify(
+FrLdrHeapVerify(
     PVOID HeapHandle);
 
 VOID
-HeapCleanupAll(VOID);
+FrLdrHeapCleanupAll(VOID);
 
 PVOID
-HeapAllocate(
+FrLdrHeapAllocate(
     PVOID HeapHandle,
     SIZE_T ByteSize,
     ULONG Tag);
 
 VOID
-HeapFree(
+FrLdrHeapFree(
     PVOID HeapHandle,
     PVOID Pointer,
     ULONG Tag);
-

@@ -282,7 +282,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Systeem"
     IDS_CPLSYSTEMDESCRIPTION "Systeeminformatie weergeven en omgevingsinstellingen wijzigen."

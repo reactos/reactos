@@ -52,7 +52,7 @@
  62 cdecl ldap_add_extW(ptr wstr ptr ptr ptr ptr)
  63 cdecl ldap_add_ext_s(ptr str ptr ptr ptr) ldap_add_ext_sA
  64 cdecl ldap_add_ext_sA(ptr str ptr ptr ptr)
- 65 cdecl ldap_add_ext_sW(ptr str ptr ptr ptr)
+ 65 cdecl ldap_add_ext_sW(ptr wstr ptr ptr ptr)
  66 cdecl ldap_add_sA(ptr str ptr)
  67 cdecl ldap_modrdn2(ptr str ptr long) ldap_modrdn2A
  68 cdecl ldap_modrdn2_s(ptr str ptr long) ldap_modrdn2_sA
@@ -206,7 +206,7 @@
 216 cdecl ldap_simple_bind_sW(ptr wstr wstr)
 217 cdecl ldap_sslinit(str long long) ldap_sslinitA
 218 cdecl ldap_sslinitA(str long long)
-219 cdecl ldap_sslinitW(str long long)
+219 cdecl ldap_sslinitW(wstr long long)
 220 cdecl ldap_ufn2dn(str ptr) ldap_ufn2dnA
 221 cdecl ldap_ufn2dnA(str ptr)
 222 cdecl ldap_ufn2dnW(wstr ptr)

@@ -235,7 +235,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
        pKl->iBaseCharset = cs.ciCharset;
        pKl->dwFontSigs = cs.fs.fsCsb[0];
        pKl->CodePage = (USHORT)cs.ciACP;
-       TRACE("Charset %d Font Sig %d CodePage %d\n", pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
+       TRACE("Charset %u Font Sig %lu CodePage %u\n", pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
     }
     else
     {
@@ -695,7 +695,7 @@ NtUserActivateKeyboardLayout(
 
     if (!pKl)
     {
-        ERR("Invalid HKL %x!\n", hKl);
+        ERR("Invalid HKL %p!\n", hKl);
         goto cleanup;
     }
 
@@ -741,7 +741,7 @@ NtUserUnloadKeyboardLayout(
     if (pKl)
         bRet = UserUnloadKbl(pKl);
     else
-        ERR("Invalid HKL %x!\n", hKl);
+        ERR("Invalid HKL %p!\n", hKl);
 
     UserLeave();
     return bRet;

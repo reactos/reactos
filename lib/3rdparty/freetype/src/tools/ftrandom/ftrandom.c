@@ -1,4 +1,4 @@
-/* Copyright (C) 2005, 2007, 2008 by George Williams */
+/* Copyright (C) 2005, 2007, 2008, 2013 by George Williams */
 /*
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -184,7 +184,6 @@
   {
     FT_Library  context;
     FT_Face     face;
-    int         i, num;
 
 
     if ( FT_Init_FreeType( &context ) )
@@ -203,6 +202,9 @@
       TestFace( face );
     else
     {
+      int  i, num;
+
+
       num = face->num_faces;
       FT_Done_Face( face );
 
@@ -327,12 +329,9 @@
   FindFonts( char**  fontdirs,
              char**  extensions )
   {
-    DIR*            examples;
-    struct dirent*  ent;
-
-    int             i, max;
-    char            buffer[1025];
-    struct stat     statb;
+    int          i, max;
+    char         buffer[1025];
+    struct stat  statb;
 
 
     max  = 0;
@@ -340,6 +339,10 @@
 
     for ( i = 0; fontdirs[i] != NULL; ++i )
     {
+      DIR*            examples;
+      struct dirent*  ent;
+
+
       examples = opendir( fontdirs[i] );
       if ( examples == NULL )
       {
@@ -555,7 +558,6 @@
         char**  argv )
   {
     char    **dirs, **exts;
-    char    *pt, *end;
     int     dcnt = 0, ecnt = 0, rset = false, allexts = false;
     int     i;
     time_t  now;
@@ -567,7 +569,10 @@
 
     for ( i = 1; i < argc; ++i )
     {
-      pt = argv[i];
+      char*  pt = argv[i];
+      char*  end;
+
+
       if ( pt[0] == '-' && pt[1] == '-' )
         ++pt;
 
@@ -633,12 +638,21 @@
     }
 
     if ( allexts )
+    {
+      free( exts );
       exts = NULL;
+    }
     else if ( ecnt == 0 )
+    {
+      free( exts );
       exts = default_ext_list;
+    }
 
     if ( dcnt == 0 )
+    {
+      free( dirs );
       dirs = default_dir_list;
+    }
 
     if ( testfile != NULL )
       ExecuteTest( testfile );         /* This should never return */

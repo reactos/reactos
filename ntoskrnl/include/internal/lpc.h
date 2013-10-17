@@ -58,6 +58,12 @@
                                                              LPCP_THREAD_FLAG_NO_IMPERSONATION)
 
 //
+// LPC Locking Flags
+//
+#define LPCP_LOCK_HELD      1
+#define LPCP_LOCK_RELEASE   2
+
+//
 // Internal Port Management
 //
 VOID
@@ -86,7 +92,7 @@ VOID
 NTAPI
 LpcpFreeToPortZone(
     IN PLPCP_MESSAGE Message,
-    IN ULONG Flags
+    IN ULONG LockFlags
 );
 
 VOID
@@ -104,7 +110,7 @@ NTAPI
 LpcpSaveDataInfoMessage(
     IN PLPCP_PORT_OBJECT Port,
     IN PLPCP_MESSAGE Message,
-    IN ULONG LockHeld
+    IN ULONG LockFlags
 );
 
 //

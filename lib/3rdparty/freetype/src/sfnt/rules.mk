@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by
+# Copyright 1996-2000, 2002-2007, 2009, 2011, 2013 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -33,15 +33,14 @@ SFNT_DRV_SRC := $(SFNT_DIR)/ttload.c   \
                 $(SFNT_DIR)/ttkern.c   \
                 $(SFNT_DIR)/ttbdf.c    \
                 $(SFNT_DIR)/sfobjs.c   \
-                $(SFNT_DIR)/sfdriver.c
+                $(SFNT_DIR)/sfdriver.c \
+                $(SFNT_DIR)/sfntpic.c  \
+                $(SFNT_DIR)/pngshim.c
 
 # SFNT driver headers
 #
-# Note that ttsbit0.c gets #included by ttsbit.c.
-#
 SFNT_DRV_H := $(SFNT_DRV_SRC:%c=%h)  \
-              $(SFNT_DIR)/sferrors.h \
-              $(SFNT_DIR)/ttsbit0.c
+              $(SFNT_DIR)/sferrors.h
 
 
 # SFNT driver object(s)

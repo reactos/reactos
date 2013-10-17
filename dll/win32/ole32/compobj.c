@@ -61,6 +61,7 @@
 #include <ole2ver.h>
 #include <ctxtcall.h>
 #include <dde.h>
+#include <servprov.h>
 
 #include <initguid.h>
 #include "compobj_private.h"
@@ -98,6 +99,20 @@ struct registered_psclsid
 };
 
 /*
+ * This is a marshallable object exposing registered local servers.
+ * IServiceProvider is used only because it happens meet requirements
+ * and already has proxy/stub code. If more functionality is needed,
+ * a custom interface may be used instead.
+ */
+struct LocalServer
+{
+    IServiceProvider IServiceProvider_iface;
+    LONG ref;
+    APARTMENT *apt;
+    IStream *marshal_stream;
+};
+
+/*
  * This lock count counts the number of times CoInitialize is called. It is
  * decreased every time CoUninitialize is called. When it hits 0, the COM
  * libraries are freed
@@ -123,7 +138,6 @@ typedef struct tagRegisteredClass
   DWORD     runContext;
   DWORD     connectFlags;
   DWORD     dwCookie;
-  LPSTREAM  pMarshaledData; /* FIXME: only really need to store OXID and IPID */
   void     *RpcRegistration;
 } RegisteredClass;
 
@@ -384,6 +398,7 @@ static HRESULT COMPOBJ_DllList_Add(LPCWSTR library_name, OpenDll **ret)
             entry->DllCanUnloadNow = DllCanUnloadNow;
             entry->DllGetClassObject = DllGetClassObject;
             list_add_tail(&openDllList, &entry->entry);
+            *ret = entry;
         }
         else
         {
@@ -391,7 +406,6 @@ static HRESULT COMPOBJ_DllList_Add(LPCWSTR library_name, OpenDll **ret)
             hr = E_OUTOFMEMORY;
             FreeLibrary(hLibrary);
         }
-        *ret = entry;
     }
 
     LeaveCriticalSection( &csOpenDllList );
@@ -549,20 +563,7 @@ static void COM_RevokeRegisteredClassObject(RegisteredClass *curClass)
     if (curClass->runContext & CLSCTX_LOCAL_SERVER)
         RPC_StopLocalServer(curClass->RpcRegistration);
 
-    /*
-     * Release the reference to the class object.
-     */
     IUnknown_Release(curClass->classObject);
-
-    if (curClass->pMarshaledData)
-    {
-        LARGE_INTEGER zero;
-        memset(&zero, 0, sizeof(zero));
-        IStream_Seek(curClass->pMarshaledData, zero, STREAM_SEEK_SET, NULL);
-        CoReleaseMarshalData(curClass->pMarshaledData);
-        IStream_Release(curClass->pMarshaledData);
-    }
-
     HeapFree(GetProcessHeap(), 0, curClass);
 }
 
@@ -730,6 +731,130 @@ static HRESULT ManualResetEvent_Construct(IUnknown *punkouter, REFIID iid, void 
     return hr;
 }
 
+static inline LocalServer *impl_from_IServiceProvider(IServiceProvider *iface)
+{
+    return CONTAINING_RECORD(iface, LocalServer, IServiceProvider_iface);
+}
+
+static HRESULT WINAPI LocalServer_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    LocalServer *This = impl_from_IServiceProvider(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+
+    if(IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IServiceProvider)) {
+        *ppv = &This->IServiceProvider_iface;
+    }else {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI LocalServer_AddRef(IServiceProvider *iface)
+{
+    LocalServer *This = impl_from_IServiceProvider(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI LocalServer_Release(IServiceProvider *iface)
+{
+    LocalServer *This = impl_from_IServiceProvider(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        assert(!This->apt);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI LocalServer_QueryService(IServiceProvider *iface, REFGUID guid, REFIID riid, void **ppv)
+{
+    LocalServer *This = impl_from_IServiceProvider(iface);
+    APARTMENT *apt = COM_CurrentApt();
+    RegisteredClass *iter;
+    HRESULT hres = E_FAIL;
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guid), debugstr_guid(riid), ppv);
+
+    if(!This->apt)
+        return E_UNEXPECTED;
+
+    EnterCriticalSection(&csRegisteredClassList);
+
+    LIST_FOR_EACH_ENTRY(iter, &RegisteredClassList, RegisteredClass, entry) {
+        if(iter->apartment_id == apt->oxid
+           && (iter->runContext & CLSCTX_LOCAL_SERVER)
+           && IsEqualGUID(&iter->classIdentifier, guid)) {
+            hres = IUnknown_QueryInterface(iter->classObject, riid, ppv);
+            break;
+        }
+    }
+
+    LeaveCriticalSection( &csRegisteredClassList );
+
+    return hres;
+}
+
+static const IServiceProviderVtbl LocalServerVtbl = {
+    LocalServer_QueryInterface,
+    LocalServer_AddRef,
+    LocalServer_Release,
+    LocalServer_QueryService
+};
+
+static HRESULT get_local_server_stream(APARTMENT *apt, IStream **ret)
+{
+    HRESULT hres = S_OK;
+
+    EnterCriticalSection(&apt->cs);
+
+    if(!apt->local_server) {
+        LocalServer *obj;
+
+        obj = heap_alloc(sizeof(*obj));
+        if(obj) {
+            obj->IServiceProvider_iface.lpVtbl = &LocalServerVtbl;
+            obj->ref = 1;
+            obj->apt = apt;
+
+            hres = CreateStreamOnHGlobal(0, TRUE, &obj->marshal_stream);
+            if(SUCCEEDED(hres)) {
+                hres = CoMarshalInterface(obj->marshal_stream, &IID_IServiceProvider, (IUnknown*)&obj->IServiceProvider_iface,
+                        MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLESTRONG);
+                if(FAILED(hres))
+                    IStream_Release(obj->marshal_stream);
+            }
+
+            if(SUCCEEDED(hres))
+                apt->local_server = obj;
+            else
+                heap_free(obj);
+        }else {
+            hres = E_OUTOFMEMORY;
+        }
+    }
+
+    if(SUCCEEDED(hres))
+        hres = IStream_Clone(apt->local_server->marshal_stream, ret);
+
+    LeaveCriticalSection(&apt->cs);
+
+    if(FAILED(hres))
+        ERR("Failed: %08x\n", hres);
+    return hres;
+}
+
 /***********************************************************************
  *           CoRevokeClassObject [OLE32.@]
  *
@@ -859,6 +984,21 @@ DWORD apartment_release(struct apartment *apt)
         struct list *cursor, *cursor2;
 
         TRACE("destroying apartment %p, oxid %s\n", apt, wine_dbgstr_longlong(apt->oxid));
+
+        if(apt->local_server) {
+            LocalServer *local_server = apt->local_server;
+            LARGE_INTEGER zero;
+
+            memset(&zero, 0, sizeof(zero));
+            IStream_Seek(local_server->marshal_stream, zero, STREAM_SEEK_SET, NULL);
+            CoReleaseMarshalData(local_server->marshal_stream);
+            IStream_Release(local_server->marshal_stream);
+            local_server->marshal_stream = NULL;
+
+            apt->local_server = NULL;
+            local_server->apt = NULL;
+            IServiceProvider_Release(&local_server->IServiceProvider_iface);
+        }
 
         /* Release the references to the registered class objects */
         COM_RevokeAllClasses(apt);
@@ -2103,6 +2243,15 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
     return __CLSIDFromString(buf2,clsid);
 }
 
+/******************************************************************************
+ *              CLSIDFromProgIDEx [OLE32.@]
+ */
+HRESULT WINAPI CLSIDFromProgIDEx(LPCOLESTR progid, LPCLSID clsid)
+{
+    FIXME("%s,%p: semi-stub\n", debugstr_w(progid), clsid);
+
+    return CLSIDFromProgID(progid, clsid);
+}
 
 /*****************************************************************************
  *             CoGetPSClsid [OLE32.@]
@@ -2407,7 +2556,6 @@ HRESULT WINAPI CoRegisterClassObject(
   newClass->apartment_id    = apt->oxid;
   newClass->runContext      = dwClsContext;
   newClass->connectFlags    = flags;
-  newClass->pMarshaledData  = NULL;
   newClass->RpcRegistration = NULL;
 
   if (!(newClass->dwCookie = InterlockedIncrement( &next_cookie )))
@@ -2427,23 +2575,17 @@ HRESULT WINAPI CoRegisterClassObject(
   *lpdwRegister = newClass->dwCookie;
 
   if (dwClsContext & CLSCTX_LOCAL_SERVER) {
-      hr = CreateStreamOnHGlobal(0, TRUE, &newClass->pMarshaledData);
-      if (hr) {
-          FIXME("Failed to create stream on hglobal, %x\n", hr);
+      IStream *marshal_stream;
+
+      hr = get_local_server_stream(apt, &marshal_stream);
+      if(FAILED(hr))
           return hr;
-      }
-      hr = CoMarshalInterface(newClass->pMarshaledData, &IID_IUnknown,
-                              newClass->classObject, MSHCTX_LOCAL, NULL,
-                              MSHLFLAGS_TABLESTRONG);
-      if (hr) {
-          FIXME("CoMarshalInterface failed, %x!\n",hr);
-          return hr;
-      }
 
       hr = RPC_StartLocalServer(&newClass->classIdentifier,
-                                newClass->pMarshaledData,
+                                marshal_stream,
                                 flags & (REGCLS_MULTIPLEUSE|REGCLS_MULTI_SEPARATE),
                                 &newClass->RpcRegistration);
+      IStream_Release(marshal_stream);
   }
   return S_OK;
 }
@@ -2768,16 +2910,12 @@ HRESULT WINAPI CoCreateInstance(
 
     /*
      * The Standard Global Interface Table (GIT) object is a process-wide singleton.
-     * Rather than create a class factory, we can just check for it here
      */
     if (IsEqualIID(rclsid, &CLSID_StdGlobalInterfaceTable))
     {
-        if (StdGlobalInterfaceTableInstance == NULL)
-            StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
-        hres = IGlobalInterfaceTable_QueryInterface((IGlobalInterfaceTable*)StdGlobalInterfaceTableInstance,
-                                                    iid,
-                                                    ppv);
-        if (hres) return hres;
+        IGlobalInterfaceTable *git = get_std_git();
+        hres = IGlobalInterfaceTable_QueryInterface(git, iid, ppv);
+        if (hres != S_OK) return hres;
 
         TRACE("Retrieved GIT (%p)\n", *ppv);
         return S_OK;
@@ -2859,7 +2997,7 @@ HRESULT WINAPI CoCreateInstanceEx(
 			&IID_IUnknown,
 			(VOID**)&pUnk);
 
-  if (hr)
+  if (hr != S_OK)
     return hr;
 
   /*
@@ -4445,9 +4583,9 @@ HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 /***********************************************************************
  *		DllMain (OLE32.@)
  */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID reserved)
 {
-    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, reserved);
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -4456,6 +4594,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	break;
 
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
+        release_std_git();
         COMPOBJ_UninitProcess();
         RPC_UnregisterAllChannelHooks();
         COMPOBJ_DllList_Free();

@@ -16,7 +16,6 @@
 #define CONSRV_FIRST_API_NUMBER     512
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
-// plus a little bit of Windows 7.
 typedef enum _CONSRV_API_NUMBER
 {
     ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
@@ -28,14 +27,14 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepWriteConsoleOutputString,
     ConsolepFillConsoleOutput,
     ConsolepGetMode,
-    // ConsolepGetNumberOfFonts,
+    ConsolepGetNumberOfFonts,
     ConsolepGetNumberOfInputEvents,
     ConsolepGetScreenBufferInfo,
     ConsolepGetCursorInfo,
-    // ConsolepGetMouseInfo,
-    // ConsolepGetFontInfo,
-    // ConsolepGetFontSize,
-    // ConsolepGetCurrentFont,
+    ConsolepGetMouseInfo,
+    ConsolepGetFontInfo,
+    ConsolepGetFontSize,
+    ConsolepGetCurrentFont,
     ConsolepSetMode,
     ConsolepSetActiveScreenBuffer,
     ConsolepFlushInputBuffer,
@@ -46,28 +45,28 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetWindowInfo,
     ConsolepScrollScreenBuffer,
     ConsolepSetTextAttribute,
-    // ConsolepSetFont,
+    ConsolepSetFont,
     ConsolepSetIcon,
     ConsolepReadConsole,
     ConsolepWriteConsole,
     ConsolepDuplicateHandle,
-    // ConsolepGetHandleInformation,
-    // ConsolepSetHandleInformation,
+    ConsolepGetHandleInformation,
+    ConsolepSetHandleInformation,
     ConsolepCloseHandle,
     ConsolepVerifyIoHandle,
-    ConsolepAlloc,
-    ConsolepFree,
+    ConsolepAlloc,                          // Not present in Win7
+    ConsolepFree,                           // Not present in Win7
     ConsolepGetTitle,
     ConsolepSetTitle,
     ConsolepCreateScreenBuffer,
     ConsolepInvalidateBitMapRect,
-    // ConsolepVDMOperation,
+    ConsolepVDMOperation,
     ConsolepSetCursor,
     ConsolepShowCursor,
     ConsolepMenuControl,
     ConsolepSetPalette,
     ConsolepSetDisplayMode,
-    // ConsolepRegisterVDM,
+    ConsolepRegisterVDM,
     ConsolepGetHardwareState,
     ConsolepSetHardwareState,
     ConsolepGetDisplayMode,
@@ -81,67 +80,118 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetNumberOfCommands,
     ConsolepGetCommandHistoryLength,
     ConsolepGetCommandHistory,
-    // ConsolepSetCommandHistoryMode,
+    ConsolepSetCommandHistoryMode,          // Not present in Vista+
     ConsolepGetCP,
     ConsolepSetCP,
-    // ConsolepSetKeyShortcuts,
+    ConsolepSetKeyShortcuts,
     ConsolepSetMenuClose,
-    // ConsolepNotifyLastClose,
+    ConsolepNotifyLastClose,
     ConsolepGenerateCtrlEvent,
-    // ConsolepGetKeyboardLayoutName,
+    ConsolepGetKeyboardLayoutName,
     ConsolepGetConsoleWindow,
-    // ConsolepCharType,
-    // ConsolepSetLocalEUDC,
-    // ConsolepSetCursorMode,
-    // ConsolepGetCursorMode,
-    // ConsolepRegisterOS2,
-    // ConsolepSetOS2OemFormat,
-    // ConsolepGetNlsMode,
-    // ConsolepSetNlsMode,
-    // ConsolepRegisterConsoleIME,
-    // ConsolepUnregisterConsoleIME,
-    // ConsolepGetLangId,
-    ConsolepAttach,
+    ConsolepCharType,
+    ConsolepSetLocalEUDC,
+    ConsolepSetCursorMode,
+    ConsolepGetCursorMode,
+    ConsolepRegisterOS2,
+    ConsolepSetOS2OemFormat,
+    ConsolepGetNlsMode,
+    ConsolepSetNlsMode,
+    ConsolepRegisterConsoleIME,             // Not present in Win7
+    ConsolepUnregisterConsoleIME,           // Not present in Win7
+    // ConsolepQueryConsoleIME,                // Added only in Vista and Win2k8, not present in Win7
+    ConsolepGetLangId,
+    ConsolepAttach,                         // Not present in Win7
     ConsolepGetSelectionInfo,
     ConsolepGetProcessList,
-    ConsolepGetHistory,
-    ConsolepSetHistory,
+
+    ConsolepGetHistory,                     // Added in Vista+
+    ConsolepSetHistory,                     // Added in Vista+
+    // ConsolepSetCurrentFont,                 // Added in Vista+
+    // ConsolepSetScreenBufferInfo,            // Added in Vista+
+    // ConsolepClientConnect,                  // Added in Win7
 
     ConsolepMaxApiNumber
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
+//
+// See http://msdn.microsoft.com/en-us/library/windows/desktop/bb773359(v=vs.85).aspx
+//
+typedef struct _CONSOLE_PROPERTIES
+{
+    WORD wFillAttribute;
+    WORD wPopupFillAttribute;
 
+    //
+    // Not on MSDN, but show up in binary
+    //
+    WORD wShowWindow;
+    WORD wUnknown;
+
+    COORD dwScreenBufferSize;
+    COORD dwWindowSize;
+    COORD dwWindowOrigin;
+    DWORD nFont;
+    DWORD nInputBufferSize;
+    COORD dwFontSize;
+    UINT uFontFamily;
+    UINT uFontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+    UINT uCursorSize;
+    BOOL bFullScreen;
+    BOOL bQuickEdit;
+    BOOL bInsertMode;
+    BOOL bAutoPosition;
+    UINT uHistoryBufferSize;
+    UINT uNumberOfHistoryBuffers;
+    BOOL bHistoryNoDup;
+    COLORREF ColorTable[16];
+
+    //NT_FE_CONSOLE_PROPS
+    UINT uCodePage;
+} CONSOLE_PROPERTIES;
+
+//
+// To minimize code changes, some fields were put here even though they really only belong in
+// CONSRV_API_CONNECTINFO. Do not change the ordering however, as it's required for Windows
+// compatibility.
+//
 typedef struct _CONSOLE_START_INFO
 {
+    INT IconIndex;
+    HICON IconHandle1;
+    HICON IconHandle2;
+    DWORD dwHotKey;
     DWORD dwStartupFlags;
-    DWORD FillAttribute;
-    COORD ScreenBufferSize;
-    WORD  ShowWindow;
-    POINT ConsoleWindowOrigin;
-    SIZE  ConsoleWindowSize;
-    // UNICODE_STRING ConsoleTitle;
+    CONSOLE_PROPERTIES;
+    BOOLEAN ConsoleNeeded; // Used for GUI apps only.
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE ImeDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher;
+    ULONG TitleLength;
     WCHAR ConsoleTitle[MAX_PATH + 1];   // Console title or full path to the startup shortcut
-    WCHAR AppPath[MAX_PATH + 1];        // Full path of the launched app
+    ULONG DesktopLength;
+    PWCHAR DesktopPath;
+    ULONG AppNameLength;
+    WCHAR AppPath[128];        // Full path of the launched app
+    ULONG IconPathLength;
     WCHAR IconPath[MAX_PATH + 1];       // Path to the file containing the icon
-    INT   IconIndex;                    // Index of the icon
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
 typedef struct _CONSRV_API_CONNECTINFO
 {
-    BOOL ConsoleNeeded; // Used for GUI apps only.
-
-    /* Adapted from CONSOLE_ALLOCCONSOLE */
-    CONSOLE_START_INFO ConsoleStartInfo;
-
     HANDLE ConsoleHandle;
+    HANDLE InputWaitHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
-    HANDLE InputWaitHandle;
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher;
+    HANDLE Event1;
+    HANDLE Event2;
+    /* Adapted from CONSOLE_ALLOCCONSOLE */
+    CONSOLE_START_INFO ConsoleStartInfo;
 } CONSRV_API_CONNECTINFO, *PCONSRV_API_CONNECTINFO;
 
+C_ASSERT(sizeof(CONSRV_API_CONNECTINFO) == 0x638);
 
 typedef struct
 {

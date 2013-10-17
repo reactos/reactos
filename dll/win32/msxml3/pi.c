@@ -57,7 +57,7 @@ static const struct nodemap_funcs dom_pi_attr_map;
 static const tid_t dompi_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMProcessingInstruction_tid,
-    0
+    NULL_tid
 };
 
 static inline dom_pi *impl_from_IXMLDOMProcessingInstruction( IXMLDOMProcessingInstruction *iface )

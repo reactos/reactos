@@ -680,11 +680,13 @@ extern PFN_NUMBER MiLowNonPagedPoolThreshold;
 extern PFN_NUMBER MiHighNonPagedPoolThreshold;
 extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
+extern SIZE_T MmMinimumStackCommitInBytes;
 extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
 extern PFN_NUMBER MmResidentAvailablePages;
 extern PFN_NUMBER MmResidentAvailableAtInit;
 extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 extern PFN_NUMBER MmTotalSystemDriverPages;
+extern ULONG MmCritsectTimeoutSeconds;
 extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
@@ -1305,8 +1307,8 @@ FORCEINLINE
 VOID
 MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
                                   IN PETHREAD Thread,
-                                  IN BOOLEAN Safe,
-                                  IN BOOLEAN Shared)
+                                  OUT PBOOLEAN Safe,
+                                  OUT PBOOLEAN Shared)
 {
     ASSERT(MI_WS_OWNER(Process));
 
@@ -1315,22 +1317,22 @@ MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
     {
         /* Release unsafely */
         MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-        Safe = FALSE;
-        Shared = FALSE;
+        *Safe = FALSE;
+        *Shared = FALSE;
     }
     else if (Thread->OwnsProcessWorkingSetExclusive == 1)
     {
         /* Owner is safe and exclusive, release normally */
         MiUnlockProcessWorkingSet(Process, Thread);
-        Safe = TRUE;
-        Shared = FALSE;
+        *Safe = TRUE;
+        *Shared = FALSE;
     }
     else
     {
         /* Owner is shared (implies safe), release normally */
         ASSERT(FALSE);
-        Safe = TRUE;
-        Shared = TRUE;
+        *Safe = TRUE;
+        *Shared = TRUE;
     }
 }
 

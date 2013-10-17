@@ -170,7 +170,7 @@ struct GpGraphics{
     REAL xres, yres;
     GpMatrix worldtrans; /* world transform */
     BOOL busy;      /* hdc handle obtained by GdipGetDC */
-    GpRegion *clip;
+    GpRegion *clip; /* in device coords */
     UINT textcontrast; /* not used yet. get/set only */
     struct list containers;
     GraphicsContainer contid; /* last-issued container ID */

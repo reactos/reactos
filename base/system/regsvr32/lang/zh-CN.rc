@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\n用法：regsvr32 [/u] [/s] [/c] [/n] [/i[:命令行]] DLL名称\n\

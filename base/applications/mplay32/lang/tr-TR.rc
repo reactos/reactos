@@ -19,7 +19,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ALL_TYPES_FILTER "Desteklenen Kütükler (*.wav, *.cda, *.mid, *.midi, *.avi)\0*.wav;*.cda;*.mid;*.midi;*.avi\0"
     IDS_TOOLTIP_PLAY "Çal"

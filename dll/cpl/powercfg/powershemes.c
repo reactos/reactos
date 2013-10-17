@@ -4,7 +4,7 @@
  * FILE:            dll/cpl/powercfg/powershemes.c
  * PURPOSE:         powerschemes tab of applet
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Martin Rottensteiner
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
@@ -471,7 +471,7 @@ DelScheme(HWND hwnd)
 	LoadString(hApplet, IDS_DEL_SCHEME_TITLE, szBufT, sizeof(szBufT) / sizeof(TCHAR));
 	LoadString(hApplet, IDS_DEL_SCHEME, szBuf, sizeof(szBuf) / sizeof(TCHAR));
 
-	if (MessageBox(hwnd, (LPCTSTR)szBuf, (LPCTSTR)szBufT, MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
+	if (MessageBox(hwnd, szBuf, szBufT, MB_YESNO | MB_ICONQUESTION) == IDYES)
 	{
 		UINT Current;
 

@@ -22,4 +22,6 @@ IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

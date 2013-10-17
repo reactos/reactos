@@ -340,7 +340,7 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                                Attributes,
                                RootDirectory,
                                SecurityDescriptor);
-    DPRINT("Attributes: %lx, RootDirectory: %lx, SecurityDescriptor: %p\n",
+    DPRINT("Attributes: %lx, RootDirectory: %p, SecurityDescriptor: %p\n",
             Attributes, RootDirectory, SecurityDescriptor);
     return ObjectAttributes;
 }
@@ -361,7 +361,7 @@ BaseCreateStack(HANDLE hProcess,
     BOOLEAN UseGuard;
     ULONG PageSize, Dummy, AllocationGranularity;
     SIZE_T StackReserveHeader, StackCommitHeader, GuardPageSize, GuaranteedStackCommit;
-    DPRINT("BaseCreateStack (hProcess: %lx, Max: %lx, Current: %lx)\n",
+    DPRINT("BaseCreateStack (hProcess: %p, Max: %lx, Current: %lx)\n",
             hProcess, StackReserve, StackCommit);
 
     /* Read page size */
@@ -402,9 +402,6 @@ BaseCreateStack(HANDLE hProcess,
 
     StackCommit = ROUND_UP(StackCommit, PageSize);
     StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
-
-    /* ROS Hack until we support guard page stack expansion */
-    StackCommit = StackReserve;
 
     /* Reserve memory for the stack */
     Stack = 0;
@@ -709,7 +706,7 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
     NtClose(hFile);
 
     /* Return status */
-    DPRINT("Section: %lx for file: %lx\n", *hSection, hFile);
+    DPRINT("Section: %p for file: %p\n", *hSection, hFile);
     return Status;
 }
 

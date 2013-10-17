@@ -72,7 +72,7 @@ static HRESULT WINAPI CategoryMgr_QueryInterface(ITfCategoryMgr *iface, REFIID i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfCategoryMgr_AddRef(iface);
         return S_OK;
     }
 
@@ -245,7 +245,7 @@ static HRESULT WINAPI CategoryMgr_FindClosestCategory ( ITfCategoryMgr *iface,
 
         if (ulCount)
         {
-            int j;
+            ULONG j;
             BOOL found = FALSE;
             for (j = 0; j < ulCount; j++)
                 if (IsEqualGUID(&guid, ppcatidList[j]))

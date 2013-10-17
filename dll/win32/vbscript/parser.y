@@ -25,10 +25,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
-#define YYLEX_PARAM ctx
-#define YYPARSE_PARAM ctx
-
-static int parser_error(const char*);
+static int parser_error(parser_ctx_t *,const char*);
 
 static void parse_complete(parser_ctx_t*,BOOL);
 
@@ -82,7 +79,9 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 
 %}
 
-%pure_parser
+%lex-param { parser_ctx_t *ctx }
+%parse-param { parser_ctx_t *ctx }
+%pure-parser
 %start Program
 
 %union {
@@ -426,7 +425,7 @@ Identifier
     | tPROPERTY      { $$ = propertyW; }
 %%
 
-static int parser_error(const char *str)
+static int parser_error(parser_ctx_t *ctx, const char *str)
 {
     return 0;
 }

@@ -3,7 +3,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Vítejte"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -13,7 +13,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Instalovat ReactOS"
     IDS_TOPICBUTTON1        "Prohlížet toto CD"
@@ -28,7 +28,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Instalovat ReactOS"
     IDS_TOPICTITLE1         "Prohlížet toto CD"
@@ -43,7 +43,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Nainstaluje ReactOS na Váš počítač nebo zaktualizuje existující systém."
     IDS_TOPICDESC1          "Prohlížet toto CD."

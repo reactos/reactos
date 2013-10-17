@@ -1,7 +1,7 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-10)
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Использование: %s том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\
   [том:]         Указывает букву диска (с последующим двоеточием),\n\

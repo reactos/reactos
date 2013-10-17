@@ -22,32 +22,33 @@ typedef enum _BASESRV_API_NUMBER
     BasepCreateThread,
     BasepGetTempFile,
     BasepExitProcess,
-    // BasepDebugProcess,
-    // BasepCheckVDM,
-    // BasepUpdateVDMEntry,
-    // BasepGetNextVDMCommand,
-    // BasepExitVDM,
-    // BasepIsFirstVDM,
-    // BasepGetVDMExitCode,
-    // BasepSetReenterCount,
+    BasepDebugProcess,
+    BasepCheckVDM,
+    BasepUpdateVDMEntry,
+    BasepGetNextVDMCommand,
+    BasepExitVDM,
+    BasepIsFirstVDM,
+    BasepGetVDMExitCode,
+    BasepSetReenterCount,
     BasepSetProcessShutdownParam,
     BasepGetProcessShutdownParam,
-    // BasepNlsSetUserInfo,
-    // BasepNlsSetMultipleUserInfo,
-    // BasepNlsCreateSection,
-    // BasepSetVDMCurDirs,
-    // BasepGetVDMCurDirs,
-    // BasepBatNotification,
-    // BasepRegisterWowExec,
+    BasepNlsSetUserInfo,
+    BasepNlsSetMultipleUserInfo,
+    BasepNlsCreateSection,
+    BasepSetVDMCurDirs,
+    BasepGetVDMCurDirs,
+    BasepBatNotification,
+    BasepRegisterWowExec,
     BasepSoundSentryNotification,
-    // BasepRefreshIniFileMapping,
+    BasepRefreshIniFileMapping,
     BasepDefineDosDevice,
-    // BasepSetTermsrvAppInstallMode,
-    // BasepNlsUpdateCacheCount,
-    // BasepSetTermsrvClientTimeZone,
-    // BasepSxsCreateActivationContext,
-    // BasepRegisterThread,
-    // BasepNlsGetUserInfo,
+    BasepSetTermsrvAppInstallMode,
+    BasepNlsUpdateCacheCount,
+    BasepSetTermsrvClientTimeZone,
+    BasepSxsCreateActivationContext,
+    BasepUnknown,
+    BasepRegisterThread,
+    BasepNlsGetUserInfo,
 
     BasepMaxApiNumber
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
@@ -105,8 +106,8 @@ typedef struct
 
 typedef struct
 {
-    CLIENT_ID ClientId;
     HANDLE ThreadHandle;
+    CLIENT_ID ClientId;
 } BASE_CREATE_THREAD, *PBASE_CREATE_THREAD;
 
 typedef struct
@@ -131,7 +132,7 @@ typedef struct
     ULONG  CodePage;
     ULONG  dwCreationFlags;
     PCHAR  CmdLine;
-    PCHAR  appName;
+    PCHAR  AppName;
     PCHAR  PifFile;
     PCHAR  CurDirectory;
     PCHAR  Env;
@@ -261,6 +262,19 @@ typedef struct
     UNICODE_STRING TargetPath;
 } BASE_DEFINE_DOS_DEVICE, *PBASE_DEFINE_DOS_DEVICE;
 
+typedef struct
+{
+    HANDLE SectionHandle;
+    ULONG Type;
+    ULONG LocaleId;
+} BASE_NLS_CREATE_SECTION, *PBASE_NLS_CREATE_SECTION;
+
+typedef struct
+{
+    PVOID /*PNLS_USER_INFO*/ NlsUserInfo;
+    ULONG Size;
+} BASE_NLS_GET_USER_INFO, *PBASE_NLS_GET_USER_INFO;
+
 typedef struct _BASE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -289,6 +303,8 @@ typedef struct _BASE_API_MESSAGE
         BASE_SOUND_SENTRY SoundSentryRequest;
         BASE_REFRESH_INIFILE_MAPPING RefreshIniFileMappingRequest;
         BASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
+        BASE_NLS_CREATE_SECTION NlsCreateSection;
+        BASE_NLS_GET_USER_INFO NlsGetUserInfo;
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;
 

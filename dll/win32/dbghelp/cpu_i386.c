@@ -39,7 +39,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 #define IS_VM86_MODE(ctx) (ctx->EFlags & V86_FLAG)
 
-
 #if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD sel)
 {

@@ -71,15 +71,8 @@ set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a graphml dependency of dlls.")
 
 if(MSVC)
-
 set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
 set(_VS_ANALYZE_ FALSE CACHE BOOL
 "Whether to enable static analysis while compiling.")
-
-else()
-
-set(USE_PSEH3 FALSE CACHE BOOL
-"Whether to use the new PSEH3 library (requires GCC 4.5 and newer).")
-
 endif()

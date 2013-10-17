@@ -10,7 +10,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDC_FDEBUG MENU DISCARDABLE
+IDC_FDEBUG MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
@@ -38,7 +38,7 @@ END
 // Accelerator
 //
 
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE
+IDC_FDEBUG ACCELERATORS
 BEGIN
     63,            IDM_ABOUT,              ASCII,  ALT // "?"
     47,            IDM_ABOUT,              ASCII,  ALT // "/"
@@ -51,7 +51,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -60,13 +60,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -80,7 +80,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -114,7 +114,7 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе Отладчик FreeLoader"
 FONT 8, "MS Shell Dlg"
@@ -128,7 +128,7 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки соединения"
 FONT 8, "MS Shell Dlg"
@@ -141,7 +141,7 @@ BEGIN
     PUSHBUTTON      "Отмена",IDCANCEL,100,79,50,14
 END
 
-IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Файл захвата"
 FONT 8, "MS Shell Dlg"
@@ -159,14 +159,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
     IDS_HELLO               "Привет мир!"
     IDC_FDEBUG              "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LICENSE             "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ; не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

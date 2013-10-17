@@ -5,7 +5,7 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Sveiki"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -15,7 +15,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Įdiegti ReactOS"
     IDS_TOPICBUTTON1        "Peržiūrėti šį CD"
@@ -30,7 +30,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Įdiegti ReactOS"
     IDS_TOPICTITLE1         "Peržiūrėti šį CD"
@@ -45,7 +45,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Įdiekite arba atnaujinkite ReactOS."
     IDS_TOPICDESC1          "Peržiūrėti šį CD."

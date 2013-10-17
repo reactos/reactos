@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "handle.h"
 #include "lineinput.h"
 
@@ -60,8 +60,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                            WaitFunction,
                            InputInfo->CallingThread,
                            ApiMessage,
-                           CapturedInputInfo,
-                           NULL))
+                           CapturedInputInfo))
         {
             ConsoleFreeHeap(CapturedInputInfo);
             return STATUS_NO_MEMORY;
@@ -79,6 +78,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
+NTAPI
 ReadCharsThread(IN PLIST_ENTRY WaitList,
                 IN PCSR_THREAD WaitThread,
                 IN PCSR_API_MESSAGE WaitApiMessage,
@@ -194,6 +194,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
+NTAPI
 ReadInputBufferThread(IN PLIST_ENTRY WaitList,
                       IN PCSR_THREAD WaitThread,
                       IN PCSR_API_MESSAGE WaitApiMessage,

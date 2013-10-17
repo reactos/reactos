@@ -3,7 +3,7 @@
  */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nPemakaian: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\

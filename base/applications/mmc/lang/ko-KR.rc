@@ -4,21 +4,42 @@
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "파일(&F)"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "종료(&E)\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "종료(&E)\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "도움말(&H)"
     BEGIN
-        MENUITEM "ReactOS 관리 콘솔에 대하여...(&A)", ID_HELP_ABOUT
+        MENUITEM "ReactOS 관리 콘솔에 대하여...(&A)", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "파일(&F)"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "종료(&E)\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "도움말(&H)"
+    BEGIN
+        MENUITEM "ReactOS 관리 콘솔에 대하여...(&A)", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 관리 콘솔"
     IDS_CONSOLETITLE "Console%1!u!"

@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 DEFINE_GUID(PRIMARY_SAC_CHANNEL_APPLICATION_GUID,
             0x63D02270,
@@ -30,7 +30,9 @@ PSAC_CHANNEL ExecutePostConsumerCommandData;
 BOOLEAN InputInEscape, InputInEscTab, ConMgrLastCharWasCR;
 CHAR InputBuffer[80];
 
-/* FUNCTIONS *****************************************************************/
+BOOLEAN GlobalPagingNeeded, GlobalDoThreads;
+
+/* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
@@ -169,7 +171,7 @@ ConMgrInitialize(VOID)
 
     /* Setup the attributes for the raw SAC channel */
     RtlZeroMemory(&SacChannelAttributes, sizeof(SacChannelAttributes));
-    SacChannelAttributes.ChannelType = Raw; /* FIXME: Should be VtUtf8 */
+    SacChannelAttributes.ChannelType = VtUtf8;
 
     /* Get the right name for it */
     pcwch = GetMessage(SAC_CHANNEL_NAME);
@@ -447,11 +449,6 @@ ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
     return Status;
 }
 
-#define Shutdown    1
-#define Restart     3
-#define Nothing     0
-BOOLEAN GlobalPagingNeeded;
-
 VOID
 NTAPI
 ConMgrProcessInputLine(VOID)
@@ -566,7 +563,7 @@ ConMgrProcessInputLine(VOID)
     }
     else if ((InputBuffer[0] != '\n') && (InputBuffer[0] != ANSI_NULL))
     {
-        SacPutSimpleMessage(105);
+        SacPutSimpleMessage(SAC_UNKNOWN_COMMAND);
     }
 }
 
@@ -725,7 +722,7 @@ DoLineParsing:
                 /* Read every character in the channel, and strip whitespace */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
+                             sizeof(ReadBuffer),
                              &ReadBufferSize);
             } while ((ReadBufferSize) &&
                      ((ReadBuffer[0] == ' ') || (ReadBuffer[0] == '\t')));
@@ -740,7 +737,7 @@ DoLineParsing:
                 /* Read each character -- there should be max 80 */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
+                             sizeof(ReadBuffer),
                              &ReadBufferSize);
                 ASSERT(i < SAC_VTUTF8_COL_WIDTH);
                 InputBuffer[i++] = ReadBuffer[0];
@@ -851,25 +848,25 @@ ConMgrWorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
         ConMgrSerialPortConsumer();
         switch (ExecutePostConsumerCommand)
         {
-            case 1:
+            case Restart:
                 /* A reboot was sent, do it  */
                 DoRebootCommand(FALSE);
                 break;
 
-            case 2:
+            case Close:
                 /* A close was sent, do it */
                 ChanMgrCloseChannel(ExecutePostConsumerCommandData);
                 ChanMgrReleaseChannel(ExecutePostConsumerCommandData);
                 break;
 
-            case 3:
+            case Shutdown:
                 /* A shutdown was sent, do it */
                 DoRebootCommand(TRUE);
                 break;
         }
 
         /* Clear the serial port consumer state */
-        ExecutePostConsumerCommand = 0;
+        ExecutePostConsumerCommand = Nothing;
         ExecutePostConsumerCommandData = NULL;
     }
 }

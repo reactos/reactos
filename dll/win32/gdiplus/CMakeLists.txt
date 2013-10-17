@@ -22,11 +22,10 @@ list(APPEND SOURCE
     pen.c
     region.c
     stringformat.c
-    gdiplus.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
-add_library(gdiplus SHARED ${SOURCE})
+add_library(gdiplus SHARED ${SOURCE} gdiplus.rc)
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus uuid wine)
 add_delay_importlibs(gdiplus windowscodecs)

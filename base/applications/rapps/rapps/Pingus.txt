@@ -1,0 +1,15 @@
+﻿; UTF-8
+
+[Section]
+Name = Pingus
+Version = 0.7.6
+Licence = GPL
+Description = Pingus is a free Lemmings-like puzzle game.
+Size = 16.0MB
+Category = 4
+URLSite = http://pingus.seul.org
+URLDownload = http://pingus.googlecode.com/files/Pingus-0.7.6.exe
+CDPath = none
+
+[Section.0407]
+Description = Pingus ist ein freies Lemings-ähnliches Puzzle Spiel.

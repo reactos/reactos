@@ -7,7 +7,7 @@
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Gestionează starea de editare a liniei de comandă, istoric și macrodefiniții.\n\

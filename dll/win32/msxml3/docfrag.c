@@ -55,7 +55,7 @@ typedef struct _domfrag
 static const tid_t domfrag_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMDocumentFragment_tid,
-    0
+    NULL_tid
 };
 
 static inline domfrag *impl_from_IXMLDOMDocumentFragment( IXMLDOMDocumentFragment *iface )

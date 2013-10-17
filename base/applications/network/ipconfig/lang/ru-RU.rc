@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_BCAST   "Broadcast"
   IDS_P2P     "Peer To Peer"
@@ -11,7 +11,7 @@ BEGIN
   IDS_UNKNOWN "unknown"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_OTHER   "Другой тип адаптера"
   IDS_ETH     "Ethernet адаптер"
@@ -22,7 +22,7 @@ BEGIN
   IDS_SLIP    "SLIP адаптер"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE

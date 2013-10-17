@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `autohint' module-specific interface (specification).     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2007 by                                     */
+/*  Copyright 1996-2002, 2007, 2009, 2012 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -86,20 +86,20 @@ FT_BEGIN_HEADER
   /*    FT_AutoHinter_GlobalGetFunc                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieves the global hints computed for a given face object the    */
+  /*    Retrieve the global hints computed for a given face object.  The   */
   /*    resulting data is dissociated from the face and will survive a     */
   /*    call to FT_Done_Face().  It must be discarded through the API      */
   /*    FT_AutoHinter_GlobalDoneFunc().                                    */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    hinter        :: A handle to the source auto-hinter.               */
+  /*    hinter       :: A handle to the source auto-hinter.                */
   /*                                                                       */
-  /*    face          :: A handle to the source face object.               */
+  /*    face         :: A handle to the source face object.                */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    global_hints  :: A typeless pointer to the global hints.           */
+  /*    global_hints :: A typeless pointer to the global hints.            */
   /*                                                                       */
-  /*    global_len    :: The size in bytes of the global hints.            */
+  /*    global_len   :: The size in bytes of the global hints.             */
   /*                                                                       */
   typedef void
   (*FT_AutoHinter_GlobalGetFunc)( FT_AutoHinter  hinter,
@@ -114,7 +114,7 @@ FT_BEGIN_HEADER
   /*    FT_AutoHinter_GlobalDoneFunc                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Discards the global hints retrieved through                        */
+  /*    Discard the global hints retrieved through                         */
   /*    FT_AutoHinter_GlobalGetFunc().  This is the only way these hints   */
   /*    are freed from memory.                                             */
   /*                                                                       */
@@ -168,8 +168,8 @@ FT_BEGIN_HEADER
   /*    This function is capable of loading composite glyphs by hinting    */
   /*    each sub-glyph independently (which improves quality).             */
   /*                                                                       */
-  /*    It will call the font driver with FT_Load_Glyph(), with            */
-  /*    FT_LOAD_NO_SCALE set.                                              */
+  /*    It will call the font driver with @FT_Load_Glyph, with             */
+  /*    @FT_LOAD_NO_SCALE set.                                             */
   /*                                                                       */
   typedef FT_Error
   (*FT_AutoHinter_GlyphLoadFunc)( FT_AutoHinter  hinter,
@@ -182,46 +182,59 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    FT_AutoHinter_ServiceRec                                           */
+  /*    FT_AutoHinter_InterfaceRec                                         */
   /*                                                                       */
   /* <Description>                                                         */
   /*    The auto-hinter module's interface.                                */
   /*                                                                       */
-  typedef struct  FT_AutoHinter_ServiceRec_
+  typedef struct  FT_AutoHinter_InterfaceRec_
   {
     FT_AutoHinter_GlobalResetFunc  reset_face;
     FT_AutoHinter_GlobalGetFunc    get_global_hints;
     FT_AutoHinter_GlobalDoneFunc   done_global_hints;
     FT_AutoHinter_GlyphLoadFunc    load_glyph;
 
-  } FT_AutoHinter_ServiceRec, *FT_AutoHinter_Service;
+  } FT_AutoHinter_InterfaceRec, *FT_AutoHinter_Interface;
+
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_AUTOHINTER_SERVICE(class_, reset_face_, get_global_hints_, \
-                                     done_global_hints_, load_glyph_)        \
-  FT_CALLBACK_TABLE_DEF                                                      \
-  const FT_AutoHinter_ServiceRec class_ =                                    \
-  {                                                                          \
-    reset_face_, get_global_hints_, done_global_hints_, load_glyph_          \
+#define FT_DEFINE_AUTOHINTER_INTERFACE(       \
+          class_,                             \
+          reset_face_,                        \
+          get_global_hints_,                  \
+          done_global_hints_,                 \
+          load_glyph_ )                       \
+  FT_CALLBACK_TABLE_DEF                       \
+  const FT_AutoHinter_InterfaceRec  class_ =  \
+  {                                           \
+    reset_face_,                              \
+    get_global_hints_,                        \
+    done_global_hints_,                       \
+    load_glyph_                               \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_AUTOHINTER_SERVICE(class_, reset_face_, get_global_hints_, \
-                                     done_global_hints_, load_glyph_)        \
-  void                                                                       \
-  FT_Init_Class_##class_( FT_Library library,                                \
-                          FT_AutoHinter_ServiceRec* clazz)                   \
-  {                                                                          \
-    FT_UNUSED(library);                                                      \
-    clazz->reset_face = reset_face_;                                         \
-    clazz->get_global_hints = get_global_hints_;                             \
-    clazz->done_global_hints = done_global_hints_;                           \
-    clazz->load_glyph = load_glyph_;                                         \
-  } 
+#define FT_DEFINE_AUTOHINTER_INTERFACE(                            \
+          class_,                                                  \
+          reset_face_,                                             \
+          get_global_hints_,                                       \
+          done_global_hints_,                                      \
+          load_glyph_ )                                            \
+  void                                                             \
+  FT_Init_Class_ ## class_( FT_Library                   library,  \
+                            FT_AutoHinter_InterfaceRec*  clazz )   \
+  {                                                                \
+    FT_UNUSED( library );                                          \
+                                                                   \
+    clazz->reset_face        = reset_face_;                        \
+    clazz->get_global_hints  = get_global_hints_;                  \
+    clazz->done_global_hints = done_global_hints_;                 \
+    clazz->load_glyph        = load_glyph_;                        \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

@@ -523,6 +523,14 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
 
     {
+        L"Session Manager\\Memory Management",
+        L"MinimumStackCommitInBytes",
+        &MmMinimumStackCommitInBytes,
+        NULL,
+        NULL
+    },
+
+    {
         L"Session Manager\\Executive",
         L"AdditionalCriticalWorkerThreads",
         &DummyData,
@@ -613,7 +621,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"CriticalSectionTimeout",
-        &DummyData,
+        &MmCritsectTimeoutSeconds,
         NULL,
         NULL
     },
@@ -621,15 +629,14 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"HeapSegmentReserve",
-        &DummyData,
+        &MmHeapSegmentReserve,
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"HeapSegmentCommit",
-        &DummyData,
+        &MmHeapSegmentCommit,
         NULL,
         NULL
     },
@@ -637,7 +644,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"HeapDeCommitTotalFreeThreshold",
-        &DummyData,
+        &MmHeapDeCommitTotalFreeThreshold,
         NULL,
         NULL
     },
@@ -645,7 +652,7 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"HeapDeCommitFreeBlockThreshold",
-        &DummyData,
+        &MmHeapDeCommitFreeBlockThreshold,
         NULL,
         NULL
     },

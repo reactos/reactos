@@ -21,7 +21,7 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Alternativ"
     BEGIN
@@ -38,7 +38,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Volymkontroll"
     IDS_NOMIXERDEVICES "Det finns inga ljudmixningsenheter tillgängliga! Programmet kommer nu att avslutas."

@@ -1,6 +1,7 @@
 #pragma once
 
 /* formerly located in cc/view.c */
+#define TAG_CC    '  cC'
 #define TAG_CSEG  'GESC'
 #define TAG_BCB   ' BCB'
 #define TAG_IBCB  'BCBi'

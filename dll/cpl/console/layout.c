@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/layout.c
  * PURPOSE:         displays layout dialog
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "console.h"

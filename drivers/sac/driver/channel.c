@@ -6,13 +6,13 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 NTAPI
@@ -255,19 +255,19 @@ ChannelIsActive(IN PSAC_CHANNEL Channel)
     BOOLEAN IsActive;
 
     /* Get the status */
-  	if (!NT_SUCCESS(ChannelGetStatus(Channel, &ChannelStatus)))
-  	{
+    if (!NT_SUCCESS(ChannelGetStatus(Channel, &ChannelStatus)))
+    {
         /* We couldn't even do that, assume it's inactive */
         IsActive = FALSE;
-  	}
-  	else
-  	{
+    }
+    else
+    {
         /* Check if the status shows activity */
         IsActive = (ChannelStatus == Active);
     }
 
     /* Return the state */
-  	return IsActive;
+    return IsActive;
 }
 
 BOOLEAN
@@ -278,13 +278,13 @@ ChannelIsClosed(IN PSAC_CHANNEL Channel)
     BOOLEAN IsClosed;
 
     /* Get the status */
-  	if (!NT_SUCCESS(ChannelGetStatus(Channel, &ChannelStatus)))
-  	{
+    if (!NT_SUCCESS(ChannelGetStatus(Channel, &ChannelStatus)))
+    {
         /* We couldn't even do that, assume it's inactive */
         IsClosed = FALSE;
-  	}
-  	else
-  	{
+    }
+    else
+    {
         /* Check if the status shows activity */
         IsClosed = ((ChannelStatus == Inactive) &&
                     (Channel->ChannelHasNewOBufferData));
@@ -310,7 +310,7 @@ ChannelGetName(IN PSAC_CHANNEL Channel,
     ChannelLockAttributes(Channel);
 
     /* Copy the name and null-terminate it */
-    ASSERT(((wcslen(Channel->NameBuffer) + 1) * sizeof(WCHAR)) <= ((64 + 1) * sizeof(WCHAR)));
+    ASSERT(((wcslen(Channel->NameBuffer) + 1) * sizeof(WCHAR)) <= ((SAC_CHANNEL_NAME_SIZE + 1) * sizeof(WCHAR)));
     wcsncpy(*Name, Channel->NameBuffer, RTL_NUMBER_OF(Channel->NameBuffer)); // bug
     (*Name)[SAC_CHANNEL_NAME_SIZE] = UNICODE_NULL;
 
@@ -331,7 +331,7 @@ ChannelSetName(IN PSAC_CHANNEL Channel,
     ChannelLockAttributes(Channel);
 
     /* Copy the name and null-terminate it */
-    ASSERT(((wcslen(Name) + 1) * sizeof(WCHAR)) <= ((64 + 1) * sizeof(WCHAR)));
+    ASSERT(((wcslen(Name) + 1) * sizeof(WCHAR)) <= ((SAC_CHANNEL_NAME_SIZE + 1) * sizeof(WCHAR)));
     wcsncpy(Channel->NameBuffer, Name, RTL_NUMBER_OF(Channel->NameBuffer)); // bug
     Channel->NameBuffer[SAC_CHANNEL_NAME_SIZE] = UNICODE_NULL;
 
@@ -356,7 +356,7 @@ ChannelGetDescription(IN PSAC_CHANNEL Channel,
     ChannelLockAttributes(Channel);
 
     /* Copy the name and null-terminate it */
-    ASSERT(((wcslen(Channel->DescriptionBuffer) + 1) * sizeof(WCHAR)) <= ((256 + 1) * sizeof(WCHAR)));
+    ASSERT(((wcslen(Channel->DescriptionBuffer) + 1) * sizeof(WCHAR)) <= ((SAC_CHANNEL_DESCRIPTION_SIZE + 1) * sizeof(WCHAR)));
     wcsncpy(*Description, Channel->DescriptionBuffer, RTL_NUMBER_OF(Channel->DescriptionBuffer)); // bug
     (*Description)[SAC_CHANNEL_DESCRIPTION_SIZE] = UNICODE_NULL;
 
@@ -377,7 +377,7 @@ ChannelSetDescription(IN PSAC_CHANNEL Channel,
     ChannelLockAttributes(Channel);
 
     /* Copy the name and null-terminate it */
-    ASSERT(((wcslen(Description) + 1) * sizeof(WCHAR)) <= ((64 + 1) * sizeof(WCHAR)));
+    ASSERT(((wcslen(Description) + 1) * sizeof(WCHAR)) <= ((SAC_CHANNEL_NAME_SIZE + 1) * sizeof(WCHAR)));
     wcsncpy(Channel->DescriptionBuffer, Description, RTL_NUMBER_OF(Channel->DescriptionBuffer)); // bug
     Channel->DescriptionBuffer[SAC_CHANNEL_DESCRIPTION_SIZE] = UNICODE_NULL;
 

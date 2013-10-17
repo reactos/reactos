@@ -64,7 +64,9 @@ struct _CONSOLE_SCREEN_BUFFER
 
     LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
 
-    COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics */
+    // PVOID Data;                         /* Private data for the frontend to use */
+
+    COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics-mode */
     COORD   ViewSize;                   /* Associated "view" (i.e. console) size */
 
     COORD   OldScreenBufferSize;        /* Old size of this screen buffer */
@@ -81,6 +83,9 @@ struct _CONSOLE_SCREEN_BUFFER
 //  ULONG   CursorSize;
     CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
 /*********************************************/
+
+    HPALETTE PaletteHandle;             /* Handle to the color palette associated to this buffer */
+    UINT     PaletteUsage;              /* The new use of the system palette. See SetSystemPaletteUse 'uUsage' parameter */
 
 //  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
 //  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
@@ -181,67 +186,73 @@ typedef struct _FRONTEND_VTBL
     /*
      * Internal interface (functions called by the console server only)
      */
-    NTSTATUS (WINAPI *InitFrontEnd)(IN OUT PFRONTEND This,
-                                    IN struct _CONSOLE* Console);
-    VOID (WINAPI *DeinitFrontEnd)(IN OUT PFRONTEND This);
+    NTSTATUS (NTAPI *InitFrontEnd)(IN OUT PFRONTEND This,
+                                   IN struct _CONSOLE* Console);
+    VOID (NTAPI *DeinitFrontEnd)(IN OUT PFRONTEND This);
 
     /* Interface used for both text-mode and graphics screen buffers */
-    VOID (WINAPI *DrawRegion)(IN OUT PFRONTEND This,
-                              SMALL_RECT* Region);
+    VOID (NTAPI *DrawRegion)(IN OUT PFRONTEND This,
+                             SMALL_RECT* Region);
     /* Interface used only for text-mode screen buffers */
-    VOID (WINAPI *WriteStream)(IN OUT PFRONTEND This,
-                               SMALL_RECT* Block,
-                               SHORT CursorStartX,
-                               SHORT CursorStartY,
-                               UINT ScrolledLines,
-                               PWCHAR Buffer,
-                               UINT Length);
-    BOOL (WINAPI *SetCursorInfo)(IN OUT PFRONTEND This,
-                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *SetScreenInfo)(IN OUT PFRONTEND This,
-                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                                 SHORT OldCursorX,
-                                 SHORT OldCursorY);
-    VOID (WINAPI *ResizeTerminal)(IN OUT PFRONTEND This);
-    BOOL (WINAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
-                                      MSG* msg,
-                                      BYTE KeyStateMenu,
-                                      DWORD ShiftState,
-                                      UINT VirtualKeyCode,
-                                      BOOL Down);
-    VOID (WINAPI *RefreshInternalInfo)(IN OUT PFRONTEND This);
+    VOID (NTAPI *WriteStream)(IN OUT PFRONTEND This,
+                              SMALL_RECT* Block,
+                              SHORT CursorStartX,
+                              SHORT CursorStartY,
+                              UINT ScrolledLines,
+                              PWCHAR Buffer,
+                              UINT Length);
+    BOOL (NTAPI *SetCursorInfo)(IN OUT PFRONTEND This,
+                                PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    BOOL (NTAPI *SetScreenInfo)(IN OUT PFRONTEND This,
+                                PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+                                SHORT OldCursorX,
+                                SHORT OldCursorY);
+    VOID (NTAPI *ResizeTerminal)(IN OUT PFRONTEND This);
+    VOID (NTAPI *SetActiveScreenBuffer)(IN OUT PFRONTEND This);
+    VOID (NTAPI *ReleaseScreenBuffer)(IN OUT PFRONTEND This,
+                                      IN PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    BOOL (NTAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
+                                     MSG* msg,
+                                     BYTE KeyStateMenu,
+                                     DWORD ShiftState,
+                                     UINT VirtualKeyCode,
+                                     BOOL Down);
+    VOID (NTAPI *RefreshInternalInfo)(IN OUT PFRONTEND This);
 
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (WINAPI *ChangeTitle)(IN OUT PFRONTEND This);
-    BOOL (WINAPI *ChangeIcon)(IN OUT PFRONTEND This,
-                              HICON hWindowIcon);
-    HWND (WINAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
-    VOID (WINAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
-                                               PCOORD pSize);
-    ULONG (WINAPI *GetDisplayMode)(IN OUT PFRONTEND This);
-    BOOL  (WINAPI *SetDisplayMode)(IN OUT PFRONTEND This,
-                                   ULONG NewMode);
-    INT   (WINAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
-                                    BOOL Show);
-    BOOL  (WINAPI *SetMouseCursor)(IN OUT PFRONTEND This,
-                                   HCURSOR hCursor);
-    HMENU (WINAPI *MenuControl)(IN OUT PFRONTEND This,
-                                UINT cmdIdLow,
-                                UINT cmdIdHigh);
-    BOOL  (WINAPI *SetMenuClose)(IN OUT PFRONTEND This,
-                                 BOOL Enable);
+    VOID (NTAPI *ChangeTitle)(IN OUT PFRONTEND This);
+    BOOL (NTAPI *ChangeIcon)(IN OUT PFRONTEND This,
+                             HICON hWindowIcon);
+    HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
+    VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
+                                              PCOORD pSize);
+    BOOL (NTAPI *SetPalette)(IN OUT PFRONTEND This,
+                             HPALETTE PaletteHandle,
+                             UINT PaletteUsage);
+    ULONG (NTAPI *GetDisplayMode)(IN OUT PFRONTEND This);
+    BOOL  (NTAPI *SetDisplayMode)(IN OUT PFRONTEND This,
+                                  ULONG NewMode);
+    INT   (NTAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
+                                   BOOL Show);
+    BOOL  (NTAPI *SetMouseCursor)(IN OUT PFRONTEND This,
+                                  HCURSOR hCursor);
+    HMENU (NTAPI *MenuControl)(IN OUT PFRONTEND This,
+                               UINT cmdIdLow,
+                               UINT cmdIdHigh);
+    BOOL  (NTAPI *SetMenuClose)(IN OUT PFRONTEND This,
+                                BOOL Enable);
 
 #if 0 // Possible future front-end interface
-    BOOL (WINAPI *GetFrontEndProperty)(IN OUT PFRONTEND This,
-                                       ULONG Flag,
-                                       PVOID Info,
-                                       ULONG Size);
-    BOOL (WINAPI *SetFrontEndProperty)(IN OUT PFRONTEND This,
-                                       ULONG Flag,
-                                       PVOID Info /*,
-                                       ULONG Size */);
+    BOOL (NTAPI *GetFrontEndProperty)(IN OUT PFRONTEND This,
+                                      ULONG Flag,
+                                      PVOID Info,
+                                      ULONG Size);
+    BOOL (NTAPI *SetFrontEndProperty)(IN OUT PFRONTEND This,
+                                      ULONG Flag,
+                                      PVOID Info /*,
+                                      ULONG Size */);
 #endif
 } FRONTEND_VTBL, *PFRONTEND_VTBL;
 
@@ -336,7 +347,7 @@ ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG Event);
 
 /* coninput.c */
-VOID WINAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
+VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
 NTSTATUS FASTCALL ConioProcessInputEvent(PCONSOLE Console,
                                          PINPUT_RECORD InputEvent);
 

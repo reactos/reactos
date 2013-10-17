@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (specification).                        */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2008 by                                    */
+/*  Copyright 2001-2003, 2008, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +22,6 @@
 
 #include "pshrec.h"
 #include "pshglob.h"
-#include FT_TRIGONOMETRY_H
 
 
 FT_BEGIN_HEADER
@@ -168,8 +167,6 @@ FT_BEGIN_HEADER
     FT_UInt      flags2;
     FT_Char      dir_in;
     FT_Char      dir_out;
-    FT_Angle     angle_in;
-    FT_Angle     angle_out;
     PSH_Hint     hint;
     FT_Pos       org_u;
     FT_Pos       org_v;
@@ -185,12 +182,6 @@ FT_BEGIN_HEADER
 
   } PSH_PointRec;
 
-
-#define PSH_POINT_EQUAL_ORG( a, b )  ( (a)->org_u == (b)->org_u && \
-                                       (a)->org_v == (b)->org_v )
-
-#define PSH_POINT_ANGLE( a, b )  FT_Atan2( (b)->org_u - (a)->org_u,  \
-                                           (b)->org_v - (a)->org_v )
 
   typedef struct  PSH_ContourRec_
   {

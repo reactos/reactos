@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            include/reactos/subsys/csr/csr.h
  * PURPOSE:         Public definitions for CSR Clients
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 

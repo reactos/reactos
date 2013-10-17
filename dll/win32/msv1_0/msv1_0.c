@@ -731,13 +731,13 @@ done:
 
 static
 NTSTATUS
-ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
-               IN PVOID ProtocolSubmitBuffer,
-               IN PVOID ClientBufferBase,
-               IN ULONG SubmitBufferLength,
-               OUT PVOID *ProtocolReturnBuffer,
-               OUT PULONG ReturnBufferLength,
-               OUT PNTSTATUS ProtocolStatus)
+MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
+                   IN PVOID ProtocolSubmitBuffer,
+                   IN PVOID ClientBufferBase,
+                   IN ULONG SubmitBufferLength,
+                   OUT PVOID *ProtocolReturnBuffer,
+                   OUT PULONG ReturnBufferLength,
+                   OUT PNTSTATUS ProtocolStatus)
 {
     PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer;
     ULONG_PTR PtrOffset;
@@ -749,10 +749,10 @@ ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Fix-up pointers in the request buffer info */
     PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
-    RequestBuffer->DomainName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->DomainName.Buffer + PtrOffset);
-    RequestBuffer->AccountName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->AccountName.Buffer + PtrOffset);
-    RequestBuffer->OldPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->OldPassword.Buffer + PtrOffset);
-    RequestBuffer->NewPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->NewPassword.Buffer + PtrOffset);
+    RequestBuffer->DomainName.Buffer = FIXUP_POINTER(RequestBuffer->DomainName.Buffer, PtrOffset);
+    RequestBuffer->AccountName.Buffer = FIXUP_POINTER(RequestBuffer->AccountName.Buffer, PtrOffset);
+    RequestBuffer->OldPassword.Buffer = FIXUP_POINTER(RequestBuffer->OldPassword.Buffer, PtrOffset);
+    RequestBuffer->NewPassword.Buffer = FIXUP_POINTER(RequestBuffer->NewPassword.Buffer, PtrOffset);
 
     TRACE("Domain: %S\n", RequestBuffer->DomainName.Buffer);
     TRACE("Account: %S\n", RequestBuffer->AccountName.Buffer);
@@ -761,6 +761,96 @@ ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
 
 
     return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+MsvpCheckPassword(PUNICODE_STRING UserPassword,
+                  PSAMPR_USER_INFO_BUFFER UserInfo)
+{
+    ENCRYPTED_NT_OWF_PASSWORD UserNtPassword;
+    ENCRYPTED_LM_OWF_PASSWORD UserLmPassword;
+    BOOLEAN UserLmPasswordPresent = FALSE;
+    BOOLEAN UserNtPasswordPresent = FALSE;
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", UserPassword, UserInfo);
+
+    /* Calculate the LM password and hash for the users password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               UserPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the users password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&UserLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            UserLmPasswordPresent = TRUE;
+        }
+    }
+
+    /* Calculate the NT hash of the users password */
+    Status = SystemFunction007(UserPassword,
+                               (LPBYTE)&UserNtPassword);
+    if (NT_SUCCESS(Status))
+    {
+        UserNtPasswordPresent = TRUE;
+    }
+
+    Status = STATUS_WRONG_PASSWORD;
+
+    /* Succeed, if no password has been set */
+    if (UserInfo->All.NtPasswordPresent == FALSE &&
+        UserInfo->All.LmPasswordPresent == FALSE)
+    {
+        TRACE("No password check!\n");
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
+    /* Succeed, if NT password matches */
+    if (UserNtPasswordPresent && UserInfo->All.NtPasswordPresent)
+    {
+        TRACE("Check NT password hashes:\n");
+        if (RtlEqualMemory(&UserNtPassword,
+                           UserInfo->All.NtOwfPassword.Buffer,
+                           sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+        {
+            TRACE("  success!\n");
+            Status = STATUS_SUCCESS;
+            goto done;
+        }
+
+        TRACE("  failed!\n");
+    }
+
+    /* Succeed, if LM password matches */
+    if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
+    {
+        TRACE("Check LM password hashes:\n");
+        if (RtlEqualMemory(&UserLmPassword,
+                           UserInfo->All.LmOwfPassword.Buffer,
+                           sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+        {
+            TRACE("  success!\n");
+            Status = STATUS_SUCCESS;
+            goto done;
+        }
+        TRACE("  failed!\n");
+    }
+
+done:
+    return Status;
 }
 
 
@@ -801,13 +891,13 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
             break;
 
         case MsV1_0ChangePassword:
-            Status = ChangePassword(ClientRequest,
-                                    ProtocolSubmitBuffer,
-                                    ClientBufferBase,
-                                    SubmitBufferLength,
-                                    ProtocolReturnBuffer,
-                                    ReturnBufferLength,
-                                    ProtocolStatus);
+            Status = MsvpChangePassword(ClientRequest,
+                                        ProtocolSubmitBuffer,
+                                        ClientBufferBase,
+                                        SubmitBufferLength,
+                                        ProtocolReturnBuffer,
+                                        ReturnBufferLength,
+                                        ProtocolStatus);
             break;
 
         case MsV1_0ChangeCachedPassword:
@@ -882,13 +972,17 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
           Confidentiality, AuthenticationPackageName);
 
     /* Get the dispatch table entries */
+    DispatchTable.CreateLogonSession = LsaDispatchTable->CreateLogonSession;
+    DispatchTable.DeleteLogonSession = LsaDispatchTable->DeleteLogonSession;
+    DispatchTable.AddCredential = LsaDispatchTable->AddCredential;
+    DispatchTable.GetCredentials = LsaDispatchTable->GetCredentials;
+    DispatchTable.DeleteCredential = LsaDispatchTable->DeleteCredential;
     DispatchTable.AllocateLsaHeap = LsaDispatchTable->AllocateLsaHeap;
     DispatchTable.FreeLsaHeap = LsaDispatchTable->FreeLsaHeap;
     DispatchTable.AllocateClientBuffer = LsaDispatchTable->AllocateClientBuffer;
     DispatchTable.FreeClientBuffer = LsaDispatchTable->FreeClientBuffer;
     DispatchTable.CopyToClientBuffer = LsaDispatchTable->CopyToClientBuffer;
     DispatchTable.CopyFromClientBuffer = LsaDispatchTable->CopyFromClientBuffer;
-
 
     /* Return the package name */
     NameString = DispatchTable.AllocateLsaHeap(sizeof(LSA_STRING));
@@ -953,6 +1047,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     UNICODE_STRING LogonServer;
+    BOOLEAN SessionCreated = FALSE;
     NTSTATUS Status;
 
     TRACE("()\n");
@@ -960,7 +1055,6 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     TRACE("LogonType: %lu\n", LogonType);
     TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
     TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
-
 
     *ProfileBuffer = NULL;
     *ProfileBufferLength = 0;
@@ -977,9 +1071,9 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Fix-up pointers in the authentication info */
         PtrOffset = (ULONG_PTR)AuthenticationInformation - (ULONG_PTR)ClientAuthenticationBase;
 
-        LogonInfo->LogonDomainName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->LogonDomainName.Buffer + PtrOffset);
-        LogonInfo->UserName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->UserName.Buffer + PtrOffset);
-        LogonInfo->Password.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->Password.Buffer + PtrOffset);
+        LogonInfo->LogonDomainName.Buffer = FIXUP_POINTER(LogonInfo->LogonDomainName.Buffer, PtrOffset);
+        LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
+        LogonInfo->Password.Buffer = FIXUP_POINTER(LogonInfo->Password.Buffer, PtrOffset);
 
         TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
         TRACE("User: %S\n", LogonInfo->UserName.Buffer);
@@ -1073,11 +1167,16 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     /* FIXME: Check restrictions */
 
-    /* FIXME: Check the password */
+    /* Check the password */
     if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
     {
-        FIXME("Must check the password!\n");
-
+        Status = MsvpCheckPassword(&(LogonInfo->Password),
+                                   UserInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("MsvpCheckPassword failed (Status %08lx)\n", Status);
+            goto done;
+        }
     }
 
     /* Return logon information */
@@ -1089,6 +1188,16 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         TRACE("NtAllocateLocallyUniqueId failed (Status %08lx)\n", Status);
         goto done;
     }
+
+    /* Create the logon session */
+    Status = DispatchTable.CreateLogonSession(LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("CreateLogonSession failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    SessionCreated = TRUE;
 
     /* Build and fill the interactve profile buffer */
     Status = BuildInteractiveProfileBuffer(ClientRequest,
@@ -1116,8 +1225,6 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         goto done;
     }
 
-    *SubStatus = STATUS_SUCCESS;
-
 done:
     /* Return the account name */
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
@@ -1135,6 +1242,9 @@ done:
 
     if (!NT_SUCCESS(Status))
     {
+        if (SessionCreated == TRUE)
+            DispatchTable.DeleteLogonSession(LogonId);
+
         if (*ProfileBuffer != NULL)
         {
             DispatchTable.FreeClientBuffer(ClientRequest,
@@ -1160,6 +1270,13 @@ done:
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
 
+    if (Status == STATUS_NO_SUCH_USER ||
+        Status == STATUS_WRONG_PASSWORD)
+    {
+        *SubStatus = Status;
+        Status = STATUS_LOGON_FAILURE;
+    }
+
     TRACE("LsaApLogonUser done (Status %08lx)\n", Status);
 
     return Status;
@@ -1169,6 +1286,7 @@ done:
 /*
  * @unimplemented
  */
+#if 0
 NTSTATUS
 NTAPI
 LsaApLogonUserEx(IN PLSA_CLIENT_REQUEST ClientRequest,
@@ -1227,5 +1345,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     return STATUS_NOT_IMPLEMENTED;
 }
+#endif
 
 /* EOF */

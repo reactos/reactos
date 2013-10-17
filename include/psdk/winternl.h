@@ -838,6 +838,11 @@ typedef enum _MEMORY_INFORMATION_CLASS {
     MemoryBasicVlmInformation
 } MEMORY_INFORMATION_CLASS;
 
+typedef struct _MEMORY_SECTION_NAME
+{
+    UNICODE_STRING SectionFileName;
+} MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
+
 typedef enum _MUTANT_INFORMATION_CLASS
 {
     MutantBasicInformation
@@ -2513,14 +2518,7 @@ static __inline PLIST_ENTRY RemoveTailList(PLIST_ENTRY le)
     return e;
 }
 
-typedef struct _FILE_FS_VOLUME_INFORMATION
-{
-    LARGE_INTEGER VolumeCreationTime;
-    ULONG VolumeSerialNumber;
-    ULONG VolumeLabelLength;
-    BOOLEAN SupportsObjects;
-    WCHAR VolumeLabel[1];
-} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
 #define FSCTL_PIPE_LISTEN CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #ifdef __cplusplus

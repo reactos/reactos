@@ -368,14 +368,15 @@ typedef struct _OPEN_PACKET
     PFILE_BASIC_INFORMATION BasicInformation;
     PFILE_NETWORK_OPEN_INFORMATION NetworkInformation;
     CREATE_FILE_TYPE CreateFileType;
-    PVOID MailslotOrPipeParameters;
+    PVOID ExtraCreateParameters;
     BOOLEAN Override;
     BOOLEAN QueryOnly;
     BOOLEAN DeleteOnly;
     BOOLEAN FullAttributes;
-    PDUMMY_FILE_OBJECT DummyFileObject;
+    PDUMMY_FILE_OBJECT LocalFileObject;
+    BOOLEAN TraversedMountPoint;
     ULONG InternalFlags;
-    //PIO_DRIVER_CREATE_CONTEXT DriverCreateContext; Vista only, needs ROS DDK Update
+    PDEVICE_OBJECT TopDeviceObjectHint;
 } OPEN_PACKET, *POPEN_PACKET;
 
 //

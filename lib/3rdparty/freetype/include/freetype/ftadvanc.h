@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Quick computation of advance widths (specification only).            */
 /*                                                                         */
-/*  Copyright 2008 by                                                      */
+/*  Copyright 2008, 2013 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -82,8 +82,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieve the advance value of a given glyph outline in an          */
-  /*    @FT_Face.  By default, the unhinted advance is returned in font    */
-  /*    units.                                                             */
+  /*    @FT_Face.                                                          */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face       :: The source @FT_Face handle.                          */
@@ -94,8 +93,9 @@ FT_BEGIN_HEADER
   /*                  calling @FT_Load_Glyph, used to determine what kind  */
   /*                  of advances you need.                                */
   /* <Output>                                                              */
-  /*    padvance :: The advance value, in either font units or 16.16       */
-  /*                format.                                                */
+  /*    padvance :: The advance value.  If scaling is performed (based on  */
+  /*                the value of `load_flags'), the advance value is in    */
+  /*                16.16 format.  Otherwise, it is in font units.         */
   /*                                                                       */
   /*                If @FT_LOAD_VERTICAL_LAYOUT is set, this is the        */
   /*                vertical advance corresponding to a vertical layout.   */
@@ -127,8 +127,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieve the advance values of several glyph outlines in an        */
-  /*    @FT_Face.  By default, the unhinted advances are returned in font  */
-  /*    units.                                                             */
+  /*    @FT_Face.                                                          */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face        :: The source @FT_Face handle.                         */
@@ -141,8 +140,12 @@ FT_BEGIN_HEADER
   /*                   calling @FT_Load_Glyph.                             */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    padvance :: The advances, in either font units or 16.16 format.    */
-  /*                This array must contain at least `count' elements.     */
+  /*    padvance :: The advance values.  This array, to be provided by the */
+  /*                caller, must contain at least `count' elements.        */
+  /*                                                                       */
+  /*                If scaling is performed (based on the value of         */
+  /*                `load_flags'), the advance values are in 16.16 format. */
+  /*                Otherwise, they are in font units.                     */
   /*                                                                       */
   /*                If @FT_LOAD_VERTICAL_LAYOUT is set, these are the      */
   /*                vertical advances corresponding to a vertical layout.  */

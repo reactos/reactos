@@ -40,14 +40,23 @@ typedef struct _GUI_CONSOLE_INFO
 typedef struct _GUI_CONSOLE_DATA
 {
     CRITICAL_SECTION Lock;
-    HANDLE hGuiInitEvent;
     BOOL WindowSizeLock;
+
+    HANDLE hGuiInitEvent;
     POINT OldCursor;
 
     HWND hWindow;               /* Handle to the console's window       */
     HICON hIcon;                /* Handle to the console's icon (big)   */
     HICON hIconSm;              /* Handle to the console's icon (small) */
 
+    LONG_PTR WndStyle;
+    LONG_PTR WndStyleEx;
+    BOOL IsWndMax;
+    WINDOWPLACEMENT WndPl;
+
+    HPALETTE hSysPalette;       /* Handle to the original system palette */
+
+/*** The following may be put per-screen-buffer !! ***/
     HCURSOR hCursor;            /* Handle to the mouse cursor */
     INT  MouseCursorRefCount;   /* The reference counter associated with the mouse cursor. >= 0 and the cursor is shown; < 0 and the cursor is hidden. */
     BOOL IgnoreNextMouseSignal; /* Used in cases where we don't want to treat a mouse signal */
@@ -63,8 +72,11 @@ typedef struct _GUI_CONSOLE_DATA
     HFONT Font;
     UINT CharWidth;
     UINT CharHeight;
+/*****************************************************/
 
     PCONSOLE Console;           /* Pointer to the owned console */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to the active screen buffer (then maybe the previous Console member is redundant?? Or not...) */
+
     GUI_CONSOLE_INFO GuiInfo;   /* GUI terminal settings */
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 

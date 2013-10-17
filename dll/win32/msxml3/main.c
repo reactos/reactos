@@ -212,7 +212,7 @@ static void init_libxslt(void)
 #endif
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
     MSXML_hInstance = hInstDLL;
 
@@ -243,7 +243,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         {
             pxsltCleanupGlobals();
             wine_dlclose(libxslt_handle, NULL, 0);
-            libxslt_handle = NULL;
         }
 #endif
 #ifdef HAVE_LIBXML2

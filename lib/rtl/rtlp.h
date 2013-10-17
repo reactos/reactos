@@ -52,6 +52,10 @@ RtlpGetExceptionList(VOID);
 
 VOID
 NTAPI
+RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters);
+
+VOID
+NTAPI
 RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
 
 BOOLEAN

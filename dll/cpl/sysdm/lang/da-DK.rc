@@ -281,7 +281,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System Indstillinger"
     IDS_CPLSYSTEMDESCRIPTION "Se mere information omkring din computer, og skift diverse system og hardware indstillinger."

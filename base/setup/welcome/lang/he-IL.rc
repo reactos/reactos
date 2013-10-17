@@ -4,7 +4,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ברוכים הבאים - ReactOS"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -14,7 +14,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "התקנת ReactOS"
     IDS_TOPICBUTTON1        "סייר בתוכן הדיסק"
@@ -29,7 +29,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "התקנת ReactOS"
     IDS_TOPICTITLE1         "סייר בתוכן הדיסק"
@@ -44,7 +44,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "צור התקנה חדשה של ReactOS במחשבך או שדרג את ההתקנה הנוכחית."
     IDS_TOPICDESC1          "סייר בתוכן הדיסק."

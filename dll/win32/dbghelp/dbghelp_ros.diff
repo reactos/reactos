@@ -1,6 +1,6 @@
-diff -prudN e:\Wine\dlls\dbghelp/cpu_i386.c e:\reactos-dwarf\dll\win32\dbghelp/cpu_i386.c
+diff -prudN e:\Wine\dlls\dbghelp/cpu_i386.c e:\reactos\dll\win32\dbghelp/cpu_i386.c
 --- e:\Wine\dlls\dbghelp/cpu_i386.c	2012-12-09 09:57:02.223180200 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/cpu_i386.c	2013-07-14 16:01:45.804981700 +0100
++++ e:\reactos\dll\win32\dbghelp/cpu_i386.c	2013-07-31 14:07:19.201466300 +0100
 @@ -20,12 +20,17 @@
  
  #include <assert.h>
@@ -114,9 +114,9 @@ diff -prudN e:\Wine\dlls\dbghelp/cpu_i386.c e:\reactos-dwarf\dll\win32\dbghelp/c
 +    NULL,
 +#endif
  };
-diff -prudN e:\Wine\dlls\dbghelp/cpu_x86_64.c e:\reactos-dwarf\dll\win32\dbghelp/cpu_x86_64.c
+diff -prudN e:\Wine\dlls\dbghelp/cpu_x86_64.c e:\reactos\dll\win32\dbghelp/cpu_x86_64.c
 --- e:\Wine\dlls\dbghelp/cpu_x86_64.c	2012-04-02 20:39:57.749333300 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/cpu_x86_64.c	2013-07-14 16:01:02.487336800 +0100
++++ e:\reactos\dll\win32\dbghelp/cpu_x86_64.c	2013-06-16 10:06:39.482074000 +0100
 @@ -302,10 +302,10 @@ static BOOL is_inside_epilog(struct cpu_
      if ((op0 & 0xf8) == 0x48)
      {
@@ -145,9 +145,9 @@ diff -prudN e:\Wine\dlls\dbghelp/cpu_x86_64.c e:\reactos-dwarf\dll\win32\dbghelp
              if (op0 & 0x06) return FALSE;  /* rex.RX must be cleared */
              if (((op2 >> 3) & 7) != 4) return FALSE;  /* dest reg mus be %rsp */
              if ((op2 & 7) == 4) return FALSE;  /* no SIB byte allowed */
-diff -prudN e:\Wine\dlls\dbghelp/dbghelp.c e:\reactos-dwarf\dll\win32\dbghelp/dbghelp.c
+diff -prudN e:\Wine\dlls\dbghelp/dbghelp.c e:\reactos\dll\win32\dbghelp/dbghelp.c
 --- e:\Wine\dlls\dbghelp/dbghelp.c	2013-03-16 11:54:52.395468000 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/dbghelp.c	2013-07-17 21:37:35.292366600 +0100
++++ e:\reactos\dll\win32\dbghelp/dbghelp.c	2013-07-31 14:07:19.207470800 +0100
 @@ -21,11 +21,14 @@
  #include "config.h"
  
@@ -222,9 +222,9 @@ diff -prudN e:\Wine\dlls\dbghelp/dbghelp.c e:\reactos-dwarf\dll\win32\dbghelp/db
      return TRUE;
  }
 
-diff -prudN e:\Wine\dlls\dbghelp/dbghelp_private.h e:\reactos-dwarf\dll\win32\dbghelp/dbghelp_private.h
+diff -prudN e:\Wine\dlls\dbghelp/dbghelp_private.h e:\reactos\dll\win32\dbghelp/dbghelp_private.h
 --- e:\Wine\dlls\dbghelp/dbghelp_private.h	2012-04-02 20:39:57.749333300 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/dbghelp_private.h	2013-07-14 16:01:46.453826200 +0100
++++ e:\reactos\dll\win32\dbghelp/dbghelp_private.h	2013-09-01 11:29:17.911557200 +0100
 @@ -21,19 +21,30 @@
   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
   */
@@ -267,7 +267,31 @@ diff -prudN e:\Wine\dlls\dbghelp/dbghelp_private.h e:\reactos-dwarf\dll\win32\db
  
  /* #define USE_STATS */
  
-@@ -671,7 +682,9 @@ extern BOOL         dwarf2_virtual_unwin
+@@ -352,6 +363,13 @@ struct module_format
+     } u;
+ };
+ 
++struct symt_idx_to_ptr
++{
++    struct hash_table_elt hash_elt;
++    DWORD idx;
++    const struct symt *sym;
++};
++
+ extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
+ struct module
+ {
+@@ -376,6 +394,9 @@ struct module
+     unsigned                    sorttab_size;
+     struct symt_ht**            addr_sorttab;
+     struct hash_table           ht_symbols;
++#ifdef __x86_64__
++    struct hash_table           ht_symaddr;
++#endif
+ 
+     /* types */
+     struct hash_table           ht_types;
+@@ -671,7 +692,9 @@ extern BOOL         dwarf2_virtual_unwin
                                            CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
  
  /* stack.c */
@@ -280,7 +304,7 @@ diff -prudN e:\Wine\dlls\dbghelp/dbghelp_private.h e:\reactos-dwarf\dll\win32\db
 
 diff -prudN e:\Wine\dlls\dbghelp/dwarf.c e:\reactos-dwarf\dll\win32\dbghelp/dwarf.c
 --- e:\Wine\dlls\dbghelp/dwarf.c	2013-03-02 14:17:59.439371000 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/dwarf.c	2013-07-14 16:01:46.490851000 +0100
++++ e:\reactos\dll\win32\dbghelp/dwarf.c	2013-07-31 14:07:19.222482300 +0100
 @@ -22,23 +22,23 @@
  
  #define NONAMELESSUNION
@@ -352,9 +376,9 @@ diff -prudN e:\Wine\dlls\dbghelp/dwarf.c e:\reactos-dwarf\dll\win32\dbghelp/dwar
      if (!(ret_type = dwarf2_lookup_type(ctx, di)))
      {
          ret_type = ctx->symt_cache[sc_void];
-diff -prudN e:\Wine\dlls\dbghelp/dwarf.h e:\reactos-dwarf\dll\win32\dbghelp/dwarf.h
+diff -prudN e:\Wine\dlls\dbghelp/dwarf.h e:\reactos\dll\win32\dbghelp/dwarf.h
 --- e:\Wine\dlls\dbghelp/dwarf.h	2011-09-16 23:22:36.194780200 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/dwarf.h	2013-07-14 16:01:46.862099400 +0100
++++ e:\reactos\dll\win32\dbghelp/dwarf.h	2013-07-31 14:07:19.227485700 +0100
 @@ -554,3 +554,15 @@ enum dwarf_call_frame_info
  #define DW_INL_inlined                  0x01
  #define DW_INL_declared_not_inlined     0x02
@@ -372,9 +396,9 @@ diff -prudN e:\Wine\dlls\dbghelp/dwarf.h e:\reactos-dwarf\dll\win32\dbghelp/dwar
 +}
 +#endif
  
-diff -prudN e:\Wine\dlls\dbghelp/image_private.h e:\reactos-dwarf\dll\win32\dbghelp/image_private.h
+diff -prudN e:\Wine\dlls\dbghelp/image_private.h e:\reactos\dll\win32\dbghelp/image_private.h
 --- e:\Wine\dlls\dbghelp/image_private.h	2012-04-02 20:39:57.752333500 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/image_private.h	2013-07-14 16:01:46.946185400 +0100
++++ e:\reactos\dll\win32\dbghelp/image_private.h	2013-07-31 14:07:19.195462800 +0100
 @@ -45,7 +45,7 @@
  
  #define IMAGE_NO_MAP  ((void*)-1)
@@ -444,9 +468,9 @@ diff -prudN e:\Wine\dlls\dbghelp/image_private.h e:\reactos-dwarf\dll\win32\dbgh
      default: assert(0); return 0;
      }
 
-diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/module.c
+diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos\dll\win32\dbghelp/module.c
 --- e:\Wine\dlls\dbghelp/module.c	2012-09-09 19:47:53.367024200 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/module.c	2013-07-14 16:01:46.973202500 +0100
++++ e:\reactos\dll\win32\dbghelp/module.c	2013-09-01 11:29:17.840509700 +0100
 @@ -19,16 +19,19 @@
   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
   */
@@ -474,7 +498,17 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  
-@@ -346,9 +349,11 @@ BOOL module_get_debug(struct module_pair
+@@ -220,6 +223,9 @@ struct module* module_new(struct process
+      */
+     hash_table_init(&module->pool, &module->ht_symbols, 4096);
+     hash_table_init(&module->pool, &module->ht_types,   4096);
++#ifdef __x86_64__
++    hash_table_init(&module->pool, &module->ht_symaddr, 4096);
++#endif
+     vector_init(&module->vtypes, sizeof(struct symt*),  32);
+ 
+     module->sources_used      = 0;
+@@ -346,9 +352,11 @@ BOOL module_get_debug(struct module_pair
          if (pair->effective->is_virtual) ret = FALSE;
          else switch (pair->effective->type)
          {
@@ -486,7 +520,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
          case DMT_PE:
              idslW64.SizeOfStruct = sizeof(idslW64);
              idslW64.BaseOfImage = pair->effective->module.BaseOfImage;
-@@ -365,9 +370,11 @@ BOOL module_get_debug(struct module_pair
+@@ -365,9 +373,11 @@ BOOL module_get_debug(struct module_pair
                           ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
                           &idslW64);
              break;
@@ -498,7 +532,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
          default:
              ret = FALSE;
              break;
-@@ -506,11 +513,13 @@ enum module_type module_get_type_by_name
+@@ -506,11 +516,13 @@ enum module_type module_get_type_by_name
  /******************************************************************
   *		                refresh_module_list
   */
@@ -512,7 +546,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  
  /***********************************************************************
   *			SymLoadModule (DBGHELP.@)
-@@ -594,7 +603,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+@@ -594,7 +606,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
      if (Flags & ~(SLMFLAG_VIRTUAL))
          FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
  
@@ -522,7 +556,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  
      /* this is a Wine extension to the API just to redo the synchronisation */
      if (!wImageName && !hFile) return 0;
-@@ -618,6 +629,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+@@ -618,6 +632,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
              wImageName)
          {
              /* and finally an ELF or Mach-O module */
@@ -530,7 +564,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
              switch (module_get_type_by_name(wImageName))
              {
                  case DMT_ELF:
-@@ -630,6 +642,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+@@ -630,6 +645,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
                      /* Ignored */
                      break;
              }
@@ -538,7 +572,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
          }
      }
      if (!module)
-@@ -819,6 +832,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HAND
+@@ -819,6 +835,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HAND
      return TRUE;
  }
  
@@ -546,7 +580,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  /******************************************************************
   *		EnumerateLoadedModules64 (DBGHELP.@)
   *
-@@ -919,6 +933,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(H
+@@ -919,6 +936,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(H
  
      return sz != 0 && i == sz;
  }
@@ -554,7 +588,7 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  
  /******************************************************************
   *		SymGetModuleInfo (DBGHELP.@)
-@@ -1131,7 +1146,11 @@ BOOL WINAPI SymRefreshModuleList(HANDLE 
+@@ -1131,7 +1149,11 @@ BOOL WINAPI SymRefreshModuleList(HANDLE 
  
      if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
  
@@ -567,9 +601,9 @@ diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/mod
  
  /***********************************************************************
  
-diff -prudN e:\Wine\dlls\dbghelp/pe_module.c e:\reactos-dwarf\dll\win32\dbghelp/pe_module.c
+diff -prudN e:\Wine\dlls\dbghelp/pe_module.c e:\reactos\dll\win32\dbghelp/pe_module.c
 --- e:\Wine\dlls\dbghelp/pe_module.c	2012-04-02 20:39:57.755333700 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/pe_module.c	2013-07-14 17:06:18.750513200 +0100
++++ e:\reactos\dll\win32\dbghelp/pe_module.c	2013-07-31 14:07:19.229487000 +0100
 @@ -31,8 +31,10 @@
  
  #include "dbghelp_private.h"
@@ -608,9 +642,9 @@ diff -prudN e:\Wine\dlls\dbghelp/pe_module.c e:\reactos-dwarf\dll\win32\dbghelp/
          /* if we still have no debug info (we could only get SymExport at this
           * point), then do the SymExport except if we have an ELF container,
 
-diff -prudN e:\Wine\dlls\dbghelp/source.c e:\reactos-dwarf\dll\win32\dbghelp/source.c
+diff -prudN e:\Wine\dlls\dbghelp/source.c e:\reactos\dll\win32\dbghelp/source.c
 --- e:\Wine\dlls\dbghelp/source.c	2011-09-16 23:22:36.198780400 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/source.c	2013-07-14 16:01:47.027608100 +0100
++++ e:\reactos\dll\win32\dbghelp/source.c	2013-07-31 14:07:19.220481000 +0100
 @@ -18,14 +18,17 @@
   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
   *
@@ -634,9 +668,9 @@ diff -prudN e:\Wine\dlls\dbghelp/source.c e:\reactos-dwarf\dll\win32\dbghelp/sou
  
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  
-diff -prudN e:\Wine\dlls\dbghelp/stabs.c e:\reactos-dwarf\dll\win32\dbghelp/stabs.c
+diff -prudN e:\Wine\dlls\dbghelp/stabs.c e:\reactos\dll\win32\dbghelp/stabs.c
 --- e:\Wine\dlls\dbghelp/stabs.c	2012-08-13 02:55:03.317206300 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/stabs.c	2013-07-14 17:06:14.969603400 +0100
++++ e:\reactos\dll\win32\dbghelp/stabs.c	2013-07-31 14:07:19.210472800 +0100
 @@ -29,41 +29,47 @@
   *     available (hopefully) from http://sources.redhat.com/gdb/onlinedocs
   */
@@ -699,9 +733,9 @@ diff -prudN e:\Wine\dlls\dbghelp/stabs.c e:\reactos-dwarf\dll\win32\dbghelp/stab
  #ifndef N_STAB
  #define N_STAB		0xe0
  
-diff -prudN e:\Wine\dlls\dbghelp/storage.c e:\reactos-dwarf\dll\win32\dbghelp/storage.c
+diff -prudN e:\Wine\dlls\dbghelp/storage.c e:\reactos\dll\win32\dbghelp/storage.c
 --- e:\Wine\dlls\dbghelp/storage.c	2011-09-16 23:22:36.199780500 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/storage.c	2013-07-14 16:01:47.077595900 +0100
++++ e:\reactos\dll\win32\dbghelp/storage.c	2013-07-31 14:07:19.203469700 +0100
 @@ -23,7 +23,10 @@
  #include "config.h"
  #include <assert.h>
@@ -716,7 +750,7 @@ diff -prudN e:\Wine\dlls\dbghelp/storage.c e:\reactos-dwarf\dll\win32\dbghelp/st
 
 diff -prudN e:\Wine\dlls\dbghelp/symbol.c e:\reactos-dwarf\dll\win32\dbghelp/symbol.c
 --- e:\Wine\dlls\dbghelp/symbol.c	2012-04-02 20:39:57.756333700 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/symbol.c	2013-07-17 04:29:08.161225800 +0100
++++ e:\reactos\dll\win32\dbghelp/symbol.c	2013-09-01 11:31:20.334679400 +0100
 @@ -31,9 +31,12 @@
  #include <sys/types.h>
  #include <assert.h>
@@ -731,9 +765,65 @@ diff -prudN e:\Wine\dlls\dbghelp/symbol.c e:\reactos-dwarf\dll\win32\dbghelp/sym
  
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  WINE_DECLARE_DEBUG_CHANNEL(dbghelp_symt);
-diff -prudN e:\Wine\dlls\dbghelp/type.c e:\reactos-dwarf\dll\win32\dbghelp/type.c
+@@ -67,18 +70,39 @@ int symt_cmp_addr(const void* p1, const 
+ 
+ DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
+ {
+-#ifdef _WIN64
++#ifdef __x86_64__
+     const struct symt** c;
+-    int                 len = vector_length(&module->vsymt), i;
++    int len = vector_length(&module->vsymt);
++    struct hash_table_iter hti;
++    void *ptr;
++    struct symt_idx_to_ptr *idx_to_ptr;
++    /* place enough storage on the stack to represent a pointer in %p form */
++    char ptrbuf[3 + (sizeof(void *) * 2)];
+ 
+-    /* FIXME: this is inefficient */
+-    for (i = 0; i < len; i++)
+-    {
+-        if (*(struct symt**)vector_at(&module->vsymt, i) == sym)
+-            return i + 1;
++    /* make a string representation of the pointer to use as a hash key */
++    sprintf(ptrbuf, "%p", sym);
++    hash_table_iter_init(&module->ht_symaddr, &hti, ptrbuf);
++
++    /* try to find the pointer in our ht */
++    while ((ptr = hash_table_iter_up(&hti))) {
++        idx_to_ptr = GET_ENTRY(ptr, struct symt_idx_to_ptr, hash_elt);
++        if (idx_to_ptr->sym == sym)
++            return idx_to_ptr->idx;
+     }
++
+     /* not found */
++    /* add the symbol to our symbol vector */
+     c = vector_add(&module->vsymt, &module->pool);
++
++    /* add an idx to ptr mapping so we can find it again by address */
++    if ((idx_to_ptr = pool_alloc(&module->pool, sizeof(*idx_to_ptr)))) 
++    {
++        idx_to_ptr->hash_elt.name = pool_strdup(&module->pool, ptrbuf);
++        idx_to_ptr->sym = sym;
++        idx_to_ptr->idx = len + 1;
++        hash_table_add(&module->ht_symaddr, &idx_to_ptr->hash_elt);
++    }
++
+     if (c) *c = sym;
+     return len + 1;
+ #else
+@@ -88,7 +112,7 @@ DWORD             symt_ptr2index(struct 
+ 
+ struct symt*      symt_index2ptr(struct module* module, DWORD id)
+ {
+-#ifdef _WIN64
++#ifdef __x86_64__
+     if (!id-- || id >= vector_length(&module->vsymt)) return NULL;
+     return *(struct symt**)vector_at(&module->vsymt, id);
+ #else
+diff -prudN e:\Wine\dlls\dbghelp/type.c e:\reactos\dll\win32\dbghelp/type.c
 --- e:\Wine\dlls\dbghelp/type.c	2012-04-02 20:39:57.756333700 +0100
-+++ e:\reactos-dwarf\dll\win32\dbghelp/type.c	2013-07-14 16:01:47.136913600 +0100
++++ e:\reactos\dll\win32\dbghelp/type.c	2013-07-31 14:07:19.197464100 +0100
 @@ -29,10 +29,13 @@
  #include <stdarg.h>
  #include <assert.h>

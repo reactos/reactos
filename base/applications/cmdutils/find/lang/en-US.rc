@@ -1,6 +1,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Prints all lines of a file that contain a string.\n\n\

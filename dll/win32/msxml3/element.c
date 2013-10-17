@@ -61,7 +61,7 @@ static const struct nodemap_funcs domelem_attr_map;
 static const tid_t domelem_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMElement_tid,
-    0
+    NULL_tid
 };
 
 static inline domelem *impl_from_IXMLDOMElement( IXMLDOMElement *iface )

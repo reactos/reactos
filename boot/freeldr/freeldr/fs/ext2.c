@@ -866,7 +866,9 @@ BOOLEAN Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Leng
 
     TRACE("Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer);
 
-    TempBuffer = HeapAllocate(FrLdrTempHeap, Ext2BlockSizeInBytes, '2TXE');
+    TempBuffer = FrLdrHeapAllocate(FrLdrTempHeap,
+                                   Ext2BlockSizeInBytes,
+                                   '2TXE');
 
     if (!Ext2ReadBlock(BlockNumber, TempBuffer))
     {
@@ -875,7 +877,7 @@ BOOLEAN Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Leng
 
     memcpy(Buffer, ((PUCHAR)TempBuffer + StartingOffset), Length);
 
-    HeapFree(FrLdrTempHeap, TempBuffer, '2TXE');
+    FrLdrHeapFree(FrLdrTempHeap, TempBuffer, '2TXE');
 
     return TRUE;
 }
@@ -1098,9 +1100,9 @@ BOOLEAN Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInLis
 
     BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
-    BlockBuffer = HeapAllocate(FrLdrTempHeap,
-                               Ext2BlockSizeInBytes,
-                               '2TXE');
+    BlockBuffer = FrLdrHeapAllocate(FrLdrTempHeap,
+                                    Ext2BlockSizeInBytes,
+                                    '2TXE');
     if (!BlockBuffer)
     {
         return FALSE;
@@ -1117,7 +1119,7 @@ BOOLEAN Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInLis
         (*CurrentBlockInList)++;
     }
 
-    HeapFree(FrLdrTempHeap, BlockBuffer, '2TXE');
+    FrLdrHeapFree(FrLdrTempHeap, BlockBuffer, '2TXE');
 
     return TRUE;
 }

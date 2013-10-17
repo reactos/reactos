@@ -1389,7 +1389,15 @@ Severity=Success
 Facility=System
 SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
 Language=English
-The driver mistakenly marked a part of it's image pageable instead of non-pageable.
+The driver mistakenly marked a part of its image pageable instead of non-pageable.
+.
+
+MessageId=0xD7
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_UNMAPPING_INVALID_VIEW
+Language=English
+The driver is attempting to unmap an invalid memory address.
 .
 
 MessageId=0xD8

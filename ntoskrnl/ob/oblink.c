@@ -285,7 +285,7 @@ ObpCreateSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
                 DriveType = DOSDEVICE_DRIVE_REMOTE;
                 break;
             default:
-                DPRINT1("Device Type %ld for %wZ is not known or unhandled\n",
+                DPRINT1("Device Type %lu for %wZ is not known or unhandled\n",
                         ((PDEVICE_OBJECT)Object)->DeviceType,
                         &SymbolicLink->LinkTarget);
                 DriveType = DOSDEVICE_DRIVE_UNKNOWN;

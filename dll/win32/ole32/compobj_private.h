@@ -40,6 +40,7 @@
 
 struct apartment;
 typedef struct apartment APARTMENT;
+typedef struct LocalServer LocalServer;
 
 DEFINE_OLEGUID( CLSID_DfMarshal, 0x0000030b, 0, 0 );
 
@@ -97,6 +98,8 @@ struct stub_manager
     ULONG             next_ipid;  /* currently unused (LOCK) */
     OXID_INFO         oxid_info;  /* string binding, ipid of rem unknown and other information (RO) */
 
+    IExternalConnection *extern_conn;
+
     /* We need to keep a count of the outstanding marshals, so we can enforce the
      * marshalling rules (ie, you can only unmarshal normal marshals once). Note
      * that these counts do NOT include unmarshalled interfaces, once a stream is
@@ -137,6 +140,7 @@ struct apartment
   struct list loaded_dlls; /* list of dlls loaded by this apartment (CS cs) */
   DWORD host_apt_tid;      /* thread ID of apartment hosting objects of differing threading model (CS cs) */
   HWND host_apt_hwnd;      /* handle to apartment window of host apartment (CS cs) */
+  LocalServer *local_server; /* A marshallable object exposing local servers (CS cs) */
 
   /* FIXME: OIDs should be given out by RPCSS */
   OID oidc;                /* object ID counter, starts at 1, zero is invalid OID (CS cs) */
@@ -169,10 +173,9 @@ struct oletls
 
 
 /* Global Interface Table Functions */
-
-extern void* StdGlobalInterfaceTable_Construct(void) DECLSPEC_HIDDEN;
+extern IGlobalInterfaceTable *get_std_git(void) DECLSPEC_HIDDEN;
+extern void release_std_git(void) DECLSPEC_HIDDEN;
 extern HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv) DECLSPEC_HIDDEN;
-extern void* StdGlobalInterfaceTableInstance DECLSPEC_HIDDEN;
 
 HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *key) DECLSPEC_HIDDEN;
 HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey) DECLSPEC_HIDDEN;
@@ -311,5 +314,15 @@ extern UINT ole_private_data_clipboard_format DECLSPEC_HIDDEN;
 
 extern LSTATUS create_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
 extern LSTATUS open_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
+
+static inline void *heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
 
 #endif /* __WINE_OLE_COMPOBJ_H */

@@ -144,7 +144,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Batal", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Tentang ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
@@ -159,12 +159,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Halaman &s"   /* FIXME */

@@ -47,7 +47,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
     LPSTR ImportName;
     ULONG ForwarderChain, i, Rva, OldProtect, IatSize, ExportSize;
     SIZE_T ImportSize;
-    DPRINT("LdrpSnapIAT(%wZ %wZ %p %d)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
+    DPRINT("LdrpSnapIAT(%wZ %wZ %p %u)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
 
     /* Get export directory */
     ExportDirectory = RtlImageDirectoryEntryToData(ExportLdrEntry->DllBase,
@@ -689,7 +689,7 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry = NULL;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     ULONG BoundSize, IatSize;
-    DPRINT("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
+    DPRINT("LdrpWalkImportDescriptor('%S' %p)\n", DllPath, LdrEntry);
 
     /* Set up the Act Ctx */
     RtlZeroMemory(&ActCtx, sizeof(ActCtx));

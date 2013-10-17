@@ -7,7 +7,7 @@
  */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FINDSTR: Tipărește toate rândurile unui fișier ce conțin un șir.\n\n\

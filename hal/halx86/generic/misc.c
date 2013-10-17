@@ -264,8 +264,8 @@ HalHandleNMI(IN PVOID NmiInfo)
     //
     // Display NMI failure string
     //
-    InbvDisplayString("\n*** Hardware Malfunction\n\n");
-    InbvDisplayString("Call your hardware vendor for support\n\n");
+    InbvDisplayString("\r\n*** Hardware Malfunction\r\n\r\n");
+    InbvDisplayString("Call your hardware vendor for support\r\n\r\n");
 
     //
     // Check for parity error
@@ -275,7 +275,7 @@ HalHandleNMI(IN PVOID NmiInfo)
         //
         // Display message
         //
-        InbvDisplayString("NMI: Parity Check / Memory Parity Error\n");
+        InbvDisplayString("NMI: Parity Check / Memory Parity Error\r\n");
     }
 
     //
@@ -286,7 +286,7 @@ HalHandleNMI(IN PVOID NmiInfo)
         //
         // Display message
         //
-        InbvDisplayString("NMI: Channel Check / IOCHK\n");
+        InbvDisplayString("NMI: Channel Check / IOCHK\r\n");
     }
 
     //
@@ -303,7 +303,7 @@ HalHandleNMI(IN PVOID NmiInfo)
     //
     // Halt the system
     //
-    InbvDisplayString("\n*** The system has halted ***\n");
+    InbvDisplayString("\r\n*** The system has halted ***\r\n");
 
 
     //

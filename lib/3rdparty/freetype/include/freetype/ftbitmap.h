@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility functions for bitmaps (specification).              */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2008 by                                    */
+/*  Copyright 2004-2006, 2008, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -135,9 +135,9 @@ FT_BEGIN_HEADER
   /*    FT_Bitmap_Convert                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Convert a bitmap object with depth 1bpp, 2bpp, 4bpp, or 8bpp to a  */
-  /*    bitmap object with depth 8bpp, making the number of used bytes per */
-  /*    line (a.k.a. the `pitch') a multiple of `alignment'.               */
+  /*    Convert a bitmap object with depth 1bpp, 2bpp, 4bpp, 8bpp or 32bpp */
+  /*    to a bitmap object with depth 8bpp, making the number of used      */
+  /*    bytes line (a.k.a. the `pitch') a multiple of `alignment'.         */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library   :: A handle to a library object.                         */

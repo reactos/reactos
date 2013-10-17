@@ -14,4 +14,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_KEY_SHORT_ICO  ICON "resources/keyboard-shortcuts.ico"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

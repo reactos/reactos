@@ -911,7 +911,9 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
     //TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
     // We need a buffer for 2 secors
-    ReadBuffer = HeapAllocate(FrLdrTempHeap, 2 * Volume->BytesPerSector, 'xTAF');
+    ReadBuffer = FrLdrHeapAllocate(FrLdrTempHeap,
+                                   2 * Volume->BytesPerSector,
+                                   'xTAF');
     if (!ReadBuffer)
     {
         return FALSE;
@@ -997,7 +999,7 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
     //TRACE("FAT entry is 0x%x.\n", fat);
 
-    HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+    FrLdrHeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
 
     *ClusterPointer = fat;
 
@@ -1181,7 +1183,7 @@ BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULON
     // Calculate rounded up read size
     ReadSize = SectorCount * Volume->BytesPerSector;
 
-    ReadBuffer = HeapAllocate(FrLdrTempHeap, ReadSize, 'xTAF');
+    ReadBuffer = FrLdrHeapAllocate(FrLdrTempHeap, ReadSize, 'xTAF');
     if (!ReadBuffer)
     {
         return FALSE;
@@ -1193,7 +1195,7 @@ BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULON
         status = TRUE;
     }
 
-    HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+    FrLdrHeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
 
     return status;
 }

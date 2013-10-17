@@ -26,11 +26,11 @@ typedef struct _ENV_INFO
 
 ENV_INFO BasepEnvNameType[] =
 {
-    {3, sizeof(L"PATH"), L"PATH"},
-    {2, sizeof(L"WINDIR"), L"WINDIR"},
+    {3, sizeof(L"PATH")      , L"PATH"      },
+    {2, sizeof(L"WINDIR")    , L"WINDIR"    },
     {2, sizeof(L"SYSTEMROOT"), L"SYSTEMROOT"},
-    {3, sizeof(L"TEMP"), L"TEMP"},
-    {3, sizeof(L"TMP"), L"TMP"},
+    {3, sizeof(L"TEMP")      , L"TEMP"      },
+    {3, sizeof(L"TMP")       , L"TMP"       },
 };
 
 UNICODE_STRING BaseDotComSuffixName = RTL_CONSTANT_STRING(L".com");
@@ -99,19 +99,21 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     {
         /* VDM is being undone */
         case VdmEntryUndo:
-
+        {
             /* Tell the server how far we had gotten along */
-            UpdateVdmEntry->iTask = (ULONG)*WaitHandle;
+            UpdateVdmEntry->iTask = HandleToUlong(*WaitHandle);
             UpdateVdmEntry->VDMCreationState = IndexInfo;
             break;
+        }
 
         /* VDM is ready with a new process handle */
         case VdmEntryUpdateProcess:
-
+        {
             /* Send it the process handle */
             UpdateVdmEntry->VDMProcessHandle = *WaitHandle;
             UpdateVdmEntry->iTask = IndexInfo;
             break;
+        }
     }
 
     /* Also check what kind of binary this is for the console handle */
@@ -123,11 +125,11 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     else if (UpdateVdmEntry->iTask)
     {
         /* No handle for true VDM */
-        UpdateVdmEntry->ConsoleHandle = 0;
+        UpdateVdmEntry->ConsoleHandle = NULL;
     }
     else
     {
-        /* Otherwise, send the regular consoel handle */
+        /* Otherwise, use the regular console handle */
         UpdateVdmEntry->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     }
 
@@ -184,7 +186,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     /* Call CSRSS */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode /* BasepCheckVDM */),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode),
                                  sizeof(BASE_GET_VDM_EXIT_CODE));
     if (!NT_SUCCESS(Status)) return FALSE;
 
@@ -196,7 +198,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
 
 BOOL
 WINAPI
-BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
+BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
                      IN ULONG DosSeqId,
                      IN ULONG BinaryType,
                      IN PUNICODE_STRING CmdLineString,
@@ -209,7 +211,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
     /* Clear the buffer in case we fail */
     CmdLineString->Buffer = 0;
 
-    /* Always return the same size */
+    /* Always return the same size: 16 Mb */
     *VdmSize = 0x1000000;
 
     /* Get the system directory */
@@ -224,24 +226,31 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
     /* Check if this is VDM with a DOS Sequence ID */
     if (DosSeqId)
     {
-        /* Build the VDM string for it */
+        /*
+         * Build the VDM string for it:
+         * -i%lx : Gives the DOS Sequence ID;
+         * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
+         */
         _snwprintf(CommandLine,
                    sizeof(CommandLine),
                    L"\"%s\\ntvdm.exe\" -i%lx %s%c",
                    Buffer,
                    DosSeqId,
-                   (BinaryType == 0x10) ? L" " : L"-w",
-                   (BinaryType == 0x40) ? 's' : ' ');
+                   (BinaryType == BINARY_TYPE_DOS) ? L" " : L"-w",
+                   (BinaryType == BINARY_TYPE_SEPARATE_WOW) ? L's' : L' ');
     }
     else
     {
-        /* Non-DOS, build the string for it without the task ID */
+        /*
+         * Build the string for it without the DOS Sequence ID:
+         * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
+         */
         _snwprintf(CommandLine,
                    sizeof(CommandLine),
-                   L"\"%s\\ntvdm.exe\"  %s%c",
+                   L"\"%s\\ntvdm.exe\" %s%c",
                    Buffer,
-                   (BinaryType == 0x10) ? L" " : L"-w",
-                   (BinaryType == 0x40) ? 's' : ' ');
+                   (BinaryType == BINARY_TYPE_DOS) ? L" " : L"-w",
+                   (BinaryType == BINARY_TYPE_SEPARATE_WOW) ? L's' : L' ');
     }
 
     /* Create the actual string */
@@ -373,8 +382,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
     /* Initialize the unicode string to hold it */
     EnvironmentSize = (p - NewEnvironment) * sizeof(WCHAR);
-    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, EnvironmentSize);
-    UnicodeEnv->Length = EnvironmentSize;
+    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, (USHORT)EnvironmentSize);
+    UnicodeEnv->Length = (USHORT)EnvironmentSize;
 
     /* Create the ASCII version of it */
     Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);
@@ -684,7 +693,7 @@ GetBinaryTypeW (
     }
   }
 
-  DPRINT1("Invalid binary type returned!\n", BinType);
+  DPRINT1("Invalid binary type %lu returned!\n", BinType);
   return FALSE;
 }
 

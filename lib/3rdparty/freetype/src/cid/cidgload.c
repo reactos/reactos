@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010 by */
+/*  Copyright 1996-2007, 2009, 2010, 2013 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,7 +46,7 @@
     FT_Byte*       p;
     FT_UInt        fd_select;
     FT_Stream      stream       = face->cid_stream;
-    FT_Error       error        = CID_Err_Ok;
+    FT_Error       error        = FT_Err_Ok;
     FT_Byte*       charstring   = 0;
     FT_Memory      memory       = face->root.memory;
     FT_ULong       glyph_length = 0;
@@ -117,7 +117,7 @@
 
       if ( fd_select >= (FT_UInt)cid->num_dicts )
       {
-        error = CID_Err_Invalid_Offset;
+        error = FT_THROW( Invalid_Offset );
         goto Exit;
       }
       if ( glyph_length == 0 )
@@ -258,7 +258,7 @@
 
     psaux->t1_decoder_funcs->done( &decoder );
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -284,7 +284,7 @@
 
     if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
     {
-      error = CID_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -426,7 +426,7 @@
       metrics->horiBearingX = cbox.xMin;
       metrics->horiBearingY = cbox.yMax;
 
-      if ( load_flags & FT_LOAD_VERTICAL_LAYOUT ) 
+      if ( load_flags & FT_LOAD_VERTICAL_LAYOUT )
       {
         /* make up vertical ones */
         ft_synthesize_vertical_metrics( metrics,

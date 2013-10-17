@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for Indic scripts (specification).      */
 /*                                                                         */
-/*  Copyright 2007 by                                                      */
+/*  Copyright 2007, 2012 by                                                */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,7 @@ FT_BEGIN_HEADER
 
   /* the Indic-specific script class */
 
-  AF_DECLARE_SCRIPT_CLASS(af_indic_script_class)
+  AF_DECLARE_SCRIPT_CLASS( af_indic_script_class )
 
 
 /* */

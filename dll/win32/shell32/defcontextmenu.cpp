@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/shell32/shv_item_new.c
  * PURPOSE:     provides default context menu implementation
- * PROGRAMMERS: Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 /*
@@ -1489,7 +1489,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
 {
     LPSHELLBROWSER lpSB;
     HWND hwndTree;
-    LPWSTR FlagsName;
+    LPCWSTR FlagsName;
     WCHAR wszKey[256];
     HRESULT hr;
     DWORD wFlags;

@@ -30,11 +30,6 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
-#define YYLEX_PARAM ctx
-#define YYPARSE_PARAM ctx
-#define YYERROR_DEBUG 1
-#define YYERROR_VERBOSE 1
-
 WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 struct parser
@@ -181,7 +176,7 @@ static struct expr *expr_propval( struct parser *parser, const struct property *
     return e;
 }
 
-static int wql_error( const char *str );
+static int wql_error( struct parser *parser, const char *str );
 static int wql_lex( void *val, struct parser *parser );
 
 #define PARSER_BUBBLE_UP_VIEW( parser, result, current_view ) \
@@ -190,6 +185,9 @@ static int wql_lex( void *val, struct parser *parser );
 
 %}
 
+%lex-param { struct parser *ctx }
+%parse-param { struct parser *ctx }
+%error-verbose
 %pure-parser
 
 %union
@@ -691,7 +689,7 @@ static int wql_lex( void *p, struct parser *parser )
     return token;
 }
 
-static int wql_error( const char *str )
+static int wql_error( struct parser *parser, const char *str )
 {
     ERR("%s\n", str);
     return 0;

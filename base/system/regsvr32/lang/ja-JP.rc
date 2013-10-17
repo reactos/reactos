@@ -1,5 +1,5 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\n使用法: regsvr32 [/u] [/s] [/c] [/n] [/i[:コマンド ライン]] DLL名\n\

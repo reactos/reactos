@@ -555,13 +555,21 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Now everything is fine, start processing */
+
     if (RtlPrefixUnicodeString(&DeviceFloppy, &TargetDeviceName, TRUE))
     {
+        /* If the device is a floppy, start with letter A */
         DriveLetter = 'A';
+    }
+    else if (RtlPrefixUnicodeString(&DeviceCdRom, &TargetDeviceName, TRUE))
+    {
+        /* If the device is a CD-ROM, start with letter D */
+        DriveLetter = 'D';
     }
     else
     {
-        DriveLetter = 'C' + RtlPrefixUnicodeString(&DeviceCdRom, &TargetDeviceName, TRUE);
+        /* Finally, if it's a disk, use C */
+        DriveLetter = 'C';
     }
 
     /* We cannot set NO drive letter */

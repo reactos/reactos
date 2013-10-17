@@ -87,6 +87,8 @@ static GpPenType bt_to_pt(GpBrushType bt)
 
 GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
 {
+    GpStatus stat;
+
     TRACE("(%p, %p)\n", pen, clonepen);
 
     if(!pen || !clonepen)
@@ -97,9 +99,34 @@ GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
 
     **clonepen = *pen;
 
-    GdipCloneCustomLineCap(pen->customstart, &(*clonepen)->customstart);
-    GdipCloneCustomLineCap(pen->customend, &(*clonepen)->customend);
-    GdipCloneBrush(pen->brush, &(*clonepen)->brush);
+    (*clonepen)->customstart = NULL;
+    (*clonepen)->customend = NULL;
+    (*clonepen)->brush = NULL;
+    (*clonepen)->dashes = NULL;
+
+    stat = GdipCloneBrush(pen->brush, &(*clonepen)->brush);
+
+    if (stat == Ok && pen->customstart)
+        stat = GdipCloneCustomLineCap(pen->customstart, &(*clonepen)->customstart);
+
+    if (stat == Ok && pen->customend)
+        stat = GdipCloneCustomLineCap(pen->customend, &(*clonepen)->customend);
+
+    if (stat == Ok && pen->dashes)
+    {
+        (*clonepen)->dashes = GdipAlloc(pen->numdashes * sizeof(REAL));
+        if ((*clonepen)->dashes)
+            memcpy((*clonepen)->dashes, pen->dashes, pen->numdashes * sizeof(REAL));
+        else
+            stat = OutOfMemory;
+    }
+
+    if (stat != Ok)
+    {
+        GdipDeletePen(*clonepen);
+        *clonepen = NULL;
+        return stat;
+    }
 
     TRACE("<-- %p\n", *clonepen);
 

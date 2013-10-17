@@ -725,7 +725,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             }
             else if (bip->DataLength < 5 * sizeof(WCHAR))
             {
-                DPRINT("Registry string too short (length %lu, expected %lu at least)\n", bip->DataLength < 5 * sizeof(WCHAR));
+                DPRINT("Registry string too short (length %lu, expected %lu at least)\n", bip->DataLength, 5 * sizeof(WCHAR));
                 Status = STATUS_UNSUCCESSFUL;
                 goto cleanup;
             }
@@ -1245,7 +1245,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
 
-    DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
+    DPRINT("IoSetDeviceInterfaceState('%wZ', %u)\n", SymbolicLinkName, Enable);
 
     /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
     /* Get GUID from SymbolicLinkName */
@@ -1261,7 +1261,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     SymLink.Buffer = SymbolicLinkName->Buffer;
     SymLink.MaximumLength = SymLink.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)SymLink.Buffer);
-    DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
+    DPRINT("IoSetDeviceInterfaceState('%wZ', %u)\n", SymbolicLinkName, Enable);
 
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,

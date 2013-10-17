@@ -25,7 +25,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Добре дошли"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -35,7 +35,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "Инсталиране на ReactOS"
     IDS_TOPICBUTTON1        "Разгледай това CD"
@@ -50,7 +50,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "Инсталиране на ReactOSS"
     IDS_TOPICTITLE1         "Разгледай това CD"
@@ -65,7 +65,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Създаване на нова инсталация ня ReactOS или обновяване на съществуваща такава."
     IDS_TOPICDESC1          "Разглеждане на CD-то."

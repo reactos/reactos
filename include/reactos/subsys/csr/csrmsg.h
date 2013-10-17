@@ -4,7 +4,7 @@
  * FILE:            include/reactos/subsys/csr/csrmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between CSR Clients and Servers
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -46,15 +46,15 @@ typedef ULONG CSR_API_NUMBER;
 
 typedef struct _CSR_API_CONNECTINFO
 {
-    ULONG Version;
-    ULONG Unknown;
     HANDLE ObjectDirectory;
     PVOID SharedSectionBase;
+    PVOID SharedStaticServerData;
     PVOID SharedSectionHeap;
-    PVOID SharedSectionData;
     ULONG DebugFlags;
-    ULONG Unknown2[3];
-    HANDLE ProcessId;
+    ULONG SizeOfPebData;
+    ULONG SizeOfTebData;
+    ULONG NumberOfServerDllNames;
+    HANDLE ServerProcessId;
 } CSR_API_CONNECTINFO, *PCSR_API_CONNECTINFO;
 
 #define CSRSRV_VERSION 0x10000
@@ -133,7 +133,7 @@ typedef struct _CSR_API_MESSAGE
                 // Finally, the overall message structure size must be at most
                 // equal to the maximum acceptable LPC message size.
                 //
-                ULONG_PTR Padding[35];
+                ULONG_PTR ApiMessageData[39];
             } Data;
         };
     };

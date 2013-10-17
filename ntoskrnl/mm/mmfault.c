@@ -32,7 +32,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      DPRINT1("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+      DPRINT1("Page fault at high IRQL was %u\n", KeGetCurrentIrql());
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -119,7 +119,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      DPRINT1("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
+      DPRINT1("Page fault at high IRQL was %u, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
 

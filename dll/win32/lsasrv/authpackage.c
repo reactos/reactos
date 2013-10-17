@@ -31,6 +31,9 @@ typedef struct _LSA_TOKEN_INFORMATION_V1
 
 typedef PVOID PLSA_CLIENT_REQUEST;
 
+typedef NTSTATUS (NTAPI *PLSA_CREATE_LOGON_SESSION)(PLUID);
+typedef NTSTATUS (NTAPI *PLSA_DELETE_LOGON_SESSION)(PLUID);
+
 typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
 typedef VOID (NTAPI *PLSA_FREE_LSA_HEAP)(PVOID);
 typedef NTSTATUS (NTAPI *PLSA_ALLOCATE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG, PVOID*);
@@ -42,8 +45,8 @@ typedef NTSTATUS (NTAPI *PLSA_COPY_FROM_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST,
 
 typedef struct LSA_DISPATCH_TABLE
 {
-    PVOID /*PLSA_CREATE_LOGON_SESSION */ CreateLogonSession;
-    PVOID /*PLSA_DELETE_LOGON_SESSION */ DeleteLogonSession;
+    PLSA_CREATE_LOGON_SESSION CreateLogonSession;
+    PLSA_DELETE_LOGON_SESSION DeleteLogonSession;
     PVOID /*PLSA_ADD_CREDENTIAL */ AddCredential;
     PVOID /*PLSA_GET_CREDENTIALS */ GetCredentials;
     PVOID /*PLSA_DELETE_CREDENTIAL */ DeleteCredential;
@@ -295,26 +298,6 @@ LsapGetAuthenticationPackage(IN ULONG PackageId)
 
 
 static
-NTSTATUS
-NTAPI
-LsapCreateLogonSession(IN PLUID LogonId)
-{
-    TRACE("()\n");
-    return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
-NTAPI
-LsapDeleteLogonSession(IN PLUID LogonId)
-{
-    TRACE("()\n");
-    return STATUS_SUCCESS;
-}
-
-
-static
 PVOID
 NTAPI
 LsapAllocateHeap(IN ULONG Length)
@@ -454,8 +437,7 @@ LsapInitAuthPackages(VOID)
                                     &PackageId,
                                     NULL);
 
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 

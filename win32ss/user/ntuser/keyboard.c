@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Keyboard functions
- * FILE:             subsystems/win32/win32k/ntuser/keyboard.c
+ * FILE:             win32ss/user/ntuser/keyboard.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -14,6 +14,7 @@ BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
+KEYBOARD_ATTRIBUTES gKeyboardInfo;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,6 +30,10 @@ InitKeyboardImpl(VOID)
 {
     RtlZeroMemory(&gafAsyncKeyState, sizeof(gafAsyncKeyState));
     RtlZeroMemory(&gafAsyncKeyStateRecentDown, sizeof(gafAsyncKeyStateRecentDown));
+    // Clear and set default information.
+    RtlZeroMemory(&gKeyboardInfo, sizeof(gKeyboardInfo));
+    gKeyboardInfo.KeyboardIdentifier.Type = 4; /* AT-101 */
+    gKeyboardInfo.NumberOfFunctionKeys = 12; /* We're doing an 101 for now, so return 12 F-keys */
     return STATUS_SUCCESS;
 }
 
@@ -38,7 +43,7 @@ InitKeyboardImpl(VOID)
  * Asks the keyboard driver to send a small table that shows which
  * lights should connect with which scancodes
  */
-static
+//static
 NTSTATUS APIENTRY
 IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
                              PKEYBOARD_INDICATOR_TRANSLATION *ppIndicatorTrans)
@@ -159,7 +164,7 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK Block;
-
+/*
     IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
 
     Status = NtDeviceIoControlFile(hKeyboardDevice,
@@ -175,13 +180,31 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
     {
         WARN("NtDeviceIoControlFile() failed, ignored\n");
     }
-
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,
                    gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
                    gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
+*/
+    // FIXME: Need device driver to work! HID support more than one!!!!
+    Status = NtDeviceIoControlFile(hKeyboardDevice,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Block,
+                                   IOCTL_KEYBOARD_QUERY_ATTRIBUTES,
+                                   NULL, 0,
+                                   &gKeyboardInfo, sizeof(gKeyboardInfo));
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtDeviceIoControlFile() failed, ignored\n");
+    }
+    ERR("Keyboard type %d, subtype %d and number of func keys %d\n",
+             gKeyboardInfo.KeyboardIdentifier.Type,
+             gKeyboardInfo.KeyboardIdentifier.Subtype,
+             gKeyboardInfo.NumberOfFunctionKeys);
 }
 
 /*
@@ -361,7 +384,7 @@ IntTranslateChar(WORD wVirtKey,
                 *pbLigature = (wch == WCH_LGTR);
                 *pwcTranslatedChar = wch;
 
-                TRACE("%d %04x: dwModNumber %08x Char %04x\n",
+                TRACE("%lu %04x: dwModNumber %08x Char %04x\n",
                       i, wVirtKey, dwModNumber, wch);
 
                 if (*pbDead)
@@ -614,7 +637,7 @@ NtUserGetAsyncKeyState(INT Key)
 
     UserLeave();
 
-    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", wRet);
+    TRACE("Leave NtUserGetAsyncKeyState, ret=%u\n", wRet);
     return wRet;
 }
 
@@ -798,8 +821,10 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* Check if this is a hotkey */
     if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
+    {
+        TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
-
+    }
     wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
@@ -1257,7 +1282,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
         ret = IntMapVirtualKeyEx(uCode, uType, pKbdTbl);
 
     UserLeave();
-    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", ret);
+    TRACE("Leave NtUserMapVirtualKeyEx, ret=%u\n", ret);
     return ret;
 }
 
@@ -1315,7 +1340,7 @@ NtUserToUnicodeEx(
     pwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
     if (!pwszBuff)
     {
-        ERR("ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
+        ERR("ExAllocatePoolWithTag(%u) failed\n", sizeof(WCHAR) * cchBuff);
         return 0;
     }
     RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
@@ -1443,7 +1468,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
 cleanup:
     UserLeave();
-    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", dwRet);
+    TRACE("Leave NtUserGetKeyNameText, ret=%lu\n", dwRet);
     return dwRet;
 }
 
@@ -1459,11 +1484,11 @@ UserGetKeyboardType(
     switch (dwTypeFlag)
     {
         case 0:        /* Keyboard type */
-            return 4;    /* AT-101 */
+            return (DWORD)gKeyboardInfo.KeyboardIdentifier.Type;
         case 1:        /* Keyboard Subtype */
-            return 0;    /* There are no defined subtypes */
+            return (DWORD)gKeyboardInfo.KeyboardIdentifier.Subtype;
         case 2:        /* Number of F-keys */
-            return 12;   /* We're doing an 101 for now, so return 12 F-keys */
+            return (DWORD)gKeyboardInfo.NumberOfFunctionKeys;
         default:
             ERR("Unknown type!\n");
             return 0;    /* Note: we don't have to set last error here */
@@ -1489,7 +1514,7 @@ NtUserVkKeyScanEx(
     PKL pKl = NULL;
     DWORD i, dwModBits = 0, dwModNumber = 0, Ret = (DWORD)-1;
 
-    TRACE("NtUserVkKeyScanEx() wch %d, KbdLayout 0x%p\n", wch, dwhkl);
+    TRACE("NtUserVkKeyScanEx() wch %u, KbdLayout 0x%p\n", wch, dwhkl);
     UserEnterShared();
 
     if (bUsehKL)
@@ -1523,7 +1548,7 @@ NtUserVkKeyScanEx(
                 if (pVkToWch->wch[dwModNumber] == wch)
                 {
                     dwModBits = pKbdTbl->pCharModifiers->ModNumber[dwModNumber];
-                    TRACE("i %d wC %04x: dwModBits %08x dwModNumber %08x MaxModBits %08x\n",
+                    TRACE("i %lu wC %04x: dwModBits %08x dwModNumber %08x MaxModBits %08x\n",
                           i, wch, dwModBits, dwModNumber, pKbdTbl->pCharModifiers->wMaxModBits);
                     Ret = (dwModBits << 8) | (pVkToWch->VirtualKey & 0xFF);
                     goto Exit;

@@ -77,7 +77,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6,6,253,232
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -104,7 +104,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Dipendenze"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -116,7 +116,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Crea un servizio"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -183,7 +183,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN "Nome"
   IDS_SECONDCOLUMN "Descrizione"
@@ -192,7 +192,7 @@ BEGIN
   IDS_FITHCOLUMN "Collegati come"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "Avviato"
   IDS_SERVICES_STOPPED "Fermato"
@@ -201,7 +201,7 @@ BEGIN
   IDS_SERVICES_DIS "Disabilitato"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "Numero Servizi: %d"
   IDS_STOP_DEPENDS "Quando %s si ferma, Questi altri sevizi si fermeranno"
@@ -209,7 +209,7 @@ BEGIN
   IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILITÀ o UTILIZZABILITÀ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP "Proprietà"
   IDS_TOOLTIP_REFRESH "Aggiorna"
@@ -222,7 +222,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "Riavvia servizio"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS sta avviando il seguente servizio"
   IDS_PROGRESS_INFO_STOP  "ReactOS sta fermando il seguente servizio"
@@ -234,13 +234,13 @@ BEGIN
   IDS_DELETE_STOP "Devi fermare il servizio prima di rimuoverlo!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTA: Il nome dell'ozione comprende il simbolo di uguale.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Esporta la lista attuale in un file."
@@ -276,7 +276,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "Gestione dei servizi di ReactOS"
 END

@@ -146,7 +146,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Annulla", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Informazioni su blocco note ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -161,12 +161,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Pagina &s"   /* FIXME */

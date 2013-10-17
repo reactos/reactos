@@ -77,7 +77,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6,6,253,232
 CAPTION "Umum"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -104,7 +104,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Ketergantungan"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -116,7 +116,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Buat layanan"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -183,7 +183,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN  "Nama"
   IDS_SECONDCOLUMN "Deskripsi"
@@ -192,7 +192,7 @@ BEGIN
   IDS_FITHCOLUMN   "Masuk Sebagai"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "Dimulai"
   IDS_SERVICES_STOPPED "Dihentikan"
@@ -201,7 +201,7 @@ BEGIN
   IDS_SERVICES_DIS     "Dimatikan"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "Jumlah Layanan: %d"
   IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
@@ -209,7 +209,7 @@ BEGIN
   IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP    "Properti"
   IDS_TOOLTIP_REFRESH "Segarkan"
@@ -222,7 +222,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "Memulai lagi layanan"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS sedang mencoba untuk memulai layanan berikut"
   IDS_PROGRESS_INFO_STOP  "ReactOS sedang mencoba untuk menghentikan layanan berikut"
@@ -234,13 +234,13 @@ BEGIN
   IDS_DELETE_STOP         "Anda harus menghentikan layanan sebelum menghapus!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "OPSI BUAT:\r\nCATATAN: Nama opsi termasuk tanda sama dengan.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (standar = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (standar = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (standar = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(dipisahkan oleh / (garis miring))>\r\n obj= <AccountName|ObjectName>\r\n       (standar = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Mengekspor daftar sekarang ke file."
@@ -276,7 +276,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "ReactOS Service Manager"
 END

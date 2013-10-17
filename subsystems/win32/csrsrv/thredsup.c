@@ -292,13 +292,24 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
  * @remarks None.
  *
  *--*/
-VOID
+NTSTATUS
 NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
                 IN PCSR_THREAD Thread)
 {
     ULONG i;
+    NTSTATUS Status;
+    ULONG ThreadInfo;
     // ASSERT(ProcessStructureListLocked());
+
+    /* Make sure the thread isn't already dead by the time we got this */
+    Status = NtQueryInformationThread(Thread->ThreadHandle,
+                                      ThreadIsTerminated,
+                                      &ThreadInfo,
+                                      sizeof(ThreadInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+    if (ThreadInfo == TRUE) return STATUS_THREAD_IS_TERMINATING;
 
     /* Insert it into the Regular List */
     InsertTailList(&Process->ThreadList, &Thread->Link);
@@ -311,6 +322,7 @@ CsrInsertThread(IN PCSR_PROCESS Process,
 
     /* Insert it there too */
     InsertHeadList(&CsrThreadHashTable[i], &Thread->HashLinks);
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -623,7 +635,15 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        if (CsrThread->ThreadHandle != hThread) NtClose(CsrThread->ThreadHandle);
+        CsrUnlockProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        return Status;
+    }
 
     /* Release the lock and return */
     CsrUnlockProcess(CsrProcess);
@@ -720,7 +740,14 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrUnlockProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        return Status;
+    }
 
     /* Release the lock and return */
     CsrReleaseProcessLock();

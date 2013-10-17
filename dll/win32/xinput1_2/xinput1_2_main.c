@@ -32,8 +32,6 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(inst);
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }

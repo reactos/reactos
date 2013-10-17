@@ -7,7 +7,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Üdvözlünk"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
@@ -17,7 +17,7 @@ BEGIN
 END
 
 /* Topic buttons */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICBUTTON0        "ReactOS telepítése"
     IDS_TOPICBUTTON1        "A CD böngészése"
@@ -32,7 +32,7 @@ BEGIN
 END
 
 /* Topic titles */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICTITLE0         "ReactOS telepítése"
     IDS_TOPICTITLE1         "A CD böngészése"
@@ -47,7 +47,7 @@ BEGIN
 END
 
 /* Topic descriptions */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "A ReactOS telepítése vagy frissítése."
     IDS_TOPICDESC1          "A CD böngészése"

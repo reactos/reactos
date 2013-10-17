@@ -7,7 +7,7 @@
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Використання: %s пристрій: [-FS:файл-система] [-V:мітка] [-Q] [-A:розмір] [-C]\n\n\
   [пристрій:]      Вказує диск, який слід відформатувати (двокрапка обов'язкова).\n\

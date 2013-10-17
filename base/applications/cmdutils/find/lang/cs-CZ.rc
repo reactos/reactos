@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "FIND: Zobrazí všechny řádky souboru obsahující hledaný řetězec.\n\n\

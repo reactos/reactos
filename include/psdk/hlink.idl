@@ -37,6 +37,7 @@ cpp_quote("HRESULT WINAPI HlinkIsShortcut(LPCWSTR);")
 cpp_quote("HRESULT WINAPI HlinkTranslateURL(LPCWSTR,DWORD,LPWSTR*);")
 cpp_quote("HRESULT WINAPI HlinkParseDisplayName(LPBC,LPCWSTR,BOOL,ULONG*,IMoniker**);")
 cpp_quote("HRESULT WINAPI HlinkResolveMonikerForData(LPMONIKER,DWORD,LPBC,ULONG,FORMATETC*,IBindStatusCallback*,LPMONIKER);")
+cpp_quote("HRESULT WINAPI HlinkUpdateStackItem(IHlinkFrame*, IHlinkBrowseContext*, ULONG, IMoniker*, LPCWSTR, LPCWSTR);")
 
 typedef enum _HLSR_NOREDEF10 {
     HLSR_HOME,

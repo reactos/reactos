@@ -1,0 +1,5 @@
+HKCR
+{
+    ForceRemove '.js' = s 'JSFile'
+    ForceRemove '.vbs' = s 'VBSFile'
+}

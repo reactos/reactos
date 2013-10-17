@@ -2838,7 +2838,7 @@ retry:
 
             DebugPrint((1, "ClassSendSrbSynchronous: Exception %lx "
                            "locking buffer\n", status));
-            return status;
+            _SEH2_YIELD(return status);
         } _SEH2_END;
     }
 

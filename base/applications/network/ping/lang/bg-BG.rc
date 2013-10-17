@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE "\nУпотреба: ping [-t] [-n пъти] [-l размер] [-w просрочване] целеви_приемник\n\n\
 Възможности:\n\

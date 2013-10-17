@@ -1,26 +1,5 @@
 
-;@ stdcall A_SHAFinal ; 6.0 and higher
-;@ stdcall A_SHAInit ; 6.0 and higher
-;@ stdcall A_SHAUpdate ; 6.0 and higher
-;@ stdcall AitFireParentUsageEvent ; 6.1 and higher
-;@ stdcall AitLogFeatureUsageByApp ; 6.1 and higher
-;@ stdcall AlpcAdjustCompletionListConcurrencyCount ; 6.0 and higher
-;@ stdcall AlpcFreeCompletionListMessage ; 6.0 and higher
-;@ stdcall AlpcGetCompletionListLastMessageInformation ; 6.0 and higher
-;@ stdcall AlpcGetCompletionListMessageAttributes ; 6.0 and higher
-;@ stdcall AlpcGetHeaderSize ; 6.0 and higher
-;@ stdcall AlpcGetMessageAttribute ; 6.0 and higher
-;@ stdcall AlpcGetMessageFromCompletionList ; 6.0 and higher
-;@ stdcall AlpcGetOutstandingCompletionListMessageCount ; 6.0 and higher
-;@ stdcall AlpcInitializeMessageAttribute ; 6.0 and higher
-;@ stdcall AlpcMaxAllowedMessageLength ; 6.0 and higher
-;@ stdcall AlpcRegisterCompletionList ; 6.0 and higher
-;@ stdcall AlpcRegisterCompletionListWorkerThread ; 6.0 and higher
-;@ stdcall AlpcRundownCompletionList ; 6.1 and higher
-;@ stdcall AlpcUnregisterCompletionList ; 6.0 and higher
-;@ stdcall AlpcUnregisterCompletionListWorkerThread ; 6.0 and higher
 @ stdcall CsrAllocateCaptureBuffer(long long)
-;@ stdcall CsrAllocateCapturePointer ; NT3, NT4 only
 @ stdcall CsrAllocateMessagePointer(ptr long ptr)
 @ stdcall CsrCaptureMessageBuffer(ptr ptr long ptr)
 @ stdcall CsrCaptureMessageMultiUnicodeStringsInPlace(ptr long ptr)
@@ -28,9 +7,6 @@
 @ stdcall CsrCaptureTimeout(long ptr)
 @ stdcall CsrClientCallServer(ptr ptr long long)
 @ stdcall CsrClientConnectToServer(str long ptr ptr ptr)
-;@ stdcall CsrClientMaxMessage ; NT3 only
-;@ stdcall CsrClientSendMessage ; NT3 only
-;@ stdcall CsrClientThreadConnect ; NT3 only
 @ stdcall CsrFreeCaptureBuffer(ptr)
 @ stdcall CsrGetProcessId()
 @ stdcall CsrIdentifyAlertableThread()
@@ -38,7 +14,6 @@
 @ stdcall CsrProbeForRead(ptr long long)
 @ stdcall CsrProbeForWrite(ptr long long)
 @ stdcall CsrSetPriorityClass(ptr ptr)
-;@ stdcall CsrpProcessCallbackRequest ; 3.51 only
 @ stdcall DbgBreakPoint()
 @ varargs DbgPrint(str)
 @ varargs DbgPrintEx(long long str)
@@ -67,21 +42,21 @@
 @ stdcall KiUserApcDispatcher(ptr ptr ptr ptr)
 @ stdcall KiUserCallbackDispatcher(ptr ptr long) ; CHECKME
 @ stdcall KiUserExceptionDispatcher(ptr ptr)
-;@ stdcall LdrAccessOutOfProcessResource
+@ stdcall LdrAccessOutOfProcessResource(ptr ptr ptr ptr ptr)
 @ stdcall LdrAccessResource(long ptr ptr ptr)
 @ stdcall LdrAddRefDll(long ptr)
 ;@ stdcall LdrAlternateResourcesEnabled
-;@ stdcall LdrCreateOutOfProcessImage
-;@ stdcall LdrDestroyOutOfProcessImage
+@ stdcall LdrCreateOutOfProcessImage(long ptr ptr ptr)
+@ stdcall LdrDestroyOutOfProcessImage(ptr)
 @ stdcall LdrDisableThreadCalloutsForDll(long)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
 @ stdcall LdrEnumerateLoadedModules(long ptr long)
-;@ stdcall LdrFindCreateProcessManifest ; 5.1 and 5.2 only
+@ stdcall LdrFindCreateProcessManifest(long ptr ptr long ptr) ; 5.1 and 5.2 only
 @ stdcall LdrFindEntryForAddress(ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(long ptr long ptr)
 ;@ stdcall LdrFindResourceEx_U ; 5.1 and higher
 @ stdcall LdrFindResource_U(long ptr long ptr)
-;@ stdcall LdrFlushAlternateResourceModules
+@ stdcall LdrFlushAlternateResourceModules()
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
 @ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
@@ -97,7 +72,7 @@
 @ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
 ;@ stdcall LdrSetAppCompatDllRedirectionCallback
-;@ stdcall LdrSetDllManifestProber
+@ stdcall LdrSetDllManifestProber(ptr)
 @ stdcall LdrShutdownProcess()
 @ stdcall LdrShutdownThread()
 @ stdcall LdrUnloadAlternateResourceModule(ptr)
@@ -132,7 +107,6 @@
 @ stdcall NtCallbackReturn(ptr long long)
 @ stdcall NtCancelDeviceWakeupRequest(ptr)
 @ stdcall NtCancelIoFile(long ptr)
-;@ stdcall NtCancelIoFileEx(long ptr ptr) ; 6.0 and higher
 @ stdcall NtCancelTimer(long ptr)
 @ stdcall NtClearEvent(long)
 @ stdcall NtClose(long)
@@ -183,7 +157,6 @@
 @ stdcall NtDuplicateObject(long long long ptr long long long)
 @ stdcall NtDuplicateToken(long long long long long long)
 @ stdcall NtEnumerateBootEntries(ptr ptr)
-;@ stdcall NtEnumerateBus ; 3.51 only
 @ stdcall NtEnumerateKey (long long long long long long)
 @ stdcall NtEnumerateSystemEnvironmentValuesEx(long ptr long)
 @ stdcall NtEnumerateValueKey(long long long long long long)
@@ -304,11 +277,9 @@
 @ stdcall NtReadFileScatter(long long ptr ptr ptr ptr long ptr ptr)
 @ stdcall NtReadRequestData(ptr ptr long ptr long ptr)
 @ stdcall NtReadVirtualMemory(long ptr ptr long ptr)
-;@ stdcall NtRegisterNewDevice ; 3.51 only
 @ stdcall NtRegisterThreadTerminatePort(ptr)
 @ stdcall NtReleaseKeyedEvent(ptr ptr long ptr)
 @ stdcall NtReleaseMutant(long ptr)
-;@ stdcall NtReleaseProcessMutant ; 3.51 only
 @ stdcall NtReleaseSemaphore(long long ptr)
 @ stdcall NtRemoveIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall NtRemoveProcessDebug(ptr ptr)
@@ -343,7 +314,6 @@
 @ stdcall NtSetEventBoostPriority(ptr)
 @ stdcall NtSetHighEventPair(ptr)
 @ stdcall NtSetHighWaitLowEventPair(ptr)
-;@ stdcall NtSetHighWaitLowThread ; 3.51 and 4.0 only
 @ stdcall NtSetInformationDebugObject(ptr long ptr long ptr)
 @ stdcall NtSetInformationFile(long long long long long)
 @ stdcall NtSetInformationJobObject(long long ptr long)
@@ -357,7 +327,6 @@
 @ stdcall NtSetLdtEntries(long double long double) ; CHECKME
 @ stdcall NtSetLowEventPair(ptr)
 @ stdcall NtSetLowWaitHighEventPair(ptr)
-;@ stdcall NtSetLowWaitHighThread ; 3.51 and 4.0 only
 @ stdcall NtSetQuotaInformationFile(ptr ptr ptr long)
 @ stdcall NtSetSecurityObject(long long ptr)
 @ stdcall NtSetSystemEnvironmentValue(ptr ptr)
@@ -391,11 +360,9 @@
 @ stdcall NtUnlockVirtualMemory(long ptr ptr long)
 @ stdcall NtUnmapViewOfSection(long ptr)
 @ stdcall NtVdmControl(long ptr)
-;@ stdcall NtW32Call(long ptr long ptr ptr)
 @ stdcall NtWaitForDebugEvent(ptr long ptr ptr)
 @ stdcall NtWaitForKeyedEvent(ptr ptr long ptr)
 @ stdcall NtWaitForMultipleObjects(long ptr long long ptr)
-;@ stdcall NtWaitForProcessMutant ; 3.51 only
 @ stdcall NtWaitForSingleObject(long long long)
 @ stdcall NtWaitHighEventPair(ptr)
 @ stdcall NtWaitLowEventPair(ptr)
@@ -462,7 +429,6 @@
 @ stdcall RtlAreAnyAccessesGranted(long long)
 @ stdcall RtlAreBitsClear(ptr long long)
 @ stdcall RtlAreBitsSet(ptr long long)
-;@ stdcall RtlAssert2
 @ stdcall RtlAssert(ptr ptr long ptr)
 ;@ stdcall RtlCancelTimer
 @ stdcall -register RtlCaptureContext(ptr)
@@ -475,7 +441,6 @@
 @ stdcall RtlClearAllBits(ptr)
 @ stdcall RtlClearBits(ptr long long)
 ;@ stdcall RtlCloneMemoryStream
-;@ stdcall RtlClosePropertySet ; NT 4.0 only
 ;@ stdcall RtlCommitMemoryStream
 @ stdcall RtlCompactHeap(long long)
 @ stdcall RtlCompareMemory(ptr ptr long)
@@ -485,8 +450,8 @@
 @ stdcall RtlCompressBuffer(long ptr long ptr long long ptr ptr)
 @ stdcall RtlComputeCrc32(long ptr long)
 @ stdcall RtlComputeImportTableHash(ptr ptr long)
-;@ stdcall RtlComputePrivatizedDllName_U
-;@ stdcall RtlConsoleMultiByteToUnicodeN
+@ stdcall RtlComputePrivatizedDllName_U(ptr ptr ptr)
+@ stdcall RtlConsoleMultiByteToUnicodeN(ptr long ptr ptr long ptr)
 @ stdcall RtlConvertExclusiveToShared(ptr)
 @ stdcall -arch=win32 -ret64 RtlConvertLongToLargeInteger(long)
 ;@ stdcall RtlConvertPropertyToVariant
@@ -508,14 +473,13 @@
 @ stdcall RtlCopyString(ptr ptr)
 @ stdcall RtlCopyUnicodeString(ptr ptr)
 @ stdcall RtlCreateAcl(ptr long long)
-@ stdcall RtlCreateActivationContext(ptr ptr)
+@ stdcall RtlCreateActivationContext(long ptr long ptr ptr ptr)
 @ stdcall RtlCreateAndSetSD(ptr long ptr ptr ptr)
 @ stdcall RtlCreateAtomTable(long ptr)
 @ stdcall RtlCreateBootStatusDataFile()
 @ stdcall RtlCreateEnvironment(long ptr)
 @ stdcall RtlCreateHeap(long ptr long long ptr ptr)
 @ stdcall RtlCreateProcessParameters(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
-;@ stdcall RtlCreatePropertySet ; 4.0 only
 @ stdcall RtlCreateQueryDebugBuffer(long long)
 @ stdcall RtlCreateRegistryKey(long wstr)
 @ stdcall RtlCreateSecurityDescriptor(ptr long)
@@ -533,12 +497,11 @@
 @ stdcall RtlDeNormalizeProcessParams(ptr)
 @ stdcall RtlDeactivateActivationContext(long long)
 @ fastcall RtlDeactivateActivationContextUnsafeFast(ptr)
-;@ stdcall RtlDebugPrintTimes
 @ stdcall RtlDecodePointer(ptr)
 @ stdcall RtlDecodeSystemPointer(ptr) RtlEncodeSystemPointer
 @ stdcall RtlDecompressBuffer(long ptr long ptr long ptr)
 @ stdcall RtlDecompressFragment(long ptr long ptr long long ptr ptr)
-;@ stdcall RtlDefaultNpAcl
+@ stdcall RtlDefaultNpAcl(ptr)
 @ stdcall RtlDelete(ptr)
 @ stdcall RtlDeleteAce(ptr long)
 @ stdcall RtlDeleteAtomFromAtomTable(ptr long)
@@ -569,9 +532,9 @@
 @ stdcall RtlDoesFileExists_U(wstr)
 @ stdcall RtlDosApplyFileIsolationRedirection_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDosPathNameToNtPathName_U(wstr ptr ptr ptr)
-;@ stdcall RtlDosPathNameToNtPathName_U_WithStatus ; 5.2 SP1, and higher
-@ stdcall RtlDosPathNameToRelativeNtPathName_U(ptr ptr ptr ptr) ; CHECKME
-;@ stdcall RtlDosPathNameToRelativeNtPathName_U_WithStatus
+@ stdcall RtlDosPathNameToNtPathName_U_WithStatus(wstr ptr ptr ptr) ; 5.2 SP1, and higher
+@ stdcall RtlDosPathNameToRelativeNtPathName_U(ptr ptr ptr ptr)
+@ stdcall RtlDosPathNameToRelativeNtPathName_U_WithStatus(wstr ptr ptr ptr)
 @ stdcall RtlDosSearchPath_U(wstr wstr wstr long ptr ptr)
 @ stdcall RtlDosSearchPath_Ustr(long ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlDowncaseUnicodeChar(long)
@@ -592,7 +555,6 @@
 @ stdcall RtlEnumerateGenericTableLikeADirectory(ptr ptr ptr long ptr ptr ptr)
 @ stdcall RtlEnumerateGenericTableWithoutSplaying(ptr ptr)
 @ stdcall RtlEnumerateGenericTableWithoutSplayingAvl(ptr ptr)
-;@ stdcall RtlEnumerateProperties ; 4.0 only
 @ stdcall RtlEqualComputerName(ptr ptr)
 @ stdcall RtlEqualDomainName(ptr ptr)
 @ stdcall RtlEqualLuid(ptr ptr)
@@ -610,7 +572,7 @@
 @ stdcall RtlFillMemory(ptr long long)
 @ stdcall RtlFillMemoryUlong(ptr long long)
 ;@ stdcall RtlFinalReleaseOutOfProcessMemoryStream
-;@ stdcall RtlFindActivationContextSectionGuid
+@ stdcall RtlFindActivationContextSectionGuid(long ptr long ptr ptr)
 @ stdcall RtlFindActivationContextSectionString(long ptr long ptr ptr)
 @ stdcall RtlFindCharInUnicodeString(long ptr ptr ptr)
 @ stdcall RtlFindClearBits(ptr long long)
@@ -631,11 +593,10 @@
 ;@ stdcall RtlFindSetRuns(ptr ptr long long)
 @ stdcall RtlFirstEntrySList(ptr)
 @ stdcall RtlFirstFreeAce(ptr ptr)
-;@ stdcall RtlFlushPropertySet ; 4.0 only
 @ stdcall RtlFlushSecureMemoryCache(ptr ptr)
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
 @ stdcall RtlFormatMessage(ptr long long long long ptr ptr long)
-;@ stdcall RtlFormatMessageEx
+@ stdcall RtlFormatMessageEx(ptr long long long long ptr ptr long long)
 @ stdcall RtlFreeActivationContextStack(ptr)
 @ stdcall RtlFreeAnsiString(long)
 @ stdcall RtlFreeHandle(ptr ptr)
@@ -653,7 +614,7 @@
 @ stdcall RtlGetCallersAddress(ptr ptr)
 @ stdcall RtlGetCompressionWorkSpaceSize(long ptr ptr)
 @ stdcall RtlGetControlSecurityDescriptor(ptr ptr ptr)
-;@ stdcall RtlGetCriticalSectionRecursionCount
+@ stdcall RtlGetCriticalSectionRecursionCount(ptr)
 @ stdcall RtlGetCurrentDirectory_U(long ptr)
 @ stdcall RtlGetCurrentPeb()
 @ stdcall RtlGetCurrentProcessorNumber() ; 5.2 SP1 and higher
@@ -667,11 +628,11 @@
 @ stdcall RtlGetGroupSecurityDescriptor(ptr ptr ptr)
 @ stdcall RtlGetLastNtStatus()
 @ stdcall RtlGetLastWin32Error()
-;@ stdcall RtlGetLengthWithoutLastFullDosOrNtPathElement
+@ stdcall RtlGetLengthWithoutLastFullDosOrNtPathElement(long ptr ptr)
 ; Yes, Microsoft really misspelled this one!
-;@ stdcall RtlGetLengthWithoutTrailingPathSeperators
+@ stdcall RtlGetLengthWithoutTrailingPathSeperators(long ptr ptr) RtlGetLengthWithoutTrailingPathSeparators
 @ stdcall RtlGetLongestNtPathLength()
-;@ stdcall RtlGetNativeSystemInformation
+@ stdcall RtlGetNativeSystemInformation(long long long long) NtQuerySystemInformation
 @ stdcall RtlGetNextRange(ptr ptr long)
 @ stdcall RtlGetNtGlobalFlags()
 @ stdcall RtlGetNtProductType(ptr)
@@ -686,7 +647,6 @@
 ;@ stdcall RtlGetUnloadEventTrace
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
-;@ stdcall RtlGuidToPropertySetName ; 4.0 only
 @ stdcall RtlHashUnicodeString(ptr long long ptr)
 @ stdcall RtlIdentifierAuthoritySid(ptr)
 @ stdcall RtlImageDirectoryEntryToData(long long long ptr)
@@ -786,7 +746,7 @@
 ;@ stdcall RtlMapSecurityErrorToNtStatus
 @ stdcall RtlMergeRangeLists(ptr ptr ptr long)
 @ stdcall RtlMoveMemory(ptr ptr long)
-;@ stdcall RtlMultiAppendUnicodeStringBuffer
+@ stdcall RtlMultiAppendUnicodeStringBuffer(ptr long ptr)
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
 @ stdcall RtlMultiByteToUnicodeSize(ptr str long)
 @ stdcall RtlNewInstanceSecurityObject(long long ptr ptr ptr ptr ptr long ptr ptr)
@@ -820,7 +780,7 @@
 @ stdcall RtlQueryHeapInformation(long long ptr long ptr)
 @ stdcall RtlQueryInformationAcl(ptr ptr long long)
 @ stdcall RtlQueryInformationActivationContext(long long ptr long ptr long ptr)
-;@ stdcall RtlQueryInformationActiveActivationContext
+@ stdcall RtlQueryInformationActiveActivationContext(long ptr long ptr)
 ;@ stdcall RtlQueryInterfaceMemoryStream
 ;@ stdcall RtlQueryProcessBackTraceInformation
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
@@ -876,7 +836,7 @@
 @ stdcall RtlSetCurrentDirectory_U(ptr)
 @ stdcall RtlSetCurrentEnvironment(wstr ptr)
 @ stdcall RtlSetDaclSecurityDescriptor(ptr long ptr long)
-;@ stdcall RtlSetEnvironmentStrings
+@ stdcall RtlSetEnvironmentStrings(wstr long)
 @ stdcall RtlSetEnvironmentVariable(ptr ptr ptr)
 @ stdcall RtlSetGroupSecurityDescriptor(ptr ptr long)
 @ stdcall RtlSetHeapInformation(ptr long ptr ptr)
@@ -983,7 +943,7 @@
 @ stdcall RtlZeroHeap(ptr long)
 @ stdcall RtlZeroMemory(ptr long)
 @ stdcall RtlZombifyActivationContext(ptr)
-;@ stdcall RtlpApplyLengthFunction
+@ stdcall RtlpApplyLengthFunction(long long ptr ptr)
 @ stdcall RtlpEnsureBufferSize(ptr ptr ptr) ; CHECKME
 ;@ stdcall RtlpNotOwnerCriticalSection
 @ stdcall RtlpNtCreateKey(ptr long ptr long ptr ptr)

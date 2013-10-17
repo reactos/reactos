@@ -31,29 +31,11 @@ on linux/alpha.
 Encodings
 *********
 
-The variety of encodings that accompanies pcf fonts appears to encompass the
-small set defined in freetype.h.  On the other hand, each pcf font defines
-two properties that specify encoding and registry.
+Use `FT_Get_BDF_Charset_ID' to access the encoding and registry.
 
-I decided to make these two properties directly accessible, leaving to the
-client application the work of interpreting them.  For instance:
-
-  #include "pcftypes.h"  /* include/freetype/internal/pcftypes.h */
-
-  FT_Face     face;
-  PCF_Public_Face  pcfface;
-
-  FT_New_Face( library,..., &face );
-
-  pcfface = (PCF_Public_Face)face;
-
-  if ((pcfface->charset_registry == "ISO10646") &&
-        (pcfface->charset_encoding) == "1")) [..]
-
-Thus the driver always export `ft_encoding_none' as
-face->charmap.encoding.  FT_Get_Char_Index() behavior is unmodified, that
-is, it converts the ULong value given as argument into the corresponding
-glyph number.
+The driver always exports `ft_encoding_none' as face->charmap.encoding.
+FT_Get_Char_Index() behavior is unmodified, that is, it converts the ULong
+value given as argument into the corresponding glyph number.
 
 
 Known problems

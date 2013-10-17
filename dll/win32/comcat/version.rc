@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_OLESELFREGISTER
 #define WINE_FILENAME_STR "comcat.dll"
+#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
 #include <wine/wine_common_ver.rc>

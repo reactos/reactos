@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          HotKey support
- * FILE:             subsystems/win32/win32k/ntuser/hotkey.c
+ * FILE:             win32ss/user/ntuser/hotkey.c
  * PROGRAMER:        Eric Kohl
  */
 
@@ -30,16 +30,30 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
  * By default the key is VK-F12 on a 101-key keyboard, and is VK_SUBTRACT
  * (hyphen / substract sign) on a 82-key keyboard.
  */
-/*                   thread hwnd  modifiers  vk      id  next */
-// HOT_KEY hkF12 =      {NULL, NULL, 0,         VK_F12, IDHK_F12,      NULL};
-// HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
-// HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
-HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   NULL};
+/*                       pti   pwnd  modifiers  vk      id  next */
+// HOT_KEY hkF12 =      {NULL, 1,    0,         VK_F12, IDHK_F12,      NULL};
+// HOT_KEY hkShiftF12 = {NULL, 1,    MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
+// HOT_KEY hkWinKey =   {NULL, 1,    MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
 
-PHOT_KEY gphkFirst = &hkWinKey;
+PHOT_KEY gphkFirst = NULL;
 BOOL bWinHotkeyActive = FALSE;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID FASTCALL
+StartDebugHotKeys(VOID)
+{
+    UINT vk = VK_F12;
+    UserUnregisterHotKey(PWND_BOTTOM, IDHK_F12);
+    UserUnregisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12);
+    if (!ENHANCED_KEYBOARD(gKeyboardInfo.KeyboardIdentifier))
+    {
+        vk = VK_SUBTRACT;
+    }
+    UserRegisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12, MOD_SHIFT, vk);
+    UserRegisterHotKey(PWND_BOTTOM, IDHK_F12, 0, vk);
+    ERR("Start up the debugger hotkeys!! Should see this once!\n");
+}
 
 /*
  * IntGetModifiers
@@ -77,7 +91,6 @@ VOID FASTCALL
 UnregisterWindowHotKeys(PWND pWnd)
 {
     PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
-    HWND hWnd = pWnd->head.h;
 
     while (pHotKey)
     {
@@ -85,7 +98,7 @@ UnregisterWindowHotKeys(PWND pWnd)
         phkNext = pHotKey->pNext;
 
         /* Should we delete this hotkey? */
-        if (pHotKey->hWnd == hWnd)
+        if (pHotKey->pWnd == pWnd)
         {
             /* Update next ptr for previous hotkey and free memory */
             *pLink = phkNext;
@@ -105,7 +118,7 @@ UnregisterWindowHotKeys(PWND pWnd)
  * Removes hotkeys registered by specified thread on its cleanup
  */
 VOID FASTCALL
-UnregisterThreadHotKeys(struct _ETHREAD *pThread)
+UnregisterThreadHotKeys(PTHREADINFO pti)
 {
     PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
 
@@ -115,7 +128,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *pThread)
         phkNext = pHotKey->pNext;
 
         /* Should we delete this hotkey? */
-        if (pHotKey->pThread == pThread)
+        if (pHotKey->pti == pti)
         {
             /* Update next ptr for previous hotkey and free memory */
             *pLink = phkNext;
@@ -165,6 +178,8 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 {
     UINT fModifiers;
     PHOT_KEY pHotKey;
+    PWND pWnd;
+    BOOL DoNotPostMsg = FALSE;
 
     if (wVk == VK_SHIFT || wVk == VK_CONTROL || wVk == VK_MENU ||
         wVk == VK_LWIN || wVk == VK_RWIN)
@@ -173,59 +188,94 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         wVk = 0;
     }
 
-    /* Check if it is a hotkey */
     fModifiers = IntGetModifiers(gafAsyncKeyState);
+
+    /* Check if it is a hotkey */
     pHotKey = IsHotKey(fModifiers, wVk);
+
     if (pHotKey)
     {
+        TRACE("Hot key pressed (pWnd %p, id %d)\n", pHotKey->pWnd, pHotKey->id);
+
+        /* FIXME: See comment about "UserDebuggerHotKey" on top of this file. */
+        if (pHotKey->id == IDHK_SHIFTF12 || pHotKey->id == IDHK_F12)
+        {
+            if (bIsDown)
+            {
+                ERR("Hot key pressed for Debug Activation! ShiftF12 = %d or F12 = %d\n",pHotKey->id == IDHK_SHIFTF12 , pHotKey->id == IDHK_F12);
+                //DoNotPostMsg = co_ActivateDebugger(); // FIXME
+            }
+            return DoNotPostMsg;
+        }
+
         /* Process hotkey if it is key up event */
         if (!bIsDown)
         {
-            TRACE("Hot key pressed (hWnd %p, id %d)\n", pHotKey->hWnd, pHotKey->id);
-
-            /* WIN and F12 keys are hardcoded here. See comments on top of this file. */
-            if (pHotKey == &hkWinKey)
+            /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
+            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive == TRUE)
             {
-                if(bWinHotkeyActive == TRUE)
+                pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
+                if (pWnd)
                 {
-                    UserPostMessage(InputWindowStation->ShellWindow, WM_SYSCOMMAND, SC_TASKLIST, 0);
-                    bWinHotkeyActive = FALSE;
+                   TRACE("System Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                   UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
+                   //ptiLastInput = pWnd->head.pti;
+                   bWinHotkeyActive = FALSE;
+                   return FALSE;
                 }
-            }
-#if 0 /* FIXME: See comment about "UserDebuggerHotKey" on top of this file. */
-            else if (pHotKey == &hkF12 || pHotKey == &hkShiftF12)
-            {
-                //co_ActivateDebugger(); // FIXME
-            }
-#endif
-            else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: Those hotkeys doesn't depend on RegisterHotKey
-            {
-                UserPostMessage(pHotKey->hWnd, WM_SYSCOMMAND, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
-            }
-            else
-            {
-                /* If a hotkey with the WIN modifier was activated, do not treat the release of the WIN key as a hotkey*/
-                if((pHotKey->fsModifiers & MOD_WIN) != 0)
-                    bWinHotkeyActive = FALSE;
-
-                MsqPostHotKeyMessage(pHotKey->pThread,
-                                     pHotKey->hWnd,
-                                     (WPARAM)pHotKey->id,
-                                     MAKELPARAM((WORD)fModifiers, wVk));
             }
         }
         else
-        {
-            if (pHotKey == &hkWinKey)
+        {    /* The user pressed the win key */
+            if (pHotKey->id == IDHK_WINKEY)
             {
-               /* The user pressed the win key */
-                bWinHotkeyActive = TRUE;
+               bWinHotkeyActive = TRUE;
+               return FALSE;
             }
         }
 
-        return TRUE; /* Don't send any message */
+        if (bIsDown)
+        {
+            if (!pHotKey->pWnd)
+            {
+                TRACE("UPTM Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                UserPostThreadMessage(pHotKey->pti, WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
+                //ptiLastInput = pHotKey->pti;
+                return TRUE; /* Don't send any message */
+            }
+            else
+            {
+               if (pHotKey->pWnd == PWND_BOTTOM)
+               {
+                   if (gpqForeground != NULL)
+                   { 
+                      pWnd = gpqForeground->spwndFocus; 
+                   }
+                   else
+                      return FALSE;
+                }
+                else
+                {
+                   pWnd = pHotKey->pWnd;
+                }
+                if (pWnd)
+                {          //  pWnd->head.rpdesk->pDeskInfo->spwndShell needs testing.
+                   if (pWnd == ValidateHwndNoErr(InputWindowStation->ShellWindow) && pHotKey->id == SC_TASKLIST)
+                   {
+                      ERR("Sending to shell window w/o IDHK_WINKEY..\n");
+                      UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
+                   }
+                   else
+                   {
+                      TRACE("UPM Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                      UserPostMessage(UserHMGetHandle(pWnd), WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
+                   }
+                   //ptiLastInput = pWnd->head.pti;
+                   return TRUE; /* Don't send any message */
+                }
+            }
+        }
     }
-
     return FALSE;
 }
 
@@ -236,7 +286,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
  * GetHotKey message support
  */
 UINT FASTCALL
-DefWndGetHotKey(HWND hWnd)
+DefWndGetHotKey(PWND pWnd)
 {
     PHOT_KEY pHotKey = gphkFirst;
 
@@ -244,7 +294,7 @@ DefWndGetHotKey(HWND hWnd)
 
     while (pHotKey)
     {
-        if (pHotKey->hWnd == hWnd && pHotKey->id == IDHK_REACTOS)
+        if (pHotKey->pWnd == pWnd && pHotKey->id == IDHK_REACTOS)
         {
             /* We have found it */
             return MAKELONG(pHotKey->vk, pHotKey->fsModifiers);
@@ -267,7 +317,6 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 {
     UINT fsModifiers, vk;
     PHOT_KEY pHotKey, *pLink;
-    HWND hWnd;
     INT iRet = 1;
 
     WARN("DefWndSetHotKey wParam 0x%x\n", wParam);
@@ -286,7 +335,6 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 
     vk = LOWORD(wParam);
     fsModifiers = HIWORD(wParam);
-    hWnd = UserHMGetHandle(pWnd);
 
     if (wParam)
     {
@@ -297,7 +345,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
                 pHotKey->vk == vk &&
                 pHotKey->id == IDHK_REACTOS)
             {
-                if (pHotKey->hWnd != hWnd)
+                if (pHotKey->pWnd != pWnd)
                     iRet = 2; // Another window already has the same hot key.
                 break;
             }
@@ -311,7 +359,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
     pLink = &gphkFirst;
     while (pHotKey)
     {
-        if (pHotKey->hWnd == hWnd &&
+        if (pHotKey->pWnd == pWnd &&
             pHotKey->id == IDHK_REACTOS)
         {
             /* This window has already hotkey registered */
@@ -332,7 +380,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
             if (pHotKey == NULL)
                 return 0;
 
-            pHotKey->hWnd = hWnd;
+            pHotKey->pWnd = pWnd;
             pHotKey->id = IDHK_REACTOS; // Don't care, these hot keys are unrelated to the hot keys set by RegisterHotKey
             pHotKey->pNext = gphkFirst;
             gphkFirst = pHotKey;
@@ -340,7 +388,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
 
         /* A window can only have one hot key. If the window already has a
            hot key associated with it, the new hot key replaces the old one. */
-        pHotKey->pThread = NULL;
+        pHotKey->pti = NULL;
         pHotKey->fsModifiers = fsModifiers;
         pHotKey->vk = vk;
     }
@@ -354,6 +402,85 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
     return iRet;
 }
 
+
+BOOL FASTCALL
+UserRegisterHotKey(PWND pWnd,
+                   int id,
+                   UINT fsModifiers,
+                   UINT vk)
+{
+    PHOT_KEY pHotKey;
+    PTHREADINFO pHotKeyThread;
+
+    /* Find hotkey thread */
+    if (pWnd == NULL || pWnd == PWND_BOTTOM)
+    {
+        pHotKeyThread = PsGetCurrentThreadWin32Thread();
+    }
+    else
+    {
+        pHotKeyThread = pWnd->head.pti;
+    }
+
+    /* Check for existing hotkey */
+    if (IsHotKey(fsModifiers, vk))
+    {
+        EngSetLastError(ERROR_HOTKEY_ALREADY_REGISTERED);
+        WARN("Hotkey already exists\n");
+        return FALSE;
+    }
+
+    /* Create new hotkey */
+    pHotKey = ExAllocatePoolWithTag(PagedPool, sizeof(HOT_KEY), USERTAG_HOTKEY);
+    if (pHotKey == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    pHotKey->pti = pHotKeyThread;
+    pHotKey->pWnd = pWnd;
+    pHotKey->fsModifiers = fsModifiers;
+    pHotKey->vk = vk;
+    pHotKey->id = id;
+
+    /* Insert hotkey to the global list */
+    pHotKey->pNext = gphkFirst;
+    gphkFirst = pHotKey;
+
+    return TRUE;
+}
+
+BOOL FASTCALL
+UserUnregisterHotKey(PWND pWnd, int id)
+{
+    PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
+    BOOL bRet = FALSE;
+
+    while (pHotKey)
+    {
+        /* Save next ptr for later use */
+        phkNext = pHotKey->pNext;
+
+        /* Should we delete this hotkey? */
+        if (pHotKey->pWnd == pWnd && pHotKey->id == id)
+        {
+            /* Update next ptr for previous hotkey and free memory */
+            *pLink = phkNext;
+            ExFreePoolWithTag(pHotKey, USERTAG_HOTKEY);
+
+            bRet = TRUE;
+        }
+        else /* This hotkey will stay, use its next ptr */
+            pLink = &pHotKey->pNext;
+
+        /* Move to the next entry */
+        pHotKey = phkNext;
+    }
+    return bRet;
+}
+
+
 /* SYSCALLS *****************************************************************/
 
 
@@ -364,8 +491,8 @@ NtUserRegisterHotKey(HWND hWnd,
                      UINT vk)
 {
     PHOT_KEY pHotKey;
-    PWND pWnd;
-    PETHREAD pHotKeyThread;
+    PWND pWnd = NULL;
+    PTHREADINFO pHotKeyThread;
     BOOL bRet = FALSE;
 
     TRACE("Enter NtUserRegisterHotKey\n");
@@ -382,7 +509,7 @@ NtUserRegisterHotKey(HWND hWnd,
     /* Find hotkey thread */
     if (hWnd == NULL)
     {
-        pHotKeyThread = PsGetCurrentThread();
+        pHotKeyThread = gptiCurrent;
     }
     else
     {
@@ -390,7 +517,15 @@ NtUserRegisterHotKey(HWND hWnd,
         if (!pWnd)
             goto cleanup;
 
-        pHotKeyThread = pWnd->head.pti->pEThread;
+        pHotKeyThread = pWnd->head.pti;
+
+        /* Fix wine msg "Window on another thread" test_hotkey */
+        if (pWnd->head.pti != gptiCurrent)
+        {
+           EngSetLastError(ERROR_WINDOW_OF_OTHER_THREAD);
+           WARN("Must be from the same Thread.\n");
+           goto cleanup;
+        }
     }
 
     /* Check for existing hotkey */
@@ -409,8 +544,8 @@ NtUserRegisterHotKey(HWND hWnd,
         goto cleanup;
     }
 
-    pHotKey->pThread = pHotKeyThread;
-    pHotKey->hWnd = hWnd;
+    pHotKey->pti = pHotKeyThread;
+    pHotKey->pWnd = pWnd;
     pHotKey->fsModifiers = fsModifiers;
     pHotKey->vk = vk;
     pHotKey->id = id;
@@ -433,12 +568,13 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
 {
     PHOT_KEY pHotKey = gphkFirst, phkNext, *pLink = &gphkFirst;
     BOOL bRet = FALSE;
+    PWND pWnd = NULL;
 
     TRACE("Enter NtUserUnregisterHotKey\n");
     UserEnterExclusive();
 
     /* Fail if given window is invalid */
-    if (hWnd && !UserGetWindowObject(hWnd))
+    if (hWnd && !(pWnd = UserGetWindowObject(hWnd)))
         goto cleanup;
 
     while (pHotKey)
@@ -447,7 +583,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
         phkNext = pHotKey->pNext;
 
         /* Should we delete this hotkey? */
-        if (pHotKey->hWnd == hWnd && pHotKey->id == id)
+        if (pHotKey->pWnd == pWnd && pHotKey->id == id)
         {
             /* Update next ptr for previous hotkey and free memory */
             *pLink = phkNext;

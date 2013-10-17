@@ -81,7 +81,7 @@ static int SetSpyedBlockTableLength ( DWORD NewLength )
 	LPVOID *NewSpyedBlocks;
 
 	if (!Malloc32.SpyedBlocks) NewSpyedBlocks = LocalAlloc(LMEM_ZEROINIT, NewLength * sizeof(PVOID));
-	else NewSpyedBlocks = LocalReAlloc(Malloc32.SpyedBlocks, NewLength * sizeof(PVOID), LMEM_ZEROINIT);
+	else NewSpyedBlocks = LocalReAlloc(Malloc32.SpyedBlocks, NewLength * sizeof(PVOID), LMEM_ZEROINIT | LMEM_MOVEABLE);
 	if (NewSpyedBlocks) {
 		Malloc32.SpyedBlocks = NewSpyedBlocks;
 		Malloc32.SpyedBlockTableLength = NewLength;
@@ -220,13 +220,16 @@ static LPVOID WINAPI IMalloc_fnRealloc(LPMALLOC iface,LPVOID pv,DWORD cb) {
 	        IMallocSpy_Release(Malloc32.pSpy);
 		Malloc32.SpyReleasePending = FALSE;
 		Malloc32.pSpy = NULL;
+		LeaveCriticalSection(&IMalloc32_SpyCS);
 	    }
 
 	    if (0==cb) {
-	        /* PreRealloc can force Realloc to fail */
-                LeaveCriticalSection(&IMalloc32_SpyCS);
+		/* PreRealloc can force Realloc to fail */
+		if (Malloc32.pSpy)
+		    LeaveCriticalSection(&IMalloc32_SpyCS);
 		return NULL;
 	    }
+
 	    pv = pRealMemory;
 	}
 

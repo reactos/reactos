@@ -1,7 +1,7 @@
 
 if(NOT MSVC)
 
-    if (USE_PSEH3)
+    if(USE_PSEH3)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/pseh)
         list(APPEND SOURCE
             i386/pseh3.c

@@ -9,7 +9,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Atvaizduoja duomenis puslapiais.\n\n\
   MORE < [Diskas:][Kelias iki bylos]Bylos vardas\n\

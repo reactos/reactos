@@ -1,6 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_USAGE, "Stampa il nome dell'host attuale.\n\nhostname"
     IDS_NOSET, "hostname -s non è supportato."

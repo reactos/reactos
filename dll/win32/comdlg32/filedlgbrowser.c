@@ -155,7 +155,7 @@ static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
 /* copied from shell32 to avoid linking to it */
 static BOOL COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITEMIDLIST pidl)
 {
-	TRACE("dest=%p len=0x%x strret=%p pidl=%p stub\n",dest,len,src,pidl);
+        TRACE("dest=%p len=0x%x strret=%p pidl=%p\n", dest , len, src, pidl);
 
 	switch (src->uType)
 	{
@@ -231,26 +231,22 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
 
     *ppvObj = NULL;
 
-    if(IsEqualIID(riid, &IID_IUnknown))          /*IUnknown*/
-    { *ppvObj = This;
-    }
-    else if(IsEqualIID(riid, &IID_IOleWindow))  /*IOleWindow*/
-    { *ppvObj = This;
-    }
-
-    else if(IsEqualIID(riid, &IID_IShellBrowser))  /*IShellBrowser*/
-    { *ppvObj = This;
-    }
-
-    else if(IsEqualIID(riid, &IID_ICommDlgBrowser))  /*ICommDlgBrowser*/
+    if(IsEqualIID(riid, &IID_IUnknown))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_IOleWindow))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_IShellBrowser))
+        *ppvObj = &This->IShellBrowser_iface;
+    else if(IsEqualIID(riid, &IID_ICommDlgBrowser))
         *ppvObj = &This->ICommDlgBrowser_iface;
-    else if(IsEqualIID(riid, &IID_IServiceProvider))  /* IServiceProvider */
+    else if(IsEqualIID(riid, &IID_IServiceProvider))
         *ppvObj = &This->IServiceProvider_iface;
 
-    if(*ppvObj)
-    { IUnknown_AddRef( (IShellBrowser*) *ppvObj);
-      return S_OK;
+    if(*ppvObj) {
+        IUnknown_AddRef((IUnknown*)*ppvObj);
+        return S_OK;
     }
+
     FIXME("Unknown interface requested\n");
     return E_NOINTERFACE;
 }
@@ -461,6 +457,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     /* Set view window control id to 5002 */
     SetWindowLongPtrW(hwndView, GWLP_ID, lst2);
+    SendMessageW( hwndView, WM_SETFONT, SendMessageW( GetParent(hwndView), WM_GETFONT, 0, 0 ), FALSE );
 
     /* Select the new folder in the Look In combo box of the Open file dialog */
     FILEDLG95_LOOKIN_SelectItem(fodInfos->DlgInfos.hwndLookInCB,fodInfos->ShellInfos.pidlAbsCurrent);

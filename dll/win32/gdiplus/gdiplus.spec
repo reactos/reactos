@@ -190,12 +190,12 @@
 190 stdcall GdipDrawString(ptr wstr long ptr ptr ptr ptr)
 191 stdcall GdipEmfToWmfBits(ptr long ptr long long)
 192 stdcall GdipEndContainer(ptr ptr)
-193 stub GdipEnumerateMetafileDestPoint
-194 stub GdipEnumerateMetafileDestPointI
+193 stdcall GdipEnumerateMetafileDestPoint(ptr ptr ptr ptr ptr ptr)
+194 stdcall GdipEnumerateMetafileDestPointI(ptr ptr ptr ptr ptr ptr)
 195 stub GdipEnumerateMetafileDestPoints
 196 stub GdipEnumerateMetafileDestPointsI
-197 stub GdipEnumerateMetafileDestRect
-198 stub GdipEnumerateMetafileDestRectI
+197 stdcall GdipEnumerateMetafileDestRect(ptr ptr ptr ptr ptr ptr)
+198 stdcall GdipEnumerateMetafileDestRectI(ptr ptr ptr ptr ptr ptr)
 199 stub GdipEnumerateMetafileSrcRectDestPoint
 200 stub GdipEnumerateMetafileSrcRectDestPointI
 201 stdcall GdipEnumerateMetafileSrcRectDestPoints(ptr ptr ptr long ptr long ptr ptr ptr)
@@ -455,7 +455,7 @@
 455 stdcall GdipReleaseDC(ptr ptr)
 456 stdcall GdipRemovePropertyItem(ptr long)
 457 stdcall GdipResetClip(ptr)
-458 stub GdipResetImageAttributes
+458 stdcall GdipResetImageAttributes(ptr long)
 459 stdcall GdipResetLineTransform(ptr)
 460 stdcall GdipResetPageTransform(ptr)
 461 stdcall GdipResetPath(ptr)

@@ -194,40 +194,29 @@ static const DWORD vertex_states_sampler[] =
  */
 static HRESULT stateblock_allocate_shader_constants(struct wined3d_stateblock *object)
 {
-    struct wined3d_device *device = object->device;
-
-    /* Allocate space for floating point constants */
-    object->state.ps_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(float) * device->d3d_pshader_constantF * 4);
-    if (!object->state.ps_consts_f) goto fail;
+    const struct wined3d_d3d_info *d3d_info = &object->device->adapter->d3d_info;
 
     object->changed.pixelShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(BOOL) * device->d3d_pshader_constantF);
+            sizeof(BOOL) * d3d_info->limits.ps_uniform_count);
     if (!object->changed.pixelShaderConstantsF) goto fail;
 
-    object->state.vs_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(float) * device->d3d_vshader_constantF * 4);
-    if (!object->state.vs_consts_f) goto fail;
-
     object->changed.vertexShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(BOOL) * device->d3d_vshader_constantF);
+            sizeof(BOOL) * d3d_info->limits.vs_uniform_count);
     if (!object->changed.vertexShaderConstantsF) goto fail;
 
     object->contained_vs_consts_f = HeapAlloc(GetProcessHeap(), 0,
-            sizeof(DWORD) * device->d3d_vshader_constantF);
+            sizeof(DWORD) * d3d_info->limits.vs_uniform_count);
     if (!object->contained_vs_consts_f) goto fail;
 
     object->contained_ps_consts_f = HeapAlloc(GetProcessHeap(), 0,
-            sizeof(DWORD) * device->d3d_pshader_constantF);
+            sizeof(DWORD) * d3d_info->limits.ps_uniform_count);
     if (!object->contained_ps_consts_f) goto fail;
 
     return WINED3D_OK;
 
 fail:
     ERR("Failed to allocate memory\n");
-    HeapFree(GetProcessHeap(), 0, object->state.ps_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.pixelShaderConstantsF);
-    HeapFree(GetProcessHeap(), 0, object->state.vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.vertexShaderConstantsF);
     HeapFree(GetProcessHeap(), 0, object->contained_vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->contained_ps_consts_f);
@@ -330,7 +319,7 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
 
 void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
 {
-    struct wined3d_device *device = stateblock->device;
+    const struct wined3d_d3d_info *d3d_info = &stateblock->device->adapter->d3d_info;
     unsigned int i, j;
 
     for (i = 0; i <= WINEHIGHEST_RENDER_STATE >> 5; ++i)
@@ -357,7 +346,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
         }
     }
 
-    for (i = 0; i < device->d3d_vshader_constantF; ++i)
+    for (i = 0; i < d3d_info->limits.vs_uniform_count; ++i)
     {
         if (stateblock->changed.vertexShaderConstantsF[i])
         {
@@ -384,7 +373,7 @@ void stateblock_init_contained_states(struct wined3d_stateblock *stateblock)
         }
     }
 
-    for (i = 0; i < device->d3d_pshader_constantF; ++i)
+    for (i = 0; i < d3d_info->limits.ps_uniform_count; ++i)
     {
         if (stateblock->changed.pixelShaderConstantsF[i])
         {
@@ -467,9 +456,8 @@ ULONG CDECL wined3d_stateblock_incref(struct wined3d_stateblock *stateblock)
     return refcount;
 }
 
-void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
+void state_unbind_resources(struct wined3d_state *state)
 {
-    struct wined3d_state *state = &stateblock->state;
     struct wined3d_vertex_declaration *decl;
     struct wined3d_sampler *sampler;
     struct wined3d_texture *texture;
@@ -589,6 +577,50 @@ void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
     }
 }
 
+void state_cleanup(struct wined3d_state *state)
+{
+    unsigned int counter;
+
+    state_unbind_resources(state);
+
+    for (counter = 0; counter < LIGHTMAP_SIZE; ++counter)
+    {
+        struct list *e1, *e2;
+        LIST_FOR_EACH_SAFE(e1, e2, &state->light_map[counter])
+        {
+            struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
+            list_remove(&light->entry);
+            HeapFree(GetProcessHeap(), 0, light);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, state->vs_consts_f);
+    HeapFree(GetProcessHeap(), 0, state->ps_consts_f);
+}
+
+HRESULT state_init(struct wined3d_state *state, const struct wined3d_d3d_info *d3d_info)
+{
+    unsigned int i;
+
+    for (i = 0; i < LIGHTMAP_SIZE; i++)
+    {
+        list_init(&state->light_map[i]);
+    }
+
+    if (!(state->vs_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            4 * sizeof(float) * d3d_info->limits.vs_uniform_count)))
+        return E_OUTOFMEMORY;
+
+    if (!(state->ps_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            4 * sizeof(float) * d3d_info->limits.ps_uniform_count)))
+    {
+        HeapFree(GetProcessHeap(), 0, state->vs_consts_f);
+        return E_OUTOFMEMORY;
+    }
+
+    return WINED3D_OK;
+}
+
 ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
 {
     ULONG refcount = InterlockedDecrement(&stateblock->ref);
@@ -597,24 +629,9 @@ ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
 
     if (!refcount)
     {
-        int counter;
+        state_cleanup(&stateblock->state);
 
-        stateblock_unbind_resources(stateblock);
-
-        for (counter = 0; counter < LIGHTMAP_SIZE; ++counter)
-        {
-            struct list *e1, *e2;
-            LIST_FOR_EACH_SAFE(e1, e2, &stateblock->state.light_map[counter])
-            {
-                struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
-                list_remove(&light->entry);
-                HeapFree(GetProcessHeap(), 0, light);
-            }
-        }
-
-        HeapFree(GetProcessHeap(), 0, stateblock->state.vs_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->changed.vertexShaderConstantsF);
-        HeapFree(GetProcessHeap(), 0, stateblock->state.ps_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->changed.pixelShaderConstantsF);
         HeapFree(GetProcessHeap(), 0, stateblock->contained_vs_consts_f);
         HeapFree(GetProcessHeap(), 0, stateblock->contained_ps_consts_f);
@@ -683,7 +700,7 @@ static void wined3d_state_record_lights(struct wined3d_state *dst_state, const s
 
 void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 {
-    const struct wined3d_state *src_state = &stateblock->device->stateBlock->state;
+    const struct wined3d_state *src_state = &stateblock->device->state;
     unsigned int i;
     DWORD map;
 
@@ -1073,8 +1090,15 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 
     if (stateblock->changed.primitive_type)
     {
-        stateblock->device->updateStateBlock->changed.primitive_type = TRUE;
-        stateblock->device->updateStateBlock->state.gl_primitive_type = stateblock->state.gl_primitive_type;
+        GLenum gl_primitive_type, prev;
+
+        if (device->recording)
+            device->recording->changed.primitive_type = TRUE;
+        gl_primitive_type = stateblock->state.gl_primitive_type;
+        prev = device->update_state->gl_primitive_type;
+        device->update_state->gl_primitive_type = gl_primitive_type;
+        if (gl_primitive_type != prev && (gl_primitive_type == GL_POINTS || prev == GL_POINTS))
+            device_invalidate_state(device, STATE_POINT_SIZE_ENABLE);
     }
 
     if (stateblock->changed.indices)
@@ -1131,12 +1155,12 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
         wined3d_device_set_clip_plane(device, i, &stateblock->state.clip_planes[i]);
     }
 
-    stateblock->device->stateBlock->state.lowest_disabled_stage = MAX_TEXTURES - 1;
+    stateblock->device->state.lowest_disabled_stage = MAX_TEXTURES - 1;
     for (i = 0; i < MAX_TEXTURES - 1; ++i)
     {
-        if (stateblock->device->stateBlock->state.texture_states[i][WINED3D_TSS_COLOR_OP] == WINED3D_TOP_DISABLE)
+        if (stateblock->device->state.texture_states[i][WINED3D_TSS_COLOR_OP] == WINED3D_TOP_DISABLE)
         {
-            stateblock->device->stateBlock->state.lowest_disabled_stage = i;
+            stateblock->device->state.lowest_disabled_stage = i;
             break;
         }
     }
@@ -1144,11 +1168,9 @@ void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
     TRACE("Applied stateblock %p.\n", stateblock);
 }
 
-void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
+void state_init_default(struct wined3d_state *state, struct wined3d_device *device)
 {
-    struct wined3d_device *device = stateblock->device;
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    struct wined3d_state *state = &stateblock->state;
     union
     {
         struct wined3d_line_pattern lp;
@@ -1161,11 +1183,15 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     unsigned int i;
     struct wined3d_swapchain *swapchain;
     struct wined3d_surface *backbuffer;
+    static const struct wined3d_matrix identity =
+    {{{
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    }}};
 
-    TRACE("stateblock %p.\n", stateblock);
-
-    memset(stateblock->changed.pixelShaderConstantsF, 0, device->d3d_pshader_constantF * sizeof(BOOL));
-    memset(stateblock->changed.vertexShaderConstantsF, 0, device->d3d_vshader_constantF * sizeof(BOOL));
+    TRACE("state %p, device %p.\n", state, device);
 
     /* Set some of the defaults for lights, transforms etc */
     state->transforms[WINED3D_TS_PROJECTION] = identity;
@@ -1391,42 +1417,43 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
 static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
         struct wined3d_device *device, enum wined3d_stateblock_type type)
 {
-    unsigned int i;
     HRESULT hr;
+    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
 
     stateblock->ref = 1;
     stateblock->device = device;
 
-    for (i = 0; i < LIGHTMAP_SIZE; i++)
+    if (FAILED(hr = state_init(&stateblock->state, d3d_info)))
+        return hr;
+
+    if (FAILED(hr = stateblock_allocate_shader_constants(stateblock)))
     {
-        list_init(&stateblock->state.light_map[i]);
+        state_cleanup(&stateblock->state);
+        return hr;
     }
 
-    hr = stateblock_allocate_shader_constants(stateblock);
-    if (FAILED(hr)) return hr;
-
-    /* The WINED3D_SBT_INIT stateblock type is used during initialization to
-     * produce a placeholder stateblock so other functions called can update a
-     * state block. */
-    if (type == WINED3D_SBT_INIT || type == WINED3D_SBT_RECORDED) return WINED3D_OK;
+    if (type == WINED3D_SBT_RECORDED)
+        return WINED3D_OK;
 
     TRACE("Updating changed flags appropriate for type %#x.\n", type);
 
     switch (type)
     {
         case WINED3D_SBT_ALL:
-            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
-            stateblock_savedstates_set_all(&stateblock->changed, device->d3d_vshader_constantF,
-                                           device->d3d_pshader_constantF);
+            stateblock_init_lights(stateblock, device->state.light_map);
+            stateblock_savedstates_set_all(&stateblock->changed,
+                    d3d_info->limits.vs_uniform_count, d3d_info->limits.ps_uniform_count);
             break;
 
         case WINED3D_SBT_PIXEL_STATE:
-            stateblock_savedstates_set_pixel(&stateblock->changed, device->d3d_pshader_constantF);
+            stateblock_savedstates_set_pixel(&stateblock->changed,
+                    d3d_info->limits.ps_uniform_count);
             break;
 
         case WINED3D_SBT_VERTEX_STATE:
-            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
-            stateblock_savedstates_set_vertex(&stateblock->changed, device->d3d_vshader_constantF);
+            stateblock_init_lights(stateblock, device->state.light_map);
+            stateblock_savedstates_set_vertex(&stateblock->changed,
+                    d3d_info->limits.vs_uniform_count);
             break;
 
         default:

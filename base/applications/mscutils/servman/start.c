@@ -183,7 +183,7 @@ DoStartService(PMAIN_WND_INFO Info,
     }
 
     if (lpArgsVector)
-        LocalFree(lpArgsVector);
+        LocalFree((LPVOID)lpArgsVector);
 
     return bRet;
 }

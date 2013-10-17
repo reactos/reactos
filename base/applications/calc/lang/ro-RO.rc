@@ -304,7 +304,7 @@ BEGIN
     DEFPUSHBUTTON   "",      IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
 END
 
-IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+IDD_DIALOG_ABOUT DIALOGEX 0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre Minicalculator"
 FONT 8, "MS Shell Dlg"
@@ -325,7 +325,7 @@ BEGIN
                              WS_VSCROLL
 END
 
-IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Statistici"
 FONT 8, "MS Shell Dlg"
@@ -342,7 +342,7 @@ END
 
 // Menus
 
-IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
@@ -374,7 +374,7 @@ BEGIN
     END
 END
 
-IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
+IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
@@ -407,7 +407,7 @@ BEGIN
     END
 END
 
-IDR_MENU_STANDARD MENU DISCARDABLE
+IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
@@ -432,7 +432,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_STRING_LICENSE      "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Eroare"
@@ -440,7 +440,7 @@ BEGIN
 END
 
 // Types of conversion
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE          "Unghi"
     IDS_CONV_AREA           "Suprafață"
@@ -458,7 +458,7 @@ BEGIN
 END
 
 // TYPES OF ANGLES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ANGLE_DEGREES       "Grade"
     IDS_ANGLE_GRADIANS      "Gradiani"
@@ -466,7 +466,7 @@ BEGIN
 END
 
 // TYPES OF AREAS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_AREA_ACRES                  "Acri"
     IDS_AREA_ACRES_BRAZIL           "Acri (Brazilia)"
@@ -505,7 +505,7 @@ BEGIN
 END
 
 // TYPES OF COMSUMPTIONS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L        "Kilometri/litru"
     IDS_CONSUMPTION_L_PER_100_KM    "Litri/100 kilometri"
@@ -514,7 +514,7 @@ BEGIN
 END
 
 // TYPES OF CURRENCIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Șiling autriac"
     IDS_CURRENCY_BELGIAN_FRANC      "Franc belgian"
@@ -537,7 +537,7 @@ BEGIN
 END
 
 // TYPES OF ENERGIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "Calorii 15 °C"
     IDS_ENERGY_BTUS                 "Unități termale britanice"
@@ -554,7 +554,7 @@ BEGIN
 END
 
 // TYPES OF LENGTHS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Ångströms"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Unități astronomice"
@@ -606,7 +606,7 @@ BEGIN
 END
 
 // TYPES OF POWERS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_POWER_BTUS_PER_MINUTE       "Unități termice britanice pe minut"
     IDS_POWER_FPS_PER_MINUTE        "Picior-livre pe minut"
@@ -617,7 +617,7 @@ BEGIN
 END
 
 // TYPE OF PRESSURES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosfere"
     IDS_PRESSURE_BARS               "Bari"
@@ -629,7 +629,7 @@ BEGIN
 END
 
 // TYPES OF TEMPERATURES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TEMPERATURE_CELSIUS         "Celsius"
     IDS_TEMPERATURE_FAHRENHEIT      "Fahrenheit"
@@ -638,7 +638,7 @@ BEGIN
 END
 
 // TYPES OF TIME
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TIME_DAYS         "Zile"
     IDS_TIME_HOURS        "Ore"
@@ -652,7 +652,7 @@ BEGIN
 END
 
 // TYPES OF VELOCITIES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Centimetri/oră"
     IDS_VELOCITY_FEET_HOUR          "Picioare/oră"
@@ -665,7 +665,7 @@ BEGIN
 END
 
 // TYPES OF VOLUMES
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_VOLUME_BARRELS_UK           "Barili (Marea Britanie)"
     IDS_VOLUME_BARRELS_OIL          "Barili de petrol"
@@ -704,7 +704,7 @@ BEGIN
 END
 
 // TYPES OF WEIGHTS
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
     IDS_WEIGHT_CARATS               "Carate"

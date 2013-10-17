@@ -12,10 +12,10 @@
 #include <stdarg.h>
 #include <internal/safecrt.h>
 
-int _cdecl streamout(FILE *stream, const char *format, va_list argptr);
+int __cdecl streamout(FILE *stream, const char *format, va_list argptr);
 
 int
-_cdecl
+__cdecl
 vfprintf_s(FILE* file, const char *format, va_list argptr)
 {
     int result;

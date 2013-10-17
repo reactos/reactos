@@ -1,6 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Viser eller endrer tilgang kontroll lister (ACL) av filer\n\n\

@@ -6,11 +6,12 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
 #include <intrin.h>
 #include <wchar.h>
+#include <stdio.h>
 #include <ndk/obtypes.h>
 #include <ndk/exfuncs.h>
 #include <ndk/rtlfuncs.h>
@@ -18,7 +19,7 @@
 #include <initguid.h>
 #include <sacmsg.h>
 
-/* DEFINES *******************************************************************/
+/* DEFINES ********************************************************************/
 
 //
 // SAC Heap Allocator Macros
@@ -47,12 +48,12 @@
 // SAC Parameter Checking Macros
 //
 #define CHECK_PARAMETER_WITH_STATUS(Parameter, Status)  \
-{   \
-    ASSERT(((PVOID)(Parameter)) != NULL);    \
-    if (((PVOID)(Parameter)) == NULL) \
-    {   \
-    	return Status;  \
-    }   \
+{                                                       \
+    ASSERT(((PVOID)(Parameter)) != NULL);               \
+    if (((PVOID)(Parameter)) == NULL)                   \
+    {                                                   \
+        return Status;                                  \
+    }                                                   \
 }
 #define CHECK_PARAMETER(x)      \
     CHECK_PARAMETER_WITH_STATUS(x, STATUS_INVALID_PARAMETER)
@@ -70,63 +71,63 @@
 //
 // SAC Channel Event Macros
 //
-#define ChannelInitializeEvent(Channel, Attributes, x)  \
-{   \
-    PVOID Object, WaitObject;   \
-    if (Attributes->x)  \
-    {   \
+#define ChannelInitializeEvent(Channel, Attributes, x)                  \
+{                                                                       \
+    PVOID Object, WaitObject;                                           \
+    if (Attributes->x)                                                  \
+    {                                                                   \
         if (!VerifyEventWaitable(Attributes->x, &Object, &WaitObject))  \
-        {   \
-            goto FailChannel;   \
-        } \
-        Channel->x = Attributes->x; \
-        Channel->x##ObjectBody = Object;    \
-        Channel->x##WaitObjectBody = WaitObject;    \
-    }   \
+        {                                                               \
+            goto FailChannel;                                           \
+        }                                                               \
+        Channel->x = Attributes->x;                                     \
+        Channel->x##ObjectBody = Object;                                \
+        Channel->x##WaitObjectBody = WaitObject;                        \
+    }                                                                   \
 }
-#define ChannelUninitializeEvent(Channel, x, f)                     \
-{                                                                   \
-    ASSERT(ChannelGetFlags(Channel) & (f));                         \
-    ASSERT(Channel->x##ObjectBody);                                 \
-    ASSERT(Channel->x##WaitObjectBody);                             \
-    if (Channel->x##ObjectBody)                                     \
-    {                                                               \
-        ObDereferenceObject(Channel->x##ObjectBody);                \
-        Channel->Flags &= ~(f);                                     \
-        Channel->x = NULL;                                          \
-        Channel->x##ObjectBody = NULL;                              \
-        Channel->x##WaitObjectBody = NULL;                          \
-    }   \
+#define ChannelUninitializeEvent(Channel, x, f)         \
+{                                                       \
+    ASSERT(ChannelGetFlags(Channel) & (f));             \
+    ASSERT(Channel->x##ObjectBody);                     \
+    ASSERT(Channel->x##WaitObjectBody);                 \
+    if (Channel->x##ObjectBody)                         \
+    {                                                   \
+        ObDereferenceObject(Channel->x##ObjectBody);    \
+        Channel->Flags &= ~(f);                         \
+        Channel->x = NULL;                              \
+        Channel->x##ObjectBody = NULL;                  \
+        Channel->x##WaitObjectBody = NULL;              \
+    }                                                   \
 }
-#define ChannelSetEvent(Channel, x) \
-{   \
-    ASSERT(Channel->x); \
-    ASSERT(Channel->x##ObjectBody); \
-    ASSERT(Channel->x##WaitObjectBody); \
-    if (Channel->x##WaitObjectBody) \
-    {   \
+#define ChannelSetEvent(Channel, x)                                     \
+{                                                                       \
+    ASSERT(Channel->x);                                                 \
+    ASSERT(Channel->x##ObjectBody);                                     \
+    ASSERT(Channel->x##WaitObjectBody);                                 \
+    if (Channel->x##WaitObjectBody)                                     \
+    {                                                                   \
         KeSetEvent(Channel->x##WaitObjectBody, EVENT_INCREMENT, FALSE); \
-        Status = STATUS_SUCCESS;    \
-    }   \
-    else    \
-    {   \
-        Status = STATUS_UNSUCCESSFUL;   \
-    }   \
+        Status = STATUS_SUCCESS;                                        \
+    }                                                                   \
+    else                                                                \
+    {                                                                   \
+        Status = STATUS_UNSUCCESSFUL;                                   \
+    }                                                                   \
 }
-#define ChannelClearEvent(Channel, x)   \
-{   \
-    ASSERT(Channel->x); \
-    ASSERT(Channel->x##ObjectBody); \
-    ASSERT(Channel->x##WaitObjectBody); \
-    if (Channel->x##WaitObjectBody) \
-    {   \
-    	KeClearEvent(Channel->x##WaitObjectBody);   \
-    	Status = STATUS_SUCCESS;    \
-    }   \
-    else    \
-    {   \
-    	Status = STATUS_UNSUCCESSFUL;   \
-    }   \
+#define ChannelClearEvent(Channel, x)               \
+{                                                   \
+    ASSERT(Channel->x);                             \
+    ASSERT(Channel->x##ObjectBody);                 \
+    ASSERT(Channel->x##WaitObjectBody);             \
+    if (Channel->x##WaitObjectBody)                 \
+    {                                               \
+        KeClearEvent(Channel->x##WaitObjectBody);   \
+        Status = STATUS_SUCCESS;                    \
+    }                                               \
+    else                                            \
+    {                                               \
+        Status = STATUS_UNSUCCESSFUL;               \
+    }                                               \
 }
 
 //
@@ -144,7 +145,7 @@
 #define GLOBAL_BLOCK_TAG                    'GpcR'
 #define CHANNEL_BLOCK_TAG                   'CpcR'
 #define LOCAL_MEMORY_SIGNATURE              'SSEL'
-#define GLOBAL_MEMORY_SIGNATURE	            'DAEH'
+#define GLOBAL_MEMORY_SIGNATURE             'DAEH'
 
 //
 // Size Definitions
@@ -158,6 +159,12 @@
 #define SAC_MAX_MESSAGES                    200
 #define SAC_VTUTF8_COL_WIDTH                80
 #define SAC_VTUTF8_COL_HEIGHT               25
+#define SAC_VTUTF8_ROW_HEIGHT               24
+#define MAX_UTF8_ENCODE_BLOCK_LENGTH        (Utf8ConversionBufferSize / 3 - 1)
+#define SAC_VTUTF8_OBUFFER_SIZE             0x2D00
+#define SAC_VTUTF8_IBUFFER_SIZE             0x2000
+#define SAC_RAW_OBUFFER_SIZE                0x2000
+#define SAC_RAW_IBUFFER_SIZE                0x2000
 
 //
 // Channel flags
@@ -165,9 +172,16 @@
 #define SAC_CHANNEL_FLAG_INTERNAL           0x1
 #define SAC_CHANNEL_FLAG_CLOSE_EVENT        0x2
 #define SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT 0x4
-#define SAC_CHANNEL_FLAG_LOCK_EVENT	        0x8
+#define SAC_CHANNEL_FLAG_LOCK_EVENT         0x8
 #define SAC_CHANNEL_FLAG_REDRAW_EVENT       0x10
 #define SAC_CHANNEL_FLAG_APPLICATION        0x20
+
+//
+// Cell Flags
+//
+#define SAC_CELL_FLAG_BLINK                 1
+#define SAC_CELL_FLAG_BOLD                  2
+#define SAC_CELL_FLAG_INVERTED              4
 
 //
 // Forward definitions
@@ -196,6 +210,67 @@ typedef struct _SAC_MESSAGE_ENTRY
     ULONG Index;
     PWCHAR Buffer;
 } SAC_MESSAGE_ENTRY, *PSAC_MESSAGE_ENTRY;
+
+//
+// These are the VT-100/220/ANSI Escape Codes supported by SAC as input
+//
+typedef enum _SAC_ANSI_COMMANDS
+{
+    SacCursorUp,
+    SacCursorDown,
+    SacCursorRight,
+    SacCursorLeft,
+    SacFontNormal,
+    SacFontBlink,
+    SacFontBlinkOff,
+    SacFontBold,
+    SacFontBoldOff,
+    SacFontInverse,
+    SacFontInverseOff,
+    SacBackTab,
+    SacEraseEndOfLine,
+    SacEraseStartOfLine,
+    SacEraseLine,
+    SacEraseEndOfScreen,
+    SacEraseStartOfScreen,
+    SacEraseScreen,
+    SacSetCursorPosition,
+    SacSetScrollRegion,
+    SacSetColors,
+    SacSetBackgroundColor,
+    SacSetFontColor,
+    SacSetColorsAndAttributes
+} SAC_ANSI_COMMANDS;
+
+//
+// These are the VT-100/220/ANSI Escape Codes send by SAC as output
+//
+typedef enum _SAC_ANSI_DISPATCH
+{
+    SacAnsiClearScreen,
+    SacAnsiClearEndOfScreen,
+    SacAnsiClearEndOfLine,
+    SacAnsiSetColors,
+    SacAnsiSetPosition,
+    SacAnsiClearAttributes,
+    SacAnsiSetInverseAttribute,
+    SacAnsiClearInverseAttribute,
+    SacAnsiSetBlinkAttribute,
+    SacAnsiClearBlinkAttribute,
+    SacAnsiSetBoldAttribute,
+    SacAnsiClearBoldAttribute
+} SAC_ANSI_DISPATCH;
+
+//
+// Commands that the consumer and producer share
+//
+typedef enum _SAC_POST_COMMANDS
+{
+    Nothing,
+    Shutdown,
+    Close,
+    Restart
+} SAC_POST_COMMANDS;
 
 //
 // SAC supports 3 different channel output types
@@ -233,6 +308,36 @@ typedef struct _SAC_CHANNEL_LOCK
     LONG RefCount;
     KSEMAPHORE Lock;
 } SAC_CHANNEL_LOCK, *PSAC_CHANNEL_LOCK;
+
+//
+// Structure of the cell-buffer when in VT-UTF8 Mode
+//
+typedef struct _SAC_CELL_DATA
+{
+    UCHAR CellBackColor;
+    UCHAR CellForeColor;
+    UCHAR CellFlags;
+    WCHAR Char;
+} SAC_CELL_DATA, *PSAC_CELL_DATA;
+C_ASSERT(sizeof(SAC_CELL_DATA) == 6);
+
+//
+// Screen buffer when in VT-UTF8 Mode
+//
+typedef struct _SAC_VTUTF8_SCREEN
+{
+    SAC_CELL_DATA Cell[SAC_VTUTF8_ROW_HEIGHT][SAC_VTUTF8_COL_WIDTH];
+} SAC_VTUTF8_SCREEN, *PSAC_VTUTF8_SCREEN;
+
+//
+// Small optimization to easily recognize the most common VT-100/ANSI codes
+//
+typedef struct _SAC_STATIC_ESCAPE_STRING
+{
+    WCHAR Sequence[10];
+    ULONG Size;
+    ULONG Action;
+} SAC_STATIC_ESCAPE_STRING, *PSAC_STATIC_ESCAPE_STRING;
 
 //
 // Channel callbacks
@@ -348,9 +453,9 @@ typedef struct _SAC_CHANNEL
     LONG ChannelHasNewIBufferData;
     UCHAR CursorRow;
     UCHAR CursorCol;
-    UCHAR CursorY;
-    UCHAR CursorX;
-    UCHAR CursorVisible;
+    UCHAR CellForeColor;
+    UCHAR CellBackColor;
+    UCHAR CellFlags;
     PCHAR OBuffer;
     ULONG OBufferIndex;
     ULONG OBufferFirstGoodIndex;
@@ -374,8 +479,8 @@ typedef struct _SAC_CHANNEL
 typedef struct _SAC_CHANNEL_ATTRIBUTES
 {
     SAC_CHANNEL_TYPE ChannelType;
-    WCHAR NameBuffer[64 + 1];
-    WCHAR DescriptionBuffer[256 + 1];
+    WCHAR NameBuffer[SAC_CHANNEL_NAME_SIZE + 1];
+    WCHAR DescriptionBuffer[SAC_CHANNEL_DESCRIPTION_SIZE + 1];
     ULONG Flag;
     HANDLE CloseEvent;
     HANDLE HasNewDataEvent;
@@ -1012,6 +1117,17 @@ VerifyEventWaitable(
     OUT PVOID *ActualWaitObject
 );
 
+BOOLEAN
+NTAPI
+SacTranslateUnicodeToUtf8(
+    IN PWCHAR SourceBuffer,
+    IN ULONG SourceBufferLength,
+    OUT PCHAR DestinationBuffer,
+    IN ULONG DestinationBufferSize,
+    OUT PULONG UTF8Count,
+    OUT PULONG ProcessedCount
+);
+
 //
 // SAC Command Functions
 //
@@ -1127,7 +1243,7 @@ extern LONG CurrentChannelRefCount;
 extern PCHAR SerialPortBuffer;
 extern LONG SerialPortConsumerIndex, SerialPortProducerIndex;
 extern PCHAR Utf8ConversionBuffer;
-extern BOOLEAN GlobalPagingNeeded;
+extern BOOLEAN GlobalPagingNeeded, GlobalDoThreads;
 extern ULONG Utf8ConversionBufferSize;
 extern BOOLEAN CommandConsoleLaunchingEnabled;
 
@@ -1250,3 +1366,154 @@ ChannelHasNewIBufferData(IN PSAC_CHANNEL Channel)
     /* Return if there's any new data in the input buffer */
     return Channel->ChannelHasNewIBufferData;
 }
+
+//
+// FIXME: ANSI.H
+//
+//
+// Source: http://en.wikipedia.org/wiki/ANSI_escape_code
+//
+typedef enum _VT_ANSI_ATTRIBUTES
+{
+    //
+    // Attribute modifiers (mostly supported)
+    //
+    Normal,
+    Bold,
+    Faint,
+    Italic,
+    Underline,
+    SlowBlink,
+    FastBlink,
+    Inverse,
+    Conceal,
+    Strikethrough,
+
+    //
+    // Font selectors (not supported)
+    //
+    PrimaryFont,
+    AlternateFont1,
+    AlternateFont2,
+    AlternateFont3,
+    Alternatefont4,
+    AlteronateFont5,
+    AlteronateFont6,
+    AlternateFont7,
+    AlternatEfont8,
+    Alternatefont9,
+
+    //
+    // Additional attributes (not supported)
+    //
+    Fraktur,
+    DoubleUnderline,
+
+    //
+    // Attribute Un-modifiers (mostly supported)
+    //
+    BoldOff,
+    ItalicOff,
+    UnderlineOff,
+    BlinkOff,
+    Reserved,
+    InverseOff,
+    ConcealOff,
+    StrikethroughOff,
+
+    //
+    // Standard Text Color
+    //
+    SetColorStart,
+    SetColorBlack = SetColorStart,
+    SetColorRed,
+    SetColorGreen,
+    SetColorYellow,
+    SetColorBlue,
+    SetcolorMAgent,
+    SetColorCyan,
+    SetColorWhite,
+    SetColorMax = SetColorWhite,
+
+    //
+    // Extended Text Color (not supported)
+    //
+    SetColor256,
+    SeTextColorDefault,
+
+    //
+    // Standard Background Color
+    //
+    SetBackColorStart,
+    SetBackColorBlack = SetBackColorStart,
+    SetBackColorRed,
+    SetBackColorGreen,
+    SetBackColorYellow,
+    SetBackColorBlue,
+    SetBackcolorMAgent,
+    SetBackColorCyan,
+    SetBackColorWhite,
+    SetBackColorMax = SetBackColorWhite,
+
+    //
+    // Extended Background Color (not supported)
+    //
+    SetBackColor256,
+    SetBackColorDefault,
+
+    //
+    // Extra Attributes (not supported)
+    //
+    Reserved1,
+    Framed,
+    Encircled,
+    Overlined,
+    FramedOff,
+    OverlinedOff,
+    Reserved2,
+    Reserved3,
+    Reserved4,
+    Reserved5
+
+    //
+    // Ideograms (not supported)
+    //
+} VT_ANSI_ATTRIBUTES;
+
+//
+// The following site is a good reference on VT100/ANSI escape codes
+// http://www.termsys.demon.co.uk/vtansi.htm
+//
+#define VT_ANSI_ESCAPE              L'\x1B'
+#define VT_ANSI_COMMAND             L'['
+
+#define VT_ANSI_CURSOR_UP_CHAR      L'A'
+#define VT_ANSI_CURSOR_UP           L"[A"
+
+#define VT_ANSI_CURSOR_DOWN_CHAR    L'B'
+#define VT_ANSI_CURSOR_DOWN         L"[B"
+
+#define VT_ANSI_CURSOR_RIGHT_CHAR   L'C'
+#define VT_ANSI_CURSOR_RIGHT        L"[C"
+
+#define VT_ANSI_CURSOR_LEFT_CHAR    L'D'
+#define VT_ANSI_CURSOR_LEFT         L"[D"
+
+#define VT_ANSI_ERASE_LINE_CHAR     L'K'
+#define VT_ANSI_ERASE_END_LINE      L"[K"
+#define VT_ANSI_ERASE_START_LINE    L"[1K"
+#define VT_ANSI_ERASE_ENTIRE_LINE   L"[2K"
+
+#define VT_ANSI_ERASE_SCREEN_CHAR   L'J'
+#define VT_ANSI_ERASE_DOWN_SCREEN   L"[J"
+#define VT_ANSI_ERASE_UP_SCREEN     L"[1J"
+#define VT_ANSI_ERASE_ENTIRE_SCREEN L"[2J"
+
+#define VT_ANSI_BACKTAB_CHAR        L'Z'
+#define VT_220_BACKTAB              L"[0Z"
+
+#define VT_ANSI_SET_ATTRIBUTE_CHAR  L'm'
+#define VT_ANSI_SEPARATOR_CHAR      L';'
+#define VT_ANSI_HVP_CURSOR_CHAR     L'f'
+#define VT_ANSI_CUP_CURSOR_CHAR     L'H'
+#define VT_ANSI_SCROLL_CHAR         L'r'

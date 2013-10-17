@@ -384,6 +384,17 @@ interface IEnumCodePage : IUnknown
 ]
 interface IMLangConvertCharset : IUnknown
 {
+    typedef enum tagMLCONVCHARF
+    {
+        MLCONVCHARF_AUTODETECT      = 1,
+        MLCONVCHARF_ENTITIZE        = 2,
+        MLCONVCHARF_NCR_ENTITIZE    = 2,
+        MLCONVCHARF_NAME_ENTITIZE   = 4,
+        MLCONVCHARF_USEDEFCHAR      = 8,
+        MLCONVCHARF_NOBESTFITCHARS  = 16,
+        MLCONVCHARF_DETECTJPN       = 32
+    } MLCONVCHAR;
+
     HRESULT Initialize(      
         [in] UINT uiSrcCodePage,
         [in] UINT uiDstCodePage,

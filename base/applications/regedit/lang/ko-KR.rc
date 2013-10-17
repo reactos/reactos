@@ -18,7 +18,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "파일(&F)"
     BEGIN
@@ -30,7 +30,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "파일(&F)"
     BEGIN
@@ -99,7 +99,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -272,21 +272,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "이름"
     IDS_LIST_COLUMN_TYPE    "종류"
     IDS_LIST_COLUMN_DATA    "데이터"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "레지스트리 편집기"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "전체 레지스트리를 관리하기 위한 명령어를 제공합니다"
     ID_EDIT_MENU            "값이나 키를 편집하기 위한 명령어를 제공합니다"
@@ -296,7 +296,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "새 키나 값을 만들기 위한 명령어를 제공합니다"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY          "값의 데이터를 수정합니다"
     ID_EDIT_NEW_KEY         "새 키를 추가합니다"
@@ -319,7 +319,7 @@ BEGIN
     ID_HELP_ABOUT           "프로그램 정보, 벼젼과 라이센스를 표시합니다"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT        "레지스트리 에디터를 종료합니다"
     ID_FAVOURITES_ADDTOFAVOURITES "키를 즐겨찾기 리스트에 추가합니다"
@@ -334,7 +334,7 @@ BEGIN
     ID_EDIT_FINDNEXT        "전의 검색에서 찾은 문자열을 계속 찾습니다"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR               "에러"
     IDS_WARNING             "경고"
@@ -359,7 +359,7 @@ BEGIN
     IDS_NEW_VALUE           "새 값 #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(길이가 0인 바이너리 값)"
     IDS_DEFAULT_VALUE_NAME  "(기본값)"
@@ -373,7 +373,7 @@ BEGIN
     IDS_INVALID_DWORD       "(잘못된 DWORD값)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "레지스트리 파일"
     IDS_FLT_REGFILES        "레지스트리 파일들 (*.reg)"
@@ -386,7 +386,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "모든 권한"
   IDS_ACCESS_READ               "읽기"
@@ -402,14 +402,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "권한 읽기"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "이 키만"
   IDS_INHERIT_THISKEYANDSUBKEYS  "이 키와 서브키"
   IDS_INHERIT_SUBKEYSONLY        "서브키만"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "확장(&E)"
   IDS_COLLAPSE                   "축소(&C)"
@@ -417,7 +417,7 @@ BEGIN
   IDS_FINISHEDFIND               "레지스트리 검색을 완료했습니다."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -425,7 +425,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
     IDS_INTERFACE                 "Interface"
@@ -446,7 +446,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Data Size"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memory"
@@ -457,7 +457,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Read / Write"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Undefined"
     IDS_BUS_INTERNAL              "Internal"
@@ -486,7 +486,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -496,7 +496,7 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
 FONT 8, "Ms Shell Dlg"
@@ -507,7 +507,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "즐겨찾기에 추가"
 FONT 8, "MS Shell Dlg"
@@ -518,7 +518,7 @@ BEGIN
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "즐겨찾기 제거"
 FONT 8, "MS Shell Dlg"
@@ -530,7 +530,7 @@ BEGIN
 	LTEXT           "즐겨찾기를 선택:",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "찾기"
 FONT 8, "MS Shell Dlg"
@@ -567,7 +567,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -579,7 +579,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
  *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."

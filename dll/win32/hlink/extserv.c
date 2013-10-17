@@ -235,7 +235,7 @@ static ULONG WINAPI ExtServ_Release(IExtensionServices *iface)
 
 static HRESULT ExtServ_ImplSetAdditionalHeaders(ExtensionService* This, LPCWSTR pwzAdditionalHeaders)
 {
-    int len = 0;
+    int len;
 
     heap_free(This->headers);
     This->headers = NULL;

@@ -10,13 +10,12 @@ list(APPEND SOURCE
     asmname.c
     assembly.c
     fusion.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 
-add_library(fusion SHARED ${SOURCE})
+add_library(fusion SHARED ${SOURCE} version.rc)
 set_module_type(fusion win32dll)
-target_link_libraries(fusion wine uuid)
+target_link_libraries(fusion wine)
 add_importlibs(fusion advapi32 dbghelp shlwapi user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET fusion DESTINATION reactos/Microsoft.NET/Framework/v1.0.3705 FOR all)
 add_cd_file(TARGET fusion DESTINATION reactos/Microsoft.NET/Framework/v1.1.4322 FOR all)

@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 SAC_CHANNEL_LOCK ChannelCreateLock;
 BOOLEAN ChannelCreateEnabled;
@@ -21,7 +21,7 @@ SAC_CHANNEL_LOCK ChannelSlotLock[SAC_MAX_CHANNELS];
 LONG CurrentChannelRefCount;
 KMUTEX CurrentChannelLock;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 #define MAX_REF_COUNT 100
 

@@ -175,7 +175,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
             {
                 DPRINT("Lock %#08lx (with tag %#08lx) was supposed to be held at max %I64d ticks but lasted longer\n",
                        Lock, TrackingBlock->Tag, Lock->Dbg.MaxLockedTicks);
-                DPRINT("Lock was acquired in file %s at line %d\n", TrackingBlock->File, TrackingBlock->Line);
+                DPRINT("Lock was acquired in file %s at line %lu\n", TrackingBlock->File, TrackingBlock->Line);
                 ASSERT(FALSE);
             }
 
@@ -270,7 +270,7 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
         /* Tag should match */
         if (TrackingBlock->Tag != Tag)
         {
-            DPRINT("Last tracking block tag invalid! Expected: %x, having: %x\n", Tag, TrackingBlock->Tag);
+            DPRINT("Last tracking block tag invalid! Expected: %p, having: %p\n", Tag, TrackingBlock->Tag);
             ASSERT(TrackingBlock->Tag != Tag);
         }
 

@@ -1,7 +1,7 @@
 /* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylų-sistema] [-V:žymė] [-Q] [-A:dydis] [-C]\n\n\
   [diskas:]        Nurodo diską formavimui.\n\

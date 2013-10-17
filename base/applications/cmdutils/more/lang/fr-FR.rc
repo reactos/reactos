@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_USAGE, "Affiche les données page par page à l'écran.\n\n\
   MORE < [Lecteur:][Chemin]Nom du fichier\n\

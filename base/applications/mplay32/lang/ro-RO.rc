@@ -22,7 +22,7 @@ BEGIN
 	END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 	IDS_ALL_TYPES_FILTER  "Toate admisibile (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
 	IDS_TOOLTIP_PLAY      "Redare conținut multimedia"

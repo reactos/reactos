@@ -419,10 +419,26 @@ static void sax_characters(void *ctx, const xmlChar *ch, int len)
 
     if (ctxt->node)
     {
-        /* during domdoc_loadXML() the xmlDocPtr->_private data is not available */
+        xmlChar cur = *(ctxt->input->cur);
+
+        /* Characters are reported with multiple calls, for example each charref is reported with a separate
+           call and then parser appends it to a single text node or creates a new node if not created.
+           It's not possible to tell if it's ignorable data or not just looking at data itself cause it could be
+           space chars that separate charrefs or similar case. We only need to skip leading and trailing spaces,
+           or whole node if it has nothing but space chars, so to detect leading space node->last is checked that
+           contains text node pointer if already created, trailing spaces are detected directly looking at parser input
+           for next '<' opening bracket - similar logic is used by libxml2 itself. Basically 'cur' == '<' means the last
+           chunk of char data, in case it's not the last chunk we check for previously added node type and if it's not
+           a text node it's safe to ignore.
+
+           Note that during domdoc_loadXML() the xmlDocPtr->_private data is not available. */
+
         if (!This->properties->preserving &&
             !is_preserving_whitespace(ctxt->node) &&
-            strn_isspace(ch, len))
+            strn_isspace(ch, len) &&
+            (!ctxt->node->last ||
+            ((ctxt->node->last && (cur == '<' || ctxt->node->last->type != XML_TEXT_NODE))
+           )))
             return;
     }
 
@@ -852,7 +868,7 @@ static const tid_t domdoc_se_tids[] = {
     IXMLDOMDocument_tid,
     IXMLDOMDocument2_tid,
     IXMLDOMDocument3_tid,
-    0
+    NULL_tid
 };
 
 static HRESULT WINAPI domdoc_QueryInterface( IXMLDOMDocument3 *iface, REFIID riid, void** ppvObject )
@@ -1921,9 +1937,6 @@ static HRESULT WINAPI domdoc_createNode(
     hr = get_node_type(Type, &node_type);
     if(FAILED(hr)) return hr;
 
-    if(namespaceURI && namespaceURI[0] && node_type != NODE_ELEMENT)
-        FIXME("nodes with namespaces currently not supported.\n");
-
     TRACE("node_type %d\n", node_type);
 
     /* exit earlier for types that need name */
@@ -1966,8 +1979,26 @@ static HRESULT WINAPI domdoc_createNode(
         break;
     }
     case NODE_ATTRIBUTE:
-        xmlnode = (xmlNodePtr)xmlNewDocProp(get_doc(This), xml_name, NULL);
+    {
+        xmlChar *local, *prefix;
+
+        local = xmlSplitQName2(xml_name, &prefix);
+
+        xmlnode = (xmlNodePtr)xmlNewDocProp(get_doc(This), local ? local : xml_name, NULL);
+
+        if (local || (href && *href))
+        {
+            /* we need a floating namespace here, it can't be created linked to attribute from
+               a start */
+            xmlNsPtr ns = xmlNewNs(NULL, href, prefix);
+            xmlSetNs(xmlnode, ns);
+        }
+
+        xmlFree(local);
+        xmlFree(prefix);
+
         break;
+    }
     case NODE_TEXT:
         xmlnode = (xmlNodePtr)xmlNewDocText(get_doc(This), NULL);
         break;
@@ -2984,7 +3015,7 @@ static HRESULT WINAPI domdoc_setProperty(
              lstrcmpiW(p, PropertyResolveExternalsW) == 0)
     {
         /* Ignore */
-        FIXME("Ignoring property %s, value %d\n", debugstr_w(p), V_BOOL(&value));
+        FIXME("Ignoring property %s, value %s\n", debugstr_w(p), debugstr_variant(&value));
         return S_OK;
     }
 

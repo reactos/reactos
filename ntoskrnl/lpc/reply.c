@@ -48,7 +48,7 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
             /* Unlink and free it */
             RemoveEntryList(&Message->Entry);
             InitializeListHead(&Message->Entry);
-            LpcpFreeToPortZone(Message, 1);
+            LpcpFreeToPortZone(Message, LPCP_LOCK_HELD);
             break;
         }
 
@@ -61,8 +61,10 @@ VOID
 NTAPI
 LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
                         IN PLPCP_MESSAGE Message,
-                        IN ULONG LockHeld)
+                        IN ULONG LockFlags)
 {
+    BOOLEAN LockHeld = (LockFlags & LPCP_LOCK_HELD);
+
     PAGED_CODE();
 
     /* Acquire the lock */
@@ -152,7 +154,7 @@ NtReplyPort(IN HANDLE PortHandle,
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Handle: %lx. Message: %p.\n",
+             "Handle: %p. Message: %p.\n",
              PortHandle,
              ReplyMessage);
 
@@ -236,7 +238,7 @@ NtReplyPort(IN HANDLE PortHandle,
         Request) != LPC_REQUEST)))
     {
         /* It isn't, fail */
-        LpcpFreeToPortZone(Message, 3);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
         if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         ObDereferenceObject(WakeupThread);
         ObDereferenceObject(Port);
@@ -255,7 +257,7 @@ NtReplyPort(IN HANDLE PortHandle,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail */
-        LpcpFreeToPortZone(Message, 3);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
         ObDereferenceObject(WakeupThread);
         ObDereferenceObject(Port);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -329,7 +331,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Handle: %lx. Messages: %p/%p. Context: %p\n",
+             "Handle: %p. Messages: %p/%p. Context: %p\n",
              PortHandle,
              ReplyMessage,
              ReceiveMessage,
@@ -480,7 +482,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
                                  Request) != LPC_REQUEST)))
         {
             /* It isn't, fail */
-            LpcpFreeToPortZone(Message, 3);
+            LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
             if (ConnectionPort) ObDereferenceObject(ConnectionPort);
             ObDereferenceObject(WakeupThread);
             ObDereferenceObject(Port);
@@ -637,7 +639,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             if (Message->Request.u2.s2.DataInfoOffset)
             {
                 /* It does, save it, and don't free the message below */
-                LpcpSaveDataInfoMessage(Port, Message, 1);
+                LpcpSaveDataInfoMessage(Port, Message, LPCP_LOCK_HELD);
                 Message = NULL;
             }
         }
@@ -659,7 +661,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     if (Message)
     {
         /* Free it and release the lock */
-        LpcpFreeToPortZone(Message, 3);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
     }
     else
     {
@@ -670,7 +672,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 Cleanup:
     /* All done, dereference the port and return the status */
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Port: %p. Status: %p\n",
+             "Port: %p. Status: %d\n",
              Port,
              Status);
     if (ConnectionPort) ObDereferenceObject(ConnectionPort);

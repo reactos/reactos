@@ -140,11 +140,68 @@ static const IClientSecurityVtbl client_security_vtbl =
 
 IClientSecurity client_security = { &client_security_vtbl };
 
+struct async_header
+{
+    IWbemObjectSink *sink;
+    void (*proc)( struct async_header * );
+    HANDLE cancel;
+    HANDLE wait;
+};
+
+struct async_query
+{
+    struct async_header hdr;
+    WCHAR *str;
+};
+
+static void free_async( struct async_header *async )
+{
+    if (async->sink) IWbemObjectSink_Release( async->sink );
+    CloseHandle( async->cancel );
+    CloseHandle( async->wait );
+    heap_free( async );
+}
+
+static BOOL init_async( struct async_header *async, IWbemObjectSink *sink,
+                        void (*proc)(struct async_header *) )
+{
+    if (!(async->wait = CreateEventW( NULL, FALSE, FALSE, NULL ))) return FALSE;
+    if (!(async->cancel = CreateEventW( NULL, FALSE, FALSE, NULL )))
+    {
+        CloseHandle( async->wait );
+        return FALSE;
+    }
+    async->proc = proc;
+    async->sink = sink;
+    IWbemObjectSink_AddRef( sink );
+    return TRUE;
+}
+
+static DWORD CALLBACK async_proc( LPVOID param )
+{
+    struct async_header *async = param;
+    HANDLE wait = async->wait;
+
+    async->proc( async );
+
+    WaitForSingleObject( async->cancel, INFINITE );
+    SetEvent( wait );
+    return ERROR_SUCCESS;
+}
+
+static HRESULT queue_async( struct async_header *async )
+{
+    if (QueueUserWorkItem( async_proc, async, WT_EXECUTELONGFUNCTION )) return S_OK;
+    return HRESULT_FROM_WIN32( GetLastError() );
+}
+
 struct wbem_services
 {
     IWbemServices IWbemServices_iface;
     LONG refs;
+    CRITICAL_SECTION cs;
     WCHAR *namespace;
+    struct async_header *async;
 };
 
 static inline struct wbem_services *impl_from_IWbemServices( IWbemServices *iface )
@@ -167,6 +224,17 @@ static ULONG WINAPI wbem_services_Release(
     if (!refs)
     {
         TRACE("destroying %p\n", ws);
+
+        EnterCriticalSection( &ws->cs );
+        if (ws->async) SetEvent( ws->async->cancel );
+        LeaveCriticalSection( &ws->cs );
+        if (ws->async)
+        {
+            WaitForSingleObject( ws->async->wait, INFINITE );
+            free_async( ws->async );
+        }
+        ws->cs.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection( &ws->cs );
         heap_free( ws->namespace );
         heap_free( ws );
     }
@@ -226,8 +294,28 @@ static HRESULT WINAPI wbem_services_CancelAsyncCall(
     IWbemServices *iface,
     IWbemObjectSink *pSink )
 {
-    FIXME("\n");
-    return WBEM_E_FAILED;
+    struct wbem_services *services = impl_from_IWbemServices( iface );
+    struct async_header *async;
+
+    TRACE("%p, %p\n", iface, pSink);
+
+    if (!pSink) return WBEM_E_INVALID_PARAMETER;
+
+    EnterCriticalSection( &services->cs );
+
+    if (!(async = services->async))
+    {
+        LeaveCriticalSection( &services->cs );
+        return WBEM_E_INVALID_PARAMETER;
+    }
+    services->async = NULL;
+    SetEvent( async->cancel );
+
+    LeaveCriticalSection( &services->cs );
+
+    WaitForSingleObject( async->wait, INFINITE );
+    free_async( async );
+    return S_OK;
 }
 
 static HRESULT WINAPI wbem_services_QueryObjectSink(
@@ -294,7 +382,7 @@ static void free_path( struct path *path )
     heap_free( path );
 }
 
-static HRESULT create_instance_enum( const struct path *path, IEnumWbemClassObject **iter )
+static WCHAR *query_from_path( const struct path *path )
 {
     static const WCHAR selectW[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','%','s',' ',
@@ -302,22 +390,30 @@ static HRESULT create_instance_enum( const struct path *path, IEnumWbemClassObje
     static const WCHAR select_allW[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',0};
     WCHAR *query;
-    HRESULT hr;
     UINT len;
 
     if (path->filter)
     {
         len = path->class_len + path->filter_len + SIZEOF(selectW);
-        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
         sprintfW( query, selectW, path->class, path->filter );
     }
     else
     {
         len = path->class_len + SIZEOF(select_allW);
-        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
         strcpyW( query, select_allW );
         strcatW( query, path->class );
     }
+    return query;
+}
+
+static HRESULT create_instance_enum( const struct path *path, IEnumWbemClassObject **iter )
+{
+    WCHAR *query;
+    HRESULT hr;
+
+    if (!(query = query_from_path( path ))) return E_OUTOFMEMORY;
     hr = exec_query( query, iter );
     heap_free( query );
     return hr;
@@ -535,6 +631,30 @@ static HRESULT WINAPI wbem_services_ExecQuery(
     return exec_query( strQuery, ppEnum );
 }
 
+static void async_exec_query( struct async_header *hdr )
+{
+    struct async_query *query = (struct async_query *)hdr;
+    IEnumWbemClassObject *result;
+    IWbemClassObject *obj;
+    ULONG count;
+    HRESULT hr;
+
+    hr = exec_query( query->str, &result );
+    if (hr == S_OK)
+    {
+        for (;;)
+        {
+            IEnumWbemClassObject_Next( result, WBEM_INFINITE, 1, &obj, &count );
+            if (!count) break;
+            IWbemObjectSink_Indicate( query->hdr.sink, 1, &obj );
+            IWbemClassObject_Release( obj );
+        }
+        IEnumWbemClassObject_Release( result );
+    }
+    IWbemObjectSink_SetStatus( query->hdr.sink, WBEM_STATUS_COMPLETE, hr, NULL, NULL );
+    heap_free( query->str );
+}
+
 static HRESULT WINAPI wbem_services_ExecQueryAsync(
     IWbemServices *iface,
     const BSTR strQueryLanguage,
@@ -543,8 +663,53 @@ static HRESULT WINAPI wbem_services_ExecQueryAsync(
     IWbemContext *pCtx,
     IWbemObjectSink *pResponseHandler )
 {
-    FIXME("\n");
-    return WBEM_E_FAILED;
+    struct wbem_services *services = impl_from_IWbemServices( iface );
+    IWbemObjectSink *sink;
+    HRESULT hr = E_OUTOFMEMORY;
+    struct async_header *async;
+    struct async_query *query;
+
+    TRACE("%p, %s, %s, 0x%08x, %p, %p\n", iface, debugstr_w(strQueryLanguage), debugstr_w(strQuery),
+          lFlags, pCtx, pResponseHandler);
+
+    if (!pResponseHandler) return WBEM_E_INVALID_PARAMETER;
+
+    hr = IWbemObjectSink_QueryInterface( pResponseHandler, &IID_IWbemObjectSink, (void **)&sink );
+    if (FAILED(hr)) return hr;
+
+    EnterCriticalSection( &services->cs );
+
+    if (services->async)
+    {
+        FIXME("handle more than one pending async\n");
+        hr = WBEM_E_FAILED;
+        goto done;
+    }
+    if (!(query = heap_alloc_zero( sizeof(*query) ))) goto done;
+    async = (struct async_header *)query;
+
+    if (!(init_async( async, sink, async_exec_query )))
+    {
+        free_async( async );
+        goto done;
+    }
+    if (!(query->str = heap_strdupW( strQuery )))
+    {
+        free_async( async );
+        goto done;
+    }
+    hr = queue_async( async );
+    if (hr == S_OK) services->async = async;
+    else
+    {
+        heap_free( query->str );
+        free_async( async );
+    }
+
+done:
+    LeaveCriticalSection( &services->cs );
+    IWbemObjectSink_Release( sink );
+    return hr;
 }
 
 static HRESULT WINAPI wbem_services_ExecNotificationQuery(
@@ -567,8 +732,53 @@ static HRESULT WINAPI wbem_services_ExecNotificationQueryAsync(
     IWbemContext *pCtx,
     IWbemObjectSink *pResponseHandler )
 {
-    FIXME("\n");
-    return WBEM_E_FAILED;
+    struct wbem_services *services = impl_from_IWbemServices( iface );
+    IWbemObjectSink *sink;
+    HRESULT hr = E_OUTOFMEMORY;
+    struct async_header *async;
+    struct async_query *query;
+
+    TRACE("%p, %s, %s, 0x%08x, %p, %p\n", iface, debugstr_w(strQueryLanguage), debugstr_w(strQuery),
+          lFlags, pCtx, pResponseHandler);
+
+    if (!pResponseHandler) return WBEM_E_INVALID_PARAMETER;
+
+    hr = IWbemObjectSink_QueryInterface( pResponseHandler, &IID_IWbemObjectSink, (void **)&sink );
+    if (FAILED(hr)) return hr;
+
+    EnterCriticalSection( &services->cs );
+
+    if (services->async)
+    {
+        FIXME("handle more than one pending async\n");
+        hr = WBEM_E_FAILED;
+        goto done;
+    }
+    if (!(query = heap_alloc_zero( sizeof(*query) ))) goto done;
+    async = (struct async_header *)query;
+
+    if (!(init_async( async, sink, async_exec_query )))
+    {
+        free_async( async );
+        goto done;
+    }
+    if (!(query->str = heap_strdupW( strQuery )))
+    {
+        free_async( async );
+        goto done;
+    }
+    hr = queue_async( async );
+    if (hr == S_OK) services->async = async;
+    else
+    {
+        heap_free( query->str );
+        free_async( async );
+    }
+
+done:
+    LeaveCriticalSection( &services->cs );
+    IWbemObjectSink_Release( sink );
+    return hr;
 }
 
 static HRESULT WINAPI wbem_services_ExecMethod(
@@ -581,10 +791,12 @@ static HRESULT WINAPI wbem_services_ExecMethod(
     IWbemClassObject **ppOutParams,
     IWbemCallResult **ppCallResult )
 {
-    IWbemClassObject *obj;
-    struct table *table;
-    class_method *func;
+    IEnumWbemClassObject *result = NULL;
+    IWbemClassObject *obj = NULL;
+    struct query *query = NULL;
     struct path *path;
+    WCHAR *str;
+    class_method *func;
     HRESULT hr;
 
     TRACE("%p, %s, %s, %08x, %p, %p, %p, %p\n", iface, debugstr_w(strObjectPath),
@@ -592,28 +804,40 @@ static HRESULT WINAPI wbem_services_ExecMethod(
 
     if (lFlags) FIXME("flags %08x not supported\n", lFlags);
 
-    if ((hr = get_object( strObjectPath, &obj ))) return hr;
-    if ((hr = parse_path( strObjectPath, &path )) != S_OK)
+    if ((hr = parse_path( strObjectPath, &path )) != S_OK) return hr;
+    if (!(str = query_from_path( path )))
     {
-        IWbemClassObject_Release( obj );
-        return hr;
+        hr = E_OUTOFMEMORY;
+        goto done;
     }
-    table = grab_table( path->class );
-    free_path( path );
-    if (!table)
+    if (!(query = create_query()))
     {
-        IWbemClassObject_Release( obj );
-        return WBEM_E_NOT_FOUND;
+        hr = E_OUTOFMEMORY;
+        goto done;
     }
-    hr = get_method( table, strMethodName, &func );
-    release_table( table );
-    if (hr != S_OK)
-    {
-        IWbemClassObject_Release( obj );
-        return hr;
-    }
+    hr = parse_query( str, &query->view, &query->mem );
+    if (hr != S_OK) goto done;
+
+    hr = execute_view( query->view );
+    if (hr != S_OK) goto done;
+
+    hr = EnumWbemClassObject_create( NULL, query, (void **)&result );
+    if (hr != S_OK) goto done;
+
+    hr = create_class_object( query->view->table->name, result, 0, NULL, &obj );
+    if (hr != S_OK) goto done;
+
+    hr = get_method( query->view->table, strMethodName, &func );
+    if (hr != S_OK) goto done;
+
     hr = func( obj, pInParams, ppOutParams );
-    IWbemClassObject_Release( obj );
+
+done:
+    if (result) IEnumWbemClassObject_Release( result );
+    if (obj) IWbemClassObject_Release( obj );
+    free_query( query );
+    free_path( path );
+    heap_free( str );
     return hr;
 }
 
@@ -670,8 +894,11 @@ HRESULT WbemServices_create( IUnknown *pUnkOuter, const WCHAR *namespace, LPVOID
     if (!ws) return E_OUTOFMEMORY;
 
     ws->IWbemServices_iface.lpVtbl = &wbem_services_vtbl;
-    ws->refs = 1;
+    ws->refs      = 1;
     ws->namespace = heap_strdupW( namespace );
+    ws->async     = NULL;
+    InitializeCriticalSection( &ws->cs );
+    ws->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": wbemprox_services.cs");
 
     *ppObj = &ws->IWbemServices_iface;
 

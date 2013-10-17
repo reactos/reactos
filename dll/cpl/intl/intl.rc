@@ -12,4 +12,6 @@
 
 IDC_CPLICON ICON "resources/applet.ico"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

@@ -7,7 +7,7 @@
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL 
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opțiuni"
     BEGIN
@@ -24,7 +24,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Reglaj de volum"
     IDS_NOMIXERDEVICES "Nu există dispozitive active de mixaj! Aplicația se va închide."

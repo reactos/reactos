@@ -3519,8 +3519,8 @@ mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c)
       return res;
     }
 
-      a->dp[0] |= *b++;
-      a->used += 1;
+    a->dp[0] |= *b++;
+    a->used += 1;
   }
   mp_clamp (a);
   return MP_OKAY;

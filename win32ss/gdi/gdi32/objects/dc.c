@@ -26,7 +26,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     }
     else
     {
-        DPRINT("WinSpooler.Drv Loaded! hMod -> 0x%x\n", ghSpooler);
+        DPRINT("WinSpooler.Drv Loaded! hMod -> 0x%p\n", ghSpooler);
     }
 
     if ((!lpwszDevice) && (!lpwszDriver))
@@ -328,7 +328,7 @@ DeleteObject(HGDIOBJ hObject)
     if ((DWORD)hObject & GDI_HANDLE_STOCK_MASK)
     {
         // Relax! This is a normal return!
-        DPRINT("Trying to delete system object 0x%x\n", hObject);
+        DPRINT("Trying to delete system object 0x%p\n", hObject);
         return TRUE;
     }
 

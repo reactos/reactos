@@ -5,4 +5,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"hh.exe\0"
 #include <reactos/version.rc>
 
-2 ICON DISCARDABLE hh.ico
+2 ICON hh.ico

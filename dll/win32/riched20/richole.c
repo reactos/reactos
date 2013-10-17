@@ -300,7 +300,7 @@ IRichEditOle_fnGetClientSite(IRichEditOle *me,
     if(!lplpolesite)
         return E_INVALIDARG;
     *lplpolesite = &This->clientSite->IOleClientSite_iface;
-    IOleClientSite_fnAddRef(*lplpolesite);
+    IOleClientSite_AddRef(*lplpolesite);
     return S_OK;
 }
 
@@ -448,21 +448,21 @@ ITextDocument_fnQueryInterface(ITextDocument* me, REFIID riid,
     void** ppvObject)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
-    return IRichEditOle_fnQueryInterface(&This->IRichEditOle_iface, riid, ppvObject);
+    return IRichEditOle_QueryInterface(&This->IRichEditOle_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI
 ITextDocument_fnAddRef(ITextDocument* me)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
-    return IRichEditOle_fnAddRef(&This->IRichEditOle_iface);
+    return IRichEditOle_AddRef(&This->IRichEditOle_iface);
 }
 
 static ULONG WINAPI
 ITextDocument_fnRelease(ITextDocument* me)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
-    return IRichEditOle_fnRelease(&This->IRichEditOle_iface);
+    return IRichEditOle_Release(&This->IRichEditOle_iface);
 }
 
 static HRESULT WINAPI

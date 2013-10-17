@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Gère les paramètres d'édition en ligne de commande de l'historique et des macros.\n\

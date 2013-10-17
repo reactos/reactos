@@ -281,7 +281,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Система"
     IDS_CPLSYSTEMDESCRIPTION "Просмотр информации о вашем компьютере и изменение различных системных и аппаратных параметров."

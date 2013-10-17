@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "Въз&можности"
     BEGIN
@@ -21,7 +21,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Сила на звука"
     IDS_NOMIXERDEVICES "Не са открити работещи смесителни устройства! Приложението ще се затвори."

@@ -22,6 +22,7 @@
 #include <config.h>
 
 #include <stdarg.h>
+#include <assert.h>
 
 #define COBJMACROS
 
@@ -271,7 +272,7 @@ static void parse_complete(HTMLDocumentObj *doc)
     call_property_onchanged(&doc->basedoc.cp_container, 1005);
     call_explorer_69(doc);
 
-    if(doc->is_webbrowser && doc->usermode != EDITMODE && !(doc->basedoc.window->load_flags & BINDING_REFRESH))
+    if(doc->webbrowser && doc->usermode != EDITMODE && !(doc->basedoc.window->load_flags & BINDING_REFRESH))
         IDocObjectService_FireNavigateComplete2(doc->doc_object_service, &doc->basedoc.window->base.IHTMLWindow2_iface, 0);
 
     /* FIXME: IE7 calls EnableModelless(TRUE), EnableModelless(FALSE) and sets interactive state here */
@@ -776,6 +777,22 @@ void release_document_mutation(HTMLDocumentNode *doc)
 
     nsIContentUtils_RemoveDocumentObserver(content_utils, nsdoc, &doc->nsIDocumentObserver_iface);
     nsIDocument_Release(nsdoc);
+}
+
+JSContext *get_context_from_document(nsIDOMHTMLDocument *nsdoc)
+{
+    nsIDocument *doc;
+    JSContext *ctx;
+    nsresult nsres;
+
+    nsres = nsIDOMHTMLDocument_QueryInterface(nsdoc, &IID_nsIDocument, (void**)&doc);
+    assert(nsres == NS_OK);
+
+    ctx = nsIContentUtils_GetContextFromDocument(content_utils, doc);
+    nsIDocument_Release(doc);
+
+    TRACE("ret %p\n", ctx);
+    return ctx;
 }
 
 void init_mutation(nsIComponentManager *component_manager)

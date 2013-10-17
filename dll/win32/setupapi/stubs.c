@@ -113,7 +113,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
 }
 
 /***********************************************************************
- *		SetupDiRemoveDevice(SETUPAPI.@)
+ *      SetupDiRemoveDevice(SETUPAPI.@)
  */
 BOOL WINAPI
 SetupDiRemoveDevice(
@@ -127,7 +127,7 @@ SetupDiRemoveDevice(
 
 
 /***********************************************************************
- *		SetupDiUnremoveDevice(SETUPAPI.@)
+ *      SetupDiUnremoveDevice(SETUPAPI.@)
  */
 BOOL WINAPI
 SetupDiUnremoveDevice(
@@ -150,6 +150,34 @@ WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSe
 WINSETUPAPI BOOL WINAPI SetupSetNonInteractiveMode(BOOL NonInteractiveFlag)
 {
     FIXME("(%d) stub\n", NonInteractiveFlag);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      SetupVerifyInfFileA(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupVerifyInfFileA(
+    IN PCSTR InfName,
+    IN PSP_ALTPLATFORM_INFO AltPlatformInfo,
+    OUT PSP_INF_SIGNER_INFO_A InfFileName)
+{
+    FIXME ("Stub %s %p %p\n", debugstr_a(InfName), AltPlatformInfo, InfFileName);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      SetupVerifyInfFileW(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupVerifyInfFileW(
+    IN PCWSTR InfName,
+    IN PSP_ALTPLATFORM_INFO AltPlatformInfo,
+    OUT PSP_INF_SIGNER_INFO_W InfFileName)
+{
+    FIXME ("Stub %s %p %p\n", debugstr_w(InfName), AltPlatformInfo, InfFileName);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }

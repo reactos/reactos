@@ -29,7 +29,7 @@ FT_BEGIN_HEADER
 
 #ifdef FT_CONFIG_OPTION_PIC
 #error "this module does not support PIC yet"
-#endif 
+#endif
 
 
   FT_EXPORT_VAR( const FT_Module_Class )  otv_module_class;

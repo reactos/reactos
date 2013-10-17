@@ -1,0 +1,14 @@
+﻿; UTF-8
+
+[Section]
+Name = Kyodai Mahjongg
+Version = 21.42
+Licence = Shareware
+Description = One of the best Mahjongg Solitaire games out there.
+Size = 13.8MB
+Category = 4
+URLDownload = http://files.cynagames.com/kyo2006.exe
+CDPath = none
+
+[Section.0407]
+Description = Eines der besten Mahjongg Solitaire Spiele im Netz.

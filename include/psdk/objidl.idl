@@ -2407,6 +2407,39 @@ interface IThumbnailExtractor : IUnknown
         [in] IStorage *pStg);
 }
 
+typedef enum tagGLOBALOPT_PROPERTIES
+{
+    COMGLB_EXCEPTION_HANDLING     = 1,
+    COMGLB_APPID                  = 2,
+    COMGLB_RPC_THREADPOOL_SETTING = 3
+} GLOBALOPT_PROPERTIES;
+
+typedef enum tagGLOBALOPT_EH_VALUES
+{
+    COMGLB_EXCEPTION_HANDLE               = 0,
+    COMGLB_EXCEPTION_DONOT_HANDLE_FATAL   = 1,
+    COMGLB_EXCEPTION_DONOT_HANDLE         = COMGLB_EXCEPTION_DONOT_HANDLE_FATAL,
+    COMGLB_EXCEPTION_DONOT_HANDLE_ANY     = 2
+} GLOBALOPT_EH_VALUES;
+
+typedef enum tagGLOBALOPT_RPCTP_VALUES
+{
+    COMGLB_RPC_THREADPOOL_SETTING_DEFAULT_POOL = 0,
+    COMGLB_RPC_THREADPOOL_SETTING_PRIVATE_POOL = 1
+} GLOBALOPT_RPCTP_VALUES;
+
+
+[
+    object,
+    local,
+    pointer_default(unique),
+    uuid(0000015B-0000-0000-C000-000000000046)
+]
+interface IGlobalOptions : IUnknown
+{
+    HRESULT Set([in] GLOBALOPT_PROPERTIES property, [in] ULONG_PTR value);
+    HRESULT Query([in] GLOBALOPT_PROPERTIES property, [out ] ULONG_PTR *value);
+}
 
 cpp_quote("#ifdef USE_COM_CONTEXT_DEF")
 

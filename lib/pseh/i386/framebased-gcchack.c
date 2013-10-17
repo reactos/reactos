@@ -23,8 +23,8 @@
 #define _NTSYSTEM_ /* removes dllimport attribute from RtlUnwind */
 
 #define STRICT
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <windef.h>
+#include <stdarg.h>
 
 #include <pseh/pseh2.h>
 #include <excpt.h>

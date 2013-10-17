@@ -945,11 +945,6 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
     tbcd.clrHighlightHotTrack = 0;
     tbcd.nStringBkMode = TRANSPARENT;
     tbcd.nHLStringBkMode = OPAQUE;
-    /* MSDN says that this is the text rectangle.
-     * But (why always a but) tracing of v5.7 of native shows
-     * that this is really a *relative* rectangle based on the
-     * the nmcd.rc. Also the left and top are always 0 ignoring
-     * any bitmap that might be present. */
     tbcd.rcText.left = 0;
     tbcd.rcText.top = 0;
     tbcd.rcText.right = rcText.right - rc.left;
@@ -5118,7 +5113,6 @@ TOOLBAR_GetIdealSize (const TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     switch(wParam) {
     case 0:
 	if (lpsize->cx == -1) {
-	    /* **** this is wrong, native measures each button and sets it */
 	    lpsize->cx = infoPtr->rcBound.right - infoPtr->rcBound.left;
 	}
 	else if(HIWORD(lpsize->cx)) {
@@ -5481,8 +5475,7 @@ TOOLBAR_LButtonDown (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
        	            btnPtr->bDropDownPressed = FALSE;
                 InvalidateRect(infoPtr->hwndSelf, &btnPtr->rect, TRUE);
 
-                /* find and set hot item
-                 * NOTE: native doesn't do this, but that is a bug */
+                /* find and set hot item */
                 GetCursorPos(&pt);
                 ScreenToClient(infoPtr->hwndSelf, &pt);
                 nHit = TOOLBAR_InternalHitTest(infoPtr, &pt, &button);
@@ -5663,9 +5656,6 @@ TOOLBAR_LButtonUp (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	TOOLBAR_SendNotify (&hdr, infoPtr,
 			NM_RELEASEDCAPTURE);
 
-	/* native issues TBN_ENDDRAG here, if _LBUTTONDOWN issued the
-	 * TBN_BEGINDRAG
-	 */
 	memset(&nmtb, 0, sizeof(nmtb));
 	nmtb.iItem = btnPtr->idCommand;
 	TOOLBAR_SendNotify ((NMHDR *) &nmtb, infoPtr,
@@ -5956,39 +5946,6 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
         HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW (GetParent (hwnd), GWLP_HINSTANCE);
 	SetWindowLongPtrW (hwnd, GWLP_HINSTANCE, (LONG_PTR)hInst);
     }
-
-    /* native control does:
-     *    Get a lot of colors and brushes
-     *    WM_NOTIFYFORMAT
-     *    SystemParametersInfoW(0x1f, 0x3c, adr1, 0)
-     *    CreateFontIndirectW(adr1)
-     *    CreateBitmap(0x27, 0x24, 1, 1, 0)
-     *    hdc = GetDC(toolbar)
-     *    GetSystemMetrics(0x48)
-     *    fnt2=CreateFontW(0xe, 0, 0, 0, 0x190, 0, 0, 0, 0, 2,
-     *                     0, 0, 0, 0, "MARLETT")
-     *    oldfnt = SelectObject(hdc, fnt2)
-     *    GetCharWidthW(hdc, 0x36, 0x36, adr2)
-     *    GetTextMetricsW(hdc, adr3)
-     *    SelectObject(hdc, oldfnt)
-     *    DeleteObject(fnt2)
-     *    ReleaseDC(hdc)
-     *    InvalidateRect(toolbar, 0, 1)
-     *    SetWindowLongW(toolbar, 0, addr)
-     *    SetWindowLongW(toolbar, -16, xxx)  **sometimes**
-     *                                          WM_STYLECHANGING
-     *                             CallWinEx   old         new
-     *                       ie 1  0x56000a4c  0x46000a4c  0x56008a4d
-     *                       ie 2  0x4600094c  0x4600094c  0x4600894d
-     *                       ie 3  0x56000b4c  0x46000b4c  0x56008b4d
-     *                      rebar  0x50008844  0x40008844  0x50008845
-     *                      pager  0x50000844  0x40000844  0x50008845
-     *                    IC35mgr  0x5400084e  **nochange**
-     *           on entry to _NCCREATE         0x5400084e
-     *                    rowlist  0x5400004e  **nochange**
-     *           on entry to _NCCREATE         0x5400004e
-     *
-     */
 
     /* I think the code below is a bug, but it is the way that the native
      * controls seem to work. The effect is that if the user of TBSTYLE_FLAT

@@ -44,6 +44,7 @@ enum wined3d_gl_extension
     APPLE_YCBCR_422,
     /* ARB */
     ARB_COLOR_BUFFER_FLOAT,
+    ARB_DEBUG_OUTPUT,
     ARB_DEPTH_BUFFER_FLOAT,
     ARB_DEPTH_CLAMP,
     ARB_DEPTH_TEXTURE,
@@ -58,6 +59,7 @@ enum wined3d_gl_extension
     ARB_HALF_FLOAT_PIXEL,
     ARB_HALF_FLOAT_VERTEX,
     ARB_INSTANCED_ARRAYS,
+    ARB_INTERNALFORMAT_QUERY2,
     ARB_MAP_BUFFER_ALIGNMENT,
     ARB_MAP_BUFFER_RANGE,
     ARB_MULTISAMPLE,
@@ -111,7 +113,6 @@ enum wined3d_gl_extension
     EXT_GPU_PROGRAM_PARAMETERS,
     EXT_GPU_SHADER4,
     EXT_PACKED_DEPTH_STENCIL,
-    EXT_PALETTED_TEXTURE,
     EXT_POINT_PARAMETERS,
     EXT_PROVOKING_VERTEX,
     EXT_SECONDARY_COLOR,
@@ -179,6 +180,11 @@ enum wined3d_gl_extension
     USE_GL_FUNC(glFlushMappedBufferRangeAPPLE) \
     /* GL_ARB_color_buffer_float */ \
     USE_GL_FUNC(glClampColorARB) \
+    /* GL_ARB_debug_output */ \
+    USE_GL_FUNC(glDebugMessageCallbackARB) \
+    USE_GL_FUNC(glDebugMessageControlARB) \
+    USE_GL_FUNC(glDebugMessageInsertARB) \
+    USE_GL_FUNC(glGetDebugMessageLogARB) \
     /* GL_ARB_draw_buffers */ \
     USE_GL_FUNC(glDrawBuffersARB) \
     /* GL_ARB_draw_elements_base_vertex */ \
@@ -217,6 +223,10 @@ enum wined3d_gl_extension
     USE_GL_FUNC(glProgramParameteriARB) \
     /* GL_ARB_instanced_arrays */ \
     USE_GL_FUNC(glVertexAttribDivisorARB) \
+    /* GL_ARB_internalformat_query */ \
+    USE_GL_FUNC(glGetInternalformativ) \
+    /* GL_ARB_internalformat_query2 */ \
+    USE_GL_FUNC(glGetInternalformati64v) \
     /* GL_ARB_map_buffer_range */ \
     USE_GL_FUNC(glFlushMappedBufferRange) \
     USE_GL_FUNC(glMapBufferRange) \
@@ -240,8 +250,10 @@ enum wined3d_gl_extension
     USE_GL_FUNC(glDeleteQueriesARB) \
     USE_GL_FUNC(glEndQueryARB) \
     USE_GL_FUNC(glGenQueriesARB) \
+    USE_GL_FUNC(glGetQueryivARB) \
     USE_GL_FUNC(glGetQueryObjectivARB) \
     USE_GL_FUNC(glGetQueryObjectuivARB) \
+    USE_GL_FUNC(glIsQueryARB) \
     /* GL_ARB_point_parameters */ \
     USE_GL_FUNC(glPointParameterfARB) \
     USE_GL_FUNC(glPointParameterfvARB) \
@@ -474,8 +486,6 @@ enum wined3d_gl_extension
     USE_GL_FUNC(glVertexAttribI4uivEXT) \
     USE_GL_FUNC(glVertexAttribI4usvEXT) \
     USE_GL_FUNC(glVertexAttribIPointerEXT) \
-    /* GL_EXT_paletted_texture */ \
-    USE_GL_FUNC(glColorTableEXT) \
     /* GL_EXT_point_parameters */ \
     USE_GL_FUNC(glPointParameterfEXT) \
     USE_GL_FUNC(glPointParameterfvEXT) \

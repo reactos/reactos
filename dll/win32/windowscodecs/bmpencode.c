@@ -364,7 +364,7 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
         bih.bV5GreenMask = This->format->greenmask;
         bih.bV5BlueMask = This->format->bluemask;
         bih.bV5AlphaMask = This->format->alphamask;
-        bih.bV5AlphaMask = LCS_DEVICE_RGB;
+        bih.bV5CSType = LCS_DEVICE_RGB;
     }
 
     bfh.bfSize = sizeof(BITMAPFILEHEADER) + info_size + bih.bV5SizeImage;

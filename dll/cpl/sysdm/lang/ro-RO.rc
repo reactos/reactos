@@ -282,7 +282,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME         "Sistem"
     IDS_CPLSYSTEMDESCRIPTION  "Afișarea informațiilor de sistem și schimbarea configurației fizice sau de sistem."

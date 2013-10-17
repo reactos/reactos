@@ -1,6 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Показва или изменя списъците за достъп (ACL или СзД) до файловете\n\n\

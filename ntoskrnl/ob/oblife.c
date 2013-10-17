@@ -1236,6 +1236,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     /* Set the index and the entry into the object type array */
     LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;
+
+    NT_ASSERT(LocalObjectType->Index != 0);
+
     if (LocalObjectType->Index < 32)
     {
         /* It fits, insert it */
@@ -1267,6 +1270,14 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* If we got here, then we failed */
     ObpReleaseLookupContext(&Context);
     return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+VOID
+NTAPI
+ObDeleteCapturedInsertInfo(IN PVOID Object)
+{
+    UNIMPLEMENTED;
+    return;
 }
 
 VOID

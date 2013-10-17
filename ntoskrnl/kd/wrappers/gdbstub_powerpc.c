@@ -1685,12 +1685,12 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
         GspDbgThread = NULL;
         GspEnumThread = NULL;
 
-        HalDisplayString("Waiting for GDB to attach\n");
+        HalDisplayString("Waiting for GDB to attach\r\n");
         DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
     else if (BootPhase == 2)
     {
-        HalDisplayString("\n   GDB debugging enabled\n\n");
+        HalDisplayString("\r\n   GDB debugging enabled\r\n\r\n");
     }
 }
 

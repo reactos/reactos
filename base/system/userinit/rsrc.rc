@@ -1,4 +1,4 @@
-LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 // UTF-8
 #pragma code_page(65001)
@@ -67,6 +67,9 @@ LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
 #endif
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by       */
+/*  Copyright 1996-2007, 2009, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -73,8 +73,8 @@
     if ( ft_strncmp( (char *)stream->cursor,
                      "%!PS-Adobe-3.0 Resource-CIDFont", 31 ) )
     {
-      FT_TRACE2(( "[not a valid CID-keyed font]\n" ));
-      error = CID_Err_Unknown_File_Format;
+      FT_TRACE2(( "  not a CID-keyed font\n" ));
+      error = FT_THROW( Unknown_File_Format );
     }
 
     FT_FRAME_EXIT();
@@ -99,7 +99,7 @@
         if ( stream_len == 0 )
         {
           FT_TRACE2(( "cid_parser_new: no `StartData' keyword found\n" ));
-          error = CID_Err_Unknown_File_Format;
+          error = FT_THROW( Invalid_File_Format );
           goto Exit;
         }
 
@@ -117,12 +117,12 @@
           if ( p[0] == 'S' && ft_strncmp( (char*)p, "StartData", 9 ) == 0 )
           {
             /* save offset of binary data after `StartData' */
-            offset += p - buffer + 10;
+            offset += (FT_ULong)( p - buffer + 10 );
             goto Found;
           }
           else if ( p[1] == 's' && ft_strncmp( (char*)p, "/sfnts", 6 ) == 0 )
           {
-            offset += p - buffer + 7;
+            offset += (FT_ULong)( p - buffer + 7 );
             goto Found;
           }
         }
@@ -185,7 +185,7 @@
       else if ( cur[1] == 's' && ft_strncmp( (char*)cur, "/sfnts", 6 ) == 0 )
       {
         FT_TRACE2(( "cid_parser_new: cannot handle Type 11 fonts\n" ));
-        error = CID_Err_Unknown_File_Format;
+        error = FT_THROW( Unknown_File_Format );
         goto Exit;
       }
 

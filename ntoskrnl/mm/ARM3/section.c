@@ -1495,6 +1495,22 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
 }
 
+VOID
+NTAPI
+MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
+{
+    PSECTION_OBJECT SectionObject;
+
+    /* Get the section object of this process*/
+    SectionObject = PsGetCurrentProcess()->SectionObject;
+    ASSERT(SectionObject != NULL);
+    ASSERT(MiIsRosSectionObject(SectionObject) == TRUE);
+
+    /* Return the image information */
+    DPRINT1("HERE!\n");
+    *ImageInformation = ((PROS_SECTION_OBJECT)SectionObject)->ImageSection->ImageInformation;
+}
+
 NTSTATUS
 NTAPI
 MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
@@ -2101,7 +2117,7 @@ MiRemoveFromSystemSpace(IN PMMSESSION Session,
             if (++Count == 2)
             {
                 /* But if we overflew twice, then this is not a real mapping */
-                KeBugCheckEx(0xD7, //DRIVER_UNMAPPING_INVALID_VIEW,
+                KeBugCheckEx(DRIVER_UNMAPPING_INVALID_VIEW,
                              (ULONG_PTR)Base,
                              1,
                              0,
@@ -2724,6 +2740,171 @@ MmUnmapViewInSystemSpace(IN PVOID MappedBase)
 
     /* It was not, call the ARM3 routine */
     return MiUnmapViewInSystemSpace(&MmSession, MappedBase);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+MmCommitSessionMappedView(IN PVOID MappedBase,
+                          IN SIZE_T ViewSize)
+{
+    ULONG_PTR StartAddress, EndingAddress, Base;
+    ULONG Hash, Count = 0, Size, QuotaCharge;
+    PMMSESSION Session;
+    PMMPTE LastProtoPte, PointerPte, ProtoPte;
+    PCONTROL_AREA ControlArea;
+    PSEGMENT Segment;
+    PSUBSECTION Subsection;
+    MMPTE TempPte;
+    PAGED_CODE();
+
+    /* Make sure the base isn't past the session view range */
+    if ((MappedBase < MiSessionViewStart) ||
+        (MappedBase >= (PVOID)((ULONG_PTR)MiSessionViewStart + MmSessionViewSize)))
+    {
+        DPRINT1("Base outside of valid range\n");
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
+    /* Make sure the size isn't past the session view range */
+    if (((ULONG_PTR)MiSessionViewStart + MmSessionViewSize -
+        (ULONG_PTR)MappedBase) < ViewSize)
+    {
+        DPRINT1("Size outside of valid range\n");
+        return STATUS_INVALID_PARAMETER_2;
+    }
+
+    /* Sanity check */
+    ASSERT(ViewSize != 0);
+
+    /* Process must be in a session */
+    if (PsGetCurrentProcess()->ProcessInSession == FALSE)
+    {
+        DPRINT1("Process is not in session\n");
+        return STATUS_NOT_MAPPED_VIEW;
+    }
+
+    /* Compute the correctly aligned base and end addresses */
+    StartAddress = (ULONG_PTR)PAGE_ALIGN(MappedBase);
+    EndingAddress = ((ULONG_PTR)MappedBase + ViewSize - 1) | (PAGE_SIZE - 1);
+
+    /* Sanity check and grab the session */
+    ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+    Session = &MmSessionSpace->Session;
+
+    /* Get the hash entry for this allocation */
+    Hash = (StartAddress >> 16) % Session->SystemSpaceHashKey;
+
+    /* Lock system space */
+    KeAcquireGuardedMutex(Session->SystemSpaceViewLockPointer);
+
+    /* Loop twice so we can try rolling over if needed */
+    while (TRUE)
+    {
+        /* Extract the size and base addresses from the entry */
+        Base = Session->SystemSpaceViewTable[Hash].Entry & ~0xFFFF;
+        Size = Session->SystemSpaceViewTable[Hash].Entry & 0xFFFF;
+
+        /* Convert the size to bucket chunks */
+        Size *= MI_SYSTEM_VIEW_BUCKET_SIZE;
+
+        /* Bail out if this entry fits in here */
+        if ((StartAddress >= Base) && (EndingAddress < (Base + Size))) break;
+
+        /* Check if we overflew past the end of the hash table */
+        if (++Hash >= Session->SystemSpaceHashSize)
+        {
+            /* Reset the hash to zero and keep searching from the bottom */
+            Hash = 0;
+            if (++Count == 2)
+            {
+                /* But if we overflew twice, then this is not a real mapping */
+                KeBugCheckEx(DRIVER_UNMAPPING_INVALID_VIEW,
+                             Base,
+                             2,
+                             0,
+                             0);
+            }
+        }
+    }
+
+    /* Make sure the view being mapped is not file-based */
+    ControlArea = Session->SystemSpaceViewTable[Hash].ControlArea;
+    if (ControlArea->FilePointer != NULL)
+    {
+        /* It is, so we have to bail out */
+        DPRINT1("Only page-filed backed sections can be commited\n");
+        KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
+        return STATUS_ALREADY_COMMITTED;
+    }
+
+    /* Get the subsection. We don't support LARGE_CONTROL_AREA in ARM3 */
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+
+    /* Get the start and end PTEs -- make sure the end PTE isn't past the end */
+    ProtoPte = Subsection->SubsectionBase + ((StartAddress - Base) >> PAGE_SHIFT);
+    QuotaCharge = MiAddressToPte(EndingAddress) - MiAddressToPte(StartAddress) + 1;
+    LastProtoPte = ProtoPte + QuotaCharge;
+    if (LastProtoPte >= Subsection->SubsectionBase + Subsection->PtesInSubsection)
+    {
+        DPRINT1("PTE is out of bounds\n");
+        KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
+        return STATUS_INVALID_PARAMETER_2;
+    }
+
+    /* Acquire the commit lock and count all the non-committed PTEs */
+    KeAcquireGuardedMutexUnsafe(&MmSectionCommitMutex);
+    PointerPte = ProtoPte;
+    while (PointerPte < LastProtoPte)
+    {
+        if (PointerPte->u.Long) QuotaCharge--;
+        PointerPte++;
+    }
+
+    /* Was everything committed already? */
+    if (!QuotaCharge)
+    {
+        /* Nothing to do! */
+        KeReleaseGuardedMutexUnsafe(&MmSectionCommitMutex);
+        KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
+        return STATUS_SUCCESS;
+    }
+
+    /* Pick the segment and template PTE */
+    Segment = ControlArea->Segment;
+    TempPte = Segment->SegmentPteTemplate;
+    ASSERT(TempPte.u.Long != 0);
+
+    /* Loop all prototype PTEs to be committed */
+    while (PointerPte < LastProtoPte)
+    {
+        /* Make sure the PTE is already invalid */
+        if (PointerPte->u.Long == 0)
+        {
+            /* And write the invalid PTE */
+            MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+        }
+
+        /* Move to the next PTE */
+        PointerPte++;
+    }
+
+    /* Check if we had at least one page charged */
+    if (QuotaCharge)
+    {
+        /* Update the accounting data */
+        Segment->NumberOfCommittedPages += QuotaCharge;
+        InterlockedExchangeAddSizeT(&MmSharedCommit, QuotaCharge);
+    }
+
+    /* Release all */
+    KeReleaseGuardedMutexUnsafe(&MmSectionCommitMutex);
+    KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
+    return STATUS_SUCCESS;
 }
 
 /* SYSTEM CALLS ***************************************************************/

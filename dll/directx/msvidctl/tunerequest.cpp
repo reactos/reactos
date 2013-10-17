@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msvidctl/tuningspace.cpp
  * PURPOSE:         ITuningRequest interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

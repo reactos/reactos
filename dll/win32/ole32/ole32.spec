@@ -4,6 +4,7 @@
 @ stdcall CLIPFORMAT_UserSize(ptr long ptr)
 @ stdcall CLIPFORMAT_UserUnmarshal(ptr ptr ptr)
 @ stdcall CLSIDFromProgID(wstr ptr)
+@ stdcall CLSIDFromProgIDEx(wstr ptr)
 @ stdcall CLSIDFromString(wstr ptr)
 @ stdcall CoAddRefServerProcess()
 @ stdcall CoAllowSetForegroundWindow(ptr ptr)

@@ -240,7 +240,7 @@ PciGetAcpiTable(IN ULONG TableCode)
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
     {
         /* Very bad: crash */
-        HalDisplayString("RSDT table contains invalid signature\n");
+        HalDisplayString("RSDT table contains invalid signature\r\n");
         MmUnmapIoSpace(Rsdt, TableLength);
         return NULL;
     }

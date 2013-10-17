@@ -73,7 +73,7 @@ static HRESULT WINAPI cache_QueryInterface(
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IAssemblyCache))
     {
-        IUnknown_AddRef( iface );
+        IAssemblyCache_AddRef( iface );
         *obj = cache;
         return S_OK;
     }

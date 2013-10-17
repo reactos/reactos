@@ -421,7 +421,7 @@ SetBrushOrgEx(HDC hdc,
             pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
             pTeb->GdiTebBatch.HDC = hdc;
             pTeb->GdiBatchCount++;
-            DPRINT("Loading the Flush!! COUNT-> %d\n", pTeb->GdiBatchCount);
+            DPRINT("Loading the Flush!! COUNT-> %lu\n", pTeb->GdiBatchCount);
 
             if (pTeb->GdiBatchCount >= GDI_BatchLimit)
             {

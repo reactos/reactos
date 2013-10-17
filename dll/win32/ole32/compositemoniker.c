@@ -239,7 +239,7 @@ CompositeMonikerImpl_Load(IMoniker* iface,IStream* pStm)
         if (++This->tabLastIndex==This->tabSize){
 
             This->tabSize+=BLOCK_TAB_SIZE;
-            This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
+            This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(This->tabMoniker[0]));
 
             if (This->tabMoniker==NULL)
             return E_OUTOFMEMORY;
@@ -1446,7 +1446,7 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_UnmarshalInterface(IMarshal *i
     if (This->tabLastIndex + 2 > This->tabSize)
     {
         This->tabSize += max(BLOCK_TAB_SIZE, 2);
-        This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
+        This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(This->tabMoniker[0]));
 
         if (This->tabMoniker==NULL)
             return E_OUTOFMEMORY;
@@ -1661,7 +1661,7 @@ EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker, ULONG tabSize,
     newEnumMoniker->tabSize=tabSize;
     newEnumMoniker->currentPos=currentPos;
 
-    newEnumMoniker->tabMoniker=HeapAlloc(GetProcessHeap(),0,tabSize*sizeof(IMoniker));
+    newEnumMoniker->tabMoniker=HeapAlloc(GetProcessHeap(),0,tabSize*sizeof(newEnumMoniker->tabMoniker[0]));
 
     if (newEnumMoniker->tabMoniker==NULL) {
         HeapFree(GetProcessHeap(), 0, newEnumMoniker);
@@ -1768,7 +1768,7 @@ CompositeMonikerImpl_Construct(IMoniker **ppMoniker, IMoniker *pmkFirst, IMonike
     This->tabSize=BLOCK_TAB_SIZE;
     This->tabLastIndex=0;
 
-    This->tabMoniker=HeapAlloc(GetProcessHeap(),0,This->tabSize*sizeof(IMoniker));
+    This->tabMoniker=HeapAlloc(GetProcessHeap(),0,This->tabSize*sizeof(This->tabMoniker[0]));
     if (This->tabMoniker==NULL) {
         HeapFree(GetProcessHeap(), 0, This);
         return E_OUTOFMEMORY;
@@ -1896,7 +1896,7 @@ CompositeMonikerImpl_Construct(IMoniker **ppMoniker, IMoniker *pmkFirst, IMonike
 
                 This->tabSize+=BLOCK_TAB_SIZE;
 
-                This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(IMoniker));
+                This->tabMoniker=HeapReAlloc(GetProcessHeap(),0,This->tabMoniker,This->tabSize*sizeof(This->tabMoniker[0]));
 
                 if (This->tabMoniker==NULL){
                     HeapFree(GetProcessHeap(), 0, tab_moniker);

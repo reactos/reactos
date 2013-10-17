@@ -165,7 +165,7 @@ ProcessLoop:
         if (Thread->Tcb.SpecialApcDisable)
         {
             /* We're nice and do it behind your back */
-            DPRINT1("Warning: Broken Worker Thread: %p %lx %p came back "
+            DPRINT1("Warning: Broken Worker Thread: %p %p %p came back "
                     "with APCs disabled!\n",
                     WorkItem->WorkerRoutine,
                     WorkItem->Parameter,
@@ -348,7 +348,7 @@ ExpDetectWorkerThreadDeadlock(VOID)
             (Queue->DynamicThreadCount < 16))
         {
             /* Stuff is still on the queue and nobody did anything about it */
-            DPRINT1("EX: Work Queue Deadlock detected: %d\n", i);
+            DPRINT1("EX: Work Queue Deadlock detected: %lu\n", i);
             ExpCreateWorkerThread(i, TRUE);
             DPRINT1("Dynamic threads queued %d\n", Queue->DynamicThreadCount);
         }
@@ -736,7 +736,7 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
         (WorkQueue->DynamicThreadCount < 16))
     {
         /* Let the balance manager know about it */
-        DPRINT1("Requesting a new thread. CurrentCount: %d. MaxCount: %d\n",
+        DPRINT1("Requesting a new thread. CurrentCount: %lu. MaxCount: %lu\n",
                 WorkQueue->WorkerQueue.CurrentCount,
                 WorkQueue->WorkerQueue.MaximumCount);
         KeSetEvent(&ExpThreadSetManagerEvent, 0, FALSE);

@@ -2096,7 +2096,12 @@ NetUserAdd(LPCWSTR servername,
 
 done:
     if (UserHandle != NULL)
-        SamCloseHandle(UserHandle);
+    {
+        if (ApiStatus != NERR_Success)
+            SamDeleteUser(UserHandle);
+        else
+            SamCloseHandle(UserHandle);
+    }
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
@@ -2350,7 +2355,7 @@ NetUserDel(LPCWSTR servername,
         {
             ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
             if (ApiStatus == ERROR_NONE_MAPPED)
-                ApiStatus = NERR_GroupNotFound;
+                ApiStatus = NERR_UserNotFound;
             goto done;
         }
     }
@@ -2687,7 +2692,10 @@ NetUserGetGroups(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 
@@ -2841,7 +2849,10 @@ NetUserGetInfo(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 
@@ -3024,7 +3035,10 @@ NetUserGetLocalGroups(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 
@@ -3118,7 +3132,7 @@ NetUserGetLocalGroups(LPCWSTR servername,
 
     for (i = 0; i < AccountMemberCount; i++)
     {
-        if (BuiltinNames[i].Length > 0)
+        if (AccountNames[i].Length > 0)
         {
             Size += (sizeof(LOCALGROUP_USERS_INFO_0) + AccountNames[i].Length + sizeof(UNICODE_NULL));
             Count++;
@@ -3644,7 +3658,7 @@ NetUserSetInfo(LPCWSTR servername,
     /* Open the Account Domain */
     Status = OpenAccountDomain(ServerHandle,
                                (servername != NULL) ? &ServerName : NULL,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP | DOMAIN_READ_PASSWORD_PARAMETERS,
                                &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {

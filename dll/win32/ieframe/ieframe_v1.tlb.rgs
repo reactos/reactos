@@ -1,0 +1,275 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+        {
+            '1.1' = s 'Microsoft Internet Controls'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B}' = s 'IWebBrowser'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{EAB22AC2-30C1-11CF-A7EB-0000C05BAE0B}' = s 'DWebBrowserEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{0002DF05-0000-0000-C000-000000000046}' = s 'IWebBrowserApp'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{D30C1661-CDAF-11D0-8A3E-00C04FC9E26E}' = s 'IWebBrowser2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{34A715A0-6587-11D0-924A-0020AFC7AC4D}' = s 'DWebBrowserEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{FE4106E0-399A-11D0-A48C-00A0C90A8F39}' = s 'DShellWindowsEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{85CB6900-4D95-11CF-960C-0080C7F4EE85}' = s 'IShellWindows'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{729FE2F8-1EA8-11D1-8F85-00C04FC2FBE1}' = s 'IShellUIHelper'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{A7FE6EDA-1932-4281-B881-87B31B8BC52C}' = s 'IShellUIHelper2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{55136806-B2DE-11D1-B9F2-00A0C98BC547}' = s 'DShellNameSpaceEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{55136804-B2DE-11D1-B9F2-00A0C98BC547}' = s 'IShellFavoritesNameSpace'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{E572D3C9-37BE-4AE2-825D-D521763E3108}' = s 'IShellNameSpace'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{F3470F24-15FD-11D2-BB2E-00805FF7EFCA}' = s 'IScriptErrorList'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{BA9239A4-3DD5-11D2-BF8B-00C04FB93661}' = s 'ISearch'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{47C922A2-3DD5-11D2-BF8B-00C04FB93661}' = s 'ISearches'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{72423E8F-8011-11D2-BE79-00A0C9A83DA1}' = s 'ISearchAssistantOC'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{72423E8F-8011-11D2-BE79-00A0C9A83DA2}' = s 'ISearchAssistantOC2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{72423E8F-8011-11D2-BE79-00A0C9A83DA3}' = s 'ISearchAssistantOC3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+        '{1611FDDA-445B-11D2-85DE-00C04FA35C89}' = s '_SearchAssistantEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}' { val Version = s '1.1' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}' = s 'Microsoft Web Browser Version 1'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Shell.Explorer.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'Shell.Explorer'
+        }
+        '{8856F961-340A-11D0-A96B-00C04FD705A2}' = s 'Microsoft Web Browser'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Shell.Explorer.2'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'Shell.Explorer'
+        }
+        '{0002DF01-0000-0000-C000-000000000046}' = s 'Internet Explorer(Ver 1.0)'
+        {
+            ProgId = s 'InternetExplorer.Application.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'InternetExplorer.Application'
+        }
+        '{9BA05972-F6A8-11CF-A442-00A0C90A8F39}' = s 'ShellWindows'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+        }
+        '{64AB4BB7-111E-11D1-8F79-00C04FC2FBE1}' = s 'Microsoft Shell UI Helper'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Shell.UIHelper.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'Shell.UIHelper'
+        }
+        '{2F2F1F96-2BC1-4B1C-BE28-EA3774F4676A}' = s 'Shell Name Space'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'ShellNameSpace.ShellNameSpace.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'ShellNameSpace.ShellNameSpace'
+        }
+        '{55136805-B2DE-11D1-B9F2-00A0C98BC547}' = s 'Shell Name Space'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'ShellNameSpace.ShellNameSpace.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'ShellNameSpace.ShellNameSpace'
+        }
+        '{2E71FD0F-AAB1-42C0-9146-6D2C4EDCF07D}' = s 'SearchAssistantOC'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'SearchAssistantOC.SearchAssistantOC.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'SearchAssistantOC.SearchAssistantOC'
+        }
+        '{B45FF030-4447-11D2-85DE-00C04FA35C89}' = s 'SearchAssistantOC'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'SearchAssistantOC.SearchAssistantOC.1'
+            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
+            Version = s '1.1'
+            VersionIndependentProgId = s 'SearchAssistantOC.SearchAssistantOC'
+        }
+    }
+    'Shell.Explorer.1' = s 'Microsoft Web Browser Version 1'
+    {
+        CLSID = s '{EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}'
+    }
+    'Shell.Explorer' = s 'Microsoft Web Browser Version 1'
+    {
+        CLSID = s '{EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}'
+        CurVer = s 'Shell.Explorer.1'
+    }
+    'Shell.Explorer.2' = s 'Microsoft Web Browser'
+    {
+        CLSID = s '{8856F961-340A-11D0-A96B-00C04FD705A2}'
+    }
+    'Shell.Explorer' = s 'Microsoft Web Browser'
+    {
+        CLSID = s '{8856F961-340A-11D0-A96B-00C04FD705A2}'
+        CurVer = s 'Shell.Explorer.2'
+    }
+    'InternetExplorer.Application.1' = s 'Internet Explorer(Ver 1.0)'
+    {
+        CLSID = s '{0002DF01-0000-0000-C000-000000000046}'
+    }
+    'InternetExplorer.Application' = s 'Internet Explorer(Ver 1.0)'
+    {
+        CLSID = s '{0002DF01-0000-0000-C000-000000000046}'
+        CurVer = s 'InternetExplorer.Application.1'
+    }
+    'Shell.UIHelper.1' = s 'Microsoft Shell UI Helper'
+    {
+        CLSID = s '{64AB4BB7-111E-11D1-8F79-00C04FC2FBE1}'
+    }
+    'Shell.UIHelper' = s 'Microsoft Shell UI Helper'
+    {
+        CLSID = s '{64AB4BB7-111E-11D1-8F79-00C04FC2FBE1}'
+        CurVer = s 'Shell.UIHelper.1'
+    }
+    'ShellNameSpace.ShellNameSpace.1' = s 'Shell Name Space'
+    {
+        CLSID = s '{2F2F1F96-2BC1-4B1C-BE28-EA3774F4676A}'
+    }
+    'ShellNameSpace.ShellNameSpace' = s 'Shell Name Space'
+    {
+        CLSID = s '{2F2F1F96-2BC1-4B1C-BE28-EA3774F4676A}'
+        CurVer = s 'ShellNameSpace.ShellNameSpace.1'
+    }
+    'ShellNameSpace.ShellNameSpace.1' = s 'Shell Name Space'
+    {
+        CLSID = s '{55136805-B2DE-11D1-B9F2-00A0C98BC547}'
+    }
+    'ShellNameSpace.ShellNameSpace' = s 'Shell Name Space'
+    {
+        CLSID = s '{55136805-B2DE-11D1-B9F2-00A0C98BC547}'
+        CurVer = s 'ShellNameSpace.ShellNameSpace.1'
+    }
+    'SearchAssistantOC.SearchAssistantOC.1' = s 'SearchAssistantOC'
+    {
+        CLSID = s '{2E71FD0F-AAB1-42C0-9146-6D2C4EDCF07D}'
+    }
+    'SearchAssistantOC.SearchAssistantOC' = s 'SearchAssistantOC'
+    {
+        CLSID = s '{2E71FD0F-AAB1-42C0-9146-6D2C4EDCF07D}'
+        CurVer = s 'SearchAssistantOC.SearchAssistantOC.1'
+    }
+    'SearchAssistantOC.SearchAssistantOC.1' = s 'SearchAssistantOC'
+    {
+        CLSID = s '{B45FF030-4447-11D2-85DE-00C04FA35C89}'
+    }
+    'SearchAssistantOC.SearchAssistantOC' = s 'SearchAssistantOC'
+    {
+        CLSID = s '{B45FF030-4447-11D2-85DE-00C04FA35C89}'
+        CurVer = s 'SearchAssistantOC.SearchAssistantOC.1'
+    }
+}

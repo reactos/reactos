@@ -21,6 +21,8 @@
 
 #include "inetcpl.h"
 
+#include <reactos/manifest_dll.rc>
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif

@@ -35,7 +35,7 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
 
    ppi = PsGetCurrentProcessWin32Process();
 
-   ERR("IntLoadHookModule. Client PID: %d\n", PsGetProcessId(ppi->peProcess));
+   ERR("IntLoadHookModule. Client PID: %p\n", PsGetProcessId(ppi->peProcess));
 
     /* Check if this is the api hook */
     if(iHookID == WH_APIHOOK)
@@ -109,7 +109,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
         {
             if(ptiCurrent->ppi->W32PF_flags & W32PF_APIHOOKLOADED)
             {
-                TRACE("IntHookModuleUnloaded: sending message to PID %d, ppi=0x%x\n", PsGetProcessId(ptiCurrent->ppi->peProcess), ptiCurrent->ppi);
+                TRACE("IntHookModuleUnloaded: sending message to PID %p, ppi=%p\n", PsGetProcessId(ptiCurrent->ppi->peProcess), ptiCurrent->ppi);
                 co_MsqSendMessageAsync( ptiCurrent,
                                         0,
                                         iHookID,
@@ -155,7 +155,7 @@ UserRegisterUserApiHook(
         return FALSE;
     }
 
-    ERR("UserRegisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
+    ERR("UserRegisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
 
     /* Register the api hook */
     gpsi->dwSRVIFlags |= SRVINFO_APIHOOK;
@@ -222,7 +222,7 @@ UserUnregisterUserApiHook(VOID)
         return FALSE;
     }
 
-    ERR("UserUnregisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
+    ERR("UserUnregisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
 
     /* Unregister the api hook */
     gpsi->dwSRVIFlags &= ~SRVINFO_APIHOOK;
@@ -349,6 +349,8 @@ co_CallHook( INT HookId,
                                  wParam,
                                  lParam,
                                  phk->Proc,
+                                 phk->ihmod,
+                                 phk->offPfn,
                                  phk->Ansi,
                                 &phk->ModuleName);
 
@@ -373,6 +375,8 @@ co_HOOK_CallHookNext( PHOOK Hook,
                                wParam,
                                lParam,
                                Hook->Proc,
+                               Hook->ihmod,
+                               Hook->offPfn,
                                Hook->Ansi,
                               &Hook->ModuleName);
 }
@@ -1086,7 +1090,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
 
    if (!pti || !pdo)
    {
-      ERR("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
+      ERR("Kill Thread Hooks pti %p pdo %p\n", pti, pdo);
       return;
    }
 
@@ -1233,6 +1237,8 @@ co_HOOK_CallHooks( INT HookId,
                                     wParam,
                                     lParam,
                                     Hook->Proc,
+                                    Hook->ihmod, 
+                                    Hook->offPfn,
                                     Hook->Ansi,
                                    &Hook->ModuleName);
        if (ClientInfo)
@@ -1283,7 +1289,7 @@ co_HOOK_CallHooks( INT HookId,
 
           if ( (pti->TIF_flags & TIF_DISABLEHOOKS) || (ptiHook->TIF_flags & TIF_INCLEANUP))
           {
-             TRACE("Next Hook 0x%x, 0x%x\n",ptiHook->rpdesk,pdo);
+             TRACE("Next Hook %p, %p\n", ptiHook->rpdesk, pdo);
              continue;
           }
 
@@ -1309,6 +1315,8 @@ co_HOOK_CallHooks( INT HookId,
                                           wParam,
                                           lParam,
                                           Hook->Proc,
+                                          Hook->ihmod, 
+                                          Hook->offPfn,
                                           Hook->Ansi,
                                          &Hook->ModuleName);
           }
@@ -1582,7 +1590,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     Hook->Proc    = HookProc;
     Hook->Ansi    = Ansi;
 
-    TRACE("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
+    TRACE("Set Hook Desk %p DeskInfo %p Handle Desk %p\n", pti->rpdesk, pti->pDeskInfo, Hook->head.rpdesk);
 
     if (ThreadId)  /* Thread-local hook */
     {
@@ -1684,7 +1692,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     RETURN( Handle);
 
 CLEANUP:
-    TRACE("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
+    TRACE("Leave NtUserSetWindowsHookEx, ret=%p\n", _ret_);
     UserLeave();
     END_CLEANUP;
 }

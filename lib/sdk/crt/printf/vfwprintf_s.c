@@ -13,10 +13,10 @@
 #include <stdarg.h>
 #include <internal/safecrt.h>
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+int __cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
 int
-_cdecl
+__cdecl
 vfwprintf_s(FILE* file, const wchar_t *format, va_list argptr)
 {
     int ret;

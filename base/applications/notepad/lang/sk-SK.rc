@@ -129,7 +129,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Zrušiť", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Čo je Poznámkový blok systému ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -144,12 +144,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "Tento program je voľný softvér; môžete ho šíriť a/alebo modifikovať podľa podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buď verzie 2 tejto licencie, alebo (podľa Vášho uváženia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovaný v nádeji, že bude užitočný, avšak BEZ AKEJKOĽVEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URČITÝ ÚČEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dostať spolu s týmto programom; ak nie, napíšte si o ňu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,    "Strana &s"   /* FIXME */

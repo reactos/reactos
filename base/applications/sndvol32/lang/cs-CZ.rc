@@ -6,7 +6,7 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Nastavení"
     BEGIN
@@ -23,7 +23,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Ovládání hlasitosti"
     IDS_NOMIXERDEVICES "Nejsou dostupná žádná směšovací zařízení! Aplikace se nyní ukončí."

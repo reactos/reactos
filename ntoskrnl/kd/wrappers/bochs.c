@@ -60,7 +60,7 @@ KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 2)
     {
-        HalDisplayString("\n   Bochs debugging enabled\n\n");
+        HalDisplayString("\r\n   Bochs debugging enabled\r\n\r\n");
     }
 }
 

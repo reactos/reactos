@@ -680,7 +680,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         /* Yes, Windows really loads the current setting from the registry. */
         ulTile = SpiLoadInt(KEY_DESKTOP, L"TileWallpaper", 0);
         ulStyle = SpiLoadInt(KEY_DESKTOP, L"WallpaperStyle", 0);
-        TRACE("SpiSetWallpaper: ulTile=%ld, ulStyle=%d\n", ulTile, ulStyle);
+        TRACE("SpiSetWallpaper: ulTile=%lu, ulStyle=%lu\n", ulTile, ulStyle);
 
         /* Check the values we found in the registry */
         if(ulTile && !ulStyle)
@@ -1544,7 +1544,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             break;
 
         default:
-            ERR("Invalid SPI value: %d\n", uiAction);
+            ERR("Invalid SPI value: %u\n", uiAction);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
     }
@@ -1619,7 +1619,7 @@ NtUserSystemParametersInfo(
 {
     BOOL bResult;
 
-    TRACE("Enter NtUserSystemParametersInfo(%d)\n", uiAction);
+    TRACE("Enter NtUserSystemParametersInfo(%u)\n", uiAction);
     UserEnterExclusive();
 
     // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType TrueType driver component (body only).                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2004, 2006 by                                     */
+/*  Copyright 1996-2001, 2004, 2006, 2012 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,6 +27,7 @@
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
 #include "ttinterp.c"
+#include "ttsubpix.c"
 #endif
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT

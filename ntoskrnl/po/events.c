@@ -264,11 +264,11 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 
 		/* FIXME: What do do with the capabilities? */
 		{
-			DPRINT1("Device capabilities: 0x%x (", Caps);
-			if (Caps & SYS_BUTTON_POWER) DbgPrint(" POWER");
-			if (Caps & SYS_BUTTON_SLEEP) DbgPrint(" SLEEP");
-			if (Caps & SYS_BUTTON_LID) DbgPrint(" LID");
-			DbgPrint(" )\n");
+			DPRINT("Device capabilities: 0x%x (", Caps);
+			if (Caps & SYS_BUTTON_POWER) DPRINT(" POWER");
+			if (Caps & SYS_BUTTON_SLEEP) DPRINT(" SLEEP");
+			if (Caps & SYS_BUTTON_LID) DPRINT(" LID");
+			DPRINT(" )\n");
 		}
 
 		SysButtonContext = ExAllocatePool(NonPagedPool, sizeof(SYS_BUTTON_CONTEXT));

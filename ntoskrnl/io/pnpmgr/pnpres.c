@@ -262,7 +262,7 @@ IopFixupResourceListWithRequirements(
             /* Check if we couldn't satsify a requirement or its alternates */
             if (AlternateRequired && !(IoDesc->Option & IO_RESOURCE_ALTERNATIVE))
             {
-                DPRINT1("Unable to satisfy preferred resource or alternates in list %d\n", i);
+                DPRINT1("Unable to satisfy preferred resource or alternates in list %lu\n", i);
 
                 /* Break out of this loop and try the next list */
                 break;
@@ -444,7 +444,7 @@ IopFixupResourceListWithRequirements(
                 if (!FoundResource && IoDesc->Option == 0)
                 {
                     /* Break out of this loop and try the next list */
-                    DPRINT1("Unable to satisfy required resource in list %d\n", i);
+                    DPRINT1("Unable to satisfy required resource in list %lu\n", i);
                     break;
                 }
                 else if (!FoundResource)
@@ -509,7 +509,7 @@ IopFixupResourceListWithRequirements(
         /* Check if we need an alternate with no resources left */
         if (AlternateRequired)
         {
-            DPRINT1("Unable to satisfy preferred resource or alternates in list %d\n", i);
+            DPRINT1("Unable to satisfy preferred resource or alternates in list %lu\n", i);
 
             /* Try the next alternate list */
             continue;

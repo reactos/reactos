@@ -1,6 +1,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Displays or modifies access control lists (ACLs) of files\n\n\

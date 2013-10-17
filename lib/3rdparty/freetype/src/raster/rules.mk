@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2003, 2008, 2009 by
+# Copyright 1996-2000, 2001, 2003, 2008, 2009, 2011 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -25,7 +25,8 @@ RASTER_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(RASTER_DIR))
 # raster driver sources (i.e., C files)
 #
 RASTER_DRV_SRC := $(RASTER_DIR)/ftraster.c \
-                  $(RASTER_DIR)/ftrend1.c
+                  $(RASTER_DIR)/ftrend1.c  \
+                  $(RASTER_DIR)/rastpic.c
 
 
 # raster driver headers

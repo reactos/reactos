@@ -1,7 +1,7 @@
 /* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 STRING_USERINIT_FAIL, "Userinit nepavyko paleisti aplinkos!\n"

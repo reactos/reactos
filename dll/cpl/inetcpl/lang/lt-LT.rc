@@ -103,7 +103,7 @@ BEGIN
 
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Internet Settings"
     IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"

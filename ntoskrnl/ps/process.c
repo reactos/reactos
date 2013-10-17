@@ -1147,11 +1147,21 @@ PsGetProcessSecurityPort(PEPROCESS Process)
 /*
  * @implemented
  */
-HANDLE
+ULONG
 NTAPI
-PsGetProcessSessionId(PEPROCESS Process)
+PsGetProcessSessionId(IN PEPROCESS Process)
 {
-    return (HANDLE)Process->Session;
+    return MmGetSessionId(Process);
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+PsGetProcessSessionIdEx(IN PEPROCESS Process)
+{
+    return MmGetSessionIdEx(Process);
 }
 
 /*

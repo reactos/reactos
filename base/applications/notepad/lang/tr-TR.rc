@@ -50,7 +50,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Sayfa Yapısı...",        CMD_PAGE_SETUP
         MENUITEM "Ya&zdır...\tCtrl+P",      CMD_PRINT
-        MENUITEM "Yaz&ıcı Seçenekleri...",  CMD_PRINTER_SETUP
+        MENUITEM "Yaz&ıcı Ayarları...",     CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                  CMD_EXIT
     END
@@ -113,7 +113,7 @@ LTEXT    "Alt:",         0x14E,  100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,  130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "Tamam",  IDOK,     180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Vazgeç", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "İptal", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Yardım", IDHELP,   180, 39, 40, 15, WS_TABSTOP
 END
 
@@ -138,10 +138,10 @@ BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT           "Yataç Numarası:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "Tamam",IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Vazgeç",IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "İptal",IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Metin Düzenleyicisi Hakkında"
 FONT 8, "MS Shell Dlg"
@@ -156,12 +156,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
-  STRING_LICENSE, "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Lisansı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Lisansı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Lisansı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Sayfa &s"   /* FIXME */
@@ -191,8 +191,8 @@ STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unikod"
 STRING_UNICODE_BE,                              "Unikod (Büyük Sonlu)"
 STRING_UTF8,                                    "UTF-8"
-STRING_CRLF,                                    "Windows"
-STRING_LF,                                      "UNIX"
-STRING_CR,                                      "Mac"
+STRING_CRLF,                                    "Pencereler (CR + LF)"
+STRING_LF,                                      "UNIX (LF)"
+STRING_CR,                                      "Mac (CR)"
 STRING_LINE_COLUMN,                             "%d. Yataç, %d. Dikeç"
 END

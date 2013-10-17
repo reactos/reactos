@@ -1008,9 +1008,9 @@ InitializePool(IN POOL_TYPE PoolType,
         //
         // During development, print this out so we can see what's happening
         //
-        DPRINT1("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+        DPRINT("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolTrackTable, PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
-        DPRINT1("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+        DPRINT("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolBigPageTable, PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
 
         //
@@ -1613,7 +1613,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
             {
-                DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+                DPRINT1("EX: ExAllocatePool (%lu, 0x%x) returning NULL\n",
                         NumberOfBytes,
                         OriginalType);
                 if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();
@@ -1708,7 +1708,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // Get the real entry, write down its pool type, and track it
             //
             Entry--;
-            Entry->PoolType = PoolType + 1;
+            Entry->PoolType = OriginalType + 1;
             ExpInsertPoolTracker(Tag,
                                  Entry->BlockSize * POOL_BLOCK_SIZE,
                                  OriginalType);
@@ -1880,7 +1880,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // We have found an entry for this allocation, so set the pool type
             // and release the lock since we're done
             //
-            Entry->PoolType = PoolType + 1;
+            Entry->PoolType = OriginalType + 1;
             ExpCheckPoolBlocks(Entry);
             ExUnlockPool(PoolDesc, OldIrql);
 
@@ -1910,7 +1910,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // There were no free entries left, so we have to allocate a new fresh page
     //
-    Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
+    Entry = MiAllocatePoolPages(OriginalType, PAGE_SIZE);
     if (!Entry)
     {
         //
@@ -1937,7 +1937,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
         {
-            DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+            DPRINT1("EX: ExAllocatePool (%lu, 0x%x) returning NULL\n",
                     NumberOfBytes,
                     OriginalType);
             if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();
@@ -1963,7 +1963,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
-    Entry->PoolType = PoolType + 1;
+    Entry->PoolType = OriginalType + 1;
 
     //
     // This page will have two entries -- one for the allocation (which we just
@@ -2023,7 +2023,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
     ExpInsertPoolTracker(Tag,
                          Entry->BlockSize * POOL_BLOCK_SIZE,
-                         PoolType);
+                         OriginalType);
 
     //
     // And return the pool allocation
@@ -2065,6 +2065,7 @@ ExFreePoolWithTag(IN PVOID P,
     PFN_NUMBER PageCount, RealPageCount;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PGENERAL_LOOKASIDE LookasideList;
+    PEPROCESS Process;
 
     //
     // Check if any of the debug flags are enabled
@@ -2254,6 +2255,30 @@ ExFreePoolWithTag(IN PVOID P,
     ExpRemovePoolTracker(Tag,
                          BlockSize * POOL_BLOCK_SIZE,
                          Entry->PoolType - 1);
+
+    //
+    // Release pool quota, if any
+    //
+    if ((Entry->PoolType - 1) & QUOTA_POOL_MASK)
+    {
+        Process = ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1];
+        ASSERT(Process != NULL);
+        if (Process)
+        {
+            if (Process->Pcb.Header.Type != ProcessObject)
+            {
+                DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
+                        Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
+                KeBugCheckEx(BAD_POOL_CALLER,
+                             0x0D,
+                             (ULONG_PTR)P,
+                             Tag,
+                             (ULONG_PTR)Process);
+            }
+            PsReturnPoolQuota(Process, PoolType, BlockSize * POOL_BLOCK_SIZE);
+            ObDereferenceObject(Process);
+        }
+    }
 
     //
     // Is this allocation small enough to have come from a lookaside list?
@@ -2511,11 +2536,114 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
                            IN SIZE_T NumberOfBytes,
                            IN ULONG Tag)
 {
+    BOOLEAN Raise = TRUE;
+    PVOID Buffer;
+    PPOOL_HEADER Entry;
+    NTSTATUS Status;
+    PEPROCESS Process = PsGetCurrentProcess();
+
     //
-    // Allocate the pool
+    // Check if we should fail instead of raising an exception
     //
-    UNIMPLEMENTED;
-    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+    if (PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE)
+    {
+        Raise = FALSE;
+        PoolType &= ~POOL_QUOTA_FAIL_INSTEAD_OF_RAISE;
+    }
+
+    //
+    // Inject the pool quota mask
+    //
+    PoolType += QUOTA_POOL_MASK;
+
+    //
+    // Check if we have enough space to add the quota owner process, as long as
+    // this isn't the system process, which never gets charged quota
+    //
+    ASSERT(NumberOfBytes != 0);
+    if ((NumberOfBytes <= (PAGE_SIZE - POOL_BLOCK_SIZE - sizeof(PVOID))) &&
+        (Process != PsInitialSystemProcess))
+    {
+        //
+        // Add space for our EPROCESS pointer
+        //
+        NumberOfBytes += sizeof(PEPROCESS);
+    }
+    else
+    {
+        //
+        // We won't be able to store the pointer, so don't use quota for this
+        //
+        PoolType -= QUOTA_POOL_MASK;
+    }
+
+    //
+    // Allocate the pool buffer now
+    //
+    Buffer = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+
+    //
+    // If the buffer is page-aligned, this is a large page allocation and we
+    // won't touch it
+    //
+    if (PAGE_ALIGN(Buffer) != Buffer)
+    {
+        //
+        // Also if special pool is enabled, and this was allocated from there,
+        // we won't touch it either
+        //
+        if ((ExpPoolFlags & POOL_FLAG_SPECIAL_POOL) &&
+            (MmIsSpecialPoolAddress(Buffer)))
+        {
+            return Buffer;
+        }
+
+        //
+        // If it wasn't actually allocated with quota charges, ignore it too
+        //
+        if (!(PoolType & QUOTA_POOL_MASK)) return Buffer;
+
+        //
+        // If this is the system process, we don't charge quota, so ignore
+        //
+        if (Process == PsInitialSystemProcess) return Buffer;
+
+        //
+        // Actually go and charge quota for the process now
+        //
+        Entry = POOL_ENTRY(Buffer);
+        Status = PsChargeProcessPoolQuota(Process,
+                                          PoolType & BASE_POOL_TYPE_MASK,
+                                          Entry->BlockSize * POOL_BLOCK_SIZE);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // Quota failed, back out the allocation, clear the owner, and fail
+            //
+            ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1] = NULL;
+            ExFreePoolWithTag(Buffer, Tag);
+            if (Raise) RtlRaiseStatus(Status);
+            return NULL;
+        }
+
+        //
+        // Quota worked, write the owner and then reference it before returning
+        //
+        ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1] = Process;
+        ObReferenceObject(Process);
+    }
+    else if (!(Buffer) && (Raise))
+    {
+        //
+        // The allocation failed, raise an error if we are in raise mode
+        //
+        RtlRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    //
+    // Return the allocated buffer
+    //
+    return Buffer;
 }
 
 #if DBG && KDBG

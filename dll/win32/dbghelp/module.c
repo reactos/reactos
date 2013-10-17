@@ -223,6 +223,9 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
      */
     hash_table_init(&module->pool, &module->ht_symbols, 4096);
     hash_table_init(&module->pool, &module->ht_types,   4096);
+#ifdef __x86_64__
+    hash_table_init(&module->pool, &module->ht_symaddr, 4096);
+#endif
     vector_init(&module->vtypes, sizeof(struct symt*),  32);
 
     module->sources_used      = 0;

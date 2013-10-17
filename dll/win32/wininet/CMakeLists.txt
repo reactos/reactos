@@ -20,13 +20,10 @@ list(APPEND SOURCE
     urlcache.c
     utility.c
     wininet_main.c
-    rsrc.rc
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
 
-add_library(wininet SHARED ${SOURCE})
-
+add_library(wininet SHARED ${SOURCE} rsrc.rc)
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} zlib)
 add_delay_importlibs(wininet secur32 crypt32 cryptui)

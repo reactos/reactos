@@ -688,7 +688,7 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
     {
         /* Very bad: crash */
-        HalDisplayString("Bad RSDT pointer\n");
+        HalDisplayString("Bad RSDT pointer\r\n");
         KeBugCheckEx(MISMATCHED_HAL, 4, __LINE__, 0, 0);
     }
 

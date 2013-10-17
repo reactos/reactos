@@ -12,7 +12,7 @@
 #include "consrv.h"
 #include "console.h"
 #include "include/conio.h"
-#include "include/conio2.h"
+#include "include/term.h"
 #include "conoutput.h"
 #include "handle.h"
 
@@ -58,11 +58,23 @@ VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 {
     if (Buffer->Header.Type == TEXTMODE_BUFFER)
+    {
         TEXTMODE_BUFFER_Destroy(Buffer);
+    }
     else if (Buffer->Header.Type == GRAPHICS_BUFFER)
+    {
         GRAPHICS_BUFFER_Destroy(Buffer);
+    }
     else if (Buffer->Header.Type == SCREEN_BUFFER)
+    {
+        // TODO: Free Buffer->Data
+
+        /* Free the palette handle */
+        if (Buffer->PaletteHandle != NULL) DeleteObject(Buffer->PaletteHandle);
+
+        /* Free the screen buffer memory */
         ConsoleFreeHeap(Buffer);
+    }
     // else
     //     do_nothing;
 }
@@ -84,14 +96,12 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     if (BufferType == CONSOLE_TEXTMODE_BUFFER)
     {
-        Status = TEXTMODE_BUFFER_Initialize(Buffer,
-                                            Console,
+        Status = TEXTMODE_BUFFER_Initialize(Buffer, Console,
                                             (PTEXTMODE_BUFFER_INFO)ScreenBufferInfo);
     }
     else if (BufferType == CONSOLE_GRAPHICS_BUFFER)
     {
-        Status = GRAPHICS_BUFFER_Initialize(Buffer,
-                                            Console,
+        Status = GRAPHICS_BUFFER_Initialize(Buffer, Console,
                                             (PGRAPHICS_BUFFER_INFO)ScreenBufferInfo);
     }
     else
@@ -109,23 +119,38 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 
-VOID WINAPI
+VOID NTAPI
 ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
 
+    /*
+     * We should notify temporarily the frontend because we are susceptible
+     * to delete the screen buffer it is using (which may be different from
+     * the active screen buffer in some cases), and because, if it actually
+     * uses the active screen buffer, we are going to nullify its pointer to
+     * change it.
+     */
+    TermReleaseScreenBuffer(Console, Buffer);
+
     RemoveEntryList(&Buffer->ListEntry);
     if (Buffer == Console->ActiveBuffer)
     {
         /* Delete active buffer; switch to most recently created */
-        Console->ActiveBuffer = NULL;
         if (!IsListEmpty(&Console->BufferList))
         {
             NewBuffer = CONTAINING_RECORD(Console->BufferList.Flink,
                                           CONSOLE_SCREEN_BUFFER,
                                           ListEntry);
+
+            /* Tie console to new buffer and signal the change to the frontend */
             ConioSetActiveScreenBuffer(NewBuffer);
+        }
+        else
+        {
+            Console->ActiveBuffer = NULL;
+            // InterlockedExchangePointer(&Console->ActiveBuffer, NULL);
         }
     }
 
@@ -141,7 +166,7 @@ ConioDrawConsole(PCONSOLE Console)
     if (ActiveBuffer)
     {
         ConioInitRect(&Region, 0, 0, ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
-        ConioDrawRegion(Console, &Region);
+        TermDrawRegion(Console, &Region);
     }
 }
 
@@ -150,8 +175,8 @@ ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
     Console->ActiveBuffer = Buffer;
-    ConioResizeTerminal(Console);
-    // ConioDrawConsole(Console);
+    // InterlockedExchangePointer(&Console->ActiveBuffer, Buffer);
+    TermSetActiveScreenBuffer(Console);
 }
 
 NTSTATUS NTAPI
@@ -172,7 +197,7 @@ ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
         ConioDeleteScreenBuffer(Console->ActiveBuffer);
     }
 
-    /* Tie console to new buffer */
+    /* Tie console to new buffer and signal the change to the frontend */
     ConioSetActiveScreenBuffer(Buffer);
 
     return STATUS_SUCCESS;
@@ -198,19 +223,61 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
 
     /* If the output buffer is the current one, redraw the correct portion of the screen */
-    if (Buffer == Console->ActiveBuffer) ConioDrawRegion(Console, Region);
+    if (Buffer == Console->ActiveBuffer) TermDrawRegion(Console, Region);
 
     return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
 ConDrvSetConsolePalette(IN PCONSOLE Console,
-                        IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        // IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        IN PCONSOLE_SCREEN_BUFFER Buffer,
                         IN HPALETTE PaletteHandle,
-                        IN UINT Usage)
+                        IN UINT PaletteUsage)
 {
-    DPRINT1("ConDrvSetConsolePalette is UNIMPLEMENTED but returns STATUS_SUCCESS\n");
-    return STATUS_SUCCESS;
+    BOOL Success;
+
+    DPRINT1("ConDrvSetConsolePalette\n");
+
+    /*
+     * Parameters validation
+     */
+    if (Console == NULL || Buffer == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if ( PaletteUsage != SYSPAL_STATIC   &&
+         PaletteUsage != SYSPAL_NOSTATIC &&
+         PaletteUsage != SYSPAL_NOSTATIC256 )
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
+
+    /* Change the palette */
+    DPRINT1("ConDrvSetConsolePalette calling TermSetPalette\n");
+    Success = TermSetPalette(Console, PaletteHandle, PaletteUsage);
+    if (Success)
+    {
+        DPRINT1("TermSetPalette succeeded\n");
+        /* Free the old palette handle if there was already one set */
+        if ( Buffer->PaletteHandle != NULL &&
+             Buffer->PaletteHandle != PaletteHandle )
+        {
+            DeleteObject(Buffer->PaletteHandle);
+        }
+
+        /* Save the new palette in the screen buffer */
+        Buffer->PaletteHandle = PaletteHandle;
+        Buffer->PaletteUsage  = PaletteUsage;
+    }
+    else
+    {
+        DPRINT1("TermSetPalette failed\n");
+    }
+
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS NTAPI
@@ -255,7 +322,7 @@ ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
         Buffer->CursorInfo.dwSize   = Size;
         Buffer->CursorInfo.bVisible = Visible;
 
-        Success = ConioSetCursorInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer);
+        Success = TermSetCursorInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer);
     }
 
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
@@ -286,7 +353,7 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
     // Buffer->CursorPosition.X = Position->X;
     // Buffer->CursorPosition.Y = Position->Y;
     if ( ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer) &&
-         (!ConioSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
+         (!TermSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
     {
         return STATUS_UNSUCCESSFUL;
     }

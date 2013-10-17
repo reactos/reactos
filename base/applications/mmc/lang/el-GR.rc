@@ -1,20 +1,41 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Αρχείο"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Έ&ξοδος\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Βοήθεια"
     BEGIN
-        MENUITEM "&Σχετικά με την Κονσόλα Διαχείρισης του ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&Σχετικά με την Κονσόλα Διαχείρισης του ReactOS...", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Έ&ξοδος\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Βοήθεια"
+    BEGIN
+        MENUITEM "&Σχετικά με την Κονσόλα Διαχείρισης του ReactOS...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Κονσόλα Διαχείρισης του ReactOS"
     IDS_CONSOLETITLE "Κονσόλα%1!u!"

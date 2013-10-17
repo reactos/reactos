@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/hotplug/hotplug.rc
  * PURPOSE:         main resource file
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include <windef.h>

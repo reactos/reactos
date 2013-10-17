@@ -176,6 +176,13 @@ typedef [v1_enum] enum tag_WBEMSTATUS
     WBEM_E_PROVIDER_DISABLED                = 0x8004108a
 } WBEMSTATUS;
 
+typedef [v1_enum] enum tag_WBEM_STATUS_TYPE
+{
+    WBEM_STATUS_COMPLETE     = 0,
+    WBEM_STATUS_REQUIREMENTS = 1,
+    WBEM_STATUS_PROGRESS     = 2
+} WBEM_STATUS_TYPE;
+
 typedef [v1_enum] enum tag_WBEM_TIMEOUT_TYPE
 {
     WBEM_NO_WAIT  = 0,
@@ -288,6 +295,24 @@ interface IWbemStatusCodeText : IUnknown
         [in] LCID LocaleId,
         [in] LONG lFlags,
         [out] BSTR *MessageText);
+};
+
+[
+    object,
+    restricted,
+    uuid(7c857801-7381-11cf-884d-00aa004b2e24)
+]
+interface IWbemObjectSink : IUnknown
+{
+    HRESULT Indicate(
+        [in] long lObjectCount,
+        [in, size_is(lObjectCount)] IWbemClassObject **apObjArray);
+
+    HRESULT SetStatus(
+        [in] long lFlags,
+        [in] HRESULT hResult,
+        [in] BSTR strParam,
+        [in] IWbemClassObject *pObjParam);
 };
 
 typedef [v1_enum] enum tag_WBEM_GENERIC_FLAG_TYPE

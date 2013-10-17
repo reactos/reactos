@@ -444,7 +444,7 @@ INT CDECL ldap_parse_vlv_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
 
 #ifdef HAVE_LDAP_PARSE_VLV_CONTROL
     if (!(ret = ldap_parse_vlv_control( ld, controlU, &pos, &count,
-                                        context, errcode )))
+                                        (struct berval **)context, errcode )))
     {
         *targetpos = pos;
         *listcount = count;

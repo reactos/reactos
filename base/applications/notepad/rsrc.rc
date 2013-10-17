@@ -28,8 +28,9 @@
 
 #include <reactos/version.rc>
 
-
 IDI_NPICON ICON "res/notepad.ico"
+
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)

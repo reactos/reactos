@@ -2,8 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-            2010 by
+  Copyright 2000-2010, 2012, 2013 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -93,21 +92,21 @@ THE SOFTWARE.
     PCF_Toc    toc = &face->toc;
     PCF_Table  tables;
 
-    FT_Memory  memory = FT_FACE(face)->memory;
+    FT_Memory  memory = FT_FACE( face )->memory;
     FT_UInt    n;
 
 
     if ( FT_STREAM_SEEK ( 0 )                          ||
          FT_STREAM_READ_FIELDS ( pcf_toc_header, toc ) )
-      return PCF_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     if ( toc->version != PCF_FILE_VERSION                 ||
          toc->count   >  FT_ARRAY_MAX( face->toc.tables ) ||
          toc->count   == 0                                )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     if ( FT_NEW_ARRAY( face->toc.tables, toc->count ) )
-      return PCF_Err_Out_Of_Memory;
+      return FT_THROW( Out_Of_Memory );
 
     tables = face->toc.tables;
     for ( n = 0; n < toc->count; n++ )
@@ -145,7 +144,7 @@ THE SOFTWARE.
 
         if ( ( tables[i].size   > tables[i + 1].offset )                  ||
              ( tables[i].offset > tables[i + 1].offset - tables[i].size ) )
-          return PCF_Err_Invalid_Offset;
+          return FT_THROW( Invalid_Offset );
       }
 
       if ( !have_change )
@@ -182,7 +181,7 @@ THE SOFTWARE.
 
 #endif
 
-    return PCF_Err_Ok;
+    return FT_Err_Ok;
 
   Exit:
     FT_FREE( face->toc.tables );
@@ -249,7 +248,7 @@ THE SOFTWARE.
                   FT_ULong    format,
                   PCF_Metric  metric )
   {
-    FT_Error  error = PCF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 
     if ( PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
@@ -295,7 +294,7 @@ THE SOFTWARE.
                           FT_ULong  *aformat,
                           FT_ULong  *asize )
   {
-    FT_Error  error = PCF_Err_Invalid_File_Format;
+    FT_Error  error = FT_ERR( Invalid_File_Format );
     FT_ULong  i;
 
 
@@ -304,20 +303,20 @@ THE SOFTWARE.
       {
         if ( stream->pos > tables[i].offset )
         {
-          error = PCF_Err_Invalid_Stream_Skip;
+          error = FT_THROW( Invalid_Stream_Skip );
           goto Fail;
         }
 
         if ( FT_STREAM_SKIP( tables[i].offset - stream->pos ) )
         {
-          error = PCF_Err_Invalid_Stream_Skip;
+          error = FT_THROW( Invalid_Stream_Skip );
           goto Fail;
         }
 
         *asize   = tables[i].size;
         *aformat = tables[i].format;
 
-        return PCF_Err_Ok;
+        return FT_Err_Ok;
       }
 
   Fail:
@@ -399,11 +398,11 @@ THE SOFTWARE.
                       PCF_Face   face )
   {
     PCF_ParseProperty  props      = 0;
-    PCF_Property       properties;
+    PCF_Property       properties = NULL;
     FT_ULong           nprops, i;
     FT_ULong           format, size;
     FT_Error           error;
-    FT_Memory          memory     = FT_FACE(face)->memory;
+    FT_Memory          memory     = FT_FACE( face )->memory;
     FT_ULong           string_size;
     FT_String*         strings    = 0;
 
@@ -442,7 +441,7 @@ THE SOFTWARE.
     /* rough estimate */
     if ( nprops > size / PCF_PROPERTY_SIZE )
     {
-      error = PCF_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       goto Bail;
     }
 
@@ -475,7 +474,7 @@ THE SOFTWARE.
       i = 4 - ( nprops & 3 );
       if ( FT_STREAM_SKIP( i ) )
       {
-        error = PCF_Err_Invalid_Stream_Skip;
+        error = FT_THROW( Invalid_Stream_Skip );
         goto Bail;
       }
     }
@@ -492,11 +491,12 @@ THE SOFTWARE.
     /* rough estimate */
     if ( string_size > size - nprops * PCF_PROPERTY_SIZE )
     {
-      error = PCF_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       goto Bail;
     }
 
-    if ( FT_NEW_ARRAY( strings, string_size ) )
+    /* allocate one more byte so that we have a final null byte */
+    if ( FT_NEW_ARRAY( strings, string_size + 1 ) )
       goto Bail;
 
     error = FT_Stream_Read( stream, (FT_Byte*)strings, string_size );
@@ -516,7 +516,7 @@ THE SOFTWARE.
       if ( ( name_offset < 0 )                     ||
            ( (FT_ULong)name_offset > string_size ) )
       {
-        error = PCF_Err_Invalid_Offset;
+        error = FT_THROW( Invalid_Offset );
         goto Bail;
       }
 
@@ -535,7 +535,7 @@ THE SOFTWARE.
         if ( ( value_offset < 0 )                     ||
              ( (FT_ULong)value_offset > string_size ) )
         {
-          error = PCF_Err_Invalid_Offset;
+          error = FT_THROW( Invalid_Offset );
           goto Bail;
         }
 
@@ -552,7 +552,7 @@ THE SOFTWARE.
       }
     }
 
-    error = PCF_Err_Ok;
+    error = FT_Err_Ok;
 
   Bail:
     FT_FREE( props );
@@ -566,10 +566,10 @@ THE SOFTWARE.
   pcf_get_metrics( FT_Stream  stream,
                    PCF_Face   face )
   {
-    FT_Error    error    = PCF_Err_Ok;
-    FT_Memory   memory   = FT_FACE(face)->memory;
+    FT_Error    error;
+    FT_Memory   memory  = FT_FACE( face )->memory;
     FT_ULong    format, size;
-    PCF_Metric  metrics  = 0;
+    PCF_Metric  metrics = 0;
     FT_ULong    nmetrics, i;
 
 
@@ -587,7 +587,7 @@ THE SOFTWARE.
 
     if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT )     &&
          !PCF_FORMAT_MATCH( format, PCF_COMPRESSED_METRICS ) )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     if ( PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
     {
@@ -604,12 +604,12 @@ THE SOFTWARE.
         (void)FT_READ_USHORT_LE( nmetrics );
     }
     if ( error )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     face->nmetrics = nmetrics;
 
     if ( !nmetrics )
-      return PCF_Err_Invalid_Table;
+      return FT_THROW( Invalid_Table );
 
     FT_TRACE4(( "pcf_get_metrics:\n" ));
 
@@ -619,16 +619,16 @@ THE SOFTWARE.
     if ( PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
     {
       if ( nmetrics > size / PCF_METRIC_SIZE )
-        return PCF_Err_Invalid_Table;
+        return FT_THROW( Invalid_Table );
     }
     else
     {
       if ( nmetrics > size / PCF_COMPRESSED_METRIC_SIZE )
-        return PCF_Err_Invalid_Table;
+        return FT_THROW( Invalid_Table );
     }
 
     if ( FT_NEW_ARRAY( face->metrics, nmetrics ) )
-      return PCF_Err_Out_Of_Memory;
+      return FT_THROW( Out_Of_Memory );
 
     metrics = face->metrics;
     for ( i = 0; i < nmetrics; i++ )
@@ -663,9 +663,9 @@ THE SOFTWARE.
   pcf_get_bitmaps( FT_Stream  stream,
                    PCF_Face   face )
   {
-    FT_Error   error  = PCF_Err_Ok;
-    FT_Memory  memory = FT_FACE(face)->memory;
-    FT_Long*   offsets;
+    FT_Error   error;
+    FT_Memory  memory  = FT_FACE( face )->memory;
+    FT_Long*   offsets = NULL;
     FT_Long    bitmapSizes[GLYPHPADOPTIONS];
     FT_ULong   format, size;
     FT_ULong   nbitmaps, i, sizebitmaps = 0;
@@ -693,7 +693,7 @@ THE SOFTWARE.
     FT_Stream_ExitFrame( stream );
 
     if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     FT_TRACE4(( "pcf_get_bitmaps:\n" ));
 
@@ -701,7 +701,7 @@ THE SOFTWARE.
 
     /* XXX: PCF_Face->nmetrics is singed FT_Long, see pcf.h */
     if ( face->nmetrics < 0 || nbitmaps != ( FT_ULong )face->nmetrics )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     if ( FT_NEW_ARRAY( offsets, nbitmaps ) )
       return error;
@@ -765,14 +765,14 @@ THE SOFTWARE.
   pcf_get_encodings( FT_Stream  stream,
                      PCF_Face   face )
   {
-    FT_Error      error  = PCF_Err_Ok;
-    FT_Memory     memory = FT_FACE(face)->memory;
+    FT_Error      error;
+    FT_Memory     memory = FT_FACE( face )->memory;
     FT_ULong      format, size;
     int           firstCol, lastCol;
     int           firstRow, lastRow;
     int           nencoding, encodingOffset;
-    int           i, j;
-    PCF_Encoding  tmpEncoding, encoding = 0;
+    int           i, j, k;
+    PCF_Encoding  encoding = NULL;
 
 
     error = pcf_seek_to_table_type( stream,
@@ -810,7 +810,7 @@ THE SOFTWARE.
     FT_Stream_ExitFrame( stream );
 
     if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     FT_TRACE4(( "pdf_get_encodings:\n" ));
 
@@ -819,56 +819,47 @@ THE SOFTWARE.
 
     nencoding = ( lastCol - firstCol + 1 ) * ( lastRow - firstRow + 1 );
 
-    if ( FT_NEW_ARRAY( tmpEncoding, nencoding ) )
-      return PCF_Err_Out_Of_Memory;
+    if ( FT_NEW_ARRAY( encoding, nencoding ) )
+      return FT_THROW( Out_Of_Memory );
 
     error = FT_Stream_EnterFrame( stream, 2 * nencoding );
     if ( error )
       goto Bail;
 
-    for ( i = 0, j = 0 ; i < nencoding; i++ )
+    k = 0;
+    for ( i = firstRow; i <= lastRow; i++ )
     {
-      if ( PCF_BYTE_ORDER( format ) == MSBFirst )
-        encodingOffset = FT_GET_SHORT();
-      else
-        encodingOffset = FT_GET_SHORT_LE();
-
-      if ( encodingOffset != -1 )
+      for ( j = firstCol; j <= lastCol; j++ )
       {
-        tmpEncoding[j].enc = ( ( ( i / ( lastCol - firstCol + 1 ) ) +
-                                 firstRow ) * 256 ) +
-                               ( ( i % ( lastCol - firstCol + 1 ) ) +
-                                 firstCol );
+        if ( PCF_BYTE_ORDER( format ) == MSBFirst )
+          encodingOffset = FT_GET_SHORT();
+        else
+          encodingOffset = FT_GET_SHORT_LE();
 
-        tmpEncoding[j].glyph = (FT_Short)encodingOffset;
+        if ( encodingOffset != -1 )
+        {
+          encoding[k].enc   = i * 256 + j;
+          encoding[k].glyph = (FT_Short)encodingOffset;
 
-        FT_TRACE5(( "  code %d (0x%04X): idx %d\n",
-                    tmpEncoding[j].enc, tmpEncoding[j].enc,
-                    tmpEncoding[j].glyph ));
+          FT_TRACE5(( "  code %d (0x%04X): idx %d\n",
+                      encoding[k].enc, encoding[k].enc, encoding[k].glyph ));
 
-        j++;
+          k++;
+        }
       }
     }
     FT_Stream_ExitFrame( stream );
 
-    if ( FT_NEW_ARRAY( encoding, j ) )
+    if ( FT_RENEW_ARRAY( encoding, nencoding, k ) )
       goto Bail;
 
-    for ( i = 0; i < j; i++ )
-    {
-      encoding[i].enc   = tmpEncoding[i].enc;
-      encoding[i].glyph = tmpEncoding[i].glyph;
-    }
-
-    face->nencodings = j;
+    face->nencodings = k;
     face->encodings  = encoding;
-    FT_FREE( tmpEncoding );
 
     return error;
 
   Bail:
     FT_FREE( encoding );
-    FT_FREE( tmpEncoding );
     return error;
   }
 
@@ -923,7 +914,7 @@ THE SOFTWARE.
                  FT_ULong   type )
   {
     FT_ULong   format, size;
-    FT_Error   error = PCF_Err_Ok;
+    FT_Error   error;
     PCF_Accel  accel = &face->accel;
 
 
@@ -994,7 +985,7 @@ THE SOFTWARE.
   static FT_Error
   pcf_interpret_style( PCF_Face  pcf )
   {
-    FT_Error   error  = PCF_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
     FT_Face    face   = FT_FACE( pcf );
     FT_Memory  memory = face->memory;
 
@@ -1023,20 +1014,20 @@ THE SOFTWARE.
          ( *(prop->value.atom) == 'B' || *(prop->value.atom) == 'b' ) )
     {
       face->style_flags |= FT_STYLE_FLAG_BOLD;
-      strings[1] = (char *)"Bold";
+      strings[1] = (char*)"Bold";
     }
 
     prop = pcf_find_property( pcf, "SETWIDTH_NAME" );
     if ( prop && prop->isString                                        &&
          *(prop->value.atom)                                           &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
-      strings[3] = (char *)(prop->value.atom);
+      strings[3] = (char*)( prop->value.atom );
 
     prop = pcf_find_property( pcf, "ADD_STYLE_NAME" );
     if ( prop && prop->isString                                        &&
          *(prop->value.atom)                                           &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
-      strings[0] = (char *)(prop->value.atom);
+      strings[0] = (char*)( prop->value.atom );
 
     for ( len = 0, nn = 0; nn < 4; nn++ )
     {
@@ -1050,7 +1041,7 @@ THE SOFTWARE.
 
     if ( len == 0 )
     {
-      strings[0] = (char *)"Regular";
+      strings[0] = (char*)"Regular";
       lengths[0] = ft_strlen( strings[0] );
       len        = lengths[0] + 1;
     }
@@ -1088,7 +1079,7 @@ THE SOFTWARE.
 
 
           for ( mm = 0; mm < len; mm++ )
-            if (s[mm] == ' ')
+            if ( s[mm] == ' ' )
               s[mm] = '-';
         }
 
@@ -1105,8 +1096,8 @@ THE SOFTWARE.
   pcf_load_font( FT_Stream  stream,
                  PCF_Face   face )
   {
-    FT_Error   error  = PCF_Err_Ok;
-    FT_Memory  memory = FT_FACE(face)->memory;
+    FT_Error   error  = FT_Err_Ok;
+    FT_Memory  memory = FT_FACE( face )->memory;
     FT_Bool    hasBDFAccelerators;
 
 
@@ -1268,7 +1259,7 @@ THE SOFTWARE.
     {
       /* This is done to respect the behaviour of the original */
       /* PCF font driver.                                      */
-      error = PCF_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
     }
 
     return error;

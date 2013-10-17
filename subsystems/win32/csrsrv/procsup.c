@@ -690,7 +690,15 @@ CsrCreateProcess(IN HANDLE hProcess,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrDeallocateProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+        return Status;
+    }
 
     /* Reference the session */
     CsrReferenceNtSession(NtSession);
@@ -732,7 +740,7 @@ NTAPI
 CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -756,7 +764,7 @@ NTAPI
 CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 

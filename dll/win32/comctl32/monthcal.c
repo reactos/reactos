@@ -123,7 +123,6 @@ typedef struct
     int		width_increment;
     INT		delta;	/* scroll rate; # of months that the */
                         /* control moves when user clicks a scroll button */
-    int		visible;	/* # of months visible */
     int		firstDay;	/* Start month calendar with firstDay's day,
 				   stored in SYSTEMTIME format */
     BOOL	firstDaySet;    /* first week day differs from locale defined */
@@ -1302,8 +1301,8 @@ MONTHCAL_GetMonthDelta(const MONTHCAL_INFO *infoPtr)
 
   if(infoPtr->delta)
     return infoPtr->delta;
-  else
-    return infoPtr->visible;
+
+  return MONTHCAL_GetMonthRange(infoPtr, GMR_VISIBLE, NULL);
 }
 
 

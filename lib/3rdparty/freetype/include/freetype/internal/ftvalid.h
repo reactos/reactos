@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType validation support (specification).                         */
 /*                                                                         */
-/*  Copyright 2004 by                                                      */
+/*  Copyright 2004, 2013 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -76,6 +76,14 @@ FT_BEGIN_HEADER
   } FT_ValidationLevel;
 
 
+#if defined( _MSC_VER )      /* Visual C++ (and Intel C++) */
+  /* We disable the warning `structure was padded due to   */
+  /* __declspec(align())' in order to compile cleanly with */
+  /* the maximum level of warnings.                        */
+#pragma warning( push )
+#pragma warning( disable : 4324 )
+#endif /* _MSC_VER */
+
   /* validator structure */
   typedef struct  FT_ValidatorRec_
   {
@@ -88,8 +96,11 @@ FT_BEGIN_HEADER
 
   } FT_ValidatorRec;
 
+#if defined( _MSC_VER )
+#pragma warning( pop )
+#endif
 
-#define FT_VALIDATOR( x )  ((FT_Validator)( x ))
+#define FT_VALIDATOR( x )  ( (FT_Validator)( x ) )
 
 
   FT_BASE( void )

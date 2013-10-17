@@ -9,11 +9,10 @@ list(APPEND SOURCE
     extserv.c
     hlink_main.c
     link.c
-    hlink.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
 
-add_library(hlink SHARED ${SOURCE})
+add_library(hlink SHARED ${SOURCE} hlink.rc)
 set_module_type(hlink win32dll)
 target_link_libraries(hlink uuid wine)
 add_delay_importlibs(hlink urlmon)

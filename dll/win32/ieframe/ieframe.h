@@ -101,6 +101,7 @@ typedef struct {
 
 typedef struct {
     WCHAR *url;
+    IStream *stream;
 } travellog_entry_t;
 
 typedef struct _IDocHostContainerVtbl
@@ -158,10 +159,13 @@ struct DocHost {
     ShellBrowser *browser_service;
     IShellUIHelper2 *shell_ui_helper;
 
-    travellog_entry_t *travellog;
-    unsigned travellog_size;
-    unsigned travellog_length;
-    unsigned travellog_position;
+    struct {
+        travellog_entry_t *log;
+        unsigned size;
+        unsigned length;
+        unsigned position;
+        int loading_pos;
+    } travellog;
 
     ConnectionPointContainer cps;
     IEHTMLWindow html_window;
@@ -215,20 +219,15 @@ struct WebBrowser {
     DocHost doc_host;
 };
 
-typedef struct {
-    DocHost doc_host;
-
-    LONG ref;
-
-    InternetExplorer *ie;
-} IEDocHost;
-
 struct InternetExplorer {
+    DocHost doc_host;
     IWebBrowser2 IWebBrowser2_iface;
+    IExternalConnection IExternalConnection_iface;
     IServiceProvider IServiceProvider_iface;
     HlinkFrame hlink_frame;
 
     LONG ref;
+    LONG extern_ref;
 
     HWND frame_hwnd;
     HWND status_hwnd;
@@ -236,7 +235,6 @@ struct InternetExplorer {
     BOOL nohome;
 
     struct list entry;
-    IEDocHost *doc_host;
 };
 
 void WebBrowser_OleObject_Init(WebBrowser*) DECLSPEC_HIDDEN;
@@ -270,6 +268,7 @@ void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*) DECLSPEC_HIDDEN;
 HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*) DECLSPEC_HIDDEN;
 HRESULT go_home(DocHost*) DECLSPEC_HIDDEN;
 HRESULT go_back(DocHost*) DECLSPEC_HIDDEN;
+HRESULT go_forward(DocHost*) DECLSPEC_HIDDEN;
 HRESULT refresh_document(DocHost*) DECLSPEC_HIDDEN;
 HRESULT get_location_url(DocHost*,BSTR*) DECLSPEC_HIDDEN;
 HRESULT set_dochost_url(DocHost*,const WCHAR*) DECLSPEC_HIDDEN;
@@ -287,6 +286,7 @@ LRESULT process_dochost_tasks(DocHost*) DECLSPEC_HIDDEN;
 void InternetExplorer_WebBrowser_Init(InternetExplorer*) DECLSPEC_HIDDEN;
 HRESULT update_ie_statustext(InternetExplorer*, LPCWSTR) DECLSPEC_HIDDEN;
 void released_obj(void) DECLSPEC_HIDDEN;
+DWORD release_extern_ref(InternetExplorer*,BOOL) DECLSPEC_HIDDEN;
 
 void register_iewindow_class(void) DECLSPEC_HIDDEN;
 void unregister_iewindow_class(void) DECLSPEC_HIDDEN;

@@ -311,7 +311,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-static DWORD WINAPI
+static DWORD NTAPI
 TuiConsoleThread(PVOID Data)
 {
     PTUI_CONSOLE_DATA TuiData = (PTUI_CONSOLE_DATA)Data;
@@ -441,7 +441,7 @@ Quit:
  *                             TUI Console Driver                             *
  ******************************************************************************/
 
-static VOID WINAPI
+static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This /*,
                   IN PCONSOLE Console */);
 
@@ -482,7 +482,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
 
     // /* The console cannot be resized anymore */
     // Console->FixedSize = TRUE; // MUST be placed AFTER the call to ConioResizeBuffer !!
-    // // ConioResizeTerminal(Console);
+    // // TermResizeTerminal(Console);
 
     /*
      * Contrary to what we do in the GUI front-end, here we create
@@ -521,7 +521,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
     return STATUS_SUCCESS;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     // PCONSOLE Console = This->Console;
@@ -562,7 +562,7 @@ TuiDeinitFrontEnd(IN OUT PFRONTEND This)
     ConsoleFreeHeap(TuiData);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
@@ -601,7 +601,7 @@ TuiDrawRegion(IN OUT PFRONTEND This,
     ConsoleFreeHeap(ConsoleDraw);
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiWriteStream(IN OUT PFRONTEND This,
                SMALL_RECT* Region,
                SHORT CursorStartX,
@@ -635,7 +635,7 @@ TuiWriteStream(IN OUT PFRONTEND This,
     RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiSetCursorInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff)
 {
@@ -657,7 +657,7 @@ TuiSetCursorInfo(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiSetScreenInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff,
                  SHORT OldCursorX,
@@ -683,12 +683,12 @@ TuiSetScreenInfo(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiResizeTerminal(IN OUT PFRONTEND This)
 {
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiProcessKeyCallback(IN OUT PFRONTEND This,
                       MSG* msg,
                       BYTE KeyStateMenu,
@@ -714,31 +714,31 @@ TuiProcessKeyCallback(IN OUT PFRONTEND This,
     return FALSE;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiChangeTitle(IN OUT PFRONTEND This)
 {
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiChangeIcon(IN OUT PFRONTEND This,
               HICON hWindowIcon)
 {
     return TRUE;
 }
 
-static HWND WINAPI
+static HWND NTAPI
 TuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
     PTUI_CONSOLE_DATA TuiData = This->Data;
     return TuiData->hWindow;
 }
 
-static VOID WINAPI
+static VOID NTAPI
 TuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
                                PCOORD pSize)
 {
@@ -746,13 +746,21 @@ TuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
     *pSize = PhysicalConsoleSize;
 }
 
-static ULONG WINAPI
+static BOOL NTAPI
+TuiSetPalette(IN OUT PFRONTEND This,
+              HPALETTE PaletteHandle,
+              UINT PaletteUsage)
+{
+    return TRUE;
+}
+
+static ULONG NTAPI
 TuiGetDisplayMode(IN OUT PFRONTEND This)
 {
     return CONSOLE_FULLSCREEN_HARDWARE; // CONSOLE_FULLSCREEN;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiSetDisplayMode(IN OUT PFRONTEND This,
                   ULONG NewMode)
 {
@@ -761,21 +769,21 @@ TuiSetDisplayMode(IN OUT PFRONTEND This,
     return TRUE;
 }
 
-static INT WINAPI
+static INT NTAPI
 TuiShowMouseCursor(IN OUT PFRONTEND This,
                    BOOL Show)
 {
     return 0;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR hCursor)
 {
     return TRUE;
 }
 
-static HMENU WINAPI
+static HMENU NTAPI
 TuiMenuControl(IN OUT PFRONTEND This,
                UINT cmdIdLow,
                UINT cmdIdHigh)
@@ -783,7 +791,7 @@ TuiMenuControl(IN OUT PFRONTEND This,
     return NULL;
 }
 
-static BOOL WINAPI
+static BOOL NTAPI
 TuiSetMenuClose(IN OUT PFRONTEND This,
                 BOOL Enable)
 {
@@ -805,6 +813,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiChangeIcon,
     TuiGetConsoleWindowHandle,
     TuiGetLargestConsoleWindowSize,
+    TuiSetPalette,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
     TuiShowMouseCursor,

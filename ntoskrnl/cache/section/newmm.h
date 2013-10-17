@@ -36,7 +36,7 @@
 #define SEC_CACHE                           (0x20000000)
 
 #define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %p:%Ix #\n", Process, Address);            \
+    DPRINT("MiWaitForPageEvent %p:%p #\n", Process, Address);            \
     KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
 } while(0)
 

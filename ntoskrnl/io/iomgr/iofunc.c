@@ -209,7 +209,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG BufferLength;
-    IOTRACE(IO_CTL_DEBUG, "Handle: %lx. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
     /* Get the access type */

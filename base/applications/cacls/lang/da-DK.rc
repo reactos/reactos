@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Ændringer fil-ACL'er (Access Control List) eller viser dem.\n\n\

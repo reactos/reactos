@@ -164,45 +164,40 @@ AddDesktopItemA (BOOL bCommonItem,
   UNICODE_STRING IconLocation;
   UNICODE_STRING WorkingDirectory;
   BOOL bResult;
-  NTSTATUS Status;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&ItemName,
-					    (LPSTR)lpItemName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&ItemName,
+                                        (LPSTR)lpItemName))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&Arguments,
-					    (LPSTR)lpArguments);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&Arguments,
+                                        (LPSTR)lpArguments))
     {
       RtlFreeUnicodeString(&ItemName);
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&IconLocation,
-					    (LPSTR)lpIconLocation);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&IconLocation,
+                                        (LPSTR)lpIconLocation))
     {
       RtlFreeUnicodeString(&Arguments);
       RtlFreeUnicodeString(&ItemName);
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
   if (lpWorkingDirectory != NULL)
     {
-      Status = RtlCreateUnicodeStringFromAsciiz(&WorkingDirectory,
-						(LPSTR)lpWorkingDirectory);
-      if (!NT_SUCCESS(Status))
+      if (!RtlCreateUnicodeStringFromAsciiz(&WorkingDirectory,
+                                            (LPSTR)lpWorkingDirectory))
 	{
 	  RtlFreeUnicodeString(&IconLocation);
 	  RtlFreeUnicodeString(&Arguments);
 	  RtlFreeUnicodeString(&ItemName);
-	  SetLastError (RtlNtStatusToDosError (Status));
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
     }
@@ -389,13 +384,11 @@ DeleteDesktopItemA (BOOL bCommonItem,
 {
   UNICODE_STRING ItemName;
   BOOL bResult;
-  NTSTATUS Status;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&ItemName,
-					    (LPSTR)lpItemName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&ItemName,
+                                        (LPSTR)lpItemName))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
@@ -437,13 +430,11 @@ CreateGroupA (LPCSTR lpGroupName,
 {
   UNICODE_STRING GroupName;
   BOOL bResult;
-  NTSTATUS Status;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&GroupName,
-					    (LPSTR)lpGroupName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&GroupName,
+                                        (LPSTR)lpGroupName))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
@@ -495,13 +486,11 @@ DeleteGroupA (LPCSTR lpGroupName,
 {
   UNICODE_STRING GroupName;
   BOOL bResult;
-  NTSTATUS Status;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&GroupName,
-					    (LPSTR)lpGroupName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&GroupName,
+                                        (LPSTR)lpGroupName))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
@@ -564,54 +553,48 @@ AddItemA (LPCSTR lpGroupName,  /* Optional */
   UNICODE_STRING IconLocation;
   UNICODE_STRING WorkingDirectory;
   BOOL bResult;
-  NTSTATUS Status;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&ItemName,
-					    (LPSTR)lpItemName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&ItemName,
+                                        (LPSTR)lpItemName))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&Arguments,
-					    (LPSTR)lpArguments);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&Arguments,
+                                        (LPSTR)lpArguments))
     {
       RtlFreeUnicodeString(&ItemName);
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&IconLocation,
-					    (LPSTR)lpIconLocation);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&IconLocation,
+                                        (LPSTR)lpIconLocation))
     {
       RtlFreeUnicodeString(&Arguments);
       RtlFreeUnicodeString(&ItemName);
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
   if (lpGroupName != NULL)
     {
-      Status = RtlCreateUnicodeStringFromAsciiz(&GroupName,
-						(LPSTR)lpGroupName);
-      if (!NT_SUCCESS(Status))
+      if (!RtlCreateUnicodeStringFromAsciiz(&GroupName,
+                                            (LPSTR)lpGroupName))
 	{
 	  RtlFreeUnicodeString(&IconLocation);
 	  RtlFreeUnicodeString(&Arguments);
 	  RtlFreeUnicodeString(&ItemName);
-	  SetLastError (RtlNtStatusToDosError (Status));
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
     }
 
   if (lpWorkingDirectory != NULL)
     {
-      Status = RtlCreateUnicodeStringFromAsciiz(&WorkingDirectory,
-						(LPSTR)lpWorkingDirectory);
-      if (!NT_SUCCESS(Status))
+      if (!RtlCreateUnicodeStringFromAsciiz(&WorkingDirectory,
+                                            (LPSTR)lpWorkingDirectory))
 	{
 	  if (lpGroupName != NULL)
 	    {
@@ -620,7 +603,7 @@ AddItemA (LPCSTR lpGroupName,  /* Optional */
 	  RtlFreeUnicodeString(&IconLocation);
 	  RtlFreeUnicodeString(&Arguments);
 	  RtlFreeUnicodeString(&ItemName);
-	  SetLastError (RtlNtStatusToDosError (Status));
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
     }
@@ -821,29 +804,26 @@ DeleteItemA (LPCSTR lpGroupName, /* Optional */
   UNICODE_STRING GroupName;
   UNICODE_STRING ItemName;
   BOOL bResult;
-  NTSTATUS Status;
 
   if (lpGroupName != NULL)
     {
-      Status = RtlCreateUnicodeStringFromAsciiz(&GroupName,
-						(LPSTR)lpGroupName);
-      if (!NT_SUCCESS(Status))
+      if (!RtlCreateUnicodeStringFromAsciiz(&GroupName,
+                                            (LPSTR)lpGroupName))
 	{
-	  SetLastError (RtlNtStatusToDosError (Status));
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&ItemName,
-					    (LPSTR)lpItemName);
-  if (!NT_SUCCESS(Status))
+  if (!RtlCreateUnicodeStringFromAsciiz(&ItemName,
+                                        (LPSTR)lpItemName))
     {
       if (lpGroupName != NULL)
 	{
 	  RtlFreeUnicodeString(&GroupName);
 	}
 
-      SetLastError (RtlNtStatusToDosError (Status));
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 

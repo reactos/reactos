@@ -30,7 +30,6 @@
 
 #include <winbase.h>
 #include <wingdi.h>
-#include "winuser.h"
 #include <winuser.h>
 
 #include <d3d.h>
@@ -41,14 +40,7 @@
 #include <wine/list.h>
 #include <wine/wined3d.h>
 
-enum ddraw_surface_type
-{
-    DDRAW_SURFACE_TYPE_OPENGL,
-    DDRAW_SURFACE_TYPE_GDI,
-};
-
 extern const struct wined3d_parent_ops ddraw_null_wined3d_parent_ops DECLSPEC_HIDDEN;
-extern enum ddraw_surface_type DefaultSurfaceType DECLSPEC_HIDDEN;
 extern DWORD force_refresh_rate DECLSPEC_HIDDEN;
 
 /*****************************************************************************
@@ -59,6 +51,14 @@ struct FvfToDecl
     DWORD fvf;
     struct wined3d_vertex_declaration *decl;
 };
+
+#define DDRAW_INITIALIZED       0x00000001
+#define DDRAW_D3D_INITIALIZED   0x00000002
+#define DDRAW_RESTORE_MODE      0x00000004
+#define DDRAW_NO3D              0x00000008
+#define DDRAW_SCL_DDRAW1        0x00000010
+
+#define DDRAW_STRIDE_ALIGNMENT  8
 
 struct ddraw
 {
@@ -75,12 +75,10 @@ struct ddraw
 
     /* See comment in IDirectDraw::AddRef */
     LONG                    ref7, ref4, ref2, ref3, ref1, numIfaces;
-    BOOL initialized;
 
     struct wined3d *wined3d;
     struct wined3d_device *wined3d_device;
-    BOOL d3d_initialized;
-    BOOL restore_mode;
+    DWORD flags;
 
     struct ddraw_surface *primary;
     RECT primary_lock;
@@ -187,9 +185,9 @@ struct ddraw_surface
     DWORD                   Handle;
 };
 
-HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface) DECLSPEC_HIDDEN;
+HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface, DWORD surface_flags) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
-        DDSURFACEDESC2 *desc, UINT version) DECLSPEC_HIDDEN;
+        DDSURFACEDESC2 *desc, DWORD flags, UINT version) DECLSPEC_HIDDEN;
 ULONG ddraw_surface_release_iface(struct ddraw_surface *This) DECLSPEC_HIDDEN;
 
 static inline struct ddraw_surface *impl_from_IDirect3DTexture(IDirect3DTexture *iface)
@@ -558,8 +556,9 @@ struct d3d_vertex_buffer *unsafe_impl_from_IDirect3DVertexBuffer7(IDirect3DVerte
 #define GET_TEXCOORD_SIZE_FROM_FVF(d3dvtVertexType, tex_num) \
     (((((d3dvtVertexType) >> (16 + (2 * (tex_num)))) + 1) & 0x03) + 1)
 
-void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id WineD3DFormat) DECLSPEC_HIDDEN;
-enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat) DECLSPEC_HIDDEN;
+void ddrawformat_from_wined3dformat(DDPIXELFORMAT *ddraw_format,
+        enum wined3d_format_id wined3d_format) DECLSPEC_HIDDEN;
+enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *format) DECLSPEC_HIDDEN;
 void DDRAW_dump_surface_desc(const DDSURFACEDESC2 *lpddsd) DECLSPEC_HIDDEN;
 void dump_D3DMATRIX(const D3DMATRIX *mat) DECLSPEC_HIDDEN;
 void DDRAW_dump_DDCAPS(const DDCAPS *lpcaps) DECLSPEC_HIDDEN;

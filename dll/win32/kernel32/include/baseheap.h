@@ -48,7 +48,7 @@
     BH_PRINT("[BASE_HEAP] %s : Allocated %p\n",                             \
              __FUNCTION__, x)
 #define BASE_TRACE_PTR(x, y)                                                \
-    BH_PRINT("[BASE_HEAP] %s : Using handle: %lx for pointer: %p\n",        \
+    BH_PRINT("[BASE_HEAP] %s : Using handle: %p for pointer: %p\n",        \
              __FUNCTION__, x, y)
 #define BASE_TRACE_HANDLE(x, y)                                             \
     BH_PRINT("[BASE_HEAP] %s : Using handle: %lx for block: %p\n",          \

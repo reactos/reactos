@@ -585,10 +585,7 @@ public:
 
 	LRESULT DefWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		CWindowImplBaseT<TBase, TWinTraits>	*pThis;
-
-		pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits> *>(this);
-		return ::CallWindowProc(m_pfnSuperWindowProc, pThis->m_hWnd, uMsg, wParam, lParam);
+		return ::CallWindowProc(m_pfnSuperWindowProc, this->m_hWnd, uMsg, wParam, lParam);
 	}
 
 	BOOL SubclassWindow(HWND hWnd)

@@ -82,6 +82,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         break;
 
     case DLL_PROCESS_DETACH:
+        if (lpvReserved) break;
         LIST_FOR_EACH_ENTRY_SAFE(entry, cursor2, &pending_credentials_list, struct pending_credentials, entry)
         {
             list_remove(&entry->entry);
@@ -339,7 +340,7 @@ static void CredDialogHideBalloonTip(HWND hwndDlg, struct cred_dialog_params *pa
 
 static inline BOOL CredDialogCapsLockOn(void)
 {
-    return GetKeyState(VK_CAPITAL) & 0x1 ? TRUE : FALSE;
+    return (GetKeyState(VK_CAPITAL) & 0x1) != 0;
 }
 
 static LRESULT CALLBACK CredDialogPasswordSubclassProc(HWND hwnd, UINT uMsg,
@@ -412,7 +413,9 @@ static BOOL CredDialogInit(HWND hwndDlg, struct cred_dialog_params *params)
         SetWindowTextW(hwndDlg, title);
     }
 
-    if (params->dwFlags & (CREDUI_FLAGS_DO_NOT_PERSIST|CREDUI_FLAGS_PERSIST))
+    if (params->dwFlags & CREDUI_FLAGS_PERSIST ||
+        (params->dwFlags & CREDUI_FLAGS_DO_NOT_PERSIST &&
+         !(params->dwFlags & CREDUI_FLAGS_SHOW_SAVE_CHECK_BOX)))
         ShowWindow(GetDlgItem(hwndDlg, IDC_SAVE), SW_HIDE);
     else if (params->fSave)
         CheckDlgButton(hwndDlg, IDC_SAVE, BST_CHECKED);
@@ -548,6 +551,38 @@ static INT_PTR CALLBACK CredDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     }
 }
 
+static BOOL find_existing_credential(const WCHAR *target, WCHAR *username, ULONG len_username,
+                                     WCHAR *password, ULONG len_password)
+{
+    DWORD count, i;
+    CREDENTIALW **credentials;
+
+    if (!CredEnumerateW(target, 0, &count, &credentials)) return FALSE;
+    for (i = 0; i < count; i++)
+    {
+        if (credentials[i]->Type != CRED_TYPE_DOMAIN_PASSWORD)
+        {
+            FIXME("no support for type %u credentials\n", credentials[i]->Type);
+            continue;
+        }
+        if ((!*username || !strcmpW(username, credentials[i]->UserName)) &&
+            strlenW(credentials[i]->UserName) < len_username &&
+            credentials[i]->CredentialBlobSize / sizeof(WCHAR) < len_password)
+        {
+            TRACE("found existing credential for %s\n", debugstr_w(credentials[i]->UserName));
+
+            strcpyW(username, credentials[i]->UserName);
+            memcpy(password, credentials[i]->CredentialBlob, credentials[i]->CredentialBlobSize);
+            password[credentials[i]->CredentialBlobSize / sizeof(WCHAR)] = 0;
+
+            CredFree(credentials);
+            return TRUE;
+        }
+    }
+    CredFree(credentials);
+    return FALSE;
+}
+
 /******************************************************************************
  *           CredUIPromptForCredentialsW [CREDUI.@]
  */
@@ -577,6 +612,11 @@ DWORD WINAPI CredUIPromptForCredentialsW(PCREDUI_INFOW pUIInfo,
 
     if ((dwFlags & CREDUI_FLAGS_SHOW_SAVE_CHECK_BOX) && !pfSave)
         return ERROR_INVALID_PARAMETER;
+
+    if (!(dwFlags & CREDUI_FLAGS_ALWAYS_SHOW_UI) &&
+        !(dwFlags & CREDUI_FLAGS_INCORRECT_PASSWORD) &&
+        find_existing_credential(pszTargetName, pszUsername, ulUsernameMaxChars, pszPassword, ulPasswordMaxChars))
+        return ERROR_SUCCESS;
 
     params.pszTargetName = pszTargetName;
     if (pUIInfo)
@@ -651,13 +691,13 @@ DWORD WINAPI CredUIPromptForCredentialsW(PCREDUI_INFOW pUIInfo,
             len = strlenW(params.pszPassword);
             entry->pszPassword = HeapAlloc(GetProcessHeap(), 0, (len + 1)*sizeof(WCHAR));
             memcpy(entry->pszPassword, params.pszPassword, (len + 1)*sizeof(WCHAR));
-            entry->generic = dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS ? TRUE : FALSE;
+            entry->generic = (dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS) != 0;
 
             LeaveCriticalSection(&csPendingCredentials);
         }
-        else
+        else if (!(dwFlags & CREDUI_FLAGS_DO_NOT_PERSIST))
             result = save_credentials(pszTargetName, pszUsername, pszPassword,
-                                      dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS ? TRUE : FALSE);
+                                      (dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS) != 0);
     }
 
     return result;
@@ -801,4 +841,13 @@ DWORD WINAPI CredUIReadSSOCredW(PCWSTR pszRealm, PWSTR *ppszUsername)
     if (ppszUsername)
         *ppszUsername = NULL;
     return ERROR_NOT_FOUND;
+}
+
+/******************************************************************************
+ * CredUIInitControls [CREDUI.@]
+ */
+BOOL WINAPI CredUIInitControls(void)
+{
+    FIXME("() stub\n");
+    return TRUE;
 }

@@ -39,7 +39,7 @@ void PrintError(DWORD ErrCode)
                       0,
                       NULL);
         LoadString(GetModuleHandle(NULL),
-                   IDS_FAILED_WITH_ERROCODE,
+                   IDS_FAILED_WITH_ERRORCODE,
                    szFmtString,
                    sizeof(szFmtString) / sizeof(szFmtString[0]));
         _sntprintf(buffer,
@@ -228,7 +228,7 @@ int AddSubst(TCHAR* Drive, TCHAR *Path)
     if (IsSubstedDrive(Drive))
     {
         LoadString(GetModuleHandle(NULL),
-                   IDS_DRIVE_ALREAD_SUBSTED,
+                   IDS_DRIVE_ALREADY_SUBSTED,
                    szFmtString,
                    sizeof(szFmtString) / sizeof(szFmtString[0]));
         _tprintf(szFmtString);

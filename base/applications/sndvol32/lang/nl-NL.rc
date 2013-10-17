@@ -1,6 +1,6 @@
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "O&pties"
     BEGIN
@@ -17,7 +17,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Volume Control"
     IDS_NOMIXERDEVICES "Er zijn geen actieve mixerapparaten beschikbaar! Deze toepassing wordt nu afgesloten."

@@ -20,6 +20,8 @@ IDB_WATERMARK BITMAP "res/watermark.bmp"
 IDB_HEADER    BITMAP "res/header.bmp"
 IDB_ROSLOGO   BITMAP "res/rosbitmap.bmp"
 
+#include <reactos/manifest_exe.rc>
+
 /* Language-specific resources */
 #include "rsrc.rc"
 

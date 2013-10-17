@@ -1439,6 +1439,7 @@ WINAPI
 EqualSid(PSID pSid1,
          PSID pSid2)
 {
+    SetLastError(ERROR_SUCCESS);
     return RtlEqualSid (pSid1, pSid2);
 }
 
@@ -1499,6 +1500,7 @@ WINAPI
 GetSidSubAuthority(PSID pSid,
                    DWORD nSubAuthority)
 {
+    SetLastError(ERROR_SUCCESS);
     return (PDWORD)RtlSubAuthoritySid(pSid, nSubAuthority);
 }
 
@@ -1510,6 +1512,7 @@ PUCHAR
 WINAPI
 GetSidSubAuthorityCount(PSID pSid)
 {
+    SetLastError(ERROR_SUCCESS);
     return RtlSubAuthorityCountSid(pSid);
 }
 

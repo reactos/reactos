@@ -23,17 +23,7 @@ list(APPEND SOURCE
 
 add_library(d3d8 SHARED ${SOURCE})
 set_module_type(d3d8 win32dll UNICODE)
-target_link_libraries(d3d8 uuid wine)
-
-add_importlibs(d3d8
-    user32
-    gdi32
-    advapi32
-    wined3d
-    msvcrt
-    kernel32
-    ntdll)
-
-add_dependencies(d3d8 wineheaders)
+target_link_libraries(d3d8 wine)
+add_importlibs(d3d8 wined3d msvcrt kernel32 ntdll)
 add_pch(d3d8 d3d8_private.h)
 add_cd_file(TARGET d3d8 DESTINATION reactos/system32 FOR all)

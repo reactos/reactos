@@ -235,11 +235,38 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
         *p = SubAuthorities[i];
     }
 
-    RtlInitUnicodeString(&SidEntry->AccountName,
-                         AccountName);
+//    RtlInitUnicodeString(&SidEntry->AccountName,
+//                         AccountName);
+    SidEntry->AccountName.Length = wcslen(AccountName) * sizeof(WCHAR);
+    SidEntry->AccountName.MaximumLength = SidEntry->AccountName.Length + sizeof(WCHAR);
+    SidEntry->AccountName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                                   SidEntry->AccountName.MaximumLength);
+    if (SidEntry->AccountName.Buffer == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->Sid);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry);
+        return FALSE;
+    }
 
-    RtlInitUnicodeString(&SidEntry->DomainName,
-                         DomainName);
+    wcscpy(SidEntry->AccountName.Buffer,
+           AccountName);
+
+//    RtlInitUnicodeString(&SidEntry->DomainName,
+//                         DomainName);
+    SidEntry->DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    SidEntry->DomainName.MaximumLength = SidEntry->DomainName.Length + sizeof(WCHAR);
+    SidEntry->DomainName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                                  SidEntry->DomainName.MaximumLength);
+    if (SidEntry->DomainName.Buffer == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->AccountName.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->Sid);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry);
+        return FALSE;
+    }
+
+    wcscpy(SidEntry->DomainName.Buffer,
+           DomainName);
 
     SidEntry->Use = Use;
 
@@ -253,223 +280,278 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 NTSTATUS
 LsapInitSids(VOID)
 {
+    WCHAR szAccountName[80];
+    WCHAR szDomainName[80];
     ULONG SubAuthorities[8];
+    HINSTANCE hInstance;
 
     InitializeListHead(&WellKnownSidListHead);
 
+    hInstance = GetModuleHandleW(L"lsasrv.dll");
+
     /* NT Authority */
+
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, 80);
     LsapCreateSid(&NtAuthority,
                   0,
                   NULL,
-                  L"NT AUTHORITY",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeDomain);
 
     /* Null Sid */
+    LsapLoadString(hInstance, IDS_NULL_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_NULL_RID;
     LsapCreateSid(&NullSidAuthority,
                   1,
                   SubAuthorities,
-                  L"NULL SID",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* World Sid */
+    LsapLoadString(hInstance, IDS_WORLD_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_WORLD_RID;
     LsapCreateSid(&WorldSidAuthority,
                   1,
                   SubAuthorities,
-                  L"Everyone",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Local Sid */
+    LsapLoadString(hInstance, IDS_LOCAL_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_LOCAL_RID;
     LsapCreateSid(&LocalSidAuthority,
                   1,
                   SubAuthorities,
-                  L"LOCAL",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Creator Owner Sid */
+    LsapLoadString(hInstance, IDS_CREATOR_OWNER_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_CREATOR_OWNER_RID;
     LsapCreateSid(&CreatorSidAuthority,
                   1,
                   SubAuthorities,
-                  L"CREATOR OWNER",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Creator Group Sid */
+    LsapLoadString(hInstance, IDS_CREATOR_GROUP_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_CREATOR_GROUP_RID;
     LsapCreateSid(&CreatorSidAuthority,
                   1,
                   SubAuthorities,
-                  L"CREATOR GROUP",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Creator Owner Server Sid */
+    LsapLoadString(hInstance, IDS_CREATOR_OWNER_SERVER_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_CREATOR_OWNER_SERVER_RID;
     LsapCreateSid(&CreatorSidAuthority,
                   1,
                   SubAuthorities,
-                  L"CREATOR OWNER SERVER",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Creator Group Server Sid */
+    LsapLoadString(hInstance, IDS_CREATOR_GROUP_SERVER_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_CREATOR_GROUP_SERVER_RID;
     LsapCreateSid(&CreatorSidAuthority,
                   1,
                   SubAuthorities,
-                  L"CREATOR GROUP SERVER",
+                  szAccountName,
                   L"",
                   SidTypeWellKnownGroup);
 
     /* Dialup Sid */
+    LsapLoadString(hInstance, IDS_DIALUP_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, 80);
+
     SubAuthorities[0] = SECURITY_DIALUP_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"DIALUP",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Network Sid */
+    LsapLoadString(hInstance, IDS_DIALUP_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_NETWORK_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"NETWORK",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Batch Sid*/
+    LsapLoadString(hInstance, IDS_BATCH_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BATCH_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"BATCH",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Interactive Sid */
+    LsapLoadString(hInstance, IDS_INTERACTIVE_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_INTERACTIVE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"INTERACTIVE",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Service Sid */
+    LsapLoadString(hInstance, IDS_SERVICE_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"SERVICE",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Anonymous Logon Sid */
+    LsapLoadString(hInstance, IDS_ANONYMOUS_LOGON_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_ANONYMOUS_LOGON_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"ANONYMOUS LOGON",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Proxy Sid */
+    LsapLoadString(hInstance, IDS_PROXY_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_PROXY_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"PROXY",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Enterprise Controllers Sid */
+    LsapLoadString(hInstance, IDS_ENTERPRISE_CONTROLLERS_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_ENTERPRISE_CONTROLLERS_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"ENTERPRISE DOMAIN CONTROLLERS",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Principal Self Sid */
+    LsapLoadString(hInstance, IDS_PRINCIPAL_SELF_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_PRINCIPAL_SELF_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"SELF",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Authenticated Users Sid */
+    LsapLoadString(hInstance, IDS_AUTHENTICATED_USER_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_AUTHENTICATED_USER_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"Authenticated Users",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Restricted Code Sid */
+    LsapLoadString(hInstance, IDS_RESTRICTED_CODE_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_RESTRICTED_CODE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"RESTRICTED",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Terminal Server Sid */
+    LsapLoadString(hInstance, IDS_TERMINAL_SERVER_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_TERMINAL_SERVER_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"TERMINAL SERVER USER",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Remote Logon Sid */
+    LsapLoadString(hInstance, IDS_REMOTE_LOGON_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_REMOTE_LOGON_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"REMOTE INTERACTIVE LOGON",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* This Organization Sid */
+    LsapLoadString(hInstance, IDS_THIS_ORGANIZATION_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_THIS_ORGANIZATION_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"This Organization",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Local System Sid */
+    LsapLoadString(hInstance, IDS_LOCAL_SYSTEM_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_LOCAL_SYSTEM_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"SYSTEM",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     /* Local Service Sid */
+    LsapLoadString(hInstance, IDS_LOCAL_SERVICE_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_LOCAL_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"LOCAL SERVICE",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     LsapCreateSid(&NtAuthority,
@@ -480,12 +562,14 @@ LsapInitSids(VOID)
                   SidTypeWellKnownGroup);
 
     /* Network Service Sid */
+    LsapLoadString(hInstance, IDS_NETWORK_SERVICE_RID, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_NETWORK_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"NETWORK SERVICE",
-                  L"NT AUTHORITY",
+                  szAccountName,
+                  szDomainName,
                   SidTypeWellKnownGroup);
 
     LsapCreateSid(&NtAuthority,
@@ -496,144 +580,171 @@ LsapInitSids(VOID)
                   SidTypeWellKnownGroup);
 
     /* Builtin Domain Sid */
+    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szDomainName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
-                  L"BUILTIN",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeDomain);
 
     /* Administrators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_ADMINS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_ADMINS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Administrators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Users Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_USERS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_USERS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Users",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Guests Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_GUESTS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_GUESTS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Guests",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Power User Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_POWER_USERS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_POWER_USERS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Power User",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Account Operators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_ACCOUNT_OPS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_ACCOUNT_OPS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Account Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* System Operators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_SYSTEM_OPS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_SYSTEM_OPS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Server Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Print Operators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_PRINT_OPS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_PRINT_OPS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Print Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Backup Operators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_BACKUP_OPS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_BACKUP_OPS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Backup Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Replicators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_REPLICATOR, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_REPLICATOR;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Replicators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
-#if 0
     /* RAS Servers Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_RAS_SERVERS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_RAS_SERVERS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Backup Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
-#endif
 
     /* Pre-Windows 2000 Compatible Access Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_PREW2KCOMPACCESS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_PREW2KCOMPACCESS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Pre-Windows 2000 Compatible Access",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Remote Desktop Users Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_REMOTE_DESKTOP_USERS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Remote Desktop Users",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* Network Configuration Operators Alias Sid */
+    LsapLoadString(hInstance, IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS, szAccountName, 80);
+
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS;
     LsapCreateSid(&NtAuthority,
                   2,
                   SubAuthorities,
-                  L"Network Configuration Operators",
-                  L"BUILTIN",
+                  szAccountName,
+                  szDomainName,
                   SidTypeAlias);
 
     /* FIXME: Add more well known sids */

@@ -39,8 +39,9 @@ CSR_API(SrvSetConsoleTextAttribute);
 CSR_API(SrvCreateConsoleScreenBuffer);
 CSR_API(SrvGetConsoleScreenBufferInfo);
 CSR_API(SrvSetConsoleActiveScreenBuffer);
-CSR_API(SrvScrollConsoleScreenBuffer);
 CSR_API(SrvSetConsoleScreenBufferSize);
+CSR_API(SrvScrollConsoleScreenBuffer);
+CSR_API(SrvSetConsoleWindowInfo);
 
 /* console.c */
 CSR_API(SrvAllocConsole);
@@ -50,6 +51,24 @@ CSR_API(SrvGetConsoleMode);
 CSR_API(SrvSetConsoleMode);
 CSR_API(SrvGetConsoleTitle);
 CSR_API(SrvSetConsoleTitle);
+CSR_API(SrvGetConsoleCP);
+CSR_API(SrvSetConsoleCP);
+CSR_API(SrvGetConsoleProcessList);
+CSR_API(SrvGenerateConsoleCtrlEvent);
+CSR_API(SrvConsoleNotifyLastClose);
+
+CSR_API(SrvGetConsoleMouseInfo);
+CSR_API(SrvSetConsoleKeyShortcuts);
+CSR_API(SrvGetConsoleKeyboardLayoutName);
+CSR_API(SrvGetConsoleCharType);
+CSR_API(SrvSetConsoleLocalEUDC);
+CSR_API(SrvSetConsoleCursorMode);
+CSR_API(SrvGetConsoleCursorMode);
+CSR_API(SrvGetConsoleNlsMode);
+CSR_API(SrvSetConsoleNlsMode);
+CSR_API(SrvGetConsoleLangId);
+
+/* frontendctl.c */
 CSR_API(SrvGetConsoleHardwareState);
 CSR_API(SrvSetConsoleHardwareState);
 CSR_API(SrvGetConsoleDisplayMode);
@@ -59,20 +78,23 @@ CSR_API(SrvShowConsoleCursor);
 CSR_API(SrvSetConsoleCursor);
 CSR_API(SrvConsoleMenuControl);
 CSR_API(SrvSetConsoleMenuClose);
-CSR_API(SrvSetConsoleWindowInfo);
 CSR_API(SrvGetConsoleWindow);
 CSR_API(SrvSetConsoleIcon);
-CSR_API(SrvGetConsoleCP);
-CSR_API(SrvSetConsoleCP);
-CSR_API(SrvGetConsoleProcessList);
-CSR_API(SrvGenerateConsoleCtrlEvent);
 CSR_API(SrvGetConsoleSelectionInfo);
+
+CSR_API(SrvGetConsoleNumberOfFonts);
+CSR_API(SrvGetConsoleFontInfo);
+CSR_API(SrvGetConsoleFontSize);
+CSR_API(SrvGetConsoleCurrentFont);
+CSR_API(SrvSetConsoleFont);
 
 /* handle.c */
 CSR_API(SrvOpenConsole);
+CSR_API(SrvDuplicateHandle);
+CSR_API(SrvGetHandleInformation);
+CSR_API(SrvSetHandleInformation);
 CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
-CSR_API(SrvDuplicateHandle);
 
 /* lineinput.c */
 CSR_API(SrvGetConsoleCommandHistory);
@@ -81,5 +103,14 @@ CSR_API(SrvExpungeConsoleCommandHistory);
 CSR_API(SrvSetConsoleNumberOfCommands);
 CSR_API(SrvGetConsoleHistory);
 CSR_API(SrvSetConsoleHistory);
+CSR_API(SrvSetConsoleCommandHistoryMode);
+
+/* subsysreg.c */
+CSR_API(SrvRegisterConsoleVDM);
+CSR_API(SrvVDMConsoleOperation);
+CSR_API(SrvRegisterConsoleOS2);
+CSR_API(SrvSetConsoleOS2OemFormat);
+CSR_API(SrvRegisterConsoleIME);
+CSR_API(SrvUnregisterConsoleIME);
 
 /* EOF */

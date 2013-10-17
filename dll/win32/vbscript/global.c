@@ -17,7 +17,7 @@
  */
 
 #include <assert.h>
-//#include <math.h>
+#include <math.h>
 
 #include "vbscript.h"
 #include "vbscript_defs.h"
@@ -29,10 +29,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
+#define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
+
 #define VB_E_CANNOT_CREATE_OBJ 0x800a01ad
 #define VB_E_MK_PARSE_ERROR    0x800a01b0
-
-#define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
 
 /* Defined as extern in urlmon.idl, but not exported by uuid.lib */
 const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY =
@@ -116,6 +116,16 @@ static HRESULT return_int(VARIANT *res, int val)
     return S_OK;
 }
 
+static HRESULT return_bool(VARIANT *res, int val)
+{
+    if(res) {
+        V_VT(res) = VT_BOOL;
+        V_BOOL(res) = val != 0 ? VARIANT_TRUE : VARIANT_FALSE;
+    }
+
+    return S_OK;
+}
+
 static inline HRESULT return_double(VARIANT *res, double val)
 {
     if(res) {
@@ -152,12 +162,20 @@ static HRESULT to_int(VARIANT *v, int *ret)
         *ret = V_I4(v);
         break;
     case VT_R8: {
-        double n = round(V_R8(v));
+        double n = floor(V_R8(v)+0.5);
+        INT32 i;
+
         if(!is_int32(n)) {
             FIXME("%lf is out of int range\n", n);
             return E_FAIL;
         }
-        *ret = n;
+
+        /* Round half to even */
+        i = n;
+        if(i%2 && n-V_R8(v) == 0.5)
+            i--;
+
+        *ret = i;
         break;
     }
     case VT_BOOL:
@@ -372,8 +390,18 @@ static HRESULT Global_CCur(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARI
 
 static HRESULT Global_CInt(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    int val;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    hres = to_int(arg, &val);
+    if(FAILED(hres))
+        return hres;
+
+    return return_int(res, val);
 }
 
 static HRESULT Global_CLng(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
@@ -384,8 +412,30 @@ static HRESULT Global_CLng(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARI
 
 static HRESULT Global_CBool(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    int val;
+    TRACE("%s\n", debugstr_variant(arg));
+
+    assert(args_cnt == 1);
+
+    switch(V_VT(arg)) {
+    case VT_I2:
+        val = V_I2(arg);
+        break;
+    case VT_I4:
+        val = V_I4(arg);
+        break;
+    case VT_R4:
+	val = V_R4(arg) > 0.0 || V_R4(arg) < 0.0;
+        break;
+    case VT_R8:
+        val = V_R8(arg) > 0.0 || V_R8(arg) < 0.0;
+        break;
+    default:
+        ERR("Not a numeric value: %s\n", debugstr_variant(arg));
+        return E_FAIL;
+    }
+
+    return return_bool(res, val);
 }
 
 static HRESULT Global_CByte(vbdisp_t *This, VARIANT *arg, unsigned args_cnt, VARIANT *res)

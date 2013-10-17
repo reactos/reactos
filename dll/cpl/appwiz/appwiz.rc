@@ -21,4 +21,6 @@ IDI_APPINETICO ICON "resources/1505.ico"
 
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 #include "rsrc.rc"

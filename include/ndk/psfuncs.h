@@ -199,7 +199,8 @@ PsGetProcessExitStatus(
     _In_ PEPROCESS Process
 );
 
-HANDLE
+NTKERNELAPI
+ULONG
 NTAPI
 PsGetProcessSessionId(
     _In_ PEPROCESS Process

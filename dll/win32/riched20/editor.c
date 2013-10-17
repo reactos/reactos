@@ -840,6 +840,14 @@ void ME_RTFParAttrHook(RTF_Info *info)
     }
     break;
   }
+  case rtfRTLPar:
+    fmt.dwMask = PFM_RTLPARA;
+    fmt.wEffects = PFE_RTLPARA;
+    break;
+  case rtfLTRPar:
+    fmt.dwMask = PFM_RTLPARA;
+    fmt.wEffects = 0;
+    break;
   }
   if (fmt.dwMask) {
     RTFFlushOutputBuffer(info);
@@ -1723,7 +1731,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
     if ((flags & FR_WHOLEWORD) && nMin)
     {
       ME_CursorFromCharOfs(editor, nMin - 1, &cursor);
-      wLastChar = cursor.pRun->member.run.strText->szData[cursor.nOffset];
+      wLastChar = *get_text( &cursor.pRun->member.run, cursor.nOffset );
       ME_MoveCursorChars(editor, &cursor, 1);
     } else {
       ME_CursorFromCharOfs(editor, nMin, &cursor);
@@ -1735,7 +1743,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       int nCurStart = cursor.nOffset;
       int nMatched = 0;
     
-      while (pCurItem && ME_CharCompare(pCurItem->member.run.strText->szData[nCurStart + nMatched], text[nMatched], (flags & FR_MATCHCASE)))
+      while (pCurItem && ME_CharCompare( *get_text( &pCurItem->member.run, nCurStart + nMatched ), text[nMatched], (flags & FR_MATCHCASE)))
       {
         if ((flags & FR_WHOLEWORD) && isalnumW(wLastChar))
           break;
@@ -1750,14 +1758,14 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
           /* Check to see if next character is a whitespace */
           if (flags & FR_WHOLEWORD)
           {
-            if (nCurStart + nMatched == pCurItem->member.run.strText->nLen)
+            if (nCurStart + nMatched == pCurItem->member.run.len)
             {
               pNextItem = ME_FindItemFwd(pCurItem, diRun);
               nNextStart = -nMatched;
             }
 
             if (pNextItem)
-              wNextChar = pNextItem->member.run.strText->szData[nNextStart + nMatched];
+              wNextChar = *get_text( &pNextItem->member.run, nNextStart + nMatched );
             else
               wNextChar = ' ';
 
@@ -1774,19 +1782,19 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
           TRACE("found at %d-%d\n", cursor.nOffset, cursor.nOffset + nLen);
           return cursor.nOffset;
         }
-        if (nCurStart + nMatched == pCurItem->member.run.strText->nLen)
+        if (nCurStart + nMatched == pCurItem->member.run.len)
         {
           pCurItem = ME_FindItemFwd(pCurItem, diRun);
           nCurStart = -nMatched;
         }
       }
       if (pCurItem)
-        wLastChar = pCurItem->member.run.strText->szData[nCurStart + nMatched];
+        wLastChar = *get_text( &pCurItem->member.run, nCurStart + nMatched );
       else
         wLastChar = ' ';
 
       cursor.nOffset++;
-      if (cursor.nOffset == cursor.pRun->member.run.strText->nLen)
+      if (cursor.nOffset == cursor.pRun->member.run.len)
       {
         ME_NextRun(&cursor.pPara, &cursor.pRun);
         cursor.nOffset = 0;
@@ -1799,7 +1807,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
     if ((flags & FR_WHOLEWORD) && nMax < nTextLen - 1)
     {
       ME_CursorFromCharOfs(editor, nMax + 1, &cursor);
-      wLastChar = cursor.pRun->member.run.strText->szData[cursor.nOffset];
+      wLastChar = *get_text( &cursor.pRun->member.run, cursor.nOffset );
       ME_MoveCursorChars(editor, &cursor, -1);
     } else {
       ME_CursorFromCharOfs(editor, nMax, &cursor);
@@ -1815,10 +1823,11 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       if (nCurEnd == 0)
       {
         ME_PrevRun(&pCurPara, &pCurItem);
-        nCurEnd = pCurItem->member.run.strText->nLen + nMatched;
+        nCurEnd = pCurItem->member.run.len + nMatched;
       }
 
-      while (pCurItem && ME_CharCompare(pCurItem->member.run.strText->szData[nCurEnd - nMatched - 1], text[nLen - nMatched - 1], (flags & FR_MATCHCASE)))
+      while (pCurItem && ME_CharCompare( *get_text( &pCurItem->member.run, nCurEnd - nMatched - 1 ),
+                                         text[nLen - nMatched - 1], (flags & FR_MATCHCASE) ))
       {
         if ((flags & FR_WHOLEWORD) && isalnumW(wLastChar))
           break;
@@ -1838,11 +1847,11 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
             {
               pPrevItem = ME_FindItemBack(pCurItem, diRun);
               if (pPrevItem)
-                nPrevEnd = pPrevItem->member.run.strText->nLen + nMatched;
+                nPrevEnd = pPrevItem->member.run.len + nMatched;
             }
 
             if (pPrevItem)
-              wPrevChar = pPrevItem->member.run.strText->szData[nPrevEnd - nMatched - 1];
+              wPrevChar = *get_text( &pPrevItem->member.run, nPrevEnd - nMatched - 1 );
             else
               wPrevChar = ' ';
 
@@ -1865,11 +1874,11 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
           ME_PrevRun(&pCurPara, &pCurItem);
           /* Don't care about pCurItem becoming NULL here; it's already taken
            * care of in the exterior loop condition */
-          nCurEnd = pCurItem->member.run.strText->nLen + nMatched;
+          nCurEnd = pCurItem->member.run.len + nMatched;
         }
       }
       if (pCurItem)
-        wLastChar = pCurItem->member.run.strText->szData[nCurEnd - nMatched - 1];
+        wLastChar = *get_text( &pCurItem->member.run, nCurEnd - nMatched - 1 );
       else
         wLastChar = ' ';
 
@@ -1877,7 +1886,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       if (cursor.nOffset < 0)
       {
         ME_PrevRun(&cursor.pPara, &cursor.pRun);
-        cursor.nOffset = cursor.pRun->member.run.strText->nLen;
+        cursor.nOffset = cursor.pRun->member.run.len;
       }
     }
   }
@@ -2709,7 +2718,8 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
   ed->nEventMask = 0;
   ed->nModifyStep = 0;
   ed->nTextLimit = TEXT_LIMIT_DEFAULT;
-  ed->pUndoStack = ed->pRedoStack = ed->pUndoStackBottom = NULL;
+  list_init( &ed->undo_stack );
+  list_init( &ed->redo_stack );
   ed->nUndoStackSize = 0;
   ed->nUndoLimit = STACK_SIZE_DEFAULT;
   ed->nUndoMode = umAddToUndo;
@@ -2833,6 +2843,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       break;
 
     case DLL_PROCESS_DETACH:
+      if (lpvReserved) break;
       UnregisterClassW(RICHEDIT_CLASS20W, 0);
       UnregisterClassW(MSFTEDIT_CLASS, 0);
       UnregisterClassA(RICHEDIT_CLASS20A, 0);
@@ -2843,7 +2854,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
           UnregisterClassW(REComboBox20W, 0);
       LookupCleanup();
       HeapDestroy (me_heap);
-      me_heap = NULL;
       break;
     }
     return TRUE;
@@ -3009,7 +3019,7 @@ static void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM
     info.lParam = lParam;
     cursor.nOffset = 0;
     info.chrg.cpMin = ME_GetCursorOfs(&cursor);
-    info.chrg.cpMax = info.chrg.cpMin + cursor.pRun->member.run.strText->nLen;
+    info.chrg.cpMax = info.chrg.cpMin + cursor.pRun->member.run.len;
     ITextHost_TxNotify(editor->texthost, info.nmhdr.code, &info);
   }
 }
@@ -3106,9 +3116,9 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return editor->nUndoLimit;
   }
   case EM_CANUNDO:
-    return editor->pUndoStack != NULL;
+    return !list_empty( &editor->undo_stack );
   case EM_CANREDO:
-    return editor->pRedoStack != NULL;
+    return !list_empty( &editor->redo_stack );
   case WM_UNDO: /* FIXME: actually not the same */
   case EM_UNDO:
     return ME_Undo(editor);
@@ -3703,16 +3713,15 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     while (nCharsLeft && (run = ME_FindItemFwd(run, diRunOrStartRow))
            && run->type == diRun)
     {
+      WCHAR *str = get_text( &run->member.run, 0 );
       unsigned int nCopy;
-      ME_String *strText;
 
-      strText = run->member.run.strText;
-      nCopy = min(nCharsLeft, strText->nLen);
+      nCopy = min(nCharsLeft, run->member.run.len);
 
       if (unicode)
-        memcpy(dest, strText->szData, nCopy * sizeof(WCHAR));
+        memcpy(dest, str, nCopy * sizeof(WCHAR));
       else
-        nCopy = WideCharToMultiByte(CP_ACP, 0, strText->szData, nCopy, dest,
+        nCopy = WideCharToMultiByte(CP_ACP, 0, str, nCopy, dest,
                                     nCharsLeft, NULL, NULL);
       dest += nCopy * (unicode ? sizeof(WCHAR) : 1);
       nCharsLeft -= nCopy;
@@ -3754,8 +3763,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     assert(last_para->member.run.nFlags & MERF_ENDPARA);
     if (editor->bEmulateVersion10 && prev_para &&
         last_para->member.run.nCharOfs == 0 &&
-        prev_para->member.run.strText->nLen == 1 &&
-        prev_para->member.run.strText->szData[0] == '\r')
+        prev_para->member.run.len == 1 &&
+        *get_text( &prev_para->member.run, 0 ) == '\r')
     {
       /* In 1.0 emulation, the last solitary \r at the very end of the text
          (if one exists) is NOT a line break.
@@ -3819,7 +3828,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     } else {
       ME_DisplayItem *endRun = ME_FindItemBack(item_end, diRun);
       assert(endRun && endRun->member.run.nFlags & MERF_ENDPARA);
-      nNextLineOfs = item_end->member.para.nCharOfs - endRun->member.run.strText->nLen;
+      nNextLineOfs = item_end->member.para.nCharOfs - endRun->member.run.len;
     }
     nChars = nNextLineOfs - nThisLineOfs;
     TRACE("EM_LINELENGTH(%ld)==%d\n",wParam, nChars);
@@ -3849,28 +3858,38 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   }
   case EM_FINDTEXT:
   {
-    FINDTEXTA *ft = (FINDTEXTA *)lParam;
-    int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
-    WCHAR *tmp;
     LRESULT r;
+    if(!unicode){
+      FINDTEXTA *ft = (FINDTEXTA *)lParam;
+      int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
+      WCHAR *tmp;
 
-    if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
-      MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
-    r = ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
-    FREE_OBJ( tmp );
+      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+        MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
+      r = ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
+      FREE_OBJ( tmp );
+    }else{
+      FINDTEXTW *ft = (FINDTEXTW *)lParam;
+      r = ME_FindText(editor, wParam, &ft->chrg, ft->lpstrText, NULL);
+    }
     return r;
   }
   case EM_FINDTEXTEX:
   {
-    FINDTEXTEXA *ex = (FINDTEXTEXA *)lParam;
-    int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
-    WCHAR *tmp;
     LRESULT r;
+    if(!unicode){
+      FINDTEXTEXA *ex = (FINDTEXTEXA *)lParam;
+      int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
+      WCHAR *tmp;
 
-    if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
-      MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
-    r = ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
-    FREE_OBJ( tmp );
+      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+        MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
+      r = ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
+      FREE_OBJ( tmp );
+    }else{
+      FINDTEXTEXW *ex = (FINDTEXTEXW *)lParam;
+      r = ME_FindText(editor, wParam, &ex->chrg, ex->lpstrText, &ex->chrgText);
+    }
     return r;
   }
   case EM_FINDTEXTW:
@@ -3917,7 +3936,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_RunOfsFromCharOfs(editor, nCharOfs, &pPara, &pRun, &nOffset);
     assert(pRun->type == diRun);
     pt.y = pRun->member.run.pt.y;
-    pt.x = pRun->member.run.pt.x + ME_PointFromChar(editor, &pRun->member.run, nOffset);
+    pt.x = pRun->member.run.pt.x + ME_PointFromChar(editor, &pRun->member.run, nOffset, TRUE);
     pt.y += pPara->member.para.pt.y + editor->rcFormat.top;
     pt.x += editor->rcFormat.left;
 
@@ -4049,6 +4068,9 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       return 0;
     goto do_default;
   case WM_CHAR:
+    if ((editor->nEventMask & ENM_KEYEVENTS) &&
+        !ME_FilterEvent(editor, msg, &wParam, &lParam))
+      return 0;
     return ME_Char(editor, wParam, lParam, unicode);
   case WM_UNICHAR:
     if (unicode)
@@ -4348,7 +4370,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     int mask = 0;
     int changes = 0;
 
-    if (ME_GetTextLength(editor) || editor->pUndoStack || editor->pRedoStack)
+    if (ME_GetTextLength(editor) ||
+        !list_empty( &editor->undo_stack ) || !list_empty( &editor->redo_stack ))
       return E_UNEXPECTED;
 
     /* Check for mutually exclusive flags in adjacent bits of wParam */
@@ -4602,8 +4625,8 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
   assert(pRun);
   pNextRun = ME_FindItemFwd(pRun, diRun);
 
-  nLen = pRun->member.run.strText->nLen - start->nOffset;
-  str = pRun->member.run.strText->szData + start->nOffset;
+  nLen = pRun->member.run.len - start->nOffset;
+  str = get_text( &pRun->member.run, start->nOffset );
 
   /* No '\r' is appended to the last paragraph. */
   while (srcChars && buflen && pNextRun)
@@ -4634,8 +4657,8 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
     pRun = pNextRun;
     pNextRun = ME_FindItemFwd(pRun, diRun);
 
-    nLen = pRun->member.run.strText->nLen;
-    str = pRun->member.run.strText->szData;
+    nLen = pRun->member.run.len;
+    str = get_text( &pRun->member.run, 0 );
   }
   *buffer = 0;
   return buffer - pStart;
@@ -4775,9 +4798,9 @@ static BOOL ME_FindNextURLCandidate(ME_TextEditor *editor,
 
   while (nChars > 0)
   {
-    WCHAR *strStart = cursor.pRun->member.run.strText->szData;
+    WCHAR *strStart = get_text( &cursor.pRun->member.run, 0 );
     WCHAR *str = strStart + cursor.nOffset;
-    int nLen = cursor.pRun->member.run.strText->nLen - cursor.nOffset;
+    int nLen = cursor.pRun->member.run.len - cursor.nOffset;
     nChars -= nLen;
 
     if (~cursor.pRun->member.run.nFlags & MERF_ENDPARA)
@@ -4951,9 +4974,9 @@ static BOOL ME_UpdateLinkAttribute(ME_TextEditor *editor, ME_Cursor *start, int 
         /* Update candidateEnd since setting character formats may split
          * runs, which can cause a cursor to be at an invalid offset within
          * a split run. */
-        while (candidateEnd.nOffset >= candidateEnd.pRun->member.run.strText->nLen)
+        while (candidateEnd.nOffset >= candidateEnd.pRun->member.run.len)
         {
-          candidateEnd.nOffset -= candidateEnd.pRun->member.run.strText->nLen;
+          candidateEnd.nOffset -= candidateEnd.pRun->member.run.len;
           candidateEnd.pRun = ME_FindItemFwd(candidateEnd.pRun, diRun);
         }
         modified = TRUE;

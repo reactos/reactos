@@ -24,9 +24,18 @@ IsStringType(ULONG Type)
 
 
 NTSTATUS
-SampRegCloseKey(IN HANDLE KeyHandle)
+SampRegCloseKey(IN OUT PHANDLE KeyHandle)
 {
-    return NtClose(KeyHandle);
+    NTSTATUS Status;
+
+    if (KeyHandle == NULL || *KeyHandle == NULL)
+        return STATUS_SUCCESS;
+
+    Status = NtClose(*KeyHandle);
+    if (NT_SUCCESS(Status))
+        *KeyHandle = NULL;
+
+    return Status;
 }
 
 
@@ -34,7 +43,7 @@ NTSTATUS
 SampRegCreateKey(IN HANDLE ParentKeyHandle,
                  IN LPCWSTR KeyName,
                  IN ACCESS_MASK DesiredAccess,
-                 OUT HANDLE KeyHandle)
+                 OUT PHANDLE KeyHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
@@ -150,7 +159,7 @@ NTSTATUS
 SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,
-               OUT HANDLE KeyHandle)
+               OUT PHANDLE KeyHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;

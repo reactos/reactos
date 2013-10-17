@@ -2283,8 +2283,6 @@ BOOL WINAPI SetupCopyOEMInfW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (OEMSourceMediaType != SPOST_NONE && OEMSourceMediaType != SPOST_PATH && OEMSourceMediaType != SPOST_URL)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (OEMSourceMediaType != SPOST_NONE && !OEMSourceMediaLocation)
-        SetLastError(ERROR_INVALID_PARAMETER);
     else if (CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY))
     {
         TRACE("Unknown flags: 0x%08lx\n", CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY));

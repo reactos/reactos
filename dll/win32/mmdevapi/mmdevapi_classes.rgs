@@ -1,0 +1,13 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{BCDE0395-E52F-467C-8E3D-C4579291692E}' = s 'MMDeviceEnumerator class'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

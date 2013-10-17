@@ -121,6 +121,7 @@ typedef struct _SAM_USER_FIXED_DATA
 extern PGENERIC_MAPPING pServerMapping;
 extern ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 extern ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
+extern RTL_RESOURCE SampResource;
 
 
 /* alias.c */
@@ -139,6 +140,14 @@ NTSTATUS
 NTAPI
 SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
                           IN PRPC_SID MemberId);
+
+NTSTATUS
+SampGetMembersInAlias(IN PSAM_DB_OBJECT AliasObject,
+                      OUT PULONG MemberCount,
+                      OUT PSAMPR_SID_INFORMATION *MemberArray);
+
+NTSTATUS
+SampRemoveAllMembersFromAlias(IN PSAM_DB_OBJECT AliasObject);
 
 
 /* database.c */
@@ -193,8 +202,12 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
 NTSTATUS
 SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
-                             RPC_UNICODE_STRING *String);
+                             PRPC_UNICODE_STRING String);
 
+NTSTATUS
+SampSetObjectAttributeString(PSAM_DB_OBJECT DbObject,
+                             LPWSTR AttributeName,
+                             PRPC_UNICODE_STRING String);
 
 /* domain.c */
 
@@ -238,13 +251,13 @@ SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
 /* registry.h */
 
 NTSTATUS
-SampRegCloseKey(IN HANDLE KeyHandle);
+SampRegCloseKey(IN OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegCreateKey(IN HANDLE ParentKeyHandle,
                  IN LPCWSTR KeyName,
                  IN ACCESS_MASK DesiredAccess,
-                 OUT HANDLE KeyHandle);
+                 OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegDeleteKey(IN HANDLE ParentKeyHandle,
@@ -260,7 +273,7 @@ NTSTATUS
 SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,
-               OUT HANDLE KeyHandle);
+               OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegQueryKeyInfo(IN HANDLE KeyHandle,

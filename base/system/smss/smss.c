@@ -174,7 +174,7 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
     {
         /* It wasn't, so create an error message to print on the screen */
         sprintf_nt(MessageBuffer,
-                   "%wZ program not found - skipping AUTOCHECK\n",
+                   "%wZ program not found - skipping AUTOCHECK\r\n",
                    FileName);
         RtlInitAnsiString(&MessageString, MessageBuffer);
         if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&Destination,
@@ -420,7 +420,7 @@ SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     UNICODE_STRING DestinationString;
 
     /* Print and breakpoint into the debugger */
-    DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %x\n",
+    DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %p\n",
              ExceptionInfo->ExceptionRecord->ExceptionCode,
              ExceptionInfo->ExceptionRecord->ExceptionAddress);
     DbgPrint("      Memory Address: %x  Read/Write: %x\n",

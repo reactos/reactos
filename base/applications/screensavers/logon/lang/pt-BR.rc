@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Protetor de Tela de Logon"
     IDS_TEXT        "Nenhuma opção precisa ser definida."

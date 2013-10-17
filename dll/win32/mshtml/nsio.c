@@ -837,7 +837,7 @@ static nsresult NSAPI nsChannel_SetContentCharset(nsIHttpChannel *iface,
     return NS_OK;
 }
 
-static nsresult NSAPI nsChannel_GetContentLength(nsIHttpChannel *iface, LONG *aContentLength)
+static nsresult NSAPI nsChannel_GetContentLength(nsIHttpChannel *iface, INT64 *aContentLength)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
 
@@ -846,11 +846,11 @@ static nsresult NSAPI nsChannel_GetContentLength(nsIHttpChannel *iface, LONG *aC
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static nsresult NSAPI nsChannel_SetContentLength(nsIHttpChannel *iface, LONG aContentLength)
+static nsresult NSAPI nsChannel_SetContentLength(nsIHttpChannel *iface, INT64 aContentLength)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
 
-    FIXME("(%p)->(%d)\n", This, aContentLength);
+    FIXME("(%p)->(%s)\n", This, wine_dbgstr_longlong(aContentLength));
 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1385,6 +1385,15 @@ static nsresult NSAPI nsChannel_IsNoCacheResponse(nsIHttpChannel *iface, cpp_boo
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsChannel_RedirectTo(nsIHttpChannel *iface, nsIURI *aNewURI)
+{
+    nsChannel *This = impl_from_nsIHttpChannel(iface);
+
+    FIXME("(%p)->(%p)\n", This, aNewURI);
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static const nsIHttpChannelVtbl nsChannelVtbl = {
     nsChannel_QueryInterface,
     nsChannel_AddRef,
@@ -1438,7 +1447,8 @@ static const nsIHttpChannelVtbl nsChannelVtbl = {
     nsChannel_SetResponseHeader,
     nsChannel_VisitResponseHeaders,
     nsChannel_IsNoStoreResponse,
-    nsChannel_IsNoCacheResponse
+    nsChannel_IsNoCacheResponse,
+    nsChannel_RedirectTo
 };
 
 static inline nsChannel *impl_from_nsIUploadChannel(nsIUploadChannel *iface)
@@ -1722,6 +1732,34 @@ static nsresult NSAPI nsHttpChannelInternal_SetAllowSpdy(nsIHttpChannelInternal 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsHttpChannelInternal_GetLoadAsBlocking(nsIHttpChannelInternal *iface, cpp_bool *aLoadAsBlocking)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%p)\n", This, aLoadAsBlocking);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_SetLoadAsBlocking(nsIHttpChannelInternal *iface, cpp_bool aLoadAsBlocking)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%x)\n", This, aLoadAsBlocking);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_GetLoadUnblocked(nsIHttpChannelInternal *iface, cpp_bool *aLoadUnblocked)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%p)\n", This, aLoadUnblocked);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_SetLoadUnblocked(nsIHttpChannelInternal *iface, cpp_bool aLoadUnblocked)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%x)\n", This, aLoadUnblocked);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static const nsIHttpChannelInternalVtbl nsHttpChannelInternalVtbl = {
     nsHttpChannelInternal_QueryInterface,
     nsHttpChannelInternal_AddRef,
@@ -1744,7 +1782,11 @@ static const nsIHttpChannelInternalVtbl nsHttpChannelInternalVtbl = {
     nsHttpChannelInternal_SetCacheKeysRedirectChain,
     nsHttpChannelInternal_HTTPUpgrade,
     nsHttpChannelInternal_GetAllowSpdy,
-    nsHttpChannelInternal_SetAllowSpdy
+    nsHttpChannelInternal_SetAllowSpdy,
+    nsHttpChannelInternal_GetLoadAsBlocking,
+    nsHttpChannelInternal_SetLoadAsBlocking,
+    nsHttpChannelInternal_GetLoadUnblocked,
+    nsHttpChannelInternal_SetLoadUnblocked
 };
 
 
@@ -1907,10 +1949,10 @@ static nsresult NSAPI nsURI_SetSpec(nsIFileURL *iface, const nsACString *aSpec)
     if(!spec)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    hres = CreateUri(spec, 0, 0, &uri);
+    hres = create_uri(spec, 0, &uri);
     heap_free(spec);
     if(FAILED(hres)) {
-        WARN("CreateUri failed: %08x\n", hres);
+        WARN("create_uri failed: %08x\n", hres);
         return NS_ERROR_FAILURE;
     }
 
@@ -2920,19 +2962,12 @@ static nsresult create_nsuri(IUri *iuri, HTMLOuterWindow *window, NSContainer *c
     return NS_OK;
 }
 
-HRESULT create_doc_uri(HTMLOuterWindow *window, const WCHAR *url, nsWineURI **ret)
+HRESULT create_doc_uri(HTMLOuterWindow *window, IUri *iuri, nsWineURI **ret)
 {
     nsWineURI *uri;
-    IUri *iuri;
     nsresult nsres;
-    HRESULT hres;
-
-    hres = CreateUri(url, 0, 0, &iuri);
-    if(FAILED(hres))
-        return hres;
 
     nsres = create_nsuri(iuri, window, window->doc_obj->nscontainer, NULL, &uri);
-    IUri_Release(iuri);
     if(NS_FAILED(nsres))
         return E_FAIL;
 
@@ -2977,7 +3012,7 @@ HRESULT create_redirect_nschannel(const WCHAR *url, nsChannel *orig_channel, nsC
     nsresult nsres;
     HRESULT hres;
 
-    hres = CreateUri(url, 0, 0, &iuri);
+    hres = create_uri(url, 0, &iuri);
     if(FAILED(hres))
         return hres;
 
@@ -3290,9 +3325,9 @@ static nsresult NSAPI nsIOService_NewURI(nsIIOService *iface, const nsACString *
         if(FAILED(hres))
             WARN("CoInternetCombineUrlEx failed: %08x\n", hres);
     }else {
-        hres = CreateUri(new_spec, 0, 0, &urlmon_uri);
+        hres = create_uri(new_spec, 0, &urlmon_uri);
         if(FAILED(hres))
-            WARN("CreateUri failed: %08x\n", hres);
+            WARN("create_uri failed: %08x\n", hres);
     }
 
     if(FAILED(hres))

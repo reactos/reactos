@@ -906,7 +906,7 @@ static BOOL secure_proxy_connect( request_t *request )
             {
                 int len = strlen( req_ascii ), bytes_sent;
 
-                ret = netconn_send( &request->netconn, req_ascii, len, 0, &bytes_sent );
+                ret = netconn_send( &request->netconn, req_ascii, len, &bytes_sent );
                 heap_free( req_ascii );
                 if (ret)
                     ret = read_reply( request );
@@ -950,7 +950,7 @@ static BOOL open_connection( request_t *request )
     struct sockaddr *saddr;
     DWORD len;
 
-    if (netconn_connected( &request->netconn )) return TRUE;
+    if (netconn_connected( &request->netconn )) goto done;
 
     connect = request->connect;
     port = connect->serverport ? connect->serverport : (request->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
@@ -1008,6 +1008,9 @@ static BOOL open_connection( request_t *request )
 
     send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, addressW, strlenW(addressW) + 1 );
 
+done:
+    request->read_pos = request->read_size = 0;
+    request->read_chunked = FALSE;
     heap_free( addressW );
     return TRUE;
 }
@@ -1123,13 +1126,17 @@ static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len
 
     send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_SENDING_REQUEST, NULL, 0 );
 
-    ret = netconn_send( &request->netconn, req_ascii, len, 0, &bytes_sent );
+    ret = netconn_send( &request->netconn, req_ascii, len, &bytes_sent );
     heap_free( req_ascii );
     if (!ret) goto end;
 
-    if (optional_len && !netconn_send( &request->netconn, optional, optional_len, 0, &bytes_sent )) goto end;
-    len += optional_len;
-
+    if (optional_len)
+    {
+        if (!netconn_send( &request->netconn, optional, optional_len, &bytes_sent )) goto end;
+        request->optional = optional;
+        request->optional_len = optional_len;
+        len += optional_len;
+    }
     send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, &len, sizeof(DWORD) );
 
 end:
@@ -1205,29 +1212,45 @@ BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD heade
 
 #define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
 
+static const WCHAR basicW[]     = {'B','a','s','i','c',0};
+static const WCHAR ntlmW[]      = {'N','T','L','M',0};
+static const WCHAR passportW[]  = {'P','a','s','s','p','o','r','t',0};
+static const WCHAR digestW[]    = {'D','i','g','e','s','t',0};
+static const WCHAR negotiateW[] = {'N','e','g','o','t','i','a','t','e',0};
+
+static const struct
+{
+    const WCHAR *str;
+    unsigned int len;
+    DWORD scheme;
+}
+auth_schemes[] =
+{
+    { basicW,     ARRAYSIZE(basicW) - 1,     WINHTTP_AUTH_SCHEME_BASIC },
+    { ntlmW,      ARRAYSIZE(ntlmW) - 1,      WINHTTP_AUTH_SCHEME_NTLM },
+    { passportW,  ARRAYSIZE(passportW) - 1,  WINHTTP_AUTH_SCHEME_PASSPORT },
+    { digestW,    ARRAYSIZE(digestW) - 1,    WINHTTP_AUTH_SCHEME_DIGEST },
+    { negotiateW, ARRAYSIZE(negotiateW) - 1, WINHTTP_AUTH_SCHEME_NEGOTIATE }
+};
+static const unsigned int num_auth_schemes = sizeof(auth_schemes)/sizeof(auth_schemes[0]);
+
+static enum auth_scheme scheme_from_flag( DWORD flag )
+{
+    int i;
+
+    for (i = 0; i < num_auth_schemes; i++) if (flag == auth_schemes[i].scheme) return i;
+    return SCHEME_INVALID;
+}
+
 static DWORD auth_scheme_from_header( WCHAR *header )
 {
-    static const WCHAR basic[]     = {'B','a','s','i','c'};
-    static const WCHAR ntlm[]      = {'N','T','L','M'};
-    static const WCHAR passport[]  = {'P','a','s','s','p','o','r','t'};
-    static const WCHAR digest[]    = {'D','i','g','e','s','t'};
-    static const WCHAR negotiate[] = {'N','e','g','o','t','i','a','t','e'};
+    unsigned int i;
 
-    if (!strncmpiW( header, basic, ARRAYSIZE(basic) ) &&
-        (header[ARRAYSIZE(basic)] == ' ' || !header[ARRAYSIZE(basic)])) return WINHTTP_AUTH_SCHEME_BASIC;
-
-    if (!strncmpiW( header, ntlm, ARRAYSIZE(ntlm) ) &&
-        (header[ARRAYSIZE(ntlm)] == ' ' || !header[ARRAYSIZE(ntlm)])) return WINHTTP_AUTH_SCHEME_NTLM;
-
-    if (!strncmpiW( header, passport, ARRAYSIZE(passport) ) &&
-        (header[ARRAYSIZE(passport)] == ' ' || !header[ARRAYSIZE(passport)])) return WINHTTP_AUTH_SCHEME_PASSPORT;
-
-    if (!strncmpiW( header, digest, ARRAYSIZE(digest) ) &&
-        (header[ARRAYSIZE(digest)] == ' ' || !header[ARRAYSIZE(digest)])) return WINHTTP_AUTH_SCHEME_DIGEST;
-
-    if (!strncmpiW( header, negotiate, ARRAYSIZE(negotiate) ) &&
-        (header[ARRAYSIZE(negotiate)] == ' ' || !header[ARRAYSIZE(negotiate)])) return WINHTTP_AUTH_SCHEME_NEGOTIATE;
-
+    for (i = 0; i < num_auth_schemes; i++)
+    {
+        if (!strncmpiW( header, auth_schemes[i].str, auth_schemes[i].len ) &&
+            (header[auth_schemes[i].len] == ' ' || !header[auth_schemes[i].len])) return auth_schemes[i].scheme;
+    }
     return 0;
 }
 
@@ -1253,10 +1276,14 @@ static BOOL query_auth_schemes( request_t *request, DWORD level, LPDWORD support
             return FALSE;
         }
         scheme = auth_scheme_from_header( buffer );
-        if (first && index == 1) *first = scheme;
-        *supported |= scheme;
-
         heap_free( buffer );
+        if (!scheme) break;
+
+        if (first && index == 1)
+            *first = *supported = scheme;
+        else
+            *supported |= scheme;
+
         ret = TRUE;
     }
     return ret;
@@ -1282,6 +1309,13 @@ BOOL WINAPI WinHttpQueryAuthSchemes( HINTERNET hrequest, LPDWORD supported, LPDW
         release_object( &request->hdr );
         set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
         return FALSE;
+    }
+    if (!supported || !first || !target)
+    {
+        release_object( &request->hdr );
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+
     }
 
     if (query_auth_schemes( request, WINHTTP_QUERY_WWW_AUTHENTICATE, supported, first ))
@@ -1340,72 +1374,350 @@ static UINT encode_base64( const char *bin, unsigned int len, WCHAR *base64 )
     return n;
 }
 
-static BOOL set_credentials( request_t *request, DWORD target, DWORD scheme, LPCWSTR username, LPCWSTR password )
+static inline char decode_char( WCHAR c )
 {
-    static const WCHAR basic[] = {'B','a','s','i','c',' ',0};
-    const WCHAR *auth_scheme, *auth_target;
-    WCHAR *auth_header;
-    DWORD len, auth_data_len;
-    char *auth_data;
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return 64;
+}
+
+static unsigned int decode_base64( const WCHAR *base64, unsigned int len, char *buf )
+{
+    unsigned int i = 0;
+    char c0, c1, c2, c3;
+    const WCHAR *p = base64;
+
+    while (len >= 4)
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+        if ((c2 = decode_char( p[2] )) > 63) return 0;
+        if ((c3 = decode_char( p[3] )) > 63) return 0;
+
+        if (buf)
+        {
+            buf[i + 0] = (c0 << 2) | (c1 >> 4);
+            buf[i + 1] = (c1 << 4) | (c2 >> 2);
+            buf[i + 2] = (c2 << 6) |  c3;
+        }
+        len -= 4;
+        i += 3;
+        p += 4;
+    }
+    if (p[2] == '=')
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+
+        if (buf) buf[i] = (c0 << 2) | (c1 >> 4);
+        i++;
+    }
+    else if (p[3] == '=')
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+        if ((c2 = decode_char( p[2] )) > 63) return 0;
+
+        if (buf)
+        {
+            buf[i + 0] = (c0 << 2) | (c1 >> 4);
+            buf[i + 1] = (c1 << 4) | (c2 >> 2);
+        }
+        i += 2;
+    }
+    return i;
+}
+
+static struct authinfo *alloc_authinfo(void)
+{
+    struct authinfo *ret;
+
+    if (!(ret = heap_alloc( sizeof(*ret) ))) return NULL;
+
+    SecInvalidateHandle( &ret->cred );
+    SecInvalidateHandle( &ret->ctx );
+    memset( &ret->exp, 0, sizeof(ret->exp) );
+    ret->scheme    = 0;
+    ret->attr      = 0;
+    ret->max_token = 0;
+    ret->data      = NULL;
+    ret->data_len  = 0;
+    ret->finished  = FALSE;
+    return ret;
+}
+
+void destroy_authinfo( struct authinfo *authinfo )
+{
+    if (!authinfo) return;
+
+    if (SecIsValidHandle( &authinfo->ctx ))
+        DeleteSecurityContext( &authinfo->ctx );
+    if (SecIsValidHandle( &authinfo->cred ))
+        FreeCredentialsHandle( &authinfo->cred );
+
+    heap_free( authinfo->data );
+    heap_free( authinfo );
+}
+
+static BOOL get_authvalue( request_t *request, DWORD level, DWORD scheme, WCHAR *buffer, DWORD len )
+{
+    DWORD size, index = 0;
+    for (;;)
+    {
+        size = len;
+        if (!query_headers( request, level, NULL, buffer, &size, &index )) return FALSE;
+        if (auth_scheme_from_header( buffer ) == scheme) break;
+    }
+    return TRUE;
+}
+
+static BOOL do_authorization( request_t *request, DWORD target, DWORD scheme_flag )
+{
+    struct authinfo *authinfo, **auth_ptr;
+    enum auth_scheme scheme = scheme_from_flag( scheme_flag );
+    const WCHAR *auth_target, *username, *password;
+    WCHAR auth_value[2048], *auth_reply;
+    DWORD len = sizeof(auth_value), len_scheme, flags;
     BOOL ret;
 
-    if (!username || !password)
-    {
-        set_last_error( ERROR_INVALID_PARAMETER );
-        return FALSE;
-    }
+    if (scheme == SCHEME_INVALID) return FALSE;
 
     switch (target)
     {
-    case WINHTTP_AUTH_TARGET_SERVER: auth_target = attr_authorization; break;
-    case WINHTTP_AUTH_TARGET_PROXY:  auth_target = attr_proxy_authorization; break;
+    case WINHTTP_AUTH_TARGET_SERVER:
+        if (!get_authvalue( request, WINHTTP_QUERY_WWW_AUTHENTICATE, scheme_flag, auth_value, len ))
+            return FALSE;
+        auth_ptr = &request->authinfo;
+        auth_target = attr_authorization;
+        username = request->connect->username;
+        password = request->connect->password;
+        break;
+
+    case WINHTTP_AUTH_TARGET_PROXY:
+        if (!get_authvalue( request, WINHTTP_QUERY_PROXY_AUTHENTICATE, scheme_flag, auth_value, len ))
+            return FALSE;
+        auth_ptr = &request->proxy_authinfo;
+        auth_target = attr_proxy_authorization;
+        username = request->connect->session->proxy_username;
+        password = request->connect->session->proxy_password;
+        break;
+
     default:
         WARN("unknown target %x\n", target);
         return FALSE;
     }
+    authinfo = *auth_ptr;
+
     switch (scheme)
     {
-    case WINHTTP_AUTH_SCHEME_BASIC:
+    case SCHEME_BASIC:
     {
-        int userlen = WideCharToMultiByte( CP_UTF8, 0, username, strlenW( username ), NULL, 0, NULL, NULL );
-        int passlen = WideCharToMultiByte( CP_UTF8, 0, password, strlenW( password ), NULL, 0, NULL, NULL );
+        int userlen, passlen;
 
-        TRACE("basic authentication\n");
+        if (!username || !password) return FALSE;
+        if ((!authinfo && !(authinfo = alloc_authinfo())) || authinfo->finished) return FALSE;
 
-        auth_scheme = basic;
-        auth_data_len = userlen + 1 + passlen;
-        if (!(auth_data = heap_alloc( auth_data_len ))) return FALSE;
+        userlen = WideCharToMultiByte( CP_UTF8, 0, username, strlenW( username ), NULL, 0, NULL, NULL );
+        passlen = WideCharToMultiByte( CP_UTF8, 0, password, strlenW( password ), NULL, 0, NULL, NULL );
 
-        WideCharToMultiByte( CP_UTF8, 0, username, -1, auth_data, userlen, NULL, NULL );
-        auth_data[userlen] = ':';
-        WideCharToMultiByte( CP_UTF8, 0, password, -1, auth_data + userlen + 1, passlen, NULL, NULL );
+        authinfo->data_len = userlen + 1 + passlen;
+        if (!(authinfo->data = heap_alloc( authinfo->data_len ))) return FALSE;
+
+        WideCharToMultiByte( CP_UTF8, 0, username, -1, authinfo->data, userlen, NULL, NULL );
+        authinfo->data[userlen] = ':';
+        WideCharToMultiByte( CP_UTF8, 0, password, -1, authinfo->data + userlen + 1, passlen, NULL, NULL );
+
+        authinfo->scheme   = SCHEME_BASIC;
+        authinfo->finished = TRUE;
         break;
     }
-    case WINHTTP_AUTH_SCHEME_NTLM:
-    case WINHTTP_AUTH_SCHEME_PASSPORT:
-    case WINHTTP_AUTH_SCHEME_DIGEST:
-    case WINHTTP_AUTH_SCHEME_NEGOTIATE:
-        FIXME("unimplemented authentication scheme %x\n", scheme);
-        return FALSE;
-    default:
-        WARN("unknown authentication scheme %x\n", scheme);
-        return FALSE;
-    }
-
-    len = strlenW( auth_scheme ) + ((auth_data_len + 2) * 4) / 3;
-    if (!(auth_header = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+    case SCHEME_NTLM:
+    case SCHEME_NEGOTIATE:
     {
-        heap_free( auth_data );
+        SECURITY_STATUS status;
+        SecBufferDesc out_desc, in_desc;
+        SecBuffer out, in;
+        ULONG flags = ISC_REQ_CONNECTION|ISC_REQ_USE_DCE_STYLE|ISC_REQ_MUTUAL_AUTH|ISC_REQ_DELEGATE;
+        const WCHAR *p;
+        BOOL first = FALSE;
+
+        if (!authinfo)
+        {
+            TimeStamp exp;
+            SEC_WINNT_AUTH_IDENTITY_W id;
+            WCHAR *domain, *user;
+
+            if (!username || !password || !(authinfo = alloc_authinfo())) return FALSE;
+
+            first = TRUE;
+            domain = (WCHAR *)username;
+            user = strchrW( username, '\\' );
+
+            if (user) user++;
+            else
+            {
+                user = (WCHAR *)username;
+                domain = NULL;
+            }
+            id.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+            id.User           = user;
+            id.UserLength     = strlenW( user );
+            id.Domain         = domain;
+            id.DomainLength   = domain ? user - domain - 1 : 0;
+            id.Password       = (WCHAR *)password;
+            id.PasswordLength = strlenW( password );
+
+            status = AcquireCredentialsHandleW( NULL, (SEC_WCHAR *)auth_schemes[scheme].str,
+                                                SECPKG_CRED_OUTBOUND, NULL, &id, NULL, NULL,
+                                                &authinfo->cred, &exp );
+            if (status == SEC_E_OK)
+            {
+                PSecPkgInfoW info;
+                status = QuerySecurityPackageInfoW( (SEC_WCHAR *)auth_schemes[scheme].str, &info );
+                if (status == SEC_E_OK)
+                {
+                    authinfo->max_token = info->cbMaxToken;
+                    FreeContextBuffer( info );
+                }
+            }
+            if (status != SEC_E_OK)
+            {
+                WARN("AcquireCredentialsHandleW for scheme %s failed with error 0x%08x\n",
+                     debugstr_w(auth_schemes[scheme].str), status);
+                heap_free( authinfo );
+                return FALSE;
+            }
+            authinfo->scheme = scheme;
+        }
+        else if (authinfo->finished) return FALSE;
+
+        if ((strlenW( auth_value ) < auth_schemes[authinfo->scheme].len ||
+            strncmpiW( auth_value, auth_schemes[authinfo->scheme].str, auth_schemes[authinfo->scheme].len )))
+        {
+            ERR("authentication scheme changed from %s to %s\n",
+                debugstr_w(auth_schemes[authinfo->scheme].str), debugstr_w(auth_value));
+            destroy_authinfo( authinfo );
+            *auth_ptr = NULL;
+            return FALSE;
+        }
+        in.BufferType = SECBUFFER_TOKEN;
+        in.cbBuffer   = 0;
+        in.pvBuffer   = NULL;
+
+        in_desc.ulVersion = 0;
+        in_desc.cBuffers  = 1;
+        in_desc.pBuffers  = &in;
+
+        p = auth_value + auth_schemes[scheme].len;
+        if (*p == ' ')
+        {
+            int len = strlenW( ++p );
+            in.cbBuffer = decode_base64( p, len, NULL );
+            if (!(in.pvBuffer = heap_alloc( in.cbBuffer ))) return FALSE;
+            decode_base64( p, len, in.pvBuffer );
+        }
+        out.BufferType = SECBUFFER_TOKEN;
+        out.cbBuffer   = authinfo->max_token;
+        if (!(out.pvBuffer = heap_alloc( authinfo->max_token )))
+        {
+            heap_free( in.pvBuffer );
+            return FALSE;
+        }
+        out_desc.ulVersion = 0;
+        out_desc.cBuffers  = 1;
+        out_desc.pBuffers  = &out;
+
+        status = InitializeSecurityContextW( first ? &authinfo->cred : NULL, first ? NULL : &authinfo->ctx,
+                                             first ? request->connect->servername : NULL, flags, 0,
+                                             SECURITY_NETWORK_DREP, in.pvBuffer ? &in_desc : NULL, 0,
+                                             &authinfo->ctx, &out_desc, &authinfo->attr, &authinfo->exp );
+        heap_free( in.pvBuffer );
+        if (status == SEC_E_OK)
+        {
+            heap_free( authinfo->data );
+            authinfo->data     = out.pvBuffer;
+            authinfo->data_len = out.cbBuffer;
+            authinfo->finished = TRUE;
+            TRACE("sending last auth packet\n");
+        }
+        else if (status == SEC_I_CONTINUE_NEEDED)
+        {
+            heap_free( authinfo->data );
+            authinfo->data     = out.pvBuffer;
+            authinfo->data_len = out.cbBuffer;
+            TRACE("sending next auth packet\n");
+        }
+        else
+        {
+            ERR("InitializeSecurityContextW failed with error 0x%08x\n", status);
+            heap_free( out.pvBuffer );
+            destroy_authinfo( authinfo );
+            *auth_ptr = NULL;
+            return FALSE;
+        }
+        break;
+    }
+    default:
+        ERR("invalid scheme %u\n", scheme);
         return FALSE;
     }
-    strcpyW( auth_header, auth_scheme );
-    encode_base64( auth_data, auth_data_len, auth_header + strlenW( auth_header ) );
+    *auth_ptr = authinfo;
 
-    ret = process_header( request, auth_target, auth_header, WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE, TRUE );
+    len_scheme = auth_schemes[authinfo->scheme].len;
+    len = len_scheme + 1 + ((authinfo->data_len + 2) * 4) / 3;
+    if (!(auth_reply = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
 
-    heap_free( auth_data );
-    heap_free( auth_header );
+    memcpy( auth_reply, auth_schemes[authinfo->scheme].str, len_scheme * sizeof(WCHAR) );
+    auth_reply[len_scheme] = ' ';
+    encode_base64( authinfo->data, authinfo->data_len, auth_reply + len_scheme + 1 );
+
+    flags = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
+    ret = process_header( request, auth_target, auth_reply, flags, TRUE );
+    heap_free( auth_reply );
     return ret;
+}
+
+static BOOL set_credentials( request_t *request, DWORD target, DWORD scheme, const WCHAR *username,
+                             const WCHAR *password )
+{
+    if ((scheme == WINHTTP_AUTH_SCHEME_BASIC || scheme == WINHTTP_AUTH_SCHEME_DIGEST) &&
+        (!username || !password))
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    switch (target)
+    {
+    case WINHTTP_AUTH_TARGET_SERVER:
+    {
+        heap_free( request->connect->username );
+        if (!username) request->connect->username = NULL;
+        else if (!(request->connect->username = strdupW( username ))) return FALSE;
+
+        heap_free( request->connect->password );
+        if (!password) request->connect->password = NULL;
+        else if (!(request->connect->password = strdupW( password ))) return FALSE;
+        break;
+    }
+    case WINHTTP_AUTH_TARGET_PROXY:
+    {
+        heap_free( request->connect->session->proxy_username );
+        if (!username) request->connect->session->proxy_username = NULL;
+        else if (!(request->connect->session->proxy_username = strdupW( username ))) return FALSE;
+
+        heap_free( request->connect->session->proxy_password );
+        if (!password) request->connect->session->proxy_password = NULL;
+        else if (!(request->connect->session->proxy_password = strdupW( password ))) return FALSE;
+        break;
+    }
+    default:
+        WARN("unknown target %u\n", target);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /***********************************************************************
@@ -1439,8 +1751,7 @@ BOOL WINAPI WinHttpSetCredentials( HINTERNET hrequest, DWORD target, DWORD schem
 
 static BOOL handle_authorization( request_t *request, DWORD status )
 {
-    DWORD schemes, level, target;
-    const WCHAR *username, *password;
+    DWORD i, schemes, first, level, target;
 
     switch (status)
     {
@@ -1459,24 +1770,191 @@ static BOOL handle_authorization( request_t *request, DWORD status )
         return FALSE;
     }
 
-    if (!query_auth_schemes( request, level, &schemes, NULL )) return FALSE;
+    if (!query_auth_schemes( request, level, &schemes, &first )) return FALSE;
+    if (do_authorization( request, target, first )) return TRUE;
 
-    if (target == WINHTTP_AUTH_TARGET_SERVER)
+    schemes &= ~first;
+    for (i = 0; i < num_auth_schemes; i++)
     {
-        username = request->connect->username;
-        password = request->connect->password;
+        if (!(schemes & auth_schemes[i].scheme)) continue;
+        if (do_authorization( request, target, auth_schemes[i].scheme )) return TRUE;
     }
-    else
-    {
-        username = request->connect->session->proxy_username;
-        password = request->connect->session->proxy_password;
-    }
-
-    if (schemes & WINHTTP_AUTH_SCHEME_BASIC)
-        return set_credentials( request, target, WINHTTP_AUTH_SCHEME_BASIC, username, password );
-
-    FIXME("unsupported authentication scheme\n");
     return FALSE;
+}
+
+/* set the request content length based on the headers */
+static DWORD set_content_length( request_t *request )
+{
+    WCHAR encoding[20];
+    DWORD buflen;
+
+    buflen = sizeof(request->content_length);
+    if (!query_headers( request, WINHTTP_QUERY_CONTENT_LENGTH|WINHTTP_QUERY_FLAG_NUMBER,
+                        NULL, &request->content_length, &buflen, NULL ))
+        request->content_length = ~0u;
+
+    buflen = sizeof(encoding);
+    if (query_headers( request, WINHTTP_QUERY_TRANSFER_ENCODING, NULL, encoding, &buflen, NULL ) &&
+        !strcmpiW( encoding, chunkedW ))
+    {
+        request->content_length = ~0u;
+        request->read_chunked = TRUE;
+    }
+    request->content_read = 0;
+    return request->content_length;
+}
+
+/* read some more data into the read buffer */
+static BOOL read_more_data( request_t *request, int maxlen )
+{
+    int len;
+
+    if (request->read_size && request->read_pos)
+    {
+        /* move existing data to the start of the buffer */
+        memmove( request->read_buf, request->read_buf + request->read_pos, request->read_size );
+        request->read_pos = 0;
+    }
+    if (maxlen == -1) maxlen = sizeof(request->read_buf);
+    if (!netconn_recv( &request->netconn, request->read_buf + request->read_size,
+                       maxlen - request->read_size, 0, &len )) return FALSE;
+    request->read_size += len;
+    return TRUE;
+}
+
+/* remove some amount of data from the read buffer */
+static void remove_data( request_t *request, int count )
+{
+    if (!(request->read_size -= count)) request->read_pos = 0;
+    else request->read_pos += count;
+}
+
+static BOOL read_line( request_t *request, char *buffer, DWORD *len )
+{
+    int count, bytes_read, pos = 0;
+
+    for (;;)
+    {
+        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
+        if (eol)
+        {
+            count = eol - (request->read_buf + request->read_pos);
+            bytes_read = count + 1;
+        }
+        else count = bytes_read = request->read_size;
+
+        count = min( count, *len - pos );
+        memcpy( buffer + pos, request->read_buf + request->read_pos, count );
+        pos += count;
+        remove_data( request, bytes_read );
+        if (eol) break;
+
+        if (!read_more_data( request, -1 )) return FALSE;
+        if (!request->read_size)
+        {
+            *len = 0;
+            TRACE("returning empty string\n");
+            return FALSE;
+        }
+    }
+    if (pos < *len)
+    {
+        if (pos && buffer[pos - 1] == '\r') pos--;
+        *len = pos + 1;
+    }
+    buffer[*len - 1] = 0;
+    TRACE("returning %s\n", debugstr_a(buffer));
+    return TRUE;
+}
+
+/* discard data contents until we reach end of line */
+static BOOL discard_eol( request_t *request )
+{
+    do
+    {
+        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
+        if (eol)
+        {
+            remove_data( request, (eol + 1) - (request->read_buf + request->read_pos) );
+            break;
+        }
+        request->read_pos = request->read_size = 0;  /* discard everything */
+        if (!read_more_data( request, -1 )) return FALSE;
+    } while (request->read_size);
+    return TRUE;
+}
+
+/* read the size of the next chunk */
+static BOOL start_next_chunk( request_t *request )
+{
+    DWORD chunk_size = 0;
+
+    if (!request->content_length) return TRUE;
+    if (request->content_length == request->content_read)
+    {
+        /* read terminator for the previous chunk */
+        if (!discard_eol( request )) return FALSE;
+        request->content_length = ~0u;
+        request->content_read = 0;
+    }
+    for (;;)
+    {
+        while (request->read_size)
+        {
+            char ch = request->read_buf[request->read_pos];
+            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
+            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
+            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
+            else if (ch == ';' || ch == '\r' || ch == '\n')
+            {
+                TRACE("reading %u byte chunk\n", chunk_size);
+                request->content_length = chunk_size;
+                request->content_read = 0;
+                if (!discard_eol( request )) return FALSE;
+                return TRUE;
+            }
+            remove_data( request, 1 );
+        }
+        if (!read_more_data( request, -1 )) return FALSE;
+        if (!request->read_size)
+        {
+            request->content_length = request->content_read = 0;
+            return TRUE;
+        }
+    }
+}
+
+/* return the size of data available to be read immediately */
+static DWORD get_available_data( request_t *request )
+{
+    if (request->read_chunked &&
+        (request->content_length == ~0u || request->content_length == request->content_read))
+        return 0;
+    return min( request->read_size, request->content_length - request->content_read );
+}
+
+/* check if we have reached the end of the data to read */
+static BOOL end_of_read_data( request_t *request )
+{
+    if (request->read_chunked) return (request->content_length == 0);
+    if (request->content_length == ~0u) return FALSE;
+    return (request->content_length == request->content_read);
+}
+
+static BOOL refill_buffer( request_t *request )
+{
+    int len = sizeof(request->read_buf);
+
+    if (request->read_chunked &&
+        (request->content_length == ~0u || request->content_length == request->content_read))
+    {
+        if (!start_next_chunk( request )) return FALSE;
+    }
+    if (request->content_length != ~0u) len = min( len, request->content_length - request->content_read );
+    if (len <= request->read_size) return TRUE;
+    if (!read_more_data( request, len )) return FALSE;
+    if (!request->read_size) request->content_length = request->content_read = 0;
+    return TRUE;
 }
 
 #define MAX_REPLY_LEN   1460
@@ -1500,7 +1978,7 @@ static BOOL read_reply( request_t *request )
     do
     {
         buflen = MAX_REPLY_LEN;
-        if (!netconn_get_next_line( &request->netconn, buffer, &buflen )) return FALSE;
+        if (!read_line( request, buffer, &buflen )) return FALSE;
         received_len += buflen;
 
         /* first line should look like 'HTTP/1.x nnn OK' where nnn is the status code */
@@ -1551,7 +2029,7 @@ static BOOL read_reply( request_t *request )
         header_t *header;
 
         buflen = MAX_REPLY_LEN;
-        if (!netconn_get_next_line( &request->netconn, buffer, &buflen )) goto end;
+        if (!read_line( request, buffer, &buflen )) goto end;
         received_len += buflen;
         if (!*buffer) break;
 
@@ -1582,101 +2060,6 @@ end:
     return TRUE;
 }
 
-static BOOL receive_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
-{
-    DWORD to_read;
-    int bytes_read;
-
-    to_read = min( size, request->content_length - request->content_read );
-    if (!netconn_recv( &request->netconn, buffer, to_read, async ? 0 : MSG_WAITALL, &bytes_read ))
-    {
-        if (bytes_read != to_read)
-        {
-            ERR("not all data received %d/%d\n", bytes_read, to_read);
-        }
-        /* always return success, even if the network layer returns an error */
-        *read = 0;
-        return TRUE;
-    }
-    request->content_read += bytes_read;
-    *read = bytes_read;
-    return TRUE;
-}
-
-static DWORD get_chunk_size( const char *buffer )
-{
-    const char *p;
-    DWORD size = 0;
-
-    for (p = buffer; *p; p++)
-    {
-        if (*p >= '0' && *p <= '9') size = size * 16 + *p - '0';
-        else if (*p >= 'a' && *p <= 'f') size = size * 16 + *p - 'a' + 10;
-        else if (*p >= 'A' && *p <= 'F') size = size * 16 + *p - 'A' + 10;
-        else if (*p == ';') break;
-    }
-    return size;
-}
-
-static BOOL receive_data_chunked( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
-{
-    char reply[MAX_REPLY_LEN], *p = buffer;
-    DWORD buflen, to_read, to_write = size;
-    int bytes_read;
-
-    *read = 0;
-    for (;;)
-    {
-        if (*read == size) break;
-
-        if (request->content_length == ~0u) /* new chunk */
-        {
-            buflen = sizeof(reply);
-            if (!netconn_get_next_line( &request->netconn, reply, &buflen )) break;
-
-            if (!(request->content_length = get_chunk_size( reply )))
-            {
-                /* zero sized chunk marks end of transfer; read any trailing headers and return */
-                read_reply( request );
-                break;
-            }
-        }
-        to_read = min( to_write, request->content_length - request->content_read );
-
-        if (!netconn_recv( &request->netconn, p, to_read, async ? 0 : MSG_WAITALL, &bytes_read ))
-        {
-            if (bytes_read != to_read)
-            {
-                ERR("Not all data received %d/%d\n", bytes_read, to_read);
-            }
-            /* always return success, even if the network layer returns an error */
-            *read = 0;
-            break;
-        }
-        if (!bytes_read) break;
-
-        request->content_read += bytes_read;
-        to_write -= bytes_read;
-        *read += bytes_read;
-        p += bytes_read;
-
-        if (request->content_read == request->content_length) /* chunk complete */
-        {
-            request->content_read = 0;
-            request->content_length = ~0u;
-
-            buflen = sizeof(reply);
-            if (!netconn_get_next_line( &request->netconn, reply, &buflen ))
-            {
-                ERR("Malformed chunk\n");
-                *read = 0;
-                break;
-            }
-        }
-    }
-    return TRUE;
-}
-
 static void finished_reading( request_t *request )
 {
     static const WCHAR closeW[] = {'c','l','o','s','e',0};
@@ -1692,31 +2075,40 @@ static void finished_reading( request_t *request )
         if (!strcmpiW( connection, closeW )) close = TRUE;
     }
     else if (!strcmpW( request->version, http1_0 )) close = TRUE;
-
     if (close) close_connection( request );
-    request->content_length = ~0u;
-    request->content_read = 0;
 }
 
-static BOOL read_data( request_t *request, void *buffer, DWORD to_read, DWORD *read, BOOL async )
+static BOOL read_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
 {
-    static const WCHAR chunked[] = {'c','h','u','n','k','e','d',0};
+    BOOL ret = TRUE;
+    int len, bytes_read = 0;
 
-    BOOL ret;
-    WCHAR encoding[20];
-    DWORD num_bytes, buflen = sizeof(encoding);
-
-    if (query_headers( request, WINHTTP_QUERY_TRANSFER_ENCODING, NULL, encoding, &buflen, NULL ) &&
-        !strcmpiW( encoding, chunked ))
+    if (request->read_chunked &&
+        (request->content_length == ~0u || request->content_length == request->content_read))
     {
-        ret = receive_data_chunked( request, buffer, to_read, &num_bytes, async );
+        if (!start_next_chunk( request )) goto done;
     }
-    else
-        ret = receive_data( request, buffer, to_read, &num_bytes, async );
+    if (request->content_length != ~0u) size = min( size, request->content_length - request->content_read );
 
+    if (request->read_size)
+    {
+        bytes_read = min( request->read_size, size );
+        memcpy( buffer, request->read_buf + request->read_pos, bytes_read );
+        remove_data( request, bytes_read );
+    }
+    if (size > bytes_read && (!bytes_read || !async))
+    {
+        if ((ret = netconn_recv( &request->netconn, (char *)buffer + bytes_read, size - bytes_read,
+                                 async ? 0 : MSG_WAITALL, &len )))
+            bytes_read += len;
+    }
+
+done:
+    request->content_read += bytes_read;
+    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, request->content_read, request->content_length );
     if (async)
     {
-        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, num_bytes );
+        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, bytes_read );
         else
         {
             WINHTTP_ASYNC_RESULT result;
@@ -1725,11 +2117,8 @@ static BOOL read_data( request_t *request, void *buffer, DWORD to_read, DWORD *r
             send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, &result, sizeof(result) );
         }
     }
-    if (ret)
-    {
-        if (read) *read = num_bytes;
-        if (!num_bytes) finished_reading( request );
-    }
+    if (read) *read = bytes_read;
+    if (!bytes_read && request->content_read == request->content_length) finished_reading( request );
     return ret;
 }
 
@@ -1739,7 +2128,7 @@ static void drain_content( request_t *request )
     DWORD bytes_read;
     char buffer[2048];
 
-    if (!request->content_length)
+    if (request->content_length == ~0u)
     {
         finished_reading( request );
         return;
@@ -1843,6 +2232,8 @@ static BOOL handle_redirect( request_t *request, DWORD status )
 
             netconn_close( &request->netconn );
             if (!(ret = netconn_init( &request->netconn ))) goto end;
+            request->read_pos = request->read_size = 0;
+            request->read_chunked = FALSE;
         }
         if (!(ret = add_host_header( request, WINHTTP_ADDREQ_FLAG_REPLACE ))) goto end;
         if (!(ret = open_connection( request ))) goto end;
@@ -1866,6 +2257,8 @@ static BOOL handle_redirect( request_t *request, DWORD status )
     {
         heap_free( request->verb );
         request->verb = strdupW( getW );
+        request->optional = NULL;
+        request->optional_len = 0;
     }
     ret = TRUE;
 
@@ -1891,10 +2284,7 @@ static BOOL receive_response( request_t *request, BOOL async )
         query = WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER;
         if (!(ret = query_headers( request, query, NULL, &status, &size, NULL ))) break;
 
-        size = sizeof(DWORD);
-        query = WINHTTP_QUERY_CONTENT_LENGTH | WINHTTP_QUERY_FLAG_NUMBER;
-        if (!query_headers( request, query, NULL, &request->content_length, &size, NULL ))
-            request->content_length = ~0u;
+        set_content_length( request );
 
         if (!(request->hdr.disable_flags & WINHTTP_DISABLE_COOKIES)) record_cookies( request );
 
@@ -1905,7 +2295,8 @@ static BOOL receive_response( request_t *request, BOOL async )
 
             if (!(ret = handle_redirect( request, status ))) break;
 
-            send_request( request, NULL, 0, NULL, 0, 0, 0, FALSE ); /* recurse synchronously */
+            /* recurse synchronously */
+            send_request( request, NULL, 0, request->optional, request->optional_len, 0, 0, FALSE );
             continue;
         }
         else if (status == HTTP_STATUS_DENIED || status == HTTP_STATUS_PROXY_AUTH_REQ)
@@ -1918,7 +2309,8 @@ static BOOL receive_response( request_t *request, BOOL async )
                 ret = TRUE;
                 break;
             }
-            send_request( request, NULL, 0, NULL, 0, 0, 0, FALSE );
+            /* recurse synchronously */
+            send_request( request, NULL, 0, request->optional, request->optional_len, 0, 0, FALSE );
             continue;
         }
         break;
@@ -1984,35 +2376,33 @@ BOOL WINAPI WinHttpReceiveResponse( HINTERNET hrequest, LPVOID reserved )
     return ret;
 }
 
-static BOOL query_data( request_t *request, LPDWORD available, BOOL async )
+static BOOL query_data_available( request_t *request, DWORD *available, BOOL async )
 {
-    BOOL ret;
-    DWORD num_bytes;
+    BOOL ret = TRUE;
+    DWORD count;
 
-    if ((ret = netconn_query_data_available( &request->netconn, &num_bytes )))
+    if (!(count = get_available_data( request )))
     {
-        if (request->content_read < request->content_length)
+        if (end_of_read_data( request ))
         {
-            if (!num_bytes)
-            {
-                char buffer[4096];
-                size_t to_read = min( sizeof(buffer), request->content_length - request->content_read );
-
-                ret = netconn_recv( &request->netconn, buffer, to_read, MSG_PEEK, (int *)&num_bytes );
-                if (ret && !num_bytes) WARN("expected more data to be available\n");
-            }
-        }
-        else if (num_bytes)
-        {
-            WARN("extra data available %u\n", num_bytes);
-            ret = FALSE;
+            if (available) *available = 0;
+            return TRUE;
         }
     }
-    TRACE("%u bytes available\n", num_bytes);
+    refill_buffer( request );
+    count = get_available_data( request );
 
+    if (count == sizeof(request->read_buf)) /* check if we have even more pending in the socket */
+    {
+        DWORD extra;
+        if ((ret = netconn_query_data_available( &request->netconn, &extra )))
+        {
+            count = min( count + extra, request->content_length - request->content_read );
+        }
+    }
     if (async)
     {
-        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE, &num_bytes, sizeof(DWORD) );
+        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE, &count, sizeof(count) );
         else
         {
             WINHTTP_ASYNC_RESULT result;
@@ -2021,14 +2411,18 @@ static BOOL query_data( request_t *request, LPDWORD available, BOOL async )
             send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, &result, sizeof(result) );
         }
     }
-    if (ret && available) *available = num_bytes;
+    if (ret)
+    {
+        TRACE("%u bytes available\n", count);
+        if (available) *available = count;
+    }
     return ret;
 }
 
-static void task_query_data( task_header_t *task )
+static void task_query_data_available( task_header_t *task )
 {
     query_data_t *q = (query_data_t *)task;
-    query_data( q->hdr.request, q->available, TRUE );
+    query_data_available( q->hdr.request, q->available, TRUE );
 }
 
 /***********************************************************************
@@ -2059,14 +2453,14 @@ BOOL WINAPI WinHttpQueryDataAvailable( HINTERNET hrequest, LPDWORD available )
 
         if (!(q = heap_alloc( sizeof(query_data_t) ))) return FALSE;
         q->hdr.request = request;
-        q->hdr.proc    = task_query_data;
+        q->hdr.proc    = task_query_data_available;
         q->available   = available;
 
         addref_object( &request->hdr );
         ret = queue_task( (task_header_t *)q );
     }
     else
-        ret = query_data( request, available, FALSE );
+        ret = query_data_available( request, available, FALSE );
 
     release_object( &request->hdr );
     return ret;
@@ -2126,7 +2520,7 @@ static BOOL write_data( request_t *request, LPCVOID buffer, DWORD to_write, LPDW
     BOOL ret;
     int num_bytes;
 
-    ret = netconn_send( &request->netconn, buffer, to_write, 0, &num_bytes );
+    ret = netconn_send( &request->netconn, buffer, to_write, &num_bytes );
 
     if (async)
     {

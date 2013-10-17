@@ -31,4 +31,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"regedt32.exe\0"
 #include <reactos/version.rc>
 
-IDI_REGEDIT  ICON   DISCARDABLE   res/regedt32.ico
+IDI_REGEDIT  ICON      res/regedt32.ico

@@ -78,7 +78,7 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
             {
                 /* Do the sync */
                 DPRINT1("Flushing: %wZ\n", CmHive->FileFullPath);
-                DPRINT1("Handle: %lx\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
+                DPRINT1("Handle: %p\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
                 Status = HvSyncHive(&CmHive->Hive);
                 if(!NT_SUCCESS(Status))
                 {

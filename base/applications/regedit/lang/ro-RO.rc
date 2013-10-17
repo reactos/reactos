@@ -36,7 +36,7 @@ END
  * Menu
  */
 
-IDC_REGEDIT MENU DISCARDABLE
+IDC_REGEDIT MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
@@ -48,7 +48,7 @@ BEGIN
     END
 END
 
-IDR_REGEDIT_MENU MENU DISCARDABLE
+IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
@@ -117,7 +117,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENUS MENU DISCARDABLE
+IDR_POPUP_MENUS MENU
 BEGIN
   POPUP ""
   BEGIN
@@ -290,21 +290,21 @@ FONT 8, "MS Shell Dlg"
  * String Table
  */
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME    "Nume"
     IDS_LIST_COLUMN_TYPE    "Tip"
     IDS_LIST_COLUMN_DATA    "Date"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Editor de registru"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU        "Conține comenzi de lucru cu întreg registrul"
     ID_EDIT_MENU            "Conține comenzi pentru editarea valorilor și cheilor"
@@ -314,7 +314,7 @@ BEGIN
     ID_EDIT_NEW_MENU        "Conține comenzi pentru crearea noilor chei sau valori"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY                         "Modifică datele unei valori"
     ID_EDIT_NEW_KEY                        "Adaugă o nouă cheie"
@@ -332,7 +332,7 @@ BEGIN
     ID_HELP_ABOUT                          "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT               "Ieșire din editorul de registru"
     ID_FAVOURITES_ADDTOFAVOURITES  "Adaugă chei către lista de favorite"
@@ -347,7 +347,7 @@ BEGIN
     ID_EDIT_FINDNEXT               "Găsește următoarea apariție a textului specificat în căutarea precedentă"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_ERROR                     "Eroare"
     IDS_WARNING                   "Avertisment"
@@ -372,7 +372,7 @@ BEGIN
     IDS_NEW_VALUE                 "Valoarea nouă #%d"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(valoare binară)"
     IDS_DEFAULT_VALUE_NAME  "(Implicit)"
@@ -386,7 +386,7 @@ BEGIN
     IDS_INVALID_DWORD       "(valoare de 32 biți nevalidă)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_FLT_REGFILE         "Fișier registru"
     IDS_FLT_REGFILES        "Fișiere registru (*.reg)"
@@ -399,7 +399,7 @@ BEGIN
     IDS_FLT_ALLFILES_FLT    "*.*"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_ACCESS_FULLCONTROL        "Control deplin"
   IDS_ACCESS_READ               "Citire"
@@ -415,14 +415,14 @@ BEGIN
   IDS_ACCESS_READCONTROL        "Citire control"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_INHERIT_THISKEYONLY        "Doar această cheie"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Cheia și subcheile"
   IDS_INHERIT_SUBKEYSONLY        "Doar subcheile"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_EXPAND                     "&Extinde"
   IDS_COLLAPSE                   "&Restrânge"
@@ -430,7 +430,7 @@ BEGIN
   IDS_FINISHEDFIND               "Căutarea în registru a fost finalizată."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
   IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
@@ -438,7 +438,7 @@ BEGIN
   IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUSNUMBER                 "Număr magistrală"
     IDS_INTERFACE                 "Interfață"
@@ -459,7 +459,7 @@ BEGIN
     IDS_SPECIFIC_DATASIZE         "Dimensiune date"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
     IDS_PORT_MEMORY_IO            "Memorie"
@@ -470,7 +470,7 @@ BEGIN
     IDS_MEMORY_READ_WRITE         "Citire / Scriere"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED             "Nedefinită"
     IDS_BUS_INTERNAL              "Internă"
@@ -499,7 +499,7 @@ END
  * Dialog
  */
 
-IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -512,7 +512,7 @@ END
 //
 // Dialog resources
 //
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Încărcare registru"
 FONT 8, "Ms Shell Dlg"
@@ -523,7 +523,7 @@ FONT 8, "Ms Shell Dlg"
     PUSHBUTTON      "A&nulează",  IDCANCEL, 89, 17, 50, 14
 }
 
-IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
+IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adaugă la favorite"
 FONT 8, "MS Shell Dlg"
@@ -534,7 +534,7 @@ BEGIN
     EDITTEXT                          IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
-IDD_REMOVEFAVORITES DIALOGEX DISCARDABLE  0, 0, 164, 135
+IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Eliminare favorite"
 FONT 8, "MS Shell Dlg"
@@ -546,7 +546,7 @@ BEGIN
     LTEXT           "Alege favorit(e):",IDC_STATIC,7,7,99,12
 END
 
-IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82
+IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
@@ -583,7 +583,7 @@ END
  * TEXTINCLUDE
  */
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -595,7 +595,7 @@ END
  */
 
 /*
- *STRINGTABLE DISCARDABLE
+ *STRINGTABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
  *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."

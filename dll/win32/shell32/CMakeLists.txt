@@ -24,6 +24,7 @@ list(APPEND SOURCE
     clipboard.cpp
     control.cpp
     CMenuBand.cpp
+    CMenuDeskBar.cpp
     dataobject.cpp
     dde.cpp
     debughlp.cpp
@@ -96,6 +97,7 @@ add_delay_importlibs(shell32 ole32 version fmifs)
 
 add_importlibs(shell32
     advapi32
+    browseui
     gdi32
     user32
     comctl32

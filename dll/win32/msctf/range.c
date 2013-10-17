@@ -81,7 +81,7 @@ static HRESULT WINAPI Range_QueryInterface(ITfRange *iface, REFIID iid, LPVOID *
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfRange_AddRef(iface);
         return S_OK;
     }
 

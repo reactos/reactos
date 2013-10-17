@@ -172,73 +172,75 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         case WM_LBUTTONDOWN:
         {
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
             switch (activeTool)
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
                 case TOOL_TEXT:
-                    if ((HIWORD(lParam) > 1) && (HIWORD(lParam) < 64))
+                    if ((y > 1) && (y < 64))
                     {
-                        transpBg = (HIWORD(lParam) - 2) / 31;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        transpBg = (y - 2) / 31;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 case TOOL_RUBBER:
-                    if ((HIWORD(lParam) > 1) && (HIWORD(lParam) < 62))
+                    if ((y > 1) && (y < 62))
                     {
-                        rubberRadius = (HIWORD(lParam) - 2) / 15 + 2;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        rubberRadius = (y - 2) / 15 + 2;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 case TOOL_BRUSH:
-                    if ((LOWORD(lParam) > 1) && (LOWORD(lParam) < 40) && (HIWORD(lParam) > 1)
-                        && (HIWORD(lParam) < 62))
+                    if ((x > 1) && (x < 40) && (y > 1)
+                        && (y < 62))
                     {
-                        brushStyle = (HIWORD(lParam) - 2) / 15 * 3 + (LOWORD(lParam) - 2) / 13;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        brushStyle = (y - 2) / 15 * 3 + (x - 2) / 13;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 case TOOL_AIRBRUSH:
-                    if (HIWORD(lParam) < 62)
+                    if (y < 62)
                     {
-                        if (HIWORD(lParam) < 30)
+                        if (y < 30)
                         {
-                            if (LOWORD(lParam) < 20)
+                            if (x < 20)
                                 airBrushWidth = 5;
                             else
                                 airBrushWidth = 8;
                         }
                         else
                         {
-                            if (LOWORD(lParam) < 15)
+                            if (x < 15)
                                 airBrushWidth = 3;
                             else
                                 airBrushWidth = 12;
                         }
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 case TOOL_LINE:
                 case TOOL_BEZIER:
-                    if (HIWORD(lParam) <= 62)
+                    if (y <= 62)
                     {
-                        lineWidth = (HIWORD(lParam) - 2) / 12 + 1;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        lineWidth = (y - 2) / 12 + 1;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 case TOOL_RECT:
                 case TOOL_SHAPE:
                 case TOOL_ELLIPSE:
                 case TOOL_RRECT:
-                    if (HIWORD(lParam) <= 60)
+                    if (y <= 60)
                     {
-                        shapeStyle = (HIWORD(lParam) - 2) / 20;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        shapeStyle = (y - 2) / 20;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
-                    if ((HIWORD(lParam) >= 70) && (HIWORD(lParam) <= 132))
+                    if ((y >= 70) && (y <= 132))
                     {
-                        lineWidth = (HIWORD(lParam) - 72) / 12 + 1;
-                        SendMessage(hwnd, WM_PAINT, 0, 0);
+                        lineWidth = (y - 72) / 12 + 1;
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
             }

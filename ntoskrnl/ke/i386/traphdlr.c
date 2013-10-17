@@ -978,7 +978,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
             }
             
             /* Check for privileged instructions */
-            DPRINT("Instruction (%d) at fault: %lx %lx %lx %lx\n",
+            DPRINT("Instruction (%lu) at fault: %lx %lx %lx %lx\n",
                     i,
                     Instructions[i],
                     Instructions[i + 1],
@@ -1233,6 +1233,17 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 
             /* Continue execution */
             KiEoiHelper(TrapFrame);
+        }
+        else
+        {
+#if 0
+            /* Do what windows does and issue an invalid access violation */
+            KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
+                                     TrapFrame->Eip,
+                                     TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                                     Cr2,
+                                     TrapFrame);
+#endif
         }
     }
 

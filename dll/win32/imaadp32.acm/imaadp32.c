@@ -138,7 +138,7 @@ static	DWORD	ADPCM_GetFormatIndex(const WAVEFORMATEX *wfx)
 
 static void     init_wfx_ima_adpcm(IMAADPCMWAVEFORMAT* awfx/*, DWORD nba*/)
 {
-    register WAVEFORMATEX*      pwfx = &awfx->wfx;
+    WAVEFORMATEX* pwfx = &awfx->wfx;
 
     /* we assume wFormatTag, nChannels, nSamplesPerSec and wBitsPerSample
      * have been initialized... */
@@ -550,7 +550,7 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
             aftd->dwFormatTagIndex = 1; /* WAVE_FORMAT_IMA_ADPCM is bigger than PCM */
 	    break;
 	}
-	/* fall thru */
+	/* fall through */
     case ACM_FORMATTAGDETAILSF_FORMATTAG:
 	switch (aftd->dwFormatTag)
         {

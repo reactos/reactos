@@ -209,12 +209,23 @@ static HRESULT run_setup_commands_callback(HINF hinf, PCWSTR field, const void *
 
 /* sequentially returns pointers to parameters in a parameter list
  * returns NULL if the parameter is empty, e.g. one,,three  */
-LPWSTR get_parameter(LPWSTR *params, WCHAR separator)
+LPWSTR get_parameter(LPWSTR *params, WCHAR separator, BOOL quoted)
 {
     LPWSTR token = *params;
 
     if (!*params)
         return NULL;
+
+    if (quoted && *token == '"')
+    {
+        WCHAR *end = strchrW(token + 1, '"');
+        if (end)
+        {
+            *end = 0;
+            *params = end + 1;
+            token = token + 1;
+        }
+    }
 
     *params = strchrW(*params, separator);
     if (*params)
@@ -764,10 +775,10 @@ INT WINAPI LaunchINFSectionW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT sho
     cmdline_ptr = cmdline_copy;
     lstrcpyW(cmdline_copy, cmdline);
 
-    inf_filename = get_parameter(&cmdline_ptr, ',');
-    install_sec = get_parameter(&cmdline_ptr, ',');
+    inf_filename = get_parameter(&cmdline_ptr, ',', TRUE);
+    install_sec = get_parameter(&cmdline_ptr, ',', TRUE);
 
-    str_flags = get_parameter(&cmdline_ptr, ',');
+    str_flags = get_parameter(&cmdline_ptr, ',', TRUE);
     if (str_flags)
         flags = atolW(str_flags);
 
@@ -857,12 +868,12 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
     cmdline_ptr = cmdline_copy;
     lstrcpyW(cmdline_copy, cmdline);
 
-    cabinfo.pszInf = get_parameter(&cmdline_ptr, ',');
-    cabinfo.pszSection = get_parameter(&cmdline_ptr, ',');
-    cabinfo.pszCab = get_parameter(&cmdline_ptr, ',');
+    cabinfo.pszInf = get_parameter(&cmdline_ptr, ',', TRUE);
+    cabinfo.pszSection = get_parameter(&cmdline_ptr, ',', TRUE);
+    cabinfo.pszCab = get_parameter(&cmdline_ptr, ',', TRUE);
     *cabinfo.szSrcPath = '\0';
 
-    flags = get_parameter(&cmdline_ptr, ',');
+    flags = get_parameter(&cmdline_ptr, ',', TRUE);
     if (flags)
         cabinfo.dwFlags = atolW(flags);
 

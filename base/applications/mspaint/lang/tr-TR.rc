@@ -3,7 +3,6 @@
  * LICENSE:     unknown (LGPL assumed)
  * FILE:        base/applications/mspaint/lang/tr-TR.rc
  * PURPOSE:     Turkish Resource file for ReactOS Paint
- * PROGRAMMERS:
  * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
@@ -70,7 +69,7 @@ BEGIN
     POPUP "G&örüntü"
     BEGIN
         MENUITEM "&Döndür ya da Evir...\tCtrl+R",  IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Boyutlandır...\tCtrl+W",        IDM_IMAGECHANGESIZE
+        MENUITEM "&Yeniden Boyutlandır veyâ Eğrilt...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Kırp",                          IDM_IMAGECROP
         MENUITEM "&Renkleri Evir\tCtrl+I",         IDM_IMAGEINVERTCOLORS
         MENUITEM "&Öz Nitelikler...\tCtrl+E",      IDM_IMAGEATTRIBUTES
@@ -81,6 +80,9 @@ BEGIN
     POPUP "&Renkler"
     BEGIN
         MENUITEM "&Renkliği Düzenle...",           IDM_COLORSEDITPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Yeni Renklik",                  IDM_COLORSMODERNPALETTE
+        MENUITEM "&Eski Renklik",                  IDM_COLORSOLDPALETTE
     END
 
     POPUP "&Yardım"
@@ -108,7 +110,7 @@ BEGIN
     "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
-    "^W", IDM_IMAGECHANGESIZE
+    "^W", IDM_IMAGESTRETCHSKEW
     "^I", IDM_IMAGEINVERTCOLORS
     "^E", IDM_IMAGEATTRIBUTES
     "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
@@ -117,7 +119,7 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Resmi Döndür ya da Evir"
+CAPTION "Döndür ya da Evir"
 BEGIN
     GROUPBOX "Döndür ya da Evir",  IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "&Yatay Evir", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
@@ -127,7 +129,7 @@ BEGIN
     AUTORADIOBUTTON "1&80°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "2&70°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "Tamam",   IDOK, 125, 8, 48, 14
-    PUSHBUTTON "Vazgeç", IDCANCEL, 125, 24, 48, 14
+    PUSHBUTTON "İptal", IDCANCEL, 125, 24, 48, 14
 END
 
 IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
@@ -153,26 +155,35 @@ BEGIN
     AUTORADIOBUTTON "Kara ve Ak", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Renkli", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "Tamam", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "Vazgeç", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Ön Tanımlı", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    PUSHBUTTON "İptal", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "Öntanımlı", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
-IDD_CHANGESIZE DIALOGEX 100, 100, 225, 80
+IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Yeniden Boyutlandır"
+CAPTION "Yeniden Boyutlandır veyâ Eğrilt"
 BEGIN
-    GROUPBOX "Yeniden Boyutlandır", IDD_CHANGESIZEGROUP, 6, 6, 158, 66
-    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
-    LTEXT "Yatay:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
-    LTEXT "Dikey:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
-    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
-    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    GROUPBOX "Yeniden Boyutlandır", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
+    LTEXT "Yatay:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTHPERCENT, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_STRETCHSKEWICONVSTRETCH, 12, 43, 32, 32
+    LTEXT "Dikey:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
+    LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
+    GROUPBOX "Eğrilt", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
+    LTEXT "Yatay:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
+    LTEXT "Derece", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
+    LTEXT "Dikey:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
+    EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
+    LTEXT "Derece", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "Tamam", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "Vazgeç", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "İptal", IDCANCEL, 170, 24, 48, 14
 END
 
 STRINGTABLE
@@ -180,7 +191,7 @@ BEGIN
     IDS_PROGRAMNAME, "Görüntü Düzenleyicisi"
     IDS_WINDOWTITLE, "%s - Görüntü Düzenleyicisi"
     IDS_INFOTITLE, "Görüntü Düzenleyicisi"
-    IDS_INFOTEXT, "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Lisansı'nın (LGPL) 3. sürümüyle lisanslıdır. (bk: www.gnu.org)"
+    IDS_INFOTEXT, "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Ruhsatı'nın (LGPL) 3. sürümüyle ruhsatlıdır. (bkz: www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "%s için yapılan değişiklikler kaydedilsin mi?"
     IDS_DEFAULTFILENAME, "Adsız.bmp"
     IDS_MINIATURETITLE, "Küçüğü"
@@ -200,8 +211,11 @@ BEGIN
     IDS_TOOLTIP14, "Çokgen"
     IDS_TOOLTIP15, "Söbek"
     IDS_TOOLTIP16, "Yuvarlatılmış Dikdörtgen"
-    IDS_OPENFILTER, "Bit Eşlem Görüntüleri (*.bmp;*.dib)\1*.bmp;*.dib\1Tüm Kütükler (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 İkillik Bit Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d sekizlik"
+    IDS_OPENFILTER, "İkil Eşlem Görüntüleri (*.bmp;*.dib)\1*.bmp;*.dib\1Tüm Kütükler (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24 İkillik İkil Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d çoklu"
     IDS_PRINTRES, "Her metrekarede %d x %d nokta"
+    IDS_INTNUMBERS, "Buraya yalnızca tamsayı girilmelidir."
+    IDS_PERCENTAGE, "Buradaki değer 1 ilâ 500 olmalıdır."
+    IDS_ANGLE, "Buradaki değer -89 ilâ 89 olmalıdır."
 END

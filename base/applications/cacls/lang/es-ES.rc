@@ -1,6 +1,6 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Muestra o modifica la lista de control de accesos (ACLs) de los archivos\n\n\

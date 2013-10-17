@@ -85,7 +85,7 @@ END
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -112,7 +112,7 @@ END
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Залежності"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
   CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
@@ -124,7 +124,7 @@ END
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Створити службу"
 FONT 8, "MS Shell Dlg",0,0
-STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
   EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
   EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
@@ -191,7 +191,7 @@ END
 
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_FIRSTCOLUMN "Ім'я"
   IDS_SECONDCOLUMN "Опис"
@@ -200,7 +200,7 @@ BEGIN
   IDS_FITHCOLUMN "Вхід від імені"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_SERVICES_STARTED "Запущено"
   IDS_SERVICES_STOPPED "Зупинено"
@@ -209,7 +209,7 @@ BEGIN
   IDS_SERVICES_DIS "Відключено"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_NUM_SERVICES "Hомер служби: %d"
   IDS_STOP_DEPENDS "Коли %s зупинеться, наступні служби також буде зупинено"
@@ -217,7 +217,7 @@ BEGIN
   IDS_LICENSE "Це вільне програмне забезпечення; Ви можете розповсюджувати її та змінювати, дотримуючись умови Відкритої ліцензійної угоди GNU, опублікованої Фондом вільного програмного забезпечення; або редакції 2 Угоди, або будь-якої редакції, випущеної пізніше.\r\n\r\nЦя програма розповсюджується в надії на те, що вона виявиться корисною, але БЕЗ БУДЬ-ЯКИХ ГАРАНТІЙ, включаючи УЯВНОЮ ГАРАНТІЄЮ ЯКОСТІ або ПРИДАТНОСТІ для певних цілей. Подробиці містяться у Відкритій ліцензійній угоді GNU.\r\n\r\nРазом з цією програмою повинен поширюватися примірник Відкритої ліцензійної угоди GNU. Якщо він відсутній, повідомте про це в Фонд вільного програмного забезпечення (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROP "Властивості"
   IDS_TOOLTIP_REFRESH "Оновити"
@@ -230,7 +230,7 @@ BEGIN
   IDS_TOOLTIP_RESTART "Перезапуск служби"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_PROGRESS_INFO_START  "ReactOS намагається запустити наступну службу"
   IDS_PROGRESS_INFO_STOP   "ReactOS намагається зупинити наступну службу"
@@ -242,13 +242,13 @@ BEGIN
   IDS_DELETE_STOP "Ви маєте вручну зупинити службу перед видаленням!"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HELP_OPTIONS "ОПЦІЇ СТВОРЕННЯ:\r\nПРИМІТКА: ім'я опції містить знак рівності.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXPORT       " Експорт поточного списку у файл."
@@ -284,7 +284,7 @@ BEGIN
 END
 
 /* Application title */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME "Диспетчер керування службами ReactOS"
 END

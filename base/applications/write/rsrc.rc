@@ -20,76 +20,78 @@
 
 #include "resources.h"
 
+#include <reactos/manifest_exe.rc>
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #ifdef LANGUAGE_DA_DK
-    #include "Da.rc"
+    #include "lang/Da.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "En.rc"
+    #include "lang/En.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "Ko.rc"
+    #include "lang/Ko.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "Nl.rc"
+    #include "lang/Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "No.rc"
+    #include "lang/No.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "Pl.rc"
+    #include "lang/Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "Pt.rc"
+    #include "lang/Pt.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
-    #include "Sv.rc"
+    #include "lang/Sv.rc"
 #endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_BG_BG
-    #include "Bg.rc"
+    #include "lang/Bg.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "De.rc"
+    #include "lang/De.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "Es.rc"
+    #include "lang/Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "Fr.rc"
+    #include "lang/Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "He.rc"
+    #include "lang/He.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "It.rc"
+    #include "lang/It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "Ja.rc"
+    #include "lang/Ja.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "Lt.rc"
+    #include "lang/Lt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "Ro.rc"
+    #include "lang/Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "Ru.rc"
+    #include "lang/Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "Si.rc"
+    #include "lang/Si.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
-    #include "Sr.rc"
+    #include "lang/Sr.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
-    #include "Tr.rc"
+    #include "lang/Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "Uk.rc"
+    #include "lang/Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "Zh.rc"
+    #include "lang/Zh.rc"
 #endif

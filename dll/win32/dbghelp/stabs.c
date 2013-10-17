@@ -1683,6 +1683,7 @@ done:
     stabs_free_includes();
     HeapFree(GetProcessHeap(), 0, pending_block.objs);
     HeapFree(GetProcessHeap(), 0, pending_func.objs);
+    HeapFree(GetProcessHeap(), 0, srcpath);
 
     return ret;
 }

@@ -72,4 +72,7 @@
 /* Console API Client Definitions */
 #include "include/console.h"
 
+/* Virtual DOS Machines (VDM) Support Definitions */
+#include "include/vdm.h"
+
 #endif

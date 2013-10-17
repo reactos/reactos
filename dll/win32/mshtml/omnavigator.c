@@ -57,13 +57,6 @@ typedef struct {
     HTMLMimeTypesCollection *mime_types;
 } OmNavigator;
 
-typedef struct {
-    DispatchEx dispex;
-    IOmHistory IOmHistory_iface;
-
-    LONG ref;
-} OmHistory;
-
 static inline OmHistory *impl_from_IOmHistory(IOmHistory *iface)
 {
     return CONTAINING_RECORD(iface, OmHistory, IOmHistory_iface);
@@ -155,8 +148,17 @@ static HRESULT WINAPI OmHistory_Invoke(IOmHistory *iface, DISPID dispIdMember, R
 static HRESULT WINAPI OmHistory_get_length(IOmHistory *iface, short *p)
 {
     OmHistory *This = impl_from_IOmHistory(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->window || !This->window->base.outer_window->doc_obj
+            || !This->window->base.outer_window->doc_obj->travel_log) {
+        *p = 0;
+    }else {
+        *p = ITravelLog_CountEntries(This->window->base.outer_window->doc_obj->travel_log,
+                This->window->base.outer_window->doc_obj->browser_service);
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI OmHistory_back(IOmHistory *iface, VARIANT *pvargdistance)
@@ -206,7 +208,7 @@ static dispex_static_data_t OmHistory_dispex = {
 };
 
 
-HRESULT create_history(IOmHistory **ret)
+HRESULT create_history(HTMLInnerWindow *window, OmHistory **ret)
 {
     OmHistory *history;
 
@@ -218,7 +220,9 @@ HRESULT create_history(IOmHistory **ret)
     history->IOmHistory_iface.lpVtbl = &OmHistoryVtbl;
     history->ref = 1;
 
-    *ret = &history->IOmHistory_iface;
+    history->window = window;
+
+    *ret = history;
     return S_OK;
 }
 

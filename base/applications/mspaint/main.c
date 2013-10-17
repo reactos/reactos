@@ -19,16 +19,19 @@ BITMAPINFO bitmapinfo;
 int imgXRes = 400;
 int imgYRes = 300;
 
+int widthSetInDlg;
+int heightSetInDlg;
+
+STRETCHSKEW stretchSkew;
+
 HBITMAP hBms[HISTORYSIZE];
 int currInd = 0;
 int undoSteps = 0;
 int redoSteps = 0;
 BOOL imageSaved = TRUE;
 
-LONG startX;
-LONG startY;
-LONG lastX;
-LONG lastY;
+POINT start;
+POINT last;
 int lineWidth = 1;
 int shapeStyle = 0;
 int brushStyle = 0;
@@ -44,12 +47,25 @@ HWND hImageArea;
 HBITMAP hSelBm;
 HBITMAP hSelMask;
 
-/* initial palette colors; may be changed by the user during execution */
-int palColors[28] = { 0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,
+/* array holding palette colors; may be changed by the user during execution */
+int palColors[28];
+
+/* modern palette */
+int modernPalColors[28] = { 0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,
     0x00f2ff, 0x1de6a8, 0x4cb122, 0xefb700, 0xf36d4d, 0x99362f, 0x98316f,
     0xffffff, 0xdcdcdc, 0xb4b4b4, 0x3c5a9c, 0xb1a3ff, 0x7aaae5, 0x9ce4f5,
     0xbdf9ff, 0xbcf9d3, 0x61bb9d, 0xead999, 0xd19a70, 0x8e6d54, 0xd5a5b5
 };
+
+/* older palette containing VGA colors */
+int oldPalColors[28] = { 0x000000, 0x808080, 0x000080, 0x008080, 0x008000, 0x808000, 0x800000,
+    0x800080, 0x408080, 0x404000, 0xff8000, 0x804000, 0xff0040, 0x004080,
+    0xffffff, 0xc0c0c0, 0x0000ff, 0x00ffff, 0x00ff00, 0xffff00, 0xff0000,
+    0xff00ff, 0x80ffff, 0x80ff00, 0xffff80, 0xff8080, 0x8000ff, 0x4080ff
+};
+
+/* palette currently in use (1: modern, 2: old) */
+int selectedPalette;
 
 /* foreground and background colors with initial value */
 int fgColor = 0x00000000;
@@ -138,6 +154,10 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
+
+    /* init palette */
+    selectedPalette = 1;
+    CopyMemory(palColors, modernPalColors, sizeof(palColors));
 
     hProgInstance = hThisInstance;
 
@@ -277,13 +297,13 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
 
     /* 
-     * FIXME: Unintentionally there is a line above the tool bar. 
+     * FIXME: Unintentionally there is a line above the tool bar (hidden by y-offset). 
      * To prevent cropping of the buttons height has been increased from 200 to 205
      */
     hToolbar =
         CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
                        WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS,
-                       1, 1, 50, 205, hToolBoxContainer, NULL, hThisInstance, NULL);
+                       1, -2, 50, 205, hToolBoxContainer, NULL, hThisInstance, NULL);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(hToolbar, TB_SETIMAGELIST, 0, (LPARAM) hImageList);
     tempBm = LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);

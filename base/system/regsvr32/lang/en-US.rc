@@ -4,7 +4,7 @@
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\

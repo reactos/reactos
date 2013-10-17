@@ -15,7 +15,11 @@ add_subdirectory(lsalib)
 add_subdirectory(ppcmmu)
 add_subdirectory(pseh)
 add_subdirectory(recyclebin)
-add_subdirectory(rossym)
+
+if(KDBG)
+    add_subdirectory(rossym)
+endif()
+
 add_subdirectory(rtl)
 add_subdirectory(sdk)
 add_subdirectory(smlib)

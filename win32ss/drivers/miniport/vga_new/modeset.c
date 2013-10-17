@@ -470,7 +470,7 @@ Return Value:
     
     if (pRequestedMode->hres == 320)
     {
-        VideoPortDebugPrint(0, "ModeX not support!!!\n");
+        VideoDebugPrint((0, "ModeX not support!!!\n"));
         return ERROR_INVALID_PARAMETER;
     }
 // eVb: 2.7 [END]
@@ -481,7 +481,7 @@ Return Value:
     if (!(pRequestedMode->fbType & VIDEO_MODE_GRAPHICS))
     {
 // eVb: 2.8 [TODO] - This code path is not implemented yet
-        VideoPortDebugPrint(0, "Text-mode not support!!!\n");
+        VideoDebugPrint((0, "Text-mode not support!!!\n"));
         return ERROR_INVALID_PARAMETER;
 // eVb: 2.8 [END]
     }

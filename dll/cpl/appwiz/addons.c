@@ -39,11 +39,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(appwiz);
 
-#define GECKO_VERSION "1.9"
+#define GECKO_VERSION "2.21"
 
 #ifdef __i386__
 #define ARCH_STRING "x86"
-#define GECKO_SHA "cadf123dd7c4cedf2b22c066b6259e8649ac2b40"
+#define GECKO_SHA "a514fc4d53783a586c7880a676c415695fe934a3"
 #else
 #define ARCH_STRING ""
 #define GECKO_SHA "???"
@@ -73,7 +73,7 @@ static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
 
-static WCHAR GeckoUrl[] = L"http://www.reactos.org/wine-gecko.php";
+static WCHAR GeckoUrl[] = L"http://dl.dropboxusercontent.com/u/743491/ReactOS/wine_gecko-2.21-x86.msi";
 
 /* SHA definitions are copied from advapi32. They aren't available in headers. */
 

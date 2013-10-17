@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/user32/controls/appswitch.c
  * PURPOSE:         app switching functionality
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  David Quintana (gigaherz@gmail.com)
  */
 

@@ -289,7 +289,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Systém"
     IDS_CPLSYSTEMDESCRIPTION "Zobrazí informácie o počítači, zmenách rôznych systémových a hardvérových nastavení."

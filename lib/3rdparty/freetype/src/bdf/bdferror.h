@@ -1,5 +1,5 @@
 /*
- * Copyright 2001, 2002 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2012 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,6 +33,7 @@
 
 #undef __FTERRORS_H__
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  BDF_Err_
 #define FT_ERR_BASE    FT_Mod_Err_BDF
 

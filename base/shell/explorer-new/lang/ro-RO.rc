@@ -1,7 +1,7 @@
 //2012.03.05 - Fulea Ștefan: translate the taskbar context menu additions
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -22,7 +22,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -133,7 +133,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Pornire"
     IDS_PROPERTIES        "P&referințe"
@@ -142,7 +142,7 @@ BEGIN
     IDS_STARTUP_ERROR     "Pornirea exploratorului a eșuat din cauza informațiilor lipsă sau corupte din registru."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Preferințe bară de activități și meniu Pornire"
 END

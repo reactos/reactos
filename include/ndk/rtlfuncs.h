@@ -2165,8 +2165,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PCANSI_STRING String1,
-    PCANSI_STRING String2,
+    PSTRING String1,
+    PSTRING String2,
     BOOLEAN CaseInsensitive
 );
 
@@ -2723,6 +2723,15 @@ RtlGetFullPathName_UstrEx(
     _Out_opt_ PBOOLEAN NameInvalid,
     _Out_ RTL_PATH_TYPE* PathType,
     _Out_opt_ PSIZE_T LengthNeeded
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutTrailingPathSeperators(
+    _Reserved_ ULONG Flags,
+    _In_ PCUNICODE_STRING PathString,
+    _Out_ PULONG Length
 );
 
 NTSYSAPI
@@ -3511,8 +3520,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateActivationContext(
-    _Out_ PHANDLE Handle,
-    _Inout_ PVOID ReturnedData
+    _In_ ULONG Flags,
+    _In_ PACTIVATION_CONTEXT_DATA ActivationContextData,
+    _In_ ULONG ExtraBytes,
+    _In_ PVOID NotificationRoutine,
+    _In_ PVOID NotificationContext,
+    _Out_ PACTIVATION_CONTEXT *ActCtx
 );
 
 NTSYSAPI

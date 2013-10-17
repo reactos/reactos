@@ -21,9 +21,6 @@ SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                            IN LPCWSTR lpAccountName,
                            IN ULONG ulRelativeId)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
     HANDLE ContainerKeyHandle = NULL;
     HANDLE NamesKeyHandle = NULL;
     NTSTATUS Status;
@@ -31,51 +28,31 @@ SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
     TRACE("SampSetAccountNameInDomain()\n");
 
     /* Open the container key */
-    RtlInitUnicodeString(&KeyName, lpContainerName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               DomainObject->KeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&ContainerKeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            lpContainerName,
+                            KEY_ALL_ACCESS,
+                            &ContainerKeyHandle);
     if (!NT_SUCCESS(Status))
         return Status;
 
     /* Open the 'Names' key */
-    RtlInitUnicodeString(&KeyName, L"Names");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ContainerKeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&NamesKeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
+    Status = SampRegOpenKey(ContainerKeyHandle,
+                            L"Names",
+                            KEY_ALL_ACCESS,
+                            &NamesKeyHandle);
     if (!NT_SUCCESS(Status))
         goto done;
 
     /* Set the alias value */
-    RtlInitUnicodeString(&ValueName, lpAccountName);
-
-    Status = NtSetValueKey(NamesKeyHandle,
-                           &ValueName,
-                           0,
-                           REG_DWORD,
-                           (LPVOID)&ulRelativeId,
-                           sizeof(ULONG));
+    Status = SampRegSetValue(NamesKeyHandle,
+                             lpAccountName,
+                             REG_DWORD,
+                             (LPVOID)&ulRelativeId,
+                             sizeof(ULONG));
 
 done:
-    if (NamesKeyHandle)
-        NtClose(NamesKeyHandle);
-
-    if (ContainerKeyHandle)
-        NtClose(ContainerKeyHandle);
+    SampRegCloseKey(&NamesKeyHandle);
+    SampRegCloseKey(&ContainerKeyHandle);
 
     return Status;
 }
@@ -86,8 +63,6 @@ SampRemoveAccountNameFromDomain(IN PSAM_DB_OBJECT DomainObject,
                                 IN LPCWSTR lpContainerName,
                                 IN LPCWSTR lpAccountName)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
     HANDLE ContainerKeyHandle = NULL;
     HANDLE NamesKeyHandle = NULL;
     NTSTATUS Status;
@@ -95,32 +70,18 @@ SampRemoveAccountNameFromDomain(IN PSAM_DB_OBJECT DomainObject,
     TRACE("(%S %S)\n", lpContainerName, lpAccountName);
 
     /* Open the container key */
-    RtlInitUnicodeString(&KeyName, lpContainerName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               DomainObject->KeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&ContainerKeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            lpContainerName,
+                            KEY_ALL_ACCESS,
+                            &ContainerKeyHandle);
     if (!NT_SUCCESS(Status))
         return Status;
 
     /* Open the 'Names' key */
-    RtlInitUnicodeString(&KeyName, L"Names");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ContainerKeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&NamesKeyHandle,
-                       KEY_SET_VALUE,
-                       &ObjectAttributes);
+    Status = SampRegOpenKey(ContainerKeyHandle,
+                            L"Names",
+                            KEY_SET_VALUE,
+                            &NamesKeyHandle);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -129,11 +90,8 @@ SampRemoveAccountNameFromDomain(IN PSAM_DB_OBJECT DomainObject,
                                 lpAccountName);
 
 done:
-    if (NamesKeyHandle)
-        NtClose(NamesKeyHandle);
-
-    if (ContainerKeyHandle)
-        NtClose(ContainerKeyHandle);
+    SampRegCloseKey(&NamesKeyHandle);
+    SampRegCloseKey(&ContainerKeyHandle);
 
     return Status;
 }
@@ -143,8 +101,8 @@ NTSTATUS
 SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                              IN LPCWSTR lpAccountName)
 {
-    HANDLE AccountKey;
-    HANDLE NamesKey;
+    HANDLE AccountKey = NULL;
+    HANDLE NamesKey = NULL;
     NTSTATUS Status;
 
     TRACE("SampCheckAccountNameInDomain()\n");
@@ -168,14 +126,14 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                                        NULL);
             if (Status == STATUS_SUCCESS)
             {
-                SampRegCloseKey(NamesKey);
+                SampRegCloseKey(&NamesKey);
                 Status = STATUS_ALIAS_EXISTS;
             }
             else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;
         }
 
-        SampRegCloseKey(AccountKey);
+        SampRegCloseKey(&AccountKey);
     }
 
     if (!NT_SUCCESS(Status))
@@ -203,14 +161,14 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                                        NULL);
             if (Status == STATUS_SUCCESS)
             {
-                SampRegCloseKey(NamesKey);
+                SampRegCloseKey(&NamesKey);
                 Status = STATUS_ALIAS_EXISTS;
             }
             else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;
         }
 
-        SampRegCloseKey(AccountKey);
+        SampRegCloseKey(&AccountKey);
     }
 
     if (!NT_SUCCESS(Status))
@@ -238,14 +196,14 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                                        NULL);
             if (Status == STATUS_SUCCESS)
             {
-                SampRegCloseKey(NamesKey);
+                SampRegCloseKey(&NamesKey);
                 Status = STATUS_ALIAS_EXISTS;
             }
             else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;
         }
 
-        SampRegCloseKey(AccountKey);
+        SampRegCloseKey(&AccountKey);
     }
 
     if (!NT_SUCCESS(Status))
@@ -263,9 +221,9 @@ SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
 {
     WCHAR AliasKeyName[64];
     LPWSTR MemberSidString = NULL;
-    HANDLE AliasesKey;
-    HANDLE MembersKey;
-    HANDLE AliasKey;
+    HANDLE AliasesKey = NULL;
+    HANDLE MembersKey = NULL;
+    HANDLE AliasKey = NULL;
     ULONG Index;
     NTSTATUS Status;
 
@@ -311,12 +269,12 @@ SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
                     Status = SampRegDeleteValue(AliasKey,
                                                 MemberSidString);
 
-                    SampRegCloseKey(MembersKey);
+                    SampRegCloseKey(&MembersKey);
                 }
                 else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                     Status = STATUS_SUCCESS;
 
-                SampRegCloseKey(AliasKey);
+                SampRegCloseKey(&AliasKey);
             }
 
             Index++;
@@ -333,10 +291,10 @@ SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;
 
-            SampRegCloseKey(MembersKey);
+            SampRegCloseKey(&MembersKey);
         }
 
-        SampRegCloseKey(AliasesKey);
+        SampRegCloseKey(&AliasesKey);
     }
 
     if (MemberSidString != NULL)

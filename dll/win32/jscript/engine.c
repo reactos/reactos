@@ -346,7 +346,7 @@ void exec_release(exec_ctx_t *ctx)
     heap_free(ctx);
 }
 
-static HRESULT disp_get_id(script_ctx_t *ctx, IDispatch *disp, WCHAR *name, BSTR name_bstr, DWORD flags, DISPID *id)
+static HRESULT disp_get_id(script_ctx_t *ctx, IDispatch *disp, const WCHAR *name, BSTR name_bstr, DWORD flags, DISPID *id)
 {
     IDispatchEx *dispex;
     jsdisp_t *jsdisp;
@@ -375,7 +375,7 @@ static HRESULT disp_get_id(script_ctx_t *ctx, IDispatch *disp, WCHAR *name, BSTR
         IDispatchEx_Release(dispex);
     }else {
         TRACE("using IDispatch\n");
-        hres = IDispatch_GetIDsOfNames(disp, &IID_NULL, &name, 1, 0, id);
+        hres = IDispatch_GetIDsOfNames(disp, &IID_NULL, &bstr, 1, 0, id);
     }
 
     if(name_bstr != bstr)
@@ -729,10 +729,12 @@ static HRESULT interp_throw_type(exec_ctx_t *ctx)
 {
     const HRESULT hres = get_op_uint(ctx, 0);
     jsstr_t *str = get_op_str(ctx, 1);
+    const WCHAR *ptr;
 
     TRACE("%08x %s\n", hres, debugstr_jsstr(str));
 
-    return throw_type_error(ctx->script, hres, str->str);
+    ptr = jsstr_flatten(str);
+    return ptr ? throw_type_error(ctx->script, hres, ptr) : E_OUTOFMEMORY;
 }
 
 /* ECMA-262 3rd Edition    12.14 */
@@ -828,9 +830,10 @@ static HRESULT interp_func(exec_ctx_t *ctx)
 /* ECMA-262 3rd Edition    11.2.1 */
 static HRESULT interp_array(exec_ctx_t *ctx)
 {
+    jsstr_t *name_str;
+    const WCHAR *name;
     jsval_t v, namev;
     IDispatch *obj;
-    jsstr_t *name;
     DISPID id;
     HRESULT hres;
 
@@ -844,15 +847,15 @@ static HRESULT interp_array(exec_ctx_t *ctx)
         return hres;
     }
 
-    hres = to_string(ctx->script, namev, &name);
+    hres = to_flat_string(ctx->script, namev, &name_str, &name);
     jsval_release(namev);
     if(FAILED(hres)) {
         IDispatch_Release(obj);
         return hres;
     }
 
-    hres = disp_get_id(ctx->script, obj, name->str, NULL, 0, &id);
-    jsstr_release(name);
+    hres = disp_get_id(ctx->script, obj, name, NULL, 0, &id);
+    jsstr_release(name_str);
     if(SUCCEEDED(hres)) {
         hres = disp_propget(ctx->script, obj, id, &v);
     }else if(hres == DISP_E_UNKNOWNNAME) {
@@ -900,8 +903,9 @@ static HRESULT interp_memberid(exec_ctx_t *ctx)
 {
     const unsigned arg = get_op_uint(ctx, 0);
     jsval_t objv, namev;
+    const WCHAR *name;
+    jsstr_t *name_str;
     IDispatch *obj;
-    jsstr_t *name;
     DISPID id;
     HRESULT hres;
 
@@ -913,7 +917,7 @@ static HRESULT interp_memberid(exec_ctx_t *ctx)
     hres = to_object(ctx->script, objv, &obj);
     jsval_release(objv);
     if(SUCCEEDED(hres)) {
-        hres = to_string(ctx->script, namev, &name);
+        hres = to_flat_string(ctx->script, namev, &name_str, &name);
         if(FAILED(hres))
             IDispatch_Release(obj);
     }
@@ -921,8 +925,8 @@ static HRESULT interp_memberid(exec_ctx_t *ctx)
     if(FAILED(hres))
         return hres;
 
-    hres = disp_get_id(ctx->script, obj, name->str, NULL, arg, &id);
-    jsstr_release(name);
+    hres = disp_get_id(ctx->script, obj, name, NULL, arg, &id);
+    jsstr_release(name_str);
     if(FAILED(hres)) {
         IDispatch_Release(obj);
         if(hres == DISP_E_UNKNOWNNAME && !(arg & fdexNameEnsure)) {
@@ -1392,10 +1396,11 @@ static HRESULT interp_instanceof(exec_ctx_t *ctx)
 /* ECMA-262 3rd Edition    11.8.7 */
 static HRESULT interp_in(exec_ctx_t *ctx)
 {
+    const WCHAR *str;
+    jsstr_t *jsstr;
     jsval_t obj, v;
     DISPID id = 0;
     BOOL ret;
-    jsstr_t *str;
     HRESULT hres;
 
     TRACE("\n");
@@ -1407,16 +1412,16 @@ static HRESULT interp_in(exec_ctx_t *ctx)
     }
 
     v = stack_pop(ctx);
-    hres = to_string(ctx->script, v, &str);
+    hres = to_flat_string(ctx->script, v, &jsstr, &str);
     jsval_release(v);
     if(FAILED(hres)) {
         IDispatch_Release(get_object(obj));
         return hres;
     }
 
-    hres = disp_get_id(ctx->script, get_object(obj), str->str, NULL, 0, &id);
+    hres = disp_get_id(ctx->script, get_object(obj), str, NULL, 0, &id);
     IDispatch_Release(get_object(obj));
-    jsstr_release(str);
+    jsstr_release(jsstr);
     if(SUCCEEDED(hres))
         ret = TRUE;
     else if(hres == DISP_E_UNKNOWNNAME)
@@ -2001,10 +2006,10 @@ static HRESULT interp_eq2(exec_ctx_t *ctx)
     BOOL b;
     HRESULT hres;
 
-    TRACE("\n");
-
     r = stack_pop(ctx);
     l = stack_pop(ctx);
+
+    TRACE("%s === %s\n", debugstr_jsval(l), debugstr_jsval(r));
 
     hres = equal2_values(r, l, &b);
     jsval_release(l);

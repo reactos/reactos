@@ -28,6 +28,7 @@ list(APPEND SOURCE
   src/base/ftwinfnt.c
   src/base/ftxf86.c
   src/bdf/bdf.c
+  src/bzip2/ftbzip2.c
   src/cache/ftcache.c
   src/cff/cff.c
   src/cid/type1cid.c
@@ -49,8 +50,3 @@ list(APPEND SOURCE
   src/winfonts/winfnt.c)
 
 add_library(freetype ${SOURCE})
-allow_warnings(freetype)
-
-if(NOT MSVC)
-    add_target_compile_flags(freetype "-Wno-unused-but-set-variable")
-endif()

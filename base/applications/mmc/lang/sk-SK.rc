@@ -8,21 +8,42 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Súbor"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Skončiť\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "Č&o je Konzola na správu systému ReactOS", ID_HELP_ABOUT
+        MENUITEM "Č&o je Konzola na správu systému ReactOS", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Súbor"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Pomocník"
+    BEGIN
+        MENUITEM "Č&o je Konzola na správu systému ReactOS", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Konzola na správu systému ReactOS"
     IDS_CONSOLETITLE "Konzola%1!u!"

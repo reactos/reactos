@@ -106,8 +106,6 @@
   {
     FT_UShort  substTable;
     FT_UShort  substTable_limit;
-    FT_UShort  min_gid;
-    FT_UShort  max_gid;
 
     FT_UNUSED( tag );
     FT_UNUSED( state );
@@ -121,9 +119,10 @@
                    ((GXV_mort_subtable_type1_StateOptRec *)
                     (valid->statetable.optdata))->substitutionTable_length );
 
-    min_gid = (FT_UShort)( ( substTable       - wordOffset * 2 ) / 2 );
-    max_gid = (FT_UShort)( ( substTable_limit - wordOffset * 2 ) / 2 );
-    max_gid = (FT_UShort)( FT_MAX( max_gid, valid->face->num_glyphs ) );
+    valid->min_gid = (FT_UShort)( ( substTable       - wordOffset * 2 ) / 2 );
+    valid->max_gid = (FT_UShort)( ( substTable_limit - wordOffset * 2 ) / 2 );
+    valid->max_gid = (FT_UShort)( FT_MAX( valid->max_gid,
+                                          valid->face->num_glyphs ) );
 
     /* XXX: check range? */
 
@@ -140,8 +139,10 @@
     FT_Bytes                        limit,
     GXV_Validator                   valid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_UShort  setMark;
     FT_UShort  dontAdvance;
+#endif
     FT_UShort  reserved;
     FT_Short   markOffset;
     FT_Short   currentOffset;
@@ -150,8 +151,10 @@
     FT_UNUSED( limit );
 
 
+#ifdef GXV_LOAD_UNUSED_VARS
     setMark       = (FT_UShort)(   flags >> 15            );
     dontAdvance   = (FT_UShort)( ( flags >> 14 ) & 1      );
+#endif
     reserved      = (FT_Short)(    flags         & 0x3FFF );
 
     markOffset    = (FT_Short)( glyphOffset_p->ul >> 16 );
@@ -160,8 +163,7 @@
     if ( 0 < reserved )
     {
       GXV_TRACE(( " non-zero bits found in reserved range\n" ));
-      if ( valid->root->level >= FT_VALIDATE_PARANOID )
-        FT_INVALID_DATA;
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
     }
 
     gxv_mort_subtable_type1_offset_to_subst_validate( markOffset,
@@ -200,13 +202,12 @@
       if ( dst_gid >= 0xFFFFU )
         continue;
 
-      if ( dst_gid > valid->face->num_glyphs )
+      if ( dst_gid < valid->min_gid || valid->max_gid < dst_gid )
       {
-        GXV_TRACE(( "substTable include too large gid[%d]=%d >"
-                    " max defined gid #%d\n",
-                    i, dst_gid, valid->face->num_glyphs ));
-        if ( valid->root->level >= FT_VALIDATE_PARANOID )
-          FT_INVALID_GLYPH_ID;
+        GXV_TRACE(( "substTable include a strange gid[%d]=%d >"
+                    " out of define range (%d..%d)\n",
+                    i, dst_gid, valid->min_gid, valid->max_gid ));
+        GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
       }
     }
 

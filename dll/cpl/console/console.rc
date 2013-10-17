@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/console.rc
  * PURPOSE:         main resource file
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include <windef.h>
@@ -17,6 +17,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"console.dll\0"
 #include <reactos/version.rc>
 
-IDC_CPLICON ICON    DISCARDABLE "res/terminal.ico"
+IDC_CPLICON ICON     "res/terminal.ico"
+
+#include <reactos/manifest_dll.rc>
 
 #include "rsrc.rc"

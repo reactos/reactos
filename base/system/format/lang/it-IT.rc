@@ -1,5 +1,5 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Uso: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifica l'unità disco da formattare.\n\

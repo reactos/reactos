@@ -10,7 +10,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 fwprintf(FILE* file, const wchar_t *format, ...)
 {
     va_list argptr;

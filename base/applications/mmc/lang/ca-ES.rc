@@ -1,20 +1,41 @@
 LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 
-IDM_CONSOLEROOT MENU DISCARDABLE
+IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Fitxer"
     BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Sortida\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "&Sortida\tAlt+F4", IDM_FILE_EXIT
     END
 
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&En quant a Consola d'administracio de ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&En quant a Consola d'administracio de ReactOS...", IDM_HELP_ABOUT
     END
 END
 
-STRINGTABLE DISCARDABLE
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&Fitxer"
+    BEGIN
+        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Sortida\tAlt+F4", IDM_FILE_EXIT
+    END
+
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&En quant a Consola d'administracio de ReactOS...", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
 BEGIN
     IDS_APPTITLE "Consola d'administracio de ReactOS"
     IDS_CONSOLETITLE "Consola%1!u!"

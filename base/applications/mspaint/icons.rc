@@ -1,4 +1,4 @@
-IDI_APPICON     ICON MOVEABLE PURE LOADONCALL DISCARDABLE "icons/paint.ico"
+IDI_APPICON     ICON  "icons/paint.ico"
 
 IDB_TOOLBARICONS    BITMAP "icons/iconbar.bmp"
 
@@ -13,3 +13,5 @@ IDC_AIRBRUSH    ICON "icons/airbrush_cur.ico"
 
 IDI_HORZSTRETCH ICON "icons/horzstretch.ico"
 IDI_VERTSTRETCH ICON "icons/vertstretch.ico"
+IDI_HORZSKEW    ICON "icons/horzskew.ico"
+IDI_VERTSKEW    ICON "icons/vertskew.ico"

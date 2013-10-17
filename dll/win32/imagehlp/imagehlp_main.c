@@ -42,10 +42,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       IMAGEHLP_hHeap = HeapCreate(0, 0x10000, 0);
       break;
     case DLL_PROCESS_DETACH:
+      if (lpvReserved) break;
       HeapDestroy(IMAGEHLP_hHeap);
-      IMAGEHLP_hHeap = NULL;
-      break;
-    default:
       break;
     }
   return TRUE;

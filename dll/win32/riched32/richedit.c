@@ -44,16 +44,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 extern LRESULT WINAPI RichEdit10ANSIWndProc(HWND, UINT, WPARAM, LPARAM);
 
 
-/* Unregisters the window class. */
-static BOOL RICHED32_Unregister(void)
-{
-    TRACE("\n");
-
-    UnregisterClassA(RICHEDIT_CLASS10A, NULL);
-    return TRUE;
-}
-
-
 /* Registers the window class. */
 static BOOL RICHED32_Register(void)
 {
@@ -84,7 +74,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         return RICHED32_Register();
 
     case DLL_PROCESS_DETACH:
-        return RICHED32_Unregister();
+        if (lpvReserved) break;
+        UnregisterClassA(RICHEDIT_CLASS10A, NULL);
+        break;
     }
     return TRUE;
 }

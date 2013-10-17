@@ -6,11 +6,11 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 ULONG SACDebug = 0xFFFFFFFF;
 BOOLEAN CommandConsoleLaunchingEnabled;
@@ -21,14 +21,14 @@ ULONG ProcessingType;
 PKEVENT SACEvent;
 HANDLE SACEventHandle;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
 WorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
 {
     /* Call the worker function */
-    return ConMgrWorkerProcessEvents(DeviceExtension);
+    ConMgrWorkerProcessEvents(DeviceExtension);
 }
 
 VOID

@@ -174,7 +174,10 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
       Flags |= FILE_SEQUENTIAL_ONLY;
 
    if(dwFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE)
+   {
       Flags |= FILE_DELETE_ON_CLOSE;
+      dwDesiredAccess |= DELETE;
+   }
 
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
@@ -394,7 +397,7 @@ OpenFile(LPCSTR lpFileName,
 	PWCHAR FilePart;
 	ULONG Len;
 
-	TRACE("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
+	TRACE("OpenFile('%s', lpReOpenBuff %p, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
 
 	if (lpReOpenBuff == NULL)
 	{
@@ -415,7 +418,7 @@ OpenFile(LPCSTR lpFileName,
 						  lpReOpenBuff->szPathName,
 						  NULL))
 	{
-	    lpReOpenBuff->nErrCode = GetLastError();
+	    lpReOpenBuff->nErrCode = (WORD)GetLastError();
 		return HFILE_ERROR;
 	}
 
@@ -489,7 +492,7 @@ OpenFile(LPCSTR lpFileName,
 
 	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
-		lpReOpenBuff->nErrCode = GetLastError();
+		lpReOpenBuff->nErrCode = (WORD)GetLastError();
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
@@ -497,7 +500,7 @@ OpenFile(LPCSTR lpFileName,
     {
         if (!DeleteFileW(PathNameW))
 		{
-			lpReOpenBuff->nErrCode = GetLastError();
+			lpReOpenBuff->nErrCode = (WORD)GetLastError();
 			return HFILE_ERROR;
 		}
         TRACE("(%s): OF_DELETE return = OK\n", lpFileName);
@@ -543,7 +546,7 @@ OpenFile(LPCSTR lpFileName,
 
 	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
 
-	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
+	lpReOpenBuff->nErrCode = (WORD)RtlNtStatusToDosError(errCode);
 
 	if (!NT_SUCCESS(errCode))
 	{

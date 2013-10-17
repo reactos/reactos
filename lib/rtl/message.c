@@ -122,6 +122,26 @@ RtlFindMessage(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+RtlFormatMessageEx(
+    PWSTR Message,
+    UCHAR MaxWidth,
+    BOOLEAN IgnoreInserts,
+    BOOLEAN Ansi,
+    BOOLEAN ArgumentIsArray,
+    va_list *Arguments,
+    PWSTR Buffer,
+    ULONG BufferSize,
+    ULONG Flags)
+{
+    DPRINT1("RtlFormatMessage(%S, %u, %s, %s, %s, %s, %p, %lu %lx)\n",
+            Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", Ansi ? "TRUE" : "FALSE",
+            ArgumentIsArray ? "TRUE" : "FALSE", (PSTR)Arguments, Buffer, BufferSize, Flags);
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /**********************************************************************
  *	RtlFormatMessage  (NTDLL.@)
@@ -141,7 +161,7 @@ RtlFindMessage(
  * RETURNS
  *      NTSTATUS code.
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -155,12 +175,7 @@ RtlFormatMessage(
     PWSTR Buffer,
     ULONG BufferSize)
 {
-    DPRINT1("RtlFormatMessage(%S, %u, %s, %s, %s, %s, %p, %lu)\n",
-            Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", Ansi ? "TRUE" : "FALSE",
-            ArgumentIsArray ? "TRUE" : "FALSE", (PSTR)Arguments, Buffer, BufferSize);
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return RtlFormatMessageEx(Message, MaxWidth, IgnoreInserts, Ansi, ArgumentIsArray, Arguments, Buffer, BufferSize, 0);
 }
 
 /* EOF */

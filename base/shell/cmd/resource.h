@@ -137,8 +137,6 @@
 
 #define STRING_GOTO_HELP1                  659
 
-#define STRING_HELP_HELP1                  660
-
 #define STRING_LABEL_HELP1                 661
 #define STRING_LABEL_HELP2                 662
 #define STRING_LABEL_HELP3                 663
@@ -221,8 +219,6 @@
 #define STRING_SCREEN_COL                  715
 #define STRING_SCREEN_ROW                  716
 #define STRING_TIMER_TIME                  717
-#define STRING_HELP1                       718
-#define STRING_HELP2                       719
 
 #define STRING_INVALID_OPERAND             720
 #define STRING_EXPECTED_CLOSE_PAREN        721

@@ -6,7 +6,7 @@
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_HELP,  "Sposób użycia: %s wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
   [wolumin:]      Określa literę dysku przeznaczonego do formatowania.\n\

@@ -135,7 +135,7 @@ static HRESULT WINAPI CompartmentMgr_QueryInterface(ITfCompartmentMgr *iface, RE
 
         if (*ppvOut)
         {
-            IUnknown_AddRef(iface);
+            ITfCompartmentMgr_AddRef(iface);
             return S_OK;
         }
 
@@ -308,7 +308,7 @@ static HRESULT WINAPI CompartmentEnumGuid_QueryInterface(IEnumGUID *iface, REFII
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        IEnumGUID_AddRef(iface);
         return S_OK;
     }
 
@@ -468,7 +468,7 @@ static HRESULT WINAPI Compartment_QueryInterface(ITfCompartment *iface, REFIID i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfCompartment_AddRef(iface);
         return S_OK;
     }
 
@@ -621,7 +621,7 @@ static HRESULT WINAPI CompartmentSource_UnadviseSink(ITfSource *iface, DWORD pdw
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_COMPARTMENTSINK)
         return E_INVALIDARG;
 
-    sink = (CompartmentSink*)remove_Cookie(pdwCookie);
+    sink = remove_Cookie(pdwCookie);
     if (!sink)
         return CONNECT_E_NOCONNECTION;
 

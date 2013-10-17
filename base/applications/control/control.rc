@@ -5,4 +5,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"control.exe\0"
 #include <reactos/version.rc>
 
-IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
+IDI_MAINICON            ICON         "resources/config.ico"

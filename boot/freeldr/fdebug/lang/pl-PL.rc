@@ -12,7 +12,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 // Menu
 //
 
-IDC_FDEBUG MENU DISCARDABLE
+IDC_FDEBUG MENU
 BEGIN
     POPUP "&Plik"
     BEGIN
@@ -40,7 +40,7 @@ END
 // Accelerator
 //
 
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE
+IDC_FDEBUG ACCELERATORS
 BEGIN
     63,            IDM_ABOUT,              ASCII,  ALT // "?"
     47,            IDM_ABOUT,              ASCII,  ALT // "/"
@@ -53,7 +53,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -62,13 +62,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
@@ -82,7 +82,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -116,7 +116,7 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
+IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "O debuggerze FreeLoadera"
 FONT 8, "MS Shell Dlg"
@@ -130,7 +130,7 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
+IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opcje połączenia"
 FONT 8, "MS Shell Dlg"
@@ -143,7 +143,7 @@ BEGIN
     PUSHBUTTON      "Anuluj",IDCANCEL,100,79,50,14
 END
 
-IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
+IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Przechwyć plik"
 FONT 8, "MS Shell Dlg"
@@ -161,14 +161,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
     IDS_HELLO               "Hello World!"
     IDC_FDEBUG              "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 	IDS_LICENSE				"Ten program należy do wolnego oprogramowania; możesz go rozpowszechniać i/lub modyfikować w zgodzie z zasadami licencji GNU GPL w formie w jakiej zostały opublikowane przez fundację Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybór) w jakiejkolwiek późniejszej wersji.\r\n\r\nRozpowszechniając ten program mamy nadzieję, że będzie użyteczny, ale BEZ ŻADNEJ GWARANCJI; nawet bez zakładanej gwarancji HANDLOWOŚCI, a w szczególnym przypadku zdatności. Aby poznać więcej szczegółów, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna być dostarczona razem z tym programem; jeśli tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."

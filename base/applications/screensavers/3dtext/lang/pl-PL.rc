@@ -19,7 +19,7 @@ BEGIN
     LTEXT           "Własny tekst",IDC_STATIC,18,17,65,8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Wygaszacz ekranu Tekst 3d"
 END

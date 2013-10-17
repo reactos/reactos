@@ -188,7 +188,7 @@ IopParseDevice(IN PVOID ParseObject,
     BOOLEAN DirectOpen = FALSE, OpenCancelled, UseDummyFile;
     OBJECT_ATTRIBUTES ObjectAttributes;
     KIRQL OldIrql;
-    PDUMMY_FILE_OBJECT DummyFileObject;
+    PDUMMY_FILE_OBJECT LocalFileObject;
     PFILE_BASIC_INFORMATION FileBasicInfo;
     ULONG ReturnLength;
     KPROCESSOR_MODE CheckMode;
@@ -503,9 +503,7 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Now set the IRP data */
     Irp->RequestorMode = AccessMode;
-    Irp->Flags = IRP_CREATE_OPERATION |
-                 IRP_SYNCHRONOUS_API |
-                 IRP_DEFER_IO_COMPLETION;
+    Irp->Flags = IRP_CREATE_OPERATION | IRP_SYNCHRONOUS_API | IRP_DEFER_IO_COMPLETION;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->UserIosb = &IoStatusBlock;
     Irp->MdlAddress = NULL;
@@ -537,8 +535,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Set the flags */
             StackLoc->Flags = (UCHAR)OpenPacket->Options;
-            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ?
-                                SL_CASE_SENSITIVE: 0;
+            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
             break;
 
         /* Named pipe */
@@ -546,8 +543,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Set the named pipe MJ and set the parameters */
             StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters =
-                OpenPacket->MailslotOrPipeParameters;
+            StackLoc->Parameters.CreatePipe.Parameters = OpenPacket->ExtraCreateParameters;
             break;
 
         /* Mailslot */
@@ -555,8 +551,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Set the mailslot MJ and set the parameters */
             StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-            StackLoc->Parameters.CreateMailslot.Parameters =
-                OpenPacket->MailslotOrPipeParameters;
+            StackLoc->Parameters.CreateMailslot.Parameters = OpenPacket->ExtraCreateParameters;
             break;
     }
 
@@ -658,13 +653,13 @@ IopParseDevice(IN PVOID ParseObject,
     else
     {
         /* Use the dummy object instead */
-        DummyFileObject = OpenPacket->DummyFileObject;
-        RtlZeroMemory(DummyFileObject, sizeof(DUMMY_FILE_OBJECT));
+        LocalFileObject = OpenPacket->LocalFileObject;
+        RtlZeroMemory(LocalFileObject, sizeof(DUMMY_FILE_OBJECT));
 
         /* Set it up */
-        FileObject = (PFILE_OBJECT)&DummyFileObject->ObjectHeader.Body;
-        DummyFileObject->ObjectHeader.Type = IoFileObjectType;
-        DummyFileObject->ObjectHeader.PointerCount = 1;
+        FileObject = (PFILE_OBJECT)&LocalFileObject->ObjectHeader.Body;
+        LocalFileObject->ObjectHeader.Type = IoFileObjectType;
+        LocalFileObject->ObjectHeader.PointerCount = 1;
     }
 
     /* Setup the file header */
@@ -1541,7 +1536,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 {
     NTSTATUS Status;
     KPROCESSOR_MODE AccessMode = ExGetPreviousMode();
-    DUMMY_FILE_OBJECT DummyFileObject;
+    DUMMY_FILE_OBJECT LocalFileObject;
     FILE_NETWORK_OPEN_INFORMATION NetworkOpenInfo;
     HANDLE Handle;
     OPEN_PACKET OpenPacket;
@@ -1582,7 +1577,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                     &NetworkOpenInfo : FileInformation;
     OpenPacket.QueryOnly = TRUE;
     OpenPacket.FullAttributes = IsBasic ? FALSE : TRUE;
-    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.LocalFileObject = &LocalFileObject;
 
     /* Update the operation count */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1717,13 +1712,17 @@ IoCreateFile(OUT PHANDLE FileHandle,
     KPROCESSOR_MODE AccessMode;
     HANDLE LocalHandle = 0;
     LARGE_INTEGER SafeAllocationSize;
-    volatile PVOID SystemEaBuffer = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    OPEN_PACKET OpenPacket;
+    PNAMED_PIPE_CREATE_PARAMETERS NamedPipeCreateParameters;
+    POPEN_PACKET OpenPacket;
     ULONG EaErrorOffset;
-
     PAGED_CODE();
     IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
+
+    /* Allocate the open packet */
+    OpenPacket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*OpenPacket), 'pOoI');
+    if (!OpenPacket) return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(OpenPacket, sizeof(*OpenPacket));
 
     /* Check if we have no parameter checking to do */
     if (Options & IO_NO_PARAMETER_CHECKING)
@@ -1738,12 +1737,160 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Check if the call came from user mode */
-    if (AccessMode != KernelMode)
+    if ((AccessMode != KernelMode) || (Options & IO_CHECK_CREATE_PARAMETERS))
     {
+        /* Validate parameters */
+        if (FileAttributes & ~FILE_ATTRIBUTE_VALID_FLAGS)
+        {
+            DPRINT1("File Create 'FileAttributes' Parameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (ShareAccess & ~FILE_SHARE_VALID_FLAGS)
+        {
+            DPRINT1("File Create 'ShareAccess' Parameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (Disposition > FILE_MAXIMUM_DISPOSITION)
+        {
+            DPRINT1("File Create 'Disposition' Parameter is out of range!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (CreateOptions & ~FILE_VALID_OPTION_FLAGS)
+        {
+            DPRINT1("File Create 'CreateOptions' parameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT)) &&
+            (!(DesiredAccess & SYNCHRONIZE)))
+        {
+            DPRINT1("File Create 'CreateOptions' parameter FILE_SYNCHRONOUS_IO_* requested, but 'DesiredAccess' does not have SYNCHRONIZE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DELETE_ON_CLOSE) && (!(DesiredAccess & DELETE)))
+        {
+            DPRINT1("File Create 'CreateOptions' parameter FILE_DELETE_ON_CLOSE requested, but 'DesiredAccess' does not have DELETE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT)) ==
+            (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT))
+        {
+            DPRINT1("File Create 'FileAttributes' parameter both FILE_SYNCHRONOUS_IO_NONALERT and FILE_SYNCHRONOUS_IO_ALERT specified!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DIRECTORY_FILE) && !(CreateOptions & FILE_NON_DIRECTORY_FILE) &&
+            (CreateOptions & ~(FILE_DIRECTORY_FILE |
+                               FILE_SYNCHRONOUS_IO_ALERT |
+                               FILE_SYNCHRONOUS_IO_NONALERT |
+                               FILE_WRITE_THROUGH |
+                               FILE_COMPLETE_IF_OPLOCKED |
+                               FILE_OPEN_FOR_BACKUP_INTENT |
+                               FILE_DELETE_ON_CLOSE |
+                               FILE_OPEN_FOR_FREE_SPACE_QUERY |
+                               FILE_OPEN_BY_FILE_ID |
+                               FILE_NO_COMPRESSION |
+                               FILE_OPEN_REPARSE_POINT)))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter has flags incompatible with FILE_DIRECTORY_FILE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DIRECTORY_FILE) && !(CreateOptions & FILE_NON_DIRECTORY_FILE) &&
+            (Disposition != FILE_CREATE) && (Disposition != FILE_OPEN) && (Disposition != FILE_OPEN_IF))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter FILE_DIRECTORY_FILE requested, but 'Disposition' is not FILE_CREATE/FILE_OPEN/FILE_OPEN_IF!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_COMPLETE_IF_OPLOCKED) && (CreateOptions & FILE_RESERVE_OPFILTER))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter both FILE_COMPLETE_IF_OPLOCKED and FILE_RESERVE_OPFILTER specified!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING) && (DesiredAccess & FILE_APPEND_DATA))
+        {
+            DPRINT1("File Create 'CreateOptions' parameter FILE_NO_INTERMEDIATE_BUFFERING requested, but 'DesiredAccess' FILE_APPEND_DATA requires it!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Now check if this is a named pipe */
+        if (CreateFileType == CreateFileTypeNamedPipe)
+        {
+            /* Make sure we have extra parameters */
+            if (!ExtraCreateParameters)
+            {
+                ExFreePool(OpenPacket);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Get the parameters and validate them */
+            NamedPipeCreateParameters = ExtraCreateParameters;
+            if ((NamedPipeCreateParameters->NamedPipeType > FILE_PIPE_MESSAGE_TYPE) ||
+
+                (NamedPipeCreateParameters->ReadMode > FILE_PIPE_MESSAGE_MODE) ||
+
+                (NamedPipeCreateParameters->CompletionMode > FILE_PIPE_COMPLETE_OPERATION) ||
+
+                (ShareAccess & FILE_SHARE_DELETE) ||
+
+                ((Disposition < FILE_OPEN) || (Disposition > FILE_OPEN_IF)) ||
+
+                (CreateOptions & ~FILE_VALID_PIPE_OPTION_FLAGS))
+            {
+                /* Invalid named pipe create */
+                ExFreePool(OpenPacket);
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else if (CreateFileType == CreateFileTypeMailslot)
+        {
+            /* Make sure we have extra parameters */
+            if (!ExtraCreateParameters)
+            {
+                ExFreePool(OpenPacket);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Get the parameters and validate them */
+            if ((ShareAccess & FILE_SHARE_DELETE) ||
+
+                !(ShareAccess & ~FILE_SHARE_WRITE) ||
+
+                (Disposition != FILE_CREATE) ||
+
+                (CreateOptions & ~FILE_VALID_MAILSLOT_OPTION_FLAGS))
+            {
+                /* Invalid mailslot create */
+                ExFreePool(OpenPacket);
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+
         _SEH2_TRY
         {
+            /* Probe the output parameters */
             ProbeForWriteHandle(FileHandle);
             ProbeForWriteIoStatusBlock(IoStatusBlock);
+
+            /* Probe the allocation size if one was passed in */
             if (AllocationSize)
             {
                 SafeAllocationSize = ProbeForReadLargeInteger(AllocationSize);
@@ -1753,33 +1900,45 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 SafeAllocationSize.QuadPart = 0;
             }
 
+            /* Make sure it's valid */
+            if (SafeAllocationSize.QuadPart < 0)
+            {
+                RtlRaiseStatus(STATUS_INVALID_PARAMETER);
+            }
+
+            /* Check if EA was passed in */
             if ((EaBuffer) && (EaLength))
             {
+                /* Probe it */
                 ProbeForRead(EaBuffer, EaLength, sizeof(ULONG));
 
-                /* marshal EaBuffer */
-                SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                       EaLength,
-                                                       TAG_EA);
-                if (!SystemEaBuffer)
-                {
-                    _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                RtlCopyMemory(SystemEaBuffer, EaBuffer, EaLength);
+                /* And marshall it */
+                OpenPacket->EaBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                             EaLength,
+                                                             TAG_EA);
+                OpenPacket->EaLength = EaLength;
+                RtlCopyMemory(OpenPacket->EaBuffer, EaBuffer, EaLength);
 
                 /* Validate the buffer */
-                Status = IoCheckEaBufferValidity(SystemEaBuffer,
+                Status = IoCheckEaBufferValidity(OpenPacket->EaBuffer,
                                                  EaLength,
                                                  &EaErrorOffset);
-                IoStatusBlock->Status = Status;
-                IoStatusBlock->Information = EaErrorOffset;
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Undo everything if it's invalid */
+                    DPRINT1("Invalid EA buffer\n");
+                    IoStatusBlock->Status = Status;
+                    IoStatusBlock->Information = EaErrorOffset;
+                    RtlRaiseStatus(Status);
+                }
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Return the exception code */
-            Status = _SEH2_GetExceptionCode();
+            if (OpenPacket->EaBuffer != NULL) ExFreePool(OpenPacket->EaBuffer);
+            ExFreePool(OpenPacket);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -1809,47 +1968,47 @@ IoCreateFile(OUT PHANDLE FileHandle,
         if ((EaBuffer) && (EaLength))
         {
             /* Allocate the kernel copy */
-            SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                   EaLength,
-                                                   TAG_EA);
-            if (!SystemEaBuffer) return STATUS_INSUFFICIENT_RESOURCES;
+            OpenPacket->EaBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                         EaLength,
+                                                         TAG_EA);
+            if (!OpenPacket->EaBuffer)
+            {
+                ExFreePool(OpenPacket);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
             /* Copy the data */
-            RtlCopyMemory(SystemEaBuffer, EaBuffer, EaLength);
+            OpenPacket->EaLength = EaLength;
+            RtlCopyMemory(OpenPacket->EaBuffer, EaBuffer, EaLength);
 
             /* Validate the buffer */
-            Status = IoCheckEaBufferValidity(SystemEaBuffer,
+            Status = IoCheckEaBufferValidity(OpenPacket->EaBuffer,
                                              EaLength,
                                              &EaErrorOffset);
-            IoStatusBlock->Status = Status;
-            IoStatusBlock->Information = EaErrorOffset;
+            if (!NT_SUCCESS(Status))
+            {
+                /* Undo everything if it's invalid */
+                DPRINT1("Invalid EA buffer\n");
+                ExFreePool(OpenPacket->EaBuffer);
+                IoStatusBlock->Status = Status;
+                IoStatusBlock->Information = EaErrorOffset;
+                ExFreePool(OpenPacket);
+                return Status;
+            }
         }
     }
 
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("FIXME: IoCheckEaBufferValidity() failed with Status: %lx\n",
-                Status);
-
-        /* Free SystemEaBuffer if needed and return the error */
-        if (SystemEaBuffer) ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
-        return Status;
-    }
-
     /* Setup the Open Packet */
-    RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
-    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
-    OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.AllocationSize = SafeAllocationSize;
-    OpenPacket.CreateOptions = CreateOptions;
-    OpenPacket.FileAttributes = (USHORT)FileAttributes;
-    OpenPacket.ShareAccess = (USHORT)ShareAccess;
-    OpenPacket.EaBuffer = SystemEaBuffer;
-    OpenPacket.EaLength = EaLength;
-    OpenPacket.Options = Options;
-    OpenPacket.Disposition = Disposition;
-    OpenPacket.CreateFileType = CreateFileType;
-    OpenPacket.MailslotOrPipeParameters = ExtraCreateParameters;
+    OpenPacket->Type = IO_TYPE_OPEN_PACKET;
+    OpenPacket->Size = sizeof(*OpenPacket);
+    OpenPacket->AllocationSize = SafeAllocationSize;
+    OpenPacket->CreateOptions = CreateOptions;
+    OpenPacket->FileAttributes = (USHORT)FileAttributes;
+    OpenPacket->ShareAccess = (USHORT)ShareAccess;
+    OpenPacket->Options = Options;
+    OpenPacket->Disposition = Disposition;
+    OpenPacket->CreateFileType = CreateFileType;
+    OpenPacket->ExtraCreateParameters = ExtraCreateParameters;
 
     /* Update the operation count */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1867,14 +2026,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
                                 AccessMode,
                                 NULL,
                                 DesiredAccess,
-                                &OpenPacket,
+                                OpenPacket,
                                 &LocalHandle);
 
     /* Free the EA Buffer */
-    if (OpenPacket.EaBuffer) ExFreePool(OpenPacket.EaBuffer);
+    if (OpenPacket->EaBuffer) ExFreePool(OpenPacket->EaBuffer);
 
     /* Now check for Ob or Io failure */
-    if (!(NT_SUCCESS(Status)) || (OpenPacket.ParseCheck != TRUE))
+    if (!(NT_SUCCESS(Status)) || (OpenPacket->ParseCheck != TRUE))
     {
         /* Check if Ob thinks well went well */
         if (NT_SUCCESS(Status))
@@ -1888,10 +2047,10 @@ IoCreateFile(OUT PHANDLE FileHandle,
         }
 
         /* Now check the Io status */
-        if (!NT_SUCCESS(OpenPacket.FinalStatus))
+        if (!NT_SUCCESS(OpenPacket->FinalStatus))
         {
             /* Use this status instead of Ob's */
-            Status = OpenPacket.FinalStatus;
+            Status = OpenPacket->FinalStatus;
 
             /* Check if it was only a warning */
             if (NT_WARNING(Status))
@@ -1900,8 +2059,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 _SEH2_TRY
                 {
                     /* In this case, we copy the I/O Status back */
-                    IoStatusBlock->Information = OpenPacket.Information;
-                    IoStatusBlock->Status = OpenPacket.FinalStatus;
+                    IoStatusBlock->Information = OpenPacket->Information;
+                    IoStatusBlock->Status = OpenPacket->FinalStatus;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -1911,39 +2070,40 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 _SEH2_END;
             }
         }
-        else if ((OpenPacket.FileObject) && (OpenPacket.ParseCheck != 1))
+        else if ((OpenPacket->FileObject) && (OpenPacket->ParseCheck != 1))
         {
             /*
              * This can happen in the very bizarre case where the parse routine
              * actually executed more then once (due to a reparse) and ended
              * up failing after already having created the File Object.
              */
-            if (OpenPacket.FileObject->FileName.Length)
+            if (OpenPacket->FileObject->FileName.Length)
             {
                 /* It had a name, free it */
-                ExFreePoolWithTag(OpenPacket.FileObject->FileName.Buffer, TAG_IO_NAME);
+                ExFreePoolWithTag(OpenPacket->FileObject->FileName.Buffer, TAG_IO_NAME);
             }
 
             /* Clear the device object to invalidate the FO, and dereference */
-            OpenPacket.FileObject->DeviceObject = NULL;
-            ObDereferenceObject(OpenPacket.FileObject);
+            OpenPacket->FileObject->DeviceObject = NULL;
+            ObDereferenceObject(OpenPacket->FileObject);
         }
     }
     else
     {
         /* We reached success and have a valid file handle */
-        OpenPacket.FileObject->Flags |= FO_HANDLE_CREATED;
+        OpenPacket->FileObject->Flags |= FO_HANDLE_CREATED;
+        ASSERT(OpenPacket->FileObject->Type == IO_TYPE_FILE);
 
         /* Enter SEH for write back */
         _SEH2_TRY
         {
             /* Write back the handle and I/O Status */
             *FileHandle = LocalHandle;
-            IoStatusBlock->Information = OpenPacket.Information;
-            IoStatusBlock->Status = OpenPacket.FinalStatus;
+            IoStatusBlock->Information = OpenPacket->Information;
+            IoStatusBlock->Status = OpenPacket->FinalStatus;
 
             /* Get the Io status */
-            Status = OpenPacket.FinalStatus;
+            Status = OpenPacket->FinalStatus;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1954,13 +2114,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Check if we were 100% successful */
-    if ((OpenPacket.ParseCheck == TRUE) && (OpenPacket.FileObject))
+    if ((OpenPacket->ParseCheck == TRUE) && (OpenPacket->FileObject))
     {
         /* Dereference the File Object */
-        ObDereferenceObject(OpenPacket.FileObject);
+        ObDereferenceObject(OpenPacket->FileObject);
     }
 
     /* Return status */
+    ExFreePool(OpenPacket);
     return Status;
 }
 
@@ -2190,7 +2351,7 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                              OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
 {
     NTSTATUS Status;
-    DUMMY_FILE_OBJECT DummyFileObject;
+    DUMMY_FILE_OBJECT LocalFileObject;
     HANDLE Handle;
     OPEN_PACKET OpenPacket;
     PAGED_CODE();
@@ -2207,7 +2368,7 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     OpenPacket.NetworkInformation = Buffer;
     OpenPacket.QueryOnly = TRUE;
     OpenPacket.FullAttributes = TRUE;
-    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.LocalFileObject = &LocalFileObject;
 
     /*
      * Attempt opening the file. This will call the I/O Parse Routine for
@@ -3000,7 +3161,7 @@ NTAPI
 NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     NTSTATUS Status;
-    DUMMY_FILE_OBJECT DummyFileObject;
+    DUMMY_FILE_OBJECT LocalFileObject;
     HANDLE Handle;
     KPROCESSOR_MODE AccessMode = KeGetPreviousMode();
     OPEN_PACKET OpenPacket;
@@ -3017,7 +3178,7 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
                              FILE_SHARE_DELETE;
     OpenPacket.Disposition = FILE_OPEN;
     OpenPacket.DeleteOnly = TRUE;
-    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.LocalFileObject = &LocalFileObject;
 
     /* Update the operation counts */
     IopUpdateOperationCount(IopOtherTransfer);

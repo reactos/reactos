@@ -259,6 +259,7 @@ MMRESULT WINAPI acmStreamOpen(PHACMSTREAM phas, HACMDRIVER had,
 		TRACE("%s => %08x\n", debugstr_w(wadi->pszDriverAlias), ret);
 		if (ret == MMSYSERR_NOERROR) {
 		    if (fdwOpen & ACM_STREAMOPENF_QUERY) {
+			MSACM_Message((HACMDRIVER)wad, ACMDM_STREAM_CLOSE, (LPARAM)&was->drvInst, 0);
 			acmDriverClose(had, 0L);
 		    }
 		    break;

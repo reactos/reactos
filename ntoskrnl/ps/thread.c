@@ -317,19 +317,30 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             return Status;
         }
 
-        /* Set the Start Addresses */
-        Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
-        Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        /* Set the Start Addresses from the untrusted ThreadContext */
+        _SEH2_TRY
+        {
+            Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
+            Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
         /* Let the kernel intialize the Thread */
-        Status = KeInitThread(&Thread->Tcb,
-                              NULL,
-                              PspUserThreadStartup,
-                              NULL,
-                              Thread->StartAddress,
-                              ThreadContext,
-                              TebBase,
-                              &Process->Pcb);
+        if (NT_SUCCESS(Status))
+        {
+            Status = KeInitThread(&Thread->Tcb,
+                                  NULL,
+                                  PspUserThreadStartup,
+                                  NULL,
+                                  Thread->StartAddress,
+                                  ThreadContext,
+                                  TebBase,
+                                  &Process->Pcb);
+        }
     }
     else
     {
@@ -669,16 +680,6 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
 /*
  * @implemented
  */
-HANDLE
-NTAPI
-PsGetCurrentThreadId(VOID)
-{
-    return PsGetCurrentThread()->Cid.UniqueThread;
-}
-
-/*
- * @implemented
- */
 ULONG
 NTAPI
 PsGetThreadFreezeCount(IN PETHREAD Thread)
@@ -709,11 +710,31 @@ PsGetThreadId(IN PETHREAD Thread)
 /*
  * @implemented
  */
+HANDLE
+NTAPI
+PsGetCurrentThreadId(VOID)
+{
+    return PsGetCurrentThread()->Cid.UniqueThread;
+}
+
+/*
+ * @implemented
+ */
 PEPROCESS
 NTAPI
 PsGetThreadProcess(IN PETHREAD Thread)
 {
     return Thread->ThreadsProcess;
+}
+
+/*
+ * @implemented
+ */
+PEPROCESS
+NTAPI
+PsGetCurrentThreadProcess(VOID)
+{
+    return PsGetCurrentThread()->ThreadsProcess;
 }
 
 /*
@@ -731,9 +752,19 @@ PsGetThreadProcessId(IN PETHREAD Thread)
  */
 HANDLE
 NTAPI
+PsGetCurrentThreadProcessId(VOID)
+{
+    return PsGetCurrentThread()->Cid.UniqueProcess;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
 PsGetThreadSessionId(IN PETHREAD Thread)
 {
-    return (HANDLE)Thread->ThreadsProcess->Session;
+    return MmGetSessionId(Thread->ThreadsProcess);
 }
 
 /*
@@ -749,11 +780,42 @@ PsGetThreadTeb(IN PETHREAD Thread)
 /*
  * @implemented
  */
+PTEB
+NTAPI
+PsGetCurrentThreadTeb(VOID)
+{
+    return PsGetCurrentThread()->Tcb.Teb;
+}
+
+/*
+ * @implemented
+ */
 PVOID
 NTAPI
 PsGetThreadWin32Thread(IN PETHREAD Thread)
 {
     return Thread->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+PsGetCurrentThreadWin32Thread(VOID)
+{
+    return PsGetCurrentThread()->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(VOID)
+{
+    KeEnterCriticalRegion();
+    return PsGetCurrentThread()->Tcb.Win32Thread;
 }
 
 /*
@@ -825,16 +887,6 @@ PsSetThreadHardErrorsAreDisabled(IN PETHREAD Thread,
                                  IN BOOLEAN HardErrorsAreDisabled)
 {
     Thread->HardErrorsAreDisabled = HardErrorsAreDisabled;
-}
-
-/*
- * @implemented
- */
-PVOID
-NTAPI
-PsGetCurrentThreadWin32Thread(VOID)
-{
-    return PsGetCurrentThread()->Tcb.Win32Thread;
 }
 
 /*

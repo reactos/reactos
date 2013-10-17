@@ -1,0 +1,135 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "ReactOS Kur, VMWare(r)'de çalıştığını algıladı.", -1, 117, 8, 140, 24
+    LTEXT "VMware(r) SVGA sürücüsünü kurmak için ""İleri"" düğmesine tıklayınız. Eğer sürücüyü kurmak istemiyorsanız ""İptal"" düğmesine tıklayınız.", -1, 117, 140, 140, 24
+END
+
+IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsüyle birlikte gelmez.\n\nBu yüzden, VMWare(r)'de bulunan ""Install VMware tools..."" seçeneğine tıklayınız.\n\n\nİşlemi sürdürmek için ""İleri"" düğmesine, sürücünün kurulumunu atlamak için ""İptal"" düğmesine tıklayınız.",-1,25,25,225,85
+END
+
+IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
+    CONTROL "", IDC_INSTALLINGPROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
+END
+
+IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "VMware(r) SVGA sürücüsü, başarılı bir şekilde kuruldu. Aşağıdaki çözünürlüklerden birini seçiniz:",-1,25,5,225,20
+    PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1152x864", 2016, 25, 75, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1280x960", 2240, 110, 30, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1280x1024", 2304, 110, 45, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1400x1050", 2450, 110, 60, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1600x1200", 2800, 110, 75, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
+    LTEXT "Aşağıdaki derinliklerden birini seçiniz:", -1, 25, 93, 225, 12
+    COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
+END
+
+IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsünü kuramadı.\n\n\nReactOS kurulumunu sürdürmek için ""Bitir"" düğmesine tıklayınız.",-1,25,25,225,85
+END
+
+IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "VMware(r) SVGA sürücüsü, daha önceden kurulmuş.\n\nNe yapmak istediğinizi seçiniz:",-1,25,5,225,30
+    PUSHBUTTON "Görüntülük Ayarlarını Yapılandırmak", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "Başka Bir Görüntülük Sürücüsü Kurmak", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "VMware(r) SVGA Sürücüsünü Kaldırmak", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+    LTEXT "Sürdürmek için ""İleri"" düğmesine, çıkmak için ""İptal"" düğmesine tıklayınız.", -1, 25, 93, 225, 19
+END
+
+IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Kullanmak istediğiniz görüntülük sürücüsünü seçiniz:",-1,25,25,225,15
+    PUSHBUTTON "ReactOS VGA Sürücüsü", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "ReactOS VBE Sürücüsü (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+    LTEXT "İşlemi bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapmadan çıkmak için ""İptal"" düğmesine tıklayınız.", -1, 25, 93, 225, 20
+END
+
+IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Görüntülük Sürücüsü Kurulumu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsünü kaldırmak üzere.\n\n\nKaldırmayı bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapılmadan çıkmak için ""İptal"" düğmesine tıklayınız.",-1,25,25,225,85
+END
+
+STRINGTABLE
+BEGIN
+    IDS_WIZARD_NAME            "VMware(r) algılandı."
+    IDS_FAILEDTOLOCATEDRIVERS  "ReactOS Kur, gerekli kütükleri bulamadı.\nVMWare(r) Araç CD'sini bağladığınızı onaylayın."
+    IDS_FAILEDTOCOPYFILES      "ReactOS Kur, gerekli kütükleri çoğaltamadı.\nVMWare(r) Araç CD'sini bağladığınızı onaylayın.\n"
+    IDS_FAILEDTOACTIVATEDRIVER "VMware(r) SVGA sürücüsünün etkinleştirilmesi başarısız oldu."
+    IDS_FAILEDTOSELVGADRIVER   "ReactOS VGA sürücüsünün etkinleştirilmesi başarısız oldu."
+    IDS_FAILEDTOSELVBEDRIVER   "ReactOS VBE sürücüsünün etkinleştirilmesi başarısız oldu."
+    IDS_UNINSTNOTICE           "VMware(r) SVGA sürücüsünün kütükleri silinmedi.\nOnları, dizgeyi yeniden başlatma sonrasında siliniz."
+    IDS_FAILEDTOADDREGENTRIES  "VMware(r) SVGA sürücüsünün değerleri oluşturulamadı."
+END
+
+STRINGTABLE
+BEGIN
+    10001                      "Düşük (8 İkillik)"
+    10002                      "Orta (16 İkillik)"
+    10003                      "Yüksek (32 İkillik)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHINGFORCDROM      "VMWare(r) Araç CD'si aranıyor..."
+    IDS_COPYINGFILES           "Kütükler çoğaltılıyor..."
+    IDS_ENABLINGDRIVER         "VMware(r) SVGA sürücüsü etkinleştiriliyor..."
+END
+
+STRINGTABLE
+BEGIN
+    IDD_INSERT_VMWARE_TOOLSTITLE        "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_INSERT_VMWARE_TOOLSSUBTITLE     "VMWare(r) Araç CD'sini bağlayınız."
+    IDD_INSTALLING_VMWARE_TOOLSTITLE    "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "VMware(r) SVGA sürücüsünü bulunuz ve çoğaltınız."
+    IDD_CONFIGTITLE                     "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_CONFIGSUBTITLE                  "Çözünürlüklerden birini seçiniz."
+    IDD_INSTALLATION_FAILEDTITLE        "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_INSTALLATION_FAILEDSUBTITLE     "VMware(r) SVGA sürücüsünün kurulumu başarısız oldu."
+    IDD_CHOOSEACTIONTITLE               "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_CHOOSEACTIONSUBTITLE            "Ne yapmak istediğinizi seçiniz."
+    IDD_SELECTDRIVERTITLE               "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_SELECTDRIVERSUBTITLE            "Bir sürücü seçiniz."
+    IDD_DOUNINSTALLTITLE                "VMware(r) SVGA Sürücüsünün Kurulumu"
+    IDD_DOUNINSTALLSUBTITLE             "Sürücüyü kaldırınız."
+END

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (specification).                    */
 /*                                                                         */
-/*  Copyright 2004, 2006, 2007 by                                          */
+/*  Copyright 2004, 2006, 2007, 2012 by                                    */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -47,6 +47,68 @@ FT_BEGIN_HEADER
     FT_ULong   offset;
 
   } FT_RFork_Ref;
+
+#ifdef FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
+  typedef FT_Error
+  (*ft_raccess_guess_func)( FT_Library  library,
+                            FT_Stream   stream,
+                            char       *base_file_name,
+                            char      **result_file_name,
+                            FT_Long    *result_offset );
+
+  typedef enum  FT_RFork_Rule_ {
+    FT_RFork_Rule_invalid = -2,
+    FT_RFork_Rule_uknown, /* -1 */
+    FT_RFork_Rule_apple_double,
+    FT_RFork_Rule_apple_single,
+    FT_RFork_Rule_darwin_ufs_export,
+    FT_RFork_Rule_darwin_newvfs,
+    FT_RFork_Rule_darwin_hfsplus,
+    FT_RFork_Rule_vfat,
+    FT_RFork_Rule_linux_cap,
+    FT_RFork_Rule_linux_double,
+    FT_RFork_Rule_linux_netatalk
+  } FT_RFork_Rule;
+
+  /* For fast translation between rule index and rule type,
+   * the macros FT_RFORK_xxx should be kept consistent with
+   * the raccess_guess_funcs table
+   */
+  typedef struct ft_raccess_guess_rec_ {
+    ft_raccess_guess_func  func;
+    FT_RFork_Rule          type;
+  } ft_raccess_guess_rec;
+
+#ifndef FT_CONFIG_OPTION_PIC
+
+  /* this array is a storage in non-PIC mode, so ; is needed in END */
+#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
+          const type name[] = {
+#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
+          { raccess_guess_ ## func_suffix,                           \
+            FT_RFork_Rule_ ## type_suffix },
+#define CONST_FT_RFORK_RULE_ARRAY_END  };
+
+#else /* FT_CONFIG_OPTION_PIC */
+
+  /* this array is a function in PIC mode, so no ; is needed in END */
+#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
+          void                                         \
+          FT_Init_ ## name( type*  storage )           \
+          {                                            \
+            type*  local = storage;                    \
+                                                       \
+                                                       \
+            int  i = 0;
+#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
+          local[i].func = raccess_guess_ ## func_suffix;             \
+          local[i].type = FT_RFork_Rule_ ## type_suffix;             \
+          i++;
+#define CONST_FT_RFORK_RULE_ARRAY_END  }
+
+#endif /* FT_CONFIG_OPTION_PIC */
+
+#endif /* FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK */
 
 
   /*************************************************************************/

@@ -269,7 +269,7 @@
 
 
 #if defined( TT_CONFIG_OPTION_UNPATENTED_HINTING ) && \
-    !defined( TT_CONFIG_OPTION_BYTECODE_INTEPRETER )
+    !defined( TT_CONFIG_OPTION_BYTECODE_INTERPRETER )
     if ( face && FT_IS_SFNT( face ) )
     {
       result = !face->internal->ignore_unpatented_hinter;

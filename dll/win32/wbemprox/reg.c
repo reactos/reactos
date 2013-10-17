@@ -277,24 +277,24 @@ done:
 static HRESULT get_stringvalue( HKEY root, const WCHAR *subkey, const WCHAR *name, VARIANT *value, VARIANT *retval )
 {
     HRESULT hr = S_OK;
-    WCHAR *buf = NULL;
+    BSTR str = NULL;
     DWORD size;
     LONG res;
 
     TRACE("%p, %s, %s\n", root, debugstr_w(subkey), debugstr_w(name));
 
     if ((res = RegGetValueW( root, subkey, name, RRF_RT_REG_SZ, NULL, NULL, &size ))) goto done;
-    if (!(buf = heap_alloc( size )))
+    if (!(str = SysAllocStringLen( NULL, size / sizeof(WCHAR) - 1 )))
     {
         hr = E_OUTOFMEMORY;
         goto done;
     }
-    if (!(res = RegGetValueW( root, subkey, name, RRF_RT_REG_SZ, NULL, buf, &size )))
-        set_variant( VT_BSTR, 0, buf, value );
+    if (!(res = RegGetValueW( root, subkey, name, RRF_RT_REG_SZ, NULL, str, &size )))
+        set_variant( VT_BSTR, 0, str, value );
 
 done:
     set_variant( VT_UI4, res, NULL, retval );
-    heap_free( buf );
+    if (res) SysFreeString( str );
     return hr;
 }
 

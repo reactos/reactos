@@ -44,6 +44,7 @@ list(APPEND NLS_FILES
     c_10029.nls
     c_10079.nls
     c_10081.nls
+    c_20127.nls
     c_20866.nls
     c_21866.nls
     c_28591.nls
@@ -60,6 +61,13 @@ list(APPEND NLS_FILES
     c_28604.nls
     c_28605.nls
     c_28606.nls
+    unicode.nls
+    geo.nls
+    sorttbls.nls
+    locale.nls
+    sortkey.nls
+    ctype.nls
+    l_except.nls
 )
     
     

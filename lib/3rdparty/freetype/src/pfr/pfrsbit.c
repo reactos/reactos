@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR bitmap loader (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006, 2009, 2010 by                              */
+/*  Copyright 2002, 2003, 2006, 2009, 2010, 2013 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -353,7 +353,7 @@
                            FT_Long   *aadvance,
                            FT_UInt   *aformat )
   {
-    FT_Error  error = PFR_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_Byte   flags;
     FT_Char   b;
     FT_Byte*  p = *pdata;
@@ -471,7 +471,7 @@
     return error;
 
   Too_Short:
-    error = PFR_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     FT_ERROR(( "pfr_load_bitmap_metrics: invalid glyph data\n" ));
     goto Exit;
   }
@@ -484,7 +484,7 @@
                         FT_Bool     decreasing,
                         FT_Bitmap*  target )
   {
-    FT_Error          error = PFR_Err_Ok;
+    FT_Error          error = FT_Err_Ok;
     PFR_BitWriterRec  writer;
 
 
@@ -508,7 +508,7 @@
 
       default:
         FT_ERROR(( "pfr_read_bitmap_data: invalid image type\n" ));
-        error = PFR_Err_Invalid_File_Format;
+        error = FT_THROW( Invalid_File_Format );
       }
     }
 
@@ -560,7 +560,7 @@
       }
 
       /* couldn't find it */
-      return PFR_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
     }
 
   Found_Strike:
@@ -593,7 +593,7 @@
       if ( gps_size == 0 )
       {
         /* Could not find a bitmap program string for this glyph */
-        error = PFR_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Exit;
       }
     }
@@ -641,7 +641,7 @@
         FT_TRACE1(( "pfr_slot_load_bitmap:" ));
         FT_TRACE1(( "huge bitmap glyph %dx%d over FT_GlyphSlot\n",
                      xpos, ypos ));
-        error = PFR_Err_Invalid_Pixel_Size;
+        error = FT_THROW( Invalid_Pixel_Size );
       }
 
       if ( !error )

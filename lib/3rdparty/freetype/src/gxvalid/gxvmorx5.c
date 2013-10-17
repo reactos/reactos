@@ -118,6 +118,9 @@
     FT_Bytes p = table + table_index * 2;
 
 
+#ifndef GXV_LOAD_TRACE_VARS
+    GXV_LIMIT_CHECK( count * 2 );
+#else
     while ( p < table + count * 2 + table_index * 2 )
     {
       FT_UShort  insert_glyphID;
@@ -129,6 +132,7 @@
     }
 
     GXV_TRACE(( "\n" ));
+#endif
   }
 
 
@@ -141,12 +145,14 @@
     FT_Bytes                        limit,
     GXV_Validator                   valid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_Bool    setMark;
     FT_Bool    dontAdvance;
     FT_Bool    currentIsKashidaLike;
     FT_Bool    markedIsKashidaLike;
     FT_Bool    currentInsertBefore;
     FT_Bool    markedInsertBefore;
+#endif
     FT_Byte    currentInsertCount;
     FT_Byte    markedInsertCount;
     FT_Byte    currentInsertList;
@@ -155,12 +161,14 @@
     FT_UNUSED( state );
 
 
+#ifdef GXV_LOAD_UNUSED_VARS
     setMark              = FT_BOOL( ( flags >> 15 ) & 1 );
     dontAdvance          = FT_BOOL( ( flags >> 14 ) & 1 );
     currentIsKashidaLike = FT_BOOL( ( flags >> 13 ) & 1 );
     markedIsKashidaLike  = FT_BOOL( ( flags >> 12 ) & 1 );
     currentInsertBefore  = FT_BOOL( ( flags >> 11 ) & 1 );
     markedInsertBefore   = FT_BOOL( ( flags >> 10 ) & 1 );
+#endif
 
     currentInsertCount = (FT_Byte)( ( flags >> 5 ) & 0x1F   );
     markedInsertCount  = (FT_Byte)(   flags        & 0x001F );

@@ -60,7 +60,7 @@
 
 #undef MmSetPageEntrySectionSegment
 #define MmSetPageEntrySectionSegment(S,O,E) do { \
-        DPRINT("SetPageEntrySectionSegment(old,%x,%x,%x)\n",(S),(O)->LowPart,E); \
+        DPRINT("SetPageEntrySectionSegment(old,%p,%x,%x)\n",(S),(O)->LowPart,E); \
         _MmSetPageEntrySectionSegment((S),(O),(E),__FILE__,__LINE__);   \
 	} while (0)
 
@@ -161,6 +161,7 @@ static ULONG SectionCharacteristicsToProtect[16] =
     PAGE_EXECUTE_READWRITE, /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
 };
 
+extern ULONG MmMakeFileAccess [];
 ACCESS_MASK NTAPI MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection);
 static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,
@@ -199,6 +200,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ULONG cbHeadersSize = 0;
     ULONG nSectionAlignment;
     ULONG nFileAlignment;
+    ULONG ImageBase;
     const IMAGE_DOS_HEADER * pidhDosHeader;
     const IMAGE_NT_HEADERS32 * pinhNtHeader;
     const IMAGE_OPTIONAL_HEADER32 * piohOptHeader;
@@ -393,17 +395,69 @@ l_ReadHeaderFromFile:
         /* PE32 */
         case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
         {
-            if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
-                ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
+                ImageBase = piohOptHeader->ImageBase;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfImage))
-                ImageSectionObject->ImageSize = piohOptHeader->SizeOfImage;
+                ImageSectionObject->ImageInformation.ImageFileSize = piohOptHeader->SizeOfImage;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackReserve))
-                ImageSectionObject->StackReserve = piohOptHeader->SizeOfStackReserve;
+                ImageSectionObject->ImageInformation.MaximumStackSize = piohOptHeader->SizeOfStackReserve;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackCommit))
-                ImageSectionObject->StackCommit = piohOptHeader->SizeOfStackCommit;
+                ImageSectionObject->ImageInformation.CommittedStackSize = piohOptHeader->SizeOfStackCommit;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Subsystem))
+            {
+                ImageSectionObject->ImageInformation.SubSystemType = piohOptHeader->Subsystem;
+
+                if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
+                    RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MajorSubsystemVersion))
+                {
+                    ImageSectionObject->ImageInformation.SubSystemMinorVersion = piohOptHeader->MinorSubsystemVersion;
+                    ImageSectionObject->ImageInformation.SubSystemMajorVersion = piohOptHeader->MajorSubsystemVersion;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                ImageSectionObject->ImageInformation.TransferAddress = (PVOID) (ImageBase +
+                    piohOptHeader->AddressOfEntryPoint);
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
+                ImageSectionObject->ImageInformation.ImageContainsCode = piohOptHeader->SizeOfCode != 0;
+            else
+                ImageSectionObject->ImageInformation.ImageContainsCode = TRUE;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                if (piohOptHeader->AddressOfEntryPoint == 0)
+                {
+                    ImageSectionObject->ImageInformation.ImageContainsCode = FALSE;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, LoaderFlags))
+                ImageSectionObject->ImageInformation.LoaderFlags = piohOptHeader->LoaderFlags;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, DllCharacteristics))
+            {
+                ImageSectionObject->ImageInformation.DllCharacteristics = piohOptHeader->DllCharacteristics;
+
+                /*
+                 * Since we don't really implement SxS yet and LD doesn't supoprt /ALLOWISOLATION:NO, hard-code
+                 * this flag here, which will prevent the loader and other code from doing any .manifest or SxS
+                 * magic to any binary.
+                 *
+                 * This will break applications that depend on SxS when running with real Windows Kernel32/SxS/etc
+                 * but honestly that's not tested. It will also break them when running no ReactOS once we implement
+                 * the SxS support -- at which point, duh, this should be removed.
+                 *
+                 * But right now, any app depending on SxS is already broken anyway, so this flag only helps.
+                 */
+                ImageSectionObject->ImageInformation.DllCharacteristics |= IMAGE_DLLCHARACTERISTICS_NO_ISOLATION;
+            }
 
             break;
         }
@@ -417,10 +471,9 @@ l_ReadHeaderFromFile:
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, ImageBase))
             {
+                ImageBase = pioh64OptHeader->ImageBase;
                 if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
                     DIE(("ImageBase exceeds the address space\n"));
-
-                ImageSectionObject->ImageBase = (ULONG_PTR)pioh64OptHeader->ImageBase;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))
@@ -428,7 +481,7 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfImage > MAXULONG_PTR)
                     DIE(("SizeOfImage exceeds the address space\n"));
 
-                ImageSectionObject->ImageSize = pioh64OptHeader->SizeOfImage;
+                ImageSectionObject->ImageInformation.ImageFileSize = pioh64OptHeader->SizeOfImage;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
@@ -436,7 +489,7 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfStackReserve > MAXULONG_PTR)
                     DIE(("SizeOfStackReserve exceeds the address space\n"));
 
-                ImageSectionObject->StackReserve = (ULONG_PTR)pioh64OptHeader->SizeOfStackReserve;
+                ImageSectionObject->ImageInformation.MaximumStackSize = (ULONG_PTR) pioh64OptHeader->SizeOfStackReserve;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackCommit))
@@ -444,42 +497,59 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfStackCommit > MAXULONG_PTR)
                     DIE(("SizeOfStackCommit exceeds the address space\n"));
 
-                ImageSectionObject->StackCommit = (ULONG_PTR)pioh64OptHeader->SizeOfStackCommit;
+                ImageSectionObject->ImageInformation.CommittedStackSize = (ULONG_PTR) pioh64OptHeader->SizeOfStackCommit;
             }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, Subsystem))
+            {
+                ImageSectionObject->ImageInformation.SubSystemType = pioh64OptHeader->Subsystem;
+
+                if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
+                    RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, MajorSubsystemVersion))
+                {
+                    ImageSectionObject->ImageInformation.SubSystemMinorVersion = pioh64OptHeader->MinorSubsystemVersion;
+                    ImageSectionObject->ImageInformation.SubSystemMajorVersion = pioh64OptHeader->MajorSubsystemVersion;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                ImageSectionObject->ImageInformation.TransferAddress = (PVOID) (ImageBase +
+                    pioh64OptHeader->AddressOfEntryPoint);
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfCode))
+                ImageSectionObject->ImageInformation.ImageContainsCode = pioh64OptHeader->SizeOfCode != 0;
+            else
+                ImageSectionObject->ImageInformation.ImageContainsCode = TRUE;
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                if (pioh64OptHeader->AddressOfEntryPoint == 0)
+                {
+                    ImageSectionObject->ImageInformation.ImageContainsCode = FALSE;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, LoaderFlags))
+                ImageSectionObject->ImageInformation.LoaderFlags = pioh64OptHeader->LoaderFlags;
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, DllCharacteristics))
+                ImageSectionObject->ImageInformation.DllCharacteristics = pioh64OptHeader->DllCharacteristics;
 
             break;
         }
     }
 
     /* [1], section 3.4.2 */
-    if((ULONG_PTR)ImageSectionObject->ImageBase % 0x10000)
+    if((ULONG_PTR)ImageBase % 0x10000)
         DIE(("ImageBase is not aligned on a 64KB boundary"));
 
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Subsystem))
-    {
-        ImageSectionObject->Subsystem = piohOptHeader->Subsystem;
-
-        if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
-           RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MajorSubsystemVersion))
-        {
-            ImageSectionObject->MinorSubsystemVersion = piohOptHeader->MinorSubsystemVersion;
-            ImageSectionObject->MajorSubsystemVersion = piohOptHeader->MajorSubsystemVersion;
-        }
-    }
-
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
-    {
-        ImageSectionObject->EntryPoint = ImageSectionObject->ImageBase +
-                                         piohOptHeader->AddressOfEntryPoint;
-    }
-
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
-        ImageSectionObject->Executable = piohOptHeader->SizeOfCode != 0;
-    else
-        ImageSectionObject->Executable = TRUE;
-
-    ImageSectionObject->ImageCharacteristics = pinhNtHeader->FileHeader.Characteristics;
-    ImageSectionObject->Machine = pinhNtHeader->FileHeader.Machine;
+    ImageSectionObject->ImageInformation.ImageCharacteristics = pinhNtHeader->FileHeader.Characteristics;
+    ImageSectionObject->ImageInformation.Machine = pinhNtHeader->FileHeader.Machine;
+    ImageSectionObject->ImageInformation.GpValue = 0;
+    ImageSectionObject->ImageInformation.ZeroBits = 0;
+    ImageSectionObject->BasedAddress = (PVOID)ImageBase;
 
     /* SECTION HEADERS */
     nStatus = STATUS_INVALID_IMAGE_FORMAT;
@@ -701,7 +771,7 @@ l_ReadHeaderFromFile:
         *Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
 
     /* Success */
-    nStatus = STATUS_ROS_EXEFMT_LOADED_FORMAT | EXEFMT_LOADED_PE32;
+    nStatus = STATUS_SUCCESS;// STATUS_ROS_EXEFMT_LOADED_FORMAT | EXEFMT_LOADED_PE32;
 
 l_Return:
     if(pBuffer)
@@ -740,7 +810,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
       {
          if (SectionSegments[i].ReferenceCount != 0)
          {
-            DPRINT1("Image segment %d still referenced (was %d)\n", i,
+            DPRINT1("Image segment %lu still referenced (was %lu)\n", i,
                     SectionSegments[i].ReferenceCount);
             KeBugCheck(MEMORY_MANAGEMENT);
          }
@@ -1019,7 +1089,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
    ASSERT(Bcb);
 
-   DPRINT("%S %x\n", FileObject->FileName.Buffer, FileOffset);
+   DPRINT("%S %I64x\n", FileObject->FileName.Buffer, FileOffset);
 
    /*
     * If the file system is letting us go directly to the cache and the
@@ -1111,7 +1181,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
       Process = PsGetCurrentProcess();
       PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
-      CacheSegOffset = (ULONG_PTR)(BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset);
+      CacheSegOffset = (ULONG_PTR)(BaseOffset + VACB_MAPPING_GRANULARITY - FileOffset);
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
       {
@@ -1280,7 +1350,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
       MiWaitForPageEvent(NULL, NULL);
       MmLockAddressSpace(AddressSpace);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_MM_RESTART_OPERATION);
    }
 
@@ -1364,7 +1434,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        * Finish the operation
        */
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1394,7 +1464,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        * Cleanup and release locks
        */
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1452,7 +1522,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           */
          MmLockAddressSpace(AddressSpace);
          MiSetPageEvent(Process, Address);
-         DPRINT("Address 0x%.8X\n", Address);
+         DPRINT("Address 0x%p\n", Address);
          return(Status);
       }
 
@@ -1483,7 +1553,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmInsertRmap(Page, Process, Address);
 
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
    else if (IS_SWAP_FROM_SSE(Entry))
@@ -1554,7 +1624,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, Address);
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
    else
@@ -1581,7 +1651,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, Address);
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 }
@@ -1604,14 +1674,14 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
    SWAPENTRY SwapEntry;
 
-   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
+   DPRINT("MmAccessFaultSectionView(%p, %p, %p)\n", AddressSpace, MemoryArea, Address);
 
    /*
     * Check if the page has already been set readwrite
     */
    if (MmGetPageProtect(Process, Address) & PAGE_READWRITE)
    {
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1645,7 +1715,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
          (Region->Protect == PAGE_READWRITE ||
           Region->Protect == PAGE_EXECUTE_READWRITE)))
    {
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_ACCESS_VIOLATION);
    }
 
@@ -1678,7 +1748,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
         * Restart the operation
         */
        MmLockAddressSpace(AddressSpace);
-       DPRINT("Address 0x%.8X\n", Address);
+       DPRINT("Address 0x%p\n", Address);
        return(STATUS_MM_RESTART_OPERATION);
    }
 
@@ -1737,7 +1807,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    MmUnlockSectionSegment(Segment);
 
    MiSetPageEvent(Process, Address);
-   DPRINT("Address 0x%.8X\n", Address);
+   DPRINT("Address 0x%p\n", Address);
    return(STATUS_SUCCESS);
 }
 
@@ -1852,8 +1922,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (Context.Section->AllocationAttributes & SEC_PHYSICALMEMORY)
    {
-      DPRINT1("Trying to page out from physical memory section address 0x%X "
-              "process %d\n", Address,
+      DPRINT1("Trying to page out from physical memory section address 0x%p "
+              "process %p\n", Address,
               Process ? Process->UniqueProcessId : 0);
        KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -1863,7 +1933,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (!MmIsPagePresent(Process, Address))
    {
-      DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
+      DPRINT1("Trying to page out not-present page at (%p,0x%p).\n",
               Process ? Process->UniqueProcessId : 0, Address);
        KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -1875,7 +1945,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (MmGetReferenceCountPage(Page) != 1)
    {
-       DPRINT("Cannot page out locked section page: 0x%p (RefCount: %d)\n",
+       DPRINT("Cannot page out locked section page: 0x%lu (RefCount: %lu)\n",
                Page, MmGetReferenceCountPage(Page));
        MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
        MmUnlockSectionSegment(Context.Segment);
@@ -1949,7 +2019,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (Context.Private)
       {
-         DPRINT1("Found a %s private page (address %x) in a pagefile segment.\n",
+         DPRINT1("Found a %s private page (address %p) in a pagefile segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
       }
@@ -1968,7 +2038,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (Context.Private)
       {
-         DPRINT1("Found a %s private page (address %x) in a shared section segment.\n",
+         DPRINT1("Found a %s private page (address %p) in a shared section segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, Page, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
       }
@@ -1990,7 +2060,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (SwapEntry != 0)
       {
-         DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
+         DPRINT1("Found a swapentry for a non private and direct mapped page (address %p)\n",
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, STATUS_UNSUCCESSFUL, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
@@ -2013,7 +2083,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (SwapEntry != 0)
       {
-         DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %x)\n",
+         DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %p)\n",
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, Page, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
@@ -2247,8 +2317,8 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     */
    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
    {
-      DPRINT1("Trying to write back page from physical memory mapped at %X "
-              "process %d\n", Address,
+      DPRINT1("Trying to write back page from physical memory mapped at %p "
+              "process %p\n", Address,
               Process ? Process->UniqueProcessId : 0);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -2259,7 +2329,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
    if (!MmIsPagePresent(Process, Address))
    {
-      DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
+      DPRINT1("Trying to page out not-present page at (%p,0x%p).\n",
               Process ? Process->UniqueProcessId : 0, Address);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -2640,8 +2710,7 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN ULONG ProcessHandleCount,
                 IN ULONG SystemHandleCount)
 {
-   DPRINT("MmpCloseSection(OB %x, HC %d)\n",
-          Object, ProcessHandleCount);
+    DPRINT("MmpCloseSection(OB %p, HC %lu)\n", Object, ProcessHandleCount);
 }
 
 NTSTATUS
@@ -3601,18 +3670,18 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
     * Some defaults
     */
    /* FIXME? are these values platform-dependent? */
-   if(ImageSectionObject->StackReserve == 0)
-      ImageSectionObject->StackReserve = 0x40000;
+   if (ImageSectionObject->ImageInformation.MaximumStackSize == 0)
+       ImageSectionObject->ImageInformation.MaximumStackSize = 0x40000;
 
-   if(ImageSectionObject->StackCommit == 0)
-      ImageSectionObject->StackCommit = 0x1000;
+   if(ImageSectionObject->ImageInformation.CommittedStackSize == 0)
+       ImageSectionObject->ImageInformation.CommittedStackSize = 0x1000;
 
-   if(ImageSectionObject->ImageBase == 0)
+   if(ImageSectionObject->BasedAddress == NULL)
    {
-      if(ImageSectionObject->ImageCharacteristics & IMAGE_FILE_DLL)
-         ImageSectionObject->ImageBase = 0x10000000;
+      if(ImageSectionObject->ImageInformation.ImageCharacteristics & IMAGE_FILE_DLL)
+         ImageSectionObject->BasedAddress = (PVOID)0x10000000;
       else
-         ImageSectionObject->ImageBase = 0x00400000;
+         ImageSectionObject->BasedAddress = (PVOID)0x00400000;
    }
 
    /*
@@ -3872,7 +3941,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed (%X).\n",
+      DPRINT1("Mapping between 0x%p and 0x%p failed (%X).\n",
               (*BaseAddress), (char*)(*BaseAddress) + ViewSize, Status);
       return(Status);
    }
@@ -4058,7 +4127,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
    PROS_SECTION_OBJECT Section;
    PVOID ImageBaseAddress = 0;
 
-   DPRINT("Opening memory area Process %x BaseAddress %x\n",
+   DPRINT("Opening memory area Process %p BaseAddress %p\n",
           Process, BaseAddress);
 
    ASSERT(Process);
@@ -4072,7 +4141,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
        MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
        MemoryArea->DeleteInProgress)
    {
-      ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
+      if (MemoryArea) NT_ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
       MmUnlockAddressSpace(AddressSpace);
       return STATUS_NOT_MAPPED_VIEW;
    }
@@ -4241,21 +4310,12 @@ NtQuerySection(IN HANDLE SectionHandle,
 
             _SEH2_TRY
             {
-               memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
                if (Section->AllocationAttributes & SEC_IMAGE)
                {
                   PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
                   ImageSectionObject = Section->ImageSection;
 
-                  Sii->TransferAddress = (PVOID)ImageSectionObject->EntryPoint;
-                  Sii->MaximumStackSize = ImageSectionObject->StackReserve;
-                  Sii->CommittedStackSize = ImageSectionObject->StackCommit;
-                  Sii->SubSystemType = ImageSectionObject->Subsystem;
-                  Sii->SubSystemMinorVersion = ImageSectionObject->MinorSubsystemVersion;
-                  Sii->SubSystemMajorVersion = ImageSectionObject->MajorSubsystemVersion;
-                  Sii->ImageCharacteristics = ImageSectionObject->ImageCharacteristics;
-                  Sii->Machine = ImageSectionObject->Machine;
-                  Sii->ImageContainsCode = ImageSectionObject->Executable;
+                  *Sii = ImageSectionObject->ImageInformation;
                }
 
                if (ResultLength != NULL)
@@ -4390,11 +4450,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
       SectionSegments = ImageSectionObject->Segments;
       NrSegments = ImageSectionObject->NrSegments;
 
-
       ImageBase = (ULONG_PTR)*BaseAddress;
       if (ImageBase == 0)
       {
-         ImageBase = ImageSectionObject->ImageBase;
+          ImageBase = (ULONG_PTR)ImageSectionObject->BasedAddress;
       }
 
       ImageSize = 0;
@@ -4409,7 +4468,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
          }
       }
 
-      ImageSectionObject->ImageSize = (ULONG)ImageSize;
+      ImageSectionObject->ImageInformation.ImageFileSize = (ULONG)ImageSize;
 
       /* Check for an illegal base address */
       if ((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress)
@@ -4813,7 +4872,7 @@ MmCreateSection (OUT PVOID  * Section,
                  IN PFILE_OBJECT  FileObject  OPTIONAL)
 {
     NTSTATUS Status;
-    ULONG Protection, FileAccess;
+    ULONG Protection;
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
 
     /* Check if an ARM3 section is being created instead */
@@ -4832,55 +4891,54 @@ MmCreateSection (OUT PVOID  * Section,
         }
     }
 
-    /*
-     * Check the protection
-     */
-    Protection = SectionPageProtection & ~(PAGE_GUARD | PAGE_NOCACHE);
-    if (Protection != PAGE_READONLY &&
-        Protection != PAGE_READWRITE &&
-        Protection != PAGE_WRITECOPY &&
-        Protection != PAGE_EXECUTE &&
-        Protection != PAGE_EXECUTE_READ &&
-        Protection != PAGE_EXECUTE_READWRITE &&
-        Protection != PAGE_EXECUTE_WRITECOPY)
+    /* Convert section flag to page flag */
+    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
+
+    /* Check to make sure the protection is correct. Nt* does this already */
+    Protection = MiMakeProtectionMask(SectionPageProtection);
+    if (Protection == MM_INVALID_PROTECTION)
     {
+        DPRINT1("Page protection is invalid\n");
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
-    if ((DesiredAccess & SECTION_MAP_WRITE) &&
-        (Protection == PAGE_READWRITE ||
-         Protection == PAGE_EXECUTE_READWRITE) &&
-       !(AllocationAttributes & SEC_IMAGE))
+    /* Check if this is going to be a data or image backed file section */
+    if ((FileHandle) || (FileObject))
     {
-        DPRINT("Creating a section with WRITE access\n");
-        FileAccess = FILE_READ_DATA | FILE_WRITE_DATA | SYNCHRONIZE;
+        /* These cannot be mapped with large pages */
+        if (AllocationAttributes & SEC_LARGE_PAGES)
+        {
+            DPRINT1("Large pages cannot be used with an image mapping\n");
+            return STATUS_INVALID_PARAMETER_6;
+        }
+
+        /* Did the caller pass an object? */
+        if (FileObject)
+        {
+            /* Reference the object directly */
+            ObReferenceObject(FileObject);
+        }
+        else
+        {
+            /* Reference the file handle to get the object */
+            Status = ObReferenceObjectByHandle(FileHandle,
+                                               MmMakeFileAccess[Protection],
+                                               IoFileObjectType,
+                                               ExGetPreviousMode(),
+                                               (PVOID*)&FileObject,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to get a handle to the FO: %lx\n", Status);
+                return Status;
+            }
+        }
     }
     else
     {
-        DPRINT("Creating a section with READ access\n");
-        FileAccess = FILE_READ_DATA | SYNCHRONIZE;
+        /* A handle must be supplied with SEC_IMAGE, as this is the no-handle path */
+        if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
     }
-
-    /* FIXME: somehow combine this with the above checks */
-    if (AllocationAttributes & SEC_IMAGE)
-        FileAccess = MiArm3GetCorrectFileAccessMask(SectionPageProtection);
-
-    if (!FileObject && FileHandle)
-    {
-        Status = ObReferenceObjectByHandle(FileHandle,
-                                           FileAccess,
-                                           IoFileObjectType,
-                                           ExGetPreviousMode(),
-                                           (PVOID *)&FileObject,
-                                           NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Failed: 0x%08lx\n", Status);
-            return Status;
-        }
-    }
-    else if (FileObject)
-        ObReferenceObject(FileObject);
 
 #ifndef NEWCC // A hack for initializing caching.
     // This is needed only in the old case.
@@ -4901,7 +4959,10 @@ MmCreateSection (OUT PVOID  * Section,
                             &ByteOffset,
                             NULL);
         if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+        {
+            DPRINT1("CC failure: %lx\n", Status);
             return Status;
+        }
         // Caching is initialized...
     }
 #endif

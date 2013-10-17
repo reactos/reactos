@@ -319,7 +319,7 @@ ULONG CDECL ldap_set_optionA( WLDAP32_LDAP *ld, int option, void *value )
 
     TRACE( "(%p, 0x%08x, %p)\n", ld, option, value );
 
-    if (!ld || !value) return WLDAP32_LDAP_PARAM_ERROR;
+    if (!ld) return WLDAP32_LDAP_PARAM_ERROR;
 
     switch (option)
     {
@@ -422,7 +422,7 @@ ULONG CDECL ldap_set_optionW( WLDAP32_LDAP *ld, int option, void *value )
 
     TRACE( "(%p, 0x%08x, %p)\n", ld, option, value );
 
-    if (!ld || !value) return WLDAP32_LDAP_PARAM_ERROR;
+    if (!ld) return WLDAP32_LDAP_PARAM_ERROR;
 
     switch (option)
     {

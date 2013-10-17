@@ -124,7 +124,7 @@ static BOOL dlg_configure_com(HANDLE hXcv, HWND hWnd, PCWSTR pPortName)
         shortname[len-1] = '\0';
 
         /* get current settings */
-        len = sizeof(cfg);
+        len = FIELD_OFFSET(COMMCONFIG, wcProviderData[1]);
         status = ERROR_SUCCESS;
         res = XcvDataW( hXcv, cmd_GetDefaultCommConfigW,
                         (PBYTE) shortname,

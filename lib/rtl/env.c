@@ -15,6 +15,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+RtlSetEnvironmentStrings(IN PWCHAR NewEnvironment, IN ULONG NewEnvironmentSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
  * @implemented
  */

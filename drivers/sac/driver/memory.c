@@ -6,17 +6,17 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 LONG TotalFrees, TotalBytesFreed, TotalAllocations, TotalBytesAllocated;
 KSPIN_LOCK MemoryLock;
 PSAC_MEMORY_LIST GlobalMemoryList;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 NTAPI
@@ -94,7 +94,8 @@ MyAllocatePool(IN SIZE_T PoolSize,
                IN ULONG Line)
 {
     PVOID p;
-    p = ExAllocatePoolWithTag(NonPagedPool, PoolSize, Tag);
+    p = ExAllocatePoolWithTag(NonPagedPool, PoolSize, 'HACK');
+    RtlZeroMemory(p, PoolSize);
     SAC_DBG(SAC_DBG_MM, "Returning block 0x%X.\n", p);
     return p;
 #if 0
@@ -112,92 +113,91 @@ MyAllocatePool(IN SIZE_T PoolSize,
 
 #if _USE_SAC_HEAP_ALLOCATOR_
     GlobalDescriptor = GlobalMemoryList;
-	KeAcquireSpinLock(&MemoryLock, &OldIrql);
-	while (GlobalDescriptor)
-	{
-		ASSERT(GlobalMemoryList->Signature == GLOBAL_MEMORY_SIGNATURE);
+    KeAcquireSpinLock(&MemoryLock, &OldIrql);
+    while (GlobalDescriptor)
+    {
+        ASSERT(GlobalMemoryList->Signature == GLOBAL_MEMORY_SIGNATURE);
 
-		LocalDescriptor = GlobalDescriptor->LocalDescriptor;
+        LocalDescriptor = GlobalDescriptor->LocalDescriptor;
 
-		GlobalSize = GlobalDescriptor->Size;
-		while (GlobalSize)
-		{
-			ASSERT(LocalDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
+        GlobalSize = GlobalDescriptor->Size;
+        while (GlobalSize)
+        {
+            ASSERT(LocalDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
 
-			if ((LocalDescriptor->Tag == FREE_POOL_TAG) &&
-				(LocalDescriptor->Size >= PoolSize))
-			{
-				break;
-			}
+            if ((LocalDescriptor->Tag == FREE_POOL_TAG) &&
+                (LocalDescriptor->Size >= PoolSize))
+            {
+                break;
+            }
 
-			GlobalSize -= (LocalDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
+            GlobalSize -= (LocalDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
 
-			LocalDescriptor =
-				(PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
-				LocalDescriptor->Size +
-				sizeof(SAC_MEMORY_ENTRY));
-		}
+            LocalDescriptor =
+                (PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
+                LocalDescriptor->Size +
+                sizeof(SAC_MEMORY_ENTRY));
+        }
 
-		GlobalDescriptor = GlobalDescriptor->Next;
-	}
+        GlobalDescriptor = GlobalDescriptor->Next;
+    }
 
-	if (!GlobalDescriptor)
-	{
-		KeReleaseSpinLock(&MemoryLock, OldIrql);
+    if (!GlobalDescriptor)
+    {
+        KeReleaseSpinLock(&MemoryLock, OldIrql);
 
-		ActualSize = min(
-			PAGE_SIZE,
-			PoolSize + sizeof(SAC_MEMORY_ENTRY) + sizeof(SAC_MEMORY_LIST));
+        ActualSize = min(
+            PAGE_SIZE,
+            PoolSize + sizeof(SAC_MEMORY_ENTRY) + sizeof(SAC_MEMORY_LIST));
 
-		SAC_DBG(SAC_DBG_MM, "Allocating new space.\n");
+        SAC_DBG(SAC_DBG_MM, "Allocating new space.\n");
 
-		NewDescriptor = ExAllocatePoolWithTagPriority(
-			0,
-			ActualSize,
-			ALLOC_BLOCK_TAG,
-			HighPoolPriority);
-		if (!NewDescriptor)
-		{
-			SAC_DBG(SAC_DBG_MM, "No more memory, returning NULL.\n");
-			return NULL;
-		}
+        NewDescriptor = ExAllocatePoolWithTagPriority(NonPagedPool,
+                                                      ActualSize,
+                                                      ALLOC_BLOCK_TAG,
+                                                      HighPoolPriority);
+        if (!NewDescriptor)
+        {
+            SAC_DBG(SAC_DBG_MM, "No more memory, returning NULL.\n");
+            return NULL;
+        }
 
-		KeAcquireSpinLock(&MemoryLock, &OldIrql);
+        KeAcquireSpinLock(&MemoryLock, &OldIrql);
 
-		NewDescriptor->Signature = GLOBAL_MEMORY_SIGNATURE;
-		NewDescriptor->LocalDescriptor = (PSAC_MEMORY_ENTRY)(NewDescriptor + 1);
-		NewDescriptor->Size = ActualSize - 16;
-		NewDescriptor->Next = GlobalMemoryList;
+        NewDescriptor->Signature = GLOBAL_MEMORY_SIGNATURE;
+        NewDescriptor->LocalDescriptor = (PSAC_MEMORY_ENTRY)(NewDescriptor + 1);
+        NewDescriptor->Size = ActualSize - 16;
+        NewDescriptor->Next = GlobalMemoryList;
 
-		GlobalMemoryList = NewDescriptor;
+        GlobalMemoryList = NewDescriptor;
 
-		LocalDescriptor = NewDescriptor->LocalDescriptor;
-		LocalDescriptor->Signature = LOCAL_MEMORY_SIGNATURE;
-		LocalDescriptor->Tag = FREE_POOL_TAG;
-		LocalDescriptor->Size =
-			GlobalMemoryList->Size - sizeof(SAC_MEMORY_ENTRY);
-	}
+        LocalDescriptor = NewDescriptor->LocalDescriptor;
+        LocalDescriptor->Signature = LOCAL_MEMORY_SIGNATURE;
+        LocalDescriptor->Tag = FREE_POOL_TAG;
+        LocalDescriptor->Size =
+            GlobalMemoryList->Size - sizeof(SAC_MEMORY_ENTRY);
+    }
 
-	SAC_DBG(SAC_DBG_MM, "Found a good sized block.\n");
-	ASSERT(LocalDescriptor->Tag == FREE_POOL_TAG);
-	ASSERT(LocalDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
+    SAC_DBG(SAC_DBG_MM, "Found a good sized block.\n");
+    ASSERT(LocalDescriptor->Tag == FREE_POOL_TAG);
+    ASSERT(LocalDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
 
-	if (LocalDescriptor->Size > (PoolSize + sizeof(SAC_MEMORY_ENTRY)))
-	{
-		NextDescriptor =
-			(PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
-			PoolSize +
-			sizeof(SAC_MEMORY_ENTRY));
-		if (NextDescriptor->Tag == FREE_POOL_TAG)
-		{
-			NextDescriptor->Tag = FREE_POOL_TAG;
-			NextDescriptor->Signature = LOCAL_MEMORY_SIGNATURE;
-			NextDescriptor->Size =
-				(LocalDescriptor->Size - PoolSize - sizeof(SAC_MEMORY_ENTRY));
+    if (LocalDescriptor->Size > (PoolSize + sizeof(SAC_MEMORY_ENTRY)))
+    {
+        NextDescriptor =
+            (PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
+            PoolSize +
+            sizeof(SAC_MEMORY_ENTRY));
+        if (NextDescriptor->Tag == FREE_POOL_TAG)
+        {
+            NextDescriptor->Tag = FREE_POOL_TAG;
+            NextDescriptor->Signature = LOCAL_MEMORY_SIGNATURE;
+            NextDescriptor->Size =
+                (LocalDescriptor->Size - PoolSize - sizeof(SAC_MEMORY_ENTRY));
 
-			LocalDescriptor->Size = PoolSize;
-		}
-	}
+            LocalDescriptor->Size = PoolSize;
+        }
+    }
 #else
     /* Shut the compiler up */
     NewDescriptor = GlobalDescriptor = NULL;
@@ -254,77 +254,77 @@ MyFreePool(IN PVOID *Block)
     KeAcquireSpinLock(&MemoryLock, &OldIrql);
 
 #if _USE_SAC_HEAP_ALLOCATOR_
-	while (GlobalDescriptor)
-	{
-		ASSERT(GlobalMemoryList->Signature == GLOBAL_MEMORY_SIGNATURE);
+    while (GlobalDescriptor)
+    {
+        ASSERT(GlobalMemoryList->Signature == GLOBAL_MEMORY_SIGNATURE);
 
-		FoundDescriptor = NULL;
+        FoundDescriptor = NULL;
 
-		ThisDescriptor = GlobalDescriptor->LocalDescriptor;
+        ThisDescriptor = GlobalDescriptor->LocalDescriptor;
 
-		GlobalSize = GlobalDescriptor->Size;
-		while (GlobalSize)
-		{
-			ASSERT(ThisDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
+        GlobalSize = GlobalDescriptor->Size;
+        while (GlobalSize)
+        {
+            ASSERT(ThisDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
 
-			if (ThisDescriptor == LocalDescriptor) break;
+            if (ThisDescriptor == LocalDescriptor) break;
 
-			GlobalSize -= (ThisDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
+            GlobalSize -= (ThisDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
 
-			ThisDescriptor =
-				(PSAC_MEMORY_ENTRY)((ULONG_PTR)ThisDescriptor +
-				ThisDescriptor->Size +
-				sizeof(SAC_MEMORY_ENTRY));
-		}
+            ThisDescriptor =
+                (PSAC_MEMORY_ENTRY)((ULONG_PTR)ThisDescriptor +
+                ThisDescriptor->Size +
+                sizeof(SAC_MEMORY_ENTRY));
+        }
 
-		if (ThisDescriptor == LocalDescriptor) break;
+        if (ThisDescriptor == LocalDescriptor) break;
 
-		GlobalDescriptor = GlobalDescriptor->Next;
-	}
+        GlobalDescriptor = GlobalDescriptor->Next;
+    }
 
-	if (!GlobalDescriptor)
-	{
-		KeReleaseSpinLock(&MemoryLock, OldIrql);
-		SAC_DBG(SAC_DBG_MM, "Could not find block.\n");
-		return;
-	}
+    if (!GlobalDescriptor)
+    {
+        KeReleaseSpinLock(&MemoryLock, OldIrql);
+        SAC_DBG(SAC_DBG_MM, "Could not find block.\n");
+        return;
+    }
 
-	ASSERT(ThisDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
+    ASSERT(ThisDescriptor->Signature == LOCAL_MEMORY_SIGNATURE);
 
-	if (LocalDescriptor->Tag == FREE_POOL_TAG)
-	{
-		KeReleaseSpinLock(&MemoryLock, OldIrql);
-		SAC_DBG(SAC_DBG_MM, "Attempted to free something twice.\n");
-		return;
-	}
+    if (LocalDescriptor->Tag == FREE_POOL_TAG)
+    {
+        KeReleaseSpinLock(&MemoryLock, OldIrql);
+        SAC_DBG(SAC_DBG_MM, "Attempted to free something twice.\n");
+        return;
+    }
 
-	LocalSize = LocalDescriptor->Size;
-	LocalDescriptor->Tag = FREE_POOL_TAG;
+    LocalSize = LocalDescriptor->Size;
+    LocalDescriptor->Tag = FREE_POOL_TAG;
 
-	if (GlobalSize > (LocalSize + sizeof(SAC_MEMORY_ENTRY)))
-	{
-		NextDescriptor =
-			(PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
-			LocalSize +
-			sizeof(SAC_MEMORY_ENTRY));
-		if (NextDescriptor->Tag == FREE_POOL_TAG)
-		{
-			NextDescriptor->Tag = 0;
-			NextDescriptor->Signature = 0;
+    if (GlobalSize > (LocalSize + sizeof(SAC_MEMORY_ENTRY)))
+    {
+        NextDescriptor =
+            (PSAC_MEMORY_ENTRY)((ULONG_PTR)LocalDescriptor +
+            LocalSize +
+            sizeof(SAC_MEMORY_ENTRY));
+        if (NextDescriptor->Tag == FREE_POOL_TAG)
+        {
+            NextDescriptor->Tag = 0;
+            NextDescriptor->Signature = 0;
 
-			LocalDescriptor->Size +=
-				(NextDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
-		}
-	}
+            LocalDescriptor->Size +=
+                (NextDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
+        }
+    }
 
-	if ((FoundDescriptor) && (FoundDescriptor->Tag == FREE_POOL_TAG))
-	{
-		LocalDescriptor->Signature = 0;
-		LocalDescriptor->Tag = 0;
+    if ((FoundDescriptor) && (FoundDescriptor->Tag == FREE_POOL_TAG))
+    {
+        LocalDescriptor->Signature = 0;
+        LocalDescriptor->Tag = 0;
 
-		FoundDescriptor->Size +=
-			(LocalDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
-	}
+        FoundDescriptor->Size +=
+            (LocalDescriptor->Size + sizeof(SAC_MEMORY_ENTRY));
+    }
 #else
     /* Shut the compiler up */
     LocalSize = GlobalSize = 0;
@@ -342,7 +342,7 @@ MyFreePool(IN PVOID *Block)
     /* Release the lock, delete the address, and return */
     KeReleaseSpinLock(&MemoryLock, OldIrql);
 #endif
-    ExFreePool(*Block);
+    SAC_DBG(SAC_DBG_MM, "exiting: 0x%p.\n", *Block);
+    ExFreePoolWithTag(*Block, 'HACK');
     *Block = NULL;
-    SAC_DBG(SAC_DBG_MM, "exiting.\n");
 }

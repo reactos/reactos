@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDM_TRAYWND MENU DISCARDABLE
+IDM_TRAYWND MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -29,7 +29,7 @@ BEGIN
     END
 END
 
-IDM_STARTMENU MENUEX DISCARDABLE
+IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
     BEGIN
@@ -140,7 +140,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_START             "Пуск"
     IDS_PROPERTIES        "В&ластивості"
@@ -149,7 +149,7 @@ BEGIN
     IDS_STARTUP_ERROR     "Система не може стартувати explorer, оскільки реєстр пошкоджений або відсутній."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Властивості меню Пуск та Панелі завдань"
 END

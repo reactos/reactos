@@ -69,6 +69,7 @@ typedef enum _USERTHREADINFOCLASS
     UserThreadWOWInformation,
     UserThreadHungStatus,
     UserThreadInitiateShutdown,
+
     UserThreadEndShutdown,
     UserThreadUseActiveDesktop,
     UserThreadUseDesktop,
@@ -119,6 +120,7 @@ typedef struct _DESKTOPINFO
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
+    struct _WND * spwndShell;
 
     PPROCESSINFO ppiShellProcess;
 
@@ -476,6 +478,9 @@ typedef struct _CLS
     HANDLE hIconSm; /* FIXME - Use pointer! */
     //PCURSOR spicnSm;
 
+    //// ReactOS dosn't suppot cache icons.
+    HICON hIconSmIntern; /* Internal small icon, derived from hIcon */
+    ////
     UINT Unicode : 1; // !CSF_ANSIPROC
     UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
     UINT MenuNameIsString : 1;
@@ -854,7 +859,7 @@ typedef struct _PERUSERSERVERINFO
     TEXTMETRICW   tmSysFont;
     DPISERVERINFO dpiSystem;
     HICON         hIconSmWindows;
-    HICON         hIcoWindows;
+    HICON         hIconWindows;
     DWORD         dwKeyCache;
     DWORD         dwAsyncKeyCache;
     ULONG         cCaptures;
@@ -2436,13 +2441,13 @@ NtUserNotifyIMEStatus(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 NTAPI
 NtUserNotifyProcessCreate(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    HANDLE NewProcessId,
+    HANDLE SourceThreadId,
+    DWORD dwUnknown,
+    ULONG CreateFlags);
 
 VOID
 NTAPI

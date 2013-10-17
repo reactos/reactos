@@ -143,7 +143,7 @@ DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Отмена", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе Блокнот ReactOS"
 FONT 8, "MS Shell Dlg"
@@ -158,12 +158,12 @@ BEGIN
                     ES_READONLY | WS_VSCROLL
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   STRING_LICENSE, "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"            /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Страница &s"   /* FIXME */

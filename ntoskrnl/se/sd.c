@@ -1316,7 +1316,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
     Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
         OwnerLength + GroupLength + DaclLength + SaclLength;
 
-    DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %d OwnerLength %d GroupLength %d DaclLength %d SaclLength %d\n",
+    DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %u OwnerLength %lu GroupLength %lu DaclLength %lu SaclLength %lu\n",
            sizeof(SECURITY_DESCRIPTOR),
            OwnerLength,
            GroupLength,
@@ -1357,11 +1357,11 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
         RtlCopyMemory((PUCHAR)Descriptor + Current, Owner, OwnerLength);
         Descriptor->Owner = Current;
         Current += OwnerLength;
-        DPRINT("Owner of %x at %x\n", Descriptor, Descriptor->Owner);
+        DPRINT("Owner of %p at %x\n", Descriptor, Descriptor->Owner);
     }
     else
     {
-        DPRINT("Owner of %x is zero length\n", Descriptor);
+        DPRINT("Owner of %p is zero length\n", Descriptor);
     }
 
     if (GroupLength != 0)
@@ -1375,7 +1375,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
 
     *NewDescriptor = Descriptor;
 
-    DPRINT("Descrptor %x\n", Descriptor);
+    DPRINT("Descrptor %p\n", Descriptor);
     ASSERT(RtlLengthSecurityDescriptor(Descriptor));
 
     return STATUS_SUCCESS;

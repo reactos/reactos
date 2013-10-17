@@ -129,10 +129,6 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if(USE_PSEH3)
-        add_definitions(-D_USE_PSEH3=1)
-    endif()
-
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600
@@ -233,6 +229,7 @@ else()
     add_subdirectory(modules)
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
+    add_subdirectory(tools/wpp)
     add_subdirectory(win32ss)
 
     # Create {bootcd, livecd, bootcdregtest}.lst

@@ -9,6 +9,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "servman.exe\0"
 //#include <reactos/version.rc>
 
-1 24 DISCARDABLE "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 #include "rsrc.rc"

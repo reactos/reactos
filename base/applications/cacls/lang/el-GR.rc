@@ -1,6 +1,6 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_HELP, "Εμφανίζει ή τροποποιεί τις access control lists (ACLs) των αρχείων\n\n\

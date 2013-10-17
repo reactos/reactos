@@ -1365,7 +1365,7 @@ IopTraverseDeviceTree(PDEVICETREE_TRAVERSE_CONTEXT Context)
 
    DPRINT("Context 0x%p\n", Context);
 
-   DPRINT("IopTraverseDeviceTree(DeviceNode 0x%p  FirstDeviceNode 0x%p  Action %x  Context 0x%p)\n",
+   DPRINT("IopTraverseDeviceTree(DeviceNode 0x%p  FirstDeviceNode 0x%p  Action %p  Context 0x%p)\n",
       Context->DeviceNode, Context->FirstDeviceNode, Context->Action, Context->Context);
 
    /* Start from the specified device node */

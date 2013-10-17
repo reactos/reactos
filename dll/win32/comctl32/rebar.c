@@ -46,11 +46,11 @@
  *   - RB_SETTOOLTIPS
  *   - WM_CHARTOITEM
  *   - WM_LBUTTONDBLCLK
- *   - WM_MEASUREITEM
  *   - WM_PALETTECHANGED
  *   - WM_QUERYNEWPALETTE
  *   - WM_RBUTTONDOWN
  *   - WM_RBUTTONUP
+ *   - WM_SYSCOLORCHANGE
  *   - WM_VKEYTOITEM
  *   - WM_WININICHANGE
  *   Notifications:
@@ -136,6 +136,9 @@ typedef struct
     LPWSTR    lpText;
     HWND    hwndPrevParent;
 } REBAR_BAND;
+
+/* has a value of: 0, CCS_TOP, CCS_NOMOVEY, CCS_BOTTOM */
+#define CCS_LAYOUT_MASK 0x3
 
 /* fStatus flags */
 #define HAS_GRIPPER    0x00000001
@@ -1049,14 +1052,6 @@ REBAR_MoveChildWindows (const REBAR_INFO *infoPtr, UINT start, UINT endplus)
 		lpBand->rcChild = rbcz.rcChild;  /* *** ??? */
             }
 
-	    /* native (IE4 in "Favorites" frame **1) does:
-	     *   SetRect (&rc, -1, -1, -1, -1)
-	     *   EqualRect (&rc,band->rc???)
-	     *   if ret==0
-	     *     CopyRect (band->rc????, &rc)
-	     *     set flag outside of loop
-	     */
-
 	    GetClassNameW (lpBand->hwndChild, szClassName, sizeof(szClassName)/sizeof(szClassName[0]));
 	    if (!lstrcmpW (szClassName, strComboBox) ||
 		!lstrcmpW (szClassName, WC_COMBOBOXEXW)) {
@@ -1108,15 +1103,6 @@ REBAR_MoveChildWindows (const REBAR_INFO *infoPtr, UINT start, UINT endplus)
 
     if (infoPtr->DoRedraw)
 	UpdateWindow (infoPtr->hwndSelf);
-
-    /* native (from **1 above) does:
-     *      UpdateWindow(rebar)
-     *      REBAR_ForceResize
-     *      RBN_HEIGHTCHANGE if necessary
-     *      if ret from any EqualRect was 0
-     *         Goto "BeginDeferWindowPos"
-     */
-
 }
 
 /* Returns the next visible band (the first visible band in [i+1; infoPtr->uNumBands) )
@@ -2924,12 +2910,20 @@ REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show)
 
 
 static LRESULT
-REBAR_SizeToRect (REBAR_INFO *infoPtr, const RECT *lpRect)
+REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM flags, RECT *lpRect)
 {
     if (!lpRect) return FALSE;
 
     TRACE("[%s]\n", wine_dbgstr_rect(lpRect));
     REBAR_SizeToHeight(infoPtr, get_rect_cy(infoPtr, lpRect));
+
+    /* Note that this undocumented flag is available on comctl32 v6 or later */
+    if ((flags & RBSTR_CHANGERECT) != 0)
+    {
+        RECT rcRebar;
+        GetClientRect(infoPtr->hwndSelf, &rcRebar);
+        lpRect->bottom = lpRect->top + (rcRebar.bottom - rcRebar.top);
+    }
     return TRUE;
 }
 
@@ -3309,29 +3303,6 @@ REBAR_NCCreate (HWND hwnd, const CREATESTRUCTW *cs)
         infoPtr->hFont = infoPtr->hDefaultFont = tfont;
     }
 
-/* native does:
-	    GetSysColor (numerous);
-	    GetSysColorBrush (numerous) (see WM_SYSCOLORCHANGE);
-	   *GetStockObject (SYSTEM_FONT);
-	   *SetWindowLong (hwnd, 0, info ptr);
-	   *WM_NOTIFYFORMAT;
-	   *SetWindowLong (hwnd, GWL_STYLE, style+0x10000001);
-                                    WS_VISIBLE = 0x10000000;
-                                    CCS_TOP    = 0x00000001;
-	   *SystemParametersInfo (SPI_GETNONCLIENTMETRICS...);
-	   *CreateFontIndirect (lfCaptionFont from above);
-	    GetDC ();
-	    SelectObject (hdc, fontabove);
-	    GetTextMetrics (hdc, );    guessing is tmHeight
-	    SelectObject (hdc, oldfont);
-	    ReleaseDC ();
-	    GetWindowRect ();
-	    MapWindowPoints (0, parent, rectabove, 2);
-	    GetWindowRect ();
-	    GetClientRect ();
-	    ClientToScreen (clientrect);
-	    SetWindowPos (hwnd, 0, 0, 0, 0, 0, SWP_NOZORDER);
- */
     return TRUE;
 }
 
@@ -3710,13 +3681,14 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return REBAR_ShowBand (infoPtr, wParam, lParam);
 
 	case RB_SIZETORECT:
-	    return REBAR_SizeToRect (infoPtr, (LPCRECT)lParam);
+	    return REBAR_SizeToRect (infoPtr, wParam, (LPRECT)lParam);
 
 
 /*    Messages passed to parent */
 	case WM_COMMAND:
 	case WM_DRAWITEM:
 	case WM_NOTIFY:
+        case WM_MEASUREITEM:
             return SendMessageW(REBAR_GetNotifyParent (infoPtr), uMsg, wParam, lParam);
 
 
@@ -3741,8 +3713,6 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONUP:
 	    return REBAR_LButtonUp (infoPtr);
-
-/*      case WM_MEASUREITEM:    supported according to ControlSpy */
 
 	case WM_MOUSEMOVE:
 	    return REBAR_MouseMove (infoPtr, lParam);

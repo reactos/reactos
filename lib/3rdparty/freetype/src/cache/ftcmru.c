@@ -161,7 +161,7 @@
       *plist = NULL;
     }
     else if ( node == first )
-        *plist = next;
+      *plist = next;
   }
 
 
@@ -238,7 +238,7 @@
                    FTC_MruNode  *anode )
   {
     FT_Error     error;
-    FTC_MruNode  node;
+    FTC_MruNode  node = NULL;
     FT_Memory    memory = list->memory;
 
 
@@ -264,14 +264,14 @@
         list->clazz.node_done( node, list->data );
     }
     else if ( FT_ALLOC( node, list->clazz.node_size ) )
-        goto Exit;
+      goto Exit;
 
     error = list->clazz.node_init( node, key, list->data );
     if ( error )
       goto Fail;
 
-      FTC_MruNode_Prepend( &list->nodes, node );
-      list->num_nodes++;
+    FTC_MruNode_Prepend( &list->nodes, node );
+    list->num_nodes++;
 
   Exit:
     *anode = node;
@@ -316,7 +316,7 @@
 
 
       if ( list->clazz.node_done )
-       list->clazz.node_done( node, list->data );
+        list->clazz.node_done( node, list->data );
 
       FT_FREE( node );
     }

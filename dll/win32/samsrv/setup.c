@@ -140,12 +140,11 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -229,8 +228,7 @@ done:
     if (MembersBuffer != NULL)
         midl_user_free(MembersBuffer);
 
-    if (hGroupKey != NULL)
-        SampRegCloseKey(hGroupKey);
+    SampRegCloseKey(&hGroupKey);
 
     return Status;
 }
@@ -302,12 +300,11 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -530,12 +527,11 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -659,7 +655,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     /* Create the Groups container */
     Status = SampRegCreateKey(hDomainKey,
@@ -676,7 +672,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     /* Create the Users container */
     Status = SampRegCreateKey(hDomainKey,
@@ -713,7 +709,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (lpDomainKey != NULL)
         *lpDomainKey = hDomainKey;
@@ -722,20 +718,12 @@ done:
     if (Sd != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
-    if (hAliasesKey != NULL)
-        SampRegCloseKey(hAliasesKey);
-
-    if (hGroupsKey != NULL)
-        SampRegCloseKey(hGroupsKey);
-
-    if (hUsersKey != NULL)
-        SampRegCloseKey(hUsersKey);
+    SampRegCloseKey(&hAliasesKey);
+    SampRegCloseKey(&hGroupsKey);
+    SampRegCloseKey(&hUsersKey);
 
     if (!NT_SUCCESS(Status))
-    {
-        if (hDomainKey != NULL)
-            SampRegCloseKey(hDomainKey);
-    }
+        SampRegCloseKey(&hDomainKey);
 
     return Status;
 }
@@ -781,7 +769,7 @@ SampSetupCreateServer(IN HANDLE hSamKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hDomainsKey);
+    SampRegCloseKey(&hDomainsKey);
 
     *lpServerKey = hServerKey;
 
@@ -834,6 +822,8 @@ SampInitializeSAM(VOID)
     HANDLE hBuiltinDomainKey = NULL;
     HANDLE hAccountDomainKey = NULL;
     PSID pBuiltinSid = NULL;
+    PSID pInteractiveSid = NULL;
+    PSID pAuthenticatedUserSid = NULL;
     BOOL bResult = TRUE;
     PSID pSid;
     HINSTANCE hInstance;
@@ -876,6 +866,30 @@ SampInitializeSAM(VOID)
 
     RtlInitializeSid(pBuiltinSid, &SecurityNtAuthority, 1);
     *(RtlSubAuthoritySid(pBuiltinSid, 0)) = SECURITY_BUILTIN_DOMAIN_RID;
+
+    /* Create and initialize the Interactive SID */
+    pInteractiveSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
+    if (pInteractiveSid == NULL)
+    {
+        ERR("Failed to alloacte the Interactive SID\n");
+        bResult = FALSE;
+        goto done;
+    }
+
+    RtlInitializeSid(pInteractiveSid, &SecurityNtAuthority, 1);
+    *(RtlSubAuthoritySid(pInteractiveSid, 0)) = SECURITY_INTERACTIVE_RID;
+
+    /* Create and initialize the Authenticated User SID */
+    pAuthenticatedUserSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
+    if (pAuthenticatedUserSid == NULL)
+    {
+        ERR("Failed to alloacte the Authenticated User SID\n");
+        bResult = FALSE;
+        goto done;
+    }
+
+    RtlInitializeSid(pAuthenticatedUserSid, &SecurityNtAuthority, 1);
+    *(RtlSubAuthoritySid(pAuthenticatedUserSid, 0)) = SECURITY_AUTHENTICATED_USER_RID;
 
     /* Get account domain information */
     Status = SampGetAccountDomainInfo(&AccountDomainInfo);
@@ -957,6 +971,15 @@ SampInitializeSAM(VOID)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
         }
 
+    /* Add the Interactive SID to the Users alias */
+    SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                              DOMAIN_ALIAS_RID_USERS,
+                              pInteractiveSid);
+
+    /* Add the Authenticated User SID to the Users alias */
+    SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                              DOMAIN_ALIAS_RID_USERS,
+                              pAuthenticatedUserSid);
 
     /* Create the Account domain */
     Status = SampSetupCreateDomain(hServerKey,
@@ -1009,20 +1032,19 @@ done:
     if (AccountDomainInfo)
         LsaFreeMemory(AccountDomainInfo);
 
+    if (pAuthenticatedUserSid)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pAuthenticatedUserSid);
+
+    if (pInteractiveSid)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pInteractiveSid);
+
     if (pBuiltinSid)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pBuiltinSid);
 
-    if (hAccountDomainKey != NULL)
-        SampRegCloseKey(hAccountDomainKey);
-
-    if (hBuiltinDomainKey != NULL)
-        SampRegCloseKey(hBuiltinDomainKey);
-
-    if (hServerKey != NULL)
-        SampRegCloseKey(hServerKey);
-
-    if (hSamKey != NULL)
-        SampRegCloseKey(hSamKey);
+    SampRegCloseKey(&hAccountDomainKey);
+    SampRegCloseKey(&hBuiltinDomainKey);
+    SampRegCloseKey(&hServerKey);
+    SampRegCloseKey(&hSamKey);
 
     TRACE("SampInitializeSAM() done\n");
 

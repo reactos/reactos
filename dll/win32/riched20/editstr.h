@@ -53,6 +53,7 @@
 #include <textserv.h>
 
 #include <wine/debug.h>
+#include <wine/list.h>
 
 #ifdef __i386__
 extern const struct ITextHostVtbl itextHostStdcallVtbl;
@@ -89,15 +90,6 @@ typedef enum {
   diRunOrStartRow,
   diParagraphOrEnd,
   diRunOrParagraphOrEnd, /* 12 */
-  
-  diUndoInsertRun, /* 13 */
-  diUndoDeleteRun, /* 14 */
-  diUndoJoinParagraphs, /* 15 */
-  diUndoSplitParagraph, /* 16 */
-  diUndoSetParagraphFormat, /* 17 */
-  diUndoSetCharFormat, /* 18 */
-  diUndoEndTransaction, /* 19 - marks the end of a group of changes for undo */
-  diUndoPotentialEndTransaction, /* 20 - allows grouping typed chars for undo */
 } ME_DIType;
 
 #define SELECTIONBAR_WIDTH 8
@@ -153,9 +145,10 @@ struct tagME_DisplayItem;
 
 typedef struct tagME_Run
 {
-  ME_String *strText;
   ME_Style *style;
+  struct tagME_Paragraph *para; /* ptr to the run's paragraph */
   int nCharOfs; /* relative to para's offset */
+  int len;      /* length of run's text */
   int nWidth; /* width of full run, width of leading&trailing ws */
   int nFlags;
   int nAscent, nDescent; /* pixels above/below baseline */
@@ -180,6 +173,7 @@ typedef struct tagME_BorderRect
 typedef struct tagME_Paragraph
 {
   PARAFORMAT2 *pFmt;
+  ME_String *text;
 
   struct tagME_DisplayItem *pCell; /* v4.1 */
   ME_BorderRect border;
@@ -234,16 +228,8 @@ typedef struct tagME_DisplayItem
     ME_Row row;
     ME_Cell cell;
     ME_Paragraph para;
-    ME_Style *ustyle; /* used by diUndoSetCharFormat */
   } member;
 } ME_DisplayItem;
-
-typedef struct tagME_UndoItem
-{
-  ME_DisplayItem di;
-  int nStart, nLen;
-  ME_String *eol_str; /* used by diUndoSplitParagraph */
-} ME_UndoItem;
 
 typedef struct tagME_TextBuffer
 {
@@ -265,6 +251,75 @@ typedef enum {
   umIgnore,
   umAddBackToUndo
 } ME_UndoMode;
+
+enum undo_type
+{
+    undo_insert_run,
+    undo_delete_run,
+    undo_join_paras,
+    undo_split_para,
+    undo_set_para_fmt,
+    undo_set_char_fmt,
+    undo_end_transaction,          /* marks the end of a group of changes for undo */
+    undo_potential_end_transaction /* allows grouping typed chars for undo */
+};
+
+struct insert_run_item
+{
+    int pos, len;
+    WCHAR *str;
+    ME_Style *style;
+    DWORD flags;
+};
+
+struct delete_run_item
+{
+    int pos, len;
+};
+
+struct join_paras_item
+{
+    int pos;
+};
+
+struct split_para_item
+{
+    int pos;
+    PARAFORMAT2 fmt;
+    ME_BorderRect border;
+    ME_String *eol_str;
+    DWORD flags;
+    ME_BorderRect cell_border;
+    int cell_right_boundary;
+};
+
+struct set_para_fmt_item
+{
+    int pos;
+    PARAFORMAT2 fmt;
+    ME_BorderRect border;
+};
+
+struct set_char_fmt_item
+{
+    int pos, len;
+    CHARFORMAT2W fmt;
+};
+
+struct undo_item
+{
+    struct list entry;
+    enum undo_type type;
+    union
+    {
+        struct insert_run_item insert_run;
+        struct delete_run_item delete_run;
+        struct join_paras_item join_paras;
+        struct split_para_item split_para;
+        struct set_para_fmt_item set_para_fmt;
+        struct set_char_fmt_item set_char_fmt;
+    } u;
+};
 
 typedef enum {
   stPosition = 0,
@@ -341,7 +396,8 @@ typedef struct tagME_TextEditor
   BOOL bCaretAtEnd;
   int nEventMask;
   int nModifyStep;
-  ME_DisplayItem *pUndoStack, *pRedoStack, *pUndoStackBottom;
+  struct list undo_stack;
+  struct list redo_stack;
   int nUndoStackSize;
   int nUndoLimit;
   ME_UndoMode nUndoMode;

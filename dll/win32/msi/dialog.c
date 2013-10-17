@@ -2,6 +2,7 @@
  * Implementation of the Microsoft Installer (msi.dll)
  *
  * Copyright 2005 Mike McCormack for CodeWeavers
+ * Copyright 2005 Aric Stewart for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +44,7 @@
 #include <winreg.h>
 #include <shlwapi.h>
 #include <msiserver.h>
+#include <shellapi.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -55,6 +57,7 @@ struct msi_control_tag;
 typedef struct msi_control_tag msi_control;
 typedef UINT (*msi_handler)( msi_dialog *, msi_control *, WPARAM );
 typedef void (*msi_update)( msi_dialog *, msi_control * );
+typedef UINT (*control_event_handler)( msi_dialog *, const WCHAR *, const WCHAR * );
 
 struct msi_control_tag
 {
@@ -88,7 +91,7 @@ struct msi_dialog_tag
 {
     MSIPACKAGE *package;
     msi_dialog *parent;
-    msi_dialog_event_handler event_handler;
+    control_event_handler event_handler;
     BOOL finished;
     INT scale;
     DWORD attributes;
@@ -101,6 +104,15 @@ struct msi_dialog_tag
     LPWSTR control_default;
     LPWSTR control_cancel;
     WCHAR name[1];
+};
+
+struct subscriber
+{
+    struct list entry;
+    msi_dialog *dialog;
+    WCHAR      *event;
+    WCHAR      *control;
+    WCHAR      *attribute;
 };
 
 typedef UINT (*msi_dialog_control_func)( msi_dialog *dialog, MSIRECORD *rec );
@@ -148,6 +160,7 @@ static const WCHAR szVolumeSelectCombo[] = { 'V','o','l','u','m','e','S','e','l'
 static const WCHAR szSelectionDescription[] = {'S','e','l','e','c','t','i','o','n','D','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR szSelectionPath[] = {'S','e','l','e','c','t','i','o','n','P','a','t','h',0};
 static const WCHAR szProperty[] = {'P','r','o','p','e','r','t','y',0};
+static const WCHAR szHyperLink[] = {'H','y','p','e','r','L','i','n','k',0};
 
 /* dialog sequencing */
 
@@ -247,16 +260,6 @@ static LPWSTR msi_dialog_dup_property( msi_dialog *dialog, LPCWSTR property, BOO
         prop = strdupW( property );
 
     return prop;
-}
-
-msi_dialog *msi_dialog_get_parent( msi_dialog *dialog )
-{
-    return dialog->parent;
-}
-
-LPWSTR msi_dialog_get_name( msi_dialog *dialog )
-{
-    return dialog->name;
 }
 
 /*
@@ -407,9 +410,9 @@ static void msi_destroy_control( msi_control *t )
     msi_free( t );
 }
 
-static msi_control *msi_dialog_create_window( msi_dialog *dialog,
-                MSIRECORD *rec, DWORD exstyle, LPCWSTR szCls, LPCWSTR name, LPCWSTR text,
-                DWORD style, HWND parent )
+static msi_control *dialog_create_window( msi_dialog *dialog, MSIRECORD *rec, DWORD exstyle,
+                                          const WCHAR *szCls, const WCHAR *name, const WCHAR *text,
+                                          DWORD style, HWND parent )
 {
     DWORD x, y, width, height;
     LPWSTR font = NULL, title_font = NULL;
@@ -618,24 +621,29 @@ static MSIFEATURE *msi_seltree_get_selected_feature( msi_control *control )
     return msi_seltree_feature_from_item( control->hwnd, info->selected );
 }
 
-/* called from the Control Event subscription code */
-void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control, 
-                              LPCWSTR attribute, MSIRECORD *rec )
+static void dialog_handle_event( msi_dialog *dialog, const WCHAR *control,
+                                 const WCHAR *attribute, MSIRECORD *rec )
 {
     msi_control* ctrl;
-    LPCWSTR font_text, text = NULL;
-    LPWSTR font;
 
     ctrl = msi_dialog_find_control( dialog, control );
     if (!ctrl)
         return;
     if( !strcmpW( attribute, szText ) )
     {
+        const WCHAR *font_text, *text = NULL;
+        WCHAR *font, *text_fmt = NULL;
+
         font_text = MSI_RecordGetString( rec , 1 );
         font = msi_dialog_get_style( font_text, &text );
-        if (!text) text = szEmpty;
+        deformat_string( dialog->package, text, &text_fmt );
+        if (text_fmt) text = text_fmt;
+        else text = szEmpty;
+
         SetWindowTextW( ctrl->hwnd, text );
+
         msi_free( font );
+        msi_free( text_fmt );
         msi_dialog_check_messages( NULL );
     }
     else if( !strcmpW( attribute, szProgress ) )
@@ -713,27 +721,65 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     }
 }
 
-static void msi_dialog_map_events(msi_dialog* dialog, LPCWSTR control)
+static void event_subscribe( msi_dialog *dialog, const WCHAR *event, const WCHAR *control, const WCHAR *attribute )
 {
-    static const WCHAR Query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+    struct subscriber *sub;
+
+    TRACE("event %s control %s attribute %s\n", debugstr_w(event), debugstr_w(control), debugstr_w(attribute));
+
+    LIST_FOR_EACH_ENTRY( sub, &dialog->package->subscriptions, struct subscriber, entry )
+    {
+        if (!strcmpiW( sub->event, event ) &&
+            !strcmpiW( sub->control, control ) &&
+            !strcmpiW( sub->attribute, attribute ))
+        {
+            TRACE("already subscribed\n");
+            return;
+        };
+    }
+    if (!(sub = msi_alloc( sizeof(*sub) ))) return;
+    sub->dialog    = dialog;
+    sub->event     = strdupW( event );
+    sub->control   = strdupW( control );
+    sub->attribute = strdupW( attribute );
+    list_add_tail( &dialog->package->subscriptions, &sub->entry );
+}
+
+struct dialog_control
+{
+    msi_dialog  *dialog;
+    const WCHAR *control;
+};
+
+static UINT map_event( MSIRECORD *row, void *param )
+{
+    struct dialog_control *dc = param;
+    const WCHAR *event = MSI_RecordGetString( row, 3 );
+    const WCHAR *attribute = MSI_RecordGetString( row, 4 );
+
+    event_subscribe( dc->dialog, event, dc->control, attribute );
+    return ERROR_SUCCESS;
+}
+
+static void dialog_map_events( msi_dialog *dialog, const WCHAR *control )
+{
+    static const WCHAR queryW[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','E','v','e','n','t','M','a','p','p','i','n','g','`',' ',
-        'W','H','E','R','E',' ',
-         '`','D','i','a','l','o','g','_','`',' ','=',' ','\'','%','s','\'',' ',
-        'A','N','D',' ',
-         '`','C','o','n','t','r','o','l','_','`',' ','=',' ','\'','%','s','\'',0
+         'W','H','E','R','E',' ','`','D','i','a','l','o','g','_','`',' ','=',' ','\'','%','s','\'',' ',
+         'A','N','D',' ','`','C','o','n','t','r','o','l','_','`',' ','=',' ','\'','%','s','\'',0};
+    MSIQUERY *view;
+    struct dialog_control dialog_control =
+    {
+        dialog,
+        control
     };
-    MSIRECORD *row;
-    LPCWSTR event, attribute;
 
-    row = MSI_QueryGetRecord( dialog->package->db, Query, dialog->name, control );
-    if (!row)
-        return;
-
-    event = MSI_RecordGetString( row, 3 );
-    attribute = MSI_RecordGetString( row, 4 );
-    ControlEvent_SubscribeToEvent( dialog->package, dialog, event, control, attribute );
-    msiobj_release( &row->hdr );
+    if (!MSI_OpenQuery( dialog->package->db, &view, queryW, dialog->name, control ))
+    {
+        MSI_IterateRecords( view, NULL, map_event, &dialog_control );
+        msiobj_release( &view->hdr );
+    }
 }
 
 /* everything except radio buttons */
@@ -758,10 +804,9 @@ static msi_control *msi_dialog_add_control( msi_dialog *dialog,
     if( attributes & msidbControlAttributesSunken )
         exstyle |= WS_EX_CLIENTEDGE;
 
-    msi_dialog_map_events(dialog, name);
+    dialog_map_events( dialog, name );
 
-    return msi_dialog_create_window( dialog, rec, exstyle, szCls, name,
-                                     text, style, dialog->hwnd );
+    return dialog_create_window( dialog, rec, exstyle, szCls, name, text, style, dialog->hwnd );
 }
 
 struct msi_text_info
@@ -856,9 +901,7 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
                                           (LONG_PTR)MSIText_WndProc );
     SetPropW( control->hwnd, szButtonData, info );
 
-    ControlEvent_SubscribeToEvent( dialog->package, dialog,
-                                   szSelectionPath, control_name, szSelectionPath );
-
+    event_subscribe( dialog, szSelectionPath, control_name, szSelectionPath );
     return ERROR_SUCCESS;
 }
 
@@ -916,7 +959,7 @@ static UINT msi_dialog_send_event( msi_dialog *dialog, LPCWSTR event, LPCWSTR ar
     deformat_string( dialog->package, event, &event_fmt );
     deformat_string( dialog->package, arg, &arg_fmt );
 
-    dialog->event_handler( dialog->package, event_fmt, arg_fmt, dialog );
+    dialog->event_handler( dialog, event_fmt, arg_fmt );
 
     msi_free( event_fmt );
     msi_free( arg_fmt );
@@ -1137,7 +1180,7 @@ static UINT msi_dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
     if( attributes & msidbControlAttributesSunken )
         exstyle |= WS_EX_CLIENTEDGE;
 
-    msi_dialog_map_events(dialog, name);
+    dialog_map_events( dialog, name );
 
     control = msi_alloc( FIELD_OFFSET(msi_control, name[strlenW( name ) + 1] ));
     if (!control)
@@ -2072,8 +2115,7 @@ static UINT msi_dialog_progress_bar( msi_dialog *dialog, MSIRECORD *rec )
     if( !control )
         return ERROR_FUNCTION_FAILED;
 
-    ControlEvent_SubscribeToEvent( dialog->package, dialog,
-                                   szSetProgress, control->name, szProgress );
+    event_subscribe( dialog, szSetProgress, control->name, szProgress );
     return ERROR_SUCCESS;
 }
 
@@ -2234,8 +2276,8 @@ static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
     if( ~attributes & msidbControlAttributesEnabled )
         style |= WS_DISABLED;
 
-    control = msi_dialog_create_window( dialog, rec, 0, szButton, name, text,
-                                        style, group->parent->hwnd );
+    control = dialog_create_window( dialog, rec, 0, szButton, name, text, style,
+                                    group->parent->hwnd );
     if (!control)
         return ERROR_FUNCTION_FAILED;
     control->handler = msi_dialog_radiogroup_handler;
@@ -2618,7 +2660,7 @@ static UINT msi_dialog_seltree_handler( msi_dialog *dialog,
     rec = MSI_CreateRecord( 1 );
 
     MSI_RecordSetStringW( rec, 1, MSI_RecordGetString( row, 4 ) );
-    ControlEvent_FireSubscribedEvent( dialog->package, szSelectionDescription, rec );
+    msi_event_fire( dialog->package, szSelectionDescription, rec );
 
     dir = MSI_RecordGetString( row, 7 );
     if (dir)
@@ -2634,7 +2676,7 @@ static UINT msi_dialog_seltree_handler( msi_dialog *dialog,
     else
         MSI_RecordSetStringW( rec, 1, NULL );
 
-    ControlEvent_FireSubscribedEvent( dialog->package, szSelectionPath, rec );
+    msi_event_fire( dialog->package, szSelectionPath, rec );
 
 done:
     msiobj_release(&row->hdr);
@@ -2678,8 +2720,7 @@ static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
                                           (LONG_PTR)MSISelectionTree_WndProc );
     SetPropW( control->hwnd, szButtonData, info );
 
-    ControlEvent_SubscribeToEvent( dialog->package, dialog,
-                                   szSelectionPath, control_name, szProperty );
+    event_subscribe( dialog, szSelectionPath, control_name, szProperty );
 
     /* initialize it */
     msi_seltree_create_imagelist( control->hwnd );
@@ -3310,6 +3351,80 @@ static UINT msi_dialog_volumeselect_combo( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_dialog_hyperlink_handler( msi_dialog *dialog, msi_control *control, WPARAM param )
+{
+    static const WCHAR hrefW[] = {'h','r','e','f'};
+    static const WCHAR openW[] = {'o','p','e','n',0};
+    int len, len_href = sizeof(hrefW) / sizeof(hrefW[0]);
+    const WCHAR *p, *q;
+    WCHAR quote = 0;
+    LITEM item;
+
+    item.mask     = LIF_ITEMINDEX | LIF_URL;
+    item.iLink    = 0;
+    item.szUrl[0] = 0;
+
+    SendMessageW( control->hwnd, LM_GETITEM, 0, (LPARAM)&item );
+
+    p = item.szUrl;
+    while (*p && *p != '<') p++;
+    if (!*p++) return ERROR_SUCCESS;
+    if (toupperW( *p++ ) != 'A' || !isspaceW( *p++ )) return ERROR_SUCCESS;
+    while (*p && isspaceW( *p )) p++;
+
+    len = strlenW( p );
+    if (len > len_href && !memicmpW( p, hrefW, len_href ))
+    {
+        p += len_href;
+        while (*p && isspaceW( *p )) p++;
+        if (!*p || *p++ != '=') return ERROR_SUCCESS;
+        while (*p && isspaceW( *p )) p++;
+
+        if (*p == '\"' || *p == '\'') quote = *p++;
+        q = p;
+        if (quote)
+        {
+            while (*q && *q != quote) q++;
+            if (*q != quote) return ERROR_SUCCESS;
+        }
+        else
+        {
+            while (*q && *q != '>' && !isspaceW( *q )) q++;
+            if (!*q) return ERROR_SUCCESS;
+        }
+        item.szUrl[q - item.szUrl] = 0;
+        ShellExecuteW( NULL, openW, p, NULL, NULL, SW_SHOWNORMAL );
+    }
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_dialog_hyperlink( msi_dialog *dialog, MSIRECORD *rec )
+{
+    msi_control *control;
+    DWORD style = WS_CHILD | WS_TABSTOP | WS_GROUP;
+    const WCHAR *text = MSI_RecordGetString( rec, 10 );
+    int len = strlenW( text );
+    LITEM item;
+
+    control = msi_dialog_add_control( dialog, rec, WC_LINK, style );
+    if (!control)
+        return ERROR_FUNCTION_FAILED;
+
+    control->attributes = MSI_RecordGetInteger( rec, 8 );
+    control->handler    = msi_dialog_hyperlink_handler;
+
+    item.mask      = LIF_ITEMINDEX | LIF_STATE | LIF_URL;
+    item.iLink     = 0;
+    item.state     = LIS_ENABLED;
+    item.stateMask = LIS_ENABLED;
+    if (len < L_MAX_URL_LENGTH) strcpyW( item.szUrl, text );
+    else item.szUrl[0] = 0;
+
+    SendMessageW( control->hwnd, LM_SETITEM, 0, (LPARAM)&item );
+
+    return ERROR_SUCCESS;
+}
+
 static const struct control_handler msi_dialog_handler[] =
 {
     { szText, msi_dialog_text_control },
@@ -3332,6 +3447,7 @@ static const struct control_handler msi_dialog_handler[] =
     { szDirectoryList, msi_dialog_directory_list },
     { szVolumeCostList, msi_dialog_volumecost_list },
     { szVolumeSelectCombo, msi_dialog_volumeselect_combo },
+    { szHyperLink, msi_dialog_hyperlink }
 };
 
 #define NUM_CONTROL_TYPES (sizeof msi_dialog_handler/sizeof msi_dialog_handler[0])
@@ -3556,6 +3672,7 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
     if (!dialog->default_font)
     {
         dialog->default_font = strdupW(dfv);
+        msiobj_release( &rec->hdr );
         if (!dialog->default_font) return -1;
     }
 
@@ -3619,7 +3736,7 @@ static LRESULT msi_dialog_onnotify( msi_dialog *dialog, LPARAM param )
     return 0;
 }
 
-static void msi_dialog_setfocus( msi_dialog *dialog )
+static void dialog_setfocus( msi_dialog *dialog )
 {
     HWND hwnd = dialog->hWndFocus;
 
@@ -3653,11 +3770,11 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
         if( LOWORD(wParam) == WA_INACTIVE )
             dialog->hWndFocus = GetFocus();
         else
-            msi_dialog_setfocus( dialog );
+            dialog_setfocus( dialog );
         return 0;
 
     case WM_SETFOCUS:
-        msi_dialog_setfocus( dialog );
+        dialog_setfocus( dialog );
         return 0;
 
     /* bounce back to our subclassed static control */
@@ -3673,6 +3790,57 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
+static void process_pending_messages( HWND hdlg )
+{
+    MSG msg;
+
+    while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
+    {
+        if (hdlg && IsDialogMessageW( hdlg, &msg )) continue;
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+}
+
+static UINT dialog_run_message_loop( msi_dialog *dialog )
+{
+    DWORD style;
+    HWND hwnd;
+
+    if( uiThreadId != GetCurrentThreadId() )
+        return SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_CREATE, 0, (LPARAM) dialog );
+
+    /* create the dialog window, don't show it yet */
+    style = WS_OVERLAPPED;
+    if( dialog->attributes & msidbDialogAttributesVisible )
+        style |= WS_VISIBLE;
+
+    hwnd = CreateWindowW( szMsiDialogClass, dialog->name, style,
+                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                     NULL, NULL, NULL, dialog );
+    if( !hwnd )
+    {
+        ERR("Failed to create dialog %s\n", debugstr_w( dialog->name ));
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    ShowWindow( hwnd, SW_SHOW );
+    /* UpdateWindow( hwnd ); - and causes the transparent static controls not to paint */
+
+    if( dialog->attributes & msidbDialogAttributesModal )
+    {
+        while( !dialog->finished )
+        {
+            MsgWaitForMultipleObjects( 0, NULL, 0, INFINITE, QS_ALLINPUT );
+            process_pending_messages( dialog->hwnd );
+        }
+    }
+    else
+        return ERROR_IO_PENDING;
+
+    return ERROR_SUCCESS;
+}
+
 static LRESULT WINAPI MSIHiddenWindowProc( HWND hwnd, UINT msg,
                 WPARAM wParam, LPARAM lParam )
 {
@@ -3683,7 +3851,7 @@ static LRESULT WINAPI MSIHiddenWindowProc( HWND hwnd, UINT msg,
     switch (msg)
     {
     case WM_MSI_DIALOG_CREATE:
-        return msi_dialog_run_message_loop( dialog );
+        return dialog_run_message_loop( dialog );
     case WM_MSI_DIALOG_DESTROY:
         msi_dialog_destroy( dialog );
         return 0;
@@ -3691,7 +3859,7 @@ static LRESULT WINAPI MSIHiddenWindowProc( HWND hwnd, UINT msg,
     return DefWindowProcW( hwnd, msg, wParam, lParam );
 }
 
-static BOOL msi_dialog_register_class( void )
+static BOOL dialog_register_class( void )
 {
     WNDCLASSW cls;
 
@@ -3723,25 +3891,21 @@ static BOOL msi_dialog_register_class( void )
     return TRUE;
 }
 
-/* functions that interface to other modules within MSI */
-
-msi_dialog *msi_dialog_create( MSIPACKAGE* package,
-                               LPCWSTR szDialogName, msi_dialog *parent,
-                               msi_dialog_event_handler event_handler )
+static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_dialog *parent,
+                                  control_event_handler event_handler )
 {
     MSIRECORD *rec = NULL;
     msi_dialog *dialog;
 
-    TRACE("%p %s\n", package, debugstr_w(szDialogName));
+    TRACE("%s\n", debugstr_w(name));
 
-    if (!hMsiHiddenWindow)
-        msi_dialog_register_class();
+    if (!hMsiHiddenWindow) dialog_register_class();
 
     /* allocate the structure for the dialog to use */
-    dialog = msi_alloc_zero( FIELD_OFFSET( msi_dialog, name[strlenW( szDialogName ) + 1] ));
+    dialog = msi_alloc_zero( FIELD_OFFSET( msi_dialog, name[strlenW( name ) + 1] ));
     if( !dialog )
         return NULL;
-    strcpyW( dialog->name, szDialogName );
+    strcpyW( dialog->name, name );
     dialog->parent = parent;
     msiobj_addref( &package->hdr );
     dialog->package = package;
@@ -3764,19 +3928,6 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package,
     msiobj_release( &rec->hdr );
 
     return dialog;
-}
-
-static void msi_process_pending_messages( HWND hdlg )
-{
-    MSG msg;
-
-    while( PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ) )
-    {
-        if( hdlg && IsDialogMessageW( hdlg, &msg ))
-            continue;
-        TranslateMessage( &msg );
-        DispatchMessageW( &msg );
-    }
 }
 
 void msi_dialog_end_dialog( msi_dialog *dialog )
@@ -3809,7 +3960,7 @@ void msi_dialog_check_messages( HANDLE handle )
     /* there's two choices for the UI thread */
     while (1)
     {
-        msi_process_pending_messages( NULL );
+        process_pending_messages( NULL );
 
         if( !handle )
             break;
@@ -3824,51 +3975,34 @@ void msi_dialog_check_messages( HANDLE handle )
     }
 }
 
-UINT msi_dialog_run_message_loop( msi_dialog *dialog )
-{
-    DWORD style;
-    HWND hwnd;
-
-    if( uiThreadId != GetCurrentThreadId() )
-        return SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_CREATE, 0, (LPARAM) dialog );
-
-    /* create the dialog window, don't show it yet */
-    style = WS_OVERLAPPED;
-    if( dialog->attributes & msidbDialogAttributesVisible )
-        style |= WS_VISIBLE;
-
-    hwnd = CreateWindowW( szMsiDialogClass, dialog->name, style,
-                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     NULL, NULL, NULL, dialog );
-    if( !hwnd )
-    {
-        ERR("Failed to create dialog %s\n", debugstr_w( dialog->name ));
-        return ERROR_FUNCTION_FAILED;
-    }
-
-    ShowWindow( hwnd, SW_SHOW );
-    /* UpdateWindow( hwnd ); - and causes the transparent static controls not to paint */
-
-    if( dialog->attributes & msidbDialogAttributesModal )
-    {
-        while( !dialog->finished )
-        {
-            MsgWaitForMultipleObjects( 0, NULL, 0, INFINITE, QS_ALLINPUT );
-            msi_process_pending_messages( dialog->hwnd );
-        }
-    }
-    else
-        return ERROR_IO_PENDING;
-
-    return ERROR_SUCCESS;
-}
-
-static void msi_dialog_do_preview( msi_dialog *dialog )
+static void dialog_do_preview( msi_dialog *dialog )
 {
     TRACE("\n");
     dialog->attributes |= msidbDialogAttributesVisible;
     dialog->attributes &= ~msidbDialogAttributesModal;
-    msi_dialog_run_message_loop( dialog );
+    dialog_run_message_loop( dialog );
+}
+
+static void free_subscriber( struct subscriber *sub )
+{
+    msi_free( sub->event );
+    msi_free( sub->control );
+    msi_free( sub->attribute );
+    msi_free( sub );
+}
+
+static void event_cleanup_subscriptions( MSIPACKAGE *package, const WCHAR *dialog )
+{
+    struct list *item, *next;
+
+    LIST_FOR_EACH_SAFE( item, next, &package->subscriptions )
+    {
+        struct subscriber *sub = LIST_ENTRY( item, struct subscriber, entry );
+
+        if (strcmpW( sub->dialog->name, dialog )) continue;
+        list_remove( &sub->entry );
+        free_subscriber( sub );
+    }
 }
 
 void msi_dialog_destroy( msi_dialog *dialog )
@@ -3888,7 +4022,7 @@ void msi_dialog_destroy( msi_dialog *dialog )
         DestroyWindow( dialog->hwnd );
 
     /* unsubscribe events */
-    ControlEvent_CleanupDialogSubscriptions(dialog->package, dialog->name);
+    event_cleanup_subscriptions( dialog->package, dialog->name );
 
     /* destroy the list of controls */
     while( !list_empty( &dialog->controls ) )
@@ -3925,8 +4059,19 @@ void msi_dialog_unregister_class( void )
     uiThreadId = 0;
 }
 
-static UINT error_dialog_handler(MSIPACKAGE *package, LPCWSTR event,
-                                 LPCWSTR argument, msi_dialog* dialog)
+void msi_event_cleanup_all_subscriptions( MSIPACKAGE *package )
+{
+    struct list *item, *next;
+
+    LIST_FOR_EACH_SAFE( item, next, &package->subscriptions )
+    {
+        struct subscriber *sub = LIST_ENTRY( item, struct subscriber, entry );
+        list_remove( &sub->entry );
+        free_subscriber( sub );
+    }
+}
+
+static UINT error_dialog_handler( msi_dialog *dialog, const WCHAR *event, const WCHAR *argument )
 {
     static const WCHAR end_dialog[] = {'E','n','d','D','i','a','l','o','g',0};
     static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};
@@ -3942,10 +4087,10 @@ static UINT error_dialog_handler(MSIPACKAGE *package, LPCWSTR event,
     if ( !strcmpW( argument, error_abort ) || !strcmpW( argument, error_cancel ) ||
          !strcmpW( argument, error_no ) )
     {
-         msi_set_property( package->db, result_prop, error_abort, -1 );
+         msi_set_property( dialog->package->db, result_prop, error_abort, -1 );
     }
 
-    ControlEvent_CleanupSubscriptions(package);
+    msi_event_cleanup_all_subscriptions( dialog->package );
     msi_dialog_end_dialog( dialog );
 
     return ERROR_SUCCESS;
@@ -4007,13 +4152,12 @@ UINT msi_spawn_error_dialog( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR er
     if ( r != ERROR_SUCCESS )
         return r;
 
-    dialog = msi_dialog_create( package, error_dialog, package->dialog,
-                                error_dialog_handler );
+    dialog = dialog_create( package, error_dialog, package->dialog, error_dialog_handler );
     if ( !dialog )
         return ERROR_FUNCTION_FAILED;
 
     dialog->finished = FALSE;
-    r = msi_dialog_run_message_loop( dialog );
+    r = dialog_run_message_loop( dialog );
     if ( r != ERROR_SUCCESS )
         goto done;
 
@@ -4092,8 +4236,7 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE *phPreview )
     return r;
 }
 
-static UINT preview_event_handler( MSIPACKAGE *package, LPCWSTR event,
-                                   LPCWSTR argument, msi_dialog *dialog )
+static UINT preview_event_handler( msi_dialog *dialog, const WCHAR *event, const WCHAR *argument )
 {
     MESSAGE("Preview dialog event '%s' (arg='%s')\n", debugstr_w(event), debugstr_w(argument));
     return ERROR_SUCCESS;
@@ -4110,9 +4253,9 @@ static UINT MSI_PreviewDialogW( MSIPREVIEW *preview, LPCWSTR szDialogName )
     /* an empty name means we should just destroy the current preview dialog */
     if (szDialogName)
     {
-        dialog = msi_dialog_create( preview->package, szDialogName, NULL, preview_event_handler );
+        dialog = dialog_create( preview->package, szDialogName, NULL, preview_event_handler );
         if (dialog)
-            msi_dialog_do_preview( dialog );
+            dialog_do_preview( dialog );
         else
             r = ERROR_FUNCTION_FAILED;
     }
@@ -4164,4 +4307,304 @@ UINT WINAPI MsiPreviewBillboardA( MSIHANDLE hPreview, LPCSTR szControlName, LPCS
 {
     FIXME("%d %s %s\n", hPreview, debugstr_a(szControlName), debugstr_a(szBillboard));
     return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+typedef UINT (*event_handler)( msi_dialog *, const WCHAR * );
+
+struct control_event
+{
+    const WCHAR  *event;
+    event_handler handler;
+};
+
+static UINT dialog_event_handler( msi_dialog *, const WCHAR *, const WCHAR * );
+
+/* create a dialog box and run it if it's modal */
+static UINT event_do_dialog( MSIPACKAGE *package, const WCHAR *name, msi_dialog *parent, BOOL destroy_modeless )
+{
+    msi_dialog *dialog;
+    UINT r;
+
+    /* create a new dialog */
+    dialog = dialog_create( package, name, parent, dialog_event_handler );
+    if (dialog)
+    {
+        /* kill the current modeless dialog */
+        if (destroy_modeless && package->dialog)
+        {
+            msi_dialog_destroy( package->dialog );
+            package->dialog = NULL;
+        }
+
+        /* modeless dialogs return an error message */
+        r = dialog_run_message_loop( dialog );
+        if (r == ERROR_SUCCESS)
+            msi_dialog_destroy( dialog );
+        else
+            package->dialog = dialog;
+    }
+    else r = ERROR_FUNCTION_FAILED;
+    return r;
+}
+
+/* end a modal dialog box */
+static UINT event_end_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    static const WCHAR exitW[] = {'E','x','i','t',0};
+    static const WCHAR retryW[] = {'R','e','t','r','y',0};
+    static const WCHAR ignoreW[] = {'I','g','n','o','r','e',0};
+    static const WCHAR returnW[] = {'R','e','t','u','r','n',0};
+
+    if (!strcmpW( argument, exitW ))
+        dialog->package->CurrentInstallState = ERROR_INSTALL_USEREXIT;
+    else if (!strcmpW( argument, retryW ))
+        dialog->package->CurrentInstallState = ERROR_INSTALL_SUSPEND;
+    else if (!strcmpW( argument, ignoreW ))
+        dialog->package->CurrentInstallState = ERROR_SUCCESS;
+    else if (!strcmpW( argument, returnW ))
+    {
+        msi_dialog *parent = dialog->parent;
+        msi_free( dialog->package->next_dialog );
+        dialog->package->next_dialog = (parent) ? strdupW( parent->name ) : NULL;
+        dialog->package->CurrentInstallState = ERROR_SUCCESS;
+    }
+    else
+    {
+        ERR("Unknown argument string %s\n", debugstr_w(argument));
+        dialog->package->CurrentInstallState = ERROR_FUNCTION_FAILED;
+    }
+    event_cleanup_subscriptions( dialog->package, dialog->name );
+    msi_dialog_end_dialog( dialog );
+    return ERROR_SUCCESS;
+}
+
+/* transition from one modal dialog to another modal dialog */
+static UINT event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    /* store the name of the next dialog, and signal this one to end */
+    dialog->package->next_dialog = strdupW( argument );
+    msi_event_cleanup_all_subscriptions( dialog->package );
+    msi_dialog_end_dialog( dialog );
+    return ERROR_SUCCESS;
+}
+
+/* create a new child dialog of an existing modal dialog */
+static UINT event_spawn_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    /* don't destroy a modeless dialogs that might be our parent */
+    event_do_dialog( dialog->package, argument, dialog, FALSE );
+    if (dialog->package->CurrentInstallState != ERROR_SUCCESS) msi_dialog_end_dialog( dialog );
+    return ERROR_SUCCESS;
+}
+
+/* creates a dialog that remains up for a period of time based on a condition */
+static UINT event_spawn_wait_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    FIXME("doing nothing\n");
+    return ERROR_SUCCESS;
+}
+
+static UINT event_do_action( msi_dialog *dialog, const WCHAR *argument )
+{
+    ACTION_PerformAction( dialog->package, argument, SCRIPT_NONE );
+    return ERROR_SUCCESS;
+}
+
+static UINT event_add_local( msi_dialog *dialog, const WCHAR *argument )
+{
+    MSIFEATURE *feature;
+
+    LIST_FOR_EACH_ENTRY( feature, &dialog->package->features, MSIFEATURE, entry )
+    {
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_LOCAL)
+                msi_set_property( dialog->package->db, szPreselected, szOne, -1 );
+            MSI_SetFeatureStateW( dialog->package, feature->Feature, INSTALLSTATE_LOCAL );
+        }
+    }
+    return ERROR_SUCCESS;
+}
+
+static UINT event_remove( msi_dialog *dialog, const WCHAR *argument )
+{
+    MSIFEATURE *feature;
+
+    LIST_FOR_EACH_ENTRY( feature, &dialog->package->features, MSIFEATURE, entry )
+    {
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+                msi_set_property( dialog->package->db, szPreselected, szOne, -1 );
+            MSI_SetFeatureStateW( dialog->package, feature->Feature, INSTALLSTATE_ABSENT );
+        }
+    }
+    return ERROR_SUCCESS;
+}
+
+static UINT event_add_source( msi_dialog *dialog, const WCHAR *argument )
+{
+    MSIFEATURE *feature;
+
+    LIST_FOR_EACH_ENTRY( feature, &dialog->package->features, MSIFEATURE, entry )
+    {
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_SOURCE)
+                msi_set_property( dialog->package->db, szPreselected, szOne, -1 );
+            MSI_SetFeatureStateW( dialog->package, feature->Feature, INSTALLSTATE_SOURCE );
+        }
+    }
+    return ERROR_SUCCESS;
+}
+
+void msi_event_fire( MSIPACKAGE *package, const WCHAR *event, MSIRECORD *rec )
+{
+    struct subscriber *sub;
+
+    TRACE("firing event %s\n", debugstr_w(event));
+
+    LIST_FOR_EACH_ENTRY( sub, &package->subscriptions, struct subscriber, entry )
+    {
+        if (strcmpiW( sub->event, event )) continue;
+        dialog_handle_event( sub->dialog, sub->control, sub->attribute, rec );
+    }
+}
+
+static UINT event_set_target_path( msi_dialog *dialog, const WCHAR *argument )
+{
+    WCHAR *path = msi_dup_property( dialog->package->db, argument );
+    MSIRECORD *rec = MSI_CreateRecord( 1 );
+    UINT r = ERROR_SUCCESS;
+
+    MSI_RecordSetStringW( rec, 1, path );
+    msi_event_fire( dialog->package, szSelectionPath, rec );
+    if (path)
+    {
+        /* failure to set the path halts the executing of control events */
+        r = MSI_SetTargetPathW( dialog->package, argument, path );
+        msi_free( path );
+    }
+    msi_free( &rec->hdr );
+    return r;
+}
+
+static UINT event_reset( msi_dialog *dialog, const WCHAR *argument )
+{
+    msi_dialog_reset( dialog );
+    return ERROR_SUCCESS;
+}
+
+/* Return ERROR_SUCCESS if dialog is process and ERROR_FUNCTION_FAILED
+ * if the given parameter is not a dialog box
+ */
+UINT ACTION_DialogBox( MSIPACKAGE *package, const WCHAR *dialog )
+{
+    UINT r;
+
+    if (package->next_dialog) ERR("Already got next dialog... ignoring it\n");
+    package->next_dialog = NULL;
+
+    /* Dialogs are chained by filling in the next_dialog member
+     * of the package structure, then terminating the current dialog.
+     * The code below sees the next_dialog member set, and runs the
+     * next dialog.
+     * We fall out of the loop below if we come across a modeless
+     * dialog, as it returns ERROR_IO_PENDING when we try to run
+     * its message loop.
+     */
+    r = event_do_dialog( package, dialog, NULL, TRUE );
+    while (r == ERROR_SUCCESS && package->next_dialog)
+    {
+        WCHAR *name = package->next_dialog;
+
+        package->next_dialog = NULL;
+        r = event_do_dialog( package, name, NULL, TRUE );
+        msi_free( name );
+    }
+    if (r == ERROR_IO_PENDING) r = ERROR_SUCCESS;
+    return r;
+}
+
+static UINT event_set_install_level( msi_dialog *dialog, const WCHAR *argument )
+{
+    int level = atolW( argument );
+
+    TRACE("setting install level to %d\n", level);
+    return MSI_SetInstallLevel( dialog->package, level );
+}
+
+static UINT event_directory_list_up( msi_dialog *dialog, const WCHAR *argument )
+{
+    return msi_dialog_directorylist_up( dialog );
+}
+
+static UINT event_reinstall_mode( msi_dialog *dialog, const WCHAR *argument )
+{
+    return msi_set_property( dialog->package->db, szReinstallMode, argument, -1 );
+}
+
+static UINT event_reinstall( msi_dialog *dialog, const WCHAR *argument )
+{
+    return msi_set_property( dialog->package->db, szReinstall, argument, -1 );
+}
+
+static UINT event_validate_product_id( msi_dialog *dialog, const WCHAR *argument )
+{
+    return msi_validate_product_id( dialog->package );
+}
+
+static const WCHAR end_dialogW[] = {'E','n','d','D','i','a','l','o','g',0};
+static const WCHAR new_dialogW[] = {'N','e','w','D','i','a','l','o','g',0};
+static const WCHAR spawn_dialogW[] = {'S','p','a','w','n','D','i','a','l','o','g',0};
+static const WCHAR spawn_wait_dialogW[] = {'S','p','a','w','n','W','a','i','t','D','i','a','l','o','g',0};
+static const WCHAR do_actionW[] = {'D','o','A','c','t','i','o','n',0};
+static const WCHAR add_localW[] = {'A','d','d','L','o','c','a','l',0};
+static const WCHAR removeW[] = {'R','e','m','o','v','e',0};
+static const WCHAR add_sourceW[] = {'A','d','d','S','o','u','r','c','e',0};
+static const WCHAR set_target_pathW[] = {'S','e','t','T','a','r','g','e','t','P','a','t','h',0};
+static const WCHAR resetW[] = {'R','e','s','e','t',0};
+static const WCHAR set_install_levelW[] = {'S','e','t','I','n','s','t','a','l','l','L','e','v','e','l',0};
+static const WCHAR directory_list_upW[] = {'D','i','r','e','c','t','o','r','y','L','i','s','t','U','p',0};
+static const WCHAR selection_browseW[] = {'S','e','l','e','c','t','i','o','n','B','r','o','w','s','e',0};
+static const WCHAR reinstall_modeW[] = {'R','e','i','n','s','t','a','l','l','M','o','d','e',0};
+static const WCHAR reinstallW[] = {'R','e','i','n','s','t','a','l','l',0};
+static const WCHAR validate_product_idW[] = {'V','a','l','i','d','a','t','e','P','r','o','d','u','c','t','I','D',0};
+
+static const struct control_event control_events[] =
+{
+    { end_dialogW, event_end_dialog },
+    { new_dialogW, event_new_dialog },
+    { spawn_dialogW, event_spawn_dialog },
+    { spawn_wait_dialogW, event_spawn_wait_dialog },
+    { do_actionW, event_do_action },
+    { add_localW, event_add_local },
+    { removeW, event_remove },
+    { add_sourceW, event_add_source },
+    { set_target_pathW, event_set_target_path },
+    { resetW, event_reset },
+    { set_install_levelW, event_set_install_level },
+    { directory_list_upW, event_directory_list_up },
+    { selection_browseW, event_spawn_dialog },
+    { reinstall_modeW, event_reinstall_mode },
+    { reinstallW, event_reinstall },
+    { validate_product_idW, event_validate_product_id },
+    { NULL, NULL }
+};
+
+static UINT dialog_event_handler( msi_dialog *dialog, const WCHAR *event, const WCHAR *argument )
+{
+    unsigned int i;
+
+    TRACE("handling event %s\n", debugstr_w(event));
+
+    if (!event) return ERROR_SUCCESS;
+
+    for (i = 0; control_events[i].event; i++)
+    {
+        if (!strcmpW( control_events[i].event, event ))
+            return control_events[i].handler( dialog, argument );
+    }
+    FIXME("unhandled event %s arg(%s)\n", debugstr_w(event), debugstr_w(argument));
+    return ERROR_SUCCESS;
 }

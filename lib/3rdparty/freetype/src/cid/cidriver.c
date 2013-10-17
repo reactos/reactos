@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2011, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,7 +74,7 @@
   {
     *afont_info = ((CID_Face)face)->cid.font_info;
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
   static FT_Error
@@ -83,7 +83,7 @@
   {
     *afont_extra = ((CID_Face)face)->font_extra;
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
   static const FT_Service_PsInfoRec  cid_service_ps_info =
@@ -91,7 +91,8 @@
     (PS_GetFontInfoFunc)   cid_ps_get_font_info,
     (PS_GetFontExtraFunc)  cid_ps_get_font_extra,
     (PS_HasGlyphNamesFunc) NULL,        /* unsupported with CID fonts */
-    (PS_GetFontPrivateFunc)NULL         /* unsupported                */
+    (PS_GetFontPrivateFunc)NULL,        /* unsupported                */
+    (PS_GetFontValueFunc)  NULL         /* not implemented            */
   };
 
 
@@ -110,14 +111,14 @@
 
     if ( registry )
       *registry = cid->registry;
-      
+
     if ( ordering )
       *ordering = cid->ordering;
 
     if ( supplement )
       *supplement = cid->supplement;
-      
-    return CID_Err_Ok;
+
+    return FT_Err_Ok;
   }
 
 
@@ -125,7 +126,7 @@
   cid_get_is_cid( CID_Face  face,
                   FT_Bool  *is_cid )
   {
-    FT_Error  error = CID_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
 
@@ -141,7 +142,7 @@
                                 FT_UInt   glyph_index,
                                 FT_UInt  *cid )
   {
-    FT_Error  error = CID_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
 
@@ -195,7 +196,7 @@
       FT_MODULE_DRIVER_SCALABLE   |
       FT_MODULE_DRIVER_HAS_HINTER,
 
-      sizeof( FT_DriverRec ),
+      sizeof ( FT_DriverRec ),
       "t1cid",   /* module name           */
       0x10000L,  /* version 1.0 of driver */
       0x20000L,  /* requires FreeType 2.0 */
@@ -208,9 +209,9 @@
     },
 
     /* then the other font drivers fields */
-    sizeof( CID_FaceRec ),
-    sizeof( CID_SizeRec ),
-    sizeof( CID_GlyphSlotRec ),
+    sizeof ( CID_FaceRec ),
+    sizeof ( CID_SizeRec ),
+    sizeof ( CID_GlyphSlotRec ),
 
     cid_face_init,
     cid_face_done,
@@ -219,11 +220,6 @@
     cid_size_done,
     cid_slot_init,
     cid_slot_done,
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
 
     cid_slot_load_glyph,
 

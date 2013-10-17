@@ -17,7 +17,7 @@ BEGIN
 	END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 	IDS_ALL_TYPES_FILTER "Todos os formatos (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
 	IDS_TOOLTIP_PLAY "Executar"

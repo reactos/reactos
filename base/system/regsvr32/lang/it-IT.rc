@@ -1,5 +1,5 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUso: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] nomedll\n\

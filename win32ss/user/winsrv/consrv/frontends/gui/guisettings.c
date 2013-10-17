@@ -19,6 +19,7 @@
 
 
 VOID GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
+VOID SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -227,7 +228,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 {
     NTSTATUS Status;
     PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL, hClientSection = NULL;
     LARGE_INTEGER SectionSize;
@@ -507,8 +508,10 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             /*
              * Apply full-screen mode.
              */
-            GuiData->GuiInfo.FullScreen = GuiInfo->FullScreen;
-            // TODO: Apply it really
+            if (GuiInfo->FullScreen != GuiData->GuiInfo.FullScreen)
+            {
+                SwitchFullScreen(GuiData, GuiInfo->FullScreen);
+            }
         }
 
         /*

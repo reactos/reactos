@@ -1009,13 +1009,13 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "ДЪбШлсйлШйЮ лжм bootloader йлж йбвЮиц Ыхйбж (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "ДЪбШлсйлШйЮ лжм bootloader йлж йбвЮиц Ыхйбж (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1670,11 +1670,11 @@ MUI_STRING elGRStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = ДзЬдаббхдЮйЮ мзжвжЪайлу"},
     {STRING_CONSOLEFAIL1,
-    "АЫчдШлж дШ ШджаолЬх Ю бждйцвШ\n\n"},
+    "АЫчдШлж дШ ШджаолЬх Ю бждйцвШ\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "The most common cause of this is using an USB keyboard\r\n"},
     {STRING_CONSOLEFAIL3,
-    "ТШ USB звЮближвцЪаШ ЫЬд ЬхдШа звуирк мзжйлЮиаЭцгЬдШ ШбцгШ\n"},
+    "ТШ USB звЮближвцЪаШ ЫЬд ЬхдШа звуирк мзжйлЮиаЭцгЬдШ ШбцгШ\r\n"},
     {STRING_FORMATTINGDISK,
     "Ж ЬЪбШлсйлШйЮ ЫаШгжинщдЬа лж Ыхйбж йШк"},
     {STRING_CHECKINGDISK,

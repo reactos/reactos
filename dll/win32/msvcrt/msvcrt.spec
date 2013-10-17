@@ -10,14 +10,20 @@
 @ cdecl -i386 -norelay ??0bad_typeid@@QAE@ABV0@@Z(ptr) __thiscall_MSVCRT_bad_typeid_copy_ctor
 @ cdecl -i386 -norelay ??0bad_typeid@@QAE@PBD@Z(ptr) __thiscall_MSVCRT_bad_typeid_ctor
 @ cdecl -i386 -norelay ??0exception@@QAE@ABQBD@Z(ptr) __thiscall_MSVCRT_exception_ctor
+@ cdecl -arch=x86_64 -stub -norelay ??0exception@@QEAA@AEBQEBD@Z(ptr)
 @ cdecl -i386 -norelay ??0exception@@QAE@ABQBDH@Z(ptr long) __thiscall_MSVCRT_exception_ctor_noalloc
+@ cdecl -arch=x86_64 -stub -norelay ??0exception@@QEAA@AEBQEBDH@Z(ptr long)
 @ cdecl -i386 -norelay ??0exception@@QAE@ABV0@@Z(ptr) __thiscall_MSVCRT_exception_copy_ctor
+@ cdecl -arch=x86_64 -stub -norelay ??0exception@@QEAA@AEBV0@@Z(ptr)
 @ cdecl -i386 -norelay ??0exception@@QAE@XZ() __thiscall_MSVCRT_exception_default_ctor
+@ cdecl -arch=x86_64 -stub -norelay ??0exception@@QEAA@XZ()
 @ cdecl -i386 -norelay ??1__non_rtti_object@@UAE@XZ() __thiscall_MSVCRT___non_rtti_object_dtor
 @ cdecl -i386 -norelay ??1bad_cast@@UAE@XZ() __thiscall_MSVCRT_bad_cast_dtor
 @ cdecl -i386 -norelay ??1bad_typeid@@UAE@XZ() __thiscall_MSVCRT_bad_typeid_dtor
 @ cdecl -i386 -norelay ??1exception@@UAE@XZ() __thiscall_MSVCRT_exception_dtor
+@ cdecl -arch=x86_64 -stub -norelay ??1exception@@UEAA@XZ() __thiscall_MSVCRT_exception_dtor
 @ cdecl -i386 -norelay ??1type_info@@UAE@XZ() __thiscall_MSVCRT_type_info_dtor
+@ cdecl -arch=x86_64 -stub ??1type_info@@UEAA@XZ() __thiscall_MSVCRT_type_info_dtor
 @ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
 @ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
 # @ cdecl ??2@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg
@@ -62,6 +68,7 @@
 @ cdecl ?terminate@@YAXXZ() MSVCRT_terminate
 @ cdecl ?unexpected@@YAXXZ() MSVCRT_unexpected
 @ cdecl -i386 -norelay ?what@exception@@UBEPBDXZ() __thiscall_MSVCRT_what_exception
+@ cdecl -arch=x86_64 -stub -norelay ?what@exception@@UEBAPEBDXZ() __thiscall_MSVCRT_what_exception
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()
@@ -117,9 +124,9 @@
 # stub __CxxCallUnwindVecDtor
 @ cdecl __CxxDetectRethrow(ptr)
 # stub __CxxExceptionFilter
-@ cdecl -i386 -norelay __CxxFrameHandler(ptr ptr ptr ptr)
-@ cdecl -i386 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
-@ cdecl -i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
+@ cdecl -arch=i386,x86_64 -norelay __CxxFrameHandler(ptr ptr ptr ptr)
+@ cdecl -arch=i386,x86_64 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
+@ cdecl -arch=i386,x86_64 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
 @ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ stdcall -i386 __CxxLongjmpUnwind(ptr)
 @ cdecl __CxxQueryExceptionSize()
