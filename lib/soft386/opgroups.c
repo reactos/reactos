@@ -1304,7 +1304,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
             }
             else
             {
-                LONG Result = (LONG)Value * (LONG)((SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowWord);
+                LONG Result = (LONG)((SHORT)Value) * (LONG)((SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowWord);
 
                 /* Update the flags */
                 State->Flags.Cf = State->Flags.Of =
