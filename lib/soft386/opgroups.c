@@ -988,7 +988,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD3)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
 {
-    UCHAR Dummy, Value;
+    UCHAR Dummy, Value = 0;
     SOFT386_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
@@ -1081,7 +1081,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
         /* IMUL */
         case 5:
         {
-            SHORT Result = (SHORT)Value * (SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+            SHORT Result = (SHORT)((CHAR)Value) * (SHORT)((CHAR)State->GeneralRegs[SOFT386_REG_EAX].LowByte);
 
             /* Update the flags */
             State->Flags.Cf = State->Flags.Of =
@@ -1125,7 +1125,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
 {
-    ULONG Dummy, Value, SignFlag;
+    ULONG Dummy, Value = 0, SignFlag;
     SOFT386_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
     
@@ -1292,7 +1292,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
         {
             if (OperandSize)
             {
-                LONGLONG Result = (LONGLONG)Value * (LONGLONG)State->GeneralRegs[SOFT386_REG_EAX].Long;
+                LONGLONG Result = (LONGLONG)((LONG)Value) * (LONGLONG)((LONG)State->GeneralRegs[SOFT386_REG_EAX].Long);
 
                 /* Update the flags */
                 State->Flags.Cf = State->Flags.Of =
@@ -1304,7 +1304,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
             }
             else
             {
-                LONG Result = (LONG)Value * (LONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+                LONG Result = (LONG)Value * (LONG)((SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowWord);
 
                 /* Update the flags */
                 State->Flags.Cf = State->Flags.Of =
@@ -1365,8 +1365,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
             {
                 LONG Dividend = (LONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord
                                  | ((LONG)State->GeneralRegs[SOFT386_REG_EDX].LowWord << 16);
-                SHORT Quotient = Dividend / (SHORT)Value;
-                SHORT Remainder = Dividend % (SHORT)Value;
+                SHORT Quotient = Dividend / (SHORT)LOWORD(Value);
+                SHORT Remainder = Dividend % (SHORT)LOWORD(Value);
 
                 /* Write back the results */
                 State->GeneralRegs[SOFT386_REG_EAX].LowWord = (USHORT)Quotient;
