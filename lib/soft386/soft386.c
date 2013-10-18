@@ -56,8 +56,30 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
     /* Main execution loop */
     do
     {
-        /* If this is a new instruction, save the IP */
-        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+        /* Check if this is a new instruction */
+        if (State->PrefixFlags == 0)
+        {
+            State->SavedInstPtr = State->InstPtr;
+
+            /* Check if interrupts are enabled and there is an interrupt pending */
+            if (State->Flags.If && State->HardwareInt)
+            {
+                SOFT386_IDT_ENTRY IdtEntry;
+
+                /* Get the interrupt vector */
+                if (Soft386GetIntVector(State, State->PendingIntNum, &IdtEntry))
+                {
+                    /* Perform the interrupt */
+                    Soft386InterruptInternal(State,
+                                             IdtEntry.Selector,
+                                             MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                                             IdtEntry.Type);
+                }
+
+                /* Clear the interrupt pending flag */
+                State->HardwareInt = FALSE;
+            }
+        }
 
         /* Perform an instruction fetch */
         if (!Soft386FetchByte(State, &Opcode)) continue;
@@ -273,27 +295,11 @@ Soft386Reset(PSOFT386_STATE State)
 
 VOID
 NTAPI
-Soft386Interrupt(PSOFT386_STATE State, UCHAR Number, BOOLEAN Hardware)
+Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
 {
-    SOFT386_IDT_ENTRY IdtEntry;
-
-    if (Hardware)
-    {
-        /* Set the hardware interrupt flag */
-        State->HardwareInt = TRUE;
-    }
-
-    if (!Soft386GetIntVector(State, Number, &IdtEntry))
-    {
-        /* An exception occurred, let the handler execute */
-        return;
-    }
-
-    /* Perform the interrupt */
-    Soft386InterruptInternal(State,
-                             IdtEntry.Selector,
-                             MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                             IdtEntry.Type);
+    /* Set the hardware interrupt flag */
+    State->HardwareInt = TRUE;
+    State->PendingIntNum = Number;
 }
 
 VOID

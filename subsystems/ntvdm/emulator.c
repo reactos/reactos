@@ -473,7 +473,7 @@ VOID EmulatorInterrupt(BYTE Number)
     softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
 #else
     /* Call the Soft386 API */
-    Soft386Interrupt(&EmulatorContext, Number, FALSE);
+    Soft386Interrupt(&EmulatorContext, Number);
 #endif
 }
 
@@ -484,7 +484,7 @@ VOID EmulatorExternalInterrupt(BYTE Number)
     softx86_ext_hw_signal(&EmulatorContext, Number);
 #else
     /* Call the Soft386 API */
-    Soft386Interrupt(&EmulatorContext, Number, TRUE);
+    Soft386Interrupt(&EmulatorContext, Number);
 #endif
 }
 

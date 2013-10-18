@@ -342,6 +342,7 @@ struct _SOFT386_STATE
     ULONG PrefixFlags;
     SOFT386_SEG_REGS SegmentOverride;
     BOOLEAN HardwareInt;
+    UCHAR PendingIntNum;
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -372,7 +373,7 @@ Soft386Reset(PSOFT386_STATE State);
 
 VOID
 NTAPI
-Soft386Interrupt(PSOFT386_STATE State, UCHAR Number, BOOLEAN Hardware);
+Soft386Interrupt(PSOFT386_STATE State, UCHAR Number);
 
 VOID
 NTAPI
