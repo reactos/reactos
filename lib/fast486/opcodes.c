@@ -472,12 +472,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0x40);
@@ -516,12 +511,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
         Size = !Size;
     }
     
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0x48);
@@ -551,12 +541,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushReg)
 {
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0x50);
@@ -576,12 +561,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0x58);
@@ -626,12 +606,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExchangeEax)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0x90);
@@ -983,12 +958,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Opcode == 0xE5)
     {
@@ -1083,12 +1053,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Opcode == 0xE7)
     {
@@ -1163,12 +1128,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovRegImm)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Size)
     {
@@ -1318,17 +1278,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
         OperandSize = !OperandSize;
     }
 
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
-
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1447,12 +1396,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x05);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -1530,15 +1474,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1593,17 +1528,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -1718,12 +1642,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x0D);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -1797,15 +1716,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1860,17 +1770,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -1949,12 +1848,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x24);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
@@ -1985,12 +1879,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x25);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -2064,15 +1953,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2127,17 +2007,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -2252,12 +2121,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x35);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -2331,15 +2195,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2390,17 +2245,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -2504,12 +2348,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA9);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -2578,15 +2417,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2647,17 +2477,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -2779,15 +2598,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2848,17 +2658,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -2992,12 +2791,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x15);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -3311,12 +3105,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x1D);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -3451,15 +3240,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3534,17 +3314,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -3705,12 +3474,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xEF) == 0x2D);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -3891,12 +3655,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushAll)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Push all the registers in order */
     for (i = 0; i < FAST486_NUM_GEN_REGS; i++)
@@ -3940,12 +3699,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Pop all the registers in reverse order */
     for (i = FAST486_NUM_GEN_REGS - 1; i >= 0; i--)
@@ -4042,12 +3796,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushImm)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x68);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -4237,15 +3986,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
         /* The ADSIZE prefix toggles the size */
         AddressSize = !AddressSize;
     }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4294,17 +4034,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
     {
         /* The OPSIZE prefix toggles the operand size */
         OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_OPSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
 
     /* Get the operands */
@@ -4544,12 +4273,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCwde)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Size)
     {
@@ -4585,12 +4309,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCdq)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Size)
     {
@@ -4625,12 +4344,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Fetch the offset */
     if (Size)
@@ -4697,12 +4411,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
 {
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -4729,12 +4438,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     INT Cpl = Fast486GetCurrentPrivLevel(State);
     ULONG NewFlags;
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -4892,12 +4596,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xC2);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5035,12 +4734,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeEnter)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xC8);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5104,12 +4798,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xC9);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5158,12 +4847,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Opcode == 0xCA)
     {
@@ -5281,12 +4965,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xCF);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5495,12 +5174,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     UCHAR Base;
     UCHAR Value = State->GeneralRegs[FAST486_REG_EAX].LowByte;
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Fetch the base */
     if (!Fast486FetchByte(State, &Base))
@@ -5534,12 +5208,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
     UCHAR Base;
     UCHAR Value = State->GeneralRegs[FAST486_REG_EAX].LowByte;
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Fetch the base */
     if (!Fast486FetchByte(State, &Base))
@@ -5601,12 +5270,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
     /* Make sure this is the right instruction */
     ASSERT((Opcode >= 0xE0) && (Opcode <= 0xE2));
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5654,12 +5318,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xE3);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
@@ -5699,12 +5358,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Size)
     {
@@ -5765,12 +5419,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     if (Size)
     {
@@ -5819,12 +5468,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
         Size = !Size;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Fetch the offset */
     if (Size)
@@ -6063,12 +5707,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSalc)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xD6);
 
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    NO_LOCK_PREFIX();
 
     /* Set all the bits of AL to CF */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = State->Flags.Cf ? 0xFF : 0x00;

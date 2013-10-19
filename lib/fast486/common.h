@@ -41,6 +41,12 @@
 #define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8)
 #define EXCEPTION_HAS_ERROR_CODE(x) (((x) == 8) || ((x) >= 10 && (x) <= 14))
 
+#define NO_LOCK_PREFIX() if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
+{\
+    Fast486Exception(State, FAST486_EXCEPTION_UD);\
+    return FALSE;\
+}
+
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)
 #define PAGE_OFFSET(x)  ((x) & 0x00000FFF)
 
