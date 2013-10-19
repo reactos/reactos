@@ -335,7 +335,6 @@ struct _FAST486_STATE
     FAST486_REG InstPtr, SavedInstPtr;
     FAST486_FLAGS_REG Flags;
     FAST486_TABLE_REG Gdtr, Idtr, Ldtr, Tss;
-    ULONGLONG TimeStampCounter;
     ULONG ControlRegisters[FAST486_NUM_CTRL_REGS];
     ULONG DebugRegisters[FAST486_NUM_DBG_REGS];
     ULONG ExceptionCount;

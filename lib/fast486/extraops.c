@@ -86,9 +86,9 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
-    NULL, // TODO: OPCODE 0x30 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x31 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x32 NOT IMPLEMENTED
+    NULL, // Invalid
+    NULL, // Invalid
+    NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid

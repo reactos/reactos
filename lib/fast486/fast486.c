@@ -107,9 +107,6 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             /* This is a prefix, go to the next instruction immediately */
             continue;
         }
-
-        /* Increment the time stamp counter */
-        State->TimeStampCounter++;
     }
     while ((Command == FAST486_CONTINUE)
            || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
@@ -155,12 +152,10 @@ VOID
 NTAPI
 Fast486DumpState(PFAST486_STATE State)
 {
-    DPRINT1("\nCPU currently executing in %s mode at %04X:%08X\n"
-            "Time Stamp Counter = %016X\n",
+    DPRINT1("\nCPU currently executing in %s mode at %04X:%08X\n",
             (State->ControlRegisters[0] & FAST486_CR0_PE) ? "protected" : "real",
             State->SegmentRegs[FAST486_REG_CS].Selector,
-            State->InstPtr.Long,
-            State->TimeStampCounter);
+            State->InstPtr.Long);
     DPRINT1("\nGeneral purpose registers:\n"
             "EAX = %08X\tECX = %08X\tEDX = %08X\tEBX = %08X\n"
             "ESP = %08X\tEBP = %08X\tESI = %08X\tEDI = %08X\n",
