@@ -214,8 +214,8 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xAD NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAE NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAF NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB0 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB1 NOT IMPLEMENTED
+    Fast486ExtOpcodeCmpXchgByte,
+    Fast486ExtOpcodeCmpXchg,
     NULL, // TODO: OPCODE 0xB2 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xB3 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xB4 NOT IMPLEMENTED
@@ -336,6 +336,162 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodePopGs)
 
     /* Call the internal API */
     return Fast486LoadSegment(State, FAST486_REG_GS, LOWORD(NewSelector));
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    UCHAR Accumulator = State->GeneralRegs[FAST486_REG_EAX].LowByte;
+    UCHAR Source, Destination, Result;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;;
+
+    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Source, &Destination))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Compare AL with the destination */
+    Result = Accumulator - Destination;
+
+    /* Update the flags */
+    State->Flags.Cf = Accumulator < Destination;
+    State->Flags.Of = ((Accumulator & SIGN_FLAG_BYTE) != (Destination & SIGN_FLAG_BYTE))
+                      && ((Accumulator & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Fast486CalculateParity(Result);
+
+    if (State->Flags.Zf)
+    {
+        /* Load the source operand into the destination */
+        return Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Source);
+    }
+    else
+    {
+        /* Load the destination into AL */
+        State->GeneralRegs[FAST486_REG_EAX].LowByte = Destination;
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Source, Destination, Result;
+        ULONG Accumulator = State->GeneralRegs[FAST486_REG_EAX].Long;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Compare EAX with the destination */
+        Result = Accumulator - Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = Accumulator < Destination;
+        State->Flags.Of = ((Accumulator & SIGN_FLAG_LONG) != (Destination & SIGN_FLAG_LONG))
+                          && ((Accumulator & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        if (State->Flags.Zf)
+        {
+            /* Load the source operand into the destination */
+            return Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Source);
+        }
+        else
+        {
+            /* Load the destination into EAX */
+            State->GeneralRegs[FAST486_REG_EAX].Long = Destination;
+        }
+    }
+    else
+    {
+        USHORT Source, Destination, Result;
+        USHORT Accumulator = State->GeneralRegs[FAST486_REG_EAX].LowWord;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Compare AX with the destination */
+        Result = Accumulator - Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = Accumulator < Destination;
+        State->Flags.Of = ((Accumulator & SIGN_FLAG_WORD) != (Destination & SIGN_FLAG_WORD))
+                          && ((Accumulator & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        if (State->Flags.Zf)
+        {
+            /* Load the source operand into the destination */
+            return Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Source);
+        }
+        else
+        {
+            /* Load the destination into AX */
+            State->GeneralRegs[FAST486_REG_EAX].LowWord = Destination;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
+
 }
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
