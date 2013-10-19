@@ -163,7 +163,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Check DR values */
-    if (KiUserTrap(TrapFrame)
+    if (KiUserTrap(TrapFrame))
     {
         /* Check for active debugging */
         if (KeGetCurrentThread()->Header.DebugActive)
