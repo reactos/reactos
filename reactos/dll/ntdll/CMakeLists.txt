@@ -52,6 +52,7 @@ target_link_libraries(ntdll
                       rtl
                       ntdllsys
                       libcntpr
+                      uuid
                       ${PSEH_LIB})
 
 add_pch(ntdll include/ntdll.h)

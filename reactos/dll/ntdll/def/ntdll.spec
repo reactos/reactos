@@ -405,7 +405,7 @@
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long)
 ;@ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
 @ stdcall RtlAddRefActivationContext(ptr)
-;@ stdcall RtlAddRefMemoryStream
+@ stdcall RtlAddRefMemoryStream(ptr)
 @ stdcall RtlAddVectoredContinueHandler(long ptr)
 @ stdcall RtlAddVectoredExceptionHandler(long ptr)
 ;@ stdcall RtlAddressInSectionTable
@@ -440,8 +440,8 @@
 @ stdcall RtlCheckRegistryKey(long ptr)
 @ stdcall RtlClearAllBits(ptr)
 @ stdcall RtlClearBits(ptr long long)
-;@ stdcall RtlCloneMemoryStream
-;@ stdcall RtlCommitMemoryStream
+@ stdcall RtlCloneMemoryStream(ptr ptr)
+@ stdcall RtlCommitMemoryStream(ptr long)
 @ stdcall RtlCompactHeap(long long)
 @ stdcall RtlCompareMemory(ptr ptr long)
 @ stdcall RtlCompareMemoryUlong(ptr long long)
@@ -464,8 +464,8 @@
 @ stdcall RtlCopyLuid(ptr ptr)
 @ stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
 ;@ stdcall RtlCopyMappedMemory
-;@ stdcall RtlCopyMemoryStreamTo
-;@ stdcall RtlCopyOutOfProcessMemoryStreamTo
+@ stdcall RtlCopyMemoryStreamTo(ptr ptr int64 ptr ptr)
+@ stdcall RtlCopyOutOfProcessMemoryStreamTo(ptr ptr int64 ptr ptr) RtlCopyMemoryStreamTo
 ;@ stdcall RtlCopyRangeList ; 5.0 and 5.1 only
 @ stdcall RtlCopySecurityDescriptor(ptr ptr)
 @ stdcall RtlCopySid(long ptr ptr)
@@ -571,7 +571,7 @@
 @ stdcall -arch=win32 -ret64 RtlExtendedMagicDivide(double double long)
 @ stdcall RtlFillMemory(ptr long long)
 @ stdcall RtlFillMemoryUlong(ptr long long)
-;@ stdcall RtlFinalReleaseOutOfProcessMemoryStream
+@ stdcall RtlFinalReleaseOutOfProcessMemoryStream(ptr)
 @ stdcall RtlFindActivationContextSectionGuid(long ptr long ptr ptr)
 @ stdcall RtlFindActivationContextSectionString(long ptr long ptr ptr)
 @ stdcall RtlFindCharInUnicodeString(long ptr ptr ptr)
@@ -658,9 +658,9 @@
 @ stdcall RtlInitAnsiString(ptr str)
 @ stdcall RtlInitAnsiStringEx(ptr str)
 @ stdcall RtlInitCodePageTable(ptr ptr)
-;@ stdcall RtlInitMemoryStream
+@ stdcall RtlInitMemoryStream(ptr)
 @ stdcall RtlInitNlsTables(ptr ptr ptr ptr)
-;@ stdcall RtlInitOutOfProcessMemoryStream
+@ stdcall RtlInitOutOfProcessMemoryStream(ptr)
 @ stdcall RtlInitString(ptr str)
 @ stdcall RtlInitUnicodeString(ptr wstr)
 @ stdcall RtlInitUnicodeStringEx(ptr wstr)
@@ -735,7 +735,7 @@
 @ stdcall RtlLocalTimeToSystemTime(ptr ptr)
 @ stdcall RtlLockBootStatusData(ptr)
 @ stdcall RtlLockHeap(long)
-;@ stdcall RtlLockMemoryStreamRegion
+@ stdcall RtlLockMemoryStreamRegion(ptr int64 int64 long)
 ;@ stdcall RtlLogStackBackTrace
 @ stdcall RtlLookupAtomInAtomTable(ptr wstr ptr)
 @ stdcall RtlLookupElementGenericTable(ptr ptr)
@@ -781,7 +781,7 @@
 @ stdcall RtlQueryInformationAcl(ptr ptr long long)
 @ stdcall RtlQueryInformationActivationContext(long long ptr long ptr long ptr)
 @ stdcall RtlQueryInformationActiveActivationContext(long ptr long ptr)
-;@ stdcall RtlQueryInterfaceMemoryStream
+@ stdcall RtlQueryInterfaceMemoryStream(ptr ptr ptr)
 ;@ stdcall RtlQueryProcessBackTraceInformation
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
 ;@ stdcall RtlQueryProcessHeapInformation
@@ -800,14 +800,14 @@
 @ stdcall RtlRandom(ptr)
 @ stdcall RtlRandomEx(ptr)
 @ stdcall RtlReAllocateHeap(long long ptr long)
-;@ stdcall RtlReadMemoryStream
-;@ stdcall RtlReadOutOfProcessMemoryStream
+@ stdcall RtlReadMemoryStream(ptr ptr long ptr)
+@ stdcall RtlReadOutOfProcessMemoryStream(ptr ptr long ptr)
 @ stdcall RtlRealPredecessor(ptr)
 @ stdcall RtlRealSuccessor(ptr)
 @ stdcall RtlRegisterSecureMemoryCacheCallback(ptr)
 @ stdcall RtlRegisterWait(ptr ptr ptr ptr long long)
 @ stdcall RtlReleaseActivationContext(ptr)
-;@ stdcall RtlReleaseMemoryStream
+@ stdcall RtlReleaseMemoryStream(ptr)
 @ stdcall RtlReleasePebLock()
 @ stdcall RtlReleasePrivilege(ptr)
 @ stdcall RtlReleaseRelativeName(ptr)
@@ -820,12 +820,12 @@
 @ stdcall RtlResetRtlTranslations(ptr)
 @ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr)
 @ stdcall RtlRestoreLastWin32Error(long) RtlSetLastWin32Error
-;@ stdcall RtlRevertMemoryStream
+@ stdcall RtlRevertMemoryStream(ptr)
 @ stdcall RtlRunDecodeUnicodeString(long ptr)
 @ stdcall RtlRunEncodeUnicodeString(long ptr)
 @ stdcall RtlSecondsSince1970ToTime(long ptr)
 @ stdcall RtlSecondsSince1980ToTime(long ptr)
-;@ stdcall RtlSeekMemoryStream
+@ stdcall RtlSeekMemoryStream(ptr int64 long ptr)
 @ stdcall RtlSelfRelativeToAbsoluteSD2(ptr ptr)
 @ stdcall RtlSelfRelativeToAbsoluteSD(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlSetAllBits(ptr)
@@ -844,7 +844,7 @@
 @ stdcall RtlSetIoCompletionCallback(long ptr long)
 @ stdcall RtlSetLastWin32Error(long)
 @ stdcall RtlSetLastWin32ErrorAndNtStatusFromNtStatus(long)
-;@ stdcall RtlSetMemoryStreamSize
+@ stdcall RtlSetMemoryStreamSize(ptr int64)
 @ stdcall RtlSetOwnerSecurityDescriptor(ptr ptr long)
 @ stdcall RtlSetProcessIsCritical(long ptr long)
 ;@ stdcall RtlSetProperties ; RtlSetProperties
@@ -869,7 +869,7 @@
 @ stdcall RtlSleepConditionVariableSRW(ptr ptr ptr long)
 @ stdcall RtlSplay(ptr)
 ;@ stdcall RtlStartRXact
-;@ stdcall RtlStatMemoryStream
+@ stdcall RtlStatMemoryStream(ptr ptr long)
 @ stdcall RtlStringFromGUID(ptr ptr)
 @ stdcall RtlSubAuthorityCountSid(ptr)
 @ stdcall RtlSubAuthoritySid(ptr long)
@@ -907,7 +907,7 @@
 @ stdcall RtlUniform(ptr)
 @ stdcall RtlUnlockBootStatusData(ptr)
 @ stdcall RtlUnlockHeap(long)
-;@ stdcall RtlUnlockMemoryStreamRegion
+@ stdcall RtlUnlockMemoryStreamRegion(ptr int64 int64 long)
 @ stdcall -register RtlUnwind(ptr ptr ptr ptr)
 @ stdcall -arch=x86_64 RtlUnwindEx(long long ptr long ptr)
 @ stdcall RtlUpcaseUnicodeChar(long)
@@ -938,7 +938,7 @@
 @ stdcall RtlWow64EnableFsRedirectionEx(long ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
-;@ stdcall RtlWriteMemoryStream
+@ stdcall RtlWriteMemoryStream(ptr ptr long ptr)
 @ stdcall RtlWriteRegistryValue(long ptr ptr long ptr long)
 @ stdcall RtlZeroHeap(ptr long)
 @ stdcall RtlZeroMemory(ptr long)
