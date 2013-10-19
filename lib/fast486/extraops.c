@@ -182,22 +182,22 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
-    NULL, // TODO: OPCODE 0x90 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x91 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x92 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x93 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x94 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x95 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x96 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x97 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x98 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x99 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9A NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9B NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9C NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9D NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9E NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x9F NOT IMPLEMENTED
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
+    Fast486ExtOpcodeConditionalSet,
     NULL, // TODO: OPCODE 0xA0 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xA1 NOT IMPLEMENTED
     NULL, // Invalid

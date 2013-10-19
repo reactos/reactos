@@ -24,6 +24,7 @@
 
 /* DEFINES ********************************************************************/
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet);
 FAST486_OPCODE_HANDLER(Fast486OpcodeExtended);
 
 #endif // _EXTRAOPS_H_
