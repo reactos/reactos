@@ -1050,6 +1050,14 @@ KiCallUserMode(
     IN PULONG OutputLength
 );
 
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiCallbackReturn(
+    IN PVOID Stack,
+    IN NTSTATUS Status
+);
+
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
