@@ -241,6 +241,7 @@ ENDM
 #define KI_EXIT_RET           HEX(080)
 #define KI_EXIT_IRET          HEX(100)
 #define KI_EDITED_FRAME       HEX(200)
+#define KI_EXIT_RET8          HEX(400)
 #define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
 
 MACRO(KiTrapExitStub, Name, Flags)
@@ -248,15 +249,15 @@ MACRO(KiTrapExitStub, Name, Flags)
 PUBLIC @&Name&@4
 @&Name&@4:
 
-    if (Flags AND KI_RESTORE_EFLAGS)
-
-        /* We will pop EFlags off the stack */
-        OffsetEsp = KTRAP_FRAME_EFLAGS
-
-    elseif (Flags AND KI_EXIT_IRET)
+    if (Flags AND KI_EXIT_RET8) OR (Flags AND KI_EXIT_IRET)
 
         /* This is the IRET frame */
         OffsetEsp = KTRAP_FRAME_EIP
+
+    elseif (Flags AND KI_RESTORE_EFLAGS)
+
+        /* We will pop EFlags off the stack */
+        OffsetEsp = KTRAP_FRAME_EFLAGS
 
     else
 
@@ -335,6 +336,13 @@ PUBLIC @&Name&@4
 
     if (Flags AND KI_RESTORE_EFLAGS)
 
+        if (Flags AND KI_EXIT_RET8)
+
+            /* We are at the IRET frame, so push EFLAGS first */
+            push dword ptr [esp + 8]
+
+        endif
+
         /* Restore EFLAGS */
         popfd
 
@@ -356,6 +364,11 @@ PUBLIC @&Name&@4
 
         /* Return to kernel mode with a jmp */
         jmp edx
+
+    elseif (Flags AND KI_EXIT_RET8)
+
+        /* Return to kernel mode with a ret 8 */
+        ret 8
 
     elseif (Flags AND KI_EXIT_RET)
 

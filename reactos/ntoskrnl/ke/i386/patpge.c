@@ -20,9 +20,9 @@
 ULONG_PTR
 NTAPI
 INIT_FUNCTION
-Ki386EnableGlobalPage(IN volatile ULONG_PTR Context)
+Ki386EnableGlobalPage(IN ULONG_PTR Context)
 {
-    volatile PLONG Count = (PLONG)Context;
+    PLONG Count = (PLONG)Context;
     ULONG Cr4, Cr3;
 
     /* Disable interrupts */
@@ -144,7 +144,7 @@ Ki386IdentityMapMakeValid(PLARGE_IDENTITY_MAP IdentityMap,
         if (PageTable)
             *PageTable = (PHARDWARE_PTE)(Pde->PageFrameNumber << PAGE_SHIFT);
     }
-    
+
     return TRUE;
 }
 
@@ -172,7 +172,7 @@ Ki386MapAddress(PLARGE_IDENTITY_MAP IdentityMap,
     /* Get PTE of VirtualPtr, make it valid, and map PhysicalPtr there */
     Pte = &PageTable[(VirtualPtr >> 12) & ((1 << PTE_BITS) - 1)];
     Pte->Valid = 1;
-    Pte->PageFrameNumber = PhysicalPtr.QuadPart >> PAGE_SHIFT;
+    Pte->PageFrameNumber = (PFN_NUMBER)(PhysicalPtr.QuadPart >> PAGE_SHIFT);
 
     return TRUE;
 }
@@ -189,7 +189,7 @@ Ki386ConvertPte(PHARDWARE_PTE Pte)
     PhysicalPtr = MmGetPhysicalAddress(VirtualPtr);
 
     /* Map its physical address in the page table provided by the caller */
-    Pte->PageFrameNumber = PhysicalPtr.QuadPart >> PAGE_SHIFT;
+    Pte->PageFrameNumber = (PFN_NUMBER)(PhysicalPtr.QuadPart >> PAGE_SHIFT);
 }
 
 BOOLEAN

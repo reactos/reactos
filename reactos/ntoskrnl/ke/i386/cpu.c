@@ -1535,7 +1535,7 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
     if (TargetAffinity)
     {
         /* Sanity check */
-        ASSERT(Prcb == (volatile PKPRCB)KeGetCurrentPrcb());
+        ASSERT(Prcb == KeGetCurrentPrcb());
 
         /* FIXME: TODO */
         ASSERTMSG("Not yet implemented\n", FALSE);

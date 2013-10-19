@@ -383,13 +383,13 @@ KeI386VdmInitialize(
 ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(
-    IN volatile ULONG_PTR Context
+    IN ULONG_PTR Context
 );
 
 ULONG_PTR
 NTAPI
 Ki386EnableTargetLargePage(
-    IN volatile ULONG_PTR Context
+    IN ULONG_PTR Context
 );
 
 BOOLEAN

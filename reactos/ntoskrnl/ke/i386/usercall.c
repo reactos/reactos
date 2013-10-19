@@ -67,7 +67,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     _SEH2_TRY
     {
         /* Sanity check */
-        ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
+        ASSERT(KiUserTrap(TrapFrame));
 
         /* Get the aligned size */
         AlignedEsp = Context.Esp & ~3;
@@ -210,7 +210,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 }
 
 
-/* 
+/*
  * Stack layout for KiUserModeCallout:
  * ----------------------------------
  * KCALLOUT_FRAME.ResultLength    <= 2nd Parameter to KiCallUserMode
