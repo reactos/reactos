@@ -198,16 +198,16 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
-    NULL, // TODO: OPCODE 0xA0 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xA1 NOT IMPLEMENTED
+    Fast486ExtOpcodePushFs,
+    Fast486ExtOpcodePopFs,
     NULL, // Invalid
     NULL, // TODO: OPCODE 0xA3 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xA4 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xA5 NOT IMPLEMENTED
     NULL, // Invalid
     NULL, // Invalid
-    NULL, // TODO: OPCODE 0xA8 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xA9 NOT IMPLEMENTED
+    Fast486ExtOpcodePushGs,
+    Fast486ExtOpcodePopGs,
     NULL, // TODO: OPCODE 0xAA NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAB NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAC NOT IMPLEMENTED
@@ -297,6 +297,46 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushFs)
+{
+    /* Call the internal API */
+    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_FS].Selector);
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodePopFs)
+{
+    ULONG NewSelector;
+
+    if (!Fast486StackPop(State, &NewSelector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Fast486LoadSegment(State, FAST486_REG_FS, LOWORD(NewSelector));
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushGs)
+{
+    /* Call the internal API */
+    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_GS].Selector);
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodePopGs)
+{
+    ULONG NewSelector;
+
+    if (!Fast486StackPop(State, &NewSelector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Fast486LoadSegment(State, FAST486_REG_GS, LOWORD(NewSelector));
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
 {
