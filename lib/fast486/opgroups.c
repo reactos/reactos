@@ -297,11 +297,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8082)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -342,17 +338,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -426,17 +413,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup83)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -505,17 +483,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -559,11 +528,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC0)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -607,17 +572,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC1)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -682,11 +638,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC6)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -721,17 +673,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC7)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -786,11 +729,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD0)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -823,18 +762,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD1)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -884,11 +813,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD2)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -924,17 +849,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD3)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -992,11 +908,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1131,17 +1043,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1386,11 +1289,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFE)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1446,17 +1345,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {

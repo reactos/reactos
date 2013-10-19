@@ -466,12 +466,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
@@ -505,12 +500,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-    
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
@@ -555,12 +545,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
     ULONG Value;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
@@ -579,13 +564,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeNop)
 {
-    if (State->PrefixFlags & ~(FAST486_PREFIX_OPSIZE | FAST486_PREFIX_REP))
-    {
-        /* Allowed prefixes are REP and OPSIZE */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
-
     if (State->PrefixFlags & FAST486_PREFIX_REP)
     {
         /* Idle cycle */
@@ -600,12 +578,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExchangeEax)
     INT Reg = Opcode & 0x07;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
@@ -952,12 +925,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF7) == 0xE5);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Opcode == 0xE5)
@@ -1047,12 +1015,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF7) == 0xE7);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Opcode == 0xE7)
@@ -1122,12 +1085,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovRegImm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF8) == 0xB8);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Size)
@@ -1206,20 +1164,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x00);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
-    else if (State->PrefixFlags
-             & ~(FAST486_PREFIX_ADSIZE
-             | FAST486_PREFIX_SEG
-             | FAST486_PREFIX_LOCK))
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1266,17 +1211,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1397,12 +1333,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
     ASSERT(Opcode == 0x05);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -1469,11 +1400,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x08);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1518,17 +1445,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1643,12 +1561,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
     ASSERT(Opcode == 0x0D);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -1711,11 +1624,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x20);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1760,17 +1669,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1880,12 +1780,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
     ASSERT(Opcode == 0x25);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -1948,11 +1843,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x30);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1997,17 +1888,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2122,12 +2004,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
     ASSERT(Opcode == 0x35);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -2190,11 +2067,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x84);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2235,17 +2108,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2349,12 +2213,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
     ASSERT(Opcode == 0xA9);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -2412,11 +2271,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x86);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2467,17 +2322,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2593,11 +2439,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x10);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2648,17 +2490,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2792,12 +2625,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
     ASSERT(Opcode == 0x15);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -2893,11 +2721,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x18);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2954,17 +2778,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3106,12 +2921,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
     ASSERT(Opcode == 0x1D);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -3235,11 +3045,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xED) == 0x28);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3304,17 +3110,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3475,12 +3272,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
     ASSERT((Opcode & 0xEF) == 0x2D);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -3649,12 +3441,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushAll)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x60);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Push all the registers in order */
@@ -3693,12 +3480,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x61);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Pop all the registers in reverse order */
@@ -3745,11 +3527,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
         return FALSE;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3797,12 +3575,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushImm)
     ASSERT(Opcode == 0x68);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -3844,17 +3617,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Fetch the parameters */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3981,11 +3745,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x88);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4024,17 +3784,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4100,17 +3851,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x8C);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4152,17 +3894,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4207,17 +3940,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x8E);
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the address size */
-        AddressSize = !AddressSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the operand size */
-        OperandSize = !OperandSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4267,12 +3991,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCwde)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x98);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Size)
@@ -4303,12 +4022,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCdq)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x99);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Size)
@@ -4338,12 +4052,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x9A);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Fetch the offset */
@@ -4412,12 +4121,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* This OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     /* Check for VM86 mode when IOPL is not 3 */
     if (State->Flags.Vm && (State->Flags.Iopl != 3))
@@ -4439,12 +4143,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     ULONG NewFlags;
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* This OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     /* Pop the new flags */
     if (!Fast486StackPop(State, &NewFlags))
@@ -4597,12 +4296,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
     ASSERT((Opcode & 0xFE) == 0xC2);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Opcode == 0xC2)
     {
@@ -4639,11 +4333,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -4735,12 +4425,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeEnter)
     ASSERT(Opcode == 0xC8);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (!Fast486FetchWord(State, &FrameSize))
     {
@@ -4799,12 +4484,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
     ASSERT(Opcode == 0xC9);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -4841,12 +4521,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xCA);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Opcode == 0xCA)
@@ -4966,12 +4641,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     ASSERT(Opcode == 0xCF);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     /* Pop EIP */
     if (!Fast486StackPop(State, &InstPtr))
@@ -5234,11 +4904,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
     UCHAR Value;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Read a byte from DS:[(E)BX + AL] */
     if (!Fast486ReadMemory(State,
@@ -5271,12 +4937,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
     ASSERT((Opcode >= 0xE0) && (Opcode <= 0xE2));
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size) Condition = ((--State->GeneralRegs[FAST486_REG_ECX].Long) != 0);
     else Condition = ((--State->GeneralRegs[FAST486_REG_ECX].LowWord) != 0);
@@ -5319,12 +4980,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
     ASSERT(Opcode == 0xE3);
 
     NO_LOCK_PREFIX();
-
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size) Condition = (State->GeneralRegs[FAST486_REG_ECX].Long == 0);
     else Condition = (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0);
@@ -5352,12 +5008,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xE8);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Size)
@@ -5413,12 +5064,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xE9);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     if (Size)
@@ -5462,12 +5108,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xEA);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
+    TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
 
     /* Fetch the offset */
@@ -5517,11 +5158,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA0);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -5561,11 +5198,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA1);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -5615,11 +5248,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetAl)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA2);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -5658,11 +5287,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA3);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
@@ -5726,17 +5351,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xA4);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (State->PrefixFlags & FAST486_PREFIX_SEG)
     {
@@ -5920,17 +5536,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xA6);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (State->PrefixFlags & FAST486_PREFIX_SEG)
     {
@@ -6065,17 +5672,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xAA);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Calculate the size */
     if (Opcode == 0xAA) DataSize = sizeof(UCHAR);
@@ -6205,17 +5803,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xAC);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     if (State->PrefixFlags & FAST486_PREFIX_SEG)
     {
@@ -6290,17 +5879,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0xAE);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Calculate the size */
     if (Opcode == 0xAE) DataSize = sizeof(UCHAR);
@@ -6400,17 +5980,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0x6C);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Calculate the size */
     if (Opcode == 0x6C) DataSize = sizeof(UCHAR);
@@ -6548,17 +6119,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFE) == 0x6E);
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Calculate the size */
     if (Opcode == 0x6E) DataSize = sizeof(UCHAR);

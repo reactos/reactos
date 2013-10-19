@@ -46,6 +46,14 @@
     Fast486Exception(State, FAST486_EXCEPTION_UD);\
     return FALSE;\
 }
+#define TOGGLE_OPSIZE(x) if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)\
+{\
+    x = !x;\
+}
+#define TOGGLE_ADSIZE(x) if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)\
+{\
+    x = !x;\
+}
 
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)
 #define PAGE_OFFSET(x)  ((x) & 0x00000FFF)

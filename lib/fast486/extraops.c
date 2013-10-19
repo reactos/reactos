@@ -345,11 +345,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte)
     UCHAR Source, Destination, Result;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -399,17 +395,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        OperandSize = !OperandSize;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The ADSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -500,18 +487,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
     LONG Offset = 0;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-
-    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
-    {
-        /* Invalid prefix */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    TOGGLE_OPSIZE(Size);
+    NO_LOCK_PREFIX();
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF0) == 0x80);
@@ -620,11 +597,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet)
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
 
-    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        AddressSize = !AddressSize;
-    }
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
