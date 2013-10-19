@@ -17,7 +17,7 @@
 #include <softx86.h>
 #include <softx87.h>
 #else
-#include <soft386.h>
+#include <fast486.h>
 #endif
 
 /* DEFINES ********************************************************************/
@@ -94,7 +94,7 @@ extern softx87_ctx FpuEmulatorContext;
 #else
 
 #define NTVDMCALL __stdcall
-extern SOFT386_STATE EmulatorContext;
+extern FAST486_STATE EmulatorContext;
 
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * Soft386 386/486 CPU Emulation Library
+ * Fast486 386/486 CPU Emulation Library
  * common.inl
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -23,42 +23,42 @@
 
 FORCEINLINE
 VOID
-Soft386Exception(PSOFT386_STATE State,
-                 SOFT386_EXCEPTIONS ExceptionCode)
+Fast486Exception(PFAST486_STATE State,
+                 FAST486_EXCEPTIONS ExceptionCode)
 {
     /* Call the internal function */
-    Soft386ExceptionWithErrorCode(State, ExceptionCode, 0);
+    Fast486ExceptionWithErrorCode(State, ExceptionCode, 0);
 }
 
 FORCEINLINE
 BOOLEAN
-Soft386StackPush(PSOFT386_STATE State,
+Fast486StackPush(PFAST486_STATE State,
                  ULONG Value)
 {
-    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
 
     /* The OPSIZE prefix toggles the size */
-    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE) Size = !Size;
+    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE) Size = !Size;
 
     if (Size)
     {
         /* 32-bit size */
 
         /* Check if ESP is between 1 and 3 */
-        if (State->GeneralRegs[SOFT386_REG_ESP].Long >= 1
-            && State->GeneralRegs[SOFT386_REG_ESP].Long <= 3)
+        if (State->GeneralRegs[FAST486_REG_ESP].Long >= 1
+            && State->GeneralRegs[FAST486_REG_ESP].Long <= 3)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_SS);
+            Fast486Exception(State, FAST486_EXCEPTION_SS);
             return FALSE;
         }
 
         /* Subtract ESP by 4 */
-        State->GeneralRegs[SOFT386_REG_ESP].Long -= 4;
+        State->GeneralRegs[FAST486_REG_ESP].Long -= 4;
 
         /* Store the value in SS:ESP */
-        return Soft386WriteMemory(State,
-                                  SOFT386_REG_SS,
-                                  State->GeneralRegs[SOFT386_REG_ESP].Long,
+        return Fast486WriteMemory(State,
+                                  FAST486_REG_SS,
+                                  State->GeneralRegs[FAST486_REG_ESP].Long,
                                   &Value,
                                   sizeof(ULONG));
     }
@@ -68,19 +68,19 @@ Soft386StackPush(PSOFT386_STATE State,
         USHORT ShortValue = LOWORD(Value);
 
         /* Check if SP is 1 */
-        if (State->GeneralRegs[SOFT386_REG_ESP].Long == 1)
+        if (State->GeneralRegs[FAST486_REG_ESP].Long == 1)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_SS);
+            Fast486Exception(State, FAST486_EXCEPTION_SS);
             return FALSE;
         }
 
         /* Subtract SP by 2 */
-        State->GeneralRegs[SOFT386_REG_ESP].LowWord -= 2;
+        State->GeneralRegs[FAST486_REG_ESP].LowWord -= 2;
 
         /* Store the value in SS:SP */
-        return Soft386WriteMemory(State,
-                                  SOFT386_REG_SS,
-                                  State->GeneralRegs[SOFT386_REG_ESP].LowWord,
+        return Fast486WriteMemory(State,
+                                  FAST486_REG_SS,
+                                  State->GeneralRegs[FAST486_REG_ESP].LowWord,
                                   &ShortValue,
                                   sizeof(USHORT));
     }
@@ -88,31 +88,31 @@ Soft386StackPush(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386StackPop(PSOFT386_STATE State,
+Fast486StackPop(PFAST486_STATE State,
                 PULONG Value)
 {
     ULONG LongValue;
     USHORT ShortValue;
-    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
 
     /* The OPSIZE prefix toggles the size */
-    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE) Size = !Size;
+    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE) Size = !Size;
 
     if (Size)
     {
         /* 32-bit size */
 
         /* Check if ESP is 0xFFFFFFFF */
-        if (State->GeneralRegs[SOFT386_REG_ESP].Long == 0xFFFFFFFF)
+        if (State->GeneralRegs[FAST486_REG_ESP].Long == 0xFFFFFFFF)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_SS);
+            Fast486Exception(State, FAST486_EXCEPTION_SS);
             return FALSE;
         }
 
         /* Read the value from SS:ESP */
-        if (!Soft386ReadMemory(State,
-                               SOFT386_REG_SS,
-                               State->GeneralRegs[SOFT386_REG_ESP].Long,
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_SS,
+                               State->GeneralRegs[FAST486_REG_ESP].Long,
                                FALSE,
                                &LongValue,
                                sizeof(LongValue)))
@@ -122,7 +122,7 @@ Soft386StackPop(PSOFT386_STATE State,
         }
 
         /* Increment ESP by 4 */
-        State->GeneralRegs[SOFT386_REG_ESP].Long += 4;
+        State->GeneralRegs[FAST486_REG_ESP].Long += 4;
 
         /* Store the value in the result */
         *Value = LongValue;
@@ -132,16 +132,16 @@ Soft386StackPop(PSOFT386_STATE State,
         /* 16-bit size */
 
         /* Check if SP is 0xFFFF */
-        if (State->GeneralRegs[SOFT386_REG_ESP].LowWord == 0xFFFF)
+        if (State->GeneralRegs[FAST486_REG_ESP].LowWord == 0xFFFF)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_SS);
+            Fast486Exception(State, FAST486_EXCEPTION_SS);
             return FALSE;
         }
 
         /* Read the value from SS:SP */
-        if (!Soft386ReadMemory(State,
-                               SOFT386_REG_SS,
-                               State->GeneralRegs[SOFT386_REG_ESP].LowWord,
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_SS,
+                               State->GeneralRegs[FAST486_REG_ESP].LowWord,
                                FALSE,
                                &ShortValue,
                                sizeof(ShortValue)))
@@ -151,7 +151,7 @@ Soft386StackPop(PSOFT386_STATE State,
         }
 
         /* Increment SP by 2 */
-        State->GeneralRegs[SOFT386_REG_ESP].Long += 2;
+        State->GeneralRegs[FAST486_REG_ESP].Long += 2;
 
         /* Store the value in the result */
         *Value = ShortValue;
@@ -162,25 +162,25 @@ Soft386StackPop(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386LoadSegment(PSOFT386_STATE State,
+Fast486LoadSegment(PFAST486_STATE State,
                    INT Segment,
                    USHORT Selector)
 {
-    PSOFT386_SEG_REG CachedDescriptor;
-    SOFT386_GDT_ENTRY GdtEntry;
+    PFAST486_SEG_REG CachedDescriptor;
+    FAST486_GDT_ENTRY GdtEntry;
 
-    ASSERT(Segment < SOFT386_NUM_SEG_REGS);
+    ASSERT(Segment < FAST486_NUM_SEG_REGS);
 
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[Segment];
 
     /* Check for protected mode */
-    if ((State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE) && !State->Flags.Vm)
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
         /* Make sure the GDT contains the entry */
         if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -202,43 +202,43 @@ Soft386LoadSegment(PSOFT386_STATE State,
                           sizeof(GdtEntry));
         }
 
-        if (Segment == SOFT386_REG_SS)
+        if (Segment == FAST486_REG_SS)
         {
             /* Loading the stack segment */
 
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (!GdtEntry.SystemType)
             {
                 /* This is a special descriptor */
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (GdtEntry.Executable || !GdtEntry.ReadWrite)
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
-            if ((GET_SEGMENT_RPL(Selector) != Soft386GetCurrentPrivLevel(State))
+            if ((GET_SEGMENT_RPL(Selector) != Fast486GetCurrentPrivLevel(State))
                 || (GET_SEGMENT_RPL(Selector) != GdtEntry.Dpl))
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_SS);
+                Fast486Exception(State, FAST486_EXCEPTION_SS);
                 return FALSE;
             }
         }
-        else if (Segment == SOFT386_REG_CS)
+        else if (Segment == FAST486_REG_CS)
         {
             /* Loading the code segment */
             // TODO: NOT IMPLEMENTED
@@ -250,20 +250,20 @@ Soft386LoadSegment(PSOFT386_STATE State,
             if (!GdtEntry.SystemType)
             {
                 /* This is a special descriptor */
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
             if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
-                && (Soft386GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+                && (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                Soft386Exception(State, SOFT386_EXCEPTION_NP);
+                Fast486Exception(State, FAST486_EXCEPTION_NP);
                 return FALSE;
             }
         }
@@ -296,17 +296,17 @@ Soft386LoadSegment(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386FetchByte(PSOFT386_STATE State,
+Fast486FetchByte(PFAST486_STATE State,
                  PUCHAR Data)
 {
-    PSOFT386_SEG_REG CachedDescriptor;
+    PFAST486_SEG_REG CachedDescriptor;
 
     /* Get the cached descriptor of CS */
-    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+    CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
     /* Read from memory */
-    if (!Soft386ReadMemory(State,
-                           SOFT386_REG_CS,
+    if (!Fast486ReadMemory(State,
+                           FAST486_REG_CS,
                            (CachedDescriptor->Size) ? State->InstPtr.Long
                                                     : State->InstPtr.LowWord,
                            TRUE,
@@ -326,18 +326,18 @@ Soft386FetchByte(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386FetchWord(PSOFT386_STATE State,
+Fast486FetchWord(PFAST486_STATE State,
                  PUSHORT Data)
 {
-    PSOFT386_SEG_REG CachedDescriptor;
+    PFAST486_SEG_REG CachedDescriptor;
 
     /* Get the cached descriptor of CS */
-    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+    CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
     /* Read from memory */
     // FIXME: Fix byte order on big-endian machines
-    if (!Soft386ReadMemory(State,
-                           SOFT386_REG_CS,
+    if (!Fast486ReadMemory(State,
+                           FAST486_REG_CS,
                            (CachedDescriptor->Size) ? State->InstPtr.Long
                                                     : State->InstPtr.LowWord,
                            TRUE,
@@ -357,18 +357,18 @@ Soft386FetchWord(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386FetchDword(PSOFT386_STATE State,
+Fast486FetchDword(PFAST486_STATE State,
                   PULONG Data)
 {
-    PSOFT386_SEG_REG CachedDescriptor;
+    PFAST486_SEG_REG CachedDescriptor;
 
     /* Get the cached descriptor of CS */
-    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+    CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
     /* Read from memory */
     // FIXME: Fix byte order on big-endian machines
-    if (!Soft386ReadMemory(State,
-                           SOFT386_REG_CS,
+    if (!Fast486ReadMemory(State,
+                           FAST486_REG_CS,
                            (CachedDescriptor->Size) ? State->InstPtr.Long
                                                     : State->InstPtr.LowWord,
                            TRUE,
@@ -388,14 +388,14 @@ Soft386FetchDword(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386GetIntVector(PSOFT386_STATE State,
+Fast486GetIntVector(PFAST486_STATE State,
                     UCHAR Number,
-                    PSOFT386_IDT_ENTRY IdtEntry)
+                    PFAST486_IDT_ENTRY IdtEntry)
 {
     ULONG FarPointer;
 
     /* Check for protected mode */
-    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Read from the IDT */
         // FIXME: This code is only correct when paging is disabled!!!
@@ -440,7 +440,7 @@ Soft386GetIntVector(PSOFT386_STATE State,
         IdtEntry->Offset = LOWORD(FarPointer);
         IdtEntry->Selector = HIWORD(FarPointer);
         IdtEntry->Zero = 0;
-        IdtEntry->Type = SOFT386_IDT_INT_GATE;
+        IdtEntry->Type = FAST486_IDT_INT_GATE;
         IdtEntry->Storage = FALSE;
         IdtEntry->Dpl = 0;
         IdtEntry->Present = TRUE;
@@ -456,21 +456,21 @@ Soft386GetIntVector(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386CalculateParity(UCHAR Number)
+Fast486CalculateParity(UCHAR Number)
 {
     return (0x9669 >> ((Number & 0x0F) ^ (Number >> 4))) & 1;
 }
 
 FORCEINLINE
 BOOLEAN
-Soft386ParseModRegRm(PSOFT386_STATE State,
+Fast486ParseModRegRm(PFAST486_STATE State,
                      BOOLEAN AddressSize,
-                     PSOFT386_MOD_REG_RM ModRegRm)
+                     PFAST486_MOD_REG_RM ModRegRm)
 {
     UCHAR ModRmByte, Mode, RegMem;
 
     /* Fetch the MOD REG R/M byte */
-    if (!Soft386FetchByte(State, &ModRmByte))
+    if (!Fast486FetchByte(State, &ModRmByte))
     {
         /* Exception occurred */
         return FALSE;
@@ -499,13 +499,13 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
 
     if (AddressSize)
     {
-        if (RegMem == SOFT386_REG_ESP)
+        if (RegMem == FAST486_REG_ESP)
         {
             UCHAR SibByte;
             ULONG Scale, Index, Base;
 
             /* Fetch the SIB byte */
-            if (!Soft386FetchByte(State, &SibByte))
+            if (!Fast486FetchByte(State, &SibByte))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -514,16 +514,16 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             /* Unpack the scale, index and base */
             Scale = 1 << (SibByte >> 6);
             Index = (SibByte >> 3) & 0x07;
-            if (Index != SOFT386_REG_ESP) Index = State->GeneralRegs[Index].Long;
+            if (Index != FAST486_REG_ESP) Index = State->GeneralRegs[Index].Long;
             else Index = 0;
             Base = State->GeneralRegs[SibByte & 0x07].Long;
 
             /* Calculate the address */
             ModRegRm->MemoryAddress = Base + Index * Scale;
         }
-        else if (RegMem == SOFT386_REG_EBP)
+        else if (RegMem == FAST486_REG_EBP)
         {
-            if (Mode) ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBP].Long;
+            if (Mode) ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].Long;
             else ModRegRm->MemoryAddress = 0;
         }
         else
@@ -533,14 +533,14 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
         }
 
         /* Check if there is no segment override */
-        if (!(State->PrefixFlags & SOFT386_PREFIX_SEG))
+        if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
         {
             /* Check if the default segment should be SS */
-            if ((RegMem == SOFT386_REG_EBP) && Mode)
+            if ((RegMem == FAST486_REG_EBP) && Mode)
             {
                 /* Add a SS: prefix */
-                State->PrefixFlags |= SOFT386_PREFIX_SEG;
-                State->SegmentOverride = SOFT386_REG_SS;
+                State->PrefixFlags |= FAST486_PREFIX_SEG;
+                State->SegmentOverride = FAST486_REG_SS;
             }
         }
 
@@ -549,7 +549,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             CHAR Offset;
             
             /* Fetch the byte */
-            if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+            if (!Fast486FetchByte(State, (PUCHAR)&Offset))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -558,12 +558,12 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             /* Add the signed offset to the address */
             ModRegRm->MemoryAddress += (LONG)Offset;
         }
-        else if ((Mode == 2) || ((Mode == 0) && (RegMem == SOFT386_REG_EBP)))
+        else if ((Mode == 2) || ((Mode == 0) && (RegMem == FAST486_REG_EBP)))
         {
             LONG Offset;
             
             /* Fetch the dword */
-            if (!Soft386FetchDword(State, (PULONG)&Offset))
+            if (!Fast486FetchDword(State, (PULONG)&Offset))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -582,8 +582,8 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             case 2:
             {
                 /* (SS:)[BX + SI] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord
-                                           + State->GeneralRegs[SOFT386_REG_ESI].LowWord;
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
+                                           + State->GeneralRegs[FAST486_REG_ESI].LowWord;
 
                 break;
             }
@@ -592,8 +592,8 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             case 3:
             {
                 /* (SS:)[BX + DI] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord
-                                           + State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
+                                           + State->GeneralRegs[FAST486_REG_EDI].LowWord;
 
                 break;
             }
@@ -601,7 +601,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             case 4:
             {
                 /* [SI] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_ESI].LowWord;
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_ESI].LowWord;
 
                 break;
             }
@@ -609,7 +609,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             case 5:
             {
                 /* [DI] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EDI].LowWord;
 
                 break;
             }
@@ -619,7 +619,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
                 if (Mode)
                 {
                     /* [BP] */
-                    ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBP].LowWord;
+                    ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].LowWord;
                 }
                 else
                 {
@@ -633,21 +633,21 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             case 7:
             {
                 /* [BX] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord;
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord;
 
                 break;
             }
         }
 
         /* Check if there is no segment override */
-        if (!(State->PrefixFlags & SOFT386_PREFIX_SEG))
+        if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
         {
             /* Check if the default segment should be SS */
             if ((RegMem == 2) || (RegMem == 3) || ((RegMem == 6) && Mode))
             {
                 /* Add a SS: prefix */
-                State->PrefixFlags |= SOFT386_PREFIX_SEG;
-                State->SegmentOverride = SOFT386_REG_SS;
+                State->PrefixFlags |= FAST486_PREFIX_SEG;
+                State->SegmentOverride = FAST486_REG_SS;
             }
         }
 
@@ -656,7 +656,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             CHAR Offset;
             
             /* Fetch the byte */
-            if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+            if (!Fast486FetchByte(State, (PUCHAR)&Offset))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -670,7 +670,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             SHORT Offset;
             
             /* Fetch the word */
-            if (!Soft386FetchWord(State, (PUSHORT)&Offset))
+            if (!Fast486FetchWord(State, (PUSHORT)&Offset))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -689,12 +689,12 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386ReadModrmByteOperands(PSOFT386_STATE State,
-                             PSOFT386_MOD_REG_RM ModRegRm,
+Fast486ReadModrmByteOperands(PFAST486_STATE State,
+                             PFAST486_MOD_REG_RM ModRegRm,
                              PUCHAR RegValue,
                              PUCHAR RmValue)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     /* Get the register value */
     if (ModRegRm->Register & 0x04)
@@ -725,14 +725,14 @@ Soft386ReadModrmByteOperands(PSOFT386_STATE State,
     else
     {
         /* Check for the segment override */
-        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        if (State->PrefixFlags & FAST486_PREFIX_SEG)
         {
             /* Use the override segment instead */
             Segment = State->SegmentOverride;
         }
 
         /* Read memory */
-        if (!Soft386ReadMemory(State,
+        if (!Fast486ReadMemory(State,
                                Segment,
                                ModRegRm->MemoryAddress,
                                FALSE,
@@ -749,12 +749,12 @@ Soft386ReadModrmByteOperands(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386ReadModrmWordOperands(PSOFT386_STATE State,
-                             PSOFT386_MOD_REG_RM ModRegRm,
+Fast486ReadModrmWordOperands(PFAST486_STATE State,
+                             PFAST486_MOD_REG_RM ModRegRm,
                              PUSHORT RegValue,
                              PUSHORT RmValue)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     /* Get the register value */
     *RegValue = State->GeneralRegs[ModRegRm->Register].LowWord;
@@ -767,14 +767,14 @@ Soft386ReadModrmWordOperands(PSOFT386_STATE State,
     else
     {
         /* Check for the segment override */
-        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        if (State->PrefixFlags & FAST486_PREFIX_SEG)
         {
             /* Use the override segment instead */
             Segment = State->SegmentOverride;
         }
 
         /* Read memory */
-        if (!Soft386ReadMemory(State,
+        if (!Fast486ReadMemory(State,
                                Segment,
                                ModRegRm->MemoryAddress,
                                FALSE,
@@ -791,12 +791,12 @@ Soft386ReadModrmWordOperands(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386ReadModrmDwordOperands(PSOFT386_STATE State,
-                              PSOFT386_MOD_REG_RM ModRegRm,
+Fast486ReadModrmDwordOperands(PFAST486_STATE State,
+                              PFAST486_MOD_REG_RM ModRegRm,
                               PULONG RegValue,
                               PULONG RmValue)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     /* Get the register value */
     *RegValue = State->GeneralRegs[ModRegRm->Register].Long;
@@ -809,14 +809,14 @@ Soft386ReadModrmDwordOperands(PSOFT386_STATE State,
     else
     {
         /* Check for the segment override */
-        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        if (State->PrefixFlags & FAST486_PREFIX_SEG)
         {
             /* Use the override segment instead */
             Segment = State->SegmentOverride;
         }
 
         /* Read memory */
-        if (!Soft386ReadMemory(State,
+        if (!Fast486ReadMemory(State,
                                Segment,
                                ModRegRm->MemoryAddress,
                                FALSE,
@@ -833,12 +833,12 @@ Soft386ReadModrmDwordOperands(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386WriteModrmByteOperands(PSOFT386_STATE State,
-                              PSOFT386_MOD_REG_RM ModRegRm,
+Fast486WriteModrmByteOperands(PFAST486_STATE State,
+                              PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
                               UCHAR Value)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     if (WriteRegister)
     {
@@ -873,14 +873,14 @@ Soft386WriteModrmByteOperands(PSOFT386_STATE State,
         else
         {
             /* Check for the segment override */
-            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
             {
                 /* Use the override segment instead */
                 Segment = State->SegmentOverride;
             }
 
             /* Write memory */
-            if (!Soft386WriteMemory(State,
+            if (!Fast486WriteMemory(State,
                                     Segment,
                                     ModRegRm->MemoryAddress,
                                     &Value,
@@ -897,12 +897,12 @@ Soft386WriteModrmByteOperands(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386WriteModrmWordOperands(PSOFT386_STATE State,
-                              PSOFT386_MOD_REG_RM ModRegRm,
+Fast486WriteModrmWordOperands(PFAST486_STATE State,
+                              PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
                               USHORT Value)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     if (WriteRegister)
     {
@@ -919,14 +919,14 @@ Soft386WriteModrmWordOperands(PSOFT386_STATE State,
         else
         {
             /* Check for the segment override */
-            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
             {
                 /* Use the override segment instead */
                 Segment = State->SegmentOverride;
             }
 
             /* Write memory */
-            if (!Soft386WriteMemory(State,
+            if (!Fast486WriteMemory(State,
                                     Segment,
                                     ModRegRm->MemoryAddress,
                                     &Value,
@@ -943,12 +943,12 @@ Soft386WriteModrmWordOperands(PSOFT386_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Soft386WriteModrmDwordOperands(PSOFT386_STATE State,
-                               PSOFT386_MOD_REG_RM ModRegRm,
+Fast486WriteModrmDwordOperands(PFAST486_STATE State,
+                               PFAST486_MOD_REG_RM ModRegRm,
                                BOOLEAN WriteRegister,
                                ULONG Value)
 {
-    SOFT386_SEG_REGS Segment = SOFT386_REG_DS;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     if (WriteRegister)
     {
@@ -965,14 +965,14 @@ Soft386WriteModrmDwordOperands(PSOFT386_STATE State,
         else
         {
             /* Check for the segment override */
-            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
             {
                 /* Use the override segment instead */
                 Segment = State->SegmentOverride;
             }
 
             /* Write memory */
-            if (!Soft386WriteMemory(State,
+            if (!Fast486WriteMemory(State,
                                     Segment,
                                     ModRegRm->MemoryAddress,
                                     &Value,

@@ -1,5 +1,5 @@
 /*
- * Soft386 386/486 CPU Emulation Library
+ * Fast486 386/486 CPU Emulation Library
  * extraops.h
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -23,8 +23,8 @@
 #define _EXTRAOPS_H_
 
 /* DEFINES ********************************************************************/
-SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp);
-SOFT386_OPCODE_HANDLER(Soft386OpcodeExtended);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp);
+FAST486_OPCODE_HANDLER(Fast486OpcodeExtended);
 
 #endif // _EXTRAOPS_H_
 

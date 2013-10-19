@@ -1,6 +1,6 @@
 /*
- * Soft386 386/486 CPU Emulation Library
- * soft386.c
+ * Fast486 386/486 CPU Emulation Library
+ * fast486.c
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
@@ -28,7 +28,7 @@
 // #define NDEBUG
 #include <debug.h>
 
-#include <soft386.h>
+#include <fast486.h>
 #include "common.h"
 #include "opcodes.h"
 
@@ -36,11 +36,11 @@
 
 typedef enum
 {
-    SOFT386_STEP_INTO,
-    SOFT386_STEP_OVER,
-    SOFT386_STEP_OUT,
-    SOFT386_CONTINUE
-} SOFT386_EXEC_CMD;
+    FAST486_STEP_INTO,
+    FAST486_STEP_OVER,
+    FAST486_STEP_OUT,
+    FAST486_CONTINUE
+} FAST486_EXEC_CMD;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -48,7 +48,7 @@ static
 inline
 VOID
 NTAPI
-Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
+Fast486ExecutionControl(PFAST486_STATE State, INT Command)
 {
     UCHAR Opcode;
     INT ProcedureCallCount = 0;
@@ -64,13 +64,13 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
             /* Check if interrupts are enabled and there is an interrupt pending */
             if (State->Flags.If && State->HardwareInt)
             {
-                SOFT386_IDT_ENTRY IdtEntry;
+                FAST486_IDT_ENTRY IdtEntry;
 
                 /* Get the interrupt vector */
-                if (Soft386GetIntVector(State, State->PendingIntNum, &IdtEntry))
+                if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
                 {
                     /* Perform the interrupt */
-                    Soft386InterruptInternal(State,
+                    Fast486InterruptInternal(State,
                                              IdtEntry.Selector,
                                              MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
                                              IdtEntry.Type);
@@ -82,22 +82,22 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
         }
 
         /* Perform an instruction fetch */
-        if (!Soft386FetchByte(State, &Opcode)) continue;
+        if (!Fast486FetchByte(State, &Opcode)) continue;
 
         // TODO: Check for CALL/RET to update ProcedureCallCount.
 
-        if (Soft386OpcodeHandlers[Opcode] != NULL)
+        if (Fast486OpcodeHandlers[Opcode] != NULL)
         {
             /* Call the opcode handler */
-            Soft386OpcodeHandlers[Opcode](State, Opcode);
+            Fast486OpcodeHandlers[Opcode](State, Opcode);
         }
         else
         {
             /* This is not a valid opcode */
-            Soft386Exception(State, SOFT386_EXCEPTION_UD);
+            Fast486Exception(State, FAST486_EXCEPTION_UD);
         }
 
-        if (Soft386OpcodeHandlers[Opcode] != Soft386OpcodePrefix)
+        if (Fast486OpcodeHandlers[Opcode] != Fast486OpcodePrefix)
         {
             /* A non-prefix opcode has been executed, reset the prefix flags */
             State->PrefixFlags = 0;
@@ -111,67 +111,67 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
         /* Increment the time stamp counter */
         State->TimeStampCounter++;
     }
-    while ((Command == SOFT386_CONTINUE)
-           || (Command == SOFT386_STEP_OVER && ProcedureCallCount > 0)
-           || (Command == SOFT386_STEP_OUT && ProcedureCallCount >= 0)
-           || (Soft386OpcodeHandlers[Opcode] == Soft386OpcodePrefix));
+    while ((Command == FAST486_CONTINUE)
+           || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
+           || (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0)
+           || (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix));
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
 NTAPI
-Soft386Continue(PSOFT386_STATE State)
+Fast486Continue(PFAST486_STATE State)
 {
     /* Call the internal function */
-    Soft386ExecutionControl(State, SOFT386_CONTINUE);
+    Fast486ExecutionControl(State, FAST486_CONTINUE);
 }
 
 VOID
 NTAPI
-Soft386StepInto(PSOFT386_STATE State)
+Fast486StepInto(PFAST486_STATE State)
 {
     /* Call the internal function */
-    Soft386ExecutionControl(State, SOFT386_STEP_INTO);
+    Fast486ExecutionControl(State, FAST486_STEP_INTO);
 }
 
 VOID
 NTAPI
-Soft386StepOver(PSOFT386_STATE State)
+Fast486StepOver(PFAST486_STATE State)
 {
     /* Call the internal function */
-    Soft386ExecutionControl(State, SOFT386_STEP_OVER);
+    Fast486ExecutionControl(State, FAST486_STEP_OVER);
 }
 
 VOID
 NTAPI
-Soft386StepOut(PSOFT386_STATE State)
+Fast486StepOut(PFAST486_STATE State)
 {
     /* Call the internal function */
-    Soft386ExecutionControl(State, SOFT386_STEP_OUT);
+    Fast486ExecutionControl(State, FAST486_STEP_OUT);
 }
 
 VOID
 NTAPI
-Soft386DumpState(PSOFT386_STATE State)
+Fast486DumpState(PFAST486_STATE State)
 {
     DPRINT1("\nCPU currently executing in %s mode at %04X:%08X\n"
             "Time Stamp Counter = %016X\n",
-            (State->ControlRegisters[0] & SOFT386_CR0_PE) ? "protected" : "real",
-            State->SegmentRegs[SOFT386_REG_CS].Selector,
+            (State->ControlRegisters[0] & FAST486_CR0_PE) ? "protected" : "real",
+            State->SegmentRegs[FAST486_REG_CS].Selector,
             State->InstPtr.Long,
             State->TimeStampCounter);
     DPRINT1("\nGeneral purpose registers:\n"
             "EAX = %08X\tECX = %08X\tEDX = %08X\tEBX = %08X\n"
             "ESP = %08X\tEBP = %08X\tESI = %08X\tEDI = %08X\n",
-            State->GeneralRegs[SOFT386_REG_EAX].Long,
-            State->GeneralRegs[SOFT386_REG_ECX].Long,
-            State->GeneralRegs[SOFT386_REG_EDX].Long,
-            State->GeneralRegs[SOFT386_REG_EBX].Long,
-            State->GeneralRegs[SOFT386_REG_ESP].Long,
-            State->GeneralRegs[SOFT386_REG_EBP].Long,
-            State->GeneralRegs[SOFT386_REG_ESI].Long,
-            State->GeneralRegs[SOFT386_REG_EDI].Long);
+            State->GeneralRegs[FAST486_REG_EAX].Long,
+            State->GeneralRegs[FAST486_REG_ECX].Long,
+            State->GeneralRegs[FAST486_REG_EDX].Long,
+            State->GeneralRegs[FAST486_REG_EBX].Long,
+            State->GeneralRegs[FAST486_REG_ESP].Long,
+            State->GeneralRegs[FAST486_REG_EBP].Long,
+            State->GeneralRegs[FAST486_REG_ESI].Long,
+            State->GeneralRegs[FAST486_REG_EDI].Long);
     DPRINT1("\nSegment registers:\n"
             "ES = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
             "CS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
@@ -179,30 +179,30 @@ Soft386DumpState(PSOFT386_STATE State)
             "DS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
             "FS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
             "GS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n",
-            State->SegmentRegs[SOFT386_REG_ES].Selector,
-            State->SegmentRegs[SOFT386_REG_ES].Base,
-            State->SegmentRegs[SOFT386_REG_ES].Limit,
-            State->SegmentRegs[SOFT386_REG_ES].Dpl,
-            State->SegmentRegs[SOFT386_REG_CS].Selector,
-            State->SegmentRegs[SOFT386_REG_CS].Base,
-            State->SegmentRegs[SOFT386_REG_CS].Limit,
-            State->SegmentRegs[SOFT386_REG_CS].Dpl,
-            State->SegmentRegs[SOFT386_REG_SS].Selector,
-            State->SegmentRegs[SOFT386_REG_SS].Base,
-            State->SegmentRegs[SOFT386_REG_SS].Limit,
-            State->SegmentRegs[SOFT386_REG_SS].Dpl,
-            State->SegmentRegs[SOFT386_REG_DS].Selector,
-            State->SegmentRegs[SOFT386_REG_DS].Base,
-            State->SegmentRegs[SOFT386_REG_DS].Limit,
-            State->SegmentRegs[SOFT386_REG_DS].Dpl,
-            State->SegmentRegs[SOFT386_REG_FS].Selector,
-            State->SegmentRegs[SOFT386_REG_FS].Base,
-            State->SegmentRegs[SOFT386_REG_FS].Limit,
-            State->SegmentRegs[SOFT386_REG_FS].Dpl,
-            State->SegmentRegs[SOFT386_REG_GS].Selector,
-            State->SegmentRegs[SOFT386_REG_GS].Base,
-            State->SegmentRegs[SOFT386_REG_GS].Limit,
-            State->SegmentRegs[SOFT386_REG_GS].Dpl);
+            State->SegmentRegs[FAST486_REG_ES].Selector,
+            State->SegmentRegs[FAST486_REG_ES].Base,
+            State->SegmentRegs[FAST486_REG_ES].Limit,
+            State->SegmentRegs[FAST486_REG_ES].Dpl,
+            State->SegmentRegs[FAST486_REG_CS].Selector,
+            State->SegmentRegs[FAST486_REG_CS].Base,
+            State->SegmentRegs[FAST486_REG_CS].Limit,
+            State->SegmentRegs[FAST486_REG_CS].Dpl,
+            State->SegmentRegs[FAST486_REG_SS].Selector,
+            State->SegmentRegs[FAST486_REG_SS].Base,
+            State->SegmentRegs[FAST486_REG_SS].Limit,
+            State->SegmentRegs[FAST486_REG_SS].Dpl,
+            State->SegmentRegs[FAST486_REG_DS].Selector,
+            State->SegmentRegs[FAST486_REG_DS].Base,
+            State->SegmentRegs[FAST486_REG_DS].Limit,
+            State->SegmentRegs[FAST486_REG_DS].Dpl,
+            State->SegmentRegs[FAST486_REG_FS].Selector,
+            State->SegmentRegs[FAST486_REG_FS].Base,
+            State->SegmentRegs[FAST486_REG_FS].Limit,
+            State->SegmentRegs[FAST486_REG_FS].Dpl,
+            State->SegmentRegs[FAST486_REG_GS].Selector,
+            State->SegmentRegs[FAST486_REG_GS].Base,
+            State->SegmentRegs[FAST486_REG_GS].Limit,
+            State->SegmentRegs[FAST486_REG_GS].Dpl);
     DPRINT1("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
             State->Flags.Long,
             State->Flags.Cf ? "CF" : "cf",
@@ -224,38 +224,38 @@ Soft386DumpState(PSOFT386_STATE State)
     DPRINT1("\nControl Registers:\n"
             "CR0 = %08X\tCR1 = %08X\tCR2 = %08X\tCR3 = %08X\n"
             "CR4 = %08X\tCR5 = %08X\tCR6 = %08X\tCR7 = %08X\n",
-            State->ControlRegisters[SOFT386_REG_CR0],
-            State->ControlRegisters[SOFT386_REG_CR1],
-            State->ControlRegisters[SOFT386_REG_CR2],
-            State->ControlRegisters[SOFT386_REG_CR3],
-            State->ControlRegisters[SOFT386_REG_CR4],
-            State->ControlRegisters[SOFT386_REG_CR5],
-            State->ControlRegisters[SOFT386_REG_CR6],
-            State->ControlRegisters[SOFT386_REG_CR7]);
+            State->ControlRegisters[FAST486_REG_CR0],
+            State->ControlRegisters[FAST486_REG_CR1],
+            State->ControlRegisters[FAST486_REG_CR2],
+            State->ControlRegisters[FAST486_REG_CR3],
+            State->ControlRegisters[FAST486_REG_CR4],
+            State->ControlRegisters[FAST486_REG_CR5],
+            State->ControlRegisters[FAST486_REG_CR6],
+            State->ControlRegisters[FAST486_REG_CR7]);
     DPRINT1("\nDebug Registers:\n"
             "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\tDR3 = %08X\n"
             "DR4 = %08X\tDR5 = %08X\tDR6 = %08X\tDR7 = %08X\n",
-            State->DebugRegisters[SOFT386_REG_DR0],
-            State->DebugRegisters[SOFT386_REG_DR1],
-            State->DebugRegisters[SOFT386_REG_DR2],
-            State->DebugRegisters[SOFT386_REG_DR3],
-            State->DebugRegisters[SOFT386_REG_DR4],
-            State->DebugRegisters[SOFT386_REG_DR5],
-            State->DebugRegisters[SOFT386_REG_DR6],
-            State->DebugRegisters[SOFT386_REG_DR7]);
+            State->DebugRegisters[FAST486_REG_DR0],
+            State->DebugRegisters[FAST486_REG_DR1],
+            State->DebugRegisters[FAST486_REG_DR2],
+            State->DebugRegisters[FAST486_REG_DR3],
+            State->DebugRegisters[FAST486_REG_DR4],
+            State->DebugRegisters[FAST486_REG_DR5],
+            State->DebugRegisters[FAST486_REG_DR6],
+            State->DebugRegisters[FAST486_REG_DR7]);
 }
 
 VOID
 NTAPI
-Soft386Reset(PSOFT386_STATE State)
+Fast486Reset(PFAST486_STATE State)
 {
     INT i;
-    SOFT386_MEM_READ_PROC MemReadCallback = State->MemReadCallback;
-    SOFT386_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;
-    SOFT386_IO_READ_PROC IoReadCallback = State->IoReadCallback;
-    SOFT386_IO_WRITE_PROC IoWriteCallback = State->IoWriteCallback;
-    SOFT386_IDLE_PROC IdleCallback = State->IdleCallback;
-    SOFT386_BOP_PROC BopCallback = State->BopCallback;
+    FAST486_MEM_READ_PROC MemReadCallback = State->MemReadCallback;
+    FAST486_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;
+    FAST486_IO_READ_PROC IoReadCallback = State->IoReadCallback;
+    FAST486_IO_WRITE_PROC IoWriteCallback = State->IoWriteCallback;
+    FAST486_IDLE_PROC IdleCallback = State->IdleCallback;
+    FAST486_BOP_PROC BopCallback = State->BopCallback;
 
     /* Clear the entire structure */
     RtlZeroMemory(State, sizeof(*State));
@@ -265,7 +265,7 @@ Soft386Reset(PSOFT386_STATE State)
     State->InstPtr.LowWord = 0xFFF0;
 
     /* Initialize segments */
-    for (i = 0; i < SOFT386_NUM_SEG_REGS; i++)
+    for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
     {
         /* Set the selector, base and limit, other values don't apply in real mode */
         State->SegmentRegs[i].Selector = 0;
@@ -274,15 +274,15 @@ Soft386Reset(PSOFT386_STATE State)
     }
 
     /* Initialize the code segment */
-    State->SegmentRegs[SOFT386_REG_CS].Selector = 0xF000;
-    State->SegmentRegs[SOFT386_REG_CS].Base = 0xFFFF0000;
+    State->SegmentRegs[FAST486_REG_CS].Selector = 0xF000;
+    State->SegmentRegs[FAST486_REG_CS].Base = 0xFFFF0000;
 
     /* Initialize the IDT */
     State->Idtr.Size = 0x3FF;
     State->Idtr.Address = 0;
 
     /* Initialize CR0 */
-    State->ControlRegisters[SOFT386_REG_CR0] |= SOFT386_CR0_ET;
+    State->ControlRegisters[FAST486_REG_CR0] |= FAST486_CR0_ET;
 
     /* Restore the callbacks */
     State->MemReadCallback = MemReadCallback;
@@ -295,7 +295,7 @@ Soft386Reset(PSOFT386_STATE State)
 
 VOID
 NTAPI
-Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
+Fast486Interrupt(PFAST486_STATE State, UCHAR Number)
 {
     /* Set the hardware interrupt flag */
     State->HardwareInt = TRUE;
@@ -304,10 +304,10 @@ Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
 
 VOID
 NTAPI
-Soft386ExecuteAt(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
+Fast486ExecuteAt(PFAST486_STATE State, USHORT Segment, ULONG Offset)
 {
     /* Load the new CS */
-    if (!Soft386LoadSegment(State, SOFT386_REG_CS, Segment))
+    if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
     {
         /* An exception occurred, let the handler execute instead */
         return;
@@ -319,27 +319,27 @@ Soft386ExecuteAt(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
 
 VOID
 NTAPI
-Soft386SetStack(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
+Fast486SetStack(PFAST486_STATE State, USHORT Segment, ULONG Offset)
 {
     /* Load the new SS */
-    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Segment))
+    if (!Fast486LoadSegment(State, FAST486_REG_SS, Segment))
     {
         /* An exception occurred, let the handler execute instead */
         return;
     }
 
     /* Set the new SP */
-    State->GeneralRegs[SOFT386_REG_ESP].Long = Offset;
+    State->GeneralRegs[FAST486_REG_ESP].Long = Offset;
 }
 
 VOID
 NTAPI
-Soft386SetSegment(PSOFT386_STATE State,
-                  SOFT386_SEG_REGS Segment,
+Fast486SetSegment(PFAST486_STATE State,
+                  FAST486_SEG_REGS Segment,
                   USHORT Selector)
 {
     /* Call the internal function */
-    Soft386LoadSegment(State, Segment, Selector);
+    Fast486LoadSegment(State, Segment, Selector);
 }
 
 /* EOF */

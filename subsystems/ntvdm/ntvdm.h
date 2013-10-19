@@ -27,8 +27,8 @@
 #define FAR_POINTER(x) ((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))
 #define STEPS_PER_CYCLE 256
 
-// Uncomment the following to use the new Soft386 CPU emulator (EXPERIMENTAL)
-// #define NEW_EMULATOR
+// Uncomment the following to use the new Fast486 CPU emulator (EXPERIMENTAL)
+#define NEW_EMULATOR
 
 /* FUNCTIONS ******************************************************************/
 

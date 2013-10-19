@@ -1,5 +1,5 @@
 /*
- * Soft386 386/486 CPU Emulation Library
+ * Fast486 386/486 CPU Emulation Library
  * extraops.c
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -28,15 +28,15 @@
 // #define NDEBUG
 #include <debug.h>
 
-#include <soft386.h>
+#include <fast486.h>
 #include "opcodes.h"
 #include "common.h"
 #include "extraops.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
 
-SOFT386_OPCODE_HANDLER_PROC
-Soft386ExtendedHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
+FAST486_OPCODE_HANDLER_PROC
+Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
     NULL, // TODO: OPCODE 0x00 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x01 NOT IMPLEMENTED
@@ -166,22 +166,22 @@ Soft386ExtendedHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x7D NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x7E NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x7F NOT IMPLEMENTED
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
-    Soft386ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalJmp,
     NULL, // TODO: OPCODE 0x90 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x91 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x92 NOT IMPLEMENTED
@@ -298,22 +298,22 @@ Soft386ExtendedHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp)
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
 {
     BOOLEAN Jump = FALSE;
     LONG Offset = 0;
-    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
     }
 
-    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    if (State->PrefixFlags & FAST486_PREFIX_LOCK)
     {
         /* Invalid prefix */
-        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
         return FALSE;
     }
 
@@ -323,7 +323,7 @@ SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp)
     /* Fetch the offset */
     if (Size)
     {
-        if (!Soft386FetchDword(State, (PULONG)&Offset))
+        if (!Fast486FetchDword(State, (PULONG)&Offset))
         {
             /* Exception occurred */
             return FALSE;
@@ -333,7 +333,7 @@ SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp)
     {
         SHORT Value;
 
-        if (!Soft386FetchWord(State, (PUSHORT)&Value))
+        if (!Fast486FetchWord(State, (PUSHORT)&Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -419,26 +419,26 @@ SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp)
 }
 
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeExtended)
+FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
 {
     UCHAR SecondOpcode;
 
     /* Fetch the second operation code */
-    if (!Soft386FetchByte(State, &SecondOpcode))
+    if (!Fast486FetchByte(State, &SecondOpcode))
     {
         /* Exception occurred */
         return FALSE;
     }
 
-    if (Soft386ExtendedHandlers[SecondOpcode] != NULL)
+    if (Fast486ExtendedHandlers[SecondOpcode] != NULL)
     {
         /* Call the extended opcode handler */
-        return Soft386ExtendedHandlers[SecondOpcode](State, SecondOpcode);
+        return Fast486ExtendedHandlers[SecondOpcode](State, SecondOpcode);
     }
     else
     {
         /* This is not a valid opcode */
-        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
         return FALSE;
     }
 }

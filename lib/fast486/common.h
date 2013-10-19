@@ -1,5 +1,5 @@
 /*
- * Soft386 386/486 CPU Emulation Library
+ * Fast486 386/486 CPU Emulation Library
  * common.h
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -48,20 +48,20 @@
 #define PAGE_SIZE   4096
 #endif
 
-typedef struct _SOFT386_MOD_REG_RM
+typedef struct _FAST486_MOD_REG_RM
 {
-    SOFT386_GEN_REGS Register;
+    FAST486_GEN_REGS Register;
     BOOLEAN Memory;
     union
     {
-        SOFT386_GEN_REGS SecondRegister;
+        FAST486_GEN_REGS SecondRegister;
         ULONG MemoryAddress;
     };
-} SOFT386_MOD_REG_RM, *PSOFT386_MOD_REG_RM;
+} FAST486_MOD_REG_RM, *PFAST486_MOD_REG_RM;
 
 #pragma pack(push, 1)
 
-typedef union _SOFT386_PAGE_DIR
+typedef union _FAST486_PAGE_DIR
 {
     struct
     {
@@ -77,9 +77,9 @@ typedef union _SOFT386_PAGE_DIR
         ULONG TableAddress  : 20;
     };
     ULONG Value;
-} SOFT386_PAGE_DIR, *PSOFT386_PAGE_DIR;
+} FAST486_PAGE_DIR, *PFAST486_PAGE_DIR;
 
-typedef union _SOFT386_PAGE_TABLE
+typedef union _FAST486_PAGE_TABLE
 {
     struct
     {
@@ -96,17 +96,17 @@ typedef union _SOFT386_PAGE_TABLE
         ULONG Address       : 20;
     };
     ULONG Value;
-} SOFT386_PAGE_TABLE, *PSOFT386_PAGE_TABLE;
+} FAST486_PAGE_TABLE, *PFAST486_PAGE_TABLE;
 
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
-Soft386ReadMemory
+Fast486ReadMemory
 (
-    PSOFT386_STATE State,
-    SOFT386_SEG_REGS SegmentReg,
+    PFAST486_STATE State,
+    FAST486_SEG_REGS SegmentReg,
     ULONG Offset,
     BOOLEAN InstFetch,
     PVOID Buffer,
@@ -114,19 +114,19 @@ Soft386ReadMemory
 );
 
 BOOLEAN
-Soft386WriteMemory
+Fast486WriteMemory
 (
-    PSOFT386_STATE State,
-    SOFT386_SEG_REGS SegmentReg,
+    PFAST486_STATE State,
+    FAST486_SEG_REGS SegmentReg,
     ULONG Offset,
     PVOID Buffer,
     ULONG Size
 );
 
 BOOLEAN
-Soft386InterruptInternal
+Fast486InterruptInternal
 (
-    PSOFT386_STATE State,
+    PFAST486_STATE State,
     USHORT SegmentSelector,
     ULONG Offset,
     BOOLEAN InterruptGate
@@ -134,10 +134,10 @@ Soft386InterruptInternal
 
 VOID
 FASTCALL
-Soft386ExceptionWithErrorCode
+Fast486ExceptionWithErrorCode
 (
-    PSOFT386_STATE State,
-    SOFT386_EXCEPTIONS ExceptionCode,
+    PFAST486_STATE State,
+    FAST486_EXCEPTIONS ExceptionCode,
     ULONG ErrorCode
 );
 
@@ -145,9 +145,9 @@ Soft386ExceptionWithErrorCode
 
 /* static */ FORCEINLINE
 INT
-Soft386GetCurrentPrivLevel(PSOFT386_STATE State)
+Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
-    return GET_SEGMENT_RPL(State->SegmentRegs[SOFT386_REG_CS].Selector);
+    return GET_SEGMENT_RPL(State->SegmentRegs[FAST486_REG_CS].Selector);
 }
 
 #include "common.inl"

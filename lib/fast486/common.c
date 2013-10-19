@@ -1,5 +1,5 @@
 /*
- * Soft386 386/486 CPU Emulation Library
+ * Fast486 386/486 CPU Emulation Library
  * common.c
  *
  * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -28,14 +28,14 @@
 // #define NDEBUG
 #include <debug.h>
 
-#include <soft386.h>
+#include <fast486.h>
 #include "common.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static inline
 ULONG
-Soft386GetPageTableEntry(PSOFT386_STATE State,
+Fast486GetPageTableEntry(PFAST486_STATE State,
                          ULONG VirtualAddress)
 {
     // TODO: NOT IMPLEMENTED
@@ -47,18 +47,18 @@ Soft386GetPageTableEntry(PSOFT386_STATE State,
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN
-Soft386ReadMemory(PSOFT386_STATE State,
-                  SOFT386_SEG_REGS SegmentReg,
+Fast486ReadMemory(PFAST486_STATE State,
+                  FAST486_SEG_REGS SegmentReg,
                   ULONG Offset,
                   BOOLEAN InstFetch,
                   PVOID Buffer,
                   ULONG Size)
 {
     ULONG LinearAddress;
-    PSOFT386_SEG_REG CachedDescriptor;
-    INT Cpl = Soft386GetCurrentPrivLevel(State);
+    PFAST486_SEG_REG CachedDescriptor;
+    INT Cpl = Fast486GetCurrentPrivLevel(State);
 
-    ASSERT(SegmentReg < SOFT386_NUM_SEG_REGS);
+    ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
@@ -66,25 +66,25 @@ Soft386ReadMemory(PSOFT386_STATE State,
     if ((Offset + Size - 1) > CachedDescriptor->Limit)
     {
         /* Read beyond limit */
-        Soft386Exception(State, SOFT386_EXCEPTION_GP);
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
 
         return FALSE;
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[0] & SOFT386_CR0_PE)
+    if (State->ControlRegisters[0] & FAST486_CR0_PE)
     {
         /* Privilege checks */
 
         if (!CachedDescriptor->Present)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_NP);
+            Fast486Exception(State, FAST486_EXCEPTION_NP);
             return FALSE;
         }
 
         if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -94,7 +94,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
             {
                 /* Data segment not executable */
 
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
         }
@@ -104,7 +104,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
             {
                 /* Code segment not readable */
 
-                Soft386Exception(State, SOFT386_EXCEPTION_GP);
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
         }
@@ -114,10 +114,10 @@ Soft386ReadMemory(PSOFT386_STATE State,
     LinearAddress = CachedDescriptor->Base + Offset;
 
     /* Check if paging is enabled */
-    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PG)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
     {
         ULONG Page;
-        SOFT386_PAGE_TABLE TableEntry;
+        FAST486_PAGE_TABLE TableEntry;
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -126,13 +126,13 @@ Soft386ReadMemory(PSOFT386_STATE State,
             ULONG PageOffset = 0, PageLength = PAGE_SIZE;
 
             /* Get the table entry */
-            TableEntry.Value = Soft386GetPageTableEntry(State, Page);
+            TableEntry.Value = Fast486GetPageTableEntry(State, Page);
 
             if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
             {
                 /* Exception */
-                Soft386ExceptionWithErrorCode(State,
-                                              SOFT386_EXCEPTION_PF,
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
                                               TableEntry.Value & 0x07);
                 return FALSE;
             }
@@ -188,17 +188,17 @@ Soft386ReadMemory(PSOFT386_STATE State,
 }
 
 BOOLEAN
-Soft386WriteMemory(PSOFT386_STATE State,
-                   SOFT386_SEG_REGS SegmentReg,
+Fast486WriteMemory(PFAST486_STATE State,
+                   FAST486_SEG_REGS SegmentReg,
                    ULONG Offset,
                    PVOID Buffer,
                    ULONG Size)
 {
     ULONG LinearAddress;
-    PSOFT386_SEG_REG CachedDescriptor;
-    INT Cpl = Soft386GetCurrentPrivLevel(State);
+    PFAST486_SEG_REG CachedDescriptor;
+    INT Cpl = Fast486GetCurrentPrivLevel(State);
 
-    ASSERT(SegmentReg < SOFT386_NUM_SEG_REGS);
+    ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
@@ -206,25 +206,25 @@ Soft386WriteMemory(PSOFT386_STATE State,
     if ((Offset + Size - 1) > CachedDescriptor->Limit)
     {
         /* Write beyond limit */
-        Soft386Exception(State, SOFT386_EXCEPTION_GP);
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
 
         return FALSE;
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[0] & SOFT386_CR0_PE)
+    if (State->ControlRegisters[0] & FAST486_CR0_PE)
     {
         /* Privilege checks */
 
         if (!CachedDescriptor->Present)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_NP);
+            Fast486Exception(State, FAST486_EXCEPTION_NP);
             return FALSE;
         }
 
         if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
-            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -232,14 +232,14 @@ Soft386WriteMemory(PSOFT386_STATE State,
         {
             /* Code segment not writable */
 
-            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
         else if (!CachedDescriptor->ReadWrite)
         {
             /* Data segment not writeable */
 
-            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
     }
@@ -248,10 +248,10 @@ Soft386WriteMemory(PSOFT386_STATE State,
     LinearAddress = CachedDescriptor->Base + Offset;
 
     /* Check if paging is enabled */
-    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PG)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
     {
         ULONG Page;
-        SOFT386_PAGE_TABLE TableEntry;
+        FAST486_PAGE_TABLE TableEntry;
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -260,15 +260,15 @@ Soft386WriteMemory(PSOFT386_STATE State,
             ULONG PageOffset = 0, PageLength = PAGE_SIZE;
 
             /* Get the table entry */
-            TableEntry.Value = Soft386GetPageTableEntry(State, Page);
+            TableEntry.Value = Fast486GetPageTableEntry(State, Page);
 
             if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
-                || ((State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_WP)
+                || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
                 && !TableEntry.Writeable))
             {
                 /* Exception */
-                Soft386ExceptionWithErrorCode(State,
-                                              SOFT386_EXCEPTION_PF,
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
                                               TableEntry.Value & 0x07);
                 return FALSE;
             }
@@ -324,20 +324,20 @@ Soft386WriteMemory(PSOFT386_STATE State,
 }
 
 BOOLEAN
-Soft386InterruptInternal(PSOFT386_STATE State,
+Fast486InterruptInternal(PFAST486_STATE State,
                          USHORT SegmentSelector,
                          ULONG Offset,
                          BOOLEAN InterruptGate)
 {
     /* Check for protected mode */
-    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
-        SOFT386_TSS Tss;
-        USHORT OldSs = State->SegmentRegs[SOFT386_REG_SS].Selector;
-        ULONG OldEsp = State->GeneralRegs[SOFT386_REG_ESP].Long;
+        FAST486_TSS Tss;
+        USHORT OldSs = State->SegmentRegs[FAST486_REG_SS].Selector;
+        ULONG OldEsp = State->GeneralRegs[FAST486_REG_ESP].Long;
 
         /* Check if the interrupt handler is more privileged */
-        if (Soft386GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
+        if (Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
         {
             /* Read the TSS */
             // FIXME: This code is only correct when paging is disabled!!!
@@ -358,36 +358,36 @@ Soft386InterruptInternal(PSOFT386_STATE State,
             {
                 case 0:
                 {
-                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss0))
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
                     {
                         /* Exception occurred */
                         return FALSE;
                     }
-                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp0;
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
 
                     break;
                 }
 
                 case 1:
                 {
-                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss1))
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
                     {
                         /* Exception occurred */
                         return FALSE;
                     }
-                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp1;
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
 
                     break;
                 }
 
                 case 2:
                 {
-                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss2))
+                    if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
                     {
                         /* Exception occurred */
                         return FALSE;
                     }
-                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp2;
+                    State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
 
                     break;
                 }
@@ -400,21 +400,21 @@ Soft386InterruptInternal(PSOFT386_STATE State,
             }
 
             /* Push SS selector */
-            if (!Soft386StackPush(State, OldSs)) return FALSE;
+            if (!Fast486StackPush(State, OldSs)) return FALSE;
 
             /* Push stack pointer */
-            if (!Soft386StackPush(State, OldEsp)) return FALSE;
+            if (!Fast486StackPush(State, OldEsp)) return FALSE;
         }
     }
 
     /* Push EFLAGS */
-    if (!Soft386StackPush(State, State->Flags.Long)) return FALSE;
+    if (!Fast486StackPush(State, State->Flags.Long)) return FALSE;
 
     /* Push CS selector */
-    if (!Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector)) return FALSE;
+    if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector)) return FALSE;
 
     /* Push the instruction pointer */
-    if (!Soft386StackPush(State, State->InstPtr.Long)) return FALSE;
+    if (!Fast486StackPush(State, State->InstPtr.Long)) return FALSE;
 
     if (InterruptGate)
     {
@@ -423,13 +423,13 @@ Soft386InterruptInternal(PSOFT386_STATE State,
     }
 
     /* Load new CS */
-    if (!Soft386LoadSegment(State, SOFT386_REG_CS, SegmentSelector))
+    if (!Fast486LoadSegment(State, FAST486_REG_CS, SegmentSelector))
     {
         /* An exception occurred during the jump */
         return FALSE;
     }
 
-    if (State->SegmentRegs[SOFT386_REG_CS].Size)
+    if (State->SegmentRegs[FAST486_REG_CS].Size)
     {
         /* 32-bit code segment, use EIP */
         State->InstPtr.Long = Offset;
@@ -445,11 +445,11 @@ Soft386InterruptInternal(PSOFT386_STATE State,
 
 VOID
 FASTCALL
-Soft386ExceptionWithErrorCode(PSOFT386_STATE State,
-                              SOFT386_EXCEPTIONS ExceptionCode,
+Fast486ExceptionWithErrorCode(PFAST486_STATE State,
+                              FAST486_EXCEPTIONS ExceptionCode,
                               ULONG ErrorCode)
 {
-    SOFT386_IDT_ENTRY IdtEntry;
+    FAST486_IDT_ENTRY IdtEntry;
 
     /* Increment the exception count */
     State->ExceptionCount++;
@@ -458,47 +458,47 @@ Soft386ExceptionWithErrorCode(PSOFT386_STATE State,
     if (State->ExceptionCount > 1)
     {
         /* Then this is a double fault */
-        ExceptionCode = SOFT386_EXCEPTION_DF;
+        ExceptionCode = FAST486_EXCEPTION_DF;
     }
 
     /* Check if this is a triple fault */
     if (State->ExceptionCount == 3)
     {
         /* Reset the CPU */
-        Soft386Reset(State);
+        Fast486Reset(State);
         return;
     }
 
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
-    if (!Soft386GetIntVector(State, ExceptionCode, &IdtEntry))
+    if (!Fast486GetIntVector(State, ExceptionCode, &IdtEntry))
     {
         /*
-         * If this function failed, that means Soft386Exception
+         * If this function failed, that means Fast486Exception
          * was called again, so just return in this case.
          */
         return;
     }
 
     /* Perform the interrupt */
-    if (!Soft386InterruptInternal(State,
+    if (!Fast486InterruptInternal(State,
                                   IdtEntry.Selector,
                                   MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
                                   IdtEntry.Type))
     {
         /*
-         * If this function failed, that means Soft386Exception
+         * If this function failed, that means Fast486Exception
          * was called again, so just return in this case.
          */
         return;
     }
 
     if (EXCEPTION_HAS_ERROR_CODE(ExceptionCode)
-        && (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE))
+        && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE))
     {
         /* Push the error code */
-        Soft386StackPush(State, ErrorCode);
+        Fast486StackPush(State, ErrorCode);
     }
 }
 

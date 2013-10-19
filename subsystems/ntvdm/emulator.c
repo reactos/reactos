@@ -24,7 +24,7 @@
 softx86_ctx EmulatorContext;
 softx87_ctx FpuEmulatorContext;
 #else
-SOFT386_STATE EmulatorContext;
+FAST486_STATE EmulatorContext;
 #endif
 
 static BOOLEAN A20Line = FALSE;
@@ -239,8 +239,8 @@ static VOID EmulatorBop(WORD Code)
     StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
     StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
 #else
-    StackSegment = EmulatorContext.SegmentRegs[SOFT386_REG_SS].Selector;
-    StackPointer = EmulatorContext.GeneralRegs[SOFT386_REG_ESP].LowWord;
+    StackSegment = EmulatorContext.SegmentRegs[FAST486_REG_SS].Selector;
+    StackPointer = EmulatorContext.GeneralRegs[FAST486_REG_ESP].LowWord;
 #endif
 
     /* Get the stack */
@@ -340,7 +340,7 @@ static VOID EmulatorBop(WORD Code)
 }
 
 #ifdef NEW_EMULATOR
-static VOID WINAPI EmulatorBiosOperation(PSOFT386_STATE State, WORD Code)
+static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
 {
     /*
      * HACK: To maintain softx86 compatbility, just call the old EmulatorBop here.
@@ -421,14 +421,14 @@ BOOLEAN EmulatorInitialize()
     softx87_connect_to_CPU(&EmulatorContext, &FpuEmulatorContext);
 #else
     /* Set the callbacks */
-    EmulatorContext.MemReadCallback = (SOFT386_MEM_READ_PROC)EmulatorReadMemory;
-    EmulatorContext.MemWriteCallback = (SOFT386_MEM_WRITE_PROC)EmulatorWriteMemory;
-    EmulatorContext.IoReadCallback = (SOFT386_IO_READ_PROC)EmulatorReadIo;
-    EmulatorContext.IoWriteCallback = (SOFT386_IO_WRITE_PROC)EmulatorWriteIo;
-    EmulatorContext.BopCallback = (SOFT386_BOP_PROC)EmulatorBiosOperation;
+    EmulatorContext.MemReadCallback = (FAST486_MEM_READ_PROC)EmulatorReadMemory;
+    EmulatorContext.MemWriteCallback = (FAST486_MEM_WRITE_PROC)EmulatorWriteMemory;
+    EmulatorContext.IoReadCallback = (FAST486_IO_READ_PROC)EmulatorReadIo;
+    EmulatorContext.IoWriteCallback = (FAST486_IO_WRITE_PROC)EmulatorWriteIo;
+    EmulatorContext.BopCallback = (FAST486_BOP_PROC)EmulatorBiosOperation;
 
     /* Reset the CPU */
-    Soft386Reset(&EmulatorContext);
+    Fast486Reset(&EmulatorContext);
 #endif
 
     /* Enable interrupts */
@@ -443,7 +443,7 @@ VOID EmulatorSetStack(WORD Segment, DWORD Offset)
     /* Call the softx86 API */
     softx86_set_stack_ptr(&EmulatorContext, Segment, Offset);
 #else
-    Soft386SetStack(&EmulatorContext, Segment, Offset);
+    Fast486SetStack(&EmulatorContext, Segment, Offset);
 #endif
 }
 
@@ -454,8 +454,8 @@ VOID EmulatorExecute(WORD Segment, WORD Offset)
     /* Call the softx86 API */
     softx86_set_instruction_ptr(&EmulatorContext, Segment, Offset);
 #else
-    /* Tell Soft386 to move the instruction pointer */
-    Soft386ExecuteAt(&EmulatorContext, Segment, Offset);
+    /* Tell Fast486 to move the instruction pointer */
+    Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
 #endif
 }
 
@@ -472,8 +472,8 @@ VOID EmulatorInterrupt(BYTE Number)
     /* Call the softx86 API */
     softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
 #else
-    /* Call the Soft386 API */
-    Soft386Interrupt(&EmulatorContext, Number);
+    /* Call the Fast486 API */
+    Fast486Interrupt(&EmulatorContext, Number);
 #endif
 }
 
@@ -483,8 +483,8 @@ VOID EmulatorExternalInterrupt(BYTE Number)
     /* Call the softx86 API */
     softx86_ext_hw_signal(&EmulatorContext, Number);
 #else
-    /* Call the Soft386 API */
-    Soft386Interrupt(&EmulatorContext, Number);
+    /* Call the Fast486 API */
+    Fast486Interrupt(&EmulatorContext, Number);
 #endif
 }
 
@@ -538,7 +538,7 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     }
     else
     {
-        Soft386SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
+        Fast486SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
     }
 #endif
 }
@@ -605,10 +605,10 @@ VOID EmulatorStep(VOID)
     }
 #else
     /* Dump the state for debugging purposes */
-    // Soft386DumpState(&EmulatorContext);
+    // Fast486DumpState(&EmulatorContext);
 
     /* Execute the next instruction */
-    Soft386StepInto(&EmulatorContext);
+    Fast486StepInto(&EmulatorContext);
 #endif
 }
 

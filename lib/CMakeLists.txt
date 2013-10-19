@@ -10,6 +10,7 @@ add_subdirectory(cportlib)
 #add_subdirectory(dnslib) Nothing links to this lib.
 add_subdirectory(drivers)
 add_subdirectory(epsapi)
+add_subdirectory(fast486)
 add_subdirectory(fslib)
 add_subdirectory(lsalib)
 add_subdirectory(ppcmmu)
@@ -24,7 +25,6 @@ add_subdirectory(rtl)
 add_subdirectory(sdk)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
-add_subdirectory(soft386)
 
 else()
 
