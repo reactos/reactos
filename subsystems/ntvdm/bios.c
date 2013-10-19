@@ -603,6 +603,8 @@ WORD BiosGetCharacter(VOID)
     }
     else
     {
+        VgaRefreshDisplay(); // HACK: Waiting here blocks the emulator!!!
+
         while (TRUE)
         {
             /* Wait for a console event */
