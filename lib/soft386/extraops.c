@@ -31,6 +31,7 @@
 #include <soft386.h>
 #include "opcodes.h"
 #include "common.h"
+#include "extraops.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -165,22 +166,22 @@ Soft386ExtendedHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x7D NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x7E NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x7F NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x80 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x81 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x82 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x83 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x84 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x85 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x86 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x87 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x88 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x89 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8A NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8B NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8C NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8D NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8E NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x8F NOT IMPLEMENTED
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
+    Soft386ExtOpcodeConditionalJmp,
     NULL, // TODO: OPCODE 0x90 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x91 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x92 NOT IMPLEMENTED
@@ -296,6 +297,127 @@ Soft386ExtendedHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp)
+{
+    BOOLEAN Jump = FALSE;
+    LONG Offset = 0;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF0) == 0x80);
+
+    /* Fetch the offset */
+    if (Size)
+    {
+        if (!Soft386FetchDword(State, (PULONG)&Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        SHORT Value;
+
+        if (!Soft386FetchWord(State, (PUSHORT)&Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Sign-extend */
+        Offset = (LONG)Value;
+    }
+
+    switch ((Opcode & 0x0F) >> 1)
+    {
+        /* JO / JNO */
+        case 0:
+        {
+            Jump = State->Flags.Of;
+            break;
+        }
+
+        /* JC / JNC */
+        case 1:
+        {
+            Jump = State->Flags.Cf;
+            break;
+        }
+
+        /* JZ / JNZ */
+        case 2:
+        {
+            Jump = State->Flags.Zf;
+            break;
+        }
+
+        /* JBE / JNBE */
+        case 3:
+        {
+            Jump = State->Flags.Cf || State->Flags.Zf;
+            break;
+        }
+
+        /* JS / JNS */
+        case 4:
+        {
+            Jump = State->Flags.Sf;
+            break;
+        }
+
+        /* JP / JNP */
+        case 5:
+        {
+            Jump = State->Flags.Pf;
+            break;
+        }
+
+        /* JL / JNL */
+        case 6:
+        {
+            Jump = State->Flags.Sf != State->Flags.Of;
+            break;
+        }
+
+        /* JLE / JNLE */
+        case 7:
+        {
+            Jump = (State->Flags.Sf != State->Flags.Of) || State->Flags.Zf;
+            break;
+        }
+    }
+
+    if (Opcode & 1)
+    {
+        /* Invert the result */
+        Jump = !Jump;
+    }
+
+    if (Jump)
+    {
+        /* Move the instruction pointer */        
+        State->InstPtr.Long += Offset;
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeExtended)
 {

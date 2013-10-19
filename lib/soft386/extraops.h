@@ -23,6 +23,7 @@
 #define _EXTRAOPS_H_
 
 /* DEFINES ********************************************************************/
+SOFT386_OPCODE_HANDLER(Soft386ExtOpcodeConditionalJmp);
 SOFT386_OPCODE_HANDLER(Soft386OpcodeExtended);
 
 #endif // _EXTRAOPS_H_
