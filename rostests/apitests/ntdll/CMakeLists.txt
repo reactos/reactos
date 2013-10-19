@@ -21,6 +21,7 @@ list(APPEND SOURCE
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
     RtlInitializeBitMap.c
+    RtlMemoryStream.c
     SystemInfo.c
     Timer.c
     testlist.c)
@@ -30,7 +31,7 @@ if(ARCH STREQUAL "i386")
 endif()
 
 add_executable(ntdll_apitest ${SOURCE} ${ntdll_apitest_asm})
-target_link_libraries(ntdll_apitest wine ${PSEH_LIB})
+target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
 
