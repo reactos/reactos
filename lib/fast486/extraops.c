@@ -418,6 +418,96 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet)
+{
+    BOOLEAN Value = FALSE;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF0) == 0x90);
+
+    switch ((Opcode & 0x0F) >> 1)
+    {
+        /* SETO / SETNO */
+        case 0:
+        {
+            Value = State->Flags.Of;
+            break;
+        }
+
+        /* SETC / SETNC */
+        case 1:
+        {
+            Value = State->Flags.Cf;
+            break;
+        }
+
+        /* SETZ / SETNZ */
+        case 2:
+        {
+            Value = State->Flags.Zf;
+            break;
+        }
+
+        /* SETBE / SETNBE */
+        case 3:
+        {
+            Value = State->Flags.Cf || State->Flags.Zf;
+            break;
+        }
+
+        /* SETS / SETNS */
+        case 4:
+        {
+            Value = State->Flags.Sf;
+            break;
+        }
+
+        /* SETP / SETNP */
+        case 5:
+        {
+            Value = State->Flags.Pf;
+            break;
+        }
+
+        /* SETL / SETNL */
+        case 6:
+        {
+            Value = State->Flags.Sf != State->Flags.Of;
+            break;
+        }
+
+        /* SETLE / SETNLE */
+        case 7:
+        {
+            Value = (State->Flags.Sf != State->Flags.Of) || State->Flags.Zf;
+            break;
+        }
+    }
+
+    if (Opcode & 1)
+    {
+        /* Invert the result */
+        Value = !Value;
+    }
+
+    /* Write back the result */
+    return Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Value);
+}
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
 {
