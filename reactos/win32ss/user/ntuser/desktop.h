@@ -69,9 +69,10 @@ typedef struct _DESKTOP
                             DESKTOP_SWITCHDESKTOP    | \
                             DESKTOP_WRITEOBJECTS
 
-extern PDESKTOP InputDesktop;
+extern PDESKTOP gpdeskInputDesktop;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
+extern PTHREADINFO gptiForeground;
 extern PTHREADINFO gptiDesktopThread;
 
 typedef struct _SHELL_HOOK_WINDOW

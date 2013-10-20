@@ -662,8 +662,11 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
         ASSERT(pti->pDeskInfo == pti->rpdesk->pDeskInfo);
 
     /*too bad we still get this assertion*/
+
+    // Why? Not all flags are passed to the user and doing so could crash the system........
+
     /* ASSERT(pci->dwTIFlags == pti->TIF_flags); */
-    if(pci->dwTIFlags != pti->TIF_flags)
+/*    if(pci->dwTIFlags != pti->TIF_flags)
     {
         ERR("pci->dwTIFlags(0x%x) doesn't match pti->TIF_flags(0x%x)\n", pci->dwTIFlags, pti->TIF_flags);
         if(showCaller)
@@ -673,6 +676,7 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
         }
         pci->dwTIFlags = pti->TIF_flags;
     }
+*/
 }
 
 void

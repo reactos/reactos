@@ -42,7 +42,6 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Reference counter, only access this variable with interlocked functions! */
   LONG References;
 
-  PTHREADINFO ptiOwner; // temp..
   /* Desktop that the message queue is attached to */
   struct _DESKTOP *Desktop;
 

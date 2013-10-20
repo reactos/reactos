@@ -402,24 +402,47 @@ NtUserBlockInput(
     return ret;
 }
 
-PTHREADINFO FASTCALL
-IsThreadAttach(PTHREADINFO ptiTo)
+BOOL
+FASTCALL
+IsRemoveAttachThread(PTHREADINFO pti)
 {
+    NTSTATUS Status;
     PATTACHINFO pai;
+    BOOL Ret = TRUE;
+    PTHREADINFO ptiFrom = NULL, ptiTo = NULL;
 
-    if (!gpai) return NULL;
-
-    pai = gpai;
     do
     {
-        if (pai->pti2 == ptiTo) break;
-        pai = pai->paiNext;
-    } while (pai);
+       if (!gpai) return TRUE;
+ 
+       pai = gpai; // Bottom of the list.
 
-    if (!pai) return NULL;
+       do
+       {
+          if (pai->pti2 == pti)
+          {
+             ptiFrom = pai->pti1;
+             ptiTo = pti;
+             break;
+          }
+          if (pai->pti1 == pti)
+          {
+             ptiFrom = pti;
+             ptiTo = pai->pti2;
+             break;
+          }
+          pai = pai->paiNext;
+        
+       } while (pai);
 
-    // Return ptiFrom.
-    return pai->pti1;
+       if (!pai && !ptiFrom && !ptiTo) break;
+
+       Status = UserAttachThreadInput(ptiFrom, ptiTo, FALSE);
+       if (!NT_SUCCESS(Status)) Ret = FALSE;
+
+    } while (Ret);
+
+    return Ret;
 }
 
 NTSTATUS FASTCALL
@@ -454,43 +477,51 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         paiCount++;
         ERR("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
 
-        if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
+        if (ptiTo->MessageQueue != ptiFrom->MessageQueue)
+        {
+
+           ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
+
+           // FIXME: conditions?
+           if (ptiTo->MessageQueue == gpqForeground)
+           {
+              ERR("ptiTo is Foreground\n");
+           }
+           else
+           {
+              ERR("ptiTo NOT Foreground\n");
+           }
+
+           if (ptiFrom->MessageQueue == gpqForeground)
+           {
+              ERR("ptiFrom is Foreground\n");
+              ptiTo->MessageQueue->spwndActive  = ptiFrom->MessageQueue->spwndActive;
+              ptiTo->MessageQueue->spwndFocus   = ptiFrom->MessageQueue->spwndFocus;
+              ptiTo->MessageQueue->CursorObject = ptiFrom->MessageQueue->CursorObject;
+              ptiTo->MessageQueue->spwndCapture = ptiFrom->MessageQueue->spwndCapture;
+              ptiTo->MessageQueue->QF_flags    ^= ((ptiTo->MessageQueue->QF_flags ^ ptiFrom->MessageQueue->QF_flags) & QF_CAPTURELOCKED);
+              ptiTo->MessageQueue->CaretInfo    = ptiFrom->MessageQueue->CaretInfo;
+              IntSetFocusMessageQueue(NULL);
+              IntSetFocusMessageQueue(ptiTo->MessageQueue);
+              gptiForeground = ptiTo;
+           }
+           else
+           {
+              ERR("ptiFrom NOT Foreground\n");
+           }
+
+           MsqDestroyMessageQueue(ptiFrom);
+
+           ptiFrom->MessageQueue = ptiTo->MessageQueue;
+
+           ptiFrom->MessageQueue->cThreads++;
+           ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+
+           IntReferenceMessageQueue(ptiTo->MessageQueue);
+        }
+        else
         {
            ERR("Attach Threads are already associated!\n");
-        }
-
-        ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
-
-        /* Keep the original queue in pqAttach (ie do not trash it in a second attachment) */
-        if (ptiFrom->pqAttach == NULL)
-           ptiFrom->pqAttach = ptiFrom->MessageQueue;
-        ptiFrom->MessageQueue = ptiTo->MessageQueue;
-
-        ptiFrom->MessageQueue->cThreads++;
-        ERR("ptiTo S Share count %lu\n", ptiFrom->MessageQueue->cThreads);
-
-        // FIXME: conditions?
-        if (ptiFrom->pqAttach == gpqForeground)
-        {
-           ERR("ptiFrom is Foreground\n");
-        ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
-        ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
-        ptiFrom->MessageQueue->CursorObject = ptiFrom->pqAttach->CursorObject;
-        ptiFrom->MessageQueue->spwndCapture = ptiFrom->pqAttach->spwndCapture;
-        ptiFrom->MessageQueue->QF_flags ^= ((ptiFrom->MessageQueue->QF_flags ^ ptiFrom->pqAttach->QF_flags) & QF_CAPTURELOCKED);
-        ptiFrom->MessageQueue->CaretInfo = ptiFrom->pqAttach->CaretInfo;
-        }
-        else
-        {
-           ERR("ptiFrom NOT Foreground\n");
-        }
-        if (ptiTo->MessageQueue == gpqForeground)
-        {
-           ERR("ptiTo is Foreground\n");
-        }
-        else
-        {
-           ERR("ptiTo NOT Foreground\n");
         }
     }
     else /* If clear, unlink and free it. */
@@ -518,41 +549,31 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         }
 
         if (!Hit) return STATUS_INVALID_PARAMETER;
-
-        ASSERT(ptiFrom->pqAttach);
  
         ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
-
-        /* Search list and check if the thread is attached one more time */
-        pai = gpai;
-        while(pai)
+ 
+        if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
         {
-            /* If the thread is attached again , we are done */
-            if (pai->pti1 == ptiFrom) 
-            {
-                ptiFrom->MessageQueue->cThreads--;
-                ERR("ptiTo L Share count %lu\n", ptiFrom->MessageQueue->cThreads);
-                /* Use the message queue of the last attachment */
-                ptiFrom->MessageQueue = pai->pti2->MessageQueue;
-                ptiFrom->MessageQueue->CursorObject = NULL;
-                ptiFrom->MessageQueue->spwndActive = NULL;
-                ptiFrom->MessageQueue->spwndFocus = NULL;
-                ptiFrom->MessageQueue->spwndCapture = NULL;
-                return STATUS_SUCCESS;
-            }
-            pai = pai->paiNext;
-        }
+           if (gptiForeground == ptiFrom)
+           {
+              ERR("ptiTo is now pti FG.\n");
+              // MessageQueue foreground is set so switch threads.
+              gptiForeground = ptiTo;
+           }
+           ptiTo->MessageQueue->cThreads--;
+           ERR("ptiTo E Share count %d\n", ptiTo->MessageQueue->cThreads);
+           ASSERT(ptiTo->MessageQueue->cThreads >= 1);
 
-        ptiFrom->MessageQueue->cThreads--;
-        ERR("ptiTo E Share count %lu\n", ptiFrom->MessageQueue->cThreads);
-        ptiFrom->MessageQueue = ptiFrom->pqAttach;
-        // FIXME: conditions?
-        ptiFrom->MessageQueue->CursorObject = NULL;
-        ptiFrom->MessageQueue->spwndActive = NULL;
-        ptiFrom->MessageQueue->spwndFocus = NULL;
-        ptiFrom->MessageQueue->spwndCapture = NULL;
-        ptiFrom->pqAttach = NULL;
-        ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
+           IntDereferenceMessageQueue(ptiTo->MessageQueue);
+
+           ptiFrom->MessageQueue = MsqCreateMessageQueue(ptiFrom);
+
+           ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
+        }
+        else
+        {
+           ERR("Detaching Threads are not associated!\n");
+        }
     }
     /* Note that key state, which can be ascertained by calls to the GetKeyState
        or GetKeyboardState function, is reset after a call to AttachThreadInput.

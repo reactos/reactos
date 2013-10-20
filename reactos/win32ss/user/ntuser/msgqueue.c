@@ -404,7 +404,6 @@ MsqWakeQueue(PTHREADINFO pti, DWORD MessageBits, BOOL KeyEvent)
    {
       ERR("This Message Queue is in Destroy!\n");
    }
-
    pti->pcti->fsWakeBits |= MessageBits;
    pti->pcti->fsChangeBits |= MessageBits;
 
@@ -475,6 +474,10 @@ ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
    {
       if (--pti->nCntsQBits[QSRosHotKey] == 0) ClrMask |= QS_HOTKEY;
    }
+   if (MessageBits & QS_EVENT)
+   {
+      if (--pti->nCntsQBits[QSRosEvent] == 0) ClrMask |= QS_EVENT;
+   }
 
    pti->pcti->fsWakeBits &= ~ClrMask;
    pti->pcti->fsChangeBits &= ~ClrMask;
@@ -506,6 +509,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
+//   PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
    HDC hdcScreen;
    PTHREADINFO pti;
@@ -549,6 +553,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
    if (!pwndDesktop) return;
+//   pDesk = pwndDesktop->head.rpdesk;
 
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
@@ -626,6 +631,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        }
        else
        {
+           //if (!IntGetCaptureWindow()) ptiLastInput = pti;
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
        }
@@ -661,7 +667,7 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
 }
 
 BOOLEAN FASTCALL
-co_MsqDispatchOneSentMessage(_In_ PTHREADINFO pti)
+co_MsqDispatchOneSentMessage(PTHREADINFO pti)
 {
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
@@ -910,12 +916,6 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
     }
 
     ptiSender = PsGetCurrentThreadWin32Thread();
-
-    IntReferenceMessageQueue(ptiReceiver->MessageQueue);
-    /* Take reference on this MessageQueue if its a callback. It will be released
-       when message is processed or removed from target hwnd MessageQueue */
-    if (CompletionCallback)
-       IntReferenceMessageQueue(ptiSender->MessageQueue);
 
     Message->Msg.hwnd = hwnd;
     Message->Msg.message = Msg;
@@ -1180,6 +1180,12 @@ MsqPostMessage(PTHREADINFO pti,
    PUSER_MESSAGE Message;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
+   if ( pti->TIF_flags & TIF_INCLEANUP || pti->MessageQueue->QF_flags & QF_INDESTROY )
+   {
+      ERR("Post Msg; Thread or Q is Dead!\n");
+      return;
+   }
+
    if(!(Message = MsqCreateMessage(Msg)))
    {
       return;
@@ -1189,6 +1195,7 @@ MsqPostMessage(PTHREADINFO pti,
 
    if (dwQEvent)
    {
+       ERR("Post Msg; System Qeued Event Message!\n");
        InsertHeadList(&pti->PostedMessagesListHead,
                       &Message->ListEntry);
    }
@@ -1206,7 +1213,7 @@ MsqPostMessage(PTHREADINFO pti,
    if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
    Message->dwQEvent = dwQEvent;
    Message->QS_Flags = MessageBits;
-   //Message->pti = pti; Fixed in ATI changes. See CORE-6551
+   Message->pti = pti;
    MsqWakeQueue(pti, MessageBits, (MessageBits & QS_TIMER ? FALSE : TRUE));
 }
 
@@ -1254,7 +1261,7 @@ FASTCALL
 IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
 {
 //   PWND pwndTrack = IntChildrenWindowFromPoint(pwndMsg, msg->pt.x, msg->pt.y);
-   hittest = (USHORT)GetNCHitEx(pwndTrack, msg->pt); /// @todo WTF is this???
+//   hittest = (USHORT)GetNCHitEx(pwndTrack, msg->pt); /// @todo WTF is this???
 
    if ( pDesk->spwndTrack != pwndTrack || // Change with tracking window or
         msg->message != WM_MOUSEMOVE   || // Mouse click changes or
@@ -1491,7 +1498,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         hook.dwExtraInfo  = 0 /* extra_info */ ;
         co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, message, (LPARAM)&hook );
 
-        ERR("WH_MOUSE dorpped mouse message!\n");
+        ERR("WH_MOUSE dropped mouse message!\n");
 
         /* Remove and skip message */
         *RemoveMessages = TRUE;
@@ -1805,7 +1812,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
    ListHead = &pti->PostedMessagesListHead;
 
    if (IsListEmpty(CurrentEntry)) return FALSE;
-   
+
    CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                          ListEntry);
    do
@@ -1880,9 +1887,8 @@ HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   MessageQueue->ptiOwner = pti;
    MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
-   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
+   InitializeListHead(&MessageQueue->HardwareMessagesListHead); // Keep here!
    MessageQueue->spwndFocus = NULL;
    MessageQueue->iCursorLevel = 0;
    MessageQueue->CursorObject = NULL;
@@ -1900,7 +1906,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
-   
+
    /* cleanup posted messages */
    while (!IsListEmpty(&pti->PostedMessagesListHead))
    {
@@ -1936,7 +1942,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
          if (CurrentSentMessage->Msg.lParam)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
-      
+
       /* free the message */
       ExFreePool(CurrentSentMessage);
    }
@@ -1999,16 +2005,16 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    pti->nCntsQBits[QSRosPostMessage] = 0;
    pti->nCntsQBits[QSRosSendMessage] = 0;
    pti->nCntsQBits[QSRosHotKey] = 0;
-
+   pti->nCntsQBits[QSRosEvent] = 0;
 }
- 
+
 VOID FASTCALL
 MsqCleanupMessageQueue(PTHREADINFO pti)
 {
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    MessageQueue = pti->MessageQueue;
-  MessageQueue->cThreads--;
+   MessageQueue->cThreads--;
 
    if (MessageQueue->cThreads)
    {
@@ -2033,6 +2039,7 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
            IntGetSysCursorInfo()->CurrentCursorObject = NULL;
        }
 
+       ERR("DereferenceObject pCursor\n");
        UserDereferenceObject(pCursor);
    }
 

@@ -123,7 +123,12 @@ IntSetStyle( PWND pwnd, ULONG set_bits, ULONG clear_bits )
     styleNew = (pwnd->style | set_bits) & ~clear_bits;
     if (styleNew == styleOld) return styleNew;
     pwnd->style = styleNew;
-    if ((styleOld ^ styleNew) & WS_VISIBLE) DceResetActiveDCEs( pwnd );
+    if ((styleOld ^ styleNew) & WS_VISIBLE) // State Change.
+    {
+       if (styleOld & WS_VISIBLE) pwnd->head.pti->cVisWindows--; 
+       if (styleNew & WS_VISIBLE) pwnd->head.pti->cVisWindows++;
+       DceResetActiveDCEs( pwnd );
+    }
     return styleOld;
 }
 
@@ -159,21 +164,16 @@ IntIsWindow(HWND hWnd)
 BOOL FASTCALL
 IntIsWindowVisible(PWND Wnd)
 {
-   BOOL Ret = TRUE;
-   do
+   PWND Temp = Wnd;
+   for (;;)
    {
-      if (!(Wnd->style & WS_VISIBLE))
-      {
-         Ret = FALSE;
-         break;
-      }
-      if (Wnd->spwndParent != NULL)
-         Wnd = Wnd->spwndParent;
-      else
-         break;
+      if (!Temp) return TRUE;
+      if (!(Temp->style & WS_VISIBLE)) break;
+      if (Temp->style & WS_MINIMIZE && Temp != Wnd) break;
+      if (Temp->fnid == FNID_DESKTOP) return TRUE;
+      Temp = Temp->spwndParent;
    }
-   while (Wnd != NULL);
-   return Ret;
+   return FALSE;
 }
 
 PWND FASTCALL
@@ -436,6 +436,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    }
    Window->state2 |= WNDS2_INDESTROY;
    Window->style &= ~WS_VISIBLE;
+   Window->head.pti->cVisWindows--;
 
    IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
@@ -496,9 +497,6 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
-
-   NT_ASSERT(Window->head.pti);
-   IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
    /* from now on no messages can be sent to this window anymore */
    Window->state |= WNDS_DESTROYED;
@@ -578,6 +576,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
       GreDeleteObject(Window->hrgnClip);
       Window->hrgnClip = NULL;
    }
+   Window->head.pti->cWindows--;
 
 //   ASSERT(Window != NULL);
    UserFreeWindowInfo(Window->head.pti, Window);
@@ -1098,8 +1097,8 @@ IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
               Wnd->head.pti == WndNewOwner->head.pti ||
               WndOldOwner->head.pti != WndNewOwner->head.pti )
          {
-            ERR("ProcessOwnerSwap Old out.\n");
-            //UserAttachThreadInput(Wnd->head.pti, WndOldOwner->head.pti, FALSE);
+            //ERR("ProcessOwnerSwap Old out.\n");
+            UserAttachThreadInput(Wnd->head.pti, WndOldOwner->head.pti, FALSE);
          }
       }
    }
@@ -1110,8 +1109,8 @@ IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
          if (!WndOldOwner ||
               WndOldOwner->head.pti != WndNewOwner->head.pti )
          {
-            ERR("ProcessOwnerSwap New in.\n");
-            //UserAttachThreadInput(Wnd->head.pti, WndNewOwner->head.pti, TRUE);
+            //ERR("ProcessOwnerSwap New in.\n");
+            UserAttachThreadInput(Wnd->head.pti, WndNewOwner->head.pti, TRUE);
          }
       }
    }
@@ -1140,6 +1139,8 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
       goto Error;
    }
 
+   /* if parent belongs to a different thread and the window isn't */
+   /* top-level, attach the two threads */
    IntProcessOwnerSwap(Wnd, WndNewOwner, WndOldOwner);
 
    if (IntValidateOwnerDepth(Wnd, WndNewOwner))
@@ -1186,6 +1187,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    /* Some applications try to set a child as a parent */
    if (IntIsChildWindow(Wnd, WndNewParent))
    {
+      TRACE("IntSetParent try to set a child as a parent.\n");
       EngSetLastError( ERROR_INVALID_PARAMETER );
       return NULL;
    }
@@ -1196,6 +1198,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    {
       if (Wnd == pWndExam)
       {
+         TRACE("IntSetParent Failed Test for set parent to parent!\n");
          EngSetLastError(ERROR_INVALID_PARAMETER);
          return NULL;
       }
@@ -1210,7 +1213,10 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    /* Window must belong to current process */
    if (Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process())
+   {
+      ERR("IntSetParent Window must belong to current process!\n");
       return NULL;
+   }
 
    WndOldParent = Wnd->spwndParent;
 
@@ -1249,22 +1255,31 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    }
 
+   if ( WndNewParent == co_GetDesktopWindow(Wnd) &&
+       !(Wnd->style & WS_CLIPSIBLINGS) )
+   {
+      Wnd->style |= WS_CLIPSIBLINGS;
+      DceResetActiveDCEs(Wnd);
+   }
+
+   /* if parent belongs to a different thread and the window isn't */
+   /* top-level, attach the two threads */
    if ((Wnd->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
    {
       if ( Wnd->spwndParent != co_GetDesktopWindow(Wnd))
       {
          if (Wnd->head.pti != WndOldParent->head.pti)
          {
-            ERR("SetParent Old out.\n");
-            //UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
+            //ERR("SetParent Old out.\n");
+            UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
          }
       }
       if ( WndNewParent != co_GetDesktopWindow(Wnd))
       {
          if (Wnd->head.pti != WndNewParent->head.pti)
          {
-            ERR("SetParent New in.\n");
-            //UserAttachThreadInput(Wnd->head.pti, WndNewParent->head.pti, TRUE);
+            //ERR("SetParent New in.\n");
+            UserAttachThreadInput(Wnd->head.pti, WndNewParent->head.pti, TRUE);
          }
       }
    }
@@ -1278,10 +1293,11 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
     * in the z-order and send the expected WM_WINDOWPOSCHANGING and
     * WM_WINDOWPOSCHANGED notification messages.
     */
+   //ERR("IntSetParent SetWindowPos 1\n");
    co_WinPosSetWindowPos( Wnd,
                          (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
                           pt.x, pt.y, 0, 0, swFlags);
-
+   //ERR("IntSetParent SetWindowPos 2\n");
    if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
    return WndOldParent;
@@ -1302,6 +1318,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    if (hWndChild == IntGetDesktopWindow())
    {
+      ERR("UserSetParent Access Denied!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
       return( NULL);
    }
@@ -1310,6 +1327,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
    {
       if (!(WndParent = UserGetWindowObject(hWndNewParent)))
       {
+         ERR("UserSetParent Bad New Parent!\n");
          return( NULL);
       }
    }
@@ -1323,6 +1341,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    if (!(Wnd = UserGetWindowObject(hWndChild)))
    {
+      ERR("UserSetParent Bad Child!\n");
       return( NULL);
    }
 
@@ -1762,12 +1781,13 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->InternalPos.MaxPos.x  = pWnd->InternalPos.MaxPos.y  = -1;
    pWnd->InternalPos.IconPos.x = pWnd->InternalPos.IconPos.y = -1;
 
-   IntReferenceMessageQueue(pWnd->head.pti->MessageQueue);
    if (pWnd->spwndParent != NULL && Cs->hwndParent != 0)
    {
        pWnd->HideFocus = pWnd->spwndParent->HideFocus;
        pWnd->HideAccel = pWnd->spwndParent->HideAccel;
    }
+
+   pWnd->head.pti->cWindows++;
 
    if (Class->hIcon && !Class->hIconSm)
    {
@@ -1962,8 +1982,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
             Class->atomClassName != gpsi->atomSysClass[ICLS_IME] &&
             pti != pWnd->spwndOwner->head.pti)
        {
-          ERR("CreateWindow Owner in.\n");
-          //UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
+          //ERR("CreateWindow Owner in.\n");
+          UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
        }
    }
 
@@ -2203,6 +2223,15 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Cs->lpszName = (LPCWSTR) WindowName;
    Cs->lpszClass = (LPCWSTR) ClassName;
 
+   if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
+   {
+      if (ParentWindow != co_GetDesktopWindow(Window))
+      {
+         Cs->x += ParentWindow->rcClient.left;
+         Cs->y += ParentWindow->rcClient.top; 
+      }
+   }
+
    /* Send the WM_GETMINMAXINFO message */
    Size.cx = Cs->cx;
    Size.cy = Cs->cy;
@@ -2220,6 +2249,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Window->rcWindow.top = Cs->y;
    Window->rcWindow.right = Cs->x + Size.cx;
    Window->rcWindow.bottom = Cs->y + Size.cy;
+/*
    if (0 != (Window->style & WS_CHILD) && ParentWindow)
    {
 //      ERR("co_UserCreateWindowEx(): Offset rcWindow\n");
@@ -2227,6 +2257,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                         ParentWindow->rcClient.left,
                         ParentWindow->rcClient.top);
    }
+*/
    Window->rcClient = Window->rcWindow;
 
    /* Link the window */
@@ -2239,8 +2270,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
           IntLinkHwnd(Window, hwndInsertAfter);
    }
 
-   // Remove flags that are retro.
-   if (!(Window->state2 & WNDS2_WIN31COMPAT)) // FIXME: support version flags.
+   if (!(Window->state2 & WNDS2_WIN31COMPAT))
    {
       if (Class->style & CS_PARENTDC && !(ParentWindow->style & WS_CLIPCHILDREN))
          Window->style &= ~(WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
@@ -2252,8 +2282,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       {
          if (pti != Window->spwndParent->head.pti)
          {
-            ERR("CreateWindow Parent in.\n");
-            //UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+            //ERR("CreateWindow Parent in.\n");
+            UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
          }
       }
    }
@@ -2267,14 +2297,19 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Send the WM_NCCALCSIZE message */
+   {
+  // RECT rc;
    MaxPos.x = Window->rcWindow.left;
    MaxPos.y = Window->rcWindow.top;
 
    Result = co_WinPosGetNonClientSize(Window, &Window->rcWindow, &Window->rcClient);
+   //rc = Window->rcWindow;
+   //Result = co_IntSendMessageNoWait(Window->head.h, WM_NCCALCSIZE, FALSE, (LPARAM)&rc);
+   //Window->rcClient = rc;
 
    RECTL_vOffsetRect(&Window->rcWindow, MaxPos.x - Window->rcWindow.left,
                                      MaxPos.y - Window->rcWindow.top);
-
+   }
 
    /* Send the WM_CREATE message. */
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_CREATE, 0, (LPARAM) Cs);
@@ -2593,8 +2628,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       {
          if (Window->spwndOwner)
          {
-            ERR("DestroyWindow Owner out.\n");
-            //UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
+            //ERR("DestroyWindow Owner out.\n");
+            UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
          }
       }
    }
@@ -2632,8 +2667,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       {
          if (!IntIsTopLevelWindow(Window))
          {
-            ERR("DestroyWindow Parent out.\n");
-            //UserAttachThreadInput(Window->head.pti, Window->spwndParent->head.pti, FALSE);
+            //ERR("DestroyWindow Parent out.\n");
+            UserAttachThreadInput(Window->head.pti, Window->spwndParent->head.pti, FALSE);
          }
       }
    }
@@ -3377,8 +3412,11 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    if (ti->pDeskInfo)
    {
        ti->pDeskInfo->hShellWindow = hwndShell;
+       ti->pDeskInfo->spwndShell = WndShell;
        ti->pDeskInfo->ppiShellProcess = ti->ppi;
    }
+
+   UserRegisterHotKey(WndShell, SC_TASKLIST, MOD_CONTROL, VK_ESCAPE);
 
    UserDerefObjectCo(WndShell);
 
@@ -3579,6 +3617,12 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             else
                Window->ExStyle &= ~WS_EX_WINDOWEDGE;
 
+            if ((Style.styleOld ^ Style.styleNew) & WS_VISIBLE)
+            {
+               if (Style.styleOld & WS_VISIBLE) Window->head.pti->cVisWindows--;
+               if (Style.styleNew & WS_VISIBLE) Window->head.pti->cVisWindows++;
+               DceResetActiveDCEs( Window );
+            }
             Window->style = (DWORD)Style.styleNew;
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;

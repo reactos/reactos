@@ -825,6 +825,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
     }
+ 
     wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
@@ -892,23 +893,31 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     }
     else if (pFocusQueue && bPostMsg)
     {
-        PWND Wnd = pFocusQueue->spwndFocus;
-        if (!Wnd)
+        PWND Wnd = pFocusQueue->spwndFocus; // SysInit.....
+
+        pti = pFocusQueue->ptiKeyboard;
+
+        if (!Wnd && pFocusQueue->spwndActive) // SysInit.....
         {
-           // Focus can be null so going with Active. WM_SYSKEYXXX last wine Win test_keyboard_input.
+           // Going with Active. WM_SYSKEYXXX last wine Win test_keyboard_input.
            Wnd = pFocusQueue->spwndActive;
         }
+        if (Wnd) pti = Wnd->head.pti;
 
-        if ( !Wnd || Wnd->state2 & WNDS2_INDESTROY || Wnd->state & WNDS_DESTROYED )
+        if ( Msg.message == WM_KEYDOWN || Msg.message == WM_SYSKEYDOWN )
         {
-           ERR("ProcessKeyEvent Active Focus window is dead!\n");
-           return FALSE;
+           if ( (Msg.wParam == VK_SHIFT ||
+                 Msg.wParam == VK_CONTROL ||
+                 Msg.wParam == VK_MENU ) &&
+               !IS_KEY_DOWN(gafAsyncKeyState, Msg.wParam))
+           {
+              ERR("Set last input\n");
+              //ptiLastInput = pti;
+           }
         }
- 
-        pti = Wnd->head.pti;
 
         /* Init message */
-        Msg.hwnd = UserHMGetHandle(Wnd);
+        Msg.hwnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;
@@ -934,6 +943,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
         /* Post a keyboard message */
         TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
+        if (!Wnd) {ERR("Window is NULL\n");}
         MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0);
     }
 
@@ -956,9 +966,9 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue && pFocusQueue->ptiOwner)
+    if (pFocusQueue && pFocusQueue->ptiKeyboard)
     {
-        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
+        pKl = pFocusQueue->ptiKeyboard->KeyboardLayout;
     }
 
     if (!pKl)
@@ -1039,9 +1049,9 @@ UserProcessKeyboardInput(
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue && pFocusQueue->ptiOwner)
+    if (pFocusQueue && pFocusQueue->ptiKeyboard)
     {
-        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
+        pKl = pFocusQueue->ptiKeyboard->KeyboardLayout;
     }
 
     if (!pKl)

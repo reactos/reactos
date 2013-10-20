@@ -28,7 +28,7 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
 HDC ScreenDeviceContext = NULL;
-PTHREADINFO gptiDesktopThread;
+PTHREADINFO gptiDesktopThread = NULL;
 HCURSOR gDesktopCursor = NULL;
 
 /* OBJECT CALLBACKS **********************************************************/
@@ -833,6 +833,9 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
       TRACE("IntShellHookNotify: No desktop!\n");
       return;
    }
+
+   // Allow other devices have a shot at foreground.
+   if (Message == HSHELL_APPCOMMAND) ptiLastInput = NULL;
 
    // FIXME: System Tray Support.
 
