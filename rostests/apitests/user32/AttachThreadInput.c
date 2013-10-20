@@ -357,6 +357,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
 {
     BOOL ret;
 
+    trace("Thread hWnd0 0x%p hWnd1 0x%p\n",data[0].hWnd, data[1].hWnd);
     /* Window 1 is in the foreground */
     SetForegroundWindow(data[1].hWnd);
     SetActiveWindow(data[0].hWnd);
@@ -552,15 +553,17 @@ void Test_SendInput()
 
     BOOL ret;
 
+    //trace("Thread hWnd0 0x%p hWnd1 0x%p\n",data[0].hWnd, data[1].hWnd);
+ 
     /* First try sending input without attaching. It will go to the foreground */
     {
         SetForegroundWindow(data[1].hWnd);
         SetActiveWindow(data[0].hWnd);
+ 
+        ok(GetForegroundWindow() == data[1].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
+        ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
 
-        ok(GetForegroundWindow() == data[1].hWnd, "wrong foreground\n");
-        ok(GetActiveWindow() == data[0].hWnd, "wrong active\n");
-    
-        FlushMessages();    
+        FlushMessages();
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
@@ -574,7 +577,7 @@ void Test_SendInput()
     }
     
     /* Next attach and send input. It will go to the same thread as before */
-    {
+    { //                          from           to
         ret = AttachThreadInput( data[1].tid, data[0].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
     
@@ -591,12 +594,15 @@ void Test_SendInput()
         COMPARE_CACHE_(&data[1].cache, Thread1_chain);
     }
 
-    /* Now set foregroung and active again. Input will go to thread 0 */
+    /* Now set foreground and active again. Input will go to thread 0 */
     {
         SetForegroundWindow(data[1].hWnd);
         SetActiveWindow(data[0].hWnd);
-
         FlushMessages();    
+
+        ok(GetForegroundWindow() == data[0].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
+        ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
+
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
@@ -630,12 +636,15 @@ void Test_SendInput()
         COMPARE_CACHE_(&data[1].cache, empty_chain);
     }
 
-    /* Now set foregroung and active again. Input will go to thread 0 */
+    /* Now set foreground and active again. Input will go to thread 0 */
     {
         SetForegroundWindow(data[1].hWnd);
         SetActiveWindow(data[0].hWnd);
-
         FlushMessages();    
+
+        ok(GetForegroundWindow() == data[0].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
+        ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
+
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
@@ -657,9 +666,8 @@ START_TEST(AttachThreadInput)
     if(!InitThreads())
         return;
 
-    win_skip("skip Test_SimpleParameters that crash ros\n");
-    //Test_SimpleParameters();
-    //cleanup_attachments();
+    Test_SimpleParameters();
+    cleanup_attachments();
     Test_Focus();
     cleanup_attachments();
     Test_UnaffectedMessages();
