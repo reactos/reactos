@@ -1446,6 +1446,15 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Default Drive */
+        case 0x19:
+        {
+            EmulatorSetRegister(EMULATOR_REG_AX,
+                                (Eax & 0xFFFFFF00) | CurrentDrive);
+
+            break;
+        }
+
         /* Set Disk Transfer Area */
         case 0x1A:
         {
