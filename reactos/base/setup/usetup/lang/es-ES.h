@@ -986,7 +986,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         6,
         8,
-        "El programa est instalando el cargador de arranque",
+        "El programa est  instalando el cargador de arranque",
         TEXT_STYLE_NORMAL
     },
     {
