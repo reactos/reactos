@@ -222,7 +222,7 @@ InitGdiHandleTable(void)
 
 FORCEINLINE
 VOID
-IncrementGdiHandleCount(void)
+IncrementCurrentProcessGdiHandleCount(void)
 {
     PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
     if (ppi) InterlockedIncrement((LONG*)&ppi->GDIHandleCount);
@@ -230,9 +230,39 @@ IncrementGdiHandleCount(void)
 
 FORCEINLINE
 VOID
-DecrementGdiHandleCount(void)
+DecrementCurrentProcessGdiHandleCount(void)
 {
     PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+    if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
+}
+
+FORCEINLINE
+VOID
+IncrementGdiHandleCount(ULONG ulProcessId)
+{
+    PEPROCESS pep;
+    PPROCESSINFO ppi;
+    NTSTATUS Status;
+
+    Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
+    NT_ASSERT(NT_SUCCESS(Status));
+
+    ppi = PsGetProcessWin32Process(pep);
+    if (ppi) InterlockedIncrement((LONG*)&ppi->GDIHandleCount);
+}
+
+FORCEINLINE
+VOID
+DecrementGdiHandleCount(ULONG ulProcessId)
+{
+    PEPROCESS pep;
+    PPROCESSINFO ppi;
+    NTSTATUS Status;
+
+    Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
+    NT_ASSERT(NT_SUCCESS(Status));
+
+    ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
 }
 
@@ -497,7 +527,7 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
                 /* Decrement the process handle count */
                 ASSERT(gpentHmgr[ulIndex].ObjectOwner.ulObj ==
                        HandleToUlong(PsGetCurrentProcessId()));
-                DecrementGdiHandleCount();
+                DecrementCurrentProcessGdiHandleCount();
             }
 
             /* Push entry to the free list */
@@ -710,7 +740,7 @@ GDIOBJ_hInsertObject(
     if (ulOwner == GDI_OBJ_HMGR_POWNED)
     {
         /* Increment the process handle count */
-        IncrementGdiHandleCount();
+        IncrementCurrentProcessGdiHandleCount();
 
         /* Use Process id */
         ulOwner = HandleToUlong(PsGetCurrentProcessId());
@@ -729,50 +759,64 @@ VOID
 NTAPI
 GDIOBJ_vSetObjectOwner(
     POBJ pobj,
-    ULONG ulOwner)
+    ULONG ulNewOwner)
 {
     PENTRY pentry;
+    ULONG ulOldOwner;
 
     /* This is a ugly HACK, needed to fix IntGdiSetDCOwnerEx */
     if (GDI_HANDLE_IS_STOCKOBJ(pobj->hHmgr))
     {
-        DPRINT("Trying to set ownership of stock object %p to %lx\n", pobj->hHmgr, ulOwner);
+        DPRINT("Trying to set ownership of stock object %p to %lx\n", pobj->hHmgr, ulNewOwner);
         return;
     }
 
     /* Get the handle entry */
-    ASSERT(GDI_HANDLE_GET_INDEX(pobj->hHmgr));
+    NT_ASSERT(GDI_HANDLE_GET_INDEX(pobj->hHmgr));
     pentry = &gpentHmgr[GDI_HANDLE_GET_INDEX(pobj->hHmgr)];
 
+    /* Check if the new owner is the same as the old one */
+    ulOldOwner = pentry->ObjectOwner.ulObj;
+    if (ulOldOwner == ulNewOwner)
+    {
+        /* Nothing to do */
+        return;
+    }
+
     /* Is the current process requested? */
-    if (ulOwner == GDI_OBJ_HMGR_POWNED)
+    if (ulNewOwner == GDI_OBJ_HMGR_POWNED)
     {
         /* Use process id */
-        ulOwner = HandleToUlong(PsGetCurrentProcessId());
-        if (pentry->ObjectOwner.ulObj != ulOwner)
-        {
-            IncrementGdiHandleCount();
-        }
+        ulNewOwner = HandleToUlong(PsGetCurrentProcessId());
     }
 
     // HACK
-    if (ulOwner == GDI_OBJ_HMGR_NONE)
-        ulOwner = GDI_OBJ_HMGR_PUBLIC;
+    if (ulNewOwner == GDI_OBJ_HMGR_NONE)
+        ulNewOwner = GDI_OBJ_HMGR_PUBLIC;
 
-    if (ulOwner == GDI_OBJ_HMGR_PUBLIC ||
-        ulOwner == GDI_OBJ_HMGR_NONE)
+    /* Was the object process owned? */
+    if ((ulOldOwner != GDI_OBJ_HMGR_PUBLIC) &&
+        (ulOldOwner != GDI_OBJ_HMGR_NONE))
+    {
+        /* Decrement the previous owners handle count */
+        DecrementGdiHandleCount(ulOldOwner);
+    }
+
+    /* Is the new owner a process? */
+    if ((ulNewOwner != GDI_OBJ_HMGR_PUBLIC) &&
+        (ulNewOwner != GDI_OBJ_HMGR_NONE))
+    {
+        /* Increment the new owners handle count */
+        IncrementGdiHandleCount(ulNewOwner);
+    }
+    else
     {
         /* Make sure we don't leak user mode memory */
-        ASSERT(pentry->pUser == NULL);
-        if (pentry->ObjectOwner.ulObj != GDI_OBJ_HMGR_PUBLIC &&
-            pentry->ObjectOwner.ulObj != GDI_OBJ_HMGR_NONE)
-        {
-            DecrementGdiHandleCount();
-        }
+        NT_ASSERT(pentry->pUser == NULL);
     }
 
     /* Set new owner */
-    pentry->ObjectOwner.ulObj = ulOwner;
+    pentry->ObjectOwner.ulObj = ulNewOwner;
     DBG_LOGEVENT(&pobj->slhLog, EVENT_SET_OWNER, 0);
 }
 
@@ -970,9 +1014,10 @@ GreGetObjectOwner(HGDIOBJ hobj)
 
 BOOL
 NTAPI
-GreSetObjectOwner(
+GreSetObjectOwnerEx(
     HGDIOBJ hobj,
-    ULONG ulOwner)
+    ULONG ulOwner,
+    ULONG Flags)
 {
     PENTRY pentry;
 
@@ -984,7 +1029,7 @@ GreSetObjectOwner(
     }
 
     /* Reference the handle entry */
-    pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
+    pentry = ENTRY_ReferenceEntryByHandle(hobj, Flags);
     if (!pentry)
     {
         DPRINT("GreSetObjectOwner: Invalid handle 0x%p.\n", hobj);
@@ -998,6 +1043,15 @@ GreSetObjectOwner(
     GDIOBJ_vDereferenceObject(pentry->einfo.pobj);
 
     return TRUE;
+}
+
+BOOL
+NTAPI
+GreSetObjectOwner(
+    HGDIOBJ hobj,
+    ULONG ulOwner)
+{
+    return GreSetObjectOwnerEx(hobj, ulOwner, 0);
 }
 
 INT
