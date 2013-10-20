@@ -2743,9 +2743,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
     if (!(Opcode & FAST486_OPCODE_WRITE_REG))
     {
         /* Swap the order */
-        FirstValue ^= SecondValue;
-        SecondValue ^= FirstValue;
-        FirstValue ^= SecondValue;
+        SWAP(FirstValue, SecondValue);
     }
 
     /* Calculate the result */
@@ -2806,9 +2804,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
-            FirstValue ^= SecondValue;
-            SecondValue ^= FirstValue;
-            FirstValue ^= SecondValue;
+            SWAP(FirstValue, SecondValue);
         }
     
         /* Calculate the result */
@@ -2846,9 +2842,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
-            FirstValue ^= SecondValue;
-            SecondValue ^= FirstValue;
-            FirstValue ^= SecondValue;
+            SWAP(FirstValue, SecondValue);
         }
     
         /* Calculate the result */
@@ -3067,9 +3061,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     if (!(Opcode & FAST486_OPCODE_WRITE_REG))
     {
         /* Swap the order */
-        FirstValue ^= SecondValue;
-        SecondValue ^= FirstValue;
-        FirstValue ^= SecondValue;
+        SWAP(FirstValue, SecondValue);
     }
 
     /* Calculate the result */
@@ -3138,9 +3130,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
-            FirstValue ^= SecondValue;
-            SecondValue ^= FirstValue;
-            FirstValue ^= SecondValue;
+            SWAP(FirstValue, SecondValue);
         }
     
         /* Calculate the result */
@@ -3187,9 +3177,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
-            FirstValue ^= SecondValue;
-            SecondValue ^= FirstValue;
-            FirstValue ^= SecondValue;
+            SWAP(FirstValue, SecondValue);
         }
     
         /* Calculate the result */

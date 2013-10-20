@@ -54,6 +54,7 @@
 {\
     x = !x;\
 }
+#define SWAP(x, y) { (x) ^= (y); (y) ^= (x); (x) ^= (y); }
 
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)
 #define PAGE_OFFSET(x)  ((x) & 0x00000FFF)

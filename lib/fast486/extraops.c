@@ -238,14 +238,14 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
-    NULL, // TODO: OPCODE 0xC8 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xC9 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCA NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCB NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCC NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCD NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCE NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xCF NOT IMPLEMENTED
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
+    Fast486ExtOpcodeBswap,
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
@@ -1019,6 +1019,23 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet)
 
     /* Write back the result */
     return Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Value);
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBswap)
+{
+    PUCHAR Pointer;
+
+    NO_LOCK_PREFIX();
+
+    /* Get a pointer to the value */
+    Pointer = (PUCHAR)&State->GeneralRegs[Opcode & 0x07].Long;
+
+    /* Swap the byte order */
+    SWAP(Pointer[0], Pointer[3]);
+    SWAP(Pointer[1], Pointer[2]);
+
+    /* Return success */
+    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
