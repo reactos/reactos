@@ -25,10 +25,14 @@
 /* DEFINES ********************************************************************/
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushFs);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePopFs);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushGs);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePopGs);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet);
 FAST486_OPCODE_HANDLER(Fast486OpcodeExtended);
