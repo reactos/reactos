@@ -904,6 +904,13 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         }
         if (Wnd) pti = Wnd->head.pti;
 
+        /* Init message */
+        Msg.hwnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
+        Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
+        Msg.lParam = MAKELPARAM(1, wScanCode);
+        Msg.time = dwTime;
+        Msg.pt = gpsi->ptCursor;
+
         if ( Msg.message == WM_KEYDOWN || Msg.message == WM_SYSKEYDOWN )
         {
            if ( (Msg.wParam == VK_SHIFT ||
@@ -915,13 +922,6 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
               //ptiLastInput = pti;
            }
         }
-
-        /* Init message */
-        Msg.hwnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
-        Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
-        Msg.lParam = MAKELPARAM(1, wScanCode);
-        Msg.time = dwTime;
-        Msg.pt = gpsi->ptCursor;
 
         /* If it is VK_PACKET, high word of wParam is used for wchar */
         if (!bPacket)
