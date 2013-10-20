@@ -96,11 +96,11 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
 #define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
 	                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_DUMMY_PTE                        (PMMPTE)(MI_MAPPING_RANGE_END + \
+#define MI_DUMMY_PTE                        (PMMPTE)((ULONG_PTR)MI_MAPPING_RANGE_END + \
 	                                              PAGE_SIZE)
-#define MI_VAD_BITMAP                       (PMMPTE)(MI_DUMMY_PTE + \
+#define MI_VAD_BITMAP                       (PMMPTE)((ULONG_PTR)MI_DUMMY_PTE + \
 	                                              PAGE_SIZE)
-#define MI_WORKING_SET_LIST                 (PMMPTE)(MI_VAD_BITMAP + \
+#define MI_WORKING_SET_LIST                 (PMMPTE)((ULONG_PTR)MI_VAD_BITMAP + \
 	                                              PAGE_SIZE)
 
 /* On x86, these two are the same */
