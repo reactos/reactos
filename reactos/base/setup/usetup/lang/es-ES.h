@@ -986,25 +986,25 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         6,
         8,
-        "El programa est  instalando el cargador de arranque",
+        "El programa est instalando el cargador de arranque",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Instalar cargador de arranque en el disco duro (MBR and VBR).",
+        "Instalar el cargador de arranque en el disco duro (MBR y VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Instalar cargador de arranque en el disco duro (VBR only).",
+        "Instalar el cargador de arranque en el disco duro (s¢lo VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Instalar cargador de inicio en un disquete.",
+        "Instalar el cargador de inicio en un disquete.",
         TEXT_STYLE_NORMAL
     },
     {
