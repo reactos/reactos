@@ -237,8 +237,6 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
 {
     BOOL Success;
 
-    DPRINT1("ConDrvSetConsolePalette\n");
-
     /*
      * Parameters validation
      */
@@ -256,11 +254,9 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
 
     /* Change the palette */
-    DPRINT1("ConDrvSetConsolePalette calling TermSetPalette\n");
     Success = TermSetPalette(Console, PaletteHandle, PaletteUsage);
     if (Success)
     {
-        DPRINT1("TermSetPalette succeeded\n");
         /* Free the old palette handle if there was already one set */
         if ( Buffer->PaletteHandle != NULL &&
              Buffer->PaletteHandle != PaletteHandle )
@@ -271,10 +267,6 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
         /* Save the new palette in the screen buffer */
         Buffer->PaletteHandle = PaletteHandle;
         Buffer->PaletteUsage  = PaletteUsage;
-    }
-    else
-    {
-        DPRINT1("TermSetPalette failed\n");
     }
 
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
