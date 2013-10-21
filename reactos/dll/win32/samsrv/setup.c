@@ -510,6 +510,16 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Set PrivateData attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"PrivateData",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+
     /* FIXME: Set SecDesc attribute*/
 
 

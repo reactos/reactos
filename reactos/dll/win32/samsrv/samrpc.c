@@ -2469,6 +2469,16 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set the PrivateData attribute */
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"PrivateData",
+                                          NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
@@ -3191,7 +3201,6 @@ TRACE("Open %S\n", MemberSidString);
     }
 
 done:
-    SampRegCloseKey(&MembersKeyHandle);
     SampRegCloseKey(&MembersKeyHandle);
     SampRegCloseKey(&AliasesKeyHandle);
 
@@ -6810,6 +6819,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
     if (InfoBuffer->All.WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
+#if 0
         Length = 0;
         SampGetObjectAttribute(UserObject,
                                L"SecDesc",
@@ -6836,6 +6846,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             if (!NT_SUCCESS(Status))
                 goto done;
         }
+#endif
     }
 
     *Buffer = InfoBuffer;
@@ -7607,11 +7618,13 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
+#if 0
         Status = SampSetObjectAttribute(UserObject,
                                         L"SecDesc",
                                         REG_BINARY,
                                         Buffer->All.SecurityDescriptor.SecurityDescriptor,
                                         Buffer->All.SecurityDescriptor.Length);
+#endif
     }
 
     if (WriteFixedData == TRUE)
@@ -8780,6 +8793,16 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
                                     REG_BINARY,
                                     NULL,
                                     0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Set the PrivateData attribute */
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"PrivateData",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
