@@ -332,6 +332,10 @@ NTSTATUS
 SampCreateAliasSD(OUT PSECURITY_DESCRIPTOR *AliasSd,
                   OUT PULONG Size);
 
+NTSTATUS
+SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
+                  OUT PULONG Size);
+
 
 /* setup.c */
 

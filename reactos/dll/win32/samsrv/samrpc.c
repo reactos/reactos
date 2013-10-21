@@ -1770,6 +1770,8 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_GROUP_FIXED_DATA FixedGroupData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT GroupObject;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -1811,6 +1813,15 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("Group name \'%S\' already exists in domain (Status 0x%08lx)\n",
               Name->Buffer, Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateGroupSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateGroupSD failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -1910,6 +1921,18 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set the SecDesc attribute*/
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     if (NT_SUCCESS(Status))
     {
         *GroupHandle = (SAMPR_HANDLE)GroupObject;
@@ -1917,6 +1940,9 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);
@@ -2848,7 +2874,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
-    /* Set SecDesc attribute*/
+    /* Set the SecDesc attribute*/
     Status = SampSetObjectAttribute(AliasObject,
                                     L"SecDesc",
                                     REG_BINARY,
