@@ -2714,6 +2714,8 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT AliasObject;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -2755,6 +2757,15 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("Alias name \'%S\' already exists in domain (Status 0x%08lx)\n",
               AccountName->Buffer, Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateAliasSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateAliasSD failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -2837,6 +2848,18 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set SecDesc attribute*/
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     if (NT_SUCCESS(Status))
     {
         *AliasHandle = (SAMPR_HANDLE)AliasObject;
@@ -2844,6 +2867,9 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);

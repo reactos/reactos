@@ -98,6 +98,8 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
     WCHAR szAccountKeyName[32];
     HANDLE hAccountKey = NULL;
     HANDLE hNamesKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     NTSTATUS Status;
 
     swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
@@ -125,6 +127,20 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Create the server SD */
+    Status = SampCreateAliasSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set SecDesc attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     Status = SampRegOpenKey(hDomainKey,
                             L"Aliases\\Names",
@@ -141,6 +157,9 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
 
 done:
     SampRegCloseKey(&hNamesKey);
+
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
     if (hAccountKey != NULL)
     {
