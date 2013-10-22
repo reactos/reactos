@@ -1114,9 +1114,7 @@ struct CtxMenuInterfaces
 
 	IContextMenu2*	_pctxmenu2;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
 	IContextMenu3*	_pctxmenu3;
-#endif
 };
 
 template<typename BASE> struct ExtContextMenuHandlerT
@@ -1151,7 +1149,6 @@ template<typename BASE> struct ExtContextMenuHandlerT
 
 			break;
 
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
 		  case WM_MENUCHAR:	// only supported by IContextMenu3
 		   if (_cm_ifs._pctxmenu3) {
 			   LRESULT lResult = 0;
@@ -1162,7 +1159,6 @@ template<typename BASE> struct ExtContextMenuHandlerT
 		   }
 
 		   return 0;
-#endif
 		}
 
 		return super::WndProc(nmsg, wparam, lparam);

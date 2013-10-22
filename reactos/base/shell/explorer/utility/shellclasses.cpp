@@ -483,20 +483,15 @@ SpecialFolderFSPath::SpecialFolderFSPath(int folder, HWND hwnd)
 void CtxMenuInterfaces::reset()
 {
 	_pctxmenu2 = NULL;
-
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
 	_pctxmenu3 = NULL;
-#endif
 }
 
 bool CtxMenuInterfaces::HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
 	if (_pctxmenu3) {
 		if (SUCCEEDED(_pctxmenu3->HandleMenuMsg(nmsg, wparam, lparam)))
 			return true;
 	}
-#endif
 
 	if (_pctxmenu2)
 		if (SUCCEEDED(_pctxmenu2->HandleMenuMsg(nmsg, wparam, lparam)))
@@ -512,11 +507,9 @@ IContextMenu* CtxMenuInterfaces::query_interfaces(IContextMenu* pcm1)
 	reset();
 
 	 // Get the higher version context menu interfaces.
-#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
 	if (pcm1->QueryInterface(IID_IContextMenu3, (void**)&pcm) == NOERROR)
 		_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
-#endif
 	if (pcm1->QueryInterface(IID_IContextMenu2, (void**)&pcm) == NOERROR)
 		_pctxmenu2 = (LPCONTEXTMENU2)pcm;
 

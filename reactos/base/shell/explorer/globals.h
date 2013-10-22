@@ -279,9 +279,7 @@ extern struct ExplorerGlobals
 
 	FILE*		_log;
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	DWORD(STDAPICALLTYPE* _SHRestricted)(RESTRICTIONS);
-#endif
 
 	FileTypeManager	_ftype_mgr;
 	IconCache	_icon_cache;
