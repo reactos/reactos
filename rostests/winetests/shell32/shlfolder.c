@@ -72,6 +72,8 @@ static HRESULT (WINAPI *pSHGetItemFromObject)(IUnknown*,REFIID,void**);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static UINT (WINAPI *pGetSystemWow64DirectoryW)(LPWSTR, UINT);
 static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFIID,void**);
+static HRESULT (WINAPI *pSHCreateShellFolderView)(const SFV_CREATE *pcsfv, IShellView **ppsv);
+static HRESULT (WINAPI *pSHCreateShellFolderViewEx)(LPCSFV psvcbi, IShellView **ppv);
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -140,6 +142,8 @@ static void init_function_pointers(void)
     MAKEFUNC(SHGetIDListFromObject);
     MAKEFUNC(SHGetItemFromObject);
     MAKEFUNC(SHCreateDefaultContextMenu);
+    MAKEFUNC(SHCreateShellFolderView);
+    MAKEFUNC(SHCreateShellFolderViewEx);
 #undef MAKEFUNC
 
 #define MAKEFUNC_ORD(f, ord) (p##f = (void*)GetProcAddress(hmod, (LPSTR)(ord)))
@@ -4596,6 +4600,123 @@ static void test_SHCreateDefaultContextMenu(void)
     Cleanup();
 }
 
+static void test_SHCreateShellFolderView(void)
+{
+    HRESULT hr;
+    IShellView *psv;
+    SFV_CREATE sfvc;
+    IShellFolder *desktop;
+    ULONG refCount;
+
+    if (!pSHCreateShellFolderView)
+    {
+        win_skip("SHCreateShellFolderView missing.\n");
+        return;
+    }
+
+    hr = SHGetDesktopFolder(&desktop);
+    ok(hr == S_OK, "got (0x%08x)\n", hr);
+
+    if (0)
+    {
+        /* crash on win7 */
+        pSHCreateShellFolderView(NULL, NULL);
+    }
+
+    psv = (void *)0xdeadbeef;
+    hr = pSHCreateShellFolderView(NULL, &psv);
+    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
+    ok(psv == NULL, "psv = %p\n", psv);
+
+    memset(&sfvc, 0, sizeof(sfvc));
+    psv = (void *)0xdeadbeef;
+    hr = pSHCreateShellFolderView(&sfvc, &psv);
+    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
+    ok(psv == NULL, "psv = %p\n", psv);
+
+    memset(&sfvc, 0, sizeof(sfvc));
+    sfvc.cbSize = sizeof(sfvc) - 1;
+    psv = (void *)0xdeadbeef;
+    hr = pSHCreateShellFolderView(&sfvc, &psv);
+    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
+    ok(psv == NULL, "psv = %p\n", psv);
+
+    memset(&sfvc, 0, sizeof(sfvc));
+    sfvc.cbSize = sizeof(sfvc) + 1;
+    psv = (void *)0xdeadbeef;
+    hr = pSHCreateShellFolderView(&sfvc, &psv);
+    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
+    ok(psv == NULL, "psv = %p\n", psv);
+
+    memset(&sfvc, 0, sizeof(sfvc));
+    sfvc.cbSize = sizeof(sfvc);
+    sfvc.pshf = desktop;
+    psv = NULL;
+    hr = pSHCreateShellFolderView(&sfvc, &psv);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+    ok(psv != NULL, "psv = %p\n", psv);
+    if (psv)
+    {
+        refCount = IShellView_Release(psv);
+        ok(refCount == 0, "refCount = %u\n", refCount);
+    }
+
+    IShellFolder_Release(desktop);
+}
+
+static void test_SHCreateShellFolderViewEx(void)
+{
+    HRESULT hr;
+    IShellView *psv;
+    CSFV csfv;
+    IShellFolder *desktop;
+    ULONG refCount;
+
+    if (!pSHCreateShellFolderViewEx)
+    {
+        win_skip("SHCreateShellFolderViewEx missing.\n");
+        return;
+    }
+
+    hr = SHGetDesktopFolder(&desktop);
+    ok(hr == S_OK, "got (0x%08x)\n", hr);
+
+    if (0)
+    {
+        /* crash on win7 */
+        pSHCreateShellFolderViewEx(NULL, NULL);
+        pSHCreateShellFolderViewEx(NULL, &psv);
+        pSHCreateShellFolderViewEx(&csfv, NULL);
+    }
+
+    memset(&csfv, 0, sizeof(csfv));
+    csfv.pshf = desktop;
+    psv = NULL;
+    hr = pSHCreateShellFolderViewEx(&csfv, &psv);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+    ok(psv != NULL, "psv = %p\n", psv);
+    if (psv)
+    {
+        refCount = IShellView_Release(psv);
+        ok(refCount == 0, "refCount = %u\n", refCount);
+    }
+
+    memset(&csfv, 0, sizeof(csfv));
+    csfv.cbSize = sizeof(csfv);
+    csfv.pshf = desktop;
+    psv = NULL;
+    hr = pSHCreateShellFolderViewEx(&csfv, &psv);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+    ok(psv != NULL, "psv = %p\n", psv);
+    if (psv)
+    {
+        refCount = IShellView_Release(psv);
+        ok(refCount == 0, "refCount = %u\n", refCount);
+    }
+
+    IShellFolder_Release(desktop);
+}
+
 START_TEST(shlfolder)
 {
     init_function_pointers();
@@ -4632,6 +4753,8 @@ START_TEST(shlfolder)
     test_ShellItemBindToHandler();
     test_ShellItemGetAttributes();
     test_SHCreateDefaultContextMenu();
+    test_SHCreateShellFolderView();
+    test_SHCreateShellFolderViewEx();
 
     OleUninitialize();
 }
