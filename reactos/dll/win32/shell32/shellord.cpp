@@ -1009,21 +1009,18 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
     LPCSFV psvcbi,    /* [in] shelltemplate struct */
     IShellView **ppv) /* [out] IShellView pointer */
 {
-    IShellView * psf;
+    IShellView *psf;
     HRESULT hRes;
 
     TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
-      psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
-      psvcbi->fvm, psvcbi->psvOuter);
+          psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
+          psvcbi->fvm, psvcbi->psvOuter);
 
+    *ppv = NULL;
     hRes = IShellView_Constructor(psvcbi->pshf, &psf);
     if (FAILED(hRes))
         return hRes;
 
-    if (!psf)
-      return E_OUTOFMEMORY;
-
-    psf->AddRef();
     hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppv);
     psf->Release();
 
@@ -1914,25 +1911,24 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
-    HRESULT ret = S_OK;
+    IShellView *psf;
+    HRESULT hRes;
 
-    FIXME("SHCreateShellFolderView() stub\n");
+    *ppsv = NULL;
+    if (!pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
+        return E_INVALIDARG;
 
-    if (!pcsfv || sizeof(*pcsfv) != pcsfv->cbSize)
-        ret = E_INVALIDARG;
-    else
-    {
-        LPVOID lpdata = 0;/*LocalAlloc(LMEM_ZEROINIT, 0x4E4);*/
+    TRACE("sf=%p outer=%p callback=%p\n",
+          pcsfv->pshf, pcsfv->psvOuter, pcsfv->psfvcb);
 
-    if (!lpdata)
-            ret = E_OUTOFMEMORY;
-    else
-    {
-            /* Initialize and return unknown lpdata structure */
-    }
-    }
+    hRes = IShellView_Constructor(pcsfv->pshf, &psf);
+    if (FAILED(hRes))
+        return hRes;
 
-    return ret;
+    hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppsv);
+    psf->Release();
+
+    return hRes;
 }
 
 /*************************************************************************
@@ -2113,8 +2109,8 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
     if (!(dwFlags & SHERB_NOCONFIRMATION))
     {
         /* FIXME
-         * enumerate available files 
-         * show confirmation dialog 
+         * enumerate available files
+         * show confirmation dialog
          */
         FIXME("show confirmation dialog\n");
     }
@@ -2137,7 +2133,7 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
     if (!(dwFlags & SHERB_NOSOUND))
     {
         dwSize = sizeof(szPath);
-        ret = RegGetValueW(HKEY_CURRENT_USER, 
+        ret = RegGetValueW(HKEY_CURRENT_USER,
                            L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
                            NULL,
                            RRF_RT_REG_EXPAND_SZ,
