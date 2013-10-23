@@ -548,6 +548,13 @@ UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
 #endif
 }
 
+
+HANDLE FASTCALL ValidateHandleNoErr(HANDLE handle, HANDLE_TYPE type)
+{
+   if (handle) return (PWND)UserGetObjectNoErr(gHandleTable, handle, type);
+   return NULL;
+}
+      
 /*
  * NtUserValidateHandleSecure
  *

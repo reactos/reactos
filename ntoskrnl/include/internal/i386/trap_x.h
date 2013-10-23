@@ -163,7 +163,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Check DR values */
-    if (TrapFrame->SegCs & MODE_MASK)
+    if (KiUserTrap(TrapFrame))
     {
         /* Check for active debugging */
         if (KeGetCurrentThread()->Header.DebugActive)
@@ -244,6 +244,7 @@ DECLSPEC_NORETURN VOID FASTCALL KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame
 DECLSPEC_NORETURN VOID FASTCALL KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL KiTrapReturn(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegments(IN PKTRAP_FRAME TrapFrame);
+DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegmentsRet8(IN PKTRAP_FRAME TrapFrame);
 
 typedef
 ATTRIB_NORETURN
@@ -382,7 +383,7 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->Dr7 = 0;
 
     /* Check if the frame was from user mode or v86 mode */
-    if ((TrapFrame->SegCs & MODE_MASK) ||
+    if (KiUserTrap(TrapFrame) ||
         (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Check for active debugging */
@@ -411,7 +412,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->Dr7 = 0;
 
     /* Check if the frame was from user mode or v86 mode */
-    if ((TrapFrame->SegCs & MODE_MASK) ||
+    if (KiUserTrap(TrapFrame) ||
         (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Check for active debugging */

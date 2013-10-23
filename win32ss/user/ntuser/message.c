@@ -502,13 +502,7 @@ VOID FASTCALL
 IdlePing(VOID)
 {
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-   PUSER_MESSAGE_QUEUE ForegroundQueue;
-   PTHREADINFO pti, ptiForeground = NULL;
-
-   ForegroundQueue = IntGetFocusMessageQueue();
-
-   if (ForegroundQueue)
-       ptiForeground = ForegroundQueue->ptiOwner;
+   PTHREADINFO pti;
 
    pti = PsGetCurrentThreadWin32Thread();
 
@@ -516,7 +510,7 @@ IdlePing(VOID)
    {
       pti->pClientInfo->cSpins = 0; // Reset spins.
 
-      if ( pti->pDeskInfo && pti == ptiForeground )
+      if ( pti->pDeskInfo && pti == gptiForeground )
       {
          if ( pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) ||
               pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) )
@@ -602,13 +596,14 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
 {
     LRESULT lRes;
     USER_REFERENCE_ENTRY Ref;
+//    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (!pWnd ||
          pWnd == UserGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    TRACE("Internal Event Msg %u hWnd %p\n", msg, pWnd->head.h);
+    TRACE("Internal Event Msg %p hWnd 0x%x\n",msg,pWnd->head.h);
 
     switch(msg)
     {
@@ -632,7 +627,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        {
           PWND Window = (PWND)wparam;
           if (wparam) UserRefObjectCo(Window, &Ref);
-          lRes = (LRESULT)co_IntSetActiveWindow(Window,NULL,(BOOL)lparam,TRUE,TRUE);
+          lRes = (LRESULT)co_IntSetActiveWindow(Window,(BOOL)lparam,TRUE,TRUE);
           if (wparam) UserDerefObjectCo(Window);
           return lRes;
        }
@@ -751,6 +746,14 @@ IntDispatchMessage(PMSG pMsg)
 
 /*
  * Internal version of PeekMessage() doing all the work
+ *
+ * MSDN:
+ *   Sent messages
+ *   Posted messages
+ *   Input (hardware) messages and system internal events
+ *   Sent messages (again)
+ *   WM_PAINT messages
+ *   WM_TIMER messages
  */
 BOOL FASTCALL
 co_IntPeekMessage( PMSG Msg,
@@ -770,7 +773,7 @@ co_IntPeekMessage( PMSG Msg,
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
     ProcessMask = HIWORD(RemoveMsg);
-    
+
  /* Hint, "If wMsgFilterMin and wMsgFilterMax are both zero, PeekMessage returns
     all available messages (that is, no range filtering is performed)".        */
     if (!ProcessMask) ProcessMask = (QS_ALLPOSTMESSAGE|QS_ALLINPUT);
@@ -1083,6 +1086,19 @@ UserPostThreadMessage( PTHREADINFO pti,
     return TRUE;
 }
 
+PTHREADINFO FASTCALL
+IntSendTo(PWND Window, PTHREADINFO ptiCur, UINT Msg)
+{
+   if ( ptiCur )
+   {
+      if ( Window->head.pti->MessageQueue == ptiCur->MessageQueue )
+      {
+         return NULL;
+      }
+   }
+   return Window->head.pti;
+}
+
 BOOL FASTCALL
 UserPostMessage( HWND Wnd,
                  UINT Msg,
@@ -1192,11 +1208,11 @@ UserPostMessage( HWND Wnd,
 
         if (WM_QUIT == Msg)
         {
-            MsqPostQuitMessage(Window->head.pti, wParam);
+            MsqPostQuitMessage(pti, wParam);
         }
         else
         {
-            MsqPostMessage(Window->head.pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
         }
     }
     return TRUE;
@@ -1230,7 +1246,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     PMSGMEMORY MsgMemoryEntry;
     INT lParamBufferSize;
     LPARAM lParamPacked;
-    PTHREADINFO Win32Thread;
+    PTHREADINFO Win32Thread, ptiSendTo = NULL;
     ULONG_PTR Hi, Lo, Result = 0;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
@@ -1246,8 +1262,9 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    if ( Win32Thread &&
-         Window->head.pti == Win32Thread)
+    ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
+
+    if ( !ptiSendTo )
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1333,7 +1350,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti))
+    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(ptiSendTo/*Window->head.pti*/))
     {
         // FIXME: Set window hung and add to a list.
         /* FIXME: Set a LastError? */
@@ -1349,7 +1366,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     do
     {
-        Status = co_MsqSendMessage( Window->head.pti,
+        Status = co_MsqSendMessage( ptiSendTo, //Window->head.pti,
                                     hWnd,
                                     Msg,
                                     wParam,
@@ -1361,7 +1378,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti)); // FIXME: Set window hung and add to a list.
+           !MsqIsHung(ptiSendTo/*Window->head.pti*/)); // FIXME: Set window hung and add to a list.
 
     if (STATUS_TIMEOUT == Status)
     {
@@ -1491,7 +1508,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     PMSGMEMORY MsgMemoryEntry;
     INT lParamBufferSize;
     LPARAM lParamPacked;
-    PTHREADINFO Win32Thread;
+    PTHREADINFO Win32Thread, ptiSendTo = NULL;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
     PUSER_SENT_MESSAGE Message;
@@ -1519,9 +1536,11 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     {
         RETURN(FALSE);
     }
+    
+    ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
 
     if (Msg & 0x80000000 &&
-        Window->head.pti == Win32Thread)
+        !ptiSendTo)
     {
        if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN( FALSE);
 
@@ -1542,14 +1561,14 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
     }
 
-    if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->head.pti != Win32Thread)))
+    if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
     {
         ERR("Failed to pack message parameters\n");
         RETURN( FALSE);
     }
 
     /* If it can be sent now, then send it. */
-    if (Window->head.pti == Win32Thread)
+    if ( !ptiSendTo )
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1599,7 +1618,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         }
     }
 
-    if (Window->head.pti == Win32Thread)
+    if ( !ptiSendTo)
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
@@ -1622,7 +1641,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->Result = 0;
     Message->lResult = 0;
     Message->QS_Flags = 0;
-    Message->ptiReceiver = Window->head.pti;
+    Message->ptiReceiver = ptiSendTo; //Window->head.pti;
     Message->ptiSender = NULL; // mjmartin, you are right! This is null.
     Message->ptiCallBackSender = Win32Thread;
     Message->DispatchingListEntry.Flink = NULL;
@@ -1633,10 +1652,10 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->QS_Flags = QS_SENDMESSAGE;
 
     if (Msg & 0x80000000) // Higher priority event message!
-       InsertHeadList(&Window->head.pti->SentMessagesListHead, &Message->ListEntry);
+       InsertHeadList(&ptiSendTo->SentMessagesListHead/*&Window->head.pti->SentMessagesListHead*/, &Message->ListEntry);
     else
-       InsertTailList(&Window->head.pti->SentMessagesListHead, &Message->ListEntry);
-    MsqWakeQueue(Window->head.pti, QS_SENDMESSAGE, TRUE);
+       InsertTailList(&ptiSendTo->SentMessagesListHead/*&Window->head.pti->SentMessagesListHead*/, &Message->ListEntry);
+    MsqWakeQueue(ptiSendTo/*Window->head.pti*/, QS_SENDMESSAGE, TRUE);
 
     RETURN(TRUE);
 
@@ -1674,7 +1693,7 @@ co_IntPostOrSendMessage( HWND hWnd,
 
     pti = PsGetCurrentThreadWin32Thread();
 
-    if ( Window->head.pti->MessageQueue != pti->MessageQueue &&
+    if ( IntSendTo(Window, pti, Msg) &&
          FindMsgMemory(Msg) == 0 )
     {
         Result = UserPostMessage(hWnd, Msg, wParam, lParam);

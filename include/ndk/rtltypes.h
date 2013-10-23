@@ -1559,6 +1559,44 @@ typedef struct _MESSAGE_RESOURCE_DATA
 
 #endif /* !NTOS_MODE_USER */
 
+#ifdef NTOS_MODE_USER
+
+//
+// Memory Stream
+//
+#ifndef CONST_VTBL
+#ifdef CONST_VTABLE
+#define CONST_VTBL const
+#else
+#define CONST_VTBL
+#endif
+#endif
+
+struct IStreamVtbl;
+struct IStream;
+struct tagSTATSTG;
+
+typedef struct _RTL_MEMORY_STREAM RTL_MEMORY_STREAM, *PRTL_MEMORY_STREAM;
+
+typedef VOID 
+(NTAPI *PRTL_MEMORY_STREAM_FINAL_RELEASE_ROUTINE)(
+    _In_ PRTL_MEMORY_STREAM Stream
+);
+
+struct _RTL_MEMORY_STREAM
+{
+    CONST_VTBL struct IStreamVtbl *Vtbl;
+    LONG RefCount;
+    ULONG Unk1;
+    PVOID Current;
+    PVOID Start;
+    PVOID End;
+    PRTL_MEMORY_STREAM_FINAL_RELEASE_ROUTINE FinalRelease;
+    HANDLE ProcessHandle;
+};
+
+#endif /* NTOS_MODE_USER */
+
 #ifdef __cplusplus
 }
 #endif

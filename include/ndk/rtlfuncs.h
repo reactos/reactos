@@ -4152,6 +4152,180 @@ RtlComputeImportTableHash(
 );
 #endif
 
+//
+// MemoryStream functions
+//
+#ifdef NTOS_MODE_USER
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitMemoryStream(
+    _Out_ PRTL_MEMORY_STREAM Stream
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitOutOfProcessMemoryStream(
+    _Out_ PRTL_MEMORY_STREAM Stream
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFinalReleaseOutOfProcessMemoryStream(
+    _In_ PRTL_MEMORY_STREAM Stream
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlQueryInterfaceMemoryStream( 
+    _In_ struct IStream *This,
+    _In_ REFIID RequestedIid,
+    _Outptr_ PVOID *ResultObject
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlAddRefMemoryStream( 
+    _In_ struct IStream *This
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlReleaseMemoryStream( 
+    _In_ struct IStream *This
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlReadMemoryStream( 
+    _In_ struct IStream *This,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_opt_ PULONG BytesRead
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlReadOutOfProcessMemoryStream( 
+    _In_ struct IStream *This,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_opt_ PULONG BytesRead
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlSeekMemoryStream( 
+    _In_ struct IStream *This,
+    _In_ LARGE_INTEGER RelativeOffset,
+    _In_ ULONG Origin,
+    _Out_opt_ PULARGE_INTEGER ResultOffset
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlCopyMemoryStreamTo( 
+    _In_ struct IStream *This,
+    _In_ struct IStream *Target,
+    _In_ ULARGE_INTEGER Length,
+    _Out_opt_ PULARGE_INTEGER BytesRead,
+    _Out_opt_ PULARGE_INTEGER BytesWritten
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlCopyOutOfProcessMemoryStreamTo( 
+    _In_ struct IStream *This,
+    _In_ struct IStream *Target,
+    _In_ ULARGE_INTEGER Length,
+    _Out_opt_ PULARGE_INTEGER BytesRead,
+    _Out_opt_ PULARGE_INTEGER BytesWritten
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlStatMemoryStream( 
+    _In_ struct IStream *This,
+    _Out_ struct tagSTATSTG *Stats,
+    _In_ ULONG Flags
+);
+
+// Dummy functions
+NTSYSAPI
+HRESULT
+NTAPI
+RtlWriteMemoryStream( 
+    _In_ struct IStream *This,
+    _In_reads_bytes_(Length) CONST VOID *Buffer,
+    _In_ ULONG Length,
+    _Out_opt_ PULONG BytesWritten
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlSetMemoryStreamSize( 
+    _In_ struct IStream *This,
+    _In_ ULARGE_INTEGER NewSize
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlCommitMemoryStream( 
+    _In_ struct IStream *This,
+    _In_ ULONG CommitFlags
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlRevertMemoryStream( 
+    _In_ struct IStream *This
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlLockMemoryStreamRegion( 
+    _In_ struct IStream *This,
+    _In_ ULARGE_INTEGER Offset,
+    _In_ ULARGE_INTEGER Length,
+    _In_ ULONG LockType
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlUnlockMemoryStreamRegion( 
+    _In_ struct IStream *This,
+    _In_ ULARGE_INTEGER Offset,
+    _In_ ULARGE_INTEGER Length,
+    _In_ ULONG LockType
+);
+
+NTSYSAPI
+HRESULT
+NTAPI
+RtlCloneMemoryStream( 
+    _In_ struct IStream *This,
+    _Outptr_ struct IStream **ResultStream
+);
+
+#endif // NTOS_MODE_USER
+
 #ifdef __cplusplus
 }
 #endif

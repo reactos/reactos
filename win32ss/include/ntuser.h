@@ -1571,6 +1571,7 @@ NtUserCloseWindowStation(
 typedef enum _CONSOLECONTROL
 {
     GuiConsoleWndClassAtom,
+    ConsoleMakePalettePublic = 5,
     ConsoleAcquireDisplayOwnership,
 } CONSOLECONTROL, *PCONSOLECONTROL;
 
@@ -1579,7 +1580,7 @@ APIENTRY
 NtUserConsoleControl(
     IN CONSOLECONTROL ConsoleCtrl,
     IN PVOID ConsoleCtrlInfo,
-    IN DWORD ConsoleCtrlInfoLength);
+    IN ULONG ConsoleCtrlInfoLength);
 
 HANDLE
 NTAPI

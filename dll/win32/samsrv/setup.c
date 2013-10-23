@@ -98,6 +98,8 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
     WCHAR szAccountKeyName[32];
     HANDLE hAccountKey = NULL;
     HANDLE hNamesKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     NTSTATUS Status;
 
     swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
@@ -125,6 +127,20 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Create the server SD */
+    Status = SampCreateAliasSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set SecDesc attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     Status = SampRegOpenKey(hDomainKey,
                             L"Aliases\\Names",
@@ -141,6 +157,9 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
 
 done:
     SampRegCloseKey(&hNamesKey);
+
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
     if (hAccountKey != NULL)
     {
@@ -245,6 +264,8 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
     WCHAR szAccountKeyName[32];
     HANDLE hAccountKey = NULL;
     HANDLE hNamesKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     NTSTATUS Status;
 
     /* Initialize fixed group data */
@@ -286,6 +307,21 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Create the security descriptor */
+    Status = SampCreateGroupSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set the SecDesc attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
     Status = SampRegOpenKey(hDomainKey,
                             L"Groups\\Names",
                             KEY_ALL_ACCESS,
@@ -301,6 +337,9 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
 
 done:
     SampRegCloseKey(&hNamesKey);
+
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
     if (hAccountKey != NULL)
     {
@@ -509,6 +548,16 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
                              0);
     if (!NT_SUCCESS(Status))
         goto done;
+
+    /* Set PrivateData attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"PrivateData",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
 
     /* FIXME: Set SecDesc attribute*/
 

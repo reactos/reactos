@@ -185,8 +185,8 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
 VOID
 GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PGUI_CONSOLE_DATA GuiData,
-                       HDC hDC,
-                       PRECT rc)
+                       PRECT rcView,
+                       PRECT rcFramebuffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
@@ -202,20 +202,25 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     if (Buffer->Buffer == NULL) return;
 
-    TopLine = rc->top / GuiData->CharHeight + Buffer->ViewOrigin.Y;
-    BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1 + Buffer->ViewOrigin.Y;
-    LeftChar = rc->left / GuiData->CharWidth + Buffer->ViewOrigin.X;
-    RightChar = (rc->right + (GuiData->CharWidth - 1)) / GuiData->CharWidth - 1 + Buffer->ViewOrigin.X;
+    rcFramebuffer->left   = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->left;
+    rcFramebuffer->top    = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->top;
+    rcFramebuffer->right  = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->right;
+    rcFramebuffer->bottom = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->bottom;
+
+    LeftChar   = rcFramebuffer->left   / GuiData->CharWidth;
+    TopLine    = rcFramebuffer->top    / GuiData->CharHeight;
+    RightChar  = rcFramebuffer->right  / GuiData->CharWidth;
+    BottomLine = rcFramebuffer->bottom / GuiData->CharHeight;
+
+    if (RightChar  >= Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
+    if (BottomLine >= Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
 
     LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)->Attributes;
 
-    SetTextColor(hDC, RGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
-    SetBkColor(hDC, RGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
+    SetTextColor(GuiData->hMemDC, RGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
+    SetBkColor(GuiData->hMemDC, RGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
 
-    if (BottomLine >= Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
-    if (RightChar  >= Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
-
-    OldFont = SelectObject(hDC, GuiData->Font);
+    OldFont = SelectObject(GuiData->hMemDC, GuiData->Font);
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
@@ -232,9 +237,9 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
              */
             if (From->Attributes != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
             {
-                TextOutW(hDC,
-                         (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth ,
-                         (Line  - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
+                TextOutW(GuiData->hMemDC,
+                         Start * GuiData->CharWidth,
+                         Line  * GuiData->CharHeight,
                          LineBuffer,
                          Char - Start);
                 Start = Char;
@@ -242,8 +247,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                 Attribute = From->Attributes;
                 if (Attribute != LastAttribute)
                 {
-                    SetTextColor(hDC, RGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
-                    SetBkColor(hDC, RGBFromAttrib(Console, BkgdAttribFromAttrib(Attribute)));
+                    SetTextColor(GuiData->hMemDC, RGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
+                    SetBkColor(GuiData->hMemDC, RGBFromAttrib(Console, BkgdAttribFromAttrib(Attribute)));
                     LastAttribute = Attribute;
                 }
             }
@@ -251,9 +256,9 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             *(To++) = (From++)->Char.UnicodeChar;
         }
 
-        TextOutW(hDC,
-                 (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth ,
-                 (Line  - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
+        TextOutW(GuiData->hMemDC,
+                 Start * GuiData->CharWidth,
+                 Line  * GuiData->CharHeight,
                  LineBuffer,
                  RightChar - Start + 1);
     }
@@ -271,30 +276,25 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             TopLine  <= CursorY && CursorY <= BottomLine)
         {
             CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
+
             Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
+            if (Attribute == DEFAULT_SCREEN_ATTRIB) Attribute = Buffer->ScreenDefaultAttrib;
 
-            if (Attribute != DEFAULT_SCREEN_ATTRIB)
-            {
-                CursorBrush = CreateSolidBrush(RGBFromAttrib(Console, Attribute));
-            }
-            else
-            {
-                CursorBrush = CreateSolidBrush(RGBFromAttrib(Console, Buffer->ScreenDefaultAttrib));
-            }
+            CursorBrush = CreateSolidBrush(RGBFromAttrib(Console, Attribute));
+            OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
 
-            OldBrush = SelectObject(hDC, CursorBrush);
-            PatBlt(hDC,
-                   (CursorX - Buffer->ViewOrigin.X) * GuiData->CharWidth,
-                   (CursorY - Buffer->ViewOrigin.Y) * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+            PatBlt(GuiData->hMemDC,
+                   CursorX * GuiData->CharWidth,
+                   CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
                    GuiData->CharWidth,
                    CursorHeight,
                    PATCOPY);
-            SelectObject(hDC, OldBrush);
+            SelectObject(GuiData->hMemDC, OldBrush);
             DeleteObject(CursorBrush);
         }
     }
 
-    SelectObject(hDC, OldFont);
+    SelectObject(GuiData->hMemDC, OldFont);
 }
 
 /* EOF */

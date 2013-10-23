@@ -69,9 +69,7 @@ ExplorerGlobals::ExplorerGlobals()
 #endif
 
     _log = NULL;
-#ifndef __MINGW32__ // SHRestricted() missing in MinGW (as of 29.10.2003)
     _SHRestricted = 0;
-#endif
     _hwndDesktopBar = 0;
     _hwndShellView = 0;
     _hwndDesktop = 0;
@@ -81,11 +79,7 @@ ExplorerGlobals::ExplorerGlobals()
 void ExplorerGlobals::init(HINSTANCE hInstance)
 {
     _hInstance = hInstance;
-
-#ifndef __MINGW32__ // SHRestricted() missing in MinGW (as of 29.10.2003)
     _SHRestricted = (DWORD(STDAPICALLTYPE*)(RESTRICTIONS)) GetProcAddress(GetModuleHandle(TEXT("SHELL32")), "SHRestricted");
-#endif
-
     _icon_cache.init();
 }
 
@@ -997,38 +991,6 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 
     return 1;
 }
-
-
- // MinGW does not provide a Unicode startup routine, so we have to implement an own.
-#if defined(__MINGW32__) && defined(UNICODE)
-
-#define _tWinMain wWinMain
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
-
-int main(int argc, char* argv[])
-{
-    CONTEXT("main");
-
-    STARTUPINFO startupinfo;
-    int nShowCmd = SW_SHOWNORMAL;
-
-    GetStartupInfo(&startupinfo);
-
-    if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
-        nShowCmd = startupinfo.wShowWindow;
-
-    LPWSTR cmdline = GetCommandLineW();
-
-    while(*cmdline && !_istspace((unsigned)*cmdline))
-        ++cmdline;
-
-    while(_istspace((unsigned)*cmdline))
-        ++cmdline;
-
-    return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
-}
-
-#endif    // __MINGW && UNICODE
 
 
 static bool SetShellReadyEvent(LPCTSTR evtName)

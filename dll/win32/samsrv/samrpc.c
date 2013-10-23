@@ -1770,6 +1770,8 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_GROUP_FIXED_DATA FixedGroupData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT GroupObject;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -1811,6 +1813,15 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("Group name \'%S\' already exists in domain (Status 0x%08lx)\n",
               Name->Buffer, Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateGroupSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateGroupSD failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -1910,6 +1921,18 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set the SecDesc attribute*/
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     if (NT_SUCCESS(Status))
     {
         *GroupHandle = (SAMPR_HANDLE)GroupObject;
@@ -1917,6 +1940,9 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);
@@ -2469,6 +2495,16 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set the PrivateData attribute */
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"PrivateData",
+                                          NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
@@ -2704,6 +2740,8 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT AliasObject;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -2745,6 +2783,15 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("Alias name \'%S\' already exists in domain (Status 0x%08lx)\n",
               AccountName->Buffer, Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateAliasSD(&Sd,
+                               &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateAliasSD failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -2827,6 +2874,18 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
+    /* Set the SecDesc attribute*/
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
     if (NT_SUCCESS(Status))
     {
         *AliasHandle = (SAMPR_HANDLE)AliasObject;
@@ -2834,6 +2893,9 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);
@@ -3191,7 +3253,6 @@ TRACE("Open %S\n", MemberSidString);
     }
 
 done:
-    SampRegCloseKey(&MembersKeyHandle);
     SampRegCloseKey(&MembersKeyHandle);
     SampRegCloseKey(&AliasesKeyHandle);
 
@@ -6810,6 +6871,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
     if (InfoBuffer->All.WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
+#if 0
         Length = 0;
         SampGetObjectAttribute(UserObject,
                                L"SecDesc",
@@ -6836,6 +6898,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             if (!NT_SUCCESS(Status))
                 goto done;
         }
+#endif
     }
 
     *Buffer = InfoBuffer;
@@ -7607,11 +7670,13 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
+#if 0
         Status = SampSetObjectAttribute(UserObject,
                                         L"SecDesc",
                                         REG_BINARY,
                                         Buffer->All.SecurityDescriptor.SecurityDescriptor,
                                         Buffer->All.SecurityDescriptor.Length);
+#endif
     }
 
     if (WriteFixedData == TRUE)
@@ -8780,6 +8845,16 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
                                     REG_BINARY,
                                     NULL,
                                     0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Set the PrivateData attribute */
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"PrivateData",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);

@@ -93,6 +93,13 @@ GreSetObjectOwner(
     HGDIOBJ hobj,
     ULONG ulOwner);
 
+BOOL
+NTAPI
+GreSetObjectOwnerEx(
+    HGDIOBJ hobj,
+    ULONG ulOwner,
+    ULONG Flags);
+
 INT
 NTAPI
 GreGetObject(

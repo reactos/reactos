@@ -53,7 +53,6 @@ IntGetProp(HWND hWnd, ATOM Atom)
   for (i = 0; i < pWnd->PropListItems; i++ )
   {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      if (!Property) break;
       if (Property->Atom == Atom)
       {
          return(Property);

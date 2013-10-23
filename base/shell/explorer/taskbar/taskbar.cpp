@@ -133,7 +133,6 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
 	//SendMessage(_htoolbar, TB_SETPADDING, 0, MAKELPARAM(8,8));
 
-#ifndef __MINGW32__	// TBMETRICS missing in MinGW (as of 20.09.2005)
 	 // set metrics for the Taskbar toolbar to enable button spacing
 	TBMETRICS metrics;
 
@@ -145,7 +144,6 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	metrics.cyButtonSpacing = 3;
 
 	SendMessage(_htoolbar, TB_SETMETRICS, 0, (LPARAM)&metrics);
-#endif
 
 	_next_id = IDC_FIRST_APP;
 
@@ -264,11 +262,9 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 
 				ActivateApp(it, false, false);	// don't restore minimized windows on right button click
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 				static DynamicFct<DWORD(STDAPICALLTYPE*)(RESTRICTIONS)> pSHRestricted(TEXT("SHELL32"), "SHRestricted");
 
 				if (pSHRestricted && !(*pSHRestricted)(REST_NOTRAYCONTEXTMENU))
-#endif
 					ShowAppSystemMenu(it);
 			}
 			break;}

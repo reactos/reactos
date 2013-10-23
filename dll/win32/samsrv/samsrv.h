@@ -321,12 +321,20 @@ SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
                    OUT PULONG Size);
 
 NTSTATUS
-SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *DomainSd,
                           OUT PULONG Size);
 
 NTSTATUS
-SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *DomainSd,
                           OUT PULONG Size);
+
+NTSTATUS
+SampCreateAliasSD(OUT PSECURITY_DESCRIPTOR *AliasSd,
+                  OUT PULONG Size);
+
+NTSTATUS
+SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
+                  OUT PULONG Size);
 
 
 /* setup.c */

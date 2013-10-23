@@ -154,6 +154,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
            ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
         }
 
+        // Fixme check if this process is allowed.
+        ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application it will get toggled off.
+
         /* Create pools for GDI object attributes */
         ppiCurrent->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
         ppiCurrent->pPoolBrushAttr = GdiPoolCreate(sizeof(BRUSH_ATTR), 'arbG');
@@ -275,14 +278,17 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     RtlZeroMemory(ptiCurrent, sizeof(THREADINFO));
 
+    /* Initialize the THREADINFO */
+
     PsSetThreadWin32Thread(Thread, ptiCurrent);
+    IntReferenceThreadInfo(ptiCurrent);
+    ptiCurrent->pEThread = Thread;
+    ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
 
     TRACE_CH(UserThread, "Allocated pti 0x%p for TID %p\n", ptiCurrent, Thread->Cid.UniqueThread);
 
-    /* Initialize the THREADINFO */
-    IntReferenceThreadInfo(ptiCurrent);
     InitializeListHead(&ptiCurrent->WindowListHead);
     InitializeListHead(&ptiCurrent->W32CallbackListHead);
     InitializeListHead(&ptiCurrent->PostedMessagesListHead);
@@ -294,8 +300,6 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     {
         InitializeListHead(&ptiCurrent->aphkStart[i]);
     }
-    ptiCurrent->pEThread = Thread;
-    ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
     ptiCurrent->ptiSibling = ptiCurrent->ppi->ptiList;
     ptiCurrent->ppi->ptiList = ptiCurrent;
     ptiCurrent->ppi->cThreads++;
@@ -307,7 +311,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     {
        goto error;
     }
-   Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
+    Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
                                        ExEventObjectType, KernelMode,
                                        (PVOID*)&ptiCurrent->pEventQueueServer, NULL);
     if (!NT_SUCCESS(Status))
@@ -319,7 +323,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     KeQueryTickCount(&LargeTickCount);
     ptiCurrent->timeLast = LargeTickCount.u.LowPart;
-    
+
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if(ptiCurrent->MessageQueue == NULL)
     {
@@ -419,8 +423,14 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     /* mark the thread as fully initialized */
     ptiCurrent->TIF_flags |= TIF_GUITHREADINITIALIZED;
-    ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    if (!(ptiCurrent->ppi->W32PF_flags & (W32PF_ALLOWFOREGROUNDACTIVATE | W32PF_APPSTARTING)) &&
+         (gptiForeground && gptiForeground->ppi == ptiCurrent->ppi ))
+    {
+       ptiCurrent->TIF_flags |= TIF_ALLOWFOREGROUNDACTIVATE;
+    }
+    ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
+    ERR_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
     return STATUS_SUCCESS;
 
 error:
@@ -483,27 +493,10 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     ppiCurrent = ptiCurrent->ppi;
     ASSERT(ppiCurrent);
 
-    // ptiTo
-    if (IsThreadAttach(ptiCurrent))
-    {
-       PTHREADINFO ptiFrom = IsThreadAttach(ptiCurrent);
-       TRACE_CH(UserThread,"Attached Thread ptiTo is getting switched!\n");
-       UserAttachThreadInput(ptiFrom, ptiCurrent, FALSE);
-    }
+    IsRemoveAttachThread(ptiCurrent);
 
-    // ptiFrom
-    if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
-    {
-       PTHREADINFO ptiTo;
-       ptiTo = ptiCurrent->MessageQueue->ptiOwner;
-       TRACE_CH(UserThread,"Attached Thread ptiFrom is getting switched!\n");
-       if (ptiTo) UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
-       else
-       {
-          // eThread maybe okay but Win32Thread already made NULL!
-          ERR_CH(UserThread,"Attached Thread ptiFrom did not switch due to ptiTo is NULL!\n");
-       }
-    }
+    ptiCurrent->TIF_flags |= TIF_DONTATTACHQUEUE;
+    ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
     /* Decrement thread count and check if its 0 */
     ppiCurrent->cThreads--;
@@ -553,9 +546,10 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
 */
         co_DestroyThreadWindows(Thread);
 
-        if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling)
+        if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
+            ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)
         {
-           //ERR_CH(UserThread,"DestroyProcessClasses\n");
+           ERR_CH(UserThread,"DestroyProcessClasses\n");
           /* no process windows should exist at this point, or the function will assert! */
            DestroyProcessClasses(ppiCurrent);
            ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
@@ -592,8 +586,24 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     if (ptiCurrent->KeyboardLayout)
         UserDereferenceObject(ptiCurrent->KeyboardLayout);
 
-    IntSetThreadDesktop(NULL, TRUE);
+    if (gptiForeground == ptiCurrent)
+    {
+//       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
+//       IntNotifyWinEvent(EVENT_SYSTEM_FOREGROUND, NULL, OBJID_WINDOW, CHILDID_SELF, 0);
 
+       gptiForeground = NULL;
+    }
+
+    // Fixes CORE-6384 & CORE-7030.
+/*    if (ptiLastInput == ptiCurrent)
+    {
+       if (!ppiCurrent->ptiList)
+          ptiLastInput = gptiForeground;
+       else
+          ptiLastInput = ppiCurrent->ptiList;
+       ERR_CH(UserThread,"DTI: ptiLastInput is Cleared!!\n");
+    }
+*/
     TRACE_CH(UserThread,"Freeing pti 0x%p\n", ptiCurrent);
 
     /* Free the THREADINFO */

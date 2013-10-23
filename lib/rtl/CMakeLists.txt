@@ -33,6 +33,7 @@ list(APPEND SOURCE
     heapuser.c
     image.c
     interlck.c
+    memstream.c
     message.c
     largeint.c
     luid.c

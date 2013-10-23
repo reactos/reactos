@@ -195,7 +195,7 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 10:
         case 11:
         {
-            POINT offsTop[] = {{4, 3}, {2, -2}, {0, 0}, 
+            POINT offsTop[] = {{4, -3}, {2, -2}, {0, 0}, 
                                {-3, -3}, {-2, -2}, {-1, 0}};
             POINT offsBtm[] = {{-3, 4}, {-2, 2}, {-1, 1},
                                {4, 4}, {2, 2}, {0, 1}};

@@ -1340,6 +1340,8 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
     Buffer->ViewSize.X = CapturedWindowRect.Right - CapturedWindowRect.Left + 1;
     Buffer->ViewSize.Y = CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1;
 
+    // TermResizeTerminal(Console);
+
     return STATUS_SUCCESS;
 }
 
