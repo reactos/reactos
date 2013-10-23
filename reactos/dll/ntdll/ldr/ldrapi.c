@@ -1610,7 +1610,7 @@ LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
     ULONG_PTR Cookie;
 
     /* Acquire the loader lock */
-    LdrLockLoaderLock(TRUE, NULL, &Cookie);
+    LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
 
     /* Check if there's any alternate resources loaded */
     if (AlternateResourceModuleCount)

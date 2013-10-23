@@ -812,10 +812,22 @@ PsGetCurrentThreadWin32Thread(VOID)
  */
 PVOID
 NTAPI
-PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(VOID)
+PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(
+    _Out_ HANDLE* OutProcessId)
 {
+    PETHREAD CurrentThread;
+
+    /* Get the current thread */
+    CurrentThread = PsGetCurrentThread();
+
+    /* Return the process id */
+    *OutProcessId = CurrentThread->Cid.UniqueProcess;
+
+    /* Enter critical region */
     KeEnterCriticalRegion();
-    return PsGetCurrentThread()->Tcb.Win32Thread;
+
+    /* Return the win32 thread */
+    return CurrentThread->Tcb.Win32Thread;
 }
 
 /*

@@ -1612,27 +1612,50 @@ SSI_DEF(SystemExtendServiceTableInformation)
     /* Check who is calling */
     if (PreviousMode != KernelMode)
     {
+        static const UNICODE_STRING Win32kName = 
+            RTL_CONSTANT_STRING(L"\\SystemRoot\\System32\\win32k.sys");
+
         /* Make sure we can load drivers */
         if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, UserMode))
         {
             /* FIXME: We can't, fail */
-            //return STATUS_PRIVILEGE_NOT_HELD;
+            return STATUS_PRIVILEGE_NOT_HELD;
         }
+        
+        _SEH2_TRY
+        {
+            /* Probe and copy the unicode string */
+            ProbeForRead(Buffer, sizeof(ImageName), 1);
+            ImageName = *(PUNICODE_STRING)Buffer;
+
+            /* Probe the string buffer */
+            ProbeForRead(ImageName.Buffer, ImageName.Length, sizeof(WCHAR));
+
+            /* Check if we have the correct name (nothing else is allowed!) */
+            if (!RtlEqualUnicodeString(&ImageName, &Win32kName, FALSE))
+            {
+                _SEH2_YIELD(return STATUS_PRIVILEGE_NOT_HELD);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+        
+        /* Recursively call the function, so that we are from kernel mode */
+        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
+                                      (PVOID)&Win32kName,
+                                      sizeof(Win32kName));
     }
 
-    /* Probe and capture the driver name */
-    ProbeAndCaptureUnicodeString(&ImageName, PreviousMode, Buffer);
-
     /* Load the image */
-    Status = MmLoadSystemImage(&ImageName,
+    Status = MmLoadSystemImage((PUNICODE_STRING)Buffer,
                                NULL,
                                NULL,
                                0,
                                (PVOID)&ModuleObject,
                                &ImageBase);
-
-    /* Release String */
-    ReleaseCapturedUnicodeString(&ImageName, PreviousMode);
 
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1658,7 +1681,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
     /* Call it */
     Status = (DriverInit)(&Win32k, NULL);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
-
+__debugbreak();__debugbreak();
     /* Unload if we failed */
     if (!NT_SUCCESS(Status)) MmUnloadSystemImage(ModuleObject);
     return Status;

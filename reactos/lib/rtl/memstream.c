@@ -303,7 +303,7 @@ RtlCopyMemoryStreamTo(
     TotalSize = Length.QuadPart;
     while (TotalSize)
     {
-        Left = min(TotalSize, sizeof(Buffer));
+        Left = (ULONG)min(TotalSize, sizeof(Buffer));
 
         /* Read */
         Result = IStream_Read(This, Buffer, Left, &Amount);
