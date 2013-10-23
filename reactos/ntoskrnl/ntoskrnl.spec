@@ -969,7 +969,7 @@
 @ stdcall PsGetCurrentThreadStackLimit()
 @ stdcall PsGetCurrentThreadTeb()
 @ stdcall PsGetCurrentThreadWin32Thread()
-@ stdcall PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion()
+@ stdcall PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(ptr)
 @ stdcall PsGetJobLock(ptr)
 @ stdcall PsGetJobSessionId(ptr)
 @ stdcall PsGetJobUIRestrictionsClass(ptr)

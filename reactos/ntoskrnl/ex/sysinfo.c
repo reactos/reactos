@@ -1681,7 +1681,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
     /* Call it */
     Status = (DriverInit)(&Win32k, NULL);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
-__debugbreak();__debugbreak();
+
     /* Unload if we failed */
     if (!NT_SUCCESS(Status)) MmUnloadSystemImage(ModuleObject);
     return Status;

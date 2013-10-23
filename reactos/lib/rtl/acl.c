@@ -847,21 +847,21 @@ RtlValidAcl(IN PACL Acl)
             (Acl->AclRevision > MAX_ACL_REVISION))
         {
             DPRINT1("Invalid ACL revision\n");
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
 
         /* Next, validate that the ACL is USHORT-aligned */
         if (ROUND_DOWN(Acl->AclSize, sizeof(USHORT)) != Acl->AclSize)
         {
             DPRINT1("Invalid ACL size\n");
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
 
         /* And that it's big enough */
         if (Acl->AclSize < sizeof(ACL))
         {
             DPRINT1("Invalid ACL size\n");
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
 
         /* Loop each ACE */
@@ -872,21 +872,21 @@ RtlValidAcl(IN PACL Acl)
             if (((ULONG_PTR)Ace + sizeof(ACE_HEADER)) >= ((ULONG_PTR)Acl + Acl->AclSize))
             {
                 DPRINT1("Invalid ACE size\n");
-                return FALSE;
+                _SEH2_YIELD(return FALSE);
             }
 
             /* Validate the length of this ACE */
             if (ROUND_DOWN(Ace->AceSize, sizeof(USHORT)) != Ace->AceSize)
             {
                 DPRINT1("Invalid ACE size: %lx\n", Ace->AceSize);
-                return FALSE;
+                _SEH2_YIELD(return FALSE);
             }
 
             /* Validate we have space for the entire ACE */
             if (((ULONG_PTR)Ace + Ace->AceSize) > ((ULONG_PTR)Acl + Acl->AclSize))
             {
                 DPRINT1("Invalid ACE size %lx %lx\n", Ace->AceSize, Acl->AclSize);
-                return FALSE;
+                _SEH2_YIELD(return FALSE);
             }
 
             /* Check what kind of ACE this is */
@@ -896,14 +896,14 @@ RtlValidAcl(IN PACL Acl)
                 if (ROUND_DOWN(Ace->AceSize, sizeof(ULONG)) != Ace->AceSize)
                 {
                     DPRINT1("Invalid ACE size\n");
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
 
                 /* The ACE size should at least have enough for the header */
                 if (Ace->AceSize < sizeof(ACE_HEADER))
                 {
                     DPRINT1("Invalid ACE size: %lx %lx\n", Ace->AceSize, sizeof(ACE_HEADER));
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
 
                 /* Check if the SID revision is valid */
@@ -911,21 +911,21 @@ RtlValidAcl(IN PACL Acl)
                 if (Sid->Revision != SID_REVISION)
                 {
                     DPRINT1("Invalid SID\n");
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
 
                 /* Check if the SID is out of bounds */
                 if (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES)
                 {
                     DPRINT1("Invalid SID\n");
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
 
                 /* The ACE size should at least have enough for the header and SID */
                 if (Ace->AceSize < (sizeof(ACE_HEADER) + RtlLengthSid(Sid)))
                 {
                     DPRINT1("Invalid ACE size\n");
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
             }
             else if (Ace->AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE)
@@ -943,7 +943,7 @@ RtlValidAcl(IN PACL Acl)
                 if (Ace->AceSize < sizeof(ACE_HEADER))
                 {
                     DPRINT1("Unknown ACE\n");
-                    return FALSE;
+                    _SEH2_YIELD(return FALSE);
                 }
             }
 
@@ -954,7 +954,7 @@ RtlValidAcl(IN PACL Acl)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Something was invalid, fail */
-        return FALSE;
+        _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 
