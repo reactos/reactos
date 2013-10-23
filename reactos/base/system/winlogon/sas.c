@@ -438,7 +438,7 @@ HandleLogon(
 	{
 		//WCHAR StatusMsg[256];
 		WARN("WL: WlxActivateUserShell() failed\n");
-		//LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg));
+		//LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg) / sizeof(StatusMsg[0]));
 		//MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
 		goto cleanup;
 	}
