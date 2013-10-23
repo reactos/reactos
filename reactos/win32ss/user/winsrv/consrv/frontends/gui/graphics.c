@@ -46,10 +46,15 @@ GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer)
 VOID
 GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                        PGUI_CONSOLE_DATA GuiData,
-                       HDC hDC,
-                       PRECT rc)
+                       PRECT rcView,
+                       PRECT rcFramebuffer)
 {
     if (Buffer->BitMap == NULL) return;
+
+    rcFramebuffer->left   = Buffer->ViewOrigin.X * 1 + rcView->left;
+    rcFramebuffer->top    = Buffer->ViewOrigin.Y * 1 + rcView->top;
+    rcFramebuffer->right  = Buffer->ViewOrigin.X * 1 + rcView->right;
+    rcFramebuffer->bottom = Buffer->ViewOrigin.Y * 1 + rcView->bottom;
 
     /* Grab the mutex */
     NtWaitForSingleObject(Buffer->Mutex, FALSE, NULL);
@@ -59,15 +64,15 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
      * the Y-coordinate of the "lower-left corner" of the image, be the DIB
      * in bottom-up or top-down mode.
      */
-    SetDIBitsToDevice(hDC,
-                      /* Coordinates / size of the repainted rectangle, in the view's frame */
-                      rc->left,
-                      rc->top,
-                      rc->right  - rc->left,
-                      rc->bottom - rc->top,
+    SetDIBitsToDevice(GuiData->hMemDC,
+                      /* Coordinates / size of the repainted rectangle, in the framebuffer's frame */
+                      rcFramebuffer->left,
+                      rcFramebuffer->top,
+                      rcFramebuffer->right  - rcFramebuffer->left,
+                      rcFramebuffer->bottom - rcFramebuffer->top,
                       /* Coordinates / size of the corresponding image portion, in the graphics screen-buffer's frame */
-                      Buffer->ViewOrigin.X + rc->left,
-                      Buffer->ViewOrigin.Y + rc->top,
+                      rcFramebuffer->left,
+                      rcFramebuffer->top,
                       0,
                       Buffer->ScreenBufferSize.Y, // == Buffer->BitMapInfo->bmiHeader.biHeight
                       Buffer->BitMap,

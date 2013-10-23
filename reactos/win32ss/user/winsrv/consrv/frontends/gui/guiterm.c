@@ -250,7 +250,7 @@ GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord);
 static VOID NTAPI
 GuiDrawRegion(IN OUT PFRONTEND This, SMALL_RECT* Region);
 static VOID
-GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData);
+GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData, DWORD WidthUnit, DWORD HeightUnit);
 
 
 static LRESULT
@@ -265,7 +265,6 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
         Ret = FALSE;
         goto Quit;
     }
-    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
     ActiveBuffer = GuiData->ActiveBuffer;
 
     /*
@@ -412,16 +411,12 @@ GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
 }
 
 static VOID
-GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
+GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData, DWORD WidthUnit, DWORD HeightUnit)
 {
-    // PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+    PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer;
     SCROLLINFO sInfo;
 
     DWORD Width, Height;
-    UINT  WidthUnit, HeightUnit;
-
-    GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 
     Width  = Buff->ViewSize.X * WidthUnit  +
              2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
@@ -551,6 +546,11 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     ReleaseDC(GuiData->hWindow, hDC);
 
+    /* Initialize the terminal framebuffer */
+    GuiData->hMemDC  = CreateCompatibleDC(NULL);
+    GuiData->hBitmap = NULL;
+    GuiData->hSysPalette = NULL; /* Original system palette */
+
     // FIXME: Keep these instructions here ? ///////////////////////////////////
     Console->ActiveBuffer->CursorBlinkOn = TRUE;
     Console->ActiveBuffer->ForceCursorOff = FALSE;
@@ -570,8 +570,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 static VOID
 SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
 {
-    // PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
     UINT WidthUnit, HeightUnit;
 
     GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
@@ -647,13 +646,13 @@ GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord)
 VOID
 GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PGUI_CONSOLE_DATA GuiData,
-                       HDC hDC,
-                       PRECT rc);
+                       PRECT rcView,
+                       PRECT rcFramebuffer);
 VOID
 GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                        PGUI_CONSOLE_DATA GuiData,
-                       HDC hDC,
-                       PRECT rc);
+                       PRECT rcView,
+                       PRECT rcFramebuffer);
 
 static VOID
 GuiConsoleHandlePaint(PGUI_CONSOLE_DATA GuiData)
@@ -661,49 +660,54 @@ GuiConsoleHandlePaint(PGUI_CONSOLE_DATA GuiData)
     BOOL Success = TRUE;
     PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
-    HDC hDC;
     PAINTSTRUCT ps;
+    RECT rcPaint;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
     {
         Success = FALSE;
         goto Quit;
     }
-    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
     ActiveBuffer = GuiData->ActiveBuffer;
 
-    hDC = BeginPaint(GuiData->hWindow, &ps);
-    if (hDC != NULL &&
+    BeginPaint(GuiData->hWindow, &ps);
+    if (ps.hdc != NULL &&
         ps.rcPaint.left < ps.rcPaint.right &&
         ps.rcPaint.top < ps.rcPaint.bottom)
     {
         EnterCriticalSection(&GuiData->Lock);
 
+        /* Compose the current screen-buffer on-memory */
         if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
         {
             GuiPaintTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)ActiveBuffer,
-                                   GuiData, hDC, &ps.rcPaint);
+                                   GuiData, &ps.rcPaint, &rcPaint);
         }
         else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
         {
             GuiPaintGraphicsBuffer((PGRAPHICS_SCREEN_BUFFER)ActiveBuffer,
-                                   GuiData, hDC, &ps.rcPaint);
+                                   GuiData, &ps.rcPaint, &rcPaint);
         }
+
+        /* Send it to screen */
+        BitBlt(ps.hdc,
+               ps.rcPaint.left,
+               ps.rcPaint.top,
+               rcPaint.right  - rcPaint.left,
+               rcPaint.bottom - rcPaint.top,
+               GuiData->hMemDC,
+               rcPaint.left,
+               rcPaint.top,
+               SRCCOPY);
 
         if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            RECT rc;
-            SmallRectToRect(GuiData, &rc, &Console->Selection.srSelection);
+            SmallRectToRect(GuiData, &rcPaint, &Console->Selection.srSelection);
 
-            /* invert the selection */
-            if (IntersectRect(&rc, &ps.rcPaint, &rc))
+            /* Invert the selection */
+            if (IntersectRect(&rcPaint, &ps.rcPaint, &rcPaint))
             {
-                PatBlt(hDC,
-                       rc.left,
-                       rc.top,
-                       rc.right - rc.left,
-                       rc.bottom - rc.top,
-                       DSTINVERT);
+                InvertRect(ps.hdc, &rcPaint);
             }
         }
 
@@ -751,7 +755,6 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
     ActiveBuffer = GuiData->ActiveBuffer;
 
     if (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
@@ -924,14 +927,15 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+    Buff = GuiData->ActiveBuffer;
 
     if (GetType(Buff) == TEXTMODE_BUFFER)
     {
         GuiInvalidateCell(&Console->TermIFace, Buff->CursorPosition.X, Buff->CursorPosition.Y);
         Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
 
-        if ((GuiData->OldCursor.x != Buff->CursorPosition.X) || (GuiData->OldCursor.y != Buff->CursorPosition.Y))
+        if ((GuiData->OldCursor.x != Buff->CursorPosition.X) ||
+            (GuiData->OldCursor.y != Buff->CursorPosition.Y))
         {
             SCROLLINFO xScroll;
             int OldScrollX = -1, OldScrollY = -1;
@@ -946,11 +950,14 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
             // If we successfully got the info for the horizontal scrollbar
             if (OldScrollX >= 0)
             {
-                if ((Buff->CursorPosition.X < Buff->ViewOrigin.X) || (Buff->CursorPosition.X >= (Buff->ViewOrigin.X + Buff->ViewSize.X)))
+                if ((Buff->CursorPosition.X < Buff->ViewOrigin.X) ||
+                    (Buff->CursorPosition.X >= (Buff->ViewOrigin.X + Buff->ViewSize.X)))
                 {
                     // Handle the horizontal scroll bar
-                    if (Buff->CursorPosition.X >= Buff->ViewSize.X) NewScrollX = Buff->CursorPosition.X - Buff->ViewSize.X + 1;
-                    else NewScrollX = 0;
+                    if (Buff->CursorPosition.X >= Buff->ViewSize.X)
+                        NewScrollX = Buff->CursorPosition.X - Buff->ViewSize.X + 1;
+                    else
+                        NewScrollX = 0;
                 }
                 else
                 {
@@ -960,11 +967,14 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
             // If we successfully got the info for the vertical scrollbar
             if (OldScrollY >= 0)
             {
-                if ((Buff->CursorPosition.Y < Buff->ViewOrigin.Y) || (Buff->CursorPosition.Y >= (Buff->ViewOrigin.Y + Buff->ViewSize.Y)))
+                if ((Buff->CursorPosition.Y < Buff->ViewOrigin.Y) ||
+                    (Buff->CursorPosition.Y >= (Buff->ViewOrigin.Y + Buff->ViewSize.Y)))
                 {
                     // Handle the vertical scroll bar
-                    if (Buff->CursorPosition.Y >= Buff->ViewSize.Y) NewScrollY = Buff->CursorPosition.Y - Buff->ViewSize.Y + 1;
-                    else NewScrollY = 0;
+                    if (Buff->CursorPosition.Y >= Buff->ViewSize.Y)
+                        NewScrollY = Buff->CursorPosition.Y - Buff->ViewSize.Y + 1;
+                    else
+                        NewScrollY = 0;
                 }
                 else
                 {
@@ -999,6 +1009,7 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
                     SetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll, TRUE);
                 }
                 UpdateWindow(GuiData->hWindow);
+                // InvalidateRect(GuiData->hWindow, NULL, FALSE);
                 GuiData->OldCursor.x = Buff->CursorPosition.X;
                 GuiData->OldCursor.y = Buff->CursorPosition.Y;
             }
@@ -1035,8 +1046,19 @@ GuiConsoleHandleClose(PGUI_CONSOLE_DATA GuiData)
 static LRESULT
 GuiConsoleHandleNcDestroy(HWND hWnd)
 {
+    PGUI_CONSOLE_DATA GuiData = GuiGetGuiData(hWnd);
+
     KillTimer(hWnd, CONGUI_UPDATE_TIMER);
     GetSystemMenu(hWnd, TRUE);
+
+    if (GuiData)
+    {
+        /* Free the terminal framebuffer */
+        if (GuiData->hMemDC ) DeleteDC(GuiData->hMemDC);
+        if (GuiData->hBitmap) DeleteObject(GuiData->hBitmap);
+        // if (GuiData->hSysPalette) DeleteObject(GuiData->hSysPalette);
+        if (GuiData->Font) DeleteObject(GuiData->Font);
+    }
 
     /* Free the GuiData registration */
     SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)NULL);
@@ -1047,8 +1069,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
 static COORD
 PointToCoord(PGUI_CONSOLE_DATA GuiData, LPARAM lParam)
 {
-    // PCONSOLE Console = GuiData->Console;
-    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
     COORD Coord;
     UINT  WidthUnit, HeightUnit;
 
@@ -1327,7 +1348,7 @@ GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
     if (OpenClipboard(GuiData->hWindow) == TRUE)
     {
         PCONSOLE Console = GuiData->Console;
-        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
@@ -1354,8 +1375,7 @@ GuiConsolePaste(PGUI_CONSOLE_DATA GuiData)
 {
     if (OpenClipboard(GuiData->hWindow) == TRUE)
     {
-        // PCONSOLE Console = GuiData->Console;
-        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+        PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
@@ -1380,7 +1400,6 @@ GuiConsoleGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    // ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
     ActiveBuffer = GuiData->ActiveBuffer;
 
     GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
@@ -1413,7 +1432,7 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     if ((GuiData->WindowSizeLock == FALSE) &&
         (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
-        PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+        PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer;
         DWORD windx, windy, charx, chary;
         UINT  WidthUnit, HeightUnit;
 
@@ -1453,7 +1472,7 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
             Buff->ViewSize.Y = (chary <= Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
         }
 
-        GuiConsoleResizeWindow(GuiData);
+        GuiConsoleResizeWindow(GuiData, WidthUnit, HeightUnit);
 
         // Adjust the start of the visible area if we are attempting to show nonexistent areas
         if ((Buff->ScreenBufferSize.X - Buff->ViewOrigin.X) < Buff->ViewSize.X) Buff->ViewOrigin.X = Buff->ScreenBufferSize.X - Buff->ViewSize.X;
@@ -1507,7 +1526,7 @@ GuiConsoleHandleScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return 0;
 
-    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(Console);
+    Buff = GuiData->ActiveBuffer;
 
     if (uMsg == WM_HSCROLL)
     {
@@ -1595,6 +1614,7 @@ GuiConsoleHandleScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
         SetScrollInfo(GuiData->hWindow, fnBar, &sInfo, TRUE);
 
         UpdateWindow(GuiData->hWindow);
+        // InvalidateRect(GuiData->hWindow, NULL, FALSE);
     }
 
 Quit:
@@ -1697,7 +1717,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_PALETTECHANGED:
         {
-            PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
+            PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
             DPRINT1("WM_PALETTECHANGED called\n");
 
@@ -1721,19 +1741,13 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
             if (ActiveBuffer->PaletteHandle)
             {
-                /* Get the Device Context of the console window */
-                HDC hDC = GetDC(GuiData->hWindow);
-
                 DPRINT1("WM_PALETTECHANGED changing palette\n");
 
-                /* Specify the use of the system palette */
-                SetSystemPaletteUse(hDC, ActiveBuffer->PaletteUsage);
+                /* Specify the use of the system palette for the framebuffer */
+                SetSystemPaletteUse(GuiData->hMemDC, ActiveBuffer->PaletteUsage);
 
                 /* Realize the (logical) palette */
-                RealizePalette(hDC);
-
-                /* Release the Device Context and return */
-                ReleaseDC(GuiData->hWindow, hDC);
+                RealizePalette(GuiData->hMemDC);
             }
 
             DPRINT1("WM_PALETTECHANGED quit\n");
@@ -1966,9 +1980,32 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case PM_RESIZE_TERMINAL:
         {
+            PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer;
+            HDC hDC;
+            HBITMAP hnew, hold;
+
+            DWORD Width, Height;
+            UINT  WidthUnit, HeightUnit;
+
+            GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
+
+            Width  = Buff->ScreenBufferSize.X * WidthUnit ;
+            Height = Buff->ScreenBufferSize.Y * HeightUnit;
+
+            /* Recreate the framebuffer */
+            hDC  = GetDC(GuiData->hWindow);
+            hnew = CreateCompatibleBitmap(hDC, Width, Height);
+            ReleaseDC(GuiData->hWindow, hDC);
+            hold = SelectObject(GuiData->hMemDC, hnew);
+            if (GuiData->hBitmap)
+            {
+                if (hold == GuiData->hBitmap) DeleteObject(GuiData->hBitmap);
+            }
+            GuiData->hBitmap = hnew;
+
             /* Resize the window to the user's values */
             GuiData->WindowSizeLock = TRUE;
-            GuiConsoleResizeWindow(GuiData);
+            GuiConsoleResizeWindow(GuiData, WidthUnit, HeightUnit);
             GuiData->WindowSizeLock = FALSE;
             break;
         }
@@ -2063,9 +2100,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 /* Move and resize the window to the user's values */
                 /* CAN WE DEADLOCK ?? */
                 GuiConsoleMoveWindow(GuiData);
-                GuiData->WindowSizeLock = TRUE;
-                GuiConsoleResizeWindow(GuiData);
-                GuiData->WindowSizeLock = FALSE;
+                SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
 
                 /* Switch to full-screen mode if necessary */
                 if (GuiData->GuiInfo.FullScreen) SwitchFullScreen(GuiData, TRUE);
@@ -2423,9 +2458,6 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         }
     }
 
-    /* Original system palette */
-    GuiData->hSysPalette = NULL;
-
     /* Mouse is shown by default with its default cursor shape */
     GuiData->hCursor = ghDefaultCursor;
     GuiData->MouseCursorRefCount = 0;
@@ -2511,6 +2543,7 @@ GuiDrawRegion(IN OUT PFRONTEND This,
     SmallRectToRect(GuiData, &RegionRect, Region);
     /* Do not erase the background: it speeds up redrawing and reduce flickering */
     InvalidateRect(GuiData->hWindow, &RegionRect, FALSE);
+    /**UpdateWindow(GuiData->hWindow);**/
 }
 
 static VOID NTAPI
@@ -2529,7 +2562,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
 
     if (NULL == GuiData || NULL == GuiData->hWindow) return;
 
-    Buff = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
+    Buff = GuiData->ActiveBuffer;
     if (GetType(Buff) != TEXTMODE_BUFFER) return;
 
     if (0 != ScrolledLines)
@@ -2578,7 +2611,7 @@ GuiSetCursorInfo(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    if (/*ConDrvGetActiveScreenBuffer(GuiData->Console)*/GuiData->ActiveBuffer == Buff)
+    if (GuiData->ActiveBuffer == Buff)
     {
         GuiInvalidateCell(This, Buff->CursorPosition.X, Buff->CursorPosition.Y);
     }
@@ -2594,7 +2627,7 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    if (/*ConDrvGetActiveScreenBuffer(GuiData->Console)*/GuiData->ActiveBuffer == Buff)
+    if (GuiData->ActiveBuffer == Buff)
     {
         /* Redraw char at old position (remove cursor) */
         GuiInvalidateCell(This, OldCursorX, OldCursorY);
@@ -2611,11 +2644,6 @@ GuiResizeTerminal(IN OUT PFRONTEND This)
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
     /* Resize the window to the user's values */
-    // GuiData->WindowSizeLock = TRUE;
-    // GuiConsoleResizeWindow(GuiData);
-    // GuiData->WindowSizeLock = FALSE;
-    // NOTE: This code ^^ causes deadlocks...
-
     PostMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
 }
 
@@ -2623,15 +2651,14 @@ static VOID NTAPI
 GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer; // = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
-    HDC hDC;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     HPALETTE hPalette;
 
     EnterCriticalSection(&GuiData->Lock);
     GuiData->WindowSizeLock = TRUE;
 
     InterlockedExchangePointer(&GuiData->ActiveBuffer,
-                                GuiData->Console->ActiveBuffer);
+                               ConDrvGetActiveScreenBuffer(GuiData->Console));
 
     GuiData->WindowSizeLock = FALSE;
     LeaveCriticalSection(&GuiData->Lock);
@@ -2650,20 +2677,14 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 
     DPRINT1("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
 
-    /* Get the Device Context of the console window */
-    hDC = GetDC(GuiData->hWindow);
+    /* Set the new palette for the framebuffer */
+    SelectPalette(GuiData->hMemDC, hPalette, FALSE);
 
-    /* Set the new palette */
-    SelectPalette(hDC, hPalette, FALSE);
-
-    /* Specify the use of the system palette */
-    SetSystemPaletteUse(hDC, ActiveBuffer->PaletteUsage);
+    /* Specify the use of the system palette for the framebuffer */
+    SetSystemPaletteUse(GuiData->hMemDC, ActiveBuffer->PaletteUsage);
 
     /* Realize the (logical) palette */
-    RealizePalette(hDC);
-
-    /* Release the Device Context */
-    ReleaseDC(GuiData->hWindow, hDC);
+    RealizePalette(GuiData->hMemDC);
 
     GuiResizeTerminal(This);
     // ConioDrawConsole(Console);
@@ -2674,7 +2695,6 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
                        IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
-    HDC hDC;
 
     /*
      * If we were notified to release a screen buffer that is not actually
@@ -2690,18 +2710,12 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
      *   it ONLY.
      */
 
-    /* Get the Device Context of the console window */
-    hDC = GetDC(GuiData->hWindow);
-
     /* Release the old active palette and set the default one */
-    if (GetCurrentObject(hDC, OBJ_PAL) == ScreenBuffer->PaletteHandle)
+    if (GetCurrentObject(GuiData->hMemDC, OBJ_PAL) == ScreenBuffer->PaletteHandle)
     {
         /* Set the new palette */
-        SelectPalette(hDC, GuiData->hSysPalette, FALSE);
+        SelectPalette(GuiData->hMemDC, GuiData->hSysPalette, FALSE);
     }
-
-    /* Release the Device Context */
-    ReleaseDC(GuiData->hWindow, hDC);
 
     /* Set the adequate active screen buffer */
     if (ScreenBuffer != GuiData->Console->ActiveBuffer)
@@ -2842,7 +2856,6 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
         return;
     }
 
-    // ActiveBuffer = ConDrvGetActiveScreenBuffer(GuiData->Console);
     ActiveBuffer = GuiData->ActiveBuffer;
     if (ActiveBuffer)
     {
@@ -2873,54 +2886,26 @@ GuiSetPalette(IN OUT PFRONTEND This,
               HPALETTE PaletteHandle,
               UINT PaletteUsage)
 {
-    BOOL Success = TRUE;
     PGUI_CONSOLE_DATA GuiData = This->Data;
-    // PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer; // ConDrvGetActiveScreenBuffer(GuiData->Console);
-    HDC hDC;
     HPALETTE OldPalette;
 
-    DPRINT1("GuiSetPalette checkpt 0\n");
-
-    // if (GetType(ActiveBuffer) != GRAPHICS_BUFFER) return FALSE;
+    // if (GetType(GuiData->ActiveBuffer) != GRAPHICS_BUFFER) return FALSE;
     if (PaletteHandle == NULL) return FALSE;
 
-    DPRINT1("GuiSetPalette checkpt 1\n");
+    /* Set the new palette for the framebuffer */
+    OldPalette = SelectPalette(GuiData->hMemDC, PaletteHandle, FALSE);
+    if (OldPalette == NULL) return FALSE;
 
-    /* Get the Device Context of the console window */
-    hDC = GetDC(GuiData->hWindow);
-
-    DPRINT1("GuiSetPalette calling SelectPalette(0x%p, 0x%p, FALSE)\n", hDC, PaletteHandle);
-
-    /* Set the new palette */
-    OldPalette = SelectPalette(hDC, PaletteHandle, FALSE);
-    DPRINT1("OldPalette = 0x%p\n", OldPalette);
-    if (OldPalette == NULL)
-    {
-        DPRINT1("SelectPalette failed\n");
-        Success = FALSE;
-        goto Quit;
-    }
-
-    DPRINT1("GuiSetPalette checkpt 2\n");
-
-    /* Specify the use of the system palette */
-    SetSystemPaletteUse(hDC, PaletteUsage);
+    /* Specify the use of the system palette for the framebuffer */
+    SetSystemPaletteUse(GuiData->hMemDC, PaletteUsage);
 
     /* Realize the (logical) palette */
-    RealizePalette(hDC);
-
-    DPRINT1("GuiData->hSysPalette before == 0x%p\n", GuiData->hSysPalette);
+    RealizePalette(GuiData->hMemDC);
 
     /* Save the original system palette handle */
     if (GuiData->hSysPalette == NULL) GuiData->hSysPalette = OldPalette;
 
-    DPRINT1("GuiData->hSysPalette after == 0x%p\n", GuiData->hSysPalette);
-
-Quit:
-    DPRINT1("GuiSetPalette Quit\n");
-    /* Release the Device Context and return */
-    ReleaseDC(GuiData->hWindow, hDC);
-    return Success;
+    return TRUE;
 }
 
 static ULONG NTAPI
