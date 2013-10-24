@@ -381,7 +381,7 @@ MiBalancerThread(PVOID Unused)
         ULONG InitialTarget = 0;
 
 #if (_MI_PAGING_LEVELS == 2)
-        if(!MiIsBalancerThread())
+        if (!MiIsBalancerThread())
         {
             /* Clean up the unused PDEs */
             ULONG_PTR Address;
@@ -390,14 +390,14 @@ MiBalancerThread(PVOID Unused)
             /* Acquire PFN lock */
             KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
             PMMPDE pointerPde;
-            for(Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
-                Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-                Address += (PAGE_SIZE * PTE_COUNT))
+            for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
+                 Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+                 Address += (PAGE_SIZE * PTE_COUNT))
             {
-                if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
                 {
                     pointerPde = MiAddressToPde(Address);
-                    if(pointerPde->u.Hard.Valid)
+                    if (pointerPde->u.Hard.Valid)
                         MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
                     ASSERT(pointerPde->u.Hard.Valid == 0);
                 }
@@ -464,7 +464,7 @@ MiInitBalancerThread(VOID)
                                  NULL,
                                  NULL,
                                  &MiBalancerThreadId,
-                                 (PKSTART_ROUTINE) MiBalancerThread,
+                                 MiBalancerThread,
                                  NULL);
    if (!NT_SUCCESS(Status))
    {

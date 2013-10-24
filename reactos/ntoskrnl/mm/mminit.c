@@ -346,7 +346,7 @@ MmInitMpwThread(VOID)
                                  NULL,
                                  NULL,
                                  &MpwThreadId,
-                                 (PKSTART_ROUTINE) MmMpwThreadMain,
+                                 MmMpwThreadMain,
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
