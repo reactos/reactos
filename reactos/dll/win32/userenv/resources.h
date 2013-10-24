@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/resource.h
+ * FILE:            dll/win32/userenv/resource.h
  * PURPOSE:         Resource IDs
  * PROGRAMMER:      Eric Kohl
  */

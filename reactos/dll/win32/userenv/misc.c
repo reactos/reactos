@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/misc.c
+ * FILE:            dll/win32/userenv/misc.c
  * PURPOSE:         User profile code
  * PROGRAMMER:      Eric Kohl
  */
@@ -35,86 +35,86 @@ static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
 /* FUNCTIONS ***************************************************************/
 
 LPWSTR
-AppendBackslash (LPWSTR String)
+AppendBackslash(LPWSTR String)
 {
-  ULONG Length;
+    ULONG Length;
 
-  Length = lstrlenW (String);
-  if (String[Length - 1] != L'\\')
+    Length = lstrlenW(String);
+    if (String[Length - 1] != L'\\')
     {
-      String[Length] = L'\\';
-      Length++;
-      String[Length] = (WCHAR)0;
+        String[Length] = L'\\';
+        Length++;
+        String[Length] = (WCHAR)0;
     }
 
-  return &String[Length];
+    return &String[Length];
 }
 
 
 BOOL
-GetUserSidFromToken (HANDLE hToken,
-		     PUNICODE_STRING SidString)
+GetUserSidFromToken(HANDLE hToken,
+                    PUNICODE_STRING SidString)
 {
-  PSID_AND_ATTRIBUTES SidBuffer, nsb;
-  ULONG Length;
-  NTSTATUS Status;
+    PSID_AND_ATTRIBUTES SidBuffer, nsb;
+    ULONG Length;
+    NTSTATUS Status;
 
-  Length = 256;
-  SidBuffer = LocalAlloc (LMEM_FIXED,
-			  Length);
-  if (SidBuffer == NULL)
-    return FALSE;
+    Length = 256;
+    SidBuffer = LocalAlloc(LMEM_FIXED,
+                           Length);
+    if (SidBuffer == NULL)
+        return FALSE;
 
-  Status = NtQueryInformationToken (hToken,
-				    TokenUser,
-				    (PVOID)SidBuffer,
-				    Length,
-				    &Length);
-  if (Status == STATUS_BUFFER_TOO_SMALL)
+    Status = NtQueryInformationToken(hToken,
+                                     TokenUser,
+                                     (PVOID)SidBuffer,
+                                     Length,
+                                     &Length);
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
-      nsb = LocalReAlloc (SidBuffer,
-                          Length,
-                          LMEM_MOVEABLE);
-      if (nsb == NULL)
+        nsb = LocalReAlloc(SidBuffer,
+                           Length,
+                           LMEM_MOVEABLE);
+        if (nsb == NULL)
         {
-          LocalFree((HLOCAL)SidBuffer);
-          return FALSE;
+            LocalFree((HLOCAL)SidBuffer);
+            return FALSE;
         }
 
-      SidBuffer = nsb;
-      Status = NtQueryInformationToken (hToken,
-					TokenUser,
-					(PVOID)SidBuffer,
-					Length,
-					&Length);
+        SidBuffer = nsb;
+        Status = NtQueryInformationToken(hToken,
+                                         TokenUser,
+                                         (PVOID)SidBuffer,
+                                         Length,
+                                         &Length);
     }
 
-  if (!NT_SUCCESS (Status))
+    if (!NT_SUCCESS (Status))
     {
-      LocalFree ((HLOCAL)SidBuffer);
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        LocalFree((HLOCAL)SidBuffer);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  DPRINT ("SidLength: %lu\n", RtlLengthSid (SidBuffer[0].Sid));
+    DPRINT("SidLength: %lu\n", RtlLengthSid (SidBuffer[0].Sid));
 
-  Status = RtlConvertSidToUnicodeString (SidString,
-					 SidBuffer[0].Sid,
-					 TRUE);
+    Status = RtlConvertSidToUnicodeString(SidString,
+                                          SidBuffer[0].Sid,
+                                          TRUE);
 
-  LocalFree ((HLOCAL)SidBuffer);
+    LocalFree((HLOCAL)SidBuffer);
 
-  if (!NT_SUCCESS (Status))
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  DPRINT ("SidString.Length: %lu\n", SidString->Length);
-  DPRINT ("SidString.MaximumLength: %lu\n", SidString->MaximumLength);
-  DPRINT ("SidString: '%wZ'\n", SidString);
+    DPRINT("SidString.Length: %lu\n", SidString->Length);
+    DPRINT("SidString.MaximumLength: %lu\n", SidString->MaximumLength);
+    DPRINT("SidString: '%wZ'\n", SidString);
 
-  return TRUE;
+    return TRUE;
 }
 
 PSECURITY_DESCRIPTOR
@@ -284,47 +284,48 @@ DYN_MODULE DynOle32 =
  * has been created!
  */
 BOOL
-LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs)
+LoadDynamicImports(PDYN_MODULE Module,
+                   PDYN_FUNCS DynFuncs)
 {
-  LPSTR *fname;
-  PVOID *fn;
+    LPSTR *fname;
+    PVOID *fn;
 
-  ZeroMemory(DynFuncs, sizeof(DYN_FUNCS));
+    ZeroMemory(DynFuncs, sizeof(DYN_FUNCS));
 
-  DynFuncs->hModule = LoadLibraryW(Module->Library);
-  if (!DynFuncs->hModule)
+    DynFuncs->hModule = LoadLibraryW(Module->Library);
+    if (!DynFuncs->hModule)
     {
-      return FALSE;
+        return FALSE;
     }
 
-  fn = &DynFuncs->fn.foo;
+    fn = &DynFuncs->fn.foo;
 
-  /* load the imports */
-  for (fname = Module->Functions; *fname != NULL; fname++)
+    /* load the imports */
+    for (fname = Module->Functions; *fname != NULL; fname++)
     {
-      *fn = GetProcAddress(DynFuncs->hModule, *fname);
-      if (*fn == NULL)
+        *fn = GetProcAddress(DynFuncs->hModule, *fname);
+        if (*fn == NULL)
         {
-          FreeLibrary(DynFuncs->hModule);
-          DynFuncs->hModule = (HMODULE)0;
+            FreeLibrary(DynFuncs->hModule);
+            DynFuncs->hModule = (HMODULE)0;
 
-          return FALSE;
+            return FALSE;
         }
 
-      fn++;
+        fn++;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
 VOID
 UnloadDynamicImports(PDYN_FUNCS DynFuncs)
 {
-  if (DynFuncs->hModule)
+    if (DynFuncs->hModule)
     {
-      FreeLibrary(DynFuncs->hModule);
-      DynFuncs->hModule = (HMODULE)0;
+        FreeLibrary(DynFuncs->hModule);
+        DynFuncs->hModule = (HMODULE)0;
     }
 }
 

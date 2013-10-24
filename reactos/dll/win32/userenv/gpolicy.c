@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/gpolicy.c
+ * FILE:            dll/win32/userenv/gpolicy.c
  * PURPOSE:         Group policy functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  */
@@ -110,7 +110,8 @@ UninitializeGPNotifications(VOID)
     DeleteCriticalSection(&GPNotifyLock);
 }
 
-static VOID
+static
+VOID
 NotifyGPEvents(IN BOOL bMachine)
 {
     PGP_NOTIFY Notify = NotificationList;
@@ -126,7 +127,9 @@ NotifyGPEvents(IN BOOL bMachine)
     }
 }
 
-static DWORD WINAPI
+static
+DWORD
+WINAPI
 GPNotificationThreadProc(IN LPVOID lpParameter)
 {
     HMODULE hModule;
@@ -255,7 +258,8 @@ GPNotificationThreadProc(IN LPVOID lpParameter)
     return 1;
 }
 
-static HANDLE
+static
+HANDLE
 CreateGPEvent(IN BOOL bMachine,
               IN PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
@@ -274,7 +278,8 @@ CreateGPEvent(IN BOOL bMachine,
     return hEvent;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 RegisterGPNotification(IN HANDLE hEvent,
                        IN BOOL bMachine)
 {
@@ -378,7 +383,8 @@ Cleanup:
     return Ret;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 UnregisterGPNotification(IN HANDLE hEvent)
 {
     PGP_NOTIFY Notify = NULL, *NotifyLink;
@@ -418,7 +424,8 @@ UnregisterGPNotification(IN HANDLE hEvent)
     return Ret;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 RefreshPolicy(IN BOOL bMachine)
 {
     HANDLE hEvent;
@@ -437,7 +444,8 @@ RefreshPolicy(IN BOOL bMachine)
     return Ret;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 RefreshPolicyEx(IN BOOL bMachine,
                 IN DWORD dwOptions)
 {
@@ -470,7 +478,8 @@ RefreshPolicyEx(IN BOOL bMachine,
     }
 }
 
-HANDLE WINAPI
+HANDLE
+WINAPI
 EnterCriticalPolicySection(IN BOOL bMachine)
 {
     SECURITY_ATTRIBUTES SecurityAttributes;
@@ -507,7 +516,8 @@ EnterCriticalPolicySection(IN BOOL bMachine)
     return NULL;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 LeaveCriticalPolicySection(IN HANDLE hSection)
 {
     BOOL Ret;
@@ -524,7 +534,8 @@ LeaveCriticalPolicySection(IN HANDLE hSection)
     return Ret;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 WaitForUserPolicyForegroundProcessing(VOID)
 {
     HANDLE hEvent;
@@ -543,7 +554,8 @@ WaitForUserPolicyForegroundProcessing(VOID)
     return Ret;
 }
 
-BOOL WINAPI
+BOOL
+WINAPI
 WaitForMachinePolicyForegroundProcessing(VOID)
 {
     HANDLE hEvent;
