@@ -97,15 +97,15 @@ START_TEST(ExSingleList)
     Entries = (PVOID)&ListHead[1];
     KeRaiseIrql(HIGH_LEVEL, &Irql);
     
-    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctional(ListHead, Entries, &SpinLock);
 
-    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctionalExports(ListHead, Entries, &SpinLock);
     
-    RtlFillMemory(Entries, sizeof Entries, 0x55);
+    RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctionalNoInterlocked(ListHead, Entries, &SpinLock);
     

@@ -90,7 +90,7 @@ static VOID PoolsTest(VOID)
 
     // now test allocating lots of small/medium blocks
     AllocNumber = 100000;
-    Allocs = ExAllocatePoolWithTag(PagedPool, sizeof(Allocs) * AllocNumber, TAG_POOLTEST);
+    Allocs = ExAllocatePoolWithTag(PagedPool, sizeof(*Allocs) * AllocNumber, TAG_POOLTEST);
 
     // alloc blocks
     for (i=0; i<AllocNumber; i++)
