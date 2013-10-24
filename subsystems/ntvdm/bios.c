@@ -267,14 +267,14 @@ static LPBYTE VideoModes[] =
 
 static BOOLEAN BiosKbdBufferPush(WORD Data)
 {
-    /* Get the location of the element after the head */
-    WORD NextElement = Bda->KeybdBufferHead + 2;
+    /* Get the location of the element after the tail */
+    WORD NextElement = Bda->KeybdBufferTail + 2;
 
     /* Wrap it around if it's at or beyond the end */
     if (NextElement >= Bda->KeybdBufferEnd) NextElement = Bda->KeybdBufferStart;
 
     /* If it's full, fail */
-    if (NextElement == Bda->KeybdBufferTail) return FALSE;
+    if (NextElement == Bda->KeybdBufferHead) return FALSE;
 
     /* Put the value in the queue */
     *((LPWORD)((ULONG_PTR)Bda + Bda->KeybdBufferTail)) = Data;
@@ -468,18 +468,33 @@ BOOLEAN BiosInitialize(VOID)
         IntVecTable[i * 2] = Offset;
         IntVecTable[i * 2 + 1] = BIOS_SEGMENT;
 
-        BiosCode[Offset++] = 0xFA; // cli
+        BiosCode[Offset++] = 0xFB; // sti
 
         BiosCode[Offset++] = 0x6A; // push i
         BiosCode[Offset++] = (BYTE)i;
+
+        BiosCode[Offset++] = 0x6A; // push 0
+        BiosCode[Offset++] = 0x00;
+
+        BiosCode[Offset++] = 0xF8; // clc
 
         BiosCode[Offset++] = LOBYTE(EMULATOR_BOP); // BOP sequence
         BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
         BiosCode[Offset++] = LOBYTE(EMULATOR_INT_BOP);
         BiosCode[Offset++] = HIBYTE(EMULATOR_INT_BOP);
 
-        BiosCode[Offset++] = 0x44; // inc sp
-        BiosCode[Offset++] = 0x44; // inc sp
+        BiosCode[Offset++] = 0x73; // jnc +3
+        BiosCode[Offset++] = 0x03;
+
+        // HACK: The following instruction should be HLT!
+        BiosCode[Offset++] = 0x90; // nop
+
+        BiosCode[Offset++] = 0xEB; // jmp -10
+        BiosCode[Offset++] = 0xF6;
+
+        BiosCode[Offset++] = 0x83; // add sp, 4
+        BiosCode[Offset++] = 0xC4;
+        BiosCode[Offset++] = 0x04;
 
         BiosCode[Offset++] = 0xCF; // iret
     }
@@ -590,9 +605,7 @@ WORD BiosPeekCharacter(VOID)
 
 WORD BiosGetCharacter(VOID)
 {
-    WORD CharacterData;
-    INPUT_RECORD InputRecord;
-    DWORD Count;
+    WORD CharacterData = 0;
 
     /* Check if there is a key available */
     if (Bda->KeybdBufferHead != Bda->KeybdBufferTail)
@@ -603,24 +616,8 @@ WORD BiosGetCharacter(VOID)
     }
     else
     {
-        VgaRefreshDisplay(); // HACK: Waiting here blocks the emulator!!!
-
-        while (TRUE)
-        {
-            /* Wait for a console event */
-            WaitForSingleObject(BiosConsoleInput, INFINITE);
-    
-            /* Read the event, and make sure it's a keypress */
-            if (!ReadConsoleInput(BiosConsoleInput, &InputRecord, 1, &Count)) continue;
-            if (InputRecord.EventType != KEY_EVENT) continue;
-            if (!InputRecord.Event.KeyEvent.bKeyDown) continue;
-
-            /* Save the scan code and end the loop */
-            CharacterData = (InputRecord.Event.KeyEvent.wVirtualScanCode << 8)
-                            | InputRecord.Event.KeyEvent.uChar.AsciiChar;
-
-            break;
-        }
+        /* Set the handler CF to repeat the BOP */
+        EmulatorSetFlag(EMULATOR_FLAG_CF);
     }
 
     return CharacterData;

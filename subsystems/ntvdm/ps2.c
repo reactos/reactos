@@ -271,6 +271,7 @@ VOID CheckForInputEvents()
     HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD i, j, Count, TotalEvents;
     BYTE ScanCode;
+    BOOLEAN Interrupt = FALSE;
 
     /* Get the number of input events */
     if (!GetNumberOfConsoleInputEvents(ConsoleInput, &Count)) return;
@@ -300,12 +301,10 @@ VOID CheckForInputEvents()
             KeyboardQueuePush(ScanCode);
         }
 
-        /* Yes, IRQ 1 */
-        PicInterruptRequest(1);
-
-        /* Stop the loop */
-        break;
+        Interrupt = TRUE;
     }
+
+    if (Interrupt) PicInterruptRequest(1);
 
 Cleanup:
     HeapFree(GetProcessHeap(), 0, Buffer);

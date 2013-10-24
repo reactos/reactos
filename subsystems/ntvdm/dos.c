@@ -684,30 +684,17 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     WORD Result = ERROR_SUCCESS;
     DWORD BytesRead32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
-    WORD i;
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
     /* Make sure the handle is valid */
     if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
 
-    if (IsConsoleHandle(Handle))
+    /* Read the file */
+    if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
     {
-        for (i = 0; i < Count; i++)
-        {
-            /* Call the BIOS function to read the character */
-            ((LPBYTE)Buffer)[i] = LOBYTE(BiosGetCharacter());
-            BytesRead32++;
-        }
-    }
-    else
-    {
-        /* Read the file */
-        if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
-        {
-            /* Store the error code */
-            Result = (WORD)GetLastError();
-        }
+        /* Store the error code */
+        Result = (WORD)GetLastError();
     }
 
     /* The number of bytes read is always 16-bit */
@@ -1283,8 +1270,16 @@ CHAR DosReadCharacter(VOID)
     CHAR Character = '\0';
     WORD BytesRead;
 
-    /* Use the file reading function */
-    DosReadFile(DOS_INPUT_HANDLE, &Character, sizeof(CHAR), &BytesRead);
+    if (IsConsoleHandle(DosGetRealHandle(DOS_INPUT_HANDLE)))
+    {
+        /* Call the BIOS */
+        Character = LOBYTE(BiosGetCharacter());
+    }
+    else
+    {
+        /* Use the file reading function */
+        DosReadFile(DOS_INPUT_HANDLE, &Character, sizeof(CHAR), &BytesRead);
+    }
 
     return Character;
 }
@@ -1381,7 +1376,12 @@ VOID DosInt21h(LPWORD Stack)
         {
             Character = DosReadCharacter();
             DosPrintCharacter(Character);
-            EmulatorSetRegister(EMULATOR_REG_AX, (Eax & 0xFFFFFF00) | Character);
+
+            if (!EmulatorGetFlag(EMULATOR_FLAG_CF))
+            {
+                EmulatorSetRegister(EMULATOR_REG_AX, (Eax & 0xFFFFFF00) | Character);
+            }
+
             break;
         }
 
@@ -1396,8 +1396,13 @@ VOID DosInt21h(LPWORD Stack)
         case 0x07:
         case 0x08:
         {
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                               (Eax & 0xFFFFFF00) | DosReadCharacter());
+            Character = DosReadCharacter();
+
+            if (!EmulatorGetFlag(EMULATOR_FLAG_CF))
+            {
+                EmulatorSetRegister(EMULATOR_REG_AX, (Eax & 0xFFFFFF00) | Character);
+            }
+
             break;
         }
 
@@ -1419,6 +1424,8 @@ VOID DosInt21h(LPWORD Stack)
         /* Read Buffered Input */
         case 0x0A:
         {
+            DPRINT1("FIXME: This function is still not adapted to the new system!\n");
+
             InputBuffer = (PDOS_INPUT_BUFFER)((ULONG_PTR)BaseAddress
                                               + TO_LINEAR(DataSegment,
                                                           LOWORD(Edx)));
@@ -1725,23 +1732,45 @@ VOID DosInt21h(LPWORD Stack)
         /* Read File */
         case 0x3F:
         {
+            WORD Handle = LOWORD(Ebx);
+            LPBYTE Buffer = (LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, LOWORD(Edx)));
+            WORD Count = LOWORD(Ecx);
             WORD BytesRead = 0;
-            WORD ErrorCode = DosReadFile(LOWORD(Ebx),
-                                         (LPVOID)((ULONG_PTR)BaseAddress
-                                         + TO_LINEAR(DataSegment, LOWORD(Edx))),
-                                         LOWORD(Ecx),
-                                         &BytesRead);
+            WORD ErrorCode = ERROR_SUCCESS;
+
+            if (IsConsoleHandle(DosGetRealHandle(Handle)))
+            {
+                while (Stack[STACK_COUNTER] < Count)
+                {
+                    /* Read a character from the BIOS */
+                    Buffer[Stack[STACK_COUNTER]] = LOBYTE(BiosGetCharacter()); // FIXME: Security checks!
+
+                    /* Stop if the BOP needs to be repeated */
+                    if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+
+                    /* Increment the counter */
+                    Stack[STACK_COUNTER]++;
+                }
+
+                if (Stack[STACK_COUNTER] < Count) ErrorCode = ERROR_NOT_READY;
+                else BytesRead = Count;
+            }
+            else
+            {
+                /* Use the file reading function */
+                ErrorCode = DosReadFile(Handle, Buffer, Count, &BytesRead);
+            }
 
             if (ErrorCode == 0)
             {
-                /* Clear CF */
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-
-                /* Return the number of bytes read in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | BytesRead);
+                    /* Clear CF */
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+    
+                    /* Return the number of bytes read in AX */
+                    EmulatorSetRegister(EMULATOR_REG_AX,
+                                        (Eax & 0xFFFF0000) | BytesRead);
             }
-            else
+            else if (ErrorCode != ERROR_NOT_READY)
             {
                 /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;

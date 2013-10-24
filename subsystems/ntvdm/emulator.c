@@ -590,9 +590,6 @@ VOID EmulatorStep(VOID)
         /* Skip the opcodes */
         EmulatorContext.state->reg_ip += 4;
 
-        // HACK: Refresh the display because the called function may wait.
-        VgaRefreshDisplay();
-
         /* Call the BOP handler */
         EmulatorBop(Instruction[1]);
     }
