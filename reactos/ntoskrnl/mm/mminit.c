@@ -297,12 +297,15 @@ MiDbgDumpAddressSpace(VOID)
             "Non Paged Pool Expansion PTE Space");
 }
 
-NTSTATUS NTAPI
-MmMpwThreadMain(PVOID Ignored)
+VOID
+NTAPI
+MmMpwThreadMain(PVOID Parameter)
 {
    NTSTATUS Status;
    ULONG PagesWritten;
    LARGE_INTEGER Timeout;
+
+   UNREFERENCED_PARAMETER(Parameter);
 
    Timeout.QuadPart = -50000000;
 
@@ -317,7 +320,7 @@ MmMpwThreadMain(PVOID Ignored)
       {
          DbgPrint("MpwThread: Wait failed\n");
          KeBugCheck(MEMORY_MANAGEMENT);
-         return(STATUS_UNSUCCESSFUL);
+         return;
       }
 
       PagesWritten = 0;
