@@ -61,7 +61,9 @@ NpCommonSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
     PNP_FCB Fcb;
     PNP_CCB Ccb;
     ULONG NamedPipeEnd;
-    PVOID CachedSecurityDescriptor, SecurityDescriptor;
+    PSECURITY_DESCRIPTOR OldSecurityDescriptor;
+    PSECURITY_DESCRIPTOR TempSecurityDescriptor;
+    PSECURITY_DESCRIPTOR NewSecurityDescriptor;
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -73,21 +75,22 @@ NpCommonSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
     if (!NodeTypeCode) return STATUS_PIPE_DISCONNECTED;
     if (NodeTypeCode != NPFS_NTC_CCB) return STATUS_INVALID_PARAMETER;
 
+    OldSecurityDescriptor = TempSecurityDescriptor = Fcb->SecurityDescriptor;
     Status = SeSetSecurityDescriptorInfo(NULL,
                                          &IoStack->Parameters.SetSecurity.SecurityInformation,
                                          IoStack->Parameters.SetSecurity.SecurityDescriptor,
-                                         &SecurityDescriptor,
+                                         &TempSecurityDescriptor,
                                          TRUE,
                                          IoGetFileObjectGenericMapping());
     if (!NT_SUCCESS(Status)) return Status;
 
-    Status = ObLogSecurityDescriptor(SecurityDescriptor, &CachedSecurityDescriptor, TRUE);
-    ExFreePool(SecurityDescriptor);
+    Status = ObLogSecurityDescriptor(TempSecurityDescriptor, &NewSecurityDescriptor, TRUE);
+    ExFreePool(TempSecurityDescriptor);
 
     if (!NT_SUCCESS(Status)) return Status;
 
-    Fcb->SecurityDescriptor = CachedSecurityDescriptor;
-    ObDereferenceSecurityDescriptor(SecurityDescriptor, 1);
+    Fcb->SecurityDescriptor = NewSecurityDescriptor;
+    ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
     return Status;
 }
 
@@ -127,7 +130,7 @@ NpFsdSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
     FsRtlEnterFileSystem();
     NpAcquireExclusiveVcb();
 
-    Status = NpCommonQuerySecurityInfo(DeviceObject, Irp);
+    Status = NpCommonSetSecurityInfo(DeviceObject, Irp);
 
     NpReleaseVcb();
     FsRtlExitFileSystem();
