@@ -1659,5 +1659,158 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FB9)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* All of them are reserved (UD2) */
+    Fast486Exception(State, FAST486_EXCEPTION_UD);
+    return FALSE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    UINT DataSize;
+    UCHAR BitNumber;
+    
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the number of bits */
+    if (OperandSize) DataSize = 32;
+    else DataSize = 16;
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register < 4)
+    {
+        /* Invalid */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the bit number */
+    if (!Fast486FetchByte(State, &BitNumber))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Memory)
+    {
+        /*
+         * For memory operands, add the bit offset divided by
+         * the data size to the address
+         */
+        ModRegRm.MemoryAddress += BitNumber / DataSize;
+    }
+
+    /* Normalize the bit number */
+    BitNumber &= (1 << DataSize) - 1;
+
+    if (OperandSize)
+    {
+        ULONG Dummy, Value;
+
+        /* Read the value */
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set CF to the bit value */
+        State->Flags.Cf = (Value >> BitNumber) & 1;
+
+        if (ModRegRm.Register == 5)
+        {
+            /* BTS */
+            Value |= 1 << BitNumber;
+        }
+        else if (ModRegRm.Register == 6)
+        {
+            /* BTR */
+            Value &= ~(1 << BitNumber);
+        }
+        else if (ModRegRm.Register == 7)
+        {
+            /* BTC */
+            Value ^= 1 << BitNumber;
+        }
+
+        if (ModRegRm.Register >= 5)
+        {
+            /* Write back the result */
+            if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Value))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        USHORT Dummy, Value;
+
+        /* Read the value */
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set CF to the bit value */
+        State->Flags.Cf = (Value >> BitNumber) & 1;
+
+        if (ModRegRm.Register == 5)
+        {
+            /* BTS */
+            Value |= 1 << BitNumber;
+        }
+        else if (ModRegRm.Register == 6)
+        {
+            /* BTR */
+            Value &= ~(1 << BitNumber);
+        }
+        else if (ModRegRm.Register == 7)
+        {
+            /* BTC */
+            Value ^= 1 << BitNumber;
+        }
+
+        if (ModRegRm.Register >= 5)
+        {
+            /* Write back the result */
+            if (!Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Value))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+
+    /* Return success */
+    return TRUE;
+
+    return TRUE;
+}
+
 /* EOF */
 

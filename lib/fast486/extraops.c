@@ -31,6 +31,7 @@
 #include <fast486.h>
 #include "opcodes.h"
 #include "common.h"
+#include "opgroups.h"
 #include "extraops.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
@@ -223,8 +224,8 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xB6 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xB7 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xB8 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB9 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xBA NOT IMPLEMENTED
+    Fast486OpcodeGroup0FB9,
+    Fast486OpcodeGroup0FBA,
     Fast486ExtOpcodeBtc,
     NULL, // TODO: OPCODE 0xBC NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xBD NOT IMPLEMENTED
