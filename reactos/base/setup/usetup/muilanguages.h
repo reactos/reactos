@@ -511,7 +511,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"00000406", L"1252", L"850", L"10000", L"Danish", L"45", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, daDKLayouts },
 #endif
 #ifdef LANGUAGE_DV_MV
-     {L"00000465", L"0", L"1", L"2", L"Divehi (Maldives)", L"960", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, dvMVLayouts },
+     {L"00000465", L"0", L"1", L"2", L"Dhivehi (Maldives)", L"960", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, dvMVLayouts },
 #endif
 #ifdef LANGUAGE_NL_NL
      {L"00000413", L"1252", L"850", L"10000", L"Dutch (Netherlands)", L"31", nlNLPages, nlNLErrorEntries, nlNLStrings, LatinFonts, nlNLLayouts },
