@@ -3586,7 +3586,7 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Allocate the names array */
-    Names->Element = midl_user_allocate(Count * sizeof(ULONG));
+    Names->Element = midl_user_allocate(Count * sizeof(*Names->Element));
     if (Names->Element == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3594,7 +3594,7 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Allocate the use array */
-    Use->Element = midl_user_allocate(Count * sizeof(ULONG));
+    Use->Element = midl_user_allocate(Count * sizeof(*Use->Element));
     if (Use->Element == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
