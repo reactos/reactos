@@ -19,18 +19,16 @@
 
 #define COBJMACROS
 
-#include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wincon.h>
-#include <ocidl.h>
+//#include <stdio.h>
+//#include "windows.h"
+//#include "ocidl.h"
 #include <initguid.h>
-#include "objidl.h"
-#include "wbemcli.h"
+//#include "objidl.h"
+#include <wbemcli.h>
+#include "wmic.h"
+
 #include <wine/debug.h>
 #include <wine/unicode.h>
-
-#include "wmic.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wmic);
 
@@ -231,7 +229,6 @@ static int query_prop( const WCHAR *alias, const WCHAR *propname )
         }
         if (IWbemClassObject_Get( obj, prop, 0, &v, NULL, NULL ) == WBEM_S_NO_ERROR)
         {
-            VariantChangeType( &v, &v, 0, VT_BSTR );
             output_string( fmtW, V_BSTR( &v ) );
             VariantClear( &v );
         }
