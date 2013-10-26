@@ -71,10 +71,10 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
-    NULL, // TODO: OPCODE 0x20 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x21 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x22 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x23 NOT IMPLEMENTED
+    Fast486ExtOpcodeStoreControlReg,
+    Fast486ExtOpcodeStoreDebugReg,
+    Fast486ExtOpcodeLoadControlReg,
+    Fast486ExtOpcodeLoadDebugReg,
     NULL, // TODO: OPCODE 0x24 NOT IMPLEMENTED
     NULL, // Invalid
     NULL, // TODO: OPCODE 0x26 NOT IMPLEMENTED
@@ -209,7 +209,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     Fast486ExtOpcodePushGs,
     Fast486ExtOpcodePopGs,
-    NULL, // TODO: OPCODE 0xAA NOT IMPLEMENTED
+    NULL, // Invalid
     Fast486ExtOpcodeBts,
     NULL, // TODO: OPCODE 0xAC NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAD NOT IMPLEMENTED
@@ -298,6 +298,202 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreControlReg)
+{
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* The current privilege level must be zero */
+    if (Fast486GetCurrentPrivLevel(State) != 0)
+    {
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    if ((ModRegRm.Register == 1) || (ModRegRm.Register > 3))
+    {
+        /* CR1, CR4, CR5, CR6 and CR7 don't exist */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (ModRegRm.Register != 0)
+    {
+        /* CR2 and CR3 and are stored in array indexes 1 and 2 */
+        ModRegRm.Register--;
+    }
+
+    /* Store the value of the control register */
+    State->GeneralRegs[ModRegRm.SecondRegister].Long = State->ControlRegisters[ModRegRm.Register];
+
+    /* Return success */
+    return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreDebugReg)
+{
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* The current privilege level must be zero */
+    if (Fast486GetCurrentPrivLevel(State) != 0)
+    {
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    if ((ModRegRm.Register == 6) || (ModRegRm.Register == 7))
+    {
+        /* DR6 and DR7 are aliases to DR4 and DR5 */
+        ModRegRm.Register -= 2;
+    }
+
+    if (State->DebugRegisters[FAST486_REG_DR5] & FAST486_DR5_GD)
+    {
+        /* Disallow access to debug registers */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    /* Store the value of the debug register */
+    State->GeneralRegs[ModRegRm.SecondRegister].Long = State->DebugRegisters[ModRegRm.Register];
+
+    /* Return success */
+    return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
+{
+    ULONG Value;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* The current privilege level must be zero */
+    if (Fast486GetCurrentPrivLevel(State) != 0)
+    {
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    if ((ModRegRm.Register == 1) || (ModRegRm.Register > 3))
+    {
+        /* CR1, CR4, CR5, CR6 and CR7 don't exist */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+    
+    if (ModRegRm.Register != 0)
+    {
+        /* CR2 and CR3 and are stored in array indexes 1 and 2 */
+        ModRegRm.Register--;
+    }
+
+    /* Get the value */
+    Value = State->GeneralRegs[ModRegRm.SecondRegister].Long;
+
+    if (ModRegRm.Register == (INT)FAST486_REG_CR0)
+    {
+        /* CR0 checks */
+
+        if (((Value & (FAST486_CR0_PG | FAST486_CR0_PE)) == FAST486_CR0_PG)
+            || ((Value & (FAST486_CR0_CD | FAST486_CR0_NW)) == FAST486_CR0_NW))
+        {
+            /* Invalid value */
+            Fast486Exception(State, FAST486_EXCEPTION_GP);
+            return FALSE;
+        }
+    }
+
+    /* Load a value to the control register */
+    State->ControlRegisters[ModRegRm.Register] = Value;
+
+    /* Return success */
+    return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadDebugReg)
+{
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* The current privilege level must be zero */
+    if (Fast486GetCurrentPrivLevel(State) != 0)
+    {
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    if ((ModRegRm.Register == 6) || (ModRegRm.Register == 7))
+    {
+        /* DR6 and DR7 are aliases to DR4 and DR5 */
+        ModRegRm.Register -= 2;
+    }
+
+    if (State->DebugRegisters[FAST486_REG_DR5] & FAST486_DR5_GD)
+    {
+        /* Disallow access to debug registers */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    /* Load a value to the debug register */
+    State->DebugRegisters[ModRegRm.Register] = State->GeneralRegs[ModRegRm.SecondRegister].Long;
+
+    if (ModRegRm.Register == (INT)FAST486_REG_DR4)
+    {
+        /* The reserved bits are 1 */
+        State->DebugRegisters[ModRegRm.Register] |= FAST486_DR4_RESERVED;
+    }
+    else if (ModRegRm.Register == (INT)FAST486_REG_DR5)
+    {
+        /* The reserved bits are 0 */
+        State->DebugRegisters[ModRegRm.Register] &= ~FAST486_DR5_RESERVED;
+    }
+
+    /* Return success */
+    return TRUE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushFs)
 {
@@ -1062,3 +1258,4 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
         return FALSE;
     }
 }
+

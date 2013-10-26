@@ -26,8 +26,8 @@
 
 #define FAST486_NUM_GEN_REGS    8
 #define FAST486_NUM_SEG_REGS    6
-#define FAST486_NUM_CTRL_REGS   8
-#define FAST486_NUM_DBG_REGS    8
+#define FAST486_NUM_CTRL_REGS   3
+#define FAST486_NUM_DBG_REGS    6
 
 #define FAST486_CR0_PE  (1 << 0)
 #define FAST486_CR0_MP  (1 << 1)
@@ -40,6 +40,33 @@
 #define FAST486_CR0_NW  (1 << 29)
 #define FAST486_CR0_CD  (1 << 30)
 #define FAST486_CR0_PG  (1 << 31)
+
+#define FAST486_DR4_B0 (1 << 0)
+#define FAST486_DR4_B1 (1 << 1)
+#define FAST486_DR4_B2 (1 << 2)
+#define FAST486_DR4_B3 (1 << 3)
+#define FAST486_DR4_BD (1 << 13)
+#define FAST486_DR4_BS (1 << 14)
+#define FAST486_DR4_BT (1 << 15)
+
+#define FAST486_DR5_L0 (1 << 0)
+#define FAST486_DR5_G0 (1 << 1)
+#define FAST486_DR5_L1 (1 << 2)
+#define FAST486_DR5_G1 (1 << 3)
+#define FAST486_DR5_L2 (1 << 4)
+#define FAST486_DR5_G2 (1 << 5)
+#define FAST486_DR5_L3 (1 << 6)
+#define FAST486_DR5_G3 (1 << 7)
+#define FAST486_DR5_LE (1 << 8)
+#define FAST486_DR5_GE (1 << 9)
+#define FAST486_DR5_GD (1 << 13)
+
+#define FAST486_DBG_BREAK_EXEC 0
+#define FAST486_DBG_BREAK_WRITE 1
+#define FAST486_DBG_BREAK_READWRITE 3
+
+#define FAST486_DR4_RESERVED 0xFFFF1FF0
+#define FAST486_DR5_RESERVED 0x0000DC00
 
 #define FAST486_IDT_TASK_GATE       0x5
 #define FAST486_IDT_INT_GATE        0x6
@@ -81,26 +108,21 @@ typedef enum _FAST486_SEG_REGS
 
 typedef enum _FAST486_CTRL_REGS
 {
-    FAST486_REG_CR0,
-    FAST486_REG_CR1,
-    FAST486_REG_CR2,
-    FAST486_REG_CR3,
-    FAST486_REG_CR4,
-    FAST486_REG_CR5,
-    FAST486_REG_CR6,
-    FAST486_REG_CR7
+    FAST486_REG_CR0 = 0,
+    FAST486_REG_CR2 = 1,
+    FAST486_REG_CR3 = 2,
 } FAST486_CTRL_REGS, *PFAST486_CTRL_REGS;
 
 typedef enum _FAST486_DBG_REGS
 {
-    FAST486_REG_DR0,
-    FAST486_REG_DR1,
-    FAST486_REG_DR2,
-    FAST486_REG_DR3,
-    FAST486_REG_DR4,
-    FAST486_REG_DR5,
-    FAST486_REG_DR6,
-    FAST486_REG_DR7
+    FAST486_REG_DR0 = 0,
+    FAST486_REG_DR1 = 1,
+    FAST486_REG_DR2 = 2,
+    FAST486_REG_DR3 = 3,
+    FAST486_REG_DR4 = 4,
+    FAST486_REG_DR5 = 5,
+    FAST486_REG_DR6 = 4, // alias to DR4
+    FAST486_REG_DR7 = 5  // alias to DR5
 } FAST486_DBG_REGS, *PFAST486_DBG_REGS;
 
 typedef enum _FAST486_EXCEPTIONS

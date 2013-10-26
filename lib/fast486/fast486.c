@@ -217,27 +217,19 @@ Fast486DumpState(PFAST486_STATE State)
             State->Flags.Vip ? "VIP" : "vip",
             State->Flags.Iopl);
     DPRINT1("\nControl Registers:\n"
-            "CR0 = %08X\tCR1 = %08X\tCR2 = %08X\tCR3 = %08X\n"
-            "CR4 = %08X\tCR5 = %08X\tCR6 = %08X\tCR7 = %08X\n",
+            "CR0 = %08X\tCR2 = %08X\tCR3 = %08X\n",
             State->ControlRegisters[FAST486_REG_CR0],
-            State->ControlRegisters[FAST486_REG_CR1],
             State->ControlRegisters[FAST486_REG_CR2],
-            State->ControlRegisters[FAST486_REG_CR3],
-            State->ControlRegisters[FAST486_REG_CR4],
-            State->ControlRegisters[FAST486_REG_CR5],
-            State->ControlRegisters[FAST486_REG_CR6],
-            State->ControlRegisters[FAST486_REG_CR7]);
+            State->ControlRegisters[FAST486_REG_CR3]);
     DPRINT1("\nDebug Registers:\n"
-            "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\tDR3 = %08X\n"
-            "DR4 = %08X\tDR5 = %08X\tDR6 = %08X\tDR7 = %08X\n",
+            "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\n"
+            "DR3 = %08X\tDR4 = %08X\tDR5 = %08X\n",
             State->DebugRegisters[FAST486_REG_DR0],
             State->DebugRegisters[FAST486_REG_DR1],
             State->DebugRegisters[FAST486_REG_DR2],
             State->DebugRegisters[FAST486_REG_DR3],
             State->DebugRegisters[FAST486_REG_DR4],
-            State->DebugRegisters[FAST486_REG_DR5],
-            State->DebugRegisters[FAST486_REG_DR6],
-            State->DebugRegisters[FAST486_REG_DR7]);
+            State->DebugRegisters[FAST486_REG_DR5]);
 }
 
 VOID
