@@ -23,6 +23,7 @@
 #define _EXTRAOPS_H_
 
 /* DEFINES ********************************************************************/
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeClts);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreControlReg);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreDebugReg);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg);

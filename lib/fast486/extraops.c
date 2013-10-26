@@ -45,7 +45,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x03 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x04 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x05 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x06 NOT IMPLEMENTED
+    Fast486ExtOpcodeClts,
     NULL, // TODO: OPCODE 0x07 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x08 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x09 NOT IMPLEMENTED
@@ -298,6 +298,23 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeClts)
+{
+    NO_LOCK_PREFIX();
+
+    /* The current privilege level must be zero */
+    if (Fast486GetCurrentPrivLevel(State) != 0)
+    {
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    /* Clear the task switch bit */
+    State->ControlRegisters[FAST486_REG_CR0] &= ~FAST486_CR0_TS;
+
+    return TRUE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreControlReg)
 {
