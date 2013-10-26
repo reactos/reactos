@@ -12,13 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
-
-#ifndef NEW_EMULATOR
-#include <softx86.h>
-#include <softx87.h>
-#else
 #include <fast486.h>
-#endif
 
 /* DEFINES ********************************************************************/
 
@@ -86,18 +80,7 @@ enum
     EMULATOR_REG_GS
 };
 
-#ifndef NEW_EMULATOR
-
-#define NTVDMCALL __cdecl
-extern softx86_ctx EmulatorContext;
-extern softx87_ctx FpuEmulatorContext;
-
-#else
-
-#define NTVDMCALL __stdcall
 extern FAST486_STATE EmulatorContext;
-
-#endif
 
 /* FUNCTIONS ******************************************************************/
 

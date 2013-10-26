@@ -20,18 +20,13 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-#ifndef NEW_EMULATOR
-softx86_ctx EmulatorContext;
-softx87_ctx FpuEmulatorContext;
-#else
 FAST486_STATE EmulatorContext;
-#endif
 
 static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID NTVDMCALL EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
 
@@ -56,7 +51,7 @@ static VOID NTVDMCALL EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buf
     }
 }
 
-static VOID NTVDMCALL EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
 
@@ -84,7 +79,7 @@ static VOID NTVDMCALL EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Bu
     }
 }
 
-static VOID NTVDMCALL EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
     UNREFERENCED_PARAMETER(Size);
@@ -152,7 +147,7 @@ static VOID NTVDMCALL EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer,
     }
 }
 
-static VOID NTVDMCALL EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     BYTE Byte = *Buffer;
 
@@ -228,20 +223,15 @@ static VOID NTVDMCALL EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer
     }
 }
 
-static VOID EmulatorBop(WORD Code)
+static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
 {
     WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
     BYTE IntNum;
     LPWORD Stack;
 
     /* Get the SS:SP */
-#ifndef NEW_EMULATOR
-    StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
-    StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
-#else
-    StackSegment = EmulatorContext.SegmentRegs[FAST486_REG_SS].Selector;
-    StackPointer = EmulatorContext.GeneralRegs[FAST486_REG_ESP].LowWord;
-#endif
+    StackSegment = State->SegmentRegs[FAST486_REG_SS].Selector;
+    StackPointer = State->GeneralRegs[FAST486_REG_ESP].LowWord;
 
     /* Get the stack */
     Stack = (LPWORD)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
@@ -339,47 +329,6 @@ static VOID EmulatorBop(WORD Code)
     }
 }
 
-#ifdef NEW_EMULATOR
-static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
-{
-    /*
-     * HACK: To maintain softx86 compatbility, just call the old EmulatorBop here.
-     * Later on, when softx86 is no longer needed, the code from EmulatorBop should
-     * be moved here and should use the "State" variable.
-     */
-    EmulatorBop(Code);
-}
-
-#endif
-
-#ifndef NEW_EMULATOR
-
-static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
-{
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Number);
-
-    /* Do nothing */
-}
-
-static VOID EmulatorHardwareInt(PVOID Context, BYTE Number)
-{
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Number);
-
-    /* Do nothing */
-}
-
-static VOID EmulatorHardwareIntAck(PVOID Context, BYTE Number)
-{
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Number);
-
-    /* Do nothing */
-}
-
-#endif
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize()
@@ -388,38 +337,6 @@ BOOLEAN EmulatorInitialize()
     BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
     if (BaseAddress == NULL) return FALSE;
 
-#ifndef NEW_EMULATOR
-    /* Initialize the softx86 CPU emulator */
-    if (!softx86_init(&EmulatorContext, SX86_CPULEVEL_80286))
-    {
-        HeapFree(GetProcessHeap(), 0, BaseAddress);
-        return FALSE;
-    }
-
-    /* Initialize the softx87 FPU emulator*/
-    if(!softx87_init(&FpuEmulatorContext, SX87_FPULEVEL_8087))
-    {
-        softx86_free(&EmulatorContext);
-        HeapFree(GetProcessHeap(), 0, BaseAddress);
-        return FALSE;
-    }
-
-    /* Set memory read/write callbacks */
-    EmulatorContext.callbacks->on_read_memory = EmulatorReadMemory;
-    EmulatorContext.callbacks->on_write_memory = EmulatorWriteMemory;
-
-    /* Set MMIO read/write callbacks */
-    EmulatorContext.callbacks->on_read_io = EmulatorReadIo;
-    EmulatorContext.callbacks->on_write_io = EmulatorWriteIo;
-
-    /* Set interrupt callbacks */
-    EmulatorContext.callbacks->on_sw_int = EmulatorSoftwareInt;
-    EmulatorContext.callbacks->on_hw_int = EmulatorHardwareInt;
-    EmulatorContext.callbacks->on_hw_int_ack = EmulatorHardwareIntAck;
-
-    /* Connect the emulated FPU to the emulated CPU */
-    softx87_connect_to_CPU(&EmulatorContext, &FpuEmulatorContext);
-#else
     /* Set the callbacks */
     EmulatorContext.MemReadCallback = (FAST486_MEM_READ_PROC)EmulatorReadMemory;
     EmulatorContext.MemWriteCallback = (FAST486_MEM_WRITE_PROC)EmulatorWriteMemory;
@@ -429,7 +346,6 @@ BOOLEAN EmulatorInitialize()
 
     /* Reset the CPU */
     Fast486Reset(&EmulatorContext);
-#endif
 
     /* Enable interrupts */
     EmulatorSetFlag(EMULATOR_FLAG_IF);
@@ -439,67 +355,30 @@ BOOLEAN EmulatorInitialize()
 
 VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 {
-#ifndef NEW_EMULATOR
-    /* Call the softx86 API */
-    softx86_set_stack_ptr(&EmulatorContext, Segment, Offset);
-#else
     Fast486SetStack(&EmulatorContext, Segment, Offset);
-#endif
 }
 
 // FIXME: This function assumes 16-bit mode!!!
 VOID EmulatorExecute(WORD Segment, WORD Offset)
 {
-#ifndef NEW_EMULATOR
-    /* Call the softx86 API */
-    softx86_set_instruction_ptr(&EmulatorContext, Segment, Offset);
-#else
     /* Tell Fast486 to move the instruction pointer */
     Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
-#endif
 }
 
 VOID EmulatorInterrupt(BYTE Number)
 {
-#ifndef NEW_EMULATOR
-    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
-    UINT Segment, Offset;
-
-    /* Get the segment and offset */
-    Segment = HIWORD(IntVecTable[Number]);
-    Offset = LOWORD(IntVecTable[Number]);
-
-    /* Call the softx86 API */
-    softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
-#else
     /* Call the Fast486 API */
     Fast486Interrupt(&EmulatorContext, Number);
-#endif
 }
 
 VOID EmulatorExternalInterrupt(BYTE Number)
 {
-#ifndef NEW_EMULATOR
-    /* Call the softx86 API */
-    softx86_ext_hw_signal(&EmulatorContext, Number);
-#else
     /* Call the Fast486 API */
     Fast486Interrupt(&EmulatorContext, Number);
-#endif
 }
 
 ULONG EmulatorGetRegister(ULONG Register)
 {
-#ifndef NEW_EMULATOR
-    if (Register < EMULATOR_REG_ES)
-    {
-        return EmulatorContext.state->general_reg[Register].val;
-    }
-    else
-    {
-        return EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val;
-    }
-#else
     if (Register < EMULATOR_REG_ES)
     {
         return EmulatorContext.GeneralRegs[Register].Long;
@@ -508,30 +387,15 @@ ULONG EmulatorGetRegister(ULONG Register)
     {
         return EmulatorContext.SegmentRegs[Register - EMULATOR_REG_ES].Selector;
     }
-#endif
 }
 
 ULONG EmulatorGetProgramCounter(VOID)
 {
-#ifndef NEW_EMULATOR
-    return EmulatorContext.state->reg_ip;
-#else
     return EmulatorContext.InstPtr.Long;
-#endif
 }
 
 VOID EmulatorSetRegister(ULONG Register, ULONG Value)
 {
-#ifndef NEW_EMULATOR
-    if (Register < EMULATOR_REG_ES)
-    {
-        EmulatorContext.state->general_reg[Register].val = Value;
-    }
-    else
-    {
-        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = (USHORT)Value;
-    }
-#else
     if (Register < EMULATOR_REG_ES)
     {
         EmulatorContext.GeneralRegs[Register].Long = Value;
@@ -540,83 +404,34 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     {
         Fast486SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
     }
-#endif
 }
 
 BOOLEAN EmulatorGetFlag(ULONG Flag)
 {
-#ifndef NEW_EMULATOR
-    return (EmulatorContext.state->reg_flags.val & Flag) ? TRUE : FALSE;
-#else
     return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
-#endif
 }
 
 VOID EmulatorSetFlag(ULONG Flag)
 {
-#ifndef NEW_EMULATOR
-    EmulatorContext.state->reg_flags.val |= Flag;
-#else
     EmulatorContext.Flags.Long |= Flag;
-#endif
 }
 
 VOID EmulatorClearFlag(ULONG Flag)
 {
-#ifndef NEW_EMULATOR
-    EmulatorContext.state->reg_flags.val &= ~Flag;
-#else
     EmulatorContext.Flags.Long &= ~Flag;
-#endif
 }
 
 VOID EmulatorStep(VOID)
 {
-#ifndef NEW_EMULATOR
-    LPWORD Instruction;
-
-    /* Print the current position - useful for debugging */
-    DPRINT("Executing at CS:IP = %04X:%04X\n",
-           EmulatorGetRegister(EMULATOR_REG_CS),
-           EmulatorContext.state->reg_ip);
-
-    Instruction = (LPWORD)((ULONG_PTR)BaseAddress
-                           + TO_LINEAR(EmulatorGetRegister(EMULATOR_REG_CS),
-                           EmulatorContext.state->reg_ip));
-
-    /* Check for the BIOS operation (BOP) sequence */
-    if (Instruction[0] == EMULATOR_BOP)
-    {
-        /* Skip the opcodes */
-        EmulatorContext.state->reg_ip += 4;
-
-        /* Call the BOP handler */
-        EmulatorBop(Instruction[1]);
-    }
-
-    /* Call the softx86 API */
-    if (!softx86_step(&EmulatorContext))
-    {
-        /* Invalid opcode */
-        EmulatorInterrupt(EMULATOR_EXCEPTION_INVALID_OPCODE);
-    }
-#else
     /* Dump the state for debugging purposes */
     // Fast486DumpState(&EmulatorContext);
 
     /* Execute the next instruction */
     Fast486StepInto(&EmulatorContext);
-#endif
 }
 
 VOID EmulatorCleanup(VOID)
 {
-#ifndef NEW_EMULATOR
-    /* Free the softx86 CPU and FPU emulator */
-    softx87_free(&FpuEmulatorContext);
-    softx86_free(&EmulatorContext);
-#endif
-
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
