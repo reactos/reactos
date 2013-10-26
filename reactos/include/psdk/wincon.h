@@ -695,6 +695,7 @@ WriteConsoleOutputCharacterW(
 #define SetConsoleTitle SetConsoleTitleW
 #define WriteConsole WriteConsoleW
 #define WriteConsoleInput WriteConsoleInputW
+#define WriteConsoleInputVDM WriteConsoleInputVDMW
 #define WriteConsoleOutput WriteConsoleOutputW
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterW
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterW
@@ -715,6 +716,7 @@ WriteConsoleOutputCharacterW(
 #define SetConsoleTitle SetConsoleTitleA
 #define WriteConsole WriteConsoleA
 #define WriteConsoleInput WriteConsoleInputA
+#define WriteConsoleInputVDM WriteConsoleInputVDMA
 #define WriteConsoleOutput WriteConsoleOutputA
 #define FillConsoleOutputCharacter FillConsoleOutputCharacterA
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterA
