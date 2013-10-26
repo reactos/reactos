@@ -1284,6 +1284,26 @@ CHAR DosReadCharacter(VOID)
     return Character;
 }
 
+BOOLEAN DosCheckInput(VOID)
+{
+    HANDLE Handle = DosGetRealHandle(DOS_INPUT_HANDLE);
+
+    if (IsConsoleHandle(Handle))
+    {
+        /* Call the BIOS */
+        return (BiosPeekCharacter() != 0xFFFF);
+    }
+    else
+    {
+        DWORD FileSizeHigh;
+        DWORD FileSize = GetFileSize(Handle, &FileSizeHigh);
+        LONG LocationHigh = 0;
+        DWORD Location = SetFilePointer(Handle, 0, &LocationHigh, FILE_CURRENT);
+
+        return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
+    }
+}
+
 VOID DosPrintCharacter(CHAR Character)
 {
     WORD BytesWritten;
@@ -1349,7 +1369,6 @@ VOID DosInt20h(LPWORD Stack)
 
 VOID DosInt21h(LPWORD Stack)
 {
-    INT i;
     CHAR Character;
     SYSTEMTIME SystemTime;
     PCHAR String;
@@ -1424,21 +1443,39 @@ VOID DosInt21h(LPWORD Stack)
         /* Read Buffered Input */
         case 0x0A:
         {
-            DPRINT1("FIXME: This function is still not adapted to the new system!\n");
-
             InputBuffer = (PDOS_INPUT_BUFFER)((ULONG_PTR)BaseAddress
                                               + TO_LINEAR(DataSegment,
                                                           LOWORD(Edx)));
 
-            InputBuffer->Length = 0;
-            for (i = 0; i < InputBuffer->MaxLength; i ++)
+            while (Stack[STACK_COUNTER] < InputBuffer->MaxLength)
             {
+                /* Try to read a character */
                 Character = DosReadCharacter();
+
+                /* If it's not ready yet, let the BOP repeat */
+                if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+
+                /* Echo the character and append it to the buffer */
                 DosPrintCharacter(Character);
-                InputBuffer->Buffer[InputBuffer->Length] = Character;
+                InputBuffer->Buffer[Stack[STACK_COUNTER]] = Character;
+
                 if (Character == '\r') break;
-                InputBuffer->Length++;
+                Stack[STACK_COUNTER]++;
             }
+
+            /* Update the length */
+            InputBuffer->Length = Stack[STACK_COUNTER];
+
+            break;
+        }
+
+        /* Get STDIN Status */
+        case 0x0B:
+        {
+            if (DosCheckInput()) Eax |= 0xFF;
+            else Eax &= 0xFFFFFF00;
+
+            EmulatorSetRegister(EMULATOR_REG_AX, Eax);
 
             break;
         }
