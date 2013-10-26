@@ -166,6 +166,8 @@ static const WCHAR prop_intvalueW[] =
     {'I','n','t','e','g','e','r','V','a','l','u','e',0};
 static const WCHAR prop_lastbootuptimeW[] =
     {'L','a','s','t','B','o','o','t','U','p','T','i','m','e',0};
+static const WCHAR prop_localdatetimeW[] =
+    {'L','o','c','a','l','D','a','t','e','T','i','m','e',0};
 static const WCHAR prop_localeW[] =
     {'L','o','c','a','l','e',0};
 static const WCHAR prop_macaddressW[] =
@@ -345,6 +347,7 @@ static const struct column col_os[] =
     { prop_countrycodeW,      CIM_STRING|COL_FLAG_DYNAMIC },
     { prop_csdversionW,       CIM_STRING },
     { prop_lastbootuptimeW,   CIM_DATETIME|COL_FLAG_DYNAMIC },
+    { prop_localdatetimeW,    CIM_DATETIME|COL_FLAG_DYNAMIC },
     { prop_localeW,           CIM_STRING|COL_FLAG_DYNAMIC },
     { prop_osarchitectureW,   CIM_STRING },
     { prop_oslanguageW,       CIM_UINT32, VT_I4 },
@@ -597,6 +600,7 @@ struct record_operatingsystem
     const WCHAR *countrycode;
     const WCHAR *csdversion;
     const WCHAR *lastbootuptime;
+    const WCHAR *localdatetime;
     const WCHAR *locale;
     const WCHAR *osarchitecture;
     UINT32       oslanguage;
@@ -1787,6 +1791,31 @@ static WCHAR *get_lastbootuptime(void)
     sprintfW( ret, fmtW, tf.Year, tf.Month, tf.Day, tf.Hour, tf.Minute, tf.Second, tf.Milliseconds * 1000 );
     return ret;
 }
+static WCHAR *get_localdatetime(void)
+{
+    static const WCHAR fmtW[] =
+        {'%','0','4','u','%','0','2','u','%','0','2','u','%','0','2','u','%','0','2','u','%','0','2','u',
+         '.','%','0','6','u','%','+','0','3','d',0};
+    TIME_ZONE_INFORMATION tzi;
+    SYSTEMTIME st;
+    WCHAR *ret;
+    DWORD Status;
+    LONG Bias;
+
+    Status = GetTimeZoneInformation(&tzi);
+
+    if(Status == TIME_ZONE_ID_INVALID) return NULL;
+    Bias = tzi.Bias;
+    if(Status == TIME_ZONE_ID_DAYLIGHT)
+        Bias+= tzi.DaylightBias;
+    else
+        Bias+= tzi.StandardBias;
+    if (!(ret = heap_alloc( 26 * sizeof(WCHAR) ))) return NULL;
+
+    GetLocalTime(&st);
+    sprintfW( ret, fmtW, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds * 1000, -Bias);
+    return ret;
+}
 static WCHAR *get_systemdirectory(void)
 {
     void *redir;
@@ -1832,6 +1861,7 @@ static enum fill_status fill_os( struct table *table, const struct expr *cond )
     rec->countrycode      = get_countrycode();
     rec->csdversion       = os_csdversionW;
     rec->lastbootuptime   = get_lastbootuptime();
+    rec->localdatetime    = get_localdatetime();
     rec->locale           = get_locale();
     rec->osarchitecture   = get_osarchitecture();
     rec->oslanguage       = GetSystemDefaultLangID();
