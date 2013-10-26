@@ -150,7 +150,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte"
     IDS_SUMMARYTITLE    "Resumen de la instalación"
     IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado"
-    IDS_ABORTSETUP      "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar Reactos. ¿Realmente quiere salir?"
+    IDS_ABORTSETUP      "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar ReactOS. ¿Realmente quiere salir?"
     IDS_ABORTSETUP2     "¿Abortar instalación?"
 END
 /* EOF */

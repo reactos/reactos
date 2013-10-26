@@ -156,7 +156,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "Pierwszy etap instalacji został zakończony, uruchom ponownie komputer, aby przejść do drugiego etapu"
     IDS_SUMMARYTITLE    "Podsumowanie instalacji"
     IDS_SUMMARYSUBTITLE "Sprawdź ustawienia instalacji przed dokonaniem zmian na dysku"
-    IDS_ABORTSETUP      "Instalacja ReactOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, będziesz musiał uruchomić Instalator ponownie, aby zainstalować Reactos. Na pewno zakończyć?"
+    IDS_ABORTSETUP      "Instalacja ReactOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, będziesz musiał uruchomić Instalator ponownie, aby zainstalować ReactOS. Na pewno zakończyć?"
     IDS_ABORTSETUP2     "Przerwać instalację?"
 END
 /* EOF */

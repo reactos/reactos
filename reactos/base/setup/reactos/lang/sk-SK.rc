@@ -151,7 +151,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage"
     IDS_SUMMARYTITLE    "Zhrnutie inštalácie"
     IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
-    IDS_ABORTSETUP      "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Naozaj skončiť?"
+    IDS_ABORTSETUP      "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install ReactOS. Naozaj skončiť?"
     IDS_ABORTSETUP2     "Prerušiť inštaláciu?"
 END
 /* EOF */
