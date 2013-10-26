@@ -492,9 +492,10 @@ typedef struct
 typedef struct
 {
     HANDLE InputHandle;
-    BOOL Unicode;
     DWORD Length;
     INPUT_RECORD* InputRecord;
+    BOOL Unicode;
+    BOOL AppendToEnd;
 } CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
 
 typedef struct

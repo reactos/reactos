@@ -805,38 +805,6 @@ VerifyConsoleIoHandle(HANDLE Handle)
 
 
 /*
- * @unimplemented
- */
-DWORD
-WINAPI
-WriteConsoleInputVDMA(DWORD Unknown0,
-                      DWORD Unknown1,
-                      DWORD Unknown2,
-                      DWORD Unknown3)
-{
-    DPRINT1("WriteConsoleInputVDMA(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-WriteConsoleInputVDMW(DWORD Unknown0,
-                      DWORD Unknown1,
-                      DWORD Unknown2,
-                      DWORD Unknown3)
-{
-    DPRINT1("WriteConsoleInputVDMW(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
  * @implemented (Undocumented)
  */
 BOOL

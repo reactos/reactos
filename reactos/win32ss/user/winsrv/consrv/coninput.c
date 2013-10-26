@@ -391,6 +391,7 @@ NTSTATUS NTAPI
 ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN PCONSOLE_INPUT_BUFFER InputBuffer,
                         IN BOOLEAN Unicode,
+                        IN BOOLEAN AppendToEnd,
                         IN PINPUT_RECORD InputRecord,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL);
@@ -420,6 +421,7 @@ CSR_API(SrvWriteConsoleInput)
     Status = ConDrvWriteConsoleInput(InputBuffer->Header.Console,
                                      InputBuffer,
                                      WriteInputRequest->Unicode,
+                                     WriteInputRequest->AppendToEnd,
                                      WriteInputRequest->InputRecord,
                                      WriteInputRequest->Length,
                                      &NumEventsWritten);

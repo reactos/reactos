@@ -460,7 +460,8 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                      PINPUT_RECORD lpBuffer,
                      DWORD nLength,
                      LPDWORD lpNumberOfEventsWritten,
-                     BOOL bUnicode)
+                     BOOL bUnicode,
+                     BOOL bAppendToEnd)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEINPUT WriteInputRequest = &ApiMessage.Data.WriteInputRequest;
@@ -488,8 +489,9 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
 
     /* Set up the data to send to the Console Server */
     WriteInputRequest->InputHandle = hConsoleInput;
-    WriteInputRequest->Unicode = bUnicode;
     WriteInputRequest->Length = nLength;
+    WriteInputRequest->Unicode = bUnicode;
+    WriteInputRequest->AppendToEnd = bAppendToEnd;
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -1086,6 +1088,7 @@ WriteConsoleInputW(HANDLE hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
                                 nLength,
                                 lpNumberOfEventsWritten,
+                                TRUE,
                                 TRUE);
 }
 
@@ -1106,6 +1109,49 @@ WriteConsoleInputA(HANDLE hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
                                 nLength,
                                 lpNumberOfEventsWritten,
+                                FALSE,
+                                TRUE);
+}
+
+
+/*--------------------------------------------------------------
+ *     WriteConsoleInputVDMW
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+WriteConsoleInputVDMW(HANDLE hConsoleInput,
+                      CONST INPUT_RECORD *lpBuffer,
+                      DWORD nLength,
+                      LPDWORD lpNumberOfEventsWritten)
+{
+    return IntWriteConsoleInput(hConsoleInput,
+                                (PINPUT_RECORD)lpBuffer,
+                                nLength,
+                                lpNumberOfEventsWritten,
+                                TRUE,
+                                FALSE);
+}
+
+
+/*--------------------------------------------------------------
+ *     WriteConsoleInputVDMA
+ *
+ * @implemented
+ */
+BOOL
+WINAPI
+WriteConsoleInputVDMA(HANDLE hConsoleInput,
+                      CONST INPUT_RECORD *lpBuffer,
+                      DWORD nLength,
+                      LPDWORD lpNumberOfEventsWritten)
+{
+    return IntWriteConsoleInput(hConsoleInput,
+                                (PINPUT_RECORD)lpBuffer,
+                                nLength,
+                                lpNumberOfEventsWritten,
+                                FALSE,
                                 FALSE);
 }
 
