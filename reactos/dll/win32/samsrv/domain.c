@@ -303,4 +303,55 @@ SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
     return Status;
 }
 
+
+NTSTATUS
+SampCreateAccountSid(IN PSAM_DB_OBJECT DomainObject,
+                     IN ULONG ulRelativeId,
+                     IN OUT PSID *AccountSid)
+{
+    PSID DomainSid = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"SID",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    TRACE("Length: %lu\n", Length);
+
+    DomainSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    if (DomainSid == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"SID",
+                                    NULL,
+                                    DomainSid,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *AccountSid = AppendRidToSid(DomainSid,
+                                 ulRelativeId);
+
+done:
+    if (DomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    return Status;
+}
+
 /* EOF */

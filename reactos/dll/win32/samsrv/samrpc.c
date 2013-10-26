@@ -2174,6 +2174,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
+    PSID UserSid = NULL;
     NTSTATUS Status;
 
     TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
@@ -2239,6 +2242,28 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     ulRid = FixedDomainData.NextRid;
     FixedDomainData.NextRid++;
 
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Create the user SID */
+    Status = SampCreateAccountSid(DomainObject,
+                                  ulRid,
+                                  &UserSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateAccountSid failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateUserSD(UserSid,
+                              &Sd,
+                              &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateUserSD failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
                            L"F",
@@ -2250,8 +2275,6 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         TRACE("failed with status 0x%08lx\n", Status);
         goto done;
     }
-
-    TRACE("RID: %lx\n", ulRid);
 
     /* Convert the RID into a string (hex) */
     swprintf(szRid, L"%08lX", ulRid);
@@ -2505,7 +2528,17 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
-    /* FIXME: Set SecDesc attribute*/
+    /* Set the SecDesc attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
 
     if (NT_SUCCESS(Status))
     {
@@ -2514,6 +2547,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);
@@ -6871,7 +6910,6 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
     if (InfoBuffer->All.WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
-#if 0
         Length = 0;
         SampGetObjectAttribute(UserObject,
                                L"SecDesc",
@@ -6898,7 +6936,6 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             if (!NT_SUCCESS(Status))
                 goto done;
         }
-#endif
     }
 
     *Buffer = InfoBuffer;
@@ -7670,13 +7707,11 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_SECURITYDESCRIPTOR)
     {
-#if 0
         Status = SampSetObjectAttribute(UserObject,
                                         L"SecDesc",
                                         REG_BINARY,
                                         Buffer->All.SecurityDescriptor.SecurityDescriptor,
                                         Buffer->All.SecurityDescriptor.Length);
-#endif
     }
 
     if (WriteFixedData == TRUE)
@@ -8523,6 +8558,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
+    PSID UserSid = NULL;
     NTSTATUS Status;
 
     TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
@@ -8596,6 +8634,28 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     ulRid = FixedDomainData.NextRid;
     FixedDomainData.NextRid++;
 
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Create the user SID */
+    Status = SampCreateAccountSid(DomainObject,
+                                  ulRid,
+                                  &UserSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateAccountSid failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Create the security descriptor */
+    Status = SampCreateUserSD(UserSid,
+                              &Sd,
+                              &SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCreateUserSD failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
                                     L"F",
@@ -8607,8 +8667,6 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         TRACE("failed with status 0x%08lx\n", Status);
         goto done;
     }
-
-    TRACE("RID: %lx\n", ulRid);
 
     /* Convert the RID into a string (hex) */
     swprintf(szRid, L"%08lX", ulRid);
@@ -8861,7 +8919,17 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
-    /* FIXME: Set SecDesc attribute*/
+    /* Set the SecDesc attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    Sd,
+                                    SdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
 
     if (NT_SUCCESS(Status))
     {
@@ -8871,6 +8939,12 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+
     RtlReleaseResource(&SampResource);
 
     TRACE("returns with status 0x%08lx\n", Status);

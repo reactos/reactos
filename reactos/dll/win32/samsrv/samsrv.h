@@ -230,6 +230,10 @@ NTSTATUS
 SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
                                IN PRPC_SID MemberSid);
 
+NTSTATUS
+SampCreateAccountSid(IN PSAM_DB_OBJECT DomainObject,
+                     IN ULONG ulRelativeId,
+                     IN OUT PSID *AccountSid);
 
 /* group.h */
 
@@ -336,6 +340,10 @@ NTSTATUS
 SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
                   OUT PULONG Size);
 
+NTSTATUS
+SampCreateUserSD(IN PSID UserSid,
+                 OUT PSECURITY_DESCRIPTOR *UserSd,
+                 OUT PULONG Size);
 
 /* setup.c */
 
