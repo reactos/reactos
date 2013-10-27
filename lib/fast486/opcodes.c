@@ -876,7 +876,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     }
 
     /* Halt */
-    while (!State->HardwareInt) State->IdleCallback(State);
+    while (State->IntStatus != FAST486_INT_SIGNAL) State->IdleCallback(State);
 
     /* Return success */
     return TRUE;

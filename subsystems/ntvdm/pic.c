@@ -35,8 +35,8 @@ BYTE PicReadCommand(BYTE Port)
     }
     else
     {
-        /* The IRR is always 0, as the emulated CPU receives the interrupt instantly */
-        return 0;
+        /* Read the interrupt request register */
+        return Pic->IntRequestRegister;
     }
 }
 
@@ -167,9 +167,9 @@ VOID PicInterruptRequest(BYTE Number)
         /* Check if the interrupt is masked */
         if (MasterPic.MaskRegister & (1 << Number)) return;
 
-        /* Set the appropriate bit in the ISR and interrupt the CPU */
-        if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << Number;
-        EmulatorExternalInterrupt(MasterPic.IntOffset + Number);
+        /* Set the appropriate bit in the IRR and interrupt the CPU */
+        MasterPic.IntRequestRegister |= 1 << Number;
+        EmulatorInterruptSignal();
     }
     else if (Number >= 8 && Number < 16)
     {
@@ -187,7 +187,7 @@ VOID PicInterruptRequest(BYTE Number)
 
         /* Check if any of the higher-priorirty interrupts are busy */
         if (MasterPic.InServiceRegister != 0) return;
-        for (i = 0; i <= Number ; i++)
+        for (i = 0; i <= Number; i++)
         {
             if (SlavePic.InServiceRegister & (1 << Number)) return;
         }
@@ -196,12 +196,57 @@ VOID PicInterruptRequest(BYTE Number)
         if (SlavePic.MaskRegister & (1 << Number)) return;
 
         /* Set the IRQ 2 bit in the master ISR */
-        if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << 2;
+        if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= (1 << 2);
 
-        /* Set the appropriate bit in the ISR and interrupt the CPU */
-        if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= 1 << Number;
-        EmulatorExternalInterrupt(SlavePic.IntOffset + Number);
+        /* Set the appropriate bit in the IRR and interrupt the CPU */
+        SlavePic.IntRequestRegister |= 1 << Number;
+        EmulatorInterruptSignal();
     }
+}
+
+BYTE PicGetInterrupt(VOID)
+{
+    INT i, j;
+
+    /* Search interrupts by priority */
+    for (i = 0; i < 8; i++)
+    {
+        /* Check if this line is cascaded to the slave PIC */
+        if ((i == 2)
+            && MasterPic.CascadeRegister & (1 << 2)
+            && SlavePic.Slave
+            && (SlavePic.CascadeRegister == 2))
+        {
+            /* Search the slave PIC interrupts by priority */
+            for (j = 0; j < 8; j++) if ((j != 1) && SlavePic.IntRequestRegister & (1 << j))
+            {
+                /* Clear the IRR flag */
+                SlavePic.IntRequestRegister &= ~(1 << j);
+
+                /* Set the ISR flag, unless AEOI is enabled */
+                if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= (1 << j);
+    
+                /* Return the interrupt number */
+                return SlavePic.IntOffset + j;
+            }
+        }
+
+        if (MasterPic.IntRequestRegister & (1 << i))
+        {
+            /* Clear the IRR flag */
+            MasterPic.IntRequestRegister &= ~(1 << i);
+
+            /* Set the ISR flag, unless AEOI is enabled */
+            if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= (1 << i);
+
+            /* Return the interrupt number */
+            return MasterPic.IntOffset + i;
+        }
+    }
+    
+    /* Spurious interrupt */
+    if (MasterPic.InServiceRegister & (1 << 2)) return SlavePic.IntOffset + 7;
+    else return MasterPic.IntOffset + 7;
 }
 
 /* EOF */

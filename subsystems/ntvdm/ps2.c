@@ -265,49 +265,64 @@ VOID KeyboardWriteData(BYTE Data)
     // TODO: Implement PS/2 device commands
 }
 
-VOID CheckForInputEvents()
+DWORD WINAPI InputThreadProc(LPVOID Parameter)
 {
-    PINPUT_RECORD Buffer;
+    INT i;
     HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD i, j, Count, TotalEvents;
-    BYTE ScanCode;
-    BOOLEAN Interrupt = FALSE;
+    INPUT_RECORD InputRecord;
+    DWORD Count;
 
-    /* Get the number of input events */
-    if (!GetNumberOfConsoleInputEvents(ConsoleInput, &Count)) return;
-    if (Count == 0) return;
-
-    /* Allocate the buffer */
-    Buffer = (PINPUT_RECORD)HeapAlloc(GetProcessHeap(), 0, Count * sizeof(INPUT_RECORD));
-    if (Buffer == NULL) return;
-
-    /* Peek the input events */
-    if (!ReadConsoleInput(ConsoleInput, Buffer, Count, &TotalEvents)) goto Cleanup;
-
-    for (i = 0; i < TotalEvents; i++)
+    while (VdmRunning)
     {
-        /* Check if this is a key event */
-        if (Buffer[i].EventType != KEY_EVENT) continue;
-
-        /* Get the scan code */
-        ScanCode = (BYTE)Buffer[i].Event.KeyEvent.wVirtualScanCode;
-
-        /* If this is a key release, set the highest bit in the scan code */
-        if (!Buffer[i].Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
-
-        /* Push the scan code onto the keyboard queue */
-        for (j = 0; j < Buffer[i].Event.KeyEvent.wRepeatCount; j++)
+        /* Wait for an input record */
+        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
         {
-            KeyboardQueuePush(ScanCode);
+            DPRINT1("Error reading console input\n");
+            return GetLastError();
+ 
         }
 
-        Interrupt = TRUE;
+        ASSERT(Count != 0);
+
+        /* Check the event type */
+        switch (InputRecord.EventType)
+        {
+            case KEY_EVENT:
+            {
+                BYTE ScanCode = (BYTE)InputRecord.Event.KeyEvent.wVirtualScanCode;
+
+                /* If this is a key release, set the highest bit in the scan code */
+                if (!InputRecord.Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
+
+                /* Push the scan code onto the keyboard queue */
+                for (i = 0; i < InputRecord.Event.KeyEvent.wRepeatCount; i++)
+                {
+                    KeyboardQueuePush(ScanCode);
+                }
+
+                /* Keyboard IRQ */
+                PicInterruptRequest(1);
+
+                break;
+            }
+
+            case MOUSE_EVENT:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            default:
+            {
+                /* Ignored */
+                break;
+            }
+        }
     }
 
-    if (Interrupt) PicInterruptRequest(1);
-
-Cleanup:
-    HeapFree(GetProcessHeap(), 0, Buffer);
+    return 0;
 }
 
 /* EOF */

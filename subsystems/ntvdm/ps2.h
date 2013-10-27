@@ -28,7 +28,7 @@ BYTE KeyboardReadStatus();
 VOID KeyboardWriteCommand(BYTE Command);
 BYTE KeyboardReadData();
 VOID KeyboardWriteData(BYTE Data);
-VOID CheckForInputEvents();
+DWORD WINAPI InputThreadProc(LPVOID Parameter);
 
 #endif // _PS2_H_
 

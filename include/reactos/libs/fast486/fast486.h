@@ -145,6 +145,13 @@ typedef enum _FAST486_EXCEPTIONS
     FAST486_EXCEPTION_MC = 0x12
 } FAST486_EXCEPTIONS, *PFAST486_EXCEPTIONS;
 
+typedef enum _FAST486_INT_STATUS
+{
+    FAST486_INT_NONE = 0,
+    FAST486_INT_EXECUTE = 1,
+    FAST486_INT_SIGNAL = 2
+} FAST486_INT_STATUS, *PFAST486_INT_STATUS;
+
 typedef
 BOOLEAN
 (NTAPI *FAST486_MEM_READ_PROC)
@@ -198,6 +205,13 @@ VOID
 (
     PFAST486_STATE State,
     USHORT BopCode
+);
+
+typedef
+UCHAR
+(NTAPI *FAST486_INT_ACK_PROC)
+(
+    PFAST486_STATE State
 );
 
 typedef union _FAST486_REG
@@ -352,6 +366,7 @@ struct _FAST486_STATE
     FAST486_IO_WRITE_PROC IoWriteCallback;
     FAST486_IDLE_PROC IdleCallback;
     FAST486_BOP_PROC BopCallback;
+    FAST486_INT_ACK_PROC IntAckCallback;
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
     FAST486_SEG_REG SegmentRegs[FAST486_NUM_SEG_REGS];
     FAST486_REG InstPtr, SavedInstPtr;
@@ -362,7 +377,7 @@ struct _FAST486_STATE
     ULONG ExceptionCount;
     ULONG PrefixFlags;
     FAST486_SEG_REGS SegmentOverride;
-    BOOLEAN HardwareInt;
+    FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
 };
 
@@ -395,6 +410,10 @@ Fast486Reset(PFAST486_STATE State);
 VOID
 NTAPI
 Fast486Interrupt(PFAST486_STATE State, UCHAR Number);
+
+VOID
+NTAPI
+Fast486InterruptSignal(PFAST486_STATE State);
 
 VOID
 NTAPI

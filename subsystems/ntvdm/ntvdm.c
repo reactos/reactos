@@ -79,12 +79,12 @@ INT wmain(INT argc, WCHAR *argv[])
     INT i;
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
     DWORD CurrentTickCount;
-    DWORD LastTickCount = GetTickCount();
     DWORD Cycles = 0;
     DWORD LastCyclePrintout = GetTickCount();
     DWORD LastVerticalRefresh = GetTickCount();
     LARGE_INTEGER Frequency, LastTimerTick, Counter;
     LONGLONG TimerTicks;
+    HANDLE InputThread = NULL;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
@@ -141,6 +141,9 @@ INT wmain(INT argc, WCHAR *argv[])
         DisplayMessage(L"Could not start program: %S", CommandLine);
         return -1;
     }
+
+    /* Start the input thread */
+    InputThread = CreateThread(NULL, 0, &InputThreadProc, NULL, 0, NULL);
  
     /* Set the last timer tick to the current time */
     QueryPerformanceCounter(&LastTimerTick);
@@ -161,13 +164,6 @@ INT wmain(INT argc, WCHAR *argv[])
         /* Update the PIT */
         for (i = 0; i < TimerTicks; i++) PitDecrementCount();
         LastTimerTick = Counter;
-
-        /* Check for console input events every millisecond */
-        if (CurrentTickCount != LastTickCount)
-        {
-            CheckForInputEvents();
-            LastTickCount = CurrentTickCount;
-        }
 
         /* Check for vertical retrace */
         if ((CurrentTickCount - LastVerticalRefresh) >= 16)
@@ -198,6 +194,7 @@ INT wmain(INT argc, WCHAR *argv[])
     VgaRefreshDisplay();
 
 Cleanup:
+    if (InputThread != NULL) CloseHandle(InputThread);
     BiosCleanup();
     EmulatorCleanup();
 

@@ -61,10 +61,22 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
         {
             State->SavedInstPtr = State->InstPtr;
 
-            /* Check if interrupts are enabled and there is an interrupt pending */
-            if (State->Flags.If && State->HardwareInt)
+            /*
+             * Check if there is an interrupt to execute, or a hardware interrupt signal
+             * while interrupts are enabled.
+             */
+            if ((State->IntStatus == FAST486_INT_EXECUTE)
+                || (State->Flags.If
+                && (State->IntAckCallback != NULL)
+                && (State->IntStatus == FAST486_INT_SIGNAL)))
             {
                 FAST486_IDT_ENTRY IdtEntry;
+
+                if (State->IntStatus == FAST486_INT_SIGNAL)
+                {
+                    /* Acknowledge the interrupt to get the number */
+                    State->PendingIntNum = State->IntAckCallback(State);
+                }
 
                 /* Get the interrupt vector */
                 if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
@@ -76,8 +88,8 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
                                              IdtEntry.Type);
                 }
 
-                /* Clear the interrupt pending flag */
-                State->HardwareInt = FALSE;
+                /* Clear the interrupt status */
+                State->IntStatus = FAST486_INT_NONE;
             }
         }
 
@@ -243,6 +255,7 @@ Fast486Reset(PFAST486_STATE State)
     FAST486_IO_WRITE_PROC IoWriteCallback = State->IoWriteCallback;
     FAST486_IDLE_PROC IdleCallback = State->IdleCallback;
     FAST486_BOP_PROC BopCallback = State->BopCallback;
+    FAST486_INT_ACK_PROC IntAckCallback = State->IntAckCallback;
 
     /* Clear the entire structure */
     RtlZeroMemory(State, sizeof(*State));
@@ -278,15 +291,24 @@ Fast486Reset(PFAST486_STATE State)
     State->IoWriteCallback = IoWriteCallback;
     State->IdleCallback = IdleCallback;
     State->BopCallback = BopCallback;
+    State->IntAckCallback = IntAckCallback;
 }
 
 VOID
 NTAPI
 Fast486Interrupt(PFAST486_STATE State, UCHAR Number)
 {
-    /* Set the hardware interrupt flag */
-    State->HardwareInt = TRUE;
+    /* Set the interrupt status and the number */
+    State->IntStatus = FAST486_INT_EXECUTE;
     State->PendingIntNum = Number;
+}
+
+VOID
+NTAPI
+Fast486InterruptSignal(PFAST486_STATE State)
+{
+    /* Set the interrupt status */
+    State->IntStatus = FAST486_INT_SIGNAL;
 }
 
 VOID

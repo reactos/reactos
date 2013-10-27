@@ -329,6 +329,14 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
     }
 }
 
+static BYTE WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
+{
+    UNREFERENCED_PARAMETER(State);
+
+    /* Get the interrupt number from the PIC */
+    return PicGetInterrupt();
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize()
@@ -342,7 +350,8 @@ BOOLEAN EmulatorInitialize()
     EmulatorContext.MemWriteCallback = (FAST486_MEM_WRITE_PROC)EmulatorWriteMemory;
     EmulatorContext.IoReadCallback = (FAST486_IO_READ_PROC)EmulatorReadIo;
     EmulatorContext.IoWriteCallback = (FAST486_IO_WRITE_PROC)EmulatorWriteIo;
-    EmulatorContext.BopCallback = (FAST486_BOP_PROC)EmulatorBiosOperation;
+    EmulatorContext.BopCallback = EmulatorBiosOperation;
+    EmulatorContext.IntAckCallback = EmulatorIntAcknowledge;
 
     /* Reset the CPU */
     Fast486Reset(&EmulatorContext);
@@ -371,10 +380,10 @@ VOID EmulatorInterrupt(BYTE Number)
     Fast486Interrupt(&EmulatorContext, Number);
 }
 
-VOID EmulatorExternalInterrupt(BYTE Number)
+VOID EmulatorInterruptSignal(VOID)
 {
     /* Call the Fast486 API */
-    Fast486Interrupt(&EmulatorContext, Number);
+    Fast486InterruptSignal(&EmulatorContext);
 }
 
 ULONG EmulatorGetRegister(ULONG Register)

@@ -88,7 +88,7 @@ BOOLEAN EmulatorInitialize();
 VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
-VOID EmulatorExternalInterrupt(BYTE Number);
+VOID EmulatorInterruptSignal(VOID);
 ULONG EmulatorGetRegister(ULONG Register);
 ULONG EmulatorGetProgramCounter(VOID);
 VOID EmulatorSetRegister(ULONG Register, ULONG Value);

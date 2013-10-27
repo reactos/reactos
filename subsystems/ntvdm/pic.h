@@ -34,6 +34,7 @@ typedef struct _PIC
 {
     BOOLEAN Initialization;
     BYTE MaskRegister;
+    BYTE IntRequestRegister;
     BYTE InServiceRegister;
     BYTE IntOffset;
     BYTE ConfigRegister;
@@ -51,6 +52,7 @@ VOID PicWriteCommand(BYTE Port, BYTE Value);
 BYTE PicReadData(BYTE Port);
 VOID PicWriteData(BYTE Port, BYTE Value);
 VOID PicInterruptRequest(BYTE Number);
+BYTE PicGetInterrupt(VOID);
 
 #endif // _PIC_H_
 
