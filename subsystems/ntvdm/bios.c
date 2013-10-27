@@ -1148,22 +1148,22 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
             Bda->KeybdShiftFlags = 0;
 
             /* Set the appropriate flags based on the state */
-            if (BiosKeyboardMap[VK_RSHIFT] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RSHIFT;
-            if (BiosKeyboardMap[VK_LSHIFT] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
-            if (BiosKeyboardMap[VK_CONTROL] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CTRL;
-            if (BiosKeyboardMap[VK_MENU] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_ALT;
-            if (BiosKeyboardMap[VK_SCROLL] & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL_ON;
-            if (BiosKeyboardMap[VK_NUMLOCK] & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK_ON;
-            if (BiosKeyboardMap[VK_CAPITAL] & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK_ON;
-            if (BiosKeyboardMap[VK_INSERT] & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT_ON;
-            if (BiosKeyboardMap[VK_RMENU] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RALT;
-            if (BiosKeyboardMap[VK_LMENU] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LALT;
+            if (BiosKeyboardMap[VK_RSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RSHIFT;
+            if (BiosKeyboardMap[VK_LSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
+            if (BiosKeyboardMap[VK_CONTROL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CTRL;
+            if (BiosKeyboardMap[VK_MENU]     & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_ALT;
+            if (BiosKeyboardMap[VK_SCROLL]   & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL_ON;
+            if (BiosKeyboardMap[VK_NUMLOCK]  & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK_ON;
+            if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK_ON;
+            if (BiosKeyboardMap[VK_INSERT]   & (1 << 0)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT_ON;
+            if (BiosKeyboardMap[VK_RMENU]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RALT;
+            if (BiosKeyboardMap[VK_LMENU]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LALT;
             if (BiosKeyboardMap[VK_SNAPSHOT] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SYSRQ;
-            if (BiosKeyboardMap[VK_PAUSE] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_PAUSE;
-            if (BiosKeyboardMap[VK_SCROLL] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL;
-            if (BiosKeyboardMap[VK_NUMLOCK] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK;
-            if (BiosKeyboardMap[VK_CAPITAL] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK;
-            if (BiosKeyboardMap[VK_INSERT] & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT;
+            if (BiosKeyboardMap[VK_PAUSE]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_PAUSE;
+            if (BiosKeyboardMap[VK_SCROLL]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_SCROLL;
+            if (BiosKeyboardMap[VK_NUMLOCK]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_NUMLOCK;
+            if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK;
+            if (BiosKeyboardMap[VK_INSERT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT;
 
             break;
         }
