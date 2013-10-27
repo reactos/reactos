@@ -277,9 +277,9 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
         /* Wait for an input record */
         if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
         {
-            DPRINT1("Error reading console input\n");
-            return GetLastError();
- 
+            DWORD LastError = GetLastError();
+            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
+            return LastError;
         }
 
         ASSERT(Count != 0);
@@ -299,8 +299,6 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
                 {
                     KeyboardQueuePush(ScanCode);
                 }
-
-                /* TODO: Update the keyboard shift status flags */
 
                 /* Keyboard IRQ */
                 PicInterruptRequest(1);
