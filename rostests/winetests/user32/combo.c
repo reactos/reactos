@@ -268,8 +268,8 @@ static void test_CBN_SELCHANGE(void)
     static const int sel_2[] = { 0, 1, 0, 0, 1 };
 
     test_selection(CBS_SIMPLE, text, sel_1, sel_2);
-    //test_selection(CBS_DROPDOWN, text, sel_1, sel_2);
-    //test_selection(CBS_DROPDOWNLIST, text, sel_2, sel_2);
+    test_selection(CBS_DROPDOWN, text, sel_1, sel_2);
+    test_selection(CBS_DROPDOWNLIST, text, sel_2, sel_2);
 }
 
 static void test_WM_LBUTTONDOWN(void)
