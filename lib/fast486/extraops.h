@@ -22,7 +22,10 @@
 #ifndef _EXTRAOPS_H_
 #define _EXTRAOPS_H_
 
+#pragma once
+
 /* DEFINES ********************************************************************/
+
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeClts);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreControlReg);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeStoreDebugReg);

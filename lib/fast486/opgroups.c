@@ -21,8 +21,6 @@
 
 /* INCLUDES *******************************************************************/
 
-// #define WIN32_NO_STATUS
-// #define _INC_WINDOWS
 #include <windef.h>
 
 // #define NDEBUG

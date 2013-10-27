@@ -22,6 +22,8 @@
 #ifndef _OPGROUPS_H_
 #define _OPGROUPS_H_
 
+#pragma once
+
 /* DEFINES ********************************************************************/
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8082);

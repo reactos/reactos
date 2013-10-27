@@ -21,10 +21,7 @@
 
 /* INCLUDES *******************************************************************/
 
-// #define WIN32_NO_STATUS
-// #define _INC_WINDOWS
 #include <windef.h>
-#include <limits.h>
 
 // #define NDEBUG
 #include <debug.h>
@@ -3694,11 +3691,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
     }
 
     /* Check for carry/overflow */
-    if ((Product < LONG_MIN) || (Product > LONG_MAX))
-    {
-        State->Flags.Cf = State->Flags.Of = TRUE;
-    }
-    else State->Flags.Cf = State->Flags.Of = FALSE;
+    State->Flags.Cf = State->Flags.Of = ((Product < MINLONG) || (Product > MAXLONG));
 
     /* Write-back the result */
     return Fast486WriteModrmDwordOperands(State,

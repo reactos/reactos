@@ -22,7 +22,13 @@
 #ifndef _FAST486_H_
 #define _FAST486_H_
 
+#pragma once
+
 /* DEFINES ********************************************************************/
+
+#ifndef FASTCALL
+#define FASTCALL __fastcall
+#endif
 
 #define FAST486_NUM_GEN_REGS    8
 #define FAST486_NUM_SEG_REGS    6

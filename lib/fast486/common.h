@@ -22,11 +22,9 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-/* DEFINES ********************************************************************/
+#pragma once
 
-#ifndef FASTCALL
-#define FASTCALL __fastcall
-#endif
+/* DEFINES ********************************************************************/
 
 #define SIGN_FLAG_BYTE  0x80
 #define SIGN_FLAG_WORD  0x8000

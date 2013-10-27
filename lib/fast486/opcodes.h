@@ -22,11 +22,9 @@
 #ifndef _OPCODES_H_
 #define _OPCODES_H_
 
-/* DEFINES ********************************************************************/
+#pragma once
 
-#ifndef FASTCALL
-#define FASTCALL __fastcall
-#endif
+/* DEFINES ********************************************************************/
 
 #define FAST486_NUM_OPCODE_HANDLERS 256
 #define FAST486_OPCODE_WRITE_REG (1 << 1)
