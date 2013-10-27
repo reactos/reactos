@@ -23,11 +23,14 @@
 
 #define TO_LINEAR(seg, off) (((seg) << 4) + (off))
 #define MAX_SEGMENT 0xFFFF
-#define MAX_OFFSET 0xFFFF
+#define MAX_OFFSET  0xFFFF
 #define MAX_ADDRESS TO_LINEAR(MAX_SEGMENT, MAX_OFFSET)
 
-#define FAR_POINTER(x)              ((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))
-#define SEG_OFF_TO_PTR(seg, off)    ((ULONG_PTR)BaseAddress + TO_LINEAR((seg), (off)))
+#define FAR_POINTER(x)  \
+    (PVOID)((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))
+
+#define SEG_OFF_TO_PTR(seg, off)    \
+    (PVOID)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), (off)))
 
 #define STEPS_PER_CYCLE 256
 

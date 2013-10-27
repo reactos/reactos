@@ -14,6 +14,8 @@
 #include "bios.h"
 #include "emulator.h"
 
+#include "registers.h"
+
 /* PRIVATE VARIABLES **********************************************************/
 
 static WORD CurrentPsp = SYSTEM_PSP;
@@ -87,7 +89,7 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
     ULONG TotalSize = 0;
     WORD DestSegment;
 
-    Ptr = SourceBuffer = (PCHAR)((ULONG_PTR)BaseAddress + TO_LINEAR(SourceSegment, 0));
+    Ptr = SourceBuffer = (PCHAR)SEG_OFF_TO_PTR(SourceSegment, 0);
 
     /* Calculate the size of the environment block */
     while (*Ptr)
@@ -106,7 +108,7 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
 
     Ptr = SourceBuffer;
 
-    DestBuffer = (PCHAR)((ULONG_PTR)BaseAddress + TO_LINEAR(DestSegment, 0));
+    DestBuffer = (PCHAR)SEG_OFF_TO_PTR(DestSegment, 0);
     while (*Ptr)
     {
         /* Copy the string */
@@ -1105,8 +1107,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         DosChangeMemoryOwner(EnvBlock, Segment);
 
         /* Copy the program to Segment:0100 */
-        RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
-                      + TO_LINEAR(Segment, 0x100)),
+        RtlCopyMemory(SEG_OFF_TO_PTR(Segment, 0x100),
                       Address + (Header->e_cparhdr << 4),
                       min(FileSize - (Header->e_cparhdr << 4),
                           (ExeSize << 4) - sizeof(DOS_PSP)));
@@ -1118,17 +1119,16 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         for (i = 0; i < Header->e_crlc; i++)
         {
             /* Get a pointer to the word that needs to be patched */
-            RelocWord = (PWORD)((ULONG_PTR)BaseAddress
-                                + TO_LINEAR(Segment + HIWORD(RelocationTable[i]),
-                                            0x100 + LOWORD(RelocationTable[i])));
+            RelocWord = (PWORD)SEG_OFF_TO_PTR(Segment + HIWORD(RelocationTable[i]),
+                                                0x100 + LOWORD(RelocationTable[i]));
 
             /* Add the number of the EXE segment to it */
             *RelocWord += Segment + (sizeof(DOS_PSP) >> 4);
         }
 
         /* Set the initial segment registers */
-        EmulatorSetRegister(EMULATOR_REG_DS, Segment);
-        EmulatorSetRegister(EMULATOR_REG_ES, Segment);
+        setDS(Segment);
+        setES(Segment);
 
         /* Set the stack to the location from the header */
         EmulatorSetStack(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss,
@@ -1161,8 +1161,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         DosChangeMemoryOwner(EnvBlock, Segment);
 
         /* Copy the program to Segment:0100 */
-        RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
-                      + TO_LINEAR(Segment, 0x100)),
+        RtlCopyMemory(SEG_OFF_TO_PTR(Segment, 0x100),
                       Address,
                       FileSize);
 
@@ -1173,8 +1172,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
                          EnvBlock);
 
         /* Set the initial segment registers */
-        EmulatorSetRegister(EMULATOR_REG_DS, Segment);
-        EmulatorSetRegister(EMULATOR_REG_ES, Segment);
+        setDS(Segment);
+        setES(Segment);
 
         /* Set the stack to the last word of the segment */
         EmulatorSetStack(Segment, 0xFFFE);
@@ -1345,8 +1344,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
             InfoWord |= 1 << 7;
 
             /* Return the device information word */
-            EmulatorSetRegister(EMULATOR_REG_DX, InfoWord);
-
+            setDX(InfoWord);
             return TRUE;
         }
 
@@ -1373,15 +1371,9 @@ VOID DosInt21h(LPWORD Stack)
     SYSTEMTIME SystemTime;
     PCHAR String;
     PDOS_INPUT_BUFFER InputBuffer;
-    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
-    DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
-    DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
-    DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
-    WORD DataSegment = (WORD)EmulatorGetRegister(EMULATOR_REG_DS);
-    WORD ExtSegment = (WORD)EmulatorGetRegister(EMULATOR_REG_ES);
 
     /* Check the value in the AH register */
-    switch (HIBYTE(Eax))
+    switch (getAH())
     {
         /* Terminate Program */
         case 0x00:
@@ -1396,45 +1388,58 @@ VOID DosInt21h(LPWORD Stack)
             Character = DosReadCharacter();
             DosPrintCharacter(Character);
 
-            if (!EmulatorGetFlag(EMULATOR_FLAG_CF))
-            {
-                EmulatorSetRegister(EMULATOR_REG_AX, (Eax & 0xFFFFFF00) | Character);
-            }
+            /* Let the BOP repeat if needed */
+            if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
 
+            setAL(Character);
             break;
         }
 
         /* Print Character */
         case 0x02:
         {
-            DosPrintCharacter(LOBYTE(Edx));
+            BYTE Character = getDL();
+            DosPrintCharacter(Character);
+
+            /*
+             * We return the output character (DOS 2.1+), see:
+             * http://www.delorie.com/djgpp/doc/rbinter/id/65/25.html
+             * for more information.
+             */
+            setAL(Character);
             break;
         }
 
         /* Direct Console I/O */
         case 0x06:
         {
-            BYTE Character = LOBYTE(Edx);
+            BYTE Character = getDL();
 
             if (Character != 0xFF)
             {
                 /* Output */
                 DosPrintCharacter(Character);
+
+                /*
+                 * We return the output character (DOS 2.1+), see:
+                 * http://www.delorie.com/djgpp/doc/rbinter/id/69/25.html
+                 * for more information.
+                 */
+                setAL(Character);
             }
             else
             {
                 /* Input */
-                Eax &= 0xFFFFFF00;
-
                 if (DosCheckInput())
                 {
-                    Eax |= DosReadCharacter();
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
+                    setAL(DosReadCharacter());
                 }
                 else
                 {
                     /* No character available */
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
+                    setAL(0);
                 }
             }
 
@@ -1447,35 +1452,37 @@ VOID DosInt21h(LPWORD Stack)
         {
             Character = DosReadCharacter();
 
-            if (!EmulatorGetFlag(EMULATOR_FLAG_CF))
-            {
-                EmulatorSetRegister(EMULATOR_REG_AX, (Eax & 0xFFFFFF00) | Character);
-            }
+            /* Let the BOP repeat if needed */
+            if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
 
+            setAL(Character);
             break;
         }
 
         /* Print String */
         case 0x09:
         {
-            String = (PCHAR)((ULONG_PTR)BaseAddress
-                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+            String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
 
-            while ((*String) != '$')
+            while (*String != '$')
             {
                 DosPrintCharacter(*String);
                 String++;
             }
 
+            /*
+             * We return the output character (DOS 2.1+), see:
+             * http://www.delorie.com/djgpp/doc/rbinter/id/73/25.html
+             * for more information.
+             */
+            setAL('$');
             break;
         }
 
         /* Read Buffered Input */
         case 0x0A:
         {
-            InputBuffer = (PDOS_INPUT_BUFFER)((ULONG_PTR)BaseAddress
-                                              + TO_LINEAR(DataSegment,
-                                                          LOWORD(Edx)));
+            InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
             while (Stack[STACK_COUNTER] < InputBuffer->MaxLength)
             {
@@ -1495,54 +1502,45 @@ VOID DosInt21h(LPWORD Stack)
 
             /* Update the length */
             InputBuffer->Length = Stack[STACK_COUNTER];
-
             break;
         }
 
         /* Get STDIN Status */
         case 0x0B:
         {
-            if (DosCheckInput()) Eax |= 0xFF;
-            else Eax &= 0xFFFFFF00;
-
-            EmulatorSetRegister(EMULATOR_REG_AX, Eax);
-
+            setAL(DosCheckInput() ? 0xFF : 0x00);
             break;
         }
 
         /* Set Default Drive  */
         case 0x0E:
         {
-            DosChangeDrive(LOBYTE(Edx));
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                                (Eax & 0xFFFFFF00) | (LastDrive - 'A' + 1));
-
+            DosChangeDrive(getDL());
+            setAL(LastDrive - 'A' + 1);
             break;
         }
 
         /* Get Default Drive */
         case 0x19:
         {
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                                (Eax & 0xFFFFFF00) | CurrentDrive);
-
+            setAL(CurrentDrive);
             break;
         }
 
         /* Set Disk Transfer Area */
         case 0x1A:
         {
-            DiskTransferArea = MAKELONG(LOWORD(Edx), DataSegment);
+            DiskTransferArea = MAKELONG(getDX(), getDS());
             break;
         }
 
         /* Set Interrupt Vector */
         case 0x25:
         {
-            DWORD FarPointer = MAKELONG(LOWORD(Edx), DataSegment);
+            DWORD FarPointer = MAKELONG(getDX(), getDS());
 
             /* Write the new far pointer to the IDT */
-            ((PDWORD)BaseAddress)[LOBYTE(Eax)] = FarPointer;
+            ((PDWORD)BaseAddress)[getAL()] = FarPointer;
 
             break;
         }
@@ -1551,14 +1549,9 @@ VOID DosInt21h(LPWORD Stack)
         case 0x2A:
         {
             GetLocalTime(&SystemTime);
-            EmulatorSetRegister(EMULATOR_REG_CX,
-                                (Ecx & 0xFFFF0000) | SystemTime.wYear);
-            EmulatorSetRegister(EMULATOR_REG_DX,
-                                (Edx & 0xFFFF0000)
-                                | (SystemTime.wMonth << 8)
-                                | SystemTime.wDay);
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                                (Eax & 0xFFFFFF00) | SystemTime.wDayOfWeek);
+            setCX(SystemTime.wYear);
+            setDX(MAKEWORD(SystemTime.wDay, SystemTime.wMonth));
+            setAL(SystemTime.wDayOfWeek);
             break;
         }
 
@@ -1566,21 +1559,12 @@ VOID DosInt21h(LPWORD Stack)
         case 0x2B:
         {
             GetLocalTime(&SystemTime);
-            SystemTime.wYear = LOWORD(Ecx);
-            SystemTime.wMonth = HIBYTE(Edx);
-            SystemTime.wDay = LOBYTE(Edx);
+            SystemTime.wYear  = getCX();
+            SystemTime.wMonth = getDH();
+            SystemTime.wDay   = getDL();
 
-            if (SetLocalTime(&SystemTime))
-            {
-                /* Return success */
-                EmulatorSetRegister(EMULATOR_REG_AX, Eax & 0xFFFFFF00);
-            }
-            else
-            {
-                /* Return failure */
-                EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
-            }
-
+            /* Return success or failure */
+            setAL(SetLocalTime(&SystemTime) ? 0x00 : 0xFF);
             break;
         }
 
@@ -1588,14 +1572,8 @@ VOID DosInt21h(LPWORD Stack)
         case 0x2C:
         {
             GetLocalTime(&SystemTime);
-            EmulatorSetRegister(EMULATOR_REG_CX,
-                                (Ecx & 0xFFFF0000)
-                                | (SystemTime.wHour << 8)
-                                | SystemTime.wMinute);
-            EmulatorSetRegister(EMULATOR_REG_DX,
-                                (Edx & 0xFFFF0000)
-                                | (SystemTime.wSecond << 8)
-                                | (SystemTime.wMilliseconds / 10));
+            setCX(MAKEWORD(SystemTime.wMinute, SystemTime.wHour));
+            setDX(MAKEWORD(SystemTime.wMilliseconds / 10, SystemTime.wSecond));
             break;
         }
 
@@ -1603,31 +1581,21 @@ VOID DosInt21h(LPWORD Stack)
         case 0x2D:
         {
             GetLocalTime(&SystemTime);
-            SystemTime.wHour = HIBYTE(Ecx);
-            SystemTime.wMinute = LOBYTE(Ecx);
-            SystemTime.wSecond = HIBYTE(Edx);
-            SystemTime.wMilliseconds = LOBYTE(Edx) * 10;
+            SystemTime.wHour         = getCH();
+            SystemTime.wMinute       = getCL();
+            SystemTime.wSecond       = getDH();
+            SystemTime.wMilliseconds = getDL() * 10; // In hundredths of seconds
 
-            if (SetLocalTime(&SystemTime))
-            {
-                /* Return success */
-                EmulatorSetRegister(EMULATOR_REG_AX, Eax & 0xFFFFFF00);
-            }
-            else
-            {
-                /* Return failure */
-                EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
-            }
-
+            /* Return success or failure */
+            setAL(SetLocalTime(&SystemTime) ? 0x00 : 0xFF);
             break;
         }
 
         /* Get Disk Transfer Area */
         case 0x2F:
         {
-            EmulatorSetRegister(EMULATOR_REG_ES, HIWORD(DiskTransferArea));
-            EmulatorSetRegister(EMULATOR_REG_BX, LOWORD(DiskTransferArea));
-
+            setES(HIWORD(DiskTransferArea));
+            setBX(LOWORD(DiskTransferArea));
             break;
         }
 
@@ -1636,27 +1604,44 @@ VOID DosInt21h(LPWORD Stack)
         {
             PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
 
-            EmulatorSetRegister(EMULATOR_REG_AX, PspBlock->DosVersion);
+            if (LOBYTE(PspBlock->DosVersion) < 5 || getAL() == 0)
+            {
+                /* Return DOS 24-bit user serial number in BL:CX */
+                setBL(0x00);
+                setCX(0x0000);
+            }
+
+            if (LOBYTE(PspBlock->DosVersion) >= 5 && getAL() == 1)
+            {
+                /*
+                 * Return DOS OEM number:
+                 * 0x00 for IBM PC-DOS
+                 * 0xFF for MS-DOS
+                 */
+                setBH(0xFF);
+            }
+
+            /* Return DOS version: Minor:Major in AH:AL */
+            setAX(PspBlock->DosVersion);
+
             break;
         }
 
         /* Get Interrupt Vector */
         case 0x35:
         {
-            DWORD FarPointer = ((PDWORD)BaseAddress)[LOBYTE(Eax)];
+            DWORD FarPointer = ((PDWORD)BaseAddress)[getAL()];
 
             /* Read the address from the IDT into ES:BX */
-            EmulatorSetRegister(EMULATOR_REG_ES, HIWORD(FarPointer));
-            EmulatorSetRegister(EMULATOR_REG_BX, LOWORD(FarPointer));
-
+            setES(HIWORD(FarPointer));
+            setBX(LOWORD(FarPointer));
             break;
         }
 
         /* Create Directory */
         case 0x39:
         {
-            String = (PCHAR)((ULONG_PTR)BaseAddress
-                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+            String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
 
             if (CreateDirectoryA(String, NULL))
             {
@@ -1665,8 +1650,7 @@ VOID DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+                setAX(LOWORD(GetLastError()));
             }
 
             break;
@@ -1675,8 +1659,7 @@ VOID DosInt21h(LPWORD Stack)
         /* Remove Directory */
         case 0x3A:
         {
-            String = (PCHAR)((ULONG_PTR)BaseAddress
-                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+            String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
 
             if (RemoveDirectoryA(String))
             {
@@ -1685,10 +1668,8 @@ VOID DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+                setAX(LOWORD(GetLastError()));
             }
-
 
             break;
         }
@@ -1696,8 +1677,7 @@ VOID DosInt21h(LPWORD Stack)
         /* Set Current Directory */
         case 0x3B:
         {
-            String = (PCHAR)((ULONG_PTR)BaseAddress
-                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+            String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
 
             if (DosChangeDirectory(String))
             {
@@ -1706,8 +1686,7 @@ VOID DosInt21h(LPWORD Stack)
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | DosLastError);
+                setAX(DosLastError);
             }
 
             break;
@@ -1718,27 +1697,18 @@ VOID DosInt21h(LPWORD Stack)
         {
             WORD FileHandle;
             WORD ErrorCode = DosCreateFile(&FileHandle,
-                                           (LPCSTR)(ULONG_PTR)BaseAddress
-                                           + TO_LINEAR(DataSegment, LOWORD(Edx)),
-                                           LOWORD(Ecx));
+                                           (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
+                                           getCX());
 
             if (ErrorCode == 0)
             {
-                /* Clear CF */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-
-                /* Return the handle in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | FileHandle);
+                setAX(FileHandle);
             }
             else
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ErrorCode);
+                setAX(ErrorCode);
             }
 
             break;
@@ -1749,27 +1719,18 @@ VOID DosInt21h(LPWORD Stack)
         {
             WORD FileHandle;
             WORD ErrorCode = DosOpenFile(&FileHandle,
-                                         (LPCSTR)(ULONG_PTR)BaseAddress
-                                         + TO_LINEAR(DataSegment, LOWORD(Edx)),
-                                         LOBYTE(Eax));
+                                         (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
+                                         getAL());
 
             if (ErrorCode == 0)
             {
-                /* Clear CF */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-
-                /* Return the handle in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | FileHandle);
+                setAX(FileHandle);
             }
             else
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ErrorCode);
+                setAX(ErrorCode);
             }
 
             break;
@@ -1778,19 +1739,14 @@ VOID DosInt21h(LPWORD Stack)
         /* Close File */
         case 0x3E:
         {
-            if (DosCloseHandle(LOWORD(Ebx)))
+            if (DosCloseHandle(getBX()))
             {
-                /* Clear CF */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ERROR_INVALID_HANDLE);
+                setAX(ERROR_INVALID_HANDLE);
             }
 
             break;
@@ -1799,9 +1755,9 @@ VOID DosInt21h(LPWORD Stack)
         /* Read File */
         case 0x3F:
         {
-            WORD Handle = LOWORD(Ebx);
-            LPBYTE Buffer = (LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, LOWORD(Edx)));
-            WORD Count = LOWORD(Ecx);
+            WORD Handle    = getBX();
+            LPBYTE Buffer  = (LPBYTE)SEG_OFF_TO_PTR(getDS(), getDX());
+            WORD Count     = getCX();
             WORD BytesRead = 0;
             WORD ErrorCode = ERROR_SUCCESS;
 
@@ -1830,21 +1786,13 @@ VOID DosInt21h(LPWORD Stack)
 
             if (ErrorCode == 0)
             {
-                    /* Clear CF */
-                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-    
-                    /* Return the number of bytes read in AX */
-                    EmulatorSetRegister(EMULATOR_REG_AX,
-                                        (Eax & 0xFFFF0000) | BytesRead);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(BytesRead);
             }
             else if (ErrorCode != ERROR_NOT_READY)
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ErrorCode);
+                setAX(ErrorCode);
             }
             break;
         }
@@ -1853,29 +1801,20 @@ VOID DosInt21h(LPWORD Stack)
         case 0x40:
         {
             WORD BytesWritten = 0;
-            WORD ErrorCode = DosWriteFile(LOWORD(Ebx),
-                                          (LPVOID)((ULONG_PTR)BaseAddress
-                                          + TO_LINEAR(DataSegment, LOWORD(Edx))),
-                                          LOWORD(Ecx),
+            WORD ErrorCode = DosWriteFile(getBX(),
+                                          SEG_OFF_TO_PTR(getDS(), getDX()),
+                                          getCX(),
                                           &BytesWritten);
 
             if (ErrorCode == 0)
             {
-                /* Clear CF */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-
-                /* Return the number of bytes written in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | BytesWritten);
+                setAX(BytesWritten);
             }
             else
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ErrorCode);
+                setAX(ErrorCode);
             }
 
             break;
@@ -1884,14 +1823,17 @@ VOID DosInt21h(LPWORD Stack)
         /* Delete File */
         case 0x41:
         {
-            LPSTR FileName = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, Edx));
+            LPSTR FileName = (LPSTR)SEG_OFF_TO_PTR(getDS(), getDX());
 
             /* Call the API function */
-            if (DeleteFileA(FileName)) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            if (DeleteFileA(FileName))
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            }
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
+                setAX(GetLastError());
             }
 
             break;
@@ -1901,30 +1843,23 @@ VOID DosInt21h(LPWORD Stack)
         case 0x42:
         {
             DWORD NewLocation;
-            WORD ErrorCode = DosSeekFile(LOWORD(Ebx),
-                                         MAKELONG(LOWORD(Edx), LOWORD(Ecx)),
-                                         LOBYTE(Eax),
+            WORD ErrorCode = DosSeekFile(getBX(),
+                                         MAKELONG(getDX(), getCX()),
+                                         getAL(),
                                          &NewLocation);
 
             if (ErrorCode == 0)
             {
-                /* Clear CF */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the new offset in DX:AX */
-                EmulatorSetRegister(EMULATOR_REG_DX,
-                                    (Edx & 0xFFFF0000) | HIWORD(NewLocation));
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | LOWORD(NewLocation));
+                setDX(HIWORD(NewLocation));
+                setAX(LOWORD(NewLocation));
             }
             else
             {
-                /* Set CF */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-
-                /* Return the error code in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ErrorCode);
+                setAX(ErrorCode);
             }
 
             break;
@@ -1934,9 +1869,9 @@ VOID DosInt21h(LPWORD Stack)
         case 0x43:
         {
             DWORD Attributes;
-            LPSTR FileName = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, Edx));
+            LPSTR FileName = (LPSTR)SEG_OFF_TO_PTR(getDS(), getDX());
 
-            if (LOBYTE(Eax) == 0x00)
+            if (getAL() == 0x00)
             {
                 /* Get the attributes */
                 Attributes = GetFileAttributesA(FileName);
@@ -1945,33 +1880,32 @@ VOID DosInt21h(LPWORD Stack)
                 if (Attributes == INVALID_FILE_ATTRIBUTES)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
-
+                    setAX(GetLastError());
                     break;
                 }
 
                 /* Return the attributes that DOS can understand */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_CX,
-                                    (Ecx & 0xFFFFFF00) | LOBYTE(Attributes));
+                // setCL(LOBYTE(Attributes));
+                setCX(LOWORD(Attributes));
             }
-            else if (LOBYTE(Eax) == 0x01)
+            else if (getAL() == 0x01)
             {
                 /* Try to set the attributes */
-                if (SetFileAttributesA(FileName, LOBYTE(Ecx)))
+                if (SetFileAttributesA(FileName, getCL()))
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 }
                 else
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                    EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
+                    setAX(GetLastError());
                 }
             }
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
+                setAX(ERROR_INVALID_FUNCTION);
             }
 
             break;
@@ -1980,14 +1914,14 @@ VOID DosInt21h(LPWORD Stack)
         /* IOCTL */
         case 0x44:
         {
-            if (DosHandleIoctl(LOBYTE(Eax), LOWORD(Ebx)))
+            if (DosHandleIoctl(getAL(), getBX()))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
+                setAX(DosLastError);
             }
 
             break;
@@ -1997,14 +1931,13 @@ VOID DosInt21h(LPWORD Stack)
         case 0x45:
         {
             WORD NewHandle;
-            HANDLE Handle = DosGetRealHandle(LOWORD(Ebx));
+            HANDLE Handle = DosGetRealHandle(getBX());
 
             if (Handle != INVALID_HANDLE_VALUE)
             {
                 /* The handle is invalid */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
-
+                setAX(ERROR_INVALID_HANDLE);
                 break;
             }
 
@@ -2015,29 +1948,27 @@ VOID DosInt21h(LPWORD Stack)
             {
                 /* Too many files open */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_TOO_MANY_OPEN_FILES);
-
+                setAX(ERROR_TOO_MANY_OPEN_FILES);
                 break;
             }
 
             /* Return the result */
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            EmulatorSetRegister(EMULATOR_REG_AX, NewHandle);
-
+            setAX(NewHandle);
             break;
         }
 
         /* Force Duplicate Handle */
         case 0x46:
         {
-            if (DosDuplicateHandle(LOWORD(Ebx), LOWORD(Ecx)))
+            if (DosDuplicateHandle(getBX(), getCX()))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
+                setAX(ERROR_INVALID_HANDLE);
             }
 
             break;
@@ -2047,18 +1978,18 @@ VOID DosInt21h(LPWORD Stack)
         case 0x48:
         {
             WORD MaxAvailable = 0;
-            WORD Segment = DosAllocateMemory(LOWORD(Ebx), &MaxAvailable);
+            WORD Segment = DosAllocateMemory(getBX(), &MaxAvailable);
 
             if (Segment != 0)
             {
-                EmulatorSetRegister(EMULATOR_REG_AX, Segment);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(Segment);
             }
             else
             {
-                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
-                EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(DosLastError);
+                setBX(MaxAvailable);
             }
 
             break;
@@ -2067,14 +1998,14 @@ VOID DosInt21h(LPWORD Stack)
         /* Free Memory */
         case 0x49:
         {
-            if (DosFreeMemory(ExtSegment))
+            if (DosFreeMemory(getES()))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_ARENA_TRASHED);
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_ARENA_TRASHED);
             }
 
             break;
@@ -2085,15 +2016,15 @@ VOID DosInt21h(LPWORD Stack)
         {
             WORD Size;
 
-            if (DosResizeMemory(ExtSegment, LOWORD(Ebx), &Size))
+            if (DosResizeMemory(getES(), getBX(), &Size))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_BX, Size);
+                setAX(DosLastError);
+                setBX(Size);
             }
 
             break;
@@ -2102,75 +2033,68 @@ VOID DosInt21h(LPWORD Stack)
         /* Terminate With Return Code */
         case 0x4C:
         {
-            DosTerminateProcess(CurrentPsp, LOBYTE(Eax));
+            DosTerminateProcess(CurrentPsp, getAL());
             break;
         }
 
         /* Get Current Process */
         case 0x51:
         {
-            EmulatorSetRegister(EMULATOR_REG_BX, CurrentPsp);
-
+            setBX(CurrentPsp);
             break;
         }
 
         /* Get/Set Memory Management Options */
         case 0x58:
         {
-            if (LOBYTE(Eax) == 0x00)
+            if (getAL() == 0x00)
             {
                 /* Get allocation strategy */
-
-                EmulatorSetRegister(EMULATOR_REG_AX, DosAllocStrategy);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(DosAllocStrategy);
             }
-            else if (LOBYTE(Eax) == 0x01)
+            else if (getAL() == 0x01)
             {
                 /* Set allocation strategy */
 
-                if ((LOBYTE(Ebx) & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                if ((getBL() & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
                     == (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
                 {
                     /* Can't set both */
-                    EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(ERROR_INVALID_PARAMETER);
                     break;
                 }
 
-                if ((LOBYTE(Ebx) & 0x3F) > DOS_ALLOC_LAST_FIT)
+                if ((getBL() & 0x3F) > DOS_ALLOC_LAST_FIT)
                 {
                     /* Invalid allocation strategy */
-                    EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(ERROR_INVALID_PARAMETER);
                     break;
                 }
 
-                DosAllocStrategy = LOBYTE(Ebx);
+                DosAllocStrategy = getBL();
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
-            else if (LOBYTE(Eax) == 0x02)
+            else if (getAL() == 0x02)
             {
                 /* Get UMB link state */
-
-                Eax &= 0xFFFFFF00;
-                if (DosUmbLinked) Eax |= 1;
-                EmulatorSetRegister(EMULATOR_REG_AX, Eax);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAL(DosUmbLinked ? 0x01 : 0x00);
             }
-            else if (LOBYTE(Eax) == 0x03)
+            else if (getAL() == 0x03)
             {
                 /* Set UMB link state */
-
-                if (Ebx) DosLinkUmb();
+                if (getBX()) DosLinkUmb();
                 else DosUnlinkUmb();
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 /* Invalid or unsupported function */
-
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
+                setAX(ERROR_INVALID_FUNCTION);
             }
 
             break;
@@ -2179,7 +2103,7 @@ VOID DosInt21h(LPWORD Stack)
         /* Unsupported */
         default:
         {
-            DPRINT1("DOS Function INT 0x21, AH = 0x%02X NOT IMPLEMENTED!\n", HIBYTE(Eax));
+            DPRINT1("DOS Function INT 0x21, AH = 0x%02X NOT IMPLEMENTED!\n", getAH());
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
     }
@@ -2200,7 +2124,7 @@ BOOLEAN DosInitialize(VOID)
     WCHAR Buffer[256];
     LPWSTR SourcePtr, Environment;
     LPSTR AsciiString;
-    LPSTR DestPtr = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(SYSTEM_ENV_BLOCK, 0));
+    LPSTR DestPtr = (LPSTR)SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
     DWORD AsciiSize;
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
