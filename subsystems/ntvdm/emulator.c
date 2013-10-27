@@ -236,7 +236,7 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, USHORT BopCode)
     StackPointer = State->GeneralRegs[FAST486_REG_ESP].LowWord;
 
     /* Get the stack */
-    Stack = (LPWORD)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
+    Stack = (LPWORD)SEG_OFF_TO_PTR(StackSegment, StackPointer);
 
     if (BopCode == EMULATOR_INT_BOP)
     {
@@ -400,11 +400,6 @@ ULONG EmulatorGetRegister(ULONG Register)
     }
 }
 
-ULONG EmulatorGetProgramCounter(VOID)
-{
-    return EmulatorContext.InstPtr.Long;
-}
-
 VOID EmulatorSetRegister(ULONG Register, ULONG Value)
 {
     if (Register < EMULATOR_REG_ES)
@@ -415,6 +410,11 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     {
         Fast486SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
     }
+}
+
+ULONG EmulatorGetProgramCounter(VOID)
+{
+    return EmulatorContext.InstPtr.Long;
 }
 
 BOOLEAN EmulatorGetFlag(ULONG Flag)
