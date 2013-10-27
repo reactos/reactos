@@ -26,9 +26,9 @@ static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID WINAPI EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
-    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(State);
 
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
@@ -44,16 +44,16 @@ static VOID WINAPI EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
-        LPBYTE VgaBuffer = &Buffer[VgaAddress - Address];
+        LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
 
         /* Read from the VGA memory */
         VgaReadMemory(VgaAddress, VgaBuffer, Size);
     }
 }
 
-static VOID WINAPI EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
-    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(State);
 
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
@@ -72,31 +72,33 @@ static VOID WINAPI EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffe
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
-        LPBYTE VgaBuffer = &Buffer[VgaAddress - Address];
+        LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
 
         /* Write to the VGA memory */
         VgaWriteMemory(VgaAddress, VgaBuffer, Size);
     }
 }
 
-static VOID WINAPI EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
 {
-    UNREFERENCED_PARAMETER(Context);
+    LPBYTE Address = (LPBYTE)Buffer;
+
+    UNREFERENCED_PARAMETER(State);
     UNREFERENCED_PARAMETER(Size);
 
-    switch (Address)
+    switch (Port)
     {
         case PIC_MASTER_CMD:
         case PIC_SLAVE_CMD:
         {
-            *Buffer = PicReadCommand(Address);
+            *Address = PicReadCommand(Port);
             break;
         }
 
         case PIC_MASTER_DATA:
         case PIC_SLAVE_DATA:
         {
-            *Buffer = PicReadData(Address);
+            *Address = PicReadData(Port);
             break;
         }
 
@@ -104,19 +106,19 @@ static VOID WINAPI EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, IN
         case PIT_DATA_PORT(1):
         case PIT_DATA_PORT(2):
         {
-            *Buffer = PitReadData(Address - PIT_DATA_PORT(0));
+            *Address = PitReadData(Port - PIT_DATA_PORT(0));
             break;
         }
 
         case PS2_CONTROL_PORT:
         {
-            *Buffer = KeyboardReadStatus();
+            *Address = KeyboardReadStatus();
             break;
         }
 
         case PS2_DATA_PORT:
         {
-            *Buffer = KeyboardReadData();
+            *Address = KeyboardReadData();
             break;
         }
 
@@ -136,25 +138,25 @@ static VOID WINAPI EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, IN
         case VGA_STAT_MONO:
         case VGA_STAT_COLOR:
         {
-            *Buffer = VgaReadPort(Address);
+            *Address = VgaReadPort(Port);
             break;
         }
 
         default:
         {
-            DPRINT1("Read from unknown port: 0x%X\n", Address);
+            DPRINT1("Read from unknown port: 0x%X\n", Port);
         }
     }
 }
 
-static VOID WINAPI EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
 {
-    BYTE Byte = *Buffer;
+    BYTE Byte = *(LPBYTE)Buffer;
 
-    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(State);
     UNREFERENCED_PARAMETER(Size);
 
-    switch (Address)
+    switch (Port)
     {
         case PIT_COMMAND_PORT:
         {
@@ -166,21 +168,21 @@ static VOID WINAPI EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, I
         case PIT_DATA_PORT(1):
         case PIT_DATA_PORT(2):
         {
-            PitWriteData(Address - PIT_DATA_PORT(0), Byte);
+            PitWriteData(Port - PIT_DATA_PORT(0), Byte);
             break;
         }
 
         case PIC_MASTER_CMD:
         case PIC_SLAVE_CMD:
         {
-            PicWriteCommand(Address, Byte);
+            PicWriteCommand(Port, Byte);
             break;
         }
 
         case PIC_MASTER_DATA:
         case PIC_SLAVE_DATA:
         {
-            PicWriteData(Address, Byte);
+            PicWriteData(Port, Byte);
             break;
         }
 
@@ -212,18 +214,18 @@ static VOID WINAPI EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, I
         case VGA_STAT_MONO:
         case VGA_STAT_COLOR:
         {
-            VgaWritePort(Address, Byte);
+            VgaWritePort(Port, Byte);
             break;
         }
 
         default:
         {
-            DPRINT1("Write to unknown port: 0x%X\n", Address);
+            DPRINT1("Write to unknown port: 0x%X\n", Port);
         }
     }
 }
 
-static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
+static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, USHORT BopCode)
 {
     WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
     BYTE IntNum;
@@ -236,7 +238,7 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
     /* Get the stack */
     Stack = (LPWORD)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
 
-    if (Code == EMULATOR_INT_BOP)
+    if (BopCode == EMULATOR_INT_BOP)
     {
         /* Get the interrupt number */
         IntNum = LOBYTE(Stack[STACK_INT_NUM]);
@@ -329,7 +331,7 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, WORD Code)
     }
 }
 
-static BYTE WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
+static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
 
@@ -346,12 +348,12 @@ BOOLEAN EmulatorInitialize()
     if (BaseAddress == NULL) return FALSE;
 
     /* Set the callbacks */
-    EmulatorContext.MemReadCallback = (FAST486_MEM_READ_PROC)EmulatorReadMemory;
-    EmulatorContext.MemWriteCallback = (FAST486_MEM_WRITE_PROC)EmulatorWriteMemory;
-    EmulatorContext.IoReadCallback = (FAST486_IO_READ_PROC)EmulatorReadIo;
-    EmulatorContext.IoWriteCallback = (FAST486_IO_WRITE_PROC)EmulatorWriteIo;
-    EmulatorContext.BopCallback = EmulatorBiosOperation;
-    EmulatorContext.IntAckCallback = EmulatorIntAcknowledge;
+    EmulatorContext.MemReadCallback  = EmulatorReadMemory;
+    EmulatorContext.MemWriteCallback = EmulatorWriteMemory;
+    EmulatorContext.IoReadCallback   = EmulatorReadIo;
+    EmulatorContext.IoWriteCallback  = EmulatorWriteIo;
+    EmulatorContext.BopCallback      = EmulatorBiosOperation;
+    EmulatorContext.IntAckCallback   = EmulatorIntAcknowledge;
 
     /* Reset the CPU */
     Fast486Reset(&EmulatorContext);
