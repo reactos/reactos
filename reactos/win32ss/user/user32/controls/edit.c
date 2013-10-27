@@ -3840,7 +3840,7 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
             EDIT_InvalidateText(es, es->selection_start, es->selection_end);
 
         /* single line edit updates itself */
-        if (!(es->style & ES_MULTILINE))
+        if (IsWindowVisible(es->hwndSelf) && !(es->style & ES_MULTILINE))
         {
             HDC hdc = GetDC(es->hwndSelf);
             EDIT_WM_Paint(es, hdc);
