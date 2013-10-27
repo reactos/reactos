@@ -28,13 +28,12 @@
  * strangeness, especially since most are in situations that would not
  * normally be met.
  */
+#undef WINVER
+#define WINVER 0x0600 /* For NONCLIENTMETRICS with padding */
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
-
-#undef WINVER
-#define WINVER 0x0600 /* For NONCLIENTMETRICS with padding */
 
 #include "wine/test.h"
 #include "windef.h"
@@ -183,7 +182,7 @@ static BOOL CreateWindows (HINSTANCE hinst)
 
         /* Create the control */
         sprintf (ctrlname, "ctrl%4.4ld", p->id);
-        hwnd[p->id] = CreateWindowEx (p->exstyle, TEXT(p->parent ? "static" : "GetNextDlgItemWindowClass"), TEXT(ctrlname), p->style, 10, 10, 10, 10, hwnd[p->parent], p->parent ? (HMENU) (2000 + p->id) : 0, hinst, 0);
+        hwnd[p->id] = CreateWindowExA(p->exstyle, p->parent ? "static" : "GetNextDlgItemWindowClass", ctrlname, p->style, 10, 10, 10, 10, hwnd[p->parent], p->parent ? (HMENU) (2000 + p->id) : 0, hinst, 0);
         if (!hwnd[p->id])
         {
             trace ("Failed to create control %ld\n", p->id);
@@ -196,8 +195,8 @@ static BOOL CreateWindows (HINSTANCE hinst)
          */
         if (p->parent)
         {
-            style = GetWindowLong (hwnd[p->id], GWL_STYLE);
-            exstyle = GetWindowLong (hwnd[p->id], GWL_EXSTYLE);
+            style = GetWindowLongA(hwnd[p->id], GWL_STYLE);
+            exstyle = GetWindowLongA(hwnd[p->id], GWL_EXSTYLE);
             if (style != p->style || exstyle != p->exstyle)
             {
                 trace ("Style mismatch at %ld: %8.8x %8.8x cf %8.8x %8.8x\n", p->id, style, exstyle, p->style, p->exstyle);
@@ -413,19 +412,19 @@ static void test_GetNextDlgItem(void)
 /*
  *  OnMainWindowCreate
  */
-static BOOL OnMainWindowCreate (HWND hwnd, LPCREATESTRUCT lpcs)
+static BOOL OnMainWindowCreate(HWND hwnd, LPCREATESTRUCTA lpcs)
 {
-    g_hwndButton1 = CreateWindow (TEXT("button"), TEXT("Button &1"),
+    g_hwndButton1 = CreateWindowA("button", "Button &1",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT,
             10, 10, 80, 80, hwnd, (HMENU)100, g_hinst, 0);
     if (!g_hwndButton1) return FALSE;
 
-    g_hwndButton2 = CreateWindow (TEXT("button"), TEXT("Button &2"),
+    g_hwndButton2 = CreateWindowA("button", "Button &2",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_TEXT,
             110, 10, 80, 80, hwnd, (HMENU)200, g_hinst, 0);
     if (!g_hwndButton2) return FALSE;
 
-    g_hwndButtonCancel = CreateWindow (TEXT("button"), TEXT("Cancel"),
+    g_hwndButtonCancel = CreateWindowA("button", "Cancel",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,
             210, 10, 80, 80, hwnd, (HMENU)IDCANCEL, g_hinst, 0);
     if (!g_hwndButtonCancel) return FALSE;
@@ -438,25 +437,25 @@ static BOOL OnMainWindowCreate (HWND hwnd, LPCREATESTRUCT lpcs)
  *  OnTestDlgCreate
  */
 
-static BOOL OnTestDlgCreate (HWND hwnd, LPCREATESTRUCT lpcs)
+static BOOL OnTestDlgCreate (HWND hwnd, LPCREATESTRUCTA lpcs)
 {
-    g_hwndTestDlgEdit = CreateWindowEx ( WS_EX_LEFT | WS_EX_LTRREADING |
+    g_hwndTestDlgEdit = CreateWindowExA( WS_EX_LEFT | WS_EX_LTRREADING |
             WS_EX_RIGHTSCROLLBAR | WS_EX_NOPARENTNOTIFY | WS_EX_CLIENTEDGE,
-            TEXT("Edit"), TEXT("Edit"),
+            "Edit", "Edit",
             WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,
             16,33,184,24, hwnd, (HMENU)101, g_hinst, 0);
     if (!g_hwndTestDlgEdit) return FALSE;
 
-    g_hwndTestDlgBut1 = CreateWindowEx ( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
+    g_hwndTestDlgBut1 = CreateWindowExA( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
             | WS_EX_NOPARENTNOTIFY,
-            TEXT("button"), TEXT("Button &1"),
+            "button", "Button &1",
             WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,
             204,33,30,24, hwnd, (HMENU)201, g_hinst, 0);
     if (!g_hwndTestDlgBut1) return FALSE;
 
-    g_hwndTestDlgBut2 = CreateWindowEx ( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
-            | WS_EX_NOPARENTNOTIFY, TEXT("button"),
-            TEXT("Button &2"),
+    g_hwndTestDlgBut2 = CreateWindowExA( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
+            | WS_EX_NOPARENTNOTIFY, "button",
+            "Button &2",
             WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,
             90,102,80,24, hwnd, (HMENU)IDCANCEL, g_hinst, 0);
     if (!g_hwndTestDlgBut2) return FALSE;
@@ -500,14 +499,14 @@ static LRESULT CALLBACK disabled_test_proc (HWND hwnd, UINT uiMsg,
             DWORD dw;
             HWND hwndOk;
 
-            dw = SendMessage(hwnd, DM_GETDEFID, 0, 0);
+            dw = SendMessageA(hwnd, DM_GETDEFID, 0, 0);
             assert(DC_HASDEFID == HIWORD(dw));
             hwndOk = GetDlgItem(hwnd, LOWORD(dw));
             assert(hwndOk);
             EnableWindow(hwndOk, FALSE);
 
-            PostMessage(hwnd, WM_KEYDOWN, VK_RETURN, 0);
-            PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
+            PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 0);
+            PostMessageA(hwnd, WM_COMMAND, IDCANCEL, 0);
             break;
         }
         case WM_COMMAND:
@@ -559,7 +558,7 @@ static BOOL RegisterWindowClasses (void)
     cls.cbWndExtra = 0;
     cls.hInstance = g_hinst;
     cls.hIcon = NULL;
-    cls.hCursor = LoadCursorA (NULL, IDC_ARROW);
+    cls.hCursor = LoadCursorA (NULL, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "GetNextDlgItemWindowClass";
@@ -585,7 +584,7 @@ static void test_WM_NEXTDLGCTL(void)
     MSG msg;
     DWORD dwVal;
 
-    g_hwndTestDlg = CreateWindowEx( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
+    g_hwndTestDlg = CreateWindowExA( WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR
               | WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT | WS_EX_APPWINDOW,
               "WM_NEXTDLGCTLWndClass",
               "WM_NEXTDLGCTL Message test window",
@@ -641,10 +640,10 @@ static void test_WM_NEXTDLGCTL(void)
          */
         if ( IDCANCEL == (LOWORD(dwVal)) )
         {
-                ok ( ((GetWindowLong( g_hwndTestDlgBut1, GWL_STYLE)) & BS_DEFPUSHBUTTON),
+                ok ( ((GetWindowLongA( g_hwndTestDlgBut1, GWL_STYLE)) & BS_DEFPUSHBUTTON),
                         "Button1 style not set to BS_DEFPUSHBUTTON\n" );
 
-                ok ( !((GetWindowLong( g_hwndTestDlgBut2, GWL_STYLE)) & BS_DEFPUSHBUTTON),
+                ok ( !((GetWindowLongA( g_hwndTestDlgBut2, GWL_STYLE)) & BS_DEFPUSHBUTTON),
                         "Button2's style not changed to BS_PUSHBUTTON\n" );
         }
 
@@ -666,10 +665,10 @@ static void test_WM_NEXTDLGCTL(void)
          */
         if ( IDCANCEL == (LOWORD(dwVal)) )
         {
-                ok ( ((GetWindowLong( g_hwndTestDlgBut2, GWL_STYLE)) & BS_DEFPUSHBUTTON),
+                ok ( ((GetWindowLongA( g_hwndTestDlgBut2, GWL_STYLE)) & BS_DEFPUSHBUTTON),
                         "Button2 style not set to BS_DEFPUSHBUTTON\n" );
 
-                ok ( !((GetWindowLong( g_hwndTestDlgBut1, GWL_STYLE)) & BS_DEFPUSHBUTTON),
+                ok ( !((GetWindowLongA( g_hwndTestDlgBut1, GWL_STYLE)) & BS_DEFPUSHBUTTON),
                         "Button1's style not changed to BS_PUSHBUTTON\n" );
         }
 
@@ -711,7 +710,7 @@ static void test_WM_NEXTDLGCTL(void)
 
     g_bReceivedCommand = FALSE;
     FormEnterMsg (&msg, child3);
-    ok(IsDialogMessage (g_hwndTestDlg, &msg), "Did not handle the ENTER\n");
+    ok(IsDialogMessageA(g_hwndTestDlg, &msg), "Did not handle the ENTER\n");
     ok(g_bReceivedCommand, "Did not trigger the default Button action\n");
 
     DestroyWindow(child3);
@@ -724,7 +723,7 @@ static void test_IsDialogMessage(void)
 {
     MSG msg;
 
-    g_hwndMain = CreateWindow ("IsDialogMessageWindowClass", "IsDialogMessageWindowClass",
+    g_hwndMain = CreateWindowA("IsDialogMessageWindowClass", "IsDialogMessageWindowClass",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
             NULL, NULL, g_hinst, 0);
@@ -738,14 +737,14 @@ static void test_IsDialogMessage(void)
      * button.
      */
     FormTabMsg (&msg, g_hwndMain);
-    ok (IsDialogMessage (g_hwndMain, &msg), "Did not handle first TAB\n");
+    ok (IsDialogMessageA(g_hwndMain, &msg), "Did not handle first TAB\n");
     ok ((GetFocus() == g_hwndButton1), "Focus did not move to first button\n");
     FormTabMsg (&msg, g_hwndButton1);
-    ok (IsDialogMessage (g_hwndMain, &msg), "Did not handle second TAB\n");
+    ok (IsDialogMessageA(g_hwndMain, &msg), "Did not handle second TAB\n");
     ok ((GetFocus() == g_hwndButtonCancel),
             "Focus did not move to cancel button\n");
     FormEnterMsg (&msg, g_hwndButtonCancel);
-    ok (IsDialogMessage (g_hwndMain, &msg), "Did not handle the ENTER\n");
+    ok (IsDialogMessageA(g_hwndMain, &msg), "Did not handle the ENTER\n");
     ok (g_terminated, "ENTER did not terminate\n");
 }
 
@@ -761,13 +760,13 @@ static INT_PTR CALLBACK delayFocusDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wPar
        g_hwndButton1 = GetDlgItem(hDlg,200);
        g_hwndButton2 = GetDlgItem(hDlg,201);
        g_hwndButtonCancel = GetDlgItem(hDlg,IDCANCEL);
-       g_styleInitialFocusT1 = GetWindowLong(g_hwndInitialFocusGroupBox, GWL_STYLE);
+       g_styleInitialFocusT1 = GetWindowLongA(g_hwndInitialFocusGroupBox, GWL_STYLE);
 
        /* Initially check the second radio button */
-       SendMessage(g_hwndButton1, BM_SETCHECK, BST_UNCHECKED, 0);
-       SendMessage(g_hwndButton2, BM_SETCHECK, BST_CHECKED  , 0);
+       SendMessageA(g_hwndButton1, BM_SETCHECK, BST_UNCHECKED, 0);
+       SendMessageA(g_hwndButton2, BM_SETCHECK, BST_CHECKED  , 0);
        /* Continue testing after dialog initialization */
-       PostMessage(hDlg, WM_USER, 0, 0);
+       PostMessageA(hDlg, WM_USER, 0, 0);
        return g_bInitialFocusInitDlgResult;
 
     case WM_COMMAND:
@@ -779,11 +778,11 @@ static INT_PTR CALLBACK delayFocusDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wPar
        return FALSE;
 
     case WM_USER:
-       g_styleInitialFocusT2 = GetWindowLong(hDlg, GWL_STYLE);
+       g_styleInitialFocusT2 = GetWindowLongA(hDlg, GWL_STYLE);
         g_hwndInitialFocusT1 = GetFocus();
        SetFocus(hDlg);
         g_hwndInitialFocusT2 = GetFocus();
-       PostMessage(hDlg, WM_COMMAND, IDCANCEL, 0);
+       PostMessageA(hDlg, WM_COMMAND, IDCANCEL, 0);
        return TRUE;
     }
 
@@ -904,7 +903,7 @@ static void test_focus(void)
         HWND hTextbox;
         DWORD selectionStart = 0xdead, selectionEnd = 0xbeef;
 
-        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", RT_DIALOG);
+        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", (LPCSTR)RT_DIALOG);
         hTemplate = LoadResource(g_hinst, hResource);
         pTemplate = LockResource(hTemplate);
 
@@ -917,16 +916,16 @@ static void test_focus(void)
 
         /* Also make sure that WM_SETFOCUS selects the textbox's text */
         hTextbox = GetDlgItem(hDlg, 200);
-        SendMessage(hTextbox, WM_SETTEXT, 0, (LPARAM)"Hello world");
+        SendMessageA(hTextbox, WM_SETTEXT, 0, (LPARAM)"Hello world");
 
-        SendMessage(hDlg, WM_SETFOCUS, 0, 0);
-        SendMessage(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
+        SendMessageA(hDlg, WM_SETFOCUS, 0, 0);
+        SendMessageA(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
         ok(selectionStart == 0 && selectionEnd == 11, "Text selection after WM_SETFOCUS is [%i, %i) expected [0, 11)\n", selectionStart, selectionEnd);
 
         /* but WM_ACTIVATE does not */
-        SendMessage(hTextbox, EM_SETSEL, 0, 0);
-        SendMessage(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
-        SendMessage(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
+        SendMessageA(hTextbox, EM_SETSEL, 0, 0);
+        SendMessageA(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
+        SendMessageA(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
         ok(selectionStart == 0 && selectionEnd == 0, "Text selection after WM_ACTIVATE is [%i, %i) expected [0, 0)\n", selectionStart, selectionEnd);
 
         DestroyWindow(hDlg);
@@ -941,7 +940,7 @@ static void test_focus(void)
         DLGTEMPLATE* pTemplate;
         HWND hLabel;
 
-        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG_2", RT_DIALOG);
+        hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG_2", (LPCSTR)RT_DIALOG);
         hTemplate = LoadResource(g_hinst, hResource);
         pTemplate = LockResource(hTemplate);
 
@@ -959,11 +958,11 @@ static void test_focus(void)
         hLabel = GetDlgItem(hDlg, 200);
 
         SetFocus(NULL);
-        SendMessage(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
+        SendMessageA(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
         ok(GetFocus() == NULL, "Focus set on WM_ACTIVATE, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
 
         SetFocus(NULL);
-        SendMessage(hDlg, WM_SETFOCUS, 0, 0);
+        SendMessageA(hDlg, WM_SETFOCUS, 0, 0);
         ok(GetFocus() == hLabel, "Focus not set to label on WM_SETFOCUS, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
 
         DestroyWindow(hDlg);
@@ -1018,13 +1017,13 @@ static void test_GetDlgItem(void)
     ok(child2 != NULL, "failed to create second child\n");
 
     /* give child2 an ID */
-    SetWindowLong(child2, GWLP_ID, 100);
+    SetWindowLongA(child2, GWLP_ID, 100);
 
     hwnd2 = GetDlgItem(hwnd, 100);
     ok(!hwnd2, "expected child to not be found, got %p\n", hwnd2);
 
     /* make the ID of child2 public with a WS_EX_CONTROLPARENT parent */
-    SetWindowLong(child1, GWL_EXSTYLE, WS_EX_CONTROLPARENT);
+    SetWindowLongA(child1, GWL_EXSTYLE, WS_EX_CONTROLPARENT);
 
     hwnd2 = GetDlgItem(hwnd, 100);
     ok(!hwnd2, "expected child to not be found, got %p\n", hwnd2);
@@ -1051,7 +1050,7 @@ static INT_PTR CALLBACK DestroyOnCloseDlgWinProc (HWND hDlg, UINT uiMsg,
     switch (uiMsg)
     {
     case WM_INITDIALOG:
-        PostMessage(hDlg, WM_CLOSE, 0, 0);
+        PostMessageA(hDlg, WM_CLOSE, 0, 0);
         return TRUE;
     case WM_CLOSE:
         DestroyWindow(hDlg);
@@ -1073,7 +1072,7 @@ static INT_PTR CALLBACK TestInitDialogHandleProc (HWND hDlg, UINT uiMsg,
            "Expected wParam to be the handle to the first tabstop control (%p), got %p\n",
            expected, (HWND)wParam);
 
-        EndDialog(hDlg, LOWORD(SendMessage(hDlg, DM_GETDEFID, 0, 0)));
+        EndDialog(hDlg, LOWORD(SendMessageA(hDlg, DM_GETDEFID, 0, 0)));
         return TRUE;
     }
     return FALSE;
@@ -1085,7 +1084,7 @@ static INT_PTR CALLBACK TestDefButtonDlgProc (HWND hDlg, UINT uiMsg,
     switch (uiMsg)
     {
     case WM_INITDIALOG:
-        EndDialog(hDlg, LOWORD(SendMessage(hDlg, DM_GETDEFID, 0, 0)));
+        EndDialog(hDlg, LOWORD(SendMessageA(hDlg, DM_GETDEFID, 0, 0)));
         return TRUE;
     }
     return FALSE;
@@ -1103,11 +1102,11 @@ static INT_PTR CALLBACK TestReturnKeyDlgProc (HWND hDlg, UINT uiMsg,
         MSG msg = {hDlg, WM_KEYDOWN, VK_RETURN, 0x011c0001};
 
         received_idok = -1;
-        IsDialogMessage(hDlg, &msg);
+        IsDialogMessageA(hDlg, &msg);
         ok(received_idok == 0xdead, "WM_COMMAND/0xdead not received\n");
 
         received_idok = -2;
-        IsDialogMessage(hDlg, &msg);
+        IsDialogMessageA(hDlg, &msg);
         ok(received_idok == IDOK, "WM_COMMAND/IDOK not received\n");
 
         EndDialog(hDlg, 0);
@@ -1119,7 +1118,7 @@ static INT_PTR CALLBACK TestReturnKeyDlgProc (HWND hDlg, UINT uiMsg,
         {
             HWND hwnd = GetDlgItem(hDlg, 0xdead);
             ok(!hwnd, "dialog item with ID 0xdead should not exist\n");
-            SetWindowLong(hDlg, DWLP_MSGRESULT, MAKELRESULT(0xdead, DC_HASDEFID));
+            SetWindowLongA(hDlg, DWLP_MSGRESULT, MAKELRESULT(0xdead, DC_HASDEFID));
             return TRUE;
         }
         return FALSE;
@@ -1143,23 +1142,23 @@ static INT_PTR CALLBACK TestControlStyleDlgProc(HWND hdlg, UINT msg,
     case WM_INITDIALOG:
         control = GetDlgItem(hdlg, 7);
         ok(control != 0, "dialog control with id 7 not found\n");
-        style = GetWindowLong(control, GWL_STYLE);
+        style = GetWindowLongA(control, GWL_STYLE);
         ok(style == (WS_CHILD|WS_VISIBLE), "expected WS_CHILD|WS_VISIBLE, got %#x\n", style);
-        exstyle = GetWindowLong(control, GWL_EXSTYLE);
+        exstyle = GetWindowLongA(control, GWL_EXSTYLE);
         ok(exstyle == (WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT|WS_EX_CLIENTEDGE), "expected WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT|WS_EX_CLIENTEDGE, got %#x\n", exstyle);
         buf[0] = 0;
-        GetWindowText(control, buf, sizeof(buf));
-        ok(lstrcmp(buf, "bump7") == 0,  "expected bump7, got %s\n", buf);
+        GetWindowTextA(control, buf, sizeof(buf));
+        ok(strcmp(buf, "bump7") == 0,  "expected bump7, got %s\n", buf);
 
         control = GetDlgItem(hdlg, 8);
         ok(control != 0, "dialog control with id 8 not found\n");
-        style = GetWindowLong(control, GWL_STYLE);
+        style = GetWindowLongA(control, GWL_STYLE);
         ok(style == (WS_CHILD|WS_VISIBLE), "expected WS_CHILD|WS_VISIBLE, got %#x\n", style);
-        exstyle = GetWindowLong(control, GWL_EXSTYLE);
+        exstyle = GetWindowLongA(control, GWL_EXSTYLE);
         ok(exstyle == (WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT), "expected WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT, got %#x\n", exstyle);
         buf[0] = 0;
-        GetWindowText(control, buf, sizeof(buf));
-        ok(lstrcmp(buf, "bump8") == 0,  "expected bump8, got %s\n", buf);
+        GetWindowTextA(control, buf, sizeof(buf));
+        ok(strcmp(buf, "bump8") == 0,  "expected bump8, got %s\n", buf);
 
         EndDialog(hdlg, -7);
         return TRUE;
@@ -1172,11 +1171,11 @@ static void test_DialogBoxParamA(void)
     INT_PTR ret;
     HWND hwnd_invalid = (HWND)0x4444;
 
-    ret = DialogBoxParamA(GetModuleHandle(0), "TEST_DLG_CHILD_POPUP", 0, TestControlStyleDlgProc, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "TEST_DLG_CHILD_POPUP", 0, TestControlStyleDlgProc, 0);
     ok(ret == -7, "expected -7, got %ld\n", ret);
 
     SetLastError(0xdeadbeef);
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG" , hwnd_invalid, 0 , 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "IDD_DIALOG" , hwnd_invalid, 0 , 0);
     ok(0 == ret || broken(ret == -1), "DialogBoxParamA returned %ld, expected 0\n", ret);
     ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError() ||
        broken(GetLastError() == 0xdeadbeef),
@@ -1184,7 +1183,7 @@ static void test_DialogBoxParamA(void)
 
     /* Test a dialog which destroys itself on WM_INITDIALOG. */
     SetLastError(0xdeadbeef);
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG", 0, DestroyDlgWinProc, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "IDD_DIALOG", 0, DestroyDlgWinProc, 0);
     ok(-1 == ret, "DialogBoxParamA returned %ld, expected -1\n", ret);
     ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError() ||
        GetLastError() == ERROR_SUCCESS ||
@@ -1192,11 +1191,11 @@ static void test_DialogBoxParamA(void)
        "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n",GetLastError());
 
     /* Test a dialog which destroys itself on WM_CLOSE. */
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG", 0, DestroyOnCloseDlgWinProc, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "IDD_DIALOG", 0, DestroyOnCloseDlgWinProc, 0);
     ok(0 == ret, "DialogBoxParamA returned %ld, expected 0\n", ret);
 
     SetLastError(0xdeadbeef);
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "RESOURCE_INVALID" , 0, 0, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "RESOURCE_INVALID" , 0, 0, 0);
     ok(-1 == ret, "DialogBoxParamA returned %ld, expected -1\n", ret);
     ok(ERROR_RESOURCE_NAME_NOT_FOUND == GetLastError() ||
        broken(GetLastError() == 0xdeadbeef),
@@ -1209,19 +1208,19 @@ static void test_DialogBoxParamA(void)
        broken(GetLastError() == 0xdeadbeef),
        "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n", GetLastError());
 
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "TEST_EMPTY_DIALOG", 0, TestInitDialogHandleProc, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "TEST_EMPTY_DIALOG", 0, TestInitDialogHandleProc, 0);
     ok(ret == IDOK, "Expected IDOK\n");
 
-    ret = DialogBoxParamA(GetModuleHandle(NULL), "TEST_EMPTY_DIALOG", 0, TestDefButtonDlgProc, 0);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "TEST_EMPTY_DIALOG", 0, TestDefButtonDlgProc, 0);
     ok(ret == IDOK, "Expected IDOK\n");
 
-    DialogBoxParamA(GetModuleHandle(NULL), "TEST_EMPTY_DIALOG", 0, TestReturnKeyDlgProc, 0);
+    DialogBoxParamA(GetModuleHandleA(NULL), "TEST_EMPTY_DIALOG", 0, TestReturnKeyDlgProc, 0);
 }
 
 static void test_DisabledDialogTest(void)
 {
     g_terminated = FALSE;
-    DialogBoxParam(g_hinst, "IDD_DIALOG", NULL, disabled_test_proc, 0);
+    DialogBoxParamA(g_hinst, "IDD_DIALOG", NULL, disabled_test_proc, 0);
     ok(FALSE == g_terminated, "dialog with disabled ok button has been terminated\n");
 }
 
@@ -1294,7 +1293,7 @@ static void test_MessageBoxFontTest(void)
      * we want, because passing such a template to CreateDialogIndirectParamA would crash
      * anyway.
      */
-    hDlg = CreateDialogIndirectParamW(g_hinst, (LPCDLGTEMPLATE)dlgTemplate, NULL, messageBoxFontDlgWinProc, 0);
+    hDlg = CreateDialogIndirectParamW(g_hinst, (LPCDLGTEMPLATEW)dlgTemplate, NULL, messageBoxFontDlgWinProc, 0);
     if (!hDlg)
     {
         win_skip("dialog wasn't created\n");
@@ -1328,34 +1327,34 @@ static void test_SaveRestoreFocus(void)
     HWND foundHwnd;
 
     /* create the dialog */
-    hResource = FindResourceA(g_hinst, "MULTI_EDIT_DIALOG", RT_DIALOG);
+    hResource = FindResourceA(g_hinst, "MULTI_EDIT_DIALOG", (LPCSTR)RT_DIALOG);
     hTemplate = LoadResource(g_hinst, hResource);
     pTemplate = LockResource(hTemplate);
 
     hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, messageBoxFontDlgWinProc, 0);
     ok (hDlg != 0, "Failed to create test dialog.\n");
 
-    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1000, "First edit box should have gained focus on dialog creation. Expected: %d, Found: %ld\n", 1000, foundId);
 
     /* de- then reactivate the dialog */
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
 
-    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1000, "First edit box should have regained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1000, foundId);
 
     /* select the next tabbable item */
     SetFocus(GetNextDlgTabItem(hDlg, GetFocus(), FALSE));
 
-    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1001, "Second edit box should have gained focus. Expected: %d, Found: %ld\n", 1001, foundId);
 
     /* de- then reactivate the dialog */
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
 
-    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1001, "Second edit box should have gained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1001, foundId);
 
     /* disable the 2nd box */
@@ -1365,8 +1364,8 @@ static void test_SaveRestoreFocus(void)
     ok (foundHwnd == NULL, "Second edit box should have lost focus after being disabled. Expected: %p, Found: %p\n", NULL, foundHwnd);
 
     /* de- then reactivate the dialog */
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
-    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
 
     foundHwnd = GetFocus();
     ok (foundHwnd == NULL, "No controls should have gained focus after dialog reactivation. Expected: %p, Found: %p\n", NULL, foundHwnd);
@@ -1383,7 +1382,7 @@ static INT_PTR CALLBACK timer_message_dlg_proc(HWND wnd, UINT msg, WPARAM wparam
     switch (msg)
     {
         case WM_INITDIALOG:
-            visible = GetWindowLong(wnd, GWL_STYLE) & WS_VISIBLE;
+            visible = GetWindowLongA(wnd, GWL_STYLE) & WS_VISIBLE;
             ok(!visible, "Dialog should not be visible.\n");
             SetTimer(wnd, 1, 100, NULL);
             Sleep(200);
@@ -1396,21 +1395,21 @@ static INT_PTR CALLBACK timer_message_dlg_proc(HWND wnd, UINT msg, WPARAM wparam
 
         case WM_TIMER:
             if (wparam != 1) return FALSE;
-            visible = GetWindowLong(wnd, GWL_STYLE) & WS_VISIBLE;
+            visible = GetWindowLongA(wnd, GWL_STYLE) & WS_VISIBLE;
             if (!count++)
             {
                 ok(!visible, "Dialog should not be visible.\n");
-                PostMessage(wnd, WM_USER, 0, 0);
+                PostMessageA(wnd, WM_USER, 0, 0);
             }
             else
             {
                 ok(visible, "Dialog should be visible.\n");
-                PostMessage(wnd, WM_COMMAND, IDCANCEL, 0);
+                PostMessageA(wnd, WM_COMMAND, IDCANCEL, 0);
             }
             return TRUE;
 
         case WM_USER:
-            visible = GetWindowLong(wnd, GWL_STYLE) & WS_VISIBLE;
+            visible = GetWindowLongA(wnd, GWL_STYLE) & WS_VISIBLE;
             ok(visible, "Dialog should be visible.\n");
             return TRUE;
 

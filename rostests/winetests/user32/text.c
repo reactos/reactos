@@ -675,23 +675,23 @@ static void test_DrawState(void)
     assert(hdc);
 
     SetLastError(0xdeadbeef);
-    ret = DrawState(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, strlen(text),
+    ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, strlen(text),
                     0, 0, 10, 10, DST_TEXT);
     ok(ret, "DrawState error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = DrawState(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, 0,
+    ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, (LPARAM)text, 0,
                     0, 0, 10, 10, DST_TEXT);
     ok(ret, "DrawState error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = DrawState(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, strlen(text),
+    ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, strlen(text),
                     0, 0, 10, 10, DST_TEXT);
     ok(!ret || broken(ret) /* win98 */, "DrawState succeeded\n");
     ok(GetLastError() == 0xdeadbeef, "not expected error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = DrawState(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, 0,
+    ret = DrawStateA(hdc, GetStockObject(DKGRAY_BRUSH), NULL, 0, 0,
                     0, 0, 10, 10, DST_TEXT);
     ok(!ret || broken(ret) /* win98 */, "DrawState succeeded\n");
     ok(GetLastError() == 0xdeadbeef, "not expected error %u\n", GetLastError());
