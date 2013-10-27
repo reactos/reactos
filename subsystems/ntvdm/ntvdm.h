@@ -11,12 +11,13 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <windows.h>
 #include <stdio.h>
-#include <conio.h>
 #include <stdarg.h>
+#include <conio.h>
+
+#include <windows.h>
+
 #include <debug.h>
-#include <limits.h>
 
 /* DEFINES ********************************************************************/
 

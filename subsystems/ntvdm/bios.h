@@ -21,11 +21,13 @@
 #define BIOS_PIC_MASTER_INT 0x08
 #define BIOS_PIC_SLAVE_INT 0x70
 #define BIOS_SEGMENT 0xF000
+
 #define BIOS_VIDEO_INTERRUPT 0x10
 #define BIOS_EQUIPMENT_INTERRUPT 0x11
 #define BIOS_KBD_INTERRUPT 0x16
 #define BIOS_TIME_INTERRUPT 0x1A
 #define BIOS_SYS_TIMER_INTERRUPT 0x1C
+
 #define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 16
 #define BIOS_EQUIPMENT_LIST 0x2C // HACK: Disable FPU for now
@@ -51,12 +53,12 @@ typedef struct
 {
     WORD SerialPorts[4];
     WORD ParallelPorts[3];
-    WORD EbdaSegment;
+    WORD EbdaSegment;       // Sometimes, ParallelPort
     WORD EquipmentList;
-    BYTE Reserved0;
+    BYTE Reserved0;         // Errors in PCjr infrared keyboard link
     WORD MemorySize;
-    WORD Reserved1;
-    WORD KeyboardFlags;
+    WORD Reserved1;         // Scratch pad for manufacturing error tests
+    WORD KeybdShiftFlags;
     BYTE AlternateKeypad;
     WORD KeybdBufferHead;
     WORD KeybdBufferTail;

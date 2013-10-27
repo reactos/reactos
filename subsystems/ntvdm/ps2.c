@@ -300,6 +300,8 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
                     KeyboardQueuePush(ScanCode);
                 }
 
+                /* TODO: Update the keyboard shift status flags */
+
                 /* Keyboard IRQ */
                 PicInterruptRequest(1);
 

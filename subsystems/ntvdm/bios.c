@@ -17,6 +17,8 @@
 #include "ps2.h"
 #include "timer.h"
 
+#include "registers.h"
+
 /* PRIVATE VARIABLES **********************************************************/
 
 PBIOS_DATA_AREA Bda;
@@ -982,15 +984,20 @@ VOID BiosKeyboardService(LPWORD Stack)
 
     switch (HIBYTE(Eax))
     {
+        /* Wait for keystroke and read */
         case 0x00:
+        /* Wait for extended keystroke and read */
+        case 0x10:  // FIXME: Temporarily do the same as INT 16h, 00h
         {
             /* Read the character (and wait if necessary) */
             EmulatorSetRegister(EMULATOR_REG_AX, BiosGetCharacter());
-
             break;
         }
 
+        /* Get keystroke status */
         case 0x01:
+        /* Get extended keystroke status */
+        case 0x11:  // FIXME: Temporarily do the same as INT 16h, 01h
         {
             WORD Data = BiosPeekCharacter();
 
@@ -1008,7 +1015,45 @@ VOID BiosKeyboardService(LPWORD Stack)
 
             break;
         }
-        
+
+        /* Get shift status */
+        case 0x02:
+        {
+            /* Return the lower byte of the keyboard shift status word */
+            setAL(LOBYTE(Bda->KeybdShiftFlags));
+            break;
+        }
+
+        /* Reserved */
+        case 0x04:
+        {
+            DPRINT1("BIOS Function INT 16h, AH = 0x04 is RESERVED\n");
+            break;
+        }
+
+        /* Push keystroke */
+        case 0x05:
+        {
+            /* Return 0 if success, 1 if failure */
+            setAL(BiosKbdBufferPush(getCX()) == FALSE);
+            break;
+        }
+
+        /* Get extended shift status */
+        case 0x12:
+        {
+            /*
+             * Be careful! The returned word is similar to Bda->KeybdShiftFlags
+             * but the high byte is organized differently:
+             * the bytes 2 and 3 of the high byte are not the same...
+             */
+            WORD KeybdShiftFlags = (Bda->KeybdShiftFlags & 0xF3FF);
+
+            /* Return the extended keyboard shift status word */
+            setAX(KeybdShiftFlags);
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 16h, AH = 0x%02X NOT IMPLEMENTED\n",
@@ -1115,6 +1160,7 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
                     BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
                     /* Find out which character this is */
+                    Character = 0;
                     if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
                     {
                         /* Not ASCII */
