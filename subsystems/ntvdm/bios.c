@@ -1132,9 +1132,9 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
         {
             BYTE ScanCode, VirtualKey;
             WORD Character;
-            
+
             /* Loop while there is a scancode available */
-            while (KeyboardReadStatus() & 1)
+            do
             {
                 /* Get the scan code and virtual key code */
                 ScanCode = KeyboardReadData();
@@ -1173,6 +1173,7 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
                     BiosKeyboardMap[VirtualKey] &= ~(1 << 7);
                 }
             }
+            while (KeyboardReadStatus() & 1);
 
             /* Clear the keyboard flags */
             Bda->KeybdShiftFlags = 0;

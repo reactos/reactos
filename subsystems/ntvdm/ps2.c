@@ -20,7 +20,7 @@ static BYTE KeyboardQueue[KEYBOARD_BUFFER_SIZE];
 static BOOLEAN KeyboardQueueEmpty = TRUE;
 static UINT KeyboardQueueStart = 0;
 static UINT KeyboardQueueEnd = 0;
-static BYTE KeyboardResponse = 0;
+static BYTE KeyboardData = 0, KeyboardResponse = 0;
 static BOOLEAN KeyboardReadResponse = FALSE, KeyboardWriteResponse = FALSE;
 static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
 
@@ -190,19 +190,19 @@ VOID KeyboardWriteCommand(BYTE Command)
 
 BYTE KeyboardReadData()
 {
-    BYTE Value = 0;
-
     /* If there was a response byte from the controller, return it */
     if (KeyboardReadResponse)
     {
         KeyboardReadResponse = FALSE;
-        return KeyboardResponse;
+        KeyboardData = KeyboardResponse;
     }
-    
-    /* Otherwise, read the data from the queue */
-    KeyboardQueuePop(&Value);
+    else
+    {
+        /* Otherwise, read the data from the queue */
+        KeyboardQueuePop(&KeyboardData);
+    }
 
-    return Value;
+    return KeyboardData;
 }
 
 VOID KeyboardWriteData(BYTE Data)
