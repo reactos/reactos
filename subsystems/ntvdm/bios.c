@@ -270,7 +270,7 @@ static LPBYTE VideoModes[] =
 static BOOLEAN BiosKbdBufferPush(WORD Data)
 {
     /* Get the location of the element after the tail */
-    WORD NextElement = Bda->KeybdBufferTail + 2;
+    WORD NextElement = Bda->KeybdBufferTail + sizeof(WORD);
 
     /* Wrap it around if it's at or beyond the end */
     if (NextElement >= Bda->KeybdBufferEnd) NextElement = Bda->KeybdBufferStart;
@@ -455,11 +455,11 @@ BOOLEAN BiosInitialize(VOID)
 {
     INT i;
     WORD Offset = 0;
-    LPWORD IntVecTable = (LPWORD)((ULONG_PTR)BaseAddress);
-    LPBYTE BiosCode = (LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(BIOS_SEGMENT, 0));
+    LPWORD IntVecTable = (LPWORD)BaseAddress;
+    LPBYTE BiosCode = (LPBYTE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0);
 
     /* Initialize the BDA */
-    Bda = (PBIOS_DATA_AREA)((ULONG_PTR)BaseAddress + TO_LINEAR(BDA_SEGMENT, 0));
+    Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
@@ -594,8 +594,8 @@ VOID BiosCleanup(VOID)
 
 WORD BiosPeekCharacter(VOID)
 {
-    WORD CharacterData;
-    
+    WORD CharacterData = 0;
+
     /* Get the key from the queue, but don't remove it */
     if (BiosKbdBufferTop(&CharacterData)) return CharacterData;
     else return 0xFFFF;
@@ -777,17 +777,12 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 
 VOID BiosVideoService(LPWORD Stack)
 {
-    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
-    DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
-    DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
-    DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
-
-    switch (HIBYTE(Eax))
+    switch (getAH())
     {
         /* Set Video Mode */
         case 0x00:
         {
-            BiosSetVideoMode(LOBYTE(Eax));
+            BiosSetVideoMode(getAL());
             VgaClearMemory();
             break;
         }
@@ -796,8 +791,8 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x01:
         {
             /* Update the BDA */
-            Bda->CursorStartLine = HIBYTE(Ecx);
-            Bda->CursorEndLine = LOBYTE(Ecx);
+            Bda->CursorStartLine = getCH();
+            Bda->CursorEndLine   = getCL();
 
             /* Modify the CRTC registers */
             VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
@@ -811,7 +806,7 @@ VOID BiosVideoService(LPWORD Stack)
         /* Set Cursor Position */
         case 0x02:
         {
-            BiosSetCursorPosition(HIBYTE(Edx), LOBYTE(Edx), HIBYTE(Ebx));
+            BiosSetCursorPosition(getDH(), getDL(), getBH());
             break;
         }
 
@@ -819,14 +814,12 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x03:
         {
             /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= BIOS_MAX_PAGES) break;
+            if (getBH() >= BIOS_MAX_PAGES) break;
 
             /* Return the result */
-            EmulatorSetRegister(EMULATOR_REG_AX, 0);
-            EmulatorSetRegister(EMULATOR_REG_CX,
-                                (Bda->CursorStartLine << 8) | Bda->CursorEndLine);
-            EmulatorSetRegister(EMULATOR_REG_DX, Bda->CursorPosition[HIBYTE(Ebx)]);
-
+            setAX(0);
+            setCX(MAKEWORD(Bda->CursorEndLine, Bda->CursorStartLine));
+            setDX(Bda->CursorPosition[getBH()]);
             break;
         }
 
@@ -837,14 +830,14 @@ VOID BiosVideoService(LPWORD Stack)
              * On modern BIOSes, this function returns 0
              * so that we can ignore the other registers.
              */
-            EmulatorSetRegister(EMULATOR_REG_AX, 0);
+            setAX(0);
             break;
         }
 
         /* Select Active Display Page */
         case 0x05:
         {
-            BiosSetVideoPage(LOBYTE(Eax));
+            BiosSetVideoPage(getAL());
             break;
         }
 
@@ -852,21 +845,15 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x06:
         case 0x07:
         {
-            SMALL_RECT Rectangle =
-            {
-                LOBYTE(Ecx),
-                HIBYTE(Ecx),
-                LOBYTE(Edx),
-                HIBYTE(Edx)
-            };
+            SMALL_RECT Rectangle = { getCL(), getCH(), getDL(), getDH() };
 
             /* Call the internal function */
-            BiosScrollWindow((HIBYTE(Eax) == 0x06) ? SCROLL_DIRECTION_UP
-                                                   : SCROLL_DIRECTION_DOWN,
-                             LOBYTE(Eax),
+            BiosScrollWindow((getAH() == 0x06) ? SCROLL_DIRECTION_UP
+                                               : SCROLL_DIRECTION_DOWN,
+                             getAL(),
                              Rectangle,
                              Bda->VideoPage,
-                             HIBYTE(Ebx));
+                             getBH());
 
             break;
         }
@@ -876,19 +863,19 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x09:
         case 0x0A:
         {
-            WORD CharacterData = MAKEWORD(LOBYTE(Eax), LOBYTE(Ebx));
-            BYTE Page = HIBYTE(Ebx);
+            WORD CharacterData = MAKEWORD(getAL(), getBL());
+            BYTE Page = getBH();
             DWORD Offset;
 
             /* Check if the page exists */
             if (Page >= BIOS_MAX_PAGES) break;
 
             /* Find the offset of the character */
-            Offset = Page * Bda->VideoPageSize
-                     + (HIBYTE(Bda->CursorPosition[Page]) * Bda->ScreenColumns
-                     + LOBYTE(Bda->CursorPosition[Page])) * 2;
+            Offset = Page * Bda->VideoPageSize +
+                     (HIBYTE(Bda->CursorPosition[Page]) * Bda->ScreenColumns +
+                      LOBYTE(Bda->CursorPosition[Page])) * 2;
 
-            if (HIBYTE(Eax) == 0x08)
+            if (getAH() == 0x08)
             {
                 /* Read from the video memory */
                 VgaReadMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
@@ -896,14 +883,14 @@ VOID BiosVideoService(LPWORD Stack)
                               sizeof(WORD));
 
                 /* Return the character in AX */
-                EmulatorSetRegister(EMULATOR_REG_AX, CharacterData);
+                setAX(CharacterData);
             }
             else
             {
                 /* Write to video memory */
                 VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
                                (LPVOID)&CharacterData,
-                               (HIBYTE(Ebx) == 0x09) ? sizeof(WORD) : sizeof(BYTE));
+                               (getBH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
             }
 
             break;
@@ -912,35 +899,26 @@ VOID BiosVideoService(LPWORD Stack)
         /* Teletype Output */
         case 0x0E:
         {
-            BiosPrintCharacter(LOBYTE(Eax), LOBYTE(Ebx), HIBYTE(Ebx));
+            BiosPrintCharacter(getAL(), getBL(), getBH());
             break;
         }
 
         /* Get Current Video Mode */
         case 0x0F:
         {
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                                MAKEWORD(Bda->VideoMode, Bda->ScreenColumns));
-            EmulatorSetRegister(EMULATOR_REG_BX,
-                                MAKEWORD(LOBYTE(Ebx), Bda->VideoPage));
-
+            setAX(MAKEWORD(Bda->VideoMode, Bda->ScreenColumns));
+            setBX(MAKEWORD(getBL(), Bda->VideoPage));
             break;
         }
 
         /* Scroll Window */
         case 0x12:
         {
-            SMALL_RECT Rectangle =
-            {
-                LOBYTE(Ecx),
-                HIBYTE(Ecx),
-                LOBYTE(Edx),
-                HIBYTE(Edx)
-            };
+            SMALL_RECT Rectangle = { getCL(), getCH(), getDL(), getDH() };
 
             /* Call the internal function */
-            BiosScrollWindow(LOBYTE(Ebx),
-                             LOBYTE(Eax),
+            BiosScrollWindow(getBL(),
+                             getAL(),
                              Rectangle,
                              Bda->VideoPage,
                              DEFAULT_ATTRIBUTE);
@@ -951,11 +929,11 @@ VOID BiosVideoService(LPWORD Stack)
         /* Display combination code */
         case 0x1A:
         {
-            switch(LOBYTE(Eax))
+            switch(getAL())
             {
                 case 0x00: /* Get Display combiantion code */
-                   EmulatorSetRegister(EMULATOR_REG_AX, MAKEWORD(0x1A, 0x1A));
-                   EmulatorSetRegister(EMULATOR_REG_BX, MAKEWORD(0x08, 0x0)); /* VGA w/ color analog display */
+                   setAX(MAKEWORD(0x1A, 0x1A));
+                   setBX(MAKEWORD(0x08, 0x00)); /* VGA w/ color analog display */
                    break;
                 case 0x01: /* Set Display combination code */
                    DPRINT1("Set Display combination code - Unsupported\n");
@@ -969,16 +947,14 @@ VOID BiosVideoService(LPWORD Stack)
         default:
         {
             DPRINT1("BIOS Function INT 10h, AH = 0x%02X NOT IMPLEMENTED\n",
-                    HIBYTE(Eax));
+                    getAH());
         }
     }
 }
 
 VOID BiosKeyboardService(LPWORD Stack)
 {
-    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
-
-    switch (HIBYTE(Eax))
+    switch (getAH())
     {
         /* Wait for keystroke and read */
         case 0x00:
@@ -986,7 +962,7 @@ VOID BiosKeyboardService(LPWORD Stack)
         case 0x10:  // FIXME: Temporarily do the same as INT 16h, 00h
         {
             /* Read the character (and wait if necessary) */
-            EmulatorSetRegister(EMULATOR_REG_AX, BiosGetCharacter());
+            setAX(BiosGetCharacter());
             break;
         }
 
@@ -1000,8 +976,8 @@ VOID BiosKeyboardService(LPWORD Stack)
             if (Data != 0xFFFF)
             {
                 /* There is a character, clear ZF and return it */
-                EmulatorSetRegister(EMULATOR_REG_AX, Data);
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
+                setAX(Data);
             }
             else
             {
@@ -1053,29 +1029,23 @@ VOID BiosKeyboardService(LPWORD Stack)
         default:
         {
             DPRINT1("BIOS Function INT 16h, AH = 0x%02X NOT IMPLEMENTED\n",
-                    HIBYTE(Eax));
+                    getAH());
         }
     }
 }
 
 VOID BiosTimeService(LPWORD Stack)
 {
-    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
-    DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
-    DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
-
-    switch (HIBYTE(Eax))
+    switch (getAH())
     {
         case 0x00:
         {
             /* Set AL to 1 if midnight had passed, 0 otherwise */
-            Eax &= 0xFFFFFF00;
-            if (Bda->MidnightPassed) Eax |= 1;
+            setAL(Bda->MidnightPassed ? 0x01 : 0x00);
 
             /* Return the tick count in CX:DX */
-            EmulatorSetRegister(EMULATOR_REG_AX, Eax);
-            EmulatorSetRegister(EMULATOR_REG_CX, HIWORD(Bda->TickCounter));
-            EmulatorSetRegister(EMULATOR_REG_DX, LOWORD(Bda->TickCounter));
+            setCX(HIWORD(Bda->TickCounter));
+            setDX(LOWORD(Bda->TickCounter));
 
             /* Reset the midnight flag */
             Bda->MidnightPassed = FALSE;
@@ -1086,7 +1056,7 @@ VOID BiosTimeService(LPWORD Stack)
         case 0x01:
         {
             /* Set the tick count to CX:DX */
-            Bda->TickCounter = MAKELONG(LOWORD(Edx), LOWORD(Ecx));
+            Bda->TickCounter = MAKELONG(getDX(), getCX());
 
             /* Reset the midnight flag */
             Bda->MidnightPassed = FALSE;
@@ -1097,7 +1067,7 @@ VOID BiosTimeService(LPWORD Stack)
         default:
         {
             DPRINT1("BIOS Function INT 1Ah, AH = 0x%02X NOT IMPLEMENTED\n",
-                    HIBYTE(Eax));
+                    getAH());
         }
     }
 }
@@ -1111,7 +1081,7 @@ VOID BiosSystemTimerInterrupt(LPWORD Stack)
 VOID BiosEquipmentService(LPWORD Stack)
 {
     /* Return the equipment list */
-    EmulatorSetRegister(EMULATOR_REG_AX, Bda->EquipmentList);
+    setAX(Bda->EquipmentList);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
@@ -1123,7 +1093,6 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
         {
             /* Perform the system timer interrupt */
             EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT);
-
             break;
         }
 
@@ -1144,15 +1113,15 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
                 if (!(ScanCode & (1 << 7)))
                 {
                     /* Key press */
-                    if (VirtualKey == VK_NUMLOCK
-                        || VirtualKey == VK_CAPITAL
-                        || VirtualKey == VK_SCROLL
-                        || VirtualKey == VK_INSERT)
+                    if (VirtualKey == VK_NUMLOCK ||
+                        VirtualKey == VK_CAPITAL ||
+                        VirtualKey == VK_SCROLL  ||
+                        VirtualKey == VK_INSERT)
                     {
                         /* For toggle keys, toggle the lowest bit in the keyboard map */
                         BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
                     }
-    
+
                     /* Set the highest bit */
                     BiosKeyboardMap[VirtualKey] |= (1 << 7);
 

@@ -1886,8 +1886,7 @@ VOID DosInt21h(LPWORD Stack)
 
                 /* Return the attributes that DOS can understand */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                // setCL(LOBYTE(Attributes));
-                setCX(LOWORD(Attributes));
+                setCL(LOBYTE(Attributes));
             }
             else if (getAL() == 0x01)
             {
