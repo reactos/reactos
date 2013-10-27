@@ -1115,11 +1115,15 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
                     BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
                     /* Find out which character this is */
-                    if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) > 0)
+                    if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
                     {
-                        /* Push it onto the BIOS keyboard queue */
-                        BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
+                        /* Not ASCII */
+                        Character = 0;
                     }
+
+                    /* Push it onto the BIOS keyboard queue */
+                    BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
+
                 }
                 else
                 {
