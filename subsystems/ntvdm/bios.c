@@ -596,13 +596,9 @@ WORD BiosPeekCharacter(VOID)
 {
     WORD CharacterData;
     
-    /* Check if there is a key available */
-    if (Bda->KeybdBufferHead == Bda->KeybdBufferTail) return 0xFFFF;
-
     /* Get the key from the queue, but don't remove it */
-    BiosKbdBufferTop(&CharacterData);
-
-    return CharacterData;
+    if (BiosKbdBufferTop(&CharacterData)) return CharacterData;
+    else return 0xFFFF;
 }
 
 WORD BiosGetCharacter(VOID)
@@ -1169,8 +1165,7 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
                     }
 
                     /* Push it onto the BIOS keyboard queue */
-                    BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
-
+                    BiosKbdBufferPush(MAKEWORD(Character, ScanCode));
                 }
                 else
                 {

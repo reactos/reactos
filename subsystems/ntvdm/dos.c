@@ -1411,6 +1411,36 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Direct Console I/O */
+        case 0x06:
+        {
+            BYTE Character = LOBYTE(Edx);
+
+            if (Character != 0xFF)
+            {
+                /* Output */
+                DosPrintCharacter(Character);
+            }
+            else
+            {
+                /* Input */
+                Eax &= 0xFFFFFF00;
+
+                if (DosCheckInput())
+                {
+                    Eax |= DosReadCharacter();
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
+                }
+                else
+                {
+                    /* No character available */
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
+                }
+            }
+
+            break;
+        }
+
         /* Read Character Without Echo */
         case 0x07:
         case 0x08:
