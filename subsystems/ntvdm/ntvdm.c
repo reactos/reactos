@@ -151,19 +151,37 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Main loop */
     while (VdmRunning)
     {
+        /* Get the resolution of the system timer */
+        DWORD TimerResolution = PitGetResolution();
+
         /* Get the current number of ticks */
         CurrentTickCount = GetTickCount();
  
-        /* Get the current performance counter value */
-        QueryPerformanceCounter(&Counter);
+        if (TimerResolution > 1000)
+        {
+            /* Get the current performance counter value */
+            QueryPerformanceCounter(&Counter);
  
-        /* Get the number of PIT ticks that have passed */
-        TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
-                     * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
+            /* Get the number of PIT ticks that have passed */
+            TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
+                         * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
+        }
+        else
+        {
+            /* Use the standard tick count */
+            Counter.QuadPart = CurrentTickCount;
+
+            /* Get the number of PIT ticks that have passed */
+            TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
+                         * PIT_BASE_FREQUENCY) / 1000;
+        }
  
         /* Update the PIT */
-        for (i = 0; i < TimerTicks; i++) PitDecrementCount();
-        LastTimerTick = Counter;
+        if (TimerTicks > 0)
+        {
+            for (i = 0; i < TimerTicks; i++) PitDecrementCount();
+            LastTimerTick = Counter;
+        }
 
         /* Check for vertical retrace */
         if ((CurrentTickCount - LastVerticalRefresh) >= 16)

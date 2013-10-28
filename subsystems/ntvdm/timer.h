@@ -49,6 +49,7 @@ VOID PitWriteCommand(BYTE Value);
 BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
 VOID PitDecrementCount();
+DWORD PitGetResolution(VOID);
 
 #endif // _TIMER_H_
 

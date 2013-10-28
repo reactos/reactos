@@ -233,4 +233,23 @@ VOID PitDecrementCount()
     }
 }
 
+DWORD PitGetResolution(VOID)
+{
+    INT i;
+    DWORD MinReloadValue = 65536;
+
+    for (i = 0; i < PIT_CHANNELS; i++)
+    {
+        DWORD ReloadValue = PitChannels[i].ReloadValue;
+
+        /* 0 means 65536 */
+        if (ReloadValue == 0) ReloadValue = 65536;
+
+        if (ReloadValue < MinReloadValue) MinReloadValue = ReloadValue;
+    }
+
+    /* Return the frequency resolution */
+    return PIT_BASE_FREQUENCY / MinReloadValue;
+}
+
 /* EOF */
