@@ -16,17 +16,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600 /* For SPI_GETMOUSEHOVERWIDTH and more */
 //#define _WIN32_IE 0x0700
 #undef WINVER
 #define WINVER 0x0600 /* For COLOR_MENUBAR, NONCLIENTMETRICS with padding */
+
+#include <assert.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include "wine/test.h"
 #include "windef.h"
@@ -729,8 +728,8 @@ static BOOL test_setborder(UINT curr_val, int usesetborder, int dpi)
     INT frame;
     NONCLIENTMETRICSA ncm;
 
-    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
-    rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     if( usesetborder) {
         rc=SystemParametersInfoA( SPI_SETBORDER, curr_val, 0, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
@@ -754,7 +753,7 @@ static BOOL test_setborder(UINT curr_val, int usesetborder, int dpi)
     /* minimum border width is 1 */
     if (curr_val == 0) curr_val = 1;
     /* should be the same as the non client metrics */
-    rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     eq( (UINT)ncm.iBorderWidth, curr_val, "NonClientMetric.iBorderWidth", "%d");
     /* and from SPI_GETBORDER */ 
@@ -774,12 +773,12 @@ static void test_SPI_SETBORDER( void )                 /*      6 */
 {
     BOOL rc;
     UINT old_border;
-    NONCLIENTMETRICS ncmsave;
+    NONCLIENTMETRICSA ncmsave;
     INT CaptionWidth,
         PaddedBorderWidth;
 
-    ncmsave.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
-    rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncmsave, 0);
+    ncmsave.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, 0, &ncmsave, 0);
     if( !rc) {
         win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
         return;
@@ -1470,7 +1469,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     trace("testing SPI_{GET,SET}NONCLIENTMETRICS\n");
     change_counter = 0;
     SetLastError(0xdeadbeef);
-    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &Ncmorig, FALSE );
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &Ncmorig, FALSE );
     if (!test_error_msg(rc,"SPI_{GET,SET}NONCLIENTMETRICS"))
         return;
     Ncmstart = Ncmorig;
@@ -1518,7 +1517,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     test_change_message( SPI_SETNONCLIENTMETRICS, 1 );
     /* get them back */
-    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &Ncmcur, FALSE );
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &Ncmcur, FALSE );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     /* test registry entries */
     TEST_NONCLIENTMETRICS_REG( Ncmcur)
@@ -1543,7 +1542,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     /* raw values are in registry */
     TEST_NONCLIENTMETRICS_REG( Ncmnew)
     /* get them back */
-    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &Ncmcur, FALSE );
+    rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &Ncmcur, FALSE );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%d\n",rc,GetLastError());
     /* cooked values are returned */
     expect = max( Ncmnew.iMenuHeight, 2 + get_tmheight( &Ncmnew.lfMenuFont, 1));
@@ -1567,7 +1566,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     /* test the system metrics with these settings */
     test_GetSystemMetrics();
     /* restore */
-    rc=SystemParametersInfoA( SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS),
+    rc=SystemParametersInfoA( SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA),
         &Ncmorig, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
     test_change_message( SPI_SETNONCLIENTMETRICS, 0 );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
@@ -2449,7 +2448,7 @@ static void test_SPI_SETWALLPAPER( void )              /*   115 */
 
 static void test_WM_DISPLAYCHANGE(void)
 {
-    DEVMODE mode, startmode;
+    DEVMODEA mode, startmode;
     int start_bpp, last_set_bpp = 0;
     int test_bpps[] = {8, 16, 24, 32}, i;
     LONG change_ret;
@@ -2465,10 +2464,10 @@ static void test_WM_DISPLAYCHANGE(void)
 
     memset(&startmode, 0, sizeof(startmode));
     startmode.dmSize = sizeof(startmode);
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &startmode);
+    EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &startmode);
     start_bpp = startmode.dmBitsPerPel;
 
-    displaychange_sem = CreateSemaphore(NULL, 0, 1, NULL);
+    displaychange_sem = CreateSemaphoreW(NULL, 0, 1, NULL);
 
     for(i = 0; i < sizeof(test_bpps)/sizeof(test_bpps[0]); i++) {
         last_bpp = -1;
@@ -2660,37 +2659,37 @@ static void test_GetSystemMetrics( void)
     UINT IconSpacing, IconVerticalSpacing;
     BOOL rc;
 
-    HDC hdc = CreateIC( "Display", 0, 0, 0);
+    HDC hdc = CreateICA( "Display", 0, 0, 0);
     UINT avcwCaption;
     INT CaptionWidthfromreg;
     MINIMIZEDMETRICS minim;
-    NONCLIENTMETRICS ncm;
+    NONCLIENTMETRICSA ncm;
     SIZE screen;
 
     assert(sizeof(ncm) == 344);
 
-    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
-    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    rc = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc, "SystemParametersInfoA failed\n");
 
-    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth) - 1;
-    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth) - 1;
+    rc = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(!rc, "SystemParametersInfoA should fail\n");
 
-    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth) + 1;
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth) + 1;
     SetLastError(0xdeadbeef);
-    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    rc = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(!rc, "SystemParametersInfoA should fail\n");
 
     ncm.cbSize = sizeof(ncm); /* Vista added padding */
     SetLastError(0xdeadbeef);
-    rc = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    rc = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc || broken(!rc) /* before Vista */, "SystemParametersInfoA failed\n");
 
     minim.cbSize = sizeof( minim);
-    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICS, iPaddedBorderWidth);
-    SystemParametersInfo( SPI_GETMINIMIZEDMETRICS, 0, &minim, 0);
-    rc = SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
+    SystemParametersInfoA( SPI_GETMINIMIZEDMETRICS, 0, &minim, 0);
+    rc = SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     if( !rc) {
         win_skip("SPI_GETNONCLIENTMETRICS is not available\n");
         return;
@@ -2839,14 +2838,14 @@ static void test_GetSystemMetrics( void)
 
 static void test_EnumDisplaySettings(void)
 {
-    DEVMODE devmode;
+    DEVMODEA devmode;
     DWORD val;
     HDC hdc;
     DWORD num;
 
     memset(&devmode, 0, sizeof(devmode));
     /* Win95 doesn't handle ENUM_CURRENT_SETTINGS correctly */
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
+    EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
     hdc = GetDC(0);
     val = GetDeviceCaps(hdc, BITSPIXEL);
@@ -2867,7 +2866,7 @@ static void test_EnumDisplaySettings(void)
     num = 1;
     while (1) {
         SetLastError (0xdeadbeef);
-        if (!EnumDisplaySettings(NULL, num++, &devmode)) {
+        if (!EnumDisplaySettingsA(NULL, num++, &devmode)) {
             DWORD le = GetLastError();
             ok(le == ERROR_NO_MORE_FILES ||
                le == 0xdeadbeef, /* XP, 2003 */
@@ -2937,8 +2936,8 @@ START_TEST(sysparams)
     wc.lpfnWndProc = SysParamsTestWndProc;
     wc.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
     wc.hInstance = hInstance;
-    wc.hIcon = LoadIconA( 0, IDI_APPLICATION );
-    wc.hCursor = LoadCursorA( 0, IDC_ARROW );
+    wc.hIcon = LoadIconA( 0, (LPCSTR)IDI_APPLICATION );
+    wc.hCursor = LoadCursorA( 0, (LPCSTR)IDC_ARROW );
     wc.hbrBackground = (HBRUSH)( COLOR_WINDOW + 1 );
     wc.lpszMenuName = 0;
     wc.cbClsExtra = 0;
