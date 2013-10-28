@@ -65,7 +65,7 @@ GetExpected(
             return FALSE;
         }
 
-        if ((fdwInit & CBM_INIT))
+        if (fdwInit & CBM_INIT)
         {
             if (!lpbInit || (lpbInit == (PVOID)0xC0000000)) return FALSE;
         }
@@ -74,26 +74,26 @@ GetExpected(
         {
             return FALSE;
         }
-
-        return TRUE;
     }
-
-    if ((lpbmih == NULL) ||
-        (lpbmih == (PVOID)0xC0000000) ||
-        (lpbmih->biSize == 0))
+    else
     {
-        return FALSE;
+
+        if ((lpbmih == NULL) ||
+            (lpbmih == (PVOID)0xC0000000) ||
+            (lpbmih->biSize == 0))
+        {
+            return FALSE;
+        }
+
+        if (hdc == (HDC)-1)
+        {
+            *pdwError = ERROR_INVALID_PARAMETER;
+            return FALSE;
+        }
+
+
+        if (lpbmi == (PVOID)0xc0000000) return FALSE;
     }
-
-    if (hdc == (HDC)-1)
-    {
-        *pdwError = ERROR_INVALID_PARAMETER;
-        return FALSE;
-    }
-
-
-    if (lpbmi == (PVOID)0xc0000000) return FALSE;
-
 
     return TRUE;
 }
@@ -400,7 +400,7 @@ void Test_CreateDIBitmap_RLE8()
 
     PackedDIB.bmiHeader.biSizeImage = 0;
     hbmp = CreateDIBitmap(hdc, &PackedDIB.bmiHeader, CBM_INIT, &PackedDIB.ajBuffer, (PVOID)&PackedDIB, DIB_PAL_COLORS);
-    ok(hbmp == 0, "CreateDIBitmap succeeded, expeted failure\n");
+    ok(hbmp == 0, "CreateDIBitmap succeeded, expected failure\n");
     ok_err(0xbadbad00);
 
     /* Test a line that is too long */
@@ -420,14 +420,33 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
     HBITMAP hbmp, hbmpOld;
     HDC hdc;
     BITMAPINFO bmi =
-        {{sizeof(BITMAPINFOHEADER), 4, 4, 1, 8, BI_RGB, 0, 1, 1, 1, 0}, {{0,0,0,0}}};
-    BYTE ajBits[10];
+        {{sizeof(BITMAPINFOHEADER), 4, 4, 1, 8, BI_RGB, 0, 1, 1, 1, 0}, {{0,1,2,3}}};
+    BYTE ajBits[10] = {0,1,2,3,4,5,6,7,8,9};
     BITMAP bitmap;
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        WORD wColors[4];
+    } bmiRLE =
+    {
+        {sizeof(BITMAPINFOHEADER), 8, 2, 1, 8, BI_RLE8, 20, 1, 1, 4, 0},
+        {0, 1, 2, 7}
+    };
+    BYTE ajBitsRLE[] = {4,0,   0,2,0,1,0,2,3,1,   2,1, 2,2,   1,3,1,0,1,2, };
 
     hdc = CreateCompatibleDC(0);
-    ok(hdc != 0, "failed\n");
+    if (hdc == NULL)
+    {
+        ok(0, "CreateCompatibleDC failed. Skipping tests!\n");
+        return;
+    }
 
-    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_CREATDIB, ajBits, &bmi, DIB_PAL_COLORS);
+    SetLastError(0xbadbad00);
+    hbmp = CreateDIBitmap(hdc, NULL, CBM_CREATDIB, ajBits, NULL, DIB_RGB_COLORS);
+    ok(hbmp == 0, "CreateDIBitmap should fail.\n");
+    ok_int(GetLastError(), 0xbadbad00);
+
+    hbmp = CreateDIBitmap(hdc, NULL, CBM_CREATDIB, ajBits, &bmi, DIB_RGB_COLORS);
     ok(hbmp != 0, "CreateDIBitmap failed.\n");
 
     ok_long(GetObject(hbmp, sizeof(DIBSECTION), &bitmap), sizeof(BITMAP));
@@ -441,8 +460,72 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
 
     hbmpOld = SelectObject(hdc, hbmp);
     ok(hbmpOld != NULL, "Couldn't select the bitmap.\n");
+
+    /* Copy it on a dib section */
+    memset(pulDIB32Bits, 0x77, 64);
+    ok_long(BitBlt(ghdcDIB32, 0, 0, 4, 4, hdc, 0, 0, SRCCOPY), 1);
+    ok_long(pulDIB32Bits[0], 0x20100);
+    ok_long(pulDIB32Bits[1], 0x20100);
+    ok_long(pulDIB32Bits[2], 0x20100);
+    ok_long(pulDIB32Bits[3], 0x20100);
+
     SelectObject(hdc, hbmpOld);
     DeleteObject(hbmp);
+
+    hbmp = CreateDIBitmap(hdc, NULL, CBM_CREATDIB | CBM_INIT, ajBits, &bmi, DIB_PAL_COLORS);
+    ok(hbmp != 0, "CreateDIBitmap failed.\n");
+
+    ok_long(GetObject(hbmp, sizeof(DIBSECTION), &bitmap), sizeof(BITMAP));
+    ok_int(bitmap.bmType, 0);
+    ok_int(bitmap.bmWidth, 4);
+    ok_int(bitmap.bmHeight, 4);
+    ok_int(bitmap.bmWidthBytes, 4);
+    ok_int(bitmap.bmPlanes, 1);
+    ok_int(bitmap.bmBitsPixel, 8);
+    ok_ptr(bitmap.bmBits, 0);
+
+    /* Even with CBM_INIT and lpbmih != 0, pbmi is used for the dimensions */
+    hbmp = CreateDIBitmap(hdc, &bmiRLE.bmiHeader, CBM_CREATDIB | CBM_INIT, ajBits, &bmi, DIB_PAL_COLORS);
+    ok(hbmp != 0, "CreateDIBitmap failed.\n");
+
+    ok_long(GetObject(hbmp, sizeof(DIBSECTION), &bitmap), sizeof(BITMAP));
+    ok_int(bitmap.bmType, 0);
+    ok_int(bitmap.bmWidth, 4);
+    ok_int(bitmap.bmHeight, 4);
+    ok_int(bitmap.bmWidthBytes, 4);
+    ok_int(bitmap.bmPlanes, 1);
+    ok_int(bitmap.bmBitsPixel, 8);
+    ok_ptr(bitmap.bmBits, 0);
+
+    hbmpOld = SelectObject(hdc, hbmp);
+    ok(hbmpOld != NULL, "Couldn't select the bitmap.\n");
+
+    /* Copy it on a dib section */
+    memset(pulDIB32Bits, 0x77, 64);
+    ok_long(BitBlt(ghdcDIB32, 0, 0, 4, 4, hdc, 0, 0, SRCCOPY), 1);
+    ok_long(pulDIB32Bits[0], 0);
+    ok_long(pulDIB32Bits[1], 0);
+    ok_long(pulDIB32Bits[2], 0);
+    ok_long(pulDIB32Bits[3], 0);
+
+    SelectObject(hdc, hbmpOld);
+    DeleteObject(hbmp);
+
+    hbmp = CreateDIBitmap(hdc, NULL, CBM_CREATDIB, ajBitsRLE, (PVOID)&bmiRLE, DIB_PAL_COLORS);
+    ok(hbmp == 0, "CreateDIBitmap should fail.\n");
+    hbmp = CreateDIBitmap(hdc, NULL, CBM_INIT | CBM_CREATDIB, ajBitsRLE, (PVOID)&bmiRLE, DIB_PAL_COLORS);
+    ok(hbmp == 0, "CreateDIBitmap should fail.\n");
+
+    /* Check if a 0 pixel bitmap results in the DEFAULT_BITMAP being returned */
+    bmi.bmiHeader.biWidth = 0;
+    bmi.bmiHeader.biHeight = 4;
+    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_CREATDIB, ajBits, &bmi, DIB_PAL_COLORS);
+    ok(hbmp == GetStockObject(21), "CreateDIBitmap didn't return the default bitmap.\n");
+    bmi.bmiHeader.biWidth = 23;
+    bmi.bmiHeader.biHeight = 0;
+    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_CREATDIB, ajBits, &bmi, DIB_PAL_COLORS);
+    ok(hbmp == GetStockObject(21), "CreateDIBitmap didn't return the default bitmap.\n");
+
     DeleteDC(hdc);
 }
 

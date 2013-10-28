@@ -21,7 +21,7 @@ Test_SetDIBitsToDevice_Params()
     /* Setup the bitmap info */
     pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     pbmi->bmiHeader.biWidth = 2;
-    pbmi->bmiHeader.biHeight = -2;
+    pbmi->bmiHeader.biHeight = -4;
     pbmi->bmiHeader.biPlanes = 1;
     pbmi->bmiHeader.biBitCount = 32;
     pbmi->bmiHeader.biCompression = BI_RGB;
@@ -31,6 +31,7 @@ Test_SetDIBitsToDevice_Params()
     pbmi->bmiHeader.biClrUsed = 0;
     pbmi->bmiHeader.biClrImportant = 0;
 
+    /* Test a normal operation */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -47,6 +48,41 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 2);
     ok_err(0xdeadc0de);
 
+    /* Test hdc == NULL */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(NULL,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 0);
+    ok_err(ERROR_INVALID_HANDLE);
+
+    /* Test truncated hdc */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice((HDC)((ULONG_PTR)ghdcDIB32 & 0xFFFF),
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 0);
+    ok_err(ERROR_INVALID_HANDLE);
+
+    /* Test invalid ColorUse */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -57,9 +93,9 @@ Test_SetDIBitsToDevice_Params()
                             0, // YSrc,
                             0, // uStartScan,
                             2, // cScanLines,
-                            NULL, // lpvBits,
+                            aulBits, // lpvBits,
                             pbmi,
-                            DIB_RGB_COLORS);
+                            7);
     ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
@@ -90,11 +126,11 @@ Test_SetDIBitsToDevice_Params()
                             0, // XSrc,
                             0, // YSrc,
                             0, // uStartScan,
-                            2000000, // cScanLines,
+                            20000000, // cScanLines,
                             (BYTE*)aulBits + 1, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    ok_dec(ret, 0);
+    todo_ros ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
     /* test unaligned illegal buffer */
@@ -111,9 +147,10 @@ Test_SetDIBitsToDevice_Params()
                             (BYTE*)0x7fffffff, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    ok_dec(ret, 0);
+    todo_ros ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
+    /* Test negative XDest */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             -100, // XDest,
@@ -130,6 +167,7 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 2);
     ok_err(0xdeadc0de);
 
+    /* Test huge XDest */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             LONG_MAX, // XDest,
@@ -146,6 +184,7 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 2);
     ok_err(0xdeadc0de);
 
+    /* Test XSrc outside of the DIB */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -162,6 +201,7 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 2);
     ok_err(0xdeadc0de);
 
+    /* Test YSrc outside of the DIB */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -178,6 +218,7 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 2);
     ok_err(0xdeadc0de);
 
+    /* Test uStartScan outside of the DIB */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -186,14 +227,15 @@ Test_SetDIBitsToDevice_Params()
                             2, // dwHeight,
                             0, // XSrc,
                             0, // YSrc,
-                            0, // uStartScan,
-                            66, // cScanLines,
+                            100, // uStartScan,
+                            5, // cScanLines,
                             aulBits, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
-    ok_dec(ret, 66);
+    ok_dec(ret, 5);
     ok_err(0xdeadc0de);
 
+    /* Test cScanLines larger than the DIB */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
@@ -203,27 +245,62 @@ Test_SetDIBitsToDevice_Params()
                             0, // XSrc,
                             0, // YSrc,
                             0, // uStartScan,
-                            200, // cScanLines,
+                            7, // cScanLines,
                             aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    todo_ros ok_dec(ret, 7);
+    ok_err(0xdeadc0de);
+
+    /* Test large cScanlines */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            2000, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    todo_ros ok_dec(ret, 0);
+    ok_err(0xdeadc0de);
+
+    /* Test uStartScan and cScanLines larger than the DIB */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            100, // uStartScan,
+                            7, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 7);
+    ok_err(0xdeadc0de);
+
+    /* Test lpvBits == NULL */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            NULL, // lpvBits,
                             pbmi,
                             DIB_RGB_COLORS);
     ok_dec(ret, 0);
-    ok_err(0xdeadc0de);
-
-    SetLastError(0xdeadc0de);
-    ret = SetDIBitsToDevice(ghdcDIB32,
-                            0, // XDest,
-                            0, // YDest,
-                            2, // dwWidth,
-                            2, // dwHeight,
-                            0, // XSrc,
-                            0, // YSrc,
-                            2000, // uStartScan,
-                            66, // cScanLines,
-                            aulBits, // lpvBits,
-                            pbmi,
-                            DIB_RGB_COLORS);
-    ok_dec(ret, 66);
     ok_err(0xdeadc0de);
 
     /* Test pbmi == NULL */
@@ -243,7 +320,114 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
-    /* Test illegal bitmap info */
+    /* Test huge positive DIB height, result is limited to dwHeight */
+    pbmi->bmiHeader.biHeight = 10000;
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            1, // YDest,
+                            2, // dwWidth,
+                            3, // dwHeight,
+                            0, // XSrc,
+                            1, // YSrc,
+                            0, // uStartScan,
+                            7, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 4);
+    ok_err(0xdeadc0de);
+
+    /* Test huge negative DIB height */
+    pbmi->bmiHeader.biHeight = -10000;
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            7, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 7);
+    ok_err(0xdeadc0de);
+
+    /* Test what happens when we cause an integer overflow */
+    pbmi->bmiHeader.biHeight = LONG_MIN;
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 2);
+    ok_err(0xdeadc0de);
+
+    /* Now also test a huge value of uStartScan */
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            abs(pbmi->bmiHeader.biHeight) - 3, // uStartScan,
+                            9, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 3);
+    ok_err(0xdeadc0de);
+
+    /* Now also test a huge value of uStartScan */
+    pbmi->bmiHeader.biHeight = LONG_MIN + 1;
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            abs(pbmi->bmiHeader.biHeight) - 3, // uStartScan,
+                            9, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 5);
+    ok_err(0xdeadc0de);
+
+    /* Now also test a huge value of uStartScan */
+    pbmi->bmiHeader.biHeight = LONG_MIN + 7;
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            0, // YSrc,
+                            abs(pbmi->bmiHeader.biHeight) - 3, // uStartScan,
+                            32, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 17);
+    ok_err(0xdeadc0de);
+
+    /* Test invalid bitmap info header */
     pbmi->bmiHeader.biSize = 0;
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,
@@ -359,12 +543,12 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    ok_hex(pulDIB32Bits[0], 0x00000000);
-    ok_hex(pulDIB32Bits[1], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[0], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[1], 0x00000000);
     ok_hex(pulDIB32Bits[2], 0x00000000);
     ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0x11000000);
-    ok_hex(pulDIB32Bits[5], 0x00000011);
+    todo_ros ok_hex(pulDIB32Bits[4], 0x11000000);
+    todo_ros ok_hex(pulDIB32Bits[5], 0x00000011);
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
@@ -384,12 +568,12 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    ok_hex(pulDIB32Bits[0], 0x11000000);
-    ok_hex(pulDIB32Bits[1], 0x00000011);
+    todo_ros ok_hex(pulDIB32Bits[0], 0x11000000);
+    todo_ros ok_hex(pulDIB32Bits[1], 0x00000011);
     ok_hex(pulDIB32Bits[2], 0x00000000);
     ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0x00000000);
-    ok_hex(pulDIB32Bits[5], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[4], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[5], 0x00000000);
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
@@ -465,12 +649,12 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    ok_hex(pulDIB32Bits[0], 0x00000000);
-    ok_hex(pulDIB32Bits[1], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[0], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[1], 0x00000000);
     ok_hex(pulDIB32Bits[2], 0x00000000);
     ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0x11000000);
-    ok_hex(pulDIB32Bits[5], 0x00000011);
+    todo_ros ok_hex(pulDIB32Bits[4], 0x11000000);
+    todo_ros ok_hex(pulDIB32Bits[5], 0x00000011);
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
@@ -490,12 +674,12 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    ok_hex(pulDIB32Bits[0], 0x11000000);
-    ok_hex(pulDIB32Bits[1], 0x00000011);
+    todo_ros ok_hex(pulDIB32Bits[0], 0x11000000);
+    todo_ros ok_hex(pulDIB32Bits[1], 0x00000011);
     ok_hex(pulDIB32Bits[2], 0x00000000);
     ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0x00000000);
-    ok_hex(pulDIB32Bits[5], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[4], 0x00000000);
+    todo_ros ok_hex(pulDIB32Bits[5], 0x00000000);
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
