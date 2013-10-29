@@ -803,7 +803,7 @@ BOOLEAN DosFlushFileBuffers(WORD FileHandle)
      * FlushConsoleInputBuffer() for us.
      */
     // if (IsConsoleHandle(Handle))
-    //    return (BOOLEAN)FlushConsoleInputBuffer(hFile);
+    //    return (BOOLEAN)FlushConsoleInputBuffer(Handle);
     // else
     return (BOOLEAN)FlushFileBuffers(Handle);
 }
