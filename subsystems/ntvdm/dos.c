@@ -28,7 +28,7 @@ static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosSftRefCount[DOS_SFT_SIZE];
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
-static BYTE DosErrorLevel = 0;
+static WORD DosErrorLevel = 0x0000;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -790,6 +790,24 @@ WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
     return ERROR_SUCCESS;
 }
 
+BOOLEAN DosFlushFileBuffers(WORD FileHandle)
+{
+    HANDLE Handle = DosGetRealHandle(FileHandle);
+
+    /* Make sure the handle is valid */
+    if (Handle == INVALID_HANDLE_VALUE) return FALSE;
+
+    /*
+     * No need to check whether the handle is a console handle since
+     * FlushFileBuffers() automatically does this check and calls
+     * FlushConsoleInputBuffer() for us.
+     */
+    // if (IsConsoleHandle(Handle))
+    //    return (BOOLEAN)FlushConsoleInputBuffer(hFile);
+    // else
+    return (BOOLEAN)FlushFileBuffers(Handle);
+}
+
 BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
 {
     BYTE SftIndex;
@@ -940,9 +958,15 @@ BOOLEAN DosChangeDirectory(LPSTR Directory)
     }
 
     /* Set the directory for the drive */
-    if (Path != NULL) strcpy(CurrentDirectories[DriveNumber], Path);
-    else strcpy(CurrentDirectories[DriveNumber], "");
-    
+    if (Path != NULL)
+    {
+        strncpy(CurrentDirectories[DriveNumber], Path, DOS_DIR_LENGTH);
+    }
+    else
+    {
+        CurrentDirectories[DriveNumber][0] = '\0';
+    }
+
     /* Return success */
     return TRUE;
 }
@@ -963,8 +987,8 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
 
     /* Save the interrupt vectors */
     PspBlock->TerminateAddress = IntVecTable[0x22];
-    PspBlock->BreakAddress = IntVecTable[0x23];
-    PspBlock->CriticalAddress = IntVecTable[0x24];
+    PspBlock->BreakAddress     = IntVecTable[0x23];
+    PspBlock->CriticalAddress  = IntVecTable[0x24];
 
     /* Set the parent PSP */
     PspBlock->ParentPsp = CurrentPsp;
@@ -1260,8 +1284,8 @@ Done:
         if (CurrentPsp == SYSTEM_PSP) VdmRunning = FALSE;
     }
 
-    /* Save the return code */
-    DosErrorLevel = ReturnCode;
+    /* Save the return code - Normal termination */
+    DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
 
     /* Return control to the parent process */
     EmulatorExecute(HIWORD(PspBlock->TerminateAddress),
@@ -1371,7 +1395,7 @@ VOID DosInt20h(LPWORD Stack)
 
 VOID DosInt21h(LPWORD Stack)
 {
-    CHAR Character;
+    BYTE Character;
     SYSTEMTIME SystemTime;
     PCHAR String;
     PDOS_INPUT_BUFFER InputBuffer;
@@ -1386,38 +1410,68 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Read Character And Echo */
+        /* Read Character from STDIN with Echo */
         case 0x01:
         {
             Character = DosReadCharacter();
             DosPrintCharacter(Character);
 
             /* Let the BOP repeat if needed */
-            if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+            if (getCF()) break;
 
             setAL(Character);
             break;
         }
 
-        /* Print Character */
+        /* Write Character to STDOUT */
         case 0x02:
         {
-            BYTE Character = getDL();
+            Character = getDL();
             DosPrintCharacter(Character);
 
             /*
-             * We return the output character (DOS 2.1+), see:
-             * http://www.delorie.com/djgpp/doc/rbinter/id/65/25.html
+             * We return the output character (DOS 2.1+).
+             * Also, if we're going to output a TAB, then
+             * don't return a TAB but a SPACE instead.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2554.htm
              * for more information.
              */
-            setAL(Character);
+            setAL(Character == '\t' ? ' ' : Character);
+            break;
+        }
+
+        /* Read Character from STDAUX */
+        case 0x03:
+        {
+            // FIXME: Really read it from STDAUX!
+            DPRINT1("INT 16h, 03h: Read character from STDAUX is HALFPLEMENTED\n");
+            setAL(DosReadCharacter());
+            break;
+        }
+
+        /* Write Character to STDAUX */
+        case 0x04:
+        {
+            // FIXME: Really write it to STDAUX!
+            DPRINT1("INT 16h, 04h: Write character to STDAUX is HALFPLEMENTED\n");
+            DosPrintCharacter(getDL());
+            break;
+        }
+
+        /* Write Character to Printer */
+        case 0x05:
+        {
+            // FIXME: Really write it to printer!
+            DPRINT1("INT 16h, 05h: Write character to printer is HALFPLEMENTED -\n\n");
+            DPRINT1("0x%p\n", getDL());
+            DPRINT1("\n\n-----------\n\n");
             break;
         }
 
         /* Direct Console I/O */
         case 0x06:
         {
-            BYTE Character = getDL();
+            Character = getDL();
 
             if (Character != 0xFF)
             {
@@ -1425,8 +1479,8 @@ VOID DosInt21h(LPWORD Stack)
                 DosPrintCharacter(Character);
 
                 /*
-                 * We return the output character (DOS 2.1+), see:
-                 * http://www.delorie.com/djgpp/doc/rbinter/id/69/25.html
+                 * We return the output character (DOS 2.1+).
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2558.htm
                  * for more information.
                  */
                 setAL(Character);
@@ -1443,27 +1497,27 @@ VOID DosInt21h(LPWORD Stack)
                 {
                     /* No character available */
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
-                    setAL(0);
+                    setAL(0x00);
                 }
             }
 
             break;
         }
 
-        /* Read Character Without Echo */
+        /* Character Input without Echo */
         case 0x07:
         case 0x08:
         {
             Character = DosReadCharacter();
 
             /* Let the BOP repeat if needed */
-            if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+            if (getCF()) break;
 
             setAL(Character);
             break;
         }
 
-        /* Print String */
+        /* Write string to STDOUT */
         case 0x09:
         {
             String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getDX());
@@ -1475,8 +1529,8 @@ VOID DosInt21h(LPWORD Stack)
             }
 
             /*
-             * We return the output character (DOS 2.1+), see:
-             * http://www.delorie.com/djgpp/doc/rbinter/id/73/25.html
+             * We return the terminating character (DOS 2.1+).
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2562.htm
              * for more information.
              */
             setAL('$');
@@ -1494,7 +1548,7 @@ VOID DosInt21h(LPWORD Stack)
                 Character = DosReadCharacter();
 
                 /* If it's not ready yet, let the BOP repeat */
-                if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+                if (getCF()) break;
 
                 /* Echo the character and append it to the buffer */
                 DosPrintCharacter(Character);
@@ -1516,11 +1570,70 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Flush Buffer and Read STDIN */
+        case 0x0C:
+        {
+            BYTE InputFunction = getAL();
+
+            /* Flush STDIN buffer */
+            DosFlushFileBuffers(DOS_INPUT_HANDLE); // Maybe just create a DosFlushInputBuffer...
+
+            /*
+             * If the input function number contained in AL is valid, i.e.
+             * AL == 0x01 or 0x06 or 0x07 or 0x08 or 0x0A, call ourselves
+             * recursively with AL == AH.
+             */
+            if (InputFunction == 0x01 || InputFunction == 0x06 ||
+                InputFunction == 0x07 || InputFunction == 0x08 ||
+                InputFunction == 0x0A)
+            {
+                setAH(InputFunction);
+                /*
+                 * Instead of calling ourselves really recursively as in:
+                 * DosInt21h(Stack);
+                 * prefer resetting the CF flag to let the BOP repeat.
+                 */
+                setCF(1);
+            }
+            break;
+        }
+
+        /* Disk Reset  */
+        case 0x0D:
+        {
+            PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+
+            // TODO: Flush what's needed.
+            DPRINT1("INT 21h, 0Dh is UNIMPLEMENTED\n");
+
+            /* Clear CF in DOS 6 only */
+            if (PspBlock->DosVersion == 0x0006)
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+
+            break;
+        }
+
         /* Set Default Drive  */
         case 0x0E:
         {
             DosChangeDrive(getDL());
             setAL(LastDrive - 'A' + 1);
+            break;
+        }
+
+        /* NULL Function for CP/M Compatibility */
+        case 0x18:
+        {
+            /*
+             * This function corresponds to the CP/M BDOS function
+             * "get bit map of logged drives", which is meaningless
+             * under MS-DOS.
+             *
+             * For: PTS-DOS 6.51 & S/DOS 1.0 - EXTENDED RENAME FILE USING FCB
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2584.htm
+             * for more information.
+             */
+            setAL(0x00);
             break;
         }
 
@@ -1538,6 +1651,42 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* NULL Function for CP/M Compatibility */
+        case 0x1D:
+        case 0x1E:
+        {
+            /*
+             * Function 0x1D corresponds to the CP/M BDOS function
+             * "get bit map of read-only drives", which is meaningless
+             * under MS-DOS.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2592.htm
+             * for more information.
+             *
+             * Function 0x1E corresponds to the CP/M BDOS function
+             * "set file attributes", which was meaningless under MS-DOS 1.x.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2593.htm
+             * for more information.
+             */
+            setAL(0x00);
+            break;
+        }
+
+        /* NULL Function for CP/M Compatibility */
+        case 0x20:
+        {
+            /*
+             * This function corresponds to the CP/M BDOS function
+             * "get/set default user (sublibrary) number", which is meaningless
+             * under MS-DOS.
+             *
+             * For: S/DOS 1.0+ & PTS-DOS 6.51+ - GET OEM REVISION
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2596.htm
+             * for more information.
+             */
+            setAL(0x00);
+            break;
+        }
+
         /* Set Interrupt Vector */
         case 0x25:
         {
@@ -1545,11 +1694,17 @@ VOID DosInt21h(LPWORD Stack)
 
             /* Write the new far pointer to the IDT */
             ((PDWORD)BaseAddress)[getAL()] = FarPointer;
-
             break;
         }
 
-        /* Get system date */
+        /* Create New PSP */
+        case 0x26:
+        {
+            DPRINT1("INT 21h, 26h - Create New PSP is UNIMPLEMENTED\n");
+            break;
+        }
+
+        /* Get System Date */
         case 0x2A:
         {
             GetLocalTime(&SystemTime);
@@ -1559,7 +1714,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Set system date */
+        /* Set System Date */
         case 0x2B:
         {
             GetLocalTime(&SystemTime);
@@ -1572,7 +1727,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Get system time */
+        /* Get System Time */
         case 0x2C:
         {
             GetLocalTime(&SystemTime);
@@ -1581,7 +1736,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Set system time */
+        /* Set System Time */
         case 0x2D:
         {
             GetLocalTime(&SystemTime);
@@ -1608,22 +1763,34 @@ VOID DosInt21h(LPWORD Stack)
         {
             PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
 
-            if (LOBYTE(PspBlock->DosVersion) < 5 || getAL() == 0)
-            {
-                /* Return DOS 24-bit user serial number in BL:CX */
-                setBL(0x00);
-                setCX(0x0000);
-            }
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2711.htm
+             * for more information.
+             */
 
-            if (LOBYTE(PspBlock->DosVersion) >= 5 && getAL() == 1)
+            if (LOBYTE(PspBlock->DosVersion) < 5 || getAL() == 0x00)
             {
                 /*
                  * Return DOS OEM number:
                  * 0x00 for IBM PC-DOS
-                 * 0xFF for MS-DOS
+                 * 0x02 for packaged MS-DOS
                  */
-                setBH(0xFF);
+                setBH(0x02);
             }
+
+            if (LOBYTE(PspBlock->DosVersion) >= 5 && getAL() == 0x01)
+            {
+                /*
+                 * Return version flag:
+                 * 1 << 3 if DOS is in ROM,
+                 * 0 (reserved) if not.
+                 */
+                setBH(0x00);
+            }
+
+            /* Return DOS 24-bit user serial number in BL:CX */
+            setBL(0x00);
+            setCX(0x0000);
 
             /* Return DOS version: Minor:Major in AH:AL */
             setAX(PspBlock->DosVersion);
@@ -1640,6 +1807,60 @@ VOID DosInt21h(LPWORD Stack)
             setES(HIWORD(FarPointer));
             setBX(LOWORD(FarPointer));
             break;
+        }
+
+        /* SWITCH character - AVAILDEV */
+        case 0x37:
+        {
+            if (getAL() == 0x00)
+            {
+                /*
+                 * DOS 2+ - "SWITCHAR" - GET SWITCH CHARACTER
+                 * This setting is ignored by MS-DOS 4.0+.
+                 * MS-DOS 5+ always return AL=00h/DL=2Fh.
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2752.htm
+                 * for more information.
+                 */
+                setDL('/');
+                setAL(0x00);
+            }
+            else if (getAL() == 0x01)
+            {
+                /*
+                 * DOS 2+ - "SWITCHAR" - SET SWITCH CHARACTER
+                 * This setting is ignored by MS-DOS 5+.
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2753.htm
+                 * for more information.
+                 */
+                // getDL();
+                setAL(0xFF);
+            }
+            else if (getAL() == 0x02)
+            {
+                /*
+                 * DOS 2.x and 3.3+ only - "AVAILDEV" - SPECIFY \DEV\ PREFIX USE
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2754.htm
+                 * for more information.
+                 */
+                // setDL();
+                setAL(0xFF);
+            }
+            else if (getAL() == 0x03)
+            {
+                /*
+                 * DOS 2.x and 3.3+ only - "AVAILDEV" - SPECIFY \DEV\ PREFIX USE
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2754.htm
+                 * for more information.
+                 */
+                // getDL();
+                setAL(0xFF);
+            }
+            else
+            {
+                setAL(0xFF);
+            }
+
+             break;
         }
 
         /* Create Directory */
@@ -1756,7 +1977,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Read File */
+        /* Read from File or Device */
         case 0x3F:
         {
             WORD Handle    = getBX();
@@ -1770,17 +1991,20 @@ VOID DosInt21h(LPWORD Stack)
                 while (Stack[STACK_COUNTER] < Count)
                 {
                     /* Read a character from the BIOS */
-                    Buffer[Stack[STACK_COUNTER]] = LOBYTE(BiosGetCharacter()); // FIXME: Security checks!
+                    // FIXME: Security checks!
+                    Buffer[Stack[STACK_COUNTER]] = LOBYTE(BiosGetCharacter());
 
                     /* Stop if the BOP needs to be repeated */
-                    if (EmulatorGetFlag(EMULATOR_FLAG_CF)) break;
+                    if (getCF()) break;
 
                     /* Increment the counter */
                     Stack[STACK_COUNTER]++;
                 }
 
-                if (Stack[STACK_COUNTER] < Count) ErrorCode = ERROR_NOT_READY;
-                else BytesRead = Count;
+                if (Stack[STACK_COUNTER] < Count)
+                    ErrorCode = ERROR_NOT_READY;
+                else
+                    BytesRead = Count;
             }
             else
             {
@@ -1788,7 +2012,7 @@ VOID DosInt21h(LPWORD Stack)
                 ErrorCode = DosReadFile(Handle, Buffer, Count, &BytesRead);
             }
 
-            if (ErrorCode == 0)
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(BytesRead);
@@ -1801,7 +2025,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Write File */
+        /* Write to File or Device */
         case 0x40:
         {
             WORD BytesWritten = 0;
@@ -1810,7 +2034,7 @@ VOID DosInt21h(LPWORD Stack)
                                           getCX(),
                                           &BytesWritten);
 
-            if (ErrorCode == 0)
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(BytesWritten);
@@ -1833,6 +2057,11 @@ VOID DosInt21h(LPWORD Stack)
             if (DeleteFileA(FileName))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                /*
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2797.htm
+                 * "AX destroyed (DOS 3.3) AL seems to be drive of deleted file."
+                 */
+                setAL(FileName[0] - 'A');
             }
             else
             {
@@ -1852,7 +2081,7 @@ VOID DosInt21h(LPWORD Stack)
                                          getAL(),
                                          &NewLocation);
 
-            if (ErrorCode == 0)
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
@@ -1885,12 +2114,13 @@ VOID DosInt21h(LPWORD Stack)
                 {
                     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                     setAX(GetLastError());
-                    break;
                 }
-
-                /* Return the attributes that DOS can understand */
-                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-                setCL(LOBYTE(Attributes));
+                else
+                {
+                    /* Return the attributes that DOS can understand */
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                    setCX(Attributes & 0x00FF);
+                }
             }
             else if (getAL() == 0x01)
             {
@@ -1977,6 +2207,42 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Current Directory */
+        case 0x47:
+        {
+            BYTE DriveNumber = getDL();
+            String = (PCHAR)SEG_OFF_TO_PTR(getDS(), getSI());
+
+            /* Get the real drive number */
+            if (DriveNumber == 0)
+            {
+                DriveNumber = CurrentDrive;
+            }
+            else
+            {
+                /* Decrement DriveNumber since it was 1-based */
+                DriveNumber--;
+            }
+
+            if (DriveNumber <= LastDrive - 'A')
+            {
+                /*
+                 * Copy the current directory into the target buffer.
+                 * It doesn't contain the drive letter and the backslash.
+                 */
+                strncpy(String, CurrentDirectories[DriveNumber], DOS_DIR_LENGTH);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(0x0100); // Undocumented, see Ralf Brown: http://www.ctyme.com/intr/rb-2933.htm
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_DRIVE);
+            }
+
+            break;
+        }
+
         /* Allocate Memory */
         case 0x48:
         {
@@ -2040,7 +2306,28 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Get Current Process */
+        /* Get Return Code (ERRORLEVEL) */
+        case 0x4D:
+        {
+            /*
+             * According to Ralf Brown: http://www.ctyme.com/intr/rb-2976.htm
+             * DosErrorLevel is cleared after being read by this function.
+             */
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            setAX(DosErrorLevel);
+            DosErrorLevel = 0x0000; // Clear it
+            break;
+        }
+
+        /* Internal - Set Current Process ID (Set PSP Address) */
+        case 0x50:
+        {
+            // FIXME: Is it really what it's done ??
+            CurrentPsp = getBX();
+            break;
+        }
+
+        /* Get Current Process ID (Get PSP Address) */
         case 0x51:
         {
             setBX(CurrentPsp);
@@ -2221,7 +2508,7 @@ BOOLEAN DosInitialize(VOID)
     /* Set the drive */
     CurrentDrive = DosDirectory[0] - 'A';
 
-    /* Get the path */
+    /* Get the directory part of the path */
     Path = strchr(DosDirectory, '\\');
     if (Path != NULL)
     {
@@ -2230,7 +2517,10 @@ BOOLEAN DosInitialize(VOID)
     }
 
     /* Set the directory */
-    if (Path != NULL) strcpy(CurrentDirectories[CurrentDrive], Path);
+    if (Path != NULL)
+    {
+        strncpy(CurrentDirectories[CurrentDrive], Path, DOS_DIR_LENGTH);
+    }
 
     /* Read CONFIG.SYS */
     Stream = _wfopen(DOS_CONFIG_PATH, L"r");

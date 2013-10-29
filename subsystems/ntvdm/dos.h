@@ -102,7 +102,8 @@ typedef struct _DOS_PSP
 
 typedef struct _DOS_INPUT_BUFFER
 {
-    BYTE MaxLength, Length;
+    BYTE MaxLength;
+    BYTE Length;
     CHAR Buffer[ANYSIZE_ARRAY];
 } DOS_INPUT_BUFFER, *PDOS_INPUT_BUFFER;
 
