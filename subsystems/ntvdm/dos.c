@@ -28,6 +28,7 @@ static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosSftRefCount[DOS_SFT_SIZE];
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
+static BYTE DosErrorLevel = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -1258,6 +1259,9 @@ Done:
         CurrentPsp = PspBlock->ParentPsp;
         if (CurrentPsp == SYSTEM_PSP) VdmRunning = FALSE;
     }
+
+    /* Save the return code */
+    DosErrorLevel = ReturnCode;
 
     /* Return control to the parent process */
     EmulatorExecute(HIWORD(PspBlock->TerminateAddress),
