@@ -105,12 +105,6 @@ static void test_EnumProcessModules(void)
     HMODULE hMod = GetModuleHandle(NULL);
     DWORD ret, cbNeeded = 0xdeadbeef;
 
-    if (!winetest_interactive)
-    {
-        win_skip("Stack corruption - ROSTESTS-122\n");
-        return;
-    }
-
     SetLastError(0xdeadbeef);
     pEnumProcessModules(NULL, NULL, 0, &cbNeeded);
     ok(GetLastError() == ERROR_INVALID_HANDLE, "expected error=ERROR_INVALID_HANDLE but got %d\n", GetLastError());
