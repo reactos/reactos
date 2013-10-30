@@ -1080,6 +1080,116 @@ MiMapViewInSystemSpace(IN PVOID Section,
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+MiSetControlAreaSymbolsLoaded(IN PCONTROL_AREA ControlArea)
+{
+    KIRQL OldIrql;
+
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    ControlArea->u.Flags.DebugSymbolsLoaded |= 1;
+
+    ASSERT(OldIrql <= APC_LEVEL);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+}
+
+VOID
+NTAPI
+MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
+                  IN PVOID BaseAddress,
+                  IN PEPROCESS Process)
+{
+    NTSTATUS Status;
+    ANSI_STRING FileNameA;
+    PLIST_ENTRY NextEntry;
+    PUNICODE_STRING FileName;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    FileName = &ControlArea->FilePointer->FileName;
+    if (FileName->Length == 0)
+    {
+        return;
+    }
+
+    /* Acquire module list lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
+
+    /* Browse list to try to find current module */
+    for (NextEntry = MmLoadedUserImageList.Flink;
+         NextEntry != &MmLoadedUserImageList;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* If already in the list, increase load count */
+        if (LdrEntry->DllBase == BaseAddress)
+        {
+            ++LdrEntry->LoadCount;
+            break;
+        }
+    }
+
+    /* Not in the list, we'll add it */
+    if (NextEntry == &MmLoadedUserImageList)
+    {
+        /* Allocate our element, taking to the name string and its null char */
+        LdrEntry = ExAllocatePoolWithTag(NonPagedPool, FileName->Length + sizeof(UNICODE_NULL) + sizeof(*LdrEntry), 'bDmM');
+        if (LdrEntry)
+        {
+            memset(LdrEntry, 0, FileName->Length + sizeof(UNICODE_NULL) + sizeof(*LdrEntry));
+
+            _SEH2_TRY
+            {
+                /* Get image checksum and size */
+                NtHeaders = RtlImageNtHeader(BaseAddress);
+                if (NtHeaders)
+                {
+                    LdrEntry->SizeOfImage = NtHeaders->OptionalHeader.SizeOfImage;
+                    LdrEntry->CheckSum = NtHeaders->OptionalHeader.CheckSum;
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                ExFreePoolWithTag(NonPagedPool, 'bDmM');
+                _SEH2_YIELD(return);
+            }
+            _SEH2_END;
+
+            /* Fill all the details */
+            LdrEntry->DllBase = BaseAddress;
+            LdrEntry->FullDllName.Buffer = (PVOID)((ULONG_PTR)LdrEntry + sizeof(*LdrEntry));
+            LdrEntry->FullDllName.Length = FileName->Length;
+            LdrEntry->FullDllName.MaximumLength = FileName->Length + sizeof(UNICODE_NULL);
+            memcpy(LdrEntry->FullDllName.Buffer, FileName->Buffer, FileName->Length);
+            LdrEntry->FullDllName.Buffer[LdrEntry->FullDllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            LdrEntry->LoadCount = 1;
+
+            /* Insert! */
+            InsertHeadList(&MmLoadedUserImageList, &LdrEntry->InLoadOrderLinks);
+        }
+    }
+
+    /* Release locks */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeLeaveCriticalRegion();
+
+    /* Load symbols */
+    Status = RtlUnicodeStringToAnsiString(&FileNameA, FileName, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        DbgLoadImageSymbols(&FileNameA, BaseAddress, (ULONG_PTR)Process);
+        RtlFreeAnsiString(&FileNameA);
+    }
+}
+
 NTSTATUS
 NTAPI
 MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
