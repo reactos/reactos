@@ -2,7 +2,6 @@
 spec2def(psapi.dll psapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    malloc.c
     psapi.c
     psapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/psapi.def)
@@ -10,7 +9,7 @@ list(APPEND SOURCE
 add_library(psapi SHARED ${SOURCE})
 
 set_module_type(psapi win32dll)
-target_link_libraries(psapi epsapi ${PSEH_LIB})
+target_link_libraries(psapi ${PSEH_LIB})
 add_importlibs(psapi msvcrt kernel32 ntdll)
 
 add_pch(psapi precomp.h)

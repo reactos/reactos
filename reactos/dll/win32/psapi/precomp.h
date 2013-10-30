@@ -10,8 +10,5 @@
 #include <ndk/rtlfuncs.h>
 
 #include <psapi.h>
-#include <epsapi/epsapi.h>
-
-#include "internal.h"
 
 #include <pseh/pseh2.h>
