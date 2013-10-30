@@ -19,22 +19,6 @@
 #define MAX_MODULES 0x2710      // Matches 10.000 modules
 #define INIT_MEMORY_SIZE 0x1000 // Matches 4kB
 
-BOOLEAN
-WINAPI
-DllMain(HINSTANCE hDllHandle,
-        DWORD nReason,
-        LPVOID Reserved)
-{
-  switch(nReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      DisableThreadLibraryCalls(hDllHandle);
-      break;
-  }
-
-  return TRUE;
-}
-
 /* INTERNAL *******************************************************************/
 
 /*
@@ -262,7 +246,66 @@ CallBackConvertToAscii(LPVOID pContext,
     return Ret;
 }
 
+/*
+ * @unimplemented
+ */
+static void NTAPI
+PsParseCommandLine(void)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+static void NTAPI
+PsInitializeAndStartProfile(void)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+static void NTAPI
+PsStopAndAnalyzeProfile(void)
+{
+    UNIMPLEMENTED;
+}
+
 /* PUBLIC *********************************************************************/
+
+/*
+ * @implemented
+ */
+BOOLEAN
+WINAPI
+DllMain(HINSTANCE hDllHandle,
+        DWORD nReason,
+        LPVOID Reserved)
+{
+    switch(nReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hDllHandle);
+            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
+            {
+                PsParseCommandLine();
+                PsInitializeAndStartProfile();
+            }
+            break;
+
+        case DLL_PROCESS_DETACH:
+            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
+            {
+                PsStopAndAnalyzeProfile();
+            }
+            break;  
+  }
+
+  return TRUE;
+}
+
 
 /*
  * @implemented
