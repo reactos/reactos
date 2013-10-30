@@ -1170,7 +1170,7 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
     }
 
     /* Send End-of-Interrupt to the PIC */
-    if (IrqNumber > 8) PicWriteCommand(PIC_SLAVE_CMD, PIC_OCW2_EOI);
+    if (IrqNumber >= 8) PicWriteCommand(PIC_SLAVE_CMD, PIC_OCW2_EOI);
     PicWriteCommand(PIC_MASTER_CMD, PIC_OCW2_EOI);
 }
 
