@@ -749,7 +749,7 @@ GetMappedFileNameA(HANDLE hProcess,
     DWORD Len;
     LPWSTR FileName;
 
-    DPRINT1("GetMappedFileNameA(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
+    DPRINT("GetMappedFileNameA(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
 
     /* Allocate internal buffer for conversion */
     FileName = LocalAlloc(LMEM_FIXED, nSize * sizeof(WCHAR));
@@ -760,9 +760,6 @@ GetMappedFileNameA(HANDLE hProcess,
 
     /* Call W API */
     Len = GetMappedFileNameW(hProcess, lpv, FileName, nSize);
-
-    DPRINT1("Got: %wS\n", FileName);
-    DPRINT1("Len: %lu\n", Len);
 
     /* And convert output */
     if (WideCharToMultiByte(CP_ACP, 0, FileName, (Len < nSize) ? Len + 1 : Len, lpFilename, nSize, NULL, NULL) == 0)
@@ -794,7 +791,7 @@ GetMappedFileNameW(HANDLE hProcess,
         WCHAR CharBuffer[MAX_PATH];
     } SectionName;
 
-    DPRINT1("GetMappedFileNameW(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
+    DPRINT("GetMappedFileNameW(%p, %p, %p, %lu)\n", hProcess, lpv, lpFilename, nSize);
 
     /* If no buffer, no need to keep going on */
     if (nSize == 0)
@@ -808,13 +805,9 @@ GetMappedFileNameW(HANDLE hProcess,
                                   &SectionName, sizeof(SectionName), &OutSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed!\n");
         SetLastError(RtlNtStatusToDosError(Status));
         return 0;
     }
-
-    DPRINT1("Found: %wZ\n", &SectionName.SectionFileName);
-    DPRINT1("Len = %lu, nSize = %lu\n", SectionName.SectionFileName.Length / sizeof(WCHAR), nSize);
 
     /* Prepare to copy file name */
     Len =
