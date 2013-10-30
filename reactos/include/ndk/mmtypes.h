@@ -169,7 +169,8 @@ typedef enum _MEMORY_INFORMATION_CLASS
     MemoryBasicInformation,
     MemoryWorkingSetList,
     MemorySectionName,
-    MemoryBasicVlmInformation
+    MemoryBasicVlmInformation,
+    MemoryWorkingSetExList
 } MEMORY_INFORMATION_CLASS;
 
 //
