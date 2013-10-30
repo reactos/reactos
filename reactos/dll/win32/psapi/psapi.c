@@ -249,8 +249,8 @@ CallBackConvertToAscii(LPVOID pContext,
 /*
  * @unimplemented
  */
-static void NTAPI
-PsParseCommandLine(void)
+static VOID NTAPI
+PsParseCommandLine(VOID)
 {
     UNIMPLEMENTED;
 }
@@ -258,8 +258,8 @@ PsParseCommandLine(void)
 /*
  * @unimplemented
  */
-static void NTAPI
-PsInitializeAndStartProfile(void)
+static VOID NTAPI
+PsInitializeAndStartProfile(VOID)
 {
     UNIMPLEMENTED;
 }
@@ -267,8 +267,8 @@ PsInitializeAndStartProfile(void)
 /*
  * @unimplemented
  */
-static void NTAPI
-PsStopAndAnalyzeProfile(void)
+static VOID NTAPI
+PsStopAndAnalyzeProfile(VOID)
 {
     UNIMPLEMENTED;
 }
