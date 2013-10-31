@@ -24,8 +24,13 @@ add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W3")
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
-if (MSVC_VERSION GREATER 1699 AND ARCH STREQUAL "i386")
+if(MSVC_VERSION GREATER 1699 AND ARCH STREQUAL "i386")
     add_compile_flags("/arch:IA32")
+endif ()
+
+# VS 12+ requires /FS when used in parallel compilations
+if(MSVC_VERSION GREATER 1799 AND NOT MSVC_IDE)
+    add_compile_flags("/FS")
 endif ()
 
 # C++ exception specification ignored... yeah we don't care
@@ -111,7 +116,11 @@ endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
     if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 17)
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.01")
+        if(ARCH STREQUAL "amd64")
+            add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.02")
+        else()
+            add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.01")
+        endif()
     else()
         add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM}")
     endif()
