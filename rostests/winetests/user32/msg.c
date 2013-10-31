@@ -14356,7 +14356,10 @@ START_TEST(msg)
     test_combobox_messages();
     test_wmime_keydown_message();
     test_paint_messages();
-//    test_interthread_messages(); ReactOS ActivateActCtx seems to be broken.
+    if(!winetest_interactive)
+    skip("ReactOS ActivateActCtx seems to be broken.\n");
+    else       
+    test_interthread_messages();
     test_message_conversion();
     test_accelerators();
     test_timers();
