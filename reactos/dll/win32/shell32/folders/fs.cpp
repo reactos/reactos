@@ -1124,14 +1124,16 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
             }
 
             op.pTo = szTargetPath;
+            op.fFlags = 0;
         }
         else
         {
             op.pTo = pszTargetList;
+            op.fFlags = FOF_MULTIDESTFILES;
         }
         op.hwnd = GetActiveWindow();
         op.wFunc = FO_COPY;
-        op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+        op.fFlags |= FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
 
         res = SHFileOperationW(&op);
 
