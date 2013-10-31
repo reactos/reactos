@@ -334,7 +334,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      ERR("Failed to copy result from user mode!\n");
+      ERR("Failed to copy result from user mode Message %d!\n", Message);
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
