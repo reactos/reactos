@@ -218,9 +218,12 @@ GetTabbedTextExtentA(
 {
     LONG ret;
     UINT cp = GdiGetCodePage( hDC ); // CP_ACP
-    DWORD len = MultiByteToWideChar(cp, 0, lpString, nCount, NULL, 0);
+    DWORD len;
+    LPWSTR strW;
+
+    len = MultiByteToWideChar(cp, 0, lpString, nCount, NULL, 0);
     if (!len) return 0;
-    LPWSTR strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (!strW) return 0;
     MultiByteToWideChar(cp, 0, lpString, nCount, strW, len);
     ret = GetTabbedTextExtentW(hDC, strW, len, nTabPositions, lpnTabStopPositions);
