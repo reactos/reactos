@@ -229,8 +229,8 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xBD NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xBE NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xBF NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xC0 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xC1 NOT IMPLEMENTED
+    Fast486ExtOpcodeXaddByte,
+    Fast486ExtOpcodeXadd,
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
@@ -1231,6 +1231,165 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalSet)
 
     /* Write back the result */
     return Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Value);
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXaddByte)
+{
+    UCHAR Source, Destination, Result;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xC0);
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Fast486ReadModrmByteOperands(State,
+                                      &ModRegRm,
+                                      &Source,
+                                      &Destination))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = Source + Destination;
+
+    /* Update the flags */
+    State->Flags.Cf = (Result < Source) && (Result < Destination);
+    State->Flags.Of = ((Source & SIGN_FLAG_BYTE) == (Destination & SIGN_FLAG_BYTE))
+                      && ((Source & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Fast486CalculateParity(Result);
+
+    /* Write the sum to the destination */
+    if (!Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Result))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Write the old value of the destination to the source */
+    if (!Fast486WriteModrmByteOperands(State, &ModRegRm, TRUE, Destination))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xC1);
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_ADSIZE(AddressSize);
+    TOGGLE_OPSIZE(OperandSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check the operand size */
+    if (OperandSize)
+    {
+        ULONG Source, Destination, Result;
+
+        if (!Fast486ReadModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          &Source,
+                                          &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        /* Calculate the result */
+        Result = Source + Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = (Result < Source) && (Result < Destination);
+        State->Flags.Of = ((Source & SIGN_FLAG_LONG) == (Destination & SIGN_FLAG_LONG))
+                          && ((Source & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write the sum to the destination */
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Write the old value of the destination to the source */
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        USHORT Source, Destination, Result;
+
+        if (!Fast486ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          &Source,
+                                          &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        /* Calculate the result */
+        Result = Source + Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = (Result < Source) && (Result < Destination);
+        State->Flags.Of = ((Source & SIGN_FLAG_WORD) == (Destination & SIGN_FLAG_WORD))
+                          && ((Source & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write the sum to the destination */
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Result))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Write the old value of the destination to the source */
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBswap)
