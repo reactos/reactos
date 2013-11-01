@@ -4613,7 +4613,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
 {
-    USHORT i;
+    FAST486_SEG_REGS i;
     ULONG InstPtr, CodeSel, StackPtr, StackSel;
     FAST486_FLAGS_REG NewFlags;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
@@ -4777,7 +4777,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             Cpl = Fast486GetCurrentPrivLevel(State);
 
             /* Check segment security */
-            for (i = 0; i <= FAST486_NUM_SEG_REGS; i++)
+            for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
             {
                 /* Don't check CS or SS */
                 if ((i == FAST486_REG_CS) || (i == FAST486_REG_SS)) continue;
