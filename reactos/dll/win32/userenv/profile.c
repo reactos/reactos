@@ -1186,6 +1186,11 @@ LoadUserProfileW(IN HANDLE hToken,
                         SidString.Buffer,
                         szUserHivePath);
     AcquireRemoveRestorePrivilege(FALSE);
+
+    /* HACK: Do not fail if the profile has already been loaded! */
+    if (Error == ERROR_SHARING_VIOLATION)
+        Error = ERROR_SUCCESS;
+
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
