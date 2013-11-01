@@ -146,7 +146,7 @@ Fast486ReadMemory(PFAST486_STATE State,
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }
 
-            /* Read the entry */
+            /* Read the memory */
             State->MemReadCallback(State,
                                    (TableEntry.Address << 12) | PageOffset,
                                    Buffer,
@@ -155,7 +155,7 @@ Fast486ReadMemory(PFAST486_STATE State,
     }
     else
     {
-        /* Read the entry */
+        /* Read the memory */
         State->MemReadCallback(State, LinearAddress, Buffer, Size);
     }
 
@@ -260,7 +260,7 @@ Fast486WriteMemory(PFAST486_STATE State,
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }
 
-            /* Write the entry */
+            /* Write the memory */
             State->MemWriteCallback(State,
                                     (TableEntry.Address << 12) | PageOffset,
                                     Buffer,
@@ -269,7 +269,7 @@ Fast486WriteMemory(PFAST486_STATE State,
     }
     else
     {
-        /* Write the entry */
+        /* Write the memory */
         State->MemWriteCallback(State, LinearAddress, Buffer, Size);
     }
 
