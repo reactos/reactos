@@ -430,7 +430,7 @@ Fast486GetIntVector(PFAST486_STATE State,
         }
         else
         {
-            RtlMoveMemory(IdtEntry,
+            RtlMoveMemory(&FarPointer,
                           (PVOID)(State->Idtr.Address
                           + Number * sizeof(FarPointer)),
                           sizeof(FarPointer));
