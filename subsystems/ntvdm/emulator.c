@@ -225,10 +225,10 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
     }
 }
 
-static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, USHORT BopCode)
+VOID WINAPI ControlBop(LPWORD Stack);
+static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
 {
-    WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
-    BYTE IntNum;
+    WORD StackSegment, StackPointer;
     LPWORD Stack;
 
     /* Get the SS:SP */
@@ -238,97 +238,20 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, USHORT BopCode)
     /* Get the stack */
     Stack = (LPWORD)SEG_OFF_TO_PTR(StackSegment, StackPointer);
 
-    if (BopCode == EMULATOR_INT_BOP)
+    switch (BopCode)
     {
-        /* Get the interrupt number */
-        IntNum = LOBYTE(Stack[STACK_INT_NUM]);
+        case EMULATOR_INT_BOP:
+            ControlBop(Stack);
+            break;
 
-        /* Get the CS:IP */
-        InstructionPointer = Stack[STACK_IP];
-        CodeSegment = Stack[STACK_CS];
-
-        /* Check if this was an exception */
-        if (IntNum < 8)
-        {
-            /* Display a message to the user */
-            DisplayMessage(L"Exception: %s occured at %04X:%04X",
-                           ExceptionName[IntNum],
-                           CodeSegment,
-                           InstructionPointer);
-
-            /* Stop the VDM */
-            VdmRunning = FALSE;
-            return;
-        }
-
-        /* Check if this was an PIC IRQ */
-        if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
-        {
-            /* It was an IRQ from the master PIC */
-            BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT, Stack);
-            return;
-        }
-        else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
-        {
-            /* It was an IRQ from the slave PIC */
-            BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8, Stack);
-            return;
-        }
-
-        switch (IntNum)
-        {
-            case BIOS_VIDEO_INTERRUPT:
-            {
-                /* This is the video BIOS interrupt, call the BIOS */
-                BiosVideoService(Stack);
-                break;
-            }
-            case BIOS_EQUIPMENT_INTERRUPT:
-            {
-                /* This is the BIOS "get equipment" command, call the BIOS */
-                BiosEquipmentService(Stack);
-                break;
-            }
-            case BIOS_KBD_INTERRUPT:
-            {
-                /* This is the keyboard BIOS interrupt, call the BIOS */
-                BiosKeyboardService(Stack);
-                break;
-            }
-            case BIOS_TIME_INTERRUPT:
-            {
-                /* This is the time BIOS interrupt, call the BIOS */
-                BiosTimeService(Stack);
-                break;
-            }
-            case BIOS_SYS_TIMER_INTERRUPT:
-            {
-                /* BIOS timer update */
-                BiosSystemTimerInterrupt(Stack);
-                break;
-            }
-            case 0x20:
-            {
-                DosInt20h(Stack);
-                break;
-            }
-            case 0x21:
-            {
-                DosInt21h(Stack);
-                break;
-            }
-            case 0x23:
-            {
-                DosBreakInterrupt(Stack);
-                break;
-            }
-            default:
-            {
-                DPRINT1("Unhandled interrupt: 0x%02X\n", IntNum);
-                break;
-            }
-        }
+        default:
+            DPRINT1("Invalid BOP code %u\n", BopCode);
+            break;
     }
+}
+
+static VOID WINAPI EmulatorIdle(PFAST486_STATE State)
+{
 }
 
 static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
@@ -350,8 +273,9 @@ BOOLEAN EmulatorInitialize()
     /* Set the callbacks */
     EmulatorContext.MemReadCallback  = EmulatorReadMemory;
     EmulatorContext.MemWriteCallback = EmulatorWriteMemory;
-    EmulatorContext.IoReadCallback   = EmulatorReadIo;
-    EmulatorContext.IoWriteCallback  = EmulatorWriteIo;
+    EmulatorContext.IoReadCallback   = EmulatorReadIo;  // Must be != NULL
+    EmulatorContext.IoWriteCallback  = EmulatorWriteIo; // Must be != NULL
+    EmulatorContext.IdleCallback     = EmulatorIdle;    // Must be != NULL
     EmulatorContext.BopCallback      = EmulatorBiosOperation;
     EmulatorContext.IntAckCallback   = EmulatorIntAcknowledge;
 

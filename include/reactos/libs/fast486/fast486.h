@@ -210,7 +210,7 @@ VOID
 (NTAPI *FAST486_BOP_PROC)
 (
     PFAST486_STATE State,
-    USHORT BopCode
+    UCHAR BopCode
 );
 
 typedef

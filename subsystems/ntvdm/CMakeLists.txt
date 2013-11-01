@@ -5,6 +5,7 @@ spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE
     bios.c
+    bop.c
     dos.c
     emulator.c
     pic.c

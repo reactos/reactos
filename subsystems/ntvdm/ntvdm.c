@@ -29,17 +29,6 @@
 
 BOOLEAN VdmRunning = TRUE;
 LPVOID BaseAddress = NULL;
-LPCWSTR ExceptionName[] =
-{
-    L"Division By Zero",
-    L"Debug",
-    L"Unexpected Error",
-    L"Breakpoint",
-    L"Integer Overflow",
-    L"Bound Range Exceeded",
-    L"Invalid Opcode",
-    L"FPU Not Available"
-};
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

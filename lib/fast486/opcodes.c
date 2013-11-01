@@ -4331,10 +4331,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
             && (ModRegRm.SecondRegister == FAST486_REG_ESP)
             && (State->BopCallback != NULL))
         {
-            USHORT BopCode;
+            UCHAR BopCode;
 
             /* Fetch the BOP code */
-            if (!Fast486FetchWord(State, &BopCode))
+            if (!Fast486FetchByte(State, &BopCode))
             {
                 /* Exception occurred */
                 return FALSE;

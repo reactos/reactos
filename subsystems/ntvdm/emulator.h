@@ -35,13 +35,14 @@
 #define EMULATOR_FLAG_ID (1 << 21)
 
 /* Common definitions */
-#define EMULATOR_BOP 0xC4C4
-#define EMULATOR_INT_BOP 0xBEEF
-#define STACK_COUNTER 0
-#define STACK_INT_NUM 1
-#define STACK_IP 2
-#define STACK_CS 3
-#define STACK_FLAGS 4
+#define EMULATOR_BOP        0xC4C4
+#define EMULATOR_INT_BOP    0xFF
+
+#define STACK_COUNTER   0
+#define STACK_INT_NUM   1
+#define STACK_IP        2
+#define STACK_CS        3
+#define STACK_FLAGS     4
 
 enum
 {

@@ -453,7 +453,7 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 
 BOOLEAN BiosInitialize(VOID)
 {
-    INT i;
+    USHORT i;
     WORD Offset = 0;
     LPWORD IntVecTable = (LPWORD)BaseAddress;
     LPBYTE BiosCode = (LPBYTE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0);
@@ -465,7 +465,7 @@ BOOLEAN BiosInitialize(VOID)
     Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
 
     /* Generate ISR stubs and fill the IVT */
-    for (i = 0; i < 256; i++)
+    for (i = 0x00; i <= 0xFF; i++)
     {
         IntVecTable[i * 2] = Offset;
         IntVecTable[i * 2 + 1] = BIOS_SEGMENT;
@@ -473,27 +473,28 @@ BOOLEAN BiosInitialize(VOID)
         BiosCode[Offset++] = 0xFB; // sti
 
         BiosCode[Offset++] = 0x6A; // push i
-        BiosCode[Offset++] = (BYTE)i;
+        BiosCode[Offset++] = (UCHAR)i;
 
         BiosCode[Offset++] = 0x6A; // push 0
         BiosCode[Offset++] = 0x00;
 
+// BOP_SEQ:
         BiosCode[Offset++] = 0xF8; // clc
 
         BiosCode[Offset++] = LOBYTE(EMULATOR_BOP); // BOP sequence
         BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-        BiosCode[Offset++] = LOBYTE(EMULATOR_INT_BOP);
-        BiosCode[Offset++] = HIBYTE(EMULATOR_INT_BOP);
+        BiosCode[Offset++] = EMULATOR_INT_BOP;
 
-        BiosCode[Offset++] = 0x73; // jnc +3
+        BiosCode[Offset++] = 0x73; // jnc EXIT (offset +3)
         BiosCode[Offset++] = 0x03;
 
         // HACK: The following instruction should be HLT!
         BiosCode[Offset++] = 0x90; // nop
 
-        BiosCode[Offset++] = 0xEB; // jmp -10
-        BiosCode[Offset++] = 0xF6;
+        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -9)
+        BiosCode[Offset++] = 0xF7;
 
+// EXIT:
         BiosCode[Offset++] = 0x83; // add sp, 4
         BiosCode[Offset++] = 0xC4;
         BiosCode[Offset++] = 0x04;
