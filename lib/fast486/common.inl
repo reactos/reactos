@@ -186,21 +186,11 @@ Fast486LoadSegment(PFAST486_STATE State,
 
         /* Read the GDT */
         // FIXME: This code is only correct when paging is disabled!!!
-        if (State->MemReadCallback)
-        {
-            State->MemReadCallback(State,
-                                   State->Gdtr.Address
-                                   + GET_SEGMENT_INDEX(Selector),
-                                   &GdtEntry,
-                                   sizeof(GdtEntry));
-        }
-        else
-        {
-            RtlMoveMemory(&GdtEntry,
-                          (PVOID)(State->Gdtr.Address
-                          + GET_SEGMENT_INDEX(Selector)),
-                          sizeof(GdtEntry));
-        }
+        State->MemReadCallback(State,
+                               State->Gdtr.Address
+                               + GET_SEGMENT_INDEX(Selector),
+                               &GdtEntry,
+                               sizeof(GdtEntry));
 
         if (Segment == FAST486_REG_SS)
         {
@@ -399,42 +389,22 @@ Fast486GetIntVector(PFAST486_STATE State,
     {
         /* Read from the IDT */
         // FIXME: This code is only correct when paging is disabled!!!
-        if (State->MemReadCallback)
-        {
-            State->MemReadCallback(State,
-                                   State->Idtr.Address
-                                   + Number * sizeof(*IdtEntry),
-                                   IdtEntry,
-                                   sizeof(*IdtEntry));
-        }
-        else
-        {
-            RtlMoveMemory(IdtEntry,
-                          (PVOID)(State->Idtr.Address
-                          + Number * sizeof(*IdtEntry)),
-                          sizeof(*IdtEntry));
-        }
+        State->MemReadCallback(State,
+                               State->Idtr.Address
+                               + Number * sizeof(*IdtEntry),
+                               IdtEntry,
+                               sizeof(*IdtEntry));
     }
     else
     {
         /* Read from the real-mode IVT */
         
         /* Paging is always disabled in real mode */
-        if (State->MemReadCallback)
-        {
-            State->MemReadCallback(State,
-                                   State->Idtr.Address
-                                   + Number * sizeof(FarPointer),
-                                   &FarPointer,
-                                   sizeof(FarPointer));
-        }
-        else
-        {
-            RtlMoveMemory(&FarPointer,
-                          (PVOID)(State->Idtr.Address
-                          + Number * sizeof(FarPointer)),
-                          sizeof(FarPointer));
-        }
+        State->MemReadCallback(State,
+                               State->Idtr.Address
+                               + Number * sizeof(FarPointer),
+                               &FarPointer,
+                               sizeof(FarPointer));
 
         /* Fill a fake IDT entry */
         IdtEntry->Offset = LOWORD(FarPointer);
@@ -458,6 +428,7 @@ FORCEINLINE
 BOOLEAN
 Fast486CalculateParity(UCHAR Number)
 {
+    // See http://graphics.stanford.edu/~seander/bithacks.html#ParityLookupTable too...
     return (0x9669 >> ((Number & 0x0F) ^ (Number >> 4))) & 1;
 }
 

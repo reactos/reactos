@@ -85,7 +85,7 @@ extern FAST486_STATE EmulatorContext;
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN EmulatorInitialize();
+BOOLEAN EmulatorInitialize(VOID);
 VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
@@ -96,8 +96,8 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value);
 BOOLEAN EmulatorGetFlag(ULONG Flag);
 VOID EmulatorSetFlag(ULONG Flag);
 VOID EmulatorClearFlag(ULONG Flag);
-VOID EmulatorStep();
-VOID EmulatorCleanup();
+VOID EmulatorStep(VOID);
+VOID EmulatorCleanup(VOID);
 VOID EmulatorSetA20(BOOLEAN Enabled);
 
 #endif // _EMULATOR_H_

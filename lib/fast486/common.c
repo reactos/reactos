@@ -65,7 +65,6 @@ Fast486ReadMemory(PFAST486_STATE State,
     {
         /* Read beyond limit */
         Fast486Exception(State, FAST486_EXCEPTION_GP);
-
         return FALSE;
     }
 
@@ -91,7 +90,6 @@ Fast486ReadMemory(PFAST486_STATE State,
             if (!CachedDescriptor->Executable)
             {
                 /* Data segment not executable */
-
                 Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
@@ -101,7 +99,6 @@ Fast486ReadMemory(PFAST486_STATE State,
             if (CachedDescriptor->Executable && (!CachedDescriptor->ReadWrite))
             {
                 /* Code segment not readable */
-
                 Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
             }
@@ -149,37 +146,17 @@ Fast486ReadMemory(PFAST486_STATE State,
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }
 
-            /* Did the host provide a memory hook? */
-            if (State->MemReadCallback)
-            {
-                /* Yes, call the host */
-                State->MemReadCallback(State,
-                                       (TableEntry.Address << 12) | PageOffset,
-                                       Buffer,
-                                       PageLength);
-            }
-            else
-            {
-                /* Read the memory directly */
-                RtlMoveMemory(Buffer,
-                              (PVOID)((TableEntry.Address << 12) | PageOffset),
-                              PageLength);
-            }
+            /* Read the entry */
+            State->MemReadCallback(State,
+                                   (TableEntry.Address << 12) | PageOffset,
+                                   Buffer,
+                                   PageLength);
         }
     }
     else
     {
-        /* Did the host provide a memory hook? */
-        if (State->MemReadCallback)
-        {
-            /* Yes, call the host */
-            State->MemReadCallback(State, LinearAddress, Buffer, Size);
-        }
-        else
-        {
-            /* Read the memory directly */
-            RtlMoveMemory(Buffer, (PVOID)LinearAddress, Size);
-        }
+        /* Read the entry */
+        State->MemReadCallback(State, LinearAddress, Buffer, Size);
     }
 
     return TRUE;
@@ -229,14 +206,12 @@ Fast486WriteMemory(PFAST486_STATE State,
         if (CachedDescriptor->Executable)
         {
             /* Code segment not writable */
-
             Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
         else if (!CachedDescriptor->ReadWrite)
         {
             /* Data segment not writeable */
-
             Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
         }
@@ -285,37 +260,17 @@ Fast486WriteMemory(PFAST486_STATE State,
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }
 
-            /* Did the host provide a memory hook? */
-            if (State->MemWriteCallback)
-            {
-                /* Yes, call the host */
-                State->MemWriteCallback(State,
-                                        (TableEntry.Address << 12) | PageOffset,
-                                        Buffer,
-                                        PageLength);
-            }
-            else
-            {
-                /* Read the memory directly */
-                RtlMoveMemory((PVOID)((TableEntry.Address << 12) | PageOffset),
-                              Buffer,
-                              PageLength);
-            }
+            /* Write the entry */
+            State->MemWriteCallback(State,
+                                    (TableEntry.Address << 12) | PageOffset,
+                                    Buffer,
+                                    PageLength);
         }
     }
     else
     {
-        /* Did the host provide a memory hook? */
-        if (State->MemWriteCallback)
-        {
-            /* Yes, call the host */
-            State->MemWriteCallback(State, LinearAddress, Buffer, Size);
-        }
-        else
-        {
-            /* Write the memory directly */
-            RtlMoveMemory((PVOID)LinearAddress, Buffer, Size);
-        }
+        /* Write the entry */
+        State->MemWriteCallback(State, LinearAddress, Buffer, Size);
     }
 
     return TRUE;
@@ -339,17 +294,10 @@ Fast486InterruptInternal(PFAST486_STATE State,
         {
             /* Read the TSS */
             // FIXME: This code is only correct when paging is disabled!!!
-            if (State->MemReadCallback)
-            {
-                State->MemReadCallback(State,
-                                       State->Tss.Address,
-                                       &Tss,
-                                       sizeof(Tss));
-            }
-            else
-            {
-                RtlMoveMemory(&Tss, (PVOID)State->Tss.Address, sizeof(Tss));
-            }
+            State->MemReadCallback(State,
+                                   State->Tss.Address,
+                                   &Tss,
+                                   sizeof(Tss));
 
             /* Check the new (higher) privilege level */
             switch (GET_SEGMENT_RPL(SegmentSelector))

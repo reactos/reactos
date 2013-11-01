@@ -250,10 +250,6 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
     }
 }
 
-static VOID WINAPI EmulatorIdle(PFAST486_STATE State)
-{
-}
-
 static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
@@ -264,28 +260,32 @@ static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN EmulatorInitialize()
+BOOLEAN EmulatorInitialize(VOID)
 {
     /* Allocate memory for the 16-bit address space */
     BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
     if (BaseAddress == NULL) return FALSE;
 
-    /* Set the callbacks */
-    EmulatorContext.MemReadCallback  = EmulatorReadMemory;
-    EmulatorContext.MemWriteCallback = EmulatorWriteMemory;
-    EmulatorContext.IoReadCallback   = EmulatorReadIo;  // Must be != NULL
-    EmulatorContext.IoWriteCallback  = EmulatorWriteIo; // Must be != NULL
-    EmulatorContext.IdleCallback     = EmulatorIdle;    // Must be != NULL
-    EmulatorContext.BopCallback      = EmulatorBiosOperation;
-    EmulatorContext.IntAckCallback   = EmulatorIntAcknowledge;
-
-    /* Reset the CPU */
-    Fast486Reset(&EmulatorContext);
+    /* Initialize the CPU */
+    Fast486Initialize(&EmulatorContext,
+                      EmulatorReadMemory,
+                      EmulatorWriteMemory,
+                      EmulatorReadIo,
+                      EmulatorWriteIo,
+                      NULL,
+                      EmulatorBiosOperation,
+                      EmulatorIntAcknowledge);
 
     /* Enable interrupts */
     EmulatorSetFlag(EMULATOR_FLAG_IF);
 
     return TRUE;
+}
+
+VOID EmulatorCleanup(VOID)
+{
+    /* Free the memory allocated for the 16-bit address space */
+    if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
 
 VOID EmulatorSetStack(WORD Segment, DWORD Offset)
@@ -363,12 +363,6 @@ VOID EmulatorStep(VOID)
 
     /* Execute the next instruction */
     Fast486StepInto(&EmulatorContext);
-}
-
-VOID EmulatorCleanup(VOID)
-{
-    /* Free the memory allocated for the 16-bit address space */
-    if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
 
 VOID EmulatorSetA20(BOOLEAN Enabled)

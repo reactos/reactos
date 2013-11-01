@@ -391,6 +391,21 @@ struct _FAST486_STATE
 
 VOID
 NTAPI
+Fast486Initialize(PFAST486_STATE         State,
+                  FAST486_MEM_READ_PROC  MemReadCallback,
+                  FAST486_MEM_WRITE_PROC MemWriteCallback,
+                  FAST486_IO_READ_PROC   IoReadCallback,
+                  FAST486_IO_WRITE_PROC  IoWriteCallback,
+                  FAST486_IDLE_PROC      IdleCallback,
+                  FAST486_BOP_PROC       BopCallback,
+                  FAST486_INT_ACK_PROC   IntAckCallback);
+
+VOID
+NTAPI
+Fast486Reset(PFAST486_STATE State);
+
+VOID
+NTAPI
 Fast486Continue(PFAST486_STATE State);
 
 VOID
@@ -408,10 +423,6 @@ Fast486StepOut(PFAST486_STATE State);
 VOID
 NTAPI
 Fast486DumpState(PFAST486_STATE State);
-
-VOID
-NTAPI
-Fast486Reset(PFAST486_STATE State);
 
 VOID
 NTAPI

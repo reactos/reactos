@@ -4613,7 +4613,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
 {
-    INT i;
+    USHORT i;
     ULONG InstPtr, CodeSel, StackPtr, StackSel;
     FAST486_FLAGS_REG NewFlags;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
