@@ -2126,9 +2126,12 @@ GetDlgItem(
   int nIDDlgItem)
 {
     int i;
-    HWND *list = WIN_ListChildren(hDlg);
+    HWND *list;
     HWND ret = 0;
 
+    if (!hDlg) return 0; 
+
+    list = WIN_ListChildren(hDlg);
     if (!list) return 0;
 
     for (i = 0; list[i]; i++) if (GetWindowLongPtrW(list[i], GWLP_ID) == nIDDlgItem) break;
@@ -2190,7 +2193,7 @@ GetDlgItemTextA(
 {
   HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
   if ( hWnd ) return GetWindowTextA(hWnd, lpString, nMaxCount);
-  if ( nMaxCount ) *lpString = 0;
+  if ( nMaxCount ) lpString[0] = '\0';
   return 0;
 }
 
@@ -2208,7 +2211,7 @@ GetDlgItemTextW(
 {
   HWND hWnd = GetDlgItem(hDlg, nIDDlgItem);
   if ( hWnd ) return GetWindowTextW(hWnd, lpString, nMaxCount);
-  if ( nMaxCount ) *lpString = 0;
+  if ( nMaxCount ) lpString[0] = '\0';
   return 0;
 }
 
