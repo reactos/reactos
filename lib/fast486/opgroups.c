@@ -1657,6 +1657,208 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
+{
+    UCHAR TableReg[6];
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Check for the segment override */
+    if (State->PrefixFlags & FAST486_PREFIX_SEG)
+    {
+        /* Use the override segment instead */
+        Segment = State->SegmentOverride;
+    }
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check which operation this is */
+    switch (ModRegRm.Register)
+    {
+        /* SGDT */
+        case 0:
+        {
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Fill the 6-byte table register */
+            RtlCopyMemory(TableReg, &State->Gdtr.Size, sizeof(USHORT));
+            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Gdtr.Address, sizeof(ULONG));
+
+            /* Store the GDTR */
+            return Fast486WriteMemory(State,
+                                      Segment,
+                                      ModRegRm.MemoryAddress,
+                                      TableReg,
+                                      sizeof(TableReg));
+        }
+
+        /* SIDT */
+        case 1:
+        {
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Fill the 6-byte table register */
+            RtlCopyMemory(TableReg, &State->Idtr.Size, sizeof(USHORT));
+            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Idtr.Address, sizeof(ULONG));
+
+            /* Store the IDTR */
+            return Fast486WriteMemory(State,
+                                      Segment,
+                                      ModRegRm.MemoryAddress,
+                                      TableReg,
+                                      sizeof(TableReg));
+        }
+
+        /* LGDT */
+        case 2:
+        {
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Read the new GDTR */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress,
+                                   FALSE,
+                                   TableReg,
+                                   sizeof(TableReg)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new GDT */
+            State->Gdtr.Size = *((PUSHORT)TableReg);
+            State->Gdtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
+
+            return TRUE;
+        }
+
+        /* LIDT */
+        case 3:
+        {
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Read the new IDTR */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress,
+                                   FALSE,
+                                   TableReg,
+                                   sizeof(TableReg)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new IDT */
+            State->Idtr.Size = *((PUSHORT)TableReg);
+            State->Idtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
+
+            return TRUE;
+        }
+
+        /* SMSW */
+        case 4:
+        {
+            /* Store the lower 16 bits of CR0 */
+            return Fast486WriteModrmWordOperands(State,
+                                                 &ModRegRm,
+                                                 FALSE,
+                                                 LOWORD(State->ControlRegisters[FAST486_REG_CR0]));
+        }
+
+        /* LMSW */
+        case 6:
+        {
+            USHORT MasterStatusWord, Dummy;
+
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            /* Read the new master status word */
+            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &MasterStatusWord))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* This instruction cannot be used to return to real mode */
+            if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                && !(MasterStatusWord & FAST486_CR0_PE))
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            /* Set the lowest 4 bits */
+            State->ControlRegisters[FAST486_REG_CR0] &= 0xFFFFFFF0;
+            State->ControlRegisters[FAST486_REG_CR0] |= MasterStatusWord & 0x0F;
+
+            return TRUE;
+        }
+
+        /* INVLPG */
+        case 7:
+        {
+            UNIMPLEMENTED;
+            return FALSE;
+        }
+
+        /* Invalid */
+        default:
+        {
+            Fast486Exception(State, FAST486_EXCEPTION_UD);
+            return FALSE;
+        }
+    }
+}
+
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FB9)
 {
     FAST486_MOD_REG_RM ModRegRm;
