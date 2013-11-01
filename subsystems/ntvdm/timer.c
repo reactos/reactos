@@ -146,7 +146,7 @@ VOID PitWriteData(BYTE Channel, BYTE Value)
     }
 }
 
-VOID PitDecrementCount()
+VOID PitDecrementCount(DWORD Count)
 {
     INT i;
 
@@ -157,7 +157,12 @@ VOID PitDecrementCount()
             case PIT_MODE_INT_ON_TERMINAL_COUNT:
             {
                 /* Decrement the value */
-                PitChannels[i].CurrentValue--;
+                if (Count > PitChannels[i].CurrentValue)
+                {
+                    /* The value does not reload in this case */
+                    PitChannels[i].CurrentValue = 0;
+                }
+                else PitChannels[i].CurrentValue -= Count;
 
                 /* Did it fall to the terminal count? */
                 if (PitChannels[i].CurrentValue == 0 && !PitChannels[i].Pulsed)
@@ -171,47 +176,100 @@ VOID PitDecrementCount()
 
             case PIT_MODE_RATE_GENERATOR:
             {
-                /* Decrement the value */
-                PitChannels[i].CurrentValue--;
+                BOOLEAN Reloaded = FALSE;
 
-                /* Did it fall to zero? */
-                if (PitChannels[i].CurrentValue != 0) break;
+                while (Count)
+                {
+                    if ((Count > PitChannels[i].CurrentValue)
+                        && (PitChannels[i].CurrentValue != 0))
+                    {
+                        /* Decrease the count */
+                        Count -= PitChannels[i].CurrentValue;
 
-                /* Yes, raise the output line and reload */
-                if (i == 0) PicInterruptRequest(0);
-                PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
+                        /* Reload the value */
+                        PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
+
+                        /* Set the flag */
+                        Reloaded = TRUE;
+                    }
+                    else
+                    {
+                        /* Decrease the value */
+                        PitChannels[i].CurrentValue -= Count;
+
+                        /* Clear the count */
+                        Count = 0;
+
+                        /* Did it fall to zero? */
+                        if (PitChannels[i].CurrentValue == 0)
+                        {
+                            PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
+                            Reloaded = TRUE;
+                        }
+                    }
+                }
+
+                /* If there was a reload on channel 0, raise IRQ 0 */
+                if ((i == 0) && Reloaded) PicInterruptRequest(0);
 
                 break;
             }
 
             case PIT_MODE_SQUARE_WAVE:
             {
-                /* Decrement the value by 2 */
-                PitChannels[i].CurrentValue -= 2;
+                INT ReloadCount = 0;
+                WORD ReloadValue = PitChannels[i].ReloadValue;
 
-                /* Did it fall to zero? */
-                if (PitChannels[i].CurrentValue != 0) break;
+                /* The reload value must be even */
+                ReloadValue &= ~1;
 
-                /* Yes, toggle the flip-flop */
-                PitChannels[i].OutputFlipFlop = !PitChannels[i].OutputFlipFlop;
-
-                /* Did this create a rising edge in the signal? */
-                if (PitChannels[i].OutputFlipFlop)
+                while (Count)
                 {
-                    /* Yes, IRQ 0 if this is channel 0 */
-                    if (i == 0) PicInterruptRequest(0);
+                    if (((Count * 2) > PitChannels[i].CurrentValue)
+                        && (PitChannels[i].CurrentValue != 0))
+                    {
+                        /* Decrease the count */
+                        Count -= PitChannels[i].CurrentValue / 2;
+
+                        /* Reload the value */
+                        PitChannels[i].CurrentValue = ReloadValue;
+
+                        /* Increment the reload count */
+                        ReloadCount++;
+                    }
+                    else
+                    {
+                        /* Clear the count */
+                        Count = 0;
+
+                        /* Decrease the value */
+                        PitChannels[i].CurrentValue -= Count * 2;
+
+                        /* Did it fall to zero? */
+                        if (PitChannels[i].CurrentValue == 0)
+                        {
+                            /* Reload the value */
+                            PitChannels[i].CurrentValue = ReloadValue;
+
+                            /* Increment the reload count */
+                            ReloadCount++;
+                        }
+                    }
                 }
 
-                /* Reload the value, but make sure it's even */
-                if (PitChannels[i].ReloadValue % 2)
+                if (ReloadCount == 0) break;
+
+                /* Toggle the flip-flop if the number of reloads was odd */
+                if (ReloadCount & 1)
                 {
-                    /* It's odd, reduce it by 1 */
-                    PitChannels[i].CurrentValue = PitChannels[i].ReloadValue - 1;
+                    PitChannels[i].OutputFlipFlop = !PitChannels[i].OutputFlipFlop;
                 }
-                else
+
+                /* Was there any rising edge on channel 0 ? */
+                if ((PitChannels[i].OutputFlipFlop || ReloadCount) && (i == 0))
                 {
-                    /* It was even */
-                    PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
+                    /* Yes, IRQ 0 */
+                    PicInterruptRequest(0);
                 }
 
                 break;

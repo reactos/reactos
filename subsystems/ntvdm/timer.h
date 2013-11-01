@@ -48,7 +48,7 @@ typedef struct _PIT_CHANNEL
 VOID PitWriteCommand(BYTE Value);
 BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
-VOID PitDecrementCount();
+VOID PitDecrementCount(DWORD Count);
 DWORD PitGetResolution(VOID);
 
 #endif // _TIMER_H_
