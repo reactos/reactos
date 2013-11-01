@@ -219,7 +219,7 @@ VOID
 NTAPI
 Fast486Reset(PFAST486_STATE State)
 {
-    USHORT i;
+    FAST486_SEG_REGS i;
 
     FAST486_MEM_READ_PROC  MemReadCallback  = State->MemReadCallback;
     FAST486_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;

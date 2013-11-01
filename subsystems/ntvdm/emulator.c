@@ -12,6 +12,7 @@
 
 #include "emulator.h"
 #include "bios.h"
+#include "bop.h"
 #include "dos.h"
 #include "vga.h"
 #include "pic.h"
@@ -225,7 +226,6 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
     }
 }
 
-VOID WINAPI ControlBop(LPWORD Stack);
 static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
 {
     WORD StackSegment, StackPointer;
@@ -238,16 +238,10 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
     /* Get the stack */
     Stack = (LPWORD)SEG_OFF_TO_PTR(StackSegment, StackPointer);
 
-    switch (BopCode)
-    {
-        case EMULATOR_INT_BOP:
-            ControlBop(Stack);
-            break;
-
-        default:
-            DPRINT1("Invalid BOP code %u\n", BopCode);
-            break;
-    }
+    if (BopProc[BopCode] != NULL)
+        BopProc[BopCode](Stack);
+    else
+        DPRINT1("Invalid BOP code %u\n", BopCode);
 }
 
 static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
