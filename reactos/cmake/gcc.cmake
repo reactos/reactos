@@ -17,6 +17,14 @@ if(USE_PSEH3)
     add_definitions(-D_USE_PSEH3=1)
 endif()
 
+if(NOT DEFINED USE_DUMMY_PSEH)
+    set(USE_DUMMY_PSEH 0)
+endif()
+
+if(USE_DUMMY_PSEH)
+    add_definitions(-D_USE_DUMMY_PSEH=1)
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 if(GCC_VERSION VERSION_GREATER 4.7)
