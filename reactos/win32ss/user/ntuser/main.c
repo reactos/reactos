@@ -430,7 +430,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
        ptiCurrent->TIF_flags |= TIF_ALLOWFOREGROUNDACTIVATE;
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
-    ERR_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
+    TRACE_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
     return STATUS_SUCCESS;
 
 error:
@@ -448,7 +448,7 @@ UserDeleteW32Thread(PTHREADINFO pti)
 {
     if (!pti->RefCount)
     {
-       ERR_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
+       TRACE_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
        if (pti->hEventQueueClient != NULL)
           ZwClose(pti->hEventQueueClient);
        pti->hEventQueueClient = NULL;
@@ -549,7 +549,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
             ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)
         {
-           ERR_CH(UserThread,"DestroyProcessClasses\n");
+           TRACE_CH(UserThread,"DestroyProcessClasses\n");
           /* no process windows should exist at this point, or the function will assert! */
            DestroyProcessClasses(ppiCurrent);
            ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
