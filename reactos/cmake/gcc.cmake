@@ -10,7 +10,7 @@ if(NOT DEFINED SEPARATE_DBG)
 endif()
 
 if(NOT DEFINED USE_PSEH3)
-    set(USE_PSEH3 0)
+    set(USE_PSEH3 1)
 endif()
 
 if(USE_PSEH3)
