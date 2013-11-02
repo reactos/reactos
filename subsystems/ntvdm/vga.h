@@ -80,6 +80,9 @@
 /* CRTC underline register bits */
 #define VGA_CRTC_UNDERLINE_DWORD (1 << 6)
 
+/* CRTC max scanline register bits */
+#define VGA_CRTC_MAXSCANLINE_DOUBLE (1 << 7)
+
 /* CRTC mode control register bits */
 #define VGA_CRTC_MODE_CONTROL_WRAP (1 << 5)
 #define VGA_CRTC_MODE_CONTROL_BYTE (1 << 6)

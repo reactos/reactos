@@ -802,6 +802,12 @@ COORD VgaGetDisplayResolution(VOID)
         if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) Resolution.X /= 2;
     }
 
+    if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+    {
+        /* Halve the vertical resolution */
+        Resolution.Y >>= 1;
+    }
+
     /* Divide the vertical resolution by the maximum scan line (== font size in text mode) */
     Resolution.Y /= MaximumScanLine;
 
