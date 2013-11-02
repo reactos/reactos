@@ -379,6 +379,8 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     COORD Resolution;
     LPBYTE Values = VideoModes[ModeNumber];
 
+    DPRINT1("Switching to mode %Xh; Values = 0x%p\n", ModeNumber, Values);
+
     if (Values == NULL) return FALSE;
 
     /* Write the misc register */
