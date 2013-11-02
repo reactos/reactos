@@ -239,13 +239,20 @@ Fast486Reset(PFAST486_STATE State)
     /* Initialize segments */
     for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
     {
-        /* Set the selector, base and limit, other values don't apply in real mode */
         State->SegmentRegs[i].Selector = 0;
         State->SegmentRegs[i].Base = 0;
         State->SegmentRegs[i].Limit = 0xFFFF;
+        State->SegmentRegs[i].Present = TRUE;
+        State->SegmentRegs[i].ReadWrite = TRUE;
+        State->SegmentRegs[i].Executable = FALSE;
+        State->SegmentRegs[i].DirConf = FALSE;
+        State->SegmentRegs[i].SystemType = 1; // Segment descriptor
+        State->SegmentRegs[i].Dpl = 0;
+        State->SegmentRegs[i].Size = FALSE; // 16-bit
     }
 
     /* Initialize the code segment */
+    State->SegmentRegs[FAST486_REG_CS].Executable = TRUE;
     State->SegmentRegs[FAST486_REG_CS].Selector = 0xF000;
     State->SegmentRegs[FAST486_REG_CS].Base = 0xFFFF0000;
 

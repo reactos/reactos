@@ -260,7 +260,7 @@ Fast486LoadSegment(PFAST486_STATE State,
 
         /* Update the cache entry */
         CachedDescriptor->Selector = Selector;
-        CachedDescriptor->Base = GdtEntry.Base | (GdtEntry.BaseHigh << 24);
+        CachedDescriptor->Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
         CachedDescriptor->Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
         CachedDescriptor->Accessed = GdtEntry.Accessed;
         CachedDescriptor->ReadWrite = GdtEntry.ReadWrite;

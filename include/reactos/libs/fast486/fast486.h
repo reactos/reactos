@@ -251,10 +251,13 @@ typedef struct _FAST486_SEG_REG
     ULONG Base;
 } FAST486_SEG_REG, *PFAST486_SEG_REG;
 
+#pragma pack(push, 1)
+
 typedef struct
 {
     ULONG Limit         : 16;
-    ULONG Base          : 24;
+    ULONG Base          : 16;
+    ULONG BaseMid       : 8;
     ULONG Accessed      : 1;
     ULONG ReadWrite     : 1;
     ULONG DirConf       : 1;
@@ -270,6 +273,9 @@ typedef struct
     ULONG BaseHigh      : 8;
 } FAST486_GDT_ENTRY, *PFAST486_GDT_ENTRY;
 
+/* Verify the structure size */
+C_ASSERT(sizeof(FAST486_GDT_ENTRY) == sizeof(ULONGLONG));
+
 typedef struct
 {
     ULONG Offset : 16;
@@ -283,6 +289,9 @@ typedef struct
     ULONG OffsetHigh : 16;
 } FAST486_CALL_GATE, *PFAST486_CALL_GATE;
 
+/* Verify the structure size */
+C_ASSERT(sizeof(FAST486_CALL_GATE) == sizeof(ULONGLONG));
+
 typedef struct
 {
     ULONG Offset        : 16;
@@ -294,6 +303,11 @@ typedef struct
     ULONG Present       : 1;
     ULONG OffsetHigh    : 16;
 } FAST486_IDT_ENTRY, *PFAST486_IDT_ENTRY;
+
+/* Verify the structure size */
+C_ASSERT(sizeof(FAST486_IDT_ENTRY) == sizeof(ULONGLONG));
+
+#pragma pack(pop)
 
 typedef struct _FAST486_TABLE_REG
 {
