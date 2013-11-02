@@ -540,7 +540,7 @@ BuildTokenPrivileges(PTOKEN_PRIVILEGES *TokenPrivileges)
 
 done:
     if (PolicyHandle != NULL)
-        LsarClose(PolicyHandle);
+        LsarClose(&PolicyHandle);
 
     return Status;
 }
