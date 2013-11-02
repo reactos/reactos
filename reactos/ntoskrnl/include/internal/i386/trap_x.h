@@ -10,20 +10,10 @@
 
 #define TRAP_DEBUG 0
 
-//
-// Unreachable code hint for GCC 4.5.x, older GCC versions, and MSVC
-//
-#ifdef __GNUC__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
-#define UNREACHABLE __builtin_unreachable()
-#else
-#define UNREACHABLE __builtin_trap()
-#endif
-#elif _MSC_VER
 #define UNREACHABLE __assume(0)
+
+#if _MSC_VER
 #define __builtin_expect(a,b) (a)
-#else
-#define UNREACHABLE
 #endif
 
 //

@@ -113,7 +113,7 @@
 /* BUGBUG: only good for use in macros. Cannot be taken the address of */
 #define __noop(...) ((void)0)
 
-/* TODO: __assume. GCC only supports the weaker __builtin_expect */
+#define __assume(x) if (!(x)) __builtin_unreachable()
 
 #endif
 

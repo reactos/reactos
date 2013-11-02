@@ -61,14 +61,10 @@ else()
     add_compile_flags("-march=${OARCH}")
 endif()
 
-# Warnings
-add_compile_flags("-Werror -Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
-
-if(GCC_VERSION VERSION_LESS 4.7)
-    add_compile_flags("-Wno-error=uninitialized")
-elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=narrowing")
-endif()
+# Warnings, errors
+add_compile_flags("-Werror -Wall -Wpointer-arith")
+add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value -Wno-maybe-uninitialized")
+add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=narrowing")
 
 if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
@@ -82,7 +78,7 @@ if(OPTIMIZE STREQUAL "1")
 elseif(OPTIMIZE STREQUAL "2")
     add_compile_flags("-Os")
 elseif(OPTIMIZE STREQUAL "3")
-    add_compile_flags("-O1 -fno-inline-functions-called-once -fno-tree-sra")
+    add_compile_flags("-Og")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_flags("-O1")
 elseif(OPTIMIZE STREQUAL "5")
