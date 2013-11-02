@@ -2616,6 +2616,28 @@ int call_test(int (* func)(void))
 	return ret;
 }
 
+DEFINE_TEST(test_PSEH3_bug)
+{
+    volatile int count = 0;
+    int dummy = 0;
+
+    _SEH2_TRY
+    {
+        if (count++ == 0)
+        {
+            *(volatile int*)0x12345678 = 0x12345678;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dummy = 0;
+    }
+    _SEH2_END;
+
+    (void)dummy;
+    return (count == 1);
+}
+
 #define USE_TEST_NAME_(NAME_) # NAME_
 #define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
 #define USE_TEST(NAME_) { USE_TEST_NAME(NAME_), NAME_ }
@@ -2745,6 +2767,7 @@ void testsuite_syntax(void)
 		USE_TEST(test_unvolatile_2),
 		USE_TEST(test_finally_goto),
 		USE_TEST(test_nested_exception),
+		USE_TEST(test_PSEH3_bug),
 	};
 
 	size_t i;
