@@ -814,8 +814,8 @@ GetUserProfileDirectoryW(HANDLE hToken,
     HKEY hKey;
     LONG Error;
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;
@@ -898,8 +898,8 @@ CheckForLoadedProfile(HANDLE hToken)
 
     DPRINT("CheckForLoadedProfile() called\n");
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;
@@ -1166,7 +1166,7 @@ LoadUserProfileW(IN HANDLE hToken,
     }
 
     /* Get user SID string */
-    ret = GetUserSidFromToken(hToken, &SidString);
+    ret = GetUserSidStringFromToken(hToken, &SidString);
     if (!ret)
     {
         DPRINT1("GetUserSidFromToken() failed\n");
@@ -1243,8 +1243,8 @@ UnloadUserProfile(HANDLE hToken,
 
     RegCloseKey(hProfile);
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;

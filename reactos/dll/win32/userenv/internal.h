@@ -75,7 +75,11 @@ AppendBackslash(LPWSTR String);
 
 BOOL
 GetUserSidFromToken(HANDLE hToken,
-                    PUNICODE_STRING SidString);
+                    PSID *Sid);
+
+BOOL
+GetUserSidStringFromToken(HANDLE hToken,
+                          PUNICODE_STRING SidString);
 
 PSECURITY_DESCRIPTOR
 CreateDefaultSecurityDescriptor(VOID);

@@ -53,56 +53,124 @@ AppendBackslash(LPWSTR String)
 
 BOOL
 GetUserSidFromToken(HANDLE hToken,
-                    PUNICODE_STRING SidString)
+                    PSID *Sid)
 {
-    PSID_AND_ATTRIBUTES SidBuffer, nsb;
+    PTOKEN_USER UserBuffer, nsb;
+    PSID pSid = NULL;
     ULONG Length;
     NTSTATUS Status;
 
     Length = 256;
-    SidBuffer = LocalAlloc(LMEM_FIXED,
-                           Length);
-    if (SidBuffer == NULL)
+    UserBuffer = LocalAlloc(LPTR, Length);
+    if (UserBuffer == NULL)
+    {
         return FALSE;
+    }
 
     Status = NtQueryInformationToken(hToken,
                                      TokenUser,
-                                     (PVOID)SidBuffer,
+                                     (PVOID)UserBuffer,
                                      Length,
                                      &Length);
     if (Status == STATUS_BUFFER_TOO_SMALL)
     {
-        nsb = LocalReAlloc(SidBuffer,
-                           Length,
-                           LMEM_MOVEABLE);
+        nsb = LocalReAlloc(UserBuffer, Length, LMEM_MOVEABLE);
         if (nsb == NULL)
         {
-            LocalFree((HLOCAL)SidBuffer);
+            LocalFree(UserBuffer);
             return FALSE;
         }
 
-        SidBuffer = nsb;
+        UserBuffer = nsb;
         Status = NtQueryInformationToken(hToken,
                                          TokenUser,
-                                         (PVOID)SidBuffer,
+                                         (PVOID)UserBuffer,
                                          Length,
                                          &Length);
     }
 
     if (!NT_SUCCESS (Status))
     {
-        LocalFree((HLOCAL)SidBuffer);
+        LocalFree(UserBuffer);
+        return FALSE;
+    }
+
+    Length = RtlLengthSid(UserBuffer->User.Sid);
+
+    pSid = LocalAlloc(LPTR, Length);
+    if (pSid == NULL)
+    {
+        LocalFree(UserBuffer);
+        return FALSE;
+    }
+
+    Status = RtlCopySid(Length, pSid, UserBuffer->User.Sid);
+
+    LocalFree(UserBuffer);
+
+    if (!NT_SUCCESS (Status))
+    {
+        LocalFree(pSid);
+        return FALSE;
+    }
+
+    *Sid = pSid;
+
+    return TRUE;
+}
+
+
+BOOL
+GetUserSidStringFromToken(HANDLE hToken,
+                          PUNICODE_STRING SidString)
+{
+    PTOKEN_USER UserBuffer, nsb;
+    ULONG Length;
+    NTSTATUS Status;
+
+    Length = 256;
+    UserBuffer = LocalAlloc(LPTR, Length);
+    if (UserBuffer == NULL)
+        return FALSE;
+
+    Status = NtQueryInformationToken(hToken,
+                                     TokenUser,
+                                     (PVOID)UserBuffer,
+                                     Length,
+                                     &Length);
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        nsb = LocalReAlloc(UserBuffer,
+                           Length,
+                           LMEM_MOVEABLE);
+        if (nsb == NULL)
+        {
+            LocalFree(UserBuffer);
+            return FALSE;
+        }
+
+        UserBuffer = nsb;
+        Status = NtQueryInformationToken(hToken,
+                                         TokenUser,
+                                         (PVOID)UserBuffer,
+                                         Length,
+                                         &Length);
+    }
+
+    if (!NT_SUCCESS (Status))
+    {
+        LocalFree(UserBuffer);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
-    DPRINT("SidLength: %lu\n", RtlLengthSid (SidBuffer[0].Sid));
+    DPRINT("SidLength: %lu\n", RtlLengthSid (UserBuffer->User.Sid));
 
     Status = RtlConvertSidToUnicodeString(SidString,
-                                          SidBuffer[0].Sid,
+                                          UserBuffer->User.Sid,
                                           TRUE);
 
-    LocalFree((HLOCAL)SidBuffer);
+    LocalFree(UserBuffer);
 
     if (!NT_SUCCESS(Status))
     {
@@ -116,6 +184,7 @@ GetUserSidFromToken(HANDLE hToken,
 
     return TRUE;
 }
+
 
 PSECURITY_DESCRIPTOR
 CreateDefaultSecurityDescriptor(VOID)
