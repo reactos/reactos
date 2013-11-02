@@ -560,9 +560,14 @@ NtUserConsoleControl(
     {
         case GuiConsoleWndClassAtom:
         {
+            if (ConsoleCtrlInfoLength != sizeof(ATOM))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             _SEH2_TRY
             {
-                ASSERT(ConsoleCtrlInfoLength == sizeof(ATOM));
                 ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
                 gaGuiConsoleWndClass = *(ATOM*)ConsoleCtrlInfo;
             }
@@ -577,23 +582,29 @@ NtUserConsoleControl(
 
         case ConsoleMakePalettePublic:
         {
+            HPALETTE hPalette;
+
+            if (ConsoleCtrlInfoLength != sizeof(HPALETTE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             _SEH2_TRY
             {
-                ASSERT(ConsoleCtrlInfoLength == sizeof(HPALETTE));
                 ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
-                /*
-                 * Make the palette handle public - Use the extended
-                 * function introduced by Timo in revision 60725.
-                 */
-                GreSetObjectOwnerEx(*(HPALETTE*)ConsoleCtrlInfo,
-                                    GDI_OBJ_HMGR_PUBLIC,
-                                    GDIOBJFLAG_IGNOREPID);
+                hPalette = *(HPALETTE*)ConsoleCtrlInfo;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Make the palette handle public */
+            GreSetObjectOwnerEx(hPalette,
+                                GDI_OBJ_HMGR_PUBLIC,
+                                GDIOBJFLAG_IGNOREPID);
 
             break;
         }
