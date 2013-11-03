@@ -14,6 +14,7 @@ list(APPEND SOURCE
     ps2.c
     speaker.c
     vga.c
+    cmos.c
     ntvdm.c
     ntvdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)

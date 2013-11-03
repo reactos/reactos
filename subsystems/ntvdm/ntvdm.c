@@ -19,6 +19,7 @@
 #include "timer.h"
 #include "pic.h"
 #include "ps2.h"
+#include "cmos.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:
@@ -72,9 +73,12 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD Cycles = 0;
     DWORD LastCyclePrintout = GetTickCount();
     DWORD LastVerticalRefresh = GetTickCount();
-    LARGE_INTEGER Frequency, LastTimerTick, Counter;
+    DWORD LastClockUpdate = GetTickCount();
+    LARGE_INTEGER Frequency, LastTimerTick, LastRtcTick, Counter;
     LONGLONG TimerTicks;
     HANDLE InputThread = NULL;
+    LARGE_INTEGER StartPerfCount;
+    DWORD StartTickCount;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
@@ -138,17 +142,34 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &InputThreadProc, NULL, 0, NULL);
 
-    /* Set the last timer tick to the current time */
-    QueryPerformanceCounter(&LastTimerTick);
+    /* Find the starting performance and tick count */
+    StartTickCount = GetTickCount();
+    QueryPerformanceCounter(&StartPerfCount);
+ 
+    /* Set the last timer ticks to the current time */
+    LastTimerTick = LastRtcTick = StartPerfCount;
 
     /* Main loop */
     while (VdmRunning)
     {
+        DWORD PitResolution = PitGetResolution();
+        DWORD RtcFrequency = RtcGetTicksPerSecond();
+
         /* Get the current number of ticks */
         CurrentTickCount = GetTickCount();
  
-        /* Get the current performance counter value */
-        QueryPerformanceCounter(&Counter);
+        if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
+        {
+            /* Calculate the approximate performance counter value instead */
+            Counter.QuadPart = StartPerfCount.QuadPart
+                               + (CurrentTickCount - StartTickCount)
+                               * (Frequency.QuadPart / 1000);
+        }
+        else
+        {
+            /* Get the current performance counter value */
+            QueryPerformanceCounter(&Counter);
+        }
  
         /* Get the number of PIT ticks that have passed */
         TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
@@ -159,6 +180,21 @@ INT wmain(INT argc, WCHAR *argv[])
         {
             PitDecrementCount(TimerTicks);
             LastTimerTick = Counter;
+        }
+
+        /* Check for RTC update */
+        if ((CurrentTickCount - LastClockUpdate) >= 1000)
+        {
+            RtcTimeUpdate();
+            LastClockUpdate = CurrentTickCount;
+        }
+
+        /* Check for RTC periodic tick */
+        if ((Counter.QuadPart - LastRtcTick.QuadPart)
+            >= (Frequency.QuadPart / (LONGLONG)RtcFrequency))
+        {
+            RtcPeriodicTick();
+            LastRtcTick = Counter;
         }
 
         /* Check for vertical retrace */

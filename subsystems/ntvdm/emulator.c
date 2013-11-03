@@ -19,6 +19,7 @@
 #include "pic.h"
 #include "ps2.h"
 #include "timer.h"
+#include "cmos.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -126,6 +127,12 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
                 break;
             }
 
+            case CMOS_DATA_PORT:
+            {
+                *(Address++) = CmosReadData();
+                break;
+            }
+
             case SPEAKER_CONTROL_PORT:
             {
                 *(Address++) = SpeakerReadStatus();
@@ -208,6 +215,18 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
             case PS2_DATA_PORT:
             {
                 KeyboardWriteData(*(Address++));
+                break;
+            }
+
+            case CMOS_ADDRESS_PORT:
+            {
+                CmosWriteAddress(*(Address++));
+                break;
+            }
+
+            case CMOS_DATA_PORT:
+            {
+                CmosWriteData(*(Address++));
                 break;
             }
 
