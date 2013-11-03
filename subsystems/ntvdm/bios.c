@@ -914,6 +914,134 @@ VOID BiosVideoService(LPWORD Stack)
             break;
         }
 
+        /* Palette Control */
+        case 0x10:
+        {
+            switch (getAL())
+            {
+                /* Set Single Palette Register */
+                case 0x00:
+                {
+                    /* Reset the flip-flop */
+                    VgaReadPort(VGA_STAT_COLOR);
+
+                    /* Write the index */
+                    VgaWritePort(VGA_AC_INDEX, getBL());
+
+                    /* Write the data */
+                    VgaWritePort(VGA_AC_WRITE, getBH());
+
+                    break;
+                }
+
+                /* Set Overscan Color */
+                case 0x01:
+                {
+                    /* Reset the flip-flop */
+                    VgaReadPort(VGA_STAT_COLOR);
+
+                    /* Write the index */
+                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+
+                    /* Write the data */
+                    VgaWritePort(VGA_AC_WRITE, getBH());
+
+                    break;
+                }
+
+                /* Set All Palette Registers */
+                case 0x02:
+                {
+                    INT i;
+                    LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
+
+                    /* Set the palette registers */
+                    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
+                    {
+                        /* Reset the flip-flop */
+                        VgaReadPort(VGA_STAT_COLOR);
+
+                        /* Write the index */
+                        VgaWritePort(VGA_AC_INDEX, i);
+
+                        /* Write the data */
+                        VgaWritePort(VGA_AC_WRITE, Buffer[i]);
+                    }
+
+                    /* Set the overscan register */
+                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    VgaWritePort(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
+
+                    break;
+                }
+
+                /* Get Single Palette Register */
+                case 0x07:
+                {
+                    /* Reset the flip-flop */
+                    VgaReadPort(VGA_STAT_COLOR);
+
+                    /* Write the index */
+                    VgaWritePort(VGA_AC_INDEX, getBL());
+
+                    /* Read the data */
+                    setBH(VgaReadPort(VGA_AC_READ));
+
+                    break;
+                }
+
+                /* Get Overscan Color */
+                case 0x08:
+                {
+                    /* Reset the flip-flop */
+                    VgaReadPort(VGA_STAT_COLOR);
+
+                    /* Write the index */
+                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+
+                    /* Read the data */
+                    setBH(VgaReadPort(VGA_AC_READ));
+
+                    break;
+                }
+
+                /* Get All Palette Registers */
+                case 0x09:
+                {
+                    INT i;
+                    LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
+
+                    /* Get the palette registers */
+                    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
+                    {
+                        /* Reset the flip-flop */
+                        VgaReadPort(VGA_STAT_COLOR);
+
+                        /* Write the index */
+                        VgaWritePort(VGA_AC_INDEX, i);
+
+                        /* Read the data */
+                        Buffer[i] = VgaReadPort(VGA_AC_READ);
+                    }
+
+                    /* Get the overscan register */
+                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    Buffer[VGA_AC_PAL_F_REG + 1] = VgaReadPort(VGA_AC_READ);
+
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("BIOS Palette Control Sub-command AL = 0x%02X NOT IMPLEMENTED\n",
+                            getAL());
+                    break;
+                }
+            }
+
+            break;
+        }
+
         /* Scroll Window */
         case 0x12:
         {
