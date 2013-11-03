@@ -39,3 +39,4 @@ extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
 
 ATOM WINAPI RegisterClassExWOWW(WNDCLASSEXW *,LPDWORD,WORD,DWORD,BOOL);
+BOOL FASTCALL VersionRegisterClass(PCWSTR,LPCWSTR,HANDLE,HMODULE *);

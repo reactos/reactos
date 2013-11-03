@@ -169,7 +169,9 @@ User32CreateWindowEx(DWORD dwExStyle,
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
-    BOOL Unicode;
+    HMODULE hLibModule;
+    DWORD save_error;
+    BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
 
 #if 0
@@ -262,21 +264,42 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!Unicode) dwExStyle |= WS_EX_SETANSICREATOR;
 
-    Handle = NtUserCreateWindowEx(dwExStyle,
-                                  plstrClassName,
-                                  NULL,
-                                  &WindowName,
-                                  dwStyle,
-                                  x,
-                                  y,
-                                  nWidth,
-                                  nHeight,
-                                  hWndParent,
-                                  hMenu,
-                                  hInstance,
-                                  lpParam,
-                                  dwFlags,
-                                  NULL);
+    for(;;)
+    {
+       Handle = NtUserCreateWindowEx(dwExStyle,
+                                     plstrClassName,
+                                     NULL,
+                                     &WindowName,
+                                     dwStyle,
+                                     x,
+                                     y,
+                                     nWidth,
+                                     nHeight,
+                                     hWndParent,
+                                     hMenu,
+                                     hInstance,
+                                     lpParam,
+                                     dwFlags,
+                                     NULL);
+       if (Handle) break;
+       if (!ClassFound)
+       {
+          save_error = GetLastError();
+          if ( save_error == ERROR_CANNOT_FIND_WND_CLASS )
+          {
+              ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+              if (ClassFound) continue;
+          }
+       }
+       if (hLibModule)
+       {
+          save_error = GetLastError();
+          FreeLibrary(hLibModule);
+          SetLastError(save_error);
+          hLibModule = 0;
+       }
+       break;
+    }
 
 #if 0
     DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
@@ -845,7 +868,7 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoA(HWND hwnd,
@@ -854,13 +877,12 @@ GetAltTabInfoA(HWND hwnd,
                LPSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,(LPWSTR)pszItemText,cchItemText,TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoW(HWND hwnd,
@@ -869,8 +891,7 @@ GetAltTabInfoW(HWND hwnd,
                LPWSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,pszItemText,cchItemText,FALSE);
 }
 
 
