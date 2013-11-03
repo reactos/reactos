@@ -422,7 +422,7 @@ HRESULT WINAPI SHCreateDefClassObject(
     if (FAILED(hResult))
         return hResult;
     *ppv = pcf;
-    return NOERROR;
+    return S_OK;
 }
 
 /*************************************************************************

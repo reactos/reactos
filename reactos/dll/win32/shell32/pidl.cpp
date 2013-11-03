@@ -1102,7 +1102,7 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
                 lstrcpynA(pfd->cAlternateFileName, shortname, sizeof(pfd->cAlternateFileName));
             else
                 pfd->cAlternateFileName[0] = '\0';
-            return NOERROR;
+            return S_OK;
 
         case SHGDFIL_NETRESOURCE:
         case SHGDFIL_DESCRIPTIONID:
@@ -1161,7 +1161,7 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
                 pfd->cAlternateFileName[0] = '\0';
             else if (!MultiByteToWideChar(CP_ACP, 0, shortname, -1, pfd->cAlternateFileName, 14))
                 pfd->cAlternateFileName[13] = 0;
-            return NOERROR;
+            return S_OK;
 
         case SHGDFIL_NETRESOURCE:
         case SHGDFIL_DESCRIPTIONID:

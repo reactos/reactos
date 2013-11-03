@@ -221,7 +221,7 @@ HRESULT WINAPI CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 HRESULT WINAPI CShellLink::SaveCompleted(LPCOLESTR pszFileName)
 {
     FIXME("(%p)->(%s)\n", this, debugstr_w(pszFileName));
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT WINAPI CShellLink::GetCurFile(LPOLESTR *ppszFileName)
@@ -244,7 +244,7 @@ HRESULT WINAPI CShellLink::GetCurFile(LPOLESTR *ppszFileName)
     /* copy last saved filename */
     wcscpy(*ppszFileName, sLinkPath);
 
-    return NOERROR;
+    return S_OK;
 }
 
 /************************************************************************
@@ -1087,7 +1087,7 @@ HRESULT WINAPI CShellLink::SetShowCmd(INT iShowCmd)
     this->iShowCmd = iShowCmd;
     bDirty = TRUE;
 
-    return NOERROR;
+    return S_OK;
 }
 
 static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
@@ -1340,7 +1340,7 @@ HRESULT WINAPI CShellLink::GetArguments(LPWSTR pszArgs, INT cchMaxPath)
     if (sArgs)
         lstrcpynW(pszArgs, sArgs, cchMaxPath);
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT WINAPI CShellLink::SetArguments(LPCWSTR pszArgs)

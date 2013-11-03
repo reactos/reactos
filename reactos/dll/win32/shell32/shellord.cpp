@@ -1070,7 +1070,7 @@ HRESULT WINAPI SHGetInstanceExplorer (IUnknown **lpUnknown)
       return E_FAIL;
 
     SHELL32_IExplorerInterface->AddRef();
-    return NOERROR;
+    return S_OK;
 }
 /*************************************************************************
  * SHFreeUnusedLibraries            [SHELL32.123]
@@ -1097,7 +1097,7 @@ void WINAPI SHFreeUnusedLibraries (void)
 BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * pt)
 {
     FIXME("hwnd = %p %p %p\n",hwnd,samples,pt);
-    return 0;
+    return FALSE;
 }
 /*************************************************************************
  * DAD_DragEnter                [SHELL32.130]
@@ -1146,7 +1146,7 @@ BOOL WINAPI DAD_SetDragImage(
     LPPOINT lppt)
 {
     FIXME("%p %p stub\n",himlTrack, lppt);
-  return 0;
+  return FALSE;
 }
 /*************************************************************************
  * DAD_ShowDragImage                [SHELL32.137]
@@ -1157,7 +1157,7 @@ BOOL WINAPI DAD_SetDragImage(
 BOOL WINAPI DAD_ShowDragImage(BOOL bShow)
 {
     FIXME("0x%08x stub\n",bShow);
-    return 0;
+    return FALSE;
 }
 
 static const WCHAR szwCabLocation[] = {
@@ -1250,8 +1250,9 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
  *
  */
 BOOL WINAPI FileIconInit(BOOL bFullInit)
-{    FIXME("(%s)\n", bFullInit ? "true" : "false");
-    return 0;
+{
+    FIXME("(%s)\n", bFullInit ? "true" : "false");
+    return FALSE;
 }
 
 /*************************************************************************

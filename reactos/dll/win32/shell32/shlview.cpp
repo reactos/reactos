@@ -2008,7 +2008,7 @@ HRESULT WINAPI CDefView::GetCurrentInfo(LPFOLDERSETTINGS lpfs)
         return E_INVALIDARG;
 
     *lpfs = FolderSettings;
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT WINAPI CDefView::AddPropertySheetPages(DWORD dwReserved, LPFNADDPROPSHEETPAGE lpfn, LPARAM lparam)
@@ -2499,7 +2499,7 @@ HRESULT WINAPI CDefView::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyStat
     else if (!(grfKeyState & MK_LBUTTON) && !(grfKeyState & MK_RBUTTON))
         return DRAGDROP_S_DROP;
     else
-        return NOERROR;
+        return S_OK;
 }
 
 HRESULT WINAPI CDefView::GiveFeedback(DWORD dwEffect)

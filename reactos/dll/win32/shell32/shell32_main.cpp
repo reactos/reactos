@@ -1013,7 +1013,7 @@ EXTERN_C HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
 
     CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void **)&ptr);
     if (ptr)
-        return NOERROR;
+        return S_OK;
     return DISP_E_MEMBERNOTFOUND;
 }
 

@@ -112,7 +112,7 @@ HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,        /* GIL
     *piIndex = -IDI_SHELL_PRINTERS_FOLDER; /* FIXME: other icons for default, network, print to file */
 
     TRACE("-- %s %x\n", debugstr_w(szIconFile), *piIndex);
-    return NOERROR;
+    return S_OK;
 }
 
 /**************************************************************************

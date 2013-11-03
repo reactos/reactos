@@ -149,7 +149,7 @@ HRESULT WINAPI IFileSystemBindDataImpl::GetFindData(WIN32_FIND_DATAW *pfd)
         return E_INVALIDARG;
 
     memcpy(pfd, &findFile, sizeof(WIN32_FIND_DATAW));
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT WINAPI IFileSystemBindDataImpl::SetFindData(const WIN32_FIND_DATAW *pfd)
@@ -160,5 +160,5 @@ HRESULT WINAPI IFileSystemBindDataImpl::SetFindData(const WIN32_FIND_DATAW *pfd)
         memcpy(&findFile, pfd, sizeof(WIN32_FIND_DATAW));
     else
         memset(&findFile, 0, sizeof(WIN32_FIND_DATAW));
-    return NOERROR;
+    return S_OK;
 }
