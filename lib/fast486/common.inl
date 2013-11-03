@@ -550,9 +550,8 @@ Fast486ParseModRegRm(PFAST486_STATE State,
         switch (RegMem)
         {
             case 0:
-            case 2:
             {
-                /* (SS:)[BX + SI] */
+                /* [BX + SI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
                                            + State->GeneralRegs[FAST486_REG_ESI].LowWord;
 
@@ -560,10 +559,27 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             }
 
             case 1:
+            {
+                /* [BX + DI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
+                                           + State->GeneralRegs[FAST486_REG_EDI].LowWord;
+
+                break;
+            }
+
+            case 2:
+            {
+                /* SS:[BP + SI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].LowWord
+                                           + State->GeneralRegs[FAST486_REG_ESI].LowWord;
+
+                break;
+            }
+
             case 3:
             {
-                /* (SS:)[BX + DI] */
-                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
+                /* SS:[BP + DI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].LowWord
                                            + State->GeneralRegs[FAST486_REG_EDI].LowWord;
 
                 break;
