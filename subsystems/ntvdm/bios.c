@@ -1031,6 +1031,77 @@ VOID BiosVideoService(LPWORD Stack)
                     break;
                 }
 
+                /* Set Individual DAC Register */
+                case 0x10:
+                {
+                    /* Write the index */
+                    // Certainly in BL and not in BX as said by Ralf Brown...
+                    VgaWritePort(VGA_DAC_WRITE_INDEX, getBL());
+
+                    /* Write the data in this order: Red, Green, Blue */
+                    VgaWritePort(VGA_DAC_DATA, getDH());
+                    VgaWritePort(VGA_DAC_DATA, getCH());
+                    VgaWritePort(VGA_DAC_DATA, getCL());
+
+                    break;
+                }
+
+                /* Set Block of DAC Registers */
+                case 0x12:
+                {
+                    INT i;
+                    LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
+
+                    /* Write the index */
+                    // Certainly in BL and not in BX as said by Ralf Brown...
+                    VgaWritePort(VGA_DAC_WRITE_INDEX, getBL());
+
+                    for (i = 0; i < getCX(); i++)
+                    {
+                        /* Write the data in this order: Red, Green, Blue */
+                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
+                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
+                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
+                    }
+
+                    break;
+                }
+
+                /* Get Individual DAC Register */
+                case 0x15:
+                {
+                    /* Write the index */
+                    VgaWritePort(VGA_DAC_READ_INDEX, getBL());
+
+                    /* Read the data in this order: Red, Green, Blue */
+                    setDH(VgaReadPort(VGA_DAC_DATA));
+                    setCH(VgaReadPort(VGA_DAC_DATA));
+                    setCL(VgaReadPort(VGA_DAC_DATA));
+
+                    break;
+                }
+
+                /* Get Block of DAC Registers */
+                case 0x17:
+                {
+                    INT i;
+                    LPBYTE Buffer = SEG_OFF_TO_PTR(getES(), getDX());
+
+                    /* Write the index */
+                    // Certainly in BL and not in BX as said by Ralf Brown...
+                    VgaWritePort(VGA_DAC_READ_INDEX, getBL());
+
+                    for (i = 0; i < getCX(); i++)
+                    {
+                        /* Write the data in this order: Red, Green, Blue */
+                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
+                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
+                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
+                    }
+
+                    break;
+                }
+
                 default:
                 {
                     DPRINT1("BIOS Palette Control Sub-command AL = 0x%02X NOT IMPLEMENTED\n",
