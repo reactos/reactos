@@ -14,6 +14,7 @@
 #include "bios.h"
 #include "bop.h"
 #include "dos.h"
+#include "speaker.h"
 #include "vga.h"
 #include "pic.h"
 #include "ps2.h"
@@ -125,6 +126,12 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
                 break;
             }
 
+            case SPEAKER_CONTROL_PORT:
+            {
+                *(Address++) = SpeakerReadStatus();
+                break;
+            }
+
             case VGA_AC_WRITE:
             case VGA_AC_READ:
             case VGA_SEQ_INDEX:
@@ -201,6 +208,12 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
             case PS2_DATA_PORT:
             {
                 KeyboardWriteData(*(Address++));
+                break;
+            }
+
+            case SPEAKER_CONTROL_PORT:
+            {
+                SpeakerWriteCommand(*(Address++));
                 break;
             }
 

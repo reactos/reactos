@@ -16,6 +16,7 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static PIT_CHANNEL PitChannels[PIT_CHANNELS];
+PPIT_CHANNEL PitChannel2 = &PitChannels[2];
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

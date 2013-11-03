@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <conio.h>
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 
 #include <debug.h>

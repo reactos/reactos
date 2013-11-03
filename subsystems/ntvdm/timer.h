@@ -43,6 +43,8 @@ typedef struct _PIT_CHANNEL
     BYTE AccessMode;
 } PIT_CHANNEL, *PPIT_CHANNEL;
 
+extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker
+
 /* FUNCTIONS ******************************************************************/
 
 VOID PitWriteCommand(BYTE Value);

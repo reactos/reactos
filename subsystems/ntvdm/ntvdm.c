@@ -13,6 +13,7 @@
 #include "ntvdm.h"
 #include "emulator.h"
 #include "bios.h"
+#include "speaker.h"
 #include "vga.h"
 #include "dos.h"
 #include "timer.h"
@@ -117,6 +118,9 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
+    /* Initialize the PC Speaker */
+    SpeakerInitialize();
+
     /* Initialize the VDM DOS kernel */
     if (!DosInitialize())
     {
@@ -133,7 +137,7 @@ INT wmain(INT argc, WCHAR *argv[])
 
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &InputThreadProc, NULL, 0, NULL);
- 
+
     /* Set the last timer tick to the current time */
     QueryPerformanceCounter(&LastTimerTick);
 
@@ -187,6 +191,7 @@ INT wmain(INT argc, WCHAR *argv[])
 
 Cleanup:
     if (InputThread != NULL) CloseHandle(InputThread);
+    SpeakerCleanup();
     BiosCleanup();
     EmulatorCleanup();
 

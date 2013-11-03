@@ -12,6 +12,7 @@ list(APPEND SOURCE
     registers.c
     timer.c
     ps2.c
+    speaker.c
     vga.c
     ntvdm.c
     ntvdm.rc
