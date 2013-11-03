@@ -342,7 +342,7 @@ GetClassInfoExA(
 
     if (!RegisterDefaultClasses)
     {
-        ERR("GetClassInfoExA RegisterSystemControls\n");
+        TRACE("RegisterSystemControls\n");
         RegisterSystemControls();
     }
 
@@ -442,7 +442,7 @@ GetClassInfoExW(
 
     if (!RegisterDefaultClasses)
     {
-       ERR("GetClassInfoExW RegisterSystemControls\n");
+       TRACE("RegisterSystemControls\n");
        RegisterSystemControls();
     }
 

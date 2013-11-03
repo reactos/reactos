@@ -180,7 +180,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("User32CreateWindowEx RegisterSystemControls\n");
+       TRACE("RegisterSystemControls\n");
        RegisterSystemControls();
     }
 
