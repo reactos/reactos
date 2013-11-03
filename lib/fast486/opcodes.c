@@ -3065,7 +3065,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     Result = FirstValue - SecondValue;
 
     /* Update the flags */
-    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Cf = (FirstValue < SecondValue);
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -3134,7 +3134,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         Result = FirstValue - SecondValue;
 
         /* Update the flags */
-        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Cf = (FirstValue < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -3181,7 +3181,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         Result = FirstValue - SecondValue;
 
         /* Update the flags */
-        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Cf = (FirstValue < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -3231,7 +3231,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubAl)
     Result = FirstValue - SecondValue;
 
     /* Update the flags */
-    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Cf = (FirstValue < SecondValue);
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -3274,7 +3274,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         Result = FirstValue - SecondValue;
 
         /* Update the flags */
-        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Cf = (FirstValue < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -3304,7 +3304,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         Result = FirstValue - SecondValue;
 
         /* Update the flags */
-        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Cf = (FirstValue < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -5566,7 +5566,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
     Result = (FirstValue - SecondValue) & DataMask;
 
     /* Update the flags */
-    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Cf = (FirstValue < SecondValue);
     State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                       && ((FirstValue & SignFlag) != (Result & SignFlag));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -5890,7 +5890,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
     Result = (FirstValue - SecondValue) & DataMask;
 
     /* Update the flags */
-    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Cf = (FirstValue < SecondValue);
     State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                       && ((FirstValue & SignFlag) != (Result & SignFlag));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);

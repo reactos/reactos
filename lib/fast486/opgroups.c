@@ -120,7 +120,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
             Result = (FirstValue - SecondValue) & MaxValue;
 
             /* Update CF, OF and AF */
-            State->Flags.Cf = FirstValue < SecondValue;
+            State->Flags.Cf = (FirstValue < SecondValue);
             State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                               && ((FirstValue & SignFlag) != (Result & SignFlag));
             State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
@@ -184,8 +184,8 @@ Fast486RotateOperation(PFAST486_STATE State,
 
             /* Update CF and OF */
             State->Flags.Cf = Result & 1;
-            if (Count == 1) State->Flags.Of = ((Result & HighestBit) != 0)
-                                              ^ State->Flags.Cf;
+            if (Count == 1) State->Flags.Of = State->Flags.Cf
+                                              ^ ((Result & HighestBit) != 0);
 
             break;
         }
@@ -212,8 +212,8 @@ Fast486RotateOperation(PFAST486_STATE State,
 
             /* Update CF and OF */
             State->Flags.Cf = ((Value & (1 << (Bits - Count))) != 0);
-            if (Count == 1) State->Flags.Of = ((Result & HighestBit) != 0)
-                                              ^ State->Flags.Cf;
+            if (Count == 1) State->Flags.Of = State->Flags.Cf
+                                              ^ ((Result & HighestBit) != 0);
 
             break;
         }
@@ -241,8 +241,8 @@ Fast486RotateOperation(PFAST486_STATE State,
 
             /* Update CF and OF */
             State->Flags.Cf = ((Value & (1 << (Bits - Count))) != 0);
-            if (Count == 1) State->Flags.Of = ((Result & HighestBit) != 0)
-                                              ^ State->Flags.Cf;
+            if (Count == 1) State->Flags.Of = State->Flags.Cf
+                                              ^ ((Result & HighestBit) != 0);
 
             break;
         }
@@ -994,8 +994,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
             SHORT Result = (SHORT)((CHAR)Value) * (SHORT)((CHAR)State->GeneralRegs[FAST486_REG_EAX].LowByte);
 
             /* Update the flags */
-            State->Flags.Cf = State->Flags.Of =
-            ((Result < -128) || (Result > 127));
+            State->Flags.Cf = State->Flags.Of = ((Result < -128) || (Result > 127));
 
             /* Write back the result */
             State->GeneralRegs[FAST486_REG_EAX].LowWord = (USHORT)Result;
@@ -1166,8 +1165,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 ULONGLONG Result = (ULONGLONG)Value * (ULONGLONG)State->GeneralRegs[FAST486_REG_EAX].Long;
 
                 /* Update the flags */
-                State->Flags.Cf = State->Flags.Of =
-                ((Result & 0xFFFFFFFF00000000ULL) != 0);
+                State->Flags.Cf = State->Flags.Of = ((Result & 0xFFFFFFFF00000000ULL) != 0);
 
                 /* Write back the result */
                 State->GeneralRegs[FAST486_REG_EAX].Long = Result & 0xFFFFFFFFULL;
@@ -1196,8 +1194,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONGLONG Result = (LONGLONG)((LONG)Value) * (LONGLONG)((LONG)State->GeneralRegs[FAST486_REG_EAX].Long);
 
                 /* Update the flags */
-                State->Flags.Cf = State->Flags.Of =
-                ((Result < -2147483648LL) || (Result > 2147483647LL));
+                State->Flags.Cf = State->Flags.Of = ((Result < -2147483648LL) || (Result > 2147483647LL));
 
                 /* Write back the result */
                 State->GeneralRegs[FAST486_REG_EAX].Long = Result & 0xFFFFFFFFULL;
@@ -1208,8 +1205,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
                 LONG Result = (LONG)((SHORT)Value) * (LONG)((SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord);
 
                 /* Update the flags */
-                State->Flags.Cf = State->Flags.Of =
-                ((Result < -32768) || (Result > 32767));
+                State->Flags.Cf = State->Flags.Of = ((Result < -32768) || (Result > 32767));
 
                 /* Write back the result */
                 State->GeneralRegs[FAST486_REG_EAX].LowWord = LOWORD(Result);

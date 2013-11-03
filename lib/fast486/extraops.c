@@ -739,7 +739,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte)
     Result = Accumulator - Destination;
 
     /* Update the flags */
-    State->Flags.Cf = Accumulator < Destination;
+    State->Flags.Cf = (Accumulator < Destination);
     State->Flags.Of = ((Accumulator & SIGN_FLAG_BYTE) != (Destination & SIGN_FLAG_BYTE))
                       && ((Accumulator & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
@@ -795,7 +795,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
         Result = Accumulator - Destination;
 
         /* Update the flags */
-        State->Flags.Cf = Accumulator < Destination;
+        State->Flags.Cf = (Accumulator < Destination);
         State->Flags.Of = ((Accumulator & SIGN_FLAG_LONG) != (Destination & SIGN_FLAG_LONG))
                           && ((Accumulator & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
@@ -830,7 +830,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
         Result = Accumulator - Destination;
 
         /* Update the flags */
-        State->Flags.Cf = Accumulator < Destination;
+        State->Flags.Cf = (Accumulator < Destination);
         State->Flags.Of = ((Accumulator & SIGN_FLAG_WORD) != (Destination & SIGN_FLAG_WORD))
                           && ((Accumulator & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
