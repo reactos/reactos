@@ -82,146 +82,152 @@ static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOI
 
 static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
 {
+    INT i;
     LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
-    UNREFERENCED_PARAMETER(Size);
 
-    switch (Port)
+    for (i = 0; i < Size; i++)
     {
-        case PIC_MASTER_CMD:
-        case PIC_SLAVE_CMD:
+        switch (Port)
         {
-            *Address = PicReadCommand(Port);
-            break;
-        }
+            case PIC_MASTER_CMD:
+            case PIC_SLAVE_CMD:
+            {
+                *(Address++) = PicReadCommand(Port);
+                break;
+            }
 
-        case PIC_MASTER_DATA:
-        case PIC_SLAVE_DATA:
-        {
-            *Address = PicReadData(Port);
-            break;
-        }
+            case PIC_MASTER_DATA:
+            case PIC_SLAVE_DATA:
+            {
+                *(Address++) = PicReadData(Port);
+                break;
+            }
 
-        case PIT_DATA_PORT(0):
-        case PIT_DATA_PORT(1):
-        case PIT_DATA_PORT(2):
-        {
-            *Address = PitReadData(Port - PIT_DATA_PORT(0));
-            break;
-        }
+            case PIT_DATA_PORT(0):
+            case PIT_DATA_PORT(1):
+            case PIT_DATA_PORT(2):
+            {
+                *(Address++) = PitReadData(Port - PIT_DATA_PORT(0));
+                break;
+            }
 
-        case PS2_CONTROL_PORT:
-        {
-            *Address = KeyboardReadStatus();
-            break;
-        }
+            case PS2_CONTROL_PORT:
+            {
+                *(Address++) = KeyboardReadStatus();
+                break;
+            }
 
-        case PS2_DATA_PORT:
-        {
-            *Address = KeyboardReadData();
-            break;
-        }
+            case PS2_DATA_PORT:
+            {
+                *(Address++) = KeyboardReadData();
+                break;
+            }
 
-        case VGA_AC_WRITE:
-        case VGA_AC_READ:
-        case VGA_SEQ_INDEX:
-        case VGA_SEQ_DATA:
-        case VGA_DAC_READ_INDEX:
-        case VGA_DAC_WRITE_INDEX:
-        case VGA_DAC_DATA:
-        case VGA_MISC_READ:
-        case VGA_MISC_WRITE:
-        case VGA_CRTC_INDEX:
-        case VGA_CRTC_DATA:
-        case VGA_GC_INDEX:
-        case VGA_GC_DATA:
-        case VGA_STAT_MONO:
-        case VGA_STAT_COLOR:
-        {
-            *Address = VgaReadPort(Port);
-            break;
-        }
+            case VGA_AC_WRITE:
+            case VGA_AC_READ:
+            case VGA_SEQ_INDEX:
+            case VGA_SEQ_DATA:
+            case VGA_DAC_READ_INDEX:
+            case VGA_DAC_WRITE_INDEX:
+            case VGA_DAC_DATA:
+            case VGA_MISC_READ:
+            case VGA_MISC_WRITE:
+            case VGA_CRTC_INDEX:
+            case VGA_CRTC_DATA:
+            case VGA_GC_INDEX:
+            case VGA_GC_DATA:
+            case VGA_STAT_MONO:
+            case VGA_STAT_COLOR:
+            {
+                *(Address++) = VgaReadPort(Port);
+                break;
+            }
 
-        default:
-        {
-            DPRINT1("Read from unknown port: 0x%X\n", Port);
+            default:
+            {
+                DPRINT1("Read from unknown port: 0x%X\n", Port);
+            }
         }
     }
 }
 
 static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
 {
-    BYTE Byte = *(LPBYTE)Buffer;
+    INT i;
+    LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
-    UNREFERENCED_PARAMETER(Size);
 
-    switch (Port)
+    for (i = 0; i < Size; i++)
     {
-        case PIT_COMMAND_PORT:
+        switch (Port)
         {
-            PitWriteCommand(Byte);
-            break;
-        }
+            case PIT_COMMAND_PORT:
+            {
+                PitWriteCommand(*(Address++));
+                break;
+            }
 
-        case PIT_DATA_PORT(0):
-        case PIT_DATA_PORT(1):
-        case PIT_DATA_PORT(2):
-        {
-            PitWriteData(Port - PIT_DATA_PORT(0), Byte);
-            break;
-        }
+            case PIT_DATA_PORT(0):
+            case PIT_DATA_PORT(1):
+            case PIT_DATA_PORT(2):
+            {
+                PitWriteData(Port - PIT_DATA_PORT(0), *(Address++));
+                break;
+            }
 
-        case PIC_MASTER_CMD:
-        case PIC_SLAVE_CMD:
-        {
-            PicWriteCommand(Port, Byte);
-            break;
-        }
+            case PIC_MASTER_CMD:
+            case PIC_SLAVE_CMD:
+            {
+                PicWriteCommand(Port, *(Address++));
+                break;
+            }
 
-        case PIC_MASTER_DATA:
-        case PIC_SLAVE_DATA:
-        {
-            PicWriteData(Port, Byte);
-            break;
-        }
+            case PIC_MASTER_DATA:
+            case PIC_SLAVE_DATA:
+            {
+                PicWriteData(Port, *(Address++));
+                break;
+            }
 
-        case PS2_CONTROL_PORT:
-        {
-            KeyboardWriteCommand(Byte);
-            break;
-        }
+            case PS2_CONTROL_PORT:
+            {
+                KeyboardWriteCommand(*(Address++));
+                break;
+            }
 
-        case PS2_DATA_PORT:
-        {
-            KeyboardWriteData(Byte);
-            break;
-        }
+            case PS2_DATA_PORT:
+            {
+                KeyboardWriteData(*(Address++));
+                break;
+            }
 
-        case VGA_AC_WRITE:
-        case VGA_AC_READ:
-        case VGA_SEQ_INDEX:
-        case VGA_SEQ_DATA:
-        case VGA_DAC_READ_INDEX:
-        case VGA_DAC_WRITE_INDEX:
-        case VGA_DAC_DATA:
-        case VGA_MISC_READ:
-        case VGA_MISC_WRITE:
-        case VGA_CRTC_INDEX:
-        case VGA_CRTC_DATA:
-        case VGA_GC_INDEX:
-        case VGA_GC_DATA:
-        case VGA_STAT_MONO:
-        case VGA_STAT_COLOR:
-        {
-            VgaWritePort(Port, Byte);
-            break;
-        }
+            case VGA_AC_WRITE:
+            case VGA_AC_READ:
+            case VGA_SEQ_INDEX:
+            case VGA_SEQ_DATA:
+            case VGA_DAC_READ_INDEX:
+            case VGA_DAC_WRITE_INDEX:
+            case VGA_DAC_DATA:
+            case VGA_MISC_READ:
+            case VGA_MISC_WRITE:
+            case VGA_CRTC_INDEX:
+            case VGA_CRTC_DATA:
+            case VGA_GC_INDEX:
+            case VGA_GC_DATA:
+            case VGA_STAT_MONO:
+            case VGA_STAT_COLOR:
+            {
+                VgaWritePort(Port, *(Address++));
+                break;
+            }
 
-        default:
-        {
-            DPRINT1("Write to unknown port: 0x%X\n", Port);
+            default:
+            {
+                DPRINT1("Write to unknown port: 0x%X\n", Port);
+            }
         }
     }
 }
