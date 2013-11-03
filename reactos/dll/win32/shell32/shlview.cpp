@@ -2089,7 +2089,7 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
             if (IsEqualIID(riid, IID_IContextMenu))
             {
                 //*ppvOut = ISvBgCm_Constructor(pSFParent, FALSE);
-                CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)ppvOut);
+                CDefFolderMenu_Create2(NULL, NULL, 0, NULL, pSFParent, NULL, 0, NULL, (IContextMenu**)ppvOut);
                 if (!ppvOut)
                     hr = E_OUTOFMEMORY;
                 else
