@@ -76,7 +76,6 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD LastClockUpdate = GetTickCount();
     LARGE_INTEGER Frequency, LastTimerTick, LastRtcTick, Counter;
     LONGLONG TimerTicks;
-    HANDLE InputThread = NULL;
     LARGE_INTEGER StartPerfCount;
     DWORD StartTickCount;
 
@@ -138,9 +137,6 @@ INT wmain(INT argc, WCHAR *argv[])
         DisplayMessage(L"Could not start program: %S", CommandLine);
         return -1;
     }
-
-    /* Start the input thread */
-    InputThread = CreateThread(NULL, 0, &InputThreadProc, NULL, 0, NULL);
 
     /* Find the starting performance and tick count */
     StartTickCount = GetTickCount();
@@ -226,7 +222,6 @@ INT wmain(INT argc, WCHAR *argv[])
     VgaRefreshDisplay();
 
 Cleanup:
-    if (InputThread != NULL) CloseHandle(InputThread);
     SpeakerCleanup();
     BiosCleanup();
     EmulatorCleanup();

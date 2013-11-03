@@ -26,6 +26,7 @@ static BYTE BiosKeyboardMap[256];
 static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
+static HANDLE InputThread = NULL;
 
 /*
  * VGA Register Configurations for BIOS Video Modes
@@ -555,6 +556,9 @@ BOOLEAN BiosInitialize(VOID)
     /* Set the console input mode */
     SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
+    /* Start the input thread */
+    InputThread = CreateThread(NULL, 0, &InputThreadProc, BiosConsoleInput, 0, NULL);
+
     /* Initialize the PIC */
     PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
     PicWriteCommand(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
@@ -593,6 +597,9 @@ VOID BiosCleanup(VOID)
     /* Close the console handles */
     if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
     if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
+
+    /* Close the input thread handle */
+    if (InputThread != NULL) CloseHandle(InputThread);
 }
 
 WORD BiosPeekCharacter(VOID)

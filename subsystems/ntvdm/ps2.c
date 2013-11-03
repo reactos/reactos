@@ -268,7 +268,7 @@ VOID KeyboardWriteData(BYTE Data)
 DWORD WINAPI InputThreadProc(LPVOID Parameter)
 {
     INT i;
-    HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE ConsoleInput = (HANDLE)Parameter;
     INPUT_RECORD InputRecord;
     DWORD Count;
 
