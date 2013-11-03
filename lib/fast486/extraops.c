@@ -743,8 +743,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte)
     State->Flags.Of = ((Accumulator & SIGN_FLAG_BYTE) != (Destination & SIGN_FLAG_BYTE))
                       && ((Accumulator & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     if (State->Flags.Zf)
@@ -799,8 +799,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
         State->Flags.Of = ((Accumulator & SIGN_FLAG_LONG) != (Destination & SIGN_FLAG_LONG))
                           && ((Accumulator & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         if (State->Flags.Zf)
@@ -834,8 +834,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
         State->Flags.Of = ((Accumulator & SIGN_FLAG_WORD) != (Destination & SIGN_FLAG_WORD))
                           && ((Accumulator & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (Accumulator & 0x0F) < (Destination & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         if (State->Flags.Zf)
@@ -1267,9 +1267,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXaddByte)
     State->Flags.Cf = (Result < Source) && (Result < Destination);
     State->Flags.Of = ((Source & SIGN_FLAG_BYTE) == (Destination & SIGN_FLAG_BYTE))
                       && ((Source & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
-    State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Af = ((((Source & 0x0F) + (Destination & 0x0F)) & 0x10) != 0);
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write the sum to the destination */
@@ -1330,9 +1330,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         State->Flags.Cf = (Result < Source) && (Result < Destination);
         State->Flags.Of = ((Source & SIGN_FLAG_LONG) == (Destination & SIGN_FLAG_LONG))
                           && ((Source & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
-        State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Af = ((((Source & 0x0F) + (Destination & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write the sum to the destination */
@@ -1369,9 +1369,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         State->Flags.Cf = (Result < Source) && (Result < Destination);
         State->Flags.Of = ((Source & SIGN_FLAG_WORD) == (Destination & SIGN_FLAG_WORD))
                           && ((Source & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
-        State->Flags.Af = (((Source & 0x0F) + (Destination & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Af = ((((Source & 0x0F) + (Destination & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write the sum to the destination */

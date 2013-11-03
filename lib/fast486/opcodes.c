@@ -473,19 +473,19 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement)
     {
         Value = ++State->GeneralRegs[Opcode & 0x07].Long;
 
-        State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
-        State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Of = (Value == SIGN_FLAG_LONG);
+        State->Flags.Sf = ((Value & SIGN_FLAG_LONG) != 0);
     }
     else
     {
         Value = ++State->GeneralRegs[Opcode & 0x07].LowWord;
 
-        State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
-        State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Of = (Value == SIGN_FLAG_WORD);
+        State->Flags.Sf = ((Value & SIGN_FLAG_WORD) != 0);
     }
 
-    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-    State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Af = ((Value & 0x0F) == 0);
     State->Flags.Pf = Fast486CalculateParity(LOBYTE(Value));
 
     /* Return success */
@@ -507,19 +507,19 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
     {
         Value = --State->GeneralRegs[Opcode & 0x07].Long;
 
-        State->Flags.Of = (Value == (SIGN_FLAG_LONG - 1)) ? TRUE : FALSE;
-        State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Of = (Value == (SIGN_FLAG_LONG - 1));
+        State->Flags.Sf = ((Value & SIGN_FLAG_LONG) != 0);
     }
     else
     {
         Value = --State->GeneralRegs[Opcode & 0x07].LowWord;
 
-        State->Flags.Of = (Value == (SIGN_FLAG_WORD - 1)) ? TRUE : FALSE;
-        State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Of = (Value == (SIGN_FLAG_WORD - 1));
+        State->Flags.Sf = ((Value & SIGN_FLAG_WORD) != 0);
     }
 
-    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-    State->Flags.Af = ((Value & 0x0F) == 0x0F) ? TRUE : FALSE;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Af = ((Value & 0x0F) == 0x0F);
     State->Flags.Pf = Fast486CalculateParity(LOBYTE(Value));
 
     /* Return success */
@@ -1186,9 +1186,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
     State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
-    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1239,9 +1239,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
         State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1270,9 +1270,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
         State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1311,9 +1311,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddAl)
     State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
-    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1350,9 +1350,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
         State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1376,9 +1376,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
         State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1421,8 +1421,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1472,8 +1472,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1501,8 +1501,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1540,8 +1540,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrAl)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1577,8 +1577,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1601,8 +1601,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1645,8 +1645,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1696,8 +1696,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1725,8 +1725,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1759,8 +1759,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndAl)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1796,8 +1796,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1820,8 +1820,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1864,8 +1864,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -1915,8 +1915,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1944,8 +1944,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -1983,8 +1983,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorAl)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -2020,8 +2020,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2044,8 +2044,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2087,8 +2087,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* The result is discarded */
@@ -2135,8 +2135,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
     else
@@ -2158,8 +2158,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
 
@@ -2194,8 +2194,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestAl)
     /* Update the flags */
     State->Flags.Cf = FALSE;
     State->Flags.Of = FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* The result is discarded */
@@ -2229,8 +2229,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
     else
@@ -2250,8 +2250,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
         /* Update the flags */
         State->Flags.Cf = FALSE;
         State->Flags.Of = FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
 
@@ -2465,9 +2465,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
     State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
-    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -2522,9 +2522,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
         State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2557,9 +2557,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
         State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2603,9 +2603,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcAl)
     State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
-    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -2646,9 +2646,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
         State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2676,9 +2676,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
         State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
-        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Af = ((((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) != 0);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2751,8 +2751,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + 1) & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -2812,8 +2812,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + 1) & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2850,8 +2850,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + 1) & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2892,8 +2892,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbAl)
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + 1) & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
@@ -2933,8 +2933,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + Carry) & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -2959,8 +2959,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + Carry) & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
@@ -3069,8 +3069,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Check if this is not a CMP */
@@ -3138,8 +3138,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Check if this is not a CMP */
@@ -3185,8 +3185,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Check if this is not a CMP */
@@ -3235,8 +3235,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubAl)
     State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
                       && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Check if this is not a CMP */
@@ -3278,8 +3278,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
                           && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Check if this is not a CMP */
@@ -3308,8 +3308,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
                           && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
         State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Check if this is not a CMP */
@@ -4847,8 +4847,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Value %= Base;
 
     /* Update flags */
-    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
 
     return TRUE;
@@ -4873,8 +4873,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Value;
 
     /* Update flags */
-    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
 
     return TRUE;
@@ -5570,8 +5570,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
     State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                       && ((FirstValue & SignFlag) != (Result & SignFlag));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SignFlag) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Increment/decrement ESI and EDI */
@@ -5894,8 +5894,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
     State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                       && ((FirstValue & SignFlag) != (Result & SignFlag));
     State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0);
+    State->Flags.Sf = ((Result & SignFlag) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Increment/decrement EDI */
