@@ -212,7 +212,7 @@ FindOrAddString(struct StringHashTable *StringTable,
         *StringsLength += strlen(StringToFind) + 1;
 
         AddStringToHash(StringTable, hash, End - (char *)StringsBase, End);
-        
+
         return End - (char *)StringsBase;
     }
 }
@@ -497,7 +497,7 @@ DbgHelpAddStringToTable(struct DbgHelpStringTab *tab, char *name)
     int i;
     char **newBucket;
 
-    if (tabEnt) 
+    if (tabEnt)
     {
         for (i = 0; tabEnt[i] && strcmp(tabEnt[i], name); i++);
         if (tabEnt[i])
@@ -773,7 +773,7 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
         (*MergedSymbolCount)++;
     }
     /* Handle functions that have no analog in the upstream data */
-    for (CoffIndex = 0; CoffIndex < CoffSymbolsCount; CoffIndex++) 
+    for (CoffIndex = 0; CoffIndex < CoffSymbolsCount; CoffIndex++)
     {
         if (CoffSymbols[CoffIndex].Address &&
             CoffSymbols[CoffIndex].FunctionOffset)
@@ -901,6 +901,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
     ULONG StartOfRawData;
     unsigned Section;
     void *OutHeader, *ProcessedRelocs, *PaddedRosSym, *Data;
+    unsigned char *PaddedStringTable;
     PIMAGE_DOS_HEADER OutDosHeader;
     PIMAGE_FILE_HEADER OutFileHeader;
     PIMAGE_OPTIONAL_HEADER OutOptHeader;
@@ -909,10 +910,11 @@ CreateOutputFile(FILE *OutFile, void *InData,
     ULONG Length, i;
     ULONG ProcessedRelocsLength;
     ULONG RosSymOffset, RosSymFileLength;
+    ULONG PaddedStringTableLength;
     int InRelocSectionIndex;
     PIMAGE_SECTION_HEADER OutRelocSection;
     /* Each coff symbol is 18 bytes and the string table follows */
-    char *StringTable = (char *)InData + 
+    char *StringTable = (char *)InData +
         InFileHeader->PointerToSymbolTable + 18 * InFileHeader->NumberOfSymbols;
     ULONG StringTableLength = 0;
     ULONG StringTableLocation;
@@ -1014,7 +1016,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
                 OutRelocSection = CurrentSectionHeader;
             }
             StringTableLocation = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
-            (OutFileHeader->NumberOfSections)++;
+            OutFileHeader->NumberOfSections++;
             CurrentSectionHeader++;
         }
     }
@@ -1058,7 +1060,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
                                                 | IMAGE_SCN_LNK_REMOVE | IMAGE_SCN_TYPE_NOLOAD;
         OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress + CurrentSectionHeader->Misc.VirtualSize,
                                              OutOptHeader->SectionAlignment);
-        (OutFileHeader->NumberOfSections)++;
+        OutFileHeader->NumberOfSections++;
 
         PaddedRosSym = malloc(RosSymFileLength);
         if (PaddedRosSym == NULL)
@@ -1120,6 +1122,37 @@ CreateOutputFile(FILE *OutFile, void *InData,
         }
         Length += OutSectionHeaders[Section].SizeOfRawData;
     }
+
+    if (OutFileHeader->PointerToSymbolTable)
+    {
+        int PaddingFrom = (OutFileHeader->PointerToSymbolTable + StringTableLength) %
+                          OutOptHeader->FileAlignment;
+        int PaddingSize = PaddingFrom ? OutOptHeader->FileAlignment - PaddingFrom : 0;
+
+        PaddedStringTableLength = StringTableLength + PaddingSize;
+        PaddedStringTable = malloc(PaddedStringTableLength);
+        /* COFF string section is preceeded by a length */
+        assert(sizeof(StringTableLength) == 4);
+        memcpy(PaddedStringTable, &StringTableLength, sizeof(StringTableLength));
+        /* We just copy enough of the string table to contain the strings we want
+           The string table length technically counts as part of the string table
+           space itself. */
+        memcpy(PaddedStringTable + 4, StringTable + 4, StringTableLength - 4);
+        memset(PaddedStringTable + StringTableLength, 0, PaddingSize);
+
+        assert(OutFileHeader->PointerToSymbolTable % 2 == 0);
+        for (i = 0; i < PaddedStringTableLength / 2; i++)
+        {
+            CheckSum += ((unsigned short*)PaddedStringTable)[i];
+            CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
+        }
+        Length += PaddedStringTableLength;
+    }
+    else
+    {
+        PaddedStringTable = NULL;
+    }
+
     CheckSum += Length;
     OutOptHeader->CheckSum = CheckSum;
 
@@ -1161,28 +1194,11 @@ CreateOutputFile(FILE *OutFile, void *InData,
         }
     }
 
-    if (OutFileHeader->PointerToSymbolTable)
+    if (PaddedStringTable)
     {
-        int PaddingFrom = (OutFileHeader->PointerToSymbolTable + StringTableLength) %
-                          OutOptHeader->FileAlignment;
-        fseek(OutFile, OutFileHeader->PointerToSymbolTable, 0);
-
-        /* COFF string section is preceeded by a length */
-        assert(sizeof(StringTableLength) == 4);
-        fwrite((char*)&StringTableLength, 1, sizeof(StringTableLength), OutFile);
-        /* We just copy enough of the string table to contain the strings we want
-           The string table length technically counts as part of the string table
-           space itself. */
-        fwrite(StringTable + 4, 1, StringTableLength - 4, OutFile);
-
-        if (PaddingFrom)
-        {
-            int PaddingSize = OutOptHeader->FileAlignment - PaddingFrom;
-            char *Padding = (char *)malloc(PaddingSize);
-            memset(Padding, 0, PaddingFrom);
-            fwrite(Padding, 1, PaddingSize, OutFile);
-            free(Padding);
-        }
+        fseek(OutFile, OutFileHeader->PointerToSymbolTable, SEEK_SET);
+        fwrite(PaddedStringTable, 1, PaddedStringTableLength, OutFile);
+        free(PaddedStringTable);
     }
 
     if (PaddedRosSym)
@@ -1325,10 +1341,10 @@ int main(int argc, char* argv[])
         // SYMOPT_LOAD_LINES
         SymSetOptions(0x10000 | 0x800000 | 0x40 | 0x10);
         SymInitialize(FileData, ".", 0);
-      
+
         module_base = SymLoadModule(FileData, file, path1, path1, 0, FileSize) & 0xffffffff;
 
-        if (ConvertDbgHelp(FileData, 
+        if (ConvertDbgHelp(FileData,
                            module_base,
                            SourcePath,
                            &StabSymbolsCount,
