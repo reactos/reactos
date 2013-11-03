@@ -278,10 +278,13 @@ Fast486RotateOperation(PFAST486_STATE State,
         }
     }
 
-    /* Update ZF, SF and PF */
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & HighestBit) ? TRUE : FALSE;
-    State->Flags.Pf = Fast486CalculateParity(Result);
+    if (Operation >= 4)
+    {
+        /* Update ZF, SF and PF */
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & HighestBit) ? TRUE : FALSE;
+        State->Flags.Pf = Fast486CalculateParity(Result);
+    }
 
     /* Return the result */
     return Result;
