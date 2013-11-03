@@ -1,0 +1,31 @@
+Monstera is a new implementation of a memory manager (along with a cache manager)
+compatible with the ReactOS kernel at source code level and providing the same
+binary compatible Native API through a lightweight wrapper.
+
+Monstera is implemented in a subset of C++ programming language. A document
+outlining specific restrictions, coding style and other considerations is
+available.
+
+Key ideas:
+1. Object oriented language for object oriented kernel. When NT was implemented,
+   C++ wasn't that good.
+2. Simplicity > optimization. Nowadays we can sacrifice a bit of performance
+   in favor of more robust implementation.
+3. Same Native API. Internal implementation and external interfaces are
+   two different things.
+4. Don't drift away too much. It's still based on NT architecture, but think
+   of it as if Microsoft Research would decide to reimplement NT in C++ for fun.
+
+Credits:
+- ReactOS Portable Systems Group for the code which is used as a base in many
+  places of Monstera.
+- Alex Ionescu for his invaluable contribution to ReactOS.
+- Timo Kreuzer, Johannes Anderwald for their C++-in-the-kernel-mode help.
+- Amine Khaldi for help with the build environment.
+- ReactOS team for the great work.
+
+Building:
+1. Check out clean trunk's working copy.
+2. Apply trunk.diff to that.
+3. Copy mm2 and cc2 to the ntoskrnl directory of your working copy.
+4. Build ntoskrnl module as usual.

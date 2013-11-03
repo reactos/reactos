@@ -1,0 +1,1100 @@
+Index: cmake/config.cmake
+===================================================================
+--- cmake/config.cmake	(revision 60822)
++++ cmake/config.cmake	(working copy)
+@@ -77,5 +77,5 @@
+ "Whether to enable static analysis while compiling.")
+ endif()
+ 
+-set(USE_DUMMY_PSEH FALSE CACHE BOOL
++set(USE_DUMMY_PSEH TRUE CACHE BOOL
+ "Whether to disable PSEH support.")
+\ No newline at end of file
+Index: include/ndk/pstypes.h
+===================================================================
+--- include/ndk/pstypes.h	(revision 60822)
++++ include/ndk/pstypes.h	(working copy)
+@@ -1088,6 +1088,7 @@
+     PETHREAD RotateInProgress;
+ #else
+     KGUARDED_MUTEX AddressCreationLock;
++    KGUARDED_MUTEX WorkingSetLock;
+     KSPIN_LOCK HyperSpaceLock;
+ #endif
+     PETHREAD ForkInProgress;
+Index: include/reactos/probe.h
+===================================================================
+--- include/reactos/probe.h	(revision 60822)
++++ include/reactos/probe.h	(working copy)
+@@ -55,7 +55,7 @@
+     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
+ 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
+ 	     ExRaiseAccessViolation(), Default :                     \
+-	     *(const volatile Type *)(Ptr))
++	     *(const Type *)(Ptr))
+ 
+ #define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
+ #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
+@@ -141,7 +141,7 @@
+ NTSTATUS
+ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
+                              IN KPROCESSOR_MODE CurrentMode,
+-                             IN const UNICODE_STRING *UnsafeSrc)
++                             IN const PUNICODE_STRING UnsafeSrc)
+ {
+     NTSTATUS Status = STATUS_SUCCESS;
+     WCHAR *Buffer = NULL;
+@@ -162,7 +162,7 @@
+                                  sizeof(WCHAR));
+ 
+                     /* Allocate space for the buffer */
+-                    Buffer = ExAllocatePoolWithTag(PagedPool,
++                    Buffer = (WCHAR *)ExAllocatePoolWithTag(PagedPool,
+                                                    Dest->Length + sizeof(WCHAR),
+                                                    'RTSU');
+                     if (Buffer == NULL)
+Index: lib/rtl/CMakeLists.txt
+===================================================================
+--- lib/rtl/CMakeLists.txt	(revision 60822)
++++ lib/rtl/CMakeLists.txt	(working copy)
+@@ -109,3 +109,7 @@
+ add_library(rtl ${SOURCE} ${rtl_asm})
+ add_pch(rtl rtl.h)
+ add_dependencies(rtl psdk asm)
++if(NOT MSVC)
++    target_link_libraries(rtl -lgcc)
++endif()
++
+Index: ntoskrnl/CMakeLists.txt
+===================================================================
+--- ntoskrnl/CMakeLists.txt	(revision 60822)
++++ ntoskrnl/CMakeLists.txt	(working copy)
+@@ -18,37 +18,10 @@
+     -D_IN_KERNEL_
+     -DNTDDI_VERSION=0x05020400)
+ 
+-if(NOT DEFINED NEWCC)
+-    set(NEWCC FALSE)
+-endif()
+-
+-if(NEWCC)
+-    add_definitions(-DNEWCC)
+     list(APPEND SOURCE
+-        cache/cachesub.c
+-        cache/copysup.c
+-        cache/fssup.c
+-        cache/lazyrite.c
+-        cache/logsup.c
+-        cache/mdlsup.c
+-        cache/pinsup.c)
+-else()
+-    list(APPEND SOURCE
+-        cc/cacheman.c
+-        cc/copy.c
+-        cc/fs.c
+-        cc/mdl.c
+-        cc/pin.c
+-        cc/view.c)
+-endif()
++        cc2/ccntapi.cpp)
+ 
+ list(APPEND SOURCE
+-    cache/section/io.c
+-    cache/section/data.c
+-    cache/section/fault.c
+-    cache/section/reqtools.c
+-    cache/section/sptab.c
+-    cache/section/swapout.c
+     config/cmalloc.c
+     config/cmapi.c
+     config/cmboot.c
+@@ -199,38 +172,15 @@
+     lpc/port.c
+     lpc/reply.c
+     lpc/send.c
+-    mm/ARM3/contmem.c
+-    mm/ARM3/drvmgmt.c
+-    mm/ARM3/dynamic.c
+-    mm/ARM3/expool.c
+-    mm/ARM3/hypermap.c
+-    mm/ARM3/iosup.c
+-    mm/ARM3/largepag.c
+-    mm/ARM3/mdlsup.c
+-    mm/ARM3/mmdbg.c
+-    mm/ARM3/mminit.c
+-    mm/ARM3/mmsup.c
+-    mm/ARM3/ncache.c
+-    mm/ARM3/pagfault.c
+-    mm/ARM3/pfnlist.c
+-    mm/ARM3/pool.c
+-    mm/ARM3/procsup.c
+-    mm/ARM3/section.c
+-    mm/ARM3/special.c
+-    mm/ARM3/sysldr.c
+-    mm/ARM3/syspte.c
+-    mm/ARM3/vadnode.c
+-    mm/ARM3/virtual.c
+-    mm/ARM3/zeropage.c
+-    mm/balance.c
+-    mm/freelist.c
+-    mm/marea.c
+-    mm/mmfault.c
+-    mm/mminit.c
+-    mm/pagefile.c
+-    mm/region.c
+-    mm/rmap.c
+-    mm/section.c
++    mm2/memorymanager.cpp
++    mm2/mmntapi.cpp
++    mm2/pfndb.cpp
++    mm2/pool.cpp
++    mm2/poolmanager.cpp
++    mm2/systemcache.cpp
++    mm2/systemptes.cpp
++    mm2/virtualmemory.cpp
++    mm2/workingset.cpp
+     ob/obdir.c
+     ob/obhandle.c
+     ob/obinit.c
+@@ -298,8 +248,8 @@
+         ke/i386/traphdlr.c
+         ke/i386/usercall.c
+         ke/i386/v86vdm.c
+-        mm/i386/page.c
+-        mm/ARM3/i386/init.c
++        mm2/i386/mach86.cpp
++        mm2/i386/pte.cpp
+         ps/i386/psctx.c
+         ps/i386/psldt.c
+         vdm/vdmmain.c
+@@ -454,6 +404,14 @@
+     add_target_link_flags(ntoskrnl "-shared")
+ endif()
+ 
++if(NOT MSVC)
++    target_link_libraries(ntoskrnl -lgcc)
++endif()
++
++if(NOT MSVC)
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-exceptions -fno-rtti")
++endif()
++
+ target_link_libraries(ntoskrnl
+     cportlib
+     csq
+Index: ntoskrnl/config/cmdata.c
+===================================================================
+--- ntoskrnl/config/cmdata.c	(revision 60822)
++++ ntoskrnl/config/cmdata.c	(working copy)
+@@ -11,7 +11,7 @@
+ #include "ntoskrnl.h"
+ #define NDEBUG
+ #include "debug.h"
+-#include "./../mm/ARM3/miarm.h"
++//#include "./../mm/ARM3/miarm.h"
+ 
+ /* GLOBALS *******************************************************************/
+ 
+@@ -253,7 +253,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"DynamicMemory",
+-        &MmDynamicPfn,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -261,7 +261,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"Mirroring",
+-        &MmMirroring,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -293,7 +293,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"PoolUsageMaximum",
+-        &MmConsumedPoolPercentage,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -301,7 +301,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"MapAllocationFragment",
+-        &MmAllocationFragment,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -309,7 +309,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"PagedPoolSize",
+-        &MmSizeOfPagedPoolInBytes,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -317,7 +317,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"NonPagedPoolSize",
+-        &MmSizeOfNonPagedPoolInBytes,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -333,7 +333,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"LargeSystemCache",
+-        &MmLargeSystemCache,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -349,7 +349,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"SystemPages",
+-        &MmNumberOfSystemPtes,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -357,7 +357,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"LowMemoryThreshold",
+-        &MmLowMemoryThreshold,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -365,7 +365,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"HighMemoryThreshold",
+-        &MmHighMemoryThreshold,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -373,7 +373,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"DisablePagingExecutive",
+-        &MmDisablePagingExecutive,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -389,7 +389,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"SecondLevelDataCache",
+-        &MmSecondaryColors,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -397,7 +397,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"ClearPageFileAtShutdown",
+-        &MmZeroPageFile,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -445,7 +445,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"ProtectNonPagedPool",
+-        &MmProtectFreedNonPagedPool,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -453,7 +453,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"TrackLockedPages",
+-        &MmTrackLockedPages,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -461,7 +461,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"TrackPtes",
+-        &MmTrackPtes,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -469,15 +469,15 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"VerifyDrivers",
+-        MmVerifyDriverBuffer,
+-        &MmVerifyDriverBufferLength,
+-        &MmVerifyDriverBufferType
++        &DummyData,
++        NULL,
++        NULL
+     },
+ 
+     {
+         L"Session Manager\\Memory Management",
+         L"VerifyDriverLevel",
+-        &MmVerifyDriverLevel,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -501,7 +501,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"EnforceWriteProtection",
+-        &MmEnforceWriteProtection,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -509,7 +509,7 @@
+     {
+         L"Session Manager\\Memory Management",
+         L"MakeLowMemory",
+-        &MmMakeLowMemory,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -523,14 +523,6 @@
+     },
+ 
+     {
+-        L"Session Manager\\Memory Management",
+-        L"MinimumStackCommitInBytes",
+-        &MmMinimumStackCommitInBytes,
+-        NULL,
+-        NULL
+-    },
+-
+-    {
+         L"Session Manager\\Executive",
+         L"AdditionalCriticalWorkerThreads",
+         &DummyData,
+@@ -621,7 +613,7 @@
+     {
+         L"Session Manager",
+         L"CriticalSectionTimeout",
+-        &MmCritsectTimeoutSeconds,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -629,14 +621,15 @@
+     {
+         L"Session Manager",
+         L"HeapSegmentReserve",
+-        &MmHeapSegmentReserve,
++        &DummyData,
+         NULL,
+         NULL
+     },
++
+     {
+         L"Session Manager",
+         L"HeapSegmentCommit",
+-        &MmHeapSegmentCommit,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -644,7 +637,7 @@
+     {
+         L"Session Manager",
+         L"HeapDeCommitTotalFreeThreshold",
+-        &MmHeapDeCommitTotalFreeThreshold,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -652,7 +645,7 @@
+     {
+         L"Session Manager",
+         L"HeapDeCommitFreeBlockThreshold",
+-        &MmHeapDeCommitFreeBlockThreshold,
++        &DummyData,
+         NULL,
+         NULL
+     },
+@@ -660,7 +653,7 @@
+     {
+         L"ProductOptions",
+         L"ProductType",
+-        &MmProductType,
++        &DummyData,
+         NULL,
+         NULL
+     },
+Index: ntoskrnl/ex/init.c
+===================================================================
+--- ntoskrnl/ex/init.c	(revision 60822)
++++ ntoskrnl/ex/init.c	(working copy)
+@@ -1946,7 +1946,7 @@
+ 
+     /* Make sure nobody touches the loader block again */
+     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+-    MmFreeLoaderBlock(LoaderBlock);
++    //MmFreeLoaderBlock(LoaderBlock);
+     LoaderBlock = Context = NULL;
+ 
+     /* Update progress bar */
+@@ -1956,7 +1956,7 @@
+     InbvEnableDisplayString(TRUE);
+ 
+     /* Launch initial process */
+-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
++    //DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+     ProcessInfo = &InitBuffer->ProcessInfo;
+     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
+ 
+@@ -1998,7 +1998,7 @@
+ 
+     /* Free the boot buffer */
+     ExFreePoolWithTag(InitBuffer, TAG_INIT);
+-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
++    //DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+ }
+ 
+ VOID
+Index: ntoskrnl/ex/sysinfo.c
+===================================================================
+--- ntoskrnl/ex/sysinfo.c	(revision 60822)
++++ ntoskrnl/ex/sysinfo.c	(working copy)
+@@ -263,7 +263,6 @@
+     NTSTATUS Status;
+     PAGED_CODE();
+ 
+-    /* Check if the call came from user mode */
+     PreviousMode = ExGetPreviousMode();
+     if (PreviousMode != KernelMode)
+     {
+@@ -463,16 +462,6 @@
+ #define SSI_DEF(n) \
+ static NTSTATUS SSI_USE(n) (PVOID Buffer, ULONG Size)
+ 
+-VOID
+-NTAPI
+-ExQueryPoolUsage(OUT PULONG PagedPoolPages,
+-                 OUT PULONG NonPagedPoolPages,
+-                 OUT PULONG PagedPoolAllocs,
+-                 OUT PULONG PagedPoolFrees,
+-                 OUT PULONG PagedPoolLookasideHits,
+-                 OUT PULONG NonPagedPoolAllocs,
+-                 OUT PULONG NonPagedPoolFrees,
+-                 OUT PULONG NonPagedPoolLookasideHits);
+ 
+ /* Class 0 - Basic Information */
+ QSI_DEF(SystemBasicInformation)
+@@ -493,8 +482,8 @@
+     Sbi->TimerResolution = KeMaximumIncrement;
+     Sbi->PageSize = PAGE_SIZE;
+     Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+-    Sbi->LowestPhysicalPageNumber = (ULONG)MmLowestPhysicalPage;
+-    Sbi->HighestPhysicalPageNumber = (ULONG)MmHighestPhysicalPage;
++    Sbi->LowestPhysicalPageNumber = 0;//(ULONG)MmLowestPhysicalPage;
++    Sbi->HighestPhysicalPageNumber = 100;//(ULONG)MmHighestPhysicalPage;
+     Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
+     Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
+     Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
+@@ -557,21 +546,21 @@
+     Spi->IoWriteOperationCount = IoWriteOperationCount;
+     Spi->IoOtherOperationCount = IoOtherOperationCount;
+ 
+-    Spi->AvailablePages = (ULONG)MmAvailablePages;
++    Spi->AvailablePages = 0x100;//(ULONG)MmAvailablePages;
+     /*
+      *   Add up all the used "Committed" memory + pagefile.
+      *   Not sure this is right. 8^\
+      */
+-    Spi->CommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
++    Spi->CommittedPages = /*MiMemoryConsumers[MC_SYSTEM].PagesUsed +
+                           MiMemoryConsumers[MC_CACHE].PagesUsed +
+                           MiMemoryConsumers[MC_USER].PagesUsed +
+-                          MiUsedSwapPages;
++                          MiUsedSwapPages;*/ 1;
+     /*
+      *  Add up the full system total + pagefile.
+      *  All this make Taskmgr happy but not sure it is the right numbers.
+      *  This too, fixes some of GlobalMemoryStatusEx numbers.
+      */
+-    Spi->CommitLimit = MmNumberOfPhysicalPages + MiFreeSwapPages + MiUsedSwapPages;
++    Spi->CommitLimit = MmNumberOfPhysicalPages;// + MiFreeSwapPages + MiUsedSwapPages;
+ 
+     Spi->PeakCommitment = 0; /* FIXME */
+     Spi->PageFaultCount = 0; /* FIXME */
+@@ -588,30 +577,24 @@
+     Spi->MappedPagesWriteCount = 0; /* FIXME */
+     Spi->MappedWriteIoCount = 0; /* FIXME */
+ 
+-    Spi->PagedPoolPages = 0;
+-    Spi->NonPagedPoolPages = 0;
+-    Spi->PagedPoolAllocs = 0;
+-    Spi->PagedPoolFrees = 0;
+-    Spi->PagedPoolLookasideHits = 0;
+-    Spi->NonPagedPoolAllocs = 0;
+-    Spi->NonPagedPoolFrees = 0;
+-    Spi->NonPagedPoolLookasideHits = 0;
+-    ExQueryPoolUsage(&Spi->PagedPoolPages,
+-                     &Spi->NonPagedPoolPages,
+-                     &Spi->PagedPoolAllocs,
+-                     &Spi->PagedPoolFrees,
+-                     &Spi->PagedPoolLookasideHits,
+-                     &Spi->NonPagedPoolAllocs,
+-                     &Spi->NonPagedPoolFrees,
+-                     &Spi->NonPagedPoolLookasideHits);
++    Spi->PagedPoolPages = 0; /* FIXME */
++    Spi->PagedPoolAllocs = 0; /* FIXME */
++    Spi->PagedPoolFrees = 0; /* FIXME */
++    Spi->NonPagedPoolPages = 0; /* FIXME */
++    Spi->NonPagedPoolAllocs = 0; /* FIXME */
++    Spi->NonPagedPoolFrees = 0; /* FIXME */
++
+     Spi->FreeSystemPtes = 0; /* FIXME */
+ 
+     Spi->ResidentSystemCodePage = 0; /* FIXME */
+ 
+     Spi->TotalSystemDriverPages = 0; /* FIXME */
++    Spi->TotalSystemCodePages = 0; /* FIXME */
++    Spi->NonPagedPoolLookasideHits = 0; /* FIXME */
++    Spi->PagedPoolLookasideHits = 0; /* FIXME */
+     Spi->Spare3Count = 0; /* FIXME */
+ 
+-    Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
++    Spi->ResidentSystemCachePage = 0;//MiMemoryConsumers[MC_CACHE].PagesUsed;
+     Spi->ResidentPagedPoolPage = 0; /* FIXME */
+ 
+     Spi->ResidentSystemDriverPage = 0; /* FIXME */
+@@ -860,10 +843,10 @@
+                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
+                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
+ 
+-                CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+-                while (CurrentEntry != &Process->Pcb.ThreadListHead)
++                CurrentEntry = Process->ThreadListHead.Flink;
++                while (CurrentEntry != &Process->ThreadListHead)
+                 {
+-                    CurrentThread = (PETHREAD)CONTAINING_RECORD(CurrentEntry, KTHREAD,
++                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
+                         ThreadListEntry);
+ 
+                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
+@@ -1035,11 +1018,12 @@
+     ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
+ 
+     /* Call the generic handler with the system module list */
+-    Status = ExpQueryModuleInformation(&PsLoadedModuleList,
++    /*Status = ExpQueryModuleInformation(&PsLoadedModuleList,
+                                        &MmLoadedUserImageList,
+                                        (PRTL_PROCESS_MODULES)Buffer,
+                                        Size,
+-                                       ReqSize);
++                                       ReqSize);*/
++    Status = STATUS_NOT_IMPLEMENTED;
+ 
+     /* Release list lock and return status */
+     ExReleaseResourceLite(&PsLoadedModuleResource);
+@@ -1196,9 +1180,9 @@
+     /* FIXME */
+     Spfi->NextEntryOffset = 0;
+ 
+-    Spfi->TotalSize = MiFreeSwapPages + MiUsedSwapPages;
+-    Spfi->TotalInUse = MiUsedSwapPages;
+-    Spfi->PeakUsage = MiUsedSwapPages; /* FIXME */
++    Spfi->TotalSize = 0;//MiFreeSwapPages + MiUsedSwapPages;
++    Spfi->TotalInUse = 0;//MiUsedSwapPages;
++    Spfi->PeakUsage = 0;//MiUsedSwapPages; /* FIXME */
+     Spfi->PageFileName = FileName;
+     return STATUS_SUCCESS;
+ }
+@@ -1233,13 +1217,13 @@
+     RtlZeroMemory(Sci, sizeof(SYSTEM_FILECACHE_INFORMATION));
+ 
+     /* Return the Byte size not the page size. */
+-    Sci->CurrentSize =
+-        MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
+-    Sci->PeakSize =
+-            MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
++    Sci->CurrentSize = 0;
++        //MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
++    Sci->PeakSize = 0;
++            //MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
+     /* Taskmgr multiplies this one by page size right away */
+-    Sci->CurrentSizeIncludingTransitionInPages =
+-        MiMemoryConsumers[MC_CACHE].PagesUsed; /* FIXME: Should be */
++    Sci->CurrentSizeIncludingTransitionInPages = 0;
++        //MiMemoryConsumers[MC_CACHE].PagesUsed; /* FIXME: Should be */
+     /* system working set and standby pages. */
+     Sci->PageFaultCount = 0; /* FIXME */
+     Sci->MinimumWorkingSet = 0; /* FIXME */
+@@ -1262,8 +1246,9 @@
+ /* Class 22 - Pool Tag Information */
+ QSI_DEF(SystemPoolTagInformation)
+ {
+-    if (Size < sizeof(SYSTEM_POOLTAG_INFORMATION)) return STATUS_INFO_LENGTH_MISMATCH;
+-    return ExGetPoolTagInfo(Buffer, Size, ReqSize);
++    /* FIXME */
++    DPRINT1("NtQuerySystemInformation - SystemPoolTagInformation not implemented\n");
++    return STATUS_NOT_IMPLEMENTED;
+ }
+ 
+ /* Class 23 - Interrupt Information for all processors */
+@@ -1335,7 +1320,7 @@
+            MiFreeSwapPages,
+            MiUsedSwapPages);
+ 
+-    *Spi = MiMemoryConsumers[MC_USER].PagesUsed;
++    *Spi = 1;//MiMemoryConsumers[MC_USER].PagesUsed;
+ 
+     return STATUS_SUCCESS;
+ }
+@@ -1817,35 +1802,13 @@
+     return STATUS_NOT_IMPLEMENTED;
+ }
+ 
+-NTSTATUS
+-NTAPI
+-MmSessionCreate(OUT PULONG SessionId);
+ 
+-NTSTATUS
+-NTAPI
+-MmSessionDelete(IN ULONG SessionId);
+-
+ /* Class 47 - Create a new session (TSE) */
+ SSI_DEF(SystemCreateSession)
+ {
+-    ULONG SessionId;
+-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+-    NTSTATUS Status;
+-
+-    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+-
+-    if (PreviousMode != KernelMode)
+-    {
+-        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+-        {
+-            return STATUS_PRIVILEGE_NOT_HELD;
+-        }
+-    }
+-
+-    Status = MmSessionCreate(&SessionId);
+-    if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
+-
+-    return Status;
++    /* FIXME */
++    DPRINT1("NtSetSystemInformation - SystemCreateSession not implemented\n");
++    return STATUS_NOT_IMPLEMENTED;
+ }
+ 
+ 
+@@ -1852,22 +1815,9 @@
+ /* Class 48 - Delete an existing session (TSE) */
+ SSI_DEF(SystemDeleteSession)
+ {
+-    ULONG SessionId;
+-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+-
+-    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+-
+-    if (PreviousMode != KernelMode)
+-    {
+-        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+-        {
+-            return STATUS_PRIVILEGE_NOT_HELD;
+-        }
+-    }
+-
+-    SessionId = *(PULONG)Buffer;
+-
+-    return MmSessionDelete(SessionId);
++    /* FIXME */
++    DPRINT1("NtSetSystemInformation - SystemDeleteSession not implemented\n");
++    return STATUS_NOT_IMPLEMENTED;
+ }
+ 
+ 
+Index: ntoskrnl/fsrtl/fastio.c
+===================================================================
+--- ntoskrnl/fsrtl/fastio.c	(revision 60822)
++++ ntoskrnl/fsrtl/fastio.c	(working copy)
+@@ -23,7 +23,7 @@
+ NTAPI
+ FsRtlIncrementCcFastReadResourceMiss(VOID)
+ {
+-    CcFastReadResourceMiss++;
++    //CcFastReadResourceMiss++;
+ }
+ 
+ /*
+@@ -33,7 +33,7 @@
+ NTAPI
+ FsRtlIncrementCcFastReadNotPossible(VOID)
+ {
+-    CcFastReadNotPossible++;
++    //CcFastReadNotPossible++;
+ }
+ 
+ /*
+@@ -43,7 +43,7 @@
+ NTAPI
+ FsRtlIncrementCcFastReadWait(VOID)
+ {
+-    CcFastReadWait++;
++    //CcFastReadWait++;
+ }
+ 
+ /*
+@@ -53,7 +53,7 @@
+ NTAPI
+ FsRtlIncrementCcFastReadNoWait(VOID)
+ {
+-    CcFastReadNoWait++;
++    //CcFastReadNoWait++;
+ }
+ 
+ /*
+@@ -1021,7 +1021,7 @@
+                         IN PDEVICE_OBJECT DeviceObject)
+ {
+     /* Call the Cache Manager */
+-    CcMdlReadComplete2(FileObject, MemoryDescriptorList);
++    //CcMdlReadComplete2(FileObject, MemoryDescriptorList);
+     return TRUE;
+ }
+ 
+@@ -1214,7 +1214,7 @@
+     }
+ 
+     /* Call the Cache Manager */
+-    CcMdlWriteComplete2(FileObject, FileOffset, MdlChain);
++    //CcMdlWriteComplete2(FileObject, FileOffset, MdlChain);
+     return TRUE;
+ }
+ 
+Index: ntoskrnl/include/internal/i386/ke.h
+===================================================================
+--- ntoskrnl/include/internal/i386/ke.h	(revision 60822)
++++ ntoskrnl/include/internal/i386/ke.h	(working copy)
+@@ -304,7 +304,7 @@
+ VOID
+ KiSetTebBase(PKPCR Pcr, PVOID TebAddress)
+ {
+-    Pcr->NtTib.Self = TebAddress;
++    Pcr->NtTib.Self = (NT_TIB *)TebAddress;
+     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
+ }
+ 
+Index: ntoskrnl/include/internal/i386/mm.h
+===================================================================
+--- ntoskrnl/include/internal/i386/mm.h	(revision 60822)
++++ ntoskrnl/include/internal/i386/mm.h	(working copy)
+@@ -34,6 +34,8 @@
+ 
+ #define PTE_PER_PAGE 0x400
+ 
++#define PTE_SHIFT 2
++
+ /* Converting address to a corresponding PDE or PTE entry */
+ #define MiAddressToPde(x) \
+     ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+Index: ntoskrnl/include/internal/mm.h
+===================================================================
+--- ntoskrnl/include/internal/mm.h	(revision 60822)
++++ ntoskrnl/include/internal/mm.h	(working copy)
+@@ -314,95 +314,6 @@
+     MI_USAGE_FREE_PAGE
+ } MI_PFN_USAGES;
+ 
+-//
+-// These two mappings are actually used by Windows itself, based on the ASSERTS
+-//
+-#define StartOfAllocation ReadInProgress
+-#define EndOfAllocation WriteInProgress
+-
+-typedef struct _MMPFNENTRY
+-{
+-    USHORT Modified:1;
+-    USHORT ReadInProgress:1;                 // StartOfAllocation
+-    USHORT WriteInProgress:1;                // EndOfAllocation
+-    USHORT PrototypePte:1;
+-    USHORT PageColor:4;
+-    USHORT PageLocation:3;
+-    USHORT RemovalRequested:1;
+-    USHORT CacheAttribute:2;
+-    USHORT Rom:1;
+-    USHORT ParityError:1;                    // HasRmap
+-} MMPFNENTRY;
+-
+-typedef struct _MMPFN
+-{
+-    union
+-    {
+-        PFN_NUMBER Flink;
+-        ULONG WsIndex;                       // SavedSwapEntry
+-        PKEVENT Event;
+-        NTSTATUS ReadStatus;
+-        SINGLE_LIST_ENTRY NextStackPfn;
+-    } u1;
+-    PMMPTE PteAddress;
+-    union
+-    {
+-        PFN_NUMBER Blink;
+-        ULONG_PTR ShareCount;
+-    } u2;
+-    union
+-    {
+-        struct
+-        {
+-            USHORT ReferenceCount;           // ReferenceCount
+-            MMPFNENTRY e1;
+-        };
+-        struct
+-        {
+-            USHORT ReferenceCount;
+-            USHORT ShortFlags;
+-        } e2;
+-    } u3;
+-    union
+-    {
+-        MMPTE OriginalPte;
+-        LONG AweReferenceCount;              // RmapListHead
+-    };
+-    union
+-    {
+-        ULONG_PTR EntireFrame;
+-        struct
+-        {
+-            ULONG_PTR PteFrame:25;
+-            ULONG_PTR InPageError:1;
+-            ULONG_PTR VerifierAllocation:1;
+-            ULONG_PTR AweAllocation:1;
+-            ULONG_PTR Priority:3;
+-            ULONG_PTR MustBeCached:1;
+-        };
+-    } u4;
+-#if MI_TRACE_PFNS
+-    MI_PFN_USAGES PfnUsage;
+-    CHAR ProcessName[16];
+-#endif
+-} MMPFN, *PMMPFN;
+-
+-extern PMMPFN MmPfnDatabase;
+-
+-typedef struct _MMPFNLIST
+-{
+-    PFN_NUMBER Total;
+-    MMLISTS ListName;
+-    PFN_NUMBER Flink;
+-    PFN_NUMBER Blink;
+-} MMPFNLIST, *PMMPFNLIST;
+-
+-extern MMPFNLIST MmZeroedPageListHead;
+-extern MMPFNLIST MmFreePageListHead;
+-extern MMPFNLIST MmStandbyPageListHead;
+-extern MMPFNLIST MmModifiedPageListHead;
+-extern MMPFNLIST MmModifiedNoWritePageListHead;
+-
+ typedef struct _MM_MEMORY_CONSUMER
+ {
+     ULONG PagesUsed;
+@@ -1094,37 +1005,7 @@
+ 
+ /* freelist.c **********************************************************/
+ 
+-FORCEINLINE
+-PMMPFN
+-MiGetPfnEntry(IN PFN_NUMBER Pfn)
+-{
+-    PMMPFN Page;
+-    extern RTL_BITMAP MiPfnBitMap;
+-
+-    /* Make sure the PFN number is valid */
+-    if (Pfn > MmHighestPhysicalPage) return NULL;
+-
+-    /* Make sure this page actually has a PFN entry */
+-    if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, (ULONG)Pfn))) return NULL;
+-
+-    /* Get the entry */
+-    Page = &MmPfnDatabase[Pfn];
+-
+-    /* Return it */
+-    return Page;
+-};
+-
+-FORCEINLINE
+ PFN_NUMBER
+-MiGetPfnEntryIndex(IN PMMPFN Pfn1)
+-{
+-    //
+-    // This will return the Page Frame Number (PFN) from the MMPFN
+-    //
+-    return Pfn1 - MmPfnDatabase;
+-}
+-
+-PFN_NUMBER
+ NTAPI
+ MmGetLRUNextUserPage(PFN_NUMBER PreviousPage);
+ 
+@@ -1197,11 +1078,6 @@
+                         IN PVOID Address,
+                         IN KIRQL OldIrql);
+ 
+-PVOID
+-NTAPI
+-MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
+-                      IN PFN_NUMBER NumberOfPages);
+-
+ VOID
+ NTAPI
+ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
+Index: ntoskrnl/io/iomgr/driver.c
+===================================================================
+--- ntoskrnl/io/iomgr/driver.c	(revision 60822)
++++ ntoskrnl/io/iomgr/driver.c	(working copy)
+@@ -525,7 +525,7 @@
+       return Status;
+    }
+ 
+-   MmFreeDriverInitialization((PLDR_DATA_TABLE_ENTRY)Driver->DriverSection);
++   //MmFreeDriverInitialization((PLDR_DATA_TABLE_ENTRY)Driver->DriverSection);
+ 
+    /* Set the driver as initialized */
+    IopReadyDeviceObjects(Driver);
+Index: ntoskrnl/kd/kdmain.c
+===================================================================
+--- ntoskrnl/kd/kdmain.c	(revision 60822)
++++ ntoskrnl/kd/kdmain.c	(working copy)
+@@ -65,7 +65,7 @@
+                     break;
+ 
+                 case KdSpare3:
+-                    MmDumpArmPfnDatabase(FALSE);
++                    //MmDumpArmPfnDatabase(FALSE);
+                     break;
+ 
+                 default:
+Index: ntoskrnl/kdbg/kdb_cli.c
+===================================================================
+--- ntoskrnl/kdbg/kdb_cli.c	(revision 60822)
++++ ntoskrnl/kdbg/kdb_cli.c	(working copy)
+@@ -180,8 +180,8 @@
+     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
+     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
+     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
+-    { "help", "help", "Display help screen.", KdbpCmdHelp },
+-    { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool }
++    { "help", "help", "Display help screen.", KdbpCmdHelp }
++    //{ "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool }
+ };
+ 
+ /* FUNCTIONS *****************************************************************/
+Index: ntoskrnl/po/power.c
+===================================================================
+--- ntoskrnl/po/power.c	(revision 60822)
++++ ntoskrnl/po/power.c	(working copy)
+@@ -908,7 +908,8 @@
+         
+ #ifndef NEWCC
+         /* Flush dirty cache pages */
+-        CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
++        //CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
++        Dummy = 0;
+ #else
+         Dummy = 0;
+ #endif
+Index: ntoskrnl/ps/kill.c
+===================================================================
+--- ntoskrnl/ps/kill.c	(revision 60822)
++++ ntoskrnl/ps/kill.c	(working copy)
+@@ -244,7 +244,7 @@
+             HeaderLocation = Info;
+         }
+ 
+-        ExpCheckPoolAllocation(HeaderLocation, NonPagedPool, 'corP');
++        //ExpCheckPoolAllocation(HeaderLocation, NonPagedPool, 'corP');
+     }
+ 
+     KeReleaseGuardedMutex(&PspActiveProcessMutex);
+Index: ntoskrnl/ps/query.c
+===================================================================
+--- ntoskrnl/ps/query.c	(revision 60822)
++++ ntoskrnl/ps/query.c	(working copy)
+@@ -834,7 +834,7 @@
+             /* Enter SEH to protect write */
+             _SEH2_TRY
+             {
+-                MmGetImageInformation((PSECTION_IMAGE_INFORMATION)ProcessInformation);
++                //MmGetImageInformation((PSECTION_IMAGE_INFORMATION)ProcessInformation);
+             }
+             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+             {
+@@ -1019,7 +1019,7 @@
+             }
+ 
+             /* Get the options */
+-            Status = MmGetExecuteOptions(&ExecuteOptions);
++            Status = STATUS_NOT_IMPLEMENTED;//MmGetExecuteOptions(&ExecuteOptions);
+             if (NT_SUCCESS(Status))
+             {
+                 /* Protect write with SEH */
+@@ -1905,7 +1905,7 @@
+             _SEH2_END;
+ 
+             /* Call Mm for the update */
+-            Status = MmSetExecuteOptions(NoExecute);
++            //Status = MmSetExecuteOptions(NoExecute);
+             break;
+ 
+         /* We currently don't implement any of these */
+Index: ntoskrnl/ps/thread.c
+===================================================================
+--- ntoskrnl/ps/thread.c	(revision 60822)
++++ ntoskrnl/ps/thread.c	(working copy)
+@@ -284,7 +284,7 @@
+     }
+ 
+     /* Save the read cluster size */
+-    Thread->ReadClusterSize = MmReadClusterSize;
++    Thread->ReadClusterSize = 4096;//MmReadClusterSize;
+ 
+     /* Initialize the LPC Reply Semaphore */
+     KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, 1);
+Index: ntoskrnl/rtl/libsupp.c
+===================================================================
+--- ntoskrnl/rtl/libsupp.c	(revision 60822)
++++ ntoskrnl/rtl/libsupp.c	(working copy)
+@@ -240,10 +240,10 @@
+ RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters)
+ {
+     /* Apply defaults for non-set parameters */
+-    if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
+-    if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
+-    if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
+-    if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
++    //if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
++    //if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
++    //if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
++    //if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+ }
+ 
+ VOID
