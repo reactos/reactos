@@ -203,3 +203,5 @@
 #define IDS_INTNUMBERS  930
 #define IDS_PERCENTAGE  931
 #define IDS_ANGLE       932
+
+#define IDS_LOADERRORTEXT  933

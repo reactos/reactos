@@ -219,4 +219,5 @@ BEGIN
     IDS_INTNUMBERS,       "Please enter integral numbers only!"
     IDS_PERCENTAGE,       "The percentage must be between 1 and 500."
     IDS_ANGLE,            "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT, "The file %s could not be loaded."
 END
