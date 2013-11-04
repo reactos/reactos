@@ -577,8 +577,9 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case WM_GETTEXT:
     case WM_ASKCBFORMATNAME:
       {
+        LPWSTR Buffer;
         if (!AnsiMsg->lParam) break;
-        LPWSTR Buffer = RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam * sizeof(WCHAR));
+        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam * sizeof(WCHAR));
         if (!Buffer) return FALSE;
         UnicodeMsg->lParam = (LPARAM)Buffer;
         break;
