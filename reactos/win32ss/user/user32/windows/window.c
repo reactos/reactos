@@ -169,7 +169,7 @@ User32CreateWindowEx(DWORD dwExStyle,
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
-    HMODULE hLibModule;
+    HMODULE hLibModule = NULL;
     DWORD save_error;
     BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;

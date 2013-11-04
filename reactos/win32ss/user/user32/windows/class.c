@@ -300,7 +300,7 @@ GetClassInfoExA(
 {
     UNICODE_STRING ClassName = {0};
     LPCSTR pszMenuName;
-    HMODULE hLibModule;
+    HMODULE hLibModule = NULL;
     DWORD save_error;
     BOOL Ret, ClassFound = FALSE;
 
@@ -401,7 +401,7 @@ GetClassInfoExW(
 {
     UNICODE_STRING ClassName = {0};
     LPWSTR pszMenuName;
-    HMODULE hLibModule;
+    HMODULE hLibModule = NULL;
     DWORD save_error;
     BOOL Ret, ClassFound = FALSE;
 
@@ -1429,7 +1429,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
    UNICODE_STRING MenuName = {0};
    CLSMENUNAME clsMenuName;
    ANSI_STRING AnsiMenuName;
-   HMODULE hLibModule;
+   HMODULE hLibModule = NULL;
    DWORD save_error;
    BOOL ClassFound = FALSE;
 
