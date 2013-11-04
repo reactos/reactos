@@ -241,8 +241,7 @@ VersionRegisterClass(
    {
    _SEH2_TRY
    {
-      hLibModule = GetModuleHandleW( comctl32W );
-      if (!hLibModule) hLibModule = LoadLibraryW(comctl32W);
+      hLibModule = LoadLibraryW(comctl32W);
       if ( hLibModule )
       {
          if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
