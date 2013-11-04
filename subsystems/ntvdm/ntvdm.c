@@ -101,6 +101,8 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 #endif
 
+    DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
+
     if (!EmulatorInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
@@ -135,7 +137,7 @@ INT wmain(INT argc, WCHAR *argv[])
     if (!DosCreateProcess(CommandLine, 0))
     {
         DisplayMessage(L"Could not start program: %S", CommandLine);
-        return -1;
+        goto Cleanup;
     }
 
     /* Find the starting performance and tick count */
@@ -225,6 +227,8 @@ Cleanup:
     SpeakerCleanup();
     BiosCleanup();
     EmulatorCleanup();
+
+    DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
 
     return 0;
 }
