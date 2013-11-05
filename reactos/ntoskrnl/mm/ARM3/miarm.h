@@ -1197,6 +1197,30 @@ MiUnlockProcessWorkingSet(IN PEPROCESS Process,
 //
 FORCEINLINE
 VOID
+MiUnlockProcessWorkingSetShared(IN PEPROCESS Process,
+                                IN PETHREAD Thread)
+{
+    /* Make sure we are the owner of a safe acquisition (because shared) */
+    ASSERT(MI_WS_OWNER(Process));
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+
+    /* Ensure we are in a shared acquisition */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == TRUE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Don't claim the lock anylonger */
+    Thread->OwnsProcessWorkingSetShared = FALSE;
+
+    /* Release the lock and re-enable APCs */
+    ExReleasePushLockShared(&Process->Vm.WorkingSetMutex);
+    KeLeaveGuardedRegion();
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
 MiUnlockProcessWorkingSetUnsafe(IN PEPROCESS Process,
                                 IN PETHREAD Thread)
 {
@@ -1330,7 +1354,7 @@ MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
     else
     {
         /* Owner is shared (implies safe), release normally */
-        ASSERT(FALSE);
+        MiUnlockProcessWorkingSetShared(Process, Thread);
         *Safe = TRUE;
         *Shared = TRUE;
     }
@@ -1343,16 +1367,24 @@ MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
                                 IN BOOLEAN Safe,
                                 IN BOOLEAN Shared)
 {
-    ASSERT(Shared == FALSE);
-
     /* Check if this was a safe lock or not */
     if (Safe)
     {
-        /* Reacquire safely */
-        MiLockProcessWorkingSet(Process, Thread);
+        if (Shared)
+        {
+            /* Reacquire safely & shared */
+            MiLockProcessWorkingSetShared(Process, Thread);
+        }
+        else
+        {
+            /* Reacquire safely */
+            MiLockProcessWorkingSet(Process, Thread);
+        }
     }
     else
     {
+        /* Unsafe lock cannot be shared */
+        ASSERT(Shared == FALSE);
         /* Reacquire unsafely */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
     }
