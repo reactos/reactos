@@ -37,13 +37,17 @@ endif ()
 add_compile_flags("/wd4290")
 
 # The following warnings are treated as errors:
+# - TODO: C4013: implicit function declaration
+# - C4022: pointer type mismatch for parameter
+# - TODO: C4028: formal parameter different from declaration
 # - C4047: different level of indirection
-# - C4090: different 'modifier' qualifiers (for C programs only;
+# - TODO: C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
+# - C4129: unrecognized escape sequence
+# - TODO: C4133: incompatible types
 # - C4700: uninitialized variable usage
-##add_compile_flags("/we4047 /we4090 /we4098 /we4700")
-add_compile_flags("/we4047 /we4098 /we4700")
+add_compile_flags("/we4022 /we4047 /we4098 /we4129 /we4700")
 
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
