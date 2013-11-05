@@ -173,7 +173,7 @@ RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 NTSTATUS
 NTAPI
 RtlAppendStringToString(IN PSTRING Destination,
-                        IN PSTRING Source)
+                        IN const STRING *Source)
 {
     USHORT SourceLength = Source->Length;
 
@@ -346,8 +346,8 @@ RtlCharToInteger(
 LONG
 NTAPI
 RtlCompareString(
-    IN PSTRING s1,
-    IN PSTRING s2,
+    IN const STRING *s1,
+    IN const STRING *s2,
     IN BOOLEAN CaseInsensitive)
 {
     unsigned int len;
@@ -382,8 +382,8 @@ RtlCompareString(
 BOOLEAN
 NTAPI
 RtlEqualString(
-    IN PSTRING s1,
-    IN PSTRING s2,
+    IN const STRING *s1,
+    IN const STRING *s2,
     IN BOOLEAN CaseInsensitive)
 {
     if (s1->Length != s2->Length) return FALSE;
@@ -835,8 +835,8 @@ RtlInt64ToUnicodeString (
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PSTRING String1,
-    PSTRING String2,
+    const STRING *String1,
+    const STRING *String2,
     BOOLEAN CaseInsensitive)
 {
     PCHAR pc1;
@@ -2115,7 +2115,7 @@ VOID
 NTAPI
 RtlCopyString(
     IN OUT PSTRING DestinationString,
-    IN PSTRING SourceString OPTIONAL)
+    IN const STRING *SourceString OPTIONAL)
 {
     ULONG SourceLength;
     PCHAR p1, p2;
@@ -2362,7 +2362,7 @@ RtlAppendAsciizToString(
 VOID
 NTAPI
 RtlUpperString(PSTRING DestinationString,
-               PSTRING SourceString)
+               const STRING *SourceString)
 {
     USHORT Length;
     PCHAR Src, Dest;

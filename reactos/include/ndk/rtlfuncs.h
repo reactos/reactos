@@ -2161,22 +2161,74 @@ RtlIsTextUnicode(
     INT *Flags
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PSTRING String1,
-    PSTRING String2,
-    BOOLEAN CaseInsensitive
+    _In_ const STRING *String1,
+    _In_ const STRING *String2,
+    _In_ BOOLEAN CaseInsensitive
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlPrefixUnicodeString(
-    PCUNICODE_STRING String1,
-    PCUNICODE_STRING String2,
-    BOOLEAN CaseInsensitive
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInsensitive
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+VOID
+NTAPI
+RtlUpperString(
+    _Inout_ PSTRING DestinationString,
+    _In_ const STRING *SourceString
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareString(
+    _In_ const STRING *String1,
+    _In_ const STRING *String2,
+    _In_ BOOLEAN CaseInSensitive
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCopyString(
+    _Out_ PSTRING DestinationString,
+    _In_opt_ const STRING *SourceString
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualString(
+    _In_ const STRING *String1,
+    _In_ const STRING *String2,
+    _In_ BOOLEAN CaseInSensitive
+);
+
+_IRQL_requires_max_(APC_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAppendStringToString(
+    _Inout_ PSTRING Destination,
+    _In_ const STRING *Source
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -2190,7 +2242,7 @@ RtlUpcaseUnicodeString(
         PUNICODE_STRING DestinationString,
     _In_ PCUNICODE_STRING SourceString,
     _In_ BOOLEAN AllocateDestinationString
-    );
+);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI

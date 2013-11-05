@@ -1006,6 +1006,16 @@ RtlCreateUnicodeString(
     PUNICODE_STRING DestinationString,
   _In_z_ PCWSTR SourceString);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlPrefixString(
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
+  _In_ BOOLEAN CaseInsensitive);
+
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
 NTSTATUS
