@@ -304,6 +304,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   -0x8,   &CLSID_ShellDesktop },
             {   -0x8,       &IID_IObjectWithSite },
             {    0x0,   &IID_IUnknown },
+            {    0x4,   &IID_IStorage },
             {    0x8,   &IID_IPersistFolder2 },
             {    0x8,       &IID_IPersistFolder },
             {    0x8,           &IID_IPersist },
@@ -325,6 +326,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x18,       &IID_IPersistFolder2 },
             {   0x18,           &IID_IPersistFolder },
             {   0x18,               &IID_IPersist },
+            {   0x1c,   &IID_IStorage },
             {   0x2c,   &IID_IContextMenuCB },
             {   0x34,   &IID_IOleCommandTarget },
         }
