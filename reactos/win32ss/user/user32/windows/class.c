@@ -236,8 +236,8 @@ VersionRegisterClass(
    WCHAR ClassNameBuf[MAX_PATH] = {0};
    BOOL Ret = FALSE;
    HMODULE hLibModule = NULL;
-   
-   if (is_comctl32_class( pszClass ))
+
+   if (!IS_ATOM(pszClass) && is_comctl32_class( pszClass ))
    {
    _SEH2_TRY
    {
