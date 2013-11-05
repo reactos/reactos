@@ -1158,7 +1158,7 @@ MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                ExFreePoolWithTag(NonPagedPool, 'bDmM');
+                ExFreePoolWithTag(LdrEntry, 'bDmM');
                 _SEH2_YIELD(return);
             }
             _SEH2_END;
