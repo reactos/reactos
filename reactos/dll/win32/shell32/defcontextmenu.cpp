@@ -1538,24 +1538,28 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT 
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
-    HRESULT hr;
-    STRRET strFile;
-
-    hr = m_Dcm.psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strFile);
-    if (hr != S_OK)
+    LPITEMIDLIST pidlFull = ILCombine(m_Dcm.pidlFolder, pidl);
+    if (pidlFull == NULL)
     {
-        ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
-        return hr;
+        return E_FAIL;
     }
 
     WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strFile, pidl, wszPath, MAX_PATH);
-    if (hr != S_OK)
-        return hr;
-
+    BOOL bHasPath = SHGetPathFromIDListW(pidlFull, wszPath);
+    
     WCHAR wszDir[MAX_PATH];
-    wcscpy(wszDir, wszPath);
-    PathRemoveFileSpec(wszDir);
+    if(bHasPath)
+    {
+        wcscpy(wszDir, wszPath);
+        PathRemoveFileSpec(wszDir);
+    }
+    else
+    {
+        SHGetPathFromIDListW(m_Dcm.pidlFolder, wszDir);
+    }
+
+    HKEY hkeyClass;
+    RegOpenKeyExW(HKEY_CLASSES_ROOT, pEntry->szClass, 0, KEY_READ, &hkeyClass);
 
     SHELLEXECUTEINFOW sei;
     ZeroMemory(&sei, sizeof(sei));
@@ -1563,9 +1567,20 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pEntry->szVerb;
-    sei.lpFile = wszPath;
     sei.lpDirectory = wszDir;
+    sei.lpIDList = pidlFull;
+    sei.hkeyClass = hkeyClass;
+    sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST;
+    if (bHasPath)
+    {
+        sei.lpFile = wszPath;
+    }
+
     ShellExecuteExW(&sei);
+
+    RegCloseKey(hkeyClass);
+
+    ILFree(pidlFull);
 
     return S_OK;
 }
