@@ -87,32 +87,41 @@ static CONST COLORREF VgaDefaultPalette[VGA_MAX_COLORS] =
 };
 
 static BYTE VgaMemory[VGA_NUM_BANKS * VGA_BANK_SIZE];
+static LPVOID ConsoleFramebuffer = NULL;
+static HANDLE TextConsoleBuffer = NULL;
+static HANDLE GraphicsConsoleBuffer = NULL;
+static HANDLE ConsoleMutex = NULL;
+static HPALETTE PaletteHandle = NULL;
+
 static BYTE VgaLatchRegisters[VGA_NUM_BANKS] = {0, 0, 0, 0};
 static BYTE VgaMiscRegister;
+
 static BYTE VgaSeqIndex = VGA_SEQ_RESET_REG;
 static BYTE VgaSeqRegisters[VGA_SEQ_MAX_REG];
+
 static BYTE VgaGcIndex = VGA_GC_RESET_REG;
 static BYTE VgaGcRegisters[VGA_GC_MAX_REG];
+
 static BYTE VgaCrtcIndex = VGA_CRTC_HORZ_TOTAL_REG;
 static BYTE VgaCrtcRegisters[VGA_CRTC_MAX_REG];
+
 static BYTE VgaAcIndex = VGA_AC_PAL_0_REG;
 static BOOLEAN VgaAcLatch = FALSE;
 static BYTE VgaAcRegisters[VGA_AC_MAX_REG];
+
 static WORD VgaDacIndex = 0;
 static BOOLEAN VgaDacReadWrite = FALSE;
 static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
-static HPALETTE PaletteHandle = NULL;
+
 static BOOLEAN InVerticalRetrace = FALSE;
 static BOOLEAN InHorizontalRetrace = FALSE;
-static HANDLE TextConsoleBuffer = NULL;
-static HANDLE GraphicsConsoleBuffer = NULL;
-static LPVOID ConsoleFramebuffer = NULL;
-static HANDLE ConsoleMutex = NULL;
+
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = TRUE;
 static BOOLEAN CursorMoved = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
 static BOOLEAN TextMode = TRUE;
+
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1096,7 +1105,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Set the sequencer index register */
             if (Data < VGA_SEQ_MAX_REG) VgaSeqIndex = Data;
-            
             break;
         }
 
@@ -1104,7 +1112,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Call the sequencer function */
             VgaWriteSequencer(Data);
-            
             break;
         }
 
@@ -1112,7 +1119,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             VgaDacReadWrite = FALSE;
             VgaDacIndex = Data * 3;
-
             break;
         }
 
@@ -1120,7 +1126,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             VgaDacReadWrite = TRUE;
             VgaDacIndex = Data * 3;
-
             break;
         }
 
@@ -1128,14 +1133,12 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Ignore writes in read mode */
             if (VgaDacReadWrite) VgaWriteDac(Data & 0x3F);
-
             break;
         }
 
         case VGA_MISC_WRITE:
         {
             VgaMiscRegister = Data;
-
             break;
         }
 
@@ -1143,7 +1146,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Set the CRTC index register */
             if (Data < VGA_CRTC_MAX_REG) VgaCrtcIndex = Data;
-
             break;
         }
 
@@ -1151,7 +1153,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Call the CRTC function */
             VgaWriteCrtc(Data);
-
             break;
         }
 
@@ -1166,7 +1167,6 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         {
             /* Call the GC function */
             VgaWriteGc(Data);
-
             break;
         }
     }
