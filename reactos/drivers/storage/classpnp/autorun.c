@@ -441,7 +441,7 @@ ClasspInterpretGesnData(
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => GESN::EXTERNAL: Event: %x Status %x Req %x\n",
                    externalInfo->ExternalEvent, externalInfo->ExternalStatus,
-                   (externalInfo->Request[0] >> 8) | externalInfo->Request[1]
+                   (externalInfo->Request[0] << 8) | externalInfo->Request[1]
                    ));
 
         RtlZeroMemory(&externalData, sizeof(DEVICE_EVENT_EXTERNAL_REQUEST));
