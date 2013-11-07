@@ -2269,7 +2269,9 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
     /* Get the interface for the new image list */
     if (hNew)
     {
-        ret = HIMAGELIST_QueryInterface(hNew, riid, ppv);
+        IImageList *imageList = (IImageList*) hNew;
+        ret = imageList->QueryInterface(riid, ppv);
+
         ImageList_Destroy(hNew);
     }
 
