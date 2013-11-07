@@ -217,10 +217,10 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeCmpXchg,
     NULL, // TODO: OPCODE 0xB2 NOT IMPLEMENTED
     Fast486ExtOpcodeBtr,
-    NULL, // TODO: OPCODE 0xB4 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB5 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB6 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xB7 NOT IMPLEMENTED
+    Fast486ExtOpcodeLfsLgs,
+    Fast486ExtOpcodeLfsLgs,
+    Fast486ExtOpcodeMovzxByte,
+    Fast486ExtOpcodeMovzxWord,
     NULL, // TODO: OPCODE 0xB8 NOT IMPLEMENTED
     Fast486OpcodeGroup0FB9,
     Fast486OpcodeGroup0FBA,
@@ -943,6 +943,139 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
 
     /* Return success */
     return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLfsLgs)
+{
+    UCHAR FarPointer[6];
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xB4);
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!ModRegRm.Memory)
+    {
+        /* Invalid */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Fast486ReadMemory(State,
+                           (State->PrefixFlags & FAST486_PREFIX_SEG)
+                           ? State->SegmentOverride : FAST486_REG_DS,
+                           ModRegRm.MemoryAddress,
+                           FALSE,
+                           FarPointer,
+                           OperandSize ? 6 : 4))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Offset = *((PULONG)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(ULONG)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].Long = Offset;
+
+        /* Load the segment */
+        return Fast486LoadSegment(State,
+                                  (Opcode == 0xB4)
+                                  ? FAST486_REG_FS : FAST486_REG_GS,
+                                  Segment);
+    }
+    else
+    {
+        USHORT Offset = *((PUSHORT)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(USHORT)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].LowWord = Offset;
+
+        /* Load the segment */
+        return Fast486LoadSegment(State,
+                                  (Opcode == 0xB4)
+                                  ? FAST486_REG_FS : FAST486_REG_GS,
+                                  Segment);
+    }
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxByte)
+{
+    UCHAR Dummy, Value;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xB6);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Write back the zero-extended value */
+    return Fast486WriteModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          TRUE,
+                                          (ULONG)Value);
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxWord)
+{
+    USHORT Dummy, Value;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xB7);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Write back the zero-extended value */
+    return Fast486WriteModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          TRUE,
+                                          (ULONG)Value);
 }
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
