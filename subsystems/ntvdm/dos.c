@@ -1691,6 +1691,7 @@ VOID DosInt21h(LPWORD Stack)
         case 0x25:
         {
             DWORD FarPointer = MAKELONG(getDX(), getDS());
+            DPRINT1("Setting interrupt 0x%x ...\n", getAL());
 
             /* Write the new far pointer to the IDT */
             ((PDWORD)BaseAddress)[getAL()] = FarPointer;
@@ -2393,7 +2394,8 @@ VOID DosInt21h(LPWORD Stack)
         /* Unsupported */
         default:
         {
-            DPRINT1("DOS Function INT 0x21, AH = 0x%02X NOT IMPLEMENTED!\n", getAH());
+            DPRINT1("DOS Function INT 0x21, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+                    getAH(), getAL());
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
     }

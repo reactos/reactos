@@ -467,6 +467,13 @@ BOOLEAN BiosInitialize(VOID)
     /* Initialize the BDA */
     Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
+    /*
+     * Conventional memory size is 640 kB,
+     * see: http://webpages.charter.net/danrollins/techhelp/0184.HTM
+     * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
+     * for more information.
+     */
+    Bda->MemorySize = 0x0280;
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
 
@@ -1294,6 +1301,12 @@ VOID BiosEquipmentService(LPWORD Stack)
 {
     /* Return the equipment list */
     setAX(Bda->EquipmentList);
+}
+
+VOID BiosGetMemorySize(LPWORD Stack)
+{
+    /* Return the conventional memory size in kB, typically 640 kB */
+    setAX(Bda->MemorySize);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)

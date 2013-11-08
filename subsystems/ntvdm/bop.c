@@ -19,6 +19,7 @@
 //#include "pic.h"
 //#include "ps2.h"
 //#include "timer.h"
+#include "registers.h"
 
 LPCWSTR ExceptionName[] =
 {
@@ -376,6 +377,12 @@ VOID WINAPI IntDispatch(LPWORD Stack)
             BiosEquipmentService(Stack);
             break;
         }
+        case BIOS_MEMORY_SIZE:
+        {
+            /* This is the BIOS "get memory size" command, call the BIOS */
+            BiosGetMemorySize(Stack);
+            break;
+        }
         case BIOS_KBD_INTERRUPT:
         {
             /* This is the keyboard BIOS interrupt, call the BIOS */
@@ -407,6 +414,13 @@ VOID WINAPI IntDispatch(LPWORD Stack)
         case 0x23:
         {
             DosBreakInterrupt(Stack);
+            break;
+        }
+        case 0x2F:
+        {
+            DPRINT1("DOS System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+                    getAH(), getAL());
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
             break;
         }
         default:

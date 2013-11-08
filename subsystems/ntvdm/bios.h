@@ -26,6 +26,7 @@
 
 #define BIOS_VIDEO_INTERRUPT 0x10
 #define BIOS_EQUIPMENT_INTERRUPT 0x11
+#define BIOS_MEMORY_SIZE 0x12
 #define BIOS_KBD_INTERRUPT 0x16
 #define BIOS_TIME_INTERRUPT 0x1A
 #define BIOS_SYS_TIMER_INTERRUPT 0x1C
@@ -131,6 +132,7 @@ WORD BiosGetCharacter(VOID);
 VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page);
 VOID BiosVideoService(LPWORD Stack);
 VOID BiosEquipmentService(LPWORD Stack);
+VOID BiosGetMemorySize(LPWORD Stack);
 VOID BiosKeyboardService(LPWORD Stack);
 VOID BiosTimeService(LPWORD Stack);
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
