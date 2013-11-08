@@ -415,6 +415,9 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
         VgaWritePort(VGA_AC_WRITE, *(Values++));
     }
 
+    /* Reset the palette */
+    VgaResetPalette();
+
     /* Update the values in the BDA */
     Bda->VideoMode = ModeNumber;
     Bda->VideoPage = 0;

@@ -200,6 +200,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 BYTE VgaReadPort(WORD Port);
 VOID VgaWritePort(WORD Port, BYTE Data);
 VOID VgaClearMemory(VOID);
+VOID VgaResetPalette(VOID);
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 
 #endif // _VGA_H_
