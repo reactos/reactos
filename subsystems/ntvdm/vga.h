@@ -38,6 +38,8 @@
 #define VGA_MAX_COLORS 256
 #define VGA_PALETTE_SIZE (VGA_MAX_COLORS * 3)
 #define VGA_BITMAP_INFO_SIZE (sizeof(BITMAPINFOHEADER) + 2 * (VGA_PALETTE_SIZE / 3))
+#define VGA_MINIMUM_WIDTH 400
+#define VGA_MINIMUM_HEIGHT 300
 #define VGA_DAC_TO_COLOR(x) (((x) << 2) | ((x) >> 6))
 #define VGA_COLOR_TO_DAC(x) ((x) >> 2)
 

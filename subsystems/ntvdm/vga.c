@@ -92,6 +92,7 @@ static HANDLE TextConsoleBuffer = NULL;
 static HANDLE GraphicsConsoleBuffer = NULL;
 static HANDLE ConsoleMutex = NULL;
 static HPALETTE PaletteHandle = NULL;
+static BOOLEAN DoubleVision = FALSE;
 
 static BYTE VgaLatchRegisters[VGA_NUM_BANKS] = {0, 0, 0, 0};
 static BYTE VgaMiscRegister;
@@ -440,6 +441,13 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     LPBITMAPINFO BitmapInfo = (LPBITMAPINFO)BitmapInfoBuffer;
     LPWORD PaletteIndex = (LPWORD)(BitmapInfo->bmiColors);
 
+    if ((Resolution->X < VGA_MINIMUM_WIDTH) && (Resolution->Y < VGA_MINIMUM_HEIGHT))
+    {
+        DoubleVision = TRUE;
+        Resolution->X *= 2;
+        Resolution->Y *= 2;
+    }
+
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
     BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -500,6 +508,7 @@ static VOID VgaLeaveGraphicsMode(VOID)
     ConsoleMutex = NULL;
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
+    DoubleVision = FALSE;
 }
 
 static BOOL VgaEnterTextMode(PCOORD Resolution)
@@ -738,14 +747,32 @@ static VOID VgaUpdateFramebuffer(VOID)
                     PixelData = VgaAcRegisters[PixelData];
                 }
 
-                /* Now check if the resulting pixel data has changed */
-                if (GraphicsBuffer[i * Resolution.X + j] != PixelData)
+                if (DoubleVision)
                 {
-                    /* Yes, write the new value */
-                    GraphicsBuffer[i * Resolution.X + j] = PixelData;
+                    /* Now check if the resulting pixel data has changed */
+                    if (GraphicsBuffer[(i * Resolution.X * 4) + (j * 2)] != PixelData)
+                    {
+                        /* Yes, write the new value */
+                        GraphicsBuffer[(i * Resolution.X * 4) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * Resolution.X * 4) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
 
-                    /* Mark the specified pixel as changed */
-                    VgaMarkForUpdate(i, j);
+                        /* Mark the specified pixel as changed */
+                        VgaMarkForUpdate(i, j);
+                    }
+                }
+                else
+                {
+                    /* Now check if the resulting pixel data has changed */
+                    if (GraphicsBuffer[i * Resolution.X + j] != PixelData)
+                    {
+                        /* Yes, write the new value */
+                        GraphicsBuffer[i * Resolution.X + j] = PixelData;
+
+                        /* Mark the specified pixel as changed */
+                        VgaMarkForUpdate(i, j);
+                    }
                 }
             }
 
@@ -952,6 +979,15 @@ VOID VgaRefreshDisplay(VOID)
                             Resolution,
                             Origin,
                             &UpdateRectangle);
+    }
+
+    if (DoubleVision)
+    {
+        /* Scale the update rectangle */
+        UpdateRectangle.Left *= 2;
+        UpdateRectangle.Top *= 2;
+        UpdateRectangle.Right = UpdateRectangle.Right * 2 + 1;
+        UpdateRectangle.Bottom = UpdateRectangle.Bottom * 2 + 1;
     }
 
     /* Redraw the screen */
