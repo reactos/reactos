@@ -381,6 +381,57 @@ static VOID VgaWriteAc(BYTE Data)
     }
 }
 
+static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
+{
+    USHORT i;
+
+    /* Copy the colors of the default palette to the DAC and console palette */
+    for (i = 0; i < NumOfEntries; i++)
+    {
+        /* Set the palette entries */
+        Entries[i].peRed   = GetRValue(VgaDefaultPalette[i]);
+        Entries[i].peGreen = GetGValue(VgaDefaultPalette[i]);
+        Entries[i].peBlue  = GetBValue(VgaDefaultPalette[i]);
+        Entries[i].peFlags = 0;
+
+        /* Set the DAC registers */
+        VgaDacRegisters[i * 3]     = VGA_COLOR_TO_DAC(GetRValue(VgaDefaultPalette[i]));
+        VgaDacRegisters[i * 3 + 1] = VGA_COLOR_TO_DAC(GetGValue(VgaDefaultPalette[i]));
+        VgaDacRegisters[i * 3 + 2] = VGA_COLOR_TO_DAC(GetBValue(VgaDefaultPalette[i]));
+    }
+}
+
+static BOOLEAN VgaInitializePalette(VOID)
+{
+    LPLOGPALETTE Palette;
+
+    /* Allocate storage space for the palette */
+    Palette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      sizeof(LOGPALETTE) +
+                                        VGA_MAX_COLORS * sizeof(PALETTEENTRY));
+    if (Palette == NULL) return FALSE;
+
+    /* Initialize the palette */
+    Palette->palVersion = 0x0300;
+    Palette->palNumEntries = VGA_MAX_COLORS;
+
+    /* Restore the default palette */
+    VgaRestoreDefaultPalette(Palette->palPalEntry, Palette->palNumEntries);
+
+    /* Create the palette */
+    PaletteHandle = CreatePalette(Palette);
+
+    /* Free the palette */
+    HeapFree(GetProcessHeap(), 0, Palette);
+
+    /* Fail if the palette wasn't successfully created... */
+    if (PaletteHandle == NULL) return FALSE;
+
+    /* ... otherwise return success */
+    return TRUE;
+}
+
 static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 {
     DWORD i;
@@ -472,8 +523,8 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
      * Set the text mode palette.
      *
      * WARNING: This call should fail on Windows (and therefore
-     * we get the default palette and we our external behaviour
-     * is just like Windows' one), but should success on ReactOS
+     * we get the default palette and our external behaviour is
+     * just like Windows' one), but it should success on ReactOS
      * (so that we get console palette changes even for text-mode
      * screen-buffers, which is a new feature on ReactOS).
      */
@@ -1197,23 +1248,10 @@ VOID VgaClearMemory(VOID)
 
 VOID VgaResetPalette(VOID)
 {
-    INT i;
     PALETTEENTRY Entries[VGA_MAX_COLORS];
 
-    /* Copy the colors of the default palette to the DAC and console palette */
-    for (i = 0; i < VGA_MAX_COLORS; i++)
-    {
-        /* Set the palette entries */
-        Entries[i].peRed = GetRValue(VgaDefaultPalette[i]);
-        Entries[i].peGreen = GetGValue(VgaDefaultPalette[i]);
-        Entries[i].peBlue = GetBValue(VgaDefaultPalette[i]);
-        Entries[i].peFlags = 0;
-
-        /* Set the DAC registers */
-        VgaDacRegisters[i * 3] = VGA_COLOR_TO_DAC(GetRValue(VgaDefaultPalette[i]));
-        VgaDacRegisters[i * 3 + 1] = VGA_COLOR_TO_DAC(GetGValue(VgaDefaultPalette[i]));
-        VgaDacRegisters[i * 3 + 2] = VGA_COLOR_TO_DAC(GetBValue(VgaDefaultPalette[i]));
-    }
+    /* Restore the default palette */
+    VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
 
     SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
     PaletteChanged = TRUE;
@@ -1230,42 +1268,9 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     PCHAR_INFO CharBuffer;
     DWORD Address = 0;
     DWORD CurrentAddr;
-    LPLOGPALETTE Palette;
 
-    /* Allocate storage space for the palette */
-    Palette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      sizeof(LOGPALETTE) +
-                                        VGA_MAX_COLORS * sizeof(PALETTEENTRY));
-    if (Palette == NULL) return FALSE;
-
-    /* Initialize the palette */
-    Palette->palVersion = 0x0300;
-    Palette->palNumEntries = VGA_MAX_COLORS;
-
-    /* Copy the colors of the default palette to the DAC and console palette */
-    for (i = 0; i < VGA_MAX_COLORS; i++)
-    {
-        /* Set the palette entries */
-        Palette->palPalEntry[i].peRed = GetRValue(VgaDefaultPalette[i]);
-        Palette->palPalEntry[i].peGreen = GetGValue(VgaDefaultPalette[i]);
-        Palette->palPalEntry[i].peBlue = GetBValue(VgaDefaultPalette[i]);
-        Palette->palPalEntry[i].peFlags = 0;
-
-        /* Set the DAC registers */
-        VgaDacRegisters[i * 3] = VGA_COLOR_TO_DAC(GetRValue(VgaDefaultPalette[i]));
-        VgaDacRegisters[i * 3 + 1] = VGA_COLOR_TO_DAC(GetGValue(VgaDefaultPalette[i]));
-        VgaDacRegisters[i * 3 + 2] = VGA_COLOR_TO_DAC(GetBValue(VgaDefaultPalette[i]));
-    }
-
-    /* Create the palette */
-    PaletteHandle = CreatePalette(Palette);
-
-    /* Free the palette */
-    HeapFree(GetProcessHeap(), 0, Palette);
-
-    /* Fail if the palette wasn't successfully created */
-    if (PaletteHandle == NULL) return FALSE;
+    /* Initialize the VGA palette and fail if it isn't successfully created */
+    if (!VgaInitializePalette()) return FALSE;
 
     /* Set the global handle */
     TextConsoleBuffer = TextHandle;
