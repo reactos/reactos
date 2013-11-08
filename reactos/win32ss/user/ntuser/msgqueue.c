@@ -631,7 +631,11 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        }
        else
        {
-           //if (!IntGetCaptureWindow()) ptiLastInput = pti;
+           if (!IntGetCaptureWindow())
+           {
+             // ERR("ptiLastInput is set\n");
+             // ptiLastInput = pti; // Once this is set during Reboot or Shutdown, this prevents the exit window having foreground.
+           }
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
        }
@@ -1104,8 +1108,6 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    {
       PVOID WaitObjects[3];
 
-      ObReferenceObject(ptirec->pEThread);
-
       WaitObjects[0] = &CompletionEvent;       // Wait 0
       WaitObjects[1] = pti->pEventQueueServer; // Wait 1
       WaitObjects[2] = ptirec->pEThread;       // Wait 2
@@ -1162,14 +1164,10 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             TRACE("MsqSendMessage timed out 2\n");
             break;
          }
-         /*if (WaitStatus == STATUS_WAIT_1)
-         {
-            ERR("Event hit\n");
-         }*/
          // Receiving thread passed on and left us hanging with issues still pending.
-         if (WaitStatus == STATUS_WAIT_2)
+         if ( WaitStatus == STATUS_WAIT_2 )
          {
-            ERR("Thread woken up dead!\n");
+            ERR("Receiving Thread woken up dead!\n");
             Entry = pti->DispatchingMessagesHead.Flink;
             while (Entry != &pti->DispatchingMessagesHead)
             {
@@ -1189,11 +1187,10 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             ;
       }
       while (NT_SUCCESS(WaitStatus) && WaitStatus == STATUS_WAIT_1);
-      ObDereferenceObject(ptirec->pEThread);
    }
 
    if(WaitStatus != STATUS_TIMEOUT)
-      *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+      if (uResult) *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
 
    return WaitStatus;
 }
