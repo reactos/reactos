@@ -1102,15 +1102,19 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    }
    else
    {
-      PVOID WaitObjects[2];
+      PVOID WaitObjects[3];
 
-      WaitObjects[0] = &CompletionEvent;
-      WaitObjects[1] = pti->pEventQueueServer;
+      ObReferenceObject(ptirec->pEThread);
+
+      WaitObjects[0] = &CompletionEvent;       // Wait 0
+      WaitObjects[1] = pti->pEventQueueServer; // Wait 1
+      WaitObjects[2] = ptirec->pEThread;       // Wait 2
+
       do
       {
          UserLeaveCo();
 
-         WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+         WaitStatus = KeWaitForMultipleObjects(3, WaitObjects, WaitAny, UserRequest,
                                                UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
 
          UserEnterCo();
@@ -1158,10 +1162,34 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             TRACE("MsqSendMessage timed out 2\n");
             break;
          }
+         /*if (WaitStatus == STATUS_WAIT_1)
+         {
+            ERR("Event hit\n");
+         }*/
+         // Receiving thread passed on and left us hanging with issues still pending.
+         if (WaitStatus == STATUS_WAIT_2)
+         {
+            ERR("Thread woken up dead!\n");
+            Entry = pti->DispatchingMessagesHead.Flink;
+            while (Entry != &pti->DispatchingMessagesHead)
+            {
+               if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
+                     == Message)
+               {
+                  Message->CompletionEvent = NULL;
+                  Message->Result = NULL;
+                  RemoveEntryList(&Message->DispatchingListEntry);
+                  Message->DispatchingListEntry.Flink = NULL;
+                  break;
+               }
+               Entry = Entry->Flink;
+            }
+         }
          while (co_MsqDispatchOneSentMessage(pti))
             ;
       }
-      while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+      while (NT_SUCCESS(WaitStatus) && WaitStatus == STATUS_WAIT_1);
+      ObDereferenceObject(ptirec->pEThread);
    }
 
    if(WaitStatus != STATUS_TIMEOUT)
