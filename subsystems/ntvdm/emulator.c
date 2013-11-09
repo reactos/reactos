@@ -82,14 +82,14 @@ static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOI
     }
 }
 
-static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size, UCHAR Width)
+static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
 
-    for (i = 0; i < Size; i++) for (j = 0; j < Width; j++)
+    for (i = 0; i < DataCount; i++) for (j = 0; j < DataSize; j++)
     {
         ULONG CurrentPort = Port + j;
 
@@ -169,14 +169,14 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
     }
 }
 
-static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size, UCHAR Width)
+static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
 
-    for (i = 0; i < Size; i++) for (j = 0; j < Width; j++)
+    for (i = 0; i < DataCount; i++) for (j = 0; j < DataSize; j++)
     {
         ULONG CurrentPort = Port + j;
 
