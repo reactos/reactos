@@ -325,7 +325,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8082)
     {
         return Fast486WriteModrmByteOperands(State, &ModRegRm, FALSE, Value);
     }
-    
+
     return TRUE;
 }
 
@@ -333,7 +333,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -408,7 +408,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup83)
     CHAR ImmByte;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -478,7 +478,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
     ULONG Value;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -567,7 +567,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC1)
     UCHAR Count;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -757,7 +757,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD1)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -844,7 +844,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD3)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -1037,7 +1037,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
     ULONG Dummy, Value = 0, SignFlag;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -1336,7 +1336,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);
@@ -1879,7 +1879,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
     BOOLEAN OperandSize, AddressSize;
     UINT DataSize;
     UCHAR BitNumber;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(OperandSize);

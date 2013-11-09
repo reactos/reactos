@@ -141,7 +141,7 @@ Fast486ReadMemory(PFAST486_STATE State,
 
             /* Check if this is the last page */
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
-            {   
+            {
                 /* Copy only a part of the page */
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }
@@ -255,7 +255,7 @@ Fast486WriteMemory(PFAST486_STATE State,
 
             /* Check if this is the last page */
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
-            {   
+            {
                 /* Copy only a part of the page */
                 PageLength = PAGE_OFFSET(LinearAddress + Size);
             }

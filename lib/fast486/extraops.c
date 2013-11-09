@@ -427,7 +427,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
         Fast486Exception(State, FAST486_EXCEPTION_UD);
         return FALSE;
     }
-    
+
     if (ModRegRm.Register != 0)
     {
         /* CR2 and CR3 and are stored in array indexes 1 and 2 */
@@ -1517,7 +1517,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeConditionalJmp)
 
     if (Jump)
     {
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
     }
 
@@ -1701,7 +1701,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = Source + Destination;
 
@@ -1740,7 +1740,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = Source + Destination;
 

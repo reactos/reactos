@@ -684,7 +684,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
 
     if (Jump)
     {
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
     }
 
@@ -997,7 +997,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
 
     /* Read the value from AL */
     Data = State->GeneralRegs[FAST486_REG_EAX].LowByte;
-    
+
     /* Write the byte to the I/O port */
     State->IoWriteCallback(State, Port, &Data, 1, sizeof(UCHAR));
 
@@ -1069,7 +1069,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
         return FALSE;
     }
 
-    /* Move the instruction pointer */        
+    /* Move the instruction pointer */
     State->InstPtr.Long += Offset;
 
     return TRUE;
@@ -1231,7 +1231,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue + SecondValue;
 
@@ -1262,7 +1262,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue + SecondValue;
 
@@ -1465,7 +1465,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue | SecondValue;
 
@@ -1494,7 +1494,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue | SecondValue;
 
@@ -1689,7 +1689,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue & SecondValue;
 
@@ -1718,7 +1718,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue & SecondValue;
 
@@ -1908,7 +1908,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue ^ SecondValue;
 
@@ -1937,7 +1937,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue ^ SecondValue;
 
@@ -2128,7 +2128,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue & SecondValue;
 
@@ -2151,7 +2151,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue & SecondValue;
 
@@ -2375,7 +2375,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Write the value from the register to the R/M */
         if (!Fast486WriteModrmWordOperands(State,
                                            &ModRegRm,
@@ -2510,7 +2510,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue + SecondValue + State->Flags.Cf;
 
@@ -2545,7 +2545,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Calculate the result */
         Result = FirstValue + SecondValue + State->Flags.Cf;
 
@@ -2803,7 +2803,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
             /* Swap the order */
             SWAP(FirstValue, SecondValue);
         }
-    
+
         /* Calculate the result */
         Result = FirstValue - SecondValue - Carry;
 
@@ -2834,14 +2834,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Check if this is the instruction that writes to R/M */
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
             SWAP(FirstValue, SecondValue);
         }
-    
+
         /* Calculate the result */
         Result = FirstValue - SecondValue - Carry;
 
@@ -3129,7 +3129,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
             /* Swap the order */
             SWAP(FirstValue, SecondValue);
         }
-    
+
         /* Calculate the result */
         Result = FirstValue - SecondValue;
 
@@ -3169,14 +3169,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         /* Check if this is the instruction that writes to R/M */
         if (!(Opcode & FAST486_OPCODE_WRITE_REG))
         {
             /* Swap the order */
             SWAP(FirstValue, SecondValue);
         }
-    
+
         /* Calculate the result */
         Result = FirstValue - SecondValue;
 
@@ -3791,7 +3791,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
 
         if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
         else Result = FirstValue;
-    
+
         /* Write back the result */
         return Fast486WriteModrmDwordOperands(State,
                                               &ModRegRm,
@@ -3810,7 +3810,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
             /* Exception occurred */
             return FALSE;
         }
-    
+
         if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
         else Result = FirstValue;
 
@@ -4234,7 +4234,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
             /* Call the VM86 monitor */
             Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
         }
-        
+
     }
 
     return TRUE;
@@ -4975,7 +4975,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
 
     if (Condition)
     {
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
     }
 
@@ -5010,7 +5010,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
             return FALSE;
         }
 
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
     }
     else
@@ -5031,7 +5031,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
             return FALSE;
         }
 
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.LowWord += Offset;
     }
 
@@ -5059,7 +5059,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
             return FALSE;
         }
 
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
     }
     else
@@ -5073,7 +5073,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
             return FALSE;
         }
 
-        /* Move the instruction pointer */        
+        /* Move the instruction pointer */
         State->InstPtr.LowWord += Offset;
     }
 
@@ -5607,7 +5607,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
         || (State->PrefixFlags & FAST486_PREFIX_REPNZ))
     {
         BOOLEAN Repeat = TRUE;
-        
+
         if (OperandSize)
         {
             if ((--State->GeneralRegs[FAST486_REG_ECX].Long) == 0)
@@ -5915,7 +5915,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
         || (State->PrefixFlags & FAST486_PREFIX_REPNZ))
     {
         BOOLEAN Repeat = TRUE;
-        
+
         if (OperandSize)
         {
             if ((--State->GeneralRegs[FAST486_REG_ECX].Long) == 0)

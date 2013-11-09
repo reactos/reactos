@@ -398,7 +398,7 @@ Fast486GetIntVector(PFAST486_STATE State,
     else
     {
         /* Read from the real-mode IVT */
-        
+
         /* Paging is always disabled in real mode */
         State->MemReadCallback(State,
                                State->Idtr.Address
@@ -518,7 +518,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
         if (Mode == 1)
         {
             CHAR Offset;
-            
+
             /* Fetch the byte */
             if (!Fast486FetchByte(State, (PUCHAR)&Offset))
             {
@@ -532,7 +532,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
         else if ((Mode == 2) || ((Mode == 0) && (RegMem == FAST486_REG_EBP)))
         {
             LONG Offset;
-            
+
             /* Fetch the dword */
             if (!Fast486FetchDword(State, (PULONG)&Offset))
             {
@@ -641,7 +641,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
         if (Mode == 1)
         {
             CHAR Offset;
-            
+
             /* Fetch the byte */
             if (!Fast486FetchByte(State, (PUCHAR)&Offset))
             {
@@ -655,7 +655,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
         else if ((Mode == 2) || ((Mode == 0) && (RegMem == 6)))
         {
             SHORT Offset;
-            
+
             /* Fetch the word */
             if (!Fast486FetchWord(State, (PUSHORT)&Offset))
             {
