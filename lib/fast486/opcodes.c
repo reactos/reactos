@@ -1041,7 +1041,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         ULONG Data = State->GeneralRegs[FAST486_REG_EAX].Long;
 
         /* Write a dword to the I/O port */
-        State->IoReadCallback(State, Port, &Data, 1, sizeof(ULONG));
+        State->IoWriteCallback(State, Port, &Data, 1, sizeof(ULONG));
     }
     else
     {
