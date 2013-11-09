@@ -53,7 +53,7 @@ static void flush_events(void)
     while (diff > 0)
     {
         if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
-        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
         diff = time - GetTickCount();
         min_timeout = 10;
     }
@@ -80,7 +80,7 @@ static void create_dde_window(HWND *hwnd, LPCSTR name, WNDPROC wndproc)
 static void destroy_dde_window(HWND *hwnd, LPCSTR name)
 {
     DestroyWindow(*hwnd);
-    UnregisterClass(name, GetModuleHandleA(0));
+    UnregisterClassA(name, GetModuleHandleA(NULL));
 }
 
 static LRESULT WINAPI dde_server_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -255,7 +255,7 @@ static void test_msg_server(HANDLE hproc, HANDLE hthread)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
 
     destroy_dde_window(&hwnd, "dde_server");
@@ -825,10 +825,10 @@ static void test_ddeml_server(HANDLE hproc)
 
     /* set up DDE server */
     server_pid = 0;
-    res = DdeInitialize(&server_pid, server_ddeml_callback, APPCLASS_STANDARD, 0);
+    res = DdeInitializeA(&server_pid, server_ddeml_callback, APPCLASS_STANDARD, 0);
     ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
 
-    server = DdeCreateStringHandle(server_pid, "TestDDEServer", CP_WINANSI);
+    server = DdeCreateStringHandleA(server_pid, "TestDDEServer", CP_WINANSI);
     ok(server != NULL, "Expected non-NULL string handle\n");
 
     hdata = DdeNameService(server_pid, server, 0, DNS_REGISTER);
@@ -836,7 +836,7 @@ static void test_ddeml_server(HANDLE hproc)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
     ret = DdeUninitialize(server_pid);
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -1074,7 +1074,7 @@ static void test_msg_client(void)
 
     flush_events();
 
-    item = GlobalAddAtom("request");
+    item = GlobalAddAtomA("request");
     ok(item != 0, "Expected non-NULL item\n");
 
     /* WM_DDE_REQUEST, bad clipboard format */
@@ -2672,7 +2672,7 @@ static void test_end_to_end_server(HANDLE hproc, HANDLE hthread, BOOL type_a)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
 
     ret = DdeUninitialize(server_pid);
@@ -2686,7 +2686,7 @@ START_TEST(dde)
     int argc;
     char **argv;
     char buffer[MAX_PATH];
-    STARTUPINFO startup;
+    STARTUPINFOA startup;
     PROCESS_INFORMATION proc;
     DWORD dde_inst = 0xdeadbeef;
 
@@ -2715,7 +2715,7 @@ START_TEST(dde)
         return;
     }
 
-    ZeroMemory(&startup, sizeof(STARTUPINFO));
+    ZeroMemory(&startup, sizeof(STARTUPINFOA));
     sprintf(buffer, "%s dde ddeml", argv[0]);
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
