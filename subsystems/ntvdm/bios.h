@@ -17,12 +17,12 @@
 
 #define ROM_AREA_START 0xE0000
 #define ROM_AREA_END 0xFFFFF
-#define BDA_SEGMENT 0x40
+
+#define BDA_SEGMENT     0x40
+#define BIOS_SEGMENT    0xF000
 
 #define BIOS_PIC_MASTER_INT 0x08
 #define BIOS_PIC_SLAVE_INT  0x70
-
-#define BIOS_SEGMENT 0xF000
 
 #define BIOS_VIDEO_INTERRUPT        0x10
 #define BIOS_EQUIPMENT_INTERRUPT    0x11
@@ -157,6 +157,7 @@ BYTE BiosGetVideoMode(VOID);
 BOOLEAN BiosSetVideoMode(BYTE ModeNumber);
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
+VOID BiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page);
 VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page);
 VOID BiosVideoService(LPWORD Stack);
 VOID BiosEquipmentService(LPWORD Stack);

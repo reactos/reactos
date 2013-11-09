@@ -430,7 +430,7 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
-    Bda->ScreenRows = Resolution.Y - 1;
+    Bda->ScreenRows    = Resolution.Y - 1;
 
     return TRUE;
 }
@@ -641,13 +641,23 @@ WORD BiosGetCharacter(VOID)
     return CharacterData;
 }
 
+VOID BiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
+{
+    /* Make sure the selected video page is valid */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Get the cursor location */
+    *Row    = HIBYTE(Bda->CursorPosition[Page]);
+    *Column = LOBYTE(Bda->CursorPosition[Page]);
+}
+
 VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
 {
     /* Make sure the selected video page is valid */
     if (Page >= BIOS_MAX_PAGES) return;
 
     /* Update the position in the BDA */
-    Bda->CursorPosition[Page] = (Row << 8) | Column;
+    Bda->CursorPosition[Page] = MAKEWORD(Column, Row);
 
     /* Check if this is the current video page */
     if (Page == Bda->VideoPage)
@@ -687,7 +697,7 @@ BOOLEAN BiosScrollWindow(INT Direction,
         /* Fill the window */
         for (i = 0; i < WindowSize; i++)
         {
-            WindowData[i] = ' ' | (FillAttribute << 8);
+            WindowData[i] = MAKEWORD(' ', FillAttribute);
         }
 
         goto Done;
@@ -707,15 +717,14 @@ Done:
 
 VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 {
-    WORD CharData = (Attribute << 8) | Character;
+    WORD CharData = MAKEWORD(Character, Attribute);
     BYTE Row, Column;
 
     /* Make sure the page exists */
     if (Page >= BIOS_MAX_PAGES) return;
 
     /* Get the cursor location */
-    Row = HIBYTE(Bda->CursorPosition[Page]);
-    Column = LOBYTE(Bda->CursorPosition[Page]);
+    BiosGetCursorPosition(&Row, &Column, Page);
 
     if (Character == '\a')
     {
@@ -738,12 +747,23 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         }
 
         /* Erase the existing character */
-        CharData = (Attribute << 8) | ' ';
-        VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
-                       Page * Bda->VideoPageSize
-                       + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                       (LPVOID)&CharData,
-                       sizeof(WORD));
+        CharData = MAKEWORD(' ', Attribute);
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
+    }
+    else if (Character == '\t')
+    {
+        /* Horizontal Tabulation control character */
+        do
+        {
+            // Taken from DosBox
+            BiosPrintCharacter(' ', Attribute, Page);
+            BiosGetCursorPosition(&Row, &Column, Page);
+        } while (Column % 8);
     }
     else if (Character == '\n')
     {
@@ -762,8 +782,8 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         /* Write the character */
         EmulatorWriteMemory(&EmulatorContext,
                             TO_LINEAR(TEXT_VIDEO_SEG,
-                            Page * Bda->VideoPageSize
-                            + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
                             (LPVOID)&CharData,
                             sizeof(WORD));
 
@@ -1174,6 +1194,18 @@ VOID BiosVideoService(LPWORD Stack)
     }
 }
 
+VOID BiosEquipmentService(LPWORD Stack)
+{
+    /* Return the equipment list */
+    setAX(Bda->EquipmentList);
+}
+
+VOID BiosGetMemorySize(LPWORD Stack)
+{
+    /* Return the conventional memory size in kB, typically 640 kB */
+    setAX(Bda->MemorySize);
+}
+
 VOID BiosKeyboardService(LPWORD Stack)
 {
     switch (getAH())
@@ -1298,18 +1330,6 @@ VOID BiosSystemTimerInterrupt(LPWORD Stack)
 {
     /* Increase the system tick count */
     Bda->TickCounter++;
-}
-
-VOID BiosEquipmentService(LPWORD Stack)
-{
-    /* Return the equipment list */
-    setAX(Bda->EquipmentList);
-}
-
-VOID BiosGetMemorySize(LPWORD Stack)
-{
-    /* Return the conventional memory size in kB, typically 640 kB */
-    setAX(Bda->MemorySize);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
