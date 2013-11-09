@@ -296,18 +296,31 @@ EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] =
 VOID WINAPI Exception(BYTE ExceptionNumber, LPWORD Stack)
 {
     WORD CodeSegment, InstructionPointer;
+    PBYTE Opcode;
 
     ASSERT(ExceptionNumber < 8);
 
     /* Get the CS:IP */
     InstructionPointer = Stack[STACK_IP];
     CodeSegment = Stack[STACK_CS];
+    Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
 
     /* Display a message to the user */
-    DisplayMessage(L"Exception: %s occured at %04X:%04X",
+    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
+                   L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
                    ExceptionName[ExceptionNumber],
                    CodeSegment,
-                   InstructionPointer);
+                   InstructionPointer,
+                   Opcode[0],
+                   Opcode[1],
+                   Opcode[2],
+                   Opcode[3],
+                   Opcode[4],
+                   Opcode[5],
+                   Opcode[6],
+                   Opcode[7],
+                   Opcode[8],
+                   Opcode[9]);
 
     /* Stop the VDM */
     VdmRunning = FALSE;
