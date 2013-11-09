@@ -760,11 +760,12 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
         /* Default character */
 
         /* Write the character */
-        VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
-                       Page * Bda->VideoPageSize
-                       + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                       (LPVOID)&CharData,
-                       sizeof(WORD));
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                            Page * Bda->VideoPageSize
+                            + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
 
         /* Advance the cursor */
         Column++;
@@ -789,6 +790,8 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
                          Rectangle,
                          Page,
                          DEFAULT_ATTRIBUTE);
+
+        Row--;
     }
 
     /* Set the cursor position */

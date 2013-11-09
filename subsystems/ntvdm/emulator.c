@@ -29,7 +29,7 @@ static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
+VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
 
@@ -47,14 +47,16 @@ static VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
+        DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
+                           - VgaAddress + 1;
         LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
 
         /* Read from the VGA memory */
-        VgaReadMemory(VgaAddress, VgaBuffer, Size);
+        VgaReadMemory(VgaAddress, VgaBuffer, ActualSize);
     }
 }
 
-static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
+VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
 
@@ -75,14 +77,16 @@ static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOI
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
+        DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
+                           - VgaAddress + 1;
         LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
 
         /* Write to the VGA memory */
-        VgaWriteMemory(VgaAddress, VgaBuffer, Size);
+        VgaWriteMemory(VgaAddress, VgaBuffer, ActualSize);
     }
 }
 
-static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
+VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
@@ -169,7 +173,7 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
     }
 }
 
-static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
+VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
@@ -268,7 +272,7 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
     }
 }
 
-static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
+VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
 {
     WORD StackSegment, StackPointer;
     LPWORD Stack;
@@ -286,7 +290,7 @@ static VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
         DPRINT1("Invalid BOP code %u\n", BopCode);
 }
 
-static UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
+UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
 

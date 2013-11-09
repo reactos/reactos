@@ -86,6 +86,51 @@ extern FAST486_STATE EmulatorContext;
 
 /* FUNCTIONS ******************************************************************/
 
+VOID WINAPI EmulatorReadMemory
+(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size
+);
+
+VOID WINAPI EmulatorWriteMemory
+(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size
+);
+
+VOID WINAPI EmulatorReadIo
+(
+    PFAST486_STATE State,
+    ULONG Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize
+);
+
+VOID WINAPI EmulatorWriteIo
+(
+    PFAST486_STATE State,
+    ULONG Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize
+);
+
+VOID WINAPI EmulatorBiosOperation
+(
+    PFAST486_STATE State,
+    UCHAR BopCode
+);
+
+UCHAR WINAPI EmulatorIntAcknowledge
+(
+    PFAST486_STATE State
+);
+
 BOOLEAN EmulatorInitialize(VOID);
 VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
