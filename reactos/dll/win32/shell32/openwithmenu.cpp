@@ -238,7 +238,12 @@ BOOL COpenWithList::Execute(COpenWithList::SApp *pApp, LPCWSTR pwszFilePath)
             --cchRemaining;
         }
         else if (pApp->wszCmd[++i] == '1')
-            StringCchCopyExW(pszEnd, cchRemaining, pwszFilePath, &pszEnd, &cchRemaining, 0);
+        {
+            if (StrChrW(pwszFilePath, L' ') && cchRemaining > 3)
+                StringCchPrintfExW(pszEnd, cchRemaining, &pszEnd, &cchRemaining, 0, L"\"%ls\"", pwszFilePath);
+            else
+                StringCchCopyExW(pszEnd, cchRemaining, pwszFilePath, &pszEnd, &cchRemaining, 0);
+        }
     }
     /* NULL-terminate the command string */
     if (cchRemaining > 0)
@@ -1182,7 +1187,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
         /* Load applications list */
         m_pAppList->Load();
         m_pAppList->LoadRecommended(m_wszPath);
-        
+
         /* Create submenu only if there is more than one application and menu has a default item */
         if (m_pAppList->GetRecommendedCount() > 1)
         {
