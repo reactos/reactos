@@ -34,11 +34,6 @@
 #define EMULATOR_FLAG_VIP (1 << 20)
 #define EMULATOR_FLAG_ID (1 << 21)
 
-/* Common definitions */
-#define EMULATOR_BOP            0xC4C4
-#define EMULATOR_INT_BOP        0xFF
-#define EMULATOR_MAX_BOP_NUM    0xFF + 1
-
 #define STACK_COUNTER   0
 #define STACK_INT_NUM   1
 #define STACK_IP        2

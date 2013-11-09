@@ -11,11 +11,10 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "bop.h"
-
 #include "dos.h"
-#include "bios.h"
 
+#include "bios.h"
+#include "int32.h"
 #include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -2570,7 +2569,7 @@ BOOLEAN DosInitialize(VOID)
     DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
     DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
 
-    /* Register the DOS-32 Interrupts */
+    /* Register the DOS 32-bit Interrupts */
     RegisterInt32(0x20, DosInt20h        );
     RegisterInt32(0x21, DosInt21h        );
     RegisterInt32(0x23, DosBreakInterrupt);

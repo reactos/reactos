@@ -11,14 +11,14 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "bop.h"
-
 #include "bios.h"
+
 #include "vga.h"
 #include "pic.h"
 #include "ps2.h"
 #include "timer.h"
 
+#include "int32.h"
 #include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -461,11 +461,6 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 
 BOOLEAN BiosInitialize(VOID)
 {
-    USHORT i;
-    WORD Offset = 0;
-    LPDWORD IntVecTable = (LPDWORD)BaseAddress;
-    LPBYTE BiosCode = (LPBYTE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0);
-
     /* Initialize the BDA */
     Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
@@ -479,43 +474,10 @@ BOOLEAN BiosInitialize(VOID)
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
 
-    /* Generate ISR stubs and fill the IVT */
-    for (i = 0x00; i <= 0xFF; i++)
-    {
-        IntVecTable[i] = MAKELONG(Offset, BIOS_SEGMENT);
+    /* Initialize the 32-bit Interrupt system */
+    InitializeInt32(BIOS_SEGMENT);
 
-        BiosCode[Offset++] = 0xFB; // sti
-
-        BiosCode[Offset++] = 0x6A; // push i
-        BiosCode[Offset++] = (UCHAR)i;
-
-        BiosCode[Offset++] = 0x6A; // push 0
-        BiosCode[Offset++] = 0x00;
-
-// BOP_SEQ:
-        BiosCode[Offset++] = 0xF8; // clc
-
-        BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
-        BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-        BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
-        BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
-
-        BiosCode[Offset++] = 0x73; // jnc EXIT (offset +3)
-        BiosCode[Offset++] = 0x03;
-
-        // HACK: The following instruction should be HLT!
-        BiosCode[Offset++] = 0x90; // nop
-
-        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -10)
-        BiosCode[Offset++] = 0xF6;
-
-// EXIT:
-        BiosCode[Offset++] = 0x83; // add sp, 4
-        BiosCode[Offset++] = 0xC4;
-        BiosCode[Offset++] = 0x04;
-
-        BiosCode[Offset++] = 0xCF; // iret
-    }
+    /* Register the BIOS 32-bit Interrupts */
     RegisterInt32(BIOS_VIDEO_INTERRUPT    , BiosVideoService        );
     RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );

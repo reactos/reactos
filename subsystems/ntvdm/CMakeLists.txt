@@ -6,15 +6,16 @@ spec2def(ntvdm.exe ntvdm.spec)
 list(APPEND SOURCE
     bios.c
     bop.c
+    cmos.c
     dos.c
     emulator.c
+    int32.c
     pic.c
-    registers.c
-    timer.c
     ps2.c
+    registers.c
     speaker.c
+    timer.c
     vga.c
-    cmos.c
     ntvdm.c
     ntvdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)

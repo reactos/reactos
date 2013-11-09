@@ -39,7 +39,6 @@
 
 extern LPVOID BaseAddress;
 extern BOOLEAN VdmRunning;
-extern LPCWSTR ExceptionName[];
 
 VOID DisplayMessage(LPCWSTR Format, ...);
 
