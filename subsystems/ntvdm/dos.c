@@ -1203,6 +1203,12 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Set the stack to the last word of the segment */
         EmulatorSetStack(Segment, 0xFFFE);
 
+        /*
+         * Set the value on the stack to 0, so that a near return
+         * jumps to PSP:0000 which has the exit code.
+         */
+        *((LPWORD)SEG_OFF_TO_PTR(Segment, 0xFFFE)) = 0;
+
         /* Execute */
         CurrentPsp = Segment;
         DiskTransferArea = MAKELONG(0x80, Segment);
