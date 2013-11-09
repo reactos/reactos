@@ -2330,6 +2330,8 @@ VOID DosInt21h(LPWORD Stack)
 
         /* Internal - Get Current Process ID (Get PSP Address) */
         case 0x51:
+        /* Get Current PSP Address */
+        case 0x62:
         {
             /*
              * Identical to the documented AH=62h.
@@ -2393,24 +2395,6 @@ VOID DosInt21h(LPWORD Stack)
                 setAX(ERROR_INVALID_FUNCTION);
             }
 
-            break;
-        }
-
-        /* Get Current PSP Address */
-        case 0x62:
-        {
-            /*
-             * Identical to the undocumented AH=51h.
-             * See Ralf Brown: http://www.ctyme.com/intr/rb-3140.htm
-             * for more information.
-             */
-            setAH(0x51); // Call the internal function.
-            /*
-             * Instead of calling ourselves really recursively as in:
-             * DosInt21h(Stack);
-             * prefer resetting the CF flag to let the BOP repeat.
-             */
-            setCF(1);
             break;
         }
 
