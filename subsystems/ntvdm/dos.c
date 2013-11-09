@@ -1598,7 +1598,7 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Disk Reset  */
+        /* Disk Reset */
         case 0x0D:
         {
             PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
@@ -2328,9 +2328,14 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Get Current Process ID (Get PSP Address) */
+        /* Internal - Get Current Process ID (Get PSP Address) */
         case 0x51:
         {
+            /*
+             * Identical to the documented AH=62h.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2982.htm
+             * for more information.
+             */
             setBX(CurrentPsp);
             break;
         }
@@ -2388,6 +2393,24 @@ VOID DosInt21h(LPWORD Stack)
                 setAX(ERROR_INVALID_FUNCTION);
             }
 
+            break;
+        }
+
+        /* Get Current PSP Address */
+        case 0x62:
+        {
+            /*
+             * Identical to the undocumented AH=51h.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3140.htm
+             * for more information.
+             */
+            setAH(0x51); // Call the internal function.
+            /*
+             * Instead of calling ourselves really recursively as in:
+             * DosInt21h(Stack);
+             * prefer resetting the CF flag to let the BOP repeat.
+             */
+            setCF(1);
             break;
         }
 
