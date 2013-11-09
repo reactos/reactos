@@ -221,8 +221,97 @@ SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
                         IN SECURITY_INFORMATION SecurityInformation,
                         OUT PSAMPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT SamObject;
+    PSAMPR_SR_SECURITY_DESCRIPTOR SamSD = NULL;
+    PSECURITY_DESCRIPTOR SdBuffer = NULL;
+    ACCESS_MASK DesiredAccess = 0;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    *SecurityDescriptor = NULL;
+
+    RtlAcquireResourceShared(&SampResource,
+                             TRUE);
+
+    if (SecurityInformation & (DACL_SECURITY_INFORMATION |
+                               OWNER_SECURITY_INFORMATION |
+                               GROUP_SECURITY_INFORMATION))
+        DesiredAccess |= READ_CONTROL;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ObjectHandle,
+                                  SamDbIgnoreObject,
+                                  DesiredAccess,
+                                  &SamObject);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    SamSD = midl_user_allocate(sizeof(SAMPR_SR_SECURITY_DESCRIPTOR));
+    if (SamSD == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(SamObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    TRACE("SD Length: %lu\n", Length);
+
+    SdBuffer = midl_user_allocate(Length);
+    if (SdBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(SamObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    SdBuffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* FIXME: Use SecurityInformation to return only the requested information */
+
+    SamSD->Length = Length;
+    SamSD->SecurityDescriptor = SdBuffer;
+
+done:
+    RtlReleaseResource(&SampResource);
+
+    if (NT_SUCCESS(Status))
+    {
+        *SecurityDescriptor = SamSD;
+    }
+    else
+    {
+        if (SdBuffer != NULL)
+            midl_user_free(SdBuffer);
+
+        if (SamSD != NULL)
+            midl_user_free(SamSD);
+    }
+
+    return Status;
 }
 
 
