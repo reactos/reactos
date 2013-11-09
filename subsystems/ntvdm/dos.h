@@ -136,9 +136,12 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 CHAR DosReadCharacter(VOID);
 VOID DosPrintCharacter(CHAR Character);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
-VOID DosInt20h(LPWORD Stack);
-VOID DosInt21h(LPWORD Stack);
-VOID DosBreakInterrupt(LPWORD Stack);
+
+VOID WINAPI DosInt20h(LPWORD Stack);
+VOID WINAPI DosInt21h(LPWORD Stack);
+VOID WINAPI DosBreakInterrupt(LPWORD Stack);
+VOID WINAPI DosInt2Fh(LPWORD Stack);
+
 BOOLEAN DosInitialize(VOID);
 
 #endif // _DOS_H_

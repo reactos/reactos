@@ -120,12 +120,6 @@ VOID WINAPI EmulatorWriteIo
     UCHAR DataSize
 );
 
-VOID WINAPI EmulatorBiosOperation
-(
-    PFAST486_STATE State,
-    UCHAR BopCode
-);
-
 UCHAR WINAPI EmulatorIntAcknowledge
 (
     PFAST486_STATE State

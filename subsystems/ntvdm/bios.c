@@ -10,8 +10,10 @@
 
 #define NDEBUG
 
-#include "bios.h"
 #include "emulator.h"
+#include "bop.h"
+
+#include "bios.h"
 #include "vga.h"
 #include "pic.h"
 #include "ps2.h"
@@ -461,7 +463,7 @@ BOOLEAN BiosInitialize(VOID)
 {
     USHORT i;
     WORD Offset = 0;
-    LPWORD IntVecTable = (LPWORD)BaseAddress;
+    LPDWORD IntVecTable = (LPDWORD)BaseAddress;
     LPBYTE BiosCode = (LPBYTE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0);
 
     /* Initialize the BDA */
@@ -480,8 +482,7 @@ BOOLEAN BiosInitialize(VOID)
     /* Generate ISR stubs and fill the IVT */
     for (i = 0x00; i <= 0xFF; i++)
     {
-        IntVecTable[i * 2] = Offset;
-        IntVecTable[i * 2 + 1] = BIOS_SEGMENT;
+        IntVecTable[i] = MAKELONG(Offset, BIOS_SEGMENT);
 
         BiosCode[Offset++] = 0xFB; // sti
 
@@ -494,9 +495,10 @@ BOOLEAN BiosInitialize(VOID)
 // BOP_SEQ:
         BiosCode[Offset++] = 0xF8; // clc
 
-        BiosCode[Offset++] = LOBYTE(EMULATOR_BOP); // BOP sequence
+        BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
         BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-        BiosCode[Offset++] = EMULATOR_INT_BOP;
+        BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
+        BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
 
         BiosCode[Offset++] = 0x73; // jnc EXIT (offset +3)
         BiosCode[Offset++] = 0x03;
@@ -504,8 +506,8 @@ BOOLEAN BiosInitialize(VOID)
         // HACK: The following instruction should be HLT!
         BiosCode[Offset++] = 0x90; // nop
 
-        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -9)
-        BiosCode[Offset++] = 0xF7;
+        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -10)
+        BiosCode[Offset++] = 0xF6;
 
 // EXIT:
         BiosCode[Offset++] = 0x83; // add sp, 4
@@ -514,6 +516,12 @@ BOOLEAN BiosInitialize(VOID)
 
         BiosCode[Offset++] = 0xCF; // iret
     }
+    RegisterInt32(BIOS_VIDEO_INTERRUPT    , BiosVideoService        );
+    RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
+    RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
+    RegisterInt32(BIOS_KBD_INTERRUPT      , BiosKeyboardService     );
+    RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
+    RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
     /* Get the input handle to the real console, and check for success */
     BiosConsoleInput = CreateFileW(L"CONIN$",
@@ -818,7 +826,7 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
     BiosSetCursorPosition(Row, Column, Page);
 }
 
-VOID BiosVideoService(LPWORD Stack)
+VOID WINAPI BiosVideoService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1194,19 +1202,19 @@ VOID BiosVideoService(LPWORD Stack)
     }
 }
 
-VOID BiosEquipmentService(LPWORD Stack)
+VOID WINAPI BiosEquipmentService(LPWORD Stack)
 {
     /* Return the equipment list */
     setAX(Bda->EquipmentList);
 }
 
-VOID BiosGetMemorySize(LPWORD Stack)
+VOID WINAPI BiosGetMemorySize(LPWORD Stack)
 {
     /* Return the conventional memory size in kB, typically 640 kB */
     setAX(Bda->MemorySize);
 }
 
-VOID BiosKeyboardService(LPWORD Stack)
+VOID WINAPI BiosKeyboardService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1288,7 +1296,7 @@ VOID BiosKeyboardService(LPWORD Stack)
     }
 }
 
-VOID BiosTimeService(LPWORD Stack)
+VOID WINAPI BiosTimeService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1326,7 +1334,7 @@ VOID BiosTimeService(LPWORD Stack)
     }
 }
 
-VOID BiosSystemTimerInterrupt(LPWORD Stack)
+VOID WINAPI BiosSystemTimerInterrupt(LPWORD Stack)
 {
     /* Increase the system tick count */
     Bda->TickCounter++;

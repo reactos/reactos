@@ -10,9 +10,11 @@
 
 #define NDEBUG
 
+#include "emulator.h"
+#include "bop.h"
+
 #include "dos.h"
 #include "bios.h"
-#include "emulator.h"
 
 #include "registers.h"
 
@@ -1393,13 +1395,13 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
     }
 }
 
-VOID DosInt20h(LPWORD Stack)
+VOID WINAPI DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
     DosTerminateProcess(Stack[STACK_CS], 0);
 }
 
-VOID DosInt21h(LPWORD Stack)
+VOID WINAPI DosInt21h(LPWORD Stack)
 {
     BYTE Character;
     SYSTEMTIME SystemTime;
@@ -2415,11 +2417,18 @@ VOID DosInt21h(LPWORD Stack)
     }
 }
 
-VOID DosBreakInterrupt(LPWORD Stack)
+VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 {
     UNREFERENCED_PARAMETER(Stack);
 
     VdmRunning = FALSE;
+}
+
+VOID WINAPI DosInt2Fh(LPWORD Stack)
+{
+    DPRINT1("DOS System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+            getAH(), getAL());
+    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
 BOOLEAN DosInitialize(VOID)
@@ -2560,6 +2569,12 @@ BOOLEAN DosInitialize(VOID)
     DosSystemFileTable[0] = GetStdHandle(STD_INPUT_HANDLE);
     DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
     DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
+
+    /* Register the DOS-32 Interrupts */
+    RegisterInt32(0x20, DosInt20h        );
+    RegisterInt32(0x21, DosInt21h        );
+    RegisterInt32(0x23, DosBreakInterrupt);
+    RegisterInt32(0x2F, DosInt2Fh        );
 
     return TRUE;
 }

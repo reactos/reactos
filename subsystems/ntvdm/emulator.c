@@ -272,24 +272,6 @@ VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULON
     }
 }
 
-VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
-{
-    WORD StackSegment, StackPointer;
-    LPWORD Stack;
-
-    /* Get the SS:SP */
-    StackSegment = State->SegmentRegs[FAST486_REG_SS].Selector;
-    StackPointer = State->GeneralRegs[FAST486_REG_ESP].LowWord;
-
-    /* Get the stack */
-    Stack = (LPWORD)SEG_OFF_TO_PTR(StackSegment, StackPointer);
-
-    if (BopProc[BopCode] != NULL)
-        BopProc[BopCode](Stack);
-    else
-        DPRINT1("Invalid BOP code %u\n", BopCode);
-}
-
 UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);

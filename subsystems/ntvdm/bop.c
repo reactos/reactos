@@ -12,13 +12,10 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "bios.h"
 #include "bop.h"
+
+#include "bios.h"
 #include "dos.h"
-//#include "vga.h"
-//#include "pic.h"
-//#include "ps2.h"
-//#include "timer.h"
 #include "registers.h"
 
 LPCWSTR ExceptionName[] =
@@ -33,6 +30,9 @@ LPCWSTR ExceptionName[] =
     L"FPU Not Available"
 };
 
+/*
+ * This is the list of registered BOP handlers.
+ */
 EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] =
 {
     NULL,
@@ -293,6 +293,271 @@ EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] =
     ControlBop
 };
 
+/*
+ * This is the list of registered 32-bit Interrupt handlers.
+ */
+EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT_NUM] =
+{
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+
+
 VOID WINAPI Exception(BYTE ExceptionNumber, LPWORD Stack)
 {
     WORD CodeSegment, InstructionPointer;
@@ -344,11 +609,7 @@ VOID WINAPI Exception(BYTE ExceptionNumber, LPWORD Stack)
     // return;
 // }
 
-// VOID WINAPI BiosInt(BYTE IntNumber, LPWORD Stack)
-// {
-// }
-
-VOID WINAPI IntDispatch(LPWORD Stack)
+VOID WINAPI Int32Dispatch(LPWORD Stack)
 {
     BYTE IntNum;
 
@@ -376,77 +637,48 @@ VOID WINAPI IntDispatch(LPWORD Stack)
         return;
     }
 
-    switch (IntNum)
-    {
-        case BIOS_VIDEO_INTERRUPT:
-        {
-            /* This is the video BIOS interrupt, call the BIOS */
-            BiosVideoService(Stack);
-            break;
-        }
-        case BIOS_EQUIPMENT_INTERRUPT:
-        {
-            /* This is the BIOS "get equipment" command, call the BIOS */
-            BiosEquipmentService(Stack);
-            break;
-        }
-        case BIOS_MEMORY_SIZE:
-        {
-            /* This is the BIOS "get memory size" command, call the BIOS */
-            BiosGetMemorySize(Stack);
-            break;
-        }
-        case BIOS_KBD_INTERRUPT:
-        {
-            /* This is the keyboard BIOS interrupt, call the BIOS */
-            BiosKeyboardService(Stack);
-            break;
-        }
-        case BIOS_TIME_INTERRUPT:
-        {
-            /* This is the time BIOS interrupt, call the BIOS */
-            BiosTimeService(Stack);
-            break;
-        }
-        case BIOS_SYS_TIMER_INTERRUPT:
-        {
-            /* BIOS timer update */
-            BiosSystemTimerInterrupt(Stack);
-            break;
-        }
-        case 0x20:
-        {
-            DosInt20h(Stack);
-            break;
-        }
-        case 0x21:
-        {
-            DosInt21h(Stack);
-            break;
-        }
-        case 0x23:
-        {
-            DosBreakInterrupt(Stack);
-            break;
-        }
-        case 0x2F:
-        {
-            DPRINT1("DOS System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
-                    getAH(), getAL());
-            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
-            break;
-        }
-        default:
-        {
-            DPRINT1("Unhandled interrupt: 0x%02X\n", IntNum);
-            break;
-        }
-    }
+    /* Call the 32-bit Interrupt handler */
+    if (Int32Proc[IntNum] != NULL)
+        Int32Proc[IntNum](Stack);
+    else
+        DPRINT1("Unhandled 32-bit interrupt: 0x%02X\n", IntNum);
 }
 
 VOID WINAPI ControlBop(LPWORD Stack)
 {
-    IntDispatch(Stack);
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    if (FuncNum == CTRL_BOP_INT32)
+        Int32Dispatch(Stack);
+    else
+        DPRINT1("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
+}
+
+
+VOID WINAPI RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)
+{
+    Int32Proc[IntNumber] = IntHandler;
+}
+
+VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
+{
+    WORD StackSegment, StackPointer;
+    LPWORD Stack;
+
+    /* Get the SS:SP */
+    StackSegment = State->SegmentRegs[FAST486_REG_SS].Selector;
+    StackPointer = State->GeneralRegs[FAST486_REG_ESP].LowWord;
+
+    /* Get the stack */
+    Stack = (LPWORD)SEG_OFF_TO_PTR(StackSegment, StackPointer);
+
+    /* Call the BOP handler */
+    if (BopProc[BopCode] != NULL)
+        BopProc[BopCode](Stack);
+    else
+        DPRINT1("Invalid BOP code: 0x%02X\n", BopCode);
 }
 
 /* EOF */
