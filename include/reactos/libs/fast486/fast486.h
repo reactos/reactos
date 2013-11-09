@@ -185,7 +185,8 @@ VOID
     PFAST486_STATE State,
     ULONG Port,
     PVOID Buffer,
-    ULONG Size
+    ULONG Size,
+    UCHAR Width
 );
 
 typedef
@@ -195,7 +196,8 @@ VOID
     PFAST486_STATE State,
     ULONG Port,
     PVOID Buffer,
-    ULONG Size
+    ULONG Size,
+    UCHAR Width
 );
 
 typedef

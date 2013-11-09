@@ -906,7 +906,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInByte)
     }
 
     /* Read a byte from the I/O port */
-    State->IoReadCallback(State, Port, &Data, sizeof(UCHAR));
+    State->IoReadCallback(State, Port, &Data, 1, sizeof(UCHAR));
 
     /* Store the result in AL */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Data;
@@ -950,7 +950,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         ULONG Data;
 
         /* Read a dword from the I/O port */
-        State->IoReadCallback(State, Port, &Data, sizeof(ULONG));
+        State->IoReadCallback(State, Port, &Data, 1, sizeof(ULONG));
 
         /* Store the value in EAX */
         State->GeneralRegs[FAST486_REG_EAX].Long = Data;
@@ -960,7 +960,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         USHORT Data;
 
         /* Read a word from the I/O port */
-        State->IoReadCallback(State, Port, &Data, sizeof(USHORT));
+        State->IoReadCallback(State, Port, &Data, 1, sizeof(USHORT));
 
         /* Store the value in AX */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Data;
@@ -999,7 +999,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
     Data = State->GeneralRegs[FAST486_REG_EAX].LowByte;
     
     /* Write the byte to the I/O port */
-    State->IoWriteCallback(State, Port, &Data, sizeof(UCHAR));
+    State->IoWriteCallback(State, Port, &Data, 1, sizeof(UCHAR));
 
     return TRUE;
 }
@@ -1041,7 +1041,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         ULONG Data = State->GeneralRegs[FAST486_REG_EAX].Long;
 
         /* Write a dword to the I/O port */
-        State->IoReadCallback(State, Port, &Data, sizeof(ULONG));
+        State->IoReadCallback(State, Port, &Data, 1, sizeof(ULONG));
     }
     else
     {
@@ -1049,7 +1049,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         USHORT Data = State->GeneralRegs[FAST486_REG_EAX].LowWord;
 
         /* Write a word to the I/O port */
-        State->IoWriteCallback(State, Port, &Data, sizeof(USHORT));
+        State->IoWriteCallback(State, Port, &Data, 1, sizeof(USHORT));
     }
 
     return TRUE;
@@ -5997,7 +5997,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
             State->IoReadCallback(State,
                                   State->GeneralRegs[FAST486_REG_EDX].LowWord,
                                   Block,
-                                  Processed * DataSize);
+                                  Processed,
+                                  DataSize);
 
             if (State->Flags.Df)
             {
@@ -6059,6 +6060,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
         State->IoReadCallback(State,
                               State->GeneralRegs[FAST486_REG_EDX].LowWord,
                               &Data,
+                              1,
                               DataSize);
 
         /* Write to the destination operand */
@@ -6174,7 +6176,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
             State->IoWriteCallback(State,
                                    State->GeneralRegs[FAST486_REG_EDX].LowWord,
                                    Block,
-                                   Processed * DataSize);
+                                   Processed,
+                                   DataSize);
 
             if (!State->Flags.Df)
             {
@@ -6212,6 +6215,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
         State->IoWriteCallback(State,
                                State->GeneralRegs[FAST486_REG_EDX].LowWord,
                                &Data,
+                               1,
                                DataSize);
 
         /* Increment/decrement ESI */

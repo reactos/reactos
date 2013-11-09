@@ -82,28 +82,30 @@ static VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOI
     }
 }
 
-static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
+static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size, UCHAR Width)
 {
-    INT i;
+    INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
 
-    for (i = 0; i < Size; i++)
+    for (i = 0; i < Size; i++) for (j = 0; j < Width; j++)
     {
-        switch (Port)
+        ULONG CurrentPort = Port + j;
+
+        switch (CurrentPort)
         {
             case PIC_MASTER_CMD:
             case PIC_SLAVE_CMD:
             {
-                *(Address++) = PicReadCommand(Port);
+                *(Address++) = PicReadCommand(CurrentPort);
                 break;
             }
 
             case PIC_MASTER_DATA:
             case PIC_SLAVE_DATA:
             {
-                *(Address++) = PicReadData(Port);
+                *(Address++) = PicReadData(CurrentPort);
                 break;
             }
 
@@ -111,7 +113,7 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
             case PIT_DATA_PORT(1):
             case PIT_DATA_PORT(2):
             {
-                *(Address++) = PitReadData(Port - PIT_DATA_PORT(0));
+                *(Address++) = PitReadData(CurrentPort - PIT_DATA_PORT(0));
                 break;
             }
 
@@ -155,28 +157,30 @@ static VOID WINAPI EmulatorReadIo(PFAST486_STATE State, ULONG Port, PVOID Buffer
             case VGA_STAT_MONO:
             case VGA_STAT_COLOR:
             {
-                *(Address++) = VgaReadPort(Port);
+                *(Address++) = VgaReadPort(CurrentPort);
                 break;
             }
 
             default:
             {
-                DPRINT1("Read from unknown port: 0x%X\n", Port);
+                DPRINT1("Read from unknown port: 0x%X\n", CurrentPort);
             }
         }
     }
 }
 
-static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size)
+static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Size, UCHAR Width)
 {
-    INT i;
+    INT i, j;
     LPBYTE Address = (LPBYTE)Buffer;
 
     UNREFERENCED_PARAMETER(State);
 
-    for (i = 0; i < Size; i++)
+    for (i = 0; i < Size; i++) for (j = 0; j < Width; j++)
     {
-        switch (Port)
+        ULONG CurrentPort = Port + j;
+
+        switch (CurrentPort)
         {
             case PIT_COMMAND_PORT:
             {
@@ -188,21 +192,21 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
             case PIT_DATA_PORT(1):
             case PIT_DATA_PORT(2):
             {
-                PitWriteData(Port - PIT_DATA_PORT(0), *(Address++));
+                PitWriteData(CurrentPort - PIT_DATA_PORT(0), *(Address++));
                 break;
             }
 
             case PIC_MASTER_CMD:
             case PIC_SLAVE_CMD:
             {
-                PicWriteCommand(Port, *(Address++));
+                PicWriteCommand(CurrentPort, *(Address++));
                 break;
             }
 
             case PIC_MASTER_DATA:
             case PIC_SLAVE_DATA:
             {
-                PicWriteData(Port, *(Address++));
+                PicWriteData(CurrentPort, *(Address++));
                 break;
             }
 
@@ -252,13 +256,13 @@ static VOID WINAPI EmulatorWriteIo(PFAST486_STATE State, ULONG Port, PVOID Buffe
             case VGA_STAT_MONO:
             case VGA_STAT_COLOR:
             {
-                VgaWritePort(Port, *(Address++));
+                VgaWritePort(CurrentPort, *(Address++));
                 break;
             }
 
             default:
             {
-                DPRINT1("Write to unknown port: 0x%X\n", Port);
+                DPRINT1("Write to unknown port: 0x%X\n", CurrentPort);
             }
         }
     }
