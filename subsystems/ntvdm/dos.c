@@ -2334,8 +2334,9 @@ VOID DosInt21h(LPWORD Stack)
         case 0x62:
         {
             /*
-             * Identical to the documented AH=62h.
+             * Undocumented AH=51h is identical to the documented AH=62h.
              * See Ralf Brown: http://www.ctyme.com/intr/rb-2982.htm
+             * and http://www.ctyme.com/intr/rb-3140.htm
              * for more information.
              */
             setBX(CurrentPsp);
