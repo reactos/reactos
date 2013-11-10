@@ -19,7 +19,221 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "common.h"
+
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FORCEINLINE
+ULONG
+Fast486GetPageTableEntry(PFAST486_STATE State,
+                         ULONG VirtualAddress,
+                         BOOLEAN MarkAsDirty)
+{
+    ULONG PdeIndex = GET_ADDR_PDE(VirtualAddress);
+    ULONG PteIndex = GET_ADDR_PTE(VirtualAddress);
+    FAST486_PAGE_DIR DirectoryEntry;
+    FAST486_PAGE_TABLE TableEntry;
+    ULONG PageDirectory = State->ControlRegisters[FAST486_REG_CR3];
+
+    if ((State->Tlb != NULL)
+        && (State->Tlb[VirtualAddress >> 12] != INVALID_TLB_FIELD))
+    {
+        /* Return the cached entry */
+        return State->Tlb[VirtualAddress >> 12];
+    }
+
+    /* Read the directory entry */
+    State->MemReadCallback(State,
+                           PageDirectory + PdeIndex * sizeof(ULONG),
+                           &DirectoryEntry.Value,
+                           sizeof(DirectoryEntry));
+
+    /* Make sure it is present */
+    if (!DirectoryEntry.Present) return 0;
+
+    /* Was the directory entry accessed before? */
+    if (!DirectoryEntry.Accessed)
+    {
+        /* Well, it is now */
+        DirectoryEntry.Accessed = TRUE;
+
+        /* Write back the directory entry */
+        State->MemWriteCallback(State,
+                                PageDirectory + PdeIndex * sizeof(ULONG),
+                                &DirectoryEntry.Value,
+                                sizeof(DirectoryEntry));
+    }
+
+    /* Read the table entry */
+    State->MemReadCallback(State,
+                           (DirectoryEntry.TableAddress << 12)
+                           + PteIndex * sizeof(ULONG),
+                           &TableEntry.Value,
+                           sizeof(TableEntry));
+
+    /* Make sure it is present */
+    if (!TableEntry.Present) return 0;
+
+    if (MarkAsDirty) TableEntry.Dirty = TRUE;
+
+    /* Was the table entry accessed before? */
+    if (!TableEntry.Accessed)
+    {
+        /* Well, it is now */
+        TableEntry.Accessed = TRUE;
+
+        /* Write back the table entry */
+        State->MemWriteCallback(State,
+                                (DirectoryEntry.TableAddress << 12)
+                                + PteIndex * sizeof(ULONG),
+                                &TableEntry.Value,
+                                sizeof(TableEntry));
+    }
+
+    /*
+     * The resulting permissions depend on the permissions
+     * in the page directory table too
+     */
+    TableEntry.Writeable &= DirectoryEntry.Writeable;
+    TableEntry.Usermode &= DirectoryEntry.Usermode;
+
+    if (State->Tlb != NULL)
+    {
+        /* Set the TLB entry */
+        State->Tlb[VirtualAddress >> 12] = TableEntry.Value;
+    }
+
+    /* Return the table entry */
+    return TableEntry.Value;
+}
+
+FORCEINLINE
+BOOLEAN
+Fast486ReadLinearMemory(PFAST486_STATE State,
+                        ULONG LinearAddress,
+                        PVOID Buffer,
+                        ULONG Size)
+{
+    INT Cpl = Fast486GetCurrentPrivLevel(State);
+
+    /* Check if paging is enabled */
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
+    {
+        ULONG Page;
+        FAST486_PAGE_TABLE TableEntry;
+
+        for (Page = PAGE_ALIGN(LinearAddress);
+             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
+             Page += PAGE_SIZE)
+        {
+            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+
+            /* Get the table entry */
+            TableEntry.Value = Fast486GetPageTableEntry(State, Page, FALSE);
+
+            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+            {
+                /* Exception */
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
+                                              TableEntry.Value & 0x07);
+                return FALSE;
+            }
+
+            /* Check if this is the first page */
+            if (Page == PAGE_ALIGN(LinearAddress))
+            {
+                /* Start copying from the offset from the beginning of the page */
+                PageOffset = PAGE_OFFSET(LinearAddress);
+            }
+
+            /* Check if this is the last page */
+            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
+            {
+                /* Copy only a part of the page */
+                PageLength = PAGE_OFFSET(LinearAddress + Size);
+            }
+
+            /* Read the memory */
+            State->MemReadCallback(State,
+                                   (TableEntry.Address << 12) | PageOffset,
+                                   Buffer,
+                                   PageLength);
+        }
+    }
+    else
+    {
+        /* Read the memory */
+        State->MemReadCallback(State, LinearAddress, Buffer, Size);
+    }
+
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+Fast486WriteLinearMemory(PFAST486_STATE State,
+                         ULONG LinearAddress,
+                         PVOID Buffer,
+                         ULONG Size)
+{
+    INT Cpl = Fast486GetCurrentPrivLevel(State);
+
+    /* Check if paging is enabled */
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
+    {
+        ULONG Page;
+        FAST486_PAGE_TABLE TableEntry;
+
+        for (Page = PAGE_ALIGN(LinearAddress);
+             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
+             Page += PAGE_SIZE)
+        {
+            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+
+            /* Get the table entry */
+            TableEntry.Value = Fast486GetPageTableEntry(State, Page, TRUE);
+
+            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+                || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
+                && !TableEntry.Writeable))
+            {
+                /* Exception */
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
+                                              TableEntry.Value & 0x07);
+                return FALSE;
+            }
+
+            /* Check if this is the first page */
+            if (Page == PAGE_ALIGN(LinearAddress))
+            {
+                /* Start copying from the offset from the beginning of the page */
+                PageOffset = PAGE_OFFSET(LinearAddress);
+            }
+
+            /* Check if this is the last page */
+            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
+            {
+                /* Copy only a part of the page */
+                PageLength = PAGE_OFFSET(LinearAddress + Size);
+            }
+
+            /* Write the memory */
+            State->MemWriteCallback(State,
+                                    (TableEntry.Address << 12) | PageOffset,
+                                    Buffer,
+                                    PageLength);
+        }
+    }
+    else
+    {
+        /* Write the memory */
+        State->MemWriteCallback(State, LinearAddress, Buffer, Size);
+    }
+
+    return TRUE;
+}
 
 FORCEINLINE
 VOID
@@ -185,12 +399,15 @@ Fast486LoadSegment(PFAST486_STATE State,
         }
 
         /* Read the GDT */
-        // FIXME: This code is only correct when paging is disabled!!!
-        State->MemReadCallback(State,
-                               State->Gdtr.Address
-                               + GET_SEGMENT_INDEX(Selector),
-                               &GdtEntry,
-                               sizeof(GdtEntry));
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Gdtr.Address
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     &GdtEntry,
+                                     sizeof(GdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
 
         if (Segment == FAST486_REG_SS)
         {
@@ -388,12 +605,15 @@ Fast486GetIntVector(PFAST486_STATE State,
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Read from the IDT */
-        // FIXME: This code is only correct when paging is disabled!!!
-        State->MemReadCallback(State,
-                               State->Idtr.Address
-                               + Number * sizeof(*IdtEntry),
-                               IdtEntry,
-                               sizeof(*IdtEntry));
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Idtr.Address
+                                     + Number * sizeof(*IdtEntry),
+                                     IdtEntry,
+                                     sizeof(*IdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
     }
     else
     {
@@ -417,10 +637,6 @@ Fast486GetIntVector(PFAST486_STATE State,
         IdtEntry->OffsetHigh = 0;
     }
 
-    /*
-     * Once paging support is implemented this function
-     * will not always return true
-     */
     return TRUE;
 }
 

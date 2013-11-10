@@ -29,19 +29,6 @@
 #include <fast486.h>
 #include "common.h"
 
-/* PRIVATE FUNCTIONS **********************************************************/
-
-static inline
-ULONG
-Fast486GetPageTableEntry(PFAST486_STATE State,
-                         ULONG VirtualAddress)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return 0;
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN
@@ -54,7 +41,6 @@ Fast486ReadMemory(PFAST486_STATE State,
 {
     ULONG LinearAddress;
     PFAST486_SEG_REG CachedDescriptor;
-    INT Cpl = Fast486GetCurrentPrivLevel(State);
 
     ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
@@ -108,58 +94,8 @@ Fast486ReadMemory(PFAST486_STATE State,
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
 
-    /* Check if paging is enabled */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
-    {
-        ULONG Page;
-        FAST486_PAGE_TABLE TableEntry;
-
-        for (Page = PAGE_ALIGN(LinearAddress);
-             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
-             Page += PAGE_SIZE)
-        {
-            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
-
-            /* Get the table entry */
-            TableEntry.Value = Fast486GetPageTableEntry(State, Page);
-
-            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
-            {
-                /* Exception */
-                Fast486ExceptionWithErrorCode(State,
-                                              FAST486_EXCEPTION_PF,
-                                              TableEntry.Value & 0x07);
-                return FALSE;
-            }
-
-            /* Check if this is the first page */
-            if (Page == PAGE_ALIGN(LinearAddress))
-            {
-                /* Start copying from the offset from the beginning of the page */
-                PageOffset = PAGE_OFFSET(LinearAddress);
-            }
-
-            /* Check if this is the last page */
-            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
-            {
-                /* Copy only a part of the page */
-                PageLength = PAGE_OFFSET(LinearAddress + Size);
-            }
-
-            /* Read the memory */
-            State->MemReadCallback(State,
-                                   (TableEntry.Address << 12) | PageOffset,
-                                   Buffer,
-                                   PageLength);
-        }
-    }
-    else
-    {
-        /* Read the memory */
-        State->MemReadCallback(State, LinearAddress, Buffer, Size);
-    }
-
-    return TRUE;
+    /* Read from the linear address */
+    return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
 }
 
 BOOLEAN
@@ -171,7 +107,6 @@ Fast486WriteMemory(PFAST486_STATE State,
 {
     ULONG LinearAddress;
     PFAST486_SEG_REG CachedDescriptor;
-    INT Cpl = Fast486GetCurrentPrivLevel(State);
 
     ASSERT(SegmentReg < FAST486_NUM_SEG_REGS);
 
@@ -220,60 +155,8 @@ Fast486WriteMemory(PFAST486_STATE State,
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
 
-    /* Check if paging is enabled */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
-    {
-        ULONG Page;
-        FAST486_PAGE_TABLE TableEntry;
-
-        for (Page = PAGE_ALIGN(LinearAddress);
-             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
-             Page += PAGE_SIZE)
-        {
-            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
-
-            /* Get the table entry */
-            TableEntry.Value = Fast486GetPageTableEntry(State, Page);
-
-            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
-                || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
-                && !TableEntry.Writeable))
-            {
-                /* Exception */
-                Fast486ExceptionWithErrorCode(State,
-                                              FAST486_EXCEPTION_PF,
-                                              TableEntry.Value & 0x07);
-                return FALSE;
-            }
-
-            /* Check if this is the first page */
-            if (Page == PAGE_ALIGN(LinearAddress))
-            {
-                /* Start copying from the offset from the beginning of the page */
-                PageOffset = PAGE_OFFSET(LinearAddress);
-            }
-
-            /* Check if this is the last page */
-            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
-            {
-                /* Copy only a part of the page */
-                PageLength = PAGE_OFFSET(LinearAddress + Size);
-            }
-
-            /* Write the memory */
-            State->MemWriteCallback(State,
-                                    (TableEntry.Address << 12) | PageOffset,
-                                    Buffer,
-                                    PageLength);
-        }
-    }
-    else
-    {
-        /* Write the memory */
-        State->MemWriteCallback(State, LinearAddress, Buffer, Size);
-    }
-
-    return TRUE;
+    /* Write to the linear address */
+    return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);
 }
 
 BOOLEAN
@@ -293,11 +176,14 @@ Fast486InterruptInternal(PFAST486_STATE State,
         if (Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
         {
             /* Read the TSS */
-            // FIXME: This code is only correct when paging is disabled!!!
-            State->MemReadCallback(State,
-                                   State->Tss.Address,
-                                   &Tss,
-                                   sizeof(Tss));
+            if (!Fast486ReadLinearMemory(State,
+                                         State->Tss.Address,
+                                         &Tss,
+                                         sizeof(Tss)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
 
             /* Check the new (higher) privilege level */
             switch (GET_SEGMENT_RPL(SegmentSelector))

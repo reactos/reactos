@@ -203,7 +203,8 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
                   FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
-                  FAST486_INT_ACK_PROC   IntAckCallback)
+                  FAST486_INT_ACK_PROC   IntAckCallback,
+                  PULONG                 Tlb)
 {
     /* Set the callbacks (or use default ones if some are NULL) */
     State->MemReadCallback  = (MemReadCallback  ? MemReadCallback  : Fast486MemReadCallback );
@@ -213,6 +214,9 @@ Fast486Initialize(PFAST486_STATE         State,
     State->IdleCallback     = (IdleCallback     ? IdleCallback     : Fast486IdleCallback    );
     State->BopCallback      = (BopCallback      ? BopCallback      : Fast486BopCallback     );
     State->IntAckCallback   = (IntAckCallback   ? IntAckCallback   : Fast486IntAckCallback  );
+
+    /* Set the TLB (if given) */
+    State->Tlb = Tlb;
 
     /* Reset the CPU */
     Fast486Reset(State);
@@ -231,6 +235,7 @@ Fast486Reset(PFAST486_STATE State)
     FAST486_IDLE_PROC      IdleCallback     = State->IdleCallback;
     FAST486_BOP_PROC       BopCallback      = State->BopCallback;
     FAST486_INT_ACK_PROC   IntAckCallback   = State->IntAckCallback;
+    PULONG                 Tlb              = State->Tlb;
 
     /* Clear the entire structure */
     RtlZeroMemory(State, sizeof(*State));
@@ -266,7 +271,7 @@ Fast486Reset(PFAST486_STATE State)
     /* Initialize CR0 */
     State->ControlRegisters[FAST486_REG_CR0] |= FAST486_CR0_ET;
 
-    /* Restore the callbacks */
+    /* Restore the callbacks and TLB */
     State->MemReadCallback  = MemReadCallback;
     State->MemWriteCallback = MemWriteCallback;
     State->IoReadCallback   = IoReadCallback;
@@ -274,6 +279,7 @@ Fast486Reset(PFAST486_STATE State)
     State->IdleCallback     = IdleCallback;
     State->BopCallback      = BopCallback;
     State->IntAckCallback   = IntAckCallback;
+    State->Tlb              = Tlb;
 }
 
 VOID

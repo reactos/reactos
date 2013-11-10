@@ -296,7 +296,8 @@ BOOLEAN EmulatorInitialize(VOID)
                       EmulatorWriteIo,
                       NULL,
                       EmulatorBiosOperation,
-                      EmulatorIntAcknowledge);
+                      EmulatorIntAcknowledge,
+                      NULL /* TODO: Use a TLB */);
 
     /* Enable interrupts */
     EmulatorSetFlag(EMULATOR_FLAG_IF);

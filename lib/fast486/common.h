@@ -56,6 +56,9 @@
 
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)
 #define PAGE_OFFSET(x)  ((x) & 0x00000FFF)
+#define GET_ADDR_PDE(x) ((x) >> 22)
+#define GET_ADDR_PTE(x) (((x) >> 12) & 0x3FF)
+#define INVALID_TLB_FIELD 0xFFFFFFFF
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE   4096
@@ -92,6 +95,8 @@ typedef union _FAST486_PAGE_DIR
     ULONG Value;
 } FAST486_PAGE_DIR, *PFAST486_PAGE_DIR;
 
+C_ASSERT(sizeof(FAST486_PAGE_DIR) == sizeof(ULONG));
+
 typedef union _FAST486_PAGE_TABLE
 {
     struct
@@ -110,6 +115,8 @@ typedef union _FAST486_PAGE_TABLE
     };
     ULONG Value;
 } FAST486_PAGE_TABLE, *PFAST486_PAGE_TABLE;
+
+C_ASSERT(sizeof(FAST486_PAGE_DIR) == sizeof(ULONG));
 
 #pragma pack(pop)
 

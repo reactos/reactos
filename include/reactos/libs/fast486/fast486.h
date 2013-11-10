@@ -401,6 +401,7 @@ struct _FAST486_STATE
     FAST486_SEG_REGS SegmentOverride;
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
+    PULONG Tlb;
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -414,7 +415,8 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
                   FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
-                  FAST486_INT_ACK_PROC   IntAckCallback);
+                  FAST486_INT_ACK_PROC   IntAckCallback,
+                  PULONG                 Tlb);
 
 VOID
 NTAPI
