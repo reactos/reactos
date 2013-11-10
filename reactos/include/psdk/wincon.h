@@ -717,6 +717,7 @@ WriteConsoleOutputCharacterW(
 #define PeekConsoleInput PeekConsoleInputW
 #define ReadConsole ReadConsoleW
 #define ReadConsoleInput ReadConsoleInputW
+#define ReadConsoleInputEx ReadConsoleInputExW
 #define ReadConsoleOutput ReadConsoleOutputW
 #define ReadConsoleOutputCharacter ReadConsoleOutputCharacterW
 #define ScrollConsoleScreenBuffer ScrollConsoleScreenBufferW
@@ -738,6 +739,7 @@ WriteConsoleOutputCharacterW(
 #define PeekConsoleInput PeekConsoleInputA
 #define ReadConsole ReadConsoleA
 #define ReadConsoleInput ReadConsoleInputA
+#define ReadConsoleInputEx ReadConsoleInputExA
 #define ReadConsoleOutput ReadConsoleOutputA
 #define ReadConsoleOutputCharacter ReadConsoleOutputCharacterA
 #define ScrollConsoleScreenBuffer ScrollConsoleScreenBufferA
