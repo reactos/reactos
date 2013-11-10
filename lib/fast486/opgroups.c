@@ -43,7 +43,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
 {
     ULONG Result;
     ULONG SignFlag = 1 << (Bits - 1);
-    ULONG MaxValue = (1 << Bits) - 1;
+    ULONG MaxValue = (SignFlag - 1) | SignFlag;
 
     /* Make sure the values don't exceed the maximum for their size */
     FirstValue &= MaxValue;
