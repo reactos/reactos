@@ -163,7 +163,7 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
         // HACK: The following instruction should be HLT!
         BiosCode[Offset++] = 0x90; // nop
 
-        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -10)
+        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -11)
         BiosCode[Offset++] = 0xF5;
 
 // EXIT:

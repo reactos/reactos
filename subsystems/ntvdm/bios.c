@@ -568,6 +568,9 @@ BOOLEAN BiosInitialize(VOID)
 
 VOID BiosCleanup(VOID)
 {
+    /* Close the input thread handle */
+    if (InputThread != NULL) CloseHandle(InputThread);
+
     /* Restore the old screen buffer */
     SetConsoleActiveScreenBuffer(BiosConsoleOutput);
 
@@ -577,9 +580,6 @@ VOID BiosCleanup(VOID)
     /* Close the console handles */
     if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
     if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
-
-    /* Close the input thread handle */
-    if (InputThread != NULL) CloseHandle(InputThread);
 }
 
 WORD BiosPeekCharacter(VOID)

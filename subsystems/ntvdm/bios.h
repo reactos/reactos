@@ -15,8 +15,8 @@
 
 /* DEFINES ********************************************************************/
 
-#define ROM_AREA_START 0xE0000
-#define ROM_AREA_END 0xFFFFF
+#define ROM_AREA_START  0xE0000
+#define ROM_AREA_END    0xFFFFF
 
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
@@ -34,13 +34,15 @@
 #define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 16
 #define BIOS_EQUIPMENT_LIST 0x2C // HACK: Disable FPU for now
+
 #define BIOS_DEFAULT_VIDEO_MODE 0x03
 #define BIOS_MAX_PAGES 8
 #define BIOS_PAGE_SIZE 0x1000
 #define BIOS_MAX_VIDEO_MODE 0x13
-#define DEFAULT_ATTRIBUTE 0x07
-#define GRAPHICS_VIDEO_SEG 0xA000
-#define TEXT_VIDEO_SEG 0xB800
+#define DEFAULT_ATTRIBUTE   0x07
+
+#define GRAPHICS_VIDEO_SEG  0xA000
+#define TEXT_VIDEO_SEG      0xB800
 
 #define BDA_KBDFLAG_RSHIFT      (1 << 0)
 #define BDA_KBDFLAG_LSHIFT      (1 << 1)
@@ -67,8 +69,6 @@ enum
     SCROLL_DIRECTION_RIGHT
 };
 
-#pragma pack(push, 1)
-
 /*
  * BIOS Data Area at 0040:XXXX
  *
@@ -76,6 +76,7 @@ enum
  * and: http://www.bioscentral.com/misc/bda.htm
  * for more information.
  */
+#pragma pack(push, 1)
 typedef struct
 {
     WORD SerialPorts[4];                        // 0x00
@@ -142,10 +143,9 @@ typedef struct
     BYTE Reserved17[15];                        // 0x121
     BYTE Reserved18[3];                         // 0x130
 } BIOS_DATA_AREA, *PBIOS_DATA_AREA;
+#pragma pack(pop)
 
 C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
-
-#pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 

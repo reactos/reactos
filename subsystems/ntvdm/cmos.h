@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            cmos.h
- * PURPOSE:         Real Time Clock emulation (header file)
+ * PURPOSE:         CMOS Real Time Clock emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -43,6 +43,12 @@
 #define BINARY_TO_BCD(x) (((x / 10) << 4) | (x % 10))
 #define BCD_TO_BINARY(x) (((x >> 4) * 10) + (x & 0x0F))
 
+#define WRITE_CMOS_DATA(Cmos, Value)    \
+    ((Cmos).StatusRegB & CMOS_STB_BINARY) ? (Value) : BCD_TO_BINARY(Value)
+
+#define READ_CMOS_DATA(Cmos, Value)     \
+    ((Cmos).StatusRegB & CMOS_STB_BINARY) ? (Value) : BINARY_TO_BCD(Value)
+
 typedef enum _CMOS_REGISTERS
 {
     CMOS_REG_SECONDS,
@@ -60,8 +66,62 @@ typedef enum _CMOS_REGISTERS
     CMOS_REG_STATUS_C,
     CMOS_REG_STATUS_D,
     CMOS_REG_DIAGNOSTICS,
-    CMOS_REG_MAX
+    CMOS_REG_SHUTDOWN_STATUS,
+    CMOS_REG_MAX = 0x40
 } CMOS_REGISTERS, *PCMOS_REGISTERS;
+
+
+/*
+ * CMOS Memory Map
+ *
+ * See the following documentation for more information:
+ * http://www.intel-assembler.it/portale/5/cmos-memory-map-123/cmos-memory-map-123.asp
+ * http://wiki.osdev.org/CMOS
+ * http://www.bioscentral.com/misc/cmosmap.htm
+ */
+#pragma pack(push, 1)
+typedef struct
+{
+    BYTE Second;        // 0x00
+    BYTE AlarmSecond;   // 0x01
+    BYTE Minute;        // 0x02
+    BYTE AlarmMinute;   // 0x03
+    BYTE Hour;          // 0x04
+    BYTE AlarmHour;     // 0x05
+    BYTE DayOfWeek;     // 0x06
+    BYTE Day;           // 0x07
+    BYTE Month;         // 0x08
+    BYTE Year;          // 0x09
+
+    BYTE StatusRegA;    // 0x0a
+    BYTE StatusRegB;    // 0x0b
+} CMOS_CLOCK, *PCMOS_CLOCK;
+
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            CMOS_CLOCK;             // 0x00 - 0x0b
+            BYTE StatusRegC;        // 0x0c
+            BYTE StatusRegD;        // 0x0d
+            BYTE Diagnostics;       // 0x0e
+            BYTE ShutdownStatus;    // 0x0f
+        };
+        BYTE Regs1[0x10];           // 0x00 - 0x0f
+        BYTE Regs [0x40];           // 0x00 - 0x3f
+    };
+
+    /*
+     * Extended information 0x40 - 0x7f
+     */
+} CMOS_MEMORY, *PCMOS_MEMORY;
+#pragma pack(pop)
+
+C_ASSERT(sizeof(CMOS_MEMORY) == 0x40);
+
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN IsNmiEnabled(VOID);
 VOID CmosWriteAddress(BYTE Value);
@@ -70,7 +130,10 @@ VOID CmosWriteData(BYTE Value);
 DWORD RtcGetTicksPerSecond(VOID);
 VOID RtcPeriodicTick(VOID);
 VOID RtcTimeUpdate(VOID);
-    
+
+BOOLEAN CmosInitialize(VOID);
+VOID CmosCleanup(VOID);
+
 #endif // _CMOS_H_
 
 /* EOF */

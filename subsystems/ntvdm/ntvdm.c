@@ -12,6 +12,7 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "cmos.h"
 #include "bios.h"
 #include "speaker.h"
 #include "vga.h"
@@ -19,7 +20,6 @@
 #include "timer.h"
 #include "pic.h"
 #include "ps2.h"
-#include "cmos.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:
@@ -114,6 +114,13 @@ INT wmain(INT argc, WCHAR *argv[])
     if (!QueryPerformanceFrequency(&Frequency))
     {
         wprintf(L"FATAL: Performance counter not available\n");
+        goto Cleanup;
+    }
+
+    /* Initialize the CMOS */
+    if (!CmosInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the VDM CMOS.\n");
         goto Cleanup;
     }
 
@@ -227,6 +234,7 @@ INT wmain(INT argc, WCHAR *argv[])
 Cleanup:
     SpeakerCleanup();
     BiosCleanup();
+    CmosCleanup();
     EmulatorCleanup();
 
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");

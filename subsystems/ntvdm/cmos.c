@@ -15,11 +15,10 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static HANDLE hCmosRam = INVALID_HANDLE_VALUE;
+static CMOS_MEMORY CmosMemory;
+
 static BOOLEAN NmiEnabled = TRUE;
-static BYTE StatusRegA = CMOS_DEFAULT_STA;
-static BYTE StatusRegB = CMOS_DEFAULT_STB;
-static BYTE StatusRegC = 0;
-static BYTE AlarmHour, AlarmMinute, AlarmSecond;
 static CMOS_REGISTERS SelectedRegister = CMOS_REG_STATUS_D;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -59,45 +58,29 @@ BYTE CmosReadData(VOID)
     switch (SelectedRegister)
     {
         case CMOS_REG_SECONDS:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? CurrentTime.wSecond
-                   : BINARY_TO_BCD(CurrentTime.wSecond);
-        }
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wSecond);
 
         case CMOS_REG_ALARM_SEC:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? AlarmSecond
-                   : BINARY_TO_BCD(AlarmSecond);
-        }
+            return READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmSecond);
 
         case CMOS_REG_MINUTES:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? CurrentTime.wMinute
-                   : BINARY_TO_BCD(CurrentTime.wMinute);
-        }
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wMinute);
 
         case CMOS_REG_ALARM_MIN:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? AlarmMinute
-                   : BINARY_TO_BCD(AlarmMinute);
-        }
+            return READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmMinute);
 
         case CMOS_REG_HOURS:
         {
             BOOLEAN Afternoon = FALSE;
             BYTE Value = CurrentTime.wHour;
 
-            if (!(StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
             {
                 Value -= 12;
                 Afternoon = TRUE;
             }
 
-            if (!(StatusRegB & CMOS_STB_BINARY)) Value = BINARY_TO_BCD(Value);
+            Value = READ_CMOS_DATA(CmosMemory, Value);
 
             /* Convert to 12-hour */
             if (Afternoon) Value |= 0x80;
@@ -108,15 +91,15 @@ BYTE CmosReadData(VOID)
         case CMOS_REG_ALARM_HRS:
         {
             BOOLEAN Afternoon = FALSE;
-            BYTE Value = AlarmHour;
+            BYTE Value = CmosMemory.AlarmHour;
 
-            if (!(StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
             {
                 Value -= 12;
                 Afternoon = TRUE;
             }
 
-            if (!(StatusRegB & CMOS_STB_BINARY)) Value = BINARY_TO_BCD(Value);
+            Value = READ_CMOS_DATA(CmosMemory, Value);
 
             /* Convert to 12-hour */
             if (Afternoon) Value |= 0x80;
@@ -125,70 +108,42 @@ BYTE CmosReadData(VOID)
         }
 
         case CMOS_REG_DAY_OF_WEEK:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? CurrentTime.wDayOfWeek
-                   : BINARY_TO_BCD(CurrentTime.wDayOfWeek);
-        }
+            /*
+             * The CMOS value is 1-based but the
+             * GetLocalTime API value is 0-based.
+             * Correct it.
+             */
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wDayOfWeek + 1);
 
         case CMOS_REG_DAY:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? CurrentTime.wDay
-                   :BINARY_TO_BCD(CurrentTime.wDay);
-        }
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wDay);
 
         case CMOS_REG_MONTH:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? CurrentTime.wMonth
-                   : BINARY_TO_BCD(CurrentTime.wMonth);
-        }
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wMonth);
 
         case CMOS_REG_YEAR:
-        {
-            return (StatusRegB & CMOS_STB_BINARY)
-                   ? (CurrentTime.wYear % 100)
-                   : BINARY_TO_BCD(CurrentTime.wYear % 100);
-        }
-
-        case CMOS_REG_STATUS_A:
-        {
-            return StatusRegA;
-        }
-
-        case CMOS_REG_STATUS_B:
-        {
-            return StatusRegB;
-        }
+            return READ_CMOS_DATA(CmosMemory, CurrentTime.wYear % 100);
 
         case CMOS_REG_STATUS_C:
         {
-            BYTE Value = StatusRegC;
+            BYTE Value = CmosMemory.StatusRegC;
 
             /* Clear status register C */
-            StatusRegC = 0;
+            CmosMemory.StatusRegC = 0x00;
 
             /* Return the old value */
             return Value;
         }
 
+        case CMOS_REG_STATUS_A:
+        case CMOS_REG_STATUS_B:
         case CMOS_REG_STATUS_D:
-        {
-            /* Our CMOS battery works perfectly forever */
-            return CMOS_BATTERY_OK;
-        }
-
         case CMOS_REG_DIAGNOSTICS:
-        {
-            /* Diagnostics found no errors */
-            return 0;
-        }
-
+        case CMOS_REG_SHUTDOWN_STATUS:
         default:
         {
-            /* Read ignored */
-            return 0;
+            // ASSERT(SelectedRegister < CMOS_REG_MAX);
+            return CmosMemory.Regs[SelectedRegister];
         }
     }
 
@@ -209,38 +164,26 @@ VOID CmosWriteData(BYTE Value)
         case CMOS_REG_SECONDS:
         {
             ChangeTime = TRUE;
-            CurrentTime.wSecond = (StatusRegB & CMOS_STB_BINARY)
-                                  ? Value
-                                  : BCD_TO_BINARY(Value);
-
+            CurrentTime.wSecond = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_ALARM_SEC:
         {
-            AlarmSecond = (StatusRegB & CMOS_STB_BINARY)
-                          ? Value
-                          : BCD_TO_BINARY(Value);
-
+            CmosMemory.AlarmSecond = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_MINUTES:
         {
             ChangeTime = TRUE;
-            CurrentTime.wMinute = (StatusRegB & CMOS_STB_BINARY)
-                                  ? Value
-                                  : BCD_TO_BINARY(Value);
-
+            CurrentTime.wMinute = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_ALARM_MIN:
         {
-            AlarmMinute = (StatusRegB & CMOS_STB_BINARY)
-                          ? Value
-                          : BCD_TO_BINARY(Value);
-
+            CmosMemory.AlarmMinute = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
@@ -250,15 +193,13 @@ VOID CmosWriteData(BYTE Value)
 
             ChangeTime = TRUE;
 
-            if (!(StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
             {
                 Value &= ~0x80;
                 Afternoon = TRUE;
             }
 
-            CurrentTime.wHour = (StatusRegB & CMOS_STB_BINARY)
-                                ? Value
-                                : BCD_TO_BINARY(Value);
+            CurrentTime.wHour = WRITE_CMOS_DATA(CmosMemory, Value);
 
             /* Convert to 24-hour format */
             if (Afternoon) CurrentTime.wHour += 12;
@@ -270,18 +211,16 @@ VOID CmosWriteData(BYTE Value)
         {
             BOOLEAN Afternoon = FALSE;
 
-            if (!(StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
+            if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value & 0x80))
             {
                 Value &= ~0x80;
                 Afternoon = TRUE;
             }
 
-            AlarmHour = (StatusRegB & CMOS_STB_BINARY)
-                        ? Value
-                        : BCD_TO_BINARY(Value);
+            CmosMemory.AlarmHour = WRITE_CMOS_DATA(CmosMemory, Value);
 
             /* Convert to 24-hour format */
-            if (Afternoon) AlarmHour += 12;
+            if (Afternoon) CmosMemory.AlarmHour += 12;
 
             break;
         }
@@ -289,30 +228,27 @@ VOID CmosWriteData(BYTE Value)
         case CMOS_REG_DAY_OF_WEEK:
         {
             ChangeTime = TRUE;
-            CurrentTime.wDayOfWeek = (StatusRegB & CMOS_STB_BINARY)
-                                     ? Value
-                                     : BCD_TO_BINARY(Value);
-
+            /*
+             * The CMOS value is 1-based but the
+             * SetLocalTime API value is 0-based.
+             * Correct it.
+             */
+            Value -= 1;
+            CurrentTime.wDayOfWeek = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_DAY:
         {
             ChangeTime = TRUE;
-            CurrentTime.wDay = (StatusRegB & CMOS_STB_BINARY)
-                               ? Value
-                               : BCD_TO_BINARY(Value);
-
+            CurrentTime.wDay = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_MONTH:
         {
             ChangeTime = TRUE;
-            CurrentTime.wMonth = (StatusRegB & CMOS_STB_BINARY)
-                                 ? Value
-                                 : BCD_TO_BINARY(Value);
-
+            CurrentTime.wMonth = WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
@@ -323,28 +259,30 @@ VOID CmosWriteData(BYTE Value)
             /* Clear everything except the century */
             CurrentTime.wYear = (CurrentTime.wYear / 100) * 100;
 
-            CurrentTime.wYear += (StatusRegB & CMOS_STB_BINARY)
-                                 ? Value
-                                 : BCD_TO_BINARY(Value);
-
+            CurrentTime.wYear += WRITE_CMOS_DATA(CmosMemory, Value);
             break;
         }
 
         case CMOS_REG_STATUS_A:
         {
-            StatusRegA = Value;
+            CmosMemory.StatusRegA = Value & 0x7F; // Bit 7 is read-only
             break;
         }
 
         case CMOS_REG_STATUS_B:
         {
-            StatusRegB = Value;
+            CmosMemory.StatusRegB = Value;
             break;
         }
 
+        case CMOS_REG_STATUS_C:
+        case CMOS_REG_STATUS_D:
+            // Status registers C and D are read-only
+            break;
+
         default:
         {
-            /* Write ignored */
+            CmosMemory.Regs[SelectedRegister] = Value;
         }
     }
 
@@ -356,7 +294,7 @@ VOID CmosWriteData(BYTE Value)
 
 DWORD RtcGetTicksPerSecond(VOID)
 {
-    BYTE RateSelect = StatusRegB & 0x0F;
+    BYTE RateSelect = CmosMemory.StatusRegB & 0x0F;
 
     if (RateSelect == 0)
     {
@@ -373,12 +311,12 @@ DWORD RtcGetTicksPerSecond(VOID)
 VOID RtcPeriodicTick(VOID)
 {
     /* Set PF */
-    StatusRegC |= CMOS_STC_PF;
+    CmosMemory.StatusRegC |= CMOS_STC_PF;
 
     /* Check if there should be an interrupt on a periodic timer tick */
-    if (StatusRegB & CMOS_STB_INT_PERIODIC)
+    if (CmosMemory.StatusRegB & CMOS_STB_INT_PERIODIC)
     {
-        StatusRegC |= CMOS_STC_IRQF;
+        CmosMemory.StatusRegC |= CMOS_STC_IRQF;
 
         /* Interrupt! */
         PicInterruptRequest(RTC_IRQ_NUMBER);
@@ -394,26 +332,91 @@ VOID RtcTimeUpdate(VOID)
     GetLocalTime(&CurrentTime);
 
     /* Set UF */
-    StatusRegC |= CMOS_STC_UF;
+    CmosMemory.StatusRegC |= CMOS_STC_UF;
 
     /* Check if the time matches the alarm time */
-    if ((CurrentTime.wHour == AlarmHour)
-        && (CurrentTime.wMinute == AlarmMinute)
-        && (CurrentTime.wSecond == AlarmSecond))
+    if ((CurrentTime.wHour   == CmosMemory.AlarmHour  ) &&
+        (CurrentTime.wMinute == CmosMemory.AlarmMinute) &&
+        (CurrentTime.wSecond == CmosMemory.AlarmSecond))
     {
         /* Set the alarm flag */
-        StatusRegC |= CMOS_STC_AF;
+        CmosMemory.StatusRegC |= CMOS_STC_AF;
 
         /* Set IRQF if there should be an interrupt */
-        if (StatusRegB & CMOS_STB_INT_ON_ALARM) StatusRegC |= CMOS_STC_IRQF;
+        if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_ALARM) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
     }
 
     /* Check if there should be an interrupt on update */
-    if (StatusRegB & CMOS_STB_INT_ON_UPDATE) StatusRegC |= CMOS_STC_IRQF;
+    if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_UPDATE) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
 
-    if (StatusRegC & CMOS_STC_IRQF)
+    if (CmosMemory.StatusRegC & CMOS_STC_IRQF)
     {
         /* Interrupt! */
         PicInterruptRequest(RTC_IRQ_NUMBER);
     }
 }
+
+BOOLEAN CmosInitialize(VOID)
+{
+    DWORD CmosSize = sizeof(CmosMemory);
+
+    /* File must not be opened before */
+    ASSERT(hCmosRam == INVALID_HANDLE_VALUE);
+
+    /* Clear the CMOS memory */
+    ZeroMemory(&CmosMemory, sizeof(CmosMemory));
+
+    /* Always open (and if needed, create) a RAM file with exclusive access */
+    SetLastError(0); // For debugging purposes
+    hCmosRam = CreateFileW(L"cmos.ram",
+                           GENERIC_READ | GENERIC_WRITE,
+                           0,
+                           NULL,
+                           OPEN_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL,
+                           NULL);
+    DPRINT1("CMOS opening %s ; GetLastError() = %u\n", hCmosRam != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
+
+    if (hCmosRam != INVALID_HANDLE_VALUE)
+    {
+        BOOL Success = FALSE;
+
+        /* Attempt to fill the CMOS memory with the RAM file */
+        SetLastError(0); // For debugging purposes
+        Success = ReadFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
+        if (CmosSize != sizeof(CmosMemory))
+        {
+            /* Bad CMOS Ram file. Reinitialize the CMOS memory. */
+            DPRINT1("Invalid CMOS file, read bytes %u, expected bytes %u\n", CmosSize, sizeof(CmosMemory));
+            ZeroMemory(&CmosMemory, sizeof(CmosMemory));
+        }
+        DPRINT1("CMOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+        SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);
+    }
+
+    /* Overwrite some registers with default values */
+    CmosMemory.StatusRegA     = CMOS_DEFAULT_STA;
+    CmosMemory.StatusRegB     = CMOS_DEFAULT_STB;
+    CmosMemory.StatusRegC     = 0x00;
+    CmosMemory.StatusRegD     = CMOS_BATTERY_OK; // Our CMOS battery works perfectly forever.
+    CmosMemory.Diagnostics    = 0x00;            // Diagnostics must not find any errors.
+    CmosMemory.ShutdownStatus = 0x00;
+
+    return TRUE;
+}
+
+VOID CmosCleanup(VOID)
+{
+    DWORD CmosSize = sizeof(CmosMemory);
+
+    if (hCmosRam == INVALID_HANDLE_VALUE) return;
+
+    /* Flush the CMOS memory back to the RAM file and close it */
+    SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);
+    WriteFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
+
+    CloseHandle(hCmosRam);
+    hCmosRam = INVALID_HANDLE_VALUE;
+}
+
+/* EOF */

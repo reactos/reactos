@@ -11,6 +11,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "cmos.h"
 #include "bios.h"
 #include "bop.h"
 #include "dos.h"
@@ -19,7 +20,6 @@
 #include "pic.h"
 #include "ps2.h"
 #include "timer.h"
-#include "cmos.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
