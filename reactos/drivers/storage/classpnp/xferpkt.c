@@ -107,7 +107,7 @@ NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo)
     while (fdoData->NumFreeTransferPackets < MIN_INITIAL_TRANSFER_PACKETS){
         PTRANSFER_PACKET pkt = NewTransferPacket(Fdo);
         if (pkt){
-            InterlockedIncrement(&fdoData->NumTotalTransferPackets);
+            InterlockedIncrement((PLONG)&fdoData->NumTotalTransferPackets);
             EnqueueFreeTransferPacket(Fdo, pkt);
         }
         else {
@@ -142,9 +142,9 @@ VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo)
     
     ASSERT(IsListEmpty(&fdoData->DeferredClientIrpList));
 
-    while (pkt = DequeueFreeTransferPacket(Fdo, FALSE)){
+    while ((pkt = DequeueFreeTransferPacket(Fdo, FALSE))){
         DestroyTransferPacket(pkt);
-        InterlockedDecrement(&fdoData->NumTotalTransferPackets);    
+        InterlockedDecrement((PLONG)&fdoData->NumTotalTransferPackets);    
     }
 
     ASSERT(fdoData->NumTotalTransferPackets == 0);
@@ -225,7 +225,7 @@ VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
     ASSERT(!Pkt->SlistEntry.Next);
 
     InterlockedPushEntrySList(&fdoData->FreeTransferPacketsList, &Pkt->SlistEntry);
-    newNumPkts = InterlockedIncrement(&fdoData->NumFreeTransferPackets);
+    newNumPkts = InterlockedIncrement((PLONG)&fdoData->NumFreeTransferPackets);
     ASSERT(newNumPkts <= fdoData->NumTotalTransferPackets);
 
     /*
@@ -264,7 +264,7 @@ VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
                 pktToDelete = DequeueFreeTransferPacket(Fdo, FALSE);   
                 if (pktToDelete){
                     SimplePushSlist(&pktList, &pktToDelete->SlistEntry);
-                    InterlockedDecrement(&fdoData->NumTotalTransferPackets);    
+                    InterlockedDecrement((PLONG)&fdoData->NumTotalTransferPackets);    
                 }
                 else {
                     DBGTRACE(ClassDebugTrace, ("Extremely unlikely condition (non-fatal): %d packets dequeued at once for Fdo %p. NumTotalTransferPackets=%d (1).", MaxWorkingSetTransferPackets, Fdo, fdoData->NumTotalTransferPackets));
@@ -273,7 +273,7 @@ VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
             }
             KeReleaseSpinLock(&fdoData->SpinLock, oldIrql);
 
-            while (slistEntry = SimplePopSlist(&pktList)){
+            while ((slistEntry = SimplePopSlist(&pktList))){
                 pktToDelete = CONTAINING_RECORD(slistEntry, TRANSFER_PACKET, SlistEntry);
                 DestroyTransferPacket(pktToDelete);
             }
@@ -303,7 +303,7 @@ VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
                 
                 pktToDelete = DequeueFreeTransferPacket(Fdo, FALSE);
                 if (pktToDelete){
-                    InterlockedDecrement(&fdoData->NumTotalTransferPackets);    
+                    InterlockedDecrement((PLONG)&fdoData->NumTotalTransferPackets);    
                 }
                 else {
                     DBGTRACE(ClassDebugTrace, ("Extremely unlikely condition (non-fatal): %d packets dequeued at once for Fdo %p. NumTotalTransferPackets=%d (2).", MinWorkingSetTransferPackets, Fdo, fdoData->NumTotalTransferPackets));
@@ -333,7 +333,7 @@ PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN All
         slistEntry->Next = NULL;
         pkt = CONTAINING_RECORD(slistEntry, TRANSFER_PACKET, SlistEntry);
         ASSERT(fdoData->NumFreeTransferPackets > 0);
-        InterlockedDecrement(&fdoData->NumFreeTransferPackets);
+        InterlockedDecrement((PLONG)&fdoData->NumFreeTransferPackets);
     }
     else {
         if (AllocIfNeeded){
@@ -345,7 +345,7 @@ PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN All
              */
             pkt = NewTransferPacket(Fdo);
             if (pkt){
-                InterlockedIncrement(&fdoData->NumTotalTransferPackets);
+                InterlockedIncrement((PLONG)&fdoData->NumTotalTransferPackets);
                 fdoData->DbgPeakNumTransferPackets = max(fdoData->DbgPeakNumTransferPackets, fdoData->NumTotalTransferPackets);
             }
             else {

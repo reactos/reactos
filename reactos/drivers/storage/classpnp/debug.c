@@ -63,7 +63,9 @@ Revision History:
         #define CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS 512
     #endif   // CLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS
 
-    #pragma data_seg("NONPAGE")
+    #ifdef ALLOC_DATA_PRAGMA
+        #pragma data_seg("NONPAGE")
+    #endif
 
 
 
@@ -178,8 +180,8 @@ Revision History:
                 //
 
                 ULONG index;
-                PUCHAR buffer;
-                index = InterlockedIncrement(&ClasspnpGlobals.Index);
+                PSTR buffer;
+                index = InterlockedIncrement((PLONG)&ClasspnpGlobals.Index);
                 index %= ClasspnpGlobals.NumberOfBuffers;
                 index *= (ULONG)ClasspnpGlobals.EachBufferSize;
 
