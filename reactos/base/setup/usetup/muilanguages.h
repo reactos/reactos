@@ -805,7 +805,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"0000041E", L"874", L"874", L"10021", L"Thai", L"1", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, thTHLayouts },
 #endif
 #ifdef LANGUAGE_TR_TR
-     {L"0000041F", L"1254", L"857", L"10081", L"Turkish", L"90", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, trTRLayouts },
+     {L"0000041F", L"1254", L"857", L"10081", L"Turkish", L"90", trTRPages, trTRErrorEntries, trTRStrings, LatinFonts, trTRLayouts },
 #endif
 #ifdef LANGUAGE_UK_UA
      {L"00000422", L"1251", L"866", L"10017", L"Ukrainian", L"380", ukUAPages, ukUAErrorEntries, ukUAStrings, CyrillicFonts, ukUALayouts },
