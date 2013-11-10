@@ -153,7 +153,7 @@ BEGIN
     GROUPBOX "Экран", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "Размер шрифта", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Совместимость", -1, 7, 67, 237, 97
     LTEXT "Некоторые программы могут работать неправильно, если вы не перезагрузите компьютер после изменения параметров экрана.\r\n\nПосле изменения параметров экрана следует", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "Пере&загрузить компьютер с новыми параметрами экрана", IDC_RESTART_RB, 14, 116, 228, 10

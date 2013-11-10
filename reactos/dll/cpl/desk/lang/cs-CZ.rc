@@ -159,7 +159,7 @@ BEGIN
     GROUPBOX "Obrazovka", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "Velikost písma", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilita", -1, 7, 67, 237, 97
     LTEXT "Některé programy nefungují správně, pokud není počítač restartován po změně nastavení barev.\r\n\nPo změnění nastavení barev", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Restartovat počítač před aplikováním nového nastavení barev.", IDC_RESTART_RB, 14, 116, 228, 10

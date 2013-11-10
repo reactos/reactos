@@ -182,7 +182,7 @@
 
 /* Advanced General Dialog */
 #define IDC_FONTSIZE_COMBO              5000
-#define IDC_FONTSIZE_COSTOM             5001
+#define IDC_FONTSIZE_CUSTOM             5001
 #define IDC_RESTART_RB                  5002
 #define IDC_WITHOUTREBOOT_RB            5003
 #define IDC_ASKME_RB                    5004

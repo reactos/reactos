@@ -154,7 +154,7 @@ BEGIN
     GROUPBOX         "Afișare",        -1, 7, 6, 237, 56, WS_GROUP
     LTEXT            "Mărime font",    -1, 14, 20, 222, 9
     COMBOBOX                           IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT            "",               IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    LTEXT            "",               IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX         "Compatibilitate", -1, 7, 67, 237, 97
     LTEXT            "Unele programe pot funcționa anormal dacă sunt aduse modificări în configurația culorilor fără a reporni apoi calculatorul.\r\n\nDupă efectuarea unor modificări:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON  "&Repornește calculatorul pentru a aplica noua configurație", IDC_RESTART_RB, 14, 116, 228, 10

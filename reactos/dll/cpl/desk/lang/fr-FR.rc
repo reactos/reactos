@@ -44,7 +44,7 @@ BEGIN
     GROUPBOX        "G&estion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Pour modifier les paramètres de l'alimentation du moniteur, cliquez sur Gestion de l'alimentation.",
                     IDC_STATIC, 14, 166, 146, 27
-    PUSHBUTTON      "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
+    PUSHBUTTON      "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 135, 176, 91, 13
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 234
@@ -139,7 +139,7 @@ BEGIN
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT           "Moins",1815,9,137,25,9,NOT WS_GROUP
-    LTEXT           "Plus",1816,93,137,25,9,NOT WS_GROUP
+    LTEXT           "Plus",1816,93,137,15,9,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Couleurs",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
@@ -148,20 +148,20 @@ BEGIN
     PUSHBUTTON      "A&vancé...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
-IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
+IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 299, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Affichage", -1, 7, 6, 237, 56, WS_GROUP
+    GROUPBOX "Affichage", -1, 7, 6, 285, 56, WS_GROUP
     LTEXT "Taille de la police", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibilité", -1, 7, 67, 237, 97
-    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\r\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs.", IDC_RESTART_RB, 14, 116, 228, 10
+    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
+    GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
+    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\r\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
+    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs.", IDC_RESTART_RB, 14, 116, 273, 10
     AUTORADIOBUTTON "Appliquer les nouveaux paramètres des couleurs sans redémarrer.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 243, 10
 END
 
 IDR_PREVIEW_MENU MENU

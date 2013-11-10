@@ -153,7 +153,7 @@ BEGIN
     GROUPBOX "表示", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "フォント サイズ:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
+    LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "互換性", -1, 7, 67, 237, 97
     LTEXT "色の設定を変更した後にコンピュータを再起動しないと、プログラムが正常に動作しないことがあります。\r\n\n色の設定を変更した後の動作:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "新しい色の設定を適用する前に、コンピュータを再起動する(&R)", IDC_RESTART_RB, 14, 116, 228, 10
