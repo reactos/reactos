@@ -120,11 +120,11 @@ IntReadConsole(HANDLE hConsoleInput,
 static
 BOOL
 IntGetConsoleInput(HANDLE hConsoleInput,
-                   BOOL bRead,
                    PINPUT_RECORD lpBuffer,
                    DWORD nLength,
                    LPDWORD lpNumberOfEventsRead,
-                   BOOL bUnicode)
+                   WORD wFlags,
+                   BOOLEAN bUnicode)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
@@ -158,10 +158,10 @@ IntGetConsoleInput(HANDLE hConsoleInput,
 
     /* Set up the data to send to the Console Server */
     GetInputRequest->InputHandle = hConsoleInput;
-    GetInputRequest->Unicode = bUnicode;
-    GetInputRequest->bRead = bRead;
     GetInputRequest->InputsRead = 0;
     GetInputRequest->Length = nLength;
+    GetInputRequest->wFlags = wFlags;
+    GetInputRequest->Unicode = bUnicode;
 
     /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -825,10 +825,10 @@ PeekConsoleInputW(HANDLE hConsoleInput,
                   LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
-                              FALSE,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
+                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
                               TRUE);
 }
 
@@ -846,10 +846,10 @@ PeekConsoleInputA(HANDLE hConsoleInput,
                   LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
-                              FALSE,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
+                              CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE,
                               FALSE);
 }
 
@@ -867,10 +867,10 @@ ReadConsoleInputW(HANDLE hConsoleInput,
                   LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
-                              TRUE,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
+                              0,
                               TRUE);
 }
 
@@ -888,29 +888,55 @@ ReadConsoleInputA(HANDLE hConsoleInput,
                   LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
-                              TRUE,
                               lpBuffer,
                               nLength,
                               lpNumberOfEventsRead,
+                              0,
                               FALSE);
 }
 
 
+/*--------------------------------------------------------------
+ *     ReadConsoleInputExW
+ *
+ * @implemented
+ */
 BOOL
 WINAPI
-ReadConsoleInputExW(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+ReadConsoleInputExW(HANDLE hConsoleInput,
+                    PINPUT_RECORD lpBuffer,
+                    DWORD nLength,
+                    LPDWORD lpNumberOfEventsRead,
+                    WORD wFlags)
 {
-    STUB;
-    return FALSE;
+    return IntGetConsoleInput(hConsoleInput,
+                              lpBuffer,
+                              nLength,
+                              lpNumberOfEventsRead,
+                              wFlags,
+                              TRUE);
 }
 
 
+/*--------------------------------------------------------------
+ *     ReadConsoleInputExA
+ *
+ * @implemented
+ */
 BOOL
 WINAPI
-ReadConsoleInputExA(HANDLE hConsole, LPVOID lpBuffer, DWORD dwLen, LPDWORD Unknown1, DWORD Unknown2)
+ReadConsoleInputExA(HANDLE hConsoleInput,
+                    PINPUT_RECORD lpBuffer,
+                    DWORD nLength,
+                    LPDWORD lpNumberOfEventsRead,
+                    WORD wFlags)
 {
-    STUB;
-    return FALSE;
+    return IntGetConsoleInput(hConsoleInput,
+                              lpBuffer,
+                              nLength,
+                              lpNumberOfEventsRead,
+                              wFlags,
+                              FALSE);
 }
 
 

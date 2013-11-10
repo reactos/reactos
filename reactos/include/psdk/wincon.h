@@ -109,6 +109,12 @@ extern "C" {
 #endif
 
 /*
+ * Read input flags
+ */
+#define CONSOLE_READ_KEEPEVENT          0x0001
+#define CONSOLE_READ_CONTINUE           0x0002
+
+/*
  * Event types
  */
 #define KEY_EVENT                       0x0001
@@ -436,6 +442,7 @@ COORD WINAPI GetLargestConsoleWindowSize(_In_ HANDLE);
 BOOL WINAPI GetNumberOfConsoleInputEvents(_In_ HANDLE, _Out_ PDWORD);
 BOOL WINAPI GetNumberOfConsoleMouseButtons(_Out_ PDWORD);
 
+_Success_(return != 0)
 BOOL
 WINAPI PeekConsoleInputA(
   _In_ HANDLE hConsoleInput,
@@ -443,6 +450,7 @@ WINAPI PeekConsoleInputA(
   _In_ DWORD nLength,
   _Out_ LPDWORD lpNumberOfEventsRead);
 
+_Success_(return != 0)
 BOOL
 WINAPI
 PeekConsoleInputW(
@@ -488,6 +496,26 @@ ReadConsoleInputW(
   _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
   _In_ DWORD nLength,
   _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+ReadConsoleInputExA(
+  _In_ HANDLE hConsoleInput,
+  _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
+  _In_ DWORD nLength,
+  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead,
+  _In_ WORD wFlags);
+
+_Success_(return != 0)
+BOOL
+WINAPI
+ReadConsoleInputExW(
+  _In_ HANDLE hConsoleInput,
+  _Out_writes_to_(nLength, *lpNumberOfEventsRead) PINPUT_RECORD lpBuffer,
+  _In_ DWORD nLength,
+  _Out_ _Deref_out_range_(<= , nLength) LPDWORD lpNumberOfEventsRead,
+  _In_ WORD wFlags);
 
 BOOL
 WINAPI

@@ -323,7 +323,7 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
 static NTSTATUS
 DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                IN PCSR_THREAD ClientThread,
-               IN BOOL CreateWaitBlock OPTIONAL);
+               IN BOOLEAN CreateWaitBlock OPTIONAL);
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
@@ -351,9 +351,7 @@ WriteConsoleThread(IN PLIST_ENTRY WaitList,
         goto Quit;
     }
 
-    Status = DoWriteConsole(WaitApiMessage,
-                            WaitThread,
-                            FALSE);
+    Status = DoWriteConsole(WaitApiMessage, WaitThread, FALSE);
 
 Quit:
     if (Status != STATUS_PENDING)
@@ -374,7 +372,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
 static NTSTATUS
 DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                IN PCSR_THREAD ClientThread,
-               IN BOOL CreateWaitBlock OPTIONAL)
+               IN BOOLEAN CreateWaitBlock OPTIONAL)
 {
     NTSTATUS Status;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
@@ -517,9 +515,7 @@ CSR_API(SrvWriteConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = DoWriteConsole(ApiMessage,
-                            CsrGetClientThread(),
-                            TRUE);
+    Status = DoWriteConsole(ApiMessage, CsrGetClientThread(), TRUE);
 
     if (Status == STATUS_PENDING) *ReplyCode = CsrReplyPending;
 

@@ -376,6 +376,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvGetConsoleInput(IN PCONSOLE Console,
                       IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                      IN BOOLEAN KeepEvents,
                       IN BOOLEAN WaitForMoreEvents,
                       IN BOOLEAN Unicode,
                       OUT PINPUT_RECORD InputRecord,
@@ -425,7 +426,8 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
         ++i;
         CurrentInput = CurrentInput->Flink;
 
-        if (WaitForMoreEvents) // TRUE --> Read, we remove inputs from the buffer ; FALSE --> Peek, we keep inputs.
+        /* Remove the events from the queue if needed */
+        if (!KeepEvents)
         {
             RemoveEntryList(&Input->ListEntry);
             ConsoleFreeHeap(Input);
