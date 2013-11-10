@@ -139,7 +139,7 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
     {
         IntVecTable[i] = MAKELONG(Offset, BiosSegment);
 
-        BiosCode[Offset++] = 0xFB; // sti
+        BiosCode[Offset++] = 0xFA; // cli
 
         BiosCode[Offset++] = 0x6A; // push i
         BiosCode[Offset++] = (UCHAR)i;
@@ -158,11 +158,13 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
         BiosCode[Offset++] = 0x73; // jnc EXIT (offset +3)
         BiosCode[Offset++] = 0x03;
 
+        BiosCode[Offset++] = 0xFB; // sti
+
         // HACK: The following instruction should be HLT!
         BiosCode[Offset++] = 0x90; // nop
 
         BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -10)
-        BiosCode[Offset++] = 0xF6;
+        BiosCode[Offset++] = 0xF5;
 
 // EXIT:
         BiosCode[Offset++] = 0x83; // add sp, 4

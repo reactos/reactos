@@ -63,18 +63,9 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
              * Check if there is an interrupt to execute, or a hardware interrupt signal
              * while interrupts are enabled.
              */
-            if ((State->IntStatus == FAST486_INT_EXECUTE)
-                || (State->Flags.If
-                && (State->IntAckCallback != NULL)
-                && (State->IntStatus == FAST486_INT_SIGNAL)))
+            if (State->IntStatus == FAST486_INT_EXECUTE)
             {
                 FAST486_IDT_ENTRY IdtEntry;
-
-                if (State->IntStatus == FAST486_INT_SIGNAL)
-                {
-                    /* Acknowledge the interrupt to get the number */
-                    State->PendingIntNum = State->IntAckCallback(State);
-                }
 
                 /* Get the interrupt vector */
                 if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
@@ -88,6 +79,16 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
 
                 /* Clear the interrupt status */
                 State->IntStatus = FAST486_INT_NONE;
+            }
+            else if (State->Flags.If
+                     && (State->IntAckCallback != NULL)
+                     && (State->IntStatus == FAST486_INT_SIGNAL))
+            {
+                /* Acknowledge the interrupt to get the number */
+                State->PendingIntNum = State->IntAckCallback(State);
+
+                /* Set the interrupt status to execute on the next instruction */
+                State->IntStatus = FAST486_INT_EXECUTE;
             }
         }
 
