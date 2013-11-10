@@ -130,40 +130,38 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
 {
     LPDWORD IntVecTable = (LPDWORD)BaseAddress;
     LPBYTE  BiosCode    = (LPBYTE)SEG_OFF_TO_PTR(BiosSegment, 0);
-
     USHORT i;
     WORD CommonStub, BopSeqOffset, Offset;
 
-    CommonStub = Offset = 0x00;
+    CommonStub = Offset = 0;
 
     /* Write the common stub code */
-    {
+
 // BOP_SEQ:
-        BiosCode[Offset++] = 0xF8; // clc
+    BiosCode[Offset++] = 0xF8; // clc
 
-        BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
-        BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-        BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
-        BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
+    BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
+    BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
+    BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
+    BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
 
-        BiosCode[Offset++] = 0x73; // jnc EXIT (offset +4)
-        BiosCode[Offset++] = 0x04;
+    BiosCode[Offset++] = 0x73; // jnc EXIT (offset +4)
+    BiosCode[Offset++] = 0x04;
 
-        BiosCode[Offset++] = 0xFB; // sti
+    BiosCode[Offset++] = 0xFB; // sti
 
-        // HACK: The following instruction should be HLT!
-        BiosCode[Offset++] = 0x90; // nop
+    // HACK: The following instruction should be HLT!
+    BiosCode[Offset++] = 0x90; // nop
 
-        BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -11)
-        BiosCode[Offset++] = 0xF5;
+    BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -11)
+    BiosCode[Offset++] = 0xF5;
 
 // EXIT:
-        BiosCode[Offset++] = 0x83; // add sp, 4
-        BiosCode[Offset++] = 0xC4;
-        BiosCode[Offset++] = 0x04;
+    BiosCode[Offset++] = 0x83; // add sp, 4
+    BiosCode[Offset++] = 0xC4;
+    BiosCode[Offset++] = 0x04;
 
-        BiosCode[Offset++] = 0xCF; // iret
-    }
+    BiosCode[Offset++] = 0xCF; // iret
 
     /* Generate ISR stubs and fill the IVT */
     for (i = 0x00; i <= 0xFF; i++)
@@ -178,12 +176,11 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
         BiosCode[Offset++] = 0x6A; // push 0
         BiosCode[Offset++] = 0x00;
 
-        BopSeqOffset = CommonStub - Offset - 3;
+        BopSeqOffset = CommonStub - (Offset + 3);
 
-        BiosCode[Offset+0] = 0xE9; // jmp near BOP_SEQ
-        BiosCode[Offset+1] = LOBYTE(BopSeqOffset);
-        BiosCode[Offset+2] = HIBYTE(BopSeqOffset);
-        Offset+=3;
+        BiosCode[Offset++] = 0xE9; // jmp near BOP_SEQ
+        BiosCode[Offset++] = LOBYTE(BopSeqOffset);
+        BiosCode[Offset++] = HIBYTE(BopSeqOffset);
     }
 }
 
