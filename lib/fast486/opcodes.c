@@ -5133,15 +5133,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
 {
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     ULONG Offset;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA0);
 
-    TOGGLE_OPSIZE(Size);
+    TOGGLE_ADSIZE(AddressSize);
 
-    if (Size)
+    if (AddressSize)
     {
         if (!Fast486FetchDword(State, &Offset))
         {
@@ -5174,14 +5174,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
 {
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xA1);
 
-    TOGGLE_OPSIZE(Size);
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
-    if (Size)
+    if (AddressSize)
     {
         ULONG Offset;
 
@@ -5192,13 +5195,26 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
         }
 
         /* Read from memory */
-        return Fast486ReadMemory(State,
-                                 (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                 State->SegmentOverride : FAST486_REG_DS,
-                                 Offset,
-                                 FALSE,
-                                 &State->GeneralRegs[FAST486_REG_EAX].Long,
-                                 sizeof(ULONG));
+        if (OperandSize)
+        {
+            return Fast486ReadMemory(State,
+                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                                     State->SegmentOverride : FAST486_REG_DS,
+                                     Offset,
+                                     FALSE,
+                                     &State->GeneralRegs[FAST486_REG_EAX].Long,
+                                     sizeof(ULONG));
+        }
+        else
+        {
+            return Fast486ReadMemory(State,
+                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                                     State->SegmentOverride : FAST486_REG_DS,
+                                     Offset,
+                                     FALSE,
+                                     &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                                     sizeof(USHORT));
+        }
     }
     else
     {
@@ -5211,13 +5227,26 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
         }
 
         /* Read from memory */
-        return Fast486ReadMemory(State,
-                                 (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                 State->SegmentOverride : FAST486_REG_DS,
-                                 Offset,
-                                 FALSE,
-                                 &State->GeneralRegs[FAST486_REG_EAX].LowWord,
-                                 sizeof(USHORT));
+        if (OperandSize)
+        {
+            return Fast486ReadMemory(State,
+                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                                     State->SegmentOverride : FAST486_REG_DS,
+                                     Offset,
+                                     FALSE,
+                                     &State->GeneralRegs[FAST486_REG_EAX].Long,
+                                     sizeof(ULONG));
+        }
+        else
+        {
+            return Fast486ReadMemory(State,
+                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                                     State->SegmentOverride : FAST486_REG_DS,
+                                     Offset,
+                                     FALSE,
+                                     &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                                     sizeof(USHORT));
+        }
     }
 }
 
