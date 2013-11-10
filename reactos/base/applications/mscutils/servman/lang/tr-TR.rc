@@ -262,10 +262,10 @@ BEGIN
     IDS_HINT_DELETE       " Seçili hizmeti siler."
     IDS_HINT_PROP         " Seçili hizmetin husûsiyetlerini gösterir."
 
-    IDS_HINT_LARGE        " Ögeleri, büyük simgelerle gösterir."
-    IDS_HINT_SMALL        " Ögeleri, küçük simgelerle gösterir."
-    IDS_HINT_LIST         " Ögeleri, dizelge olarak gösterir."
-    IDS_HINT_DETAILS      " Ögeleri, dizelge olarak, ayrıntılı bir şekilde gösterir."
+    IDS_HINT_LARGE        " Öğeleri, büyük simgelerle gösterir."
+    IDS_HINT_SMALL        " Öğeleri, küçük simgelerle gösterir."
+    IDS_HINT_LIST         " Öğeleri, dizelge olarak gösterir."
+    IDS_HINT_DETAILS      " Öğeleri, dizelge olarak, ayrıntılı bir şekilde gösterir."
     IDS_HINT_CUST         " Görünümü husûsileştirir."
 
     IDS_HINT_HELP         " Yardım konularını görüntüler."

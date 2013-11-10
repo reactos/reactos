@@ -8,24 +8,29 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Çıkış",                             IDC_EXIT
+        MENUITEM "&Çıkış",                     IDC_EXIT
     END
     POPUP "&Eylem"
     BEGIN
-        MENUITEM "&Yazdır",                            IDC_PRINT, GRAYED
+        MENUITEM "&Yazdır",                    IDC_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler",                      IDC_PROP, GRAYED
-        END
+        MENUITEM "&Husûsiyetler",              IDC_PROP, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Y&ardım",                    IDC_PROGHELP, GRAYED
+    END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Türe Göre Aygıtlar",        IDC_DEVBYTYPE, CHECKED
-        MENUITEM "&Bağlantıya Göre Aygıtlar",  IDC_STATIC, GRAYED
-        MENUITEM "T&üre Göre Kaynaklar",       IDC_STATIC, GRAYED
-        MENUITEM "B&ağlantıya Göre Kaynaklar", IDC_STATIC, GRAYED
+        MENUITEM "&Türe Göre Aygıtlar",        IDC_DEVBYTYPE
+        MENUITEM "&Bağlantıya Göre Aygıtlar",  IDC_DEVBYCONN
+        MENUITEM "T&üre Göre Kaynaklar",       IDC_RESBYTYPE, GRAYED
+        MENUITEM "B&ağlantıya Göre Kaynaklar", IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Gizli Aygıtları Göster",    IDC_SHOWHIDDEN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında",                          IDC_ABOUT
+        MENUITEM "&Yardım",                    IDC_PROGHELP
+        MENUITEM "&Hakkında",                  IDC_ABOUT
     END
 END
 
@@ -33,7 +38,9 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "Husûsiyetler",                       IDC_PROP, GRAYED
+        MENUITEM "&Husûsiyetler",              IDC_PROP, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Yardım",                    IDC_PROGHELP
     END
 END
 

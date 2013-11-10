@@ -218,5 +218,5 @@ BEGIN
     IDS_INTNUMBERS, "Buraya yalnızca tamsayı girilmelidir."
     IDS_PERCENTAGE, "Buradaki değer 1 ilâ 500 olmalıdır."
     IDS_ANGLE, "Buradaki değer -89 ilâ 89 olmalıdır."
-    IDS_LOADERRORTEXT, "The file %s could not be loaded."
+    IDS_LOADERRORTEXT, "%s kütüğü yüklenemedi."
 END

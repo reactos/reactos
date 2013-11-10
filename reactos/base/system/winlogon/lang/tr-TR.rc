@@ -26,7 +26,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Ağ Bağlantıları Hazırlanıyor..."
+    IDS_PREPARENETWORKCONNECTIONS "Ağ Bağlantıları Anıklanıyor..."
     IDS_APPLYINGCOMPUTERSETTINGS "Bilgisayar Ayarları Uygulanıyor..."
     IDS_RUNNINGSTARTUPSCRIPTS "Bilgisayarı Açma Betikleri Çalıştırılıyor..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Bilgisayarı Kapama Betikleri Çalıştırılıyor..."
@@ -37,7 +37,7 @@ BEGIN
     IDS_CLOSINGNETWORKCONNECTIONS "Ağ Bağlantıları Kapatılıyor..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS Kapatılıyor..."
     IDS_PREPARETOSTANDBY "Uyku Kipine Geçiliyor..."
-    IDS_PREPARETOHIBERNATE "Hazırda Beklemeye Geçiliyor..."
+    IDS_PREPARETOHIBERNATE "Anıkta Beklemeye Geçiliyor..."
     IDS_SAVEYOURSETTINGS "Ayarlarınız Kaydediliyor..."
     IDS_REACTOSISSTARTINGUP "ReactOS Başlatılıyor..."
 END

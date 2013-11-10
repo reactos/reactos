@@ -208,11 +208,11 @@ STRINGTABLE
 BEGIN
     STRING_ALL_FILES,                 "Tüm Kütükler (*.*)"
     STRING_TEXT_FILES_TXT,            "Metin Belgeleri (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT,    "Unikod Metin Belgeleri (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT,    "Evrenlik Düzgülü Metin Belgeleri (*.txt)"
     STRING_RICHTEXT_FILES_RTF,        "Gelişmiş Metin Belgeleri (*.rtf)"
     STRING_NEWFILE_RICHTEXT,          "Gelişmiş Metin Belgesi"
     STRING_NEWFILE_TXT,               "Metin Belgesi"
-    STRING_NEWFILE_TXT_UNICODE,       "Unikod Metin Belgesi"
+    STRING_NEWFILE_TXT_UNICODE,       "Evrenlik Düzgülü Metin Belgesi"
     STRING_PRINTER_FILES_PRN,         "Yazıcı Kütükleri (*.PRN)"
 END
 

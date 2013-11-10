@@ -46,14 +46,26 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
  * Everything specific to any language goes
  * in one of the specific files.
  */
+#ifdef LANGUAGE_BG_BG
+    #include "lang/avifile_Bg.rc"
+#endif
 #ifdef LANGUAGE_CS_CZ
     #include "lang/avifile_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/avifile_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/avifile_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/avifile_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/avifile_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/avifile_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/avifile_He.rc"
@@ -64,30 +76,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_IT_IT
     #include "lang/avifile_It.rc"
 #endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/avifile_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/avifile_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/avifile_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/avifile_Sv.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/avifile_Tr.rc"
-#endif
-#ifdef LANGUAGE_DA_DK
-    #include "lang/avifile_Da.rc"
-#endif
-#ifdef LANGUAGE_DE_DE
-    #include "lang/avifile_De.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/avifile_Fr.rc"
-#endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/avifile_Ja.rc"
 #endif
@@ -96,6 +84,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/avifile_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/avifile_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/avifile_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/avifile_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/avifile_Pt.rc"
@@ -109,12 +106,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_SL_SI
     #include "lang/avifile_Si.rc"
 #endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/avifile_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/avifile_Tr.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/avifile_Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/avifile_Zh.rc"
-#endif
-#ifdef LANGUAGE_BG_BG
-    #include "lang/avifile_Bg.rc"
 #endif

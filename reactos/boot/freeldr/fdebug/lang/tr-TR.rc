@@ -26,7 +26,7 @@ BEGIN
         MENUITEM "&Yakalamayı Başlat", IDM_FILE_STARTCAPTURE
         MENUITEM "Ya&kalamayı Durdur", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "B&ölgevî Yankı", IDM_FILE_LOCALECHO
+        MENUITEM "B&ölgelik Yankı", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END

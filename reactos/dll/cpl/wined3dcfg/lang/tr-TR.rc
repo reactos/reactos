@@ -1,0 +1,31 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Umûmî"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 21, 20
+    GROUPBOX "Shaderler", -1, 5, 35, 230, 65
+    AUTOCHECKBOX "&GLSL'yi Etkinleştir", IDC_GLSL, 15, 50, 150, 10
+    AUTOCHECKBOX "&Nokta Shaderleri Etkinleştir", IDC_PIXELSHADERS, 15, 65, 150, 10
+    AUTOCHECKBOX "&Doruk Shaderleri Etkinleştir", IDC_VERTEXSHADERS, 15, 80, 150, 10
+    GROUPBOX "Renderleme", -1, 5, 110, 230, 85
+    AUTOCHECKBOX "&Örtüşme Önlemeyi Zorla", IDC_MULTISAMPLING, 15, 125, 150, 10
+    AUTOCHECKBOX "&Strict Draw Orderleme'yi Zorla", IDC_STRICTDRAWORDERING, 15, 140, 150, 10
+    LTEXT "&Ekran Dışı Renderleme:", -1, 15, 157, 80, 10
+    COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "&Render Hedef Kilitlenmesi:", -1, 15, 175, 72, 10, SS_LEFT
+    COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "WineD3D Ayarları"
+    IDS_CPLDESCRIPTION "WinD3D yürütücüsünün ayarlarını yapılandırır."
+END
