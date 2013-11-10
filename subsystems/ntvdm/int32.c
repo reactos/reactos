@@ -155,8 +155,8 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
         BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
         BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
 
-        BiosCode[Offset++] = 0x73; // jnc EXIT (offset +3)
-        BiosCode[Offset++] = 0x03;
+        BiosCode[Offset++] = 0x73; // jnc EXIT (offset +4)
+        BiosCode[Offset++] = 0x04;
 
         BiosCode[Offset++] = 0xFB; // sti
 
