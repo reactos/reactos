@@ -365,7 +365,7 @@ Fast486StackPop(PFAST486_STATE State,
         }
 
         /* Increment SP by 2 */
-        State->GeneralRegs[FAST486_REG_ESP].Long += 2;
+        State->GeneralRegs[FAST486_REG_ESP].LowWord += 2;
 
         /* Store the value in the result */
         *Value = ShortValue;
