@@ -1397,7 +1397,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
 {
-    PVOID SectionPointer = Buffer;
+    PVOID *SectionPointer = Buffer;
 
     /* Validate size */
     if (Size != sizeof(PVOID))
@@ -1410,7 +1410,7 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
     if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
     /* Unload the image */
-    MmUnloadSystemImage(SectionPointer);
+    MmUnloadSystemImage(*SectionPointer);
     return STATUS_SUCCESS;
 }
 

@@ -30,36 +30,16 @@ typedef struct _LDEVOBJ
 
 } LDEVOBJ, *PLDEVOBJ;
 
-extern PLDEVOBJ gpldevHead;
-extern HSEMAPHORE ghsemDriverMgmt;
-
-PLDEVOBJ
-NTAPI
-LDEVOBJ_pldevLoadImage(
-    PUNICODE_STRING pusPathName,
-    LDEVTYPE ldevtype);
-
-BOOL
-NTAPI
-LDEVOBJ_bLoadDriver(
-    IN PLDEVOBJ pldev);
-
-PVOID
-NTAPI
-LDEVOBJ_pvFindImageProcAddress(
-    IN PLDEVOBJ pldev,
-    IN LPSTR    lpProcName);
-
-PDEVMODEINFO
-NTAPI
-LDEVOBJ_pdmiGetModes(
-    PLDEVOBJ pldev,
-    HANDLE hDriver);
-
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitLDEVImpl(VOID);
+
+PDEVMODEINFO
+NTAPI
+LDEVOBJ_pdmiGetModes(
+    _In_ PLDEVOBJ pldev,
+    _In_ HANDLE hDriver);
 
 PLDEVOBJ
 APIENTRY
@@ -75,6 +55,6 @@ EngGetLDEV(
 NTSTATUS
 APIENTRY
 DriverEntry (
-  IN	PDRIVER_OBJECT	DriverObject,
-  IN	PUNICODE_STRING	RegistryPath);
+    _In_ PDRIVER_OBJECT	DriverObject,
+    _In_ PUNICODE_STRING RegistryPath);
 
