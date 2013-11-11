@@ -1240,12 +1240,58 @@ PsSetProcessSecurityPort(PEPROCESS Process,
 /*
  * @implemented
  */
-VOID
-NTAPI
-PsSetProcessWin32Process(PEPROCESS Process,
-                         PVOID Win32Process)
+NTSTATUS 
+NTAPI 
+PsSetProcessWin32Process(
+    _Inout_ PEPROCESS Process, 
+    _In_opt_ PVOID Win32Process, 
+    _In_opt_ PVOID OldWin32Process)
 {
-    Process->Win32Process = Win32Process;
+    NTSTATUS Status;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Lock the process */
+    KeEnterCriticalRegion();
+    ExAcquirePushLockExclusive(&Process->ProcessLock);
+
+    /* Check if we set a new win32 process */
+    if (Win32Process != NULL)
+    {
+        /* Check if the process is in the right state */
+        if (((Process->Flags & PSF_PROCESS_DELETE_BIT) == 0) &&
+            (Process->Win32Process == NULL))
+        {
+            /* Set the new win32 process */
+            Process->Win32Process = Win32Process;
+        }
+        else
+        {
+            /* Otherwise fail */
+            Status = STATUS_PROCESS_IS_TERMINATING;
+        }
+    }
+    else
+    {
+        /* Reset the win32 process, did the caller specify the correct old value? */
+        if (Process->Win32Process == OldWin32Process)
+        {
+            /* Yes, so reset the win32 process to NULL */
+            Process->Win32Process = 0;
+        }
+        else
+        {
+            /* Otherwise fail */
+            Status = STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    /* Unlock the process */
+    ExReleasePushLockExclusive(&Process->ProcessLock);
+    KeLeaveCriticalRegion();
+
+    return Status;
 }
 
 /*

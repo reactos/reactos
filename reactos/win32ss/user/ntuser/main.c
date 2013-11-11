@@ -85,7 +85,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         RtlZeroMemory(ppiCurrent, sizeof(PROCESSINFO));
 
-        PsSetProcessWin32Process(Process, ppiCurrent);
+        PsSetProcessWin32Process(Process, ppiCurrent, NULL);
 
 #if DBG
         DbgInitDebugChannels();
@@ -237,7 +237,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 #endif
 
         /* Free the PROCESSINFO */
-        PsSetProcessWin32Process(Process, NULL);
+        PsSetProcessWin32Process(Process, NULL, ppiCurrent);
         ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
     }
 
@@ -280,7 +280,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     /* Initialize the THREADINFO */
 
-    PsSetThreadWin32Thread(Thread, ptiCurrent);
+    PsSetThreadWin32Thread(Thread, ptiCurrent, NULL);
     IntReferenceThreadInfo(ptiCurrent);
     ptiCurrent->pEThread = Thread;
     ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
@@ -463,7 +463,7 @@ UserDeleteW32Thread(PTHREADINFO pti)
 
        IntSetThreadDesktop(NULL, TRUE);
 
-       PsSetThreadWin32Thread(pti->pEThread, NULL);
+       PsSetThreadWin32Thread(pti->pEThread, NULL, pti);
        ExFreePoolWithTag(pti, USERTAG_THREADINFO);
     }
 }

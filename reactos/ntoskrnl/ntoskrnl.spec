@@ -1031,10 +1031,10 @@
 @ stdcall PsSetProcessPriorityByClass(ptr ptr)
 @ stdcall PsSetProcessPriorityClass(ptr long)
 @ stdcall PsSetProcessSecurityPort(ptr ptr)
-@ stdcall PsSetProcessWin32Process(ptr ptr)
+@ stdcall PsSetProcessWin32Process(ptr ptr ptr)
 @ stdcall PsSetProcessWindowStation(ptr ptr)
 @ stdcall PsSetThreadHardErrorsAreDisabled(ptr long)
-@ stdcall PsSetThreadWin32Thread(ptr ptr)
+@ stdcall PsSetThreadWin32Thread(ptr ptr ptr)
 @ stdcall PsTerminateSystemThread(long)
 @ extern PsThreadType _PsThreadType
 ;PsWrapApcWow64Thread

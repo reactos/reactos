@@ -56,19 +56,21 @@ PsGetProcessWin32Process(
 );
 
 NTKERNELAPI
-VOID
+NTSTATUS
 NTAPI
 PsSetProcessWin32Process(
     _Inout_ PEPROCESS Process,
-    _In_ PVOID Win32Process
+    _In_opt_ PVOID Win32Process,
+    _In_opt_ PVOID OldWin32Process
 );
 
 NTKERNELAPI
-VOID
+PVOID
 NTAPI
 PsSetThreadWin32Thread(
     _Inout_ PETHREAD Thread,
-    PVOID Win32Thread
+    _In_ PVOID Win32Thread,
+    _In_ PVOID OldWin32Thread
 );
 
 NTKERNELAPI
