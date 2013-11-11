@@ -27,6 +27,7 @@
 #define BIOS_VIDEO_INTERRUPT        0x10
 #define BIOS_EQUIPMENT_INTERRUPT    0x11
 #define BIOS_MEMORY_SIZE            0x12
+#define BIOS_MISC_INTERRUPT         0x15
 #define BIOS_KBD_INTERRUPT          0x16
 #define BIOS_TIME_INTERRUPT         0x1A
 #define BIOS_SYS_TIMER_INTERRUPT    0x1C
@@ -171,6 +172,7 @@ BOOLEAN BiosScrollWindow(
 VOID WINAPI BiosVideoService(LPWORD Stack);
 VOID WINAPI BiosEquipmentService(LPWORD Stack);
 VOID WINAPI BiosGetMemorySize(LPWORD Stack);
+VOID WINAPI BiosMiscService(LPWORD Stack);
 VOID WINAPI BiosKeyboardService(LPWORD Stack);
 VOID WINAPI BiosTimeService(LPWORD Stack);
 VOID WINAPI BiosSystemTimerInterrupt(LPWORD Stack);

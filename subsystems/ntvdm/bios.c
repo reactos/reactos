@@ -481,6 +481,7 @@ BOOLEAN BiosInitialize(VOID)
     RegisterInt32(BIOS_VIDEO_INTERRUPT    , BiosVideoService        );
     RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
+    RegisterInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
     RegisterInt32(BIOS_KBD_INTERRUPT      , BiosKeyboardService     );
     RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
     RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
@@ -1174,6 +1175,30 @@ VOID WINAPI BiosGetMemorySize(LPWORD Stack)
 {
     /* Return the conventional memory size in kB, typically 640 kB */
     setAX(Bda->MemorySize);
+}
+
+VOID WINAPI BiosMiscService(LPWORD Stack)
+{
+    switch (getAH())
+    {
+        /* Get Extended Memory Size */
+        case 0x88:
+        {
+            /* Return the number of KB of RAM after 1 MB */
+            setAX((MAX_ADDRESS - 0x100000) / 1024);
+
+            /* Clear CF */
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("BIOS Function INT 15h, AH = 0x%02X NOT IMPLEMENTED\n",
+                    getAH());
+        }
+    }
 }
 
 VOID WINAPI BiosKeyboardService(LPWORD Stack)
