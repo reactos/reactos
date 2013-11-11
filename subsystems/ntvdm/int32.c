@@ -16,6 +16,7 @@
 
 #include "bop.h"
 #include "bios.h"
+#include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -123,7 +124,7 @@ VOID WINAPI Int32Dispatch(LPWORD Stack)
     if (Int32Proc[IntNum] != NULL)
         Int32Proc[IntNum](Stack);
     else
-        DPRINT1("Unhandled 32-bit interrupt: 0x%02X\n", IntNum);
+        DPRINT1("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
 }
 
 VOID WINAPI InitializeInt32(WORD BiosSegment)
