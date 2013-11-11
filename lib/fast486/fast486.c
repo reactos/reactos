@@ -55,42 +55,7 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
     do
     {
         /* Check if this is a new instruction */
-        if (State->PrefixFlags == 0)
-        {
-            State->SavedInstPtr = State->InstPtr;
-
-            /*
-             * Check if there is an interrupt to execute, or a hardware interrupt signal
-             * while interrupts are enabled.
-             */
-            if (State->IntStatus == FAST486_INT_EXECUTE)
-            {
-                FAST486_IDT_ENTRY IdtEntry;
-
-                /* Get the interrupt vector */
-                if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
-                {
-                    /* Perform the interrupt */
-                    Fast486InterruptInternal(State,
-                                             IdtEntry.Selector,
-                                             MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                             IdtEntry.Type);
-                }
-
-                /* Clear the interrupt status */
-                State->IntStatus = FAST486_INT_NONE;
-            }
-            else if (State->Flags.If
-                     && (State->IntAckCallback != NULL)
-                     && (State->IntStatus == FAST486_INT_SIGNAL))
-            {
-                /* Acknowledge the interrupt to get the number */
-                State->PendingIntNum = State->IntAckCallback(State);
-
-                /* Set the interrupt status to execute on the next instruction */
-                State->IntStatus = FAST486_INT_EXECUTE;
-            }
-        }
+        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
 
         /* Perform an instruction fetch */
         if (!Fast486FetchByte(State, &Opcode)) continue;
@@ -108,15 +73,45 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             Fast486Exception(State, FAST486_EXCEPTION_UD);
         }
 
-        if (Fast486OpcodeHandlers[Opcode] != Fast486OpcodePrefix)
-        {
-            /* A non-prefix opcode has been executed, reset the prefix flags */
-            State->PrefixFlags = 0;
-        }
-        else
+        if (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix)
         {
             /* This is a prefix, go to the next instruction immediately */
             continue;
+        }
+
+        /* A non-prefix opcode has been executed, reset the prefix flags */
+        State->PrefixFlags = 0;
+
+        /*
+         * Check if there is an interrupt to execute, or a hardware interrupt signal
+         * while interrupts are enabled.
+         */
+        if (State->IntStatus == FAST486_INT_EXECUTE)
+        {
+            FAST486_IDT_ENTRY IdtEntry;
+
+            /* Get the interrupt vector */
+            if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
+            {
+                /* Perform the interrupt */
+                Fast486InterruptInternal(State,
+                                         IdtEntry.Selector,
+                                         MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                                         IdtEntry.Type);
+            }
+
+            /* Clear the interrupt status */
+            State->IntStatus = FAST486_INT_NONE;
+        }
+        else if (State->Flags.If
+                 && (State->IntAckCallback != NULL)
+                 && (State->IntStatus == FAST486_INT_SIGNAL))
+        {
+            /* Acknowledge the interrupt to get the number */
+            State->PendingIntNum = State->IntAckCallback(State);
+
+            /* Set the interrupt status to execute on the next instruction */
+            State->IntStatus = FAST486_INT_EXECUTE;
         }
     }
     while ((Command == FAST486_CONTINUE)
