@@ -53,10 +53,10 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
-    NULL, // TODO: OPCODE 0x10 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x11 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x12 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x13 NOT IMPLEMENTED
+    NULL, // Invalid
+    NULL, // Invalid
+    NULL, // Invalid
+    NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
     NULL, // Invalid
@@ -221,7 +221,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeLfsLgs,
     Fast486ExtOpcodeMovzxByte,
     Fast486ExtOpcodeMovzxWord,
-    NULL, // TODO: OPCODE 0xB8 NOT IMPLEMENTED
+    NULL, // Invalid
     Fast486OpcodeGroup0FB9,
     Fast486OpcodeGroup0FBA,
     Fast486ExtOpcodeBtc,
