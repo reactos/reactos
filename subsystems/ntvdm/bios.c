@@ -651,8 +651,9 @@ BOOLEAN BiosScrollWindow(INT Direction,
 {
     DWORD i;
     LPWORD WindowData;
-    DWORD WindowSize = (Rectangle.Bottom - Rectangle.Top + 1)
-                       * (Rectangle.Right - Rectangle.Left + 1);
+    WORD WindowWidth = Rectangle.Right - Rectangle.Left + 1;
+    WORD WindowHeight = Rectangle.Bottom - Rectangle.Top + 1;
+    DWORD WindowSize = WindowWidth * WindowHeight;
 
     /* Allocate a buffer for the window */
     WindowData = (LPWORD)HeapAlloc(GetProcessHeap(),
@@ -663,7 +664,13 @@ BOOLEAN BiosScrollWindow(INT Direction,
     /* Read the window data */
     BiosReadWindow(WindowData, Rectangle, Page);
 
-    if (Amount == 0)
+    if ((Amount == 0)
+        || (((Direction == SCROLL_DIRECTION_UP)
+        || (Direction == SCROLL_DIRECTION_DOWN))
+        && (Amount >= WindowHeight))
+        || (((Direction == SCROLL_DIRECTION_LEFT)
+        || (Direction == SCROLL_DIRECTION_RIGHT))
+        && (Amount >= WindowWidth)))
     {
         /* Fill the window */
         for (i = 0; i < WindowSize; i++)
@@ -674,7 +681,42 @@ BOOLEAN BiosScrollWindow(INT Direction,
         goto Done;
     }
 
-    // TODO: Scroll the window!
+    switch (Direction)
+    {
+        case SCROLL_DIRECTION_UP:
+        {
+            RtlMoveMemory(WindowData,
+                          &WindowData[WindowWidth * Amount],
+                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
+
+            for (i = 0; i < Amount * WindowWidth; i++)
+            {
+                WindowData[WindowSize - i - 1] = MAKEWORD(' ', FillAttribute);
+            }
+
+            break;
+        }
+
+        case SCROLL_DIRECTION_DOWN:
+        {
+            RtlMoveMemory(&WindowData[WindowWidth * Amount],
+                          WindowData,
+                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
+
+            for (i = 0; i < Amount * WindowWidth; i++)
+            {
+                WindowData[i] = MAKEWORD(' ', FillAttribute);
+            }
+
+            break;
+        }
+
+        default:
+        {
+            // TODO: NOT IMPLEMENTED!
+            UNIMPLEMENTED;
+        }
+    }
 
 Done:
     /* Write back the window data */
