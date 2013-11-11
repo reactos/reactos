@@ -366,11 +366,11 @@ BOOLEAN CmosInitialize(VOID)
     /* Clear the CMOS memory */
     ZeroMemory(&CmosMemory, sizeof(CmosMemory));
 
-    /* Always open (and if needed, create) a RAM file with exclusive access */
+    /* Always open (and if needed, create) a RAM file with shared access */
     SetLastError(0); // For debugging purposes
     hCmosRam = CreateFileW(L"cmos.ram",
                            GENERIC_READ | GENERIC_WRITE,
-                           0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
                            NULL,
                            OPEN_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL,
