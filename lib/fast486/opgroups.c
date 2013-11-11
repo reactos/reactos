@@ -2004,9 +2004,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
 
     /* Return success */
     return TRUE;
-
-    return TRUE;
 }
 
 /* EOF */
-
