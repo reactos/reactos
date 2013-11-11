@@ -215,7 +215,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeImul,
     Fast486ExtOpcodeCmpXchgByte,
     Fast486ExtOpcodeCmpXchg,
-    NULL, // TODO: OPCODE 0xB2 NOT IMPLEMENTED
+    Fast486ExtOpcodeLss,
     Fast486ExtOpcodeBtr,
     Fast486ExtOpcodeLfsLgs,
     Fast486ExtOpcodeLfsLgs,
@@ -1102,6 +1102,74 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchg)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLss)
+{
+    UCHAR FarPointer[6];
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xB2);
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!ModRegRm.Memory)
+    {
+        /* Invalid */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Fast486ReadMemory(State,
+                           (State->PrefixFlags & FAST486_PREFIX_SEG)
+                           ? State->SegmentOverride : FAST486_REG_DS,
+                           ModRegRm.MemoryAddress,
+                           FALSE,
+                           FarPointer,
+                           OperandSize ? 6 : 4))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Offset = *((PULONG)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(ULONG)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].Long = Offset;
+
+        /* Load the segment */
+        return Fast486LoadSegment(State,
+                                  FAST486_REG_SS,
+                                  Segment);
+    }
+    else
+    {
+        USHORT Offset = *((PUSHORT)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(USHORT)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].LowWord = Offset;
+
+        /* Load the segment */
+        return Fast486LoadSegment(State,
+                                  FAST486_REG_SS,
+                                  Segment);
+    }
+}
+
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
 {
     BOOLEAN OperandSize, AddressSize;
@@ -1204,6 +1272,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLfsLgs)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
+    TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
