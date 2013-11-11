@@ -212,7 +212,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xAC NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAD NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0xAE NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xAF NOT IMPLEMENTED
+    Fast486ExtOpcodeImul,
     Fast486ExtOpcodeCmpXchgByte,
     Fast486ExtOpcodeCmpXchg,
     NULL, // TODO: OPCODE 0xB2 NOT IMPLEMENTED
@@ -710,6 +710,70 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
 
     /* Return success */
     return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeImul)
+{
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        LONG Source, Destination;
+        LONGLONG Result;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmDwordOperands(State,
+                                           &ModRegRm,
+                                           (PULONG)&Destination,
+                                           (PULONG)&Source))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (LONGLONG)Source * (LONGLONG)Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Of = ((Result < -2147483648LL) || (Result > 2147483647LL));
+
+        /* Write back the result */
+        return Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, (ULONG)((LONG)Result));
+    }
+    else
+    {
+        SHORT Source, Destination;
+        LONG Result;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          (PUSHORT)&Destination,
+                                          (PUSHORT)&Source))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (LONG)Source * (LONG)Destination;
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Of = ((Result < -32768) || (Result > 32767));
+
+        /* Write back the result */
+        return Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, (USHORT)((SHORT)Result));
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeCmpXchgByte)
