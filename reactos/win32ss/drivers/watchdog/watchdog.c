@@ -109,7 +109,8 @@ WdSuspendDeferredWatch(
 VOID
 NTAPI
 WdResumeWatch(
-    PVOID p1)
+    PVOID p1,
+    PVOID p2)
 {
     UNIMPLEMENTED;
 }
@@ -117,7 +118,8 @@ WdResumeWatch(
 VOID
 FASTCALL
 WdResumeDeferredWatch(
-    PVOID p1)
+    PVOID p1,
+    PVOID p2)
 {
     UNIMPLEMENTED;
 }
