@@ -66,7 +66,7 @@ HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC
 
     *ppV = NULL;
 
-    hResult = IFileSystemBindDataImpl::_CreatorClass::CreateInstance(NULL, IID_IFileSystemBindData, (void **)&fileSystemBindData);
+    hResult = IFileSystemBindDataImpl::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IFileSystemBindData, &fileSystemBindData));
     if (FAILED(hResult))
         return hResult;
     hResult = fileSystemBindData->SetFindData(pfd);
@@ -106,7 +106,7 @@ HRESULT WINAPI FileSystemBindData_GetFindData(LPBC pbc, WIN32_FIND_DATAW *pfd)
     ret = pbc->GetObjectParam((LPOLESTR)wFileSystemBindData, &pUnk);
     if (SUCCEEDED(ret))
     {
-        ret = pUnk->QueryInterface(IID_IFileSystemBindData, (LPVOID *)&pfsbd);
+        ret = pUnk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pfsbd));
         if (SUCCEEDED(ret))
             ret = pfsbd->GetFindData(pfd);
     }
@@ -124,7 +124,7 @@ HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *
     ret = pbc->GetObjectParam((LPOLESTR)wFileSystemBindData, &pUnk);
     if (SUCCEEDED(ret))
     {
-        ret = pUnk->QueryInterface(IID_IFileSystemBindData, (LPVOID *)&pfsbd);
+        ret = pUnk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pfsbd));
         if (SUCCEEDED(ret))
             ret = pfsbd->SetFindData(pfd);
     }

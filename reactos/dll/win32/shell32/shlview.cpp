@@ -350,7 +350,7 @@ CDefView::~CDefView()
 HRESULT WINAPI CDefView::Initialize(IShellFolder *shellFolder)
 {
     pSFParent = shellFolder;
-    shellFolder->QueryInterface(IID_IShellFolder2, (LPVOID *)&pSF2Parent);
+    shellFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, &pSF2Parent));
 
     return S_OK;
 }
@@ -936,11 +936,11 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         }
     }
 
-    if (SUCCEEDED(this->QueryInterface(IID_IDropTarget, (LPVOID*)&pdt)))
+    if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
         RegisterDragDrop(m_hWnd, pdt);
 
     /* register for receiving notifications */
-    pSFParent->QueryInterface(IID_IPersistFolder2, (LPVOID*)&ppf2);
+    pSFParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (ppf2)
     {
         ppf2->GetCurFolder((LPITEMIDLIST*)&ntreg.pidl);
@@ -1114,7 +1114,7 @@ HRESULT CDefView::OpenSelectedItems()
     if (!hMenu) 
         return E_FAIL;
 
-    hResult = GetItemObject( SVGIO_SELECTION, IID_IContextMenu, (LPVOID *)&pCM);
+    hResult = GetItemObject( SVGIO_SELECTION, IID_PPV_ARG(IContextMenu2, &pCM));
     if (FAILED(hResult))
         goto cleanup;
 
@@ -1181,7 +1181,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     cidl = ListView_GetSelectedCount(hWndList);
 
-    hResult = GetItemObject( cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_IContextMenu, (LPVOID *)&pCM);
+    hResult = GetItemObject( cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu2, &pCM));
     if (FAILED( hResult))
         goto cleanup;
 
@@ -1235,7 +1235,7 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (!hMenu) 
         return 0;
 
-    hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_IContextMenu, (LPVOID *)&pCM);
+    hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu2, &pCM));
     if (FAILED( hResult))
         goto cleanup;
 
@@ -1958,7 +1958,7 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 
     /* try to get the ICommDlgBrowserInterface, adds a reference !!! */
     pCommDlgBrowser = NULL;
-    if (SUCCEEDED(pShellBrowser->QueryInterface(IID_ICommDlgBrowser, (LPVOID *)&pCommDlgBrowser)))
+    if (SUCCEEDED(pShellBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &pCommDlgBrowser))))
     {
         TRACE("-- CommDlgBrowser\n");
     }
@@ -2415,8 +2415,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     {
         /* We are not above one of the listview's subitems. Bind to the parent folder's
          * DropTarget interface. */
-        hr = pSFParent->QueryInterface(IID_IDropTarget,
-                                       (LPVOID*)&pCurDropTarget);
+        hr = pSFParent->QueryInterface(IID_PPV_ARG(IDropTarget,&pCurDropTarget));
     }
     else
     {
@@ -2600,7 +2599,7 @@ HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newVie
     if (theView == NULL)
         return E_OUTOFMEMORY;
 
-    hResult = theView->QueryInterface (IID_IShellView, (void **)&result);
+    hResult = theView->QueryInterface(IID_PPV_ARG(IShellView, &result));
     if (FAILED (hResult))
     {
         delete theView;

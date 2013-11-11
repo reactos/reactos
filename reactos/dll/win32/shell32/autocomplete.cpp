@@ -122,7 +122,7 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
         return this->hwndEdit ? E_FAIL : E_UNEXPECTED;
     }
 
-    if (!SUCCEEDED (punkACL->QueryInterface(IID_IEnumString, (LPVOID *)&enumstr)))
+    if (!SUCCEEDED(punkACL->QueryInterface(IID_PPV_ARG(IEnumString,&enumstr))))
     {
         TRACE("No IEnumString interface\n");
         return  E_NOINTERFACE;

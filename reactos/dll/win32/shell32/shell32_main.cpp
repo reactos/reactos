@@ -467,7 +467,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         /* get the parent shellfolder */
         if (pidl)
         {
-            hr = SHBindToParent( pidl, IID_IShellFolder, (LPVOID*)&psfParent,
+            hr = SHBindToParent( pidl, IID_PPV_ARG(IShellFolder, &psfParent),
                                 (LPCITEMIDLIST*)&pidlLast );
             if (SUCCEEDED(hr))
                 pidlLast = ILClone(pidlLast);

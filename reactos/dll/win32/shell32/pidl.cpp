@@ -118,7 +118,7 @@ BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR pa
         }
         else
         {
-            ret = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psfParent, &pidllast);
+            ret = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfParent), &pidllast);
             if (SUCCEEDED(ret))
             {
                 ret = psfParent->GetDisplayNameOf(pidllast, flag, &strret);
@@ -1221,7 +1221,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
     if (!pidl)
         return FALSE;
 
-    hr = SHBindToParent(pidl, IID_IShellFolder, (VOID**)&psfFolder, &pidlLast);
+    hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &pidlLast);
     if (FAILED(hr))
     {
         ERR("SHBindToParent failed: %x\n", hr);

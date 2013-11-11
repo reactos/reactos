@@ -389,7 +389,7 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     ATLTRY (theEnumerator = new CComObject<CPrintersEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;

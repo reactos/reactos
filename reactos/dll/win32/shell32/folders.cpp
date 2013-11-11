@@ -197,11 +197,11 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
     LPITEMIDLIST pSimplePidl = ILFindLastID(pidl);
     HRESULT hr;
 
-    hr = SHCreateDefaultExtractIcon(IID_IDefaultExtractIconInit, (void **)&initIcon);
+    hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
     if (FAILED(hr))
         return NULL;
 
-    hr = initIcon->QueryInterface(IID_IExtractIconW, (void **)&extractIcon);
+    hr = initIcon->QueryInterface(IID_PPV_ARG(IExtractIconW,&extractIcon));
     if (FAILED(hr))
         return NULL;
 
@@ -383,7 +383,7 @@ IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
     if (!extractIconW)
         return NULL;
 
-    hr = extractIconW->QueryInterface(IID_IExtractIconA, (void **)&extractIconA);
+    hr = extractIconW->QueryInterface(IID_PPV_ARG(IExtractIconA, &extractIconA));
     extractIconW->Release();
     if (FAILED(hr))
         return NULL;

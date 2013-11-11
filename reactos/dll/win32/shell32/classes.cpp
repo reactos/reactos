@@ -487,8 +487,7 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
         hr = SHGetDesktopFolder(&psfDesktop);
         if (SUCCEEDED(hr))
         {
-            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_IShellFolder,
-                                          (LPVOID*)&psfFolder);
+            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder,&psfFolder));
             if (SUCCEEDED(hr))
                 hr = psfFolder->GetAttributesOf(0, NULL, pdwAttributes);
         }

@@ -934,12 +934,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     hres = CoCreateInstance(CLSID_ShellLink,
                  NULL,
                  CLSCTX_INPROC_SERVER,
-                 IID_IShellLinkA,
-                 (void **)&psl);
+                 IID_PPV_ARG(IShellLinkA,&psl));
     if(SUCCEEDED(hres)) {
 
-        hres = psl->QueryInterface(IID_IPersistFile,
-                         (LPVOID *)&pPf);
+        hres = psl->QueryInterface(IID_PPV_ARG(IPersistFile,&pPf));
         if(FAILED(hres)) {
         /* bombed */
         ERR("failed QueryInterface for IPersistFile %08x\n", hres);
@@ -1021,7 +1019,7 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
     if (FAILED(hRes))
         return hRes;
 
-    hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppv);
+    hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppv));
     psf->Release();
 
     return hRes;
@@ -1773,9 +1771,9 @@ EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, 
                    /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
                        Only if both interfaces are supported it's a real shell extension.
                        Then call IShellExtInit's Initialize method. */
-                    if (SUCCEEDED(CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
+                    if (SUCCEEDED(CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, IID_PPV_ARG(IShellPropSheetExt, &pspsx))))
                     {
-                        if (SUCCEEDED(pspsx->QueryInterface(IID_IShellExtInit, (PVOID *)&psxi)))
+                        if (SUCCEEDED(pspsx->QueryInterface(IID_PPV_ARG(IShellExtInit, &psxi))))
                         {
                             if (SUCCEEDED(psxi->Initialize(NULL, pDataObj, hKey)))
                             {
@@ -1900,7 +1898,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
         return hRes;
 
     pef->AddRef();
-    hRes = pef->QueryInterface(IID_IEnumFORMATETC, (LPVOID*)ppenumFormatetc);
+    hRes = pef->QueryInterface(IID_PPV_ARG(IEnumFORMATETC, ppenumFormatetc));
     pef->Release();
 
     return hRes;
@@ -1926,7 +1924,7 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **pps
     if (FAILED(hRes))
         return hRes;
 
-    hRes = psf->QueryInterface(IID_IShellView, (LPVOID *)ppsv);
+    hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppsv));
     psf->Release();
 
     return hRes;

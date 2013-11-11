@@ -133,7 +133,7 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
     TRACE ("(%p, %p, %p, %s)\n", psf, pbc, pidlInOut ? *pidlInOut : NULL, debugstr_w (szNext));
 
     /* get the shellfolder for the child pidl and let it analyse further */
-    hr = psf->BindToObject(*pidlInOut, pbc, IID_IShellFolder, (LPVOID *)&psfChild);
+    hr = psf->BindToObject(*pidlInOut, pbc, IID_PPV_ARG(IShellFolder, &psfChild));
 
     if (SUCCEEDED(hr)) {
     hr = psfChild->ParseDisplayName(hwndOwner, pbc, szNext, pEaten, &pidlOut, pdwAttributes);
@@ -171,10 +171,11 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
                 LPCITEMIDLIST pidlChild, REFCLSID clsid, LPVOID * ppvOut)
 {
     HRESULT hr;
+    IShellFolder* pShellFolder;
 
     TRACE ("%p %s %p\n", pidlRoot, debugstr_w(pathRoot), pidlChild);
 
-    hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_IShellFolder, ppvOut);
+    hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
     if (SUCCEEDED (hr))
     {
         LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
@@ -182,7 +183,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         IPersistFolder3 *ppf;
 
         if (_ILIsFolder(pidlChild) &&
-            SUCCEEDED (((IUnknown *)(*ppvOut))->QueryInterface(IID_IPersistFolder3, (LPVOID *) & ppf)))
+            SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf))))
         {
             PERSIST_FOLDER_TARGET_INFO ppfti;
 
@@ -210,7 +211,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
             ppf->InitializeEx(NULL, pidlAbsolute, &ppfti);
             ppf->Release();
         }
-        else if (SUCCEEDED ((hr = ((IUnknown *)(*ppvOut))->QueryInterface (IID_IPersistFolder, (LPVOID *) & pPF))))
+        else if (SUCCEEDED((hr = pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &pPF)))))
         {
             pPF->Initialize(pidlAbsolute);
             pPF->Release();
@@ -218,6 +219,9 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         ILFree (pidlAbsolute);
     }
     TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
+
+    *ppvOut = pShellFolder;
+
     return hr;
 }
 
@@ -323,7 +327,7 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
     {
         IShellFolder *psfChild;
 
-        hr = psf->BindToObject(pidlFirst, NULL, IID_IShellFolder, (LPVOID *) & psfChild);
+        hr = psf->BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
         if (SUCCEEDED (hr))
         {
             STRRET strTemp;
@@ -454,7 +458,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
         if (SFGAO_HASSUBFOLDER & *pdwAttributes)
         {
             IShellFolder *psf2;
-            if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID *)&psf2)))
+            if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
             {
                 IEnumIDList *pEnumIL = NULL;
                 if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
@@ -533,7 +537,7 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
     } else if (isEmpty2) {
         return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
     /* optimizing end */
-    } else if (SUCCEEDED (iface->BindToObject(firstpidl, NULL, IID_IShellFolder, (LPVOID *)&psf))) {
+    } else if (SUCCEEDED (iface->BindToObject(firstpidl, NULL, IID_PPV_ARG(IShellFolder, &psf)))) {
     nReturn = psf->CompareIDs(lParam, nextpidl1, nextpidl2);
     psf->Release();
     }

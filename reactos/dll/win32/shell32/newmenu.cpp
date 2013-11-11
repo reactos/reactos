@@ -350,15 +350,15 @@ HRESULT CNewMenu::CreateNewFolder(IShellView *psv)
     //    return E_FAIL;
 
     /* Get current folder */
-    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&pFolderView);
+    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_PPV_ARG(IFolderView, &pFolderView));
     if (FAILED(hr))
         return hr;
 
-    hr = pFolderView->GetFolder(IID_IShellFolder, (void **)&pParentFolder);
+    hr = pFolderView->GetFolder(IID_PPV_ARG(IShellFolder, &pParentFolder));
     if (FAILED(hr))
         return hr;
 
-    hr = pParentFolder->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlp);
+    hr = pParentFolder->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlp));
     if (FAILED(hr))
         return hr;
 
@@ -394,19 +394,19 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
     WCHAR wszPath[MAX_PATH];
     CComPtr<IFolderView> pFolderView;
     CComPtr<IShellFolder> pParentFolder;
-    CComPtr<IPersistFolder3> psf;
+    CComPtr<IPersistFolder2> psf;
     HRESULT hr;
 
     /* Get current folder */
-    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_IFolderView, (void **)&pFolderView);
+    hr = IUnknown_QueryService(psv, SID_IFolderView, IID_PPV_ARG(IFolderView, &pFolderView));
     if (FAILED(hr))
         return hr;
 
-    hr = pFolderView->GetFolder(IID_IShellFolder, (void **)&pParentFolder);
+    hr = pFolderView->GetFolder(IID_PPV_ARG(IShellFolder, &pParentFolder));
     if (FAILED(hr))
         return hr;
 
-    if (pParentFolder->QueryInterface(IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+    if (pParentFolder->QueryInterface(IID_PPV_ARG(IPersistFolder2, &psf)) != S_OK)
     {
         ERR("Failed to get interface IID_IPersistFolder2\n");
         return E_FAIL;

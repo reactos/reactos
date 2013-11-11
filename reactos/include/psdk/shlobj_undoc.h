@@ -26,6 +26,12 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#ifdef __cplusplus
+#define IID_PPV_ARG(Itype, ppType) IID_##Itype, reinterpret_cast<void**>((static_cast<Itype**>(ppType)))
+#else
+#define IID_PPV_ARG(Itype, ppType) IID_##Itype, (void**)(ppType)
+#endif
+
 /*****************************************************************************
  * New shellstate structure
  */

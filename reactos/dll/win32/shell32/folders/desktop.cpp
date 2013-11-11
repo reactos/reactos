@@ -430,7 +430,7 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
 
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;
@@ -857,7 +857,7 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(
 
     if (_ILGetGUIDPointer(pidl))
     {
-        if (SUCCEEDED(BindToObject(pidl, NULL, IID_IShellFolder2, (LPVOID *)&psf)))
+        if (SUCCEEDED(BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder2, &psf))))
         {
             hr = psf->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
             return hr;
@@ -1218,7 +1218,7 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
 
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
-    pSFFrom->QueryInterface(IID_IPersistFolder2, (LPVOID *)&ppf2);
+    pSFFrom->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (ppf2)
     {
         if (FAILED(ppf2->GetCurFolder(&pidl)))

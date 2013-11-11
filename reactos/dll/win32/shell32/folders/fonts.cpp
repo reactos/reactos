@@ -233,7 +233,7 @@ HRESULT WINAPI CFontsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMID
     ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnumZ>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;
@@ -314,7 +314,7 @@ HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOI
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
+        hr = IShellView_Constructor (this, &pShellView);
         if (pShellView)
             hr = pShellView->QueryInterface(riid, ppvOut);
     }
@@ -345,7 +345,7 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
         CComPtr<IShellFolder>            psfParent;
         LPCITEMIDLIST rpidl = NULL;
 
-        hr = SHBindToParent(pidlRoot, IID_IShellFolder, (LPVOID *)&psfParent, (LPCITEMIDLIST *)&rpidl);
+        hr = SHBindToParent(pidlRoot, IID_PPV_ARG(IShellFolder, &psfParent), (LPCITEMIDLIST *)&rpidl);
         if (SUCCEEDED(hr))
             SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
     }

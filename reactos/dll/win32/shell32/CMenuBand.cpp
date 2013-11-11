@@ -250,7 +250,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
         return S_OK;
 
     hwndParent = NULL;
-    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&m_site));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
     if (SUCCEEDED(hResult))
     {
         m_site->GetWindow(&hwndParent);

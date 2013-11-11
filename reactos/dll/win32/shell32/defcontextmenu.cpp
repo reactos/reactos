@@ -139,7 +139,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     IDataObject *pDataObj;
 
     TRACE("cidl %u\n", pdcm->cidl);
-    if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
+    if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
         m_pDataObj = pDataObj;
 
     if (!pdcm->cidl)
@@ -150,7 +150,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
         else
         {
             IPersistFolder2 *pf = NULL;
-            if (SUCCEEDED(pdcm->psf->QueryInterface(IID_IPersistFolder2, (PVOID*)&pf)))
+            if (SUCCEEDED(pdcm->psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
             {
                 if (FAILED(pf->GetCurFolder((_ITEMIDLIST**)&m_pidlFolder)))
                     ERR("GetCurFolder failed\n");
@@ -357,7 +357,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
         return S_OK;
 
     IContextMenu *pcm;
-    hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_IContextMenu, (void**)&pcm);
+    hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
     if (hr != S_OK)
     {
         ERR("SHCoCreateInstance failed %x\n", GetLastError());
@@ -365,7 +365,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
     }
 
     IShellExtInit *pExtInit;
-    hr = pcm->QueryInterface(IID_IShellExtInit, (void**)&pExtInit);
+    hr = pcm->QueryInterface(IID_PPV_ARG(IShellExtInit, &pExtInit));
     if (hr != S_OK)
     {
         ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
@@ -998,7 +998,7 @@ CDefaultContextMenu::DoPaste(
         /* use desktop shellfolder */
         psfFrom = psfDesktop;
     }
-    else if (FAILED(psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom)))
+    else if (FAILED(psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom))))
     {
         ERR("no IShellFolder\n");
 
@@ -1016,7 +1016,7 @@ CDefaultContextMenu::DoPaste(
     if (m_Dcm.cidl)
     {
         psfDesktop->Release();
-        hr = m_Dcm.psf->BindToObject(m_Dcm.apidl[0], NULL, IID_IShellFolder, (LPVOID*)&psfTarget);
+        hr = m_Dcm.psf->BindToObject(m_Dcm.apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
     }
     else
     {
@@ -1024,7 +1024,7 @@ CDefaultContextMenu::DoPaste(
         LPITEMIDLIST pidl;
 
         /* cidl is zero due to explorer view */
-        hr = m_Dcm.psf->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
+        hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
         if (SUCCEEDED(hr))
         {
             hr = ppf2->GetCurFolder(&pidl);
@@ -1039,7 +1039,7 @@ CDefaultContextMenu::DoPaste(
                 else
                 {
                     /* retrieve target desktop folder */
-                    hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfTarget);
+                    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
                 }
                 TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget, _ILIsDesktop(pidl));
                 ILFree(pidl);
@@ -1062,7 +1062,7 @@ CDefaultContextMenu::DoPaste(
 
     /* get source and destination shellfolder */
     ISFHelper *psfhlpdst;
-    if (FAILED(psfTarget->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpdst)))
+    if (FAILED(psfTarget->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlpdst))))
     {
         ERR("no IID_ISFHelper for destination\n");
 
@@ -1077,7 +1077,7 @@ CDefaultContextMenu::DoPaste(
     }
 
     ISFHelper *psfhlpsrc;
-    if (FAILED(psfFrom->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpsrc)))
+    if (FAILED(psfFrom->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlpsrc))))
     {
         ERR("no IID_ISFHelper for source\n");
 
@@ -1185,7 +1185,7 @@ CDefaultContextMenu::DoCreateLink(
             return E_FAIL;
 
         IShellLinkW *pLink;
-        hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkW, (void**)&pLink);
+        hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
         if (hr != S_OK)
             return hr;
 
@@ -1196,7 +1196,7 @@ CDefaultContextMenu::DoCreateLink(
         if (SUCCEEDED(pLink->SetPath(wszPath)) &&
             SUCCEEDED(pLink->SetWorkingDirectory(szDirPath)))
         {
-            if (SUCCEEDED(pLink->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf)))
+            if (SUCCEEDED(pLink->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf))))
             {
                 hr = ppf->Save(wszTarget, TRUE);
                 ppf->Release();
@@ -1280,7 +1280,7 @@ CDefaultContextMenu::DoCopyOrCut(
     LPDATAOBJECT pDataObj;
     HRESULT hr;
 
-    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_IDataObject, (void**)&pDataObj)))
+    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
         hr = OleSetClipboard(pDataObj);
         pDataObj->Release();
@@ -1364,7 +1364,7 @@ CDefaultContextMenu::DoProperties(
         IPersistFolder2 *pf;
         
         /* pidlFolder is optional */
-        if (SUCCEEDED(m_Dcm.psf->QueryInterface(IID_IPersistFolder2, (PVOID*)&pf)))
+        if (SUCCEEDED(m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
             pf->GetCurFolder((_ITEMIDLIST**)&pidlParent);
             pf->Release();
@@ -1794,7 +1794,7 @@ CDefFolderMenu_Create2(
     pdcm.cKeys = nKeys;
     pdcm.aKeys = ahkeyClsKeys;
 
-    HRESULT hr = SHCreateDefaultContextMenu(&pdcm, IID_IContextMenu, (void**)ppcm);
+    HRESULT hr = SHCreateDefaultContextMenu(&pdcm, IID_PPV_ARG(IContextMenu, ppcm));
     return hr;
 }
 

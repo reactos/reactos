@@ -218,7 +218,7 @@ static void InitializeTreeView( browse_info *info )
             ILFree(pidlParent);
             return;
         }
-        hr = lpsfDesktop->BindToObject(pidlParent, 0, IID_IShellFolder, (LPVOID *)&lpsfParent);
+        hr = lpsfDesktop->BindToObject(pidlParent, 0, IID_PPV_ARG(IShellFolder, &lpsfParent));
         lpsfDesktop->Release();
     }
 
@@ -230,7 +230,7 @@ static void InitializeTreeView( browse_info *info )
     }
 
     if (pidlChild && pidlChild->mkid.cb) {
-        hr = lpsfParent->BindToObject(pidlChild, 0, IID_IShellFolder, (LPVOID *)&lpsfRoot);
+        hr = lpsfParent->BindToObject(pidlChild, 0, IID_PPV_ARG(IShellFolder, &lpsfRoot));
     } else {
         lpsfRoot = lpsfParent;
         hr = lpsfParent->AddRef();
@@ -417,7 +417,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
         lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulAttrs);
         if (ulAttrs & SFGAO_FOLDER)
         {
-            hr = lpsf->BindToObject(pidlTemp, NULL, IID_IShellFolder, (LPVOID *)&pSFChild);
+            hr = lpsf->BindToObject(pidlTemp, NULL, IID_PPV_ARG(IShellFolder, &pSFChild));
             if (SUCCEEDED(hr))
                 {
                 DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
@@ -519,8 +519,7 @@ static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv 
         return 0;
 
     if (lptvid->lpi && lptvid->lpi->mkid.cb) {
-        r = lptvid->lpsfParent->BindToObject(lptvid->lpi, 0,
-                                      IID_IShellFolder, (LPVOID *)&lpsf2 );
+        r = lptvid->lpsfParent->BindToObject(lptvid->lpi, 0, IID_PPV_ARG(IShellFolder, &lpsf2));
     } else {
         lpsf2 = lptvid->lpsfParent;
         r = lpsf2->AddRef();
@@ -735,12 +734,12 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     hr = SHGetDesktopFolder(&desktop);
     if(FAILED(hr))
         return hr;
-    hr = desktop->BindToObject(info->pidlRet, 0, IID_IShellFolder, (LPVOID *)&cur);
+    hr = desktop->BindToObject(info->pidlRet, 0, IID_PPV_ARG(IShellFolder, &cur));
     desktop->Release();
     if(FAILED(hr))
         return hr;
 
-    hr = cur->QueryInterface(IID_ISFHelper, (LPVOID *)&sfhelper);
+    hr = cur->QueryInterface(IID_PPV_ARG(ISFHelper, &sfhelper));
     if(FAILED(hr))
         return hr;
 

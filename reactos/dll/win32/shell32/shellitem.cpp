@@ -69,7 +69,7 @@ HRESULT CShellItem::get_parent_shellfolder(IShellFolder **ppsf)
     {
         hr = SHGetDesktopFolder(&desktop);
         if (SUCCEEDED(hr))
-            hr = desktop->BindToObject(parent_pidl, NULL, IID_IShellFolder, reinterpret_cast<void **>(ppsf));
+            hr = desktop->BindToObject(parent_pidl, NULL, IID_PPV_ARG(IShellFolder, ppsf));
         ILFree(parent_pidl);
     }
 
@@ -179,7 +179,7 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
     if (piOrder == NULL || oth == NULL)
         return E_POINTER;
 
-    hr = oth->QueryInterface(IID_IPersistIDList, reinterpret_cast<void **>(&pIDList));
+    hr = oth->QueryInterface(IID_PPV_ARG(IPersistIDList, &pIDList));
     if (SUCCEEDED(hr))
     {
         hr = pIDList->GetIDList(&pidl);
@@ -256,7 +256,7 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
         {
             CComPtr<IPersistFolder2>    ppf2Parent;
 
-            if (FAILED(psfParent->QueryInterface(IID_IPersistFolder2, (void**)&ppf2Parent)))
+            if (FAILED(psfParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2Parent))))
             {
                 FIXME("couldn't get IPersistFolder2 interface of parent\n");
                 return E_NOINTERFACE;
@@ -284,14 +284,14 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
             return E_OUTOFMEMORY;
     }
 
-    hr = CShellItem::_CreatorClass::CreateInstance(NULL, IID_IShellItem, (void**)&newShellItem);
+    hr = CShellItem::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellItem, &newShellItem));
     if (FAILED(hr))
     {
         *ppsi = NULL;
         ILFree(new_pidl);
         return hr;
     }
-    hr = newShellItem->QueryInterface(IID_IPersistIDList, (void **)&newPersistIDList);
+    hr = newShellItem->QueryInterface(IID_PPV_ARG(IPersistIDList, &newPersistIDList));
     if (FAILED(hr))
     {
         ILFree(new_pidl);

@@ -127,8 +127,7 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
     if (FAILED(r))
         return NULL;
 
-    r = param->QueryInterface(IID_IFileSystemBindData,
-                              (LPVOID*)&fsbd );
+    r = param->QueryInterface(IID_PPV_ARG(IFileSystemBindData,&fsbd));
     if (SUCCEEDED(r))
     {
         r = fsbd->GetFindData(&wfd);
@@ -265,8 +264,8 @@ HRESULT WINAPI CFSFolder::EnumObjects(
     ATLTRY (theEnumerator = new CComObject<CFileSysEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
-    if (FAILED (hResult))
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
+    if (FAILED(hResult))
     {
         delete theEnumerator;
         return hResult;
@@ -404,7 +403,7 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         IShellFolder *psfParent = NULL;
         LPCITEMIDLIST rpidl = NULL;
 
-        hr = SHBindToParent(pidlRoot, IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
+        hr = SHBindToParent(pidlRoot, IID_PPV_ARG(IShellFolder, &psfParent), &rpidl);
         if(SUCCEEDED(hr))
         {
             SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
@@ -1050,7 +1049,7 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
-    hr = pSFFrom->QueryInterface (IID_IPersistFolder2, (LPVOID *) & ppf2);
+    hr = pSFFrom->QueryInterface (IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (SUCCEEDED(hr))
     {
         hr = ppf2->GetCurFolder(&pidl);

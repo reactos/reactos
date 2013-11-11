@@ -1095,7 +1095,7 @@ static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
 {
     LPCITEMIDLIST pidlLast;
 
-    HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psf, &pidlLast);
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
 
     if (SUCCEEDED(hr))
     {
@@ -1365,7 +1365,7 @@ static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
     LPCITEMIDLIST pidlLast;
     UINT wFlags;
 
-    HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psf, &pidlLast);
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
 
     if (SUCCEEDED(hr))
     {
@@ -2111,7 +2111,7 @@ HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown *pUnkOuter, REFIID riid, LP
 
         *ppv = NULL;
 
-        hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
+        hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
 
         if (SUCCEEDED(hr))
         {

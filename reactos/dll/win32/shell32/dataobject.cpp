@@ -139,7 +139,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
     ATLTRY (theEnumerator = new CComObject<IEnumFORMATETCImpl>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumFORMATETC, (void **)&result);
+    hResult = theEnumerator->QueryInterface (IID_PPV_ARG(IEnumFORMATETC, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;
@@ -362,7 +362,7 @@ HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMID
     ATLTRY (theDataObject = new CComObject<IDataObjectImpl>);
     if (theDataObject == NULL)
         return E_OUTOFMEMORY;
-    hResult = theDataObject->QueryInterface (IID_IDataObject, (void **)&result);
+    hResult = theDataObject->QueryInterface(IID_PPV_ARG(IDataObject, &result));
     if (FAILED (hResult))
     {
         delete theDataObject;
