@@ -91,6 +91,18 @@ VideoPortUnlockPages(
     return 0;
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
+VOID
+NTAPI
+WdDdiWatchdogDpcCallback(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    UNIMPLEMENTED;
+}
+
 #ifdef _M_AMD64
 UCHAR
 NTAPI
