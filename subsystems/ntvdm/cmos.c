@@ -11,6 +11,7 @@
 #define NDEBUG
 
 #include "cmos.h"
+#include "bios.h"
 #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -134,6 +135,18 @@ BYTE CmosReadData(VOID)
             /* Return the old value */
             return Value;
         }
+
+        case CMOS_REG_BASE_MEMORY_LOW:
+            return Bda->MemorySize & 0xFF;
+
+        case CMOS_REG_BASE_MEMORY_HIGH:
+            return Bda->MemorySize >> 8;
+
+        case CMOS_REG_EXT_MEMORY_LOW:
+            return ((MAX_ADDRESS - 0x100000) / 1024) & 0xFF;
+
+        case CMOS_REG_EXT_MEMORY_HIGH:
+            return ((MAX_ADDRESS - 0x100000) / 1024) >> 8;
 
         case CMOS_REG_STATUS_A:
         case CMOS_REG_STATUS_B:
