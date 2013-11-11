@@ -719,7 +719,21 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             Index = (SibByte >> 3) & 0x07;
             if (Index != FAST486_REG_ESP) Index = State->GeneralRegs[Index].Long;
             else Index = 0;
-            Base = State->GeneralRegs[SibByte & 0x07].Long;
+
+            if ((SibByte & 0x07) != FAST486_REG_EBP)
+            {
+                /* Use the register a base */
+                Base = State->GeneralRegs[SibByte & 0x07].Long;
+            }
+            else
+            {
+                /* Fetch the base */
+                if (!Fast486FetchDword(State, &Base))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+            }
 
             /* Calculate the address */
             ModRegRm->MemoryAddress = Base + Index * Scale;
