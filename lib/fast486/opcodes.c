@@ -4314,6 +4314,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
+    TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
