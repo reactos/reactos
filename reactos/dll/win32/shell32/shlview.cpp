@@ -100,7 +100,7 @@ class CDefView :
         UINT                                cScrollDelay;        /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
         POINT                                ptLastMousePos;        /* Mouse position at last DragOver call */
         //
-        CComPtr<IContextMenu2>                pCM;
+        CComPtr<IContextMenu>                pCM;
     public:
         CDefView();
         ~CDefView();
@@ -1114,7 +1114,7 @@ HRESULT CDefView::OpenSelectedItems()
     if (!hMenu) 
         return E_FAIL;
 
-    hResult = GetItemObject( SVGIO_SELECTION, IID_PPV_ARG(IContextMenu2, &pCM));
+    hResult = GetItemObject( SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &pCM));
     if (FAILED(hResult))
         goto cleanup;
 
@@ -1181,7 +1181,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     cidl = ListView_GetSelectedCount(hWndList);
 
-    hResult = GetItemObject( cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu2, &pCM));
+    hResult = GetItemObject( cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &pCM));
     if (FAILED( hResult))
         goto cleanup;
 
@@ -1235,7 +1235,7 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (!hMenu) 
         return 0;
 
-    hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu2, &pCM));
+    hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &pCM));
     if (FAILED( hResult))
         goto cleanup;
 
@@ -1814,7 +1814,12 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    if (pCM.p->HandleMenuMsg(uMsg, (WPARAM)m_hWnd, lParam) == S_OK)
+    CComPtr<IContextMenu2> pCM2;
+    HRESULT hres = pCM.p->QueryInterface(IID_PPV_ARG(IContextMenu2, &pCM2));
+    if(FAILED(hres))
+        return FALSE;
+
+    if (pCM2.p->HandleMenuMsg(uMsg, (WPARAM)m_hWnd, lParam) == S_OK)
         return TRUE;
     else
         return FALSE;
