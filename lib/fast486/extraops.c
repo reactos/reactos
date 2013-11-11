@@ -201,16 +201,16 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodePopFs,
     NULL, // Invalid
     Fast486ExtOpcodeBitTest,
-    NULL, // TODO: OPCODE 0xA4 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xA5 NOT IMPLEMENTED
+    Fast486ExtOpcodeShld,
+    Fast486ExtOpcodeShld,
     NULL, // Invalid
     NULL, // Invalid
     Fast486ExtOpcodePushGs,
     Fast486ExtOpcodePopGs,
     NULL, // Invalid
     Fast486ExtOpcodeBts,
-    NULL, // TODO: OPCODE 0xAC NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0xAD NOT IMPLEMENTED
+    Fast486ExtOpcodeShrd,
+    Fast486ExtOpcodeShrd,
     NULL, // TODO: OPCODE 0xAE NOT IMPLEMENTED
     Fast486ExtOpcodeImul,
     Fast486ExtOpcodeCmpXchgByte,
@@ -601,6 +601,98 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShld)
+{
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+    UCHAR Count;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xA4);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Opcode == 0xA4)
+    {
+        /* Fetch the count */
+        if (!Fast486FetchByte(State, &Count))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* The count is in CL */
+        Count = State->GeneralRegs[FAST486_REG_ECX].LowByte;
+    }
+
+    /* Normalize the count */
+    if (OperandSize) Count &= 0x1F;
+    else Count &= 0x0F;
+
+    /* Do nothing if the count is zero */
+    if (Count == 0) return TRUE;
+
+    if (OperandSize)
+    {
+        ULONG Source, Destination, Result;
+
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (Destination << Count) | (Source >> (32 - Count));
+
+        /* Update flags */
+        State->Flags.Cf = (Destination >> (32 - Count)) & 1;
+        if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_LONG)
+                                          != (Destination & SIGN_FLAG_LONG);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write back the result */
+        return Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result);
+    }
+    else
+    {
+        USHORT Source, Destination, Result;
+
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (Destination << Count) | (Source >> (16 - Count));
+
+        /* Update flags */
+        State->Flags.Cf = (Destination >> (16 - Count)) & 1;
+        if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_WORD)
+                                          != (Destination & SIGN_FLAG_WORD);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write back the result */
+        return Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Result);
+    }
+}
+
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodePushGs)
 {
     /* Call the internal API */
@@ -710,6 +802,98 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
 
     /* Return success */
     return TRUE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShrd)
+{
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+    UCHAR Count;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xAC);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Opcode == 0xAC)
+    {
+        /* Fetch the count */
+        if (!Fast486FetchByte(State, &Count))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* The count is in CL */
+        Count = State->GeneralRegs[FAST486_REG_ECX].LowByte;
+    }
+
+    /* Normalize the count */
+    if (OperandSize) Count &= 0x1F;
+    else Count &= 0x0F;
+
+    /* Do nothing if the count is zero */
+    if (Count == 0) return TRUE;
+
+    if (OperandSize)
+    {
+        ULONG Source, Destination, Result;
+
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (Destination >> Count) | (Source << (32 - Count));
+
+        /* Update flags */
+        State->Flags.Cf = (Destination >> (Count - 1)) & 1;
+        if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_LONG)
+                                          != (Destination & SIGN_FLAG_LONG);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write back the result */
+        return Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result);
+    }
+    else
+    {
+        USHORT Source, Destination, Result;
+
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Source, &Destination))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = (Destination >> Count) | (Source << (16 - Count));
+
+        /* Update flags */
+        State->Flags.Cf = (Result >> (Count - 1)) & 1;
+        if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_WORD)
+                                          != (Destination & SIGN_FLAG_WORD);
+        State->Flags.Zf = (Result == 0);
+        State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
+        State->Flags.Pf = Fast486CalculateParity(Result);
+
+        /* Write back the result */
+        return Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Result);
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeImul)
