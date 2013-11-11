@@ -720,7 +720,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             if (Index != FAST486_REG_ESP) Index = State->GeneralRegs[Index].Long;
             else Index = 0;
 
-            if ((SibByte & 0x07) != FAST486_REG_EBP)
+            if (((SibByte & 0x07) != FAST486_REG_EBP) || (Mode != 0))
             {
                 /* Use the register a base */
                 Base = State->GeneralRegs[SibByte & 0x07].Long;
