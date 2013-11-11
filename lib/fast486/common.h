@@ -167,7 +167,16 @@ Fast486ExceptionWithErrorCode
 INT
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
-    return GET_SEGMENT_RPL(State->SegmentRegs[FAST486_REG_CS].Selector);
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        /* In protected mode, return the RPL of the CS */
+        return GET_SEGMENT_RPL(State->SegmentRegs[FAST486_REG_CS].Selector);
+    }
+    else
+    {
+        /* Real mode is always in supervisor mode */
+        return 0;
+    }
 }
 
 #include "common.inl"
