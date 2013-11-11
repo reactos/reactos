@@ -984,6 +984,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
                          OUT PWCHAR *MissingDriver,
                          OUT PLOAD_IMPORTS *LoadImports)
 {
+    static UNICODE_STRING DriversFolderName = RTL_CONSTANT_STRING(L"drivers\\");
     PCHAR MissingApiBuffer = *MissingApi, ImportName;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor, CurrentImport;
     ULONG ImportSize, ImportCount = 0, LoadedImportsSize, ExportSize;
@@ -1001,6 +1002,9 @@ MiResolveImageReferences(IN PVOID ImageBase,
     PAGED_CODE();
     DPRINT("%s - ImageBase: %p. ImageFileDirectory: %wZ\n",
            __FUNCTION__, ImageBase, ImageFileDirectory);
+
+    /* No name string buffer yet */
+    NameString.Buffer = NULL;
 
     /* Assume no imports */
     *LoadImports = MM_SYSLDR_NO_IMPORTS;
@@ -1064,12 +1068,8 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
-            if (LoadedImports)
-            {
-                MiDereferenceImports(LoadedImports);
-                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-            }
-            return STATUS_PROCEDURE_NOT_FOUND;
+            Status = STATUS_PROCEDURE_NOT_FOUND;
+            goto Failure;
         }
 
         /* Check for user-mode printer or video card drivers, which don't belong */
@@ -1081,12 +1081,8 @@ MiResolveImageReferences(IN PVOID ImageBase,
             !(_strnicmp(ImportName, "gdi32", sizeof("gdi32") - 1)))
         {
             /* This is not kernel code */
-            if (LoadedImports)
-            {
-                MiDereferenceImports(LoadedImports);
-                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-            }
-            return STATUS_PROCEDURE_NOT_FOUND;
+            Status = STATUS_PROCEDURE_NOT_FOUND;
+            goto Failure;
         }
 
         /* Check if this is a "core" import, which doesn't get referenced */
@@ -1109,12 +1105,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if (!NT_SUCCESS(Status))
         {
             /* Failed */
-            if (LoadedImports)
-            {
-                MiDereferenceImports(LoadedImports);
-                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-            }
-            return Status;
+            goto Failure;
         }
 
         /* We don't support name prefixes yet */
@@ -1169,78 +1160,108 @@ CheckDllState:
             DllName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                    DllName.MaximumLength,
                                                    TAG_LDR_WSTR);
-            if (DllName.Buffer)
+            if (!DllName.Buffer)
             {
-                /* Setup the base length and copy it */
-                DllName.Length = ImageFileDirectory->Length;
+                /* We're out of resources */
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Failure;
+            }
+
+            /* Setup the base length and copy it */
+            DllName.Length = ImageFileDirectory->Length;
+            RtlCopyMemory(DllName.Buffer,
+                          ImageFileDirectory->Buffer,
+                          ImageFileDirectory->Length);
+
+            /* Now add the import name and null-terminate it */
+            RtlAppendUnicodeStringToString(&DllName,
+                                           &NameString);
+            DllName.Buffer[DllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            /* Load the image */
+            Status = MmLoadSystemImage(&DllName,
+                                       NamePrefix,
+                                       NULL,
+                                       FALSE,
+                                       (PVOID)&DllEntry,
+                                       &DllBase);
+
+            /* win32k / GDI drivers can also import from system32 folder */
+            if ((Status == STATUS_OBJECT_NAME_NOT_FOUND) &&
+                (MI_IS_SESSION_ADDRESS(ImageBase) || 1)) // HACK
+            {
+                /* Free the old name buffer */
+                ExFreePoolWithTag(DllName.Buffer, TAG_LDR_WSTR);
+
+                /* Calculate size for a string the adds 'drivers\' */
+                DllName.MaximumLength += DriversFolderName.Length;
+
+                /* Allocate the new buffer */
+                DllName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                       DllName.MaximumLength,
+                                                       TAG_LDR_WSTR);
+                if (!DllName.Buffer)
+                {
+                    /* We're out of resources */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto Failure;
+                }
+
+                /* Copy the image directory */
                 RtlCopyMemory(DllName.Buffer,
                               ImageFileDirectory->Buffer,
                               ImageFileDirectory->Length);
+                DllName.Length = ImageFileDirectory->Length;
+
+                /* Append 'drivers\' folder name */
+                RtlAppendUnicodeStringToString(&DllName, &DriversFolderName);
 
                 /* Now add the import name and null-terminate it */
-                RtlAppendUnicodeStringToString(&DllName,
-                                               &NameString);
+                RtlAppendUnicodeStringToString(&DllName, &NameString);
                 DllName.Buffer[DllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                /* Load the image */
+                /* Try once again to load the image */
                 Status = MmLoadSystemImage(&DllName,
                                            NamePrefix,
                                            NULL,
                                            FALSE,
                                            (PVOID)&DllEntry,
                                            &DllBase);
-                if (NT_SUCCESS(Status))
-                {
-                    /* We can free the DLL Name */
-                    ExFreePoolWithTag(DllName.Buffer, TAG_LDR_WSTR);
-                }
-                else
-                {
-                    /* Fill out the information for the error */
-                    *MissingDriver = DllName.Buffer;
-                    *(PULONG)MissingDriver |= 1;
-                    *MissingApi = NULL;
-
-                    DPRINT1("Failed to load dependency: %wZ\n", &DllName);
-                }
-            }
-            else
-            {
-                /* We're out of resources */
-                Status = STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            /* Check if we're OK until now */
-            if (NT_SUCCESS(Status))
-            {
-                /* We're now loaded */
-                Loaded = TRUE;
-
-                /* Sanity check */
-                ASSERT(DllBase == DllEntry->DllBase);
-
-                /* Call the initialization routines */
-                Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
-                if (!NT_SUCCESS(Status))
-                {
-                    /* We failed, unload the image */
-                    MmUnloadSystemImage(DllEntry);
-                    ERROR_DBGBREAK("MmCallDllInitialize failed with status 0x%x\n", Status);
-                    Loaded = FALSE;
-                }
-            }
-
-            /* Check if we failed by here */
             if (!NT_SUCCESS(Status))
             {
+                /* Fill out the information for the error */
+                *MissingDriver = DllName.Buffer;
+                *(PULONG)MissingDriver |= 1;
+                *MissingApi = NULL;
+
+                /* Don't free the name */
+                DllName.Buffer = NULL;
+
                 /* Cleanup and return */
-                RtlFreeUnicodeString(&NameString);
-                if (LoadedImports)
-                {
-                    MiDereferenceImports(LoadedImports);
-                    ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-                }
-                return Status;
+                DPRINT1("Failed to load dependency: %wZ\n", &DllName);
+                goto Failure;
+            }
+
+            /* We can free the DLL Name */
+            ExFreePoolWithTag(DllName.Buffer, TAG_LDR_WSTR);
+            DllName.Buffer = NULL;
+
+            /* We're now loaded */
+            Loaded = TRUE;
+
+            /* Sanity check */
+            ASSERT(DllBase == DllEntry->DllBase);
+
+            /* Call the initialization routines */
+            Status = MmCallDllInitialize(DllEntry, &PsLoadedModuleList);
+            if (!NT_SUCCESS(Status))
+            {
+                /* We failed, unload the image */
+                MmUnloadSystemImage(DllEntry);
+                ERROR_DBGBREAK("MmCallDllInitialize failed with status 0x%x\n", Status);
+                Loaded = FALSE;
             }
 
             /* Loop again to make sure that everything is OK */
@@ -1271,13 +1292,9 @@ CheckDllState:
         if (!ExportDirectory)
         {
             /* Cleanup and return */
-            if (LoadedImports)
-            {
-                MiDereferenceImports(LoadedImports);
-                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-            }
             DPRINT1("Warning: Driver failed to load, %S not found\n", *MissingDriver);
-            return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
+            Status = STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
+            goto Failure;
         }
 
         /* Make sure we have an IAT */
@@ -1304,12 +1321,7 @@ CheckDllState:
                 if (!NT_SUCCESS(Status))
                 {
                     /* Cleanup and return */
-                    if (LoadedImports)
-                    {
-                        MiDereferenceImports(LoadedImports);
-                        ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
-                    }
-                    return Status;
+                    goto Failure;
                 }
 
                 /* Reset the buffer */
@@ -1386,6 +1398,22 @@ CheckDllState:
 
     /* Return success */
     return STATUS_SUCCESS;
+
+Failure:
+
+    /* Cleanup and return */
+    if (NameString.Buffer != NULL)
+    {
+        ExFreePoolWithTag(NameString.Buffer, TAG_LDR_WSTR);
+    }
+
+    if (LoadedImports)
+    {
+        MiDereferenceImports(LoadedImports);
+        ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+    }
+
+    return Status;
 }
 
 VOID
@@ -3177,6 +3205,7 @@ LoaderScan:
 
     /* Resolve imports */
     MissingApiName = Buffer;
+    MissingDriverName = NULL;
     Status = MiResolveImageReferences(ModuleLoadBase,
                                       &BaseDirectory,
                                       NULL,
@@ -3186,6 +3215,13 @@ LoaderScan:
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
+        DPRINT1(" Missing driver '%ws', missing API '%s'\n",
+                MissingDriverName, MissingApiName);
+
+        if (MissingDriverName != NULL)
+        {
+            ExFreePoolWithTag(MissingDriverName, TAG_LDR_WSTR);
+        }
 
         /* Fail */
         MiProcessLoaderEntry(LdrEntry, FALSE);
