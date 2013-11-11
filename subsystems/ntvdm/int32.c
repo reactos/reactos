@@ -131,11 +131,31 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
     LPDWORD IntVecTable = (LPDWORD)BaseAddress;
     LPBYTE  BiosCode    = (LPBYTE)SEG_OFF_TO_PTR(BiosSegment, 0);
     USHORT i;
-    WORD CommonStub, BopSeqOffset, Offset;
+    WORD BopSeqOffset, Offset = 0;
 
-    CommonStub = Offset = 0;
+    /* Generate ISR stubs and fill the IVT */
+    for (i = 0x00; i <= 0xFF; i++)
+    {
+        Offset = INT_HANDLER_OFFSET + (i << 4);
+        IntVecTable[i] = MAKELONG(Offset, BiosSegment);
+
+        BiosCode[Offset++] = 0xFA; // cli
+
+        BiosCode[Offset++] = 0x6A; // push i
+        BiosCode[Offset++] = (UCHAR)i;
+
+        BiosCode[Offset++] = 0x6A; // push 0
+        BiosCode[Offset++] = 0x00;
+
+        BopSeqOffset = COMMON_STUB_OFFSET - (Offset + 3);
+
+        BiosCode[Offset++] = 0xE9; // jmp near BOP_SEQ
+        BiosCode[Offset++] = LOBYTE(BopSeqOffset);
+        BiosCode[Offset++] = HIBYTE(BopSeqOffset);
+    }
 
     /* Write the common stub code */
+    Offset = COMMON_STUB_OFFSET;
 
 // BOP_SEQ:
     BiosCode[Offset++] = 0xF8; // clc
@@ -162,26 +182,6 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
     BiosCode[Offset++] = 0x04;
 
     BiosCode[Offset++] = 0xCF; // iret
-
-    /* Generate ISR stubs and fill the IVT */
-    for (i = 0x00; i <= 0xFF; i++)
-    {
-        IntVecTable[i] = MAKELONG(Offset, BiosSegment);
-
-        BiosCode[Offset++] = 0xFA; // cli
-
-        BiosCode[Offset++] = 0x6A; // push i
-        BiosCode[Offset++] = (UCHAR)i;
-
-        BiosCode[Offset++] = 0x6A; // push 0
-        BiosCode[Offset++] = 0x00;
-
-        BopSeqOffset = CommonStub - (Offset + 3);
-
-        BiosCode[Offset++] = 0xE9; // jmp near BOP_SEQ
-        BiosCode[Offset++] = LOBYTE(BopSeqOffset);
-        BiosCode[Offset++] = HIBYTE(BopSeqOffset);
-    }
 }
 
 VOID WINAPI RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)

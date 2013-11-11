@@ -18,6 +18,9 @@
 /* 32-bit Interrupt Identifiers */
 #define EMULATOR_MAX_INT32_NUM  0xFF + 1
 
+#define INT_HANDLER_OFFSET 0x1000
+#define COMMON_STUB_OFFSET 0x2000
+
 /* FUNCTIONS ******************************************************************/
 
 typedef VOID (WINAPI *EMULATOR_INT32_PROC)(LPWORD Stack);
