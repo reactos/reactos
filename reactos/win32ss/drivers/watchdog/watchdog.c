@@ -4,9 +4,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern char WatchdogPeHeader;
-void Fixup_WatchdogPeHeader(void);
-
 NTSTATUS
 NTAPI
 DriverEntry (

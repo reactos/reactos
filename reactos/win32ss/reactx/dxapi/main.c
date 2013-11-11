@@ -12,7 +12,7 @@
 
 #include "dxapi_driver.h"
 
-#define NDEBU
+#define NDEBU /* debug prints are enabled, add a G at the end to disable it ;-) */
 #include <debug.h>
 
 NTSTATUS NTAPI

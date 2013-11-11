@@ -39,6 +39,7 @@ UserDerefObjectCo(PVOID obj)
     PTHREADINFO W32Thread;
     PSINGLE_LIST_ENTRY ReferenceEntry;
     PUSER_REFERENCE_ENTRY UserReferenceEntry;
+    UNREFERENCED_LOCAL_VARIABLE(UserReferenceEntry);
 
     ASSERT(obj != NULL);
     W32Thread = PsGetCurrentThreadWin32Thread();
