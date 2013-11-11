@@ -1181,6 +1181,38 @@ VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* Copy Extended Memory */
+        case 0x87:
+        {
+            WORD Count = getCX() * 2 - 1;
+            PFAST486_GDT_ENTRY Gdt = (PFAST486_GDT_ENTRY)SEG_OFF_TO_PTR(getES(), getSI());
+            DWORD SourceBase = Gdt[2].Base + (Gdt[2].BaseMid << 16) + (Gdt[2].BaseHigh << 24);
+            DWORD SourceLimit = Gdt[2].Limit + (Gdt[2].LimitHigh << 16);
+            DWORD DestBase = Gdt[3].Base + (Gdt[3].BaseMid << 16) + (Gdt[3].BaseHigh << 24);
+            DWORD DestLimit = Gdt[3].Limit + (Gdt[3].LimitHigh << 16);
+
+            /* Check for flags */
+            if (Gdt[2].Granularity) SourceLimit = (SourceLimit << 12) | 0xFFF;
+            if (Gdt[3].Granularity) DestLimit = (DestLimit << 12) | 0xFFF;
+
+            if ((Count > SourceLimit) || (Count > DestLimit))
+            {
+                setAX(0x80);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+                break;
+            }
+
+            /* Copy */
+            RtlMoveMemory((PVOID)((ULONG_PTR)BaseAddress + DestBase),
+                          (PVOID)((ULONG_PTR)BaseAddress + SourceBase),
+                          Count);
+
+            setAX(ERROR_SUCCESS);
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Get Extended Memory Size */
         case 0x88:
         {
