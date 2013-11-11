@@ -171,7 +171,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
                 LPCITEMIDLIST pidlChild, REFCLSID clsid, LPVOID * ppvOut)
 {
     HRESULT hr;
-    IShellFolder* pShellFolder;
+    IShellFolder* pShellFolder = NULL;
 
     TRACE ("%p %s %p\n", pidlRoot, debugstr_w(pathRoot), pidlChild);
 
@@ -218,9 +218,10 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         }
         ILFree (pidlAbsolute);
     }
-    TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
 
     *ppvOut = pShellFolder;
+
+    TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
 
     return hr;
 }
