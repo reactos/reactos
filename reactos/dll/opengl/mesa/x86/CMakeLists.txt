@@ -28,7 +28,7 @@ list(APPEND ASM_SOURCE
 )
 
 add_asm_files(mesa_x86_asm ${ASM_SOURCE})
-add_library(mesa_x86 STATIC ${SOURCE} ${mesa_x86_asm))
+add_library(mesa_x86 STATIC ${SOURCE} ${mesa_x86_asm})
 
 if(NOT MSVC)
     add_compile_flags("-Wno-format")
