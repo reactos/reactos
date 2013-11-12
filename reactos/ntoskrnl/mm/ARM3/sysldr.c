@@ -3214,11 +3214,20 @@ LoaderScan:
                                       &LoadedImports);
     if (!NT_SUCCESS(Status))
     {
+        BOOLEAN NeedToFreeString = FALSE;
+
+        /* If the lowest bit is set to 1, this is a hint that we need to free */
+        if (*(ULONG_PTR*)MissingDriverName & 1)
+        {
+            NeedToFreeString = TRUE;
+            *(ULONG_PTR*)MissingDriverName &= ~1;
+        }
+
         DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
         DPRINT1(" Missing driver '%ws', missing API '%s'\n",
                 MissingDriverName, MissingApiName);
 
-        if (MissingDriverName != NULL)
+        if (NeedToFreeString)
         {
             ExFreePoolWithTag(MissingDriverName, TAG_LDR_WSTR);
         }
