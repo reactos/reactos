@@ -1194,7 +1194,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Initialize the PSP */
         DosInitializePsp(Segment,
                          CommandLine,
-                         (WORD)((FileSize + sizeof(DOS_PSP)) >> 4),
+                         MaxAllocSize,
                          EnvBlock);
 
         /* Set the initial segment registers */
