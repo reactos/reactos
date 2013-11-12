@@ -28,12 +28,12 @@ set_source_files_properties(gcrt0.o libgmon.a PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH STREQUAL "i386")
     # Optimisation: use asm trampolines to ICD provided functions
-    list(APPEND SOURCE
+    add_asm_files(opengl32_asm
         glapi_x86.s
     )
 endif()
 
-add_library(opengl32 SHARED ${SOURCE})
+add_library(opengl32 SHARED ${SOURCE} ${opengl32_asm})
 target_link_libraries(opengl32
     wine
     ${PSEH_LIB}
