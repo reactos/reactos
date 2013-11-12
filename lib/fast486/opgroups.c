@@ -167,7 +167,11 @@ Fast486RotateOperation(PFAST486_STATE State,
     Count &= 0x1F;
 
     /* If the count is zero, do nothing */
-    if (Count == 0) goto SetFlags;
+    if (Count == 0)
+    {
+        Result = Value;
+        goto SetFlags;
+    }
 
     /* Check which operation is this */
     switch (Operation)
