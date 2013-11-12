@@ -1025,6 +1025,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     LPBYTE Address = NULL;
     LPSTR ProgramFilePath, Parameters[256];
     CHAR CommandLineCopy[DOS_CMDLINE_LENGTH];
+    CHAR ParamString[DOS_CMDLINE_LENGTH];
     INT ParamCount = 0;
     WORD Segment = 0;
     WORD MaxAllocSize;
@@ -1040,8 +1041,6 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     /* Save a copy of the command line */
     strcpy(CommandLineCopy, CommandLine);
 
-    // FIXME: Improve parsing (especially: "some_path\with spaces\program.exe" options)
-
     /* Get the file name of the executable */
     ProgramFilePath = strtok(CommandLineCopy, " \t");
 
@@ -1050,6 +1049,15 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
            && ((Parameters[ParamCount] = strtok(NULL, " \t")) != NULL))
     {
         ParamCount++;
+    }
+
+    ZeroMemory(ParamString, sizeof(ParamString));
+
+    /* Store the parameters in a string */
+    for (i = 0; i < ParamCount; i++)
+    {
+        strncat(ParamString, Parameters[i], DOS_CMDLINE_LENGTH - strlen(ParamString) - 1);
+        strncat(ParamString, " ", DOS_CMDLINE_LENGTH - strlen(ParamString) - 1);
     }
 
     /* Open a handle to the executable */
@@ -1124,7 +1132,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* Initialize the PSP */
         DosInitializePsp(Segment,
-                         CommandLine,
+                         ParamString,
                          (WORD)ExeSize,
                          EnvBlock);
 
@@ -1193,7 +1201,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* Initialize the PSP */
         DosInitializePsp(Segment,
-                         CommandLine,
+                         ParamString,
                          MaxAllocSize,
                          EnvBlock);
 
