@@ -3595,7 +3595,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
     LONG Multiplier;
-    LONGLONG Product;
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xFD) == 0x69);
@@ -3658,6 +3657,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
     if (OperandSize)
     {
         LONG RegValue, Multiplicand;
+        LONGLONG Product;
 
         /* Read the operands */
         if (!Fast486ReadModrmDwordOperands(State,
@@ -3671,10 +3671,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
 
         /* Multiply */
         Product = (LONGLONG)Multiplicand * (LONGLONG)Multiplier;
+
+        /* Check for carry/overflow */
+        State->Flags.Cf = State->Flags.Of = ((Product < MINLONG) || (Product > MAXLONG));
+
+        /* Write-back the result */
+        return Fast486WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              TRUE,
+                                              (ULONG)((LONG)Product));
     }
     else
     {
         SHORT RegValue, Multiplicand;
+        LONG Product;
 
         /* Read the operands */
         if (!Fast486ReadModrmWordOperands(State,
@@ -3687,17 +3697,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         }
 
         /* Multiply */
-        Product = (LONGLONG)Multiplicand * (LONGLONG)Multiplier;
+        Product = (LONG)Multiplicand * (LONG)Multiplier;
+
+        /* Check for carry/overflow */
+        State->Flags.Cf = State->Flags.Of = ((Product < MINSHORT) || (Product > MAXSHORT));
+
+        /* Write-back the result */
+        return Fast486WriteModrmWordOperands(State,
+                                             &ModRegRm,
+                                             TRUE,
+                                             (USHORT)((SHORT)Product));
     }
-
-    /* Check for carry/overflow */
-    State->Flags.Cf = State->Flags.Of = ((Product < MINLONG) || (Product > MAXLONG));
-
-    /* Write-back the result */
-    return Fast486WriteModrmDwordOperands(State,
-                                          &ModRegRm,
-                                          TRUE,
-                                          (ULONG)((LONG)Product));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushByteImm)
