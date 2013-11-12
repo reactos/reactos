@@ -903,6 +903,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeImul)
 
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
