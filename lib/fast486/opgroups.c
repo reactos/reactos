@@ -163,16 +163,11 @@ Fast486RotateOperation(PFAST486_STATE State,
     ULONG HighestBit = 1 << (Bits - 1);
     ULONG Result;
 
-    if ((Operation != 2) && (Operation != 3))
-    {
-        /* Mask the count */
-        Count &= Bits - 1;
-    }
-    else
-    {
-        /* For RCL and RCR, the CF is included in the value */
-        Count %= Bits + 1;
-    }
+    /* Normalize the count */
+    Count &= 0x1F;
+
+    /* If the count is zero, do nothing */
+    if (Count == 0) goto SetFlags;
 
     /* Check which operation is this */
     switch (Operation)
@@ -275,6 +270,7 @@ Fast486RotateOperation(PFAST486_STATE State,
         }
     }
 
+SetFlags:
     if (Operation >= 4)
     {
         /* Update ZF, SF and PF */

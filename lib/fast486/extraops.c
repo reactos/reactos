@@ -637,8 +637,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShld)
     }
 
     /* Normalize the count */
-    if (OperandSize) Count &= 0x1F;
-    else Count &= 0x0F;
+    Count &= 0x1F;
 
     /* Do nothing if the count is zero */
     if (Count == 0) return TRUE;
@@ -840,8 +839,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShrd)
     }
 
     /* Normalize the count */
-    if (OperandSize) Count &= 0x1F;
-    else Count &= 0x0F;
+    Count &= 0x1F;
 
     /* Do nothing if the count is zero */
     if (Count == 0) return TRUE;
