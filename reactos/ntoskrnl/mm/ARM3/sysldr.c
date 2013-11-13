@@ -1167,23 +1167,17 @@ CheckDllState:
                 goto Failure;
             }
 
-            /* Setup the base length and copy it */
-            DllName.Length = ImageFileDirectory->Length;
-            RtlCopyMemory(DllName.Buffer,
-                          ImageFileDirectory->Buffer,
-                          ImageFileDirectory->Length);
-
-            /* Now add the import name and null-terminate it */
+            /* Add the import name to the base directory */
+            RtlCopyUnicodeString(&DllName, ImageFileDirectory);
             RtlAppendUnicodeStringToString(&DllName,
                                            &NameString);
-            DllName.Buffer[DllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
             /* Load the image */
             Status = MmLoadSystemImage(&DllName,
                                        NamePrefix,
                                        NULL,
                                        FALSE,
-                                       (PVOID)&DllEntry,
+                                       (PVOID *)&DllEntry,
                                        &DllBase);
 
             /* win32k / GDI drivers can also import from system32 folder */
@@ -1207,25 +1201,19 @@ CheckDllState:
                     goto Failure;
                 }
 
-                /* Copy the image directory */
-                RtlCopyMemory(DllName.Buffer,
-                              ImageFileDirectory->Buffer,
-                              ImageFileDirectory->Length);
-                DllName.Length = ImageFileDirectory->Length;
-
-                /* Append 'drivers\' folder name */
+                /* Copy image directory and append 'drivers\' folder name */
+                RtlCopyUnicodeString(&DllName, ImageFileDirectory);
                 RtlAppendUnicodeStringToString(&DllName, &DriversFolderName);
 
-                /* Now add the import name and null-terminate it */
+                /* Now add the import name */
                 RtlAppendUnicodeStringToString(&DllName, &NameString);
-                DllName.Buffer[DllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Try once again to load the image */
                 Status = MmLoadSystemImage(&DllName,
                                            NamePrefix,
                                            NULL,
                                            FALSE,
-                                           (PVOID)&DllEntry,
+                                           (PVOID *)&DllEntry,
                                            &DllBase);
             }
 
@@ -1236,11 +1224,12 @@ CheckDllState:
                 *(PULONG)MissingDriver |= 1;
                 *MissingApi = NULL;
 
+                DPRINT1("Failed to load dependency: %wZ\n", &DllName);
+
                 /* Don't free the name */
                 DllName.Buffer = NULL;
 
                 /* Cleanup and return */
-                DPRINT1("Failed to load dependency: %wZ\n", &DllName);
                 goto Failure;
             }
 
@@ -1402,10 +1391,7 @@ CheckDllState:
 Failure:
 
     /* Cleanup and return */
-    if (NameString.Buffer != NULL)
-    {
-        ExFreePoolWithTag(NameString.Buffer, TAG_LDR_WSTR);
-    }
+    RtlFreeUnicodeString(&NameString);
 
     if (LoadedImports)
     {
@@ -3217,14 +3203,14 @@ LoaderScan:
         BOOLEAN NeedToFreeString = FALSE;
 
         /* If the lowest bit is set to 1, this is a hint that we need to free */
-        if (*(ULONG_PTR*)MissingDriverName & 1)
+        if (*(ULONG_PTR*)&MissingDriverName & 1)
         {
             NeedToFreeString = TRUE;
-            *(ULONG_PTR*)MissingDriverName &= ~1;
+            *(ULONG_PTR*)&MissingDriverName &= ~1;
         }
 
         DPRINT1("MiResolveImageReferences failed with status 0x%x\n", Status);
-        DPRINT1(" Missing driver '%ws', missing API '%s'\n",
+        DPRINT1(" Missing driver '%ls', missing API '%s'\n",
                 MissingDriverName, MissingApiName);
 
         if (NeedToFreeString)
