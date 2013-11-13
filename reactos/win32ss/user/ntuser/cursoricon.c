@@ -204,7 +204,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
 }
 
 HANDLE
-IntCreateCurIconHandle(DWORD dwNumber)
+IntCreateCurIconHandle(BOOLEAN Anim)
 {
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
