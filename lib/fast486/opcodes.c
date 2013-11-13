@@ -4929,7 +4929,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
     ASSERT((Opcode >= 0xE0) && (Opcode <= 0xE2));
 
     NO_LOCK_PREFIX();
-    TOGGLE_OPSIZE(Size);
+    TOGGLE_ADSIZE(Size);
 
     if (Size) Condition = ((--State->GeneralRegs[FAST486_REG_ECX].Long) != 0);
     else Condition = ((--State->GeneralRegs[FAST486_REG_ECX].LowWord) != 0);
@@ -4956,7 +4956,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
     if (Condition)
     {
         /* Move the instruction pointer */
-        State->InstPtr.Long += Offset;
+        if (Size) State->InstPtr.Long += Offset;
+        else State->InstPtr.LowWord += Offset;
     }
 
     return TRUE;
@@ -4972,7 +4973,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
     ASSERT(Opcode == 0xE3);
 
     NO_LOCK_PREFIX();
-    TOGGLE_OPSIZE(Size);
+    TOGGLE_ADSIZE(Size);
 
     if (Size) Condition = (State->GeneralRegs[FAST486_REG_ECX].Long == 0);
     else Condition = (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0);
@@ -4987,7 +4988,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
     if (Condition)
     {
         /* Move the instruction pointer */
-        State->InstPtr.Long += Offset;
+        if (Size) State->InstPtr.Long += Offset;
+        else State->InstPtr.LowWord += Offset;
     }
 
     return TRUE;
