@@ -167,8 +167,7 @@ Fast486RotateOperation(PFAST486_STATE State,
     /* Normalize the count */
     Count &= 0x1F;
 
-    if (Operation <= 1) Count %= Bits;
-    else if (Operation <= 3) Count %= Bits + 1;
+    if ((Operation == 2) || (Operation == 3)) Count %= Bits + 1;
 
     /* If the count is zero, do nothing */
     if (Count == 0) return Value;
@@ -179,6 +178,7 @@ Fast486RotateOperation(PFAST486_STATE State,
         /* ROL */
         case 0:
         {
+            Count %= Bits;
             Result = (Value << Count) | (Value >> (Bits - Count));
 
             /* Update CF and OF */
@@ -192,6 +192,7 @@ Fast486RotateOperation(PFAST486_STATE State,
         /* ROR */
         case 1:
         {
+            Count %= Bits;
             Result = (Value >> Count) | (Value << (Bits - Count));
 
             /* Update CF and OF */
