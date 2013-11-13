@@ -465,6 +465,11 @@ ClasspPowerUpCompletionFailure:
 
             return status;
         }
+
+        case PowerUpDeviceInitial: {
+            NT_ASSERT(context->PowerChangeState.PowerUp != PowerUpDeviceInitial);
+            break;
+        }
     }
 
     return STATUS_MORE_PROCESSING_REQUIRED;
@@ -965,6 +970,11 @@ ClasspPowerDownCompletion(
 
             return status;
         }
+
+        case PowerDownDeviceInitial2: {
+            NT_ASSERT(context->PowerChangeState.PowerDown2 != PowerDownDeviceInitial2);
+            break;
+        }
     }
 
     return STATUS_MORE_PROCESSING_REQUIRED;
@@ -1049,6 +1059,8 @@ ClasspPowerHandler(
                              */
                             SET_FLAG(DeviceObject->Flags, DO_VERIFY_VOLUME);
                         }
+                        break;
+                    default:
                         break;
                 }
             
@@ -1325,6 +1337,8 @@ ClassMinimalPowerHandler(
                         if (vpb && (vpb->Flags & VPB_MOUNTED)){
                             SET_FLAG(fdoExtension->DeviceObject->Flags, DO_VERIFY_VOLUME);  
                         } 
+                        break;
+                    default:
                         break;
                 }
             } 
