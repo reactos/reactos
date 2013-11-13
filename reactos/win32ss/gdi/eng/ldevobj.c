@@ -374,6 +374,7 @@ EngLoadImageEx(
         /* Check if the ldev is associated with a file */
         if (pldev->pGdiDriverInfo)
         {
+            ERR("Driver Name %wZ\n", &strDriverName);
             /* Check for match (case insensative) */
             if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, 1))
             {
