@@ -848,10 +848,10 @@ MmFreeMemoryArea(
 #if (_MI_PAGING_LEVELS == 2)
             /* Remove page table reference */
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-            if((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
+            if ((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
             {
                 ASSERT(AddressSpace != MmGetKernelAddressSpace());
-                if(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
                 {
                     /* No PTE relies on this PDE. Release it */
                     KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -1180,16 +1180,23 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
         /* Acquire PFN lock */
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-        for(Address = MI_LOWEST_VAD_ADDRESS;
-            Address < MM_HIGHEST_VAD_ADDRESS;
-            Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
+        for (Address = MI_LOWEST_VAD_ADDRESS;
+             Address < MM_HIGHEST_VAD_ADDRESS;
+             Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
         {
             /* At this point all references should be dead */
-            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0);
+            if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] != 0)
+            {
+                DPRINT1("Process %p, Address %p, UsedPageTableEntries %lu\n",
+                        Process,
+                        Address,
+                        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]);
+                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0);
+            }
             pointerPde = MiAddressToPde(Address);
             /* Unlike in ARM3, we don't necesarrily free the PDE page as soon as reference reaches 0,
              * so we must clean up a bit when process closes */
-            if(pointerPde->u.Hard.Valid)
+            if (pointerPde->u.Hard.Valid)
                 MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
             ASSERT(pointerPde->u.Hard.Valid == 0);
         }
