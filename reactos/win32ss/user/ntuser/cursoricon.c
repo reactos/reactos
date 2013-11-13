@@ -203,7 +203,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
     return NULL;
 }
 
-PCURICON_OBJECT
+HANDLE
 IntCreateCurIconHandle(DWORD dwNumber)
 {
     PCURICON_OBJECT CurIcon;
@@ -220,7 +220,7 @@ IntCreateCurIconHandle(DWORD dwNumber)
     CurIcon->Self = hCurIcon;
     InitializeListHead(&CurIcon->ProcessList);
 
-    if (! ReferenceCurIconByProcess(CurIcon))
+    if (!ReferenceCurIconByProcess(CurIcon))
     {
         ERR("Failed to add process\n");
         UserDeleteObject(hCurIcon, TYPE_CURSOR);
@@ -230,7 +230,9 @@ IntCreateCurIconHandle(DWORD dwNumber)
 
     InsertHeadList(&gCurIconList, &CurIcon->ListEntry);
 
-    return CurIcon;
+    UserDereferenceObject(CurIcon);
+
+    return hCurIcon;
 }
 
 BOOLEAN FASTCALL
@@ -1517,6 +1519,22 @@ NtUserDrawIconEx(
 
     UserLeave();
     return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+HCURSOR
+NTAPI
+NtUserGetCursorFrameInfo(
+    HCURSOR hCursor,
+    DWORD istep,
+    INT* rate_jiffies,
+    DWORD* num_steps)
+{
+    STUB
+
+    return 0;
 }
 
 /* EOF */

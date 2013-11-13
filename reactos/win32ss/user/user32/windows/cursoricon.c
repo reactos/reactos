@@ -2207,3 +2207,10 @@ User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
   return ZwCallbackReturn(&Result, sizeof(HANDLE), STATUS_SUCCESS);
 }
 
+HCURSOR
+WINAPI
+GetCursorFrameInfo(HCURSOR hCursor, DWORD reserved, DWORD istep, PINT rate_jiffies, DWORD *num_steps)
+{
+   return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
+}
+

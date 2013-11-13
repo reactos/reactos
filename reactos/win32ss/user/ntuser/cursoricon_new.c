@@ -17,37 +17,16 @@
  *   Possibly shared by multiple processes
  *   Immune to NtDestroyCursorIcon()
  *   CurIcon->hModule, CurIcon->hRsrc and CurIcon->hGroupRsrc are valid
- * There's a M:N relationship between processes and (shared) cursor/icons.
- * A process can have multiple cursor/icons and a cursor/icon can be used
- * by multiple processes. To keep track of this we keep a list of all
- * cursor/icons (CurIconList) and per cursor/icon we keep a list of
- * CURICON_PROCESS structs starting at CurIcon->ProcessList.
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserIcon);
-
-static LIST_ENTRY gCurIconList;
-static PAGED_LOOKASIDE_LIST *pgProcessLookasideList;
 
 SYSTEM_CURSORINFO gSysCursorInfo;
 
 BOOL
 InitCursorImpl()
 {
-    pgProcessLookasideList = ExAllocatePool(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST));
-    if(!pgProcessLookasideList)
-        return FALSE;
-
-    ExInitializePagedLookasideList(pgProcessLookasideList,
-                                   NULL,
-                                   NULL,
-                                   0,
-                                   sizeof(CURICON_PROCESS),
-                                   TAG_DIB,
-                                   128);
-    InitializeListHead(&gCurIconList);
-
     gSysCursorInfo.Enabled = FALSE;
     gSysCursorInfo.ButtonsDown = 0;
     gSysCursorInfo.bClipped = FALSE;
@@ -80,6 +59,13 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 
     if (!hCurIcon)
     {
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+        return NULL;
+    }
+
+    if(UserObjectInDestroy(hCurIcon))
+    {
+        ERR("Requesting destroyed cursor.\n");
         EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
@@ -138,98 +124,19 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     return TRUE;
 }
 
-/*
- * We have to register that this object is in use by the current
- * process. The only way to do that seems to be to walk the list
- * of cursor/icon objects starting at W32Process->CursorIconListHead.
- * If the object is already present in the list, we don't have to do
- * anything, if it's not present we add it and inc the ProcessCount
- * in the object. Having to walk the list kind of sucks, but that's
- * life...
- */
-static BOOLEAN FASTCALL
-ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
-{
-    PPROCESSINFO Win32Process;
-    PCURICON_PROCESS Current;
-
-    Win32Process = PsGetCurrentProcessWin32Process();
-
-    LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
-    {
-        if (Current->Process == Win32Process)
-        {
-            /* Already registered for this process */
-            return TRUE;
-        }
-    }
-
-    /* Not registered yet */
-    Current = ExAllocateFromPagedLookasideList(pgProcessLookasideList);
-    if (NULL == Current)
-    {
-        return FALSE;
-    }
-    InsertHeadList(&CurIcon->ProcessList, &Current->ListEntry);
-    Current->Process = Win32Process;
-
-    return TRUE;
-}
-
-static
-PCURICON_OBJECT
-FASTCALL
-IntFindExistingCurIconObject(
-    PUNICODE_STRING pustrModule,
-    PUNICODE_STRING pustrRsrc,
-    FINDEXISTINGCURICONPARAM* param)
-{
-    PCURICON_OBJECT CurIcon;
-
-    LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
-    {
-        /* See if we are looking for an icon or a cursor */
-        if(MAKEINTRESOURCE(CurIcon->rt) != (param->bIcon ? RT_ICON : RT_CURSOR))
-            continue;
-        /* See if module names match */
-        if(RtlCompareUnicodeString(pustrModule, &CurIcon->ustrModule, TRUE) == 0)
-        {
-            /* They do. Now see if this is the same resource */
-            if(IS_INTRESOURCE(CurIcon->strName.Buffer) && IS_INTRESOURCE(pustrRsrc->Buffer))
-            {
-                if(CurIcon->strName.Buffer != pustrRsrc->Buffer)
-                    continue;
-            }
-            else if(IS_INTRESOURCE(CurIcon->strName.Buffer) || IS_INTRESOURCE(pustrRsrc->Buffer))
-                continue;
-            else if(RtlCompareUnicodeString(pustrRsrc, &CurIcon->strName, TRUE) != 0)
-                continue;
-            
-            if ((param->cx == CurIcon->cx) && (param->cy == CurIcon->cy))
-            {
-                if (! ReferenceCurIconByProcess(CurIcon))
-                {
-                    return NULL;
-                }
-
-                return CurIcon;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-PCURICON_OBJECT
-IntCreateCurIconHandle(DWORD dwNumber)
+HANDLE
+IntCreateCurIconHandle(BOOLEAN Animated)
 {
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
-    
-    if(dwNumber == 0)
-        dwNumber = 1;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, TYPE_CURSOR, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(
+        gHandleTable,
+        NULL,
+        NULL,
+        &hCurIcon,
+        TYPE_CURSOR,
+        Animated ? sizeof(ACON) : sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -237,134 +144,102 @@ IntCreateCurIconHandle(DWORD dwNumber)
         return FALSE;
     }
 
-    CurIcon->Self = hCurIcon;
-    InitializeListHead(&CurIcon->ProcessList);
+    UserDereferenceObject(CurIcon);
 
-    if (! ReferenceCurIconByProcess(CurIcon))
-    {
-        ERR("Failed to add process\n");
-        UserDereferenceObject(CurIcon);
-        UserDeleteObject(hCurIcon, TYPE_CURSOR);
-        return NULL;
-    }
-
-    InsertHeadList(&gCurIconList, &CurIcon->ListEntry);
-
-    return CurIcon;
+    return hCurIcon;
 }
 
 BOOLEAN FASTCALL
-IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi, BOOLEAN bForce)
+IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOLEAN bForce)
 {
-    HBITMAP bmpMask, bmpColor, bmpAlpha;
-    BOOLEAN Ret, bListEmpty, bFound = FALSE;
-    PCURICON_PROCESS Current = NULL;
-    
-    /* Check if this is the current cursor */
     if(CurIcon->CURSORF_flags & CURSORF_CURRENT)
     {
-        UserDereferenceObject(CurIcon);
+        /* Mark the object as destroyed, and fail, as per wine tests */
+        UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
         return FALSE;
     }
-    
-    /* For handles created without any data (error handling) */
-    if(IsListEmpty(&CurIcon->ProcessList))
-        goto emptyList;
 
-    /* Now find this process in the list of processes referencing this object and
-       remove it from that list */
-    LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
+    if(CurIcon->head.ppi != PsGetCurrentProcessWin32Process())
     {
-        if (Current->Process == ppi)
-        {
-            bFound = TRUE;
-            bListEmpty = RemoveEntryList(&Current->ListEntry);
-            break;
-        }
-    }
-    
-    if(!bFound)
-    {
-        /* This object doesn't belong to this process */
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        /* Caller expects us to dereference! */
+        /* This object doesn't belong to the current process */
+        WARN("Trying to delete foreign cursor!\n");
         UserDereferenceObject(CurIcon);
+        EngSetLastError(ERROR_DESTROY_OBJECT_OF_OTHER_THREAD);
         return FALSE;
     }
     
-    /* We found our process, but we're told to not destroy it in case it is shared */
-    if((CurIcon->ustrModule.Buffer != NULL) && !bForce)
+    /* Do not destroy it if it is shared. (And we're not forced to) */
+    if((CurIcon->CURSORF_flags & CURSORF_LRSHARED) && !bForce)
     {
         /* Tests show this is a valid call */
+        WARN("Trying to destroy shared cursor!\n");
         UserDereferenceObject(CurIcon);
         return TRUE;
     }
 
-    ExFreeToPagedLookasideList(pgProcessLookasideList, Current);
-
-    /* If there are still processes referencing this object we can't destroy it yet */
-    if (!bListEmpty)
+    if(!(CurIcon->CURSORF_flags & CURSORF_ACON))
     {
-        if(CurIcon->head.ppi == ppi)
+        HBITMAP bmpMask = CurIcon->hbmMask;
+        HBITMAP bmpColor = CurIcon->hbmColor;
+        HBITMAP bmpAlpha = CurIcon->hbmAlpha;
+
+        /* Delete bitmaps */
+        if (bmpMask)
         {
-            /* Set the first process of the list as owner */
-            Current = CONTAINING_RECORD(CurIcon->ProcessList.Flink, CURICON_PROCESS, ListEntry);
-            UserSetObjectOwner(CurIcon, TYPE_CURSOR, Current->Process);
+            GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(bmpMask);
+            CurIcon->hbmMask = NULL;
         }
-        UserDereferenceObject(CurIcon);
-        return TRUE;
+        if (bmpColor)
+        {
+            GreSetObjectOwner(bmpColor, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(bmpColor);
+            CurIcon->hbmColor = NULL;
+        }
+        if (bmpAlpha)
+        {
+            GreSetObjectOwner(bmpAlpha, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(bmpAlpha);
+            CurIcon->hbmAlpha = NULL;
+        }
     }
-
-emptyList:
-    /* Remove it from the list */
-    RemoveEntryList(&CurIcon->ListEntry);
-
-    bmpMask = CurIcon->hbmMask;
-    bmpColor = CurIcon->hbmColor;
-    bmpAlpha = CurIcon->hbmAlpha;
-
-    /* Delete bitmaps */
-    if (bmpMask)
+    else
     {
-        GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(bmpMask);
-        CurIcon->hbmMask = NULL;
-    }
-    if (bmpColor)
-    {
-        GreSetObjectOwner(bmpColor, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(bmpColor);
-        CurIcon->hbmColor = NULL;
-    }
-    if (bmpAlpha)
-    {
-        GreSetObjectOwner(bmpAlpha, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(bmpAlpha);
-        CurIcon->hbmAlpha = NULL;
-    }
-    
-    if(!IS_INTRESOURCE(CurIcon->strName.Buffer))
-        ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
-    if(CurIcon->ustrModule.Buffer)
-        ReleaseCapturedUnicodeString(&CurIcon->ustrModule, UserMode);
+        PACON AniCurIcon = (PACON)CurIcon;
+        UINT i;
 
-    /* We were given a pointer, no need to keep the reference anylonger! */
+        for(i = 0; i < AniCurIcon->cpcur; i++)
+            IntDestroyCurIconObject(AniCurIcon->aspcur[i], TRUE);
+        ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
+    }
+
+    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+    {
+        if (!IS_INTRESOURCE(CurIcon->strName.Buffer))
+            ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
+        if (CurIcon->atomModName)
+            RtlDeleteAtomFromAtomTable(gAtomTable, CurIcon->atomModName);
+        CurIcon->strName.Buffer = NULL;
+        CurIcon->atomModName = 0;
+    }
+
+    /* We were given a pointer, no need to keep the reference any longer! */
     UserDereferenceObject(CurIcon);
-    Ret = UserDeleteObject(CurIcon->Self, TYPE_CURSOR);
-
-    return Ret;
+    return UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
 }
 
 VOID FASTCALL
 IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 {
-    PCURICON_OBJECT CurIcon, tmp;
+    PCURICON_OBJECT CurIcon;
 
     /* Run through the list of icon objects */
-    LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
+    while(Win32Process->pCursorCache)
     {
-        UserReferenceObject(CurIcon);
-        IntDestroyCurIconObject(CurIcon, Win32Process, TRUE);
+        CurIcon = Win32Process->pCursorCache;
+        Win32Process->pCursorCache = CurIcon->pcurNext;
+        ASSERT(CurIcon->head.cLockObj == 2);
+        IntDestroyCurIconObject(CurIcon, TRUE);
     }
 }
 
@@ -410,17 +285,24 @@ NtUserGetIconInfo(
     /* Give back the icon information */
     if(IconInfo)
     {
+        PCURICON_OBJECT FrameCurIcon = CurIcon;
+        if(CurIcon->CURSORF_flags & CURSORF_ACON)
+        {
+            /* Get information from first frame. */
+            FrameCurIcon = ((PACON)CurIcon)->aspcur[0];
+        }
+            
         /* Fill data */
-        ii.fIcon = is_icon(CurIcon);
-        ii.xHotspot = CurIcon->xHotspot;
-        ii.yHotspot = CurIcon->yHotspot;
+        ii.fIcon = is_icon(FrameCurIcon);
+        ii.xHotspot = FrameCurIcon->xHotspot;
+        ii.yHotspot = FrameCurIcon->yHotspot;
 
         /* Copy bitmaps */
-        ii.hbmMask = BITMAP_CopyBitmap(CurIcon->hbmMask);
+        ii.hbmMask = BITMAP_CopyBitmap(FrameCurIcon->hbmMask);
         GreSetObjectOwner(ii.hbmMask, GDI_OBJ_HMGR_POWNED);
-        ii.hbmColor = BITMAP_CopyBitmap(CurIcon->hbmColor);
+        ii.hbmColor = BITMAP_CopyBitmap(FrameCurIcon->hbmColor);
         GreSetObjectOwner(ii.hbmColor, GDI_OBJ_HMGR_POWNED);
-        colorBpp = CurIcon->bpp;
+        colorBpp = FrameCurIcon->bpp;
 
         /* Copy fields */
         _SEH2_TRY
@@ -439,63 +321,72 @@ NtUserGetIconInfo(
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END
-    }
 
-    if (!NT_SUCCESS(Status))
-    {
-        WARN("Status: 0x%08x.\n", Status);
-        SetLastNtError(Status);
-        goto leave;
+        if (!NT_SUCCESS(Status))
+        {
+            WARN("Status: 0x%08x.\n", Status);
+            SetLastNtError(Status);
+            goto leave;
+        }
     }
 
     /* Give back the module name */
     if(lpModule)
     {
-        if(!CurIcon->ustrModule.Buffer)
-        {
-            EngSetLastError(ERROR_INVALID_HANDLE);
+        ULONG BufLen = 0;
+        if (!CurIcon->atomModName)
             goto leave;
-        }
-        /* Copy what we can */
+
+        RtlQueryAtomInAtomTable(gAtomTable, CurIcon->atomModName, NULL, NULL, NULL, &BufLen);
+        /* Get the module name from the atom table */
         _SEH2_TRY
         {
-            ProbeForWrite(lpModule, sizeof(UNICODE_STRING), 1);
-            ProbeForWrite(lpModule->Buffer, lpModule->MaximumLength, 1);
-            lpModule->Length = min(lpModule->MaximumLength, CurIcon->ustrModule.Length);
-            RtlCopyMemory(lpModule->Buffer, CurIcon->ustrModule.Buffer, lpModule->Length);
+            if (BufLen > (lpModule->MaximumLength * sizeof(WCHAR)))
+            {
+                lpModule->Length = 0;
+            }
+            else
+            {
+                ProbeForWrite(lpModule->Buffer, lpModule->MaximumLength, 1);
+                BufLen = lpModule->MaximumLength * sizeof(WCHAR);
+                RtlQueryAtomInAtomTable(gAtomTable, CurIcon->atomModName, NULL, NULL, lpModule->Buffer, &BufLen);
+                lpModule->Length = BufLen/sizeof(WCHAR);
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END
-    }
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        goto leave;
-    }
-    
-    if(lpResName)
-    {
-        if(!CurIcon->strName.Buffer)
+        if (!NT_SUCCESS(Status))
         {
-            EngSetLastError(ERROR_INVALID_HANDLE);
+            SetLastNtError(Status);
             goto leave;
         }
+    }
+    
+    if (lpResName)
+    {
+        if (!CurIcon->strName.Buffer)
+            goto leave;
+
         /* Copy it */
         _SEH2_TRY
         {
             ProbeForWrite(lpResName, sizeof(UNICODE_STRING), 1);
-            if(IS_INTRESOURCE(CurIcon->strName.Buffer))
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
             {
                 lpResName->Buffer = CurIcon->strName.Buffer;
                 lpResName->Length = 0;
             }
+            else if (lpResName->MaximumLength < CurIcon->strName.Length)
+            {
+                lpResName->Length = 0;
+            }
             else
             {
-                lpResName->Length = min(lpResName->MaximumLength, CurIcon->strName.Length);
+                ProbeForWrite(lpResName->Buffer, lpResName->MaximumLength * sizeof(WCHAR), 1);
                 RtlCopyMemory(lpResName->Buffer, CurIcon->strName.Buffer, lpResName->Length);
             }
         }
@@ -545,6 +436,15 @@ NtUserGetIconSize(
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
         goto cleanup;
+    }
+
+    if(CurIcon->CURSORF_flags & CURSORF_ACON)
+    {
+        /* Use first frame for animated cursors */
+        PACON AniCurIcon = (PACON)CurIcon;
+        CurIcon = AniCurIcon->aspcur[0];
+        UserDereferenceObject(AniCurIcon);
+        UserReferenceObject(CurIcon);
     }
 
     _SEH2_TRY
@@ -597,7 +497,7 @@ NtUserGetCursorInfo(
 
     SafeCi.cbSize = sizeof(CURSORINFO);
     SafeCi.flags = ((CurIcon && CurInfo->ShowingCursor >= 0) ? CURSOR_SHOWING : 0);
-    SafeCi.hCursor = (CurIcon ? (HCURSOR)CurIcon->Self : (HCURSOR)0);
+    SafeCi.hCursor = (CurIcon ? CurIcon->head.h : NULL);
 
     SafeCi.ptScreenPos = gpsi->ptCursor;
 
@@ -739,7 +639,7 @@ NtUserDestroyCursor(
         RETURN(FALSE);
     }
 
-    ret = IntDestroyCurIconObject(CurIcon, PsGetCurrentProcessWin32Process(), bForce);
+    ret = IntDestroyCurIconObject(CurIcon, bForce);
     /* Note: IntDestroyCurIconObject will remove our reference for us! */
 
     RETURN(ret);
@@ -766,16 +666,11 @@ NtUserFindExistingCursorIcon(
     UNICODE_STRING ustrModuleSafe, ustrRsrcSafe;
     FINDEXISTINGCURICONPARAM paramSafe;
     NTSTATUS Status;
+    PPROCESSINFO pProcInfo = PsGetCurrentProcessWin32Process();
+    RTL_ATOM atomModName;
 
     TRACE("Enter NtUserFindExistingCursorIcon\n");
     
-    /* Capture resource name (it can be an INTRESOURCE == ATOM) */
-    Status = ProbeAndCaptureUnicodeStringOrAtom(&ustrRsrcSafe, pustrRsrc);
-    if(!NT_SUCCESS(Status))
-        return NULL;
-    Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
-    if(!NT_SUCCESS(Status))
-        goto done;
     
     _SEH2_TRY
     {
@@ -788,16 +683,65 @@ NtUserFindExistingCursorIcon(
     }
     _SEH2_END
 
+    /* Capture resource name (it can be an INTRESOURCE == ATOM) */
+    Status = ProbeAndCaptureUnicodeStringOrAtom(&ustrRsrcSafe, pustrRsrc);
+    if(!NT_SUCCESS(Status))
+        return NULL;
+    Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
+    if(!NT_SUCCESS(Status))
+        goto done;
+    Status = RtlLookupAtomInAtomTable(gAtomTable, ustrModuleSafe.Buffer, &atomModName);
+    ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
+    if(!NT_SUCCESS(Status))
+    {
+        /* The module is not in the atom table. No chance to find the cursor */
+        goto done;
+    }
+
     UserEnterExclusive();
-    CurIcon = IntFindExistingCurIconObject(&ustrModuleSafe, &ustrRsrcSafe, &paramSafe);
-    if (CurIcon)
-        Ret = CurIcon->Self;
+    CurIcon = pProcInfo->pCursorCache;
+    while(CurIcon)
+    {
+        /* Icon/cursor */
+        if (paramSafe.bIcon != is_icon(CurIcon))
+        {
+            CurIcon = CurIcon->pcurNext;
+            continue;
+        }
+        /* See if module names match */
+        if (atomModName == CurIcon->atomModName)
+        {
+            /* They do. Now see if this is the same resource */
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
+            {
+                /* One is an INT resource and the other is not -> no match */
+                CurIcon = CurIcon->pcurNext;
+                continue;
+            }
+            
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer))
+            {
+                if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
+                {
+                    /* INT resources match */
+                    break;
+                }
+            }
+            else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
+            {
+                /* Resource name strings match */
+                break;
+            }
+        }
+        CurIcon = CurIcon->pcurNext;
+    }
+    if(CurIcon)
+        Ret = CurIcon->head.h;
     UserLeave();
 
 done:
     if(!IS_INTRESOURCE(ustrRsrcSafe.Buffer))
         ExFreePoolWithTag(ustrRsrcSafe.Buffer, TAG_STRING);
-    ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
     
     return Ret;
 }
@@ -884,9 +828,18 @@ NtUserSetCursor(
     pcurOld = UserSetCursor(pcurNew, FALSE);
     if (pcurOld)
     {
-        hOldCursor = (HCURSOR)pcurOld->Self;
+        hOldCursor = pcurOld->head.h;
         pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-        UserDereferenceObject(pcurOld);
+        if(UserObjectInDestroy(hOldCursor))
+        {
+            /* Destroy it once and for all */
+            IntDestroyCurIconObject(pcurOld, TRUE);
+            hOldCursor = NULL;
+        }
+        else
+        {
+            UserDereferenceObject(pcurOld);
+        }
     }
 
 leave:
@@ -918,17 +871,16 @@ NtUserSetCursorIconData(
   _In_     HCURSOR Handle,
   _In_opt_ PUNICODE_STRING pustrModule,
   _In_opt_ PUNICODE_STRING pustrRsrc,
-  _In_     PCURSORDATA pCursorData)
+  _In_     const CURSORDATA* pCursorData)
 {
     PCURICON_OBJECT CurIcon;
     NTSTATUS Status = STATUS_SUCCESS;
-    BOOL Ret = FALSE;
+    BOOLEAN Ret = FALSE;
+    BOOLEAN IsShared = FALSE, IsAnim = FALSE;
+    DWORD numFrames;
+    UINT i = 0;
     
     TRACE("Enter NtUserSetCursorIconData\n");
-    
-    /* If a module name is provided, we need a resource name, and vice versa */
-    if((pustrModule && !pustrRsrc) || (!pustrModule && pustrRsrc))
-        return FALSE;
     
     UserEnterExclusive();
 
@@ -942,15 +894,49 @@ NtUserSetCursorIconData(
     _SEH2_TRY
     {
         ProbeForRead(pCursorData, sizeof(*pCursorData), 1);
-        CurIcon->xHotspot = pCursorData->xHotspot;
-        CurIcon->yHotspot = pCursorData->yHotspot;
-        CurIcon->cx = pCursorData->cx;
-        CurIcon->cy = pCursorData->cy;
-        CurIcon->rt = pCursorData->rt;
-        CurIcon->bpp = pCursorData->bpp;
-        CurIcon->hbmMask = pCursorData->hbmMask;
-        CurIcon->hbmColor = pCursorData->hbmColor;
-        CurIcon->hbmAlpha = pCursorData->hbmAlpha;
+        if(pCursorData->CURSORF_flags & CURSORF_ACON)
+        {
+            /* This is an animated cursor */
+            PACON AniCurIcon = (PACON)CurIcon;
+            DWORD numSteps;
+
+            numFrames = AniCurIcon->cpcur = pCursorData->cpcur;
+            numSteps = AniCurIcon->cicur = pCursorData->cicur;
+            AniCurIcon->iicur = pCursorData->iicur;
+            AniCurIcon->rt = pCursorData->rt;
+
+            /* Calculate size: one cursor object for each frame, and a frame index and jiffies for each "step" */
+            AniCurIcon->aspcur = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, /* Let SEH catch allocation failures */
+                numFrames * sizeof(CURICON_OBJECT*) + numSteps * (sizeof(DWORD) + sizeof(INT)),
+                USERTAG_CURSOR);
+            AniCurIcon->aicur = (DWORD*)(AniCurIcon->aspcur + numFrames);
+            AniCurIcon->ajifRate = (INT*)(AniCurIcon->aicur + numSteps);
+
+            RtlZeroMemory(AniCurIcon->aspcur, numFrames * sizeof(CURICON_OBJECT*));
+
+            ProbeForRead(pCursorData->aicur, numSteps * sizeof(DWORD), 1);
+            RtlCopyMemory(AniCurIcon->aicur, pCursorData->aicur, numSteps * sizeof(DWORD));
+            ProbeForRead(pCursorData->ajifRate, numSteps * sizeof(INT), 1);
+            RtlCopyMemory(AniCurIcon->ajifRate, pCursorData->ajifRate, numSteps * sizeof(INT));
+            
+            AniCurIcon->CURSORF_flags = pCursorData->CURSORF_flags;
+            pCursorData = pCursorData->aspcur;
+
+            IsAnim = TRUE;
+        }
+        else
+        {
+            CurIcon->xHotspot = pCursorData->xHotspot;
+            CurIcon->yHotspot = pCursorData->yHotspot;
+            CurIcon->cx = pCursorData->cx;
+            CurIcon->cy = pCursorData->cy;
+            CurIcon->rt = pCursorData->rt;
+            CurIcon->bpp = pCursorData->bpp;
+            CurIcon->hbmMask = pCursorData->hbmMask;
+            CurIcon->hbmColor = pCursorData->hbmColor;
+            CurIcon->hbmAlpha = pCursorData->hbmAlpha;
+            CurIcon->CURSORF_flags = pCursorData->CURSORF_flags;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -963,18 +949,42 @@ NtUserSetCursorIconData(
         SetLastNtError(Status);
         goto done;
     }
-    
-    if(pustrModule)
-    {
-        /* We use this convenient function, because INTRESOURCEs and ATOMs are the same */
-        Status = ProbeAndCaptureUnicodeStringOrAtom(&CurIcon->strName, pustrRsrc);
-        if(!NT_SUCCESS(Status))
-            goto done;
-        Status = ProbeAndCaptureUnicodeString(&CurIcon->ustrModule, UserMode, pustrModule);
-        if(!NT_SUCCESS(Status))
-            goto done;
-    }
 
+    if(IsAnim)
+    {
+        PACON AniCurIcon = (PACON)CurIcon;
+        /* This is an animated cursor. Create a cursor object for each frame and set up the data */
+        for(i = 0; i < numFrames; i++)
+        {
+            HANDLE hCurFrame = IntCreateCurIconHandle(FALSE);
+            if(!NtUserSetCursorIconData(hCurFrame, NULL, NULL, pCursorData))
+                goto done;
+            AniCurIcon->aspcur[i] = UserGetCurIconObject(hCurFrame);
+            if(!AniCurIcon->aspcur[i])
+                goto done;
+            pCursorData++;
+        }
+    }
+    
+    if(CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+    {
+        IsShared = TRUE;
+        if(pustrRsrc && pustrModule)
+        {
+            UNICODE_STRING ustrModuleSafe;
+            /* We use this convenient function, because INTRESOURCEs and ATOMs are the same */
+            Status = ProbeAndCaptureUnicodeStringOrAtom(&CurIcon->strName, pustrRsrc);
+            if(!NT_SUCCESS(Status))
+                goto done;
+            Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
+            if(!NT_SUCCESS(Status))
+                goto done;
+            Status = RtlAddAtomToAtomTable(gAtomTable, ustrModuleSafe.Buffer, &CurIcon->atomModName);
+            ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
+            if(!NT_SUCCESS(Status))
+                goto done;
+        }
+    }
 
     if(!CurIcon->hbmMask)
     {
@@ -990,17 +1000,41 @@ NtUserSetCursorIconData(
     
     if(CurIcon->hbmAlpha)
         GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
+
+    if(IsShared)
+    {
+        /* Update process cache in case of shared cursor */
+        UserReferenceObject(CurIcon);
+        PPROCESSINFO ppi = CurIcon->head.ppi;
+        CurIcon->pcurNext = ppi->pCursorCache;
+        ppi->pCursorCache = CurIcon;
+    }
     
     Ret = TRUE;
 
 done:
-    if(!Ret)
+    if(!Ret && IsShared)
     {
         if(!IS_INTRESOURCE(CurIcon->strName.Buffer))
             ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
-        if(CurIcon->ustrModule.Buffer)
-            ReleaseCapturedUnicodeString(&CurIcon->ustrModule, UserMode);
     }
+
+    if(!Ret && IsAnim)
+    {
+        PACON AniCurIcon = (PACON)CurIcon;
+        for(i = 0; i < numFrames; i++)
+        {
+            if(AniCurIcon->aspcur[i])
+                IntDestroyCurIconObject(AniCurIcon->aspcur[i], TRUE);
+        }
+        AniCurIcon->cicur = 0;
+        AniCurIcon->cpcur = 0;
+        ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
+        AniCurIcon->aspcur = NULL;
+        AniCurIcon->aicur = NULL;
+        AniCurIcon->ajifRate = NULL;
+    }
+
     UserDereferenceObject(CurIcon);
     TRACE("Leave NtUserSetCursorIconData, ret=%i\n",Ret);
     UserLeave();
@@ -1044,12 +1078,20 @@ UserDrawIconEx(
         return FALSE;
     }
 
+    if (pIcon->CURSORF_flags & CURSORF_ACON)
+    {
+        ACON* pAcon = (ACON*)pIcon;
+        if(istepIfAniCur >= pAcon->cicur)
+        {
+            ERR("NtUserDrawIconEx: istepIfAniCur too big!\n");
+            return FALSE;
+        }
+        pIcon = pAcon->aspcur[pAcon->aicur[istepIfAniCur]];
+    }
+
     hbmMask = pIcon->hbmMask;
     hbmColor = pIcon->hbmColor;
     hbmAlpha = pIcon->hbmAlpha;
-    
-    if (istepIfAniCur)
-        ERR("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
     
     /*
      * Get our objects. 
@@ -1443,6 +1485,76 @@ NtUserDrawIconEx(
 
     UserLeave();
     return Ret;
+}
+
+/*
+ * @unimplemented
+ */
+HCURSOR
+NTAPI
+NtUserGetCursorFrameInfo(
+    HCURSOR hCursor,
+    DWORD istep,
+    INT* rate_jiffies,
+    DWORD* num_steps)
+{
+    PCURICON_OBJECT CurIcon;
+    HCURSOR ret;
+    INT jiffies = 0;
+    DWORD steps = 1;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("Enter NtUserGetCursorFrameInfo\n");
+    UserEnterExclusive();
+
+    if (!(CurIcon = UserGetCurIconObject(hCursor)))
+    {
+        UserLeave();
+        return NULL;
+    }
+
+    ret = CurIcon->head.h;
+
+    if(CurIcon->CURSORF_flags & CURSORF_ACON)
+    {
+        PACON AniCurIcon = (PACON)CurIcon;
+        if(istep >= AniCurIcon->cicur)
+        {
+            UserDereferenceObject(CurIcon);
+            UserLeave();
+            return NULL;
+        }
+        jiffies = AniCurIcon->ajifRate[istep];
+        steps = AniCurIcon->cicur;
+        ret = AniCurIcon->aspcur[AniCurIcon->aicur[istep]]->head.h;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(rate_jiffies, sizeof(INT), 1);
+        ProbeForWrite(num_steps, sizeof(DWORD), 1);
+        *rate_jiffies = jiffies;
+        *num_steps = steps;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("Status: 0x%08x.\n", Status);
+        SetLastNtError(Status);
+        ret = NULL;
+    }
+
+    UserDereferenceObject(CurIcon);
+    UserLeave();
+
+    TRACE("Leaving NtUserGetCursorFrameInfo, ret = 0x%08x\n", ret);
+
+    return ret;
 }
 
 /* EOF */

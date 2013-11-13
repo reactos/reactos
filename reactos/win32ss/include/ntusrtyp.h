@@ -90,7 +90,7 @@ typedef struct
 {   union
     { 
         ICONRESDIR icon;
-        CURSORDIR  cursor;
+        CURSORRESDIR  cursor;
     } ResInfo;
     WORD   wPlanes;
     WORD   wBitCount;

@@ -1250,22 +1250,6 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
 /*
  * @unimplemented
  */
-HCURSOR
-NTAPI
-NtUserGetCursorFrameInfo(
-    HCURSOR hCursor,
-    DWORD istep,
-    PDWORD rate_jiffies,
-    INT *num_steps)
-{
-    STUB
-
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtUserSetSystemCursor(

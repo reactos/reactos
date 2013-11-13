@@ -2000,8 +2000,8 @@ NTAPI
 NtUserGetCursorFrameInfo(
   HCURSOR hCursor,
   DWORD istep,
-  PDWORD rate_jiffies,
-  INT *num_steps);
+  INT* rate_jiffies,
+  DWORD* num_steps);
 
 BOOL
 NTAPI
@@ -2791,7 +2791,7 @@ NtUserSetCursorIconData(
   _In_ HCURSOR hCursor,
   _In_ PUNICODE_STRING pustrModule,
   _In_ PUNICODE_STRING puSrcName,
-  _In_ PCURSORDATA pCursorData);
+  _In_ const CURSORDATA* pCursorData);
 
 typedef struct _tagFINDEXISTINGCURICONPARAM
 {

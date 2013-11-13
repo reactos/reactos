@@ -1728,7 +1728,11 @@ IntSetClassMenuName(IN PCLS Class,
 }
 
 //// Do this for now in anticipation of new cursor icon code.
+#ifndef NEW_CURSORICON
 BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT, PPROCESSINFO);
+#else
+BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT, BOOLEAN);
+#endif
 
 BOOL FASTCALL
 IntClassDestroyIcon(HANDLE hCurIcon)
@@ -1742,8 +1746,13 @@ IntClassDestroyIcon(HANDLE hCurIcon)
         ERR("hCurIcon was not found!\n");
         return FALSE;
     }
+#ifndef NEW_CURSORICON
     Ret = IntDestroyCurIconObject(CurIcon, PsGetCurrentProcessWin32Process());
     /* Note: IntDestroyCurIconObject will remove our reference for us! */
+#else
+    /* Note: IntDestroyCurIconObject will remove our reference for us! */
+    Ret = IntDestroyCurIconObject(CurIcon, TRUE);
+#endif
     if (!Ret)
     {
        ERR("hCurIcon was not Destroyed!\n");
