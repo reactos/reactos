@@ -161,17 +161,17 @@ Fast486RotateOperation(PFAST486_STATE State,
                        UCHAR Count)
 {
     ULONG HighestBit = 1 << (Bits - 1);
+    ULONG MaxValue = HighestBit | (HighestBit - 1);
     ULONG Result;
 
     /* Normalize the count */
     Count &= 0x1F;
 
+    if (Operation <= 1) Count %= Bits;
+    else if (Operation <= 3) Count %= Bits + 1;
+
     /* If the count is zero, do nothing */
-    if (Count == 0)
-    {
-        Result = Value;
-        goto SetFlags;
-    }
+    if (Count == 0) return Value;
 
     /* Check which operation is this */
     switch (Operation)
@@ -205,14 +205,14 @@ Fast486RotateOperation(PFAST486_STATE State,
         /* RCL */
         case 2:
         {
-            Result = (Value << Count)
-                     | (State->Flags.Cf << (Count - 1))
-                     | (Value >> (Bits - Count + 1));
+            Result = (Value << Count) | (State->Flags.Cf << (Count - 1));
+            
+            /* Complete the calculation, but make sure we don't shift by too much */
+            if ((Bits - Count) < 31) Result |= Value >> (Bits - Count + 1);
 
             /* Update CF and OF */
             State->Flags.Cf = ((Value & (1 << (Bits - Count))) != 0);
-            if (Count == 1) State->Flags.Of = State->Flags.Cf
-                                              ^ ((Result & HighestBit) != 0);
+            if (Count == 1) State->Flags.Of = State->Flags.Cf ^ ((Result & HighestBit) != 0);
 
             break;
         }
@@ -220,14 +220,16 @@ Fast486RotateOperation(PFAST486_STATE State,
         /* RCR */
         case 3:
         {
-            Result = (Value >> Count)
-                     | (State->Flags.Cf << (Bits - Count))
-                     | (Value << (Bits - Count + 1));
+            /* Update OF */
+            if (Count == 1) State->Flags.Of = State->Flags.Cf ^ ((Value & HighestBit) != 0);
 
-            /* Update CF and OF */
-            State->Flags.Cf = ((Value & (1 << (Bits - Count))) != 0);
-            if (Count == 1) State->Flags.Of = State->Flags.Cf
-                                              ^ ((Result & (HighestBit >> 1)) != 0);
+            Result = (Value >> Count) | (State->Flags.Cf << (Bits - Count));
+
+            /* Complete the calculation, but make sure we don't shift by too much */
+            if ((Bits - Count) < 31) Result |= Value << (Bits - Count + 1);
+
+            /* Update CF */
+            State->Flags.Cf = ((Value & (1 << (Count - 1))) != 0);
 
             break;
         }
@@ -274,11 +276,10 @@ Fast486RotateOperation(PFAST486_STATE State,
         }
     }
 
-SetFlags:
     if (Operation >= 4)
     {
         /* Update ZF, SF and PF */
-        State->Flags.Zf = (Result == 0);
+        State->Flags.Zf = ((Result & MaxValue) == 0);
         State->Flags.Sf = ((Result & HighestBit) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
