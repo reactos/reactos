@@ -2032,15 +2032,15 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         State->Flags.Sf = ((Result & SIGN_FLAG_LONG) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
-        /* Write the sum to the destination */
-        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result))
+        /* Write the old value of the destination to the source */
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, Destination))
         {
             /* Exception occurred */
             return FALSE;
         }
 
-        /* Write the old value of the destination to the source */
-        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, Destination))
+        /* Write the sum to the destination */
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result))
         {
             /* Exception occurred */
             return FALSE;
@@ -2071,15 +2071,15 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
 
-        /* Write the sum to the destination */
-        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Result))
+        /* Write the old value of the destination to the source */
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, Destination))
         {
             /* Exception occurred */
             return FALSE;
         }
 
-        /* Write the old value of the destination to the source */
-        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, Destination))
+        /* Write the sum to the destination */
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, Result))
         {
             /* Exception occurred */
             return FALSE;

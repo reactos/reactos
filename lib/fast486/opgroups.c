@@ -486,9 +486,19 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
     TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
 
-    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    /* Pop a value from the stack - this must be done first */
+    if (!Fast486StackPop(State, &Value))
     {
         /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred - restore SP */
+        if (OperandSize) State->GeneralRegs[FAST486_REG_ESP].Long += sizeof(ULONG);
+        else State->GeneralRegs[FAST486_REG_ESP].LowWord += sizeof(USHORT);
+
         return FALSE;
     }
 
@@ -496,13 +506,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
     {
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
-
-    /* Pop a value from the stack */
-    if (!Fast486StackPop(State, &Value))
-    {
-        /* Exception occurred */
         return FALSE;
     }
 
