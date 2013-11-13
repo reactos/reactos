@@ -17,8 +17,12 @@
 #ifdef LANGUAGE_EN_US
     #include "winnls/lang/en-US.rc"
 #endif
+#pragma code_page(65001)
 #ifdef LANGUAGE_ES_ES
     #include "winnls/lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "winnls/lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "winnls/lang/ro-RO.rc"
