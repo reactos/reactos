@@ -539,13 +539,10 @@ ClassDispatchPnp(
     PCLASS_DEV_INFO devInfo;
 
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
-    PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
 
     NTSTATUS status = Irp->IoStatus.Status;
     BOOLEAN completeRequest = TRUE;
     BOOLEAN lockReleased = FALSE;
-
-    ULONG isRemoved;
 
     PAGED_CODE();
 
@@ -566,7 +563,7 @@ ClassDispatchPnp(
             devInfo = &(initData->PdoData);
         }
 
-        isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
+        ClassAcquireRemoveLock(DeviceObject, Irp);
 
         DebugPrint((2, "ClassDispatchPnp (%p,%p): minor code %#x for %s %p\n",
                        DeviceObject, Irp,
@@ -894,7 +891,6 @@ ClassDispatchPnp(
             case IRP_MN_REMOVE_DEVICE:
             case IRP_MN_SURPRISE_REMOVAL: {
 
-                PDEVICE_OBJECT lowerDeviceObject = commonExtension->LowerDeviceObject;
                 UCHAR removeType = irpStack->MinorFunction;
 
                 if (commonExtension->PagingPathCount != 0) {
@@ -3003,7 +2999,6 @@ ClassInterpretSenseInfo(
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExtension->PrivateFdoData;
 
     PSENSE_DATA       senseBuffer = Srb->SenseInfoBuffer;
@@ -6559,7 +6554,6 @@ ClassPnpQueryFdoRelations(
     PCLASS_DRIVER_EXTENSION
         driverExtension = IoGetDriverObjectExtension(Fdo->DriverObject,
                                                      CLASS_DRIVER_EXTENSION_KEY);
-    NTSTATUS status;
 
     PAGED_CODE();
 
@@ -6569,7 +6563,7 @@ ClassPnpQueryFdoRelations(
     //
 
     if(InterlockedIncrement((PLONG)&fdoExtension->EnumerationInterlock) == 1) {
-        status = driverExtension->InitData.ClassEnumerateDevice(Fdo);
+        driverExtension->InitData.ClassEnumerateDevice(Fdo);
     }
 
     Irp->IoStatus.Information = (ULONG_PTR) NULL;
@@ -7330,7 +7324,6 @@ ClassUpdateInformationInRegistry(
     IN ULONG              InquiryDataLength
     )
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     NTSTATUS          status;
     SCSI_ADDRESS      scsiAddress;
     OBJECT_ATTRIBUTES objectAttributes;
@@ -7346,7 +7339,6 @@ ClassUpdateInformationInRegistry(
     PAGED_CODE();
 
     ASSERT(DeviceName);
-    fdoExtension = Fdo->DeviceExtension;
     buffer = NULL;
     targetKey = NULL;
     RtlZeroMemory(&unicodeName,         sizeof(UNICODE_STRING));

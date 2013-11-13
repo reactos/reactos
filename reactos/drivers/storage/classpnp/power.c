@@ -80,15 +80,12 @@ ClassDispatchPower(
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     ULONG isRemoved;
-    PCLASS_POWER_DEVICE powerRoutine = NULL;
 
     //
     // NOTE: This code may be called at PASSIVE or DISPATCH, depending
     //       upon the device object it is being called for.
     //       don't do anything that would break under either circumstance.
     //
-
-    //NTSTATUS status;
 
     isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
 
@@ -1508,8 +1505,6 @@ RetryPowerRequest(
     PCLASS_POWER_CONTEXT Context
     )
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     PSCSI_REQUEST_BLOCK srb = &(Context->Srb);
     LARGE_INTEGER dueTime;

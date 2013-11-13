@@ -418,8 +418,6 @@ ClasspCleanupDisableMcn(
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension =
         commonExtension->PartitionZeroExtension;
 
-    ULONG newCount = 1;
-
     PAGED_CODE();
 
     DebugPrint((ClassDebugTrace,

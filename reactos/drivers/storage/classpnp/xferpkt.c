@@ -720,7 +720,6 @@ VOID NTAPI SetupEjectionTransferPacket(   TRANSFER_PACKET *Pkt,
                                         PIRP OriginalIrp)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
-    PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PCDB pCdb;
 
     PAGED_CODE();
@@ -766,7 +765,6 @@ VOID NTAPI SetupModeSenseTransferPacket(TRANSFER_PACKET *Pkt,
                                         PIRP OriginalIrp)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
-    PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PCDB pCdb;
 
     PAGED_CODE();
@@ -815,7 +813,6 @@ VOID NTAPI SetupDriveCapacityTransferPacket(TRANSFER_PACKET *Pkt,
                                             PIRP OriginalIrp)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
-    PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PCDB pCdb;
 
     RtlZeroMemory(&Pkt->Srb, sizeof(SCSI_REQUEST_BLOCK));
