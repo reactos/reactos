@@ -566,7 +566,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest)
     }
 
     /* Normalize the bit number */
-    BitNumber &= (1 << DataSize) - 1;
+    BitNumber %= DataSize;
 
     if (OperandSize)
     {
@@ -748,7 +748,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
     }
 
     /* Normalize the bit number */
-    BitNumber &= (1 << DataSize) - 1;
+    BitNumber %= DataSize;
 
     if (OperandSize)
     {
@@ -1207,7 +1207,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
     }
 
     /* Normalize the bit number */
-    BitNumber &= (1 << DataSize) - 1;
+    BitNumber %= DataSize;
 
     if (OperandSize)
     {
@@ -1432,7 +1432,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
     }
 
     /* Normalize the bit number */
-    BitNumber &= (1 << DataSize) - 1;
+    BitNumber %= DataSize;
 
     if (OperandSize)
     {

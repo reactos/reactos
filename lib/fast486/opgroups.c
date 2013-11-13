@@ -1921,7 +1921,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
     }
 
     /* Normalize the bit number */
-    BitNumber &= (1 << DataSize) - 1;
+    BitNumber %= DataSize;
 
     if (OperandSize)
     {
