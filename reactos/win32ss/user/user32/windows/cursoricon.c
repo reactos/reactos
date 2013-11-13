@@ -376,7 +376,7 @@ static BOOL CURSORICON_GetResCursorEntry( LPCVOID dir, DWORD size, int n,
                                           int *width, int *height, int *bits )
 {
     const CURSORICONDIR *resdir = dir;
-    const CURSORDIR *cursor;
+    const CURSORRESDIR *cursor;
 
     if ( resdir->idCount <= n )
         return FALSE;
