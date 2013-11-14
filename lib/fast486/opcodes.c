@@ -5886,17 +5886,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
             else State->GeneralRegs[FAST486_REG_ESI].LowWord -= (Count - 1) * DataSize;
         }
 
-        /* Update registers */
-        if (OperandSize)
-        {
-            State->GeneralRegs[FAST486_REG_ECX].Long = 0;
-            State->GeneralRegs[FAST486_REG_ESI].Long += (Count - 1) * DataSize;
-        }
-        else
-        {
-            State->GeneralRegs[FAST486_REG_ECX].LowWord = 0;
-            State->GeneralRegs[FAST486_REG_ESI].LowWord += (Count - 1) * DataSize;
-        }
+        /* Clear ECX */
+        if (OperandSize) State->GeneralRegs[FAST486_REG_ECX].Long = 0;
+        else State->GeneralRegs[FAST486_REG_ECX].LowWord = 0;
     }
 
     /* Read from the source operand */
