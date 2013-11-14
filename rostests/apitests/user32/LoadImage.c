@@ -35,7 +35,7 @@ START_TEST(LoadImage)
         hCopy = CopyIcon(arg);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "\n");
-        
+
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, 0);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "\n");

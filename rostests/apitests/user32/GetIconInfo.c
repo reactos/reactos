@@ -99,7 +99,7 @@ Test_GetIconInfo(BOOL fIcon, DWORD screen_bpp)
     ok(bitmap.bmHeight == 16, "\n");
     ok(bitmap.bmWidthBytes == 8 * bitmap.bmBitsPixel / 8, "\n");
     ok(bitmap.bmPlanes == 1, "\n");
-    ok(bitmap.bmBitsPixel == screen_bpp, "\n");
+    ok(bitmap.bmBitsPixel == screen_bpp, "%d\n", bitmap.bmBitsPixel);
     ok(bitmap.bmBits == NULL, "\n");
     DeleteObject(iconinfo2.hbmMask);
     DeleteObject(iconinfo2.hbmColor);
@@ -152,13 +152,20 @@ START_TEST(GetIconInfo)
     DWORD data[] = {0, 0, 0, 0, 0, 0};
     DWORD bpp, screenbpp, creationbpp;
     DEVMODEW dm;
+
+    dm.dmSize = sizeof(dm);
+    dm.dmDriverExtra = 0;
     
     /* Test icons behaviour regarding display settings */
-    EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    ok(EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm), "\n");
     screenbpp = dm.dmBitsPerPel;
 
-    Test_GetIconInfo(0, screenbpp);
-    Test_GetIconInfo(1, screenbpp);
+    trace("Icon default size: %dx%d.\n", GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+    trace("Cursor default size: %dx%d.\n", GetSystemMetrics(SM_CXCURSOR), GetSystemMetrics(SM_CYCURSOR));
+
+    trace("Screen bpp: %lu.\n", screenbpp);
+    Test_GetIconInfo(FALSE, screenbpp);
+    Test_GetIconInfo(TRUE, screenbpp);
 
     hcursor = LoadCursor(GetModuleHandle(NULL), "TESTCURSOR");
     ok(hcursor != 0, "should not fail, error %ld\n", GetLastError());
@@ -192,6 +199,7 @@ START_TEST(GetIconInfo)
             skip("Unable to change bpp to %lu.\n", creationbpp);
             continue;
         }
+        trace("starting with creationbpp = %lu\n", creationbpp);
         hcursor = LoadImage(GetModuleHandle(NULL),
             MAKEINTRESOURCE(IDI_TEST),
             IMAGE_ICON,
@@ -203,6 +211,7 @@ START_TEST(GetIconInfo)
         /* If we reverse the loop here (32->16 bpp), then hbmColor.bmBitsPixel is always 32 */
         for(bpp = 16; bpp <=32; bpp += 8)
         {
+            trace("testing resetting to %lu\n", bpp);
             dm.dmBitsPerPel = bpp;
             if(ChangeDisplaySettingsExW(NULL, &dm, NULL, 0, NULL) != DISP_CHANGE_SUCCESSFUL)
             {

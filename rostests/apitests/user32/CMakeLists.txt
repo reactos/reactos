@@ -7,12 +7,14 @@ list(APPEND SOURCE
     DestroyCursorIcon.c
     DrawIconEx.c
     desktop.c
+    EnumDisplaySettings.c
     GetIconInfo.c
     GetKeyState.c
     GetPeekMessage.c
     GetSystemMetrics.c
     InitializeLpkHooks.c
     LoadImage.c
+    LookupIconIdFromDirectoryEx.c
     RealGetWindowClass.c
     ScrollDC.c
     ScrollWindowEx.c
