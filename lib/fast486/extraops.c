@@ -669,6 +669,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShld)
     else
     {
         USHORT Source, Destination, Result;
+        ULONG DoubleSource;
 
         if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Source, &Destination))
         {
@@ -676,8 +677,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShld)
             return FALSE;
         }
 
+        DoubleSource = Source | (Source << 16);
+
         /* Calculate the result */
-        Result = (Destination << Count) | (Source >> (16 - Count));
+        Result = (Destination << Count) | (DoubleSource >> (32 - Count));
 
         /* Update flags */
         State->Flags.Cf = (Destination >> (16 - Count)) & 1;
@@ -880,6 +883,8 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShrd)
 
         /* Calculate the result */
         Result = (Destination >> Count) | (Source << (16 - Count));
+
+        if (Count >= 16) Result |= (ULONG)(Source | (Source << 16)) >> (Count - 16);
 
         /* Update flags */
         State->Flags.Cf = (Result >> (Count - 1)) & 1;
@@ -1535,16 +1540,14 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
         }
     }
 
-    /* Clear ZF */
-    State->Flags.Zf = FALSE;
+    /* Set ZF */
+    State->Flags.Zf = (Value == 0);
+    if (State->Flags.Zf) return TRUE;
 
     for (i = 0; i < DataSize; i++)
     {
         if(Value & (1 << i))
         {
-            /* Set ZF */
-            State->Flags.Zf = TRUE;
-
             /* Save the bit number */
             BitNumber = i;
 
@@ -1553,24 +1556,21 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
         }
     }
 
-    if (State->Flags.Zf)
+    /* Write back the result */
+    if (OperandSize)
     {
-        /* Write back the result */
-        if (OperandSize)
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, BitNumber))
         {
-            if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, BitNumber))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+            /* Exception occurred */
+            return FALSE;
         }
-        else
+    }
+    else
+    {
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(BitNumber)))
         {
-            if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(BitNumber)))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+            /* Exception occurred */
+            return FALSE;
         }
     }
 
@@ -1625,16 +1625,14 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
         }
     }
 
-    /* Clear ZF */
-    State->Flags.Zf = FALSE;
+    /* Set ZF according to the value */
+    State->Flags.Zf = (Value == 0);
+    if (State->Flags.Zf) return TRUE;
 
     for (i = DataSize - 1; i >= 0; i--)
     {
         if(Value & (1 << i))
         {
-            /* Set ZF */
-            State->Flags.Zf = TRUE;
-
             /* Save the bit number */
             BitNumber = i;
 
@@ -1643,24 +1641,21 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
         }
     }
 
-    if (State->Flags.Zf)
+    /* Write back the result */
+    if (OperandSize)
     {
-        /* Write back the result */
-        if (OperandSize)
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, BitNumber))
         {
-            if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, BitNumber))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+            /* Exception occurred */
+            return FALSE;
         }
-        else
+    }
+    else
+    {
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(BitNumber)))
         {
-            if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(BitNumber)))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+            /* Exception occurred */
+            return FALSE;
         }
     }
 
