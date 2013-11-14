@@ -47,6 +47,7 @@ KMT_TESTFUNC Test_PsNotify;
 KMT_TESTFUNC Test_SeQueryInfoToken;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
+KMT_TESTFUNC Test_RtlIntSafe;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
@@ -97,6 +98,7 @@ const KMT_TEST TestList[] =
     { "-SeQueryInfoToken",                  Test_SeQueryInfoToken },
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlExceptionKM",                     Test_RtlException },
+    { "RtlIntSafeKM",                       Test_RtlIntSafe },
     { "RtlMemoryKM",                        Test_RtlMemory },
     { "RtlRegistryKM",                      Test_RtlRegistry },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },

@@ -12,6 +12,7 @@ list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
     rtl/RtlAvlTree.c
     rtl/RtlException.c
+    rtl/RtlIntSafe.c
     rtl/RtlMemory.c
     rtl/RtlRegistry.c
     rtl/RtlSplayTree.c
