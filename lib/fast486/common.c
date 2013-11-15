@@ -240,6 +240,14 @@ Fast486InterruptInternal(PFAST486_STATE State,
             if (!Fast486StackPush(State, OldEsp)) return FALSE;
         }
     }
+    else
+    {
+        if (State->SegmentRegs[FAST486_REG_CS].Size)
+        {
+            /* Set OPSIZE, because INT always pushes 16-bit values in real mode */
+            State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
+        }
+    }
 
     /* Push EFLAGS */
     if (!Fast486StackPush(State, State->Flags.Long)) return FALSE;

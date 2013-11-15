@@ -730,6 +730,17 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 }
             }
 
+            if ((SibByte & 0x07) == FAST486_REG_ESP)
+            {
+                /* Check if there is no segment override */
+                if (!(State->PrefixFlags & FAST486_PREFIX_SEG))
+                {
+                    /* Add a SS: prefix */
+                    State->PrefixFlags |= FAST486_PREFIX_SEG;
+                    State->SegmentOverride = FAST486_REG_SS;
+                }
+            }
+
             /* Calculate the address */
             ModRegRm->MemoryAddress = Base + Index * Scale;
         }
