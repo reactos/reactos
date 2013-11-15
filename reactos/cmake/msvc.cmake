@@ -20,7 +20,7 @@ endif()
 
 add_definitions(/Dinline=__inline /D__STDC__=1)
 
-add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W4")
+add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W3")
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
