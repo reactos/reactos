@@ -25,7 +25,7 @@ DBG_DEFAULT_CHANNEL(UserIcon);
 SYSTEM_CURSORINFO gSysCursorInfo;
 
 BOOL
-InitCursorImpl()
+InitCursorImpl(VOID)
 {
     gSysCursorInfo.Enabled = FALSE;
     gSysCursorInfo.ButtonsDown = 0;
@@ -154,7 +154,8 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOLEAN bForce)
 {
     if(CurIcon->CURSORF_flags & CURSORF_CURRENT)
     {
-        /* Mark the object as destroyed, and fail, as per wine tests */
+        /* Mark the object as destroyed, and fail, as per tests */
+        TRACE("Cursor is current, marking as destroyed.\n");
         UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
         return FALSE;
     }
@@ -238,7 +239,9 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
     {
         CurIcon = Win32Process->pCursorCache;
         Win32Process->pCursorCache = CurIcon->pcurNext;
-        ASSERT(CurIcon->head.cLockObj == 2);
+        /* One ref for the handle, one for the list,
+         * and potentially one from an other process via SetCursor */
+        ASSERT(CurIcon->head.cLockObj <= 3);
         IntDestroyCurIconObject(CurIcon, TRUE);
     }
 }
@@ -1004,8 +1007,8 @@ NtUserSetCursorIconData(
     if(IsShared)
     {
         /* Update process cache in case of shared cursor */
-        UserReferenceObject(CurIcon);
         PPROCESSINFO ppi = CurIcon->head.ppi;
+        UserReferenceObject(CurIcon);
         CurIcon->pcurNext = ppi->pCursorCache;
         ppi->pCursorCache = CurIcon;
     }
@@ -1038,7 +1041,7 @@ done:
     UserDereferenceObject(CurIcon);
     TRACE("Leave NtUserSetCursorIconData, ret=%i\n",Ret);
     UserLeave();
-    
+
     return Ret;
 }
 

@@ -175,6 +175,52 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
     return -1;
 }
 
+/* copy an icon bitmap, even when it can't be selected into a DC */
+/* helper for CreateIconIndirect */
+static void stretch_blt_icon(HDC hdc_dst, int dst_width, int dst_height, HBITMAP src)
+{
+    HDC hdc = CreateCompatibleDC( 0 );
+    BITMAP bm;
+    HBITMAP hbmpPrev;
+
+    GetObjectW(src, sizeof(bm), &bm);
+
+    hbmpPrev = SelectObject(hdc, src);
+
+    if (!hbmpPrev)  /* do it the hard way */
+    {
+        BITMAPINFO *info;
+        void *bits;
+
+        if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) return;
+        info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        info->bmiHeader.biWidth = bm.bmWidth;
+        info->bmiHeader.biHeight = bm.bmHeight;
+        info->bmiHeader.biPlanes = GetDeviceCaps( hdc_dst, PLANES );
+        info->bmiHeader.biBitCount = GetDeviceCaps( hdc_dst, BITSPIXEL );
+        info->bmiHeader.biCompression = BI_RGB;
+        info->bmiHeader.biSizeImage = get_dib_image_size( bm.bmWidth, bm.bmHeight, info->bmiHeader.biBitCount );
+        info->bmiHeader.biXPelsPerMeter = 0;
+        info->bmiHeader.biYPelsPerMeter = 0;
+        info->bmiHeader.biClrUsed = 0;
+        info->bmiHeader.biClrImportant = 0;
+        bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage );
+        if (bits && GetDIBits( hdc, src, 0, bm.bmHeight, bits, info, DIB_RGB_COLORS ))
+            StretchDIBits( hdc_dst, 0, 0, dst_width, dst_height,
+                           0, 0, bm.bmWidth, bm.bmHeight, bits, info, DIB_RGB_COLORS, SRCCOPY );
+
+        HeapFree( GetProcessHeap(), 0, bits );
+        HeapFree( GetProcessHeap(), 0, info );
+    }
+    else
+    {
+        StretchBlt( hdc_dst, 0, 0, dst_width, dst_height, hdc, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY );
+        SelectObject(hdc, hbmpPrev);
+    }
+
+    DeleteDC( hdc );
+}
+
 /***********************************************************************
  *          bmi_has_alpha
  */
@@ -576,12 +622,41 @@ static BOOL CURSORICON_GetCursorDataFromIconInfo(
     BITMAP bm;
 
     ZeroMemory(pCursorData, sizeof(*pCursorData));
-    /* Use the CopyImage function, as it will gracefully convert our bitmap to the screen bit depth */
     if(pIconInfo->hbmColor)
     {
-        pCursorData->hbmColor = CopyImage(pIconInfo->hbmColor, IMAGE_BITMAP, 0, 0, 0);
-        if(!pCursorData->hbmColor)
+        /* We must convert the color bitmap to screen format */
+        HDC hdcScreen, hdcMem;
+        HBITMAP hbmpPrev;
+        
+        /* The mask dictates its dimensions */
+        if (!GetObject(pIconInfo->hbmMask, sizeof(bm), &bm))
             return FALSE;
+        hdcScreen = CreateDCW(DISPLAYW, NULL, NULL, NULL);
+        if(!hdcScreen)
+            return FALSE;
+        hdcMem = CreateCompatibleDC(hdcScreen);
+        if(!hdcMem)
+        {
+            DeleteDC(hdcScreen);
+            return FALSE;
+        }
+        pCursorData->hbmColor = CreateCompatibleBitmap(hdcScreen, bm.bmWidth, bm.bmHeight);
+        DeleteDC(hdcScreen);
+        if (!pCursorData->hbmColor)
+        {
+            DeleteDC(hdcMem);
+            return FALSE;
+        }
+        hbmpPrev = SelectObject(hdcMem, pCursorData->hbmColor);
+        if (!hbmpPrev)
+        {
+            DeleteDC(hdcMem);
+            DeleteObject(pCursorData->hbmColor);
+            return FALSE;
+        }
+        stretch_blt_icon( hdcMem, bm.bmWidth, bm.bmHeight, pIconInfo->hbmColor);
+        SelectObject(hdcMem, hbmpPrev);
+        DeleteDC(hdcMem);
     }
     pCursorData->hbmMask = CopyImage(pIconInfo->hbmMask, IMAGE_BITMAP, 0, 0, LR_MONOCHROME);
     if(!pCursorData->hbmMask)
@@ -1318,7 +1393,7 @@ CURSORICON_LoadImageW(
     if(!dir)
         goto done;
     
-    wResId = LookupIconIdFromDirectoryEx((PBYTE)dir, bIcon, cxDesired, cyDesired, fuLoad & LR_MONOCHROME);
+    wResId = LookupIconIdFromDirectoryEx((PBYTE)dir, bIcon, cxDesired, cyDesired, fuLoad);
     FreeResource(handle);
     
     /* Get the relevant resource pointer */
@@ -2008,11 +2083,11 @@ int WINAPI LookupIconIdFromDirectoryEx(
     WORD bppDesired;
     CURSORICONDIR* dir = (CURSORICONDIR*)presbits;
     CURSORICONDIRENTRY* entry;
-    int i, numMatch, iIndex = -1;
-    WORD width, height;
-    USHORT bitcount;
-    ULONG cxyDiff, cxyDiffTmp;
-    
+    int i, numMatch = 0, iIndex = -1;
+    WORD width, height, BitCount = 0;
+    BOOL notPaletted = FALSE;
+    ULONG bestScore = 0xFFFFFFFF, score;
+
     TRACE("%p, %x, %i, %i, %x.\n", presbits, fIcon, cxDesired, cyDesired, Flags);
     
     if(!(dir && !dir->idReserved && (dir->idType & 3)))
@@ -2035,13 +2110,11 @@ int WINAPI LookupIconIdFromDirectoryEx(
     }
     
     if(!cxDesired)
-        cxDesired = GetSystemMetrics(fIcon ? SM_CXICON : SM_CXCURSOR);
+        cxDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CXICON : SM_CXCURSOR) : 256;
     if(!cyDesired)
-        cyDesired = GetSystemMetrics(fIcon ? SM_CYICON : SM_CYCURSOR);
+        cyDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CYICON : SM_CYCURSOR) : 256;
 
     /* Find the best match for the desired size */
-    cxyDiff = 0xFFFFFFFF;
-    numMatch = 0;
     for(i = 0; i < dir->idCount; i++)
     {
         entry = &dir->idEntries[i];
@@ -2051,27 +2124,41 @@ int WINAPI LookupIconIdFromDirectoryEx(
         /* 0 represents 256 */
         if(!width) width = 256;
         if(!height) height = 256;
-        /* Let it be a 1-norm */
-        cxyDiffTmp = max(abs(width - cxDesired), abs(height - cyDesired));
-        if( cxyDiffTmp > cxyDiff)
+        /* Calculate the "score" (lower is better) */
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if( score > bestScore)
             continue;
-        if( cxyDiffTmp == cxyDiff)
+        /* Bigger than requested lowers the score */
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score > bestScore)
+            continue;
+        if(score == bestScore)
         {
+            if(entry->wBitCount > BitCount)
+                BitCount = entry->wBitCount;
             numMatch++;
             continue;
         }
         iIndex = i;
         numMatch = 1;
-        cxyDiff = cxyDiffTmp;
+        bestScore = score;
+        BitCount = entry->wBitCount;
     }
     
     if(numMatch == 1)
     {
-        /* Only one entry fit the asked dimensions */
+        /* Only one entry fits the asked dimensions */
         return dir->idEntries[iIndex].wResId;
     }
+
+    /* Avoid paletted icons on non-paletted device */
+    if (bppDesired > 8 && BitCount > 8)
+        notPaletted = TRUE; 
     
-    bitcount = 0;
+    BitCount = 0;
     iIndex = -1;
     /* Now find the entry with the best depth */
     for(i = 0; i < dir->idCount; i++)
@@ -2083,25 +2170,33 @@ int WINAPI LookupIconIdFromDirectoryEx(
         if(!width) width = 256;
         if(!height) height = 256;
         /* Check if this is the best match we had */
-        cxyDiffTmp = max(abs(width - cxDesired), abs(height - cyDesired));
-        if(cxyDiffTmp != cxyDiff)
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score != bestScore)
             continue;
         /* Exact match? */
         if(entry->wBitCount == bppDesired)
             return entry->wResId;
         /* We take the highest possible but smaller  than the display depth */
-        if((entry->wBitCount > bitcount) && (entry->wBitCount < bppDesired))
+        if((entry->wBitCount > BitCount) && (entry->wBitCount < bppDesired))
         {
+            /* Avoid paletted icons on non paletted devices */
+            if ((entry->wBitCount <= 8) && notPaletted)
+                continue;
             iIndex = i;
-            bitcount = entry->wBitCount;
+            BitCount = entry->wBitCount;
         }
     }
-    
+
     if(iIndex >= 0)
         return dir->idEntries[iIndex].wResId;
     
-    /* No inferior or equal depth available. Get the smallest one */
-    bitcount = 0x7FFF;
+    /* No inferior or equal depth available. Get the smallest bigger one */
+    BitCount = 0xFFFF;
+    iIndex = 0;
     for(i = 0; i < dir->idCount; i++)
     {
         entry = &dir->idEntries[i];
@@ -2111,14 +2206,20 @@ int WINAPI LookupIconIdFromDirectoryEx(
         if(!width) width = 256;
         if(!height) height = 256;
         /* Check if this is the best match we had */
-        cxyDiffTmp = max(abs(width - cxDesired), abs(height - cyDesired));
-        if(cxyDiffTmp != cxyDiff)
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score != bestScore)
             continue;
         /* Check the bit depth */
-        if(entry->wBitCount < bitcount)
+        if(entry->wBitCount < BitCount)
         {
+            if((entry->wBitCount <= 8) && notPaletted)
+                continue;
             iIndex = i;
-            bitcount = entry->wBitCount;
+            BitCount = entry->wBitCount;
         }
     }
     
