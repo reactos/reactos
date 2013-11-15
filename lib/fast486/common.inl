@@ -257,7 +257,7 @@ BOOLEAN
 Fast486StackPush(PFAST486_STATE State,
                  ULONG Value)
 {
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* The OPSIZE prefix toggles the size */
     if (State->PrefixFlags & FAST486_PREFIX_OPSIZE) Size = !Size;
@@ -315,7 +315,7 @@ Fast486StackPop(PFAST486_STATE State,
 {
     ULONG LongValue;
     USHORT ShortValue;
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* The OPSIZE prefix toggles the size */
     TOGGLE_OPSIZE(Size);
