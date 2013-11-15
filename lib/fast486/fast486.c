@@ -239,6 +239,9 @@ Fast486Reset(PFAST486_STATE State)
     State->Flags.AlwaysSet = 1;
     State->InstPtr.LowWord = 0xFFF0;
 
+    /* Set the CPL to 0 */
+    State->Cpl = 0;
+
     /* Initialize segments */
     for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
     {

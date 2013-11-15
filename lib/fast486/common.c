@@ -65,7 +65,8 @@ Fast486ReadMemory(PFAST486_STATE State,
             return FALSE;
         }
 
-        if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+        if ((!InstFetch && (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl))
+            || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
             Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
@@ -132,7 +133,8 @@ Fast486WriteMemory(PFAST486_STATE State,
             return FALSE;
         }
 
-        if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+        if ((GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+            || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
             Fast486Exception(State, FAST486_EXCEPTION_GP);
             return FALSE;
@@ -330,8 +332,18 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
         && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE))
     {
         /* Push the error code */
-        Fast486StackPush(State, ErrorCode);
+        if (!Fast486StackPush(State, ErrorCode))
+        {
+            /*
+             * If this function failed, that means Fast486Exception
+             * was called again, so just return in this case.
+             */
+            return;
+        }
     }
+
+    /* Reset the exception count */
+    State->ExceptionCount = 0;
 }
 
 /* EOF */

@@ -27,16 +27,8 @@ FORCEINLINE
 INT
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
-    {
-        /* In protected mode, return the RPL of the CS */
-        return GET_SEGMENT_RPL(State->SegmentRegs[FAST486_REG_CS].Selector);
-    }
-    else
-    {
-        /* Real mode is always in supervisor mode */
-        return 0;
-    }
+    /* Return the CPL, or 3 if we're in virtual 8086 mode */
+    return (!State->Flags.Vm) ? State->Cpl : 3;
 }
 
 FORCEINLINE
@@ -464,7 +456,10 @@ Fast486LoadSegment(PFAST486_STATE State,
         else if (Segment == FAST486_REG_CS)
         {
             /* Loading the code segment */
-            // TODO: NOT IMPLEMENTED
+            // TODO: Implement security checks, call gates, etc...
+
+            /* Update CPL */
+            State->Cpl = GET_SEGMENT_RPL(Selector);
         }
         else
         {
@@ -478,7 +473,7 @@ Fast486LoadSegment(PFAST486_STATE State,
             }
 
             if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
-                && (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+                || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
             {
                 Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;

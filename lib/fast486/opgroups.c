@@ -1668,17 +1668,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
     NO_LOCK_PREFIX();
     TOGGLE_ADSIZE(AddressSize);
 
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
     /* Check for the segment override */
     if (State->PrefixFlags & FAST486_PREFIX_SEG)
     {
         /* Use the override segment instead */
         Segment = State->SegmentOverride;
-    }
-
-    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
-    {
-        /* Exception occurred */
-        return FALSE;
     }
 
     /* Check which operation this is */
