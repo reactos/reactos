@@ -11010,14 +11010,27 @@ RtlCheckBit(
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
 #define RTL_SOFT_VERIFYMSG(msg, exp) \
-  (VOID)((!(exp)) ? \
+  ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-#define ASSERT(exp) ((void)RTL_VERIFY(exp))
-#define ASSERTMSG(msg, exp) ((void)RTL_VERIFYMSG(msg, exp))
+/* The ASSERTs must be cast to void to avoid warnings about unused results.
+ * We also cannot invoke the VERIFY versions because the indirection messes
+ * with stringify. */
+#define ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE))
 
-#define RTL_SOFT_ASSERT(exp) ((void)RTL_SOFT_VERIFY(exp))
-#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)RTL_SOFT_VERIFYMSG(msg, exp))
+#define ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE))
 
 #if defined(_MSC_VER)
 # define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
