@@ -129,6 +129,9 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     /* Check for edited frame */
     if (KiIsFrameEdited(TrapFrame)) KiEditedTrapReturn(TrapFrame);
 
+    /* Check if we have single stepping enabled */
+    if (TrapFrame->EFlags & EFLAGS_TF) KiTrapReturnNoSegments(TrapFrame);
+
     /* Exit the trap to kernel mode */
     KiTrapReturnNoSegmentsRet8(TrapFrame);
 }
@@ -190,6 +193,9 @@ KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 
     /* Check for edited frame */
     if (KiIsFrameEdited(TrapFrame)) KiEditedTrapReturn(TrapFrame);
+
+    /* Check if we have single stepping enabled */
+    if (TrapFrame->EFlags & EFLAGS_TF) KiTrapReturnNoSegments(TrapFrame);
 
     /* Exit the trap to kernel mode */
     KiTrapReturnNoSegmentsRet8(TrapFrame);
