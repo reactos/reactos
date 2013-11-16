@@ -2112,10 +2112,21 @@ RtlFindCharInUnicodeString(
     _Out_ PUSHORT Position
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 VOID
 NTAPI
-RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString);
+RtlFreeUnicodeString(
+    _Inout_ _At_(UnicodeString->Buffer, __drv_freesMem(Mem))
+        PUNICODE_STRING UnicodeString
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlEraseUnicodeString(
+    _Inout_ PUNICODE_STRING String
+);
 
 NTSYSAPI
 NTSTATUS
