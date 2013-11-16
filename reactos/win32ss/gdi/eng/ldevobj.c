@@ -186,7 +186,6 @@ LDEVOBJ_bLoadImage(
     Status = ZwSetSystemInformation(SystemLoadGdiDriverInformation,
                                     pDriverInfo,
                                     sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
-
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to load a GDI driver: '%wZ', Status = 0x%lx\n",
@@ -424,6 +423,8 @@ EngLoadImageEx(
         /* Insert the LDEV into the global list */
         pldev->pldevPrev = NULL;
         pldev->pldevNext = gpldevHead;
+        if (gpldevHead)
+            gpldevHead->pldevPrev = pldev;
         gpldevHead = pldev;
     }
 
