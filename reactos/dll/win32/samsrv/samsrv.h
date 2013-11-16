@@ -384,6 +384,9 @@ NTSTATUS
 SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject);
 
 NTSTATUS
+SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject);
+
+NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
                     IN PENCRYPTED_NT_OWF_PASSWORD NtPassword,
                     IN BOOLEAN NtPasswordPresent,

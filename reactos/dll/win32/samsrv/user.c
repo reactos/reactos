@@ -384,6 +384,14 @@ done:
 
 
 NTSTATUS
+SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject)
+{
+    FIXME("(%p)\n", UserObject);
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
                     IN PENCRYPTED_NT_OWF_PASSWORD NtPassword,
                     IN BOOLEAN NtPasswordPresent,

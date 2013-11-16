@@ -5427,9 +5427,21 @@ SamrDeleteUser(IN OUT SAMPR_HANDLE *UserHandle)
         goto done;
     }
 
-    /* FIXME: Remove the user from all groups */
+    /* Remove the user from all groups */
+    Status = SampRemoveUserFromAllGroups(UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveUserFromAllGroups() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
-    /* FIXME: Remove the user from all aliases */
+    /* Remove the user from all aliases */
+    Status = SampRemoveUserFromAllAliases(UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveUserFromAllAliases() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
     /* Delete the user from the database */
     Status = SampDeleteAccountDbObject(UserObject);
