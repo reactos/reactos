@@ -24,6 +24,7 @@
 /* GLOBAL VARIABLES ***********************************************************/
 
 PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
+PVIDEO_WIN32K_CALLOUT Win32kCallout;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -110,12 +111,9 @@ IntVideoPortDispatchOpen(
         Csrss = (PKPROCESS)PsGetCurrentProcess();
         INFO_(VIDEOPRT, "Csrss %p\n", Csrss);
 
+        IntInitializeVideoAddressSpace();
+
         CsrssInitialized = TRUE;
-
-        Irp->IoStatus.Information = FILE_OPENED;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-        return STATUS_SUCCESS;
     }
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -171,6 +169,206 @@ IntVideoPortDispatchClose(
     return STATUS_SUCCESS;
 }
 
+PSTR
+IoctlName(ULONG Ioctl)
+{
+    switch(Ioctl)
+    {
+        case IOCTL_VIDEO_ENABLE_VDM:
+            return "IOCTL_VIDEO_ENABLE_VDM"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x00, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_DISABLE_VDM:
+            return "IOCTL_VIDEO_DISABLE_VDM"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x01, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_REGISTER_VDM:
+            return "IOCTL_VIDEO_REGISTER_VDM"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x02, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_OUTPUT_DEVICE_POWER_STATE:
+            return "IOCTL_VIDEO_SET_OUTPUT_DEVICE_POWER_STATE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x03, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_GET_OUTPUT_DEVICE_POWER_STATE:
+            return "IOCTL_VIDEO_GET_OUTPUT_DEVICE_POWER_STATE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x04, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_MONITOR_DEVICE:
+            return "IOCTL_VIDEO_MONITOR_DEVICE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x05, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_ENUM_MONITOR_PDO:
+            return "IOCTL_VIDEO_ENUM_MONITOR_PDO"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x06, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_INIT_WIN32K_CALLBACKS:
+            return "IOCTL_VIDEO_INIT_WIN32K_CALLBACKS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x07, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_HANDLE_VIDEOPARAMETERS:
+            return "IOCTL_VIDEO_HANDLE_VIDEOPARAMETERS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x08, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_IS_VGA_DEVICE:
+            return "IOCTL_VIDEO_IS_VGA_DEVICE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x09, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_USE_DEVICE_IN_SESSION:
+            return "IOCTL_VIDEO_USE_DEVICE_IN_SESSION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x0a, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_PREPARE_FOR_EARECOVERY:
+            return "IOCTL_VIDEO_PREPARE_FOR_EARECOVERY"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x0b, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SAVE_HARDWARE_STATE:
+            return "IOCTL_VIDEO_SAVE_HARDWARE_STATE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x80, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_RESTORE_HARDWARE_STATE:
+            return "IOCTL_VIDEO_RESTORE_HARDWARE_STATE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x81, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_AVAIL_MODES:
+            return "IOCTL_VIDEO_QUERY_AVAIL_MODES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x100, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
+            return "IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x101, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_CURRENT_MODE:
+            return "IOCTL_VIDEO_QUERY_CURRENT_MODE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x102, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_CURRENT_MODE:
+            return "IOCTL_VIDEO_SET_CURRENT_MODE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x103, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_RESET_DEVICE:
+            return "IOCTL_VIDEO_RESET_DEVICE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x104, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_LOAD_AND_SET_FONT:
+            return "IOCTL_VIDEO_LOAD_AND_SET_FONT"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x105, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_PALETTE_REGISTERS:
+            return "IOCTL_VIDEO_SET_PALETTE_REGISTERS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x106, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_COLOR_REGISTERS:
+            return "IOCTL_VIDEO_SET_COLOR_REGISTERS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x107, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_ENABLE_CURSOR:
+            return "IOCTL_VIDEO_ENABLE_CURSOR"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x108, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_DISABLE_CURSOR:
+            return "IOCTL_VIDEO_DISABLE_CURSOR"; // CTL_CODE (FILE_DEVICE_VIDEO, 0x109, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_CURSOR_ATTR:
+            return "IOCTL_VIDEO_SET_CURSOR_ATTR"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10a, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_CURSOR_ATTR:
+            return "IOCTL_VIDEO_QUERY_CURSOR_ATTR"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10b, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_CURSOR_POSITION:
+            return "IOCTL_VIDEO_SET_CURSOR_POSITION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10c, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_CURSOR_POSITION:
+            return "IOCTL_VIDEO_QUERY_CURSOR_POSITION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10d, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_ENABLE_POINTER:
+            return "IOCTL_VIDEO_ENABLE_POINTER"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10e, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_DISABLE_POINTER:
+            return "IOCTL_VIDEO_DISABLE_POINTER"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x10f, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_POINTER_ATTR:
+            return "IOCTL_VIDEO_SET_POINTER_ATTR"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x110, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_POINTER_ATTR:
+            return "IOCTL_VIDEO_QUERY_POINTER_ATTR"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x111, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_POINTER_POSITION:
+            return "IOCTL_VIDEO_SET_POINTER_POSITION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x112, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_POINTER_POSITION:
+            return "IOCTL_VIDEO_QUERY_POINTER_POSITION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x113, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES:
+            return "IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x114, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_GET_BANK_SELECT_CODE:
+            return "IOCTL_VIDEO_GET_BANK_SELECT_CODE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x115, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
+            return "IOCTL_VIDEO_MAP_VIDEO_MEMORY"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x116, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
+            return "IOCTL_VIDEO_UNMAP_VIDEO_MEMORY"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x117, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_PUBLIC_ACCESS_RANGES:
+            return "IOCTL_VIDEO_QUERY_PUBLIC_ACCESS_RANGES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x118, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES:
+            return "IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x119, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_COLOR_CAPABILITIES:
+            return "IOCTL_VIDEO_QUERY_COLOR_CAPABILITIES"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11a, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_POWER_MANAGEMENT:
+            return "IOCTL_VIDEO_SET_POWER_MANAGEMENT"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11b, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_GET_POWER_MANAGEMENT:
+            return "IOCTL_VIDEO_GET_POWER_MANAGEMENT"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11c, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
+            return "IOCTL_VIDEO_SHARE_VIDEO_MEMORY"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11d, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY:
+            return "IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11e, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_COLOR_LUT_DATA:
+            return "IOCTL_VIDEO_SET_COLOR_LUT_DATA"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x11f, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_GET_CHILD_STATE:
+            return "IOCTL_VIDEO_GET_CHILD_STATE"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x120, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_VALIDATE_CHILD_STATE_CONFIGURATION:
+            return "IOCTL_VIDEO_VALIDATE_CHILD_STATE_CONFIGURATION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x121, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_CHILD_STATE_CONFIGURATION:
+            return "IOCTL_VIDEO_SET_CHILD_STATE_CONFIGURATION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x122, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SWITCH_DUALVIEW:
+            return "IOCTL_VIDEO_SWITCH_DUALVIEW"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x123, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_BANK_POSITION:
+            return "IOCTL_VIDEO_SET_BANK_POSITION"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x124, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_SUPPORTED_BRIGHTNESS:
+            return "IOCTL_VIDEO_QUERY_SUPPORTED_BRIGHTNESS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x125, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS:
+            return "IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x126, METHOD_BUFFERED, FILE_ANY_ACCESS)
+        case IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS:
+            return "IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x127, METHOD_BUFFERED, FILE_ANY_ACCESS)
+    }
+
+    return "<unknown ioctl code";
+}
+
+static
+NTSTATUS
+VideoPortInitWin32kCallbacks(
+    IN PDEVICE_OBJECT DeviceObject,
+    PVIDEO_WIN32K_CALLBACKS Win32kCallbacks,
+    ULONG BufferLength)
+{
+    if (BufferLength < sizeof(VIDEO_WIN32K_CALLBACKS))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* Save the callout function globally */
+    Win32kCallout = Win32kCallbacks->Callout;
+
+    /* Return reasonable values to win32k */
+    Win32kCallbacks->bACPI = FALSE;
+    Win32kCallbacks->pPhysDeviceObject = DeviceObject;
+    Win32kCallbacks->DualviewFlags = 0;
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+VideoPortForwardDeviceControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IrpStack;
+    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+    VIDEO_REQUEST_PACKET vrp;
+
+    TRACE_(VIDEOPRT, "VideoPortForwardDeviceControl\n");
+
+    IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+    DriverExtension = DeviceExtension->DriverExtension;
+
+    /* Translate the IRP to a VRP */
+    vrp.StatusBlock = (PSTATUS_BLOCK)&Irp->IoStatus;
+    vrp.IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
+
+    INFO_(VIDEOPRT, "- IoControlCode: %x\n", vrp.IoControlCode);
+
+    /* We're assuming METHOD_BUFFERED */
+    vrp.InputBuffer = Irp->AssociatedIrp.SystemBuffer;
+    vrp.InputBufferLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
+    vrp.OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
+    vrp.OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    /* Call the Miniport Driver with the VRP */
+    DriverExtension->InitializationData.HwStartIO(&DeviceExtension->MiniPortDeviceExtension,
+                                                  &vrp);
+
+    INFO_(VIDEOPRT, "- Returned status: %x\n", Irp->IoStatus.Status);
+
+    /* Map from win32 error codes to NT status values. */
+    switch (Irp->IoStatus.Status)
+    {
+        case NO_ERROR:
+            return STATUS_SUCCESS;
+        case ERROR_NOT_ENOUGH_MEMORY:
+            return STATUS_INSUFFICIENT_RESOURCES;
+        case ERROR_MORE_DATA:
+            return STATUS_BUFFER_OVERFLOW;
+        case ERROR_INVALID_FUNCTION:
+            return STATUS_NOT_IMPLEMENTED;
+        case ERROR_INVALID_PARAMETER:
+            return STATUS_INVALID_PARAMETER;
+        case ERROR_INSUFFICIENT_BUFFER:
+            return STATUS_BUFFER_TOO_SMALL;
+        case ERROR_DEV_NOT_EXIST:
+            return STATUS_DEVICE_DOES_NOT_EXIST;
+        case ERROR_IO_PENDING:
+            return STATUS_PENDING;
+        default:
+            return STATUS_UNSUCCESSFUL;
+    }
+}
+
 /*
  * IntVideoPortDispatchDeviceControl
  *
@@ -186,76 +384,35 @@ IntVideoPortDispatchDeviceControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IrpStack;
-    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
-    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    PVIDEO_REQUEST_PACKET vrp;
     NTSTATUS Status;
+    ULONG IoControlCode;
 
     TRACE_(VIDEOPRT, "IntVideoPortDispatchDeviceControl\n");
 
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
-    DeviceExtension = DeviceObject->DeviceExtension;
-    DriverExtension = DeviceExtension->DriverExtension;
 
-    /* Translate the IRP to a VRP */
-    vrp = ExAllocatePoolWithTag(NonPagedPool,
-                                sizeof(VIDEO_REQUEST_PACKET),
-                                TAG_REQUEST_PACKET);
-    if (vrp == NULL)
+    IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
+
+    INFO_(VIDEOPRT, "- IoControlCode: %x: %s\n", IoControlCode, IoctlName(IoControlCode));
+
+    switch(IoControlCode)
     {
-        return STATUS_NO_MEMORY;
+        case IOCTL_VIDEO_INIT_WIN32K_CALLBACKS:
+            INFO_(VIDEOPRT, "- IOCTL_VIDEO_INIT_WIN32K_CALLBACKS\n");
+            Status = VideoPortInitWin32kCallbacks(DeviceObject,
+                                                  Irp->AssociatedIrp.SystemBuffer,
+                                                  IrpStack->Parameters.DeviceIoControl.InputBufferLength);
+            break;
+
+        default:
+            /* Forward to the Miniport Driver */
+            Status = VideoPortForwardDeviceControl(DeviceObject, Irp);
+            break;
     }
-
-    vrp->StatusBlock = (PSTATUS_BLOCK) & (Irp->IoStatus);
-    vrp->IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
-
-    INFO_(VIDEOPRT, "- IoControlCode: %x\n", vrp->IoControlCode);
-
-    /* We're assuming METHOD_BUFFERED */
-    vrp->InputBuffer = Irp->AssociatedIrp.SystemBuffer;
-    vrp->InputBufferLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
-    vrp->OutputBuffer = Irp->AssociatedIrp.SystemBuffer;
-    vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
-
-    /* Call the Miniport Driver with the VRP */
-    DriverExtension->InitializationData.HwStartIO(
-        &DeviceExtension->MiniPortDeviceExtension,
-        vrp);
-
-    /* Free the VRP */
-    ExFreePoolWithTag(vrp, TAG_REQUEST_PACKET);
 
     INFO_(VIDEOPRT, "- Returned status: %x\n", Irp->IoStatus.Status);
 
-    if (Irp->IoStatus.Status != STATUS_SUCCESS)
-    {
-        switch (Irp->IoStatus.Status)
-        {
-            case ERROR_NOT_ENOUGH_MEMORY:
-                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                break;
-            case ERROR_MORE_DATA:
-                Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
-                break;
-            case ERROR_INVALID_FUNCTION:
-                Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-                break;
-            case ERROR_INVALID_PARAMETER:
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-                break;
-            case ERROR_INSUFFICIENT_BUFFER:
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            case ERROR_DEV_NOT_EXIST:
-                Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
-                break;
-            case ERROR_IO_PENDING:
-                Irp->IoStatus.Status = STATUS_PENDING;
-                break;
-        }
-    }
-
-    Status = Irp->IoStatus.Status;
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
@@ -278,7 +435,6 @@ IntVideoPortDispatchDeviceControl(
  * Run Level
  *    PASSIVE_LEVEL
  */
-
 NTSTATUS
 NTAPI
 IntVideoPortDispatchWrite(

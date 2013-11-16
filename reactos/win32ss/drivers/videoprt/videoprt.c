@@ -75,114 +75,6 @@ IntVideoPortDeferredRoutine(
     ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
 }
 
-static
-NTSTATUS
-IntCreateRegistryPath(
-    IN PCUNICODE_STRING DriverRegistryPath,
-    OUT PUNICODE_STRING DeviceRegistryPath)
-{
-    static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
-    static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
-    static WCHAR ControlSet[] = L"CONTROLSET";
-    static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-    static WCHAR Insert2[] = L"\\Device0";
-    BOOLEAN Valid;
-    UNICODE_STRING AfterControlSet;
-
-    AfterControlSet = *DriverRegistryPath;
-
-    /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
-    Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
-             0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
-                            wcslen(RegistryMachineSystem)));
-    if (Valid)
-    {
-        AfterControlSet.Buffer += wcslen(RegistryMachineSystem);
-        AfterControlSet.Length -= sizeof(RegistryMachineSystem) - sizeof(UNICODE_NULL);
-
-        /* Check if path contains CURRENTCONTROLSET */
-        if (AfterControlSet.Length > sizeof(CurrentControlSet) &&
-            0 == _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, wcslen(CurrentControlSet)))
-        {
-            AfterControlSet.Buffer += wcslen(CurrentControlSet);
-            AfterControlSet.Length -= sizeof(CurrentControlSet) - sizeof(UNICODE_NULL);
-        }
-        /* Check if path contains CONTROLSETnum */
-        else if (AfterControlSet.Length > sizeof(ControlSet) &&
-                 0 == _wcsnicmp(AfterControlSet.Buffer, ControlSet, wcslen(ControlSet)))
-        {
-            AfterControlSet.Buffer += wcslen(ControlSet);
-            AfterControlSet.Length -= sizeof(ControlSet) - sizeof(UNICODE_NULL);
-            while (AfterControlSet.Length > 0 &&
-                    *AfterControlSet.Buffer >= L'0' &&
-                    *AfterControlSet.Buffer <= L'9')
-            {
-                AfterControlSet.Buffer++;
-                AfterControlSet.Length -= sizeof(WCHAR);
-            }
-
-            Valid = (AfterControlSet.Length > 0 && L'\\' == *AfterControlSet.Buffer);
-            AfterControlSet.Buffer++;
-            AfterControlSet.Length -= sizeof(WCHAR);
-            AfterControlSet.MaximumLength = AfterControlSet.Length;
-        }
-        else
-        {
-            Valid = FALSE;
-        }
-    }
-
-    if (Valid)
-    {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2);
-        DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                           DeviceRegistryPath->MaximumLength,
-                                                           TAG_VIDEO_PORT);
-        if (DeviceRegistryPath->Buffer != NULL)
-        {
-            /* Build device path */
-            wcsncpy(DeviceRegistryPath->Buffer,
-                    DriverRegistryPath->Buffer,
-                    AfterControlSet.Buffer - DriverRegistryPath->Buffer);
-            DeviceRegistryPath->Length = (AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
-            RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
-            RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
-            RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
-
-            /* Check if registry key exists */
-            Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DeviceRegistryPath->Buffer));
-
-            if (!Valid)
-                ExFreePoolWithTag(DeviceRegistryPath->Buffer, TAG_VIDEO_PORT);
-        }
-        else
-        {
-            Valid = FALSE;
-        }
-    }
-    else
-    {
-        WARN_(VIDEOPRT, "Unparsable registry path %wZ", DriverRegistryPath);
-    }
-
-    /* If path doesn't point to *ControlSet*, use DriverRegistryPath directly */
-    if (!Valid)
-    {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert2);
-        DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                           DeviceRegistryPath->MaximumLength,
-                                                           TAG_VIDEO_PORT);
-
-        if (!DeviceRegistryPath->Buffer)
-            return STATUS_NO_MEMORY;
-
-        RtlCopyUnicodeString(DeviceRegistryPath, DriverRegistryPath);
-        RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
-    }
-
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS
 NTAPI
 IntVideoPortCreateAdapterDeviceObject(
@@ -227,15 +119,15 @@ IntVideoPortCreateAdapterDeviceObject(
           DriverExtension->InitializationData.HwDeviceExtensionSize);
 
     /* Create the device object. */
-    Status = IoCreateDevice(
-                 DriverObject,
-                 sizeof(VIDEO_PORT_DEVICE_EXTENSION) +
-                 DriverExtension->InitializationData.HwDeviceExtensionSize,
-                 &DeviceName,
-                 FILE_DEVICE_VIDEO,
-                 0,
-                 TRUE,
-                 DeviceObject);
+    Size = sizeof(VIDEO_PORT_DEVICE_EXTENSION) +
+        DriverExtension->InitializationData.HwDeviceExtensionSize;
+    Status = IoCreateDevice(DriverObject,
+                            Size,
+                            &DeviceName,
+                            FILE_DEVICE_VIDEO,
+                            0,
+                            TRUE,
+                            DeviceObject);
 
     if (!NT_SUCCESS(Status))
     {
@@ -261,7 +153,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
-    /* Get the registry path associated with this driver. */
+    /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
                                    &DeviceExtension->RegistryPath);
     if (!NT_SUCCESS(Status))
@@ -276,12 +168,11 @@ IntVideoPortCreateAdapterDeviceObject(
     {
         /* Get bus number from the upper level bus driver. */
         Size = sizeof(ULONG);
-        Status = IoGetDeviceProperty(
-                     PhysicalDeviceObject,
-                     DevicePropertyBusNumber,
-                     Size,
-                     &DeviceExtension->SystemIoBusNumber,
-                     &Size);
+        Status = IoGetDeviceProperty(PhysicalDeviceObject,
+                                     DevicePropertyBusNumber,
+                                     Size,
+                                     &DeviceExtension->SystemIoBusNumber,
+                                     &Size);
         if (!NT_SUCCESS(Status))
         {
             WARN_(VIDEOPRT, "Couldn't get an information from bus driver. We will try to\n"
@@ -333,6 +224,9 @@ IntVideoPortCreateAdapterDeviceObject(
         DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(
                                                 *DeviceObject,
                                                 PhysicalDeviceObject);
+
+    IntCreateNewRegistryPath(DeviceExtension);
+    IntSetupDeviceSettingsKey(DeviceExtension);
 
     /* Remove the initailizing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -434,12 +328,7 @@ IntVideoPortFindAdapter(
             else
             {
                 ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
-                RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
-                if (DeviceExtension->NextDeviceObject)
-                    IoDetachDevice(DeviceExtension->NextDeviceObject);
-                IoDeleteDevice(DeviceObject);
-
-                return Status;
+                goto Failure;
             }
         }
     }
@@ -457,11 +346,7 @@ IntVideoPortFindAdapter(
     if (Status != NO_ERROR)
     {
         ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
-        RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
-        if (DeviceExtension->NextDeviceObject)
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
-        IoDeleteDevice(DeviceObject);
-        return Status;
+        goto Failure;
     }
 
     /*
@@ -501,27 +386,18 @@ IntVideoPortFindAdapter(
     /* Allocate interrupt for device. */
     if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, &ConfigInfo))
     {
-        RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
-        if (DeviceExtension->NextDeviceObject)
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
-        IoDeleteDevice(DeviceObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
     }
 
-    /*
-     * Allocate timer for device.
-     */
-
+    /* Allocate timer for device. */
     if (!IntVideoPortSetupTimer(DeviceObject, DriverExtension))
     {
         if (DeviceExtension->InterruptObject != NULL)
             IoDisconnectInterrupt(DeviceExtension->InterruptObject);
-        if (DeviceExtension->NextDeviceObject)
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
-        RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
-        IoDeleteDevice(DeviceObject);
         ERR_(VIDEOPRT, "IntVideoPortSetupTimer failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
     }
 
     /* Query children of the device. */
@@ -529,12 +405,19 @@ IntVideoPortFindAdapter(
 
     INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
     return STATUS_SUCCESS;
+
+Failure:
+    RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+    if (DeviceExtension->NextDeviceObject)
+        IoDetachDevice(DeviceExtension->NextDeviceObject);
+    IoDeleteDevice(DeviceObject);
+    return Status;
 }
 
 VOID
 FASTCALL
 IntAttachToCSRSS(
-    PKPROCESS *CallingProcess, 
+    PKPROCESS *CallingProcess,
     PKAPC_STATE ApcState)
 {
     *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
@@ -584,9 +467,9 @@ VideoPortInitialize(
         return STATUS_REVISION_MISMATCH;
     }
 
-    if (HwInitializationData->HwFindAdapter == NULL ||
-            HwInitializationData->HwInitialize == NULL ||
-            HwInitializationData->HwStartIO == NULL)
+    if ((HwInitializationData->HwFindAdapter == NULL) ||
+        (HwInitializationData->HwInitialize == NULL) ||
+        (HwInitializationData->HwStartIO == NULL))
     {
         ERR_(VIDEOPRT, "Invalid HwInitializationData\n");
         return STATUS_INVALID_PARAMETER;
@@ -628,10 +511,10 @@ VideoPortInitialize(
 
     /* Determine type of the miniport driver */
     if ((HwInitializationData->HwInitDataSize >=
-            FIELD_OFFSET(VIDEO_HW_INITIALIZATION_DATA, HwQueryInterface))
-            && HwInitializationData->HwSetPowerState
-            && HwInitializationData->HwGetPowerState
-            && HwInitializationData->HwGetVideoChildDescriptor)
+            FIELD_OFFSET(VIDEO_HW_INITIALIZATION_DATA, HwQueryInterface)) &&
+        (HwInitializationData->HwSetPowerState != NULL) &&
+        (HwInitializationData->HwGetPowerState != NULL) &&
+        (HwInitializationData->HwGetVideoChildDescriptor != NULL))
     {
         INFO_(VIDEOPRT, "The miniport is a PnP miniport driver\n");
         PnpDriver = TRUE;
@@ -658,12 +541,10 @@ VideoPortInitialize(
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
     if (DriverExtension == NULL)
     {
-        Status = IoAllocateDriverObjectExtension(
-                     DriverObject,
-                     DriverObject,
-                     sizeof(VIDEO_PORT_DRIVER_EXTENSION),
-                     (PVOID *)&DriverExtension);
-
+        Status = IoAllocateDriverObjectExtension(DriverObject,
+                                                 DriverObject,
+                                                 sizeof(VIDEO_PORT_DRIVER_EXTENSION),
+                                                 (PVOID *)&DriverExtension);
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "IoAllocateDriverObjectExtension failed 0x%x\n", Status);
@@ -699,9 +580,7 @@ VideoPortInitialize(
         }
     }
 
-    /*
-     * Copy the correct miniport initialization data to the device extension.
-     */
+    /* Copy the correct miniport initialization data to the device extension. */
     RtlCopyMemory(&DriverExtension->InitializationData,
                   HwInitializationData,
                   HwInitializationData->HwInitDataSize);
@@ -728,6 +607,7 @@ VideoPortInitialize(
             /* power management */
             DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
         }
+
         Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                        DriverExtension,
                                                        NULL,

@@ -30,6 +30,7 @@
 #include <ndk/inbvfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
 
 #define __BROKEN__
 #include <miniport.h>
@@ -45,6 +46,8 @@
 #define TAG_VIDEO_PORT  'PDIV'
 #define TAG_VIDEO_PORT_BUFFER  '\0mpV'
 #define TAG_REQUEST_PACKET 'qRpV'
+
+#define GUID_STRING_LENGTH 38 * sizeof(WCHAR)
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
@@ -93,6 +96,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    PDEVICE_OBJECT FunctionalDeviceObject;
    PDEVICE_OBJECT NextDeviceObject;
    UNICODE_STRING RegistryPath;
+   UNICODE_STRING NewRegistryPath;
    PKINTERRUPT InterruptObject;
    KSPIN_LOCK InterruptSpinLock;
    PCM_RESOURCE_LIST AllocatedResources;
@@ -280,6 +284,10 @@ IntVideoPortGetProcAddress(
 
 /* int10.c */
 
+NTSTATUS
+NTAPI
+IntInitializeVideoAddressSpace(VOID);
+
 VP_STATUS NTAPI
 IntInt10AllocateBuffer(
    IN PVOID Context,
@@ -313,5 +321,37 @@ VP_STATUS NTAPI
 IntInt10CallBios(
    IN PVOID Context,
    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments);
+
+/* registry.c */
+
+NTSTATUS
+NTAPI
+IntCopyRegistryKey(
+    _In_ HANDLE SourceKeyHandle,
+    _In_ HANDLE DestKeyHandle);
+
+NTSTATUS
+NTAPI
+IntCopyRegistryValue(
+    HANDLE SourceKeyHandle,
+    HANDLE DestKeyHandle,
+    PWSTR ValueName);
+
+NTSTATUS
+NTAPI
+IntSetupDeviceSettingsKey(
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+NTAPI
+IntCreateNewRegistryPath(
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+NTAPI
+IntCreateRegistryPath(
+    IN PCUNICODE_STRING DriverRegistryPath,
+    OUT PUNICODE_STRING DeviceRegistryPath);
+
 
 #endif /* VIDEOPRT_H */

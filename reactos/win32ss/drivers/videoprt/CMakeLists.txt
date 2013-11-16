@@ -15,6 +15,7 @@ list(APPEND SOURCE
     funclist.c
     int10.c
     interrupt.c
+    registry.c
     resource.c
     services.c
     spinlock.c
