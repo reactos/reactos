@@ -16,7 +16,12 @@
 #include <conio.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <wincon.h>
+#include <winnls.h>
+#include <winuser.h>
 
 #include <debug.h>
 

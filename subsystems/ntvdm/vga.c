@@ -132,17 +132,17 @@ static inline INT VgaGetAddressSize(VOID)
     if (VgaCrtcRegisters[VGA_CRTC_UNDERLINE_REG] & VGA_CRTC_UNDERLINE_DWORD)
     {
         /* Double-word addressing */
-        return 4;
+        return 4; // sizeof(DWORD)
     }
     
     if (VgaCrtcRegisters[VGA_CRTC_MODE_CONTROL_REG] & VGA_CRTC_MODE_CONTROL_BYTE)
     {
         /* Byte addressing */
-        return 1;
+        return 1; // sizeof(BYTE)
     }
 
     /* Word addressing */
-    return 2;
+    return 2; // sizeof(WORD)
 }
 
 static inline DWORD VgaTranslateReadAddress(DWORD Address)
@@ -265,8 +265,8 @@ static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
     /* Check if this is the first time the rectangle is updated */
     if (!NeedsUpdate)
     {
-        UpdateRectangle.Left = UpdateRectangle.Top = SHRT_MAX;
-        UpdateRectangle.Right = UpdateRectangle.Bottom = SHRT_MIN;
+        UpdateRectangle.Left = UpdateRectangle.Top = MAXSHORT;
+        UpdateRectangle.Right = UpdateRectangle.Bottom = MINSHORT;
     }
 
     /* Expand the rectangle to include the point */
