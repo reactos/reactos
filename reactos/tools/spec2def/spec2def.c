@@ -427,8 +427,8 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
     /* Check if this is a forwarded export */
     if (pexp->strTarget.buf)
     {
-        DbgPrint("Got redirect '%.*s'\n", pexp->strTarget.len, pexp->strTarget.buf);
         int fIsExternal = !!ScanToken(pexp->strTarget.buf, '.');
+        DbgPrint("Got redirect '%.*s'\n", pexp->strTarget.len, pexp->strTarget.buf);
 
         /* print the target name, don't decorate if it is external */
         fprintf(fileDest, "=");
