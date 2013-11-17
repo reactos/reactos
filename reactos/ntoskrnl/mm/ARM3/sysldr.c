@@ -557,8 +557,10 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
 
     /* Insert or remove from the list */
-    Insert ? InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks) :
-             RemoveEntryList(&LdrEntry->InLoadOrderLinks);
+    if (Insert)
+        InsertTailList(&PsLoadedModuleList, &LdrEntry->InLoadOrderLinks);
+    else
+        RemoveEntryList(&LdrEntry->InLoadOrderLinks);
 
     /* Release locks */
     KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
