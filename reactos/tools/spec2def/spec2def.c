@@ -827,8 +827,7 @@ void usage(void)
            "  -s=<file>   generates a stub file\n"
            "  --ms        msvc compatibility\n"
            "  -n=<name>   name of the dll\n"
-           "  --kill-at   removes @xx decorations from exports\n"
-           "  -r          removes redirections from def file\n"
+           "  --implib    generate a def file for an import library\n"
            "  -a=<arch>   Set architecture to <arch>. (i386, x86_64, arm)\n");
 }
 
