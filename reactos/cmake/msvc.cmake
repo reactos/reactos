@@ -44,11 +44,12 @@ add_compile_flags("/wd4290")
 # - TODO: C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
+# - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
 # - TODO: C4133: incompatible types
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
-add_compile_flags("/we4022 /we4047 /we4098 /we4129 /we4229 /we4700")
+add_compile_flags("/we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700")
 
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
