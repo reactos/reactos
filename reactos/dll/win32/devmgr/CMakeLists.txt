@@ -6,6 +6,7 @@ list(APPEND SOURCE
     advprop.c
     devprblm.c
     hwpage.c
+    hwresource.c
     misc.c
     stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr_stubs.c

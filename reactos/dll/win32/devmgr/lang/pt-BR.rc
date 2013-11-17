@@ -27,6 +27,12 @@ BEGIN
     IDS_NOTAVAILABLE "Não disponível"
     IDS_NOTDIGITALLYSIGNED "Sem assinatura digital"
     IDS_NODRIVERS "Nenhum arquivo de driver é necessário ou foi carregado para este dispositivo."
+    IDS_RESOURCE_COLUMN "Resource type"
+    IDS_SETTING_COLUMN "Setting"
+    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_INTERRUPT "IRQ"
+    IDS_RESOURCE_DMA "DMA"
+    IDS_RESOURCE_PORT "E/A range"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -219,6 +225,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
 END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218

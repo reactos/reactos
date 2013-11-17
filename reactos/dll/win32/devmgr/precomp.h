@@ -19,6 +19,80 @@ extern HINSTANCE hDllInstance;
 
 ULONG DbgPrint(PCCH Format,...);
 
+typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
+typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
+typedef BOOL (WINAPI *PDESTROYPROPERTYSHEETPAGE)(HPROPSHEETPAGE);
+
+typedef struct _DEVADVPROP_INFO
+{
+    HWND hWndGeneralPage;
+    HWND hWndParent;
+    WNDPROC ParentOldWndProc;
+    HICON hDevIcon;
+
+    HDEVINFO DeviceInfoSet;
+    SP_DEVINFO_DATA DeviceInfoData;
+    HDEVINFO CurrentDeviceInfoSet;
+    SP_DEVINFO_DATA CurrentDeviceInfoData;
+    DEVINST ParentDevInst;
+    HMACHINE hMachine;
+    LPCWSTR lpMachineName;
+
+    HINSTANCE hComCtl32;
+    PCREATEPROPERTYSHEETPAGEW pCreatePropertySheetPageW;
+    PDESTROYPROPERTYSHEETPAGE pDestroyPropertySheetPage;
+
+    DWORD PropertySheetType;
+    DWORD nDevPropSheets;
+    HPROPSHEETPAGE *DevPropSheets;
+
+    union
+    {
+        UINT Flags;
+        struct
+        {
+            UINT Extended : 1;
+            UINT FreeDevPropSheets : 1;
+            UINT CanDisable : 1;
+            UINT DeviceStarted : 1;
+            UINT DeviceUsageChanged : 1;
+            UINT CloseDevInst : 1;
+            UINT IsAdmin : 1;
+            UINT DoDefaultDevAction : 1;
+            UINT PageInitialized : 1;
+            UINT ShowRemotePages : 1;
+            UINT HasDriverPage : 1;
+            UINT HasResourcePage : 1;
+            UINT HasPowerPage : 1;
+        };
+    };
+
+    WCHAR szDevName[255];
+    WCHAR szTemp[255];
+    WCHAR szDeviceID[1];
+    /* struct may be dynamically expanded here! */
+} DEVADVPROP_INFO, *PDEVADVPROP_INFO;
+
+
+typedef struct _ENUMDRIVERFILES_CONTEXT
+{
+    HWND hDriversListView;
+    UINT nCount;
+} ENUMDRIVERFILES_CONTEXT, *PENUMDRIVERFILES_CONTEXT;
+
+#define PM_INITIALIZE (WM_APP + 0x101)
+
+
+
+/* HWRESOURCE.C */
+
+INT_PTR
+CALLBACK
+ResourcesProcDriverDlgProc(IN HWND hwndDlg,
+                     IN UINT uMsg,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam);
+
 /* ADVPROP.C */
 
 INT_PTR
