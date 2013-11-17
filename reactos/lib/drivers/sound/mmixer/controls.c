@@ -513,8 +513,12 @@ MMixerCountMixerControls(
         /* get next nodes upstream */
         MMixerGetNextNodesFromNodeIndex(MixerContext, Topology, NodeIndex, bUpStream, &NodesCount, Nodes);
 
-        /* assume there is a node connected */
-        ASSERT(NodesCount != 0);
+        if (NodesCount != 1)
+        {
+            DPRINT("PinId %lu bInputMixer %lu bUpStream %lu NodeIndex %lu is not connected", PinId, bInputMixer, bUpStream, NodeIndex);
+            break;
+        }
+
         ASSERT(NodesCount == 1);
 
         /* use first index */
