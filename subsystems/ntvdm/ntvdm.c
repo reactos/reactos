@@ -70,15 +70,14 @@ INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
-    DWORD CurrentTickCount;
-    DWORD Cycles = 0;
-    DWORD LastCyclePrintout = GetTickCount();
-    DWORD LastVerticalRefresh = GetTickCount();
-    DWORD LastClockUpdate = GetTickCount();
+    LARGE_INTEGER StartPerfCount;
     LARGE_INTEGER Frequency, LastTimerTick, LastRtcTick, Counter;
     LONGLONG TimerTicks;
-    LARGE_INTEGER StartPerfCount;
-    DWORD StartTickCount;
+    DWORD StartTickCount, CurrentTickCount;
+    DWORD LastClockUpdate;
+    DWORD LastVerticalRefresh;
+    DWORD LastCyclePrintout;
+    DWORD Cycles = 0;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
@@ -109,7 +108,7 @@ INT wmain(INT argc, WCHAR *argv[])
         wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
         goto Cleanup;
     }
-    
+
     /* Initialize the performance counter (needed for hardware timers) */
     if (!QueryPerformanceFrequency(&Frequency))
     {
@@ -151,7 +150,10 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Find the starting performance and tick count */
     StartTickCount = GetTickCount();
     QueryPerformanceCounter(&StartPerfCount);
- 
+
+    /* Set the different last counts to the starting count */
+    LastClockUpdate = LastVerticalRefresh = LastCyclePrintout = StartTickCount;
+
     /* Set the last timer ticks to the current time */
     LastTimerTick = LastRtcTick = StartPerfCount;
 
@@ -163,7 +165,7 @@ INT wmain(INT argc, WCHAR *argv[])
 
         /* Get the current number of ticks */
         CurrentTickCount = GetTickCount();
- 
+
         if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
         {
             /* Calculate the approximate performance counter value instead */
@@ -176,7 +178,7 @@ INT wmain(INT argc, WCHAR *argv[])
             /* Get the current performance counter value */
             QueryPerformanceCounter(&Counter);
         }
- 
+
         /* Get the number of PIT ticks that have passed */
         TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
                      * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
