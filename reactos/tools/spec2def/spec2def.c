@@ -359,7 +359,7 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
             /* Print the prefix, but skip it for (GCC && stdcall) */
             if (gbMSComp || (pexp->nCallingConvention != CC_STDCALL))
             {
-                fprintf(fileDest, "%c%", pexp->nCallingConvention == CC_FASTCALL ? '@' : '_');
+                fprintf(fileDest, "%c", pexp->nCallingConvention == CC_FASTCALL ? '@' : '_');
             }
 
             /* Print the name with trailing decoration */
