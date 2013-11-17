@@ -218,7 +218,7 @@ LdrFindResource_U(PVOID BaseAddress,
     {
         if (ResourceInfo)
         {
-            DPRINT1( "module %p type %lx name %lx lang %04lx level %lu\n",
+            DPRINT( "module %p type %lx name %lx lang %04lx level %lu\n",
                      BaseAddress, ResourceInfo->Type, 
                      Level > 1 ? ResourceInfo->Name : 0,
                      Level > 2 ? ResourceInfo->Language : 0, Level );
