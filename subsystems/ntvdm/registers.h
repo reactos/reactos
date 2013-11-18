@@ -11,8 +11,6 @@
 
 /* INCLUDES *******************************************************************/
 
-ULONG EmulatorGetRegister(ULONG Register);
-VOID EmulatorSetRegister(ULONG Register, ULONG Value);
 BOOLEAN EmulatorGetFlag(ULONG Flag);
 VOID EmulatorSetFlag(ULONG Flag);
 VOID EmulatorClearFlag(ULONG Flag);
