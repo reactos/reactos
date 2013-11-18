@@ -661,14 +661,16 @@ USHORT
 CDECL
 getMSW(VOID)
 {
-    return 0; // UNIMPLEMENTED
+    return LOWORD(EmulatorContext.ControlRegisters[FAST486_REG_CR0]);
 }
 
 VOID
 CDECL
 setMSW(USHORT Value)
 {
-    // UNIMPLEMENTED
+    /* Set the lowest word (8 bits) */
+    EmulatorContext.ControlRegisters[FAST486_REG_CR0] &= 0xFFFF0000;
+    EmulatorContext.ControlRegisters[FAST486_REG_CR0] |= Value & 0xFFFF;
 }
 
 /* EOF */

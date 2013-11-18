@@ -1803,7 +1803,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
         /* SMSW */
         case 4:
         {
-            /* Store the lower 16 bits of CR0 */
+            /* Store the lower 16 bits (Machine Status Word) of CR0 */
             return Fast486WriteModrmWordOperands(State,
                                                  &ModRegRm,
                                                  FALSE,
@@ -1813,7 +1813,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
         /* LMSW */
         case 6:
         {
-            USHORT MasterStatusWord, Dummy;
+            USHORT MachineStatusWord, Dummy;
 
             /* This is a privileged instruction */
             if (Fast486GetCurrentPrivLevel(State) != 0)
@@ -1822,8 +1822,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
                 return FALSE;
             }
 
-            /* Read the new master status word */
-            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &MasterStatusWord))
+            /* Read the new Machine Status Word */
+            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &MachineStatusWord))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -1831,7 +1831,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
 
             /* This instruction cannot be used to return to real mode */
             if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
-                && !(MasterStatusWord & FAST486_CR0_PE))
+                && !(MachineStatusWord & FAST486_CR0_PE))
             {
                 Fast486Exception(State, FAST486_EXCEPTION_GP);
                 return FALSE;
@@ -1839,7 +1839,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
 
             /* Set the lowest 4 bits */
             State->ControlRegisters[FAST486_REG_CR0] &= 0xFFFFFFF0;
-            State->ControlRegisters[FAST486_REG_CR0] |= MasterStatusWord & 0x0F;
+            State->ControlRegisters[FAST486_REG_CR0] |= MachineStatusWord & 0x0F;
 
             return TRUE;
         }
