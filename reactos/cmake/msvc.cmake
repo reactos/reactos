@@ -51,6 +51,10 @@ add_compile_flags("/wd4290")
 # - C4700: uninitialized variable usage
 add_compile_flags("/we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700")
 
+# Enable warnings above the default level, but don't treat them as errors:
+# - C4115: named type definition in parentheses
+add_compile_flags("/w14115")
+
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

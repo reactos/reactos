@@ -16,6 +16,12 @@
 #define __typeof_wchar unsigned short
 #endif
 
+struct jpeg_decompress_struct;
+struct jpeg_compress_struct;
+struct png_struct_def;
+struct png_color_struct;
+struct png_color_16_struct;
+
 typedef struct jpeg_error_mgr * (__cdecl typeof(jpeg_std_error))(struct jpeg_error_mgr *);
 typedef void (__cdecl typeof(jpeg_CreateDecompress))(struct jpeg_decompress_struct *, int, __typeof_size);
 typedef int (__cdecl typeof(jpeg_read_header))(struct jpeg_decompress_struct *, int);

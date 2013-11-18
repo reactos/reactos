@@ -4,13 +4,18 @@
 
 #define typeof(X_) __typeof_ ## X_
 
-struct ITextHost;
-struct _RECT;
-struct _CHARFORMATW;
-struct _PARAFORMAT;
-struct _POINT;
-struct _SIZEL;
 struct HDC__;
+struct ITextHost;
+struct tagRECT;
+struct _RECTL;
+struct _charformatw;
+struct _paraformat;
+struct tagPOINT;
+enum _TXTBACKSTYLE;
+struct tagSIZE;
+struct ITextServices;
+struct tagDVTARGETDEVICE;
+struct IDropTarget;
 
 #define WINAPI __stdcall
 #define HRESULT int
