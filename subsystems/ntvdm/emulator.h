@@ -59,24 +59,6 @@ enum
     EMULATOR_EXCEPTION_PAGE_FAULT
 };
 
-enum
-{
-    EMULATOR_REG_AX,
-    EMULATOR_REG_CX,
-    EMULATOR_REG_DX,
-    EMULATOR_REG_BX,
-    EMULATOR_REG_SP,
-    EMULATOR_REG_BP,
-    EMULATOR_REG_SI,
-    EMULATOR_REG_DI,
-    EMULATOR_REG_ES,
-    EMULATOR_REG_CS,
-    EMULATOR_REG_SS,
-    EMULATOR_REG_DS,
-    EMULATOR_REG_FS,
-    EMULATOR_REG_GS
-};
-
 extern FAST486_STATE EmulatorContext;
 
 /* FUNCTIONS ******************************************************************/
@@ -121,16 +103,9 @@ UCHAR WINAPI EmulatorIntAcknowledge
 );
 
 BOOLEAN EmulatorInitialize(VOID);
-VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
 VOID EmulatorInterruptSignal(VOID);
-ULONG EmulatorGetRegister(ULONG Register);
-ULONG EmulatorGetProgramCounter(VOID);
-VOID EmulatorSetRegister(ULONG Register, ULONG Value);
-BOOLEAN EmulatorGetFlag(ULONG Flag);
-VOID EmulatorSetFlag(ULONG Flag);
-VOID EmulatorClearFlag(ULONG Flag);
 VOID EmulatorStep(VOID);
 VOID EmulatorCleanup(VOID);
 VOID EmulatorSetA20(BOOLEAN Enabled);

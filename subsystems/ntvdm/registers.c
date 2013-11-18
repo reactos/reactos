@@ -12,118 +12,184 @@
 
 #include "emulator.h"
 
+// TODO: Should be moved to fast486.h
+enum
+{
+    EMULATOR_REG_EAX,
+    EMULATOR_REG_ECX,
+    EMULATOR_REG_EDX,
+    EMULATOR_REG_EBX,
+    EMULATOR_REG_ESP,
+    EMULATOR_REG_EBP,
+    EMULATOR_REG_ESI,
+    EMULATOR_REG_EDI,
+
+    EMULATOR_REG_ES,
+    EMULATOR_REG_CS,
+    EMULATOR_REG_SS,
+    EMULATOR_REG_DS,
+    EMULATOR_REG_FS,
+    EMULATOR_REG_GS
+};
+
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+ULONG EmulatorGetRegister(ULONG Register)
+{
+    if (Register < EMULATOR_REG_ES)
+    {
+        return EmulatorContext.GeneralRegs[Register].Long;
+    }
+    else
+    {
+        return EmulatorContext.SegmentRegs[Register - EMULATOR_REG_ES].Selector;
+    }
+}
+
+VOID EmulatorSetRegister(ULONG Register, ULONG Value)
+{
+    if (Register < EMULATOR_REG_ES)
+    {
+        EmulatorContext.GeneralRegs[Register].Long = Value;
+    }
+    else
+    {
+        Fast486SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
+    }
+}
+
+BOOLEAN EmulatorGetFlag(ULONG Flag)
+{
+    return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
+}
+
+VOID EmulatorSetFlag(ULONG Flag)
+{
+    EmulatorContext.Flags.Long |= Flag;
+}
+
+VOID EmulatorClearFlag(ULONG Flag)
+{
+    EmulatorContext.Flags.Long &= ~Flag;
+}
+
+VOID EmulatorSetStack(WORD Segment, DWORD Offset)
+{
+    Fast486SetStack(&EmulatorContext, Segment, Offset);
+}
+
+
 
 ULONG
 CDECL
 getEAX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].Long;
 }
 
 VOID
 CDECL
 setEAX(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].Long = Value;
 }
 
 USHORT
 CDECL
 getAX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].LowWord;
 }
 
 VOID
 CDECL
 setAX(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].LowWord = Value;
 }
 
 UCHAR
 CDECL
 getAH(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].HighByte;
 }
 
 VOID
 CDECL
 setAH(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].HighByte = Value;
 }
 
 UCHAR
 CDECL
 getAL(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].LowByte;
 }
 
 VOID
 CDECL
 setAL(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EAX].LowByte = Value;
 }
 
 ULONG
 CDECL
 getEBX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].Long;
 }
 
 VOID
 CDECL
 setEBX(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].Long = Value;
 }
 
 USHORT
 CDECL
 getBX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].LowWord;
 }
 
 VOID
 CDECL
 setBX(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].LowWord = Value;
 }
 
 UCHAR
 CDECL
 getBH(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].HighByte;
 }
 
 VOID
 CDECL
 setBH(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].HighByte = Value;
 }
 
 UCHAR
 CDECL
 getBL(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].LowByte;
 }
 
 VOID
 CDECL
 setBL(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBX].LowByte = Value;
 }
 
 
@@ -132,56 +198,56 @@ ULONG
 CDECL
 getECX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].Long;
 }
 
 VOID
 CDECL
 setECX(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].Long = Value;
 }
 
 USHORT
 CDECL
 getCX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].LowWord;
 }
 
 VOID
 CDECL
 setCX(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].LowWord = Value;
 }
 
 UCHAR
 CDECL
 getCH(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].HighByte;
 }
 
 VOID
 CDECL
 setCH(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].HighByte = Value;
 }
 
 UCHAR
 CDECL
 getCL(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].LowByte;
 }
 
 VOID
 CDECL
 setCL(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ECX].LowByte = Value;
 }
 
 
@@ -190,56 +256,56 @@ ULONG
 CDECL
 getEDX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].Long;
 }
 
 VOID
 CDECL
 setEDX(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].Long = Value;
 }
 
 USHORT
 CDECL
 getDX(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].LowWord;
 }
 
 VOID
 CDECL
 setDX(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].LowWord = Value;
 }
 
 UCHAR
 CDECL
 getDH(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].HighByte;
 }
 
 VOID
 CDECL
 setDH(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].HighByte = Value;
 }
 
 UCHAR
 CDECL
 getDL(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].LowByte;
 }
 
 VOID
 CDECL
 setDL(UCHAR Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDX].LowByte = Value;
 }
 
 
@@ -248,7 +314,7 @@ ULONG
 CDECL
 getESP(VOID)
 {
-    return EmulatorGetRegister(EMULATOR_REG_SP);
+    return EmulatorGetRegister(EMULATOR_REG_ESP);
 }
 
 VOID
@@ -262,7 +328,7 @@ USHORT
 CDECL
 getSP(VOID)
 {
-    return LOWORD(EmulatorGetRegister(EMULATOR_REG_SP));
+    return LOWORD(EmulatorGetRegister(EMULATOR_REG_ESP));
 }
 
 VOID
@@ -278,28 +344,28 @@ ULONG
 CDECL
 getEBP(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BP].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBP].Long;
 }
 
 VOID
 CDECL
 setEBP(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BP].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBP].Long = Value;
 }
 
 USHORT
 CDECL
 getBP(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_BP].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EBP].LowWord;
 }
 
 VOID
 CDECL
 setBP(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_BP].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EBP].LowWord = Value;
 }
 
 
@@ -308,28 +374,28 @@ ULONG
 CDECL
 getESI(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_SI].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ESI].Long;
 }
 
 VOID
 CDECL
 setESI(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_SI].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ESI].Long = Value;
 }
 
 USHORT
 CDECL
 getSI(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_SI].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_ESI].LowWord;
 }
 
 VOID
 CDECL
 setSI(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_SI].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_ESI].LowWord = Value;
 }
 
 
@@ -338,28 +404,28 @@ ULONG
 CDECL
 getEDI(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DI].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDI].Long;
 }
 
 VOID
 CDECL
 setEDI(ULONG Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DI].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDI].Long = Value;
 }
 
 USHORT
 CDECL
 getDI(VOID)
 {
-    return EmulatorContext.GeneralRegs[EMULATOR_REG_DI].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_EDI].LowWord;
 }
 
 VOID
 CDECL
 setDI(USHORT Value)
 {
-    EmulatorContext.GeneralRegs[EMULATOR_REG_DI].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_EDI].LowWord = Value;
 }
 
 
@@ -368,7 +434,7 @@ ULONG
 CDECL
 getEIP(VOID)
 {
-    return EmulatorGetProgramCounter();
+    return EmulatorContext.InstPtr.Long;
 }
 
 VOID
@@ -382,7 +448,7 @@ USHORT
 CDECL
 getIP(VOID)
 {
-    return LOWORD(EmulatorGetProgramCounter());
+    return EmulatorContext.InstPtr.LowWord;
 }
 
 VOID
@@ -614,6 +680,22 @@ setOF(ULONG Flag)
         EmulatorSetFlag(EMULATOR_FLAG_OF);
     else
         EmulatorClearFlag(EMULATOR_FLAG_OF);
+}
+
+
+
+ULONG
+CDECL
+getEFLAGS(VOID)
+{
+    return EmulatorContext.Flags.Long;
+}
+
+VOID
+CDECL
+setEFLAGS(ULONG Flags)
+{
+    EmulatorContext.Flags.Long = Flags;
 }
 
 

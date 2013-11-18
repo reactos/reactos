@@ -14,6 +14,7 @@
 #include "cmos.h"
 #include "bios.h"
 #include "bop.h"
+#include "registers.h"
 #include "dos.h"
 #include "speaker.h"
 #include "vga.h"
@@ -311,11 +312,6 @@ VOID EmulatorCleanup(VOID)
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
 
-VOID EmulatorSetStack(WORD Segment, DWORD Offset)
-{
-    Fast486SetStack(&EmulatorContext, Segment, Offset);
-}
-
 // FIXME: This function assumes 16-bit mode!!!
 VOID EmulatorExecute(WORD Segment, WORD Offset)
 {
@@ -333,50 +329,6 @@ VOID EmulatorInterruptSignal(VOID)
 {
     /* Call the Fast486 API */
     Fast486InterruptSignal(&EmulatorContext);
-}
-
-ULONG EmulatorGetRegister(ULONG Register)
-{
-    if (Register < EMULATOR_REG_ES)
-    {
-        return EmulatorContext.GeneralRegs[Register].Long;
-    }
-    else
-    {
-        return EmulatorContext.SegmentRegs[Register - EMULATOR_REG_ES].Selector;
-    }
-}
-
-VOID EmulatorSetRegister(ULONG Register, ULONG Value)
-{
-    if (Register < EMULATOR_REG_ES)
-    {
-        EmulatorContext.GeneralRegs[Register].Long = Value;
-    }
-    else
-    {
-        Fast486SetSegment(&EmulatorContext, Register - EMULATOR_REG_ES, (USHORT)Value);
-    }
-}
-
-ULONG EmulatorGetProgramCounter(VOID)
-{
-    return EmulatorContext.InstPtr.Long;
-}
-
-BOOLEAN EmulatorGetFlag(ULONG Flag)
-{
-    return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
-}
-
-VOID EmulatorSetFlag(ULONG Flag)
-{
-    EmulatorContext.Flags.Long |= Flag;
-}
-
-VOID EmulatorClearFlag(ULONG Flag)
-{
-    EmulatorContext.Flags.Long &= ~Flag;
 }
 
 VOID EmulatorStep(VOID)

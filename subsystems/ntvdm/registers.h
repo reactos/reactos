@@ -11,6 +11,14 @@
 
 /* INCLUDES *******************************************************************/
 
+ULONG EmulatorGetRegister(ULONG Register);
+VOID EmulatorSetRegister(ULONG Register, ULONG Value);
+BOOLEAN EmulatorGetFlag(ULONG Flag);
+VOID EmulatorSetFlag(ULONG Flag);
+VOID EmulatorClearFlag(ULONG Flag);
+VOID EmulatorSetStack(WORD Segment, DWORD Offset);
+
+
 ULONG getEAX(VOID);
 VOID setEAX(ULONG);
 USHORT getAX(VOID);
@@ -103,6 +111,9 @@ ULONG getDF(VOID);
 VOID setDF(ULONG);
 ULONG getOF(VOID);
 VOID setOF(ULONG);
+
+ULONG getEFLAGS(VOID);
+VOID setEFLAGS(ULONG);
 
 USHORT getMSW(VOID);
 VOID setMSW(USHORT);
