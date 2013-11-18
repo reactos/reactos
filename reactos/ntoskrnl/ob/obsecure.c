@@ -62,17 +62,17 @@ ObDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
     EX_FAST_REF FastRef;
     ULONG Count;
     PSECURITY_DESCRIPTOR OldSecurityDescriptor;
-    
+
     /* Get the fast reference and capture it */
     FastRef = *(PEX_FAST_REF)SecurityDescriptor;
-    
+
     /* Don't free again later */
     *SecurityDescriptor = NULL;
-    
+
     /* Get the descriptor and reference count */
     OldSecurityDescriptor = ExGetObjectFastReference(FastRef);
     Count = ExGetCountFastReference(FastRef);
-    
+
     /* Dereference the descriptor */
     ObDereferenceSecurityDescriptor(OldSecurityDescriptor, Count + 1);
 
@@ -162,11 +162,11 @@ ObSetSecurityDescriptorInfo(IN PVOID Object,
                 OldValue = ExCompareSwapFastReference(FastRef,
                                                       CachedDescriptor,
                                                       OldDescriptor);
-                
+
                 /* Get the security descriptor */
                 SecurityDescriptor = ExGetObjectFastReference(OldValue);
                 Count = ExGetCountFastReference(OldValue);
-                
+
                 /* Make sure the swap worked */
                 if (SecurityDescriptor == OldDescriptor)
                 {
@@ -1010,7 +1010,7 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
     PAGED_CODE();
 
     /* Check if we're dealing with a kernel handle */
-    if (ObIsKernelHandle(Handle, ExGetPreviousMode()))
+    if (ObpIsKernelHandle(Handle, ExGetPreviousMode()))
     {
         /* Use the kernel table and convert the handle */
         HandleTable = ObpKernelHandleTable;

@@ -1675,14 +1675,14 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
     switch (ObjectInformationClass)
     {
         case ObjectHandleFlagInformation:
-        
+
             /* Validate the length */
             if (Length != sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
             {
                 /* Invalid length */
                 return STATUS_INFO_LENGTH_MISMATCH;
             }
-            
+
             /* Save the previous mode */
             Context.PreviousMode = ExGetPreviousMode();
 
@@ -1714,7 +1714,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
             }
 
             /* Check if this is a kernel handle */
-            if (ObIsKernelHandle(ObjectHandle, Context.PreviousMode))
+            if (ObpIsKernelHandle(ObjectHandle, Context.PreviousMode))
             {
                 /* Get the actual handle */
                 ObjectHandle = ObKernelHandleToHandle(ObjectHandle);
@@ -1752,9 +1752,9 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
             /* De-attach if we were attached, and return status */
             if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
             break;
-        
+
         case ObjectSessionInformation:
-        
+
             /* Only a system process can do this */
             PreviousMode = ExGetPreviousMode();
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
@@ -1766,8 +1766,8 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
             else
             {
                 /* Get the object directory */
-                Status = ObReferenceObjectByHandle(ObjectHandle, 
-                                                   0, 
+                Status = ObReferenceObjectByHandle(ObjectHandle,
+                                                   0,
                                                    ObDirectoryType,
                                                    PreviousMode,
                                                    (PVOID*)&Directory,
@@ -1781,7 +1781,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                 }
             }
             break;
-        
+
         default:
             /* Unsupported class */
             Status = STATUS_INVALID_INFO_CLASS;

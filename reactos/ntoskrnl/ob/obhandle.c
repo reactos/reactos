@@ -1714,7 +1714,7 @@ ObpCloseHandle(IN HANDLE Handle,
         return STATUS_INVALID_HANDLE;
 
     /* Check if we're dealing with a kernel handle */
-    if (ObIsKernelHandle(Handle, AccessMode))
+    if (ObpIsKernelHandle(Handle, AccessMode))
     {
         /* Use the kernel table and convert the handle */
         HandleTable = ObpKernelHandleTable;
@@ -2490,7 +2490,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         PassedAccessState->SecurityDescriptor =
             TempBuffer->ObjectCreateInfo.SecurityDescriptor;
     }
-    
+
     /* Validate the access mask */
     Status = ObpValidateAccessMask(PassedAccessState);
     if (!NT_SUCCESS(Status))
@@ -3197,8 +3197,52 @@ ObSetHandleAttributes(IN HANDLE Handle,
                       IN POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
                       IN KPROCESSOR_MODE PreviousMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    OBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleAttributesContext;
+    BOOLEAN Result, AttachedToSystemProcess = FALSE;
+    PHANDLE_TABLE HandleTable;
+    KAPC_STATE ApcState;
+    PAGED_CODE();
+
+    /* Check if this is a kernel handle */
+    if (ObpIsKernelHandle(Handle, PreviousMode))
+    {
+        /* Use the kernel table and convert the handle */
+        HandleTable = ObpKernelHandleTable;
+        Handle = ObKernelHandleToHandle(Handle);
+
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            /* Attach to the system process */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+            AttachedToSystemProcess = TRUE;
+        }
+    }
+    else
+    {
+        /* Get the current process' handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Initialize the handle attribute context */
+    SetHandleAttributesContext.PreviousMode = PreviousMode;
+    SetHandleAttributesContext.Information = *HandleFlags;
+
+    /* Invoke the ObpSetHandleAttributes callback */
+    Result = ExChangeHandle(HandleTable,
+                            Handle,
+                            ObpSetHandleAttributes,
+                            (ULONG_PTR)&SetHandleAttributesContext);
+
+    /* Did we attach to the system process? */
+    if (AttachedToSystemProcess)
+    {
+        /* Detach from it */
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* Return the result as an NTSTATUS value */
+    return Result ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
 }
 
 /*++
@@ -3364,13 +3408,12 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     return Status;
 }
 
-#undef ObIsKernelHandle
 BOOLEAN
 NTAPI
 ObIsKernelHandle(IN HANDLE Handle)
 {
-    /* We know we're kernel mode, so just check for the kernel handle flag */
-    return (BOOLEAN)(((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG) != 0);
+    /* Use the inlined version. We know we are in kernel mode. */
+    return ObpIsKernelHandle(Handle, KernelMode);
 }
 
 /* EOF */
