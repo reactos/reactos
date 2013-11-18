@@ -26,6 +26,7 @@ list(APPEND SOURCE
 
 add_library(d3dx9_36 SHARED ${SOURCE} version.rc)
 set_module_type(d3dx9_36 win32dll)
+add_dependencies(d3dx9_36 d3d_idl_headers)
 target_link_libraries(d3dx9_36 dxguid wine)
 add_importlibs(d3dx9_36 d3dcompiler_43 d3dxof user32 ole32 gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET d3dx9_36 DESTINATION reactos/system32 FOR all)

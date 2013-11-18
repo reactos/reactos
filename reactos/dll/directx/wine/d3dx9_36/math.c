@@ -25,6 +25,8 @@
 #define NONAMELESSUNION
 
 #include <config.h>
+#include "wine/port.h"
+
 //#include "windef.h"
 //#include "wingdi.h"
 #include "d3dx9_36_private.h"
