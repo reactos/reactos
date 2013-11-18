@@ -535,14 +535,25 @@ RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
    return (AtomTable->ExHandleTable != NULL);
 }
 
+BOOLEAN
+NTAPI
+RtlpCloseHandleCallback(
+    IN PHANDLE_TABLE_ENTRY HandleTableEntry,
+    IN HANDLE Handle,
+    IN PVOID HandleTable)
+{
+    /* Destroy and unlock the handle entry */
+    return ExDestroyHandle(HandleTable, Handle, HandleTableEntry);
+}
+
 VOID
 RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->ExHandleTable)
    {
       ExSweepHandleTable(AtomTable->ExHandleTable,
-                         NULL,
-                         NULL);
+                         RtlpCloseHandleCallback,
+                         AtomTable->ExHandleTable);
       ExDestroyHandleTable(AtomTable->ExHandleTable, NULL);
       AtomTable->ExHandleTable = NULL;
    }
