@@ -240,7 +240,7 @@ typedef struct _POWER_CHANNEL_SUMMARY
     ULONG D0Count;
     LIST_ENTRY NotifyList;
 } POWER_CHANNEL_SUMMARY, *PPOWER_CHANNEL_SUMMARY;
-    
+
 typedef struct  _DEVICE_OBJECT_POWER_EXTENSION
 {
     ULONG IdleCount;
@@ -255,6 +255,12 @@ typedef struct  _DEVICE_OBJECT_POWER_EXTENSION
     LIST_ENTRY Volume;
 } DEVICE_OBJECT_POWER_EXTENSION, *PDEVICE_OBJECT_POWER_EXTENSION;
 
+typedef struct _POP_SHUTDOWN_WAIT_ENTRY
+{
+    struct _POP_SHUTDOWN_WAIT_ENTRY *NextEntry;
+    PETHREAD Thread;
+} POP_SHUTDOWN_WAIT_ENTRY, *PPOP_SHUTDOWN_WAIT_ENTRY;
+
 //
 // Initialization routines
 //
@@ -268,6 +274,12 @@ VOID
 NTAPI
 PoInitializePrcb(
     IN PKPRCB Prcb
+);
+
+VOID
+NTAPI
+PopInitShutdownList(
+    VOID
 );
 
 //
