@@ -235,6 +235,10 @@ NTSTATUS ElfrClearELFW(
         return STATUS_INVALID_HANDLE;
     }
 
+    /* Fail, if the log file is a backup file */
+    if (lpLogHandle->Flags & LOG_HANDLE_BACKUP_FILE)
+        return STATUS_INVALID_HANDLE;
+
     return LogfClearFile(lpLogHandle->LogFile,
                          (PUNICODE_STRING)BackupFileName);
 }
