@@ -360,7 +360,7 @@ void hlsl_free (void *  );
 
 /* Begin user sect3 */
 
-#define hlsl_wrap(n) 1
+#define hlsl_wrap() 1
 #define YY_SKIP_YYWRAP
 
 typedef unsigned char YY_CHAR;
