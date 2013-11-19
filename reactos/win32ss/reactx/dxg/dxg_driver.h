@@ -783,7 +783,8 @@ DxDdDisableDirectDraw(
 DWORD
 NTAPI
 DxDdSuspendDirectDraw(
-    PVOID p1)
+    PVOID p1,
+    PVOID p2)
 {
     TRACE();
     return 0;
