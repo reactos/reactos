@@ -18,13 +18,13 @@
 PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout = NULL;
 PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch = NULL;
-extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
-extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
-extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose;
-extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose;
-extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
-extern PKWIN32_OPENMETHOD_CALLOUT ExpDesktopObjectOpen;
-extern PKWIN32_CLOSEMETHOD_CALLOUT ExpDesktopObjectClose;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectParse;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectDelete;
+extern PKWIN32_SESSION_CALLOUT ExpWindowStationObjectOkToClose;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectOkToClose;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectDelete;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectOpen;
+extern PKWIN32_SESSION_CALLOUT ExpDesktopObjectClose;
 extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
 /* PRIVATE FUNCTIONS *********************************************************/

@@ -1770,3 +1770,31 @@ ExpCheckPoolAllocation(
     PVOID P,
     POOL_TYPE PoolType,
     ULONG Tag);
+
+
+/* session.c *****************************************************************/
+
+_IRQL_requires_max_(APC_LEVEL)
+NTSTATUS
+NTAPI
+MmAttachSession(
+    _Inout_ PVOID SessionEntry,
+    _Out_ PKAPC_STATE ApcState);
+
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+NTAPI
+MmDetachSession(
+    _Inout_ PVOID SessionEntry,
+    _Out_ PKAPC_STATE ApcState);
+
+VOID
+NTAPI
+MmQuitNextSession(
+    _Inout_ PVOID SessionEntry);
+
+PVOID
+NTAPI
+MmGetSessionById(
+    _In_ ULONG SessionId);
+

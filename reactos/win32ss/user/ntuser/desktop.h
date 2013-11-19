@@ -2,6 +2,9 @@
 
 typedef struct _DESKTOP
 {
+    /* Must be the first member */
+    DWORD dwSessionId;
+
     PDESKTOPINFO pDeskInfo;
     LIST_ENTRY ListEntry;
     /* Pointer to the associated window station. */
@@ -99,17 +102,25 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                       OUT PVOID *Object);
 
-VOID APIENTRY
-IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
+NTSTATUS
+NTAPI
+IntDesktopObjectDelete(
+    _In_ PVOID Parameters);
 
-NTSTATUS NTAPI 
-IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+NTSTATUS
+NTAPI
+IntDesktopOkToClose(
+    _In_ PVOID Parameters);
 
-NTSTATUS NTAPI 
-IntDesktopObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
+NTSTATUS
+NTAPI
+IntDesktopObjectOpen(
+    _In_ PVOID Parameters);
 
-NTSTATUS NTAPI 
-IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters);
+NTSTATUS
+NTAPI
+IntDesktopObjectClose(
+    _In_ PVOID Parameters);
 
 HDC FASTCALL
 IntGetScreenDC(VOID);

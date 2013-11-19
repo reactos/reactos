@@ -138,10 +138,13 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     return STATUS_SUCCESS;
 }
 
-VOID APIENTRY
-IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
+NTSTATUS
+NTAPI
+IntDesktopObjectDelete(
+    _In_ PVOID Parameters)
 {
-   PDESKTOP pdesk = (PDESKTOP)Parameters->Object;
+    PWIN32_DELETEMETHOD_PARAMETERS DeleteParameters = Parameters;
+   PDESKTOP pdesk = (PDESKTOP)DeleteParameters->Object;
 
    TRACE("Deleting desktop object 0x%p\n", pdesk);
 
@@ -158,11 +161,15 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 
    /* Free the heap */
    IntFreeDesktopHeap(pdesk);
+   return STATUS_SUCCESS;
 }
 
-NTSTATUS NTAPI
-IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
+NTSTATUS
+NTAPI
+IntDesktopOkToClose(
+    _In_ PVOID Parameters)
 {
+    PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS OkToCloseParameters = Parameters;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if( pti == NULL)
@@ -172,8 +179,8 @@ IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
     }
 
     /* Do not allow the current desktop or the initial desktop to be closed */
-    if( Parameters->Handle == pti->ppi->hdeskStartup ||
-        Parameters->Handle == pti->hdesk)
+    if( OkToCloseParameters->Handle == pti->ppi->hdeskStartup ||
+        OkToCloseParameters->Handle == pti->hdesk)
     {
         return STATUS_ACCESS_DENIED;
     }
@@ -181,18 +188,26 @@ IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS NTAPI IntDesktopObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters)
+NTSTATUS
+NTAPI
+IntDesktopObjectOpen(
+    _In_ PVOID Parameters)
 {
-    PPROCESSINFO ppi = PsGetProcessWin32Process(Parameters->Process);
+    PWIN32_OPENMETHOD_PARAMETERS OpenParameters = Parameters;
+    PPROCESSINFO ppi = PsGetProcessWin32Process(OpenParameters->Process);
     if (ppi == NULL)
         return STATUS_SUCCESS;
 
-    return IntMapDesktopView((PDESKTOP)Parameters->Object);
+    return IntMapDesktopView((PDESKTOP)OpenParameters->Object);
 }
 
-NTSTATUS NTAPI IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters)
+NTSTATUS
+NTAPI
+IntDesktopObjectClose(
+    _In_ PVOID Parameters)
 {
-    PPROCESSINFO ppi = PsGetProcessWin32Process(Parameters->Process);
+    PWIN32_CLOSEMETHOD_PARAMETERS CloseParameters = Parameters;
+    PPROCESSINFO ppi = PsGetProcessWin32Process(CloseParameters->Process);
     if (ppi == NULL)
     {
         /* This happens when the process leaks desktop handles.
@@ -200,7 +215,7 @@ NTSTATUS NTAPI IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters)
          return STATUS_SUCCESS;
     }
 
-    return IntUnmapDesktopView((PDESKTOP)Parameters->Object);
+    return IntUnmapDesktopView((PDESKTOP)CloseParameters->Object);
 }
 
 
@@ -1341,6 +1356,7 @@ NtUserCreateDesktop(
       RETURN(NULL);
    }
 
+   pdesk->dwSessionId = PsGetCurrentProcessSessionId();
    pdesk->DesktopWindow = pWnd->head.h;
    pdesk->pDeskInfo->spwnd = pWnd;
    pWnd->fnid = FNID_DESKTOP;
@@ -1638,7 +1654,7 @@ NtUserSwitchDesktop(HDESK hdesk)
    if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
    {
       ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
-      RETURN(FALSE);  
+      RETURN(FALSE);
    }
 
    if(pdesk == gpdeskInputDesktop)

@@ -25,6 +25,9 @@ LONG MmSessionDataPages;
 PRTL_BITMAP MiSessionIdBitmap;
 volatile LONG MiSessionLeaderExists;
 
+// HACK: we support only one process. The creator is CSRSS and that lives!
+PEPROCESS Session0CreatorProcess;
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -607,6 +610,10 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     ASSERT(SessionGlobal->ProcessReferenceToSession == 0);
     SessionGlobal->ProcessReferenceToSession = 1;
 
+    // HACK: we only support 1 session and save the creator process
+    NT_ASSERT(Session0CreatorProcess == NULL);
+    Session0CreatorProcess = PsGetCurrentProcess();
+
     /* We're done */
     InterlockedIncrement(&MmSessionDataPages);
     return STATUS_SUCCESS;
@@ -699,4 +706,75 @@ MmSessionDelete(IN ULONG SessionId)
 
     /* All done */
     return STATUS_SUCCESS;
+}
+
+_IRQL_requires_max_(APC_LEVEL)
+NTSTATUS
+NTAPI
+MmAttachSession(
+    _Inout_ PVOID SessionEntry,
+    _Out_ PKAPC_STATE ApcState)
+{
+    PEPROCESS EntryProcess;
+
+    /* The parameter is the actual process! */
+    EntryProcess = SessionEntry;
+    NT_ASSERT(EntryProcess != NULL);
+
+    /* HACK: for now we only support 1 session! */
+    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 1);
+
+    /* Very simple for now: just attach to the process we have */
+    KeStackAttachProcess(&EntryProcess->Pcb, ApcState);
+    return STATUS_SUCCESS;
+}
+
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+NTAPI
+MmDetachSession(
+    _Inout_ PVOID SessionEntry,
+    _In_ PKAPC_STATE ApcState)
+{
+    PEPROCESS EntryProcess;
+
+    /* The parameter is the actual process! */
+    EntryProcess = SessionEntry;
+    NT_ASSERT(EntryProcess != NULL);
+
+    /* HACK: for now we only support 1 session! */
+    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 0);
+
+    /* Very simple for now: just detach */
+    KeUnstackDetachProcess(ApcState);
+}
+
+VOID
+NTAPI
+MmQuitNextSession(
+    _Inout_ PVOID SessionEntry)
+{
+    PEPROCESS EntryProcess;
+
+    /* The parameter is the actual process! */
+    EntryProcess = SessionEntry;
+    NT_ASSERT(EntryProcess != NULL);
+
+    /* HACK: for now we only support 1 session! */
+    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 0);
+
+    /* Get rid of the reference we got */
+    ObDereferenceObject(SessionEntry);
+}
+
+PVOID
+NTAPI
+MmGetSessionById(
+    _In_ ULONG SessionId)
+{
+    /* HACK: for now we only support 1 session! */
+    NT_ASSERT(SessionId == 0);
+
+    /* Just return the sessions creator process, which is csrss and still alive. */
+    return Session0CreatorProcess;
 }
