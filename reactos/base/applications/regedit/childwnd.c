@@ -541,8 +541,34 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             case TVN_ITEMEXPANDING:
                 return !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             case TVN_SELCHANGED:
-                UpdateAddress(((NMTREEVIEW*)lParam)->itemNew.hItem, NULL, NULL);
+            {
+                NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
+                /* Get the parent of the current item */
+                HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
+
+                UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
+
+                /*
+                 * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
+                 * and HKEY_* keys (their parent is 'My Computer' and the previous remark applies).
+                 */
+                if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
+                {
+                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
+                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
+                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
+                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
+                }
+                else
+                {
+                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_ENABLED);
+                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_ENABLED);
+                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_ENABLED);
+                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_ENABLED);
+                }
+
                 break;
+            }
             case NM_SETFOCUS:
                 g_pChildWnd->nFocusPanel = 0;
                 break;
