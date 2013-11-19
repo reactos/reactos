@@ -1035,7 +1035,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
  * copies items to this folder
  */
 HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                                    LPCITEMIDLIST * apidl)
+                                    LPCITEMIDLIST * apidl, bool bCopy)
 {
     IPersistFolder2 *ppf2 = NULL;
     WCHAR szSrcPath[MAX_PATH];
@@ -1131,7 +1131,7 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
             op.fFlags = FOF_MULTIDESTFILES;
         }
         op.hwnd = GetActiveWindow();
-        op.wFunc = FO_COPY;
+        op.wFunc = bCopy ? FO_COPY : FO_MOVE;
         op.fFlags |= FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
 
         res = SHFileOperationW(&op);

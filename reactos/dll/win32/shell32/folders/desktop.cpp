@@ -1205,7 +1205,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
     return ret;
 }
 
-HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl)
+HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, bool bCopy)
 {
     CComPtr<IPersistFolder2> ppf2;
     WCHAR szSrcPath[MAX_PATH];
@@ -1291,7 +1291,7 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
             op.fFlags = FOF_MULTIDESTFILES;
         }
         op.hwnd = GetActiveWindow();
-        op.wFunc = FO_COPY;
+        op.wFunc = bCopy ? FO_COPY : FO_MOVE;
         op.fFlags |= FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
 
         res = SHFileOperationW(&op);

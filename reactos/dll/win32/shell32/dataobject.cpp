@@ -159,7 +159,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 */
 
 /* number of supported formats */
-#define MAX_FORMATS 4
+#define MAX_FORMATS 5
 
 class IDataObjectImpl :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -169,11 +169,13 @@ private:
     LPITEMIDLIST    pidl;
     LPITEMIDLIST *    apidl;
     UINT        cidl;
+    DWORD        dropeffect;
 
     FORMATETC    pFormatEtc[MAX_FORMATS];
     UINT        cfShellIDList;
     UINT        cfFileNameA;
     UINT        cfFileNameW;
+    UINT        cfPreferredDropEffect;
 public:
     IDataObjectImpl();
     ~IDataObjectImpl();
@@ -200,9 +202,11 @@ IDataObjectImpl::IDataObjectImpl()
     pidl = NULL;
     apidl = NULL;
     cidl = 0;
+    dropeffect = 0;
     cfShellIDList = 0;
     cfFileNameA = 0;
     cfFileNameW = 0;
+    cfPreferredDropEffect = 0;
 }
 
 IDataObjectImpl::~IDataObjectImpl()
@@ -219,14 +223,17 @@ HRESULT WINAPI IDataObjectImpl::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl
     if (pidl == NULL || apidl == NULL)
         return E_OUTOFMEMORY;
     cidl = cidlx;
+    dropeffect = DROPEFFECT_COPY;
 
     cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     cfFileNameA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
     cfFileNameW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    cfPreferredDropEffect = RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECTW);
     InitFormatEtc(pFormatEtc[0], cfShellIDList, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[1], CF_HDROP, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[2], cfFileNameA, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[3], cfFileNameW, TYMED_HGLOBAL);
+    InitFormatEtc(pFormatEtc[4], cfPreferredDropEffect, TYMED_HGLOBAL);
     return S_OK;
 }
 
@@ -260,6 +267,10 @@ HRESULT WINAPI IDataObjectImpl::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pme
     {
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderFILENAMEW(pidl, apidl, cidl);
+    }
+    else if    (pformatetcIn->cfFormat == cfPreferredDropEffect)
+    {
+      pmedium->hGlobal = RenderPREFEREDDROPEFFECT(dropeffect);
     }
     else
     {
@@ -311,6 +322,19 @@ HRESULT WINAPI IDataObjectImpl::GetCanonicalFormatEtc(LPFORMATETC pformatectIn, 
 
 HRESULT WINAPI IDataObjectImpl::SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
 {
+    if (pformatetc->cfFormat == cfPreferredDropEffect)
+    {
+      const DWORD *src = (const DWORD *)GlobalLock(pmedium->hGlobal);
+      if (src != 0)
+      {
+        dropeffect = *src;
+        GlobalUnlock(pmedium->hGlobal);
+        return S_OK;
+      }
+      FIXME("Error setting data");
+      return E_FAIL;
+    }
+
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }

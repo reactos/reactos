@@ -93,7 +93,7 @@ class CFSFolder :
         virtual HRESULT WINAPI GetUniqueName(LPWSTR pwszName, UINT uLen);
         virtual HRESULT WINAPI AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut);
         virtual HRESULT WINAPI DeleteItems(UINT cidl, LPCITEMIDLIST *apidl);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl);
+        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, bool bCopy);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
