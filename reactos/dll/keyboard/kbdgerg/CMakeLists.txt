@@ -5,7 +5,7 @@ spec2def(kbdgerg.dll kbdgerg.spec)
 
 add_library(kbdgerg SHARED kbdgerg.c kbdgerg.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdgerg.def)
 
-set_entrypoint(kbdgerg 0)
+set_module_type(kbdgerg kbdlayout)
 
 add_dependencies(kbdgerg psdk)
 

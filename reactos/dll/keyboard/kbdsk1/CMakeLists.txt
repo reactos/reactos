@@ -5,7 +5,7 @@ spec2def(kbdsk1.dll kbdsk1.spec)
 
 add_library(kbdsk1 SHARED kbdsk1.c kbdsk1.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdsk1.def)
 
-set_entrypoint(kbdsk1 0)
+set_module_type(kbdsk1 kbdlayout)
 
 add_dependencies(kbdsk1 psdk)
 

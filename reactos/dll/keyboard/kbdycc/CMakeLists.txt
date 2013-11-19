@@ -5,7 +5,7 @@ spec2def(kbdycc.dll kbdycc.spec)
 
 add_library(kbdycc SHARED kbdycc.c kbdycc.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdycc.def)
 
-set_entrypoint(kbdycc 0)
+set_module_type(kbdycc kbdlayout)
 
 add_dependencies(kbdycc psdk)
 

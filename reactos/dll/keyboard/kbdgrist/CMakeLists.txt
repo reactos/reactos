@@ -5,7 +5,7 @@ spec2def(kbdgrist.dll kbdgrist.spec)
 
 add_library(kbdgrist SHARED kbdgrist.c kbdgrist.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdgrist.def)
 
-set_entrypoint(kbdgrist 0)
+set_module_type(kbdgrist kbdlayout)
 
 add_dependencies(kbdgrist psdk)
 

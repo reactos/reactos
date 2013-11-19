@@ -5,7 +5,7 @@ spec2def(kbdblr.dll kbdblr.spec)
 
 add_library(kbdblr SHARED kbdblr.c kbdblr.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdblr.def)
 
-set_entrypoint(kbdblr 0)
+set_module_type(kbdblr kbdlayout)
 
 add_dependencies(kbdblr psdk)
 

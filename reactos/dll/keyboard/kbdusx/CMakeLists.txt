@@ -5,7 +5,7 @@ spec2def(kbdusx.dll kbdusx.spec)
 
 add_library(kbdusx SHARED kbdusx.c kbdusx.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdusx.def)
 
-set_entrypoint(kbdusx 0)
+set_module_type(kbdusx kbdlayout)
 
 add_dependencies(kbdusx psdk)
 

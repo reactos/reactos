@@ -5,7 +5,7 @@ spec2def(kbdit.dll kbdit.spec)
 
 add_library(kbdit SHARED kbdit.c kbdit.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdit.def)
 
-set_entrypoint(kbdit 0)
+set_module_type(kbdit kbdlayout)
 
 add_dependencies(kbdit psdk)
 

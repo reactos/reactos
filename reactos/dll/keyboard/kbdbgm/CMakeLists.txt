@@ -5,7 +5,7 @@ spec2def(kbdbgm.dll kbdbgm.spec)
 
 add_library(kbdbgm SHARED kbdbgm.c kbdbgm.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbgm.def)
 
-set_entrypoint(kbdbgm 0)
+set_module_type(kbdbgm kbdlayout)
 
 add_dependencies(kbdbgm psdk)
 

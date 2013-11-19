@@ -5,7 +5,7 @@ spec2def(kbdgeo.dll kbdgeo.spec)
 
 add_library(kbdgeo SHARED kbdgeo.c kbdgeo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdgeo.def)
 
-set_entrypoint(kbdgeo 0)
+set_module_type(kbdgeo kbdlayout)
 
 add_dependencies(kbdgeo psdk)
 

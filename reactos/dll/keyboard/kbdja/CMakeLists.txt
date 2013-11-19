@@ -5,7 +5,7 @@ spec2def(kbdja.dll kbdja.spec)
 
 add_library(kbdja SHARED kbdja.c kbdja.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdja.def)
 
-set_entrypoint(kbdja 0)
+set_module_type(kbdja kbdlayout)
 
 add_dependencies(kbdja psdk)
 

@@ -5,7 +5,7 @@ spec2def(kbdaze.dll kbdaze.spec)
 
 add_library(kbdaze SHARED kbdaze.c kbdaze.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdaze.def)
 
-set_entrypoint(kbdaze 0)
+set_module_type(kbdaze kbdlayout)
 
 add_dependencies(kbdaze psdk)
 

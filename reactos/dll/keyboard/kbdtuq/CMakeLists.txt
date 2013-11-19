@@ -5,7 +5,7 @@ spec2def(kbdtuq.dll kbdtuq.spec)
 
 add_library(kbdtuq SHARED kbdtuq.c kbdtuq.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtuq.def)
 
-set_entrypoint(kbdtuq 0)
+set_module_type(kbdtuq kbdlayout)
 
 add_dependencies(kbdtuq psdk)
 

@@ -5,7 +5,7 @@ spec2def(kbdtuf.dll kbdtuf.spec)
 
 add_library(kbdtuf SHARED kbdtuf.c kbdtuf.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtuf.def)
 
-set_entrypoint(kbdtuf 0)
+set_module_type(kbdtuf kbdlayout)
 
 add_dependencies(kbdtuf psdk)
 

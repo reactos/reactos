@@ -5,7 +5,7 @@ spec2def(kbdlv.dll kbdlv.spec)
 
 add_library(kbdlv SHARED kbdlv.c kbdlv.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdlv.def)
 
-set_entrypoint(kbdlv 0)
+set_module_type(kbdlv kbdlayout)
 
 add_dependencies(kbdlv psdk)
 

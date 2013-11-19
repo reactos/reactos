@@ -4,7 +4,7 @@ spec2def(kbdus.dll kbdus.spec)
 
 add_library(kbdus SHARED kbdus.c kbdus.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
 
-set_entrypoint(kbdus 0)
+set_module_type(kbdus kbdlayout)
 
 add_dependencies(kbdus psdk)
 

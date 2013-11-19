@@ -5,7 +5,7 @@ spec2def(kbdir.dll kbdir.spec)
 
 add_library(kbdir SHARED kbdir.c kbdir.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdir.def)
 
-set_entrypoint(kbdir 0)
+set_module_type(kbdir kbdlayout)
 
 add_dependencies(kbdir psdk)
 

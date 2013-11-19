@@ -5,7 +5,7 @@ spec2def(kbdinmal.dll kbdinmal.spec)
 
 add_library(kbdinmal SHARED kbdinmal.c kbdinmal.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdinmal.def)
 
-set_entrypoint(kbdinmal 0)
+set_module_type(kbdinmal kbdlayout)
 
 add_dependencies(kbdinmal psdk)
 

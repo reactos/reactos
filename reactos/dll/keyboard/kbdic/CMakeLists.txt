@@ -5,7 +5,7 @@ spec2def(kbdic.dll kbdic.spec)
 
 add_library(kbdic SHARED kbdic.c kbdic.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdic.def)
 
-set_entrypoint(kbdic 0)
+set_module_type(kbdic kbdlayout)
 
 add_dependencies(kbdic psdk)
 

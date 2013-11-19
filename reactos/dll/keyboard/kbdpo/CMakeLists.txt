@@ -5,7 +5,7 @@ spec2def(kbdpo.dll kbdpo.spec)
 
 add_library(kbdpo SHARED kbdpo.c kbdpo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdpo.def)
 
-set_entrypoint(kbdpo 0)
+set_module_type(kbdpo kbdlayout)
 
 add_dependencies(kbdpo psdk)
 

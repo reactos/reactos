@@ -5,7 +5,7 @@ spec2def(kbdfc.dll kbdfc.spec)
 
 add_library(kbdfc SHARED kbdfc.c kbdfc.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdfc.def)
 
-set_entrypoint(kbdfc 0)
+set_module_type(kbdfc kbdlayout)
 
 add_dependencies(kbdfc psdk)
 

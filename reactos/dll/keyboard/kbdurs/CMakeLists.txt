@@ -5,7 +5,7 @@ spec2def(kbdurs.dll kbdurs.spec)
 
 add_library(kbdurs SHARED kbdurs.c kbdurs.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdurs.def)
 
-set_entrypoint(kbdurs 0)
+set_module_type(kbdurs kbdlayout)
 
 add_dependencies(kbdurs psdk)
 

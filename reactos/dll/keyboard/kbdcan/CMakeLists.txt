@@ -5,7 +5,7 @@ spec2def(kbdcan.dll kbdcan.spec)
 
 add_library(kbdcan SHARED kbdcan.c kbdcan.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdcan.def)
 
-set_entrypoint(kbdcan 0)
+set_module_type(kbdcan kbdlayout)
 
 add_dependencies(kbdcan psdk)
 

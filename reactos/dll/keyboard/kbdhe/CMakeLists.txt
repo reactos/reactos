@@ -5,7 +5,7 @@ spec2def(kbdhe.dll kbdhe.spec)
 
 add_library(kbdhe SHARED kbdhe.c kbdhe.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdhe.def)
 
-set_entrypoint(kbdhe 0)
+set_module_type(kbdhe kbdlayout)
 
 add_dependencies(kbdhe psdk)
 

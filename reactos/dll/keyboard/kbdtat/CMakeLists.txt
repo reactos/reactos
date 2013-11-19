@@ -5,7 +5,7 @@ spec2def(kbdtat.dll kbdtat.spec)
 
 add_library(kbdtat SHARED kbdtat.c kbdtat.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtat.def)
 
-set_entrypoint(kbdtat 0)
+set_module_type(kbdtat kbdlayout)
 
 add_dependencies(kbdtat psdk)
 

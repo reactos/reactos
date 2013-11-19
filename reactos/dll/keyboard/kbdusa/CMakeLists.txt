@@ -5,7 +5,7 @@ spec2def(kbdusa.dll kbdusa.spec)
 
 add_library(kbdusa SHARED kbdusa.c kbdusa.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdusa.def)
 
-set_entrypoint(kbdusa 0)
+set_module_type(kbdusa kbdlayout)
 
 add_dependencies(kbdusa psdk)
 

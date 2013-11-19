@@ -3,7 +3,7 @@ spec2def(kbdpl.dll kbdpl.spec)
 
 add_library(kbdpl SHARED kbdpl.c kbdpl.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdpl.def)
 
-set_entrypoint(kbdpl 0)
+set_module_type(kbdpl kbdlayout)
 
 add_dependencies(kbdpl psdk)
 

@@ -5,7 +5,7 @@ spec2def(kbdhu.dll kbdhu.spec)
 
 add_library(kbdhu SHARED kbdhu.c kbdhu.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdhu.def)
 
-set_entrypoint(kbdhu 0)
+set_module_type(kbdhu kbdlayout)
 
 add_dependencies(kbdhu psdk)
 
