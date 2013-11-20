@@ -72,7 +72,7 @@ ExpWin32SessionCallout(
         (PsGetCurrentProcessSessionId() != Win32ObjectHeader->SessionId))
     {
         /* Get the session from the objects session Id */
-        DPRINT1("SessionId == %d\n", Win32ObjectHeader->SessionId);
+        DPRINT("SessionId == %d\n", Win32ObjectHeader->SessionId);
         SessionEntry = MmGetSessionById(Win32ObjectHeader->SessionId);
         if (SessionEntry == NULL)
         {

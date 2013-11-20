@@ -18,7 +18,7 @@
 
 #define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
 
-#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
+#define MI_SESSION_VIEW_SIZE                    (48 * _1MB)
 #define MI_SESSION_POOL_SIZE                    (16 * _1MB)
 #define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
 #define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
@@ -716,6 +716,7 @@ extern PVOID MmHighSectionBase;
 extern SIZE_T MmSystemLockPagesCount;
 extern ULONG_PTR MmSubsectionBase;
 extern LARGE_INTEGER MmCriticalSectionTimeout;
+extern LIST_ENTRY MmWorkingSetExpansionHead;
 
 BOOLEAN
 FORCEINLINE
@@ -1728,6 +1729,12 @@ VOID
 NTAPI
 MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeSessionWsSupport(
+    VOID
 );
 
 VOID

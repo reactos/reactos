@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/mm/ARM3/session.c
  * PURPOSE:         Session support routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -25,11 +26,46 @@ LONG MmSessionDataPages;
 PRTL_BITMAP MiSessionIdBitmap;
 volatile LONG MiSessionLeaderExists;
 
-// HACK: we support only one process. The creator is CSRSS and that lives!
-PEPROCESS Session0CreatorProcess;
+LIST_ENTRY MiSessionWsList;
+LIST_ENTRY MmWorkingSetExpansionHead;
+
+KSPIN_LOCK MmExpansionLock;
+PETHREAD MiExpansionLockOwner;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+FORCEINLINE
+KIRQL
+MiAcquireExpansionLock()
+{
+    KIRQL OldIrql;
+
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    KeAcquireSpinLock(&MmExpansionLock, &OldIrql);
+    ASSERT(MiExpansionLockOwner == NULL);
+    MiExpansionLockOwner = PsGetCurrentThread();
+    return OldIrql;
+}
+
+FORCEINLINE
+VOID
+MiReleaseExpansionLock(KIRQL OldIrql)
+{
+    ASSERT(MiExpansionLockOwner == PsGetCurrentThread());
+    MiExpansionLockOwner = NULL;
+    KeReleaseSpinLock(&MmExpansionLock, OldIrql);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+}
+
+VOID
+NTAPI
+MiInitializeSessionWsSupport(VOID)
+{
+    /* Initialize the list heads */
+    InitializeListHead(&MiSessionWsList);
+    InitializeListHead(&MmWorkingSetExpansionHead);
+}
 
 LCID
 NTAPI
@@ -225,9 +261,132 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
 
 VOID
 NTAPI
+MiDereferenceSessionFinal(VOID)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+    KIRQL OldIrql;
+
+    /* Get the pointer to the global session address */
+    SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+
+    /* Acquire the expansion lock */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Set delete pending flag, so that processes can no longer attach to this
+       session and the last process that detaches sets the AttachEvent */
+    ASSERT(SessionGlobal->u.Flags.DeletePending == 0);
+    SessionGlobal->u.Flags.DeletePending = 1;
+
+    /* Check if we have any attached processes */
+    if (SessionGlobal->AttachCount)
+    {
+        /* Initialize the event (it's not in use yet!) */
+        KeInitializeEvent(&SessionGlobal->AttachEvent, NotificationEvent, FALSE);
+
+        /* Release the expansion lock for the wait */
+        MiReleaseExpansionLock(OldIrql);
+
+        /* Wait for the event to be set due to the last process detach */
+        KeWaitForSingleObject(&SessionGlobal->AttachEvent, WrVirtualMemory, 0, 0, 0);
+
+        /* Reacquire the expansion lock */
+        OldIrql = MiAcquireExpansionLock();
+
+        /* Makes sure we still have the delete flag and no attached processes */
+        ASSERT(MmSessionSpace->u.Flags.DeletePending == 1);
+        ASSERT(MmSessionSpace->AttachCount == 0);
+    }
+
+    /* Check if the session is in the workingset expansion list */
+    if (SessionGlobal->Vm.WorkingSetExpansionLinks.Flink != NULL)
+    {
+        /* Remove the session from the list and zero the list entry */
+        RemoveEntryList(&SessionGlobal->Vm.WorkingSetExpansionLinks);
+        SessionGlobal->Vm.WorkingSetExpansionLinks.Flink = 0;
+    }
+
+    /* Check if the session is in the workingset list */
+    if (SessionGlobal->WsListEntry.Flink)
+    {
+        /* Remove the session from the list and zero the list entry */
+        RemoveEntryList(&SessionGlobal->WsListEntry);
+        SessionGlobal->WsListEntry.Flink = NULL;
+    }
+
+    /* Release the expansion lock */
+    MiReleaseExpansionLock(OldIrql);
+
+    /* Check for a win32k unload routine */
+    if (SessionGlobal->Win32KDriverUnload)
+    {
+        /* Call it */
+        SessionGlobal->Win32KDriverUnload(NULL);
+    }
+}
+
+
+VOID
+NTAPI
+MiDereferenceSession(VOID)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+    PEPROCESS Process;
+    ULONG ReferenceCount, SessionId;
+
+    /* Sanity checks */
+    ASSERT(PsGetCurrentProcess()->ProcessInSession ||
+           ((MmSessionSpace->u.Flags.Initialized == 0) &&
+            (PsGetCurrentProcess()->Vm.Flags.SessionLeader == 1) &&
+            (MmSessionSpace->ReferenceCount == 1)));
+
+    /* The session bit must be set */
+    SessionId = MmSessionSpace->SessionId;
+    ASSERT(RtlCheckBit(MiSessionIdBitmap, SessionId));
+
+    /* Get the current process */
+    Process = PsGetCurrentProcess();
+
+    /* Decrement the process count */
+    InterlockedDecrement(&MmSessionSpace->ResidentProcessCount);
+
+    /* Decrement the reference count and check if was the last reference */
+    ReferenceCount = InterlockedDecrement(&MmSessionSpace->ReferenceCount);
+    if (ReferenceCount == 0)
+    {
+        /* No more references left, kill the session completely */
+        MiDereferenceSessionFinal();
+    }
+
+    /* Check if tis is the session leader or the last process in the session */
+    if ((Process->Vm.Flags.SessionLeader) || (ReferenceCount == 0))
+    {
+        /* Get the global session address before we kill the session mapping */
+        SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+
+        /* Delete all session PDEs and flush the TB */
+        RtlZeroMemory(MiAddressToPde(MmSessionBase),
+                      BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
+        KeFlushEntireTb(FALSE, FALSE);
+
+        /* Is this the session leader? */
+        if (Process->Vm.Flags.SessionLeader)
+        {
+            /* Clean up the references here. */
+            ASSERT(Process->Session == NULL);
+            MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
+        }
+    }
+
+    /* Reset the current process' session flag */
+    RtlInterlockedClearBits(&Process->Flags, PSF_PROCESS_IN_SESSION_BIT);
+}
+
+VOID
+NTAPI
 MiSessionRemoveProcess(VOID)
 {
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
+    KIRQL OldIrql;
 
     /* If the process isn't already in a session, or if it's the leader... */
     if (!(CurrentProcess->Flags & PSF_PROCESS_IN_SESSION_BIT) ||
@@ -240,10 +399,17 @@ MiSessionRemoveProcess(VOID)
     /* Sanity check */
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
 
-    /* Remove the process from the list ,and dereference the session */
-    // DO NOT ENABLE THIS UNLESS YOU FIXED THE NP POOL CORRUPTION THAT IT CAUSES!!!
-    //RemoveEntryList(&CurrentProcess->SessionProcessLinks);
-    //MiDereferenceSession();
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Remove the process from the list */
+    RemoveEntryList(&CurrentProcess->SessionProcessLinks);
+
+    /* Release the lock again */
+    MiReleaseExpansionLock(OldIrql);
+
+    /* Dereference the session */
+    MiDereferenceSession();
 }
 
 VOID
@@ -251,6 +417,7 @@ NTAPI
 MiSessionAddProcess(IN PEPROCESS NewProcess)
 {
     PMM_SESSION_SPACE SessionGlobal;
+    KIRQL OldIrql;
 
     /* The current process must already be in a session */
     if (!(PsGetCurrentProcess()->Flags & PSF_PROCESS_IN_SESSION_BIT)) return;
@@ -270,9 +437,14 @@ MiSessionAddProcess(IN PEPROCESS NewProcess)
     ASSERT(NewProcess->Session == NULL);
     NewProcess->Session = SessionGlobal;
 
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
     /* Insert it into the process list */
-    // DO NOT ENABLE THIS UNLESS YOU FIXED THE NP POOL CORRUPTION THAT IT CAUSES!!!
-    //InsertTailList(&SessionGlobal->ProcessList, &NewProcess->SessionProcessLinks);
+    InsertTailList(&SessionGlobal->ProcessList, &NewProcess->SessionProcessLinks);
+
+    /* Release the lock again */
+    MiReleaseExpansionLock(OldIrql);
 
     /* Set the flag */
     PspSetProcessFlag(NewProcess, PSF_PROCESS_IN_SESSION_BIT);
@@ -389,11 +561,21 @@ MiSessionInitializeWorkingSetList(VOID)
     WorkingSetList->HashTableSize = 0;
     WorkingSetList->Wsle = MmSessionSpace->Wsle;
 
-    /* FIXME: Handle list insertions */
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Handle list insertions */
     ASSERT(SessionGlobal->WsListEntry.Flink == NULL);
     ASSERT(SessionGlobal->WsListEntry.Blink == NULL);
+    InsertTailList(&MiSessionWsList, &SessionGlobal->WsListEntry);
+
     ASSERT(SessionGlobal->Vm.WorkingSetExpansionLinks.Flink == NULL);
     ASSERT(SessionGlobal->Vm.WorkingSetExpansionLinks.Blink == NULL);
+    InsertTailList(&MmWorkingSetExpansionHead,
+                   &SessionGlobal->Vm.WorkingSetExpansionLinks);
+
+    /* Release the lock again */
+    MiReleaseExpansionLock(OldIrql);
 
     /* All done, return */
     //MmUnlockPageableImageSection(ExPageLockHandle);
@@ -610,10 +792,6 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     ASSERT(SessionGlobal->ProcessReferenceToSession == 0);
     SessionGlobal->ProcessReferenceToSession = 1;
 
-    // HACK: we only support 1 session and save the creator process
-    NT_ASSERT(Session0CreatorProcess == NULL);
-    Session0CreatorProcess = PsGetCurrentProcess();
-
     /* We're done */
     InterlockedIncrement(&MmSessionDataPages);
     return STATUS_SUCCESS;
@@ -716,16 +894,63 @@ MmAttachSession(
     _Out_ PKAPC_STATE ApcState)
 {
     PEPROCESS EntryProcess;
+    PMM_SESSION_SPACE EntrySession, CurrentSession;
+    PEPROCESS CurrentProcess;
+    KIRQL OldIrql;
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
     NT_ASSERT(EntryProcess != NULL);
 
-    /* HACK: for now we only support 1 session! */
-    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 1);
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(EntryProcess->Vm.Flags.SessionLeader == 0);
 
-    /* Very simple for now: just attach to the process we have */
+    /* Get the session from the process that was passed in */
+    EntrySession = EntryProcess->Session;
+    ASSERT(EntrySession != NULL);
+
+    /* Get the current process and it's session */
+    CurrentProcess = PsGetCurrentProcess();
+    CurrentSession = CurrentProcess->Session;
+
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Check if the session is about to be deleted */
+    if (EntrySession->u.Flags.DeletePending)
+    {
+        /* We cannot attach to it, so unlock and fail */
+        MiReleaseExpansionLock(OldIrql);
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    /* Count the number of attaches */
+    EntrySession->AttachCount++;
+
+    /* we can release the lock again */
+    MiReleaseExpansionLock(OldIrql);
+
+    /* Check if we are not the session leader and we are in a session */
+    if (!CurrentProcess->Vm.Flags.SessionLeader && (CurrentSession != NULL))
+    {
+        /* Are we already in the right session? */
+        if (CurrentSession == EntrySession)
+        {
+            /* We are, so "attach" to the current process */
+            EntryProcess = CurrentProcess;
+        }
+        else
+        {
+            /* We are not, the session id should better not match! */
+            ASSERT(CurrentSession->SessionId != EntrySession->SessionId);
+        }
+    }
+
+    /* Now attach to the process that we have */
     KeStackAttachProcess(&EntryProcess->Pcb, ApcState);
+
+    /* Success! */
     return STATUS_SUCCESS;
 }
 
@@ -737,16 +962,42 @@ MmDetachSession(
     _In_ PKAPC_STATE ApcState)
 {
     PEPROCESS EntryProcess;
+    PMM_SESSION_SPACE EntrySession;
+    KIRQL OldIrql;
+    BOOLEAN DeletePending;
 
     /* The parameter is the actual process! */
     EntryProcess = SessionEntry;
     NT_ASSERT(EntryProcess != NULL);
 
-    /* HACK: for now we only support 1 session! */
-    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 0);
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(EntryProcess->Vm.Flags.SessionLeader == 0);
 
-    /* Very simple for now: just detach */
+    /* Get the session from the process that was passed in */
+    EntrySession = EntryProcess->Session;
+    ASSERT(EntrySession != NULL);
+
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Make sure we have at least one attach and decrement the count */
+    ASSERT(EntrySession->AttachCount >= 1);
+    EntrySession->AttachCount--;
+
+    /* Remember if a delete is pending and we were the last one attached */
+    DeletePending = EntrySession->u.Flags.DeletePending &&
+                    (EntrySession->AttachCount == 0);
+
+    /* Release the lock again */
+    MiReleaseExpansionLock(OldIrql);
+
+    /* Detach from the process */
     KeUnstackDetachProcess(ApcState);
+
+    /* Check if we need to set the attach event */
+    if (DeletePending)
+        KeSetEvent(&EntrySession->AttachEvent, IO_NO_INCREMENT, FALSE);
 }
 
 VOID
@@ -760,11 +1011,13 @@ MmQuitNextSession(
     EntryProcess = SessionEntry;
     NT_ASSERT(EntryProcess != NULL);
 
-    /* HACK: for now we only support 1 session! */
-    NT_ASSERT(((PMM_SESSION_SPACE)EntryProcess->Session)->SessionId == 0);
+    /* Sanity checks */
+    ASSERT(KeGetCurrentIrql () <= APC_LEVEL);
+    ASSERT(EntryProcess->Vm.Flags.SessionLeader == 0);
+    ASSERT(EntryProcess->Session != NULL);
 
-    /* Get rid of the reference we got */
-    ObDereferenceObject(SessionEntry);
+    /* Get rid of the reference we took */
+    ObDereferenceObject(EntryProcess);
 }
 
 PVOID
@@ -772,9 +1025,39 @@ NTAPI
 MmGetSessionById(
     _In_ ULONG SessionId)
 {
-    /* HACK: for now we only support 1 session! */
-    NT_ASSERT(SessionId == 0);
+    PLIST_ENTRY ListEntry;
+    PMM_SESSION_SPACE Session;
+    PEPROCESS Process = NULL;
+    KIRQL OldIrql;
 
-    /* Just return the sessions creator process, which is csrss and still alive. */
-    return Session0CreatorProcess;
+    /* Acquire the expansion lock while touching the session */
+    OldIrql = MiAcquireExpansionLock();
+
+    /* Loop all entries in the session ws list */
+    ListEntry = MiSessionWsList.Flink;
+    while (ListEntry != &MiSessionWsList)
+    {
+        Session = CONTAINING_RECORD(ListEntry, MM_SESSION_SPACE, WsListEntry);
+
+        /* Check if this is the session we are looking for */
+        if (Session->SessionId == SessionId)
+        {
+            /* Check if we also have a process in the process list */
+            if (!IsListEmpty(&Session->ProcessList))
+            {
+                Process = CONTAINING_RECORD(Session->ProcessList.Flink,
+                                            EPROCESS,
+                                            SessionProcessLinks);
+
+                /* Reference the process */
+                ObReferenceObject(Process);
+                break;
+            }
+        }
+    }
+
+    /* Release the lock again */
+    MiReleaseExpansionLock(OldIrql);
+
+    return Process;
 }

@@ -450,6 +450,9 @@ MmInitSystem(IN ULONG Phase,
                                 PageFrameNumber);
     *MmSharedUserDataPte = TempPte;
 
+    /* Initialize session working set support */
+    MiInitializeSessionWsSupport();
+
     /* Setup session IDs */
     MiInitializeSessionIds();
 
