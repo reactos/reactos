@@ -37,6 +37,7 @@
 
 #define GET_SEGMENT_RPL(s)          ((s) & 3)
 #define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8)
+#define SEGMENT_TABLE_INDICATOR     (1 << 2)
 #define EXCEPTION_HAS_ERROR_CODE(x) (((x) == 8) || ((x) >= 10 && (x) <= 14))
 
 #define NO_LOCK_PREFIX() if (State->PrefixFlags & FAST486_PREFIX_LOCK)\

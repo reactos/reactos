@@ -399,22 +399,45 @@ Fast486LoadSegment(PFAST486_STATE State,
     /* Check for protected mode */
     if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
-        /* Make sure the GDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        if (!(Selector & SEGMENT_TABLE_INDICATOR))
         {
-            Fast486Exception(State, FAST486_EXCEPTION_GP);
-            return FALSE;
-        }
+            /* Make sure the GDT contains the entry */
+            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
 
-        /* Read the GDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Gdtr.Address
-                                     + GET_SEGMENT_INDEX(Selector),
-                                     &GdtEntry,
-                                     sizeof(GdtEntry)))
+            /* Read the GDT */
+            if (!Fast486ReadLinearMemory(State,
+                                         State->Gdtr.Address
+                                         + GET_SEGMENT_INDEX(Selector),
+                                         &GdtEntry,
+                                         sizeof(GdtEntry)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+        else
         {
-            /* Exception occurred */
-            return FALSE;
+            /* Make sure the LDT contains the entry */
+            if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Size + 1))
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
+            /* Read the LDT */
+            if (!Fast486ReadLinearMemory(State,
+                                         State->Ldtr.Address
+                                         + GET_SEGMENT_INDEX(Selector),
+                                         &GdtEntry,
+                                         sizeof(GdtEntry)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
         }
 
         if (Segment == FAST486_REG_SS)
@@ -503,7 +526,6 @@ Fast486LoadSegment(PFAST486_STATE State,
                         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                         return FALSE;
                     }
-
                 }
 
                 /* Update CPL */
