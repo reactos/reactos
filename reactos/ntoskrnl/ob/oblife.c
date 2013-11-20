@@ -1276,8 +1276,18 @@ VOID
 NTAPI
 ObDeleteCapturedInsertInfo(IN PVOID Object)
 {
-    UNIMPLEMENTED;
-    return;
+    POBJECT_HEADER ObjectHeader;
+    PAGED_CODE();
+
+    /* Check if there is anything to free */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    if ((ObjectHeader->Flags & OB_FLAG_CREATE_INFO) &&
+        (ObjectHeader->ObjectCreateInfo != NULL))
+    {
+        /* Free the create info */
+        ObpFreeObjectCreateInformation(ObjectHeader->ObjectCreateInfo);
+        ObjectHeader->ObjectCreateInfo = NULL;
+    }
 }
 
 VOID
