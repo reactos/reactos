@@ -430,36 +430,85 @@ Fast486LoadSegment(PFAST486_STATE State,
             if (!GdtEntry.SystemType)
             {
                 /* This is a special descriptor */
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
             }
 
             if (GdtEntry.Executable || !GdtEntry.ReadWrite)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
             }
 
             if ((GET_SEGMENT_RPL(Selector) != Fast486GetCurrentPrivLevel(State))
                 || (GET_SEGMENT_RPL(Selector) != GdtEntry.Dpl))
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_SS);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_SS, Selector);
                 return FALSE;
             }
         }
         else if (Segment == FAST486_REG_CS)
         {
             /* Loading the code segment */
-            // TODO: Implement security checks, call gates, etc...
 
-            /* Update CPL */
-            State->Cpl = GET_SEGMENT_RPL(Selector);
+            if (GET_SEGMENT_INDEX(Selector) == 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (GdtEntry.SystemType)
+            {
+                // TODO: Call/interrupt/task gates NOT IMPLEMENTED!
+                UNIMPLEMENTED;
+            }
+            else
+            {
+                if (!GdtEntry.Present)
+                {
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                    return FALSE;
+                }
+
+                if (!GdtEntry.Executable)
+                {
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                    return FALSE;
+                }
+
+                if (GdtEntry.DirConf)
+                {
+                    /* Conforming Code Segment */
+
+                    if (GdtEntry.Dpl > Fast486GetCurrentPrivLevel(State))
+                    {
+                        /* Must be accessed from lower-privileged code */
+                        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                        return FALSE;
+                    }
+                }
+                else
+                {
+                    /* Regular code segment */
+
+                    if ((GET_SEGMENT_RPL(Selector) > Fast486GetCurrentPrivLevel(State))
+                        || (Fast486GetCurrentPrivLevel(State) != GdtEntry.Dpl))
+                    {
+                        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                        return FALSE;
+                    }
+
+                }
+
+                /* Update CPL */
+                State->Cpl = GET_SEGMENT_RPL(Selector);
+            }
         }
         else
         {
@@ -468,20 +517,20 @@ Fast486LoadSegment(PFAST486_STATE State,
             if (!GdtEntry.SystemType)
             {
                 /* This is a special descriptor */
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
             }
 
             if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
                 || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_NP);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
                 return FALSE;
             }
         }
