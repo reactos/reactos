@@ -606,9 +606,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
 {
     BOOLEAN Jump = FALSE;
     CHAR Offset = 0;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* Make sure this is the right instruction */
     ASSERT((Opcode & 0xF0) == 0x70);
+
+    TOGGLE_OPSIZE(Size);
 
     /* Fetch the offset */
     if (!Fast486FetchByte(State, (PUCHAR)&Offset))
@@ -686,6 +689,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
     {
         /* Move the instruction pointer */
         State->InstPtr.Long += Offset;
+
+        if (!Size)
+        {
+            /* Clear the top half of EIP */
+            State->InstPtr.Long &= 0xFFFF;
+        }
     }
 
     /* Return success */
@@ -1058,6 +1067,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
 FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
 {
     CHAR Offset = 0;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    TOGGLE_OPSIZE(Size);
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xEB);
@@ -1071,6 +1083,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
 
     /* Move the instruction pointer */
     State->InstPtr.Long += Offset;
+
+    if (!Size)
+    {
+        /* Clear the top half of EIP */
+        State->InstPtr.Long &= 0xFFFF;
+    }
 
     return TRUE;
 }
@@ -5087,7 +5105,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
         }
 
         /* Move the instruction pointer */
-        State->InstPtr.LowWord += Offset;
+        State->InstPtr.Long += Offset;
+
+        /* Clear the top half of EIP */
+        State->InstPtr.Long &= 0xFFFF;
     }
 
     return TRUE;
@@ -5137,9 +5158,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
         return FALSE;
     }
 
-    /* Load new (E)IP */
-    if (Size) State->InstPtr.Long = Offset;
-    else State->InstPtr.LowWord = LOWORD(Offset);
+    /* Load new EIP */
+    State->InstPtr.Long = Offset;
 
     return TRUE;
 }
