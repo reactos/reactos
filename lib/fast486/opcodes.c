@@ -3951,9 +3951,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
 
     if (OperandSize)
     {
-        ULONG Dummy, Selector;
+        ULONG Selector;
 
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Selector))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Selector))
         {
             /* Exception occurred */
             return FALSE;
@@ -3963,9 +3963,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
     }
     else
     {
-        USHORT Dummy, Selector;
+        USHORT Selector;
 
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Selector))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
         {
             /* Exception occurred */
             return FALSE;

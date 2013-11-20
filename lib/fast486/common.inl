@@ -935,51 +935,57 @@ Fast486ReadModrmByteOperands(PFAST486_STATE State,
 {
     FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
-    /* Get the register value */
-    if (ModRegRm->Register & 0x04)
+    if (RegValue)
     {
-        /* AH, CH, DH, BH */
-        *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].HighByte;
-    }
-    else
-    {
-        /* AL, CL, DL, BL */
-        *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].LowByte;
-    }
-
-    if (!ModRegRm->Memory)
-    {
-        /* Get the second register value */
-        if (ModRegRm->SecondRegister & 0x04)
+        /* Get the register value */
+        if (ModRegRm->Register & 0x04)
         {
             /* AH, CH, DH, BH */
-            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].HighByte;
+            *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].HighByte;
         }
         else
         {
             /* AL, CL, DL, BL */
-            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].LowByte;
+            *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].LowByte;
         }
     }
-    else
-    {
-        /* Check for the segment override */
-        if (State->PrefixFlags & FAST486_PREFIX_SEG)
-        {
-            /* Use the override segment instead */
-            Segment = State->SegmentOverride;
-        }
 
-        /* Read memory */
-        if (!Fast486ReadMemory(State,
-                               Segment,
-                               ModRegRm->MemoryAddress,
-                               FALSE,
-                               RmValue,
-                               sizeof(UCHAR)))
+    if (RmValue)
+    {
+        if (!ModRegRm->Memory)
         {
-            /* Exception occurred */
-            return FALSE;
+            /* Get the second register value */
+            if (ModRegRm->SecondRegister & 0x04)
+            {
+                /* AH, CH, DH, BH */
+                *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].HighByte;
+            }
+            else
+            {
+                /* AL, CL, DL, BL */
+                *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].LowByte;
+            }
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read memory */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm->MemoryAddress,
+                                   FALSE,
+                                   RmValue,
+                                   sizeof(UCHAR)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
         }
     }
 
@@ -995,33 +1001,39 @@ Fast486ReadModrmWordOperands(PFAST486_STATE State,
 {
     FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
-    /* Get the register value */
-    *RegValue = State->GeneralRegs[ModRegRm->Register].LowWord;
-
-    if (!ModRegRm->Memory)
+    if (RegValue)
     {
-        /* Get the second register value */
-        *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].LowWord;
+        /* Get the register value */
+        *RegValue = State->GeneralRegs[ModRegRm->Register].LowWord;
     }
-    else
-    {
-        /* Check for the segment override */
-        if (State->PrefixFlags & FAST486_PREFIX_SEG)
-        {
-            /* Use the override segment instead */
-            Segment = State->SegmentOverride;
-        }
 
-        /* Read memory */
-        if (!Fast486ReadMemory(State,
-                               Segment,
-                               ModRegRm->MemoryAddress,
-                               FALSE,
-                               RmValue,
-                               sizeof(USHORT)))
+    if (RmValue)
+    {
+        if (!ModRegRm->Memory)
         {
-            /* Exception occurred */
-            return FALSE;
+            /* Get the second register value */
+            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].LowWord;
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read memory */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm->MemoryAddress,
+                                   FALSE,
+                                   RmValue,
+                                   sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
         }
     }
 
@@ -1037,33 +1049,39 @@ Fast486ReadModrmDwordOperands(PFAST486_STATE State,
 {
     FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
-    /* Get the register value */
-    *RegValue = State->GeneralRegs[ModRegRm->Register].Long;
-
-    if (!ModRegRm->Memory)
+    if (RegValue)
     {
-        /* Get the second register value */
-        *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].Long;
+        /* Get the register value */
+        *RegValue = State->GeneralRegs[ModRegRm->Register].Long;
     }
-    else
-    {
-        /* Check for the segment override */
-        if (State->PrefixFlags & FAST486_PREFIX_SEG)
-        {
-            /* Use the override segment instead */
-            Segment = State->SegmentOverride;
-        }
 
-        /* Read memory */
-        if (!Fast486ReadMemory(State,
-                               Segment,
-                               ModRegRm->MemoryAddress,
-                               FALSE,
-                               RmValue,
-                               sizeof(ULONG)))
+    if (RmValue)
+    {
+        if (!ModRegRm->Memory)
         {
-            /* Exception occurred */
-            return FALSE;
+            /* Get the second register value */
+            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].Long;
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & FAST486_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Read memory */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm->MemoryAddress,
+                                   FALSE,
+                                   RmValue,
+                                   sizeof(ULONG)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
         }
     }
 

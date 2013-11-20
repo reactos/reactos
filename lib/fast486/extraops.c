@@ -570,10 +570,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -584,10 +584,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -755,10 +755,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -779,10 +779,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1216,10 +1216,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1240,10 +1240,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1339,7 +1339,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLfsLgs)
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxByte)
 {
-    UCHAR Dummy, Value;
+    UCHAR Value;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
 
@@ -1356,7 +1356,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxByte)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -1371,7 +1371,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxByte)
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxWord)
 {
-    USHORT Dummy, Value;
+    USHORT Value;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
 
@@ -1388,7 +1388,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovzxWord)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -1441,10 +1441,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1465,10 +1465,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1495,7 +1495,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
 {
     INT i;
-    ULONG Dummy = 0, Value = 0;
+    ULONG Value = 0;
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
     ULONG BitNumber;
@@ -1522,7 +1522,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
     /* Read the value */
     if (OperandSize)
     {
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1532,7 +1532,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
     {
         if (!Fast486ReadModrmWordOperands(State,
                                           &ModRegRm,
-                                          (PUSHORT)&Dummy,
+                                          (PUSHORT)NULL,
                                           (PUSHORT)&Value))
         {
             /* Exception occurred */
@@ -1580,7 +1580,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
 {
     INT i;
-    ULONG Dummy = 0, Value = 0;
+    ULONG Value = 0;
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
     ULONG BitNumber;
@@ -1607,7 +1607,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
     /* Read the value */
     if (OperandSize)
     {
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1617,7 +1617,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
     {
         if (!Fast486ReadModrmWordOperands(State,
                                           &ModRegRm,
-                                          (PUSHORT)&Dummy,
+                                          (PUSHORT)NULL,
                                           (PUSHORT)&Value))
         {
             /* Exception occurred */
@@ -1664,7 +1664,6 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovsxByte)
 {
-    UCHAR Dummy;
     CHAR Value;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
@@ -1682,7 +1681,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovsxByte)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, (PUCHAR)&Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, (PUCHAR)&Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -1697,7 +1696,6 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovsxByte)
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovsxWord)
 {
-    USHORT Dummy;
     SHORT Value;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
@@ -1715,7 +1713,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeMovsxWord)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, (PUSHORT)&Value))
+    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, (PUSHORT)&Value))
     {
         /* Exception occurred */
         return FALSE;

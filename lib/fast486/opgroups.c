@@ -293,7 +293,7 @@ Fast486RotateOperation(PFAST486_STATE State,
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8082)
 {
-    UCHAR Immediate, Dummy, Value;
+    UCHAR Immediate, Value;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -313,7 +313,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8082)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -349,7 +349,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
 
     if (OperandSize)
     {
-        ULONG Immediate, Value, Dummy;
+        ULONG Immediate, Value;
 
         /* Fetch the immediate operand */
         if (!Fast486FetchDword(State, &Immediate))
@@ -359,7 +359,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
         }
 
         /* Read the operands */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -376,7 +376,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
     }
     else
     {
-        USHORT Immediate, Value, Dummy;
+        USHORT Immediate, Value;
 
         /* Fetch the immediate operand */
         if (!Fast486FetchWord(State, &Immediate))
@@ -386,7 +386,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup81)
         }
 
         /* Read the operands */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -432,10 +432,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup83)
     if (OperandSize)
     {
         ULONG Immediate = (ULONG)((LONG)ImmByte); // Sign extend
-        ULONG Value, Dummy;
+        ULONG Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -453,10 +453,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup83)
     else
     {
         USHORT Immediate = (USHORT)((SHORT)ImmByte); // Sign extend
-        USHORT Value, Dummy;
+        USHORT Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -527,7 +527,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup8F)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC0)
 {
-    UCHAR Dummy, Value, Count;
+    UCHAR Value, Count;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -547,7 +547,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC0)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -593,10 +593,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC1)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -614,10 +614,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC1)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -728,7 +728,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupC7)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD0)
 {
-    UCHAR Dummy, Value;
+    UCHAR Value;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -741,7 +741,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD0)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -776,10 +776,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD1)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -793,10 +793,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD1)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -812,7 +812,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD1)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD2)
 {
-    UCHAR Dummy, Value;
+    UCHAR Value;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -825,7 +825,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD2)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -863,10 +863,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD3)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -884,10 +884,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD3)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the operands */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -907,7 +907,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupD3)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
 {
-    UCHAR Dummy, Value = 0;
+    UCHAR Value = 0;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -920,7 +920,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -1039,7 +1039,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
 {
-    ULONG Dummy, Value = 0, SignFlag;
+    ULONG Value = 0, SignFlag;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
 
@@ -1062,7 +1062,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
     if (OperandSize)
     {
         /* 32-bit */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1071,7 +1071,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
     else
     {
         /* 16-bit */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, (PUSHORT)&Dummy, (PUSHORT)&Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, (PUSHORT)&Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1284,7 +1284,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFE)
 {
-    UCHAR Dummy, Value;
+    UCHAR Value;
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
@@ -1304,7 +1304,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFE)
     }
 
     /* Read the operands */
-    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    if (!Fast486ReadModrmByteOperands(State, &ModRegRm, NULL, &Value))
     {
         /* Exception occurred */
         return FALSE;
@@ -1363,9 +1363,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     /* Read the operands */
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1506,9 +1506,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1813,7 +1813,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
         /* LMSW */
         case 6:
         {
-            USHORT MachineStatusWord, Dummy;
+            USHORT MachineStatusWord;
 
             /* This is a privileged instruction */
             if (Fast486GetCurrentPrivLevel(State) != 0)
@@ -1823,7 +1823,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             }
 
             /* Read the new Machine Status Word */
-            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &MachineStatusWord))
+            if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &MachineStatusWord))
             {
                 /* Exception occurred */
                 return FALSE;
@@ -1928,10 +1928,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
 
     if (OperandSize)
     {
-        ULONG Dummy, Value;
+        ULONG Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
@@ -1968,10 +1968,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA)
     }
     else
     {
-        USHORT Dummy, Value;
+        USHORT Value;
 
         /* Read the value */
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Value))
         {
             /* Exception occurred */
             return FALSE;
