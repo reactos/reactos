@@ -486,7 +486,7 @@ Fast486LoadSegment(PFAST486_STATE State,
                 return FALSE;
             }
 
-            if (GdtEntry.SystemType)
+            if (!GdtEntry.SystemType)
             {
                 // TODO: Call/interrupt/task gates NOT IMPLEMENTED!
                 UNIMPLEMENTED;
