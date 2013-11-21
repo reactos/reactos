@@ -755,6 +755,10 @@ BOOL WINAPI ILGetDisplayNameEx(IShellFolder *psf, LPCITEMIDLIST pidl, LPVOID pat
 #define ILGDN_NORMAL      1
 #define ILGDN_INFOLDER    2
 
+BOOL WINAPI FileIconInit(BOOL bFullInit);
+void WINAPI ShellDDEInit(BOOL bInit);
+DWORD WINAPI WinList_Init(void);
+
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
 
