@@ -4919,8 +4919,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
     /* Read a byte from DS:[(E)BX + AL] */
     if (!Fast486ReadMemory(State,
                            FAST486_REG_DS,
-                           AddressSize ? State->GeneralRegs[FAST486_REG_EBX].Long
-                                       : State->GeneralRegs[FAST486_REG_EBX].LowWord
+                           (AddressSize ? State->GeneralRegs[FAST486_REG_EBX].Long
+                                        : State->GeneralRegs[FAST486_REG_EBX].LowWord)
                            + State->GeneralRegs[FAST486_REG_EAX].LowByte,
                            FALSE,
                            &Value,
