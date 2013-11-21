@@ -93,7 +93,7 @@ VdmpInitialize(PVOID ControlData)
     NTSTATUS Status;
     HANDLE PhysMemHandle;
     PVOID BaseAddress;
-    PVOID NullAddress = NULL;
+    volatile PVOID NullAddress = NULL;
     LARGE_INTEGER Offset;
     ULONG ViewSize;
 
