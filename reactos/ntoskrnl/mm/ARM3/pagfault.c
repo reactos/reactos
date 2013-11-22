@@ -1365,9 +1365,10 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #if (_MI_PAGING_LEVELS >= 3)
             (PointerPpe->u.Hard.Valid == 0) ||
 #endif
-            (PointerPde->u.Hard.Valid == 0))
+            (PointerPde->u.Hard.Valid == 0) ||
+            (PointerPte->u.Hard.Valid == 0))
         {
-            /* This fault is not valid, printf out some debugging help */
+            /* This fault is not valid, print out some debugging help */
             DbgPrint("MM:***PAGE FAULT AT IRQL > 1  Va %p, IRQL %lx\n",
                      Address,
                      OldIrql);
@@ -1411,7 +1412,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
 
         /* Nothing is actually wrong */
-        DPRINT1("Fault at IRQL1 is ok\n");
+        DPRINT1("Fault at IRQL %u is ok (%p)\n", OldIrql, Address);
         return STATUS_SUCCESS;
     }
 
