@@ -85,7 +85,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
                               || ((Result < FirstValue) && (Result < (SecondValue + Carry)));
             State->Flags.Of = ((FirstValue & SignFlag) == (SecondValue & SignFlag))
                               && ((FirstValue & SignFlag) != (Result & SignFlag));
-            State->Flags.Af = ((((FirstValue & 0x0F) + ((SecondValue + Carry) & 0x0F)) & 0x10) != 0);
+            State->Flags.Af = ((FirstValue ^ SecondValue ^ Result) & 0x10) != 0;
 
             break;
         }
@@ -98,10 +98,12 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
             Result = (FirstValue - SecondValue - Carry) & MaxValue;
 
             /* Update CF, OF and AF */
-            State->Flags.Cf = FirstValue < (SecondValue + Carry);
+            State->Flags.Cf = Carry
+                              ? (FirstValue <= SecondValue)
+                              : (FirstValue < SecondValue);
             State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
                               && ((FirstValue & SignFlag) != (Result & SignFlag));
-            State->Flags.Af = (FirstValue & 0x0F) < ((SecondValue + Carry) & 0x0F);
+            State->Flags.Af = ((FirstValue ^ SecondValue ^ Result) & 0x10) != 0;
 
             break;
         }
