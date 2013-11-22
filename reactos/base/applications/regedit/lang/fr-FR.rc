@@ -27,9 +27,10 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
 /*
@@ -82,8 +83,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Permissions...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Supprimer\tDel",                ID_EDIT_DELETE
-        MENUITEM "Ren&ommer",                     ID_EDIT_RENAME
+        MENUITEM "&Supprimer\tSuppr",                ID_EDIT_DELETE
+        MENUITEM "Ren&ommer\tF2",                     ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Copier le nom de la clé",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
@@ -118,8 +119,8 @@ BEGIN
 	MENUITEM "&Modifier",                     ID_EDIT_MODIFY
 	MENUITEM "Modifier les données binaires",          ID_EDIT_MODIFY_BIN
 	MENUITEM SEPARATOR
-	MENUITEM "Supprimer\tDel",                ID_EDIT_DELETE
-	MENUITEM "&Renommer",                     ID_EDIT_RENAME
+	MENUITEM "Supprimer\tSuppr",                ID_EDIT_DELETE
+	MENUITEM "&Renommer\tF2",                     ID_EDIT_RENAME
   END
   POPUP ""
   BEGIN
@@ -149,8 +150,8 @@ BEGIN
         END
         MENUITEM "Cherche",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "Supprimer",                         ID_TREE_DELETE
-        MENUITEM "&Renommer",                         ID_TREE_RENAME
+        MENUITEM "Supprimer\tSuppr",                         ID_TREE_DELETE
+        MENUITEM "&Renommer\tF2",                         ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exporter",                         ID_TREE_EXPORT
         MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
