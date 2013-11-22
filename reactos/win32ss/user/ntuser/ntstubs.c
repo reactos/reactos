@@ -20,44 +20,6 @@ NtUserAssociateInputContext(
     return 0;
 }
 
-
-BOOL
-APIENTRY
-NtUserAttachThreadInput(
-    IN DWORD idAttach,
-    IN DWORD idAttachTo,
-    IN BOOL fAttach)
-{
-  NTSTATUS Status;
-  PTHREADINFO pti, ptiTo;
-  BOOL Ret = FALSE;
-
-  UserEnterExclusive();
-  ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
-
-  pti = IntTID2PTI((HANDLE)idAttach);
-  ptiTo = IntTID2PTI((HANDLE)idAttachTo);
-
-  if ( !pti || !ptiTo )
-  {
-     ERR("AttachThreadInput pti or ptiTo NULL.\n");
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     goto Exit;
-  }
-
-  Status = UserAttachThreadInput( pti, ptiTo, fAttach);
-  if (!NT_SUCCESS(Status))
-  {
-     EngSetLastError(RtlNtStatusToDosError(Status));
-  }
-  else Ret = TRUE;
-
-Exit:
-  ERR("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
-  UserLeave();
-  return Ret;
-}
-
 //
 // Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
 //
