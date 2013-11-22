@@ -1457,6 +1457,15 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         DllBase = (ULONG_PTR)LdrEntry->DllBase;
 
+        /* Only process boot loaded images. Other drivers are processed by
+           MmFreeDriverInitialization */
+        if (LdrEntry->Flags & LDRP_MM_LOADED)
+        {
+            /* Keep going */
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+
         /* Get the NT header */
         NtHeader = RtlImageNtHeader((PVOID)DllBase);
         if (!NtHeader)
@@ -2561,6 +2570,10 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
+
+    /* The page fault handler is broken and doesn't page back in! */
+    DPRINT1("WARNING: MiSetPagingOfDriver() called, but paging is broken! ignoring!\n");
+    return;
 
     /* Get the driver's base address */
     ImageBase = MiPteToAddress(PointerPte);
