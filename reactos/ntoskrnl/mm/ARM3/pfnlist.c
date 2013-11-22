@@ -1308,14 +1308,14 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Sanity checks on the page */
-    if (PageFrameIndex >= MmHighestPhysicalPage ||
+    if (PageFrameIndex > MmHighestPhysicalPage ||
         Pfn1 != MI_PFN_ELEMENT(PageFrameIndex) ||
         Pfn1->u3.e2.ReferenceCount == 0 ||
         Pfn1->u3.e2.ReferenceCount >= 2500)
     {
         DPRINT1("PageFrameIndex=0x%lx, MmHighestPhysicalPage=0x%lx\n", PageFrameIndex, MmHighestPhysicalPage);
         DPRINT1("Pfn1=%p, Element=%p, RefCount=%u\n", Pfn1, MI_PFN_ELEMENT(PageFrameIndex), Pfn1->u3.e2.ReferenceCount);
-        ASSERT(PageFrameIndex < MmHighestPhysicalPage);
+        ASSERT(PageFrameIndex <= MmHighestPhysicalPage);
         ASSERT(Pfn1 == MI_PFN_ELEMENT(PageFrameIndex));
         ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
         ASSERT(Pfn1->u3.e2.ReferenceCount < 2500);
