@@ -3042,6 +3042,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDaa)
         State->Flags.Cf = TRUE;
     }
 
+    Value = State->GeneralRegs[FAST486_REG_EAX].LowByte;
+
+    /* Update the flags */
+    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) != 0;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Pf = Fast486CalculateParity(Value);
+
     return TRUE;
 }
 
@@ -3374,6 +3381,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDas)
         State->Flags.Cf = TRUE;
     }
 
+    Value = State->GeneralRegs[FAST486_REG_EAX].LowByte;
+
+    /* Update the flags */
+    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) != 0;
+    State->Flags.Zf = (Value == 0);
+    State->Flags.Pf = Fast486CalculateParity(Value);
+
     return TRUE;
 }
 
@@ -3388,7 +3402,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAaa)
     if (((Value & 0x0F) > 9) || State->Flags.Af)
     {
         /* Correct it */
-        State->GeneralRegs[FAST486_REG_EAX].LowByte += 0x06;
+        State->GeneralRegs[FAST486_REG_EAX].LowWord += 0x06;
         State->GeneralRegs[FAST486_REG_EAX].HighByte++;
 
         /* Set CF and AF */
@@ -3417,7 +3431,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAas)
     if (((Value & 0x0F) > 9) || State->Flags.Af)
     {
         /* Correct it */
-        State->GeneralRegs[FAST486_REG_EAX].LowByte -= 0x06;
+        State->GeneralRegs[FAST486_REG_EAX].LowWord -= 0x06;
         State->GeneralRegs[FAST486_REG_EAX].HighByte--;
 
         /* Set CF and AF */
@@ -4876,6 +4890,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Value %= Base;
 
     /* Update flags */
+    State->Flags.Af = FALSE;
     State->Flags.Zf = (Value == 0);
     State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
@@ -4899,9 +4914,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
 
     /* Adjust */
     Value += State->GeneralRegs[FAST486_REG_EAX].HighByte * Base;
-    State->GeneralRegs[FAST486_REG_EAX].LowByte = Value;
+    State->GeneralRegs[FAST486_REG_EAX].LowWord = Value;
 
     /* Update flags */
+    State->Flags.Af = FALSE;
     State->Flags.Zf = (Value == 0);
     State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
