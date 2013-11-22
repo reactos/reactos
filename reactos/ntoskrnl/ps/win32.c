@@ -82,13 +82,9 @@ PsConvertToGuiThread(VOID)
         MmDeleteKernelStack(OldStack, FALSE);
     }
 
-    /* This check is bizare. Check out win32k later */
-    if (!Process->Win32Process)
-    {
-        /* Now tell win32k about us */
-        Status = PspW32ProcessCallout(Process, TRUE);
-        if (!NT_SUCCESS(Status)) return Status;
-    }
+    /* Always do the process callout! */
+    Status = PspW32ProcessCallout(Process, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the new service table */
     Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;

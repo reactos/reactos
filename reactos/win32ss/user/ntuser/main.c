@@ -57,7 +57,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
     PPROCESSINFO ppiCurrent, *pppi;
-    DECLARE_RETURN(NTSTATUS);
+    NTSTATUS Status;
 
     ASSERT(Process->Peb);
 
@@ -69,18 +69,26 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         LARGE_INTEGER Offset;
         PVOID UserBase = NULL;
         PRTL_USER_PROCESS_PARAMETERS pParams = Process->Peb->ProcessParameters;
-        NTSTATUS Status;
 
-        ASSERT(PsGetProcessWin32Process(Process) == NULL);
+        /* We might be called with an already allocated win32 process */
+        ppiCurrent = PsGetProcessWin32Process(Process);
+        if (ppiCurrent != NULL)
+        {
+            /* There is no more to do for us (this is a success code!) */
+            Status = STATUS_ALREADY_WIN32;
+            goto Leave;
+        }
 
+        /* Allocate a new win32 process */
         ppiCurrent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(PROCESSINFO),
                                            USERTAG_PROCESSINFO);
-
         if (ppiCurrent == NULL)
         {
-            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n", HandleToUlong(Process->UniqueProcessId));
-            RETURN( STATUS_NO_MEMORY);
+            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n",
+                   HandleToUlong(Process->UniqueProcessId));
+            Status = STATUS_NO_MEMORY;
+            goto Leave;
         }
 
         RtlZeroMemory(ppiCurrent, sizeof(PROCESSINFO));
@@ -111,7 +119,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         if (!NT_SUCCESS(Status))
         {
             TRACE_CH(UserProcess,"Failed to map the global heap! 0x%x\n", Status);
-            RETURN(Status);
+            goto Leave;
         }
         ppiCurrent->HeapMappings.Next = NULL;
         ppiCurrent->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
@@ -241,11 +249,11 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
     }
 
-    RETURN( STATUS_SUCCESS);
+    Status = STATUS_SUCCESS;
 
-CLEANUP:
+Leave:
     UserLeave();
-    END_CLEANUP;
+    return Status;
 }
 
 NTSTATUS NTAPI
