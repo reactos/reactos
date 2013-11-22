@@ -31,6 +31,7 @@
 #include <ndk/kefuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 
 #define __BROKEN__
 #include <miniport.h>
@@ -113,6 +114,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    AGP_BUS_INTERFACE_STANDARD AgpInterface;
    KMUTEX DeviceLock;
    LIST_ENTRY DmaAdapterList, ChildDeviceList;
+   ULONG SessionId;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 

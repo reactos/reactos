@@ -150,6 +150,7 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
     DeviceExtension->FunctionalDeviceObject = *DeviceObject;
     DeviceExtension->DriverExtension = DriverExtension;
+    DeviceExtension->SessionId = -1;
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 

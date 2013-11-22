@@ -265,6 +265,11 @@ typedef struct _VIDEO_WIN32K_CALLBACKS {
   OUT ULONG DualviewFlags;
 } VIDEO_WIN32K_CALLBACKS, *PVIDEO_WIN32K_CALLBACKS;
 
+typedef struct _VIDEO_DEVICE_SESSION_STATUS {
+  ULONG bEnable;
+  ULONG bSuccess;
+} VIDEO_DEVICE_SESSION_STATUS, *PVIDEO_DEVICE_SESSION_STATUS;
+
 typedef struct _VIDEO_MEMORY {
   PVOID RequestedVirtualAddress;
 } VIDEO_MEMORY, *PVIDEO_MEMORY;
@@ -558,6 +563,7 @@ typedef struct _DISPLAY_BRIGHTNESS {
 #define DISPLAYPOLICY_AC                0x00000001
 #define DISPLAYPOLICY_DC                0x00000002
 #define DISPLAYPOLICY_BOTH              0x00000003
+
 
 #ifdef __cplusplus
 }

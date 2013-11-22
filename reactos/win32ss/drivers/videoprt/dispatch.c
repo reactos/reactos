@@ -289,13 +289,75 @@ IoctlName(ULONG Ioctl)
 
 static
 NTSTATUS
-VideoPortInitWin32kCallbacks(
-    IN PDEVICE_OBJECT DeviceObject,
-    PVIDEO_WIN32K_CALLBACKS Win32kCallbacks,
-    ULONG BufferLength)
+VideoPortUseDeviceInSesion(
+    _Inout_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PVIDEO_DEVICE_SESSION_STATUS SessionState,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG_PTR Information)
 {
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    /* Check buffer size */
+    *Information = sizeof(VIDEO_DEVICE_SESSION_STATUS);
+    if (BufferLength < sizeof(VIDEO_DEVICE_SESSION_STATUS))
+    {
+        ERR_(VIDEOPRT, "Buffer too small for VIDEO_DEVICE_SESSION_STATUS: %lx\n",
+             BufferLength);
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* Get the device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* Shall we enable the session? */
+    if (SessionState->bEnable)
+    {
+        /* Check if we have no session yet */
+        if (DeviceExtension->SessionId == -1)
+        {
+            /* Use this session and return success */
+            DeviceExtension->SessionId = PsGetCurrentProcessSessionId();
+            SessionState->bSuccess = TRUE;
+        }
+        else
+        {
+            ERR_(VIDEOPRT, "Requested to set session, but session is already set to: 0x%lx",
+                 DeviceExtension->SessionId);
+            SessionState->bSuccess = FALSE;
+        }
+    }
+    else
+    {
+        /* Check if we belong to the current session */
+        if (DeviceExtension->SessionId == PsGetCurrentProcessSessionId())
+        {
+            /* Reset the session and return success */
+            DeviceExtension->SessionId = -1;
+            SessionState->bSuccess = TRUE;
+        }
+        else
+        {
+            ERR_(VIDEOPRT, "Requested to reset session, but session is not set\n");
+            SessionState->bSuccess = FALSE;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+VideoPortInitWin32kCallbacks(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PVIDEO_WIN32K_CALLBACKS Win32kCallbacks,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG_PTR Information)
+{
+    *Information = sizeof(VIDEO_WIN32K_CALLBACKS);
     if (BufferLength < sizeof(VIDEO_WIN32K_CALLBACKS))
     {
+        ERR_(VIDEOPRT, "Buffer too small for VIDEO_WIN32K_CALLBACKS: %lx\n",
+             BufferLength);
         return STATUS_BUFFER_TOO_SMALL;
     }
 
@@ -401,7 +463,16 @@ IntVideoPortDispatchDeviceControl(
             INFO_(VIDEOPRT, "- IOCTL_VIDEO_INIT_WIN32K_CALLBACKS\n");
             Status = VideoPortInitWin32kCallbacks(DeviceObject,
                                                   Irp->AssociatedIrp.SystemBuffer,
-                                                  IrpStack->Parameters.DeviceIoControl.InputBufferLength);
+                                                  IrpStack->Parameters.DeviceIoControl.InputBufferLength,
+                                                  &Irp->IoStatus.Information);
+            break;
+
+        case IOCTL_VIDEO_USE_DEVICE_IN_SESSION:
+            INFO_(VIDEOPRT, "- IOCTL_VIDEO_USE_DEVICE_IN_SESSION\n");
+            Status = VideoPortUseDeviceInSesion(DeviceObject,
+                                                Irp->AssociatedIrp.SystemBuffer,
+                                                IrpStack->Parameters.DeviceIoControl.InputBufferLength,
+                                                &Irp->IoStatus.Information);
             break;
 
         default:
