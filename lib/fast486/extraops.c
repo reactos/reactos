@@ -683,7 +683,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShld)
         Result = (Destination << Count) | (DoubleSource >> (32 - Count));
 
         /* Update flags */
-        State->Flags.Cf = (Destination >> (16 - Count)) & 1;
+        if (Count <= 16) State->Flags.Cf = (Destination >> (16 - Count)) & 1;
+        else  State->Flags.Cf = (Source >> (32 - Count)) & 1;
+
         if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_WORD)
                                           != (Destination & SIGN_FLAG_WORD);
         State->Flags.Zf = (Result == 0);
@@ -887,7 +889,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeShrd)
         if (Count >= 16) Result |= (ULONG)(Source | (Source << 16)) >> (Count - 16);
 
         /* Update flags */
-        State->Flags.Cf = (Result >> (Count - 1)) & 1;
+        if (Count <= 16) State->Flags.Cf = (Destination >> (Count - 1)) & 1;
+        else State->Flags.Cf = (Source >> (Count - 17)) & 1;
+
         if (Count == 1) State->Flags.Of = (Result & SIGN_FLAG_WORD)
                                           != (Destination & SIGN_FLAG_WORD);
         State->Flags.Zf = (Result == 0);
