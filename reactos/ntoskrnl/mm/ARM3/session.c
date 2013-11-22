@@ -80,9 +80,9 @@ MmGetSessionLocaleId(VOID)
     Process = PsGetCurrentProcess();
 
     //
-    // Check if it's the Session Leader
+    // Check if it's NOT the Session Leader
     //
-    if (Process->Vm.Flags.SessionLeader)
+    if (!Process->Vm.Flags.SessionLeader)
     {
         //
         // Make sure it has a valid Session
@@ -101,6 +101,31 @@ MmGetSessionLocaleId(VOID)
     //
     return PsDefaultThreadLocaleId;
 }
+
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+NTAPI
+MmSetSessionLocaleId(
+    _In_ LCID LocaleId)
+{
+    PEPROCESS CurrentProcess;
+    PAGED_CODE();
+
+    /* Get the current process and check if it is in a session */
+    CurrentProcess = PsGetCurrentProcess();
+    if ((CurrentProcess->Vm.Flags.SessionLeader == 0) &&
+        (CurrentProcess->Session != NULL))
+    {
+        /* Set the session locale Id */
+        ((PMM_SESSION_SPACE)CurrentProcess->Session)->LocaleId = LocaleId;
+    }
+    else
+    {
+        /* Set the default locale */
+        PsDefaultThreadLocaleId = LocaleId;
+    }
+}
+
 
 VOID
 NTAPI

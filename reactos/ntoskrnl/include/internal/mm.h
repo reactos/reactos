@@ -1798,3 +1798,8 @@ NTAPI
 MmGetSessionById(
     _In_ ULONG SessionId);
 
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+NTAPI
+MmSetSessionLocaleId(
+    _In_ LCID LocaleId);
