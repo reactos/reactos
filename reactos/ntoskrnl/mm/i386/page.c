@@ -1004,32 +1004,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
         MmUnmapPageTable(Pt);
 }
 
-/*
- * @implemented
- */
-PHYSICAL_ADDRESS NTAPI
-MmGetPhysicalAddress(PVOID vaddr)
-/*
- * FUNCTION: Returns the physical address corresponding to a virtual address
- */
-{
-    PHYSICAL_ADDRESS p;
-    ULONG Pte;
-
-    DPRINT("MmGetPhysicalAddress(vaddr %p)\n", vaddr);
-    Pte = MmGetPageEntryForProcess(NULL, vaddr);
-    if (Pte != 0 && (Pte & PA_PRESENT))
-    {
-        p.QuadPart = PAGE_MASK(Pte);
-        p.u.LowPart |= (ULONG_PTR)vaddr & (PAGE_SIZE - 1);
-    }
-    else
-    {
-        p.QuadPart = 0;
-    }
-    return p;
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
