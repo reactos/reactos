@@ -1917,7 +1917,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     ASSERT(PointerPte->u.Hard.Valid == 1);
     ASSERT(TempPte.u.Hard.Valid == 1);
     ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
-    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+    *PointerPte = TempPte;
 
     //
     // Flush the TLB
