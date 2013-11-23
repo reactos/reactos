@@ -4163,121 +4163,37 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
 {
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
     INT Cpl = Fast486GetCurrentPrivLevel(State);
-    ULONG NewFlags;
+    FAST486_FLAGS_REG NewFlags;
 
     NO_LOCK_PREFIX();
     TOGGLE_OPSIZE(Size);
 
     /* Pop the new flags */
-    if (!Fast486StackPop(State, &NewFlags))
+    if (!Fast486StackPop(State, &NewFlags.Long))
     {
         /* Exception occurred */
         return FALSE;
     }
 
-    if (!State->Flags.Vm)
+    if (State->Flags.Vm && (State->Flags.Iopl != 3))
     {
-        /* Check the current privilege level */
-        if (Cpl == 0)
-        {
-            /* Supervisor */
-
-            /* Set the flags */
-            if (Size)
-            {
-                /* Memorize the old state of RF */
-                BOOLEAN OldRf = State->Flags.Rf;
-
-                State->Flags.Long = NewFlags;
-
-                /* Restore VM and RF */
-                State->Flags.Vm = FALSE;
-                State->Flags.Rf = OldRf;
-
-                /* Clear VIF and VIP */
-                State->Flags.Vif = State->Flags.Vip = FALSE;
-            }
-            else State->Flags.LowWord = LOWORD(NewFlags);
-
-            /* Restore the reserved bits */
-            State->Flags.AlwaysSet = TRUE;
-            State->Flags.Reserved0 = FALSE;
-            State->Flags.Reserved1 = FALSE;
-        }
-        else
-        {
-            /* User */
-
-            /* Memorize the old state of IF and IOPL */
-            BOOLEAN OldIf = State->Flags.If;
-            UINT OldIopl = State->Flags.Iopl;
-
-            /* Set the flags */
-            if (Size)
-            {
-                /* Memorize the old state of RF */
-                BOOLEAN OldRf = State->Flags.Rf;
-
-                State->Flags.Long = NewFlags;
-
-                /* Restore VM and RF */
-                State->Flags.Vm = FALSE;
-                State->Flags.Rf = OldRf;
-
-                /* Clear VIF and VIP */
-                State->Flags.Vif = State->Flags.Vip = FALSE;
-            }
-            else State->Flags.LowWord = LOWORD(NewFlags);
-
-            /* Restore the reserved bits and IOPL */
-            State->Flags.AlwaysSet = TRUE;
-            State->Flags.Reserved0 = FALSE;
-            State->Flags.Reserved1 = FALSE;
-            State->Flags.Iopl = OldIopl;
-
-            /* Check if the user doesn't have the privilege to change IF */
-            if (Cpl > State->Flags.Iopl)
-            {
-                /* Restore IF */
-                State->Flags.If = OldIf;
-            }
-        }
+        /* Call the VM86 monitor */
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
+        return TRUE;
     }
-    else
-    {
-        /* Check the IOPL */
-        if (State->Flags.Iopl == 3)
-        {
-            if (Size)
-            {
-                /* Memorize the old state of RF, VIF and VIP */
-                BOOLEAN OldRf = State->Flags.Rf;
-                BOOLEAN OldVif = State->Flags.Vif;
-                BOOLEAN OldVip = State->Flags.Vip;
 
-                State->Flags.Long = NewFlags;
+    State->Flags.Cf = NewFlags.Cf;
+    State->Flags.Pf = NewFlags.Pf;
+    State->Flags.Af = NewFlags.Af;
+    State->Flags.Zf = NewFlags.Zf;
+    State->Flags.Sf = NewFlags.Sf;
+    State->Flags.Tf = NewFlags.Tf;
+    State->Flags.Df = NewFlags.Df;
+    State->Flags.Of = NewFlags.Of;
+    State->Flags.Nt = NewFlags.Nt;
 
-                /* Restore VM, RF, VIF and VIP */
-                State->Flags.Vm = TRUE;
-                State->Flags.Rf = OldRf;
-                State->Flags.Vif = OldVif;
-                State->Flags.Vip = OldVip;
-            }
-            else State->Flags.LowWord = LOWORD(NewFlags);
-
-            /* Restore the reserved bits and IOPL */
-            State->Flags.AlwaysSet = TRUE;
-            State->Flags.Reserved0 = FALSE;
-            State->Flags.Reserved1 = FALSE;
-            State->Flags.Iopl = 3;
-        }
-        else
-        {
-            /* Call the VM86 monitor */
-            Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        }
-
-    }
+    if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
+    if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
 
     return TRUE;
 }

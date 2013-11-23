@@ -1226,7 +1226,7 @@ VOID WINAPI BiosMiscService(LPWORD Stack)
         /* Copy Extended Memory */
         case 0x87:
         {
-            WORD Count = getCX() * 2 - 1;
+            DWORD Count = (DWORD)getCX() * 2;
             PFAST486_GDT_ENTRY Gdt = (PFAST486_GDT_ENTRY)SEG_OFF_TO_PTR(getES(), getSI());
             DWORD SourceBase = Gdt[2].Base + (Gdt[2].BaseMid << 16) + (Gdt[2].BaseHigh << 24);
             DWORD SourceLimit = Gdt[2].Limit + (Gdt[2].LimitHigh << 16);

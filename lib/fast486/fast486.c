@@ -330,7 +330,7 @@ Fast486DumpState(PFAST486_STATE State)
             State->SegmentRegs[FAST486_REG_GS].Base,
             State->SegmentRegs[FAST486_REG_GS].Limit,
             State->SegmentRegs[FAST486_REG_GS].Dpl);
-    DPRINT1("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
+    DPRINT1("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
             State->Flags.Long,
             State->Flags.Cf ? "CF" : "cf",
             State->Flags.Pf ? "PF" : "pf",
@@ -344,9 +344,6 @@ Fast486DumpState(PFAST486_STATE State)
             State->Flags.Nt ? "NT" : "nt",
             State->Flags.Rf ? "RF" : "rf",
             State->Flags.Vm ? "VM" : "vm",
-            State->Flags.Ac ? "AC" : "ac",
-            State->Flags.Vif ? "VIF" : "vif",
-            State->Flags.Vip ? "VIP" : "vip",
             State->Flags.Iopl);
     DPRINT1("\nControl Registers:\n"
             "CR0 = %08X\tCR2 = %08X\tCR3 = %08X\n",

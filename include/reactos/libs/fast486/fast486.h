@@ -341,12 +341,8 @@ typedef union _FAST486_FLAGS_REG
         ULONG Reserved2 : 1;
         ULONG Rf        : 1;
         ULONG Vm        : 1;
-        ULONG Ac        : 1;
-        ULONG Vif       : 1;
-        ULONG Vip       : 1;
-        ULONG Id        : 1;
 
-        // ULONG Reserved : 10;
+        // ULONG Reserved : 14;
     };
 } FAST486_FLAGS_REG, *PFAST486_FLAGS_REG;
 
