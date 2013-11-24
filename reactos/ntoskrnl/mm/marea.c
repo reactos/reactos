@@ -851,7 +851,7 @@ MmFreeMemoryArea(
             if ((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
             {
                 ASSERT(AddressSpace != MmGetKernelAddressSpace());
-                if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                if (MiQueryPageTableReferences((PVOID)Address) == 0)
                 {
                     /* No PTE relies on this PDE. Release it */
                     KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -1185,13 +1185,13 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
              Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
         {
             /* At this point all references should be dead */
-            if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] != 0)
+            if (MiQueryPageTableReferences(Address) != 0)
             {
                 DPRINT1("Process %p, Address %p, UsedPageTableEntries %lu\n",
                         Process,
                         Address,
-                        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]);
-                ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0);
+                        MiQueryPageTableReferences(Address));
+                ASSERT(MiQueryPageTableReferences(Address) == 0);
             }
             pointerPde = MiAddressToPde(Address);
             /* Unlike in ARM3, we don't necesarrily free the PDE page as soon as reference reaches 0,
