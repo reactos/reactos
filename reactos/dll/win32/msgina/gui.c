@@ -229,6 +229,42 @@ GetTextboxText(
     return TRUE;
 }
 
+
+static INT_PTR CALLBACK
+ChangePasswordDialogProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            FIXME("ChangePasswordDialogProc: WM_INITDLG\n");
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, TRUE);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    return TRUE;
+            }
+            break;
+
+        case WM_CLOSE:
+            EndDialog(hwndDlg, FALSE);
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
 static VOID
 OnInitSecurityDlg(HWND hwnd,
                   PGINA_CONTEXT pgContext)
@@ -258,6 +294,30 @@ OnInitSecurityDlg(HWND hwnd,
     SetDlgItemTextW(hwnd, IDC_LOGONDATE, Buffer4);
 }
 
+
+static BOOL
+OnChangePassword(
+    IN HWND hwnd,
+    IN PGINA_CONTEXT pgContext)
+{
+    INT res;
+
+    FIXME("OnChangePassword()\n");
+
+    res = pgContext->pWlxFuncs->WlxDialogBoxParam(
+        pgContext->hWlx,
+        pgContext->hDllInstance,
+        MAKEINTRESOURCEW(IDD_CHANGE_PASSWORD),
+        hwnd,
+        ChangePasswordDialogProc,
+        (LPARAM)pgContext);
+
+    FIXME("Result: %x\n", res);
+
+    return FALSE;
+}
+
+
 static INT_PTR CALLBACK
 LoggedOnWindowProc(
     IN HWND hwndDlg,
@@ -265,10 +325,17 @@ LoggedOnWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PGINA_CONTEXT pgContext;
+
+    pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            pgContext = (PGINA_CONTEXT)lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
             OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
             SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
@@ -286,6 +353,10 @@ LoggedOnWindowProc(
                     return TRUE;
                 case IDC_SHUTDOWN:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+                    return TRUE;
+                case IDC_CHANGEPWD:
+                    if (OnChangePassword(hwndDlg, pgContext))
+                        EndDialog(hwndDlg, WLX_SAS_ACTION_PWD_CHANGED);
                     return TRUE;
                 case IDC_TASKMGR:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_TASKLIST);

@@ -19,6 +19,14 @@
 #define IDC_LOCKMSG                     1009
 #define IDC_LOGONMSG                    1010
 #define IDC_LOGONDATE                   1011
+#define IDC_CHANGEPWD                   1012
+
+#define IDD_CHANGE_PASSWORD             106
+#define IDC_CHANGEPWD_USERNAME          1013
+#define IDC_CHANGEPWD_DOMAIN            1014
+#define IDC_CHANGEPWD_OLDPWD            1015
+#define IDC_CHANGEPWD_NEWPWD1           1016
+#define IDC_CHANGEPWD_NEWPWD2           1017
 
 #define IDI_ROSLOGO                     20000
 
