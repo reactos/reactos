@@ -4871,7 +4871,7 @@ MmGetPhysicalAddress(PVOID Address)
         }
     }
 
-    DPRINT1("MM:MmGetPhysicalAddressFailed base address was %p", Address);
+    DPRINT1("MM:MmGetPhysicalAddressFailed base address was %p\n", Address);
     PhysicalAddress.QuadPart = 0;
     return PhysicalAddress;
 }
