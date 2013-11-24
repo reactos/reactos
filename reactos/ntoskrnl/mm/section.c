@@ -1125,6 +1125,10 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             return Status;
          }
       }
+
+      /* Probe the page, since it's PDE might not be synced */
+      (void)*((volatile char*)BaseAddress + FileOffset - BaseOffset);
+
       /*
        * Retrieve the page from the cache segment that we actually want.
        */
