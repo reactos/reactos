@@ -508,20 +508,6 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
 MmDeleteVirtualMapping(
     PEPROCESS Process,
     PVOID Address,

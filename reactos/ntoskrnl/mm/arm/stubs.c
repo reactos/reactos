@@ -390,19 +390,6 @@ MmGetPageDirectory(VOID)
 
 VOID
 NTAPI
-MmDisableVirtualMapping(IN PEPROCESS Process,
-                        IN PVOID Address,
-                        OUT PBOOLEAN WasDirty,
-                        OUT PPFN_NUMBER Page)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED_DBGBREAK();
-}
-
-VOID
-NTAPI
 MmEnableVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address)
 {
@@ -573,30 +560,6 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                                         Protection,
                                         Pages,
                                         PageCount);
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(IN PVOID Address)
-{
-    PMMPTE PointerPte;
-
-    //
-    // Get the PTE
-    //
-    PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
-    if ((PointerPte) && (PointerPte->u.Hard.Valid))
-    {
-        //
-        // Destroy it
-        //
-        PointerPte->u.Hard.AsUlong = 0;
-
-        //
-        // Flush the TLB
-        //
-        MiFlushTlb(PointerPte, Address);
-    }
 }
 
 VOID

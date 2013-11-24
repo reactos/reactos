@@ -1292,24 +1292,10 @@ MmInitGlobalKernelPageDirectory(VOID);
 
 VOID
 NTAPI
-MmDisableVirtualMapping(
-    struct _EPROCESS *Process,
-    PVOID Address,
-    BOOLEAN* WasDirty,
-    PPFN_NUMBER Page
-);
-
-VOID
-NTAPI
 MmEnableVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address
 );
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address);
-
 
 VOID
 NTAPI
