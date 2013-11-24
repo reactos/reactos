@@ -49,9 +49,6 @@ BEGIN_COM_MAP(IFileSystemBindDataImpl)
 END_COM_MAP()
 };
 
-static const WCHAR wFileSystemBindData[] = {
-    'F','i','l','e',' ','S','y','s','t','e','m',' ','B','i','n','d','D','a','t','a',0};
-
 HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC *ppV)
 {
     CComPtr<IFileSystemBindData>        fileSystemBindData;
@@ -83,7 +80,7 @@ HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC
     hResult = bindContext->SetBindOptions(&bindOpts);
     if (FAILED(hResult))
         return hResult;
-    hResult = bindContext->RegisterObjectParam((LPOLESTR)wFileSystemBindData, fileSystemBindData);
+    hResult = bindContext->RegisterObjectParam((LPOLESTR)STR_FILE_SYS_BIND_DATA, fileSystemBindData);
     if (FAILED(hResult))
         return hResult;
 
@@ -103,7 +100,7 @@ HRESULT WINAPI FileSystemBindData_GetFindData(LPBC pbc, WIN32_FIND_DATAW *pfd)
     if (!pfd)
         return E_INVALIDARG;
 
-    ret = pbc->GetObjectParam((LPOLESTR)wFileSystemBindData, &pUnk);
+    ret = pbc->GetObjectParam((LPOLESTR)STR_FILE_SYS_BIND_DATA, &pUnk);
     if (SUCCEEDED(ret))
     {
         ret = pUnk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pfsbd));
@@ -121,7 +118,7 @@ HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *
 
     TRACE("%p, %p\n", pbc, pfd);
 
-    ret = pbc->GetObjectParam((LPOLESTR)wFileSystemBindData, &pUnk);
+    ret = pbc->GetObjectParam((LPOLESTR)STR_FILE_SYS_BIND_DATA, &pUnk);
     if (SUCCEEDED(ret))
     {
         ret = pUnk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pfsbd));

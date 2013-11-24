@@ -110,7 +110,6 @@ static const shvheader GenericSFHeader[] = {
  */
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
 {
-    static WCHAR szfsbc[] = L"File System Bind Data";
     IFileSystemBindData *fsbd = NULL;
     LPITEMIDLIST pidl = NULL;
     IUnknown *param = NULL;
@@ -123,7 +122,7 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
         return NULL;
 
     /* see if the caller bound File System Bind Data */
-    r = pbc->GetObjectParam((LPOLESTR)szfsbc, &param);
+    r = pbc->GetObjectParam((LPOLESTR)STR_FILE_SYS_BIND_DATA, &param);
     if (FAILED(r))
         return NULL;
 
@@ -198,20 +197,27 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
     if (pchEaten)
         *pchEaten = 0; /* strange but like the original */
 
-    pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName);
-    if (!pidlTemp && *lpszDisplayName)
+    if (*lpszDisplayName)
     {
         /* get the next element */
         szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
 
-        /* build the full pathname to the element */
-        lstrcpynW(szPath, sPathTarget, MAX_PATH - 1);
-        PathAddBackslashW(szPath);
-        len = wcslen(szPath);
-        lstrcpynW(szPath + len, szElement, MAX_PATH - len);
+        pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, szElement);
+        if (pidlTemp != NULL)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            /* build the full pathname to the element */
+            lstrcpynW(szPath, sPathTarget, MAX_PATH - 1);
+            PathAddBackslashW(szPath);
+            len = wcslen(szPath);
+            lstrcpynW(szPath + len, szElement, MAX_PATH - len);
 
-        /* get the pidl */
-        hr = _ILCreateFromPathW(szPath, &pidlTemp);
+            /* get the pidl */
+            hr = _ILCreateFromPathW(szPath, &pidlTemp);
+        }
 
         if (SUCCEEDED(hr))
         {
