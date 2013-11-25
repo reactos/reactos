@@ -65,6 +65,7 @@ endif()
 add_compile_flags("-Werror -Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value -Wno-maybe-uninitialized")
 add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=narrowing")
+add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
