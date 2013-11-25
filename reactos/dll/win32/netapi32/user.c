@@ -185,13 +185,58 @@ GetPasswordAge(IN PLARGE_INTEGER PasswordLastSet)
 
 
 static
+VOID
+FreeUserInfo(PUSER_ALL_INFORMATION UserInfo)
+{
+    if (UserInfo->UserName.Buffer != NULL)
+        SamFreeMemory(UserInfo->UserName.Buffer);
+
+    if (UserInfo->FullName.Buffer != NULL)
+        SamFreeMemory(UserInfo->FullName.Buffer);
+
+    if (UserInfo->HomeDirectory.Buffer != NULL)
+        SamFreeMemory(UserInfo->HomeDirectory.Buffer);
+
+    if (UserInfo->HomeDirectoryDrive.Buffer != NULL)
+        SamFreeMemory(UserInfo->HomeDirectoryDrive.Buffer);
+
+    if (UserInfo->ScriptPath.Buffer != NULL)
+        SamFreeMemory(UserInfo->ScriptPath.Buffer);
+
+    if (UserInfo->ProfilePath.Buffer != NULL)
+        SamFreeMemory(UserInfo->ProfilePath.Buffer);
+
+    if (UserInfo->AdminComment.Buffer != NULL)
+        SamFreeMemory(UserInfo->AdminComment.Buffer);
+
+    if (UserInfo->WorkStations.Buffer != NULL)
+        SamFreeMemory(UserInfo->WorkStations.Buffer);
+
+    if (UserInfo->UserComment.Buffer != NULL)
+        SamFreeMemory(UserInfo->UserComment.Buffer);
+
+    if (UserInfo->Parameters.Buffer != NULL)
+        SamFreeMemory(UserInfo->Parameters.Buffer);
+
+    if (UserInfo->PrivateData.Buffer != NULL)
+        SamFreeMemory(UserInfo->PrivateData.Buffer);
+
+    if (UserInfo->LogonHours.LogonHours != NULL)
+        SamFreeMemory(UserInfo->LogonHours.LogonHours);
+
+    SamFreeMemory(UserInfo);
+}
+
+
+static
 NET_API_STATUS
-BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
+BuildUserInfoBuffer(SAM_HANDLE UserHandle,
                     DWORD level,
                     ULONG RelativeId,
                     LPVOID *Buffer)
 {
     UNICODE_STRING LogonServer = RTL_CONSTANT_STRING(L"\\\\*");
+    PUSER_ALL_INFORMATION UserInfo = NULL;
     LPVOID LocalBuffer = NULL;
     PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
@@ -204,9 +249,20 @@ BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
     PUSER_INFO_23 UserInfo23;
     LPWSTR Ptr;
     ULONG Size = 0;
+    NTSTATUS Status;
     NET_API_STATUS ApiStatus = NERR_Success;
 
     *Buffer = NULL;
+
+    Status = SamQueryInformationUser(UserHandle,
+                                     UserAllInformation,
+                                     (PVOID *)&UserInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamQueryInformationUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
 
     switch (level)
     {
@@ -1261,6 +1317,9 @@ BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
     }
 
 done:
+    if (UserInfo != NULL)
+        FreeUserInfo(UserInfo);
+
     if (ApiStatus == NERR_Success)
     {
         *Buffer = LocalBuffer;
@@ -1272,50 +1331,6 @@ done:
     }
 
     return ApiStatus;
-}
-
-
-static
-VOID
-FreeUserInfo(PUSER_ALL_INFORMATION UserInfo)
-{
-    if (UserInfo->UserName.Buffer != NULL)
-        SamFreeMemory(UserInfo->UserName.Buffer);
-
-    if (UserInfo->FullName.Buffer != NULL)
-        SamFreeMemory(UserInfo->FullName.Buffer);
-
-    if (UserInfo->HomeDirectory.Buffer != NULL)
-        SamFreeMemory(UserInfo->HomeDirectory.Buffer);
-
-    if (UserInfo->HomeDirectoryDrive.Buffer != NULL)
-        SamFreeMemory(UserInfo->HomeDirectoryDrive.Buffer);
-
-    if (UserInfo->ScriptPath.Buffer != NULL)
-        SamFreeMemory(UserInfo->ScriptPath.Buffer);
-
-    if (UserInfo->ProfilePath.Buffer != NULL)
-        SamFreeMemory(UserInfo->ProfilePath.Buffer);
-
-    if (UserInfo->AdminComment.Buffer != NULL)
-        SamFreeMemory(UserInfo->AdminComment.Buffer);
-
-    if (UserInfo->WorkStations.Buffer != NULL)
-        SamFreeMemory(UserInfo->WorkStations.Buffer);
-
-    if (UserInfo->UserComment.Buffer != NULL)
-        SamFreeMemory(UserInfo->UserComment.Buffer);
-
-    if (UserInfo->Parameters.Buffer != NULL)
-        SamFreeMemory(UserInfo->Parameters.Buffer);
-
-    if (UserInfo->PrivateData.Buffer != NULL)
-        SamFreeMemory(UserInfo->PrivateData.Buffer);
-
-    if (UserInfo->LogonHours.LogonHours != NULL)
-        SamFreeMemory(UserInfo->LogonHours.LogonHours);
-
-    SamFreeMemory(UserInfo);
 }
 
 
@@ -2403,8 +2418,6 @@ NetUserEnum(LPCWSTR servername,
     LPVOID Buffer = NULL;
     ULONG i;
     SAM_HANDLE UserHandle = NULL;
-    PUSER_ALL_INFORMATION UserInfo = NULL;
-
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2527,20 +2540,7 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        Status = SamQueryInformationUser(UserHandle,
-                                         UserAllInformation,
-                                         (PVOID *)&UserInfo);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamQueryInformationUser failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        SamCloseHandle(UserHandle);
-        UserHandle = NULL;
-
-        ApiStatus = BuildUserInfoBuffer(UserInfo,
+        ApiStatus = BuildUserInfoBuffer(UserHandle,
                                         level,
                                         CurrentUser->RelativeId,
                                         &Buffer);
@@ -2550,11 +2550,8 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        if (UserInfo != NULL)
-        {
-            FreeUserInfo(UserInfo);
-            UserInfo = NULL;
-        }
+        SamCloseHandle(UserHandle);
+        UserHandle = NULL;
 
         EnumContext->Index++;
 
@@ -2598,9 +2595,6 @@ done:
 
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
-
-    if (UserInfo != NULL)
-        FreeUserInfo(UserInfo);
 
     if (resume_handle != NULL)
         *resume_handle = (DWORD_PTR)EnumContext;
@@ -2803,7 +2797,6 @@ NetUserGetInfo(LPCWSTR servername,
     SAM_HANDLE UserHandle = NULL;
     PULONG RelativeIds = NULL;
     PSID_NAME_USE Use = NULL;
-    PUSER_ALL_INFORMATION UserInfo = NULL;
     LPVOID Buffer = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -2878,17 +2871,7 @@ NetUserGetInfo(LPCWSTR servername,
         goto done;
     }
 
-    Status = SamQueryInformationUser(UserHandle,
-                                     UserAllInformation,
-                                     (PVOID *)&UserInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("SamQueryInformationUser failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
-        goto done;
-    }
-
-    ApiStatus = BuildUserInfoBuffer(UserInfo,
+    ApiStatus = BuildUserInfoBuffer(UserHandle,
                                     level,
                                     RelativeIds[0],
                                     &Buffer);
@@ -2899,9 +2882,6 @@ NetUserGetInfo(LPCWSTR servername,
     }
 
 done:
-    if (UserInfo != NULL)
-        FreeUserInfo(UserInfo);
-
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
 
