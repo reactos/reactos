@@ -96,6 +96,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // Protection Bits part of the internal memory manager Protection Mask, from:
 // http://reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// https://www.reactos.org/wiki/Techwiki:Memory_Protection_constants
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
@@ -106,9 +107,20 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_WRITECOPY           5
 #define MM_EXECUTE_READWRITE   6
 #define MM_EXECUTE_WRITECOPY   7
-#define MM_NOCACHE             8
-#define MM_DECOMMIT            0x10
-#define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+
+//
+// These are flags on top of the actual protection mask
+//
+#define MM_NOCACHE            0x08
+#define MM_GUARDPAGE          0x10
+#define MM_WRITECOMBINE       0x18
+
+//
+// These are special cases
+//
+#define MM_DECOMMIT           (MM_ZERO_ACCESS | MM_GUARDPAGE)
+#define MM_NOACCESS           (MM_ZERO_ACCESS | MM_WRITECOMBINE)
+#define MM_OUTSWAPPED_KSTACK  (MM_EXECUTE_WRITECOPY | MM_WRITECOMBINE)
 #define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
@@ -576,6 +588,7 @@ typedef struct _MM_SESSION_SPACE
     LONG ImageLoadingCount;
 } MM_SESSION_SPACE, *PMM_SESSION_SPACE;
 
+static const MMPTE MmZeroPte = {{0}};
 extern PMM_SESSION_SPACE MmSessionSpace;
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;

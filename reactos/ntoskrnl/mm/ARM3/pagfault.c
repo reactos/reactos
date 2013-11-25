@@ -112,12 +112,41 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     return STATUS_STACK_OVERFLOW;
 }
 
+FORCEINLINE
+BOOLEAN
+MiIsAccessAllowed(
+    _In_ ULONG ProtectionMask,
+    _In_ BOOLEAN Write,
+    _In_ BOOLEAN Execute)
+{
+    #define _BYTE_MASK(Bit0, Bit1, Bit2, Bit3, Bit4, Bit5, Bit6, Bit7) \
+        (Bit0) | ((Bit1) << 1) | ((Bit2) << 2) | ((Bit3) << 3) | \
+        ((Bit4) << 4) | ((Bit5) << 5) | ((Bit6) << 6) | ((Bit7) << 7)
+    static const UCHAR MiAccessAllowedMask[2][2] =
+    {
+        {   // Protect 0  1  2  3  4  5  6  7
+            _BYTE_MASK(0, 1, 1, 1, 1, 1, 1, 1), // READ
+            _BYTE_MASK(0, 0, 1, 1, 0, 0, 1, 1), // EXECUTE READ
+        },
+        {
+            _BYTE_MASK(0, 0, 0, 0, 1, 1, 1, 1), // WRITE
+            _BYTE_MASK(0, 0, 0, 0, 0, 0, 1, 1), // EXECUTE WRITE
+        }
+    };
+
+    /* We want only the low 3 bits */
+    ProtectionMask &= 7;
+
+    /* Look it up in the table */
+    return (MiAccessAllowedMask[Write != 0][Execute != 0] >> ProtectionMask) & 1;
+}
+
 NTSTATUS
 NTAPI
 MiAccessCheck(IN PMMPTE PointerPte,
               IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE PreviousMode,
-              IN ULONG_PTR ProtectionCode,
+              IN ULONG_PTR ProtectionMask,
               IN PVOID TrapFrame,
               IN BOOLEAN LockHeld)
 {
@@ -151,20 +180,17 @@ MiAccessCheck(IN PMMPTE PointerPte,
         return STATUS_SUCCESS;
     }
 
-    /* Convert any fault flag to 1 only */
-    if (StoreInstruction) StoreInstruction = 1;
-
-#if 0
     /* Check if the protection on the page allows what is being attempted */
-    if ((MmReadWrite[Protection] - StoreInstruction) < 10)
+    if (!MiIsAccessAllowed(ProtectionMask, StoreInstruction, FALSE))
     {
         return STATUS_ACCESS_VIOLATION;
     }
-#endif
 
     /* Check if this is a guard page */
-    if (ProtectionCode & MM_DECOMMIT)
+    if (ProtectionMask & MM_GUARDPAGE)
     {
+        NT_ASSERT(ProtectionMask != MM_DECOMMIT);
+
         /* Attached processes can't expand their stack */
         if (KeIsAttachedProcess()) return STATUS_ACCESS_VIOLATION;
 
@@ -173,7 +199,9 @@ MiAccessCheck(IN PMMPTE PointerPte,
                 (TempPte.u.Soft.Prototype == 0)) == FALSE);
 
         /* Remove the guard page bit, and return a guard page violation */
-        PointerPte->u.Soft.Protection = ProtectionCode & ~MM_DECOMMIT;
+        TempPte.u.Soft.Protection = ProtectionMask & ~MM_GUARDPAGE;
+        NT_ASSERT(TempPte.u.Long != 0);
+        MI_WRITE_INVALID_PTE(PointerPte, TempPte);
         return STATUS_GUARD_PAGE_VIOLATION;
     }
 
@@ -950,6 +978,9 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         return STATUS_ACCESS_VIOLATION;
     }
+
+    /* There is no such thing as a decommitted prototype PTE */
+    NT_ASSERT(TempPte.u.Long != MmDecommittedPte.u.Long);
 
     /* Check for access rights on the PTE proper */
     PteContents = *PointerPte;
@@ -1863,10 +1894,14 @@ UserFault:
         }
 
         /* Is this a guard page? */
-        if (ProtectionCode & MM_DECOMMIT)
+        if (ProtectionCode & MM_GUARDPAGE)
         {
+            /* The VAD protection cannot be MM_DECOMMIT! */
+            NT_ASSERT(ProtectionCode != MM_DECOMMIT);
+
             /* Remove the bit */
-            PointerPte->u.Soft.Protection = ProtectionCode & ~MM_DECOMMIT;
+            TempPte.u.Soft.Protection = ProtectionCode & ~MM_GUARDPAGE;
+            MI_WRITE_INVALID_PTE(PointerPte, TempPte);
 
             /* Not supported */
             ASSERT(ProtoPte == NULL);
@@ -1892,7 +1927,8 @@ UserFault:
             else
             {
                 /* No, create a new PTE. First, write the protection */
-                PointerPte->u.Soft.Protection = ProtectionCode;
+                TempPte.u.Soft.Protection = ProtectionCode;
+                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
             }
 
             /* Lock the PFN database since we're going to grab a page */
@@ -1972,6 +2008,7 @@ UserFault:
         /* Write the prototype PTE */
         TempPte = PrototypePte;
         TempPte.u.Soft.Protection = ProtectionCode;
+        NT_ASSERT(TempPte.u.Long != 0);
         MI_WRITE_INVALID_PTE(PointerPte, TempPte);
     }
     else

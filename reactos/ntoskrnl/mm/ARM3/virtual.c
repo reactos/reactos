@@ -350,7 +350,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
                 /* Destroy the PTE */
-                PointerPte->u.Long = 0;
+                MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
             }
 
             /* Actual legitimate pages */
@@ -368,7 +368,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
             ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
 
             /* Destroy the PTE */
-            PointerPte->u.Long = 0;
+            MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
         }
 
         /* Keep going */
@@ -486,7 +486,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     }
 
     /* Destroy the PTE and flush the TLB */
-    PointerPte->u.Long = 0;
+    MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
     KeFlushCurrentTb();
 }
 
@@ -618,7 +618,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                         (TempPte.u.Soft.Prototype == 1))
                     {
                         /* Just nuke it */
-                        PointerPte->u.Long = 0;
+                        MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
                     }
                     else
                     {
@@ -632,7 +632,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                 else
                 {
                     /* The PTE was never mapped, just nuke it here */
-                    PointerPte->u.Long = 0;
+                    MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
                 }
             }
 
@@ -2113,7 +2113,8 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 ASSERT(PteContents.u.Soft.Transition == 0);
 
                 /* The PTE is already demand-zero, just update the protection mask */
-                PointerPte->u.Soft.Protection = ProtectionMask;
+                PteContents.u.Soft.Protection = ProtectionMask;
+                MI_WRITE_INVALID_PTE(PointerPte, PteContents);
                 ASSERT(PointerPte->u.Long != 0);
             }
 
