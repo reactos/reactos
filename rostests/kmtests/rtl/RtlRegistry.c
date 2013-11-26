@@ -122,7 +122,8 @@ TestRtlQueryRegistryValues(
 #define DO_QUERY(ExpectedArray, ExpectedCount) do                       \
     {                                                                   \
         ULONG _i;                                                       \
-        for (_i = 0; _i < (ExpectedCount); _i++)                        \
+        ULONG _ExpectedCount = (ExpectedCount);                         \
+        for (_i = 0; _i < _ExpectedCount; _i++)                         \
         {                                                               \
             Expected.Values[_i].ValueName = ValueName.Buffer;           \
             Expected.Values[_i].ValueType = REG_SZ;                     \
@@ -130,8 +131,8 @@ TestRtlQueryRegistryValues(
             Expected.Values[_i].ValueLength = (ExpectedArray)[_i].Len;  \
         }                                                               \
         Expected.CurrentIndex = 0;                                      \
-        Expected.Count = (ExpectedCount);                               \
-        if ((ExpectedCount) == 1)                                       \
+        Expected.Count = _ExpectedCount;                                \
+        if (_ExpectedCount == 1)                                        \
             QueryTable[0].EntryContext = &Expected.Values[0];           \
         else                                                            \
             QueryTable[0].EntryContext = NULL;                          \
