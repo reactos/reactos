@@ -920,8 +920,8 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             return FALSE;
         }
         //Lohnegrim: The BroadcastCapacityResolution presents the Powerlevel in Percent, if invalid set th 100 == FULL
-        if ((pGPP->mach.BroadcastCapacityResolution < 0) || (pGPP->mach.BroadcastCapacityResolution > 100))
-            pGPP->mach.BroadcastCapacityResolution=100;
+        if (pGPP->mach.BroadcastCapacityResolution > 100)
+            pGPP->mach.BroadcastCapacityResolution = 100;
 
 		//Lohnegrim: I have no idear, if they are realy needed, or if they are spezific for my System, or what they mean, so i removed them
         //pGPP->user.DischargePolicy[1].PowerPolicy.EventCode = pGPP->user.DischargePolicy[1].PowerPolicy.EventCode | 0x010000;
