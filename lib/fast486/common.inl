@@ -224,7 +224,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
             {
                 /* Copy only a part of the page */
-                PageLength = PAGE_OFFSET(LinearAddress + Size);
+                PageLength = PAGE_OFFSET(LinearAddress + Size) - PageOffset;
             }
 
             /* Write the memory */
