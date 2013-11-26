@@ -668,7 +668,7 @@ VOID
 CDECL
 setMSW(USHORT Value)
 {
-    /* Set the lowest word (8 bits) */
+    /* Set the lower 16 bits (Machine Status Word) of CR0 */
     EmulatorContext.ControlRegisters[FAST486_REG_CR0] &= 0xFFFF0000;
     EmulatorContext.ControlRegisters[FAST486_REG_CR0] |= Value & 0xFFFF;
 }

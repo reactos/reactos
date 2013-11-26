@@ -10,8 +10,9 @@
 
 #define NDEBUG
 
-#include "pic.h"
 #include "emulator.h"
+#include "io.h"
+#include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -152,6 +153,46 @@ VOID PicWriteData(BYTE Port, BYTE Value)
     Pic->Initialization = FALSE;
 }
 
+BYTE WINAPI PicReadPort(ULONG Port)
+{
+    switch (Port)
+    {
+        case PIC_MASTER_CMD:
+        case PIC_SLAVE_CMD:
+        {
+            return PicReadCommand(Port);
+        }
+
+        case PIC_MASTER_DATA:
+        case PIC_SLAVE_DATA:
+        {
+            return PicReadData(Port);
+        }
+    }
+
+    return 0;
+}
+
+VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
+{
+    switch (Port)
+    {
+        case PIC_MASTER_CMD:
+        case PIC_SLAVE_CMD:
+        {
+            PicWriteCommand(Port, Data);
+            break;
+        }
+
+        case PIC_MASTER_DATA:
+        case PIC_SLAVE_DATA:
+        {
+            PicWriteData(Port, Data);
+            break;
+        }
+    }
+}
+
 VOID PicInterruptRequest(BYTE Number)
 {
     BYTE i;
@@ -247,6 +288,17 @@ BYTE PicGetInterrupt(VOID)
     /* Spurious interrupt */
     if (MasterPic.InServiceRegister & (1 << 2)) return SlavePic.IntOffset + 7;
     else return MasterPic.IntOffset + 7;
+}
+
+BOOLEAN PicInitialize(VOID)
+{
+    /* Register the I/O Ports */
+    RegisterIoPort(PIC_MASTER_CMD , PicReadPort, PicWritePort);
+    RegisterIoPort(PIC_SLAVE_CMD  , PicReadPort, PicWritePort);
+    RegisterIoPort(PIC_MASTER_DATA, PicReadPort, PicWritePort);
+    RegisterIoPort(PIC_SLAVE_DATA , PicReadPort, PicWritePort);
+
+    return TRUE;
 }
 
 /* EOF */

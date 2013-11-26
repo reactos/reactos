@@ -79,24 +79,6 @@ VOID WINAPI EmulatorWriteMemory
     ULONG Size
 );
 
-VOID WINAPI EmulatorReadIo
-(
-    PFAST486_STATE State,
-    ULONG Port,
-    PVOID Buffer,
-    ULONG DataCount,
-    UCHAR DataSize
-);
-
-VOID WINAPI EmulatorWriteIo
-(
-    PFAST486_STATE State,
-    ULONG Port,
-    PVOID Buffer,
-    ULONG DataCount,
-    UCHAR DataSize
-);
-
 UCHAR WINAPI EmulatorIntAcknowledge
 (
     PFAST486_STATE State

@@ -10,8 +10,9 @@
 
 #define NDEBUG
 
-#include "ps2.h"
 #include "emulator.h"
+#include "io.h"
+#include "ps2.h"
 #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -23,6 +24,8 @@ static UINT KeyboardQueueEnd = 0;
 static BYTE KeyboardData = 0, KeyboardResponse = 0;
 static BOOLEAN KeyboardReadResponse = FALSE, KeyboardWriteResponse = FALSE;
 static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
+
+static HANDLE InputThread = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -265,6 +268,24 @@ VOID KeyboardWriteData(BYTE Data)
     // TODO: Implement PS/2 device commands
 }
 
+BYTE WINAPI PS2ReadPort(ULONG Port)
+{
+    if (Port == PS2_CONTROL_PORT)
+        return KeyboardReadStatus();
+    else if (Port == PS2_DATA_PORT)
+        return KeyboardReadData();
+    else
+        return 0;
+}
+
+VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
+{
+    if (Port == PS2_CONTROL_PORT)
+        KeyboardWriteCommand(Data);
+    else if (Port == PS2_DATA_PORT)
+        KeyboardWriteData(Data);
+}
+
 DWORD WINAPI InputThreadProc(LPVOID Parameter)
 {
     INT i;
@@ -323,6 +344,27 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
     }
 
     return 0;
+}
+
+BOOLEAN PS2Initialize(HANDLE ConsoleInput)
+{
+    /* Start the input thread */
+    InputThread = CreateThread(NULL, 0, &InputThreadProc, ConsoleInput, 0, NULL);
+
+    // if (InputThread == NULL) return FALSE;
+
+    /* Register the I/O Ports */
+    RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
+    RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
+
+    return TRUE;
+}
+
+VOID PS2Cleanup(VOID)
+{
+    /* Close the input thread handle */
+    if (InputThread != NULL) CloseHandle(InputThread);
+    InputThread = NULL;
 }
 
 /* EOF */

@@ -10,7 +10,10 @@
 
 #define NDEBUG
 
+#include "emulator.h"
 #include "vga.h"
+
+#include "io.h"
 #include "bios.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -1082,9 +1085,9 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     }
 }
 
-BYTE VgaReadPort(WORD Port)
+BYTE WINAPI VgaReadPort(ULONG Port)
 {
-    DPRINT("VgaReadPort: Port 0x%04X\n", Port);
+    DPRINT("VgaReadPort: Port 0x%08X\n", Port);
 
     switch (Port)
     {
@@ -1181,9 +1184,9 @@ BYTE VgaReadPort(WORD Port)
     return 0;
 }
 
-VOID VgaWritePort(WORD Port, BYTE Data)
+VOID WINAPI VgaWritePort(ULONG Port, BYTE Data)
 {
-    DPRINT("VgaWritePort: Port 0x%04X, Data 0x%02X\n", Port, Data);
+    DPRINT("VgaWritePort: Port 0x%08X, Data 0x%02X\n", Port, Data);
 
     switch (Port)
     {
@@ -1352,6 +1355,23 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
         /* Move to the next scanline */
         Address += ScanlineSize;
     }
+
+    /* Register the I/O Ports */
+    RegisterIoPort(VGA_AC_WRITE , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_AC_READ  , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_SEQ_INDEX, VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_SEQ_DATA , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_DAC_READ_INDEX , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_DAC_WRITE_INDEX, VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_DAC_DATA  , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_MISC_READ , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_MISC_WRITE, VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_CRTC_INDEX, VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_CRTC_DATA , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_GC_INDEX, VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_GC_DATA , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_STAT_MONO , VgaReadPort, VgaWritePort);
+    RegisterIoPort(VGA_STAT_COLOR, VgaReadPort, VgaWritePort);
 
     /* Return success */
     return TRUE;

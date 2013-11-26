@@ -25,10 +25,12 @@
 /* FUNCTIONS ******************************************************************/
 
 BYTE KeyboardReadStatus();
-VOID KeyboardWriteCommand(BYTE Command);
+//VOID KeyboardWriteCommand(BYTE Command);
 BYTE KeyboardReadData();
-VOID KeyboardWriteData(BYTE Data);
-DWORD WINAPI InputThreadProc(LPVOID Parameter);
+//VOID KeyboardWriteData(BYTE Data);
+
+BOOLEAN PS2Initialize(HANDLE ConsoleInput);
+VOID PS2Cleanup(VOID);
 
 #endif // _PS2_H_
 

@@ -39,10 +39,6 @@
 #define CMOS_DEFAULT_STA 0x26
 #define CMOS_DEFAULT_STB CMOS_STB_24HOUR
 
-/* BCD-Binary conversion */
-#define BINARY_TO_BCD(x) (((x / 10) << 4) | (x % 10))
-#define BCD_TO_BINARY(x) (((x >> 4) * 10) + (x & 0x0F))
-
 #define WRITE_CMOS_DATA(Cmos, Value)    \
     ((Cmos).StatusRegB & CMOS_STB_BINARY) ? (Value) : BCD_TO_BINARY(Value)
 
@@ -129,9 +125,6 @@ C_ASSERT(sizeof(CMOS_MEMORY) == 0x40);
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN IsNmiEnabled(VOID);
-VOID CmosWriteAddress(BYTE Value);
-BYTE CmosReadData(VOID);
-VOID CmosWriteData(BYTE Value);
 DWORD RtcGetTicksPerSecond(VOID);
 VOID RtcPeriodicTick(VOID);
 VOID RtcTimeUpdate(VOID);

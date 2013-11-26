@@ -103,6 +103,7 @@ INT wmain(INT argc, WCHAR *argv[])
 
     DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
 
+    /* Initialize the emulator */
     if (!EmulatorInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
@@ -116,6 +117,20 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
+    /* Initialize the PIC */
+    if (!PicInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the PIC.\n");
+        goto Cleanup;
+    }
+
+    /* Initialize the PIT */
+    if (!PitInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the PIT.\n");
+        goto Cleanup;
+    }
+
     /* Initialize the CMOS */
     if (!CmosInitialize())
     {
@@ -123,15 +138,15 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
+    /* Initialize the PC Speaker */
+    SpeakerInitialize();
+
     /* Initialize the system BIOS */
     if (!BiosInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;
     }
-
-    /* Initialize the PC Speaker */
-    SpeakerInitialize();
 
     /* Initialize the VDM DOS kernel */
     if (!DosInitialize())

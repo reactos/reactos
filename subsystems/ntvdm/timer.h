@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            timer.h
- * PURPOSE:         Programmable Interval Timer emulation (header file)
+ * PURPOSE:         Programmable Interval Timer emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -48,10 +48,11 @@ extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker
 /* FUNCTIONS ******************************************************************/
 
 VOID PitWriteCommand(BYTE Value);
-BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
+
 VOID PitDecrementCount(DWORD Count);
 DWORD PitGetResolution(VOID);
+BOOLEAN PitInitialize(VOID);
 
 #endif // _TIMER_H_
 

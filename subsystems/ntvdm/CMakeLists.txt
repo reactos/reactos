@@ -10,6 +10,7 @@ list(APPEND SOURCE
     dos.c
     emulator.c
     int32.c
+    io.c
     pic.c
     ps2.c
     registers.c

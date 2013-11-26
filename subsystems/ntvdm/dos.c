@@ -2580,7 +2580,9 @@ BOOLEAN DosInitialize(VOID)
     /* Register the DOS 32-bit Interrupts */
     RegisterInt32(0x20, DosInt20h        );
     RegisterInt32(0x21, DosInt21h        );
-    RegisterInt32(0x23, DosBreakInterrupt);
+//  RegisterInt32(0x22, DosInt22h        ); // Termination
+    RegisterInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
+//  RegisterInt32(0x24, DosInt24h        ); // Critical Error
     RegisterInt32(0x2F, DosInt2Fh        );
 
     return TRUE;

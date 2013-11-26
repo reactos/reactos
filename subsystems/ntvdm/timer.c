@@ -10,6 +10,8 @@
 
 #define NDEBUG
 
+#include "emulator.h"
+#include "io.h"
 #include "timer.h"
 #include "pic.h"
 
@@ -143,6 +145,41 @@ VOID PitWriteData(BYTE Channel, BYTE Value)
             /* High byte */
             PitChannels[Channel].ReloadValue &= 0x00FF;
             PitChannels[Channel].ReloadValue |= Value << 8;
+        }
+    }
+}
+
+static BYTE WINAPI PitReadPort(ULONG Port)
+{
+    switch (Port)
+    {
+        case PIT_DATA_PORT(0):
+        case PIT_DATA_PORT(1):
+        case PIT_DATA_PORT(2):
+        {
+            return PitReadData(Port - PIT_DATA_PORT(0));
+        }
+    }
+
+    return 0;
+}
+
+static VOID WINAPI PitWritePort(ULONG Port, BYTE Data)
+{
+    switch (Port)
+    {
+        case PIT_COMMAND_PORT:
+        {
+            PitWriteCommand(Data);
+            break;
+        }
+
+        case PIT_DATA_PORT(0):
+        case PIT_DATA_PORT(1):
+        case PIT_DATA_PORT(2):
+        {
+            PitWriteData(Port - PIT_DATA_PORT(0), Data);
+            break;
         }
     }
 }
@@ -309,6 +346,17 @@ DWORD PitGetResolution(VOID)
 
     /* Return the frequency resolution */
     return PIT_BASE_FREQUENCY / MinReloadValue;
+}
+
+BOOLEAN PitInitialize(VOID)
+{
+    /* Register the I/O Ports */
+    RegisterIoPort(PIT_COMMAND_PORT, NULL       , PitWritePort);
+    RegisterIoPort(PIT_DATA_PORT(0), PitReadPort, PitWritePort);
+    RegisterIoPort(PIT_DATA_PORT(1), PitReadPort, PitWritePort);
+    RegisterIoPort(PIT_DATA_PORT(2), PitReadPort, PitWritePort);
+
+    return TRUE;
 }
 
 /* EOF */

@@ -10,7 +10,9 @@
 
 #define NDEBUG
 
+#include "emulator.h"
 #include "cmos.h"
+#include "io.h"
 #include "bios.h"
 #include "pic.h"
 
@@ -305,6 +307,19 @@ VOID CmosWriteData(BYTE Value)
     SelectedRegister = CMOS_REG_STATUS_D;
 }
 
+BYTE WINAPI CmosReadPort(ULONG Port)
+{
+    return CmosReadData();
+}
+
+VOID WINAPI CmosWritePort(ULONG Port, BYTE Data)
+{
+    if (Port == CMOS_ADDRESS_PORT)
+        CmosWriteAddress(Data);
+    else if (Port == CMOS_DATA_PORT)
+        CmosWriteData(Data);
+}
+
 DWORD RtcGetTicksPerSecond(VOID)
 {
     BYTE RateSelect = CmosMemory.StatusRegB & 0x0F;
@@ -414,6 +429,10 @@ BOOLEAN CmosInitialize(VOID)
     CmosMemory.StatusRegD     = CMOS_BATTERY_OK; // Our CMOS battery works perfectly forever.
     CmosMemory.Diagnostics    = 0x00;            // Diagnostics must not find any errors.
     CmosMemory.ShutdownStatus = 0x00;
+
+    /* Register the I/O Ports */
+    RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
+    RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
 
     return TRUE;
 }

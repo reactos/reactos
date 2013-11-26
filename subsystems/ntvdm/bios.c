@@ -28,7 +28,6 @@ static BYTE BiosKeyboardMap[256];
 static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
-static HANDLE InputThread = NULL;
 
 /*
  * VGA Register Configurations for BIOS Video Modes
@@ -486,6 +485,18 @@ BOOLEAN BiosInitialize(VOID)
     RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
     RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
+    /* Some interrupts are in fact addresses to tables */
+    ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x1E] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
+
+    ((PDWORD)BaseAddress)[0x41] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x46] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
+
     /* Get the input handle to the real console, and check for success */
     BiosConsoleInput = CreateFileW(L"CONIN$",
                                    GENERIC_READ | GENERIC_WRITE,
@@ -537,8 +548,8 @@ BOOLEAN BiosInitialize(VOID)
     /* Set the console input mode */
     SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
-    /* Start the input thread */
-    InputThread = CreateThread(NULL, 0, &InputThreadProc, BiosConsoleInput, 0, NULL);
+    /* Initialize PS2 */
+    PS2Initialize(BiosConsoleInput);
 
     /* Initialize the PIC */
     PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
@@ -569,8 +580,7 @@ BOOLEAN BiosInitialize(VOID)
 
 VOID BiosCleanup(VOID)
 {
-    /* Close the input thread handle */
-    if (InputThread != NULL) CloseHandle(InputThread);
+    PS2Cleanup();
 
     /* Restore the old screen buffer */
     SetConsoleActiveScreenBuffer(BiosConsoleOutput);

@@ -47,12 +47,11 @@ typedef struct _PIC
 
 /* FUNCTIONS ******************************************************************/
 
-BYTE PicReadCommand(BYTE Port);
 VOID PicWriteCommand(BYTE Port, BYTE Value);
-BYTE PicReadData(BYTE Port);
 VOID PicWriteData(BYTE Port, BYTE Value);
 VOID PicInterruptRequest(BYTE Number);
 BYTE PicGetInterrupt(VOID);
+BOOLEAN PicInitialize(VOID);
 
 #endif // _PIC_H_
 

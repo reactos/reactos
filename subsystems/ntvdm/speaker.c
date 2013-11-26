@@ -10,8 +10,9 @@
 
 #define NDEBUG
 
-#include "speaker.h"
 #include "emulator.h"
+#include "speaker.h"
+#include "io.h"
 #include "timer.h"
 
 /* Extra PSDK/NDK Headers */
@@ -29,48 +30,8 @@ HANDLE hBeep = NULL;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID SpeakerInitialize(VOID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING BeepDevice;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-
-    /* Adapted from kernel32:Beep() */
-
-    //
-    // On TS systems, we need to Load Winsta.dll and call WinstationBeepOpen
-    // after doing a GetProcAddress for it
-    //
-
-    /* Open the device */
-    RtlInitUnicodeString(&BeepDevice, L"\\Device\\Beep");
-    InitializeObjectAttributes(&ObjectAttributes, &BeepDevice, 0, NULL, NULL);
-    Status = NtCreateFile(&hBeep,
-                          FILE_READ_DATA | FILE_WRITE_DATA,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          0,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          FILE_OPEN_IF,
-                          0,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to open Beep driver, Status 0x%08lx\n", Status);
-    }
-}
-
-VOID SpeakerCleanup(VOID)
-{
-    NtClose(hBeep);
-}
-
 BYTE SpeakerReadStatus(VOID)
 {
-    // DPRINT1("SpeakerReadStatus() == 0x%x\n", Port61hState);
     return Port61hState;
 }
 
@@ -78,8 +39,6 @@ VOID SpeakerWriteCommand(BYTE Value)
 {
     BOOLEAN IsConnectedToPITChannel2;
     UCHAR   SpeakerData;
-
-    // DPRINT1("SpeakerWriteCommand(0x%x)\n", Value);
 
     Port61hState = Value;
     IsConnectedToPITChannel2 = ((Port61hState & 0x01) != 0);
@@ -160,6 +119,58 @@ VOID SpeakerWriteCommand(BYTE Value)
                     Status);
         }
     }
+}
+
+BYTE WINAPI SpeakerReadPort(ULONG Port)
+{
+    return SpeakerReadStatus();
+}
+
+VOID WINAPI SpeakerWritePort(ULONG Port, BYTE Data)
+{
+    SpeakerWriteCommand(Data);
+}
+
+VOID SpeakerInitialize(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING BeepDevice;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    /* Adapted from kernel32:Beep() */
+
+    //
+    // On TS systems, we need to Load Winsta.dll and call WinstationBeepOpen
+    // after doing a GetProcAddress for it
+    //
+
+    /* Open the device */
+    RtlInitUnicodeString(&BeepDevice, L"\\Device\\Beep");
+    InitializeObjectAttributes(&ObjectAttributes, &BeepDevice, 0, NULL, NULL);
+    Status = NtCreateFile(&hBeep,
+                          FILE_READ_DATA | FILE_WRITE_DATA,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN_IF,
+                          0,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open Beep driver, Status 0x%08lx\n", Status);
+    }
+
+    /* Register the I/O Ports */
+    RegisterIoPort(SPEAKER_CONTROL_PORT, SpeakerReadPort, SpeakerWritePort);
+}
+
+VOID SpeakerCleanup(VOID)
+{
+    NtClose(hBeep);
 }
 
 /* EOF */
