@@ -44,10 +44,8 @@ NTAPI
 MiInitSystemMemoryAreas()
 {
     PVOID BaseAddress;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PMEMORY_AREA MArea;
     NTSTATUS Status;
-    BoundaryAddressMultiple.QuadPart = 0;
 
     //
     // Create the memory area to define the loader mappings
@@ -61,7 +59,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -76,7 +74,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -91,7 +89,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -106,7 +104,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -121,7 +119,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -136,7 +134,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -151,7 +149,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -167,7 +165,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -182,7 +180,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 #ifndef _M_AMD64
     //
@@ -197,7 +195,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 #endif
     //
@@ -212,7 +210,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
     //
@@ -227,7 +225,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 
 #if defined(_X86_)
@@ -243,7 +241,7 @@ MiInitSystemMemoryAreas()
                                 &MArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
 #endif
 }

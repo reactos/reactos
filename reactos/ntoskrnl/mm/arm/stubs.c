@@ -779,14 +779,12 @@ NTAPI
 MiInitPageDirectoryMap(VOID)
 {
     MEMORY_AREA* MemoryArea = NULL;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID BaseAddress;
     NTSTATUS Status;
 
     //
     // Create memory area for the PTE area
     //
-    BoundaryAddressMultiple.QuadPart = 0;
     BaseAddress = (PVOID)PTE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3,
@@ -796,7 +794,7 @@ MiInitPageDirectoryMap(VOID)
                                 &MemoryArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(NT_SUCCESS(Status));
 
     //
@@ -811,7 +809,7 @@ MiInitPageDirectoryMap(VOID)
                                 &MemoryArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(NT_SUCCESS(Status));
 
     //
@@ -826,7 +824,7 @@ MiInitPageDirectoryMap(VOID)
                                 &MemoryArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(NT_SUCCESS(Status));
 }
 

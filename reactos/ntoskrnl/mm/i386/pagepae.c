@@ -2311,13 +2311,11 @@ MiInitPageDirectoryMap(VOID)
 {
    MEMORY_AREA* kernel_map_desc = NULL;
    MEMORY_AREA* hyperspace_desc = NULL;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PVOID BaseAddress;
    NTSTATUS Status;
 
    DPRINT("MiInitPageDirectoryMap()\n");
 
-   BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_SYSTEM,
@@ -2327,7 +2325,7 @@ MiInitPageDirectoryMap(VOID)
                                &kernel_map_desc,
                                TRUE,
                                0,
-                               BoundaryAddressMultiple);
+                               PAGE_SIZE);
    if (!NT_SUCCESS(Status))
    {
       ASSERT(FALSE);
@@ -2341,7 +2339,7 @@ MiInitPageDirectoryMap(VOID)
                                &hyperspace_desc,
                                TRUE,
                                0,
-                               BoundaryAddressMultiple);
+                               PAGE_SIZE);
    if (!NT_SUCCESS(Status))
    {
       ASSERT(FALSE);

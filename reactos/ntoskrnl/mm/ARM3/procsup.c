@@ -30,9 +30,7 @@ MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID AllocatedBase = (PVOID)MM_SHARED_USER_DATA_VA;
-    BoundaryAddressMultiple.QuadPart = 0;
 
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
@@ -42,7 +40,7 @@ MiRosTakeOverSharedUserPage(IN PEPROCESS Process)
                                 &MemoryArea,
                                 TRUE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     ASSERT(NT_SUCCESS(Status));
 }
 

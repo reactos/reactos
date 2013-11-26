@@ -984,10 +984,8 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                    PMEMORY_AREA *Result,
                    BOOLEAN FixedAddress,
                    ULONG AllocationFlags,
-                   PHYSICAL_ADDRESS BoundaryAddressMultiple)
+                   ULONG Granularity)
 {
-   PVOID EndAddress;
-   ULONG Granularity;
    ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
 
@@ -997,7 +995,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
           Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
           FixedAddress, Result);
 
-   Granularity = PAGE_SIZE;
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
       tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
@@ -1028,12 +1025,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
       {
          DPRINT("Memory area for user mode address space exceeds MmSystemRangeStart\n");
          return STATUS_ACCESS_VIOLATION;
-      }
-
-      if (BoundaryAddressMultiple.QuadPart != 0)
-      {
-         EndAddress = ((char*)(*BaseAddress)) + tmpLength-1;
-         ASSERT(((ULONG_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
       }
 
       if (MmLocateMemoryAreaByRegion(AddressSpace,

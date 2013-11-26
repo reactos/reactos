@@ -512,7 +512,7 @@ MmCreateMemoryArea(
     PMEMORY_AREA *Result,
     BOOLEAN FixedAddress,
     ULONG AllocationFlags,
-    PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL
+    ULONG AllocationGranularity
 );
 
 PMEMORY_AREA
