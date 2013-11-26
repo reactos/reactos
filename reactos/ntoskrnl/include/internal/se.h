@@ -24,8 +24,8 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
-PSID
 FORCEINLINE
+PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -43,8 +43,8 @@ SepGetGroupFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PSID
 FORCEINLINE
+PSID
 SepGetOwnerFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -62,8 +62,8 @@ SepGetOwnerFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetDaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -83,8 +83,8 @@ SepGetDaclFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetSaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;

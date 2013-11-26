@@ -129,9 +129,9 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
 
-VOID
 FORCEINLINE
 DECLSPEC_NORETURN
+VOID
 KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
                 IN KIRQL OldIrql,
                 IN BOOLEAN Spurious)

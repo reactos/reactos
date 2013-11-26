@@ -277,8 +277,8 @@ IopMountInitializeVpb(IN PDEVICE_OBJECT DeviceObject,
 /*
  * @implemented
  */
-VOID
 FORCEINLINE
+VOID
 IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
                           IN BOOLEAN DriverActive)
 {

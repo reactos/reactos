@@ -98,8 +98,8 @@ MiUnProtectFreeNonPagedPool(IN PVOID VirtualAddress,
     return UnprotectedPages ? TRUE : FALSE;
 }
 
-VOID
 FORCEINLINE
+VOID
 MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
                               OUT PVOID* PoolFlink,
                               OUT PVOID* PoolBlink)
@@ -133,8 +133,8 @@ MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 MiProtectedPoolProtectLinks(IN PVOID PoolFlink,
                             IN PVOID PoolBlink)
 {

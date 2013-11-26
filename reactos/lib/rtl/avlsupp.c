@@ -27,8 +27,8 @@ C_ASSERT(RtlBalancedAvlTree == 0);
 
 /* FUNCTIONS ******************************************************************/
 
-TABLE_SEARCH_RESULT
 FORCEINLINE
+TABLE_SEARCH_RESULT
 RtlpFindAvlTableNodeOrParent(IN PRTL_AVL_TABLE Table,
                              IN PVOID Buffer,
                              OUT PRTL_BALANCED_LINKS *NodeOrParent)
@@ -94,8 +94,8 @@ RtlpFindAvlTableNodeOrParent(IN PRTL_AVL_TABLE Table,
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlPromoteAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
 {
     PRTL_BALANCED_LINKS ParentNode, SuperParentNode;
@@ -122,8 +122,8 @@ RtlPromoteAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     RtlSetParent(Node, SuperParentNode);
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
 {
     PRTL_BALANCED_LINKS ChildNode, SubChildNode;
@@ -203,8 +203,8 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     return TRUE;
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
                       IN PRTL_BALANCED_LINKS NewNode,
                       IN OUT PVOID NodeOrParent,
@@ -290,8 +290,8 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
                       IN PRTL_BALANCED_LINKS Node)
 {

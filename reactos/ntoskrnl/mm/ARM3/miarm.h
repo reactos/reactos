@@ -731,8 +731,8 @@ extern ULONG_PTR MmSubsectionBase;
 extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFree) ||
@@ -741,8 +741,8 @@ MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderOsloaderStack));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFirmwarePermanent) ||
@@ -752,44 +752,44 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 }
 
 #ifdef _M_AMD64
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPxe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPpe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
 }
 #else
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
             (Address <= (PVOID)MiHighestUserPde));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return (Address <= (PVOID)MiHighestUserPte);
@@ -799,8 +799,8 @@ MiIsUserPte(PVOID Address)
 //
 // Figures out the hardware bits for a PTE
 //
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
@@ -991,8 +991,8 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 //
 // Writes a valid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
                    IN MMPTE TempPte)
 {
@@ -1005,8 +1005,8 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
 //
 // Writes an invalid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
                      IN MMPTE InvalidPte)
 {
@@ -1018,8 +1018,8 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
 //
 // Writes a valid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
                    IN MMPDE TempPde)
 {
@@ -1032,8 +1032,8 @@ MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
 //
 // Writes an invalid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
                      IN MMPDE InvalidPde)
 {
@@ -1082,8 +1082,8 @@ MI_WS_OWNER(IN PEPROCESS Process)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsRosSectionObject(IN PVOID Section)
 {
     PROS_SECTION_OBJECT RosSection = Section;
@@ -2294,8 +2294,8 @@ MiMakePdeExistAndMakeValid(
 // then we'd like to have our own code to grab a free page and zero it out, by
 // using MiRemoveAnyPage. This macro implements this.
 //
-PFN_NUMBER
 FORCEINLINE
+PFN_NUMBER
 MiRemoveZeroPageSafe(IN ULONG Color)
 {
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);

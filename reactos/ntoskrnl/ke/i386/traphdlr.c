@@ -57,8 +57,8 @@ BOOLEAN StopChecking = FALSE;
 
 /* TRAP EXIT CODE *************************************************************/
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Either the V8086 flag is on, or this is user-mode with a VDM */
@@ -66,16 +66,16 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
             ((KiUserTrap(TrapFrame)) && (PsGetCurrentProcess()->VdmObjects)));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 KiV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Check if the V8086 flag is on */
     return ((TrapFrame->EFlags & EFLAGS_V86_MASK) != 0);
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 KiIsFrameEdited(IN PKTRAP_FRAME TrapFrame)
 {
     /* An edited frame changes esp. It is marked by clearing the bits
@@ -83,8 +83,8 @@ KiIsFrameEdited(IN PKTRAP_FRAME TrapFrame)
     return ((TrapFrame->SegCs & FRAME_EDITED) == 0);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
 {
     /* Disable interrupts until we return */
@@ -1521,9 +1521,9 @@ KiDbgPostServiceHook(ULONG SystemCallNumber, ULONG_PTR Result)
     return Result;
 }
 
+FORCEINLINE
 DECLSPEC_NORETURN
 VOID
-FORCEINLINE
 KiSystemCall(IN PKTRAP_FRAME TrapFrame,
              IN PVOID Arguments)
 {

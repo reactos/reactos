@@ -199,8 +199,8 @@ ProtectToPTE(ULONG flProtect)
 }
 
 /* Taken from ARM3/pagfault.c */
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiSynchronizeSystemPde(PMMPDE PointerPde)
 {
     MMPDE SystemPde;

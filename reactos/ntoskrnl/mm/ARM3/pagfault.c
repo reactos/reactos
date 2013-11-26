@@ -311,8 +311,8 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
 }
 
 #if (_MI_PAGING_LEVELS == 2)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiSynchronizeSystemPde(PMMPDE PointerPde)
 {
     MMPDE SystemPde;
