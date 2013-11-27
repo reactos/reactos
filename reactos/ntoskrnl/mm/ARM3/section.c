@@ -198,7 +198,7 @@ MiMakeProtectionMask(IN ULONG Protect)
         }
 
         /* This actually turns on guard page in this scenario! */
-        ProtectMask |= MM_DECOMMIT;
+        ProtectMask |= MM_GUARDPAGE;
     }
 
     /* Check for nocache option */
