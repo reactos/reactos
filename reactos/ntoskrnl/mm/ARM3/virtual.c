@@ -350,25 +350,25 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
                 /* Destroy the PTE */
-                MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
+                MI_ERASE_PTE(PointerPte);
+            }
+            else
+            {
+                /*
+                 * The only other ARM3 possibility is a demand zero page, which would
+                 * mean freeing some of the paged pool pages that haven't even been
+                 * touched yet, as part of a larger allocation.
+                 *
+                 * Right now, we shouldn't expect any page file information in the PTE
+                 */
+                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+
+                /* Destroy the PTE */
+                MI_ERASE_PTE(PointerPte);
             }
 
             /* Actual legitimate pages */
             ActualPages++;
-        }
-        else
-        {
-            /*
-             * The only other ARM3 possibility is a demand zero page, which would
-             * mean freeing some of the paged pool pages that haven't even been
-             * touched yet, as part of a larger allocation.
-             *
-             * Right now, we shouldn't expect any page file information in the PTE
-             */
-            ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
-
-            /* Destroy the PTE */
-            MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
         }
 
         /* Keep going */
@@ -486,7 +486,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     }
 
     /* Destroy the PTE and flush the TLB */
-    MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
+    MI_ERASE_PTE(PointerPte);
     KeFlushCurrentTb();
 }
 
@@ -618,7 +618,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                         (TempPte.u.Soft.Prototype == 1))
                     {
                         /* Just nuke it */
-                        MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
+                        MI_ERASE_PTE(PointerPte);
                     }
                     else
                     {
@@ -632,7 +632,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                 else
                 {
                     /* The PTE was never mapped, just nuke it here */
-                    MI_WRITE_INVALID_PTE(PointerPte, MmZeroPte);
+                    MI_ERASE_PTE(PointerPte);
                 }
             }
 

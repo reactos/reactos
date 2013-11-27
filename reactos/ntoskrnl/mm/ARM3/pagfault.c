@@ -122,7 +122,7 @@ MiIsAccessAllowed(
     #define _BYTE_MASK(Bit0, Bit1, Bit2, Bit3, Bit4, Bit5, Bit6, Bit7) \
         (Bit0) | ((Bit1) << 1) | ((Bit2) << 2) | ((Bit3) << 3) | \
         ((Bit4) << 4) | ((Bit5) << 5) | ((Bit6) << 6) | ((Bit7) << 7)
-    static const UCHAR MiAccessAllowedMask[2][2] =
+    static const UCHAR AccessAllowedMask[2][2] =
     {
         {   // Protect 0  1  2  3  4  5  6  7
             _BYTE_MASK(0, 1, 1, 1, 1, 1, 1, 1), // READ
@@ -134,11 +134,11 @@ MiIsAccessAllowed(
         }
     };
 
-    /* We want only the low 3 bits */
-    ProtectionMask &= 7;
+    /* We want only the lower access bits */
+    ProtectionMask &= MM_PROTECT_ACCESS;
 
     /* Look it up in the table */
-    return (MiAccessAllowedMask[Write != 0][Execute != 0] >> ProtectionMask) & 1;
+    return (AccessAllowedMask[Write != 0][Execute != 0] >> ProtectionMask) & 1;
 }
 
 NTSTATUS
@@ -187,7 +187,7 @@ MiAccessCheck(IN PMMPTE PointerPte,
     }
 
     /* Check if this is a guard page */
-    if (ProtectionMask & MM_GUARDPAGE)
+    if ((ProtectionMask & MM_PROTECT_SPECIAL) == MM_GUARDPAGE)
     {
         NT_ASSERT(ProtectionMask != MM_DECOMMIT);
 
@@ -765,8 +765,8 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* Remove caching bits */
-    Protection &= ~(MM_NOCACHE | MM_NOACCESS);
+    /* Remove special/caching bits */
+    Protection &= ~MM_PROTECT_SPECIAL;
 
     /* Setup caching */
     if (Pfn1->u3.e1.CacheAttribute == MiWriteCombined)
@@ -820,7 +820,8 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     PMMPFN Pfn1;
     MMPTE TempPte;
     PMMPTE PointerToPteForProtoPage;
-    DPRINT1("Transition fault on 0x%p with PTE 0x%p in process %s\n", FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
+    DPRINT1("Transition fault on 0x%p with PTE 0x%p in process %s\n",
+            FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
     /* Windowss does this check */
     ASSERT(*InPageBlock == NULL);
@@ -1453,37 +1454,25 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Bail out, if the fault came from user mode */
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
 
-#if (_MI_PAGING_LEVELS == 4)
-        /* AMD64 system, check if PXE is invalid */
-        if (PointerPxe->u.Hard.Valid == 0)
-        {
-            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
-                         (ULONG_PTR)Address,
-                         StoreInstruction,
-                         (ULONG_PTR)TrapInformation,
-                         7);
-        }
-#endif
-#if (_MI_PAGING_LEVELS == 4)
-        /* PAE/AMD64 system, check if PPE is invalid */
-        if (PointerPpe->u.Hard.Valid == 0)
-        {
-            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
-                         (ULONG_PTR)Address,
-                         StoreInstruction,
-                         (ULONG_PTR)TrapInformation,
-                         5);
-        }
-#endif
 #if (_MI_PAGING_LEVELS == 2)
         if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address)) MiSynchronizeSystemPde((PMMPDE)PointerPte);
         MiCheckPdeForPagedPool(Address);
 #endif
 
-        /* Check if the PDE is invalid */
-        if (PointerPde->u.Hard.Valid == 0)
+        /* Check if the higher page table entries are invalid */
+        if (
+#if (_MI_PAGING_LEVELS == 4)
+            /* AMD64 system, check if PXE is invalid */
+            (PointerPxe->u.Hard.Valid == 0) ||
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+            /* PAE/AMD64 system, check if PPE is invalid */
+            (PointerPpe->u.Hard.Valid == 0) ||
+#endif
+            /* Always check if the PDE is valid */
+            (PointerPde->u.Hard.Valid == 0))
         {
-            /* PDE (still) not valid, kill the system */
+            /* PXE/PPE/PDE (still) not valid, kill the system */
             KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                          (ULONG_PTR)Address,
                          StoreInstruction,
@@ -1894,7 +1883,7 @@ UserFault:
         }
 
         /* Is this a guard page? */
-        if (ProtectionCode & MM_GUARDPAGE)
+        if ((ProtectionCode & MM_PROTECT_SPECIAL) == MM_GUARDPAGE)
         {
             /* The VAD protection cannot be MM_DECOMMIT! */
             NT_ASSERT(ProtectionCode != MM_DECOMMIT);

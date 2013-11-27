@@ -107,6 +107,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_WRITECOPY           5
 #define MM_EXECUTE_READWRITE   6
 #define MM_EXECUTE_WRITECOPY   7
+#define MM_PROTECT_ACCESS      7
 
 //
 // These are flags on top of the actual protection mask
@@ -114,6 +115,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_NOCACHE            0x08
 #define MM_GUARDPAGE          0x10
 #define MM_WRITECOMBINE       0x18
+#define MM_PROTECT_SPECIAL    0x18
 
 //
 // These are special cases
@@ -588,7 +590,6 @@ typedef struct _MM_SESSION_SPACE
     LONG ImageLoadingCount;
 } MM_SESSION_SPACE, *PMM_SESSION_SPACE;
 
-static const MMPTE MmZeroPte = {{0}};
 extern PMM_SESSION_SPACE MmSessionSpace;
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
@@ -1003,6 +1004,21 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
 }
 
 //
+// Updates a valid PTE
+//
+VOID
+FORCEINLINE
+MI_UPDATE_VALID_PTE(IN PMMPTE PointerPte,
+                   IN MMPTE TempPte)
+{
+    /* Write the valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
+    *PointerPte = TempPte;
+}
+
+//
 // Writes an invalid PTE
 //
 FORCEINLINE
@@ -1012,7 +1028,20 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
 {
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
+    ASSERT(InvalidPte.u.Long != 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Erase the PTE completely
+//
+VOID
+FORCEINLINE
+MI_ERASE_PTE(IN PMMPTE PointerPte)
+{
+    /* Zero out the PTE */
+    ASSERT(PointerPte->u.Long != 0);
+    PointerPte->u.Long = 0;
 }
 
 //
@@ -1039,6 +1068,7 @@ MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
 {
     /* Write the invalid PDE */
     ASSERT(InvalidPde.u.Hard.Valid == 0);
+    ASSERT(InvalidPde.u.Long != 0);
     *PointerPde = InvalidPde;
 }
 

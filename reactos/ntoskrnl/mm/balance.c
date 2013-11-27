@@ -394,7 +394,7 @@ MiBalancerThread(PVOID Unused)
                  Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
                  Address += (PAGE_SIZE * PTE_COUNT))
             {
-                if (MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] == 0)
+                if (MiQueryPageTableReferences((PVOID)Address) == 0)
                 {
                     pointerPde = MiAddressToPde(Address);
                     if (pointerPde->u.Hard.Valid)

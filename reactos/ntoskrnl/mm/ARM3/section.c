@@ -198,7 +198,7 @@ MiMakeProtectionMask(IN ULONG Protect)
         }
 
         /* This actually turns on guard page in this scenario! */
-        ProtectMask |= MM_GUARDPAGE;
+        ProtectMask |= MM_DECOMMIT;
     }
 
     /* Check for nocache option */
@@ -1914,10 +1914,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     //
     // Write the new PTE, making sure we are only changing the bits
     //
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
-    *PointerPte = TempPte;
+    MI_UPDATE_VALID_PTE(PointerPte, TempPte);
 
     //
     // Flush the TLB
