@@ -1,40 +1,34 @@
-/*
- * PROJECT:     ReactOS Event Viewer
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/eventvwr/lang/pt-BR.rc
- * PURPOSE:     Portuguese Brazilian Language File for ReactOS Event Viewer
- * TRANSLATORS: Matheus Macabu
- */
+/* Portuguese Brazilian translation by Matheus Macabu */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDC_EVENTVWR MENU
 BEGIN
-	POPUP "&Registro"
-	BEGIN
-		MENUITEM "&Aplicativo",              ID_LOG_APPLICATION
-		MENUITEM "S&egurança",                 ID_LOG_SECURITY
-		MENUITEM "&Sistema",                   ID_LOG_SYSTEM
-		MENUITEM SEPARATOR
-		MENUITEM "&Sair",                     IDM_EXIT
-	END
-	POPUP "&Visualizar"
-	BEGIN
-		MENUITEM "&Atualizar",                  IDM_REFRESH
-	END
-	MENUITEM "&Opções",                          ID_OPTIONS
-	POPUP "&Ajuda"
-	BEGIN
-		MENUITEM "&Ajuda",                     IDM_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Sobre...",                 IDM_ABOUT
-	END
+    POPUP "&Registro"
+    BEGIN
+        MENUITEM "&Aplicativo", ID_LOG_APPLICATION
+        MENUITEM "S&egurança", ID_LOG_SECURITY
+        MENUITEM "&Sistema", ID_LOG_SYSTEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Sair", IDM_EXIT
+    END
+    POPUP "&Visualizar"
+    BEGIN
+        MENUITEM "&Atualizar", IDM_REFRESH
+    END
+    MENUITEM "&Opções", ID_OPTIONS
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&Ajuda", IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Sobre...", IDM_ABOUT
+    END
 END
 
 IDC_EVENTVWR ACCELERATORS
 BEGIN
-	"?",            IDM_ABOUT,              ASCII,  ALT
-	"/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
@@ -42,10 +36,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "Sobre"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "Visualizador de Eventos ReactOS Versão 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
-	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
+    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
+    LTEXT "Visualizador de Eventos ReactOS Versão 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
+    DEFPUSHBUTTON "OK", IDOK, 90, 48, 42, 16, WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -53,7 +47,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
 CAPTION "Aguarde.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	CTEXT           "Carregando Registros de Eventos. Por favor aguarde ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+    CTEXT "Carregando Registros de Eventos. Por favor aguarde ...", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
@@ -62,62 +56,62 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Detalhes do Evento"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-	DEFPUSHBUTTON   "&Fechar",IDOK,12,258,50,14
-	PUSHBUTTON      "&Anterior",IDPREVIOUS,78,258,50,14
-	PUSHBUTTON      "&Próximo",IDNEXT,144,258,50,14
-	PUSHBUTTON      "A&juda",IDHELP,210,258,50,14
-	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-	LTEXT           "&Descrição:",IDC_STATIC,15,70,39,8
-	LTEXT           "Data:",IDC_STATIC,14,14,36,8
-	LTEXT           "Estático",IDC_EVENTDATESTATIC,56,14,72,8
-	LTEXT           "Tempo:",IDC_STATIC,14,27,36,8
-	LTEXT           "Estático",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "&Usuário:",IDC_STATIC,14,41,36,8
-	LTEXT           "Estático",IDC_EVENTUSERSTATIC,56,41,72,8
-	LTEXT           "&Computador:",IDC_STATIC,14,54,36,8
-	LTEXT           "Estático",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
-	LTEXT           "EventID:",IDC_STATIC,133,15,36,8
-	LTEXT           "Estático",IDC_EVENTIDSTATIC,175,15,87,8
-	LTEXT           "Fonte:",IDC_STATIC,133,28,36,8
-	LTEXT           "Estático",IDC_EVENTSOURCESTATIC,175,28,87,8
-	LTEXT           "Tipo:",IDC_STATIC,133,42,36,8
-	LTEXT           "Estático",IDC_EVENTTYPESTATIC,175,42,87,8
-	LTEXT           "Categoria:",IDC_STATIC,133,55,36,8
-	LTEXT           "Estático",IDC_EVENTCATEGORYSTATIC,175,55,87,8
-	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
-	LTEXT           "Dad&os",IDC_STATIC,14,194,20,8
-	CONTROL         "&Bytes",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
-	CONTROL         "&Word",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+    DEFPUSHBUTTON "&Fechar", IDOK, 12, 258, 50, 14
+    PUSHBUTTON "&Anterior", IDPREVIOUS, 78, 258, 50, 14
+    PUSHBUTTON "&Próximo", IDNEXT, 144, 258, 50, 14
+    PUSHBUTTON "A&juda", IDHELP, 210, 258, 50, 14
+    EDITTEXT IDC_EVENTTEXTEDIT, 14, 81, 247, 108, ES_MULTILINE | ES_READONLY
+    LTEXT "&Descrição:", IDC_STATIC, 15, 70, 39, 8
+    LTEXT "Data:", IDC_STATIC, 14, 14, 36, 8
+    LTEXT "Estático", IDC_EVENTDATESTATIC, 56, 14, 72, 8
+    LTEXT "Tempo:", IDC_STATIC, 14, 27, 36, 8
+    LTEXT "Estático", IDC_EVENTTIMESTATIC, 56, 27, 72, 8
+    LTEXT "&Usuário:", IDC_STATIC, 14, 41, 36, 8
+    LTEXT "Estático", IDC_EVENTUSERSTATIC, 56, 41, 72, 8
+    LTEXT "&Computador:", IDC_STATIC, 14, 54, 36, 8
+    LTEXT "Estático", IDC_EVENTCOMPUTERSTATIC, 56, 54, 72, 8
+    LTEXT "EventID:", IDC_STATIC, 133, 15, 36, 8
+    LTEXT "Estático", IDC_EVENTIDSTATIC, 175, 15, 87, 8
+    LTEXT "Fonte:", IDC_STATIC, 133, 28, 36, 8
+    LTEXT "Estático", IDC_EVENTSOURCESTATIC, 175, 28, 87, 8
+    LTEXT "Tipo:", IDC_STATIC, 133, 42, 36, 8
+    LTEXT "Estático", IDC_EVENTTYPESTATIC, 175, 42, 87, 8
+    LTEXT "Categoria:", IDC_STATIC, 133, 55, 36, 8
+    LTEXT "Estático", IDC_EVENTCATEGORYSTATIC, 175, 55, 87, 8
+    EDITTEXT IDC_EVENTDATAEDIT, 14, 204, 247, 44, ES_MULTILINE | ES_READONLY
+    LTEXT "Dad&os", IDC_STATIC, 14, 194, 20, 8
+    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 194, 34, 10
+    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 194, 33, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE                  "Visualizador de Eventos"
-    IDS_EVENTSTRINGIDNOTFOUND      "A descrição para Event ID ( %lu ) em Fonte ( %s ) não foi encontrado. O computador local talvez não possua a informação de registro necessária ou mensagem de arquivos DLL para exibir mensagens de um computador remoto."
-    IDS_EVENTLOG_ERROR_TYPE        "Erro"
-    IDS_EVENTLOG_WARNING_TYPE      "Aviso"
-    IDS_EVENTLOG_INFORMATION_TYPE  "Informação"
-    IDS_EVENTLOG_AUDIT_SUCCESS     "Sucesso na Auditoria"
-    IDS_EVENTLOG_AUDIT_FAILURE     "Falha na Auditoria"
-    IDS_EVENTLOG_SUCCESS           "Sucesso"
-    IDS_EVENTLOG_UNKNOWN_TYPE      "Evento Desconhecido"
+    IDS_APP_TITLE "Visualizador de Eventos"
+    IDS_EVENTSTRINGIDNOTFOUND "A descrição para Event ID ( %lu ) em Fonte ( %s ) não foi encontrado. O computador local talvez não possua a informação de registro necessária ou mensagem de arquivos DLL para exibir mensagens de um computador remoto."
+    IDS_EVENTLOG_ERROR_TYPE "Erro"
+    IDS_EVENTLOG_WARNING_TYPE "Aviso"
+    IDS_EVENTLOG_INFORMATION_TYPE "Informação"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Sucesso na Auditoria"
+    IDS_EVENTLOG_AUDIT_FAILURE "Falha na Auditoria"
+    IDS_EVENTLOG_SUCCESS "Sucesso"
+    IDS_EVENTLOG_UNKNOWN_TYPE "Evento Desconhecido"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Tipo"
-    IDS_COLUMNDATE      "Data"
-    IDS_COLUMNTIME      "Hora"
-    IDS_COLUMNSOURCE    "Fonte"
-    IDS_COLUMNCATEGORY  "Categoria"
-    IDS_COLUMNEVENT     "Evento"
-    IDS_COLUMNUSER      "Usuário"
-    IDS_COLUMNCOMPUTER  "Computador"
+    IDS_COLUMNTYPE "Tipo"
+    IDS_COLUMNDATE "Data"
+    IDS_COLUMNTIME "Hora"
+    IDS_COLUMNSOURCE "Fonte"
+    IDS_COLUMNCATEGORY "Categoria"
+    IDS_COLUMNEVENT "Evento"
+    IDS_COLUMNUSER "Usuário"
+    IDS_COLUMNCOMPUTER "Computador"
     IDS_COLUMNEVENTDATA "Dados do Evento"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE          "Nenhum"
+    IDS_NONE "Nenhum"
     IDS_NOT_AVAILABLE "N/A"
 END
