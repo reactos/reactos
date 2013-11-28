@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-IDS_USAGE, "\nSkonfiguruj adapter WLAN.\n\n\
+    IDS_USAGE "\nSkonfiguruj adapter WLAN.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-c SSID\t\t£¹czy z podanym SSID,\n\
 \t-w WEP\t\tWyznacza klucz WEP dla po³¹czenia.\n\
@@ -10,31 +10,28 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-d\t\tRoz³¹cza obecnie po³¹czony AP.\n\
 \t-s\t\tSkauje i wyœwietle listê dostêpnych AP\n\
 \t\t\tw zasiêgu.\n\n\
-Uruchomienie bez parametrów wyœwietli informacje o bie¿¹cym po³¹czeniu WLAN\n"
-/* === */
-IDS_NO_NETWORK, "Brak sieci w zasiêgu\n"
-IDS_NO_WLAN_ADAPTER, "Adapter WLAN nie zosta³ wykryty w systemie\n"
-IDS_SUCCESS, "Operacja zakoñczy³a siê sukcesem.\n"
-IDS_WLAN_DISCONNECT, "\nWLAN zosta³ od³¹czony\n"
-/* === */
-IDS_MSG_WEP_ENABLED, "WEP w u¿yciu: %s\n"
-IDS_MSG_NETWORK_MODE, "Tryb po³¹czenia: %s\n"
-IDS_MSG_CURRENT_WIRELESS, "\nInformacje o konfiguracji obecnej sieci bezprzewodowej:\n\n"
-IDS_MSG_ENCRYPTED, "Szyfrowana: %s\n"
-IDS_MSG_NETWORK_TYPE, "Typ sieci: %s\n"
-IDS_MSG_RSSI, "RSSI: %i dBm\n"
-IDS_MSG_SUPPORT_RATE, "Dostêpne prêdkoœci transmisji (Mbps): "
-IDS_MSG_TRANSMISSION_POWER, "Moc transmisji: %d mW\n"
-IDS_MSG_ANTENNA_COUNT, "Liczba anten: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA, "Antena nadaj¹ca: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA_ANY, "Antena nadaj¹ca: Dowolna\n"
-IDS_MSG_RECEIVE_ANTENNA, "Antena odbieraj¹ca: %d\n"
-IDS_MSG_RECEIVE_ANTENNA_ANY, "Antena odbieraj¹ca: Dowolna\n"
-IDS_MSG_FRAGMENT_THRESHOLD, "Pu³ap fragmentacji: %d bytes\n"
-IDS_MSG_RTS_THRESHOLD, "Pu³ap RTS: %d bytes\n"
-/* === */
-IDS_YES, "Tak"
-IDS_NO, "Nie"
-IDS_ADHOC, "Ad-hoc"
-IDS_INFRASTRUCTURE, "Infrastruktura"
+Uruchomienie bez parametr?w wyœwietli informacje o bie?¹cym po³¹czeniu WLAN\n"
+    IDS_NO_NETWORK "Brak sieci w zasiêgu\n"
+    IDS_NO_WLAN_ADAPTER "Adapter WLAN nie zosta³ wykryty w systemie\n"
+    IDS_SUCCESS "Operacja zako?czy³a siê sukcesem.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN zosta³ od³¹czony\n"
+    IDS_MSG_WEP_ENABLED "WEP w u?yciu: %s\n"
+    IDS_MSG_NETWORK_MODE "Tryb po³¹czenia: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformacje o konfiguracji obecnej sieci bezprzewodowej:\n\n"
+    IDS_MSG_ENCRYPTED "Szyfrowana: %s\n"
+    IDS_MSG_NETWORK_TYPE "Typ sieci: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Dostêpne prêdkoœci transmisji (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Moc transmisji: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Liczba anten: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antena nadaj¹ca: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena nadaj¹ca: Dowolna\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antena odbieraj¹ca: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena odbieraj¹ca: Dowolna\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Pu³ap fragmentacji: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Pu³ap RTS: %d bytes\n"
+    IDS_YES "Tak"
+    IDS_NO "Nie"
+    IDS_ADHOC "Ad-hoc"
+    IDS_INFRASTRUCTURE "Infrastruktura"
 END

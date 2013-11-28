@@ -1,31 +1,31 @@
-// Russian language resource file (Dmitry Chapyshev, 2007-06-10)
+/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mixed"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "unknown"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mixed"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "unknown"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Другой тип адаптера"
-  IDS_ETH     "Ethernet адаптер"
-  IDS_TOKEN   "Token Ring адаптер"
-  IDS_FDDI    "FDDI адаптер"
-  IDS_PPP     "PPP адаптер"
-  IDS_LOOP    "Loopback адаптер"
-  IDS_SLIP    "SLIP адаптер"
+    IDS_OTHER "Другой тип адаптера"
+    IDS_ETH "Ethernet адаптер"
+    IDS_TOKEN "Token Ring адаптер"
+    IDS_FDDI "FDDI адаптер"
+    IDS_PPP "PPP адаптер"
+    IDS_LOOP "Loopback адаптер"
+    IDS_SLIP "SLIP адаптер"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nИСПОЛЬЗОВАНИЕ:\n \
         ipconfig [/? | /all | /renew [адаптер] | /release [адаптер] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

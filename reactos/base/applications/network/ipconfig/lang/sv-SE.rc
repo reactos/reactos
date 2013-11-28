@@ -1,36 +1,36 @@
 /*
- * PROJECT:      ReactOS IPCONFIG
- * FILE:         base\applications\network\ipconfig\lang\sv-SE.rc
- * PURPOSE:      Swedish resource file
- * TRANSLATOR:   Jaix Bly
+ * PROJECT:    ReactOS IPCONFIG
+ * FILE:       base/applications/network/ipconfig/lang/sv-SE.rc
+ * PURPOSE:    Swedish resource file
+ * TRANSLATOR: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mixad"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "Okänd"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mixad"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "Okänd"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Annan Typ av Adapter"
-  IDS_ETH     "Ethernet Adapter"
-  IDS_TOKEN   "Token Ring Adapter"
-  IDS_FDDI    "FDDI Adapter"
-  IDS_PPP     "PPP Adapter"
-  IDS_LOOP    "Loopback Adapter"
-  IDS_SLIP    "SLIP Adapter"
+    IDS_OTHER "Annan Typ av Adapter"
+    IDS_ETH "Ethernet Adapter"
+    IDS_TOKEN "Token Ring Adapter"
+    IDS_FDDI "FDDI Adapter"
+    IDS_PPP "PPP Adapter"
+    IDS_LOOP "Loopback Adapter"
+    IDS_SLIP "SLIP Adapter"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nSYNTAX:\n \
         ipconfig [/? | /all | /renew [kort] | /release [kort] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

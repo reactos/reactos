@@ -2,27 +2,27 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Gemischt"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "Unbekannt"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Gemischt"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "Unbekannt"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Anderer Adapter"
-  IDS_ETH     "Ethernet-Adapter"
-  IDS_TOKEN   "Token-Ring-Adapter"
-  IDS_FDDI    "FDDI-Adapter"
-  IDS_PPP     "PPP-Adapter"
-  IDS_LOOP    "Loopback-Adapter"
-  IDS_SLIP    "SLIP-Adapter"
+    IDS_OTHER "Anderer Adapter"
+    IDS_ETH "Ethernet-Adapter"
+    IDS_TOKEN "Token-Ring-Adapter"
+    IDS_FDDI "FDDI-Adapter"
+    IDS_PPP "PPP-Adapter"
+    IDS_LOOP "Loopback-Adapter"
+    IDS_SLIP "SLIP-Adapter"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_USAGE
+    IDS_USAGE
     "\nSyntax:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

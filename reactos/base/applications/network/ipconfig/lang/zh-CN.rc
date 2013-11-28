@@ -1,33 +1,31 @@
-/*
- * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "广播"
-  IDS_P2P     "点对点"
-  IDS_MIXED   "混合"
-  IDS_HYBRID  "混杂"
-  IDS_UNKNOWN "未知"
+    IDS_BCAST "广播"
+    IDS_P2P "点对点"
+    IDS_MIXED "混合"
+    IDS_HYBRID "混杂"
+    IDS_UNKNOWN "未知"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "其他类型的适配器"
-  IDS_ETH     "以太网适配器"
-  IDS_TOKEN   "令牌环适配器"
-  IDS_FDDI    "FDDI 适配器"
-  IDS_PPP     "PPP 适配器"
-  IDS_LOOP    "本地环回适配器"
-  IDS_SLIP    "SLIP 适配器"
+    IDS_OTHER "其他类型的适配器"
+    IDS_ETH "以太网适配器"
+    IDS_TOKEN "令牌环适配器"
+    IDS_FDDI "FDDI 适配器"
+    IDS_PPP "PPP 适配器"
+    IDS_LOOP "本地环回适配器"
+    IDS_SLIP "SLIP 适配器"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\n用法：\n \
         ipconfig [/? | /all | /renew [适配器] | /release [适配器] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

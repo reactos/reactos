@@ -1,6 +1,4 @@
-/*
- * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -14,26 +12,26 @@ BEGIN
     -l 大小         发送包的大小。\n\
     -w 超时         等待每个回复的时间(毫秒)。\n\n\0"
 
-    IDS_PING_WITH_BYTES             "\n正在呼叫 %1 [%2] ，数据包大小 %3!d! 字节：\n\n\0"
-    IDS_PING_STATISTICS             "\n%1 的呼叫统计：\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST  "    数据包：发送个数 = %1!d!，接收个数 = %2!d!，丢失个数 = %3!d! (丢失率 %4!d!%%),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP      "近似来回所需时间(毫秒)：\n\0"
-    IDS_MIN_MAX_AVERAGE             "    最小值 = %1, 最大值 = %2, 平均值 = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES        "空闲资源不足。\n\0"
-    IDS_UNKNOWN_HOST                "未知主机 %1。\n\0"
-    IDS_SETSOCKOPT_FAILED           "setsockopt 失败 (%1!d!)。\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET     "不能创建套接字 (#%1!d!)。\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK      "不能初始化 winsock dll。\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "目标主机的名称或 IP 地址必须被指定。\n\0"
-    IDS_BAD_PARAMETER               "错误参数 %1。\n\0"
-    IDS_BAD_OPTION_FORMAT           "错误选项格式 %1。\n\0"
-    IDS_BAD_OPTION                  "错误选项 %1。\n\0"
-    IDS_BAD_VALUE_OPTION_L          "-l 选项的值无效，有效的范围是从 0 到 %1!d!。\n\0"
-    IDS_REPLY_FROM                  "来自 %1 的回复：字节数=%2!d! 时间%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE            "目标主机不可到达。\n\0"
-    IDS_COULD_NOT_TRANSMIT          "无法发送数据 (%1!d!)。\n\0"
-    IDS_COULD_NOT_RECV              "无法接收数据 (%1!d!)。\n\0"
-    IDS_REQUEST_TIMEOUT             "请求超时。\n\0"
-    IDS_MS                          "ms\0"
-    IDS_1MS                         "1ms\0"
+    IDS_PING_WITH_BYTES "\n正在呼叫 %1 [%2] ，数据包大小 %3!d! 字节：\n\n\0"
+    IDS_PING_STATISTICS "\n%1 的呼叫统计：\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST "    数据包：发送个数 = %1!d!，接收个数 = %2!d!，丢失个数 = %3!d! (丢失率 %4!d!%%),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP "近似来回所需时间(毫秒)：\n\0"
+    IDS_MIN_MAX_AVERAGE "    最小值 = %1, 最大值 = %2, 平均值 = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES "空闲资源不足。\n\0"
+    IDS_UNKNOWN_HOST "未知主机 %1。\n\0"
+    IDS_SETSOCKOPT_FAILED "setsockopt 失败 (%1!d!)。\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET "不能创建套接字 (#%1!d!)。\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "不能初始化 winsock dll。\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "目标主机的名称或 IP 地址必须被指定。\n\0"
+    IDS_BAD_PARAMETER "错误参数 %1。\n\0"
+    IDS_BAD_OPTION_FORMAT "错误选项格式 %1。\n\0"
+    IDS_BAD_OPTION "错误选项 %1。\n\0"
+    IDS_BAD_VALUE_OPTION_L "-l 选项的值无效，有效的范围是从 0 到 %1!d!。\n\0"
+    IDS_REPLY_FROM "来自 %1 的回复：字节数=%2!d! 时间%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE "目标主机不可到达。\n\0"
+    IDS_COULD_NOT_TRANSMIT "无法发送数据 (%1!d!)。\n\0"
+    IDS_COULD_NOT_RECV "无法接收数据 (%1!d!)。\n\0"
+    IDS_REQUEST_TIMEOUT "请求超时。\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
 END
