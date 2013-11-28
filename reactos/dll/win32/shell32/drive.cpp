@@ -19,7 +19,6 @@
  */
 
 #include "precomp.h"
-using namespace std;
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
