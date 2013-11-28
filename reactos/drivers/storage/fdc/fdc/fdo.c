@@ -270,7 +270,7 @@ FdcFdoPnp(
             {
                 case BusRelations:
                     DPRINT1("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    Status = FdcFdoQueryBusRelations((DeviceObject, &DeviceRelations);
+                    Status = FdcFdoQueryBusRelations(DeviceObject, &DeviceRelations);
                     Information = (ULONG_PTR)DeviceRelations;
                     break;
 
