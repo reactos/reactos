@@ -7,17 +7,15 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Támogatott parancsok megjelenítése\n\n\
+    IDS_HELP1 "Támogatott parancsok megjelenítése\n\n\
   help parancs\n\
   parancs /?     Több (részletes) információ megtekintéséhez használd ezt.\n\n\
 ?        Minden támogatott parancs megjelenítése (részletek nélkül).\n\
@@ -62,7 +60,7 @@ RMDIR    Töröl egy mappát.\n\
 SCREEN   Megváltoztatja a kurzos pozícióját, vagy megjelenít adott pozícióban egy szöveget.\n\
 SET      Megjeleníti vagy beállítja a környezeti változókat.\n\
 SHIFT    Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n"
-IDS_HELP2, "START    Egy új ablakban hajtha végre a parancsot.\n\
+    IDS_HELP2 "START    Egy új ablakban hajtha végre a parancsot.\n\
 TIME     Megjeleníti vagy beállítja a rendszeridõt.\n\
 TIMER    Idõzítõk kezelését teszi lehetõve.\n\
 TITLE    Beállítja az ablak címsorának szövegét.\n\
@@ -70,5 +68,4 @@ TYPE     Megjeleníti egy állomány tartalmát.\n\
 VER      Megjeleníti a ReactOS verzió információját.\n\
 VERIFY   Írási mûveletek ellenõrzését vezérli\n\
 VOL      Megjeleníti egy kötet címkéjét és sorozatszámát.\n"
-
 END

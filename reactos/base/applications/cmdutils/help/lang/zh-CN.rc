@@ -1,23 +1,18 @@
-/*
- * Simplified Chinese translation
- * By Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011
- */
+/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "列出所有可用命令 (+ 它们的描述)\n\n\
+    IDS_HELP1 "列出所有可用命令 (+ 它们的描述)\n\n\
   help 命令\n\
   命令 /?         得到特定命令的更多信息\n\n\
 ?        列出所有可用命令 (没有描述)。\n\
@@ -63,7 +58,7 @@ RMDIR    删除一个目录。\n\
 SCREEN   移动光标并可选地输出文本。\n\
 SET      显示、设置或删除 ReactOS 环境变量。\n\
 SHIFT    在批处理文件中移动可替换参数的位置。\n"
-IDS_HELP2, "START    启动一个分隔的窗口来运行指定的程序或命令。\n\
+    IDS_HELP2 "START    启动一个分隔的窗口来运行指定的程序或命令。\n\
          执行命令。\n\
 TIME     显示或设置系统时间。\n\
 TIMER    允许使用至多十个停表。\n\
@@ -72,5 +67,4 @@ TYPE     显示一个文本文件的内容。\n\
 VER      显示 ReactOS 版本。\n\
 VERIFY   决定 ReactOS 是否检验您的文件已被正确地写入磁盘。\n\
 VOL      显示磁盘卷标和序列号。\n"
-
 END

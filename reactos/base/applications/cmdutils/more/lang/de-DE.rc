@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_USAGE, "Zeigt Daten seitenweise auf dem Bildschirm an.\n\n\
+    IDS_USAGE "Zeigt Daten seitenweise auf dem Bildschirm an.\n\n\
   MORE < [Laufwerk:][Pfad]Dateiname\n\
   Befehl | MORE \n\
   MORE [Laufwerk:][Pfad]Dateiname\n\n\
@@ -10,7 +10,6 @@ BEGIN
   Befehl\t\t     Ein Befehl, dessen Ausgabe angezeigt werden soll.\n\n\
   An der Eingabeaufforderung ""-- Fortsetzung --"" kann eine beliebige\n\
   Taste gedrückt werden, um die nächste Seite anzuzeigen.\n"
-
-  IDS_CONTINUE, " -- Fortsetzung (100%) -- "
-  IDS_FILE_ACCESS, "Auf die Datei %s kann nicht zugegriffen werden."
+    IDS_CONTINUE " -- Fortsetzung (100%) -- "
+    IDS_FILE_ACCESS "Auf die Datei %s kann nicht zugegriffen werden."
 END

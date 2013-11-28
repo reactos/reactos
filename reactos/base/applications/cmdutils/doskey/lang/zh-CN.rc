@@ -1,13 +1,10 @@
-/*
- * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "管理命令行编辑设置、历史记录和宏。\n\
+    IDS_HELP "管理命令行编辑设置、历史记录和宏。\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=大小]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=文件] [宏名=[文本]]\n\
@@ -25,7 +22,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=大小]\n\
   /MACROFILE=file     从文件载入宏定义。\n\
   宏名                指定要创建的宏名。\n\
   文本                指定要替换该宏的文本。\n"
-
-IDS_INVALID_MACRO_DEF, "无效的宏定义：%s\n"
-
+    IDS_INVALID_MACRO_DEF "无效的宏定义：%s\n"
 END

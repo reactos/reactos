@@ -2,8 +2,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Administra la configuración de edición en línea de comandos del historial y de las macros.\n\
+    IDS_HELP "Administra la configuración de edición en línea de comandos del historial y de las macros.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -21,7 +20,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=file     Carga las definiciones de las macros desde un archivo.\n\
   macroname           Especifica el nombre de una macro a crear.\n\
   text                Especifica el texto de reemplazo para la macro.\n"
-
-IDS_INVALID_MACRO_DEF, "Definición de macro inválida: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Definición de macro inválida: %s\n"
 END

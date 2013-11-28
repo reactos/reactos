@@ -1,38 +1,14 @@
-/*
- * REG.EXE - Wine-compatible reg program.
- * Korean language support
- *
- * Copyright 2008 Andrew Riedi
- * Copyright 2008 YunSong Hwang
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "reg.h"
-
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
-    STRING_USAGE, "명령어 형식:\n\nREG [ ADD | DELETE | QUERY ]\nREG 명령어 /?\n"
-    STRING_ADD_USAGE, "REG ADD 값 [/v 값 | /ve] [/t 형식] [/s 분리기호] [/d 데이타] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE 키 이름 [/v 값 | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY 키 이름 [/v 값| /ve] [/s]\n"
-    STRING_SUCCESS, "작업이 성공적으로 끝났습니다\n"
-    STRING_INVALID_KEY, "에러: 올바르지 않은 키 이름\n"
-    STRING_INVALID_CMDLINE, "에러:올바르지 않은 명령라인 매개변수\n"
-    STRING_NO_REMOTE, "에러: 원격 머신에  키를 더하는 것은 가능하지 않습니다\n"
-    STRING_CANNOT_FIND, "에러: 이 시스템에서 지정된 레지스트리 키나 값을 찾을수 없습니다\n"
-}
+BEGIN
+    STRING_USAGE "명령어 형식:\n\nREG [ ADD | DELETE | QUERY ]\nREG 명령어 /?\n"
+    STRING_ADD_USAGE "REG ADD 값 [/v 값 | /ve] [/t 형식] [/s 분리기호] [/d 데이타] [/f]\n"
+    STRING_DELETE_USAGE "REG DELETE 키 이름 [/v 값 | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE "REG QUERY 키 이름 [/v 값| /ve] [/s]\n"
+    STRING_SUCCESS "작업이 성공적으로 끝났습니다\n"
+    STRING_INVALID_KEY "에러: 올바르지 않은 키 이름\n"
+    STRING_INVALID_CMDLINE "에러:올바르지 않은 명령라인 매개변수\n"
+    STRING_NO_REMOTE "에러: 원격 머신에  키를 더하는 것은 가능하지 않습니다\n"
+    STRING_CANNOT_FIND "에러: 이 시스템에서 지정된 레지스트리 키나 값을 찾을수 없습니다\n"
+END

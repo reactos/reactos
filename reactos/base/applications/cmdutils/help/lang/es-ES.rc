@@ -7,17 +7,15 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Lista de todos los comandos disponibles (con descripción)\n\n\
+    IDS_HELP1 "Lista de todos los comandos disponibles (con descripción)\n\n\
   help comando\n\
   comando /?     Para más información del comando especificado.\n\n\
 ?        Muestra todos los comandos disponibles (sin la descripción).\n\
@@ -63,8 +61,7 @@ RMDIR    Borra un directorio.\n\
 SCREEN   Mueve el cursor y opcionalmente escribe un texto.\n\
 SET      Muestra, cambia o borra variables del entorno de la ventana.\n\
 SHIFT    Marca la posición de parámetros remplazables en un archivo por lotes.\n"
-
-IDS_HELP2, "START    Abre una ventana separada para ejecutar un programa o comando específicod.\n\
+    IDS_HELP2 "START    Abre una ventana separada para ejecutar un programa o comando específicod.\n\
          Ejecuta CMD.\n\
 TIME     Muestra o cambia la hora del sistema.\n\
 TIMER    Permite al usuario diez paradas para ver.\n\
@@ -74,5 +71,4 @@ VER      Muestra la versión de ReactOS.\n\
 VERIFY   Le dice a ReactOS que verifique que cada archivo se escriba.\n\
          corectamente en el disco.\n\
 VOL      Muestra la etiqueta de volumen y el número de serie del disco.\n"
-
 END

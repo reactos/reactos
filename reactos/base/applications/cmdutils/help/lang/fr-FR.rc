@@ -1,24 +1,22 @@
 /*
  * French resources
- * Sylvain Pétréolle  2005
- * Pierre Schweitzer  2007
+ * Sylvain Pétréolle - 2005
+ * Pierre Schweitzer - 2007
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "Cette commande n'est pas prise en charge par l'utilitaire d'aide.\nEssayez ""%s /?"".\n"
+    IDS_NO_ENTRY "Cette commande n'est pas prise en charge par l'utilitaire d'aide.\nEssayez ""%s /?"".\n"
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\
+    IDS_USAGE "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\
 HELP [commande]\n\n\
   commande - Affiche des informations d'aide sur cette commande.\n"
-
-IDS_HELP1, "Liste de toutes les commandes disponibles (+ description)\n\n\
+    IDS_HELP1 "Liste de toutes les commandes disponibles (+ description)\n\n\
   help commande\n\
   commande /?    Pour plus d'informations sur une commande spécifique\n\n\
 ?        Liste toutes les commandes disponibles sans leur description).\n\
@@ -50,7 +48,7 @@ LABEL    Crée, change, ou supprime le nom de volume d'un disque.\n\
 MD       Crée un répertoire.\n\
 MKDIR    Crée un répertoire.\n\
 MKLINK   Crée des liens symboliques ou réels.\n"
-IDS_HELP2, "MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
+    IDS_HELP2 "MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
          répertoire.\n\
 PATH     Affiche ou définit un chemin de recherche pour les fichiers exécutables.\n\
 PAUSE    Suspend l'exécution d'un fichier batch et affiche un message.\n\
@@ -77,5 +75,4 @@ VER      Affiche la version de ReactOS.\n\
 VERIFY   Spécifie à ReactOS s'il faut vérifier que les fichiers sont correctement\n\
          écrit sur un disque.\n\
 VOL      Affiche le nom de volume d'un disque et son numéro de série.\n"
-
 END

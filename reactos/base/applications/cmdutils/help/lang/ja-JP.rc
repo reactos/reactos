@@ -1,22 +1,18 @@
-/*
- * Japanese translation of CMD
- */
+/* Japanese translation of CMD */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "利用可能なすべてのコマンドの一覧と、その説明。\n\n\
+    IDS_HELP1 "利用可能なすべてのコマンドの一覧と、その説明。\n\n\
   help コマンド\n\
   コマンド /?     特定のコマンドに関する詳細情報\n\n\
 ?        利用可能なすべてのコマンドの一覧 (説明なし)。\n\
@@ -63,7 +59,7 @@ RMDIR    ディレクトリを削除します。\n\
 SCREEN   カーソルを移動させます。移動後、文字列を入力することもできます。\n\
 SET      環境変数を表示、設定、または削除します。\n\
 SHIFT    カーソルを移動させます。移動後、文字列を入力することもできます。\n"
-IDS_HELP2, "START    別のウィンドウを起動し、指定したプログラムまたはコマンドを実行します。\n\
+    IDS_HELP2 "START    別のウィンドウを起動し、指定したプログラムまたはコマンドを実行します。\n\
 TIME     システム時刻を表示または設定します。\n\
 TIMER    10 個までのストップウォッチを使うことができます。\n\
 TITLE    コマンド プロンプト ウィンドウのウィンドウ タイトルを設定します。\n\
@@ -72,5 +68,4 @@ VER      ReactOS のバージョンを表示します。\n\
 VERIFY   ファイルがディスクに正しく書き込まれたことを照合するかどうかを\n\
          指示します。\n\
 VOL      ディスクのボリューム ラベルとシリアル番号を表示します。\n"
-
 END

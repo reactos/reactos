@@ -2,17 +2,15 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
+    IDS_HELP1 "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
 help kommando\n\
 kommando /?     For mer informasjon om en bestemt kommando\n\n\
 ?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
@@ -59,7 +57,7 @@ RMDIR    Fjerner en mapp.\n\
 SCREEN   Flytter markør.\n\
 SET      Vis, sett, eller fjern ReactOS miljøvariabel.\n\
 SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
-IDS_HELP2, "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
+    IDS_HELP2 "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
          Utfører kommando.\n\
 TIME     Vis eller sett system tid.\n\
 TIMER    Håndtere stoppeklokker (maks 10 stk).\n\
@@ -69,5 +67,4 @@ VER      Viser ReactOS version.\n\
 VERIFY   Forteller ReactOS om att bekrefte om dine filer är skrevet\n\
          riktig til disk.\n\
 VOL      Vis et volums namn och serienummer.\n"
-
 END

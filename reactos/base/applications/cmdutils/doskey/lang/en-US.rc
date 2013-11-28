@@ -2,8 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Manages command-line editing settings, history, and macros.\n\
+    IDS_HELP "Manages command-line editing settings, history, and macros.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -21,7 +20,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=file     Loads macro definitions from a file.\n\
   macroname           Specifies the name of a macro to create.\n\
   text                Specifies the replacement text for the macro.\n"
-
-IDS_INVALID_MACRO_DEF, "Invalid macro definition: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Invalid macro definition: %s\n"
 END

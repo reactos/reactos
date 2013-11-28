@@ -1,23 +1,22 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Dec,2007)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Dec, 2007)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_USAGE, "Wyświetla dane, podzielone na odcinki o długości ekranu.\n\n\
+    IDS_USAGE "Wyświetla dane, podzielone na odcinki o długości ekranu.\n\n\
   MORE < [Napęd:][Ścieżka]Nazwa pliku\n\
   Polecenie | MORE \n\
   MORE [Napęd:][Ścieżka]Nazwa pliku\n\n\
   [Napęd:][Ścieżka]Nazwa pliku    Plik, którego zawartość ma być wyświetlona.\n\
   Polecenie\t\t     Polecenie, którego wynik ma być wyświetlony.\n\n\
   Po wyświetleniu ""-- Kontynuuj --"" możesz nacisnąć dowolny klawisz, aby przejść do następnej strony.\n"
-
-  IDS_CONTINUE, " -- Kontynuuj (100%) -- "
-  IDS_FILE_ACCESS, "Brak dostępu do pliku: %s."
+    IDS_CONTINUE " -- Kontynuuj (100%) -- "
+    IDS_FILE_ACCESS "Brak dostępu do pliku: %s."
 END

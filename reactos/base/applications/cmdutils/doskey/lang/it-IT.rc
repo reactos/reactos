@@ -2,8 +2,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Gestisce le impostazioni della riga di comando di editing, la cronologia e le macro.\n\
+    IDS_HELP "Gestisce le impostazioni della riga di comando di editing, la cronologia e le macro.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -21,7 +20,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=file     Carica le definizioni di macro da un file.\n\
   macroname           Specifica il nome di una macro per creare.\n\
   text                Consente di specificare il testo di sostituzione per la macro.\n"
-  
-IDS_INVALID_MACRO_DEF, "Definizion macro non valida: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Definizion macro non valida: %s\n"
 END

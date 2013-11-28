@@ -1,22 +1,18 @@
-/*
- *  Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15
- */
+/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
+    IDS_HELP1 "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
   help command\n\
   command /?     Untuk informasi lengkap pada perintah tertentu\n\n\
 ?        Daftar semua perintah yang tersedia tanpa deskripsi.\n\
@@ -64,7 +60,7 @@ RMDIR    Menghapus direktori.\n\
 SCREEN   Memindahkan kursor dan secara opsional mencetak teks.\n\
 SET      Menampilkan, menyetel, atau menghapus variabel lingkungan ReactOS.\n\
 SHIFT    Mengangkat posisi parameter yang bisa diganti dalam file batch.\n"
-IDS_HELP2, "START    Memulai jendela terpisah untuk menjalankan perintah atau program tertentu.\n\
+    IDS_HELP2 "START    Memulai jendela terpisah untuk menjalankan perintah atau program tertentu.\n\
          Menjalankan perintah.\n\
 TIME     Menampilkan atau menyetel jam sistem.\n\
 TIMER    Mengijinkan penggunaan sepuluh stopwatch.\n\
@@ -74,5 +70,4 @@ VER      Menampilkan versi ReactOS.\n\
 VERIFY   Memberitahu ReactOS apakah memverifikasi bahwa file anda ditulis\n\
          dengan benar ke sebuah disk.\n\
 VOL      Menampilkan label volume disk dan nomor seri.\n"
-
 END
