@@ -5,31 +5,30 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Schémata napájení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-  LTEXT "Vyberte napájecí schéma, které se nejvíce hodí pro tento poèítaè. Všechny zmìny nastavení se uloží do vybraného schématu.",
-        -1, 37, 6, 209, 36
-  GROUPBOX "&Schéma napájení", -1, 6, 43, 240, 50
-  COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-  PUSHBUTTON "&Uložit jako...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
-  PUSHBUTTON "&Odstranit", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
-  GROUPBOX "Neznámý", IDC_GRPDETAIL, 6, 95, 240, 136
-  LTEXT "Pokud je poèítaè:",IDC_SAT, 12, 109, 60, 12
-  LTEXT "Pøipojen",IDC_SAC, 123, 110, 45, 15
-  ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-  LTEXT "Funguje na baterie",IDC_SDC, 195, 110, 45, 15
-  ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
-  LTEXT "Vypnout &monitor:",IDC_MONITOR, 13, 148, 84, 10
-  COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "Vypnout pevné &disky:",IDC_DISK, 13, 171, 84, 10
-  COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "Úsporný &režim:",IDC_STANDBY, 13, 191, 84, 10
-  COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "&Režim spánku:",IDC_HYBERNATE, 13, 212, 84, 10
-  COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    LTEXT "Vyberte napájecí schéma, které se nejvíce hodí pro tento poèítaè. Všechny zmìny nastavení se uloží do vybraného schématu.", -1, 37, 6, 209, 36
+    GROUPBOX "&Schéma napájení", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "&Uložit jako...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Odstranit", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "Neznámý", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "Pokud je poèítaè:", IDC_SAT, 12, 109, 60, 12
+    LTEXT "Pøipojen", IDC_SAC, 123, 110, 45, 15
+    ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+    LTEXT "Funguje na baterie", IDC_SDC, 195, 110, 45, 15
+    ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+    LTEXT "Vypnout &monitor:", IDC_MONITOR, 13, 148, 84, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Vypnout pevné &disky:", IDC_DISK, 13, 171, 84, 10
+    COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Úsporný &režim:", IDC_STANDBY, 13, 191, 84, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Režim spánku:", IDC_HYBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
@@ -37,37 +36,32 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Varování"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Varování o nízkém stavu baterie",-1,10,15,235,95
-    CONTROL         "Aktivovat &varování o nízkém stavu baterie, když úroveò nabití dosáhne:",IDC_ALARM1,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT           "neznámá",IDC_ALARMVALUE1, 209, 20, 33, 10
-    LTEXT           "0%",-1, 28, 43, 15, 10
-    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
-                    TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
-    LTEXT           "100%", -1,214, 43, 25, 10
-    PUSHBUTTON      "&Akce pøi varování...",-1, 17, 69, 70, 14,WS_DISABLED
-    LTEXT           "Oznámení:",-1, 95, 71, 57, 10
-    LTEXT           "Neznámé",IDC_ALARMMSG1, 154, 71, 84, 10
-    LTEXT           "Akce:",-1, 95, 83, 55, 10
-    LTEXT           "Neznámá",IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT           "Spustit program:",-1, 95, 95, 55, 10
-    LTEXT           "Neznámý",IDC_ALARMPROG1, 154, 95, 84, 10
-
-    GROUPBOX        "Varování o kritickém stavu baterie",-1, 6, 120, 239, 106
-    CONTROL         "Aktivovat varování o &kritickém stavu baterie, když úroveò nabití dosáhne:",IDC_ALARM2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
-    LTEXT           "neznámá",IDC_ALARMVALUE2, 209, 133, 33, 10
-    LTEXT           "0%",-1, 28, 154, 15, 10
-    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
-                    TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
-    LTEXT           "100%",-1, 214, 154, 25, 10
-    PUSHBUTTON      "Akce &pøi varování...",-1, 17, 183, 70, 14, WS_DISABLED
-    LTEXT           "Oznámení:",-1, 95, 185, 50, 10
-    LTEXT           "Neznámé",IDC_ALARMMSG2, 154, 185, 84, 10
-    LTEXT           "Akce:",-1, 95, 198, 45, 10
-    LTEXT           "Neznámá",IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT           "Spustit program:",-1, 95, 211, 50, 10
-    LTEXT           "Neznámý",IDC_ALARMPROG2, 154, 211, 84, 10
+    GROUPBOX "Varování o nízkém stavu baterie", -1, 10, 15, 235, 95
+    CONTROL "Aktivovat &varování o nízkém stavu baterie, když úroveò nabití dosáhne:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT "neznámá", IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT "0%", -1, 28, 43, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON "&Akce pøi varování...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "Oznámení:", -1, 95, 71, 57, 10
+    LTEXT "Neznámé", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "Akce:", -1, 95, 83, 55, 10
+    LTEXT "Neznámá", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "Spustit program:", -1, 95, 95, 55, 10
+    LTEXT "Neznámý", IDC_ALARMPROG1, 154, 95, 84, 10
+    GROUPBOX "Varování o kritickém stavu baterie", -1, 6, 120, 239, 106
+    CONTROL "Aktivovat varování o &kritickém stavu baterie, když úroveò nabití dosáhne:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT "neznámá", IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT "0%", -1, 28, 154, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT "100%", -1, 214, 154, 25, 10
+    PUSHBUTTON "Akce &pøi varování...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "Oznámení:", -1, 95, 185, 50, 10
+    LTEXT "Neznámé", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "Akce:", -1, 95, 198, 45, 10
+    LTEXT "Neznámá", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "Spustit program:", -1, 95, 211, 50, 10
+    LTEXT "Neznámý", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
@@ -75,25 +69,19 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Upøesnit"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_ACDC,IDI_ACDC, 7, 7, 20, 20
-    LTEXT           "Vyberte, které nastavení snížené spotøeby chcete použít.",-1, 37, 6, 207, 20
-    GROUPBOX        "Možnosti",-1, 6, 30, 240, 65
-    CONTROL         "Vždy zobrazovat &ikonu na hlavním panelu",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 43, 220, 10
-    CONTROL         "Dotázat se na &heslo pøi pøechodu z úsporného režimu",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 60, 220, 10
-    CONTROL         "&Snížit jas displeje pøi chodu na baterie.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 78, 220, 10
-    GROUPBOX        "Tlaèítka napájení",-1, 6, 101, 240, 127
-    LTEXT           "&Pøi sklopení displeje pøenosného poèítaèe:", IDC_SLIDCLOSE, 15, 115, 222, 10
-    COMBOBOX        IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Pøi stisknutí tlaèítka &napájení:", IDC_SPOWERBUTTON, 15, 153, 222, 10
-    COMBOBOX        IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Pøi stisknutí tlaèítka režimu &spánku:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
-    COMBOBOX        IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
-                    WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    LTEXT "Vyberte, které nastavení snížené spotøeby chcete použít.", -1, 37, 6, 207, 20
+    GROUPBOX "Možnosti", -1, 6, 30, 240, 65
+    CONTROL "Vždy zobrazovat &ikonu na hlavním panelu", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "Dotázat se na &heslo pøi pøechodu z úsporného režimu", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
+    CONTROL "&Snížit jas displeje pøi chodu na baterie.", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX "Tlaèítka napájení", -1, 6, 101, 240, 127
+    LTEXT "&Pøi sklopení displeje pøenosného poèítaèe:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Pøi stisknutí tlaèítka &napájení:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Pøi stisknutí tlaèítka režimu &spánku:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
@@ -101,62 +89,55 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Režim spánku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT           "Pokud Váš poèítaè pøejde do režimu spánku, uloží obsah své pamìti na pevný disk a vypne se. Po opìtovném spuštìní se vrátí do pùvodního stavu.",
-                    -1, 37, 6, 210, 35
-    GROUPBOX        "Režim spánku",-1, 6, 41, 240, 32
-    CONTROL         "Zapnout funkci režim &spánku",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 55, 210, 10
-    GROUPBOX        "Místo na disku potøebné pro režim spánku",-1, 6, 80, 240, 76
-    LTEXT           "Volné místo:",-1, 15, 95, 140, 10
-    LTEXT           "Neznámé",IDC_FREESPACE, 160, 95, 80, 10
-    LTEXT           "Potøebné místo na disku:",-1, 15, 115, 140, 10
-    LTEXT           "Neznámé",IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT           "Pro funkci režim spánku musíte uvolnit místo na disku. ",IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT "Pokud Váš poèítaè pøejde do režimu spánku, uloží obsah své pamìti na pevný disk a vypne se. Po opìtovném spuštìní se vrátí do pùvodního stavu.", -1, 37, 6, 210, 35
+    GROUPBOX "Režim spánku", -1, 6, 41, 240, 32
+    CONTROL "Zapnout funkci režim &spánku", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX "Místo na disku potøebné pro režim spánku", -1, 6, 80, 240, 76
+    LTEXT "Volné místo:", -1, 15, 95, 140, 10
+    LTEXT "Neznámé", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "Potøebné místo na disku:", -1, 15, 115, 140, 10
+    LTEXT "Neznámé", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "Pro funkci režim spánku musíte uvolnit místo na disku. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME_1 "Možnosti napájení"
-  IDS_CPLDESCRIPTION_1 "Nastaví možnosti napájení a šetøení energií pro tento poèítaè."
-  IDS_PROCENT "%i%%"
-  IDS_SOUND "Zvuk"
-  IDS_TEXT "Text"
-  IDS_CONFIG1 "Nastavení pro schéma napájení %1"
-  IDS_CONFIG2 "Pokroèilá nastavení pro %1"
-
-  IDS_SIZEBYTS "%i bytù"
-  IDS_SIZEMB "%i MB"
-
-  IDS_NOACTION "Nedìlat nic"
-
-  IDS_PowerActionNone1 "Žádná akce"
-  IDS_PowerActionUnknown "Neznámý"
-  IDS_PowerActionSleep "Úsporný režim"
-  IDS_PowerActionHibernate "Režim spánku"
-  IDS_PowerActionShutdown "Vypnout"
-  IDS_PowerActionRestart "Restartovat"
-  IDS_PowerActionShutdownOff "Vypnout a odpojit napájení"
-  IDS_PowerActionWarmEject "Zeptat se na požadovanou akci"
-  IDS_PowerActionNone2 "Není"
-
-  IDS_TIMEOUT1 "Po 1 minutì"
-  IDS_TIMEOUT2 "Po 2 minutách"
-  IDS_TIMEOUT3 "Po 3 minutách"
-  IDS_TIMEOUT4 "Po 5 minutách"
-  IDS_TIMEOUT5 "Po 10 minutách"
-  IDS_TIMEOUT6 "Po 15 minutách"
-  IDS_TIMEOUT7 "Po 20 minutách"
-  IDS_TIMEOUT8 "Po 25 minutách"
-  IDS_TIMEOUT9 "Po 30 minutách"
-  IDS_TIMEOUT10 "Po 45 minutách"
-  IDS_TIMEOUT11 "Po 1 hodinì"
-  IDS_TIMEOUT12 "Po 2 hodinách"
-  IDS_TIMEOUT13 "Po 3 hodinách"
-  IDS_TIMEOUT14 "Po 4 hodinách"
-  IDS_TIMEOUT15 "Po 5 hodinách"
-  IDS_TIMEOUT16 "Nikdy"
-
-  IDS_DEL_SCHEME "Opravdu si pøejete smazat toto schéma napájení?"
-  IDS_DEL_SCHEME_TITLE "Smazat schéma"
+    IDS_CPLNAME_1 "Možnosti napájení"
+    IDS_CPLDESCRIPTION_1 "Nastaví možnosti napájení a šetøení energií pro tento poèítaè."
+    IDS_PROCENT "%i%%"
+    IDS_SOUND "Zvuk"
+    IDS_TEXT "Text"
+    IDS_CONFIG1 "Nastavení pro schéma napájení %1"
+    IDS_CONFIG2 "Pokroèilá nastavení pro %1"
+    IDS_SIZEBYTS "%i bytù"
+    IDS_SIZEMB "%i MB"
+    IDS_NOACTION "Nedìlat nic"
+    IDS_PowerActionNone1 "Žádná akce"
+    IDS_PowerActionUnknown "Neznámý"
+    IDS_PowerActionSleep "Úsporný režim"
+    IDS_PowerActionHibernate "Režim spánku"
+    IDS_PowerActionShutdown "Vypnout"
+    IDS_PowerActionRestart "Restartovat"
+    IDS_PowerActionShutdownOff "Vypnout a odpojit napájení"
+    IDS_PowerActionWarmEject "Zeptat se na požadovanou akci"
+    IDS_PowerActionNone2 "Není"
+    IDS_TIMEOUT1 "Po 1 minutì"
+    IDS_TIMEOUT2 "Po 2 minutách"
+    IDS_TIMEOUT3 "Po 3 minutách"
+    IDS_TIMEOUT4 "Po 5 minutách"
+    IDS_TIMEOUT5 "Po 10 minutách"
+    IDS_TIMEOUT6 "Po 15 minutách"
+    IDS_TIMEOUT7 "Po 20 minutách"
+    IDS_TIMEOUT8 "Po 25 minutách"
+    IDS_TIMEOUT9 "Po 30 minutách"
+    IDS_TIMEOUT10 "Po 45 minutách"
+    IDS_TIMEOUT11 "Po 1 hodinì"
+    IDS_TIMEOUT12 "Po 2 hodinách"
+    IDS_TIMEOUT13 "Po 3 hodinách"
+    IDS_TIMEOUT14 "Po 4 hodinách"
+    IDS_TIMEOUT15 "Po 5 hodinách"
+    IDS_TIMEOUT16 "Nikdy"
+    IDS_DEL_SCHEME "Opravdu si pøejete smazat toto schéma napájení?"
+    IDS_DEL_SCHEME_TITLE "Smazat schéma"
 END

@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -22,7 +20,6 @@ BEGIN
     LTEXT "&Render Hedef Kilitlenmesi:", -1, 15, 175, 72, 10, SS_LEFT
     COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
-
 
 STRINGTABLE
 BEGIN

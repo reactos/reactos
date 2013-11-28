@@ -1,4 +1,4 @@
-// Italian language resource file (Gabriel ilardi, gabrielilardi@hotmail.it, 2007-09-04)
+/* Italian translation by Gabriel ilardi, gabrielilardi@hotmail.it, 2007-09-04 */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
@@ -87,7 +87,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Valuta"
@@ -114,7 +113,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ora"
@@ -135,10 +133,8 @@ BEGIN
     LTEXT "Legenda:\n\n\
 h = ore    m = minuti    s = secondi    t = am o pm\n\n\
 h = 12 ore   H = 24 ore\n\
-hh, mm, ss = con zero iniziale   h, m, s = senza zero iniziale",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = con zero iniziale   h, m, s = senza zero iniziale", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -173,7 +169,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ordinamento"
@@ -184,7 +179,6 @@ BEGIN
     LTEXT "Scegliere il metodo di ordinamento per il vostro linguaggio:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN

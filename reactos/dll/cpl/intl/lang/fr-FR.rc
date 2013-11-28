@@ -1,5 +1,4 @@
-/* French translation by Benoit Plante 2005 (cmoibenlepro AT hotmail DOT com) */
-/* Updated by Pierre Schweitzer 2007 (heis_spiter AT hotmail DOT com) */
+/* French translation by Benoit Plante (cmoibenlepro AT hotmail DOT com), Pierre Schweitzer (pierre AT reactos DOT org) */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -88,7 +87,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Symbole monétaire"
@@ -115,7 +113,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 124, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Heure"
@@ -136,10 +133,8 @@ BEGIN
     LTEXT "Notation de l'heure\n\n\
 h = heure    m = minute    s = seconde    t = AM ou PM\n\n\
 h = 12 heures   H =24 heures \n\
-hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ",
-        -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ", -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -174,7 +169,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Classement"
@@ -186,7 +180,6 @@ BEGIN
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Personnaliser les options régionales"
@@ -197,6 +190,6 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "Options régionales"
-  IDS_CPLDESCRIPTION "Sélectionner les langues, les formats de nombres, les monnaies, l'heure et la date."
+    IDS_CPLNAME "Options régionales"
+    IDS_CPLDESCRIPTION "Sélectionner les langues, les formats de nombres, les monnaies, l'heure et la date."
 END

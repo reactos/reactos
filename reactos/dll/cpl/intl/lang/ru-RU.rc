@@ -133,8 +133,7 @@ h = час    m = минута    s = секунда    t = AM или PM\n\n\
 h = 12-часовой формат суток\n\
 H = 24-часовой формат суток\n\
 hh, mm, ss = с выводом нулей в начале\n\
-h, m, s = без вывода нулей",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+h, m, s = без вывода нулей", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
