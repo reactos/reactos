@@ -134,7 +134,7 @@ FdcFdoStartDevice(
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated;
+//    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated;
     ULONG i;
 
     DPRINT1("FdcFdoStartDevice called\n");
@@ -172,7 +172,7 @@ FdcFdoStartDevice(
     for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
     {
         PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
-        PartialDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[i];
+//        PartialDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[i];
 
         switch (PartialDescriptor->Type)
         {
@@ -180,12 +180,24 @@ FdcFdoStartDevice(
                 DPRINT1("Port: 0x%lx (%lu)\n",
                         PartialDescriptor->u.Port.Start.u.LowPart,
                         PartialDescriptor->u.Port.Length);
+                if (PartialDescriptor->u.Port.Length >= 6)
+                    DeviceExtension->ControllerInfo.BaseAddress = (PUCHAR)PartialDescriptor->u.Port.Start.u.LowPart;
                 break;
 
             case CmResourceTypeInterrupt:
                 DPRINT1("Interrupt: Level %lu  Vector %lu\n",
-                        PartialDescriptorTranslated->u.Interrupt.Level,
-                        PartialDescriptorTranslated->u.Interrupt.Vector);
+                        PartialDescriptor->u.Interrupt.Level,
+                        PartialDescriptor->u.Interrupt.Vector);
+/*
+                Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
+                Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
+                Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;
+                if (PartialDescriptorTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+                    InterruptMode = Latched;
+                else
+                    InterruptMode = LevelSensitive;
+                ShareInterrupt = (PartialDescriptorTranslated->ShareDisposition == CmResourceShareShared);
+*/
                 break;
 
             case CmResourceTypeDma:
@@ -201,11 +213,134 @@ FdcFdoStartDevice(
 
 static
 NTSTATUS
+NTAPI
+FdcFdoConfigCallback(
+    PVOID Context,
+    PUNICODE_STRING PathName,
+    INTERFACE_TYPE BusType,
+    ULONG BusNumber,
+    PKEY_VALUE_FULL_INFORMATION *BusInformation,
+    CONFIGURATION_TYPE ControllerType,
+    ULONG ControllerNumber,
+    PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+    CONFIGURATION_TYPE PeripheralType,
+    ULONG PeripheralNumber,
+    PKEY_VALUE_FULL_INFORMATION *PeripheralInformation)
+{
+    PKEY_VALUE_FULL_INFORMATION ControllerFullDescriptor;
+    PCM_FULL_RESOURCE_DESCRIPTOR ControllerResourceDescriptor;
+    PKEY_VALUE_FULL_INFORMATION PeripheralFullDescriptor;
+    PCM_FULL_RESOURCE_DESCRIPTOR PeripheralResourceDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_FLOPPY_DEVICE_DATA FloppyDeviceData;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+    PDRIVE_INFO DriveInfo;
+    BOOLEAN ControllerFound = FALSE;
+    ULONG i;
+
+    DPRINT1("FdcFdoConfigCallback() called\n");
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
+
+    /* Get the controller resources */
+    ControllerFullDescriptor = ControllerInformation[IoQueryDeviceConfigurationData];
+    ControllerResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)ControllerFullDescriptor +
+                                                                  ControllerFullDescriptor->DataOffset);
+
+    for(i = 0; i < ControllerResourceDescriptor->PartialResourceList.Count; i++)
+    {
+        PartialDescriptor = &ControllerResourceDescriptor->PartialResourceList.PartialDescriptors[i];
+
+        if (PartialDescriptor->Type == CmResourceTypePort)
+        {
+            if ((PUCHAR)PartialDescriptor->u.Port.Start.LowPart == DeviceExtension->ControllerInfo.BaseAddress)
+                ControllerFound = TRUE;
+        }
+    }
+
+    /* Leave, if the enumerated controller is not the one represented by the FDO */
+    if (ControllerFound == FALSE)
+        return STATUS_SUCCESS;
+
+    /* Get the peripheral resources */
+    PeripheralFullDescriptor = PeripheralInformation[IoQueryDeviceConfigurationData];
+    PeripheralResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)PeripheralFullDescriptor +
+                                                                  PeripheralFullDescriptor->DataOffset);
+
+    DeviceExtension->ControllerInfo.NumberOfDrives = 0;
+
+    /* learn about drives attached to controller */
+    for(i = 0; i < PeripheralResourceDescriptor->PartialResourceList.Count; i++)
+    {
+        PartialDescriptor = &PeripheralResourceDescriptor->PartialResourceList.PartialDescriptors[i];
+
+        if (PartialDescriptor->Type != CmResourceTypeDeviceSpecific)
+            continue;
+
+        FloppyDeviceData = (PCM_FLOPPY_DEVICE_DATA)(PartialDescriptor + 1);
+
+        DriveInfo = &DeviceExtension->ControllerInfo.DriveInfo[i];
+
+        DriveInfo->ControllerInfo = &DeviceExtension->ControllerInfo;
+        DriveInfo->UnitNumber = i;
+
+        DriveInfo->FloppyDeviceData.MaxDensity = FloppyDeviceData->MaxDensity;
+        DriveInfo->FloppyDeviceData.MountDensity = FloppyDeviceData->MountDensity;
+        DriveInfo->FloppyDeviceData.StepRateHeadUnloadTime = FloppyDeviceData->StepRateHeadUnloadTime;
+        DriveInfo->FloppyDeviceData.HeadLoadTime = FloppyDeviceData->HeadLoadTime;
+        DriveInfo->FloppyDeviceData.MotorOffTime = FloppyDeviceData->MotorOffTime;
+        DriveInfo->FloppyDeviceData.SectorLengthCode = FloppyDeviceData->SectorLengthCode;
+        DriveInfo->FloppyDeviceData.SectorPerTrack = FloppyDeviceData->SectorPerTrack;
+        DriveInfo->FloppyDeviceData.ReadWriteGapLength = FloppyDeviceData->ReadWriteGapLength;
+        DriveInfo->FloppyDeviceData.FormatGapLength = FloppyDeviceData->FormatGapLength;
+        DriveInfo->FloppyDeviceData.FormatFillCharacter = FloppyDeviceData->FormatFillCharacter;
+        DriveInfo->FloppyDeviceData.HeadSettleTime = FloppyDeviceData->HeadSettleTime;
+        DriveInfo->FloppyDeviceData.MotorSettleTime = FloppyDeviceData->MotorSettleTime;
+        DriveInfo->FloppyDeviceData.MaximumTrackValue = FloppyDeviceData->MaximumTrackValue;
+        DriveInfo->FloppyDeviceData.DataTransferLength = FloppyDeviceData->DataTransferLength;
+
+        /* Once it's all set up, acknowledge its existance in the controller info object */
+        DeviceExtension->ControllerInfo.NumberOfDrives++;
+    }
+
+    DeviceExtension->ControllerInfo.Populated = TRUE;
+
+    DPRINT1("Detected %lu floppy drives!\n",
+            DeviceExtension->ControllerInfo.NumberOfDrives);
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 FdcFdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PDEVICE_RELATIONS *DeviceRelations)
 {
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+    INTERFACE_TYPE InterfaceType = Isa;
+    CONFIGURATION_TYPE ControllerType = DiskController;
+    CONFIGURATION_TYPE PeripheralType = FloppyDiskPeripheral;
+    NTSTATUS Status;
+
     DPRINT1("FdcFdoQueryBusRelations() called\n");
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    Status = IoQueryDeviceDescription(&InterfaceType,
+                                      NULL,
+                                      &ControllerType,
+                                      NULL,
+                                      &PeripheralType,
+                                      NULL,
+                                      FdcFdoConfigCallback,
+                                      DeviceExtension);
+    if (!NT_SUCCESS(Status) && (Status != STATUS_OBJECT_NAME_NOT_FOUND))
+    {
+        return Status;
+    }
+
     return STATUS_SUCCESS;
 }
 
