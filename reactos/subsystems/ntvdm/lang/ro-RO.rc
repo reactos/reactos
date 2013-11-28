@@ -1,14 +1,14 @@
 /* 
- * FILE:             subsystems/ntvdm/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-10-16  initial translation
+ * FILE:       subsystems/ntvdm/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG: 2011-10-16  initial translation
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
 STRINGTABLE
 BEGIN
-
-STRING_WelcomeMsg,      "Asistență pentru mașina virtuală DOS.\n"
-STRING_PromptMsg,       "Tastați r<cr> pentru a executa, s<cr> pentru a închide sau q<cr> pentru a ieși imediat."
+    STRING_WelcomeMsg "Asistență pentru mașina virtuală DOS.\n"
+    STRING_PromptMsg "Tastați r<cr> pentru a executa, s<cr> pentru a închide sau q<cr> pentru a ieși imediat."
 END

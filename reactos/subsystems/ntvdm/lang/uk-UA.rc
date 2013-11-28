@@ -1,16 +1,15 @@
 /*
- * PROJECT:     Virtual DOS Machine
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsystems/ntvdm/Uk.rc
- * PURPOSE:     Ukraianian Language File for Virtual DOS Machine
- * TRANSLATOR:  Artem Reznikov
+ * PROJECT:    Virtual DOS Machine
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       subsystems/ntvdm/Uk.rc
+ * PURPOSE:    Ukraianian Language File for Virtual DOS Machine
+ * TRANSLATOR: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-STRING_WelcomeMsg,      "Підтримка віртуальної машини DOS у ReactOS.\n"
-STRING_PromptMsg,       "Введіть r<cr> для запуску, s<cr> для закриття або q<cr>, щоб вийти зараз."
+    STRING_WelcomeMsg "Підтримка віртуальної машини DOS у ReactOS.\n"
+    STRING_PromptMsg "Введіть r<cr> для запуску, s<cr> для закриття або q<cr>, щоб вийти зараз."
 END
