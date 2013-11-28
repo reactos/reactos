@@ -1,12 +1,8 @@
-/* 
- * Simpified Chinese translation
- * By Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011
- */
+/* Simpified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
 STRINGTABLE
 BEGIN
-
-STRING_USERINIT_FAIL, "Userinit 无法启动外壳！\n"
-
+    STRING_USERINIT_FAIL "Userinit 无法启动外壳！\n"
 END

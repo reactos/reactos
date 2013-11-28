@@ -1,7 +1,6 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
 STRINGTABLE
 BEGIN
-
-STRING_USERINIT_FAIL, "Userinit non ha potuto avviare l'ambiente(shell)!\n"
-
+    STRING_USERINIT_FAIL "Userinit non ha potuto avviare l'ambiente(shell)!\n"
 END

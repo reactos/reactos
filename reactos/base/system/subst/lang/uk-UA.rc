@@ -1,10 +1,4 @@
-/*
- * PROJECT:     ReactOS subst
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/subst/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for subst
- * TRANSLATOR:  Igor Paliychuk
- */
+/* Ukraianian translation by Igor Paliychuk */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 

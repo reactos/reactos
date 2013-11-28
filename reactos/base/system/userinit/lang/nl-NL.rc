@@ -1,12 +1,8 @@
-/*
- * Dutch Language resource file
- * Translated by: Wouter De Vlieger
- */
+/* Dutch translation by Wouter De Vlieger */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
 STRINGTABLE
 BEGIN
-
-STRING_USERINIT_FAIL, "Userinit kon de shell niet starten!\n"
-
+    STRING_USERINIT_FAIL "Userinit kon de shell niet starten!\n"
 END

@@ -1,11 +1,8 @@
-/* 
- * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
- */
+/*  Hungarian translation by Peter Nagy <nagylakas@gmail.com> */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
 STRINGTABLE
 BEGIN
-
-STRING_USERINIT_FAIL, "Az Userinit nem tudja elindítani a rendszert!\n"
-
+    STRING_USERINIT_FAIL "Az Userinit nem tudja elindítani a rendszert!\n"
 END
