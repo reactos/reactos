@@ -4,12 +4,12 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Spausdinti"
-	IDS_STRING, "ABCDEFGHIYJKLMNOPQRSTUVWXZ ąčęėįšųūž 1234567890"
-	IDS_OPEN, "Aatvira šriftas..."
-	IDS_ERROR, "Klaida"
-	IDS_ERROR_NOMEM, "Užduočiai užbaigti, nepakanka atminties."
-	IDS_ERROR_NOFONT, "%1 nėra teisinga šrifto byla."
-	IDS_ERROR_NOCLASS, "Nepavyko inicijuoti lango klasės."
+    IDS_INSTALL "Install"
+    IDS_PRINT "Spausdinti"
+    IDS_STRING "ABCDEFGHIYJKLMNOPQRSTUVWXZ ąčęėįšųūž 1234567890"
+    IDS_OPEN "Aatvira šriftas..."
+    IDS_ERROR "Klaida"
+    IDS_ERROR_NOMEM "Užduočiai užbaigti, nepakanka atminties."
+    IDS_ERROR_NOFONT "%1 nėra teisinga šrifto byla."
+    IDS_ERROR_NOCLASS "Nepavyko inicijuoti lango klasės."
 END

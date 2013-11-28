@@ -1,21 +1,21 @@
 /*
- * PROJECT:     ReactOS FontView
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/fontview/lang/zh-TW.rc
- * PURPOSE:     Chinese (Traditional) Language File for FontView
- * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS FontView
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/fontview/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language File for FontView
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
- 	IDS_INSTALL, "Install"
- 	IDS_PRINT, "列印"
- 	IDS_STRING, "ReactOS 給所有人一個自由的操作系統！ 1234567890"
-	IDS_OPEN, "Open Font..."
- 	IDS_ERROR, "錯誤"
- 	IDS_ERROR_NOMEM, "沒有足夠的記憶體來完成操作。"
- 	IDS_ERROR_NOFONT, "%1 不是一個有效的字體檔案。"
- 	IDS_ERROR_NOCLASS, "窗口無法初始化。"
+    IDS_INSTALL "Install"
+    IDS_PRINT "列印"
+    IDS_STRING "ReactOS 給所有人一個自由的操作系統！ 1234567890"
+    IDS_OPEN "Open Font..."
+    IDS_ERROR "錯誤"
+    IDS_ERROR_NOMEM "沒有足夠的記憶體來完成操作。"
+    IDS_ERROR_NOFONT "%1 不是一個有效的字體檔案。"
+    IDS_ERROR_NOCLASS "窗口無法初始化。"
 END

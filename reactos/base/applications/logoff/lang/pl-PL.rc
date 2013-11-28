@@ -1,23 +1,19 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Dec,2007)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Dec, 2007)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Przerywa sesję.\n\n\
+    IDS_USAGE "Przerywa sesję.\n\n\
   /v\t\tWyświetla informację o wykonanej czynności.\n\
   /?\t\tWyświetla niniejszą pomoc.\n\n"
-
-IDS_LOGOFF_REMOTE, "Przerywanie sesji na maszynie zdalnej."
-IDS_LOGOFF_LOCAL, "Przerywanie niniejszej sesji na maszynie lokalnej."
-
-IDS_ILLEGAL_PARAM, "Nieprawidłowy parametr\n"
+    IDS_LOGOFF_REMOTE "Przerywanie sesji na maszynie zdalnej."
+    IDS_LOGOFF_LOCAL "Przerywanie niniejszej sesji na maszynie lokalnej."
+    IDS_ILLEGAL_PARAM "Nieprawidłowy parametr\n"
 END
-/* EOF */

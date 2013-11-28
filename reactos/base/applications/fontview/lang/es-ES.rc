@@ -1,17 +1,15 @@
-/*
- * Spanish language file by Javier Remacha <2007-09-21>
- */
+/* Spanish language file by Javier Remacha <2007-09-21> */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Imprimir"
-	IDS_STRING, "Haz el amor y no la guerra. 1234567890"
-	IDS_OPEN, "Open Font..."
-	IDS_ERROR, "Error"
-	IDS_ERROR_NOMEM, "No hay memoria suficiente para completar la operación."
-	IDS_ERROR_NOFONT, "El archivo %1 no es un archivo válido de fuente."
-	IDS_ERROR_NOCLASS, "No es posible iniciar la clase."
+    IDS_INSTALL "Install"
+    IDS_PRINT "Imprimir"
+    IDS_STRING "Haz el amor y no la guerra. 1234567890"
+    IDS_OPEN "Open Font..."
+    IDS_ERROR "Error"
+    IDS_ERROR_NOMEM "No hay memoria suficiente para completar la operación."
+    IDS_ERROR_NOFONT "El archivo %1 no es un archivo válido de fuente."
+    IDS_ERROR_NOCLASS "No es posible iniciar la clase."
 END

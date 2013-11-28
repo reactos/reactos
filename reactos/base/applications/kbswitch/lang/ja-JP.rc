@@ -4,8 +4,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "設定(&P)...",     ID_PREFERENCES
+        MENUITEM "設定(&P)...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "終了(&E)",        ID_EXIT
+        MENUITEM "終了(&E)", ID_EXIT
     END
 END

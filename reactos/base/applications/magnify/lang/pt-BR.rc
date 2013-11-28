@@ -6,17 +6,17 @@ IDC_MAGNIFIER MENU
 BEGIN
     POPUP "&Arquivo"
     BEGIN
-        MENUITEM "Sa&ir",                       IDM_EXIT
-        MENUITEM "&Opções",                    IDM_OPTIONS
+        MENUITEM "Sa&ir", IDM_EXIT
+        MENUITEM "&Opções", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sobre ...",                  IDM_ABOUT
+        MENUITEM "&Sobre ...", IDM_ABOUT
     END
 END
 
 IDC_MAGNIFIER ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
@@ -24,10 +24,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "Sobre"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
-    LTEXT           "Lupa Versão 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
-    PUSHBUTTON      "OK",IDOK,162,48,50,14
+    ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
+    LTEXT "Lupa Versão 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
+    PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
@@ -35,18 +35,24 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_
 CAPTION "Configurações da Lupa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Sair",IDOK,96,161,50,14
-    PUSHBUTTON      "Ajuda",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "Taxa de aumento:",IDC_STATIC,6,8,68,8
-    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Rastreamento",IDC_STATIC,7,25,139,59
-    GROUPBOX        "Apresentação",IDC_STATIC,7,87,139,57
-    CONTROL         "Seguir cursor do mouse",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
-    CONTROL         "Seguir foco do teclado",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "Seguir edição de texto",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
-    CONTROL         "Inverter cores",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
-    CONTROL         "Iniciar Minimizado",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
-    CONTROL         "Exibir Lupa",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+    DEFPUSHBUTTON "Sair", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "Ajuda", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Taxa de aumento:", IDC_STATIC, 6, 8, 68, 8
+    COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Rastreamento", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "Apresentação", IDC_STATIC, 7, 87, 139, 57
+    CONTROL "Seguir cursor do mouse", IDC_FOLLOWMOUSECHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
+    CONTROL "Seguir foco do teclado", IDC_FOLLOWKEYBOARDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
+    CONTROL "Seguir edição de texto", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
+    CONTROL "Inverter cores", IDC_INVERTCOLORSCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
+    CONTROL "Iniciar Minimizado", IDC_STARTMINIMIZEDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
+    CONTROL "Exibir Lupa", IDC_SHOWMAGNIFIERCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
@@ -54,13 +60,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "Lupa ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
-    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "A lupa tem como finalidade providenciar um nível mínimo de funcionalidade para usuários com alguma deficiência visual. Grande parte dos usuários com dificuldades visuais irão necessitar do utilitário de aumento com alta funcionalidade para uso diário.",IDC_STATIC,36,7,207,33
-    CONTROL         "Não exibir esta mensagem novamente",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "A lupa tem como finalidade providenciar um nível mínimo de funcionalidade para usuários com alguma deficiência visual. Grande parte dos usuários com dificuldades visuais irão necessitar do utilitário de aumento com alta funcionalidade para uso diário.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Não exibir esta mensagem novamente", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Lupa"
+    IDS_APP_TITLE "Lupa"
 END

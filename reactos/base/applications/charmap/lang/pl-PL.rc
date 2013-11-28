@@ -1,58 +1,62 @@
 /*
- *         translated by xrogers
- *         xxrogers@users.sourceforge.net
- *         https://sourceforge.net/projects/reactospl
- *         updated by Olaf Siejka (May, 2011)
- *         UTF-8 conversion by Caemyr (May, 2011)
- *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+ *    Translated by xrogers (xxrogers@users.sourceforge.net)
+ *    https://sourceforge.net/projects/reactospl
+ *    Updated by Olaf Siejka (May, 2011)
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
-FONT 8,"MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "Czci&onka:", IDC_STATIC, 6, 7, 28, 9
-  COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
-  PUSHBUTTON    "Pomo&c", IDC_CMHELP, 249, 5, 35, 13
-  CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "&Znaki do skopiowania:", IDC_STATIC, 6, 188, 70, 9
-  CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "Wy&bierz", IDC_SELECT, 194, 186, 44, 13
-  PUSHBUTTON    "&Kopiuj", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
-  CONTROL       "Widok zaawansowany",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
+    LTEXT "Czci&onka:", IDC_STATIC, 6, 7, 28, 9
+    COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE |
+             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    PUSHBUTTON "Pomo&c", IDC_CMHELP, 249, 5, 35, 13
+    CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+            WS_VSCROLL, 20, 22, 266, 156
+    LTEXT "&Znaki do skopiowania:", IDC_STATIC, 6, 188, 70, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "Wy&bierz", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "&Kopiuj", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+    CONTROL "Widok zaawansowany", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 8, 208, 95, 10
 END
 
-IDD_ADVANCED DIALOGEX  0, 0, 292, 64
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT         "Zestaw znaków:",IDC_STATIC,8,8,53,8
-  COMBOBOX      IDC_COMBO_CHARSET,72,4,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT         "Grupowanie według:",IDC_STATIC,8,28,67,8
-  COMBOBOX      IDC_COMBO_GROUPBY,72,24,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  PUSHBUTTON    "Szukaj",IDC_BUTTON_SEARCH,200,44,50,14
-  EDITTEXT      IDC_EDIT_SEARCH,72,44,116,14,ES_AUTOHSCROLL
-  LTEXT         "Wyszukaj:",IDC_STATIC,8,48,42,8
-  LTEXT         "Symbol Unicode:",IDC_STATIC,200,8,30,8
-  EDITTEXT      IDC_EDIT_UNICODE,236,4,28,12,ES_AUTOHSCROLL
+    LTEXT "Zestaw znaków:", IDC_STATIC, 8, 8, 53, 8
+    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Grupowanie według:", IDC_STATIC, 8, 28, 67, 8
+    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Szukaj", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Wyszukaj:", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "Symbol Unicode:", IDC_STATIC, 200, 8, 30, 8
+    EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
 END
 
-IDD_ABOUTBOX DIALOGEX 22,16,210,182
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
 CAPTION "Informacje o tablicy znaków"
-FONT 8,"MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Tablica znaków v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON    "Zamknij", IDOK, 75, 162, 44, 15
-  ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
-  EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+    LTEXT "Tablica znaków v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    PUSHBUTTON "Zamknij", IDOK, 75, 162, 44, 15
+    ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
+             WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE
 BEGIN
-  IDS_LICENSE   "Niniejszy program jest wolnym oprogramowaniem; możesz go rozprowadzać dalej i/lub modyfikować na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundację Wolnego Oprogramowania - według wersji 2 tej Licencji lub (według twojego wyboru) którejś z późniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKRESLONYCH ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnością wraz z niniejszym programem otrzymałeś też egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeśli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-  IDS_ABOUT     "&O programie..."
-  IDS_TITLE     "Tablica znaków"
+    IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; możesz go rozprowadzać dalej i/lub modyfikować na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundację Wolnego Oprogramowania - według wersji 2 tej Licencji lub (według twojego wyboru) którejś z późniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKRESLONYCH ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnością wraz z niniejszym programem otrzymałeś też egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeśli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_ABOUT "&O programie..."
+    IDS_TITLE "Tablica znaków"
 END

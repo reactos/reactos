@@ -1,1 +1,3 @@
-#define IDI_REGEDIT     101
+#pragma once
+
+#define IDI_REGEDIT 101

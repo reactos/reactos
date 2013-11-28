@@ -1,14 +1,15 @@
-// Translated by Baruch Rutman
+/* Translated by Baruch Rutman */
+
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "התקן"
-	IDS_PRINT, "הדפס"
-	IDS_STRING, "דג סקרן שט לו בים זך אך לפתע פגש חבורה נחמדה שצצה כך. 1234567890"
-	IDS_OPEN, "פתח גופן..."
-	IDS_ERROR, "שגיאה"
-	IDS_ERROR_NOMEM, "אין מספיק זיכרון כדי להשלים את הפעולה."
-	IDS_ERROR_NOFONT, "הקובץ %1 אינו קובץ גופנים חוקי."
-	IDS_ERROR_NOCLASS, "Could not initialize window class."
+    IDS_INSTALL "התקן"
+    IDS_PRINT "הדפס"
+    IDS_STRING "דג סקרן שט לו בים זך אך לפתע פגש חבורה נחמדה שצצה כך. 1234567890"
+    IDS_OPEN "פתח גופן..."
+    IDS_ERROR "שגיאה"
+    IDS_ERROR_NOMEM "אין מספיק זיכרון כדי להשלים את הפעולה."
+    IDS_ERROR_NOFONT "הקובץ %1 אינו קובץ גופנים חוקי."
+    IDS_ERROR_NOCLASS "Could not initialize window class."
 END

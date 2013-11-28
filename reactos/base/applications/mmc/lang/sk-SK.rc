@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Management Console
- * FILE:        base/applications/mmc/lang/sk-SK.rc
- * PURPOSE:     Slovak Language File for MMC
- * TRANSLATOR:  Kario (kario@szm.sk)
- * DATE OF TR:  24-07-2007
+ * PROJECT:    ReactOS Management Console
+ * FILE:       base/applications/mmc/lang/sk-SK.rc
+ * PURPOSE:    Slovak Language File for MMC
+ * TRANSLATOR: Kario (kario@szm.sk)
+ * DATE OF TR: 24-07-2007
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -16,7 +16,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "Č&o je Konzola na správu systému ReactOS", IDM_HELP_ABOUT
@@ -31,12 +30,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "Č&o je Konzola na správu systému ReactOS", IDM_HELP_ABOUT

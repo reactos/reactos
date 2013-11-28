@@ -1,4 +1,4 @@
-// Russian language resource file (Dmitry Chapyshev, 2007-06-10)
+/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -10,7 +10,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Справка"
     BEGIN
         MENUITEM "&О программе...", IDM_HELP_ABOUT
@@ -25,12 +24,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "&Справка"
     BEGIN
         MENUITEM "&О программе...", IDM_HELP_ABOUT

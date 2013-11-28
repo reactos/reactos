@@ -1,37 +1,37 @@
 /*
- * PROJECT:      ReactOS MPlay32
- * FILE:         base\applications\mplay32\lang\sv-SE.rc
- * PURPOSE:      Swedish resource file
- * TRANSLATOR:   Jaix Bly
+ * PROJECT:    ReactOS MPlay32
+ * FILE:       base\applications\mplay32\lang\sv-SE.rc
+ * PURPOSE:    Swedish resource file
+ * TRANSLATOR: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Arkiv"
-	BEGIN
-		MENUITEM "&Öppna...", IDM_OPEN_FILE
-		MENUITEM "&Stäng", IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "&Avsluta", IDM_EXIT
-	END
-	POPUP "&Hjälp"
-	BEGIN
-		MENUITEM "&Om...", IDM_ABOUT
-	END
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&Öppna...", IDM_OPEN_FILE
+        MENUITEM "&Stäng", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Avsluta", IDM_EXIT
+    END
+    POPUP "&Hjälp"
+    BEGIN
+        MENUITEM "&Om...", IDM_ABOUT
+    END
 END
 
 STRINGTABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Alla kompaktibla filer  (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Spela upp"
-	IDS_TOOLTIP_STOP "Stopp"
-	IDS_TOOLTIP_EJECT "Mata ut"
-	IDS_TOOLTIP_BACKWARD "Spola tillbaka"
-	IDS_TOOLTIP_SEEKBACK "Sök bakåt"
-	IDS_TOOLTIP_SEEKFORW "Sök framåt"
-	IDS_TOOLTIP_FORWARD "Spola fremåt"
-	IDS_APPTITLE "ReactOS Multimediaspelare"
-	IDS_PLAY "Play"
+    IDS_ALL_TYPES_FILTER "Alla kompaktibla filer  (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY "Spela upp"
+    IDS_TOOLTIP_STOP "Stopp"
+    IDS_TOOLTIP_EJECT "Mata ut"
+    IDS_TOOLTIP_BACKWARD "Spola tillbaka"
+    IDS_TOOLTIP_SEEKBACK "Sök bakåt"
+    IDS_TOOLTIP_SEEKFORW "Sök framåt"
+    IDS_TOOLTIP_FORWARD "Spola fremåt"
+    IDS_APPTITLE "ReactOS Multimediaspelare"
+    IDS_PLAY "Play"
 END

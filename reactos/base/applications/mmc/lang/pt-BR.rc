@@ -8,7 +8,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "Aj&uda"
     BEGIN
         MENUITEM "&Sobre o Console de gerenciamento ReactOS...", IDM_HELP_ABOUT
@@ -23,12 +22,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "Aj&uda"
     BEGIN
         MENUITEM "&Sobre o Console de gerenciamento ReactOS...", IDM_HELP_ABOUT

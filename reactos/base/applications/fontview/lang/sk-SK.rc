@@ -1,18 +1,18 @@
-/* TRANSLATOR:  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  31-07-2007
- * UPDATED   :  21-07-2012
+/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 31-07-2007
+ * UPDATED   : 21-07-2012
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Nainštalovať"
-	IDS_PRINT, "Tlačiť"
-	IDS_STRING, "Kŕdeľ ďatľov učí koňa žrať kôru. 1234567890"
-	IDS_OPEN, "Otvoriť písmo..."
-	IDS_ERROR, "Chyba"
-	IDS_ERROR_NOMEM, "Na vykonanie tejto operácie nie je dostatok voľnej pamäte."
-	IDS_ERROR_NOFONT, "Požadovaný súbor %1 nie je platným súborom písiem."
-	IDS_ERROR_NOCLASS, "Nepodarilo sa inicializovať triedu window."
+    IDS_INSTALL "Nainštalovať"
+    IDS_PRINT "Tlačiť"
+    IDS_STRING "Kŕdeľ ďatľov učí koňa žrať kôru. 1234567890"
+    IDS_OPEN "Otvoriť písmo..."
+    IDS_ERROR "Chyba"
+    IDS_ERROR_NOMEM "Na vykonanie tejto operácie nie je dostatok voľnej pamäte."
+    IDS_ERROR_NOFONT "Požadovaný súbor %1 nie je platným súborom písiem."
+    IDS_ERROR_NOCLASS "Nepodarilo sa inicializovať triedu window."
 END

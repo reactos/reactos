@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,7 +10,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Hakkında...", IDM_HELP_ABOUT
@@ -27,12 +24,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Pencereler"
     BEGIN
         MENUITEM "&Dizelgele", IDM_WINDOWS_LIST
     END
-
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Hakkında...", IDM_HELP_ABOUT

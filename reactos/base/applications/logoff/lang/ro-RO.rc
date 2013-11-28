@@ -1,23 +1,19 @@
 /*
- * FILE:             base/applications/logoff/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-21  initial translation
- *                   2011-10-18  diacritics change
+ * FILE:       base/applications/logoff/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG: 2011-08-21  initial translation
+ *             2011-10-18  diacritics change
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Încheie o sesiune.\n\n\
+    IDS_USAGE "Încheie o sesiune.\n\n\
   /v\t\tAfișează informații despre acțiunile efectuate.\n\
   /?\t\tAfișează acest manual.\n\n"
-
-IDS_LOGOFF_REMOTE, "Încheierea sesiunii pe un calculator în rețea."
-IDS_LOGOFF_LOCAL,  "Încheierea sesiunii curente pe calculatorul local."
-
-IDS_ILLEGAL_PARAM, "Parametri nevalizi\n"
+    IDS_LOGOFF_REMOTE "Încheierea sesiunii pe un calculator în rețea."
+    IDS_LOGOFF_LOCAL "Încheierea sesiunii curente pe calculatorul local."
+    IDS_ILLEGAL_PARAM "Parametri nevalizi\n"
 END
-/* EOF */

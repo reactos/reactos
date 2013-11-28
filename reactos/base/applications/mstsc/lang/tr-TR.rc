@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,37 +6,37 @@ IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Oturum Açma Seçenkeleri",IDC_STATIC,7,7,228,89
-    GROUPBOX        "Bağlantı Seçenekleri",IDC_STATIC,7,103,228,65
-    ICON            "", IDC_LOGONICON, 15,19,20,20
-    LTEXT           "Sunucu adresini giriniz:",IDC_STATIC,47,24,81,8
-    LTEXT           "Sunucu:",IDC_STATIC,47,41,25,8
-    LTEXT           "Kullanıcı Adı:",IDC_STATIC,47,58,38,8
-    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON      "Kaydet",IDC_SAVE,67,139,50,14
-    PUSHBUTTON      "Ayrı Kaydet...",IDC_SAVEAS,123,139,50,14
-    PUSHBUTTON      "Aç...",IDC_OPEN,177,139,50,14
-    ICON            "", IDC_CONNICON, 16,114,20,20
-    LTEXT           "Şimdiki seçenekleri kaydedebilir ya da var olan bir seçenek kütüğünü açabilirsiniz.",IDC_STATIC,50,115,172,20
+    GROUPBOX "Oturum Açma Seçenkeleri", IDC_STATIC, 7, 7, 228, 89
+    GROUPBOX "Bağlantı Seçenekleri", IDC_STATIC, 7, 103, 228, 65
+    ICON "", IDC_LOGONICON, 15, 19, 20, 20
+    LTEXT "Sunucu adresini giriniz:", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Sunucu:", IDC_STATIC, 47, 41, 25, 8
+    LTEXT "Kullanıcı Adı:", IDC_STATIC, 47, 58, 38, 8
+    COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Kaydet", IDC_SAVE, 67, 139, 50, 14
+    PUSHBUTTON "Ayrı Kaydet...", IDC_SAVEAS, 123, 139, 50, 14
+    PUSHBUTTON "Aç...", IDC_OPEN, 177, 139, 50, 14
+    ICON "", IDC_CONNICON, 16, 114, 20, 20
+    LTEXT "Şimdiki seçenekleri kaydedebilir ya da var olan bir seçenek kütüğünü açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Uzak Masaüstü Boyutu",IDC_STATIC,7,7,228,68
-    GROUPBOX        "Uzak Masaüstü Renk Sayısı",IDC_STATIC,7,83,228,85
-    ICON            "", IDC_REMICON, 15,19,20,20
-    ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "Uzak Masaüstü boyutunu seçebilirsiniz. Tüm görüntülüğe geçmek için sürgüyü en sağa kaydırınız.",IDC_STATIC,53,22,175,21
-    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
-    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
-    LTEXT           "ÖNEMLİ: Uzaktaki bilgisayar, bu seçeneği geçersiz kılabilir.",IDC_STATIC,56,143,165,18
-    LTEXT           "Daha Küçük",IDC_STATIC,35,42,15,8
-    LTEXT           "Daha Büyük",IDC_STATIC,189,42,17,8
-    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+    GROUPBOX "Uzak Masaüstü Boyutu", IDC_STATIC, 7, 7, 228, 68
+    GROUPBOX "Uzak Masaüstü Renk Sayısı", IDC_STATIC, 7, 83, 228, 85
+    ICON "", IDC_REMICON, 15, 19, 20, 20
+    ICON "", IDC_COLORSICON, 15, 98, 20, 20
+    LTEXT "Uzak Masaüstü boyutunu seçebilirsiniz. Tüm görüntülüğe geçmek için sürgüyü en sağa kaydırınız.", IDC_STATIC, 53, 22, 175, 21
+    CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10
+    LTEXT "ÖNEMLİ: Uzaktaki bilgisayar, bu seçeneği geçersiz kılabilir.", IDC_STATIC, 56, 143, 165, 18
+    LTEXT "Daha Küçük", IDC_STATIC, 35, 42, 15, 8
+    LTEXT "Daha Büyük", IDC_STATIC, 189, 42, 17, 8
+    LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
@@ -46,23 +44,22 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Uzak Masaüstü Bağlayıcısı"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Bağlan",IDOK,147,245,50,14
-    PUSHBUTTON      "İptal",IDCANCEL,203,245,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+    DEFPUSHBUTTON "Bağlan", IDOK, 147, 245, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 203, 245, 50, 14
+    CONTROL "", IDC_TAB, "SysTabControl32", 0x0, 7, 50, 246, 190
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_GENERAL         "Umûmî"
-    IDS_TAB_DISPLAY         "Görüntü"
-    IDS_256COLORS           "256 Renk"
-    IDS_HIGHCOLOR15         "32,768 (15 İkillik) Renk"
-    IDS_HIGHCOLOR16         "65,536 (16 İkillik) Renk"
-    IDS_HIGHCOLOR24         "16,777,216 (24 İkillik) Renk"
-    IDS_PIXEL               "%lux%lu Nokta"
-    IDS_FULLSCREEN          "Tüm Görüntülük"
-    IDS_BROWSESERVER        "(Daha Çok...)"
-    IDS_HEADERTEXT1         "Uzak Masaüstü"
-    IDS_HEADERTEXT2         "Bağlayıcısı"
+    IDS_TAB_GENERAL "Umûmî"
+    IDS_TAB_DISPLAY "Görüntü"
+    IDS_256COLORS "256 Renk"
+    IDS_HIGHCOLOR15 "32,768 (15 İkillik) Renk"
+    IDS_HIGHCOLOR16 "65,536 (16 İkillik) Renk"
+    IDS_HIGHCOLOR24 "16,777,216 (24 İkillik) Renk"
+    IDS_PIXEL "%lux%lu Nokta"
+    IDS_FULLSCREEN "Tüm Görüntülük"
+    IDS_BROWSESERVER "(Daha Çok...)"
+    IDS_HEADERTEXT1 "Uzak Masaüstü"
+    IDS_HEADERTEXT2 "Bağlayıcısı"
 END

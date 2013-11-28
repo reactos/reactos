@@ -1,25 +1,21 @@
 /*
- * PROJECT:     ReactOS FindStr
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/findstr/lang/zh-TW.rc
- * PURPOSE:     Chinese (Traditional) Language File for FindStr
- * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS FindStr
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/findstr/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language File for FindStr
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "FINDSTR: 輸出包含指定字串的檔案的所有行。\n\n\
+    IDS_USAGE "FINDSTR: 輸出包含指定字串的檔案的所有行。\n\n\
   FINDSTR [ /C ] [ /I ] [ /N ] [ /V ] ""字符串"" [ 文件... ]\n\
     /C  計算包含該字串的行數\n\
     /I  忽略大小寫\n\
     /N  顯示的行編號 (由 1 開始)\n\
     /V  輸出不包含該指定字串的行"
-
-IDS_NO_SUCH_FILE, "FINDSTR: %s: 沒有這個檔案\n"
-
-IDS_CANNOT_OPEN, "FINDSTR: %s: 無法打開檔案\n"
-
+    IDS_NO_SUCH_FILE "FINDSTR: %s: 沒有這個檔案\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: 無法打開檔案\n"
 END

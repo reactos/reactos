@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,36 +6,35 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Ayarlar...",                        ID_SETTINGS
+        MENUITEM "&Ayarlar...", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış",                             ID_EXIT
+        MENUITEM "&Çıkış", ID_EXIT
     END
     POPUP "&Yazılım"
     BEGIN
-        MENUITEM "&Kur",                               ID_INSTALL
-        MENUITEM "K&aldır",                            ID_UNINSTALL
-        MENUITEM "&Değiştir",                          ID_MODIFY
+        MENUITEM "&Kur", ID_INSTALL
+        MENUITEM "K&aldır", ID_UNINSTALL
+        MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Değer Defteri'nden Kaldır",  ID_REGREMOVE
+        MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile",                            ID_REFRESH
+        MENUITEM "&Yenile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Yenile",       ID_RESETDB
+        MENUITEM "Y&azılım Veritabanını Yenile", ID_RESETDB
     END
     POPUP "Y&ardım"
     BEGIN
-        MENUITEM "&Yardım Konuları",                   ID_HELP, GRAYED
-        MENUITEM "&Hakkında",                          ID_ABOUT
+        MENUITEM "&Yardım Konuları", ID_HELP, GRAYED
+        MENUITEM "&Hakkında", ID_ABOUT
     END
-
 END
 
 IDR_LINKMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Tarayıcıda Aç",                     ID_OPEN_LINK
-        MENUITEM "&Panoya Çoğalt",                     ID_COPY_LINK
+        MENUITEM "&Tarayıcıda Aç", ID_OPEN_LINK
+        MENUITEM "&Panoya Çoğalt", ID_COPY_LINK
     END
 END
 
@@ -45,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur",                               ID_INSTALL
-        MENUITEM "K&aldır",                            ID_UNINSTALL
-        MENUITEM "&Değiştir",                          ID_MODIFY
+        MENUITEM "&Kur", ID_INSTALL
+        MENUITEM "K&aldır", ID_UNINSTALL
+        MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Değer Defteri'nden Kaldır",  ID_REGREMOVE
+        MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile",                            ID_REFRESH
+        MENUITEM "&Yenile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Yenile",       ID_RESETDB
+        MENUITEM "Y&azılım Veritabanını Yenile", ID_RESETDB
     END
 END
 
@@ -66,13 +63,11 @@ BEGIN
     AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Her Başlangıçta Erişilebilir Yazılım Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Yazılımların Kuruluş ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
-
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Kurulumdan Sonra Yazılımın Kurulum Kütüğünü Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-
     PUSHBUTTON "Öntanımlılar", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
     PUSHBUTTON "Tamam", IDOK, 116, 124, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 124, 60, 14
@@ -84,10 +79,8 @@ CAPTION "Yazılım Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
-
     AUTORADIOBUTTON "&Bir Diskten Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-
     PUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 150, 78, 60, 14
 END

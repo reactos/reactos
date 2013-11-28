@@ -1,6 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
+ * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/lang/ja-JP.rc
  * PURPOSE:     Japanese Language resource file
  * TRANSLATORS: pcds90net, Tomoya Kitagawa, Katayama Hirofumi MZ
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "ペイントの終了(&Q)\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "編集(&E)"
     BEGIN
         MENUITEM "元に戻す(&U)\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "ファイルへコピー(&O)", IDM_EDITCOPYTO
         MENUITEM "ファイルから貼り付け(&F)", IDM_EDITPASTEFROM
     END
-
     POPUP "表示(&V)"
     BEGIN
         MENUITEM "ツール ボックス(&T)\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "全画面表示(&F)\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "画像(&I)"
     BEGIN
         MENUITEM "回転と反転(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "画像の削除\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "不透明色を描画する(&D)", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "色(&C)"
     BEGIN
         MENUITEM "パレットの編集(&E)", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "ヘルプ トピック(&H)", IDM_HELPHELPTOPICS
@@ -188,35 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "ペイント"
-    IDS_WINDOWTITLE, "%s - ペイント"
-    IDS_INFOTITLE, "ReactOS ペイント"
-    IDS_INFOTEXT, "ReactOS ペイントは GNU Lesser General Public License (LGPL) version 3 (詳細は www.gnu.org)の下で利用可能です。"
-    IDS_SAVEPROMPTTEXT, "%s の変更内容を保存しますか?"
-    IDS_DEFAULTFILENAME, "無題.bmp"
-    IDS_MINIATURETITLE, "縮小図"
-    IDS_TOOLTIP1, "自由選択"
-    IDS_TOOLTIP2, "選択"
-    IDS_TOOLTIP3, "消しゴム"
-    IDS_TOOLTIP4, "塗りつぶし"
-    IDS_TOOLTIP5, "色の選択"
-    IDS_TOOLTIP6, "拡大と縮小"
-    IDS_TOOLTIP7, "鉛筆"
-    IDS_TOOLTIP8, "ブラシ"
-    IDS_TOOLTIP9, "エアブラシ"
-    IDS_TOOLTIP10, "テキスト"
-    IDS_TOOLTIP11, "直線"
-    IDS_TOOLTIP12, "曲線"
-    IDS_TOOLTIP13, "四角形"
-    IDS_TOOLTIP14, "多角形"
-    IDS_TOOLTIP15, "楕円"
-    IDS_TOOLTIP16, "角丸四角形"
-    IDS_OPENFILTER, "ビットマップ ファイル (*.bmp;*.dib)\1*.bmp;*.dib\1すべてのファイル (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 ビット ビットマップ (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d バイト"
-    IDS_PRINTRES, "%d x %d ピクセル/メートル"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT, "The file %s could not be loaded."
+    IDS_PROGRAMNAME "ペイント"
+    IDS_WINDOWTITLE "%s - ペイント"
+    IDS_INFOTITLE "ReactOS ペイント"
+    IDS_INFOTEXT "ReactOS ペイントは GNU Lesser General Public License (LGPL) version 3 (詳細は www.gnu.org)の下で利用可能です。"
+    IDS_SAVEPROMPTTEXT "%s の変更内容を保存しますか?"
+    IDS_DEFAULTFILENAME "無題.bmp"
+    IDS_MINIATURETITLE "縮小図"
+    IDS_TOOLTIP1 "自由選択"
+    IDS_TOOLTIP2 "選択"
+    IDS_TOOLTIP3 "消しゴム"
+    IDS_TOOLTIP4 "塗りつぶし"
+    IDS_TOOLTIP5 "色の選択"
+    IDS_TOOLTIP6 "拡大と縮小"
+    IDS_TOOLTIP7 "鉛筆"
+    IDS_TOOLTIP8 "ブラシ"
+    IDS_TOOLTIP9 "エアブラシ"
+    IDS_TOOLTIP10 "テキスト"
+    IDS_TOOLTIP11 "直線"
+    IDS_TOOLTIP12 "曲線"
+    IDS_TOOLTIP13 "四角形"
+    IDS_TOOLTIP14 "多角形"
+    IDS_TOOLTIP15 "楕円"
+    IDS_TOOLTIP16 "角丸四角形"
+    IDS_OPENFILTER "ビットマップ ファイル (*.bmp;*.dib)\1*.bmp;*.dib\1すべてのファイル (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 ビット ビットマップ (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d バイト"
+    IDS_PRINTRES "%d x %d ピクセル/メートル"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

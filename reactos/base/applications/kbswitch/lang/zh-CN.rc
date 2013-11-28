@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS KBSwitch
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/kbswitch/lang/zh-CN.rc
- * PURPOSE:     Chinese (Simplified) Language File for KBSwitch
- * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS KBSwitch
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/kbswitch/lang/zh-CN.rc
+ * PURPOSE:    Chinese (Simplified) Language File for KBSwitch
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -12,8 +12,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "选项(&P)...",  ID_PREFERENCES
+        MENUITEM "选项(&P)...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "结束(&E)",     ID_EXIT
+        MENUITEM "结束(&E)", ID_EXIT
     END
 END

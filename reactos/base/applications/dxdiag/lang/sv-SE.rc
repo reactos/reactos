@@ -1,19 +1,19 @@
 /*
- * PROJECT:         ReactX Diagnosis Application
- * FILE:            base/applications/dxdiag/lang/sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:     ReactX Diagnosis Application
+ * FILE:        base/applications/dxdiag/lang/sv-SE.rc
+ * PURPOSE:     Swedish resource file
+ * Translation: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactX-diagnos program"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Hjälp", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Nästa sida", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Spara all information...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -70,7 +70,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-
     GROUPBOX "Drivrutiner", -1, 270, 10, 190, 100
     RTEXT "Huvuddrivrutin:", -1, 275, 25, 55, 10
     RTEXT "Version:", -1, 275, 35, 55, 10
@@ -86,7 +85,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
-
     GROUPBOX "ReactX-Funktioner", -1, 10, 115, 450, 60
     RTEXT "DirectDraw-accelerasjon:", -1, 15, 130, 110, 12
     RTEXT "Direct3D-accelerasjon:", -1, 15, 145, 110, 12
@@ -99,11 +97,9 @@ BEGIN
     PUSHBUTTON "Aktiverad", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testa DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Testa Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
-
     GROUPBOX "Anmärkningar", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
-
 
 IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
@@ -140,7 +136,7 @@ BEGIN
     RTEXT "Maskinvara ljud\nAccelerationsnivå:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testa DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Anmärkningar", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
@@ -149,7 +145,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-
 IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -157,9 +152,10 @@ BEGIN
     GROUPBOX "DirektInput-enheter", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Indata enheter", -1, 10, 100, 452, 60
-    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Information", -1, 10, 170, 452, 50
-    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
@@ -178,55 +174,55 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_MAIN_DIALOG "ReactX diagnostikverktyg"
-	IDS_SYSTEM_DIALOG "System"
-	IDS_DISPLAY_DIALOG "Skärm"
-	IDS_SOUND_DIALOG "Ljud"
-	IDS_MUSIC_DIALOG "Musik"
-	IDS_INPUT_DIALOG "Indata"
-	IDS_NETWORK_DIALOG "Nätverk"
-	IDS_HELP_DIALOG "Hjälp"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB använt, %I64u MB tillgängligt"
-	IDS_FORMAT_UNIPROC "%s (%u processor)"
-	IDS_FORMAT_MPPROC  "%s (%u procesorer)"
-	IDS_VERSION_UNKNOWN "Okänd version"
-	IDS_DEVICE_STATUS_ATTACHED "Ansluten"
-	IDS_DEVICE_STATUS_MISSING "Saknas"
-	IDS_DEVICE_STATUS_UNKNOWN "Okänd"
-	IDS_DEVICE_NAME "Enhetsnamn"
-	IDS_DEVICE_STATUS "Status"
-	IDS_DEVICE_CONTROLLER "Kontroller ID"
-	IDS_DEVICE_MANUFACTURER "Tillverkarens ID"
-	IDS_DEVICE_PRODUCT "Produkt ID"
-	IDS_DEVICE_FORCEFEEDBACK "Force Feedback-driver"
-	IDS_NOT_APPLICABLE "Icke applicerbar"
-	IDS_OPTION_YES "Ja"
-	IDS_DIRECTPLAY_COL_NAME1 "Namn"
-	IDS_DIRECTPLAY_COL_NAME2 "Register"
-	IDS_DIRECTPLAY_COL_NAME3 "Fil"
-	IDS_DIRECTPLAY_COL_NAME4 "Version"
-	IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Service Provider"
-	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
-	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
-	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
-	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling för DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "IPX koppling för DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Modemkoppling för DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Seriell kopplig för DirectPlay"
-	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "Fel"
-	IDS_DDTEST_ERROR "Testet misslyckes!"
-	IDS_DDTEST_DESCRIPTION "Detta kommer att starta DirecDraw enhetstest. Fortsätta?"
-	IDS_DDPRIMARY_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita svarta och vita rektangular primära ytan. Fortsätta?"
-	IDS_DDPRIMARY_RESULT "Såg du svarta och vite rektanglar?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita i en offscreen buffert. En animerad vit rektangel kommer att ritas. Fortsätta?"
-	IDS_DDOFFSCREEN_RESULT "Såg du en vit animerad rektangel?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita i fullskärmsläge. En animerad vit rektangel kommer att ritas. Fortsätta?"
-	IDS_DDFULLSCREEN_RESULT "Såg du en vit animerad rektangel i fullskärmsläge?"
-	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
-	IDS_OPTION_NO "Nej"
-	IDS_D3DTEST_DESCRIPTION "Detta kommer att starta Direct3D enhetstest. Fortsätt?"
-	IDS_D3DTEST_D3Dx "Detta testet kommer att använda hårdvaruaccellererad Direct3D %u enheten."
+    IDS_MAIN_DIALOG "ReactX diagnostikverktyg"
+    IDS_SYSTEM_DIALOG "System"
+    IDS_DISPLAY_DIALOG "Skärm"
+    IDS_SOUND_DIALOG "Ljud"
+    IDS_MUSIC_DIALOG "Musik"
+    IDS_INPUT_DIALOG "Indata"
+    IDS_NETWORK_DIALOG "Nätverk"
+    IDS_HELP_DIALOG "Hjälp"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB använt, %I64u MB tillgängligt"
+    IDS_FORMAT_UNIPROC "%s (%u processor)"
+    IDS_FORMAT_MPPROC "%s (%u procesorer)"
+    IDS_VERSION_UNKNOWN "Okänd version"
+    IDS_DEVICE_STATUS_ATTACHED "Ansluten"
+    IDS_DEVICE_STATUS_MISSING "Saknas"
+    IDS_DEVICE_STATUS_UNKNOWN "Okänd"
+    IDS_DEVICE_NAME "Enhetsnamn"
+    IDS_DEVICE_STATUS "Status"
+    IDS_DEVICE_CONTROLLER "Kontroller ID"
+    IDS_DEVICE_MANUFACTURER "Tillverkarens ID"
+    IDS_DEVICE_PRODUCT "Produkt ID"
+    IDS_DEVICE_FORCEFEEDBACK "Force Feedback-driver"
+    IDS_NOT_APPLICABLE "Icke applicerbar"
+    IDS_OPTION_YES "Ja"
+    IDS_DIRECTPLAY_COL_NAME1 "Namn"
+    IDS_DIRECTPLAY_COL_NAME2 "Register"
+    IDS_DIRECTPLAY_COL_NAME3 "Fil"
+    IDS_DIRECTPLAY_COL_NAME4 "Version"
+    IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Service Provider"
+    IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
+    IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
+    IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
+    IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling för DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "IPX koppling för DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Modemkoppling för DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Seriell kopplig för DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Fel"
+    IDS_DDTEST_ERROR "Testet misslyckes!"
+    IDS_DDTEST_DESCRIPTION "Detta kommer att starta DirecDraw enhetstest. Fortsätta?"
+    IDS_DDPRIMARY_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita svarta och vita rektangular primära ytan. Fortsätta?"
+    IDS_DDPRIMARY_RESULT "Såg du svarta och vite rektanglar?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita i en offscreen buffert. En animerad vit rektangel kommer att ritas. Fortsätta?"
+    IDS_DDOFFSCREEN_RESULT "Såg du en vit animerad rektangel?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita i fullskärmsläge. En animerad vit rektangel kommer att ritas. Fortsätta?"
+    IDS_DDFULLSCREEN_RESULT "Såg du en vit animerad rektangel i fullskärmsläge?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "Nej"
+    IDS_D3DTEST_DESCRIPTION "Detta kommer att starta Direct3D enhetstest. Fortsätt?"
+    IDS_D3DTEST_D3Dx "Detta testet kommer att använda hårdvaruaccellererad Direct3D %u enheten."
 END

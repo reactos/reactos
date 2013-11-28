@@ -2,12 +2,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Print"
-	IDS_STRING, "Jackdaws love my big sphinx of quartz. 1234567890"
-	IDS_OPEN, "Open Font..."
-	IDS_ERROR, "Error"
-	IDS_ERROR_NOMEM, "There's not enough memory to complete the operation."
-	IDS_ERROR_NOFONT, "The file %1 is not a valid font file."
-	IDS_ERROR_NOCLASS, "Could not initialize window class."
+    IDS_INSTALL "Install"
+    IDS_PRINT "Print"
+    IDS_STRING "Jackdaws love my big sphinx of quartz. 1234567890"
+    IDS_OPEN "Open Font..."
+    IDS_ERROR "Error"
+    IDS_ERROR_NOMEM "There's not enough memory to complete the operation."
+    IDS_ERROR_NOFONT "The file %1 is not a valid font file."
+    IDS_ERROR_NOCLASS "Could not initialize window class."
 END

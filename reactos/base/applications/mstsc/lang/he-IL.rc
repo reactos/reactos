@@ -4,37 +4,37 @@ IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "הגדרות כניסה",IDC_STATIC,7,7,228,89
-    GROUPBOX        "הגדרות חיבור",IDC_STATIC,7,103,228,65
-    ICON            "", IDC_LOGONICON, 15,19,20,20
-    LTEXT           "הזן את כתובת השרת",IDC_STATIC,47,24,81,8
-    LTEXT           "שרת:",IDC_STATIC,47,41,25,8
-    LTEXT           "שם משתמש:",IDC_STATIC,47,58,38,8
-    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON      "שמור",IDC_SAVE,67,139,50,14
-    PUSHBUTTON      "שמור בשם...",IDC_SAVEAS,123,139,50,14
-    PUSHBUTTON      "פתח...",IDC_OPEN,177,139,50,14
-    ICON            "", IDC_CONNICON, 16,114,20,20
-    LTEXT           "שמור את הגדרות החיבור הנוכחיות או פתח חיבור שמור.",IDC_STATIC,50,115,172,20
+    GROUPBOX "הגדרות כניסה", IDC_STATIC, 7, 7, 228, 89
+    GROUPBOX "הגדרות חיבור", IDC_STATIC, 7, 103, 228, 65
+    ICON "", IDC_LOGONICON, 15, 19, 20, 20
+    LTEXT "הזן את כתובת השרת", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "שרת:", IDC_STATIC, 47, 41, 25, 8
+    LTEXT "שם משתמש:", IDC_STATIC, 47, 58, 38, 8
+    COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "שמור", IDC_SAVE, 67, 139, 50, 14
+    PUSHBUTTON "שמור בשם...", IDC_SAVEAS, 123, 139, 50, 14
+    PUSHBUTTON "פתח...", IDC_OPEN, 177, 139, 50, 14
+    ICON "", IDC_CONNICON, 16, 114, 20, 20
+    LTEXT "שמור את הגדרות החיבור הנוכחיות או פתח חיבור שמור.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "תצורת תצוגה",IDC_STATIC,7,7,228,68
-    GROUPBOX        "צבעים",IDC_STATIC,7,83,228,85
-    ICON            "", IDC_REMICON, 15,19,20,20
-    ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "בחר את גודלו של שולחן העבודה המרוחק שלך. גרור את המחוון עד\nלקצה השמאלי כדי להשתמש במסך מלא.",IDC_STATIC,51,19,175,25
-    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 57, 48, 124, 17
-    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
-    LTEXT           "שימו לב: ההגדרות במחשב המרוחק יכולות לשנות את ההגדרות שלכם.",IDC_STATIC,56,143,165,18
-    LTEXT           "פחות",IDC_STATIC,40,51,19,8
-    LTEXT           "יותר",IDC_STATIC,183,51,19,8
-    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+    GROUPBOX "תצורת תצוגה", IDC_STATIC, 7, 7, 228, 68
+    GROUPBOX "צבעים", IDC_STATIC, 7, 83, 228, 85
+    ICON "", IDC_REMICON, 15, 19, 20, 20
+    ICON "", IDC_COLORSICON, 15, 98, 20, 20
+    LTEXT "בחר את גודלו של שולחן העבודה המרוחק שלך. גרור את המחוון עד\nלקצה השמאלי כדי להשתמש במסך מלא.", IDC_STATIC, 51, 19, 175, 25
+    CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 57, 48, 124, 17
+    COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10
+    LTEXT "שימו לב: ההגדרות במחשב המרוחק יכולות לשנות את ההגדרות שלכם.", IDC_STATIC, 56, 143, 165, 18
+    LTEXT "פחות", IDC_STATIC, 40, 51, 19, 8
+    LTEXT "יותר", IDC_STATIC, 183, 51, 19, 8
+    LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
@@ -42,23 +42,22 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "חיבור לשולחן עבודה מרוחק"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "התחבר",IDOK,147,245,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,203,245,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+    DEFPUSHBUTTON "התחבר", IDOK, 147, 245, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 203, 245, 50, 14
+    CONTROL "", IDC_TAB, "SysTabControl32", 0x0, 7, 50, 246, 190
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_GENERAL         "כללי"
-    IDS_TAB_DISPLAY         "תצוגה"
-    IDS_256COLORS           "256 צבעים"
-    IDS_HIGHCOLOR15         "32,768 צבעים (15 סיביות)"
-    IDS_HIGHCOLOR16         "65,536 צבעים (16 סיביות)"
-    IDS_HIGHCOLOR24         "16,777,216 צבעים (24 סיביות)"
-    IDS_PIXEL               "%lux%lu פיקסלים"
-    IDS_FULLSCREEN          "מסך מלא"
-    IDS_BROWSESERVER        "<Browse for more...>"
-    IDS_HEADERTEXT1         "שולחן עבודה מרוחק"
-    IDS_HEADERTEXT2         "חיבור"
+    IDS_TAB_GENERAL "כללי"
+    IDS_TAB_DISPLAY "תצוגה"
+    IDS_256COLORS "256 צבעים"
+    IDS_HIGHCOLOR15 "32,768 צבעים (15 סיביות)"
+    IDS_HIGHCOLOR16 "65,536 צבעים (16 סיביות)"
+    IDS_HIGHCOLOR24 "16,777,216 צבעים (24 סיביות)"
+    IDS_PIXEL "%lux%lu פיקסלים"
+    IDS_FULLSCREEN "מסך מלא"
+    IDS_BROWSESERVER "<Browse for more...>"
+    IDS_HEADERTEXT1 "שולחן עבודה מרוחק"
+    IDS_HEADERTEXT2 "חיבור"
 END

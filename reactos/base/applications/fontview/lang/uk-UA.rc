@@ -1,21 +1,21 @@
 /*
- * PROJECT:     ReactOS Font Viewer
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        rosapps/fontview/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for fontview
- * TRANSLATOR:  Artem Reznikov
+ * PROJECT:    ReactOS Font Viewer
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       rosapps/fontview/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for fontview
+ * TRANSLATOR: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_INSTALL, "Install"
-	IDS_PRINT, "Друк"
-	IDS_STRING, "Чуєш їх, доцю, га? Кумедна ж ти, прощайся без ґольфів! 1234567890"
-	IDS_OPEN, "Open Font..."
-	IDS_ERROR, "Помилка"
-	IDS_ERROR_NOMEM, "Недостатньо пам'яті для завершення операції."
-	IDS_ERROR_NOFONT, "Файл %1 не є коректним файлом шрифту."
-	IDS_ERROR_NOCLASS, "Неможливо ініціалізувати віконний клас."
+    IDS_INSTALL "Install"
+    IDS_PRINT "Друк"
+    IDS_STRING "Чуєш їх, доцю, га? Кумедна ж ти, прощайся без ґольфів! 1234567890"
+    IDS_OPEN "Open Font..."
+    IDS_ERROR "Помилка"
+    IDS_ERROR_NOMEM "Недостатньо пам'яті для завершення операції."
+    IDS_ERROR_NOFONT "Файл %1 не є коректним файлом шрифту."
+    IDS_ERROR_NOCLASS "Неможливо ініціалізувати віконний клас."
 END

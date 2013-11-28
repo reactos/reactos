@@ -10,7 +10,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Baigti\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Pagalba"
     BEGIN
         MENUITEM "&Apie ReactOS Valdymo Pultą...", IDM_HELP_ABOUT
@@ -25,12 +24,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Baigti\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "&Pagalba"
     BEGIN
         MENUITEM "&Apie ReactOS Valdymo Pultą...", IDM_HELP_ABOUT

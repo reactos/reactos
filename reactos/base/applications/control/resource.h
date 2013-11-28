@@ -1,3 +1,3 @@
 #pragma once
 
-#define IDI_MAINICON                    100
+#define IDI_MAINICON 100

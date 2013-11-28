@@ -4,17 +4,17 @@ IDC_MAGNIFIER MENU
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
-        MENUITEM "終了(&X)",                    IDM_EXIT
-        MENUITEM "オプション(&O)",              IDM_OPTIONS
+        MENUITEM "終了(&X)", IDM_EXIT
+        MENUITEM "オプション(&O)", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "バージョン情報(&A) ...",      IDM_ABOUT
+        MENUITEM "バージョン情報(&A) ...", IDM_ABOUT
     END
 END
 
 IDC_MAGNIFIER ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
@@ -22,10 +22,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "拡大鏡について"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
-    LTEXT           "拡大鏡 バージョン 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
-    PUSHBUTTON      "OK",IDOK,162,48,50,14
+    ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
+    LTEXT "拡大鏡 バージョン 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
+    PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
@@ -33,18 +33,24 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_
 CAPTION "拡大鏡の設定"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "終了",IDOK,96,161,50,14
-    PUSHBUTTON      "ヘルプ",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "拡大率:",IDC_STATIC,6,8,68,8
-    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "拡大の対象",IDC_STATIC,7,25,139,59
-    GROUPBOX        "表示",IDC_STATIC,7,87,139,57
-    CONTROL         "マウス カーソルの動きを追う",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
-    CONTROL         "キーボードのフォーカスを追う",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "編集中のテキストを追う",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
-    CONTROL         "色を反転する",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
-    CONTROL         "最小化して開始する",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
-    CONTROL         "拡大鏡を表示する",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+    DEFPUSHBUTTON "終了", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "ヘルプ", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "拡大率:", IDC_STATIC, 6, 8, 68, 8
+    COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "拡大の対象", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "表示", IDC_STATIC, 7, 87, 139, 57
+    CONTROL "マウス カーソルの動きを追う", IDC_FOLLOWMOUSECHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
+    CONTROL "キーボードのフォーカスを追う", IDC_FOLLOWKEYBOARDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
+    CONTROL "編集中のテキストを追う", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
+    CONTROL "色を反転する", IDC_INVERTCOLORSCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
+    CONTROL "最小化して開始する", IDC_STARTMINIMIZEDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
+    CONTROL "拡大鏡を表示する", IDC_SHOWMAGNIFIERCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
@@ -52,13 +58,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "ReactOS 拡大鏡"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
-    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "拡大鏡は軽い視覚障害がある方に最低限の機能を提供するように設計されています。ほとんどの視覚障害者の方の場合、日常利用するにはより高機能な拡大ユーティリティが必要となります。",IDC_STATIC,36,7,207,33
-    CONTROL         "今後、このメッセージを表示しない",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "拡大鏡は軽い視覚障害がある方に最低限の機能を提供するように設計されています。ほとんどの視覚障害者の方の場合、日常利用するにはより高機能な拡大ユーティリティが必要となります。", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "今後、このメッセージを表示しない", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "拡大鏡"
+    IDS_APP_TITLE "拡大鏡"
 END

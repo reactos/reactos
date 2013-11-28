@@ -9,14 +9,10 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Ukončí sedenie.\n\n\
+    IDS_USAGE "Ukončí sedenie.\n\n\
   /v\t\tZobrazí informácie o prebiehajúcich akciách.\n\
   /?\t\tUkáže túto informáciu.\n\n"
-
-IDS_LOGOFF_REMOTE, "Ukončovanie sedenia na vzdialenom počítači."
-IDS_LOGOFF_LOCAL, "Ukončovanie aktuálneho sedenia na tomto počítači."
-
-IDS_ILLEGAL_PARAM, "Neplatný(é) parameter(e)\n"
+    IDS_LOGOFF_REMOTE "Ukončovanie sedenia na vzdialenom počítači."
+    IDS_LOGOFF_LOCAL "Ukončovanie aktuálneho sedenia na tomto počítači."
+    IDS_ILLEGAL_PARAM "Neplatný(é) parameter(e)\n"
 END
-/* EOF */

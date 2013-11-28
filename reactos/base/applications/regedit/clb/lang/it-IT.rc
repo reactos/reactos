@@ -1,10 +1,4 @@
-/*
- * PROJECT:     System Setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/regedit/clb/lang/it-IT.rc
- * PURPOSE:     Italian Translation
- * PROGRAMMERS: Copyright (C) 2007 Paolo Devoti devotip at tiscali.it
- */
+/* Italian translation by Paolo Devoti devotip at tiscali.it */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
@@ -32,4 +26,3 @@ BEGIN
    PUSHBUTTON "Annulla", IDCANCEL, 93, 125, 40, 14, BS_PUSHBUTTON | WS_GROUP | WS_TABSTOP
    CHECKBOX "&Disabilita No-Scroll", 1708, 79, 60, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 END
-

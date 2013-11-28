@@ -2,11 +2,11 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "Diagnostisch hulpprogramma voor ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Help", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Volgende Pagina", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Alle gegevens opslaan...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -63,7 +63,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-
     GROUPBOX "Stuurprogramma's", -1, 270, 10, 190, 100
     RTEXT "Stuurprogramma:", -1, 275, 25, 55, 10
     RTEXT "Versie:", -1, 275, 35, 55, 10
@@ -79,7 +78,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
-
     GROUPBOX "ReactX-functies", -1, 10, 115, 450, 60
     RTEXT "DirectDraw-versnelling:", -1, 15, 130, 110, 12
     RTEXT "Direct3D-versnelling:", -1, 15, 145, 110, 12
@@ -92,11 +90,9 @@ BEGIN
     PUSHBUTTON "Inschakelen", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "DirectDraw testen", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Direct3D testen", IDC_BUTTON_TEST3D, 250, 140, 80, 14
-
     GROUPBOX "Opmerkingen", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
-
 
 IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
@@ -133,7 +129,7 @@ BEGIN
     RTEXT "Versnellingsniveau van hardwaregeluid:", -1, 20, 135, 90, 20
     PUSHBUTTON "DirectSound testen", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Opmerkingen", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
@@ -142,7 +138,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-
 IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -150,9 +145,10 @@ BEGIN
     GROUPBOX "DirectInput-apparaten", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Aan invoer gerelateerde apparaten", -1, 10, 100, 452, 60
-    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "opmerkingen", -1, 10, 170, 352, 50
-    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
@@ -171,55 +167,55 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_MAIN_DIALOG "Diagnostisch hulpprogramma voor ReactX"
-	IDS_SYSTEM_DIALOG "Systeem"
-	IDS_DISPLAY_DIALOG "Beeldscherm"
-	IDS_SOUND_DIALOG "Geluid"
-	IDS_MUSIC_DIALOG "Muziek"
-	IDS_INPUT_DIALOG "Invoer"
-	IDS_NETWORK_DIALOG "Netwerk"
-	IDS_HELP_DIALOG "Help"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB wordt gebruikt, %I64u MB is vrij"
-	IDS_FORMAT_UNIPROC "%s (%u CPU)"
-	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
-	IDS_VERSION_UNKNOWN "ongekende versie"
-	IDS_DEVICE_STATUS_ATTACHED "aangesloten"
-	IDS_DEVICE_STATUS_MISSING "niet aangesloten"
-	IDS_DEVICE_STATUS_UNKNOWN "onbekend"
-	IDS_DEVICE_NAME "Apparaatnaam"
-	IDS_DEVICE_STATUS "Status"
-	IDS_DEVICE_CONTROLLER "Controller-id"
-	IDS_DEVICE_MANUFACTURER "Fabrikant-id"
-	IDS_DEVICE_PRODUCT "Product ID"
-	IDS_DEVICE_FORCEFEEDBACK "Stuurprogramma voor force-feedback"
-	IDS_NOT_APPLICABLE "n.v.t."
-	IDS_OPTION_YES "Ja"
-	IDS_DIRECTPLAY_COL_NAME1 "Naam"
-	IDS_DIRECTPLAY_COL_NAME2 "Register"
-	IDS_DIRECTPLAY_COL_NAME3 "Bestand"
-	IDS_DIRECTPLAY_COL_NAME4 "Versie"
-	IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Service Provider"
-	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
-	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
-	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
-	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP verbinding voor DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "IPX verbinding voor DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Modem verbinding voor DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Serial verbinding voor DirectPlay"
-	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "Fout"
-	IDS_DDTEST_ERROR "Test mislukt!"
-	IDS_DDTEST_DESCRIPTION "Hierdoor wordt DirectDraw op dit systeem getest. Wilt u doorgaan?"
-	IDS_DDPRIMARY_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moeten enkele witte en zwarte rechthoeken op het scherm verschijnen. Wilt u doorgaan?"
-	IDS_DDPRIMARY_RESULT "Hebt u afwisselend zwarte en witte rechthoeken op het scherm gezien?"
-	IDS_DDOFFSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
-	IDS_DDOFFSCREEN_RESULT "Hebt u het stuiterende vlak gezien?"
-	IDS_DDFULLSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak in de modus voor het volledige scherm. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
-	IDS_DDFULLSCREEN_RESULT "Hebt u het stuiterende vlak op het volledige scherm gezien?"
-	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
-	IDS_OPTION_NO "Nee"
-	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
-	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
+    IDS_MAIN_DIALOG "Diagnostisch hulpprogramma voor ReactX"
+    IDS_SYSTEM_DIALOG "Systeem"
+    IDS_DISPLAY_DIALOG "Beeldscherm"
+    IDS_SOUND_DIALOG "Geluid"
+    IDS_MUSIC_DIALOG "Muziek"
+    IDS_INPUT_DIALOG "Invoer"
+    IDS_NETWORK_DIALOG "Netwerk"
+    IDS_HELP_DIALOG "Help"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB wordt gebruikt, %I64u MB is vrij"
+    IDS_FORMAT_UNIPROC "%s (%u CPU)"
+    IDS_FORMAT_MPPROC "%s (%u CPUs)"
+    IDS_VERSION_UNKNOWN "ongekende versie"
+    IDS_DEVICE_STATUS_ATTACHED "aangesloten"
+    IDS_DEVICE_STATUS_MISSING "niet aangesloten"
+    IDS_DEVICE_STATUS_UNKNOWN "onbekend"
+    IDS_DEVICE_NAME "Apparaatnaam"
+    IDS_DEVICE_STATUS "Status"
+    IDS_DEVICE_CONTROLLER "Controller-id"
+    IDS_DEVICE_MANUFACTURER "Fabrikant-id"
+    IDS_DEVICE_PRODUCT "Product ID"
+    IDS_DEVICE_FORCEFEEDBACK "Stuurprogramma voor force-feedback"
+    IDS_NOT_APPLICABLE "n.v.t."
+    IDS_OPTION_YES "Ja"
+    IDS_DIRECTPLAY_COL_NAME1 "Naam"
+    IDS_DIRECTPLAY_COL_NAME2 "Register"
+    IDS_DIRECTPLAY_COL_NAME3 "Bestand"
+    IDS_DIRECTPLAY_COL_NAME4 "Versie"
+    IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Service Provider"
+    IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
+    IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
+    IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
+    IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP verbinding voor DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "IPX verbinding voor DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Modem verbinding voor DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Serial verbinding voor DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Fout"
+    IDS_DDTEST_ERROR "Test mislukt!"
+    IDS_DDTEST_DESCRIPTION "Hierdoor wordt DirectDraw op dit systeem getest. Wilt u doorgaan?"
+    IDS_DDPRIMARY_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moeten enkele witte en zwarte rechthoeken op het scherm verschijnen. Wilt u doorgaan?"
+    IDS_DDPRIMARY_RESULT "Hebt u afwisselend zwarte en witte rechthoeken op het scherm gezien?"
+    IDS_DDOFFSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
+    IDS_DDOFFSCREEN_RESULT "Hebt u het stuiterende vlak gezien?"
+    IDS_DDFULLSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak in de modus voor het volledige scherm. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
+    IDS_DDFULLSCREEN_RESULT "Hebt u het stuiterende vlak op het volledige scherm gezien?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "Nee"
+    IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+    IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

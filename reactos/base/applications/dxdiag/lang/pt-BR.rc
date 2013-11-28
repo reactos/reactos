@@ -4,11 +4,11 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "Programa de Diagnóstico ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Ajuda", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Próxima página", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Sal&var Informações...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -65,7 +65,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-
     GROUPBOX "Drivers", -1, 270, 10, 190, 100
     RTEXT "Driver principal:", -1, 275, 25, 55, 10
     RTEXT "Versão:", -1, 275, 35, 55, 10
@@ -81,7 +80,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
-
     GROUPBOX "Recursos dos ReactX", -1, 10, 115, 450, 60
     RTEXT "Aceleração do DirectDraw:", -1, 15, 130, 110, 12
     RTEXT "Aceleração do Direct3D:", -1, 15, 145, 110, 12
@@ -94,11 +92,9 @@ BEGIN
     PUSHBUTTON "Ativado", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testar DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Testar Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
-
     GROUPBOX "Observações", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
-
 
 IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
@@ -135,7 +131,7 @@ BEGIN
     RTEXT "Hardware de Som\nNível de Aceleração:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testar DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Observações", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
@@ -144,7 +140,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-
 IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -152,9 +147,10 @@ BEGIN
     GROUPBOX "Dispositivos do DirectInput", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Dispositivos relacionados a entrada", -1, 10, 100, 452, 60
-    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Informações", -1, 10, 170, 452, 50
-    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
@@ -173,55 +169,55 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_MAIN_DIALOG "Ferramenta de Diagnóstico ReactX"
-	IDS_SYSTEM_DIALOG "Sistema"
-	IDS_DISPLAY_DIALOG "Exibição"
-	IDS_SOUND_DIALOG "Som"
-	IDS_MUSIC_DIALOG "Música"
-	IDS_INPUT_DIALOG "Entrada"
-	IDS_NETWORK_DIALOG "Rede"
-	IDS_HELP_DIALOG "Ajuda"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB usados, %I64u MB disponíveis"
-	IDS_FORMAT_UNIPROC "%s (%u CPU)"
-	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
-	IDS_VERSION_UNKNOWN "Versão Desconhecida"
-	IDS_DEVICE_STATUS_ATTACHED "Conectado"
-	IDS_DEVICE_STATUS_MISSING "Desconectado"
-	IDS_DEVICE_STATUS_UNKNOWN "Desconhecido"
-	IDS_DEVICE_NAME "Nome do dispositivo"
-	IDS_DEVICE_STATUS "Status"
-	IDS_DEVICE_CONTROLLER "Identificação do controlador"
-	IDS_DEVICE_MANUFACTURER "Identificação do fornecedor"
-	IDS_DEVICE_PRODUCT "Identificação do produto (Product ID)"
-	IDS_DEVICE_FORCEFEEDBACK "Driver do Force Feedback"
-	IDS_NOT_APPLICABLE "Não aplicável"
-	IDS_OPTION_YES "Sim"
-	IDS_DIRECTPLAY_COL_NAME1 "Nome"
-	IDS_DIRECTPLAY_COL_NAME2 "Registro"
-	IDS_DIRECTPLAY_COL_NAME3 "Arquivo"
-	IDS_DIRECTPLAY_COL_NAME4 "Versão"
-	IDS_DIRECTPLAY8_MODEMSP "Provedor de Serviço de Modem DirectPlay8"
-	IDS_DIRECTPLAY8_SERIALSP "Provedor de Serviço de Serial DirectPlay8"
-	IDS_DIRECTPLAY8_IPXSP "Provedor de Serviço DirectPlay8 IPX"
-	IDS_DIRECTPLAY8_TCPSP "Provedor de Serviço DirectPlay8-TCP/IP"
-	IDS_DIRECTPLAY_TCPCONN "Conexão de Internet TCP/IP Para DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "Conexão IPX Para DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Conexão de Modem Para DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Conexão Serial Para DirectPlay"
-	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "Erro"
-	IDS_DDTEST_ERROR "Teste falhou!"
-	IDS_DDTEST_DESCRIPTION "Será iniciada a interface de teste do DirectDraw. Prosseguir?"
-	IDS_DDPRIMARY_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em camada primária. Retângulos brancos e pretos serão desenhados. Prosseguir?"
-	IDS_DDPRIMARY_RESULT "Você visualizou retângulos brancos e pretos?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em offscreen buffer. Um retângulo branco em movimento será desenhado. Prosseguir?"
-	IDS_DDOFFSCREEN_RESULT "Você visualizou um retângulo branco se movendo?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em tela cheia. Um retângulo branco em movimento será desenhado. Prosseguir?"
-	IDS_DDFULLSCREEN_RESULT "Você visualizou o retângulo branco se movendo em tela cheia?"
-	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
-	IDS_OPTION_NO "Não"
-	IDS_D3DTEST_DESCRIPTION "Será iniciada a interface de teste do Direct3D. Prosseguir?"
-	IDS_D3DTEST_D3Dx "Este teste utilizará a interface Direct3D %u com aceleração por hardware."
+    IDS_MAIN_DIALOG "Ferramenta de Diagnóstico ReactX"
+    IDS_SYSTEM_DIALOG "Sistema"
+    IDS_DISPLAY_DIALOG "Exibição"
+    IDS_SOUND_DIALOG "Som"
+    IDS_MUSIC_DIALOG "Música"
+    IDS_INPUT_DIALOG "Entrada"
+    IDS_NETWORK_DIALOG "Rede"
+    IDS_HELP_DIALOG "Ajuda"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB usados, %I64u MB disponíveis"
+    IDS_FORMAT_UNIPROC "%s (%u CPU)"
+    IDS_FORMAT_MPPROC "%s (%u CPUs)"
+    IDS_VERSION_UNKNOWN "Versão Desconhecida"
+    IDS_DEVICE_STATUS_ATTACHED "Conectado"
+    IDS_DEVICE_STATUS_MISSING "Desconectado"
+    IDS_DEVICE_STATUS_UNKNOWN "Desconhecido"
+    IDS_DEVICE_NAME "Nome do dispositivo"
+    IDS_DEVICE_STATUS "Status"
+    IDS_DEVICE_CONTROLLER "Identificação do controlador"
+    IDS_DEVICE_MANUFACTURER "Identificação do fornecedor"
+    IDS_DEVICE_PRODUCT "Identificação do produto (Product ID)"
+    IDS_DEVICE_FORCEFEEDBACK "Driver do Force Feedback"
+    IDS_NOT_APPLICABLE "Não aplicável"
+    IDS_OPTION_YES "Sim"
+    IDS_DIRECTPLAY_COL_NAME1 "Nome"
+    IDS_DIRECTPLAY_COL_NAME2 "Registro"
+    IDS_DIRECTPLAY_COL_NAME3 "Arquivo"
+    IDS_DIRECTPLAY_COL_NAME4 "Versão"
+    IDS_DIRECTPLAY8_MODEMSP "Provedor de Serviço de Modem DirectPlay8"
+    IDS_DIRECTPLAY8_SERIALSP "Provedor de Serviço de Serial DirectPlay8"
+    IDS_DIRECTPLAY8_IPXSP "Provedor de Serviço DirectPlay8 IPX"
+    IDS_DIRECTPLAY8_TCPSP "Provedor de Serviço DirectPlay8-TCP/IP"
+    IDS_DIRECTPLAY_TCPCONN "Conexão de Internet TCP/IP Para DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "Conexão IPX Para DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Conexão de Modem Para DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Conexão Serial Para DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Erro"
+    IDS_DDTEST_ERROR "Teste falhou!"
+    IDS_DDTEST_DESCRIPTION "Será iniciada a interface de teste do DirectDraw. Prosseguir?"
+    IDS_DDPRIMARY_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em camada primária. Retângulos brancos e pretos serão desenhados. Prosseguir?"
+    IDS_DDPRIMARY_RESULT "Você visualizou retângulos brancos e pretos?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em offscreen buffer. Um retângulo branco em movimento será desenhado. Prosseguir?"
+    IDS_DDOFFSCREEN_RESULT "Você visualizou um retângulo branco se movendo?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Este teste utilizará DirectDraw para desenhar em tela cheia. Um retângulo branco em movimento será desenhado. Prosseguir?"
+    IDS_DDFULLSCREEN_RESULT "Você visualizou o retângulo branco se movendo em tela cheia?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "Não"
+    IDS_D3DTEST_DESCRIPTION "Será iniciada a interface de teste do Direct3D. Prosseguir?"
+    IDS_D3DTEST_D3Dx "Este teste utilizará a interface Direct3D %u com aceleração por hardware."
 END
