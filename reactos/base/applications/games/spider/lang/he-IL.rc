@@ -1,9 +1,9 @@
 /*
- * PROJECT:      Spider Solitaire
- * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/he-IL.rc
- * PURPOSE:      Hebrew Language File for Spider Solitaire
- * TRANSLATOR:   Baruch Rutman
+ * PROJECT:    Spider Solitaire
+ * LICENSE:    See COPYING in top level directory
+ * FILE:       base/applications/games/spider/lang/he-IL.rc
+ * PURPOSE:    Hebrew Language File for Spider Solitaire
+ * TRANSLATOR: Baruch Rutman
  */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
@@ -15,20 +15,20 @@ CAPTION "בחר חפיסה"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
-    CONTROL       "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
+    CONTROL "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
+    CONTROL "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
+    CONTROL "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
+    CONTROL "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
+    CONTROL "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
+    CONTROL "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
+    CONTROL "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
+    CONTROL "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
+    CONTROL "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
+    CONTROL "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
+    CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
+    CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "אישור", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "ביטול", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON "ביטול", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
@@ -36,25 +36,23 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "רמת קושי"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "קל: סדרה אחת",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "בינוני: שתי סדרות", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "קשה: ארבע סדרות",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
-
-    DEFPUSHBUTTON   "אישור", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "ביטול", IDCANCEL, 58, 58, 40, 14
+    AUTORADIOBUTTON "קל: סדרה אחת", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "בינוני: שתי סדרות", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
+    AUTORADIOBUTTON "קשה: ארבע סדרות", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    DEFPUSHBUTTON "אישור", IDOK, 8, 58, 40, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "עכביש"
-    IDS_SPI_ABOUT   "Spider Solitaire by Gregor Schneider\n\nCardLib version 1.0"
-    IDS_SPI_QUIT    "להפסיק את המשחק הנוכחי?"
-    IDS_SPI_WIN     "כל הכבוד, ניצחת!"
-    IDS_SPI_DEAL    "לחלק שוב?"
+    IDS_SPI_NAME "עכביש"
+    IDS_SPI_ABOUT "Spider Solitaire by Gregor Schneider\n\nCardLib version 1.0"
+    IDS_SPI_QUIT "להפסיק את המשחק הנוכחי?"
+    IDS_SPI_WIN "כל הכבוד, ניצחת!"
+    IDS_SPI_DEAL "לחלק שוב?"
 END
-
 
 /* Menus */
 
@@ -62,25 +60,22 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&משחק"
     BEGIN
-        MENUITEM "משחק &חדש\tF2",               IDM_GAME_NEW
+        MENUITEM "משחק &חדש\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "ח&פיסה...",                    IDM_GAME_DECK
+        MENUITEM "ח&פיסה...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "י&ציאה",                       IDM_GAME_EXIT
+        MENUITEM "י&ציאה", IDM_GAME_EXIT
     END
     POPUP "&עזרה"
     BEGIN
-        MENUITEM "&תוכן\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "&אודות",                      IDM_HELP_ABOUT
+        MENUITEM "&תוכן\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&אודות", IDM_HELP_ABOUT
     END
 END
 
-
-
 /* Accelerator */
-
 IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
-    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
-    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+    VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
+    VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
 END

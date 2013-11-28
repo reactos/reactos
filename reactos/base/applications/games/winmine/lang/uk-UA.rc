@@ -1,93 +1,73 @@
-/*
- * WineMine
- * Ukrainian Language Support
- *
- * Copyright 2000 Joshua Thielen
- * Copyright 2003 Marcelo Duarte
- * Copyright 2010 Igor Paliychuk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE BEGIN
-     IDS_APPNAME, "WineMine"
-     IDS_NOBODY,  "Nobody"
-     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "WineMine"
+    IDS_NOBODY "Nobody"
+    IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "&Гра" BEGIN
-        MENUITEM "&Нова\tF2",      IDM_NEW
+    POPUP "&Гра"
+    BEGIN
+        MENUITEM "&Нова\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Знаки питання", IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "Н&овачок",       IDM_BEGINNER
-        MENUITEM "&Майстер",       IDM_ADVANCED
-        MENUITEM "&Експерт",       IDM_EXPERT
-        MENUITEM "&Свої параметри...",     IDM_CUSTOM
+        MENUITEM "Н&овачок", IDM_BEGINNER
+        MENUITEM "&Майстер", IDM_ADVANCED
+        MENUITEM "&Експерт", IDM_EXPERT
+        MENUITEM "&Свої параметри...", IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "&Вихід\tAlt+X",   IDM_EXIT
+        MENUITEM "&Вихід\tAlt+X", IDM_EXIT
     END
-    POPUP "&Довідка" BEGIN
+    POPUP "&Довідка"
+    BEGIN
         MENUITEM "&Кращий час...", IDM_TIMES
-        MENUITEM "&Про програму",         IDM_ABOUT
+        MENUITEM "&Про програму", IDM_ABOUT
     END
 END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Кращий час"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Кращий час",   -1,  10,  10, 140,  45
-    LTEXT           "Новачок",      -1,  20,  20,  40,   8
-    LTEXT           "Майстер",      -1,  20,  30,  40,   8
-    LTEXT           "Експерт",      -1,  20,  40,  40,   8
-    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
-    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
-    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
-    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
-    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
-    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
-    DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
+    GROUPBOX "Кращий час", -1, 10, 10, 140, 45
+    LTEXT "Новачок", -1, 20, 20, 40, 8
+    LTEXT "Майстер", -1, 20, 30, 40, 8
+    LTEXT "Експерт", -1, 20, 40, 40, 8
+    LTEXT "999", IDC_TIME1, 70, 20, 15, 8
+    LTEXT "999", IDC_TIME2, 70, 30, 15, 8
+    LTEXT "999", IDC_TIME3, 70, 40, 15, 8
+    LTEXT "", IDC_NAME1, 90, 20, 55, 8
+    LTEXT "", IDC_NAME2, 90, 30, 55, 8
+    LTEXT "", IDC_NAME3, 90, 40, 55, 8
+    DEFPUSHBUTTON "OK", IDOK, 55, 60, 50, 15
 END
 
-DLG_CONGRATS DIALOGEX  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CONGRATS DIALOGEX 0, 0, 160, 60
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Вітання!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Введіть ваше ім'я",             -1,  10,  10, 150,  10
-    EDITTEXT                               IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "OK",                          IDOK,  60,  40,  40,  15
+    LTEXT "Введіть ваше ім'я", -1, 10, 10, 150, 10
+    EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
+    DEFPUSHBUTTON "OK", IDOK, 60, 40, 40, 15
 END
 
-DLG_CUSTOM DIALOGEX  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CUSTOM DIALOGEX 0, 0, 100, 100
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Свої параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Рядків",         -1,   5,   5,  30,  10
-    LTEXT           "Стовпців",       -1,   5,  35,  30,  10
-    LTEXT           "Мін",            -1,   5,  65,  30,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "Скасувати", IDCANCEL,  40,  50,  50,  15
+    LTEXT "Рядків", -1, 5, 5, 30, 10
+    LTEXT "Стовпців", -1, 5, 35, 30, 10
+    LTEXT "Мін", -1, 5, 65, 30, 10
+    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 40, 30, 50, 15
+    PUSHBUTTON "Скасувати", IDCANCEL, 40, 50, 50, 15
 END

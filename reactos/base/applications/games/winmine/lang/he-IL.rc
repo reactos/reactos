@@ -1,94 +1,73 @@
-/*
- * WineMine
- * Hebrew Language Support
- *
- * Copyright 2000 Joshua Thielen
- * Copyright 2003 Marcelo Duarte
- *
- * Translated by Baruch Rutman (peterooch)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
-STRINGTABLE BEGIN
-     IDS_APPNAME, "WineMine"
-     IDS_NOBODY,  "אף אחד"
-     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "WineMine"
+    IDS_NOBODY "אף אחד"
+    IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "&אפשרויות" BEGIN
-        MENUITEM "&חדש\tF2",       IDM_NEW
+    POPUP "&אפשרויות"
+    BEGIN
+        MENUITEM "&חדש\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "סימון בשאלה", IDM_MARKQ // to be invented
         MENUITEM SEPARATOR
-        MENUITEM "&מתחיל",      IDM_BEGINNER
-        MENUITEM "מ&תקדם",      IDM_ADVANCED
-        MENUITEM "מומ&חה",        IDM_EXPERT
-        MENUITEM "מותא&ם...",     IDM_CUSTOM
+        MENUITEM "&מתחיל", IDM_BEGINNER
+        MENUITEM "מ&תקדם", IDM_ADVANCED
+        MENUITEM "מומ&חה", IDM_EXPERT
+        MENUITEM "מותא&ם...", IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "י&ציאה\tAlt-X",   IDM_EXIT
+        MENUITEM "י&ציאה\tAlt-X", IDM_EXIT
     END
-    POPUP "מי&דע" BEGIN
+    POPUP "מי&דע"
+    BEGIN
         MENUITEM "ה&כי מהירים...", IDM_TIMES
-        MENUITEM "אודו&ת",         IDM_ABOUT
+        MENUITEM "אודו&ת", IDM_ABOUT
     END
 END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "שיאני שולה המוקשים"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "הכי מהירים", -1,  10,  10, 140,  45
-    LTEXT           "מתחיל",      -1,  20,  20,  40,   8
-    LTEXT           "מתקדם",      -1,  20,  30,  40,   8
-    LTEXT           "מומחה",        -1,  20,  40,  40,   8
-    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
-    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
-    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
-    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
-    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
-    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
-    DEFPUSHBUTTON   "אישור",                IDOK,  55,  60,  50,  15
+    GROUPBOX "הכי מהירים", -1, 10, 10, 140, 45
+    LTEXT "מתחיל", -1, 20, 20, 40, 8
+    LTEXT "מתקדם", -1, 20, 30, 40, 8
+    LTEXT "מומחה", -1, 20, 40, 40, 8
+    LTEXT "999", IDC_TIME1, 70, 20, 15, 8
+    LTEXT "999", IDC_TIME2, 70, 30, 15, 8
+    LTEXT "999", IDC_TIME3, 70, 40, 15, 8
+    LTEXT "", IDC_NAME1, 90, 20, 55, 8
+    LTEXT "", IDC_NAME2, 90, 30, 55, 8
+    LTEXT "", IDC_NAME3, 90, 40, 55, 8
+    DEFPUSHBUTTON "אישור", IDOK, 55, 60, 50, 15
 END
 
-DLG_CONGRATS DIALOGEX  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CONGRATS DIALOGEX 0, 0, 160, 60
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "כל הכבוד!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "הקש את שמך", -1,  10,  10, 150,  10
-    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "אישור",                         IDOK,  60,  40,  40,  15
+    LTEXT "הקש את שמך", -1, 10, 10, 150, 10
+    EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
+    DEFPUSHBUTTON "אישור", IDOK, 60, 40, 40, 15
 END
 
-DLG_CUSTOM DIALOGEX  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CUSTOM DIALOGEX 0, 0, 100, 100
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "משחק מותאם"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "גובה",   -1,   5,   5,  30,  10
-    LTEXT           "רוחב",   -1,   5,  35,  30,  10
-    LTEXT           "מוקשים",  -1,   5,  65,  30,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "אישור",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "ביטול", IDCANCEL,  40,  50,  50,  15
+    LTEXT "גובה", -1, 5, 5, 30, 10
+    LTEXT "רוחב", -1, 5, 35, 30, 10
+    LTEXT "מוקשים", -1, 5, 65, 30, 10
+    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
+    DEFPUSHBUTTON "אישור", IDOK, 40, 30, 50, 15
+    PUSHBUTTON "ביטול", IDCANCEL, 40, 50, 50, 15
 END

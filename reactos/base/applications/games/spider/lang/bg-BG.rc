@@ -1,11 +1,3 @@
-/*
- * PROJECT:      Spider Solitaire
- * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/bg-BG.rc
- * PURPOSE:      Bulgarian Language File for Spider Solitaire
- * TRANSLATOR:   Gregor Schneider
- */
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
@@ -15,20 +7,20 @@ CAPTION "Избор на гръб на картите"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
-    CONTROL       "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
+    CONTROL "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
+    CONTROL "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
+    CONTROL "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
+    CONTROL "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
+    CONTROL "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
+    CONTROL "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
+    CONTROL "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
+    CONTROL "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
+    CONTROL "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
+    CONTROL "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
+    CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
+    CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "Добре", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Отказ", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON "Отказ", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
@@ -36,25 +28,23 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Трудност"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Лесно: &Един цвят",    IDC_DIF_ONECOLOR,   8, 10, 90, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Средно: &Два цвята", IDC_DIF_TWOCOLORS,  8, 23, 90, 10
-    AUTORADIOBUTTON "Трудно: &Четири цвята",  IDC_DIF_FOURCOLORS, 8, 36, 96, 10
-
-    DEFPUSHBUTTON   "Добре", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "Отказ", IDCANCEL, 58, 58, 40, 14
+    AUTORADIOBUTTON "Лесно: &Един цвят", IDC_DIF_ONECOLOR, 8, 10, 90, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Средно: &Два цвята", IDC_DIF_TWOCOLORS, 8, 23, 90, 10
+    AUTORADIOBUTTON "Трудно: &Четири цвята", IDC_DIF_FOURCOLORS, 8, 36, 96, 10
+    DEFPUSHBUTTON "Добре", IDOK, 8, 58, 40, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Паяк"
-    IDS_SPI_ABOUT   "Spider Solitaire by Gregor Schneider\n\nCardLib version 1.0"
-    IDS_SPI_QUIT    "Изход от текушата игра?"
-    IDS_SPI_WIN     "Поздравления, спечелихте!"
-    IDS_SPI_DEAL    "Ново раздаване?"
+    IDS_SPI_NAME "Паяк"
+    IDS_SPI_ABOUT "Spider Solitaire by Gregor Schneider\n\nCardLib version 1.0"
+    IDS_SPI_QUIT "Изход от текушата игра?"
+    IDS_SPI_WIN "Поздравления, спечелихте!"
+    IDS_SPI_DEAL "Ново раздаване?"
 END
-
 
 /* Menus */
 
@@ -62,25 +52,22 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Игра"
     BEGIN
-        MENUITEM "&Нова игра\tF2",               IDM_GAME_NEW
+        MENUITEM "&Нова игра\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Тесте",                    IDM_GAME_DECK
+        MENUITEM "&Тесте", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход",                       IDM_GAME_EXIT
+        MENUITEM "Из&ход", IDM_GAME_EXIT
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&Съдържание\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "&За",                      IDM_HELP_ABOUT
+        MENUITEM "&Съдържание\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&За", IDM_HELP_ABOUT
     END
 END
 
-
-
 /* Accelerator */
-
 IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
-    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
-    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+    VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
+    VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
 END

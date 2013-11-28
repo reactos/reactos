@@ -5,11 +5,9 @@
  * PURPOSE:     Slovak Language File for Solitaire
  * TRANSLATOR:  Kario <kario@szm.sk>
  * DATE OF TR.: 13-07-2007
- * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 
@@ -18,15 +16,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Možnosti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Karty", -1, 7, 7, 90, 40
+    GROUPBOX "Karty", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Ťahať &jednu", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Ťahať &tri", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-
-    AUTOCHECKBOX    "Ča&sový limit", IDC_OPT_SHOWTIME, 7 ,51 ,64 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Stavový riad&ok", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-
-    DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Zrušiť", IDCANCEL, 101, 97, 50, 14
+    AUTOCHECKBOX "Ča&sový limit", IDC_OPT_SHOWTIME, 7 ,51 ,64 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Stavový riad&ok", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
@@ -34,34 +30,32 @@ CAPTION "Výber rubu kariet"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
-    CONTROL       "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
-    CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
-    CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
+    CONTROL "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
+    CONTROL "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
+    CONTROL "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
+    CONTROL "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
+    CONTROL "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
+    CONTROL "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
+    CONTROL "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
+    CONTROL "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
+    CONTROL "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
+    CONTROL "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
+    CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
+    CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Zrušiť", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON "Zrušiť", IDCANCEL, 126, 84, 54, 13
 END
-
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitér"
-    IDS_SOL_ABOUT   "Solitér od J Brown\n\nCardLib verzia 1.0"
-    IDS_SOL_QUIT    "Naozaj chcete skončiť aktuálnu hru?"
-    IDS_SOL_WIN     "Blahoželám, vyhrali ste!"
-    IDS_SOL_DEAL    "Rozdať znova?"
+    IDS_SOL_NAME "Solitér"
+    IDS_SOL_ABOUT "Solitér od J Brown\n\nCardLib verzia 1.0"
+    IDS_SOL_QUIT "Naozaj chcete skončiť aktuálnu hru?"
+    IDS_SOL_WIN "Blahoželám, vyhrali ste!"
+    IDS_SOL_DEAL "Rozdať znova?"
 END
-
 
 /* Menus */
 
@@ -69,26 +63,24 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Hra"
     BEGIN
-        MENUITEM "&Rozdať\tF2",                  IDM_GAME_NEW
+        MENUITEM "&Rozdať\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Balíček...",                  IDM_GAME_DECK
-        MENUITEM "&Možnosti...",                 IDM_GAME_OPTIONS
+        MENUITEM "&Balíček...", IDM_GAME_DECK
+        MENUITEM "&Možnosti...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "S&končiť",                     IDM_GAME_EXIT
+        MENUITEM "S&končiť", IDM_GAME_EXIT
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "&Obsah\tF1",                   IDM_HELP_CONTENTS
-        MENUITEM "&Čo je Solitér",               IDM_HELP_ABOUT
+        MENUITEM "&Obsah\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Čo je Solitér", IDM_HELP_ABOUT
     END
 END
 
-
-
-/* Accelerator */
+/* Accelerators */
 
 IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
-    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
-    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+    VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
+    VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
 END
