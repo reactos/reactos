@@ -5,24 +5,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "IP-Einstellungen können automatisch zugewiesen werden, wenn das Netzwerk diese Funktion unterstützt. Wenden Sie sich andernfalls an den Netzwerkadministrator, um die geeigneten IP-Einstellungen zu beziehen.", -1, 9, 9, 235, 27
-	CONTROL "I&P-Adresse automatisch beziehen", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-	GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-	CONTROL "Folgende IP-&Adresse verwenden:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
-	LTEXT "&IP-Adresse:", -1, 14, 75, 135, 8
-	CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
-	LTEXT "S&ubnetzmaske:", -1, 14, 90, 135, 8
-	CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
-	LTEXT "&Standardgateway:", -1, 14, 105, 135, 8
-	CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
-	CONTROL "D&NS-Serveradresse automatisch beziehen", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
-	GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-	CONTROL "Folgende DNS-Serveradressen &verwenden:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
-	LTEXT "&Bevorzugter DNS-Server:", -1, 14, 171, 135, 8
-	CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
-	LTEXT "A&lternativer DNS-Server:", -1, 14, 186, 135, 8
-	CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
-	PUSHBUTTON "&Erweitert...", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "IP-Einstellungen können automatisch zugewiesen werden, wenn das Netzwerk diese Funktion unterstützt. Wenden Sie sich andernfalls an den Netzwerkadministrator, um die geeigneten IP-Einstellungen zu beziehen.", -1, 9, 9, 235, 27
+    CONTROL "I&P-Adresse automatisch beziehen", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "Folgende IP-&Adresse verwenden:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "&IP-Adresse:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "S&ubnetzmaske:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "&Standardgateway:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "D&NS-Serveradresse automatisch beziehen", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "Folgende DNS-Serveradressen &verwenden:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "&Bevorzugter DNS-Server:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "A&lternativer DNS-Server:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Erweitert...", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
@@ -35,15 +35,15 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "B&enutzerdefiniert", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "&IP-Adresse:", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "S&ubnetzmaske:", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "&Standardgateway:", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "&Bevorzugter DNS-Server:", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "A&lternativer DNS-Server:", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
@@ -93,7 +93,6 @@ BEGIN
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "Adressen dieser Verbindung in DNS registrieren", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "DNS-Suffix dieser Verbindung in DNS-Registrierung verwenden", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -113,10 +112,10 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP-Adresse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "IP-Adresse:", -1, 5, 15, 70, 12
     LTEXT "Subnetzmaske:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -126,7 +125,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP-Gateway"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Gateway:", -1, 5, 15, 70, 12
     CHECKBOX "Automatische Metrik", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metrik:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
@@ -140,7 +139,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP-DNS-Server"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "DNS-Server:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -198,32 +197,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "LAN-Verbindung"
-	IDS_NO_IPADDR_SET   "Der Adapter erfordert mindestens eine IP-Addresse. Geben Sie eine IP-Adresse ein."
-	IDS_NO_SUBMASK_SET  "Sie haben eine Adresse eingegeben, für die keine Subnetzmaske vorhanden ist. Fügen Sie eine Subnetzmaske hinzu."
-	IDS_TCPFILTERDESC   "Mit der TCP/IP-Filterung können Sie die Art der TCP/IP-Netzwerkdaten, die den Windows-Computer erreichen sollen, steuern."
-	IDS_TCPFILTER       "TCP/IP-Filterung"
-	IDS_IPADDR          "IP-Adresse"
-	IDS_SUBMASK         "Subnetzmaske"
-	IDS_GATEWAY         "Gateway"
-	IDS_METRIC          "Metrik"
-	IDS_DHCPACTIVE      "DHCP-aktiviert"
-	IDS_AUTOMATIC       "Automatisch"
-	IDS_NOITEMSEL       "Sie haben kein Element ausgewählt. Wählen Sie ein Element aus."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Hinzufügen"
-	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "TCP-Ports"
-	IDS_UDP_PORTS       "UDP-Ports"
-	IDS_IP_PROTO        "IP-Protokolle"
-	IDS_PORT_RANGE      "Portnummern müssen größer als 0 und kleiner als 65536 sein. Geben Sie eine Nummer in diesem Bereich ein."
-	IDS_PROT_RANGE      "Protokollnummern müssen größer als 0 und kleiner als 256 sein. Geben Sie eine Nummer in diesem Bereich ein."
-	IDS_DUP_NUMBER      "Die Nummer, die Sie hinzufügen möchten ist bereits in der Liste. Geben Sie eine andere Nummer ein."
-	IDS_DISABLE_FILTER  "Das Deaktivieren dieser globalen TCP/IP-Einstellung wird alle Adapter betreffen."
-	IDS_NO_SUFFIX       "Die aktuelle Sucheinstellung der Suchmethode erfordert mindestens ein DNS-Suffix. Geben Sie ein Suffix ein, oder ändern Sie die Einstellung."
-	IDS_DOMAIN_SUFFIX   "Das Domänensuffix ist kein gültiges Süffix."
-	IDS_DNS_SUFFIX      "Der DNS-Domänensuffix ""%s"" ist kein gültiger DNS-Name."
-	IDS_DUP_SUFFIX      "Das DNS-Suffix ist bereits in der Liste vorhanden."
-	IDS_DUP_IPADDR      "Die IP-Adresse ist bereits in der Liste vorhanden."
-	IDS_DUP_GW          "Der Standardgateway ist bereits in der Liste vorhanden."
+    IDS_NET_CONNECT "LAN-Verbindung"
+    IDS_NO_IPADDR_SET "Der Adapter erfordert mindestens eine IP-Addresse. Geben Sie eine IP-Adresse ein."
+    IDS_NO_SUBMASK_SET "Sie haben eine Adresse eingegeben, für die keine Subnetzmaske vorhanden ist. Fügen Sie eine Subnetzmaske hinzu."
+    IDS_TCPFILTERDESC "Mit der TCP/IP-Filterung können Sie die Art der TCP/IP-Netzwerkdaten, die den Windows-Computer erreichen sollen, steuern."
+    IDS_TCPFILTER "TCP/IP-Filterung"
+    IDS_IPADDR "IP-Adresse"
+    IDS_SUBMASK "Subnetzmaske"
+    IDS_GATEWAY "Gateway"
+    IDS_METRIC "Metrik"
+    IDS_DHCPACTIVE "DHCP-aktiviert"
+    IDS_AUTOMATIC "Automatisch"
+    IDS_NOITEMSEL "Sie haben kein Element ausgewählt. Wählen Sie ein Element aus."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Hinzufügen"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "TCP-Ports"
+    IDS_UDP_PORTS "UDP-Ports"
+    IDS_IP_PROTO "IP-Protokolle"
+    IDS_PORT_RANGE "Portnummern müssen größer als 0 und kleiner als 65536 sein. Geben Sie eine Nummer in diesem Bereich ein."
+    IDS_PROT_RANGE "Protokollnummern müssen größer als 0 und kleiner als 256 sein. Geben Sie eine Nummer in diesem Bereich ein."
+    IDS_DUP_NUMBER "Die Nummer, die Sie hinzufügen möchten ist bereits in der Liste. Geben Sie eine andere Nummer ein."
+    IDS_DISABLE_FILTER "Das Deaktivieren dieser globalen TCP/IP-Einstellung wird alle Adapter betreffen."
+    IDS_NO_SUFFIX "Die aktuelle Sucheinstellung der Suchmethode erfordert mindestens ein DNS-Suffix. Geben Sie ein Suffix ein, oder ändern Sie die Einstellung."
+    IDS_DOMAIN_SUFFIX "Das Domänensuffix ist kein gültiges Süffix."
+    IDS_DNS_SUFFIX "Der DNS-Domänensuffix ""%s"" ist kein gültiger DNS-Name."
+    IDS_DUP_SUFFIX "Das DNS-Suffix ist bereits in der Liste vorhanden."
+    IDS_DUP_IPADDR "Die IP-Adresse ist bereits in der Liste vorhanden."
+    IDS_DUP_GW "Der Standardgateway ist bereits in der Liste vorhanden."
 END

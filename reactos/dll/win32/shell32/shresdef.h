@@ -16,223 +16,213 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_SHELL_RES_H
-#define __WINE_SHELL_RES_H
+#pragma once
 
-#define IDC_STATIC                  -1
+#define IDC_STATIC -1
 
-/*
- * Accelerators
- */
+/* Accelerators */
 #define IDA_SHELLVIEW 1
 
+/* Bitmaps */
+#define IDB_SHELL_ABOUT_LOGO_24BPP 131
 
-/*
- * Bitmaps
- */
-#define IDB_SHELL_ABOUT_LOGO_24BPP  131
-
-/*
- * Strings
- */
+/* Strings */
 
 /* Column titles for the shellview */
-#define IDS_SHV_COLUMN1             7
-#define IDS_SHV_COLUMN2             8
-#define IDS_SHV_COLUMN3             9
-#define IDS_SHV_COLUMN4             10
-#define IDS_SHV_COLUMN5             11
-#define IDS_SHV_COLUMN6             12
-#define IDS_SHV_COLUMN7             13
-#define IDS_SHV_COLUMN8             14
-#define IDS_SHV_COLUMN9             15
-#define IDS_SHV_COLUMN10            16
-#define IDS_SHV_COLUMN11            17
-#define IDS_SHV_COLUMN_DELFROM      18
-#define IDS_SHV_COLUMN_DELDATE      19
+#define IDS_SHV_COLUMN1        7
+#define IDS_SHV_COLUMN2        8
+#define IDS_SHV_COLUMN3        9
+#define IDS_SHV_COLUMN4        10
+#define IDS_SHV_COLUMN5        11
+#define IDS_SHV_COLUMN6        12
+#define IDS_SHV_COLUMN7        13
+#define IDS_SHV_COLUMN8        14
+#define IDS_SHV_COLUMN9        15
+#define IDS_SHV_COLUMN10       16
+#define IDS_SHV_COLUMN11       17
+#define IDS_SHV_COLUMN_DELFROM 18
+#define IDS_SHV_COLUMN_DELDATE 19
 
-#define IDS_DESKTOP                 20
+#define IDS_DESKTOP 20
 
-#define IDS_SELECT                  22
-#define IDS_OPEN                    23
-#define IDS_VIEW_LARGE              24
-#define IDS_VIEW_SMALL              25
-#define IDS_VIEW_LIST               26
-#define IDS_VIEW_DETAILS            27
+#define IDS_SELECT       22
+#define IDS_OPEN         23
+#define IDS_VIEW_LARGE   24
+#define IDS_VIEW_SMALL   25
+#define IDS_VIEW_LIST    26
+#define IDS_VIEW_DETAILS 27
 
-#define IDS_RESTART_TITLE           40
-#define IDS_RESTART_PROMPT          41
-#define IDS_SHUTDOWN_TITLE          42
-#define IDS_SHUTDOWN_PROMPT         43
+#define IDS_RESTART_TITLE   40
+#define IDS_RESTART_PROMPT  41
+#define IDS_SHUTDOWN_TITLE  42
+#define IDS_SHUTDOWN_PROMPT 43
 
-#define IDS_PROGRAMS                45
-#define IDS_FAVORITES               47
-#define IDS_STARTUP                 48
-#define IDS_RECENT                  49
-#define IDS_SENDTO                  50
-#define IDS_STARTMENU               51
-#define IDS_MYMUSIC                 52
-#define IDS_MYVIDEO                 53
-#define IDS_DESKTOPDIRECTORY        54
-#define IDS_NETHOOD                 55
-#define IDS_TEMPLATES               56
-#define IDS_APPDATA                 57
-#define IDS_PRINTHOOD               58
-#define IDS_LOCAL_APPDATA           59
-#define IDS_INTERNET_CACHE          60
-#define IDS_COOKIES                 61
-#define IDS_HISTORY                 62
-#define IDS_PROGRAM_FILES           63
-#define IDS_MYPICTURES              64
-#define IDS_PROGRAM_FILES_COMMON    65
-#define IDS_COMMON_DOCUMENTS        66
-#define IDS_ADMINTOOLS              67
-#define IDS_COMMON_MUSIC            68
-#define IDS_COMMON_PICTURES         69
-#define IDS_COMMON_VIDEO            70
-#define IDS_CDBURN_AREA             71
-#define IDS_DRIVE_FIXED             72
-#define IDS_DRIVE_CDROM             73
-#define IDS_DRIVE_NETWORK           74
+#define IDS_PROGRAMS             45
+#define IDS_FAVORITES            47
+#define IDS_STARTUP              48
+#define IDS_RECENT               49
+#define IDS_SENDTO               50
+#define IDS_STARTMENU            51
+#define IDS_MYMUSIC              52
+#define IDS_MYVIDEO              53
+#define IDS_DESKTOPDIRECTORY     54
+#define IDS_NETHOOD              55
+#define IDS_TEMPLATES            56
+#define IDS_APPDATA              57
+#define IDS_PRINTHOOD            58
+#define IDS_LOCAL_APPDATA        59
+#define IDS_INTERNET_CACHE       60
+#define IDS_COOKIES              61
+#define IDS_HISTORY              62
+#define IDS_PROGRAM_FILES        63
+#define IDS_MYPICTURES           64
+#define IDS_PROGRAM_FILES_COMMON 65
+#define IDS_COMMON_DOCUMENTS     66
+#define IDS_ADMINTOOLS           67
+#define IDS_COMMON_MUSIC         68
+#define IDS_COMMON_PICTURES      69
+#define IDS_COMMON_VIDEO         70
+#define IDS_CDBURN_AREA          71
+#define IDS_DRIVE_FIXED          72
+#define IDS_DRIVE_CDROM          73
+#define IDS_DRIVE_NETWORK        74
 
-#define IDS_LOGOFF_TITLE            78
-#define IDS_LOGOFF_PROMPT           79
+#define IDS_LOGOFF_TITLE  78
+#define IDS_LOGOFF_PROMPT 79
 
-#define IDS_CREATEFOLDER_DENIED     128
-#define IDS_CREATEFOLDER_CAPTION    129
-#define IDS_DELETEITEM_CAPTION      130
-#define IDS_DELETEFOLDER_CAPTION    131
-#define IDS_DELETEITEM_TEXT         132
-#define IDS_DELETEMULTIPLE_TEXT     133
-#define IDS_OVERWRITEFILE_CAPTION   134
-#define IDS_OVERWRITEFILE_TEXT      135
-#define IDS_DELETESELECTED_TEXT     136
-#define IDS_TRASHFOLDER_TEXT        137
-#define IDS_TRASHITEM_TEXT          138
-#define IDS_TRASHMULTIPLE_TEXT      139
-#define IDS_CANTTRASH_TEXT          140
-#define IDS_OVERWRITEFOLDER_TEXT    141
-#define IDS_OPEN_WITH               142
-#define IDS_OPEN_WITH_CHOOSE        143
-#define IDS_SHELL_ABOUT_AUTHORS     144
-#define IDS_SHELL_ABOUT_BACK        145
-#define FCIDM_SHVIEW_NEW            146
-#define FCIDM_SHVIEW_VIEW           147
-#define IDS_CONTROLPANEL            148
-#define IDS_NEWFOLDER               149
-#define IDS_COLUMN_EXTENSION        151
-#define IDS_NO_EXTENSION            152
-#define IDS_RECYCLEBIN_LOCATION     153
-#define IDS_RECYCLEBIN_DISKSPACE    154
-#define IDS_OPEN_WITH_FILTER        155
-#define IDS_DIRECTORY               156
-#define IDS_VIRTUAL_DRIVER          157
-#define IDS_BAT_FILE                158
-#define IDS_CMD_FILE                159
-#define IDS_COM_FILE                160
-#define IDS_CPL_FILE                161
-#define IDS_CUR_FILE                162
-#define IDS_DLL_FILE                163
-#define IDS_DRV_FILE                164
-#define IDS_EXE_FILE                165
-#define IDS_FON_FILE                166
-#define IDS_TTF_FILE                167
-#define IDS_HLP_FILE                168
-#define IDS_INI_FILE                169
-#define IDS_LNK_FILE                170
-#define IDS_SYS_FILE                171
-#define IDS_EMPTY_BITBUCKET         172
-#define IDS_SHLEXEC_NOASSOC         173
-#define IDS_FILE_TYPES              174
-#define IDS_FILE_DETAILS            175
-#define IDS_FILE_DETAILSADV         176
-#define IDS_BYTES_FORMAT            177
-#define IDS_OPEN_WITH_RECOMMENDED   178
-#define IDS_OPEN_WITH_OTHER         179
+#define IDS_CREATEFOLDER_DENIED   128
+#define IDS_CREATEFOLDER_CAPTION  129
+#define IDS_DELETEITEM_CAPTION    130
+#define IDS_DELETEFOLDER_CAPTION  131
+#define IDS_DELETEITEM_TEXT       132
+#define IDS_DELETEMULTIPLE_TEXT   133
+#define IDS_OVERWRITEFILE_CAPTION 134
+#define IDS_OVERWRITEFILE_TEXT    135
+#define IDS_DELETESELECTED_TEXT   136
+#define IDS_TRASHFOLDER_TEXT      137
+#define IDS_TRASHITEM_TEXT        138
+#define IDS_TRASHMULTIPLE_TEXT    139
+#define IDS_CANTTRASH_TEXT        140
+#define IDS_OVERWRITEFOLDER_TEXT  141
+#define IDS_OPEN_WITH             142
+#define IDS_OPEN_WITH_CHOOSE      143
+#define IDS_SHELL_ABOUT_AUTHORS   144
+#define IDS_SHELL_ABOUT_BACK      145
+#define FCIDM_SHVIEW_NEW          146
+#define FCIDM_SHVIEW_VIEW         147
+#define IDS_CONTROLPANEL          148
+#define IDS_NEWFOLDER             149
+#define IDS_COLUMN_EXTENSION      151
+#define IDS_NO_EXTENSION          152
+#define IDS_RECYCLEBIN_LOCATION   153
+#define IDS_RECYCLEBIN_DISKSPACE  154
+#define IDS_OPEN_WITH_FILTER      155
+#define IDS_DIRECTORY             156
+#define IDS_VIRTUAL_DRIVER        157
+#define IDS_BAT_FILE              158
+#define IDS_CMD_FILE              159
+#define IDS_COM_FILE              160
+#define IDS_CPL_FILE              161
+#define IDS_CUR_FILE              162
+#define IDS_DLL_FILE              163
+#define IDS_DRV_FILE              164
+#define IDS_EXE_FILE              165
+#define IDS_FON_FILE              166
+#define IDS_TTF_FILE              167
+#define IDS_HLP_FILE              168
+#define IDS_INI_FILE              169
+#define IDS_LNK_FILE              170
+#define IDS_SYS_FILE              171
+#define IDS_EMPTY_BITBUCKET       172
+#define IDS_SHLEXEC_NOASSOC       173
+#define IDS_FILE_TYPES            174
+#define IDS_FILE_DETAILS          175
+#define IDS_FILE_DETAILSADV       176
+#define IDS_BYTES_FORMAT          177
+#define IDS_OPEN_WITH_RECOMMENDED 178
+#define IDS_OPEN_WITH_OTHER       179
 
-#define IDS_RUNDLG_ERROR            180
-#define IDS_RUNDLG_BROWSE_ERROR     181
-#define IDS_RUNDLG_BROWSE_CAPTION   182
-#define IDS_RUNDLG_BROWSE_FILTER    183
+#define IDS_RUNDLG_ERROR          180
+#define IDS_RUNDLG_BROWSE_ERROR   181
+#define IDS_RUNDLG_BROWSE_CAPTION 182
+#define IDS_RUNDLG_BROWSE_FILTER  183
 
-#define IDS_UNKNOWN_APP             190
-#define IDS_EXE_DESCRIPTION         191
+#define IDS_UNKNOWN_APP     190
+#define IDS_EXE_DESCRIPTION 191
 
-#define IDS_OPEN_VERB               300
-#define IDS_EXPLORE_VERB            301
-#define IDS_RUNAS_VERB              302
-#define IDS_EDIT_VERB               303
-#define IDS_FIND_VERB               304
-#define IDS_PRINT_VERB              305
+#define IDS_OPEN_VERB    300
+#define IDS_EXPLORE_VERB 301
+#define IDS_RUNAS_VERB   302
+#define IDS_EDIT_VERB    303
+#define IDS_FIND_VERB    304
+#define IDS_PRINT_VERB   305
 
-#define IDS_FILE_FOLDER             308
-#define IDS_CREATELINK              309
-#define IDS_INSTALLNEWFONT          310
-#define IDS_SHV_COLUMN_FONTTYPE     311
-#define IDS_SHV_COLUMN12            312
-#define IDS_SHV_COLUMN13            313
-#define IDS_SHV_COLUMN_WORKGROUP    314
-#define IDS_SHV_NETWORKLOCATION     315
-#define IDS_COPY                    316
-#define IDS_DELETE                  317
-#define IDS_PROPERTIES              318
-#define IDS_SHV_COLUMN_DOCUMENTS    319
-#define IDS_SHV_COLUMN_STATUS       320
-#define IDS_SHV_COLUMN_COMMENTS     321
-#define IDS_SHV_COLUMN_LOCATION     322
-#define IDS_SHV_COLUMN_MODEL        323
-#define IDS_CUT                     324
-#define IDS_RESTORE                 325
-#define IDS_DEFAULT_CLUSTER_SIZE    326
-#define IDS_FORMATDRIVE             328
-#define IDS_RENAME                  329
-#define IDS_INSERT                  330
-#define IDS_DESCRIPTION             331
-#define IDS_COPY_OF                 332
+#define IDS_FILE_FOLDER          308
+#define IDS_CREATELINK           309
+#define IDS_INSTALLNEWFONT       310
+#define IDS_SHV_COLUMN_FONTTYPE  311
+#define IDS_SHV_COLUMN12         312
+#define IDS_SHV_COLUMN13         313
+#define IDS_SHV_COLUMN_WORKGROUP 314
+#define IDS_SHV_NETWORKLOCATION  315
+#define IDS_COPY                 316
+#define IDS_DELETE               317
+#define IDS_PROPERTIES           318
+#define IDS_SHV_COLUMN_DOCUMENTS 319
+#define IDS_SHV_COLUMN_STATUS    320
+#define IDS_SHV_COLUMN_COMMENTS  321
+#define IDS_SHV_COLUMN_LOCATION  322
+#define IDS_SHV_COLUMN_MODEL     323
+#define IDS_CUT                  324
+#define IDS_RESTORE              325
+#define IDS_DEFAULT_CLUSTER_SIZE 326
+#define IDS_FORMATDRIVE          328
+#define IDS_RENAME               329
+#define IDS_INSERT               330
+#define IDS_DESCRIPTION          331
+#define IDS_COPY_OF              332
 
 /* Note: those strings are referenced from the registry */
-#define IDS_RECYCLEBIN_FOLDER_NAME  8964
-#define IDS_ADMINISTRATIVETOOLS     22982
-#define IDS_FOLDER_OPTIONS          22985
-#define IDS_FONTS                   22981
-#define IDS_PRINTERS                9319
-#define IDS_MYCOMPUTER              9216
-#define IDS_PERSONAL                9227
-#define IDS_NETWORKPLACE            9217
+#define IDS_RECYCLEBIN_FOLDER_NAME 8964
+#define IDS_ADMINISTRATIVETOOLS    22982
+#define IDS_FOLDER_OPTIONS         22985
+#define IDS_FONTS                  22981
+#define IDS_PRINTERS               9319
+#define IDS_MYCOMPUTER             9216
+#define IDS_PERSONAL               9227
+#define IDS_NETWORKPLACE           9217
 
-/*
- * Dialogs
- */
+/* Dialogs */
 
 /* Run dialog */
-#define IDD_RUN                 1
-#define IDC_RUNDLG_DESCRIPTION  12289
-#define IDC_RUNDLG_BROWSE       12288
-#define IDC_RUNDLG_ICON         12297
-#define IDC_RUNDLG_EDITPATH     12298
-#define IDC_RUNDLG_LABEL        12305
+#define IDD_RUN                1
+#define IDC_RUNDLG_DESCRIPTION 12289
+#define IDC_RUNDLG_BROWSE      12288
+#define IDC_RUNDLG_ICON        12297
+#define IDC_RUNDLG_EDITPATH    12298
+#define IDC_RUNDLG_LABEL       12305
 
 /* ShellAbout dialog */
-#define IDD_ABOUT                   2
-#define IDC_ABOUT_ICON              0x3009
-#define IDC_ABOUT_APPNAME           0x3500
-#define IDC_ABOUT_OTHERSTUFF        0x350D
-#define IDC_ABOUT_REG_USERNAME      0x3507
-#define IDC_ABOUT_REG_ORGNAME       0x3508
-#define IDC_ABOUT_PHYSMEM           0x3503
+#define IDD_ABOUT              2
+#define IDC_ABOUT_ICON         0x3009
+#define IDC_ABOUT_APPNAME      0x3500
+#define IDC_ABOUT_OTHERSTUFF   0x350D
+#define IDC_ABOUT_REG_USERNAME 0x3507
+#define IDC_ABOUT_REG_ORGNAME  0x3508
+#define IDC_ABOUT_PHYSMEM      0x3503
 
 /* About authors dialog */
-#define IDD_ABOUT_AUTHORS           3
-#define IDC_ABOUT_AUTHORS           0x4101
-#define IDC_ABOUT_AUTHORS_LISTBOX   0x4102
+#define IDD_ABOUT_AUTHORS         3
+#define IDC_ABOUT_AUTHORS         0x4101
+#define IDC_ABOUT_AUTHORS_LISTBOX 0x4102
 
 /* Pick icon dialog */
-#define IDD_PICK_ICON               4
-#define IDC_PICKICON_LIST           0x4121
-#define IDC_BUTTON_PATH             0x4122
-#define IDC_EDIT_PATH               0x4123
-#define IDS_PICK_ICON_TITLE         0x4124
-#define IDS_PICK_ICON_FILTER        0x4125
+#define IDD_PICK_ICON        4
+#define IDC_PICKICON_LIST    0x4121
+#define IDC_BUTTON_PATH      0x4122
+#define IDC_EDIT_PATH        0x4123
+#define IDS_PICK_ICON_TITLE  0x4124
+#define IDS_PICK_ICON_FILTER 0x4125
 
 /* Properties dialog */
 #define IDD_FILE_PROPERTIES        8
@@ -271,10 +261,10 @@
 #define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
 
 /* Other dialogs */
-#define IDD_RUN_AS               23
-#define IDD_OPEN_WITH            24
-#define IDD_FORMAT_DRIVE         25
-#define IDD_CHECK_DISK           26
+#define IDD_RUN_AS       23
+#define IDD_OPEN_WITH    24
+#define IDD_FORMAT_DRIVE 25
+#define IDD_CHECK_DISK   26
 
 /* Not used dialogs */
 #define IDD_FILE_COPY            27
@@ -286,9 +276,7 @@
 #define IDD_MIXED_CONTENT1       33
 #define IDD_MIXED_CONTENT2       34
 
-/*
- * Icons
- */
+/* Icons */
 #define IDI_SHELL_DOCUMENT           1
 #define IDI_SHELL_RICH_TEXT          2
 #define IDI_SHELL_EXE                3
@@ -446,13 +434,13 @@
 /* TODO: 1005.ico, 1006.ico, 1007.ico, 1008.ico, 1009.ico, 1010.ico, 1011.ico */
 #define IDI_SHELL_SHUTDOWN2        8240
 
-#define IDI_SHELL_DELETE1  16710
-#define IDI_SHELL_DELETE2  16715
-#define IDI_SHELL_DELETE3  16717
-#define IDI_SHELL_DELETE4  16718
-#define IDI_SHELL_DELETE5  16721
+#define IDI_SHELL_DELETE1 16710
+#define IDI_SHELL_DELETE2 16715
+#define IDI_SHELL_DELETE3 16717
+#define IDI_SHELL_DELETE4 16718
+#define IDI_SHELL_DELETE5 16721
 
-// Icons for Folder Options (ID's identical to Windows XP SP3)
+/* Icons for Folder Options (ID's identical to Windows XP SP3) */
 #define IDI_SHELL_SHOW_COMMON_TASKS    182
 #define IDI_SHELL_CLASSIC_FOLDERS      183
 #define IDI_SHELL_OPEN_IN_SOME_WINDOW  184
@@ -467,35 +455,33 @@
  * FIXME: Need to add them, but for now just let them use the same: searching.avi
  * (also to limit shell32's size)
  */
-#define IDR_AVI_SEARCH             150
-#define IDR_AVI_SEARCHING          151
-#define IDR_AVI_FINDCOMPUTER       152
-#define IDR_AVI_FILEMOVE           160
-#define IDR_AVI_FILECOPY           161
-#define IDR_AVI_FILENUKE           163
-#define IDR_AVI_FILEDELETE         164
+#define IDR_AVI_SEARCH       150
+#define IDR_AVI_SEARCHING    151
+#define IDR_AVI_FINDCOMPUTER 152
+#define IDR_AVI_FILEMOVE     160
+#define IDR_AVI_FILECOPY     161
+#define IDR_AVI_FILENUKE     163
+#define IDR_AVI_FILEDELETE   164
 
-/*
- * Shell view commands
- */
-#define FCIDM_SHVIEW_ARRANGE    0x7001
-#define FCIDM_SHVIEW_DELETE     0x7011
-#define FCIDM_SHVIEW_PROPERTIES 0x7013
-#define FCIDM_SHVIEW_CUT        0x7018
-#define FCIDM_SHVIEW_COPY       0x7019
-#define FCIDM_SHVIEW_INSERT     0x701A
-#define FCIDM_SHVIEW_UNDO       0x701B
-#define FCIDM_SHVIEW_INSERTLINK 0x701C
-#define FCIDM_SHVIEW_SELECTALL  0x7021
+/* Shell view commands */
+#define FCIDM_SHVIEW_ARRANGE         0x7001
+#define FCIDM_SHVIEW_DELETE          0x7011
+#define FCIDM_SHVIEW_PROPERTIES      0x7013
+#define FCIDM_SHVIEW_CUT             0x7018
+#define FCIDM_SHVIEW_COPY            0x7019
+#define FCIDM_SHVIEW_INSERT          0x701A
+#define FCIDM_SHVIEW_UNDO            0x701B
+#define FCIDM_SHVIEW_INSERTLINK      0x701C
+#define FCIDM_SHVIEW_SELECTALL       0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
-#define FCIDM_SHVIEW_BIGICON    0x7029 //FIXME
-#define FCIDM_SHVIEW_SMALLICON  0x702A //FIXME
-#define FCIDM_SHVIEW_LISTVIEW   0x702B //FIXME
-#define FCIDM_SHVIEW_REPORTVIEW 0x702C //FIXME
+#define FCIDM_SHVIEW_BIGICON     0x7029 //FIXME
+#define FCIDM_SHVIEW_SMALLICON   0x702A //FIXME
+#define FCIDM_SHVIEW_LISTVIEW    0x702B //FIXME
+#define FCIDM_SHVIEW_REPORTVIEW  0x702C //FIXME
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
-#define FCIDM_SHVIEW_SNAPTOGRID 0x7032
+#define FCIDM_SHVIEW_SNAPTOGRID  0x7032
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050
@@ -503,19 +489,17 @@
 #define FCIDM_SHVIEW_NEWLINK    0x7052
 #define FCIDM_SHVIEW_NEWFOLDER  0x7053
 
-#define FCIDM_SHVIEW_REFRESH    0x7100 /* FIXME */
-#define FCIDM_SHVIEW_EXPLORE    0x7101 /* FIXME */
-#define FCIDM_SHVIEW_OPEN       0x7102 /* FIXME */
+#define FCIDM_SHVIEW_REFRESH 0x7100 /* FIXME */
+#define FCIDM_SHVIEW_EXPLORE 0x7101 /* FIXME */
+#define FCIDM_SHVIEW_OPEN    0x7102 /* FIXME */
 
-#define FCIDM_TB_UPFOLDER       0xA001
-#define FCIDM_TB_NEWFOLDER      0xA002
-#define FCIDM_TB_SMALLICON      0xA003
-#define FCIDM_TB_REPORTVIEW     0xA004
-#define FCIDM_TB_DESKTOP        0xA005  /* FIXME */
+#define FCIDM_TB_UPFOLDER   0xA001
+#define FCIDM_TB_NEWFOLDER  0xA002
+#define FCIDM_TB_SMALLICON  0xA003
+#define FCIDM_TB_REPORTVIEW 0xA004
+#define FCIDM_TB_DESKTOP    0xA005  /* FIXME */
 
-/*
- * Registrar scripts (RGS)
- */
+/* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
 #define IDR_AUTOCOMPLETE        129
 #define IDR_CONTROLPANEL        130
@@ -539,5 +523,3 @@
 #define IDR_DRVDEFEXT           148
 #define IDR_MENUBAND            149
 #define IDR_MENUDESKBAR         150
-
-#endif

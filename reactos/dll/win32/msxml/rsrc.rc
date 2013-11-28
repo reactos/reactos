@@ -20,5 +20,5 @@
 
 /* @makedep: msxml.rgs */
 1 WINE_REGISTRY msxml.rgs
-2 WINE_REGISTRY msxml_tlb.rgs
-1 TYPELIB msxml_tlb.tlb
+2 WINE_REGISTRY "msxml_tlb.rgs"
+1 TYPELIB "msxml_tlb.tlb"

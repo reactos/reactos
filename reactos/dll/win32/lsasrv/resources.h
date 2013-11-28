@@ -8,7 +8,7 @@
 
 #pragma once
 
-#define IDS_NT_AUTHORITY                        100
+#define IDS_NT_AUTHORITY 100
 
 #define IDS_NULL_RID                            110
 #define IDS_WORLD_RID                           111
@@ -48,5 +48,3 @@
 #define IDS_ALIAS_RID_PREW2KCOMPACCESS          145
 #define IDS_ALIAS_RID_REMOTE_DESKTOP_USERS      146
 #define IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS 147
-
-/* EOF */

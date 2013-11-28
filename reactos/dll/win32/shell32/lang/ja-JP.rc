@@ -1,29 +1,11 @@
-/*
- * Copyright 1998 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "大きいアイコン(&G)",    FCIDM_SHVIEW_BIGICON
-    MENUITEM "小さいアイコン(&M)",    FCIDM_SHVIEW_SMALLICON
-    MENUITEM "一覧(&L)",              FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "詳細(&D)",              FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
+    MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -33,29 +15,29 @@ BEGIN
     BEGIN
         POPUP "表示(&V)"
         BEGIN
-            MENUITEM "大きいアイコン(&G)",      FCIDM_SHVIEW_BIGICON
-            MENUITEM "小さいアイコン(&M)",      FCIDM_SHVIEW_SMALLICON
-            MENUITEM "一覧(&L)",                FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "詳細(&D)",                FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
+            MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "アイコンの整列(&I)"
         BEGIN
-            MENUITEM "名前順(&N)",              0x30  /* column 0 */
-            MENUITEM "種類順(&T)",              0x32  /* column 2 */
-            MENUITEM "サイズ順(&S)",            0x31  /* ... */
-            MENUITEM "日付順(&D)",    0x33
+            MENUITEM "名前順(&N)", 0x30  /* column 0 */
+            MENUITEM "種類順(&T)", 0x32  /* column 2 */
+            MENUITEM "サイズ順(&S)", 0x31  /* ... */
+            MENUITEM "日付順(&D)", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "アイコンの自動整列(&A)",  FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "等間隔に整列",              FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "等間隔に整列", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "最新の情報に更新",          FCIDM_SHVIEW_REFRESH
+        MENUITEM "最新の情報に更新", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "貼り付け",                 FCIDM_SHVIEW_INSERT
+        MENUITEM "貼り付け", FCIDM_SHVIEW_INSERT
         MENUITEM "ショートカットの貼り付け", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "プロパティ",                FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "プロパティ", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -64,17 +46,17 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "エクスプローラ(&X)",        FCIDM_SHVIEW_EXPLORE
-        MENUITEM "開く(&O)",                  FCIDM_SHVIEW_OPEN
+        MENUITEM "エクスプローラ(&X)", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "開く(&O)", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "切り取り(&U)",              FCIDM_SHVIEW_CUT
-        MENUITEM "コピー(&C)",                FCIDM_SHVIEW_COPY
+        MENUITEM "切り取り(&U)", FCIDM_SHVIEW_CUT
+        MENUITEM "コピー(&C)", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "ショートカットの作成(&L)",  FCIDM_SHVIEW_CREATELINK
-        MENUITEM "削除(&D)",                  FCIDM_SHVIEW_DELETE
-        MENUITEM "名前の変更(&R)",            FCIDM_SHVIEW_RENAME
+        MENUITEM "ショートカットの作成(&L)", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "削除(&D)", FCIDM_SHVIEW_DELETE
+        MENUITEM "名前の変更(&R)", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "プロパティ(&P)",            FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "プロパティ(&P)", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -141,7 +123,6 @@ BEGIN
     LTEXT "搭載されている物理メモリ容量:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -168,7 +149,7 @@ BEGIN
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "ショートカット"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
@@ -212,7 +193,7 @@ IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
-BEGIN    
+BEGIN
     ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
     LTEXT "ファイルの種類:", 14004, 8, 40, 55, 10
@@ -295,17 +276,15 @@ IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
-BEGIN 
+BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "種類:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "ファイルシステム:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "使用領域:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -315,7 +294,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "容量:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -323,7 +301,6 @@ BEGIN
     LTEXT "ドライブ %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "ディスクのクリーンアップ", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "ドライブを圧縮してディスク領域を確保する", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "このディスクにインデックスを付けてファイル検索を速くする。", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -363,7 +340,6 @@ BEGIN
     CHECKBOX "次のユーザー:", 14002, 10, 100, 90, 10
     LTEXT "ユーザー名:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "パスワード:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -395,7 +371,7 @@ BEGIN
     LTEXT "このファイルを開くために使用するプログラムを選択してください:", -1, 44, 12, 211, 10
     LTEXT "ファイル:    ", 14001, 44, 25, 188, 10
     GROUPBOX "プログラムの一覧(&P)", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "この種類のファイルを開くときは、常に選択したプログラムを使用する(&A)", 14003, 20, 193, 225, 10
     PUSHBUTTON "参照(&B)...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -409,7 +385,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -439,14 +415,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "表示"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-GROUPBOX "フォルダの表示方法", -1, 7, 10, 249, 60
-//ICON
-LTEXT "このフォルダに使用している表示方法(詳細表示や並べて表示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
-PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "詳細設定:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "デフォルトに戻す(&D)", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "フォルダの表示方法", -1, 7, 10, 249, 60
+    //ICON
+    LTEXT "このフォルダに使用している表示方法(詳細表示や並べて表示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
+    PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "詳細設定:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "デフォルトに戻す(&D)", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -454,17 +430,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "ファイルの種類"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-LTEXT "登録されているファイルの種類(&T):", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "新規(&N)", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "削除(&D)", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "拡張子 '%s' の詳細", 14003, 7, 130, 249, 70
-LTEXT "開くプログラム:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "アプリ名", 14005, 100, 140, 40, 10
-PUSHBUTTON "変更(&C)...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "登録されているファイルの種類(&T):", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "新規(&N)", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "削除(&D)", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "拡張子 '%s' の詳細", 14003, 7, 130, 249, 70
+    LTEXT "開くプログラム:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "アプリ名", 14005, 100, 140, 40, 10
+    PUSHBUTTON "変更(&C)...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -622,187 +598,187 @@ CAPTION "アイコンの変更"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
     LTEXT "ファイル名:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "参照...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "参照...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "アイコン:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "キャンセル",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "名前"
-    IDS_SHV_COLUMN2             "サイズ"
-    IDS_SHV_COLUMN3             "種類"
-    IDS_SHV_COLUMN4             "更新日時"
-    IDS_SHV_COLUMN5             "属性"
-    IDS_SHV_COLUMN6             "合計サイズ"
-    IDS_SHV_COLUMN7             "空き容量"
-    IDS_SHV_COLUMN8             "作成者"
-    IDS_SHV_COLUMN9             "コメント"
-    IDS_SHV_COLUMN10            "所有者"
-    IDS_SHV_COLUMN11            "グループ"
-    IDS_SHV_COLUMN12            "ファイル名"
-    IDS_SHV_COLUMN13            "カテゴリ"
-    IDS_SHV_COLUMN_DELFROM      "元の場所"
-    IDS_SHV_COLUMN_DELDATE      "削除日"
-    IDS_SHV_COLUMN_FONTTYPE     "フォントの種類"
-    IDS_SHV_COLUMN_WORKGROUP    "ワークグループ"
-    IDS_SHV_NETWORKLOCATION     "ネットワークの場所"
-    IDS_SHV_COLUMN_DOCUMENTS    "ドキュメント"
-    IDS_SHV_COLUMN_STATUS       "状態"
-    IDS_SHV_COLUMN_COMMENTS     "コメント"
-    IDS_SHV_COLUMN_LOCATION     "場所"
-    IDS_SHV_COLUMN_MODEL        "モデル"
+    IDS_SHV_COLUMN1 "名前"
+    IDS_SHV_COLUMN2 "サイズ"
+    IDS_SHV_COLUMN3 "種類"
+    IDS_SHV_COLUMN4 "更新日時"
+    IDS_SHV_COLUMN5 "属性"
+    IDS_SHV_COLUMN6 "合計サイズ"
+    IDS_SHV_COLUMN7 "空き容量"
+    IDS_SHV_COLUMN8 "作成者"
+    IDS_SHV_COLUMN9 "コメント"
+    IDS_SHV_COLUMN10 "所有者"
+    IDS_SHV_COLUMN11 "グループ"
+    IDS_SHV_COLUMN12 "ファイル名"
+    IDS_SHV_COLUMN13 "カテゴリ"
+    IDS_SHV_COLUMN_DELFROM "元の場所"
+    IDS_SHV_COLUMN_DELDATE "削除日"
+    IDS_SHV_COLUMN_FONTTYPE "フォントの種類"
+    IDS_SHV_COLUMN_WORKGROUP "ワークグループ"
+    IDS_SHV_NETWORKLOCATION "ネットワークの場所"
+    IDS_SHV_COLUMN_DOCUMENTS "ドキュメント"
+    IDS_SHV_COLUMN_STATUS "状態"
+    IDS_SHV_COLUMN_COMMENTS "コメント"
+    IDS_SHV_COLUMN_LOCATION "場所"
+    IDS_SHV_COLUMN_MODEL "モデル"
 
     /* special folders */
-    IDS_DESKTOP                 "デスクトップ"
-    IDS_MYCOMPUTER              "マイ コンピュータ"
-    IDS_RECYCLEBIN_FOLDER_NAME  "ごみ箱"
-    IDS_CONTROLPANEL            "コントロール パネル"
-    IDS_ADMINISTRATIVETOOLS     "管理ツール"
+    IDS_DESKTOP "デスクトップ"
+    IDS_MYCOMPUTER "マイ コンピュータ"
+    IDS_RECYCLEBIN_FOLDER_NAME "ごみ箱"
+    IDS_CONTROLPANEL "コントロール パネル"
+    IDS_ADMINISTRATIVETOOLS "管理ツール"
 
     /* context menus */
-    IDS_VIEW_LARGE              "大きいアイコン(&G)"
-    IDS_VIEW_SMALL              "小さいアイコン(&M)"
-    IDS_VIEW_LIST               "一覧(&L)"
-    IDS_VIEW_DETAILS            "詳細(&D)"
-    IDS_SELECT                  "選択"
-    IDS_OPEN                    "開く"
-    IDS_CREATELINK              "ショートカットの作成(&L)"
-    IDS_COPY                    "コピー(&C)"
-    IDS_DELETE                  "削除"
-    IDS_PROPERTIES              "プロパティ"
-    IDS_CUT                     "切り取り(&U)"
-    IDS_RESTORE                 "元に戻す"
-    IDS_FORMATDRIVE             "フォーマット..."
-    IDS_RENAME                  "名前の変更"
-    IDS_INSERT                  "挿入"
+    IDS_VIEW_LARGE "大きいアイコン(&G)"
+    IDS_VIEW_SMALL "小さいアイコン(&M)"
+    IDS_VIEW_LIST "一覧(&L)"
+    IDS_VIEW_DETAILS "詳細(&D)"
+    IDS_SELECT "選択"
+    IDS_OPEN "開く"
+    IDS_CREATELINK "ショートカットの作成(&L)"
+    IDS_COPY "コピー(&C)"
+    IDS_DELETE "削除"
+    IDS_PROPERTIES "プロパティ"
+    IDS_CUT "切り取り(&U)"
+    IDS_RESTORE "元に戻す"
+    IDS_FORMATDRIVE "フォーマット..."
+    IDS_RENAME "名前の変更"
+    IDS_INSERT "挿入"
 
-    IDS_CREATEFOLDER_DENIED     "新しいフォルダを作成できませんでした: アクセス権がありません。"
-    IDS_CREATEFOLDER_CAPTION    "新しいフォルダの作成中にエラーが発生しました"
-    IDS_DELETEITEM_CAPTION      "ファイル削除の確認"
-    IDS_DELETEFOLDER_CAPTION    "フォルダ削除の確認"
-    IDS_DELETEITEM_TEXT         "'%1' を削除してもよろしいですか?"
-    IDS_DELETEMULTIPLE_TEXT     "これら %1 個の項目を削除してもよろしいですか?"
-    IDS_DELETESELECTED_TEXT     "選択された項目を削除してもよろしいですか?"
-    IDS_TRASHITEM_TEXT          "'%1' をごみ箱に送ってもよろしいですか?"
-    IDS_TRASHFOLDER_TEXT        "'%1'とそれに含まれるものすべてをごみ箱に送ってもよろしいですか?"
-    IDS_TRASHMULTIPLE_TEXT      "%1 個の項目をごみ箱に送ってもよろしいですか?"
-    IDS_CANTTRASH_TEXT          "項目 '%1' はごみ箱に送れません。 代わりに削除してもよろしいですか?"
-    IDS_OVERWRITEFILE_TEXT      "このフォルダには既にファイル'%1'が含まれています。\n\n置き換えてもよろしいですか?"
-    IDS_OVERWRITEFILE_CAPTION   "ファイル上書きの確認"
-    IDS_OVERWRITEFOLDER_TEXT    "このフォルダには既にフォルダ'%1'が含まれています。\n\nディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\nと同じ時は置き換えられます。それでも、フォルダを移動または\nコピーしますか?"
+    IDS_CREATEFOLDER_DENIED "新しいフォルダを作成できませんでした: アクセス権がありません。"
+    IDS_CREATEFOLDER_CAPTION "新しいフォルダの作成中にエラーが発生しました"
+    IDS_DELETEITEM_CAPTION "ファイル削除の確認"
+    IDS_DELETEFOLDER_CAPTION "フォルダ削除の確認"
+    IDS_DELETEITEM_TEXT "'%1' を削除してもよろしいですか?"
+    IDS_DELETEMULTIPLE_TEXT "これら %1 個の項目を削除してもよろしいですか?"
+    IDS_DELETESELECTED_TEXT "選択された項目を削除してもよろしいですか?"
+    IDS_TRASHITEM_TEXT "'%1' をごみ箱に送ってもよろしいですか?"
+    IDS_TRASHFOLDER_TEXT "'%1'とそれに含まれるものすべてをごみ箱に送ってもよろしいですか?"
+    IDS_TRASHMULTIPLE_TEXT "%1 個の項目をごみ箱に送ってもよろしいですか?"
+    IDS_CANTTRASH_TEXT "項目 '%1' はごみ箱に送れません。 代わりに削除してもよろしいですか?"
+    IDS_OVERWRITEFILE_TEXT "このフォルダには既にファイル'%1'が含まれています。\n\n置き換えてもよろしいですか?"
+    IDS_OVERWRITEFILE_CAPTION "ファイル上書きの確認"
+    IDS_OVERWRITEFOLDER_TEXT "このフォルダには既にフォルダ'%1'が含まれています。\n\nディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\nと同じ時は置き換えられます。それでも、フォルダを移動または\nコピーしますか?"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "再起動"
-    IDS_RESTART_PROMPT          "システムを再起動しますか?"
-    IDS_SHUTDOWN_TITLE          "シャットダウン"
-    IDS_SHUTDOWN_PROMPT         "シャットダウンしますか?"
-    IDS_LOGOFF_TITLE            "Log Off"
-    IDS_LOGOFF_PROMPT           "Do you want to log off?"
+    IDS_RESTART_TITLE "再起動"
+    IDS_RESTART_PROMPT "システムを再起動しますか?"
+    IDS_SHUTDOWN_TITLE "シャットダウン"
+    IDS_SHUTDOWN_PROMPT "シャットダウンしますか?"
+    IDS_LOGOFF_TITLE "Log Off"
+    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "スタート メニュー\\プログラム"
-    IDS_PERSONAL                "My Documents"
-    IDS_FAVORITES               "Favorites"
-    IDS_STARTUP                 "スタート メニュー\\プログラム\\スタートアップ"
-    IDS_RECENT                  "Recent"
-    IDS_SENDTO                  "SendTo"
-    IDS_STARTMENU               "スタート メニュー"
-    IDS_MYMUSIC                 "My Music"
-    IDS_MYVIDEO                 "My Videos"
-    IDS_DESKTOPDIRECTORY        "デスクトップ"
-    IDS_NETHOOD                 "NetHood"
-    IDS_TEMPLATES               "Templates"
-    IDS_APPDATA                 "Application Data"
-    IDS_PRINTHOOD               "PrintHood"
-    IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE          "Temporary Internet Files"
-    IDS_COOKIES                 "Cookies"
-    IDS_HISTORY                 "History"
-    IDS_PROGRAM_FILES           "Program Files"
-    IDS_MYPICTURES              "My Pictures"
-    IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS        "Documents"
-    IDS_ADMINTOOLS              "スタート メニュー\\プログラム\\管理ツール"
-    IDS_COMMON_MUSIC            "Documents\\My Music"
-    IDS_COMMON_PICTURES         "Documents\\My Pictures"
-    IDS_COMMON_VIDEO            "Documents\\My Videos"
-    IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "マイ ネットワーク"
+    IDS_PROGRAMS "スタート メニュー\\プログラム"
+    IDS_PERSONAL "My Documents"
+    IDS_FAVORITES "Favorites"
+    IDS_STARTUP "スタート メニュー\\プログラム\\スタートアップ"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_STARTMENU "スタート メニュー"
+    IDS_MYMUSIC "My Music"
+    IDS_MYVIDEO "My Videos"
+    IDS_DESKTOPDIRECTORY "デスクトップ"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Templates"
+    IDS_APPDATA "Application Data"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Temporary Internet Files"
+    IDS_COOKIES "Cookies"
+    IDS_HISTORY "History"
+    IDS_PROGRAM_FILES "Program Files"
+    IDS_MYPICTURES "My Pictures"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "スタート メニュー\\プログラム\\管理ツール"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "マイ ネットワーク"
 
-    IDS_NEWFOLDER               "新しいフォルダ"
+    IDS_NEWFOLDER "新しいフォルダ"
 
-    IDS_DRIVE_FIXED             "ローカル ディスク"
-    IDS_DRIVE_CDROM             "CDROM"
-    IDS_DRIVE_NETWORK           "ネットワーク ディスク"
+    IDS_DRIVE_FIXED "ローカル ディスク"
+    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_NETWORK "ネットワーク ディスク"
 
     /* Open With */
-    IDS_OPEN_WITH               "プログラムから開く"
-    IDS_OPEN_WITH_CHOOSE        "プログラムの選択..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "プログラムから開く"
+    IDS_OPEN_WITH_CHOOSE "プログラムの選択..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "制作者(&A)"
-    IDS_SHELL_ABOUT_BACK        "< 戻る(&B)"
-    FCIDM_SHVIEW_NEW            "新規作成"
-    FCIDM_SHVIEW_NEWFOLDER      "フォルダ(&F)"
-    FCIDM_SHVIEW_NEWLINK        "ショートカット(&L)"
-    IDS_FOLDER_OPTIONS          "フォルダ オプション"
-    IDS_RECYCLEBIN_LOCATION     "ごみ箱の場所"
-    IDS_RECYCLEBIN_DISKSPACE    "利用できる領域"
-    IDS_EMPTY_BITBUCKET         "ごみ箱を空にする"
-    IDS_PICK_ICON_TITLE         "アイコンの選択"
-    IDS_PICK_ICON_FILTER        "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
-    IDS_DIRECTORY               "フォルダ"
-    IDS_VIRTUAL_DRIVER          "仮想 デバイス ドライバ"
-    IDS_BAT_FILE                "ReactOS バッチ ファイル"
-    IDS_CMD_FILE                "ReactOS コマンド スクリプト"
-    IDS_COM_FILE                "Dos アプリケーション"
-    IDS_CPL_FILE                "コントロール パネルの項目"
-    IDS_CUR_FILE                "カーソル"
-    IDS_DLL_FILE                "アプリケーション 拡張"
-    IDS_DRV_FILE                "デバイス ドライバ"
-    IDS_EXE_FILE                "アプリケーション"
-    IDS_FON_FILE                "フォント ファイル"
-    IDS_TTF_FILE                "TrueType フォント ファイル"
-    IDS_HLP_FILE                "ヘルプ ファイル"
-    IDS_INI_FILE                "構成設定"
-    IDS_LNK_FILE                "ショートカット"
-    IDS_SYS_FILE                "システム ファイル"
+    IDS_SHELL_ABOUT_AUTHORS "制作者(&A)"
+    IDS_SHELL_ABOUT_BACK "< 戻る(&B)"
+    FCIDM_SHVIEW_NEW "新規作成"
+    FCIDM_SHVIEW_NEWFOLDER "フォルダ(&F)"
+    FCIDM_SHVIEW_NEWLINK "ショートカット(&L)"
+    IDS_FOLDER_OPTIONS "フォルダ オプション"
+    IDS_RECYCLEBIN_LOCATION "ごみ箱の場所"
+    IDS_RECYCLEBIN_DISKSPACE "利用できる領域"
+    IDS_EMPTY_BITBUCKET "ごみ箱を空にする"
+    IDS_PICK_ICON_TITLE "アイコンの選択"
+    IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_DIRECTORY "フォルダ"
+    IDS_VIRTUAL_DRIVER "仮想 デバイス ドライバ"
+    IDS_BAT_FILE "ReactOS バッチ ファイル"
+    IDS_CMD_FILE "ReactOS コマンド スクリプト"
+    IDS_COM_FILE "Dos アプリケーション"
+    IDS_CPL_FILE "コントロール パネルの項目"
+    IDS_CUR_FILE "カーソル"
+    IDS_DLL_FILE "アプリケーション 拡張"
+    IDS_DRV_FILE "デバイス ドライバ"
+    IDS_EXE_FILE "アプリケーション"
+    IDS_FON_FILE "フォント ファイル"
+    IDS_TTF_FILE "TrueType フォント ファイル"
+    IDS_HLP_FILE "ヘルプ ファイル"
+    IDS_INI_FILE "構成設定"
+    IDS_LNK_FILE "ショートカット"
+    IDS_SYS_FILE "システム ファイル"
 
-    IDS_OPEN_VERB               "開く"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "別のユーザーとして実行 "
-    IDS_EDIT_VERB               "編集"
-    IDS_FIND_VERB               "検索"
-    IDS_PRINT_VERB              "印刷"
+    IDS_OPEN_VERB "開く"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "別のユーザーとして実行 "
+    IDS_EDIT_VERB "編集"
+    IDS_FIND_VERB "検索"
+    IDS_PRINT_VERB "印刷"
 
-    IDS_FILE_FOLDER             "%u 個のファイル、 %u 個のフォルダ"
-    IDS_PRINTERS                "プリンタ"
-    IDS_FONTS                   "フォント"
-    IDS_INSTALLNEWFONT          "新しいフォントのインストール..."
+    IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
+    IDS_PRINTERS "プリンタ"
+    IDS_FONTS "フォント"
+    IDS_INSTALLNEWFONT "新しいフォントのインストール..."
 
-    IDS_DEFAULT_CLUSTER_SIZE    "デフォルト アロケーション サイズ"
-    IDS_COPY_OF                 "コピー ～"
-    
-    IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
-    
-    IDS_FILE_DETAILS            "拡張子 '%s' の詳細"
-    IDS_FILE_DETAILSADV         "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_DEFAULT_CLUSTER_SIZE "デフォルト アロケーション サイズ"
+    IDS_COPY_OF "コピー ～"
+
+    IDS_SHLEXEC_NOASSOC "There is no Windows program configured to open this type of file."
+
+    IDS_FILE_DETAILS "拡張子 '%s' の詳細"
+    IDS_FILE_DETAILSADV "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
 END

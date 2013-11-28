@@ -122,5 +122,5 @@ IDB_HHTOOLBAR BITMAP "res/hhtoolbar.bmp"
 /* @makedep: hhtreeview.bmp */
 IDB_HHTREEVIEW BITMAP "res/hhtreeview.bmp"
 
-1 TYPELIB hhctrl_tlb.tlb
-1 WINE_REGISTRY hhctrl_tlb.rgs
+1 TYPELIB "hhctrl_tlb.tlb"
+1 WINE_REGISTRY "hhctrl_tlb.rgs"

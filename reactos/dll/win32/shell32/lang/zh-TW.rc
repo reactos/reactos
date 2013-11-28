@@ -1,19 +1,19 @@
 /*
- * PROJECT:     ReactOS Shell32
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shell32/lang/zh-TW.rc
- * PURPOSE:     Chinese (Traditional) Language Resources
- * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS Shell32
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       dll/win32/shell32/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language Resources
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "大圖示(&G)",  FCIDM_SHVIEW_BIGICON
-    MENUITEM "小圖示(&M)",  FCIDM_SHVIEW_SMALLICON
-    MENUITEM "列表(&L)",         FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "詳細資料(&D)",      FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "大圖示(&G)", FCIDM_SHVIEW_BIGICON
+    MENUITEM "小圖示(&M)", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "列表(&L)", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "詳細資料(&D)", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -23,29 +23,29 @@ BEGIN
     BEGIN
         POPUP "&View"
         BEGIN
-            MENUITEM "大圖示(&G)",       FCIDM_SHVIEW_BIGICON
-            MENUITEM "小圖示(&M)",       FCIDM_SHVIEW_SMALLICON
-            MENUITEM "列表(&L)",              FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "詳細資料(&D)",           FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "大圖示(&G)", FCIDM_SHVIEW_BIGICON
+            MENUITEM "小圖示(&M)", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "列表(&L)", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "詳細資料(&D)", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "排列圖示(&I)"
         BEGIN
-            MENUITEM "名稱(&N)",           0x30  /* column 0 */
-            MENUITEM "類型(&T)",           0x32  /* column 2 */
-            MENUITEM "大小(&S)",           0x31  /* ... */
-            MENUITEM "日期(&D)",           0x33
+            MENUITEM "名稱(&N)", 0x30  /* column 0 */
+            MENUITEM "類型(&T)", 0x32  /* column 2 */
+            MENUITEM "大小(&S)", 0x31  /* ... */
+            MENUITEM "日期(&D)", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "自動排列(&A)",      FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "自動排列(&A)", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "排列圖示",        FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "排列圖示", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "重新整理",              FCIDM_SHVIEW_REFRESH
+        MENUITEM "重新整理", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "貼上",                FCIDM_SHVIEW_INSERT
-        MENUITEM "貼上捷徑",        FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "貼上", FCIDM_SHVIEW_INSERT
+        MENUITEM "貼上捷徑", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "屬性",           FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "屬性", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -54,17 +54,17 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplore",             FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Open",                FCIDM_SHVIEW_OPEN
+        MENUITEM "E&xplore", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "&Open", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "C&ut",                 FCIDM_SHVIEW_CUT
-        MENUITEM "&Copy",                FCIDM_SHVIEW_COPY
+        MENUITEM "C&ut", FCIDM_SHVIEW_CUT
+        MENUITEM "&Copy", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Create &Link",         FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Delete",              FCIDM_SHVIEW_DELETE
-        MENUITEM "&Rename",              FCIDM_SHVIEW_RENAME
+        MENUITEM "Create &Link", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Delete", FCIDM_SHVIEW_DELETE
+        MENUITEM "&Rename", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Properties",          FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Properties", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -131,7 +131,6 @@ BEGIN
     LTEXT "已安裝的物理記憶體:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "確定", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -158,7 +157,7 @@ BEGIN
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Shortcut"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -289,13 +288,11 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Type:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "File system:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "Used space:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -305,7 +302,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Capacity:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -313,7 +309,6 @@ BEGIN
     LTEXT "Drive %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "&Disk Cleanup", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "Compress drive to save disk space", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -353,7 +348,6 @@ BEGIN
     CHECKBOX "The following user:", 14002, 10, 100, 90, 10
     LTEXT "User name:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Password:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -385,7 +379,7 @@ BEGIN
     LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
     LTEXT "File:    ", 14001, 44, 25, 188, 10
     GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -399,7 +393,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -429,14 +423,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "View"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
-//ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "Folder views", -1, 7, 10, 249, 60
+    //ICON
+    LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -444,17 +438,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "File Types"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
-LTEXT "Opens with:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
+    LTEXT "Opens with:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "Appname", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -612,188 +606,187 @@ CAPTION "Change Icon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "Browse...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 167, 181, 50, 14
 END
 
-STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "檔案"
-    IDS_SHV_COLUMN2             "大小"
-    IDS_SHV_COLUMN3             "類型"
-    IDS_SHV_COLUMN4             "已修改"
-    IDS_SHV_COLUMN5             "屬性"
-    IDS_SHV_COLUMN6             "使用空間"
-    IDS_SHV_COLUMN7             "剩餘空間"
-    IDS_SHV_COLUMN8             "名稱"
-    IDS_SHV_COLUMN9             "Comments"
-    IDS_SHV_COLUMN10            "Owner"
-    IDS_SHV_COLUMN11            "Group"
-    IDS_SHV_COLUMN12            "檔案名稱"
-    IDS_SHV_COLUMN13            "Category"
-    IDS_SHV_COLUMN_DELFROM      "Original location"
-    IDS_SHV_COLUMN_DELDATE      "Date deleted"
-    IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-    IDS_SHV_NETWORKLOCATION     "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-    IDS_SHV_COLUMN_STATUS       "Status"
-    IDS_SHV_COLUMN_COMMENTS     "Comments"
-    IDS_SHV_COLUMN_LOCATION     "Location"
-    IDS_SHV_COLUMN_MODEL        "Model"
+    IDS_SHV_COLUMN1 "檔案"
+    IDS_SHV_COLUMN2 "大小"
+    IDS_SHV_COLUMN3 "類型"
+    IDS_SHV_COLUMN4 "已修改"
+    IDS_SHV_COLUMN5 "屬性"
+    IDS_SHV_COLUMN6 "使用空間"
+    IDS_SHV_COLUMN7 "剩餘空間"
+    IDS_SHV_COLUMN8 "名稱"
+    IDS_SHV_COLUMN9 "Comments"
+    IDS_SHV_COLUMN10 "Owner"
+    IDS_SHV_COLUMN11 "Group"
+    IDS_SHV_COLUMN12 "檔案名稱"
+    IDS_SHV_COLUMN13 "Category"
+    IDS_SHV_COLUMN_DELFROM "Original location"
+    IDS_SHV_COLUMN_DELDATE "Date deleted"
+    IDS_SHV_COLUMN_FONTTYPE "Fonttype"
+    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_NETWORKLOCATION "Network Location"
+    IDS_SHV_COLUMN_DOCUMENTS "Documents"
+    IDS_SHV_COLUMN_STATUS "Status"
+    IDS_SHV_COLUMN_COMMENTS "Comments"
+    IDS_SHV_COLUMN_LOCATION "Location"
+    IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
-    IDS_DESKTOP                 "桌面"
-    IDS_MYCOMPUTER              "我的電腦"
-    IDS_RECYCLEBIN_FOLDER_NAME  "資源回收筒"
-    IDS_CONTROLPANEL            "控制台"
-    IDS_ADMINISTRATIVETOOLS     "管理工具"
+    IDS_DESKTOP "桌面"
+    IDS_MYCOMPUTER "我的電腦"
+    IDS_RECYCLEBIN_FOLDER_NAME "資源回收筒"
+    IDS_CONTROLPANEL "控制台"
+    IDS_ADMINISTRATIVETOOLS "管理工具"
 
     /* context menus */
-    IDS_VIEW_LARGE              "大圖示(&G)"
-    IDS_VIEW_SMALL              "小圖示(&M)"
-    IDS_VIEW_LIST               "列表(&L)"
-    IDS_VIEW_DETAILS            "詳細資料(&D)"
-    IDS_SELECT                  "選擇"
-    IDS_OPEN                    "開啟"
-    IDS_CREATELINK              "建立捷徑(&L)"
-    IDS_COPY                    "複製"
-    IDS_DELETE                  "刪除"
-    IDS_PROPERTIES              "屬性"
-    IDS_CUT                     "剪下"
-    IDS_RESTORE                 "復原"
-    IDS_FORMATDRIVE             "格式化..."
-    IDS_RENAME                  "重新命名"
-    IDS_INSERT                  "插入"
+    IDS_VIEW_LARGE "大圖示(&G)"
+    IDS_VIEW_SMALL "小圖示(&M)"
+    IDS_VIEW_LIST "列表(&L)"
+    IDS_VIEW_DETAILS "詳細資料(&D)"
+    IDS_SELECT "選擇"
+    IDS_OPEN "開啟"
+    IDS_CREATELINK "建立捷徑(&L)"
+    IDS_COPY "複製"
+    IDS_DELETE "刪除"
+    IDS_PROPERTIES "屬性"
+    IDS_CUT "剪下"
+    IDS_RESTORE "復原"
+    IDS_FORMATDRIVE "格式化..."
+    IDS_RENAME "重新命名"
+    IDS_INSERT "插入"
 
-    IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
-    IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"
-    IDS_DELETEITEM_CAPTION      "Confirm file deletion"
-    IDS_DELETEFOLDER_CAPTION    "Confirm folder deletion"
-    IDS_DELETEITEM_TEXT         "Are you sure you want to delete '%1'?"
-    IDS_DELETEMULTIPLE_TEXT     "Are you sure you want to delete these %1 items?"
-    IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
-    IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
-    IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
-    IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
-    IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-    IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-    IDS_OVERWRITEFILE_CAPTION   "Confirm file overwrite"
-    IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
+    IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
+    IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
+    IDS_DELETEITEM_CAPTION "Confirm file deletion"
+    IDS_DELETEFOLDER_CAPTION "Confirm folder deletion"
+    IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
+    IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
+    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Trash?"
+    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Trash?"
+    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Trash?"
+    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
+    IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+    IDS_OVERWRITEFILE_CAPTION "Confirm file overwrite"
+    IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "重新啟動"
-    IDS_RESTART_PROMPT          "Do you want to restart the system?"
-    IDS_SHUTDOWN_TITLE          "關機"
-    IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
-    IDS_LOGOFF_TITLE            "登出"
-    IDS_LOGOFF_PROMPT           "Do you want to log off?"
+    IDS_RESTART_TITLE "重新啟動"
+    IDS_RESTART_PROMPT "Do you want to restart the system?"
+    IDS_SHUTDOWN_TITLE "關機"
+    IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
+    IDS_LOGOFF_TITLE "登出"
+    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "Start Menu\\Programs"
-    IDS_PERSONAL                "我的文件"
-    IDS_FAVORITES               "我的最愛"
-    IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
-    IDS_RECENT                  "Recent"
-    IDS_SENDTO                  "SendTo"
-    IDS_STARTMENU               "Start Menu"
-    IDS_MYMUSIC                 "我的音樂"
-    IDS_MYVIDEO                 "我的影片"
-    IDS_DESKTOPDIRECTORY        "桌面"
-    IDS_NETHOOD                 "NetHood"
-    IDS_TEMPLATES               "Templates"
-    IDS_APPDATA                 "Application Data"
-    IDS_PRINTHOOD               "PrintHood"
-    IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES                 "Cookies"
-    IDS_HISTORY                 "Local Settings\\History"
-    IDS_PROGRAM_FILES           "Program Files"
-    IDS_MYPICTURES              "我的圖片"
-    IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS        "Documents"
-    IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-    IDS_COMMON_MUSIC            "Documents\\My Music"
-    IDS_COMMON_PICTURES         "Documents\\My Pictures"
-    IDS_COMMON_VIDEO            "Documents\\My Videos"
-    IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "My Network Places"
+    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PERSONAL "我的文件"
+    IDS_FAVORITES "我的最愛"
+    IDS_STARTUP "Start Menu\\Programs\\StartUp"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_STARTMENU "Start Menu"
+    IDS_MYMUSIC "我的音樂"
+    IDS_MYVIDEO "我的影片"
+    IDS_DESKTOPDIRECTORY "桌面"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Templates"
+    IDS_APPDATA "Application Data"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_COOKIES "Cookies"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_PROGRAM_FILES "Program Files"
+    IDS_MYPICTURES "我的圖片"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "My Network Places"
 
-    IDS_NEWFOLDER               "新資料夾"
+    IDS_NEWFOLDER "新資料夾"
 
-    IDS_DRIVE_FIXED             "Local Disk"
-    IDS_DRIVE_CDROM             "CDROM"
-    IDS_DRIVE_NETWORK           "Network Disk"
+    IDS_DRIVE_FIXED "Local Disk"
+    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_NETWORK "Network Disk"
 
     /* Open With */
-    IDS_OPEN_WITH               "Open With"
-    IDS_OPEN_WITH_CHOOSE        "Select Program"
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "Open With"
+    IDS_OPEN_WITH_CHOOSE "Choose Program..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "&Authors"
-    IDS_SHELL_ABOUT_BACK        "< &Back"
-    FCIDM_SHVIEW_NEW         "New"
-    FCIDM_SHVIEW_NEWFOLDER         "New &Folder"
-    FCIDM_SHVIEW_NEWLINK         "New &Link"
-    IDS_FOLDER_OPTIONS          "Folder Options"
-    IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-    IDS_RECYCLEBIN_DISKSPACE    "Space Available"
-    IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
-    IDS_PICK_ICON_TITLE         "Choose Icon"
-    IDS_PICK_ICON_FILTER        "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
-    IDS_DIRECTORY               "Folder"
-    IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-    IDS_BAT_FILE                "ReactOS Batch File"
-    IDS_CMD_FILE                "ReactOS Command Script"
-    IDS_COM_FILE                "Dos Application"
-    IDS_CPL_FILE                "Control Panel Item"
-    IDS_CUR_FILE                "Cursor"
-    IDS_DLL_FILE                "Application Extension"
-    IDS_DRV_FILE                "Device Driver"
-    IDS_EXE_FILE                "Application"
-    IDS_FON_FILE                "Font file"
-    IDS_TTF_FILE                "TrueType Font file"
-    IDS_HLP_FILE                "Help File"
-    IDS_INI_FILE                "Configuration Settings"
-    IDS_LNK_FILE                "Shortcut"
-    IDS_SYS_FILE                "System file"
+    IDS_SHELL_ABOUT_AUTHORS "&Authors"
+    IDS_SHELL_ABOUT_BACK "< &Back"
+    FCIDM_SHVIEW_NEW "New"
+    FCIDM_SHVIEW_NEWFOLDER "New &Folder"
+    FCIDM_SHVIEW_NEWLINK "New &Link"
+    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
+    IDS_RECYCLEBIN_DISKSPACE "Space Available"
+    IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
+    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_DIRECTORY "Folder"
+    IDS_VIRTUAL_DRIVER "Virtual Device Driver"
+    IDS_BAT_FILE "ReactOS Batch File"
+    IDS_CMD_FILE "ReactOS Command Script"
+    IDS_COM_FILE "Dos Application"
+    IDS_CPL_FILE "Control Panel Item"
+    IDS_CUR_FILE "Cursor"
+    IDS_DLL_FILE "Application Extension"
+    IDS_DRV_FILE "Device Driver"
+    IDS_EXE_FILE "Application"
+    IDS_FON_FILE "Font file"
+    IDS_TTF_FILE "TrueType Font file"
+    IDS_HLP_FILE "Help File"
+    IDS_INI_FILE "Configuration Settings"
+    IDS_LNK_FILE "Shortcut"
+    IDS_SYS_FILE "System file"
 
-    IDS_OPEN_VERB               "Open"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "Run as "
-    IDS_EDIT_VERB               "Edit"
-    IDS_FIND_VERB               "Find"
-    IDS_PRINT_VERB              "Print"
+    IDS_OPEN_VERB "Open"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "Run as "
+    IDS_EDIT_VERB "Edit"
+    IDS_FIND_VERB "Find"
+    IDS_PRINT_VERB "Print"
 
-    IDS_FILE_FOLDER             "%u Files, %u Folders"
-    IDS_PRINTERS                "Printers"
-    IDS_FONTS                   "Fonts"
-    IDS_INSTALLNEWFONT          "Install New Font..."
+    IDS_FILE_FOLDER "%u Files, %u Folders"
+    IDS_PRINTERS "Printers"
+    IDS_FONTS "Fonts"
+    IDS_INSTALLNEWFONT "Install New Font..."
 
-    IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
-    IDS_COPY_OF                 "Copy of"
+    IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
+    IDS_COPY_OF "Copy of"
 
-    IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
-    
-    IDS_FILE_DETAILS            "Details for '%s' extension"
-    IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_SHLEXEC_NOASSOC "There is no Windows program configured to open this type of file."
+
+    IDS_FILE_DETAILS "Details for '%s' extension"
+    IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
 END
-

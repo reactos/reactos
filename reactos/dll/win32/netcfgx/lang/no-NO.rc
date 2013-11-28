@@ -5,24 +5,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 228, 27
- CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
- GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "IP addresse:", -1, 14, 75, 135, 8
- CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "Subnet maske:", -1, 14, 90, 135, 8
- CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Standard gateway:", -1, 14, 105, 135, 8
- CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
- CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
- GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Forvalgt DNS server:", -1, 14, 171, 135, 8
- CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "Alternativ DNS server:", -1, 14, 186, 135, 8
- CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "&Avansert", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 228, 27
+    CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    LTEXT "IP addresse:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "Subnet maske:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "Standard gateway:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    LTEXT "Forvalgt DNS server:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "Alternativ DNS server:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Avansert", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
@@ -35,15 +35,15 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "B&ruker konfigurert", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "&IP addresse:", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "S&ubnet maske:", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "&Standard gateway:", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "&Valgt DNS server:", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "&Alternativ DNS server:", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
@@ -93,7 +93,6 @@ BEGIN
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Register denne tilkoblings addressen i DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "&Bruk denne tilkoblingens DNS suffiks i DNS registrasjon", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -113,10 +112,10 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP adresse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "IP adresse:", -1, 5, 15, 70, 12
     LTEXT "Subnet maske:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Avbryt", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -126,7 +125,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP Gateway Adresse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Gateway:", -1, 5, 15, 70, 12
     CHECKBOX "Automatisk metrisk", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metrisk:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
@@ -140,7 +139,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP DNS Server"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "DNS server:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Avbryt", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -198,32 +197,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Nettverk tilkobling"
-	IDS_NO_IPADDR_SET   "Kortet trenger minst en IP adresse. Vennligst skriv inn en IP adresse."
-	IDS_NO_SUBMASK_SET  "Du har skrevet en adresse som mangler subnet maske. Vennligst skriv inn et subnet maske."
-	IDS_TCPFILTERDESC   "TCP/IP filtering lar deg kontrollere typen av TCP/IP nettverk trafikk som strekker seg til din datamaskin."
-	IDS_TCPFILTER       "TCP/IP Filtering"
-	IDS_IPADDR          "IP adresse"
-	IDS_SUBMASK         "Subnet maske"
-	IDS_GATEWAY         "Gateway"
-	IDS_METRIC          "Metrisk"
-	IDS_DHCPACTIVE      "DHCP aktivert"
-	IDS_AUTOMATIC       "Automatisk"
-	IDS_NOITEMSEL       "Du har ikke valg en enhet. Velg en enhet først."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Legg til"
-	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "TCP porter"
-	IDS_UDP_PORTS       "UDP porter"
-	IDS_IP_PROTO        "IP protokoller"
-	IDS_PORT_RANGE      "Port nummere må være større enn 0 og mindre enn 65536. Vennligst skriv inn et nummer innenfor dette området."
-	IDS_PROT_RANGE      "Protokoll nummeret må være større enn 0 og mindre enn 256. Vennligst skriv inn et nummer innenfor dette området."
-	IDS_DUP_NUMBER      "Nummeret som du prøver å legge til er allerede i listen. Vennligst skriv inn et annet nummer."
-	IDS_DISABLE_FILTER  "Deaktivere denne global TCP/IP innstillingen vil påvirke alle kortene."
-	IDS_NO_SUFFIX       "Nåværende innstilling av søke metoden trenger minst et DNS suffiks. Vennligst skriv inn et eller endre innstillingene."
-	IDS_DOMAIN_SUFFIX   "Domene suffiks er ikke et gyldig suffiks."
-	IDS_DNS_SUFFIX      "DNS domene navn ""%s"" er ikke et gyldig DNS navn."
-	IDS_DUP_SUFFIX      "DNS suffiks er allerede på listen."
-	IDS_DUP_IPADDR      "IP adresse er allerede på listen."
-	IDS_DUP_GW          "Standard gateway er allerede på listen."
+    IDS_NET_CONNECT "Nettverk tilkobling"
+    IDS_NO_IPADDR_SET "Kortet trenger minst en IP adresse. Vennligst skriv inn en IP adresse."
+    IDS_NO_SUBMASK_SET "Du har skrevet en adresse som mangler subnet maske. Vennligst skriv inn et subnet maske."
+    IDS_TCPFILTERDESC "TCP/IP filtering lar deg kontrollere typen av TCP/IP nettverk trafikk som strekker seg til din datamaskin."
+    IDS_TCPFILTER "TCP/IP Filtering"
+    IDS_IPADDR "IP adresse"
+    IDS_SUBMASK "Subnet maske"
+    IDS_GATEWAY "Gateway"
+    IDS_METRIC "Metrisk"
+    IDS_DHCPACTIVE "DHCP aktivert"
+    IDS_AUTOMATIC "Automatisk"
+    IDS_NOITEMSEL "Du har ikke valg en enhet. Velg en enhet først."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Legg til"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "TCP porter"
+    IDS_UDP_PORTS "UDP porter"
+    IDS_IP_PROTO "IP protokoller"
+    IDS_PORT_RANGE "Port nummere må være større enn 0 og mindre enn 65536. Vennligst skriv inn et nummer innenfor dette området."
+    IDS_PROT_RANGE "Protokoll nummeret må være større enn 0 og mindre enn 256. Vennligst skriv inn et nummer innenfor dette området."
+    IDS_DUP_NUMBER "Nummeret som du prøver å legge til er allerede i listen. Vennligst skriv inn et annet nummer."
+    IDS_DISABLE_FILTER "Deaktivere denne global TCP/IP innstillingen vil påvirke alle kortene."
+    IDS_NO_SUFFIX "Nåværende innstilling av søke metoden trenger minst et DNS suffiks. Vennligst skriv inn et eller endre innstillingene."
+    IDS_DOMAIN_SUFFIX "Domene suffiks er ikke et gyldig suffiks."
+    IDS_DNS_SUFFIX "DNS domene navn ""%s"" er ikke et gyldig DNS navn."
+    IDS_DUP_SUFFIX "DNS suffiks er allerede på listen."
+    IDS_DUP_IPADDR "IP adresse er allerede på listen."
+    IDS_DUP_GW "Standard gateway er allerede på listen."
 END

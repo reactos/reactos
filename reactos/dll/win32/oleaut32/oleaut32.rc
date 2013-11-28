@@ -113,8 +113,8 @@
 /* @makedep: oleaut32.rgs */
 1 WINE_REGISTRY oleaut32.rgs
 
-2 WINE_REGISTRY oleaut32_oaidl.rgs
-3 WINE_REGISTRY oleaut32_ocidl.rgs
+2 WINE_REGISTRY "oleaut32_oaidl.rgs"
+3 WINE_REGISTRY "oleaut32_ocidl.rgs"
 
 #define WINE_FILEDESCRIPTION_STR "Wine OLE dll"
 #define WINE_FILENAME_STR "oleaut32.dll"

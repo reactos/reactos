@@ -10,21 +10,21 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Názov počítača"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS použije nasledujúce informácie pri identifikácii počítača v sieti.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "&Popis počítača:", IDC_STATIC, 6, 40, 70, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Úplný názov počítača:", IDC_STATIC, 6, 68, 75, 9
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Pracovná skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 70, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Ak sa chcete pripojiť pomocou Sprievodcu identifikáciou v sieti na doménu a vytvoriť lokálne používateľské konto, kliknite na tlačidlo Sieťová identifikácia.", IDC_STATIC, 6, 108, 160, 33
-    PUSHBUTTON  "&Sieťová identifikácia", IDC_NETWORK_ID, 176, 114, 72, 15
-    LTEXT       "Ak chcete zmeniť názov počítača alebo sa pripojiť na doménu, kliknite na tlačidlo Zmeniť.", IDC_STATIC, 6, 149, 160, 17
-    PUSHBUTTON  "Z&meniť...",IDC_NETWORK_PROPERTY, 176, 149, 72, 15
-    LTEXT       "Poznámka: Identifikáciu počítača môžu zmeniť len správcovia počítača.", IDC_STATIC, 6, 179, 244, 9
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "ReactOS použije nasledujúce informácie pri identifikácii počítača v sieti.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "&Popis počítača:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Úplný názov počítača:", IDC_STATIC, 6, 68, 75, 9
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Pracovná skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 70, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Ak sa chcete pripojiť pomocou Sprievodcu identifikáciou v sieti na doménu a vytvoriť lokálne používateľské konto, kliknite na tlačidlo Sieťová identifikácia.", IDC_STATIC, 6, 108, 160, 33
+    PUSHBUTTON "&Sieťová identifikácia", IDC_NETWORK_ID, 176, 114, 72, 15
+    LTEXT "Ak chcete zmeniť názov počítača alebo sa pripojiť na doménu, kliknite na tlačidlo Zmeniť.", IDC_STATIC, 6, 149, 160, 17
+    PUSHBUTTON "Z&meniť...", IDC_NETWORK_PROPERTY, 176, 149, 72, 15
+    LTEXT "Poznámka: Identifikáciu počítača môžu zmeniť len správcovia počítača.", IDC_STATIC, 6, 179, 244, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -74,12 +74,12 @@ BEGIN
     22 "Vitajte v pracovnej skupine %1."
     23 "Vitajte v doméne %1."
     24 "Aby sa prejavili vykonané zmeny, musíte reštartovať počítač."
-	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
+    25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Poznámka: Iba správcovia môžu zmeniť identifikáciu tohto počítača."
     1022 "Poznámka: Identifikácia počítača nemôže byť zmenená, lebo:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+    1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
     3210 "&Podrobnosti >>"
     3220 "<< &Podrobnosti"
-	4000 "Information"
-	4001 "Can't set new a computer name!"
+    4000 "Information"
+    4001 "Can't set new a computer name!"
 END

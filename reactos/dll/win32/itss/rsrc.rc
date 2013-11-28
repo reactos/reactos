@@ -18,4 +18,4 @@
 
 /* @makedep: itss.rgs */
 1 WINE_REGISTRY itss.rgs
-2 WINE_REGISTRY itss_r.rgs
+2 WINE_REGISTRY "itss_r.rgs"

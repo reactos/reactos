@@ -1,29 +1,11 @@
-/*
- * Copyright 1998 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "&Μεγάλα εικονίδια",  FCIDM_SHVIEW_BIGICON
-    MENUITEM "Μ&ικρά εικονίδια",   FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Λίστα",             FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "Λ&επτομέρειες",      FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "&Μεγάλα εικονίδια", FCIDM_SHVIEW_BIGICON
+    MENUITEM "Μ&ικρά εικονίδια", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Λίστα", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "Λ&επτομέρειες", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -33,29 +15,29 @@ BEGIN
     BEGIN
         POPUP "&Προβολή"
         BEGIN
-            MENUITEM "&Μεγάλα εικονίδια",         FCIDM_SHVIEW_BIGICON
-            MENUITEM "Μ&ικρά εικονίδια",          FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Λίστα",                    FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "Λ&επτομέρειες",             FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "&Μεγάλα εικονίδια", FCIDM_SHVIEW_BIGICON
+            MENUITEM "Μ&ικρά εικονίδια", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Λίστα", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "Λ&επτομέρειες", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "&Τακτοποίηση εικονιδίων"
         BEGIN
-            MENUITEM "Κατά ό&νομα",               0x30  /* column 0 */
-            MENUITEM "Κατά &τύπο",                0x32  /* column 2 */
-            MENUITEM "Κατά &μέγεθος",             0x31  /* ... */
-            MENUITEM "Κατά &ημερομηνία",          0x33
+            MENUITEM "Κατά ό&νομα", 0x30  /* column 0 */
+            MENUITEM "Κατά &τύπο", 0x32  /* column 2 */
+            MENUITEM "Κατά &μέγεθος", 0x31  /* ... */
+            MENUITEM "Κατά &ημερομηνία", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "Αυτόματη τακτοποίηση",      FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Αυτόματη τακτοποίηση", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Ευθυγράμμιση εικονιδίων",     FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Ευθυγράμμιση εικονιδίων", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "Ανανέωση",                    FCIDM_SHVIEW_REFRESH
+        MENUITEM "Ανανέωση", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Επικόληση",                   FCIDM_SHVIEW_INSERT
-        MENUITEM "Επικόληση συντόμευσης",       FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Επικόληση", FCIDM_SHVIEW_INSERT
+        MENUITEM "Επικόληση συντόμευσης", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "Ιδιότητες",                   FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Ιδιότητες", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -64,17 +46,17 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Εξερεύνηση",              FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Άνοιγμα",                 FCIDM_SHVIEW_OPEN
+        MENUITEM "&Εξερεύνηση", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "&Άνοιγμα", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Α&ποκοπή",                 FCIDM_SHVIEW_CUT
-        MENUITEM "Α&ντιγραφή",               FCIDM_SHVIEW_COPY
+        MENUITEM "Α&ποκοπή", FCIDM_SHVIEW_CUT
+        MENUITEM "Α&ντιγραφή", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Δημιουργία &συντόμευσης",  FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Διαγραφή",                FCIDM_SHVIEW_DELETE
-        MENUITEM "&Μετονομασία",             FCIDM_SHVIEW_RENAME
+        MENUITEM "Δημιουργία &συντόμευσης", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Διαγραφή", FCIDM_SHVIEW_DELETE
+        MENUITEM "&Μετονομασία", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Ιδιότητες",               FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Ιδιότητες", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -118,7 +100,7 @@ BEGIN
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-SHELL_ABOUT_MSGBOX DIALOGEX 15, 40, 210, 152
+IDD_ABOUT DIALOGEX 15, 40, 210, 152
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Πληροφορίες: %s"
 FONT 8, "MS Shell Dlg"
@@ -141,7 +123,6 @@ BEGIN
     LTEXT "Εγκατεστημένη φυσική μνήμη:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -168,7 +149,7 @@ BEGIN
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 240, 130
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Συντόμευση"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -238,7 +219,7 @@ BEGIN
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Γενικά"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -299,13 +280,11 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Τύπος:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Σύστημα αρχείων:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "Δεσμευμένος χώρος:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -315,7 +294,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Χωρητικότητα:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -323,7 +301,6 @@ BEGIN
     LTEXT "Δίσκος %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "&Εκκαθάριση δίσκου", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "Συμπίεση δίσκου για εξοικονόμηση χώρου", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Δημιουργία ευρετηρίου για γρηγορότερη αναζήτηση", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -363,7 +340,6 @@ BEGIN
     CHECKBOX "Ο παρακάτω χρήστης:", 14002, 10, 100, 90, 10
     LTEXT "Όνομα χρήστη:", -1, 20, 115, 60, 10
     COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
     LTEXT "Κωδικός πρόσβασης:", -1, 20, 140, 60, 10
     EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
@@ -379,7 +355,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Ρυθμίσεις για τον επιλεγμένο προορισμό", -1, 10, 80, 220, 70
-    RADIOBUTTON "&Προσαρμοσμένο μέγεθος:", 14001, 20, 90, 90, 10
+    RADIOBUTTON "&Προσαρμοσμένο μέγεθος:", 14001, 20, 90, 90, 10, WS_TABSTOP
     EDITTEXT 14002, 110, 90, 50, 10, WS_TABSTOP | ES_NUMBER
     LTEXT "Μέγιστο μέγεθος (MB):", -1, 20, 100, 100, 10
     RADIOBUTTON "Να μην μετακινούνται τα αρχεία στον κάδο ανακυκλωσης. Να καταργούνται τα αρχεία μόλις διαγράφονται.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
@@ -395,7 +371,7 @@ BEGIN
     LTEXT "Επιλέξτε το πρόγραμμα με το οποίο θέλετε να ανοίξετε αυτό το αρχείο:", -1, 44, 12, 211, 10
     LTEXT "Αρχείο:    %s", 14001, 44, 25, 188, 10
     GROUPBOX "Προγράμματα", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     CHECKBOX "&Άνοιγμα αυτού του είδους αρχείου, πάντα με το επιλεγμένο πρόγραμμα", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Αναζήτηση...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -409,7 +385,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -439,14 +415,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "View"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
-//ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "Folder views", -1, 7, 10, 249, 60
+    //ICON
+    LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -454,17 +430,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "File Types"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
-LTEXT "Opens with:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
+    LTEXT "Opens with:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "Appname", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -616,194 +592,193 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-
 IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Change Icon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "Browse...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "Αρχείο"
-    IDS_SHV_COLUMN2             "Μέγεθος"
-    IDS_SHV_COLUMN3             "Τύπος"
-    IDS_SHV_COLUMN4             "Τροποποίηση"
-    IDS_SHV_COLUMN5             "Χαρακτηριστικά"
-    IDS_SHV_COLUMN6             "Μέγεθος"
-    IDS_SHV_COLUMN7             "Ελεύθερος χώρος"
-    IDS_SHV_COLUMN8             "Όνομα"
-    IDS_SHV_COLUMN9             "Σχόλια"
-    IDS_SHV_COLUMN10            "Κάτοχος"
-    IDS_SHV_COLUMN11            "Ομάδα"
-    IDS_SHV_COLUMN12            "Filename"
-    IDS_SHV_COLUMN13            "Category"
-    IDS_SHV_COLUMN_DELFROM      "Αρχική θέση"
-    IDS_SHV_COLUMN_DELDATE      "Ημερομηνία διαγραφής"
-    IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-    IDS_SHV_NETWORKLOCATION     "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-    IDS_SHV_COLUMN_STATUS       "Status"
-    IDS_SHV_COLUMN_COMMENTS     "Comments"
-    IDS_SHV_COLUMN_LOCATION     "Location"
-    IDS_SHV_COLUMN_MODEL        "Model"
+    IDS_SHV_COLUMN1 "Αρχείο"
+    IDS_SHV_COLUMN2 "Μέγεθος"
+    IDS_SHV_COLUMN3 "Τύπος"
+    IDS_SHV_COLUMN4 "Τροποποίηση"
+    IDS_SHV_COLUMN5 "Χαρακτηριστικά"
+    IDS_SHV_COLUMN6 "Μέγεθος"
+    IDS_SHV_COLUMN7 "Ελεύθερος χώρος"
+    IDS_SHV_COLUMN8 "Όνομα"
+    IDS_SHV_COLUMN9 "Σχόλια"
+    IDS_SHV_COLUMN10 "Κάτοχος"
+    IDS_SHV_COLUMN11 "Ομάδα"
+    IDS_SHV_COLUMN12 "Filename"
+    IDS_SHV_COLUMN13 "Category"
+    IDS_SHV_COLUMN_DELFROM "Αρχική θέση"
+    IDS_SHV_COLUMN_DELDATE "Ημερομηνία διαγραφής"
+    IDS_SHV_COLUMN_FONTTYPE "Fonttype"
+    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_NETWORKLOCATION "Network Location"
+    IDS_SHV_COLUMN_DOCUMENTS "Documents"
+    IDS_SHV_COLUMN_STATUS "Status"
+    IDS_SHV_COLUMN_COMMENTS "Comments"
+    IDS_SHV_COLUMN_LOCATION "Location"
+    IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
-    IDS_DESKTOP                 "Επιφάνεια εργασίας"
-    IDS_MYCOMPUTER              "Ο υπολογιστής μου"
-    IDS_RECYCLEBIN_FOLDER_NAME  "Κάδος ανακύκλωσης"
-    IDS_CONTROLPANEL            "Πίνακας ελέγχου"
-    IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+    IDS_DESKTOP "Επιφάνεια εργασίας"
+    IDS_MYCOMPUTER "Ο υπολογιστής μου"
+    IDS_RECYCLEBIN_FOLDER_NAME "Κάδος ανακύκλωσης"
+    IDS_CONTROLPANEL "Πίνακας ελέγχου"
+    IDS_ADMINISTRATIVETOOLS "Administrative Tools"
 
     /* context menus */
-    IDS_VIEW_LARGE              "&Μεγάλα εικονίδια"
-    IDS_VIEW_SMALL              "Μ&ικρά εικονίδια"
-    IDS_VIEW_LIST               "&Λίστα"
-    IDS_VIEW_DETAILS            "Λ&επτομέρειες"
-    IDS_SELECT                  "Επιλογή"
-    IDS_OPEN                    "Άνοιγμα"
-    IDS_CREATELINK              "Δημιουργία &συντόμευσης"
-    IDS_COPY                    "Α&ντιγραφή"
-    IDS_DELETE                  "&Διαγραφή"
-    IDS_PROPERTIES              "&Ιδιότητες"
-    IDS_CUT                     "Α&ποκοπή"
-    IDS_RESTORE                 "Restore"
-    IDS_FORMATDRIVE             "Format..."
-    IDS_RENAME                  "Rename"
-    IDS_INSERT                  "Insert"
+    IDS_VIEW_LARGE "&Μεγάλα εικονίδια"
+    IDS_VIEW_SMALL "Μ&ικρά εικονίδια"
+    IDS_VIEW_LIST "&Λίστα"
+    IDS_VIEW_DETAILS "Λ&επτομέρειες"
+    IDS_SELECT "Επιλογή"
+    IDS_OPEN "Άνοιγμα"
+    IDS_CREATELINK "Δημιουργία &συντόμευσης"
+    IDS_COPY "Α&ντιγραφή"
+    IDS_DELETE "&Διαγραφή"
+    IDS_PROPERTIES "&Ιδιότητες"
+    IDS_CUT "Α&ποκοπή"
+    IDS_RESTORE "Restore"
+    IDS_FORMATDRIVE "Format..."
+    IDS_RENAME "Rename"
+    IDS_INSERT "Insert"
 
-    IDS_CREATEFOLDER_DENIED     "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
-    IDS_CREATEFOLDER_CAPTION    "Σφάλμα κατά την δημιουργία νέου φακέλου"
-    IDS_DELETEITEM_CAPTION      "Επιβεβαίωση διαγραφής αρχείου"
-    IDS_DELETEFOLDER_CAPTION    "Επιβεβαίωση διαγραφής φακέλου"
-    IDS_DELETEITEM_TEXT         "Είστε βέβαιοι ότι θέλετε να διαγράψετε το στοιχείο '%1';"
-    IDS_DELETEMULTIPLE_TEXT     "Εϊστε βέβαιοι ότι θέλετε να διαγράψετε αυτά τα %1 στοιχεί΄;"
-    IDS_DELETESELECTED_TEXT     "Είστε σίγουροι ότι θέλετε να διαγράψετε τα επιλεγμένα στοιχεία;"
-    IDS_TRASHITEM_TEXT          "Είστε σίγουροι ότι θέλετε να στείλετε στον κάδο ανακύκλωσης το '%1' ;"
-    IDS_TRASHFOLDER_TEXT        "Είστε σίγουροι ότι θέλετε να στείλετε το '%1' και όλα τα περιεχόμενά του στον κάδο ανακύκλωσης;"
-    IDS_TRASHMULTIPLE_TEXT      "Είστε σίγουροι ότι θέλετε να στείλετε αυτά τα %1 στοιχεία στον κάδο ανακύκλωσης;"
-    IDS_CANTTRASH_TEXT          "Το στοιχείο '%1' δεν μπορεί να μεταφερθεί στον κάδο ανακύκλωσης. Θέλετε να το διαγράψετε;"
-    IDS_OVERWRITEFILE_TEXT      "Αυτός ο φάκελος περιέχει ήδη ένα αρχείο με το όνομα '%1'.\n\nΘέλετε να το αντικαταστήσετε;"
-    IDS_OVERWRITEFILE_CAPTION   "Επιβεβαίωση διαγραφής αρχείου"
-    IDS_OVERWRITEFOLDER_TEXT    "Αυτός ο φάκελος περιέχει ήδη έναν φάκελο ed '%1'.\n\nΑν τα αρχεία στον φάκελο προορισμού έχουν ίδια ονόματα με τα αρχεία στον\nεπιλεγμένο φάκελο θα αντικατασταθούν. Είστε σίγουροι ότι θέλετε να συνεχίσετε;\nthe folder?"
+    IDS_CREATEFOLDER_DENIED "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
+    IDS_CREATEFOLDER_CAPTION "Σφάλμα κατά την δημιουργία νέου φακέλου"
+    IDS_DELETEITEM_CAPTION "Επιβεβαίωση διαγραφής αρχείου"
+    IDS_DELETEFOLDER_CAPTION "Επιβεβαίωση διαγραφής φακέλου"
+    IDS_DELETEITEM_TEXT "Είστε βέβαιοι ότι θέλετε να διαγράψετε το στοιχείο '%1';"
+    IDS_DELETEMULTIPLE_TEXT "Εϊστε βέβαιοι ότι θέλετε να διαγράψετε αυτά τα %1 στοιχεί΄;"
+    IDS_DELETESELECTED_TEXT "Είστε σίγουροι ότι θέλετε να διαγράψετε τα επιλεγμένα στοιχεία;"
+    IDS_TRASHITEM_TEXT "Είστε σίγουροι ότι θέλετε να στείλετε στον κάδο ανακύκλωσης το '%1' ;"
+    IDS_TRASHFOLDER_TEXT "Είστε σίγουροι ότι θέλετε να στείλετε το '%1' και όλα τα περιεχόμενά του στον κάδο ανακύκλωσης;"
+    IDS_TRASHMULTIPLE_TEXT "Είστε σίγουροι ότι θέλετε να στείλετε αυτά τα %1 στοιχεία στον κάδο ανακύκλωσης;"
+    IDS_CANTTRASH_TEXT "Το στοιχείο '%1' δεν μπορεί να μεταφερθεί στον κάδο ανακύκλωσης. Θέλετε να το διαγράψετε;"
+    IDS_OVERWRITEFILE_TEXT "Αυτός ο φάκελος περιέχει ήδη ένα αρχείο με το όνομα '%1'.\n\nΘέλετε να το αντικαταστήσετε;"
+    IDS_OVERWRITEFILE_CAPTION "Επιβεβαίωση διαγραφής αρχείου"
+    IDS_OVERWRITEFOLDER_TEXT "Αυτός ο φάκελος περιέχει ήδη έναν φάκελο ed '%1'.\n\nΑν τα αρχεία στον φάκελο προορισμού έχουν ίδια ονόματα με τα αρχεία στον\nεπιλεγμένο φάκελο θα αντικατασταθούν. Είστε σίγουροι ότι θέλετε να συνεχίσετε;\nthe folder?"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "Επανεκκίνηση"
-    IDS_RESTART_PROMPT          "Είστε σίγουροι ότι θέλετε να επανεκκινήσετε τον υπολογιστή σας;"
-    IDS_SHUTDOWN_TITLE          "Απενεργοποίηση"
-    IDS_SHUTDOWN_PROMPT         "Είστε σίγουροι ότι θέλετε να απενεργοποιήσετε τον υπολογιστή σας;"
-    IDS_LOGOFF_TITLE            "Log Off"
-    IDS_LOGOFF_PROMPT           "Do you want to log off?"
+    IDS_RESTART_TITLE "Επανεκκίνηση"
+    IDS_RESTART_PROMPT "Είστε σίγουροι ότι θέλετε να επανεκκινήσετε τον υπολογιστή σας;"
+    IDS_SHUTDOWN_TITLE "Απενεργοποίηση"
+    IDS_SHUTDOWN_PROMPT "Είστε σίγουροι ότι θέλετε να απενεργοποιήσετε τον υπολογιστή σας;"
+    IDS_LOGOFF_TITLE "Log Off"
+    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "Start Menu\\Programs"
-    IDS_PERSONAL                "Τα έγγραφά μου"
-    IDS_FAVORITES               "Favorites"
-    IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
-    IDS_RECENT                  "Recent"
-    IDS_SENDTO                  "SendTo"
-    IDS_STARTMENU               "Start Menu"
-    IDS_MYMUSIC                 "My Music"
-    IDS_MYVIDEO                 "My Videos"
-    IDS_DESKTOPDIRECTORY        "Desktop"
-    IDS_NETHOOD                 "NetHood"
-    IDS_TEMPLATES               "Templates"
-    IDS_APPDATA                 "Application Data"
-    IDS_PRINTHOOD               "PrintHood"
-    IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES                 "Cookies"
-    IDS_HISTORY                 "Local Settings\\History"
-    IDS_PROGRAM_FILES           "Program Files"
-    IDS_MYPICTURES              "My Pictures"
-    IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS        "Documents"
-    IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-    IDS_COMMON_MUSIC            "Documents\\My Music"
-    IDS_COMMON_PICTURES         "Documents\\My Pictures"
-    IDS_COMMON_VIDEO            "Documents\\My Videos"
-    IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "My Network Places"
+    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PERSONAL "Τα έγγραφά μου"
+    IDS_FAVORITES "Favorites"
+    IDS_STARTUP "Start Menu\\Programs\\StartUp"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_STARTMENU "Start Menu"
+    IDS_MYMUSIC "My Music"
+    IDS_MYVIDEO "My Videos"
+    IDS_DESKTOPDIRECTORY "Desktop"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Templates"
+    IDS_APPDATA "Application Data"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_COOKIES "Cookies"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_PROGRAM_FILES "Program Files"
+    IDS_MYPICTURES "My Pictures"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "My Network Places"
 
-    IDS_NEWFOLDER               "New Folder"
+    IDS_NEWFOLDER "New Folder"
 
-    IDS_DRIVE_FIXED             "Τοπικός δίσκος"
-    IDS_DRIVE_CDROM             "Μονάδα CD"
-    IDS_DRIVE_NETWORK           "Δίσκος δικτύου"
+    IDS_DRIVE_FIXED "Τοπικός δίσκος"
+    IDS_DRIVE_CDROM "Μονάδα CD"
+    IDS_DRIVE_NETWORK "Δίσκος δικτύου"
 
     /* Open With */
-    IDS_OPEN_WITH               "Άνοιγμαμε"
-    IDS_OPEN_WITH_CHOOSE        "Επιλογή προγράμματος..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "Άνοιγμαμε"
+    IDS_OPEN_WITH_CHOOSE "Επιλογή προγράμματος..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "&Προγραμματιστές"
-    IDS_SHELL_ABOUT_BACK        "< &Επιστροφή"
-    FCIDM_SHVIEW_NEW            "Δημιουργία"
-    FCIDM_SHVIEW_NEWFOLDER      "Νέος &Φάκελος"
-    FCIDM_SHVIEW_NEWLINK        "Νέα &Συντόμευση"
-    IDS_FOLDER_OPTIONS          "Folder Options"
-    IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
-    IDS_RECYCLEBIN_DISKSPACE    "Space Available"
-    IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
-    IDS_PICK_ICON_TITLE         "Choose Icon"
-    IDS_PICK_ICON_FILTER        "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
-    IDS_DIRECTORY               "Folder"
-    IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-    IDS_BAT_FILE                "ReactOS Batch File"
-    IDS_CMD_FILE                "ReactOS Command Script"
-    IDS_COM_FILE                "Dos Application"
-    IDS_CPL_FILE                "Control Panel Item"
-    IDS_CUR_FILE                "Cursor"
-    IDS_DLL_FILE                "Application Extension"
-    IDS_DRV_FILE                "Device Driver"
-    IDS_EXE_FILE                "Application"
-    IDS_FON_FILE                "Font file"
-    IDS_TTF_FILE                "TrueType Font file"
-    IDS_HLP_FILE                "Help File"
-    IDS_INI_FILE                "Configuration Settings"
-    IDS_LNK_FILE                "Shortcut"
-    IDS_SYS_FILE                "System file"
+    IDS_SHELL_ABOUT_AUTHORS "&Προγραμματιστές"
+    IDS_SHELL_ABOUT_BACK "< &Επιστροφή"
+    FCIDM_SHVIEW_NEW "Δημιουργία"
+    FCIDM_SHVIEW_NEWFOLDER "Νέος &Φάκελος"
+    FCIDM_SHVIEW_NEWLINK "Νέα &Συντόμευση"
+    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
+    IDS_RECYCLEBIN_DISKSPACE "Space Available"
+    IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
+    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_DIRECTORY "Folder"
+    IDS_VIRTUAL_DRIVER "Virtual Device Driver"
+    IDS_BAT_FILE "ReactOS Batch File"
+    IDS_CMD_FILE "ReactOS Command Script"
+    IDS_COM_FILE "Dos Application"
+    IDS_CPL_FILE "Control Panel Item"
+    IDS_CUR_FILE "Cursor"
+    IDS_DLL_FILE "Application Extension"
+    IDS_DRV_FILE "Device Driver"
+    IDS_EXE_FILE "Application"
+    IDS_FON_FILE "Font file"
+    IDS_TTF_FILE "TrueType Font file"
+    IDS_HLP_FILE "Help File"
+    IDS_INI_FILE "Configuration Settings"
+    IDS_LNK_FILE "Shortcut"
+    IDS_SYS_FILE "System file"
 
-    IDS_OPEN_VERB               "Open"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "Run as "
-    IDS_EDIT_VERB               "Edit"
-    IDS_FIND_VERB               "Find"
-    IDS_PRINT_VERB              "Print"
+    IDS_OPEN_VERB "Open"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "Run as "
+    IDS_EDIT_VERB "Edit"
+    IDS_FIND_VERB "Find"
+    IDS_PRINT_VERB "Print"
 
-    IDS_FILE_FOLDER             "%u Files, %u Folders"
-    IDS_PRINTERS                "Printers"
-    IDS_FONTS                   "Fonts"
-    IDS_INSTALLNEWFONT          "Install New Font..."
+    IDS_FILE_FOLDER "%u Files, %u Folders"
+    IDS_PRINTERS "Printers"
+    IDS_FONTS "Fonts"
+    IDS_INSTALLNEWFONT "Install New Font..."
 
-    IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
-    IDS_COPY_OF                 "Copy of"
+    IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
+    IDS_COPY_OF "Copy of"
 
-    IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
-    
-    IDS_FILE_DETAILS            "Details for '%s' extension"
-    IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_SHLEXEC_NOASSOC "There is no Windows program configured to open this type of file."
+
+    IDS_FILE_DETAILS "Details for '%s' extension"
+    IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
 END

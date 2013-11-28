@@ -53,7 +53,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: urlmon.rgs */
 1 WINE_REGISTRY urlmon.rgs
 
-2 WINE_REGISTRY urlmon_urlmon.rgs
+2 WINE_REGISTRY "urlmon_urlmon.rgs"
 
 /* @makedep: urlmon.inf */
 REGINST REGINST urlmon.inf

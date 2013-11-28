@@ -66,7 +66,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: jscript.rgs */
 2 WINE_REGISTRY jscript.rgs
 
-3 WINE_REGISTRY jscript_classes.rgs
+3 WINE_REGISTRY "jscript_classes.rgs"
 
 #define WINE_FILEDESCRIPTION_STR "Wine JScript"
 #define WINE_FILENAME_STR "jscript.dll"

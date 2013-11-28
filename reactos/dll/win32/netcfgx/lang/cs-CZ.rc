@@ -1,7 +1,7 @@
-/* FILE:        dll/win32/netcfgx/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2010-03-14
- * THANKS TO:   potapnik, who translated part of this file
+/* FILE:       dll/win32/netcfgx/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2010-03-14
+ * THANKS TO:  potapnik, who translated part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -11,24 +11,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Konfigurace IP adres může proběhnout automaticky, pokud to síť dovoluje. V opačném případě kontaktujte správce sítě pro správné nastavení.", -1, 9, 9, 228, 27
- CONTROL "Získat IP adresu automaticky", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
- GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Použít následující IP adresu:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "IP adresa:", -1, 14, 75, 135, 8
- CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
- LTEXT "Maska podsítě:", -1, 14, 90, 135, 8
- CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
- LTEXT "Výchozí brána:", -1, 14, 105, 135, 8
- CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
- CONTROL "Získat adresy DNS serverů automaticky", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
- GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&Použít následující adresy DNS serverů", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Upřednostňovaný DNS server:", -1, 14, 171, 135, 8
- CONTROL "",IDC_DNS1,"SysIPAddress32",0,150,171-2,80,12
- LTEXT "Záložní DNS server:", -1, 14, 186, 135, 8
- CONTROL "",IDC_DNS2,"SysIPAddress32",0,150,186-2,80,12
- PUSHBUTTON "&Rozšířené", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "Konfigurace IP adres může proběhnout automaticky, pokud to síť dovoluje. V opačném případě kontaktujte správce sítě pro správné nastavení.", -1, 9, 9, 228, 27
+    CONTROL "Získat IP adresu automaticky", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Použít následující IP adresu:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    LTEXT "IP adresa:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "Maska podsítě:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "Výchozí brána:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "Získat adresy DNS serverů automaticky", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Použít následující adresy DNS serverů", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    LTEXT "Upřednostňovaný DNS server:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "Záložní DNS server:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Rozšířené", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
@@ -41,15 +41,15 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "&Uživatelské nastavení", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "&IP adresa:", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "&Maska podsítě:", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "&Výchozí brána:", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "&Preferovaný DNS server:", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "&Alternativní DNS server:", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
@@ -99,7 +99,6 @@ BEGIN
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "Registrovat &adresy tohoto připojení v DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "P&oužít DNS příponu tohoto připojení při DNS registraci", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -119,10 +118,10 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP adresa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "IP adresa:", -1, 5, 15, 70, 12
     LTEXT "Maska podsítě:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "OK", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Storno", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -132,7 +131,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP adresa brány"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Brána:", -1, 5, 15, 70, 12
     CHECKBOX "Automatická metrika", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Metrika:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
@@ -143,10 +142,10 @@ END
 
 IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP DNS server"
+CAPTION "TCP/IP DNS Server"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "DNS server:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Storno", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -204,33 +203,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Síťové připojení"
-	IDS_NO_IPADDR_SET   "Adaptér vyžaduje zadání alespoň jedné IP adresy."
-	IDS_NO_SUBMASK_SET  "K zadané adrese je nutné doplnit masku podsítě."
-	IDS_TCPFILTERDESC   "TCP/IP filtrování dovoluje kontrolovat typ TCP/IP síťového provozu, který se dostane k tomuto počítači."
-	IDS_TCPFILTER       "TCP/IP filtrování"
-	IDS_IPADDR          "IP adresa"
-	IDS_SUBMASK         "Maska podsítě"
-	IDS_GATEWAY         "Brána"
-	IDS_METRIC          "Metrika"
-	IDS_DHCPACTIVE      "DHCP zapnuto"
-	IDS_AUTOMATIC       "Automaticky"
-	IDS_NOITEMSEL       "Nebyla vybrána žádná položka."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Přidat"
-	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "TCP porty"
-	IDS_UDP_PORTS       "UDP porty"
-	IDS_IP_PROTO        "IP protokoly"
-	IDS_PORT_RANGE      "Čísla portů musí být zadána vyšší než 0 a nižší než 65536."
-	IDS_PROT_RANGE      "Čísla protokolů musí být zadána vyšší než 0 a nižší než 256."
-	IDS_DUP_NUMBER      "Přidávané číslo se už nachází v seznamu. Je nutné zadat jiné číslo."
-	IDS_DISABLE_FILTER  "Vypnutí tohoto globálního nastavení TCP/IP ovlivní všechny adaptéry."
-	IDS_NO_SUFFIX       "Současné nastavení metod vyhledávání vyžaduje alespoň jednu DNS příponu. Je nutné ji zadat nebo změnit nastavení."
-	IDS_DOMAIN_SUFFIX   "Zadaná doménová přípona není platná."
-	IDS_DNS_SUFFIX      "DNS doménové jméno ""%s"" není platné."
-	IDS_DUP_SUFFIX      "DNS přípona se už nachází v seznamu."
-	IDS_DUP_IPADDR      "IP adresa se už nachází v seznamu."
-	IDS_DUP_GW          "Výchozí brána se už nachází v seznamu."
+    IDS_NET_CONNECT "Síťové připojení"
+    IDS_NO_IPADDR_SET "Adaptér vyžaduje zadání alespoň jedné IP adresy."
+    IDS_NO_SUBMASK_SET "K zadané adrese je nutné doplnit masku podsítě."
+    IDS_TCPFILTERDESC "TCP/IP filtrování dovoluje kontrolovat typ TCP/IP síťového provozu, který se dostane k tomuto počítači."
+    IDS_TCPFILTER "TCP/IP filtrování"
+    IDS_IPADDR "IP adresa"
+    IDS_SUBMASK "Maska podsítě"
+    IDS_GATEWAY "Brána"
+    IDS_METRIC "Metrika"
+    IDS_DHCPACTIVE "DHCP zapnuto"
+    IDS_AUTOMATIC "Automaticky"
+    IDS_NOITEMSEL "Nebyla vybrána žádná položka."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Přidat"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "TCP porty"
+    IDS_UDP_PORTS "UDP porty"
+    IDS_IP_PROTO "IP protokoly"
+    IDS_PORT_RANGE "Čísla portů musí být zadána vyšší než 0 a nižší než 65536."
+    IDS_PROT_RANGE "Čísla protokolů musí být zadána vyšší než 0 a nižší než 256."
+    IDS_DUP_NUMBER "Přidávané číslo se už nachází v seznamu. Je nutné zadat jiné číslo."
+    IDS_DISABLE_FILTER "Vypnutí tohoto globálního nastavení TCP/IP ovlivní všechny adaptéry."
+    IDS_NO_SUFFIX "Současné nastavení metod vyhledávání vyžaduje alespoň jednu DNS příponu. Je nutné ji zadat nebo změnit nastavení."
+    IDS_DOMAIN_SUFFIX "Zadaná doménová přípona není platná."
+    IDS_DNS_SUFFIX "DNS doménové jméno ""%s"" není platné."
+    IDS_DUP_SUFFIX "DNS přípona se už nachází v seznamu."
+    IDS_DUP_IPADDR "IP adresa se už nachází v seznamu."
+    IDS_DUP_GW "Výchozí brána se už nachází v seznamu."
 END
-

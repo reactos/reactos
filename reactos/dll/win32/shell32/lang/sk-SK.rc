@@ -1,35 +1,11 @@
-/* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * NOTE       :  partially translated
- * TRANSLATED :  26-12-2007
- * LAST CHANGE:  27-03-2011
- */   
-
-/*
- * Copyright 1998 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "&Veľké ikony",    FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Malé ikony",     FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Zoznam",         FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Podrobnosti",    FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "&Veľké ikony", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Malé ikony", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Zoznam", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&Podrobnosti", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -39,29 +15,29 @@ BEGIN
     BEGIN
         POPUP "&Zobraziť"
         BEGIN
-            MENUITEM "&Veľké ikony",          FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Malé ikony",           FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Zoznam",               FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Podrobnosti",          FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "&Veľké ikony", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Malé ikony", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Zoznam", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&Podrobnosti", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "&Usporiadať ikony"
         BEGIN
-            MENUITEM "&Názov",           0x30  /* column 0 */
-            MENUITEM "&Typ",             0x32  /* column 2 */
-            MENUITEM "&Veľkosť",         0x31  /* ... */
-            MENUITEM "&Zmenené",         0x33
+            MENUITEM "&Názov", 0x30  /* column 0 */
+            MENUITEM "&Typ", 0x32  /* column 2 */
+            MENUITEM "&Veľkosť", 0x31  /* ... */
+            MENUITEM "&Zmenené", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "Usporiadať &automaticky",      FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Usporiadať &automaticky", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Zarovnať ikony",         FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Zarovnať ikony", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviť",                FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Obnoviť", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Prilepiť",              FCIDM_SHVIEW_INSERT
-        MENUITEM "Prilepiť od&kaz",        FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Prilepiť", FCIDM_SHVIEW_INSERT
+        MENUITEM "Prilepiť od&kaz", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "Vl&astnosti",             FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Vl&astnosti", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -70,23 +46,23 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Preskúmať",             FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Otvoriť",               FCIDM_SHVIEW_OPEN
+        MENUITEM "&Preskúmať", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "&Otvoriť", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Vystrihnúť",            FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopírovať",             FCIDM_SHVIEW_COPY
+        MENUITEM "&Vystrihnúť", FCIDM_SHVIEW_CUT
+        MENUITEM "&Kopírovať", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Vytvoriť o&dkaz",        FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Odstrániť",             FCIDM_SHVIEW_DELETE
-        MENUITEM "Pre&menovať",            FCIDM_SHVIEW_RENAME
+        MENUITEM "Vytvoriť o&dkaz", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Odstrániť", FCIDM_SHVIEW_DELETE
+        MENUITEM "Pre&menovať", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Vl&astnosti",            FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Vl&astnosti", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Vyhľadať priečinok" //Browse for Folder
+CAPTION "Browse for Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -98,7 +74,7 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Vyhľadať priečinok" //Browse for Folder
+CAPTION "Browse for Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
@@ -113,7 +89,7 @@ END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Správa" //Message
+CAPTION "Message"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Án&o", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
@@ -147,7 +123,6 @@ BEGIN
     LTEXT "Nainštalovaná fyzická pamäť:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -174,7 +149,7 @@ BEGIN
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Odkaz"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -305,13 +280,11 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Typ:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Systém súborov:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "Využité miesto:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -321,7 +294,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Kapacita:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -329,7 +301,6 @@ BEGIN
     LTEXT "Jednotka %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "Čistenie &disku", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "Ušetriť miesto na disku &kompresiou jednotky", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "&Povoliť indexovanie pre tento disk, a zrýchliť tak hľadanie súborov", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -369,7 +340,6 @@ BEGIN
     CHECKBOX "Nasledujúci používateľ:", 14002, 10, 100, 90, 10
     LTEXT "Meno používateľa:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Heslo:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -401,7 +371,7 @@ BEGIN
     LTEXT "Vyberte program, v ktorom sa má otvoriť tento súbor:", -1, 44, 12, 211, 10
     LTEXT "Súbor:    ", 14001, 44, 25, 188, 10
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "N&a otvorenie týchto súborov vždy použiť vybratý program", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Prehľadávať...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -415,12 +385,12 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Všeobecné" //General
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Úlohy", -1, 7, 10, 249, 45
@@ -445,14 +415,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Zobraziť"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
-//ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "Folder views", -1, 7, 10, 249, 60
+    //ICON
+    LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -460,17 +430,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Typy súborov"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registrované &typy súborov:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Nový", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "O&dstrániť", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Podrobnosti o prípone '%s'", 14003, 7, 130, 249, 70 //Details for '%s' extension
-LTEXT "Opens with:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Zmeniť...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Registrované &typy súborov:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&Nový", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "O&dstrániť", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
+    LTEXT "Opens with:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "Appname", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Zmeniť...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -628,189 +598,187 @@ CAPTION "Zmena ikony"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Názov súboru:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "&Prehľadávať...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "&Prehľadávať...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Ikony:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Zrušiť",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "Súbor"
-    IDS_SHV_COLUMN2             "Veľkosť"
-    IDS_SHV_COLUMN3             "Typ"
-    IDS_SHV_COLUMN4             "Modifikovaný"
-    IDS_SHV_COLUMN5             "Atribúty"
-    IDS_SHV_COLUMN6             "Veľkosť"
-    IDS_SHV_COLUMN7             "Veľkosť k dispozícii"
-    IDS_SHV_COLUMN8             "Názov" //Name
-    IDS_SHV_COLUMN9             "Poznámky" //Comments
-    IDS_SHV_COLUMN10            "Vlastník"
-    IDS_SHV_COLUMN11            "Skupina"
-    IDS_SHV_COLUMN12            "Filename"
-    IDS_SHV_COLUMN13            "Kategória"
-    IDS_SHV_COLUMN_DELFROM      "Pôvod" //Pôvodné umiestnenie
-    IDS_SHV_COLUMN_DELDATE      "Odstránený" //Dátum zmazania
-    IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-    IDS_SHV_NETWORKLOCATION     "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
-    IDS_SHV_COLUMN_STATUS       "Stav"
-    IDS_SHV_COLUMN_COMMENTS     "Comments"
-    IDS_SHV_COLUMN_LOCATION     "Location"
-    IDS_SHV_COLUMN_MODEL        "Model"
+    IDS_SHV_COLUMN1 "Súbor"
+    IDS_SHV_COLUMN2 "Veľkosť"
+    IDS_SHV_COLUMN3 "Typ"
+    IDS_SHV_COLUMN4 "Modifikovaný"
+    IDS_SHV_COLUMN5 "Atribúty"
+    IDS_SHV_COLUMN6 "Veľkosť"
+    IDS_SHV_COLUMN7 "Veľkosť k dispozícii"
+    IDS_SHV_COLUMN8 "Názov" //Name
+    IDS_SHV_COLUMN9 "Poznámky" //Comments
+    IDS_SHV_COLUMN10 "Vlastník"
+    IDS_SHV_COLUMN11 "Skupina"
+    IDS_SHV_COLUMN12 "Filename"
+    IDS_SHV_COLUMN13 "Kategória"
+    IDS_SHV_COLUMN_DELFROM "Pôvod" //Pôvodné umiestnenie
+    IDS_SHV_COLUMN_DELDATE "Odstránený" //Dátum zmazania
+    IDS_SHV_COLUMN_FONTTYPE "Fonttype"
+    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_NETWORKLOCATION "Network Location"
+    IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
+    IDS_SHV_COLUMN_STATUS "Stav"
+    IDS_SHV_COLUMN_COMMENTS "Comments"
+    IDS_SHV_COLUMN_LOCATION "Location"
+    IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
-    IDS_DESKTOP                 "Pracovná plocha"
-    IDS_MYCOMPUTER              "Tento počítač"
-    IDS_RECYCLEBIN_FOLDER_NAME  "Kôš"
-    IDS_CONTROLPANEL            "Ovládací panel"
-    IDS_ADMINISTRATIVETOOLS     "Nástroje na správu"
+    IDS_DESKTOP "Pracovná plocha"
+    IDS_MYCOMPUTER "Tento počítač"
+    IDS_RECYCLEBIN_FOLDER_NAME "Kôš"
+    IDS_CONTROLPANEL "Ovládací panel"
+    IDS_ADMINISTRATIVETOOLS "Nástroje na správu"
 
     /* context menus */
-    IDS_VIEW_LARGE              "&Veľké ikony"
-    IDS_VIEW_SMALL              "&Malé ikony"
-    IDS_VIEW_LIST               "&Zoznam"
-    IDS_VIEW_DETAILS            "&Podrobnosti"
-    IDS_SELECT                  "Vybrať"
-    IDS_OPEN                    "&Otvoriť"
-    IDS_CREATELINK              "Vytvoriť o&dkaz"
-    IDS_COPY                    "&Kopírovať"
-    IDS_DELETE                  "Odstrániť"
-    IDS_PROPERTIES              "Vl&astnosti"
-    IDS_CUT                     "&Vystrihnúť"
-    IDS_RESTORE                 "&Obnoviť"
-    IDS_FORMATDRIVE             "Formátovať..."
-    IDS_RENAME                  "Premenovať"
-    IDS_INSERT                  "Vložiť"
+    IDS_VIEW_LARGE "&Veľké ikony"
+    IDS_VIEW_SMALL "&Malé ikony"
+    IDS_VIEW_LIST "&Zoznam"
+    IDS_VIEW_DETAILS "&Podrobnosti"
+    IDS_SELECT "Vybrať"
+    IDS_OPEN "&Otvoriť"
+    IDS_CREATELINK "Vytvoriť o&dkaz"
+    IDS_COPY "&Kopírovať"
+    IDS_DELETE "Odstrániť"
+    IDS_PROPERTIES "Vl&astnosti"
+    IDS_CUT "&Vystrihnúť"
+    IDS_RESTORE "&Obnoviť"
+    IDS_FORMATDRIVE "Formátovať..."
+    IDS_RENAME "Premenovať"
+    IDS_INSERT "Vložiť"
 
-    IDS_CREATEFOLDER_DENIED     "Nie je možné vytvoriť nový priečinok: Prístup zamietnutý."
-    IDS_CREATEFOLDER_CAPTION    "Chyba počas vytvárania nového priečinka"
-    IDS_DELETEITEM_CAPTION      "Potvrdenie odstránenia súboru"
-    IDS_DELETEFOLDER_CAPTION    "Potvrdenie odstránenia priečinka"
-    IDS_DELETEITEM_TEXT         "Naozaj chcete vymazať '%1'?"
-    IDS_DELETEMULTIPLE_TEXT     "Naozaj chcete vymazať tieto %1 položky?"
-    IDS_DELETESELECTED_TEXT     "Naozaj chcete vymazať vybranú/é položku/y?"
-    IDS_TRASHITEM_TEXT          "Naozaj chcete odoslať '%1' do koša?"
-    IDS_TRASHFOLDER_TEXT        "Naozaj chcete odoslať '%1' a všetko čo obsahuje do koša?"
-    IDS_TRASHMULTIPLE_TEXT      "Naozaj chcete odoslať tieto %1 položky do koša?"
-    IDS_CANTTRASH_TEXT          "Položka '%1' nemôže byť odoslaná do koša. Chcete ju namiesto toho vymazať?"
-    IDS_OVERWRITEFILE_TEXT      "Tento priečinok už obsahuje súbor s názvom '%1'.\n\nChcete ho nahradiť?"
-    IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepísania súboru"
-    IDS_OVERWRITEFOLDER_TEXT    "Tento priečinok už obsahuje priečinok s názvom '%1'.\n\nAk budú mať súbory v cieľovom priečinku rovnaké názvy ako súbory\nvo vybranom priečinku, tak budú nahradené. Stále chcete presunúť\nalebo skopírovať priečinok?"
+    IDS_CREATEFOLDER_DENIED "Nie je možné vytvoriť nový priečinok: Prístup zamietnutý."
+    IDS_CREATEFOLDER_CAPTION "Chyba počas vytvárania nového priečinka"
+    IDS_DELETEITEM_CAPTION "Potvrdenie odstránenia súboru"
+    IDS_DELETEFOLDER_CAPTION "Potvrdenie odstránenia priečinka"
+    IDS_DELETEITEM_TEXT "Naozaj chcete vymazať '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Naozaj chcete vymazať tieto %1 položky?"
+    IDS_DELETESELECTED_TEXT "Naozaj chcete vymazať vybranú/é položku/y?"
+    IDS_TRASHITEM_TEXT "Naozaj chcete odoslať '%1' do koša?"
+    IDS_TRASHFOLDER_TEXT "Naozaj chcete odoslať '%1' a všetko čo obsahuje do koša?"
+    IDS_TRASHMULTIPLE_TEXT "Naozaj chcete odoslať tieto %1 položky do koša?"
+    IDS_CANTTRASH_TEXT "Položka '%1' nemôže byť odoslaná do koša. Chcete ju namiesto toho vymazať?"
+    IDS_OVERWRITEFILE_TEXT "Tento priečinok už obsahuje súbor s názvom '%1'.\n\nChcete ho nahradiť?"
+    IDS_OVERWRITEFILE_CAPTION "Potvrdenie prepísania súboru"
+    IDS_OVERWRITEFOLDER_TEXT "Tento priečinok už obsahuje priečinok s názvom '%1'.\n\nAk budú mať súbory v cieľovom priečinku rovnaké názvy ako súbory\nvo vybranom priečinku, tak budú nahradené. Stále chcete presunúť\nalebo skopírovať priečinok?"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "Reštartovať"
-    IDS_RESTART_PROMPT          "Naozaj chcete reštartovať systém?"
-    IDS_SHUTDOWN_TITLE          "Vypnúť"
-    IDS_SHUTDOWN_PROMPT         "Naozaj chcete vypnúť počítač?"
-    IDS_LOGOFF_TITLE            "Odhlásiť"
-    IDS_LOGOFF_PROMPT           "Naozaj sa chcete odhlásiť?"
+    IDS_RESTART_TITLE "Reštartovať"
+    IDS_RESTART_PROMPT "Naozaj chcete reštartovať systém?"
+    IDS_SHUTDOWN_TITLE "Vypnúť"
+    IDS_SHUTDOWN_PROMPT "Naozaj chcete vypnúť počítač?"
+    IDS_LOGOFF_TITLE "Odhlásiť"
+    IDS_LOGOFF_PROMPT "Naozaj sa chcete odhlásiť?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Nemožno zobraziť dialogové okno Spustiť súbor (vnútorná chyba)"
-    IDS_RUNDLG_BROWSE_ERROR     "Nemožno zobraziť dialogové okno Prehľadávať (vnútorná chyba)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Prehľadávať"
-    IDS_RUNDLG_BROWSE_FILTER    "Spustiteľné súbory (*.exe)\0*.exe\0Všetky súbory (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Nemožno zobraziť dialogové okno Spustiť súbor (vnútorná chyba)"
+    IDS_RUNDLG_BROWSE_ERROR "Nemožno zobraziť dialogové okno Prehľadávať (vnútorná chyba)"
+    IDS_RUNDLG_BROWSE_CAPTION "Prehľadávať"
+    IDS_RUNDLG_BROWSE_FILTER "Spustiteľné súbory (*.exe)\0*.exe\0Všetky súbory (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "Ponuka Štart\\Programy"
-    IDS_PERSONAL                "Moje dokumenty"
-    IDS_FAVORITES               "Obľúbené položky"
-    IDS_STARTUP                 "Ponuka Štart\\Programy\\Po spustení"
-    IDS_RECENT                  "Recent"
-    IDS_SENDTO                  "Odoslať do"
-    IDS_STARTMENU               "Ponuka Štart"
-    IDS_MYMUSIC                 "Hudba"
-    IDS_MYVIDEO                 "Videá"
-    IDS_DESKTOPDIRECTORY        "Pracovná plocha"
-    IDS_NETHOOD                 "NetHood"
-    IDS_TEMPLATES               "Templates"
-    IDS_APPDATA                 "Application Data"
-    IDS_PRINTHOOD               "PrintHood"
-    IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES                 "Cookies"
-    IDS_HISTORY                 "Local Settings\\History"
-    IDS_PROGRAM_FILES           "Program Files"
-    IDS_MYPICTURES              "Obrázky"
-    IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS        "Documents"
-    IDS_ADMINTOOLS              "Ponuka Štart\\Programy\\Nástroje na správu"
-    IDS_COMMON_MUSIC            "Documents\\My Music"
-    IDS_COMMON_PICTURES         "Documents\\My Pictures"
-    IDS_COMMON_VIDEO            "Documents\\My Videos"
-    IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "Miesta v sieti"
+    IDS_PROGRAMS "Ponuka Štart\\Programy"
+    IDS_PERSONAL "Moje dokumenty"
+    IDS_FAVORITES "Obľúbené položky"
+    IDS_STARTUP "Ponuka Štart\\Programy\\Po spustení"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "Odoslať do"
+    IDS_STARTMENU "Ponuka Štart"
+    IDS_MYMUSIC "Hudba"
+    IDS_MYVIDEO "Videá"
+    IDS_DESKTOPDIRECTORY "Pracovná plocha"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Templates"
+    IDS_APPDATA "Application Data"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_COOKIES "Cookies"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_PROGRAM_FILES "Program Files"
+    IDS_MYPICTURES "Obrázky"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "Ponuka Štart\\Programy\\Nástroje na správu"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "Miesta v sieti"
 
-    IDS_NEWFOLDER               "Nový priečinok"
+    IDS_NEWFOLDER "Nový priečinok"
 
-    IDS_DRIVE_FIXED             "Lokálny disk"
-    IDS_DRIVE_CDROM             "Jednotka CD"
-    IDS_DRIVE_NETWORK           "Sieťový disk"
+    IDS_DRIVE_FIXED "Lokálny disk"
+    IDS_DRIVE_CDROM "Jednotka CD"
+    IDS_DRIVE_NETWORK "Sieťový disk"
 
     /* Open With */
-    IDS_OPEN_WITH               "Otvoriť v progra&me"
-    IDS_OPEN_WITH_CHOOSE        "&Vybrať program..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "Otvoriť v progra&me"
+    IDS_OPEN_WITH_CHOOSE "&Vybrať program..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "&Autori"
-    IDS_SHELL_ABOUT_BACK        "< &Späť"
-    FCIDM_SHVIEW_NEW              "&Nový"
-    FCIDM_SHVIEW_NEWFOLDER         "&Priečinok"
-    FCIDM_SHVIEW_NEWLINK          "&Odkaz"
-    IDS_FOLDER_OPTIONS          "Možnosti priečinka"
-    IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koša" //Recycle Bin Location
-    IDS_RECYCLEBIN_DISKSPACE    "Dostupné miesto"
-    IDS_EMPTY_BITBUCKET         "Vyprázdniť Kôš"
-    IDS_PICK_ICON_TITLE         "Choose Icon"
-    IDS_PICK_ICON_FILTER        "Súbory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Všetky súbory (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "Spustiteľné súbory (*.exe)\0*.exe\0Všetky súbory (*.*)\0*.*\0"
-    IDS_DIRECTORY               "Priečinok"
-    IDS_VIRTUAL_DRIVER          "Ovládač virtuálneho zariadenia"
-    IDS_BAT_FILE                "Dávkový súbor systému ReactOS"
-    IDS_CMD_FILE                "Príkazový skript systému ReactOS"
-    IDS_COM_FILE                "DOS aplikácia"
-    IDS_CPL_FILE                "Položka ovládacieho panela"
-    IDS_CUR_FILE                "Kurzor"
-    IDS_DLL_FILE                "Rozšírenie aplikácie"
-    IDS_DRV_FILE                "Ovládač zariadenia"
-    IDS_EXE_FILE                "Aplikácia"
-    IDS_FON_FILE                "Súbor písma"
-    IDS_TTF_FILE                "Súbor písma TrueType"
-    IDS_HLP_FILE                "Súbor pomocníka"
-    IDS_INI_FILE                "Konfiguračné nastavenia"
-    IDS_LNK_FILE                "Odkaz"
-    IDS_SYS_FILE                "Systémový súbor"
+    IDS_SHELL_ABOUT_AUTHORS "&Autori"
+    IDS_SHELL_ABOUT_BACK "< &Späť"
+    FCIDM_SHVIEW_NEW "&Nový"
+    FCIDM_SHVIEW_NEWFOLDER "&Priečinok"
+    FCIDM_SHVIEW_NEWLINK "&Odkaz"
+    IDS_FOLDER_OPTIONS "Možnosti priečinka"
+    IDS_RECYCLEBIN_LOCATION "Umiestnenia Koša" //Recycle Bin Location
+    IDS_RECYCLEBIN_DISKSPACE "Dostupné miesto"
+    IDS_EMPTY_BITBUCKET "Vyprázdniť Kôš"
+    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_PICK_ICON_FILTER "Súbory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Všetky súbory (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Spustiteľné súbory (*.exe)\0*.exe\0Všetky súbory (*.*)\0*.*\0"
+    IDS_DIRECTORY "Priečinok"
+    IDS_VIRTUAL_DRIVER "Ovládač virtuálneho zariadenia"
+    IDS_BAT_FILE "Dávkový súbor systému ReactOS"
+    IDS_CMD_FILE "Príkazový skript systému ReactOS"
+    IDS_COM_FILE "DOS aplikácia"
+    IDS_CPL_FILE "Položka ovládacieho panela"
+    IDS_CUR_FILE "Kurzor"
+    IDS_DLL_FILE "Rozšírenie aplikácie"
+    IDS_DRV_FILE "Ovládač zariadenia"
+    IDS_EXE_FILE "Aplikácia"
+    IDS_FON_FILE "Súbor písma"
+    IDS_TTF_FILE "Súbor písma TrueType"
+    IDS_HLP_FILE "Súbor pomocníka"
+    IDS_INI_FILE "Konfiguračné nastavenia"
+    IDS_LNK_FILE "Odkaz"
+    IDS_SYS_FILE "Systémový súbor"
 
-    IDS_OPEN_VERB               "Otvoriť"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "Spustiť ako "
-    IDS_EDIT_VERB               "Upraviť"
-    IDS_FIND_VERB               "Find" //Nájsť, Hľadať, Vyhľadať ???
-    IDS_PRINT_VERB              "Tlačiť"
+    IDS_OPEN_VERB "Otvoriť"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "Spustiť ako "
+    IDS_EDIT_VERB "Upraviť"
+    IDS_FIND_VERB "Find"
+    IDS_PRINT_VERB "Tlačiť"
 
-    IDS_FILE_FOLDER             "súbory: %u, priečinky: %u"
-    IDS_PRINTERS                "Tlačiarne"
-    IDS_FONTS                   "Písma"
-    IDS_INSTALLNEWFONT          "&Nainštalovať nové písmo..."
+    IDS_FILE_FOLDER "súbory: %u, priečinky: %u"
+    IDS_PRINTERS "Tlačiarne"
+    IDS_FONTS "Písma"
+    IDS_INSTALLNEWFONT "&Nainštalovať nové písmo..."
 
-    IDS_DEFAULT_CLUSTER_SIZE    "Predvolená alokačná veľkosť" //Default allocation size
-    IDS_COPY_OF                 "Kópia" //Copy of
+    IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
+    IDS_COPY_OF "Copy of"
 
-  // There is no Windows program configured to open this type of file.  
-    IDS_SHLEXEC_NOASSOC         "Neexistuje žiadny program nakonfigurovaný tak, aby otváral tento typ súborov."
-                          //   Na otváranie tohto typu súboru nie je nakonfigurovaný žiadny program systému Windows.
-    
-    IDS_FILE_DETAILS            "Details for '%s' extension"
-    IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_SHLEXEC_NOASSOC "There is no Windows program configured to open this type of file."
+
+    IDS_FILE_DETAILS "Details for '%s' extension"
+    IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
 END
