@@ -1,11 +1,9 @@
-/*
- * Korean Translation by Seungju Kim(www.manatails007.org) manatails007*
- */
+/* Korean Translation by Seungju Kim - manatails007 */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "로그온 화면 보호기"
-    IDS_TEXT        "설정할 것이 없습니다."
+    IDS_TEXT "설정할 것이 없습니다."
 END

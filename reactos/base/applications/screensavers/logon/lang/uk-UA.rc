@@ -1,9 +1,9 @@
 /*
- * PROJECT:     Logon ScreenSaver
- * LICENSE:     Public Domain
- * FILE:        base/applications/screensavers/logon/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Logon ScreenSaver
- * TRANSLATOR:  Artem Reznikov
+ * PROJECT:    Logon ScreenSaver
+ * LICENSE:    Public Domain
+ * FILE:       base/applications/screensavers/logon/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for Logon ScreenSaver
+ * TRANSLATOR: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -11,5 +11,5 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Заставка ""Вхід до системи"""
-    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
+    IDS_TEXT "Ця заставка не має налаштовуваних параметрів."
 END

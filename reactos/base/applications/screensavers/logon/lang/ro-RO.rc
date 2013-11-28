@@ -1,8 +1,9 @@
-//2011.10.30 - Fulea Ștefan: minor changes
+/* 2011.10.30 - Fulea Ștefan: minor changes */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Sigla ReactOS"
-    IDS_TEXT        "Această animație de ecran inactiv nu are opțiuni."
+    IDS_TEXT "Această animație de ecran inactiv nu are opțiuni."
 END

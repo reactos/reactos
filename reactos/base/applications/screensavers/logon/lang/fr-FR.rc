@@ -3,5 +3,5 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Écran de veille de logon"
-    IDS_TEXT        "Il n'y a aucune option à définir."
+    IDS_TEXT "Il n'y a aucune option à définir."
 END

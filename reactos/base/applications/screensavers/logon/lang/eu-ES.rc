@@ -3,5 +3,5 @@ LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "ReactOS Logotipoa"
-    IDS_TEXT        "Ez dago konfiguratu beharreko aukerarik."
+    IDS_TEXT "Ez dago konfiguratu beharreko aukerarik."
 END

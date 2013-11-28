@@ -3,5 +3,5 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "ログオン スクリーンセーバー"
-    IDS_TEXT        "設定が必要なオプションはありません。"
+    IDS_TEXT "設定が必要なオプションはありません。"
 END
