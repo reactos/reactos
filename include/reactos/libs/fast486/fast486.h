@@ -34,6 +34,7 @@
 #define FAST486_NUM_SEG_REGS    6
 #define FAST486_NUM_CTRL_REGS   3
 #define FAST486_NUM_DBG_REGS    6
+#define FAST486_NUM_FPU_REGS    8
 
 #define FAST486_CR0_PE  (1 << 0)
 #define FAST486_CR0_MP  (1 << 1)
@@ -376,6 +377,55 @@ typedef struct _FAST486_TSS
     ULONG IopbOffset;
 } FAST486_TSS, *PFAST486_TSS;
 
+typedef struct _FAST486_FPU_DATA_REG
+{
+    ULONGLONG Mantissa;
+    USHORT Exponent;
+} FAST486_FPU_DATA_REG, *PFAST486_FPU_DATA_REG;
+
+typedef union _FAST486_FPU_STATUS_REG
+{
+    USHORT Value;
+
+    struct
+    {
+        ULONG Ie : 1;
+        ULONG De : 1;
+        ULONG Ze : 1;
+        ULONG Oe : 1;
+        ULONG Ue : 1;
+        ULONG Pe : 1;
+        ULONG Sf : 1;
+        ULONG Es : 1;
+        ULONG Code0 : 1;
+        ULONG Code1 : 1;
+        ULONG Code2 : 1;
+        ULONG Top : 3;
+        ULONG Code3 : 1;
+        ULONG Busy : 1;
+    };
+} FAST486_FPU_STATUS_REG, *PFAST486_FPU_STATUS_REG;
+
+typedef union _FAST486_FPU_CONTROL_REG
+{
+    USHORT Value;
+
+    struct
+    {
+        ULONG Im : 1;
+        ULONG Dm : 1;
+        ULONG Zm : 1;
+        ULONG Om : 1;
+        ULONG Um : 1;
+        ULONG Pm : 1;
+        ULONG Reserved : 2;
+        ULONG Pc : 2;
+        ULONG Rc : 2;
+        ULONG Inf : 1;
+        // ULONG Reserved1 : 3;
+    };
+} FAST486_FPU_CONTROL_REG, *PFAST486_FPU_CONTROL_REG;
+
 struct _FAST486_STATE
 {
     FAST486_MEM_READ_PROC MemReadCallback;
@@ -399,6 +449,10 @@ struct _FAST486_STATE
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
     PULONG Tlb;
+    FAST486_FPU_DATA_REG FpuRegisters[FAST486_NUM_FPU_REGS];
+    FAST486_FPU_STATUS_REG FpuStatus;
+    FAST486_FPU_CONTROL_REG FpuControl;
+    USHORT FpuTag;
 };
 
 /* FUNCTIONS ******************************************************************/

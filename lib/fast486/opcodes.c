@@ -31,6 +31,7 @@
 #include "opgroups.h"
 #include "extraops.h"
 #include "common.h"
+#include "fpu.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -253,14 +254,14 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeAad,
     Fast486OpcodeSalc,
     Fast486OpcodeXlat,
-    NULL, // TODO: OPCODE 0xD8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD9 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDD NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xDF NOT SUPPORTED
+    Fast486FpuOpcodeD8,
+    Fast486FpuOpcodeD9,
+    Fast486FpuOpcodeDA,
+    Fast486FpuOpcodeDB,
+    Fast486FpuOpcodeDC,
+    Fast486FpuOpcodeDD,
+    Fast486FpuOpcodeDE,
+    Fast486FpuOpcodeDF,
     Fast486OpcodeLoop,
     Fast486OpcodeLoop,
     Fast486OpcodeLoop,

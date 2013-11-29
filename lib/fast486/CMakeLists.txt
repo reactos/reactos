@@ -6,6 +6,7 @@ list(APPEND SOURCE
     opcodes.c
     opgroups.c
     extraops.c
-    common.c)
+    common.c
+    fpu.c)
 
 add_library(fast486 ${SOURCE})
