@@ -251,7 +251,7 @@ AddResourceItems(
     DWORD dwSize;
     PCM_RESOURCE_LIST ResourceList;
     LONG Result;
-    INT ItemCount = 0, Index = 0;
+    ULONG ItemCount = 0, Index;
 
     wsprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Enum\\%s\\LogConf", dap->szDeviceID);
     Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey);
@@ -273,9 +273,9 @@ AddResourceItems(
 
     ResourceList = (PCM_RESOURCE_LIST)szData;
 
-    do
+    for (Index = 0; Index < ResourceList->List[0].PartialResourceList.Count; Index++)
     {
-         PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor = (PCM_PARTIAL_RESOURCE_DESCRIPTOR)&ResourceList->List[0].PartialResourceList.PartialDescriptors[ItemCount];
+         PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
          if (Descriptor->Type == CmResourceTypeInterrupt)
          {
              if (LoadString(hDllInstance, IDS_RESOURCE_INTERRUPT, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
@@ -312,9 +312,7 @@ AddResourceItems(
                  ItemCount++;
              }
          }
-
-         Index++;
-    }while(Index <= ResourceList->List[0].PartialResourceList.Count);
+    }
 }
 
 
