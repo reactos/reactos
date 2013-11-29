@@ -138,6 +138,31 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
          }
       }
       ////
+      //// CORE-1161 and CORE-6651
+      if (Window->spwndPrev)
+      {
+         HWND *phwndTopLevel, *phwndCurrent;
+         PWND pwndCurrent, pwndDesktop;
+
+         pwndDesktop = UserGetDesktopWindow();
+         if (Window->spwndParent == pwndDesktop )
+         {
+            phwndTopLevel = IntWinListChildren(pwndDesktop);
+            phwndCurrent = phwndTopLevel;
+            while(*phwndCurrent)
+            {
+                pwndCurrent = UserGetWindowObject(*phwndCurrent);
+
+                if (pwndCurrent && pwndCurrent->spwndOwner == Window )
+                {
+                    co_WinPosSetWindowPos(pwndCurrent, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE);
+                }
+                phwndCurrent++;
+            }
+            ExFreePool(phwndTopLevel);
+          }
+      }
+      ////
       OldTID = WindowPrev ? IntGetWndThreadId(WindowPrev) : NULL;
       NewTID = IntGetWndThreadId(Window);
       ptiOld = WindowPrev ? WindowPrev->head.pti : NULL;
@@ -184,7 +209,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                   }
                }
             }
-            ExFreePool(List);//ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
          }
       }
       if (WindowPrev)

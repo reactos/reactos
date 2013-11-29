@@ -518,8 +518,16 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
       gpqForegroundPrev = Old;
    }
    // Only one Q can have active foreground even when there are more than one desktop.
-   if (NewQueue) gpqForeground = pdo->ActiveMessageQueue;
-   else gpqForeground = NULL;
+   if (NewQueue)
+   {
+      gpqForeground = pdo->ActiveMessageQueue;
+   }
+   else 
+   {
+      gpqForeground = NULL;
+      ERR("ptiLastInput is CLEARED!!\n");
+      ptiLastInput = NULL; // ReactOS hacks,,,, should check for process death.
+   }
 }
 
 PWND FASTCALL

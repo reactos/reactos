@@ -359,7 +359,7 @@ done:
    //ERR("WinPosActivateOtherWindow Set Active  0x%p\n",WndTo);
    if (!co_IntSetActiveWindow(WndTo,FALSE,TRUE,FALSE))  /* Ok for WndTo to be NULL here */
    {
-      co_IntSetActiveWindow(0,FALSE,TRUE,FALSE);
+      co_IntSetActiveWindow(NULL,FALSE,TRUE,FALSE);
    }
    if (WndTo) UserDerefObjectCo(WndTo);
 }
