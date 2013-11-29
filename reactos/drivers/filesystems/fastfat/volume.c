@@ -21,8 +21,6 @@ FsdGetFsVolumeInformation(
     PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
     PULONG BufferLength)
 {
-    PDEVICE_EXTENSION DeviceExt;
-
     DPRINT("FsdGetFsVolumeInformation()\n");
     DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
     DPRINT("BufferLength %lu\n", *BufferLength);
@@ -36,8 +34,6 @@ FsdGetFsVolumeInformation(
 
     if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
         return STATUS_BUFFER_OVERFLOW;
-
-    DeviceExt = DeviceObject->DeviceExtension;
 
     /* valid entries */
     FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
