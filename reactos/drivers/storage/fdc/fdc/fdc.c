@@ -14,12 +14,64 @@
 #include <debug.h>
 
 
-
 /* GLOBALS ********************************************************************/
 
 ULONG ControllerCount = 0;
 
 /* FUNCTIONS ******************************************************************/
+
+static
+NTSTATUS
+NTAPI
+FdcAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT Pdo)
+{
+    PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
+    PDEVICE_OBJECT Fdo = NULL;
+    NTSTATUS Status;
+
+    DPRINT1("FdcAddDevice()\n");
+
+    ASSERT(DriverObject);
+    ASSERT(Pdo);
+
+    /* Create functional device object */
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(FDO_DEVICE_EXTENSION),
+                            NULL,
+                            FILE_DEVICE_CONTROLLER,
+                            FILE_DEVICE_SECURE_OPEN,
+                            FALSE,
+                            &Fdo);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
+        RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
+
+        DeviceExtension->Common.IsFDO = TRUE;
+        DeviceExtension->Common.DeviceObject = Fdo;
+
+        DeviceExtension->Pdo = Pdo;
+
+        Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
+            IoDeleteDevice(Fdo);
+            return Status;
+        }
+
+
+        Fdo->Flags |= DO_DIRECT_IO;
+        Fdo->Flags |= DO_POWER_PAGABLE;
+
+        Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+    }
+
+    return Status;
+}
+
 
 static
 VOID

@@ -72,57 +72,6 @@ ForwardIrpAndForget(
 }
 
 
-NTSTATUS
-NTAPI
-FdcAddDevice(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDEVICE_OBJECT Pdo)
-{
-    PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
-    PDEVICE_OBJECT Fdo = NULL;
-    NTSTATUS Status;
-
-    DPRINT1("FdcAddDevice()\n");
-
-    ASSERT(DriverObject);
-    ASSERT(Pdo);
-
-    /* Create functional device object */
-    Status = IoCreateDevice(DriverObject,
-                            sizeof(FDO_DEVICE_EXTENSION),
-                            NULL,
-                            FILE_DEVICE_CONTROLLER,
-                            FILE_DEVICE_SECURE_OPEN,
-                            FALSE,
-                            &Fdo);
-    if (NT_SUCCESS(Status))
-    {
-        DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
-        RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
-
-        DeviceExtension->Common.IsFDO = TRUE;
-
-        DeviceExtension->Fdo = Fdo;
-        DeviceExtension->Pdo = Pdo;
-
-
-        Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
-            IoDeleteDevice(Fdo);
-            return Status;
-        }
-
-
-        Fdo->Flags |= DO_DIRECT_IO;
-        Fdo->Flags |= DO_POWER_PAGABLE;
-
-        Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-    }
-
-    return Status;
-}
 
 
 static
@@ -318,15 +267,24 @@ FdcFdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PDEVICE_RELATIONS *DeviceRelations)
 {
-    PFDO_DEVICE_EXTENSION DeviceExtension;
+    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
     INTERFACE_TYPE InterfaceType = Isa;
     CONFIGURATION_TYPE ControllerType = DiskController;
     CONFIGURATION_TYPE PeripheralType = FloppyDiskPeripheral;
+    PDEVICE_RELATIONS Relations;
+    PDRIVE_INFO DriveInfo;
+    PDEVICE_OBJECT Pdo;
+    WCHAR DeviceNameBuffer[80];
+    UNICODE_STRING DeviceName;
+    ULONG DeviceNumber = 0;
+    ULONG Size;
+    ULONG i;
     NTSTATUS Status;
 
     DPRINT1("FdcFdoQueryBusRelations() called\n");
 
-    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     Status = IoQueryDeviceDescription(&InterfaceType,
                                       NULL,
@@ -335,13 +293,83 @@ FdcFdoQueryBusRelations(
                                       &PeripheralType,
                                       NULL,
                                       FdcFdoConfigCallback,
-                                      DeviceExtension);
-    if (!NT_SUCCESS(Status) && (Status != STATUS_OBJECT_NAME_NOT_FOUND))
-    {
+                                      FdoDeviceExtension);
+    if (!NT_SUCCESS(Status) && (Status != STATUS_NO_MORE_ENTRIES))
         return Status;
+
+    Size = sizeof(DEVICE_RELATIONS) +
+           sizeof(Relations->Objects) * (FdoDeviceExtension->ControllerInfo.NumberOfDrives - 1);
+    Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+    if (Relations == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    return STATUS_SUCCESS;
+    Relations->Count = FdoDeviceExtension->ControllerInfo.NumberOfDrives;
+
+    for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
+    {
+        DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
+
+        if (DriveInfo->DeviceObject == NULL)
+        {
+            do
+            {
+                swprintf(DeviceNameBuffer, L"\\Device\\FloppyPDO%lu", DeviceNumber++);
+                RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
+                DPRINT1("Device name: %S\n", DeviceNameBuffer);
+
+                /* Create physical device object */
+                Status = IoCreateDevice(FdoDeviceExtension->Common.DeviceObject->DriverObject,
+                                        sizeof(PDO_DEVICE_EXTENSION),
+                                        &DeviceName,
+                                        FILE_DEVICE_MASS_STORAGE,
+                                        FILE_DEVICE_SECURE_OPEN,
+                                        FALSE,
+                                        &Pdo);
+            }
+            while (Status == STATUS_OBJECT_NAME_COLLISION);
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("PDO creation failed (Status 0x%08lx)\n", Status);
+                goto done;
+            }
+
+            DPRINT1("PDO created: %S\n", DeviceNameBuffer);
+
+            DriveInfo->DeviceObject = Pdo;
+
+            PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
+            RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
+
+            PdoDeviceExtension->Common.IsFDO = FALSE;
+            PdoDeviceExtension->Common.DeviceObject = Pdo;
+
+            PdoDeviceExtension->Fdo = FdoDeviceExtension->Common.DeviceObject;
+            PdoDeviceExtension->DriveInfo = DriveInfo;
+
+            Pdo->Flags |= DO_DIRECT_IO;
+            Pdo->Flags |= DO_POWER_PAGABLE;
+            Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+        }
+
+        ObReferenceObject(DriveInfo->DeviceObject);
+        Relations->Objects[i] = DriveInfo->DeviceObject;
+    }
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        *DeviceRelations = Relations;
+    }
+    else
+    {
+        if (Relations != NULL)
+            ExFreePool(Relations);
+    }
+
+    return Status;
 }
 
 

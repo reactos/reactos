@@ -6,7 +6,9 @@
  * PROGRAMMERS:    Eric Kohl
  */
 
+#include <ntifs.h>
 #include <ntddk.h>
+#include <stdio.h>
 #include <debug.h>
 
 #define MAX_DEVICE_NAME 255
@@ -20,53 +22,54 @@ typedef struct _DRIVE_INFO
 {
     struct _CONTROLLER_INFO  *ControllerInfo;
     UCHAR                    UnitNumber; /* 0,1,2,3 */
-    LARGE_INTEGER            MotorStartTime;
-    PDEVICE_OBJECT           DeviceObject;
+//    LARGE_INTEGER            MotorStartTime;
+    PDEVICE_OBJECT            DeviceObject;
     CM_FLOPPY_DEVICE_DATA    FloppyDeviceData;
 //    DISK_GEOMETRY            DiskGeometry;
-    UCHAR                    BytesPerSectorCode;
-    WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
-    WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
-    ULONG                    DiskChangeCount;
-    BOOLEAN                  Initialized;
+//    UCHAR                    BytesPerSectorCode;
+//    WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
+//    WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
+//    ULONG                    DiskChangeCount;
+//    BOOLEAN                  Initialized;
 } DRIVE_INFO, *PDRIVE_INFO;
 
 typedef struct _CONTROLLER_INFO
 {
     BOOLEAN          Populated;
-    BOOLEAN          Initialized;
-    ULONG            ControllerNumber;
-    INTERFACE_TYPE   InterfaceType;
-    ULONG            BusNumber;
-    ULONG            Level;
-    KIRQL            MappedLevel;
-    ULONG            Vector;
-    ULONG            MappedVector;
-    KINTERRUPT_MODE  InterruptMode;
+//    BOOLEAN          Initialized;
+//    ULONG            ControllerNumber;
+//    INTERFACE_TYPE   InterfaceType;
+//    ULONG            BusNumber;
+//    ULONG            Level;
+//    KIRQL            MappedLevel;
+//    ULONG            Vector;
+//    ULONG            MappedVector;
+//    KINTERRUPT_MODE  InterruptMode;
     PUCHAR           BaseAddress;
-    ULONG            Dma;
-    ULONG            MapRegisters;
-    PVOID            MapRegisterBase;
-    BOOLEAN          Master;
-    KEVENT           SynchEvent;
-    KDPC             Dpc;
-    PKINTERRUPT      InterruptObject;
-    PADAPTER_OBJECT  AdapterObject;
+//    ULONG            Dma;
+//    ULONG            MapRegisters;
+//    PVOID            MapRegisterBase;
+//    BOOLEAN          Master;
+//    KEVENT           SynchEvent;
+//    KDPC             Dpc;
+//    PKINTERRUPT      InterruptObject;
+//    PADAPTER_OBJECT  AdapterObject;
     UCHAR            NumberOfDrives;
-    BOOLEAN          ImpliedSeeks;
+//    BOOLEAN          ImpliedSeeks;
     DRIVE_INFO       DriveInfo[MAX_DRIVES_PER_CONTROLLER];
-    PDRIVE_INFO      CurrentDrive;
-    BOOLEAN          Model30;
-    KEVENT           MotorStoppedEvent;
-    KTIMER           MotorTimer;
-    KDPC             MotorStopDpc;
-    BOOLEAN          StopDpcQueued;
+//    PDRIVE_INFO      CurrentDrive;
+//    BOOLEAN          Model30;
+//    KEVENT           MotorStoppedEvent;
+//    KTIMER           MotorTimer;
+//    KDPC             MotorStopDpc;
+//    BOOLEAN          StopDpcQueued;
 } CONTROLLER_INFO, *PCONTROLLER_INFO;
 
 
 typedef struct _COMMON_DEVICE_EXTENSION
 {
     BOOLEAN IsFDO;
+    PDEVICE_OBJECT DeviceObject;
 } COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
 typedef struct _FDO_DEVICE_EXTENSION
@@ -74,7 +77,6 @@ typedef struct _FDO_DEVICE_EXTENSION
     COMMON_DEVICE_EXTENSION Common;
 
     PDEVICE_OBJECT LowerDevice;
-    PDEVICE_OBJECT Fdo;
     PDEVICE_OBJECT Pdo;
 
     CONTROLLER_INFO ControllerInfo;
@@ -82,12 +84,22 @@ typedef struct _FDO_DEVICE_EXTENSION
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
-/* fdo.c */
+typedef struct _PDO_DEVICE_EXTENSION
+{
+    COMMON_DEVICE_EXTENSION Common;
 
-NTSTATUS
-NTAPI
-FdcAddDevice(IN PDRIVER_OBJECT DriverObject,
-             IN PDEVICE_OBJECT Pdo);
+    PDEVICE_OBJECT Fdo;
+    PDRIVE_INFO DriveInfo;
+
+    UNICODE_STRING DeviceDescription; // REG_SZ
+    UNICODE_STRING DeviceId;          // REG_SZ
+    UNICODE_STRING InstanceId;        // REG_SZ
+    UNICODE_STRING HardwareIds;       // REG_MULTI_SZ
+    UNICODE_STRING CompatibleIds;     // REG_MULTI_SZ
+} PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+
+
+/* fdo.c */
 
 NTSTATUS
 NTAPI
