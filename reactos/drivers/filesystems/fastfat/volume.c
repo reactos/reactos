@@ -21,6 +21,8 @@ FsdGetFsVolumeInformation(
     PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
     PULONG BufferLength)
 {
+    PDEVICE_EXTENSION DeviceExt;
+
     DPRINT("FsdGetFsVolumeInformation()\n");
     DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
     DPRINT("BufferLength %lu\n", *BufferLength);
@@ -35,13 +37,28 @@ FsdGetFsVolumeInformation(
     if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
         return STATUS_BUFFER_OVERFLOW;
 
+    DeviceExt = DeviceObject->DeviceExtension;
+
     /* valid entries */
     FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
     FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
     RtlCopyMemory(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel, FsVolumeInfo->VolumeLabelLength);
 
-    /* dummy entries */
-    FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
+    if (DeviceExt->VolumeFcb->Flags & FCB_IS_FATX_ENTRY)
+    {
+        FsdDosDateTimeToSystemTime(DeviceExt,
+                                   DeviceExt->VolumeFcb->entry.FatX.CreationDate,
+                                   DeviceExt->VolumeFcb->entry.FatX.CreationTime,
+                                   &FsVolumeInfo->VolumeCreationTime);
+    }
+    else
+    {
+        FsdDosDateTimeToSystemTime(DeviceExt,
+                                   DeviceExt->VolumeFcb->entry.Fat.CreationDate,
+                                   DeviceExt->VolumeFcb->entry.Fat.CreationTime,
+                                   &FsVolumeInfo->VolumeCreationTime);
+    }
+
     FsVolumeInfo->SupportsObjects = FALSE;
 
     DPRINT("Finished FsdGetFsVolumeInformation()\n");
