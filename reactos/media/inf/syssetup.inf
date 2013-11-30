@@ -10,6 +10,7 @@ cpu.inf
 disk.inf
 display.inf
 fdc.inf
+flpydisk.inf
 hal.inf
 hdc.inf
 input.inf
