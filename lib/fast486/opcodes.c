@@ -541,7 +541,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushReg)
 FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
 {
     ULONG Value;
-    BOOLEAN Size = State->SegmentRegs[FAST486_REG_SS].Size;
+    BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     TOGGLE_OPSIZE(Size);
     NO_LOCK_PREFIX();
