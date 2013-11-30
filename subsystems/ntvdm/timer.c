@@ -277,11 +277,11 @@ VOID PitDecrementCount(DWORD Count)
                     }
                     else
                     {
-                        /* Clear the count */
-                        Count = 0;
-
                         /* Decrease the value */
                         PitChannels[i].CurrentValue -= Count * 2;
+
+                        /* Clear the count */
+                        Count = 0;
 
                         /* Did it fall to zero? */
                         if (PitChannels[i].CurrentValue == 0)
@@ -304,7 +304,9 @@ VOID PitDecrementCount(DWORD Count)
                 }
 
                 /* Was there any rising edge on channel 0 ? */
-                if ((PitChannels[i].OutputFlipFlop || ReloadCount) && (i == 0))
+                if (((PitChannels[i].OutputFlipFlop && (ReloadCount == 1))
+                    || (ReloadCount > 1))
+                    && (i == 0))
                 {
                     /* Yes, IRQ 0 */
                     PicInterruptRequest(0);
