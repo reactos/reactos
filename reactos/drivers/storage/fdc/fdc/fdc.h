@@ -22,9 +22,10 @@ typedef struct _DRIVE_INFO
 {
     struct _CONTROLLER_INFO  *ControllerInfo;
     UCHAR                    UnitNumber; /* 0,1,2,3 */
-//    LARGE_INTEGER            MotorStartTime;
-    PDEVICE_OBJECT            DeviceObject;
+    ULONG                    PeripheralNumber;
+    PDEVICE_OBJECT           DeviceObject;
     CM_FLOPPY_DEVICE_DATA    FloppyDeviceData;
+//    LARGE_INTEGER            MotorStartTime;
 //    DISK_GEOMETRY            DiskGeometry;
 //    UCHAR                    BytesPerSectorCode;
 //    WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
@@ -98,20 +99,30 @@ typedef struct _PDO_DEVICE_EXTENSION
     UNICODE_STRING CompatibleIds;     // REG_MULTI_SZ
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
+#define FDC_TAG 'acdF'
 
 /* fdo.c */
 
 NTSTATUS
 NTAPI
-FdcFdoPnp(IN PDEVICE_OBJECT DeviceObject,
-          IN PIRP Irp);
+FdcFdoPnp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+/* misc.c */
+
+NTSTATUS
+DuplicateUnicodeString(
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString);
 
 /* pdo.c */
 
 NTSTATUS
 NTAPI
-FdcPdoPnp(IN PDEVICE_OBJECT DeviceObject,
-          IN PIRP Irp);
-
+FdcPdoPnp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 /* EOF */

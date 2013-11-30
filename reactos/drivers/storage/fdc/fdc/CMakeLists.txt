@@ -2,6 +2,7 @@
 add_library(fdc SHARED
     fdc.c
     fdo.c
+    misc.c
     pdo.c
     fdc.rc)
 

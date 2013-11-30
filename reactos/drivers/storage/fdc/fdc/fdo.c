@@ -232,6 +232,7 @@ FdcFdoConfigCallback(
 
         DriveInfo->ControllerInfo = &DeviceExtension->ControllerInfo;
         DriveInfo->UnitNumber = i;
+        DriveInfo->PeripheralNumber = PeripheralNumber;
 
         DriveInfo->FloppyDeviceData.MaxDensity = FloppyDeviceData->MaxDensity;
         DriveInfo->FloppyDeviceData.MountDensity = FloppyDeviceData->MountDensity;
@@ -258,6 +259,63 @@ FdcFdoConfigCallback(
             DeviceExtension->ControllerInfo.NumberOfDrives);
 
     return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs)
+{
+    WCHAR Buffer[256];
+    UNICODE_STRING BufferU;
+    ULONG Index;
+
+    Index = 0;
+    Index += swprintf(&Buffer[Index],
+                      L"FDC\\GENERIC_FLOPPY_DRIVE");
+    Index++;
+
+    Buffer[Index] = UNICODE_NULL;
+
+    BufferU.Length = BufferU.MaximumLength = (USHORT) Index * sizeof(WCHAR);
+    BufferU.Buffer = Buffer;
+
+    return DuplicateUnicodeString(0, &BufferU, HardwareIDs);
+}
+
+
+static
+NTSTATUS
+PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs)
+{
+    WCHAR Buffer[256];
+    UNICODE_STRING BufferU;
+    ULONG Index;
+
+    Index = 0;
+    Index += swprintf(&Buffer[Index],
+                      L"GenFloppyDisk");
+    Index++;
+
+    Buffer[Index] = UNICODE_NULL;
+
+    BufferU.Length = BufferU.MaximumLength = (USHORT)Index * sizeof(WCHAR);
+    BufferU.Buffer = Buffer;
+
+    return DuplicateUnicodeString(0, &BufferU, CompatibleIDs);
+}
+
+
+static
+NTSTATUS
+PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
+                          ULONG PeripheralNumber)
+{
+    WCHAR Buffer[3];
+
+    swprintf(Buffer, L"%02X", PeripheralNumber & 0xff);
+
+    return RtlCreateUnicodeString(InstanceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
@@ -352,6 +410,59 @@ FdcFdoQueryBusRelations(
             Pdo->Flags |= DO_DIRECT_IO;
             Pdo->Flags |= DO_POWER_PAGABLE;
             Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            /* Add Device ID string */
+            RtlCreateUnicodeString(&PdoDeviceExtension->DeviceId,
+                                   L"FDC\\GENERIC_FLOPPY_DRIVE");
+            DPRINT1("DeviceID: %S\n", PdoDeviceExtension->DeviceId.Buffer);
+
+            /* Add Hardware IDs string */
+            Status = PciCreateHardwareIDsString(&PdoDeviceExtension->HardwareIds);
+            if (!NT_SUCCESS(Status))
+            {
+//                ErrorStatus = Status;
+//                ErrorOccurred = TRUE;
+                break;
+            }
+
+            /* Add Compatible IDs string */
+            Status = PciCreateCompatibleIDsString(&PdoDeviceExtension->CompatibleIds);
+            if (!NT_SUCCESS(Status))
+            {
+//                ErrorStatus = Status;
+//                ErrorOccurred = TRUE;
+                break;
+            }
+
+            /* Add Instance ID string */
+            Status = PciCreateInstanceIDString(&PdoDeviceExtension->InstanceId,
+                                               DriveInfo->PeripheralNumber);
+            if (!NT_SUCCESS(Status))
+            {
+//                ErrorStatus = Status;
+//                ErrorOccurred = TRUE;
+                break;
+            }
+
+#if 0
+             /* Add device description string */
+            Status = PciCreateDeviceDescriptionString(&PdoDeviceExtension->DeviceDescription, Device);
+            if (!NT_SUCCESS(Status))
+            {
+//                ErrorStatus = Status;
+//                ErrorOccurred = TRUE;
+                break;
+            }
+
+            /* Add device location string */
+            Status = PciCreateDeviceLocationString(&PdoDeviceExtension->DeviceLocation, Device);
+            if (!NT_SUCCESS(Status))
+            {
+//                ErrorStatus = Status;
+//                ErrorOccurred = TRUE;
+                break;
+            }
+#endif
         }
 
         ObReferenceObject(DriveInfo->DeviceObject);
