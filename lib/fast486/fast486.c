@@ -84,6 +84,9 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             continue;
         }
 
+        /* A non-prefix opcode has been executed, reset the prefix flags */
+        State->PrefixFlags = 0;
+
         /*
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
@@ -100,6 +103,9 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
                                          IdtEntry.Selector,
                                          MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
                                          IdtEntry.Type);
+
+                /* Restore the prefix flags, which would be set to OPSIZE for 32-bit real mode */
+                State->PrefixFlags = 0;
             }
 
             /* Clear the interrupt status */
@@ -115,9 +121,6 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             /* Set the interrupt status to execute on the next instruction */
             State->IntStatus = FAST486_INT_EXECUTE;
         }
-
-        /* A non-prefix opcode has been executed, reset the prefix flags */
-        State->PrefixFlags = 0;
     }
     while ((Command == FAST486_CONTINUE)
            || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
