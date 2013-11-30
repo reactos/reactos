@@ -124,7 +124,13 @@ static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = TRUE;
 static BOOLEAN CursorMoved = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
-static BOOLEAN TextMode = TRUE;
+
+static
+enum SCREEN_MODE
+{
+    TEXT_MODE,
+    GRAPHICS_MODE
+} ScreenMode = TEXT_MODE;
 
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
@@ -263,8 +269,6 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
 
 static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
 {
-    DPRINT("VgaMarkForUpdate: Row %d, Column %d\n", Row, Column);
-
     /* Check if this is the first time the rectangle is updated */
     if (!NeedsUpdate)
     {
@@ -304,7 +308,6 @@ static VOID VgaWriteGc(BYTE Data)
         {
             /* The GC misc register decides if it's text or graphics mode */
             ModeChanged = TRUE;
-
             break;
         }
     }
@@ -326,7 +329,6 @@ static VOID VgaWriteCrtc(BYTE Data)
         {
             /* The video mode has changed */
             ModeChanged = TRUE;
-
             break;
         }
 
@@ -337,7 +339,6 @@ static VOID VgaWriteCrtc(BYTE Data)
         {
             /* Set the cursor moved flag */
             CursorMoved = TRUE;
-
             break;
         }
     }
@@ -444,22 +445,26 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     LPBITMAPINFO BitmapInfo = (LPBITMAPINFO)BitmapInfoBuffer;
     LPWORD PaletteIndex = (LPWORD)(BitmapInfo->bmiColors);
 
-    if ((Resolution->X < VGA_MINIMUM_WIDTH) && (Resolution->Y < VGA_MINIMUM_HEIGHT))
+    LONG Width  = Resolution->X;
+    LONG Height = Resolution->Y;
+
+    /* Use DoubleVision mode if the resolution is too small */
+    if (Width < VGA_MINIMUM_WIDTH && Height < VGA_MINIMUM_HEIGHT)
     {
         DoubleVision = TRUE;
-        Resolution->X *= 2;
-        Resolution->Y *= 2;
+        Width  *= 2;
+        Height *= 2;
     }
 
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
-    BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo->bmiHeader.biWidth = Resolution->X;
-    BitmapInfo->bmiHeader.biHeight = Resolution->Y;
+    BitmapInfo->bmiHeader.biSize   = sizeof(BITMAPINFOHEADER);
+    BitmapInfo->bmiHeader.biWidth  = Width;
+    BitmapInfo->bmiHeader.biHeight = Height;
     BitmapInfo->bmiHeader.biBitCount = 8;
-    BitmapInfo->bmiHeader.biPlanes = 1;
+    BitmapInfo->bmiHeader.biPlanes   = 1;
     BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y /* * 1 == biBitCount / 8 */;
+    BitmapInfo->bmiHeader.biSizeImage   = Width * Height /* * 1 == biBitCount / 8 */;
 
     /* Fill the palette data */
     for (i = 0; i < (VGA_PALETTE_SIZE / 3); i++) PaletteIndex[i] = (WORD)i;
@@ -492,8 +497,8 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
                       PaletteHandle,
                       SYSPAL_NOSTATIC256);
 
-    /* Clear the text mode flag */
-    TextMode = FALSE;
+    /* Set the screen mode flag */
+    ScreenMode = GRAPHICS_MODE;
 
     return TRUE;
 }
@@ -544,8 +549,8 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
                       PaletteHandle,
                       SYSPAL_NOSTATIC256);
 
-    /* Set the text mode flag */
-    TextMode = TRUE;
+    /* Set the screen mode flag */
+    ScreenMode = TEXT_MODE;
 
     return TRUE;
 }
@@ -564,7 +569,7 @@ static VOID VgaChangeMode(VOID)
     /* Reset the mode change flag */
     // ModeChanged = FALSE;
 
-    if (!TextMode)
+    if (ScreenMode == GRAPHICS_MODE)
     {
         /* Leave the current graphics mode */
         VgaLeaveGraphicsMode();
@@ -750,6 +755,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                     PixelData = VgaAcRegisters[PixelData];
                 }
 
+                /* Take into account DoubleVision mode when checking for pixel updates */
                 if (DoubleVision)
                 {
                     /* Now check if the resulting pixel data has changed */
@@ -837,6 +843,9 @@ static VOID VgaUpdateTextCursor(VOID)
     BYTE TextSize = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
     WORD Location = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG]);
+
+    /* Just return if we are not in text mode */
+    if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA) != 0) return;
 
     if (CursorStart < CursorEnd)
     {
@@ -927,9 +936,17 @@ COORD VgaGetDisplayResolution(VOID)
 VOID VgaRefreshDisplay(VOID)
 {
     HANDLE ConsoleBufferHandle = NULL;
-    COORD Resolution = VgaGetDisplayResolution();
+    COORD Resolution;
 
-    DPRINT("VgaRefreshDisplay\n");
+    /* Set the vertical retrace flag */
+    InVerticalRetrace = TRUE;
+
+    /* If nothing has changed, just return */
+    if (!ModeChanged && !CursorMoved && !PaletteChanged && !NeedsUpdate)
+        return;
+
+    /* Retrieve the current resolution */
+    Resolution = VgaGetDisplayResolution();
 
     /* Change the display mode */
     if (ModeChanged) VgaChangeMode();
@@ -951,9 +968,6 @@ VOID VgaRefreshDisplay(VOID)
 
     /* Update the contents of the framebuffer */
     VgaUpdateFramebuffer();
-
-    /* Set the vertical retrace flag */
-    InVerticalRetrace = TRUE;
 
     /* Ignore if there's nothing to update */
     if (!NeedsUpdate) return;
@@ -984,12 +998,12 @@ VOID VgaRefreshDisplay(VOID)
                             &UpdateRectangle);
     }
 
+    /* In DoubleVision mode, scale the update rectangle */
     if (DoubleVision)
     {
-        /* Scale the update rectangle */
         UpdateRectangle.Left *= 2;
-        UpdateRectangle.Top *= 2;
-        UpdateRectangle.Right = UpdateRectangle.Right * 2 + 1;
+        UpdateRectangle.Top  *= 2;
+        UpdateRectangle.Right  = UpdateRectangle.Right  * 2 + 1;
         UpdateRectangle.Bottom = UpdateRectangle.Bottom * 2 + 1;
     }
 
@@ -1011,9 +1025,7 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     DWORD i;
     DWORD VideoAddress;
 
-    DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n",
-           Address,
-           Size);
+    DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n", Address, Size);
 
     /* Ignore if video RAM access is disabled */
     if (!(VgaMiscRegister & VGA_MISC_RAM_ENABLED)) return;
@@ -1039,9 +1051,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     DWORD i, j;
     DWORD VideoAddress;
 
-    DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n",
-           Address,
-           Size);
+    DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n", Address, Size);
 
     /* Ignore if video RAM access is disabled */
     if (!(VgaMiscRegister & VGA_MISC_RAM_ENABLED)) return;
