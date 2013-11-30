@@ -58,7 +58,12 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
         if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
 
         /* Perform an instruction fetch */
-        if (!Fast486FetchByte(State, &Opcode)) continue;
+        if (!Fast486FetchByte(State, &Opcode))
+        {
+            /* Exception occurred */
+            State->PrefixFlags = 0;
+            continue;
+        }
 
         // TODO: Check for CALL/RET to update ProcedureCallCount.
 
@@ -78,9 +83,6 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             /* This is a prefix, go to the next instruction immediately */
             continue;
         }
-
-        /* A non-prefix opcode has been executed, reset the prefix flags */
-        State->PrefixFlags = 0;
 
         /*
          * Check if there is an interrupt to execute, or a hardware interrupt signal
@@ -113,6 +115,9 @@ Fast486ExecutionControl(PFAST486_STATE State, INT Command)
             /* Set the interrupt status to execute on the next instruction */
             State->IntStatus = FAST486_INT_EXECUTE;
         }
+
+        /* A non-prefix opcode has been executed, reset the prefix flags */
+        State->PrefixFlags = 0;
     }
     while ((Command == FAST486_CONTINUE)
            || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
