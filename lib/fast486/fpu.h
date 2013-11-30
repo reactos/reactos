@@ -26,6 +26,13 @@
 
 /* DEFINES ********************************************************************/
 
+#define FPU_CHECK() if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_EM) \
+                    { \
+                        Fast486Exception(State, FAST486_EXCEPTION_NM); \
+                        return FALSE; \
+                    }
+#define FPU_ST(i) State->FpuRegisters[(State->FpuStatus.Top + (i)) % FAST486_NUM_FPU_REGS]
+
 enum
 {
     FPU_SINGLE_PRECISION = 0,

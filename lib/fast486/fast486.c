@@ -266,8 +266,10 @@ Fast486Reset(PFAST486_STATE State)
     State->Idtr.Size = 0x3FF;
     State->Idtr.Address = 0;
 
+#ifndef FAST486_NO_FPU
     /* Initialize CR0 */
     State->ControlRegisters[FAST486_REG_CR0] |= FAST486_CR0_ET;
+#endif
 
     /* Restore the callbacks and TLB */
     State->MemReadCallback  = MemReadCallback;

@@ -35,66 +35,122 @@
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 {
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-    Fast486Exception(State, FAST486_EXCEPTION_UD);
+
     return FALSE;
+#else
+    /* Do nothing */
+    return TRUE;
+#endif
 }
 
 /* EOF */
