@@ -158,12 +158,12 @@ END
 
 IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Taskbar-Einstellungen"
+CAPTION "Taskleiste-Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Anzeigen der &Uhr", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 71, 10
-    CONTROL "&verstecke inaktive Benachrichtigungssymbole", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 131, 10
-    PUSHBUTTON "&Benachrichtigungen...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
+    CONTROL "&Verstecke inaktive Benachrichtigungssymbole", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 155, 10
+    PUSHBUTTON "&Symbole...", ID_CONFIG_NOTIFYAREA, 165, 173, 40, 14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 204
@@ -189,7 +189,7 @@ BEGIN
     GROUPBOX "&Anzeigemodus", IDC_LABEL4, 7, 96, 157, 28
     CONTROL "&zeigen", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 37, 10
     CONTROL "&verstecken", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 55, 108, 51, 10
-    CONTROL "a&utomatisch", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 110, 108, 54, 10
+    CONTROL "a&utomatisch", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 110, 108, 52, 10
     ICON "", IDC_PICTURE, 173, 101, 20, 20
     LTEXT "&Letzte Änderung:", IDC_LABEL6, 7, 132, 55, 8
     EDITTEXT IDC_LAST_CHANGE, 66, 129, 98, 14, ES_AUTOHSCROLL | ES_READONLY
@@ -285,7 +285,7 @@ BEGIN
     IDS_LAUNCH_MANY_PROGRAMS "Sie haben mehrere Programme ausgewählt.\nSind Sie sich sicher, dass Sie diese alle starten wollen?"
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP "Desktop"
-    IDS_TASKBAR "Taskbar"
+    IDS_TASKBAR "Taskleiste"
     IDS_NAMECOLUMN "Name"
     IDS_PATHCOLUMN "Pfad"
     IDS_MENUCOLUMN "Menüpfad"

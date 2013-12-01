@@ -95,7 +95,7 @@ BEGIN
     IDS_FAILEDTOSELVGADRIVER "Fehler beim Aktivieren des ReactOS-VGA-Treibers!"
     IDS_FAILEDTOSELVBEDRIVER "Fehler beim Aktivieren des ReactOS-VBE-Treibers!"
     IDS_UNINSTNOTICE "Die VMware(r)-SVGA-Treiberdateien wurden noch nicht gelöscht.\nLöschen Sie sie bitte nach dem Neustart manuell."
-    IDS_FAILEDTOADDREGENTRIES "Failed to create registry entries for the VMware(r) SVGA driver!"//FIXME
+    IDS_FAILEDTOADDREGENTRIES "Registry Einträge für den VMware(r) SVGA driver konnten nicht erstellt werden!"//FIXME
 END
 
 STRINGTABLE

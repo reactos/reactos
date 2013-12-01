@@ -491,7 +491,7 @@ title         neuer Titel"
     STRING_GOTO_ERROR1 "Keine Sprungmarke für GOTO gesetzt"
     STRING_GOTO_ERROR2 "Sprungmarke '%s' wurde nicht gefunden\n"
     STRING_MD_ERROR "Unterverzeichnis oder Datei existiert bereits.\n"
-    STRING_MD_ERROR2 "The path to the new folder does not exist.\n"//FIXME
+    STRING_MD_ERROR2 "Der Pfad zum neuen Ordner existiert nicht.\n"//FIXME
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[FEHLER]\n"
     STRING_REN_ERROR1 "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"
