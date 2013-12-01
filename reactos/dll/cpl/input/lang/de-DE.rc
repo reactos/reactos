@@ -20,7 +20,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
+    GROUPBOX "System Konfiguration", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Erweiterte &Textdienste deaktivieren", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
     LTEXT "Auswählen, um die erweiterte Sprachunterstützung in allen Programmen zu deaktivieren.\nNicht empfohlen für ostasiatische Benutzer, da die Sprachleiste hierdurch geschlossen wird.", -1, 14, 40, 230, 35
 END

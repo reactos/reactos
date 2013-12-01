@@ -98,8 +98,8 @@ BEGIN
     GROUPBOX "Hardwareprofil-Auswahl", IDC_STATIC, 7, 130, 240, 75
     LTEXT "Wenn ReactOS startet:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Warten, bis ein Hardwareprofil gewählt wird", IDC_HRDPROFWAIT, 14, 158, 170, 8, WS_GROUP
-    AUTORADIOBUTTON "&Das erste Profil aus der Liste auswählen, wenn ich kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 200, 8
-    LTEXT "Sekunden gewählt habe", IDC_STATIC, 65, 187, 80, 8
+    AUTORADIOBUTTON "&Erstes Profil aus der Liste auswählen, wenn kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 230, 8
+    LTEXT "Sekunden gewählt wurde", IDC_STATIC, 65, 187, 90, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -117,7 +117,7 @@ BEGIN
     LTEXT "Nach:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 199, 30, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52

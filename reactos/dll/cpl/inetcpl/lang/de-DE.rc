@@ -104,13 +104,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
+    IDS_CPL_NAME        "Internetoptionen"
+    IDS_CPL_INFO        "Konfiguration des Wine Internet Browsers und dessen Einstellungen"
+    IDS_SEC_SETTINGS    "Sicherheitseinstellungen für Zone: "
+    IDS_SEC_LEVEL0      "Benutzerdefiniert"
+    IDS_SEC_LEVEL1      "Sehr niedrig"
+    IDS_SEC_LEVEL2      "Niedrig"
+    IDS_SEC_LEVEL3      "Mittel"
+    IDS_SEC_LEVEL4      "Mittel bis hoch"
+    IDS_SEC_LEVEL5      "Hoch"
 END

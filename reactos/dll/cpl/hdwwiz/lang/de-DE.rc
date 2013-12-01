@@ -105,7 +105,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Hardwareassistent wird vervollst‰ndigt", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Der Assistent fand folgende Hardware an ihrem Computer:", -1, 114, 32, 193, 19
-    LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schlieﬂen.", -1, 114, 166, 132, 8
+    LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schlieﬂen.", -1, 114, 166, 192, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
