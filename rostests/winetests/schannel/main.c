@@ -216,8 +216,9 @@ static void testGetInfo(void)
 
     if (status == STATUS_SUCCESS)
     {
-        ok(PackageInfo.fCapabilities == LSA_BASE_CAPS, "fCapabilities: 0x%x\n",
-           PackageInfo.fCapabilities);
+        ok(PackageInfo.fCapabilities == LSA_BASE_CAPS ||
+           PackageInfo.fCapabilities == (LSA_BASE_CAPS|SECPKG_FLAG_APPCONTAINER_PASSTHROUGH),
+           "fCapabilities: 0x%x\n", PackageInfo.fCapabilities);
         ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
         ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
         ok(PackageInfo.cbMaxToken == 0x4000 ||
