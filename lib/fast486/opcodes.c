@@ -5398,16 +5398,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
 
             if (State->Flags.Df)
             {
-                /* Reduce ESI and EDI by the number of bytes to transfer */
+                /* Move ESI and EDI to the start of the block */
                 if (AddressSize)
                 {
-                    State->GeneralRegs[FAST486_REG_ESI].Long -= Processed * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].Long -= Processed * DataSize;
+                    State->GeneralRegs[FAST486_REG_ESI].Long -= (Processed - 1) * DataSize;
+                    State->GeneralRegs[FAST486_REG_EDI].Long -= (Processed - 1) * DataSize;
                 }
                 else
                 {
-                    State->GeneralRegs[FAST486_REG_ESI].LowWord -= Processed * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].LowWord -= Processed * DataSize;
+                    State->GeneralRegs[FAST486_REG_ESI].LowWord -= (Processed - 1) * DataSize;
+                    State->GeneralRegs[FAST486_REG_EDI].LowWord -= (Processed - 1) * DataSize;
                 }
             }
 
@@ -5456,6 +5456,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
                 {
                     State->GeneralRegs[FAST486_REG_ESI].LowWord += Processed * DataSize;
                     State->GeneralRegs[FAST486_REG_EDI].LowWord += Processed * DataSize;
+                }
+            }
+            else
+            {
+                /* Reduce ESI and EDI */
+                if (AddressSize)
+                {
+                    State->GeneralRegs[FAST486_REG_ESI].Long -= DataSize;
+                    State->GeneralRegs[FAST486_REG_EDI].Long -= DataSize;
+                }
+                else
+                {
+                    State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
+                    State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
                 }
             }
 
@@ -5728,9 +5742,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
 
             if (State->Flags.Df)
             {
-                /* Reduce EDI by the number of bytes to transfer */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long -= Processed * DataSize;
-                else State->GeneralRegs[FAST486_REG_EDI].LowWord -= Processed * DataSize;
+                /* Set EDI to the starting location */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long -= (Processed - 1) * DataSize;
+                else State->GeneralRegs[FAST486_REG_EDI].LowWord -= (Processed - 1) * DataSize;
             }
 
             /* Write to memory */
@@ -5754,6 +5768,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
                 /* Increase EDI by the number of bytes transfered */
                 if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long += Processed * DataSize;
                 else State->GeneralRegs[FAST486_REG_EDI].LowWord += Processed * DataSize;
+            }
+            else
+            {
+                /* Reduce EDI */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long -= DataSize;
+                else State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
             }
 
             /* Reduce the total count by the number processed in this run */
