@@ -34,6 +34,9 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele.
 Size = 1,03 Mo
 
+[Section.041f]
+Description = 7z, zip, tar, rar ve diğer birçok sıkıştırma biçimini destekleyen bir araç.
+
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.
 

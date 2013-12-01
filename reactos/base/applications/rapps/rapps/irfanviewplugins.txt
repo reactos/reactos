@@ -41,6 +41,11 @@ Licence = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
 Size = 9,85 Mo
 
+[Section.041f]
+Name = IrfanView Eklentileri
+Licence = Şahsî kullanımlar için ücretsiz.
+Description = Daha çok kütük türünü desteklemeye yarayan eklentiler.
+
 [Section.0422]
 Licence = Freeware (для домашнього використання)
 Description = Додаткові плагіни для підтримки більшої кількості файлових типів.

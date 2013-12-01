@@ -57,6 +57,11 @@ Name = Драйвер AC97 для VirtualBox
 Licence = Не указано
 Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
 
+[Section.041f]
+Name = VirtualBox için AC97 Sürücüsü
+Licence = Bilinmiyor
+Description = Bunu ReactOS'un dizinine çıkartıp bilgisayarı iki kez yeniden başlatınız.
+
 [Section.0422]
 Name = Драйвер AC97 для VirtualBox
 Licence = Невідома

@@ -31,6 +31,9 @@ Description = Otwarty klient/serwer VNC.
 Description = Client/server VNC (open-source).
 Size = 3,27 Mo
 
+[Section.041f]
+Description = Açık kaynak bir VNC istemcisi ve bir VNC sunucusu.
+
 [Section.0422]
 Description = Відкритий VNC клієнт/сервер.
 

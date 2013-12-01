@@ -18,3 +18,7 @@ Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, k
 Description = DVD Write Now - бесплатная программа для прямой записи на CD и DVD диски. Позволяет использовать перезаписываемые CD и DVD диски как USB-Flash или съемные жесткие диски, записывать файлы на перезаписываемые CD/DVD диски, созданные в формате UDF, и читать UDF-диски, созданные другими программами.
 URLSite = http://dwn.alter.org.ua/ru/
 
+[Section.041f]
+Name = DVD Şimdi Yaz
+Licence = Ücretsiz
+Description =  Ücretsiz bir doğrudan CD/DVD kaydedicisi. Kurulur kurulmaz CD/DVD RW'leri çıkartılabilir disk olarak kullanabilirsiniz. Bununla birlikte CD/DVD RW'leri UDF kütük dizgesiyle kaydedebilirsiniz. Ayrıca, Mikroyazılım DVD−ROM'ları, Ahead InCD ile kaydedilen RW diskleri gibi diğer yazılımlarla oluşturulan UDF diskleri okutabilirsiniz. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.

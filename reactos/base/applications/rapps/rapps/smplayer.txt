@@ -39,6 +39,9 @@ Description = Lector multimedia (interfață pentru MPlayer).
 Size = 16,98 Mo
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=ro
 
+[Section.041f]
+Description = MPlayer için çizgelik önyüz.
+
 [Section.0422]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=uk
 Description = Графічний інтерфейс для MPlayer (мультимедійний плеєр).

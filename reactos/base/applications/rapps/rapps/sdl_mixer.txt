@@ -37,6 +37,10 @@ Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym 
 Description = Necesar pentru execuția unor jocuri (open-source). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
 Size = 548,02 ko
 
+[Section.041f]
+Name = Bayağı Doğrudan Ortam Katmanı (SDL) Karıştırıcısı
+Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
 

@@ -40,6 +40,10 @@ Description = Текстовый редактор.
 [Section.041b]
 Description = Textový editor.
 
+[Section.041f]
+Licence = Ücretsiz
+Description = Bir metin düzenleyicisi.
+
 [Section.0422]
 Description = Текстовый редактор.
 

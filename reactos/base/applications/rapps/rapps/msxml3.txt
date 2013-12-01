@@ -41,6 +41,10 @@ Licence = Nespecificată
 Description = MSXML3 este necesar unor Instalatori MSI. Conține: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 Mo
 
+[Section.041f]
+Licence = Bilinmiyor
+Description = Birtakım Mikroyazılım Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
+
 [Section.0422]
 Licence = Невідома
 Description = MSXML3 необхідна для декотрих MSI інсталяторів. включає: msxml3.dll, msxml3a.dll, msxml3r.dll.

@@ -71,6 +71,12 @@ Size = 22,2MB
 URLSite = http://www.mozilla-europe.org/sk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/24.0/win32/sk/Firefox%20Setup%2024.0.exe
 
+[Section.041f]
+Name = Mozilla Ateştilkisi 24
+Description = Özgür örütbağ tarayıcıları arasında en tutulanı ve en iyisi.
+URLSite = http://www.mozilla.org/tr/firefox/new/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/24.0/win32/tr/Firefox%20Setup%2024.0.exe
+
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 Size = 22,0MB

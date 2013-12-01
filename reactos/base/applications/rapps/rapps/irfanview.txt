@@ -41,6 +41,10 @@ Licence = Gratuită (pentru uz personal)
 Description = Lector pentru multiple formate de fișiere grafice/audio/video.
 Size = 1,57 Mo
 
+[Section.041f]
+Licence = Şahsî kullanımlar için ücretsiz.
+Description = Çizge, ses ve vidyo kütükleri görüntüleyicisi.
+
 [Section.0422]
 Licence = Freeware (для домашнього використання)
 Description = Переглядач для всіх видів графічних та аудіо/відео файлів.

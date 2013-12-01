@@ -25,3 +25,8 @@ Description = Wirtualna klawiatura ekranowa.
 Licence = Gratuită
 Description = Aplicație gratuită pentru simularea unei tastaturi fizice.
 Size = 1,3 Mo
+
+[Section.041f]
+Name = Click-N-Type Farazî Düğme Takımı
+Licence = Ücretsiz
+Description = Ücretsiz bir farazî düğme takımı uygulaması.

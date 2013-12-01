@@ -34,6 +34,9 @@ Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego 
 Description = Clona (open-source a) motorului de joc "Transport Tycoon Deluxe". Este necesară o copie a jocului Transport Tycoon.
 Size = 6,75 Mo
 
+[Section.041f]
+Description = Transport Tycoon Deluxe oyun motorunun bir açık kaynak taklidi. Transport Tycoon'un bir sûreti gerekir.
+
 [Section.0422]
 Description = Відкритий клон двигуна гри "Transport Tycoon Deluxe". Вам потрібна копія гри Transport Tycoon.
 

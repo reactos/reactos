@@ -28,3 +28,8 @@ Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
 Licence = Nespecificată
 Description = Platforma Microsoft .NET versiunea 2.0 - Service Pack 2.
 Size = 23,84 Mo
+
+[Section.041f]
+Name = Mikroyazılım .NET Çatısı Sürüm 2.0 Hizmet Paketi 2
+Licence = Bilinmiyor
+Description = Mikroyazılım .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2

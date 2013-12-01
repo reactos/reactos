@@ -34,6 +34,9 @@ Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
 Description = Ramificație-clonă a bibliotecilor SDL.
 Size = 3,03 Mo
 
+[Section.041f]
+Description = SDL kitaplıklarını kullanan bir Breakout taklidi.
+
 [Section.0422]
 Description = Клон Breakouta/Arkanoida, що використовує бібліотеки SDL.
 

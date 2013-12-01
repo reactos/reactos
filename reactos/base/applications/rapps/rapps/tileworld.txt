@@ -34,6 +34,10 @@ Description = Udany klon gry Chip's Challenge z Atari Lynx. Zawiera darmowy zest
 Description = Clonă a Chip's Challenge, creată inițial pentru Atari Lynx. Include pachetul gratuit CCLP2 Graphics, deci nu este necesar Originalul cu drepturi de autor.
 Size = 1,16 Mo
 
+[Section.041f]
+Name = Karolu Dünyâ
+Description = Başlangıçta Atari Lynx için yapılan Çip'in Düellosu adlı oyunun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni de kapsadığından bunun ruhsatlı özgününe gerek yoktur.
+
 [Section.0422]
 Description = Чудовий клон гри Chip's Challenge для Atari Lynx. Включено безплатний графічний пакет CCLP2, тому вам не потрібен оригінальний.
 

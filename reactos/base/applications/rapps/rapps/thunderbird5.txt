@@ -59,6 +59,12 @@ Size = 21.38MB
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.0.1/win32/ru/Thunderbird%20Setup%2024.0.1.exe
 
+[Section.041f]
+Name = Mozilla Yıldırımkuşu
+Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
+URLSite = https://www.mozilla.org/tr/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.0.1/win32/tr/Thunderbird%20Setup%2024.0.1.exe
+
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
 Size = 21.40MB

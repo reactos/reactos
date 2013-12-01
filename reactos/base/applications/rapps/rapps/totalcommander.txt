@@ -27,6 +27,11 @@ Description = Total Commander to popularny menedżer plików z dwoma panelami, u
 Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
 Size = 3,25 Mo
 
+[Section.041f]
+Name = Eksiksiz Komutan
+Licence = Kısıtlı
+Description = Eksiksiz Komutan, yan yana iki bölmenin bulunduğu bir kütük yöneticisidir.
+
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.
 

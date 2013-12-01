@@ -13,3 +13,6 @@ CDPath = none
 
 [Section.0407]
 Description = Globulation 2 ist ein Echtzeitstrategiespiel. Das Spiel vereinfacht das Mikromanagement, indem es Einheiten automatisch mit Aufträgen versieht.
+
+[Section.041f]
+Description = Globulation 2, gerçek zamanlı bir izlem oyunudur. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikroyönetimini en aza indirir.

@@ -13,3 +13,7 @@ CDPath = none
 
 [Section.0407]
 Description = Eine plattformunabhängige, integrierte Entwicklungsumgebung (IDE), mit der man grafische (GUI) und nicht-grafische Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.
+
+[Section.041f]
+Licence = Değiştirilmiş LGPL, GPL
+Description = Basarî ve basarî olmayan Nesne Paskal çizeylemleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.

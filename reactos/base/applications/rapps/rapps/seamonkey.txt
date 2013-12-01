@@ -50,6 +50,10 @@ Description = Продолжение Mozilla Suite. Включает брауз�
 Size = 22.17MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.21/win32/ru/SeaMonkey%20Setup%202.21.exe
 
+[Section.041f]
+Description = Bu; yalnızca Tarayıcı, Mail, Söyleşi ve Yazar'dan oluşan, hiç gereksinim duymayacağınız bir bohçadır.
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.21/win32/tr/SeaMonkey%20Setup%202.21.exe
+
 [Section.0422]
 Description = Продовження Mozilla Suite. Включає в себе браузер, поштовий клієнт, IRC-клієнт та HTML-редактор.
 Size = 22.03MB

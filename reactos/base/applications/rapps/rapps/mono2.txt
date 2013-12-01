@@ -29,5 +29,10 @@ Licence = Nespecificată
 Description = Platformă .net (open-source).
 Size = 91,93 Mo
 
+[Section.041f]
+Name = Mono .NET Geliştirme Çatısı
+Licence = Bilinmiyor
+Description = Bir açık kaynak .NET çatısı.
+
 [Section.0422]
 Description = Відкритий .net Фреймворк.

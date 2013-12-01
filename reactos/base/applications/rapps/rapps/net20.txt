@@ -28,3 +28,8 @@ Description = Microsoft .NET Framework Wersja 2.0 - Pakiet Dystrybucyjny.
 Licence = Nespecificată
 Description = Platforma Microsoft .NET versiunea 2.0 - Pachet redistributabl.
 Size = 22,42 Mo
+
+[Section.041f]
+Name = Mikroyazılım .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
+Licence = Bilinmiyor
+Description = Mikroyazılım .NET Çatısı Sürüm 2.0 - Yeniden Dağıtılabilir Paket

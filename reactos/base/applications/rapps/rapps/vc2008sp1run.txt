@@ -41,6 +41,11 @@ Licence = Necunoscută
 Description = Visual Studio 2008 SP1 Runtime. Conține: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 Size = 4,02 Mo
 
+[Section.041f]
+Name = Mikroyazılım Basarî C++ 2008 SP1 Yeniden Dağıtılabilir Paket
+Licence = Bilinmiyor
+Description = Basarî Stüdyo 2008 SP1 Yürütücüsü. Şunları içerir: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+
 [Section.0422]
 Licence = Невідома
 Description = Бібліотеки Visual Studio 2008 SP1. включає: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.

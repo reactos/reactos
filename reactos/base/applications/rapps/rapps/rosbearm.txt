@@ -34,6 +34,10 @@ Description = Pozwala zbudować obraz płyty ReactOS ARM ze źródeł. Więcej i
 Description = Permite compilarea surselor ReactOS pentru ARM. Pentru instrucțiuni, consultați wiki ReactOS.
 Size = 11,15 Mo
 
+[Section.041f]
+Name = ReactOS Derleme Ortamı
+Description = ReactOS ARM Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+
 [Section.0422]
 Description = Дозволяє зібрати ReactOS ARM з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
 

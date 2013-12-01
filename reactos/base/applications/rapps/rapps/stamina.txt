@@ -11,3 +11,6 @@ CDPath = none
 
 [Section.0407]
 Description = Ein freies Schreiblernprogramm.
+
+[Section.041f]
+Description = Ücretsiz bir düğme takımında yazma öğreticisi.

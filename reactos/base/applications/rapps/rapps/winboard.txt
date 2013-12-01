@@ -34,6 +34,9 @@ Description = Graficzna szachownica dla systemu Windows/ReactOS, która może s�
 Description = WinBoard este o tablă de șah grafică pentru Windows/ReactOS ce poate servi ca interfață pentru GNU Chess, Crafty, sau alte motoare de șah, pentru servere de șah din Internet, sau pentru corespondență poștală de șah.
 Size = 5,93 Mo
 
+[Section.041f]
+Description = WinBoard; GNU Satranç, Crafty ve diğer satranç motorlarını örütbağ satranç sunucuları ve maille yazışmalı satranç için bir arayüz olarak sunan, Pencereler/ReactOS için bir çizgelik satranç tahtasıdır.
+
 [Section.0422]
 Description = Графічна шахматна дошка для Windows/ReactOS, що може слугувати графічним інтерфейсом для GNU Chess, Crafty, та інших шахматних двигунів, для серверів інтернет-шахмат та для шахматної переписки по е-мейл.
 

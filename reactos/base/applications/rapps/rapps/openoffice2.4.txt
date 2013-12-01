@@ -53,6 +53,10 @@ Size = 113.92MB
 Description = Suita de aplicații de birotică open-source.
 Size = 113 Mo
 
+[Section.041f]
+Description = Bir açık kaynak büro takımı.
+URLSite = http://tr.openoffice.org/
+
 [Section.0422]
 URLSite = http://ua.openoffice.org/
 Description = Відкритий офісний пакет.

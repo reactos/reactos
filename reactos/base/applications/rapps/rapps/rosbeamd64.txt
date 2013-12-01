@@ -37,6 +37,10 @@ Description = Pozwala zbudować obraz płyty ReactOS AMD64 ze źródeł. Więcej
 Description = Permite compilarea surselor ReactOS pentru AMD64. Pentru instrucțiuni, consultați wiki ReactOS.
 Size = 15,83 Mo
 
+[Section.041f]
+Name = ReactOS Derleme Ortamı
+Description = ReactOS AMD64 Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+
 [Section.0422]
 Description = Дозволяє зібрати ReactOS AMD64 з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
 

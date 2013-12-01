@@ -13,3 +13,6 @@ CDPath = none
 
 [Section.0407]
 Description = SuperTux ist ein zweidimensionales, freies, Open Source Plattformspiel. 
+
+[Section.041f]
+Description = SuperTux, ücretsiz, iki boyutlu ve açık kaynak bir platform oyunudur.

@@ -58,6 +58,11 @@ Name = Драйвер SoundBlaster для VMWare
 Licence = Не указано
 Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
 
+[Section.041f]
+Name = VMWare için SoundBlaster Sürücüsü
+Licence = Bilinmiyor
+Description = Bunu, ReactOS'un dizinine çıkartıp bilgisayarı iki kez yeniden başlatınız.
+
 [Section.0422]
 Name = Драйвер SoundBlaster для VMWare
 Licence = Невідома

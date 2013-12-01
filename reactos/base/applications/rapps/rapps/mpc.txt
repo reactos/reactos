@@ -40,6 +40,9 @@ Description = Мультимедийный проигрыватель.
 [Section.041b]
 Description = Multimediálny prehrávač.
 
+[Section.041f]
+Description = Bir ortam oynatıcısı.
+
 [Section.0422]
 Description = Мультимедійний програвач.
 
