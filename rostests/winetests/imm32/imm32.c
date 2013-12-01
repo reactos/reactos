@@ -24,11 +24,13 @@
 #include "winuser.h"
 #include "wingdi.h"
 #include "imm.h"
+#include "ddk/imm.h"
 
 #define NUMELEMS(array) (sizeof((array))/sizeof((array)[0]))
 
 static BOOL (WINAPI *pImmAssociateContextEx)(HWND,HIMC,DWORD);
 static BOOL (WINAPI *pImmIsUIMessageA)(HWND,UINT,WPARAM,LPARAM);
+static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 
 /*
  * msgspy - record and analyse message traces sent to a certain window
@@ -45,6 +47,19 @@ static struct _msg_spy {
     imm_msgs     msgs[32];
     unsigned int i_msg;
 } msg_spy;
+
+typedef struct
+{
+    DWORD type;
+    union
+    {
+        MOUSEINPUT      mi;
+        KEYBDINPUT      ki;
+        HARDWAREINPUT   hi;
+    } u;
+} TEST_INPUT;
+
+static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 
 static LRESULT CALLBACK get_msg_filter(int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -169,11 +184,13 @@ static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static BOOL init(void) {
     WNDCLASSEX wc;
     HIMC imc;
-    HMODULE hmod;
+    HMODULE hmod,huser;
 
     hmod = GetModuleHandleA("imm32.dll");
+    huser = GetModuleHandleA("user32");
     pImmAssociateContextEx = (void*)GetProcAddress(hmod, "ImmAssociateContextEx");
     pImmIsUIMessageA = (void*)GetProcAddress(hmod, "ImmIsUIMessageA");
+    pSendInput = (void*)GetProcAddress(huser, "SendInput");
 
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
@@ -671,6 +688,152 @@ static void test_ImmDefaultHwnd(void)
     DestroyWindow(hwnd);
 }
 
+static void test_ImmGetIMCLockCount(void)
+{
+    HIMC imc;
+    DWORD count, ret, i;
+    INPUTCONTEXT *ic;
+
+    imc = ImmCreateContext();
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    ic = ImmLockIMC(imc);
+    ok(ic != NULL, "ImmLockIMC failed!\n");
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 1, "expect 1, returned %d\n", count);
+    ret = ImmUnlockIMC(imc);
+    ok(ret == TRUE, "expect TRUE, ret %d\n", ret);
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    ret = ImmUnlockIMC(imc);
+    ok(ret == TRUE, "expect TRUE, ret %d\n", ret);
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+
+    for (i = 0; i < GMEM_LOCKCOUNT * 2; i++)
+    {
+        ic = ImmLockIMC(imc);
+        ok(ic != NULL, "ImmLockIMC failed!\n");
+    }
+    count = ImmGetIMCLockCount(imc);
+    todo_wine ok(count == GMEM_LOCKCOUNT, "expect GMEM_LOCKCOUNT, returned %d\n", count);
+
+    for (i = 0; i < GMEM_LOCKCOUNT - 1; i++)
+        ImmUnlockIMC(imc);
+    count = ImmGetIMCLockCount(imc);
+    todo_wine ok(count == 1, "expect 1, returned %d\n", count);
+    ImmUnlockIMC(imc);
+    count = ImmGetIMCLockCount(imc);
+    todo_wine ok(count == 0, "expect 0, returned %d\n", count);
+
+    ImmDestroyContext(imc);
+}
+
+static void test_ImmGetIMCCLockCount(void)
+{
+    HIMCC imcc;
+    DWORD count, g_count, ret, i;
+    VOID *p;
+
+    imcc = ImmCreateIMCC(sizeof(CANDIDATEINFO));
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    ImmLockIMCC(imcc);
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 1, "expect 1, returned %d\n", count);
+    ret = ImmUnlockIMCC(imcc);
+    ok(ret == FALSE, "expect FALSE, ret %d\n", ret);
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    ret = ImmUnlockIMCC(imcc);
+    ok(ret == FALSE, "expect FALSE, ret %d\n", ret);
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+
+    p = ImmLockIMCC(imcc);
+    ok(GlobalHandle(p) == imcc, "expect %p, returned %p\n", imcc, GlobalHandle(p));
+
+    for (i = 0; i < GMEM_LOCKCOUNT * 2; i++)
+    {
+        ImmLockIMCC(imcc);
+        count = ImmGetIMCCLockCount(imcc);
+        g_count = GlobalFlags(imcc) & GMEM_LOCKCOUNT;
+        ok(count == g_count, "count %d, g_count %d\n", count, g_count);
+    }
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == GMEM_LOCKCOUNT, "expect GMEM_LOCKCOUNT, returned %d\n", count);
+
+    for (i = 0; i < GMEM_LOCKCOUNT - 1; i++)
+        GlobalUnlock(imcc);
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 1, "expect 1, returned %d\n", count);
+    GlobalUnlock(imcc);
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+
+    ImmDestroyIMCC(imcc);
+}
+
+static void test_ImmDestroyContext(void)
+{
+    HIMC imc;
+    DWORD ret, count;
+    INPUTCONTEXT *ic;
+
+    imc = ImmCreateContext();
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    ic = ImmLockIMC(imc);
+    ok(ic != NULL, "ImmLockIMC failed!\n");
+    count = ImmGetIMCLockCount(imc);
+    ok(count == 1, "expect 1, returned %d\n", count);
+    ret = ImmDestroyContext(imc);
+    ok(ret == TRUE, "Destroy a locked IMC should success!\n");
+    ic = ImmLockIMC(imc);
+    todo_wine ok(ic == NULL, "Lock a destroyed IMC should fail!\n");
+    ret = ImmUnlockIMC(imc);
+    todo_wine ok(ret == FALSE, "Unlock a destroyed IMC should fail!\n");
+    count = ImmGetIMCLockCount(imc);
+    todo_wine ok(count == 0, "Get lock count of a destroyed IMC should return 0!\n");
+    SetLastError(0xdeadbeef);
+    ret = ImmDestroyContext(imc);
+    todo_wine ok(ret == FALSE, "Destroy a destroyed IMC should fail!\n");
+    ret = GetLastError();
+    todo_wine ok(ret == ERROR_INVALID_HANDLE, "wrong last error %08x!\n", ret);
+}
+
+static void test_ImmDestroyIMCC(void)
+{
+    HIMCC imcc;
+    DWORD ret, count, size;
+    VOID *p;
+
+    imcc = ImmCreateIMCC(sizeof(CANDIDATEINFO));
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "expect 0, returned %d\n", count);
+    p = ImmLockIMCC(imcc);
+    ok(p != NULL, "ImmLockIMCC failed!\n");
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 1, "expect 1, returned %d\n", count);
+    size = ImmGetIMCCSize(imcc);
+    ok(size == sizeof(CANDIDATEINFO), "returned %d\n", size);
+    p = ImmDestroyIMCC(imcc);
+    ok(p == NULL, "Destroy a locked IMCC should success!\n");
+    p = ImmLockIMCC(imcc);
+    ok(p == NULL, "Lock a destroyed IMCC should fail!\n");
+    ret = ImmUnlockIMCC(imcc);
+    ok(ret == FALSE, "Unlock a destroyed IMCC should return FALSE!\n");
+    count = ImmGetIMCCLockCount(imcc);
+    ok(count == 0, "Get lock count of a destroyed IMCC should return 0!\n");
+    size = ImmGetIMCCSize(imcc);
+    ok(size == 0, "Get size of a destroyed IMCC should return 0!\n");
+    SetLastError(0xdeadbeef);
+    p = ImmDestroyIMCC(imcc);
+    ok(p != NULL, "returned NULL\n");
+    ret = GetLastError();
+    ok(ret == ERROR_INVALID_HANDLE, "wrong last error %08x!\n", ret);
+}
+
 static void test_ImmMessages(void)
 {
     CANDIDATEFORM cf;
@@ -701,6 +864,122 @@ static void test_ImmMessages(void)
     DestroyWindow(hwnd);
 }
 
+static LRESULT CALLBACK processkey_wnd_proc( HWND hWnd, UINT msg, WPARAM wParam,
+        LPARAM lParam )
+{
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+static void test_ime_processkey(void)
+{
+    WCHAR classNameW[] = {'P','r','o','c','e','s','s', 'K','e','y','T','e','s','t','C','l','a','s','s',0};
+    WCHAR windowNameW[] = {'P','r','o','c','e','s','s', 'K','e','y',0};
+
+    MSG msg;
+    WNDCLASSW wclass;
+    HANDLE hInstance = GetModuleHandleW(NULL);
+    TEST_INPUT inputs[2];
+    HIMC imc;
+    INT rc;
+    HWND hWndTest;
+
+    wclass.lpszClassName = classNameW;
+    wclass.style         = CS_HREDRAW | CS_VREDRAW;
+    wclass.lpfnWndProc   = processkey_wnd_proc;
+    wclass.hInstance     = hInstance;
+    wclass.hIcon         = LoadIcon(0, IDI_APPLICATION);
+    wclass.hCursor       = LoadCursor( NULL, IDC_ARROW);
+    wclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wclass.lpszMenuName  = 0;
+    wclass.cbClsExtra    = 0;
+    wclass.cbWndExtra    = 0;
+    if(!RegisterClassW(&wclass)){
+        win_skip("Failed to register window.\n");
+        return;
+    }
+
+    /* create the test window that will receive the keystrokes */
+    hWndTest = CreateWindowW(wclass.lpszClassName, windowNameW,
+                             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 100, 100,
+                             NULL, NULL, hInstance, NULL);
+
+    ShowWindow(hWndTest, SW_SHOW);
+    SetWindowPos(hWndTest, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE);
+    SetForegroundWindow(hWndTest);
+    UpdateWindow(hWndTest);
+
+    imc = ImmGetContext(hWndTest);
+    if (!imc)
+    {
+        win_skip("IME not supported\n");
+        DestroyWindow(hWndTest);
+        return;
+    }
+
+    rc = ImmSetOpenStatus(imc, TRUE);
+    if (rc != TRUE)
+    {
+        win_skip("Unable to open IME\n");
+        ImmReleaseContext(hWndTest, imc);
+        DestroyWindow(hWndTest);
+        return;
+    }
+
+    /* flush pending messages */
+    while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageW(&msg);
+
+    SetFocus(hWndTest);
+
+    /* init input data that never changes */
+    inputs[1].type = inputs[0].type = INPUT_KEYBOARD;
+    inputs[1].u.ki.dwExtraInfo = inputs[0].u.ki.dwExtraInfo = 0;
+    inputs[1].u.ki.time = inputs[0].u.ki.time = 0;
+
+    /* Pressing a key */
+    inputs[0].u.ki.wVk = 0x41;
+    inputs[0].u.ki.wScan = 0x1e;
+    inputs[0].u.ki.dwFlags = 0x0;
+
+    pSendInput(1, (INPUT*)inputs, sizeof(INPUT));
+
+    while(PeekMessageW(&msg, hWndTest, 0, 0, PM_NOREMOVE)) {
+        if(msg.message != WM_KEYDOWN)
+            PeekMessageW(&msg, hWndTest, 0, 0, PM_REMOVE);
+        else
+        {
+            ok(msg.wParam != VK_PROCESSKEY,"Incorrect ProcessKey Found\n");
+            PeekMessageW(&msg, hWndTest, 0, 0, PM_REMOVE);
+            if(msg.wParam == VK_PROCESSKEY)
+                trace("ProcessKey was correctly found\n");
+        }
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    inputs[0].u.ki.wVk = 0x41;
+    inputs[0].u.ki.wScan = 0x1e;
+    inputs[0].u.ki.dwFlags = KEYEVENTF_KEYUP;
+
+    pSendInput(1, (INPUT*)inputs, sizeof(INPUT));
+
+    while(PeekMessageW(&msg, hWndTest, 0, 0, PM_NOREMOVE)) {
+        if(msg.message != WM_KEYUP)
+            PeekMessageW(&msg, hWndTest, 0, 0, PM_REMOVE);
+        else
+        {
+            ok(msg.wParam != VK_PROCESSKEY,"Incorrect ProcessKey Found\n");
+            PeekMessageW(&msg, hWndTest, 0, 0, PM_REMOVE);
+            ok(msg.wParam != VK_PROCESSKEY,"ProcessKey should still not be Found\n");
+        }
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    ImmReleaseContext(hWndTest, imc);
+    ImmSetOpenStatus(imc, FALSE);
+    DestroyWindow(hWndTest);
+}
+
 START_TEST(imm32) {
     if (init())
     {
@@ -714,11 +993,18 @@ START_TEST(imm32) {
         test_ImmGetContext();
         test_ImmGetDescription();
         test_ImmDefaultHwnd();
+        test_ImmGetIMCLockCount();
+        test_ImmGetIMCCLockCount();
+        test_ImmDestroyContext();
+        test_ImmDestroyIMCC();
         msg_spy_cleanup();
         /* Reinitialize the hooks to capture all windows */
         msg_spy_init(NULL);
         test_ImmMessages();
         msg_spy_cleanup();
+        if (pSendInput)
+            test_ime_processkey();
+        else win_skip("SendInput is not available\n");
     }
     cleanup();
 }
