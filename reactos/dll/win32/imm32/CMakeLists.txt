@@ -1,10 +1,9 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 
@@ -13,9 +12,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)
 
-add_library(imm32 SHARED
-    ${SOURCE}
-    version.rc)
+add_library(imm32 SHARED ${SOURCE} version.rc)
 
 if(MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
