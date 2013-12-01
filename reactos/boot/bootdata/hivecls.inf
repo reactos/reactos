@@ -73,6 +73,7 @@ HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen","",0x00000000,"Open with Control Panel"
 HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
+HKCR,"cplfile\shell\runas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLLAsUser %1,%*"
 
 ; Cursors
 HKCR,".cur","",0x00000000,"curfile"
@@ -98,6 +99,7 @@ HKCR,"exefile","",0x00000000,"ReactOS Application"
 HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-165"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
+HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
@@ -167,6 +169,7 @@ HKCR,"inifile","",0x00000000,"Configuration Settings"
 HKCR,"inifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-169"
 HKCR,"inifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inifile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
+HKCR,"inifile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 
 ; Setup Information Files
 HKCR,".inf","",0x00000000,"inffile"
@@ -204,6 +207,7 @@ HKCR,"txtfile","",0x00000000,"Text Document"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
 HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 
 ; XML Documents
 HKCR,".xml","",0x00000000,"xmlfile"
