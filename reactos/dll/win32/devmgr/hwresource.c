@@ -298,7 +298,7 @@ AddResourceItems(
          {
              if (LoadString(hDllInstance, IDS_RESOURCE_MEMORY_RANGE, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
              {
-                 wsprintf(szDetail, L"%08lx - %08lx", Descriptor->u.Memory.Start, Descriptor->u.Memory.Start.LowPart + Descriptor->u.Memory.Length - 1);
+                 wsprintf(szDetail, L"%08I64x - %08I64x", Descriptor->u.Memory.Start.QuadPart, Descriptor->u.Memory.Start.QuadPart + Descriptor->u.Memory.Length - 1);
                  InsertListItem(hWndDevList, ItemCount, szBuffer, szDetail);
                  ItemCount++;
              }
