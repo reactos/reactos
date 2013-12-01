@@ -113,11 +113,11 @@
 #ifdef LANGUAGE_RU_RU
     #include "lang/cdlg_Ru.rc"
 #endif
-#ifdef LANGUAGE_SL_SI
-    #include "lang/cdlg_Si.rc"
-#endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/cdlg_Sk.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "lang/cdlg_Si.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/cdlg_Sr.rc"
@@ -131,11 +131,11 @@
 #ifdef LANGUAGE_TR_TR
     #include "lang/cdlg_Tr.rc"
 #endif
-#ifdef LANGUAGE_ZH_TW
-    #include "lang/cdlg_Tw.rc"
-#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/cdlg_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/cdlg_Tw.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/cdlg_Zh.rc"

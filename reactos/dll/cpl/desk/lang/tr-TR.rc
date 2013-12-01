@@ -54,7 +54,7 @@ BEGIN
     LTEXT "B&oyut:", IDC_STATIC, 7, 190, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Efektler...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "&Etkiler...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON "&Gelişmiş...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
@@ -92,10 +92,10 @@ END
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Efektler"
+CAPTION "Etkiler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Araç İpuçlarında ve Seçkelerde Geçiş Efekti Kullan",
+    CONTROL "&Araç İpuçlarında ve Seçkelerde Geçiş Etkisi Kullan",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -146,7 +146,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
-    LTEXT "Birtakım çizeylemler, renk ayarlarını değiştirdikten sonra yeniden başlatılmazsa tam olarak çalışmayabilir.\r\n\nRenk ayarları değiştirildikten sonra:", -1, 12, 78, 228, 34
+    LTEXT "Birtakım çizeylemler, renk ayarlarını değiştirdikten sonra yeniden başlatılmazsa eksiksiz olarak çalışmayabilir.\r\n\nRenk ayarları değiştirildikten sonra:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&yeni renk ayarları uygulanmadan önce bilgisayar yeniden başlatılsın.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "y&eniden başlatılmadan yeni renk ayarları uygulansın.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "ye&ni renk ayarlarının uygulanıp uygulanmayacağı kullanıcıya sorulsun.", IDC_ASKME_RB, 14, 146, 228, 10
@@ -173,8 +173,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Kayma Efekti"
-    IDS_FADEEFFECT "Solma Efekti"
+    IDS_SLIDEEFFECT "Kayma Etkisi"
+    IDS_FADEEFFECT "Solma Etkisi"
 END
 
 STRINGTABLE

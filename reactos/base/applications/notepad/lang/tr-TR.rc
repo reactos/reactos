@@ -1,3 +1,5 @@
+/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
@@ -80,7 +82,7 @@ BEGIN
     EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
     LTEXT "Alt Bilgi:", 0x142, 10, 24, 40, 15
     EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
-    GROUPBOX "Kenar Payı:", 0x144, 10, 43, 160, 45
+    GROUPBOX "Kıyı Payı:", 0x144, 10, 43, 160, 45
     LTEXT "Sol:", 0x145, 20, 55, 30, 10, WS_CHILD
     EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "Üst:", 0x148, 20, 73, 30, 10, WS_CHILD
@@ -151,7 +153,7 @@ BEGIN
     STRING_ALL_FILES "Tüm Kütükler (*.*)"
     STRING_TEXT_FILES_TXT "Metin Belgeleri (*.txt)"
     STRING_TOOLARGE "%s kütüğü Metin Düzenleyicisi için çok büyük. Bu kütüğü düzenlemek için başka bir düzenleyici kullanınız."
-    STRING_NOTEXT "Hiçbir şey yazmadınız. Lütfen bir şeyler yazıp yeniden deneyiniz."
+    STRING_NOTEXT "Hiçbir şey yazmadınız. Birşeyler yazıp yeniden deneyiniz."
     STRING_DOESNOTEXIST "%s kütüğü yok. Yeni bir kütük oluşturmak ister misiniz?"
     STRING_NOTSAVED "%s kütüğündeki metin değiştirilmiş. Değişiklikleri kaydetmek istiyor musunuz?"
     STRING_NOTFOUND "%s kütüğü bulunamadı."

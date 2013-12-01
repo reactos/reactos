@@ -1,4 +1,4 @@
-/* Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@lve.com) */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -427,7 +427,7 @@ STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO "Giriş"
     IDS_PORT_MEMORY_IO "Bellek"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Kenar Duyarlılığı"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Kıyı Duyarlılığı"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Düzey Duyarlılığı"
     IDS_MEMORY_READ_ONLY "Salt Okunur"
     IDS_MEMORY_WRITE_ONLY "Salt Yazılır"
@@ -520,9 +520,9 @@ BEGIN
             WS_TABSTOP, 14, 48, 36, 8
     CONTROL "&Değerler", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
-    CONTROL "Yalnızca tüm dizgi", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Yalnızca Tüm Dizgi", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "Büyük-küçük hârf ayrımı", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Büyük-küçük Hârf Ayrımı", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
 

@@ -134,7 +134,7 @@ BEGIN
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "Ö&ntanımlılara Geri Dön", 5400, 7, 191, 110, 14
     LTEXT "Yok", 8497, 128, 56, 21, 10
-    LTEXT "Tam", 8498, 214, 56, 21, 9
+    LTEXT "Eksiksiz", 8498, 214, 56, 21, 9
     LTEXT "İyi", 8499, 128, 123, 21, 10
     LTEXT "En İyi", 8500, 214, 123, 23, 9
     LTEXT "Bu dizgi, yakalama aygıtı için donanım ayârını tanımlar.", 5399, 13, 145, 227, 21
