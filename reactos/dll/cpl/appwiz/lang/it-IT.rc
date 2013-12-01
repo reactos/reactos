@@ -51,9 +51,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Downloading..."
-    IDS_INSTALLING      "Installing..."
-    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_DOWNLOADING     "Scaricando..."
+    IDS_INSTALLING      "Installando..."
+    IDS_INVALID_SHA     "Checksum imprevisto del file scaricato. Interruzione installazione del file danneggiato."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
@@ -61,9 +61,9 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Wine Gecko Installer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS could not find a Wine Gecko package which is needed for applications embedding HTML to work correctly. ReactOS can automatically download and install it for you.",
+    CONTROL "ReactOS non ha trovato il pacchetto Wine Gecko necessario per il corretto funzionamento delle applicazioni che incorporano HTML. ReactOS puo scaricarlo e installarlo automaticamente.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Install", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Installa", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancella", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
