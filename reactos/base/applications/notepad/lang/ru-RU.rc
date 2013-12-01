@@ -166,8 +166,8 @@ BEGIN
     STRING_UNICODE "Юникод"
     STRING_UNICODE_BE "Юникод (big endian)"
     STRING_UTF8 "UTF-8"
-    STRING_CRLF "Windows"
-    STRING_LF "Unix"
-    STRING_CR "Макинтош"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Макинтош (CR)"
     STRING_LINE_COLUMN "Строка %d, столбец %d"
 END
