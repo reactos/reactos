@@ -33,5 +33,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Application Compatibility Layer Shell Extension"
+    IDS_DESCRIPTION "Anwendungs-Kompatibilitätsschicht Shell Erweiterung"
 END

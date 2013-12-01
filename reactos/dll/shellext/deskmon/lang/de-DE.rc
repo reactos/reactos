@@ -12,7 +12,7 @@ BEGIN
     GROUPBOX "Monitoreinstellungen", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "Bild&schirmwiederholrate:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Versteckt Modi, die der Monitor nicht anzeigen kann.", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "Modi &verstecken, die der Monitor nicht anzeigen kann", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
