@@ -18,11 +18,19 @@
 
 #include "wmic.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-STRINGTABLE
-BEGIN
-    STRING_CMDLINE_NOT_SUPPORTED "Error: Command line not supported\n"
-    STRING_ALIAS_NOT_FOUND "Error: Alias not found\n"
-    STRING_INVALID_QUERY "Error: Invalid query\n"
-END
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WMI command line"
+#define REACTOS_STR_INTERNAL_NAME     "wmic"
+#define REACTOS_STR_ORIGINAL_FILENAME "wmic.exe"
+#include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+

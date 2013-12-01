@@ -1,4 +1,4 @@
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
@@ -10,7 +10,7 @@ Optionen:\n\
     -l Größe       Größe des Sendepuffers.\n\
     -w Zeitlimit   Zeitlimit in Millisekunden für eine Antwort.\n\n\0"
 
-    IDS_PING_WITH_BYTES "\nPinging %1 [%2] with %3!d! bytes Data:\n\n\0"
+    IDS_PING_WITH_BYTES "\nPingen von %1 [%2] mit %3!d! Bytes Daten:\n\n\0"
     IDS_PING_STATISTICS "\nPing Statistik für %1:\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST "    Packets: Gesendet = %1!d!, Empfangen = %2!d!, Verloren = %3!d! (%4!d!%% Verlust),\n\0"
     IDS_APPROXIMATE_ROUND_TRIP "Durchschnittliche Antwortzeit in Millisekunden:\n\0"

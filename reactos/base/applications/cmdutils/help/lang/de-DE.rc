@@ -4,14 +4,14 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "Dieser Befehl wird von der Hilfe nicht unterstützt.\nVersuchen Sie ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
+    IDS_USAGE "Liefert Informationen über ReactOS Befehle.\n\n\
+HELP [Befehl]\n\n\
+  Befehl - Zeige Informationen über diesen Befehl.\n"
     IDS_HELP1 "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
   help Befehl\n\
   Befehl /?     Um nähere Informationen zu einem bestimmten Befehl\n\
