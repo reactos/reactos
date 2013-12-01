@@ -14,3 +14,6 @@ Description = Ein FB2 eBook Reader.
 
 [Section.041f]
 Description = Bir FB2 e-Kitap ouyucusu.
+
+[Section.0410]
+Description = Un eBook Reader.

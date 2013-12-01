@@ -14,5 +14,8 @@ CDPath = none
 [Section.0407]
 Description = DirectShow Filter für Ogg Vorbis, Speex, Theora, FLAC, und WebM Dateiformate.
 
+[Section.0410]
+Description = I filtri DirectShow per la Ogg Vorbis, Speex, Theora, FLAC e formati di file WebM.
+
 [Section.041f]
 Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük türleri için DirectShow süzgeçleri.

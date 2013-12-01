@@ -16,3 +16,6 @@ Description = Chromium B.S.U. ist ein Arcade-Style, Top-Scrolling Space Shooter.
 
 [Section.041f]
 Description = Chromium B.S.U., atari salonu oyunu türünde, üst kaydırmalı bir uzay nişancısıdır.
+
+[Section.0410]
+Description = Cromo B.S.U. è sparatutto spaziale.
