@@ -2,9 +2,9 @@ Files synched with Wine can be found in /media/doc/README.WINE
 
 Other Things synched with other projects:
 
-Title: RedHat Liberation Fonts
-Used Version: 2.00
-Website: https://www.redhat.com/promo/fonts/
+Title: Liberation Fonts
+Used Version: 2.00.1
+Website: https://fedorahosted.org/liberation-fonts/
 
 Title: DejaVu Fonts
 Used Version: 2.34
@@ -19,24 +19,24 @@ Used Version: 2.5.0
 Website: http://www.freetype.org
 
 Title: Mesa3D
-Used Version: 7.4
+Used Version: 8.0.4
 Website: http://www.mesa3d.org
+
+Title: Mesa3D glu libary
+Used Version: 9.0
+Website: ftp://ftp.freedesktop.org/pub/mesa/glu/
 
 Title: GNU adns
 Used Version: 1.0 REV 5
-Website: http://www.chiark.greenend.org.uk/~ian/adns | http://adns.jgaa.com
+Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
 
 Title: BZip2
-Used Version: 2.0.6
+Used Version: 1.0.6
 Website: http://www.bzip.org
-
-Title: Expat
-Used Version: 2.0
-Website: http://expat.sourceforge.net
 
 Title: LibXML
 Used Version: 2.9.0
-Website: http://xmlsoft.org
+Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
 
 Title: ZLib
 Used Version: 1.2.8
@@ -45,3 +45,19 @@ Website: http://www.zlib.net
 Title: GNU FreeFont
 Used Version: 2012-05-03
 Website: http://savannah.gnu.org/projects/freefont/
+
+Title: CardLib
+Used Version: 2005-07-14
+Website: http://www.catch22.net/tuts/cardlib
+
+Title:  libsamplerate
+Used Version: 0.1.8
+Website: http://www.mega-nerd.com/SRC/download.html
+
+Title:  libmpg123 (used by winemp3.acm)
+Used Version: 1.12.3
+Website: http://www.mpg123.de/
+
+Title:  STLport
+Used Version: 5.2.1
+Website: http://stlport.sourceforge.net/
