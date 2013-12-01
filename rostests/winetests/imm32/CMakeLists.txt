@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-add_definitions(-D__ROS_LONG64__)
 add_executable(imm32_winetest imm32.c testlist.c)
 set_module_type(imm32_winetest win32cui)
 add_importlibs(imm32_winetest imm32 user32 msvcrt kernel32)
