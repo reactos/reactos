@@ -2419,6 +2419,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT1("DOS Function INT 0x21, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
                     getAH(), getAL());
+
+            setAL(0); // Some functions expect AL to be 0 when it's not supported.
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
     }
