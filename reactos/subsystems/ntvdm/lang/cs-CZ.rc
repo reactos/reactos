@@ -7,6 +7,6 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "ReactOS podpora virtu·lnÌho DOS stroje.\n"
-    STRING_PromptMsg "Napiöte r<cr> pro spuötÏnÌ, s<cr> pro vypnutÌ nebo q<cr> pro ukonËenÌ."
+    STRING_WelcomeMsg "ReactOS podpora virtu√°ln√≠ho DOS stroje.\n"
+    STRING_PromptMsg "Napi≈°te r<cr> pro spu≈°t√¨n√≠, s<cr> pro vypnut√≠ nebo q<cr> pro ukon√®en√≠."
 END

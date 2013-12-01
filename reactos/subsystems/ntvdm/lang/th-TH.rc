@@ -2,6 +2,6 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "�ͧ�Ѻ��÷ӧҹ�к��������͹�ͧ ReactOS\n"
-    STRING_PromptMsg "Ẻ r<cr> ���ͷӧҹ, s<cr> ���ͻԴ�к����� q<cr> �����͡�ѹ��"
+    STRING_WelcomeMsg "รองรับการทำงานระบบดอสเสมือนของ ReactOS\n"
+    STRING_PromptMsg "แบบ r<cr> เพื่อทำงาน, s<cr> เพื่อปิดระบบหรือ q<cr> เพื่อออกทันที"
 END

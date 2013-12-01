@@ -2,6 +2,6 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "Поддръжка на РеактОС за привидна ДОС машина.\n"
-    STRING_PromptMsg "Напишете r<cr> за пускане, s<cr> за спиране или q<cr> за изход."
+    STRING_WelcomeMsg "РџРѕРґРґСЂСЉР¶РєР° РЅР° Р РµР°РєС‚РћРЎ Р·Р° РїСЂРёРІРёРґРЅР° Р”РћРЎ РјР°С€РёРЅР°.\n"
+    STRING_PromptMsg "РќР°РїРёС€РµС‚Рµ r<cr> Р·Р° РїСѓСЃРєР°РЅРµ, s<cr> Р·Р° СЃРїРёСЂР°РЅРµ РёР»Рё q<cr> Р·Р° РёР·С…РѕРґ."
 END

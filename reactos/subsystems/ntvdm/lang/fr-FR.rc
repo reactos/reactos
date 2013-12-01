@@ -3,5 +3,5 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     STRING_WelcomeMsg "Aide de la Machine DOS Virtuel de ReactOS.\n"
-    STRING_PromptMsg "Taper r<cr> pour démarrer, s<cr> pour éteindre ou q<cr> pour quitter maintenant."
+    STRING_PromptMsg "Taper r<cr> pour dÃ©marrer, s<cr> pour Ã©teindre ou q<cr> pour quitter maintenant."
 END

@@ -2,6 +2,6 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "ReactOS Vituell DOS Maskin støtte.\n"
-    STRING_PromptMsg "Skriv r<cr> for å kjøre, s<cr> å avslutte eller q<cr> for å slutte nå."
+    STRING_WelcomeMsg "ReactOS Vituell DOS Maskin stÃ¸tte.\n"
+    STRING_PromptMsg "Skriv r<cr> for Ã¥ kjÃ¸re, s<cr> Ã¥ avslutte eller q<cr> for Ã¥ slutte nÃ¥."
 END

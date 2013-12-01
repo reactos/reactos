@@ -7,6 +7,9 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "ntvdm.exe"
 #include <reactos/version.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
@@ -18,16 +21,12 @@
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/no-NO.rc"
-#include "lang/th-TH.rc"
-#include "lang/pt-BR.rc"
-#include "lang/sk-SK.rc"
-#include "lang/zh-CN.rc"
-#include "lang/zh-TW.rc"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 #include "lang/pl-PL.rc"
+#include "lang/pt-BR.rc"
 #include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
+#include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
+#include "lang/zh-TW.rc"

@@ -4,6 +4,6 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "ReactOS Virtu·lis DOS GÈp t·mogat·s.\n"
-    STRING_PromptMsg "Futtat·shoz nyomd meg a r<cr>, le·llÌt·shoz a s<cr> vagy kilÈpÈshez a q<cr> gombot."
+    STRING_WelcomeMsg "ReactOS Virtu√°lis DOS G√©p t√°mogat√°s.\n"
+    STRING_PromptMsg "Futtat√°shoz nyomd meg a r<cr>, le√°ll√≠t√°shoz a s<cr> vagy kil√©p√©shez a q<cr> gombot."
 END

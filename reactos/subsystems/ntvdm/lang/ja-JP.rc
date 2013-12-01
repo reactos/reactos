@@ -3,5 +3,5 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_WelcomeMsg "ReactOS Virtual DOS Machine support.\n"
-    STRING_PromptMsg "‹N“®‚·‚é‚É‚Í r<cr> ‚ðAƒVƒƒƒbƒgƒ_ƒEƒ“‚·‚é‚É‚Í s<cr> ‚ðA¡‚·‚®I—¹‚³‚¹‚é‚É‚Í q<cr> ‚ð“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B"
+    STRING_PromptMsg "èµ·å‹•ã™ã‚‹ã«ã¯ r<cr> ã‚’ã€ã‚·ãƒ£ãƒƒãƒˆãƒ€ã‚¦ãƒ³ã™ã‚‹ã«ã¯ s<cr> ã‚’ã€ä»Šã™ãçµ‚äº†ã•ã›ã‚‹ã«ã¯ q<cr> ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚"
 END
