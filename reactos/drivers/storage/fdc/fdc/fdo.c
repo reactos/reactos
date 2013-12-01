@@ -216,8 +216,6 @@ FdcFdoConfigCallback(
     PeripheralResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)PeripheralFullDescriptor +
                                                                   PeripheralFullDescriptor->DataOffset);
 
-    DeviceExtension->ControllerInfo.NumberOfDrives = 0;
-
     /* learn about drives attached to controller */
     for(i = 0; i < PeripheralResourceDescriptor->PartialResourceList.Count; i++)
     {
@@ -228,10 +226,10 @@ FdcFdoConfigCallback(
 
         FloppyDeviceData = (PCM_FLOPPY_DEVICE_DATA)(PartialDescriptor + 1);
 
-        DriveInfo = &DeviceExtension->ControllerInfo.DriveInfo[i];
+        DriveInfo = &DeviceExtension->ControllerInfo.DriveInfo[DeviceExtension->ControllerInfo.NumberOfDrives];
 
         DriveInfo->ControllerInfo = &DeviceExtension->ControllerInfo;
-        DriveInfo->UnitNumber = i;
+        DriveInfo->UnitNumber = DeviceExtension->ControllerInfo.NumberOfDrives;
         DriveInfo->PeripheralNumber = PeripheralNumber;
 
         DriveInfo->FloppyDeviceData.MaxDensity = FloppyDeviceData->MaxDensity;
