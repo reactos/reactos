@@ -87,7 +87,7 @@ UserGetWindowIcon(HWND hwnd)
         hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
 
     if(!hIcon)
-        hIcon = LoadIcon(NULL, IDI_WINLOGO);
+        hIcon = LoadIconW(NULL, (LPCWSTR)IDI_WINLOGO);
 
     return hIcon;
 }

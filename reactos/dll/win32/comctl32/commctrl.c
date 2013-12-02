@@ -119,7 +119,7 @@ static BOOL create_manifest(BOOL install)
     HANDLE hFile;
     BOOL bRet = FALSE;
 
-    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", RT_MANIFEST);
+    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", (LPWSTR)RT_MANIFEST);
     if (!hResInfo)
         return FALSE;
 
