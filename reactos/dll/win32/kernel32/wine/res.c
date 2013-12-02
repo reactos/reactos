@@ -983,7 +983,7 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
         Type = resource_dup_string( root, e1 );
 
-        namedir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e1->u2.s3.OffsetToDirectory);
+        namedir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e1->u2.s2.OffsetToDirectory);
         for (j = 0; j < namedir->NumberOfNamedEntries + namedir->NumberOfIdEntries; j++)
         {
             LPWSTR Name;
@@ -992,7 +992,7 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
             Name = resource_dup_string( root, e2 );
 
-            langdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e2->u2.s3.OffsetToDirectory);
+            langdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e2->u2.s2.OffsetToDirectory);
             for (k = 0; k < langdir->NumberOfNamedEntries + langdir->NumberOfIdEntries; k++)
             {
                 LANGID Lang;
@@ -1252,8 +1252,8 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
             root->NumberOfIdEntries++;
             e1->u1.Id = LOWORD( types->id );
         }
-        e1->u2.s3.OffsetToDirectory = si->names_ofs;
-        e1->u2.s3.DataIsDirectory = TRUE;
+        e1->u2.s2.OffsetToDirectory = si->names_ofs;
+        e1->u2.s2.DataIsDirectory = TRUE;
         si->types_ofs += sizeof (IMAGE_RESOURCE_DIRECTORY_ENTRY);
 
         namedir = (IMAGE_RESOURCE_DIRECTORY*) &base[si->names_ofs];
@@ -1288,8 +1288,8 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
                 namedir->NumberOfIdEntries++;
                 e2->u1.Id = LOWORD( names->id );
             }
-            e2->u2.s3.OffsetToDirectory = si->langs_ofs;
-            e2->u2.s3.DataIsDirectory = TRUE;
+            e2->u2.s2.OffsetToDirectory = si->langs_ofs;
+            e2->u2.s2.DataIsDirectory = TRUE;
             si->names_ofs += sizeof (IMAGE_RESOURCE_DIRECTORY_ENTRY);
 
             langdir = (IMAGE_RESOURCE_DIRECTORY*) &base[si->langs_ofs];
