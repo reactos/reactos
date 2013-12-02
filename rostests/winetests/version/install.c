@@ -89,7 +89,7 @@ static void test_find_file(void)
                    "got %d(%s) expected MAX_PATH\n", dwOut, outBuf);
                 break;
             default:
-                todo_wine ok(0, "Got unexpected return value %x\n", ret);
+                ok(0, "Got unexpected return value %x\n", ret);
             }
 
             dwCur=MAX_PATH;
@@ -111,7 +111,7 @@ static void test_find_file(void)
                    "got %d(%s) expected MAX_PATH\n", dwOut, outBuf);
                 break;
             default:
-                todo_wine ok(0, "Got unexpected return value %x\n", ret);
+                ok(0, "Got unexpected return value %x\n", ret);
             }
         }
     }
