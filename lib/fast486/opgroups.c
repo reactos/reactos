@@ -1012,8 +1012,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
         /* DIV */
         case 6:
         {
-            UCHAR Quotient = State->GeneralRegs[FAST486_REG_EAX].LowWord / Value;
-            UCHAR Remainder = State->GeneralRegs[FAST486_REG_EAX].LowWord % Value;
+            UCHAR Quotient, Remainder;
+
+            if (Value == 0)
+            {
+                /* Divide error */
+                Fast486Exception(State, FAST486_EXCEPTION_DE);
+                return FALSE;
+            }
+
+            Quotient = State->GeneralRegs[FAST486_REG_EAX].LowWord / Value;
+            Remainder = State->GeneralRegs[FAST486_REG_EAX].LowWord % Value;
 
             /* Write back the results */
             State->GeneralRegs[FAST486_REG_EAX].LowByte = Quotient;
@@ -1025,8 +1034,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
         /* IDIV */
         case 7:
         {
-            CHAR Quotient = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord / (CHAR)Value;
-            CHAR Remainder = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord % (CHAR)Value;
+            CHAR Quotient, Remainder;
+
+            if (Value == 0)
+            {
+                /* Divide error */
+                Fast486Exception(State, FAST486_EXCEPTION_DE);
+                return FALSE;
+            }
+
+            Quotient = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord / (CHAR)Value;
+            Remainder = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord % (CHAR)Value;
 
             /* Write back the results */
             State->GeneralRegs[FAST486_REG_EAX].LowByte = (UCHAR)Quotient;
@@ -1225,6 +1243,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
         /* DIV */
         case 6:
         {
+            if (Value == 0)
+            {
+                /* Divide error */
+                Fast486Exception(State, FAST486_EXCEPTION_DE);
+                return FALSE;
+            }
+
             if (OperandSize)
             {
                 ULONGLONG Dividend = (ULONGLONG)State->GeneralRegs[FAST486_REG_EAX].Long
@@ -1254,6 +1279,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
         /* IDIV */
         case 7:
         {
+            if (Value == 0)
+            {
+                /* Divide error */
+                Fast486Exception(State, FAST486_EXCEPTION_DE);
+                return FALSE;
+            }
+
             if (OperandSize)
             {
                 LONGLONG Dividend = (LONGLONG)State->GeneralRegs[FAST486_REG_EAX].Long
