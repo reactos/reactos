@@ -26,7 +26,7 @@ QueryPerformanceCounter(OUT PLARGE_INTEGER lpPerformanceCount)
     NTSTATUS Status;
 
     Status = NtQueryPerformanceCounter(lpPerformanceCount, &Frequency);
-    if (!Frequency.QuadPart) Status = STATUS_NOT_IMPLEMENTED;
+    if (Frequency.QuadPart == 0) Status = STATUS_NOT_IMPLEMENTED;
     
     if (!NT_SUCCESS(Status))
     {
@@ -48,7 +48,7 @@ QueryPerformanceFrequency(OUT PLARGE_INTEGER lpFrequency)
     NTSTATUS Status;
 
     Status = NtQueryPerformanceCounter(&Count, lpFrequency);
-    if (!Count.QuadPart) Status = STATUS_NOT_IMPLEMENTED;
+    if (lpFrequency->QuadPart == 0) Status = STATUS_NOT_IMPLEMENTED;
     
     if (!NT_SUCCESS(Status))
     {
