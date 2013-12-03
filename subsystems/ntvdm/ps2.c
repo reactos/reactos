@@ -96,7 +96,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         {
             KeyboardResponse = KeyboardConfig;
             KeyboardReadResponse = TRUE;
-
             break;
         }
 
@@ -114,7 +113,6 @@ VOID KeyboardWriteCommand(BYTE Command)
             /* These commands require a response */
             KeyboardResponse = Command;
             KeyboardWriteResponse = TRUE;
-
             break;
         }
 
@@ -122,7 +120,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         case 0xA7:
         {
             // TODO: Mouse support
-
             break;
         }
 
@@ -130,7 +127,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         case 0xA8:
         {
             // TODO: Mouse support
-
             break;
         }
 
@@ -139,7 +135,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         {
             KeyboardResponse = 0;
             KeyboardReadResponse = TRUE;
-
             break;
         }
 
@@ -148,7 +143,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         {
             KeyboardResponse = 0x55;
             KeyboardReadResponse = TRUE;
-
             break;
         }
 
@@ -185,7 +179,6 @@ VOID KeyboardWriteCommand(BYTE Command)
         {
             /* Stop the simulation */
             VdmRunning = FALSE;
-
             break;
         }
     }
@@ -245,7 +238,6 @@ VOID KeyboardWriteData(BYTE Data)
             {
                 /* Push the data byte to the keyboard queue */
                 KeyboardQueuePush(Data);
-
                 break;
             }
 
@@ -323,7 +315,6 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
 
                 /* Keyboard IRQ */
                 PicInterruptRequest(1);
-
                 break;
             }
 
@@ -331,7 +322,6 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
             {
                 // TODO: NOT IMPLEMENTED
                 UNIMPLEMENTED;
-
                 break;
             }
 

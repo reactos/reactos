@@ -199,7 +199,7 @@ VOID PicInterruptRequest(BYTE Number)
 
     if (Number >= 0 && Number < 8)
     {
-        /* Check if any of the higher-priorirty interrupts are busy */
+        /* Check if any of the higher-priority interrupts are busy */
         for (i = 0; i <= Number ; i++)
         {
             if (MasterPic.InServiceRegister & (1 << Number)) return;
@@ -226,7 +226,7 @@ VOID PicInterruptRequest(BYTE Number)
             return;
         }
 
-        /* Check if any of the higher-priorirty interrupts are busy */
+        /* Check if any of the higher-priority interrupts are busy */
         if (MasterPic.InServiceRegister != 0) return;
         for (i = 0; i <= Number; i++)
         {
