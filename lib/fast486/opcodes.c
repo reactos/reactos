@@ -5363,176 +5363,90 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
         Segment = State->SegmentOverride;
     }
 
+    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    {
+        if ((AddressSize && (State->GeneralRegs[FAST486_REG_ECX].Long == 0))
+            || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
+        {
+            /* Do nothing */
+            return TRUE;
+        }
+    }
+
     /* Calculate the size */
     if (Opcode == 0xA4) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    /* Read from the source operand */
+    if (!Fast486ReadMemory(State,
+                           Segment,
+                           AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
+                                       : State->GeneralRegs[FAST486_REG_ESI].LowWord,
+                           FALSE,
+                           &Data,
+                           DataSize))
     {
-        UCHAR Block[STRING_BLOCK_SIZE];
-        ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
-                                  : State->GeneralRegs[FAST486_REG_ECX].LowWord;
+        /* Exception occurred */
+        return FALSE;
+    }
 
-        /* Clear the memory block */
-        RtlZeroMemory(Block, sizeof(Block));
+    /* Write to the destination operand */
+    if (!Fast486WriteMemory(State,
+                            FAST486_REG_ES,
+                            AddressSize ? State->GeneralRegs[FAST486_REG_EDI].Long
+                                        : State->GeneralRegs[FAST486_REG_EDI].LowWord,
+                            &Data,
+                            DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
 
-        /* Transfer until finished */
-        while (Count)
+    /* Increment/decrement ESI and EDI */
+    if (AddressSize)
+    {
+        if (!State->Flags.Df)
         {
-            ULONG Processed = min(Count, STRING_BLOCK_SIZE / DataSize);
-
-            /* Simulate the 16-bit wrap-around of SI and DI in 16-bit address mode */
-            if (!AddressSize)
-            {
-                ULONG MaxBytesSrc = State->Flags.Df
-                                    ? (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord
-                                    : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord);
-                ULONG MaxBytesDest = State->Flags.Df
-                                     ? (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord
-                                     : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord);
-
-
-                Processed = min(Processed, min(MaxBytesSrc, MaxBytesDest) / DataSize);
-                if (Processed == 0) Processed = 1;
-            }
-
-            if (State->Flags.Df)
-            {
-                /* Move ESI and EDI to the start of the block */
-                if (AddressSize)
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].Long -= (Processed - 1) * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].Long -= (Processed - 1) * DataSize;
-                }
-                else
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].LowWord -= (Processed - 1) * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].LowWord -= (Processed - 1) * DataSize;
-                }
-            }
-
-            /* Read from memory */
-            if (!Fast486ReadMemory(State,
-                                   Segment,
-                                   AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
-                                               : State->GeneralRegs[FAST486_REG_ESI].LowWord,
-                                   FALSE,
-                                   Block,
-                                   Processed * DataSize))
-            {
-                /* Set ECX */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_ECX].Long = Count;
-                else State->GeneralRegs[FAST486_REG_ECX].LowWord = LOWORD(Count);
-
-                /* Exception occurred */
-                return FALSE;
-            }
-
-            /* Write to memory */
-            if (!Fast486WriteMemory(State,
-                                    FAST486_REG_ES,
-                                    AddressSize ? State->GeneralRegs[FAST486_REG_EDI].Long
-                                                : State->GeneralRegs[FAST486_REG_EDI].LowWord,
-                                    Block,
-                                    Processed * DataSize))
-            {
-                /* Set ECX */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_ECX].Long = Count;
-                else State->GeneralRegs[FAST486_REG_ECX].LowWord = LOWORD(Count);
-
-                /* Exception occurred */
-                return FALSE;
-            }
-
-            if (!State->Flags.Df)
-            {
-                /* Increase ESI and EDI by the number of bytes transfered */
-                if (AddressSize)
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].Long += Processed * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].Long += Processed * DataSize;
-                }
-                else
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].LowWord += Processed * DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].LowWord += Processed * DataSize;
-                }
-            }
-            else
-            {
-                /* Reduce ESI and EDI */
-                if (AddressSize)
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].Long -= DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].Long -= DataSize;
-                }
-                else
-                {
-                    State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
-                    State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
-                }
-            }
-
-            /* Reduce the total count by the number processed in this run */
-            Count -= Processed;
+            State->GeneralRegs[FAST486_REG_ESI].Long += DataSize;
+            State->GeneralRegs[FAST486_REG_EDI].Long += DataSize;
         }
-
-        /* Clear ECX */
-        if (AddressSize) State->GeneralRegs[FAST486_REG_ECX].Long = 0;
-        else State->GeneralRegs[FAST486_REG_ECX].LowWord = 0;
+        else
+        {
+            State->GeneralRegs[FAST486_REG_ESI].Long -= DataSize;
+            State->GeneralRegs[FAST486_REG_EDI].Long -= DataSize;
+        }
     }
     else
     {
-        /* Read from the source operand */
-        if (!Fast486ReadMemory(State,
-                               FAST486_REG_DS,
-                               AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
-                                           : State->GeneralRegs[FAST486_REG_ESI].LowWord,
-                               FALSE,
-                               &Data,
-                               DataSize))
+        if (!State->Flags.Df)
         {
-            /* Exception occurred */
-            return FALSE;
+            State->GeneralRegs[FAST486_REG_ESI].LowWord += DataSize;
+            State->GeneralRegs[FAST486_REG_EDI].LowWord += DataSize;
         }
-
-        /* Write to the destination operand */
-        if (!Fast486WriteMemory(State,
-                                FAST486_REG_ES,
-                                AddressSize ? State->GeneralRegs[FAST486_REG_EDI].Long
-                                            : State->GeneralRegs[FAST486_REG_EDI].LowWord,
-                                &Data,
-                                DataSize))
+        else
         {
-            /* Exception occurred */
-            return FALSE;
+            State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
+            State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
         }
+    }
 
-        /* Increment/decrement ESI and EDI */
+    // FIXME: This method is slow!
+    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    {
         if (AddressSize)
         {
-            if (!State->Flags.Df)
+            if (--State->GeneralRegs[FAST486_REG_ECX].Long)
             {
-                State->GeneralRegs[FAST486_REG_ESI].Long += DataSize;
-                State->GeneralRegs[FAST486_REG_EDI].Long += DataSize;
-            }
-            else
-            {
-                State->GeneralRegs[FAST486_REG_ESI].Long -= DataSize;
-                State->GeneralRegs[FAST486_REG_EDI].Long -= DataSize;
+                /* Repeat the instruction */
+                State->InstPtr = State->SavedInstPtr;
             }
         }
         else
         {
-            if (!State->Flags.Df)
+            if (--State->GeneralRegs[FAST486_REG_ECX].LowWord)
             {
-                State->GeneralRegs[FAST486_REG_ESI].LowWord += DataSize;
-                State->GeneralRegs[FAST486_REG_EDI].LowWord += DataSize;
-            }
-            else
-            {
-                State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
-                State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
+                /* Repeat the instruction */
+                State->InstPtr = State->SavedInstPtr;
             }
         }
     }
@@ -5560,6 +5474,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
     {
         /* Use the override segment instead of DS */
         Segment = State->SegmentOverride;
+    }
+
+    if ((State->PrefixFlags & FAST486_PREFIX_REP)
+        || (State->PrefixFlags & FAST486_PREFIX_REPNZ))
+    {
+        if ((AddressSize && (State->GeneralRegs[FAST486_REG_ECX].Long == 0))
+            || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
+        {
+            /* Do nothing */
+            return TRUE;
+        }
     }
 
     /* Calculate the size */
@@ -5908,6 +5833,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
 
     TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
+
+    if ((State->PrefixFlags & FAST486_PREFIX_REP)
+        || (State->PrefixFlags & FAST486_PREFIX_REPNZ))
+    {
+        if ((AddressSize && (State->GeneralRegs[FAST486_REG_ECX].Long == 0))
+            || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
+        {
+            /* Do nothing */
+            return TRUE;
+        }
+    }
 
     /* Calculate the size */
     if (Opcode == 0xAE) DataSize = sizeof(UCHAR);
