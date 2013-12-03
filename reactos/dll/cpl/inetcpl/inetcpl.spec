@@ -3,15 +3,15 @@
 @ stub AddInternetPropertySheetsEx
 @ stdcall CPlApplet(long long long long)
 @ stub DisplayPopupWindowManagementDialog
-@ stub DllInstall
+@ stdcall -private DllInstall(long wstr)
 @ stub GetAddSitesDisplayUrl
 @ stub ImportExportPFX
 @ stub LaunchAddSitesDialog
-@ stub LaunchConnectionDialog
+@ stdcall LaunchConnectionDialog(long)
 @ stdcall LaunchInternetControlPanel(long)
 @ stub LaunchPerSitePrivacyActionDialog
 @ stub LaunchPopupWindowManagementDialog
-@ stub LaunchPrivacyDialog
+@ stdcall LaunchPrivacyDialog(long)
 @ stub LaunchSecurityDialog
 @ stub LaunchSecurityDialogEx
 @ stdcall LaunchSiteCertDialog(long)

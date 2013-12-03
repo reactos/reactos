@@ -54,6 +54,7 @@ static inline BOOL heap_free( void *mem )
 
 /* icons */
 #define ICO_MAIN            100
+#define ICO_INTERNET        1313
 
 /* strings */
 #define IDS_CPL_NAME        1
