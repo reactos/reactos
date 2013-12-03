@@ -3524,10 +3524,102 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
-    return FALSE;
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!ModRegRm.Memory)
+    {
+        /* Invalid */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Check for the segment override */
+    if (State->PrefixFlags & FAST486_PREFIX_SEG)
+    {
+        /* Use the override segment instead */
+        Segment = State->SegmentOverride;
+    }
+
+    if (OperandSize)
+    {
+        LONG Index, LowerBound, UpperBound;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmDwordOperands(State,
+                                           &ModRegRm,
+                                           (PULONG)&Index,
+                                           (PULONG)&LowerBound))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486ReadMemory(State,
+                               Segment,
+                               ModRegRm.MemoryAddress + sizeof(ULONG),
+                               FALSE,
+                               &UpperBound,
+                               sizeof(ULONG)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if ((Index < LowerBound) || (Index > UpperBound))
+        {
+            /* Out of bounds */
+            Fast486Exception(State, FAST486_EXCEPTION_BR);
+            return FALSE;
+        }
+    }
+    else
+    {
+        SHORT Index, LowerBound, UpperBound;
+
+        /* Read the operands */
+        if (!Fast486ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          (PUSHORT)&Index,
+                                          (PUSHORT)&LowerBound))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if (!Fast486ReadMemory(State,
+                               Segment,
+                               ModRegRm.MemoryAddress + sizeof(USHORT),
+                               FALSE,
+                               &UpperBound,
+                               sizeof(USHORT)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if ((Index < LowerBound) || (Index > UpperBound))
+        {
+            /* Out of bounds */
+            Fast486Exception(State, FAST486_EXCEPTION_BR);
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
