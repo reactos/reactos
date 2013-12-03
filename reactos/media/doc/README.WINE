@@ -190,7 +190,7 @@ reactos/dll/win32/sti              # Synced to Wine-1.7.1
 reactos/dll/win32/sxs              # Synced to Wine-1.7.1
 reactos/dll/win32/tapi32           # Synced to Wine-1.7.1
 reactos/dll/win32/traffic          # Synced to Wine-1.7.1
-reactos/dll/win32/twain_32         # Out of sync
+reactos/dll/win32/twain_32         # Synced to Wine-1.7.1
 reactos/dll/win32/unicows          # Synced to Wine-1.3.32 (Win9x only, why do we need this?!)
 reactos/dll/win32/updspapi         # Synced to Wine-1.7.1
 reactos/dll/win32/url              # Synced to Wine-1.7.1
