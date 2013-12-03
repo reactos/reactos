@@ -118,7 +118,6 @@ Fast486WriteMemory(PFAST486_STATE State,
     {
         /* Write beyond limit */
         Fast486Exception(State, FAST486_EXCEPTION_GP);
-
         return FALSE;
     }
 

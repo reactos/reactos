@@ -40,19 +40,19 @@
 #define SEGMENT_TABLE_INDICATOR     (1 << 2)
 #define EXCEPTION_HAS_ERROR_CODE(x) (((x) == 8) || ((x) >= 10 && (x) <= 14))
 
-#define NO_LOCK_PREFIX() if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
+#define NO_LOCK_PREFIX()\
+if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 {\
     Fast486Exception(State, FAST486_EXCEPTION_UD);\
     return FALSE;\
 }
-#define TOGGLE_OPSIZE(x) if (State->PrefixFlags & FAST486_PREFIX_OPSIZE)\
-{\
-    x = !x;\
-}
-#define TOGGLE_ADSIZE(x) if (State->PrefixFlags & FAST486_PREFIX_ADSIZE)\
-{\
-    x = !x;\
-}
+
+#define TOGGLE_OPSIZE(x)\
+    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE) x = !x;
+
+#define TOGGLE_ADSIZE(x)\
+    if (State->PrefixFlags & FAST486_PREFIX_ADSIZE) x = !x;
+
 #define SWAP(x, y) { (x) ^= (y); (y) ^= (x); (x) ^= (y); }
 
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)

@@ -1434,7 +1434,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
         else if (ModRegRm.Register == 3)
         {
             USHORT Selector;
-            INT Segment = FAST486_REG_DS;
+            FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
             /* Check for the segment override */
             if (State->PrefixFlags & FAST486_PREFIX_SEG)
@@ -1487,7 +1487,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
         else if (ModRegRm.Register == 5)
         {
             USHORT Selector;
-            INT Segment = FAST486_REG_DS;
+            FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
             /* Check for the segment override */
             if (State->PrefixFlags & FAST486_PREFIX_SEG)
@@ -1580,7 +1580,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
         else if (ModRegRm.Register == 3)
         {
             USHORT Selector;
-            INT Segment = FAST486_REG_DS;
+            FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
             /* Check for the segment override */
             if (State->PrefixFlags & FAST486_PREFIX_SEG)
@@ -1636,7 +1636,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
         else if (ModRegRm.Register == 5)
         {
             USHORT Selector;
-            INT Segment = FAST486_REG_DS;
+            FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
             /* Check for the segment override */
             if (State->PrefixFlags & FAST486_PREFIX_SEG)

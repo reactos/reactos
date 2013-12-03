@@ -122,13 +122,12 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
                         PVOID Buffer,
                         ULONG Size)
 {
-    INT Cpl = Fast486GetCurrentPrivLevel(State);
-
     /* Check if paging is enabled */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
     {
         ULONG Page;
         FAST486_PAGE_TABLE TableEntry;
+        INT Cpl = Fast486GetCurrentPrivLevel(State);
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -151,14 +150,14 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
             /* Check if this is the first page */
             if (Page == PAGE_ALIGN(LinearAddress))
             {
-                /* Start copying from the offset from the beginning of the page */
+                /* Start reading from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
             }
 
             /* Check if this is the last page */
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
             {
-                /* Copy only a part of the page */
+                /* Read only a part of the page */
                 PageLength = PAGE_OFFSET(LinearAddress) + Size - PageOffset;
             }
 
@@ -185,13 +184,12 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
                          PVOID Buffer,
                          ULONG Size)
 {
-    INT Cpl = Fast486GetCurrentPrivLevel(State);
-
     /* Check if paging is enabled */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
     {
         ULONG Page;
         FAST486_PAGE_TABLE TableEntry;
+        INT Cpl = Fast486GetCurrentPrivLevel(State);
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -216,14 +214,14 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             /* Check if this is the first page */
             if (Page == PAGE_ALIGN(LinearAddress))
             {
-                /* Start copying from the offset from the beginning of the page */
+                /* Start writing from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
             }
 
             /* Check if this is the last page */
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
             {
-                /* Copy only a part of the page */
+                /* Write only a part of the page */
                 PageLength = PAGE_OFFSET(LinearAddress) + Size - PageOffset;
             }
 
@@ -385,7 +383,7 @@ Fast486StackPop(PFAST486_STATE State,
 FORCEINLINE
 BOOLEAN
 Fast486LoadSegment(PFAST486_STATE State,
-                   INT Segment,
+                   FAST486_SEG_REGS Segment,
                    USHORT Selector)
 {
     PFAST486_SEG_REG CachedDescriptor;
