@@ -16,11 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -34,218 +29,209 @@ STRINGTABLE
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
 }
 
-
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Default"
+    POPUP "" /* Default */
     {
-        MENUITEM "&Vissza",                  IDM_GOBACKWARD
-        MENUITEM "El&őre",               IDM_GOFORWARD
+        MENUITEM "&Vissza",                   IDM_GOBACKWARD
+        MENUITEM "El&őre",                    IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "&Háttér mentése...", IDM_SAVEBACKGROUND
+        MENUITEM "&Háttér mentése...",        IDM_SAVEBACKGROUND
         MENUITEM "Beállítás há&ttérként",     IDM_SETWALLPAPER
-        MENUITEM "Háttér &másolása",       IDM_COPYBACKGROUND
-        MENUITEM "Beállítás &asztalelemként",   IDM_SETDESKTOPITEM
+        MENUITEM "Háttér &másolása",          IDM_COPYBACKGROUND
+        MENUITEM "Beállítás &asztalelemként", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "M&indet kijelöli",            IDM_SELECTALL
-        MENUITEM "&Beillesztés",                 IDM_PASTE
+        MENUITEM "M&indet kijelöli",          IDM_SELECTALL
+        MENUITEM "&Beillesztés",              IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Parancsi&kon létrehozása",       IDM_CREATESHORTCUT
-        MENUITEM "Hozzáa&dás a kedvencekhez",     IDM_ADDFAVORITES
-        MENUITEM "&Forrás megjelenítése",           IDM_VIEWSOURCE
+        MENUITEM "Parancsi&kon létrehozása",  IDM_CREATESHORTCUT
+        MENUITEM "Hozzáa&dás a kedvencekhez", IDM_ADDFAVORITES
+        MENUITEM "&Forrás megjelenítése",     IDM_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "K&ódolás",              IDM_LANGUAGE
+        MENUITEM "K&ódolás",                  IDM_LANGUAGE
         MENUITEM SEPARATOR
-        MENUITEM "&Nyomtatás",                 IDM_PRINT
-        MENUITEM "F&rissítés",               _IDM_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "&Nyomtatás",                IDM_PRINT
+        MENUITEM "F&rissítés",                _IDM_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Tula&jdonságok",            IDM_PROPERTIES
     }
 
-    POPUP "Image"
+    POPUP "" /* Image */
     {
-        MENUITEM "&Link megnyitása",               IDM_FOLLOWLINKC
-        MENUITEM "Li&nk megnyitása új ablakban", IDM_FOLLOWLINKN
-        MENUITEM "Cél ment&ése...",       IDM_SAVETARGET
-        MENUITEM "&Cél nyomtatása",            IDM_PRINTTARGET
+        MENUITEM "&Link megnyitása",              IDM_FOLLOWLINKC
+        MENUITEM "Li&nk megnyitása új ablakban",  IDM_FOLLOWLINKN
+        MENUITEM "Cél ment&ése...",               IDM_SAVETARGET
+        MENUITEM "&Cél nyomtatása",               IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Kép megjelen&ítése",            IDM_SHOWPICTURE
-        MENUITEM "&Kép mentése...",      IDM_SAVEPICTURE
-        MENUITEM "Kép elküldése &e-mail-ben...",       IDM_MP_EMAILPICTURE
-        MENUITEM "Kép n&yomtatása...",        IDM_MP_PRINTPICTURE
-        MENUITEM "&Ugrás a Képek-hez",       IDM_MP_MYPICS
-        MENUITEM "Beállíttás há&ttérként",       IDM_SETWALLPAPER
-        MENUITEM "Beállíttás &asztalelemként...",  IDM_SETDESKTOPITEM
+        MENUITEM "&Kép mentése...",               IDM_SAVEPICTURE
+        MENUITEM "Kép elküldése &e-mail-ben...",  IDM_MP_EMAILPICTURE
+        MENUITEM "Kép n&yomtatása...",            IDM_MP_PRINTPICTURE
+        MENUITEM "&Ugrás a Képek-hez",            IDM_MP_MYPICS
+        MENUITEM "Beállíttás há&ttérként",        IDM_SETWALLPAPER
+        MENUITEM "Beállíttás &asztalelemként...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "K&ivágás",                     IDM_CUT
-        MENUITEM "&Másolás",                    IDM_COPY
-        MENUITEM "Parancs&ikon másolása",           IDM_COPYSHORTCUT
-        MENUITEM "Bei&llesztés",                   IDM_PASTE
+        MENUITEM "K&ivágás",                      IDM_CUT
+        MENUITEM "&Másolás",                      IDM_COPY
+        MENUITEM "Parancs&ikon másolása",         IDM_COPYSHORTCUT
+        MENUITEM "Bei&llesztés",                  IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Hozzáa&dás a kedvencekhez...",     IDM_ADDFAVORITES
+        MENUITEM "Hozzáa&dás a kedvencekhez...",  IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "Tula&jdonságok",              IDM_PROPERTIES
+        MENUITEM "Tula&jdonságok",                IDM_PROPERTIES
     }
 
-    POPUP "Control"
+    POPUP "" /* Control */
     {
-        MENUITEM "&Visszavonás",       IDM_UNDO
+        MENUITEM "&Visszavonás",     IDM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "Kiv&ágás",        IDM_CUT
-        MENUITEM "&Másolás",       IDM_COPY
-        MENUITEM "&Beillesztés",      IDM_PASTE
-        MENUITEM "&Törlés",     IDM_DELETE
-        MENUITEM SEPARATOR
+        MENUITEM "Kiv&ágás",         IDM_CUT
+        MENUITEM "&Másolás",         IDM_COPY
+        MENUITEM "&Beillesztés",     IDM_PASTE
+        MENUITEM "&Törlés",          IDM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Mindet k&ijelöli", IDM_SELECTALL
     }
 
-    POPUP "Table"
+    POPUP "" /* Table */
     {
         POPUP "&Kiválasztás"
         {
-            MENUITEM "&Cella",         IDM_CELLSELECT
-            MENUITEM "&Sor",          IDM_ROWSELECT
-            MENUITEM "&Oszlop",       IDM_COLUMNSELECT
-            MENUITEM "&Tábla",        IDM_TABLESELECT
+            MENUITEM "&Cella",           IDM_CELLSELECT
+            MENUITEM "&Sor",             IDM_ROWSELECT
+            MENUITEM "&Oszlop",          IDM_COLUMNSELECT
+            MENUITEM "&Tábla",           IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "&Cella tulajdonságai",  IDM_CELLPROPERTIES
+        MENUITEM "&Cella tulajdonságai", IDM_CELLPROPERTIES
         MENUITEM "&Tábla tulajdonságai", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
-        MENUITEM "&Kivágás",        IDM_CUT
-        MENUITEM "&Másolás",       IDM_COPY
-        MENUITEM "Beillesztés",       IDM_PASTE
+        MENUITEM "&Kivágás",         IDM_CUT
+        MENUITEM "&Másolás",         IDM_COPY
+        MENUITEM "Beillesztés",      IDM_PASTE
         MENUITEM "Mindet k&ijelöli", IDM_SELECTALL
-        MENUITEM "&Nyomtatás",      IDM_PRINT
+        MENUITEM "&Nyomtatás",       IDM_PRINT
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
-        MENUITEM "&Megnyitás",                IDM_FOLLOWLINKC
-        MENUITEM "Megnyitás &új ablakban",  IDM_FOLLOWLINKN
-        MENUITEM "Cél m&entése...",   IDM_SAVETARGET
-        MENUITEM "C&él nyomtatása",        IDM_PRINTTARGET
+        MENUITEM "&Megnyitás",                   IDM_FOLLOWLINKC
+        MENUITEM "Megnyitás &új ablakban",       IDM_FOLLOWLINKN
+        MENUITEM "Cél m&entése...",              IDM_SAVETARGET
+        MENUITEM "C&él nyomtatása",              IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "Kivágás",                  IDM_CUT
-        MENUITEM "Má&solás",                IDM_COPY
-        MENUITEM "Parancs&ikon másolása",       IDM_COPYSHORTCUT
-        MENUITEM "&Beillesztés",               IDM_PASTE
+        MENUITEM "Kivágás",                      IDM_CUT
+        MENUITEM "Má&solás",                     IDM_COPY
+        MENUITEM "Parancs&ikon másolása",        IDM_COPYSHORTCUT
+        MENUITEM "&Beillesztés",                 IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Hozzáadás a ke&dvencekhez...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "Tula&jdonságok",          IDM_PROPERTIES
+        MENUITEM "Tula&jdonságok",               IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-
-    POPUP "DYNSRC Image"
+    POPUP "" /* DYNSRC Image */
     {
-    MENUITEM "&Link megnyitása",               IDM_FOLLOWLINKC
-    MENUITEM "Li&nk megnyitása új ablakban", IDM_FOLLOWLINKN
-    MENUITEM "Cél ment&ése...",       IDM_SAVETARGET
-    MENUITEM "&Cél nyomtatása",            IDM_PRINTTARGET
-    MENUITEM SEPARATOR
-    MENUITEM "Kép megjelen&ítése",            IDM_SHOWPICTURE
-    MENUITEM "&Video mentése...",      IDM_SAVEPICTURE
-    MENUITEM "Beállíttás há&ttérként",       IDM_SETWALLPAPER
-    MENUITEM "Beállíttás &asztalelemként...",  IDM_SETDESKTOPITEM
-    MENUITEM SEPARATOR
-    MENUITEM "K&ivágás",                     IDM_CUT
-    MENUITEM "&Másolás",                    IDM_COPY
-    MENUITEM "Parancs&ikon másolása",           IDM_COPYSHORTCUT
-    MENUITEM "Bei&llesztés",                   IDM_PASTE
-    MENUITEM SEPARATOR
-    MENUITEM "Hozzáa&dás a kedvencekhez...",     IDM_ADDFAVORITES
-    MENUITEM SEPARATOR
-    MENUITEM SEPARATOR
-    MENUITEM "Lejátszás",                     IDM_DYNSRCPLAY
-    MENUITEM "Leállítás",                     IDM_DYNSRCSTOP
-    MENUITEM "Tula&jdonságok",              IDM_PROPERTIES
+        MENUITEM "&Link megnyitása",              IDM_FOLLOWLINKC
+        MENUITEM "Li&nk megnyitása új ablakban",  IDM_FOLLOWLINKN
+        MENUITEM "Cél ment&ése...",               IDM_SAVETARGET
+        MENUITEM "&Cél nyomtatása",               IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Kép megjelen&ítése",            IDM_SHOWPICTURE
+        MENUITEM "&Video mentése...",             IDM_SAVEPICTURE
+        MENUITEM "Beállíttás há&ttérként",        IDM_SETWALLPAPER
+        MENUITEM "Beállíttás &asztalelemként...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "K&ivágás",                      IDM_CUT
+        MENUITEM "&Másolás",                      IDM_COPY
+        MENUITEM "Parancs&ikon másolása",         IDM_COPYSHORTCUT
+        MENUITEM "Bei&llesztés",                  IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Hozzáa&dás a kedvencekhez...",  IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Lejátszás",                     IDM_DYNSRCPLAY
+        MENUITEM "Leállítás",                     IDM_DYNSRCSTOP
+        MENUITEM "Tula&jdonságok",                IDM_PROPERTIES
     }
 
-    POPUP "ART Image"
+    POPUP "" /* ART Image */
     {
-    MENUITEM "&Link megnyitása",               IDM_FOLLOWLINKC
-    MENUITEM "Li&nk megnyitása új ablakban", IDM_FOLLOWLINKN
-    MENUITEM "Cél ment&ése...",       IDM_SAVETARGET
-    MENUITEM "&Cél nyomtatása",            IDM_PRINTTARGET
-    MENUITEM SEPARATOR
-    MENUITEM "Kép megjelen&ítése",            IDM_SHOWPICTURE
-    MENUITEM "&Video mentése...",      IDM_SAVEPICTURE
-    MENUITEM "Beállíttás há&ttérként",       IDM_SETWALLPAPER
-    MENUITEM "Beállíttás &asztalelemként...",  IDM_SETDESKTOPITEM
-    MENUITEM SEPARATOR
-    MENUITEM "K&ivágás",                     IDM_CUT
-    MENUITEM "&Másolás",                    IDM_COPY
-    MENUITEM "Parancs&ikon másolása",           IDM_COPYSHORTCUT
-    MENUITEM "Bei&llesztés",                   IDM_PASTE
-    MENUITEM SEPARATOR
-    MENUITEM "Hozzáa&dás a kedvencekhez...",     IDM_ADDFAVORITES
-    MENUITEM SEPARATOR
-    MENUITEM "Lejátszás",                     IDM_IMGARTPLAY
-    MENUITEM "Leállítás",                     IDM_IMGARTSTOP
-    MENUITEM "Visszatekerés",                   IDM_IMGARTREWIND
-    MENUITEM SEPARATOR
-    MENUITEM SEPARATOR
-    MENUITEM "Tula&jdonságok",              IDM_PROPERTIES
+        MENUITEM "&Link megnyitása",              IDM_FOLLOWLINKC
+        MENUITEM "Li&nk megnyitása új ablakban",  IDM_FOLLOWLINKN
+        MENUITEM "Cél ment&ése...",               IDM_SAVETARGET
+        MENUITEM "&Cél nyomtatása",               IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Kép megjelen&ítése",            IDM_SHOWPICTURE
+        MENUITEM "&Video mentése...",             IDM_SAVEPICTURE
+        MENUITEM "Beállíttás há&ttérként",        IDM_SETWALLPAPER
+        MENUITEM "Beállíttás &asztalelemként...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "K&ivágás",                      IDM_CUT
+        MENUITEM "&Másolás",                      IDM_COPY
+        MENUITEM "Parancs&ikon másolása",         IDM_COPYSHORTCUT
+        MENUITEM "Bei&llesztés",                  IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Hozzáa&dás a kedvencekhez...",  IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Lejátszás",                     IDM_IMGARTPLAY
+        MENUITEM "Leállítás",                     IDM_IMGARTSTOP
+        MENUITEM "Visszatekerés",                 IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM "Tula&jdonságok",                IDM_PROPERTIES
     }
 
-    POPUP "Debug"
+    POPUP "" /* Debug */
     {
-        MENUITEM "Trace Tag-ek",         IDM_TRACETAGS
-        MENUITEM "Erőforrás hibák",  IDM_RESOURCEFAILURES
+        MENUITEM "Trace Tag-ek",               IDM_TRACETAGS
+        MENUITEM "Erőforrás hibák",            IDM_RESOURCEFAILURES
         MENUITEM "Nyomkövetési info dumplása", IDM_DUMPTRACKINGINFO
-        MENUITEM "Hibakeresés megszakítása",        IDM_DEBUGBREAK
+        MENUITEM "Hibakeresés megszakítása",   IDM_DEBUGBREAK
         MENUITEM "Hibakeresési nézet",         IDM_DEBUGVIEW
-        MENUITEM "Fa dumpolása",          IDM_DUMPTREE
-        MENUITEM "Sorok dumpolása",         IDM_DUMPLINES
-        MENUITEM "DisplayTree dumpolása",   IDM_DUMPDISPLAYTREE
-        MENUITEM "FormatCaches dumpolása",  IDM_DUMPFORMATCACHES
-        MENUITEM "LayoutRects dumpolása",   IDM_DUMPLAYOUTRECTS
-        MENUITEM "Memóriafigyelő",     IDM_MEMORYMONITOR
-        MENUITEM "Teljesítménymérő", IDM_PERFORMANCEMETERS
-        MENUITEM "HTML mentése",          IDM_SAVEHTML
+        MENUITEM "Fa dumpolása",               IDM_DUMPTREE
+        MENUITEM "Sorok dumpolása",            IDM_DUMPLINES
+        MENUITEM "DisplayTree dumpolása",      IDM_DUMPDISPLAYTREE
+        MENUITEM "FormatCaches dumpolása",     IDM_DUMPFORMATCACHES
+        MENUITEM "LayoutRects dumpolása",      IDM_DUMPLAYOUTRECTS
+        MENUITEM "Memóriafigyelő",             IDM_MEMORYMONITOR
+        MENUITEM "Teljesítménymérő",           IDM_PERFORMANCEMETERS
+        MENUITEM "HTML mentése",               IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "&Nézet tallózása",       IDM_BROWSEMODE
-        MENUITEM "N&ézet szerkesztése",         IDM_EDITMODE
+        MENUITEM "&Nézet tallózása",           IDM_BROWSEMODE
+        MENUITEM "N&ézet szerkesztése",        IDM_EDITMODE
     }
 
-    POPUP "Vertical Scrollbar"
+    POPUP "" /* Vertical Scrollbar */
     {
-        MENUITEM "Görgetés itt",  IDM_SCROLL_HERE
+        MENUITEM "Görgetés itt", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Felül",          IDM_SCROLL_TOP
-        MENUITEM "Alul",       IDM_SCROLL_BOTTOM
+        MENUITEM "Felül",        IDM_SCROLL_TOP
+        MENUITEM "Alul",         IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
         MENUITEM "Lap fel",      IDM_SCROLL_PAGEUP
-        MENUITEM "Lap le",    IDM_SCROLL_PAGEDOWN
+        MENUITEM "Lap le",       IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
-        MENUITEM "Görgetés fel",    IDM_SCROLL_UP
+        MENUITEM "Görgetés fel", IDM_SCROLL_UP
         MENUITEM "Görgetés le",  IDM_SCROLL_DOWN
     }
 
-    POPUP "Horizontal Scrollbar"
+    POPUP "" /* Horizontal Scrollbar */
     {
-        MENUITEM "Görgetés itt",  IDM_SCROLL_HERE
+        MENUITEM "Görgetés itt",    IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Bal széle",    IDM_SCROLL_LEFTEDGE
-        MENUITEM "Jobb széle",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM "Bal széle",       IDM_SCROLL_LEFTEDGE
+        MENUITEM "Jobb széle",      IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
-        MENUITEM "Lap balra",    IDM_SCROLL_PAGELEFT
-        MENUITEM "Lap jobbra",   IDM_SCROLL_PAGERIGHT
+        MENUITEM "Lap balra",       IDM_SCROLL_PAGELEFT
+        MENUITEM "Lap jobbra",      IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
         MENUITEM "Görgetés balra",  IDM_SCROLL_LEFT
         MENUITEM "Görgetés jobbra", IDM_SCROLL_RIGHT

@@ -17,11 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-
-#pragma code_page(65001)
 
 STRINGTABLE
 {
@@ -36,7 +32,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Implicit"
+    POPUP "" /* Default */
     {
         MENUITEM "În&apoi",                            IDM_GOBACKWARD
         MENUITEM "Î&nainte",                           IDM_GOFORWARD
@@ -58,11 +54,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Tipărește",                         IDM_PRINT
         MENUITEM "&Actualizează",                      _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "P&roprietăți",                       IDM_PROPERTIES
     }
 
-    POPUP "Imagine"
+    POPUP "" /* Image */
     {
         MENUITEM "Deschide &legătura",                       IDM_FOLLOWLINKC
         MENUITEM "Deschide legătura într-o fereastră &nouă", IDM_FOLLOWLINKN
@@ -84,11 +79,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Adaugă la &favorite...",                   IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "P&roprietăți",                             IDM_PROPERTIES
     }
 
-    POPUP "Control"
+    POPUP "" /* Control */
     {
         MENUITEM "&Refă",           IDM_UNDO
         MENUITEM SEPARATOR
@@ -97,11 +91,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Lipește",        IDM_PASTE
         MENUITEM "&Șterge",         IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Selectează t&ot", IDM_SELECTALL
     }
 
-    POPUP "Tabel"
+    POPUP "" /* Table */
     {
         POPUP "Selectare"
         {
@@ -111,12 +104,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "&Tabel",          IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Proprietăți &celulă", IDM_CELLPROPERTIES
         MENUITEM "Proprietăți &tabel",  IDM_TABLEPROPERTIES
     }
 
-    POPUP "Selecție Pagini1D"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "&Taie",           IDM_CUT
         MENUITEM "&Copiază",        IDM_COPY
@@ -126,7 +118,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Ancorare"
+    POPUP "" /* Anchor */
     {
         MENUITEM "Deschide &legătura",                       IDM_FOLLOWLINKC
         MENUITEM "Deschide legătura într-o fereastră &nouă", IDM_FOLLOWLINKN
@@ -140,16 +132,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Adaugă la &favorite...",                   IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "P&roprietăți",                             IDM_PROPERTIES
     }
 
-    POPUP "Context necunoscut"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "Imagine DYNSRC"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "Deschide &legătura",                       IDM_FOLLOWLINKC
         MENUITEM "Deschide legătura într-o fereastră &nouă", IDM_FOLLOWLINKN
@@ -168,13 +159,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Adaugă la &favorite...",                   IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Redă",                                     IDM_DYNSRCPLAY
         MENUITEM "Oprește",                                  IDM_DYNSRCSTOP
         MENUITEM "P&roprietăți",                             IDM_PROPERTIES
     }
 
-    POPUP "Imagine ART"
+    POPUP "" /* ART Image */
     {
         MENUITEM "Deschide &legătura",                       IDM_FOLLOWLINKC
         MENUITEM "Deschide legătura într-o fereastră &nouă", IDM_FOLLOWLINKN
@@ -197,11 +187,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Oprește",                                  IDM_IMGARTSTOP
         MENUITEM "Derulează înapoi",                         IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "P&roprietăți",                             IDM_PROPERTIES
     }
 
-    POPUP "Depanare"
+    POPUP "" /* Debug */
     {
         MENUITEM "Urmărire etichete",                 IDM_TRACETAGS
         MENUITEM "Erori în resursă",                  IDM_RESOURCEFAILURES
@@ -221,7 +210,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Editează vizualizarea",             IDM_EDITMODE
     }
 
-    POPUP "Bara de defilare verticală"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "Derulează aici",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -235,7 +224,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Defilare în jos", IDM_SCROLL_DOWN
     }
 
-    POPUP "Bara de defilare orizontală"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "Derulează aici",        IDM_SCROLL_HERE
         MENUITEM SEPARATOR

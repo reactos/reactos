@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -35,7 +33,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Default"
+    POPUP "" /* Default */
     {
         MENUITEM "חזור",                  IDM_GOBACKWARD
         MENUITEM "קדימה",               IDM_GOFORWARD
@@ -57,11 +55,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "הדפס",                 IDM_PRINT
         MENUITEM "רענן",               _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "מאפיינים",            IDM_PROPERTIES
     }
 
-    POPUP "Image"
+    POPUP "" /* Image */
     {
         MENUITEM "פתח קישור",               IDM_FOLLOWLINKC
         MENUITEM "פתח קישור בחלון חדש", IDM_FOLLOWLINKN
@@ -83,11 +80,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "הוסף למועדפים...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "מאפיינים",              IDM_PROPERTIES
     }
 
-    POPUP "Control"
+    POPUP "" /* Control */
     {
         MENUITEM "ביטול",       IDM_UNDO
         MENUITEM SEPARATOR
@@ -96,11 +92,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "הדבק",      IDM_PASTE
         MENUITEM "מחק",     IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "בחר הכל", IDM_SELECTALL
     }
 
-    POPUP "Table"
+    POPUP "" /* Table */
     {
         POPUP "&Select"
         {
@@ -110,12 +105,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "טבלה",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "&Cell Properties",  IDM_CELLPROPERTIES
         MENUITEM "&Table Properties", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "גזור",        IDM_CUT
         MENUITEM "העתק",       IDM_COPY
@@ -125,7 +119,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
         MENUITEM "פתח",                IDM_FOLLOWLINKC
         MENUITEM "פתח בחלון חדש",  IDM_FOLLOWLINKN
@@ -139,16 +133,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "הוסף למועדפים...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "מאפיינים",          IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC Image"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "פתח קישור",               IDM_FOLLOWLINKC
         MENUITEM "פתח קישור בחלון חדש", IDM_FOLLOWLINKN
@@ -167,13 +160,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "הוסף למועדפים...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "נגן",                     IDM_DYNSRCPLAY
         MENUITEM "עצור",                     IDM_DYNSRCSTOP
         MENUITEM "מאפיינים",              IDM_PROPERTIES
     }
 
-    POPUP "ART Image"
+    POPUP "" /* ART Image */
     {
         MENUITEM "פתח קישור",               IDM_FOLLOWLINKC
         MENUITEM "פתיחת קישור בחלון חדש", IDM_FOLLOWLINKN
@@ -196,11 +188,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "עצירה",                     IDM_IMGARTSTOP
         MENUITEM "הרצה לאחור",                   IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "מאפיינים",              IDM_PROPERTIES
     }
 
-    POPUP "Debug"
+    POPUP "" /* Debug */
     {
         MENUITEM "Trace Tags",         IDM_TRACETAGS
         MENUITEM "Resource Failures",  IDM_RESOURCEFAILURES
@@ -220,7 +211,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Edit View",         IDM_EDITMODE
     }
 
-    POPUP "Vertical Scrollbar"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "גלול לכאן",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -234,7 +225,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "גלול למטה",  IDM_SCROLL_DOWN
     }
 
-    POPUP "Horizontal Scrollbar"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "גלול לכאן",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR

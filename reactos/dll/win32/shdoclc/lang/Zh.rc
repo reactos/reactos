@@ -1,6 +1,4 @@
 /*
- * shdoclc (Simplified and Traditional Chinese Resources)
- *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,11 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
@@ -38,7 +31,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "默认"
+    POPUP "" /* Default */
     {
         MENUITEM "向后(&B)", IDM_GOBACKWARD
         MENUITEM "向前(&O)", IDM_GOFORWARD
@@ -60,11 +53,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "打印(&I)", IDM_PRINT
         MENUITEM "刷新(&R)", _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "属性(&P)", IDM_PROPERTIES
     }
 
-    POPUP "图片"
+    POPUP "" /* Image */
     {
         MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新视窗打开链接(&N)", IDM_FOLLOWLINKN
@@ -86,11 +78,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "控制"
+    POPUP "" /* Control */
     {
         MENUITEM "撤销(&U)", IDM_UNDO
         MENUITEM SEPARATOR
@@ -99,11 +90,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM "删除(&D", IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "全选(&A)", IDM_SELECTALL
     }
 
-    POPUP "表格"
+    POPUP "" /* Table */
     {
         POPUP "选择(&S)"
         {
@@ -113,12 +103,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "表格(&T)", IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "格属性(&C)", IDM_CELLPROPERTIES
         MENUITEM "表格属性(&T)", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "剪切(&T)", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
@@ -128,7 +117,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
         MENUITEM "打开(&O)", IDM_FOLLOWLINKC
         MENUITEM "打开新窗口(&N)", IDM_FOLLOWLINKN
@@ -142,16 +131,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC 图片"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新窗口打开链接(&N)", IDM_FOLLOWLINKN
@@ -170,13 +158,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "播放", IDM_DYNSRCPLAY
         MENUITEM "停止", IDM_DYNSRCSTOP
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "ART 图片"
+    POPUP "" /* ART Image */
     {
         MENUITEM "打开链接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新窗口打开链接(&N)", IDM_FOLLOWLINKN
@@ -199,11 +186,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "停止", IDM_IMGARTSTOP
         MENUITEM "倒回", IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "调试"
+    POPUP "" /* Debug */
     {
         MENUITEM "跟踪标记", IDM_TRACETAGS
         MENUITEM "资源失败", IDM_RESOURCEFAILURES
@@ -223,7 +209,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "编辑(&E)", IDM_EDITMODE
     }
 
-    POPUP "垂直滚动条"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "滚动这里", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -237,7 +223,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "向下滚动", IDM_SCROLL_DOWN
     }
 
-    POPUP "水平滚动条"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "滚动这里", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -267,7 +253,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "默認"
+    POPUP "" /* Default */
     {
         MENUITEM "向後(&B)", IDM_GOBACKWARD
         MENUITEM "向前(&O)", IDM_GOFORWARD
@@ -289,11 +275,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "列印(&I)", IDM_PRINT
         MENUITEM "刷新(&R)", _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "屬性(&P)", IDM_PROPERTIES
     }
 
-    POPUP "圖片"
+    POPUP "" /* Image */
     {
         MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新視窗開啟鏈接(&N)", IDM_FOLLOWLINKN
@@ -315,11 +300,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "屬性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "控制"
+    POPUP "" /* Control */
     {
         MENUITEM "復原(&U)", IDM_UNDO
         MENUITEM SEPARATOR
@@ -328,11 +312,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM "刪除(&D", IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "全選(&A)", IDM_SELECTALL
     }
 
-    POPUP "表格"
+    POPUP "" /* Table */
     {
         POPUP "選擇(&S)"
         {
@@ -342,12 +325,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "表格(&T)", IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "格屬性(&C)", IDM_CELLPROPERTIES
         MENUITEM "表格屬性(&T)", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "剪下(&T)", IDM_CUT
         MENUITEM "複製(&C)", IDM_COPY
@@ -357,7 +339,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
         MENUITEM "開啟(&O)", IDM_FOLLOWLINKC
         MENUITEM "開啟新窗口(&N)", IDM_FOLLOWLINKN
@@ -371,16 +353,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "屬性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC 圖片"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
@@ -399,13 +380,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "播放", IDM_DYNSRCPLAY
         MENUITEM "停止", IDM_DYNSRCSTOP
         MENUITEM "屬性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "ART 圖片"
+    POPUP "" /* ART Image */
     {
         MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
@@ -428,11 +408,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "停止", IDM_IMGARTSTOP
         MENUITEM "倒回", IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "屬性(&R)", IDM_PROPERTIES
     }
 
-    POPUP "調試"
+    POPUP "" /* Debug */
     {
         MENUITEM "跟蹤標記", IDM_TRACETAGS
         MENUITEM "資源失敗", IDM_RESOURCEFAILURES
@@ -452,7 +431,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "編輯(&E)", IDM_EDITMODE
     }
 
-    POPUP "垂直滾動條"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "滾動這裡", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -466,7 +445,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "向下滾動", IDM_SCROLL_DOWN
     }
 
-    POPUP "水平滾動條"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "滾動這裡", IDM_SCROLL_HERE
         MENUITEM SEPARATOR

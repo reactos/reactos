@@ -17,11 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -37,7 +32,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Default"
+    POPUP "" /* Default */
     {
         MENUITEM "戻る(&B)",               IDM_GOBACKWARD
         MENUITEM "進む(&O)",               IDM_GOFORWARD
@@ -59,11 +54,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "印刷(&I)",               IDM_PRINT
         MENUITEM "更新(&R)",               _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "プロパティ(&P)",         IDM_PROPERTIES
     }
 
-    POPUP "Image"
+    POPUP "" /* Image */
     {
         MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
         MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
@@ -85,11 +79,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "お気に入りに追加(&F)...",  IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
     }
 
-    POPUP "Control"
+    POPUP "" /* Control */
     {
         MENUITEM "元に戻す(&U)", IDM_UNDO
         MENUITEM SEPARATOR
@@ -98,11 +91,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "貼り付け(&P)", IDM_PASTE
         MENUITEM "削除(&D)",     IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "すべて選択(&A)", IDM_SELECTALL
     }
 
-    POPUP "Table"
+    POPUP "" /* Table */
     {
         POPUP "選択(&S)"
         {
@@ -112,12 +104,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "表(&T)",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "セルのプロパティ(&C)",  IDM_CELLPROPERTIES
         MENUITEM "表のプロパティ(&T)", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "切り取り(&T)", IDM_CUT
         MENUITEM "コピー(&C)",  IDM_COPY
@@ -127,7 +118,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
         MENUITEM "開く(&O)",              IDM_FOLLOWLINKC
         MENUITEM "新しいウィンドウで開く(&N)", IDM_FOLLOWLINKN
@@ -141,16 +132,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "お気に入りに追加(&F)...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "プロパティ(&R)",        IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC Image"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
         MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
@@ -169,13 +159,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "お気に入りに追加(&F)...",  IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "再生",                     IDM_DYNSRCPLAY
         MENUITEM "停止",                     IDM_DYNSRCSTOP
         MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
     }
 
-    POPUP "ART Image"
+    POPUP "" /* ART Image */
     {
         MENUITEM "リンクを開く(&O)",         IDM_FOLLOWLINKC
         MENUITEM "新しいウィンドウでリンクを開く(&N)", IDM_FOLLOWLINKN
@@ -198,11 +187,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "停止",                     IDM_IMGARTSTOP
         MENUITEM "巻き戻し",                 IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "プロパティ(&R)",           IDM_PROPERTIES
     }
 
-    POPUP "Debug"
+    POPUP "" /* Debug */
     {
         MENUITEM "タグのトレース",     IDM_TRACETAGS
         MENUITEM "リソースの失敗",     IDM_RESOURCEFAILURES
@@ -222,7 +210,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "編集ビュー(&E)",     IDM_EDITMODE
     }
 
-    POPUP "Vertical Scrollbar"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "ここにスクロール",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -236,7 +224,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "下にスクロール", IDM_SCROLL_DOWN
     }
 
-    POPUP "Horizontal Scrollbar"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "ここにスクロール", IDM_SCROLL_HERE
         MENUITEM SEPARATOR

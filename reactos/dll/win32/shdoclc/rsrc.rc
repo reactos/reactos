@@ -20,7 +20,7 @@
 //#include "winuser.h"
 #include <mshtmcid.h>
 
-//#include "shdoclc.h"
+#include "shdoclc.h"
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/Bg.rc"
@@ -51,6 +51,8 @@
 #endif
 
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/De.rc"
 #endif
@@ -96,4 +98,3 @@
 #ifdef LANGUAGE_ZH_CN
     #include "lang/Zh.rc"
 #endif
-
