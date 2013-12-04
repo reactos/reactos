@@ -61,6 +61,9 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif

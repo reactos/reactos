@@ -1,0 +1,39 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nPërdorimi: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n\
+Options:\n\
+    -t             Pingo hostin specifik deri ne ndalim.\n\
+                   Për ndalim - shkruaj Control-C.\n\
+    -n count       Numri i kerkesa echo per tu derguar.\n\
+    -l size        Dergo masen buffer.\n\
+    -w timeout     Timeout në milisekonda per te pritur secilen pergjigje.\n\n\0"
+
+    IDS_PING_WITH_BYTES "\nPing ne vazhdim %1 [%2] me %3!d! bytes data:\n\n\0"
+    IDS_PING_STATISTICS "\nStatistikat e Ping për %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST "    Packeta: Dërguar = %1!d!, Marr = %2!d!, Humbur = %3!d! (%4!d!%% loss),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP "Afersisht koha e matjes në mili-sekonda:\n\0"
+    IDS_MIN_MAX_AVERAGE "    Minimum = %1, Maximum = %2, Mesatar = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES "Nuk mjaftojne burimet ne dispozicion.\n\0"
+    IDS_UNKNOWN_HOST "Host i panjohur %1.\n\0"
+    IDS_SETSOCKOPT_FAILED "setsockopt deshtoj (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET "Nuk krijoj dot socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Nuk inicializoj dor winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Emri ose adresa IP'se dhe destinacioni duhet specifikuar.\n\0"
+    IDS_BAD_PARAMETER "Parametra i keq %1.\n\0"
+    IDS_BAD_OPTION_FORMAT "Opsion formati i keq %1.\n\0"
+    IDS_BAD_OPTION "Opsion i keq %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L "Vlere e keqe per opsion -l, varh i vlefshem nga 0 në %1!d!.\n\0"
+    IDS_REPLY_FROM "Pergjigju nga %1: bytes=%2!d! time%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE "Destinacioni i hostit i  pakapshem.\n\0"
+    IDS_COULD_NOT_TRANSMIT "Nuk transmetoj dot data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV "Nuk merr dot data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT "Kerkese kohe mbaroj.\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+END

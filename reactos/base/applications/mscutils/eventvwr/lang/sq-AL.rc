@@ -1,0 +1,123 @@
+/*
+ * PROJECT:    ReactOS Event Viewer
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mscutils/eventvwr/lang/en-US.rc
+ * PURPOSE:    Albanian Language File for ReactOS Event Viewer
+ * TRANSLATOR: Ardit Dani
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDC_EVENTVWR MENU
+BEGIN
+    POPUP "&Log"
+    BEGIN
+        MENUITEM "&Aplikacion", ID_LOG_APPLICATION
+        MENUITEM "&Siguri", ID_LOG_SECURITY
+        MENUITEM "&Sistemi", ID_LOG_SYSTEM
+        MENUITEM SEPARATOR
+        MENUITEM "Dil", IDM_EXIT
+    END
+    POPUP "&Vëzhgo"
+    BEGIN
+        MENUITEM "&Rifresko", IDM_REFRESH
+    END
+    MENUITEM "&Opsione", ID_OPTIONS
+    POPUP "Ndihmë"
+    BEGIN
+        MENUITEM "Ndihmë", IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Rreth...", IDM_ABOUT
+    END
+END
+
+IDC_EVENTVWR ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Rreth"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
+    LTEXT "ReactOS Event Viewer Versioni 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
+    DEFPUSHBUTTON "OK", IDOK, 90, 48, 42, 16, WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "Prit.."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CTEXT "Ngarkim loget e ngjarjeve. Ju lutem prisniPlease wait ...", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
+END
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Detaje te ngjarjeve"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "Mbylle", IDOK, 12, 258, 50, 14
+    PUSHBUTTON "I mëparshmi", IDPREVIOUS, 78, 258, 50, 14
+    PUSHBUTTON "Tjetri", IDNEXT, 144, 258, 50, 14
+    PUSHBUTTON "Ndihmë", IDHELP, 210, 258, 50, 14
+    EDITTEXT IDC_EVENTTEXTEDIT, 14, 81, 247, 108, ES_MULTILINE | ES_READONLY
+    LTEXT "Përshkrimi:", IDC_STATIC, 15, 70, 39, 8
+    LTEXT "Data:", IDC_STATIC, 14, 14, 36, 8
+    LTEXT "Statistika", IDC_EVENTDATESTATIC, 56, 14, 72, 8
+    LTEXT "Ora:", IDC_STATIC, 14, 27, 36, 8
+    LTEXT "Statistika", IDC_EVENTTIMESTATIC, 56, 27, 72, 8
+    LTEXT "Përdoruesi:", IDC_STATIC, 14, 41, 36, 8
+    LTEXT "Statistika", IDC_EVENTUSERSTATIC, 56, 41, 72, 8
+    LTEXT "Kompjuteri:", IDC_STATIC, 14, 54, 36, 8
+    LTEXT "Statistika", IDC_EVENTCOMPUTERSTATIC, 56, 54, 72, 8
+    LTEXT "NgjarjeID:", IDC_STATIC, 133, 15, 36, 8
+    LTEXT "Statistika", IDC_EVENTIDSTATIC, 175, 15, 87, 8
+    LTEXT "Burimi:", IDC_STATIC, 133, 28, 36, 8
+    LTEXT "Statistika", IDC_EVENTSOURCESTATIC, 175, 28, 87, 8
+    LTEXT "Tipi:", IDC_STATIC, 133, 42, 36, 8
+    LTEXT "Statistika", IDC_EVENTTYPESTATIC, 175, 42, 87, 8
+    LTEXT "Kategoria:", IDC_STATIC, 133, 55, 36, 8
+    LTEXT "Statistika", IDC_EVENTCATEGORYSTATIC, 175, 55, 87, 8
+    EDITTEXT IDC_EVENTDATAEDIT, 14, 204, 247, 44, ES_MULTILINE | ES_READONLY
+    LTEXT "D&ata", IDC_STATIC, 14, 194, 20, 8
+    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 194, 34, 10
+    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 194, 33, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Shikues ngjarjesh"
+    IDS_EVENTSTRINGIDNOTFOUND "Përshkrimi për ngjarjet ID ( %lu ) në burim ( %s ) nuk gjindet. Kompjuter vendas mund të mos ketë informacionin e regjistrit te nevojshem ose mesazhin për dokumentat DLL për të shfaqur nga një kompjuter në distancë."
+    IDS_EVENTLOG_ERROR_TYPE "Error"
+    IDS_EVENTLOG_WARNING_TYPE "Paralajmërim"
+    IDS_EVENTLOG_INFORMATION_TYPE "Informacion"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Audit me Sukses"
+    IDS_EVENTLOG_AUDIT_FAILURE "Audit dështoj"
+    IDS_EVENTLOG_SUCCESS "Sukses"
+    IDS_EVENTLOG_UNKNOWN_TYPE "Ngjraje e panjohur"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE "Tipi"
+    IDS_COLUMNDATE "Data"
+    IDS_COLUMNTIME "Ora"
+    IDS_COLUMNSOURCE "Burimi"
+    IDS_COLUMNCATEGORY "Kategoria"
+    IDS_COLUMNEVENT "Ngjarja"
+    IDS_COLUMNUSER "Përdoruesi"
+    IDS_COLUMNCOMPUTER "Kompjuter"
+    IDS_COLUMNEVENTDATA "Data e Ngjarjes"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE "Asnje"
+    IDS_NOT_AVAILABLE "N/A"
+END

@@ -1,0 +1,17 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "Instalo"
+    IDS_PRINT "Printo"
+    IDS_STRING "Jackdaws dashuron sphinxin tim të madh  prej kuartzi. 1234567890"
+    IDS_OPEN "Hap fontin..."
+    IDS_ERROR "Error"
+    IDS_ERROR_NOMEM "Nuk ka memorie të mjaftueshme për të përfunduar operacionin."
+    IDS_ERROR_NOFONT "Dokumenti %1 nuk është një font i vlefshem."
+    IDS_ERROR_NOCLASS "Nuk mund të fillojë dritaren e klases."
+END
