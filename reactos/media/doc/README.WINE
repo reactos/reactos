@@ -226,7 +226,7 @@ reactos/dll/cpl/inetcpl            # Synced to Wine-1.7.1
 ReactOS shares the following programs with Winehq.
 
 reactos/base/applications/cmdutils/reg      # Synced to Wine-1.1.40
-reactos/base/applications/cmdutils/taskkill # Synced to Wine-1.5.25
+reactos/base/applications/cmdutils/taskkill # Synced to Wine-1.7.1
 reactos/base/applications/cmdutils/wmic     # Synced to Wine-1.7.1
 reactos/base/applications/cmdutils/xcopy    # Synced to Wine-1.3.37
 reactos/base/applications/games/winmine     # Forked at Wine-1_3_5
@@ -237,8 +237,8 @@ reactos/base/applications/regedit           # Out of sync
 reactos/base/applications/winhlp32          # Synced to Wine-1.5.26
 reactos/base/applications/wordpad           # Synced to Wine-1.5.26
 reactos/base/services/rpcss                 # Synced to Wine-1.7.1
-reactos/base/system/expand                  # Synced to Wine-1.5.26
-reactos/base/system/msiexec                 # Synced to Wine-1.5.26
+reactos/base/system/expand                  # Synced to Wine-1.7.1
+reactos/base/system/msiexec                 # Synced to Wine-1.7.1
 reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
