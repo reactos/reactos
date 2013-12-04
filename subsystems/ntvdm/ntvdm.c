@@ -221,7 +221,7 @@ INT wmain(INT argc, WCHAR *argv[])
         }
 
         /* Check for vertical retrace */
-        if ((CurrentTickCount - LastVerticalRefresh) >= 16)
+        if ((CurrentTickCount - LastVerticalRefresh) >= 15)
         {
             VgaRefreshDisplay();
             LastVerticalRefresh = CurrentTickCount;

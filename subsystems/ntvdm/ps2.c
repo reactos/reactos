@@ -24,6 +24,7 @@ static UINT KeyboardQueueEnd = 0;
 static BYTE KeyboardData = 0, KeyboardResponse = 0;
 static BOOLEAN KeyboardReadResponse = FALSE, KeyboardWriteResponse = FALSE;
 static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
+static HANDLE QueueMutex = NULL;
 
 static HANDLE InputThread = NULL;
 
@@ -31,10 +32,15 @@ static HANDLE InputThread = NULL;
 
 static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
 {
+    BOOLEAN Result = TRUE;
+
+    WaitForSingleObject(QueueMutex, INFINITE);
+
     /* Check if the keyboard queue is full */
     if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
     {
-        return FALSE;
+        Result = FALSE;
+        goto Done;
     }
 
     /* Insert the value in the queue */
@@ -45,13 +51,23 @@ static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
     /* Since we inserted a value, it's not empty anymore */
     KeyboardQueueEmpty = FALSE;
 
-    return TRUE;
+Done:
+    ReleaseMutex(QueueMutex);
+    return Result;
 }
 
 static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
 {
+    BOOLEAN Result = TRUE;
+
+    WaitForSingleObject(QueueMutex, INFINITE);
+
     /* Make sure the keyboard queue is not empty */
-    if (KeyboardQueueEmpty) return FALSE;
+    if (KeyboardQueueEmpty)
+    {
+        Result = FALSE;
+        goto Done;
+    }
 
     /* Get the scan code */
     *ScanCode = KeyboardQueue[KeyboardQueueStart];
@@ -66,7 +82,9 @@ static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
         KeyboardQueueEmpty = TRUE;
     }
 
-    return TRUE;
+Done:
+    ReleaseMutex(QueueMutex);
+    return Result;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -338,6 +356,9 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput)
 {
+    /* Create the mutex */
+    QueueMutex = CreateMutex(NULL, FALSE, NULL);
+
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &InputThreadProc, ConsoleInput, 0, NULL);
 
@@ -355,6 +376,8 @@ VOID PS2Cleanup(VOID)
     /* Close the input thread handle */
     if (InputThread != NULL) CloseHandle(InputThread);
     InputThread = NULL;
+
+    CloseHandle(QueueMutex);
 }
 
 /* EOF */
