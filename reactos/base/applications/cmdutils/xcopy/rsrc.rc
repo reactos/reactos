@@ -85,7 +85,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     #include "lang/Sv.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
-    #include "lang/sq.rc"
+    #include "lang/Sq.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"
