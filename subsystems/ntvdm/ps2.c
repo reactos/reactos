@@ -93,8 +93,12 @@ BYTE KeyboardReadStatus()
 {
     BYTE Status = 0;
 
+    WaitForSingleObject(QueueMutex, INFINITE);
+
     /* Set the first bit if the data can be read */
     if (KeyboardReadResponse || !KeyboardQueueEmpty) Status |= 1 << 0;
+
+    ReleaseMutex(QueueMutex);
 
     /* Always set bit 2 */
     Status |= 1 << 2;
