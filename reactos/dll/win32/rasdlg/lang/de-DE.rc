@@ -320,7 +320,7 @@ BEGIN
     COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Leitungstyp a&ushandeln", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
-    AUTOCHECKBOX "&Altes, proprietäres Protokoll verwenden", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Altes, proprietäres Protokoll verwenden", 1149, 17, 48, 141, 10, BS_TOP | BS_MULTILINE
     LTEXT "&Zu verwendende Kanäle:", 1154, 16, 65, 100, 8, NOT WS_GROUP
     EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Hardwarekompression aktivieren", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
@@ -528,7 +528,7 @@ BEGIN
     LTEXT "Geben Sie einen Namen für diese Verbindung ein:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf Fertig stellen, um die Verbindung in Netzwerkverbindungen zu speichern", -1, 8, 38, 193, 16
-    LTEXT "Um diese Verbindung später zu beareiten, markieren Sie diese Verbindung, und klicken Sie auf Datei und anschließend auf Eigenschaften, .", -1, 8, 58, 193, 16
+    LTEXT "Um diese Verbindung später zu beareiten, markieren Sie diese Verbindung, und klicken Sie auf Datei und anschließend auf Eigenschaften.", -1, 8, 58, 193, 24
 END
 
 155 DIALOGEX 0, 0, 231, 215
@@ -681,8 +681,8 @@ BEGIN
     GROUPBOX "Wähloptionen", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Fortschritt während des Wählens anzeigen", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "Na&me, Passwort, Zertifikat usw. abfragen", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 39, 201, 10
-    AUTOCHECKBOX "&Telefonnummer abfragen", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 40, 201, 10
+    AUTOCHECKBOX "&Telefonnummer abfragen", 1285, 16, 53, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Wahlwiederholungsoptionen", 1290, 6, 72, 213, 79
     LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 16, 87, 123, 8
     EDITTEXT 1287, 141, 84, 69, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -767,7 +767,7 @@ BEGIN
     LTEXT "&Sekunden zwischen Wahlwiederholungen:", 1351, 16, 38, 140, 8, NOT WS_GROUP
     EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
     GROUPBOX "Verbindungstyp", 1343, 9, 63, 213, 56, WS_GROUP
-    LTEXT "&Leerlaufzeit, nach der aufgelegt wird:", 1350, 28, 88, 124, 8, NOT WS_GROUP
+    LTEXT "&Leerlauf, bevor aufgelegt wird:", 1350, 28, 88, 124, 8, NOT WS_GROUP
     AUTORADIOBUTTON "&Wählverbindung beantragen", 1347, 16, 78, 135, 10, WS_GROUP
     AUTORADIOBUTTON "&Persistente Verbindung", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
     EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
@@ -834,7 +834,7 @@ CAPTION "Sicherheit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Richtlinien für die Authentifizierung und Verschlüsselung", 1367, 7, 8, 200, 98, WS_GROUP
-    AUTORADIOBUTTON "&Beliebige Authentifizierung einschl. Klartext akzeptieren", 1370, 14, 24, 185, 10
+    AUTORADIOBUTTON "&Beliebige Authentifizierung incl. Klartext akzeptieren", 1370, 14, 24, 185, 10
     AUTORADIOBUTTON "Nur &verschlüsselte Authentifizierung akzeptieren", 1373, 14, 39, 183, 10
     AUTORADIOBUTTON "Nur &MS-verschlüsselte Authentifizierung akzeptieren", 1374, 14, 53, 184, 10
     AUTOCHECKBOX "&Datenverschlüsselung benötigt", 1363, 33, 67, 165, 10, WS_GROUP
@@ -929,7 +929,7 @@ BEGIN
     LTEXT "Wählen Sie die Rolle für diesen Computer:", -1, 10, 5, 275, 9
     AUTORADIOBUTTON "&Host", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Gast", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
-    LTEXT "Auf diesem Computer befinden sich die Informationen, auf die Sie zugreifen möchten.", -1, 45, 31, 270, 13, NOT WS_GROUP | WS_TABSTOP
+    LTEXT "Dieser Computer hat die Informationen, auf die Sie zugreifen möchten.", -1, 43, 31, 270, 13, NOT WS_GROUP | WS_TABSTOP
     LTEXT "Dieser Computer wird verwendet, um auf Informationen auf dem Hostcomputer zuzugreifen.", -1, 43, 56, 270, 23, NOT WS_GROUP
 END
 
@@ -1028,13 +1028,13 @@ CAPTION "Verbinden mit %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "Be&nutzername:", 1413, 12, 67, 87, 8
+    LTEXT "Be&nutzername:", 1413, 10, 67, 87, 8
     EDITTEXT 1104, 103, 63, 154, 14, ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 84, 248, 1
     LTEXT "Wä&hlen:", 1412, 10, 96, 48, 8
     COMBOBOX 1416, 103, 92, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Wählen &von:", 1415, 10, 114, 46, 8
-    COMBOBOX 1414, 102, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1414, 103, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "Wähl&regeln", 1108, 193, 110, 64, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
     DEFPUSHBUTTON "&Wählen", 1590, 6, 136, 60, 14
@@ -1050,7 +1050,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Durch Internetverbindungsfreigabe können andere Computer des lokalen Netzwerks auf externe Ressourcen über diese Verbindung zugreifen.", -1, 10, 5, 300, 22
     AUTOCHECKBOX "&Internetverbindungsfreigabe für diese Verbindung aktivieren", 1512, 21, 31, 272, 10
-    LTEXT "Aktivieren Sie das folgende Kontrollkästchen, um die Verbindung automatisch herzustellen, wenn ein Computer des lokalen Netzwerks versucht auf eine externe Ressource zuzugreifen.", 1514, 10, 56, 294, 22
+    LTEXT "Aktivieren, um die Verbindung automatisch herzustellen, wenn ein Computer des lokalen Netzwerks versucht auf eine externe Ressource zuzugreifen.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "Wählen bei Bedarf &aktivieren", 1513, 21, 86, 260, 10
 END
 
@@ -1126,7 +1126,7 @@ BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
     LTEXT "Be&nutzername:", 1413, 10, 67, 91, 10
     EDITTEXT 1104, 104, 64, 154, 14, ES_AUTOHSCROLL
-    LTEXT "Do&mäne", 1110, 11, 86, 91, 8
+    LTEXT "Do&mäne", 1110, 10, 86, 91, 8
     EDITTEXT 1102, 104, 83, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 103, 248, 1
     LTEXT "Wä&hlen:", 1412, 10, 115, 91, 8
@@ -1208,7 +1208,7 @@ BEGIN
     LTEXT "T&CP:", -1, 7, 100, 28, 8
     EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
     LTEXT "UD&P:", -1, 7, 121, 30, 8
-    EDITTEXT 1551, 51, 117, 162, 14, ES_AUTOHSCROLL
+    EDITTEXT 1551, 50, 117, 162, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 90, 144, 60, 14
     PUSHBUTTON "Abbrechen", 2, 154, 144, 60, 14
 END
@@ -1583,8 +1583,8 @@ CAPTION "Assistent für neue Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&In ein privates Netzwerk einwählen", 1488, 24, 9, 126, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Verbindung mit einem privaten Netz durch das Internet herstellen", 1489, 24, 34, 216, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Direkte Verbindung mit anderem Computer herstellen", 1490, 24, 59, 177, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Verbindung mit einem privaten Netz durch das Internet herstellen", 1489, 24, 34, 225, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Direkte Verbindung mit anderem Computer herstellen", 1490, 24, 59, 185, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Breitbandverbindung mit dem Netzwerk herstellen", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
     LTEXT "Verbindung über eine Telefonleitung (Modem oder ISDN) herstellen.", -1, 45, 21, 216, 8
     LTEXT "VPN-Verbindung oder Tunnel durch das Internet (oder ein anderes Netz) herstellen.", -1, 45, 46, 266, 8
@@ -1757,7 +1757,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aktivieren Sie das Kontrollkästchen neben den Benutzernamen, die eine Verbindung mit diesem Computer herstellen dürfen. Bedenken Sie, dass andere Faktoren, wie z. B. deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 10, 1, 275, 27
+    LTEXT "Aktivieren Sie das Kontrollkästchen neben den Benutzernamen, die eine Verbindung mit diesem Computer herstellen dürfen. Bedenken Sie, dass andere Faktoren, wie deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 10, 1, 275, 27
     LTEXT "Benutzern, denen die &Verbindung gestattet ist:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Hinzufügen...", 7044, 10, 122, 65, 14, WS_GROUP

@@ -61,7 +61,7 @@ BEGIN
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
     PUSHBUTTON "Abbrechen", 2, 209, 104, 50, 14
-    LTEXT "Dieser Name wird zur Interoperabilität mit älteren Computern und Diensten verwendet.", 13, 7, 88, 253, 8
+    LTEXT "Dieser Name dient der Interoperatibilität mit älteren Computern und Diensten.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE

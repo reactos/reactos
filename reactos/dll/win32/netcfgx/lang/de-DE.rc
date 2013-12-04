@@ -220,7 +220,7 @@ BEGIN
     IDS_DUP_NUMBER "Die Nummer, die Sie hinzufügen möchten ist bereits in der Liste. Geben Sie eine andere Nummer ein."
     IDS_DISABLE_FILTER "Das Deaktivieren dieser globalen TCP/IP-Einstellung wird alle Adapter betreffen."
     IDS_NO_SUFFIX "Die aktuelle Sucheinstellung der Suchmethode erfordert mindestens ein DNS-Suffix. Geben Sie ein Suffix ein, oder ändern Sie die Einstellung."
-    IDS_DOMAIN_SUFFIX "Das Domänensuffix ist kein gültiges Süffix."
+    IDS_DOMAIN_SUFFIX "Das Domänensuffix ist kein gültiges Suffix."
     IDS_DNS_SUFFIX "Der DNS-Domänensuffix ""%s"" ist kein gültiger DNS-Name."
     IDS_DUP_SUFFIX "Das DNS-Suffix ist bereits in der Liste vorhanden."
     IDS_DUP_IPADDR "Die IP-Adresse ist bereits in der Liste vorhanden."

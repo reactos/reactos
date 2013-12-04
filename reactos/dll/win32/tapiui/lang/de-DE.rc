@@ -114,7 +114,7 @@ BEGIN
     LTEXT "Zugriffsnummer &für Ferngespräche:", -1, 7, 7, 238, 8
     EDITTEXT 1044, 7, 18, 116, 14, ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf die Schaltflächen unten, um Wählschritte für Ferngespräche einzugeben. Geben Sie diese Schritte in der für die Callingcard gültigen Reihenfolge ein.", 2000, 7, 40, 238, 24
-    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 100, 8
+    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 105, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Nach &oben", 1022, 195, 83, 50, 14
     PUSHBUTTON "Nach &unten", 1023, 195, 101, 50, 14
@@ -123,7 +123,7 @@ BEGIN
     PUSHBUTTON "&Kontonummer", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Z&ielnummer...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Auf Aufforderung warten...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Auf Bestätigung warten...", 1017, 7, 197, 90, 14
     PUSHBUTTON "Ziffern a&ngeben...", 1021, 101, 197, 90, 14
 END
 
@@ -135,7 +135,7 @@ BEGIN
     LTEXT "Zugriffsnummer &für Auslandsgespräche:", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 116, 14, ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf die Schaltflächen unten, um Wählschritte für Auslands- gespräche einzugeben. Geben Sie diese Schritte in der für die Callingcard gültigen Reihenfolge ein.", 2000, 7, 40, 244, 24
-    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 100, 8
+    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 105, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Nach &oben", 1022, 195, 83, 50, 14
     PUSHBUTTON "Nach &unten", 1023, 195, 101, 50, 14
@@ -144,7 +144,7 @@ BEGIN
     PUSHBUTTON "&Kontonummer", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Z&ielnummer...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Auf Aufforderung warten...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Auf Bestätigung warten...", 1017, 7, 197, 90, 14
     PUSHBUTTON "Ziffern a&ngeben...", 1021, 101, 197, 90, 14
 END
 
@@ -156,7 +156,7 @@ BEGIN
     LTEXT "Zugriffsnummer &für Ortsgespräche:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 116, 14, ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf die Schaltflächen unten, um Wählschritte für Ortsgespräche einzugeben. Geben Sie diese Schritte in der für die Callingcard gültigen Reihenfolge ein.", 2000, 7, 40, 238, 24
-    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 100, 8
+    LTEXT "&Wählschritte für die Callingcard:", -1, 7, 72, 105, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "Nach &oben", 1022, 195, 83, 50, 14
     PUSHBUTTON "Nach &unten", 1023, 195, 101, 50, 14
@@ -165,7 +165,7 @@ BEGIN
     PUSHBUTTON "&Kontonummer", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "Z&ielnummer...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Auf Aufforderung warten...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Auf Bestätigung warten...", 1017, 7, 197, 90, 14
     PUSHBUTTON "Ziffern a&ngeben...", 1021, 101, 197, 90, 14
 END
 
@@ -283,7 +283,7 @@ BEGIN
     LTEXT "Welche &Vorwahl haben Sie?", -1, 107, 73, 189, 10
     EDITTEXT 1034, 107, 87, 40, 12, ES_AUTOHSCROLL
     LTEXT "Falls eine &Netzkennzahl erforderlich ist, wie lautet sie?", -1, 107, 104, 189, 10
-    EDITTEXT 1058, 106, 118, 40, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    EDITTEXT 1058, 107, 118, 40, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Falls eine &Amtskennziffer erforderlich ist, wie lautet sie?", -1, 107, 136, 189, 10
     EDITTEXT 1010, 107, 149, 40, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "An diesem Standort angewandtes Wählverfahren:", -1, 107, 167, 189, 10
@@ -305,7 +305,7 @@ BEGIN
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
     LTEXT "Falls eine &Amtskennziffer erforderlich ist, wie lautet sie?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "An diesem Standort angewandtes Wählverfahren:", -1, 95, 129, 159, 10
+    LTEXT "An diesem Standort angewandtes Wählverfahren:", -1, 95, 129, 169, 10
     AUTORADIOBUTTON "&Tonwahl", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Impulswahl", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
 END

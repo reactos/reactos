@@ -437,7 +437,7 @@ BEGIN
     GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 130, 249, 70
     LTEXT "Öffnen mit:", -1, 12, 140, 40, 10
     //ICON
-    LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
+    LTEXT "Name", 14005, 100, 140, 40, 10
     PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 30
     PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP

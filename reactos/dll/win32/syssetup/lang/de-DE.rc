@@ -61,11 +61,11 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
-    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.", IDC_STATIC, 53, 57, 188, 15
+    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.", IDC_STATIC, 53, 57, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.", IDC_STATIC, 53, 126, 189, 8
+    LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.", IDC_STATIC, 53, 122, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 

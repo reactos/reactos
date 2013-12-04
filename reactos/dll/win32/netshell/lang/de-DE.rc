@@ -16,7 +16,7 @@ BEGIN
     GROUPBOX "Beschreibung", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Hier wird die Beschreibung des Elementes stehen....", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     CHECKBOX "&Symbol bei Verbindung im Infobereich anzeigen", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Benachrichtigen, wenn diese Verbindung eingeschränkte oder keine Konnektivität besitzt", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Benachrichtigen bei eingeschränkter oder keiner Konnektivität", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -83,8 +83,8 @@ BEGIN
     IDS_SUBNET_MASK "Subnetzmaske"
     IDS_DEF_GATEWAY "Standardgateway"
     IDS_DHCP_SERVER "DHCP-Server"
-    IDS_LEASE_OBTAINED "Lease Obtained"
-    IDS_LEASE_EXPIRES "Lease Expires"
+    IDS_LEASE_OBTAINED "Lease erhalten"
+    IDS_LEASE_EXPIRES "Lease läuft ab"
     IDS_DNS_SERVERS "DNS-Server"
     IDS_WINS_SERVERS "WINS-Server"
     IDS_PROPERTY "Eigenschaft"

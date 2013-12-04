@@ -84,7 +84,7 @@ CAPTION "Verschiedene Rufsignale"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", 1068, 10, 7, 218, 87
-    AUTOCHECKBOX "&Telefonleitung verfügt über verschiedene Rufsignale", 1069, 19, 7, 177, 10
+    AUTOCHECKBOX "&Telefonleitung verfügt über verschiedene Rufsignale", 1069, 19, 7, 181, 10
     CTEXT "Rufsignalfolge", -1, 20, 21, 74, 8
     CTEXT "Art des Anrufs", -1, 96, 21, 65, 8
     LTEXT "&Einfaches Klingeln:", 1088, 20, 37, 65, 8
@@ -124,7 +124,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Vermittlungsunterstütztes (manuelles) Wählen", 1002, 19, 22, 155, 10
+    AUTOCHECKBOX "&Vermittlungsunterstütztes (manuelles) Wählen", 1002, 19, 22, 160, 10
     AUTOCHECKBOX "&Trennen nach Leerlauf von:", 1042, 19, 38, 143, 10
     EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "&Wählvorgang abbrechen nach:", -1, 19, 56, 147, 10
@@ -358,7 +358,7 @@ BEGIN
     2010 "Der Computer muss neu gestartet werden, um die Modeminstallation abzuschließen.\n\nSoll der Computer jetzt neu gestartet werden?"
     2011 "Das Modem ist nicht korrekt installiert."
     2012 "Unbekannter Anschluss"
-    3000 "Modem Setup"
+    3000 "Modem Installation"
     3018 "Modems"
     3019 "Installiert ein neues Modem und ändert Modemeigenschaften."
     3053 "Die Modemeigenschaften können nicht angezeigt werden, da das Modem nicht verfügbar ist.\n\nStarten Sie das System neu und wiederholen Sie den Vorgang."
