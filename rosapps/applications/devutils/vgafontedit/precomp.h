@@ -15,16 +15,15 @@
 #include "resource.h"
 #include "customwndclasses.h"
 
+#include "raw.h"
+#include "psf.h"
+#include "cpi.h"
+
 // Forward declarations
 typedef struct _FONT_WND_INFO FONT_WND_INFO, *PFONT_WND_INFO;
 typedef struct _EDIT_GLYPH_INFO EDIT_GLYPH_INFO, *PEDIT_GLYPH_INFO;
 
 // Structure declarations
-typedef struct _BITMAP_FONT
-{
-    UCHAR Bits[2048];
-} BITMAP_FONT, *PBITMAP_FONT;
-
 typedef struct _MAIN_WND_INFO
 {
     HWND hMainWnd;
@@ -105,17 +104,6 @@ struct _EDIT_GLYPH_INFO
 // Bitmap numbers
 #define TOOLBAR_EDIT_GLYPH            0
 #define TOOLBOX_PEN                   0
-
-// PSFv1 file handling
-#define PSF1_MAGIC0                   0x36
-#define PSF1_MAGIC1                   0x04
-
-typedef struct _PSF1_HEADER
-{
-    UCHAR uMagic[2];
-    UCHAR uMode;
-    UCHAR uCharSize;
-} PSF1_HEADER, *PPSF1_HEADER;
 
 
 //
