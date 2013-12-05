@@ -16,8 +16,21 @@
 #include "customwndclasses.h"
 
 #include "raw.h"
-#include "psf.h"
 #include "cpi.h"
+#include "psf.h"
+
+typedef enum
+{
+    RAW,
+    CPI,
+    PSF
+} VGAFONT_TYPE;
+
+typedef struct _VGAFONT
+{
+    VGAFONT_TYPE FontType;
+    PVOID        FontPtr;
+} VGAFONT, *PVGAFONT;
 
 // Forward declarations
 typedef struct _FONT_WND_INFO FONT_WND_INFO, *PFONT_WND_INFO;
