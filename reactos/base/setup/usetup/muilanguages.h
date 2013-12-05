@@ -412,7 +412,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"00000436", L"1252", L"850", L"10000", L"Afrikaans", L"1", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, afZALayouts },
 #endif
 #ifdef LANGUAGE_SQ_AL
-     {L"0000041C", L"1250", L"852", L"10029", L"Albanian", L"355", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, sqALLayouts },
+    {L"0000041C", L"1250", L"852", L"10029", L"Albanian (Albania)", L"355", sqALPages, sqALErrorEntries, sqALStrings, LatinFonts, sqALLayouts },
 #endif
 #ifdef LANGUAGE_AR_SA
      {L"00000401", L"1256", L"720", L"10004", L"Arabic (Saudi Arabia)", L"966", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arSALayouts },
