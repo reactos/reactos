@@ -35,95 +35,7 @@
 
 #include <advapi32.h>
 
-/* The three core functions */
-
-#define rotl32(x,n)  (((x) << ((unsigned int)(n))) | ((x) >> (32 - (unsigned int)(n))))
-
-#define F( x, y, z ) (((x) & (y)) | ((~x) & (z)))
-#define G( x, y, z ) (((x) & (y)) | ((x) & (z)) | ((y) & (z)))
-#define H( x, y, z ) ((x) ^ (y) ^ (z))
-
-#define FF( a, b, c, d, x, s ) { \
-    (a) += F( (b), (c), (d) ) + (x); \
-    (a) = rotl32( (a), (s) ); \
-  }
-#define GG( a, b, c, d, x, s ) { \
-    (a) += G( (b), (c), (d) ) + (x) + (unsigned int)0x5a827999; \
-    (a) = rotl32( (a), (s) ); \
-  }
-#define HH( a, b, c, d, x, s ) { \
-    (a) += H( (b), (c), (d) ) + (x) + (unsigned int)0x6ed9eba1; \
-    (a) = rotl32( (a), (s) ); \
-  }
-
-/*
- * The core of the MD4 algorithm
- */
-static void MD4Transform( unsigned int buf[4], const unsigned int in[16] )
-{
-    register unsigned int a, b, c, d;
-
-    a = buf[0];
-    b = buf[1];
-    c = buf[2];
-    d = buf[3];
-
-    FF( a, b, c, d, in[0], 3 );
-    FF( d, a, b, c, in[1], 7 );
-    FF( c, d, a, b, in[2], 11 );
-    FF( b, c, d, a, in[3], 19 );
-    FF( a, b, c, d, in[4], 3 );
-    FF( d, a, b, c, in[5], 7 );
-    FF( c, d, a, b, in[6], 11 );
-    FF( b, c, d, a, in[7], 19 );
-    FF( a, b, c, d, in[8], 3 );
-    FF( d, a, b, c, in[9], 7 );
-    FF( c, d, a, b, in[10], 11 );
-    FF( b, c, d, a, in[11], 19 );
-    FF( a, b, c, d, in[12], 3 );
-    FF( d, a, b, c, in[13], 7 );
-    FF( c, d, a, b, in[14], 11 );
-    FF( b, c, d, a, in[15], 19 );
-
-    GG( a, b, c, d, in[0], 3 );
-    GG( d, a, b, c, in[4], 5 );
-    GG( c, d, a, b, in[8], 9 );
-    GG( b, c, d, a, in[12], 13 );
-    GG( a, b, c, d, in[1], 3 );
-    GG( d, a, b, c, in[5], 5 );
-    GG( c, d, a, b, in[9], 9 );
-    GG( b, c, d, a, in[13], 13 );
-    GG( a, b, c, d, in[2], 3 );
-    GG( d, a, b, c, in[6], 5 );
-    GG( c, d, a, b, in[10], 9 );
-    GG( b, c, d, a, in[14], 13 );
-    GG( a, b, c, d, in[3], 3 );
-    GG( d, a, b, c, in[7], 5 );
-    GG( c, d, a, b, in[11], 9 );
-    GG( b, c, d, a, in[15], 13 );
-
-    HH( a, b, c, d, in[0], 3 );
-    HH( d, a, b, c, in[8], 9 );
-    HH( c, d, a, b, in[4], 11 );
-    HH( b, c, d, a, in[12], 15 );
-    HH( a, b, c, d, in[2], 3 );
-    HH( d, a, b, c, in[10], 9 );
-    HH( c, d, a, b, in[6], 11 );
-    HH( b, c, d, a, in[14], 15 );
-    HH( a, b, c, d, in[1], 3 );
-    HH( d, a, b, c, in[9], 9 );
-    HH( c, d, a, b, in[5], 11 );
-    HH( b, c, d, a, in[13], 15 );
-    HH( a, b, c, d, in[3], 3 );
-    HH( d, a, b, c, in[11], 9 );
-    HH( c, d, a, b, in[7], 11 );
-    HH( b, c, d, a, in[15], 15 );
-
-    buf[0] += a;
-    buf[1] += b;
-    buf[2] += c;
-    buf[3] += d;
-}
+static void MD4Transform( unsigned int buf[4], unsigned int const in[16] );
 
 /*
  * Start MD4 accumulation.  Set bit count to 0 and buffer to mysterious
@@ -240,3 +152,149 @@ VOID WINAPI MD4Final( MD4_CTX *ctx )
     byteReverse( (unsigned char *)ctx->buf, 4 );
     memcpy( ctx->digest, ctx->buf, 16 );
 }
+
+/* The three core functions */
+
+#define rotl32(x,n)  (((x) << ((unsigned int)(n))) | ((x) >> (32 - (unsigned int)(n))))
+
+#define F( x, y, z ) (((x) & (y)) | ((~x) & (z)))
+#define G( x, y, z ) (((x) & (y)) | ((x) & (z)) | ((y) & (z)))
+#define H( x, y, z ) ((x) ^ (y) ^ (z))
+
+#define FF( a, b, c, d, x, s ) { \
+    (a) += F( (b), (c), (d) ) + (x); \
+    (a) = rotl32( (a), (s) ); \
+  }
+#define GG( a, b, c, d, x, s ) { \
+    (a) += G( (b), (c), (d) ) + (x) + (unsigned int)0x5a827999; \
+    (a) = rotl32( (a), (s) ); \
+  }
+#define HH( a, b, c, d, x, s ) { \
+    (a) += H( (b), (c), (d) ) + (x) + (unsigned int)0x6ed9eba1; \
+    (a) = rotl32( (a), (s) ); \
+  }
+
+/*
+ * The core of the MD4 algorithm
+ */
+static void MD4Transform( unsigned int buf[4], const unsigned int in[16] )
+{
+    register unsigned int a, b, c, d;
+
+    a = buf[0];
+    b = buf[1];
+    c = buf[2];
+    d = buf[3];
+
+    FF( a, b, c, d, in[0], 3 );
+    FF( d, a, b, c, in[1], 7 );
+    FF( c, d, a, b, in[2], 11 );
+    FF( b, c, d, a, in[3], 19 );
+    FF( a, b, c, d, in[4], 3 );
+    FF( d, a, b, c, in[5], 7 );
+    FF( c, d, a, b, in[6], 11 );
+    FF( b, c, d, a, in[7], 19 );
+    FF( a, b, c, d, in[8], 3 );
+    FF( d, a, b, c, in[9], 7 );
+    FF( c, d, a, b, in[10], 11 );
+    FF( b, c, d, a, in[11], 19 );
+    FF( a, b, c, d, in[12], 3 );
+    FF( d, a, b, c, in[13], 7 );
+    FF( c, d, a, b, in[14], 11 );
+    FF( b, c, d, a, in[15], 19 );
+
+    GG( a, b, c, d, in[0], 3 );
+    GG( d, a, b, c, in[4], 5 );
+    GG( c, d, a, b, in[8], 9 );
+    GG( b, c, d, a, in[12], 13 );
+    GG( a, b, c, d, in[1], 3 );
+    GG( d, a, b, c, in[5], 5 );
+    GG( c, d, a, b, in[9], 9 );
+    GG( b, c, d, a, in[13], 13 );
+    GG( a, b, c, d, in[2], 3 );
+    GG( d, a, b, c, in[6], 5 );
+    GG( c, d, a, b, in[10], 9 );
+    GG( b, c, d, a, in[14], 13 );
+    GG( a, b, c, d, in[3], 3 );
+    GG( d, a, b, c, in[7], 5 );
+    GG( c, d, a, b, in[11], 9 );
+    GG( b, c, d, a, in[15], 13 );
+
+    HH( a, b, c, d, in[0], 3 );
+    HH( d, a, b, c, in[8], 9 );
+    HH( c, d, a, b, in[4], 11 );
+    HH( b, c, d, a, in[12], 15 );
+    HH( a, b, c, d, in[2], 3 );
+    HH( d, a, b, c, in[10], 9 );
+    HH( c, d, a, b, in[6], 11 );
+    HH( b, c, d, a, in[14], 15 );
+    HH( a, b, c, d, in[1], 3 );
+    HH( d, a, b, c, in[9], 9 );
+    HH( c, d, a, b, in[5], 11 );
+    HH( b, c, d, a, in[13], 15 );
+    HH( a, b, c, d, in[3], 3 );
+    HH( d, a, b, c, in[11], 9 );
+    HH( c, d, a, b, in[7], 11 );
+    HH( b, c, d, a, in[15], 15 );
+
+    buf[0] += a;
+    buf[1] += b;
+    buf[2] += c;
+    buf[3] += d;
+}
+
+#ifndef __REACTOS__
+/******************************************************************************
+ * SystemFunction007  [ADVAPI32.@]
+ *
+ * MD4 hash a unicode string
+ *
+ * PARAMS
+ *   string  [I] the string to hash
+ *   output  [O] the md4 hash of the string (16 bytes)
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS
+ *  Failure: STATUS_UNSUCCESSFUL
+ *
+ */
+NTSTATUS WINAPI SystemFunction007(const UNICODE_STRING *string, LPBYTE hash)
+{
+    MD4_CTX ctx;
+
+    MD4Init( &ctx );
+    MD4Update( &ctx, (const BYTE *)string->Buffer, string->Length );
+    MD4Final( &ctx );
+    memcpy( hash, ctx.digest, 0x10 );
+
+    return STATUS_SUCCESS;
+}
+
+/******************************************************************************
+ * SystemFunction010  [ADVAPI32.@]
+ * SystemFunction011  [ADVAPI32.@]
+ *
+ * MD4 hashes 16 bytes of data
+ *
+ * PARAMS
+ *   unknown []  seems to have no effect on the output
+ *   data    [I] pointer to data to hash (16 bytes)
+ *   output  [O] the md4 hash of the data (16 bytes)
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS
+ *  Failure: STATUS_UNSUCCESSFUL
+ *
+ */
+NTSTATUS WINAPI SystemFunction010(LPVOID unknown, const BYTE *data, LPBYTE hash)
+{
+    MD4_CTX ctx;
+
+    MD4Init( &ctx );
+    MD4Update( &ctx, data, 0x10 );
+    MD4Final( &ctx );
+    memcpy( hash, ctx.digest, 0x10 );
+
+    return STATUS_SUCCESS;
+}
+#endif /* !__REACTOS__ */
