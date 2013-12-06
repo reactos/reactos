@@ -375,7 +375,7 @@ HRESULT WINAPI CStdStubBuffer_QueryInterface(LPRPCSTUBBUFFER iface,
   if (IsEqualIID(&IID_IUnknown, riid) ||
       IsEqualIID(&IID_IRpcStubBuffer, riid))
   {
-    IUnknown_AddRef(iface);
+    IRpcStubBuffer_AddRef(iface);
     *obj = iface;
     return S_OK;
   }

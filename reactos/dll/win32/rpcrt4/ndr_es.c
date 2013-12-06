@@ -351,9 +351,9 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
-        pEsMsg->ProcNumber = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
+        pEsMsg->ProcNumber = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else

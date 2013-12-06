@@ -165,7 +165,7 @@ reactos/dll/win32/rasapi32         # Synced to Wine-1.7.1
 reactos/dll/win32/resutils         # Synced to Wine-1.7.1
 reactos/dll/win32/riched20         # Synced to Wine-1.7.1
 reactos/dll/win32/riched32         # Synced to Wine-1.7.1
-reactos/dll/win32/rpcrt4           # Synced to Wine-1.3.26
+reactos/dll/win32/rpcrt4           # Synced to Wine-1.7.1
 reactos/dll/win32/rsabase          # Synced to Wine-1.7.1
 reactos/dll/win32/rsaenh           # Synced to Wine-1.7.1
 reactos/dll/win32/sccbase          # Synced to Wine-1.7.1

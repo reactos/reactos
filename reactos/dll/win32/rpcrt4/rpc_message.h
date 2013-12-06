@@ -31,7 +31,7 @@ RpcPktHdr *RPCRT4_BuildBindHeader(ULONG DataRepresentation, unsigned short MaxTr
 RpcPktHdr *RPCRT4_BuildBindNackHeader(ULONG DataRepresentation, unsigned char RpcVersion, unsigned char RpcVersionMinor, unsigned short RejectReason) DECLSPEC_HIDDEN;
 RpcPktHdr *RPCRT4_BuildBindAckHeader(ULONG DataRepresentation, unsigned short MaxTransmissionSize, unsigned short MaxReceiveSize, ULONG AssocGroupId, LPCSTR ServerAddress, unsigned char ResultCount, const RpcResult *Results) DECLSPEC_HIDDEN;
 RpcPktHdr *RPCRT4_BuildHttpHeader(ULONG DataRepresentation, unsigned short flags, unsigned short num_data_items, unsigned int payload_size) DECLSPEC_HIDDEN;
-RpcPktHdr *RPCRT4_BuildHttpConnectHeader(unsigned short flags, int out_pipe, const UUID *connection_uuid, const UUID *pipe_uuid, const UUID *association_uuid) DECLSPEC_HIDDEN;
+RpcPktHdr *RPCRT4_BuildHttpConnectHeader(int out_pipe, const UUID *connection_uuid, const UUID *pipe_uuid, const UUID *association_uuid) DECLSPEC_HIDDEN;
 RpcPktHdr *RPCRT4_BuildHttpFlowControlHeader(BOOL server, ULONG bytes_transmitted, ULONG flow_control_increment, const UUID *pipe_uuid) DECLSPEC_HIDDEN;
 VOID RPCRT4_FreeHeader(RpcPktHdr *Header) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header, void *Buffer, unsigned int BufferLength) DECLSPEC_HIDDEN;

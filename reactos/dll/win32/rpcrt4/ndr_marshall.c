@@ -1179,7 +1179,8 @@ static unsigned char * EmbeddedPointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   while (pFormat[0] != RPC_FC_END) {
     switch (pFormat[0]) {
     default:
-      FIXME("unknown repeat type %d\n", pFormat[0]);
+      FIXME("unknown repeat type %d; assuming no repeat\n", pFormat[0]);
+      /* fallthrough */
     case RPC_FC_NO_REPEAT:
       rep = 1;
       stride = 0;
@@ -1259,7 +1260,8 @@ static unsigned char * EmbeddedPointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     TRACE("pFormat[0] = 0x%x\n", pFormat[0]);
     switch (pFormat[0]) {
     default:
-      FIXME("unknown repeat type %d\n", pFormat[0]);
+      FIXME("unknown repeat type %d; assuming no repeat\n", pFormat[0]);
+      /* fallthrough */
     case RPC_FC_NO_REPEAT:
       rep = 1;
       stride = 0;
@@ -1333,7 +1335,8 @@ static void EmbeddedPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   while (pFormat[0] != RPC_FC_END) {
     switch (pFormat[0]) {
     default:
-      FIXME("unknown repeat type %d\n", pFormat[0]);
+      FIXME("unknown repeat type %d; assuming no repeat\n", pFormat[0]);
+      /* fallthrough */
     case RPC_FC_NO_REPEAT:
       rep = 1;
       stride = 0;
@@ -1405,7 +1408,8 @@ static ULONG EmbeddedPointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
   while (pFormat[0] != RPC_FC_END) {
     switch (pFormat[0]) {
     default:
-      FIXME("unknown repeat type %d\n", pFormat[0]);
+      FIXME("unknown repeat type %d; assuming no repeat\n", pFormat[0]);
+      /* fallthrough */
     case RPC_FC_NO_REPEAT:
       rep = 1;
       stride = 0;
@@ -1463,7 +1467,8 @@ static void EmbeddedPointerFree(PMIDL_STUB_MESSAGE pStubMsg,
   while (pFormat[0] != RPC_FC_END) {
     switch (pFormat[0]) {
     default:
-      FIXME("unknown repeat type %d\n", pFormat[0]);
+      FIXME("unknown repeat type %d; assuming no repeat\n", pFormat[0]);
+      /* fallthrough */
     case RPC_FC_NO_REPEAT:
       rep = 1;
       stride = 0;

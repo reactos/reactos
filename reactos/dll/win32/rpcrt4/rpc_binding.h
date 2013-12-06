@@ -61,6 +61,7 @@ struct connection_ops;
 
 typedef struct _RpcConnection
 {
+  LONG ref;
   BOOL server;
   LPSTR NetworkAddr;
   LPSTR Endpoint;
@@ -77,6 +78,7 @@ typedef struct _RpcConnection
   ULONG encryption_auth_len;
   ULONG signature_auth_len;
   RpcQualityOfService *QOS;
+  LPWSTR CookieAuth;
 
   /* client-only */
   struct list conn_pool_entry;
@@ -133,6 +135,7 @@ typedef struct _RpcBinding
   /* authentication */
   RpcAuthInfo *AuthInfo;
   RpcQualityOfService *QOS;
+  LPWSTR CookieAuth;
 } RpcBinding;
 
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len) DECLSPEC_HIDDEN;
@@ -152,8 +155,11 @@ ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
 ULONG RpcQualityOfService_Release(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
 BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2) DECLSPEC_HIDDEN;
 
-RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo, RpcQualityOfService *QOS) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq,
+    LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo,
+    RpcQualityOfService *QOS, LPCWSTR CookieAuth) DECLSPEC_HIDDEN;
+RpcConnection *RPCRT4_GrabConnection( RpcConnection *conn ) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_ReleaseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
 
