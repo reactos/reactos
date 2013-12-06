@@ -78,6 +78,7 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD LastVerticalRefresh;
     DWORD LastCyclePrintout;
     DWORD Cycles = 0;
+    INT KeyboardIntCounter = 0;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
@@ -225,6 +226,13 @@ INT wmain(INT argc, WCHAR *argv[])
         {
             VgaRefreshDisplay();
             LastVerticalRefresh = CurrentTickCount;
+        }
+
+        KeyboardIntCounter++;
+        if (KeyboardIntCounter == KBD_INT_CYCLES)
+        {
+            GenerateKeyboardInterrupts();
+            KeyboardIntCounter = 0;
         }
 
         /* Horizontal retrace occurs as fast as possible */

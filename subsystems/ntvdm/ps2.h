@@ -24,13 +24,11 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BYTE KeyboardReadStatus();
-//VOID KeyboardWriteCommand(BYTE Command);
-BYTE KeyboardReadData();
-//VOID KeyboardWriteData(BYTE Data);
-
 BOOLEAN PS2Initialize(HANDLE ConsoleInput);
 VOID PS2Cleanup(VOID);
+BYTE WINAPI PS2ReadPort(ULONG Port);
+VOID WINAPI PS2WritePort(ULONG Port, BYTE Data);
+VOID GenerateKeyboardInterrupts(VOID);
 
 #endif // _PS2_H_
 

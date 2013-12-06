@@ -45,6 +45,7 @@
 
 /* Processor speed */
 #define STEPS_PER_CYCLE 256
+#define KBD_INT_CYCLES 16
 
 /* FUNCTIONS ******************************************************************/
 

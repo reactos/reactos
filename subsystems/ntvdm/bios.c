@@ -1429,47 +1429,42 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
             BYTE ScanCode, VirtualKey;
             WORD Character;
 
-            /* Loop while there is a scancode available */
-            do
+            /* Get the scan code and virtual key code */
+            ScanCode = PS2ReadPort(PS2_DATA_PORT);
+            VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
+
+            /* Check if this is a key press or release */
+            if (!(ScanCode & (1 << 7)))
             {
-                /* Get the scan code and virtual key code */
-                ScanCode = KeyboardReadData();
-                VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
-
-                /* Check if this is a key press or release */
-                if (!(ScanCode & (1 << 7)))
+                /* Key press */
+                if (VirtualKey == VK_NUMLOCK ||
+                    VirtualKey == VK_CAPITAL ||
+                    VirtualKey == VK_SCROLL  ||
+                    VirtualKey == VK_INSERT)
                 {
-                    /* Key press */
-                    if (VirtualKey == VK_NUMLOCK ||
-                        VirtualKey == VK_CAPITAL ||
-                        VirtualKey == VK_SCROLL  ||
-                        VirtualKey == VK_INSERT)
-                    {
-                        /* For toggle keys, toggle the lowest bit in the keyboard map */
-                        BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
-                    }
+                    /* For toggle keys, toggle the lowest bit in the keyboard map */
+                    BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
+                }
 
-                    /* Set the highest bit */
-                    BiosKeyboardMap[VirtualKey] |= (1 << 7);
+                /* Set the highest bit */
+                BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
-                    /* Find out which character this is */
+                /* Find out which character this is */
+                Character = 0;
+                if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
+                {
+                    /* Not ASCII */
                     Character = 0;
-                    if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
-                    {
-                        /* Not ASCII */
-                        Character = 0;
-                    }
+                }
 
-                    /* Push it onto the BIOS keyboard queue */
-                    BiosKbdBufferPush(MAKEWORD(Character, ScanCode));
-                }
-                else
-                {
-                    /* Key release, unset the highest bit */
-                    BiosKeyboardMap[VirtualKey] &= ~(1 << 7);
-                }
+                /* Push it onto the BIOS keyboard queue */
+                BiosKbdBufferPush(MAKEWORD(Character, ScanCode));
             }
-            while (KeyboardReadStatus() & 1);
+            else
+            {
+                /* Key release, unset the highest bit */
+                BiosKeyboardMap[VirtualKey] &= ~(1 << 7);
+            }
 
             /* Clear the keyboard flags */
             Bda->KeybdShiftFlags = 0;
