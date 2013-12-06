@@ -250,7 +250,7 @@ reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.1
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # Synced to Wine-1.7.1
-  reactos/dll/win32/advapi32/sec/cred.c         # Out of Sync
+  reactos/dll/win32/advapi32/sec/cred.c         # Synced to Wine-1.7.1
   reactos/dll/win32/advapi32/sec/sid.c          # Out of Sync
 
 gdi32 -
