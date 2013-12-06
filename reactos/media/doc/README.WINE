@@ -247,7 +247,6 @@ from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
 reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.1
-reactos/lib/sdk/uuid                      # Synced to Wine-1.1.42
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # Unknown
