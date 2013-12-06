@@ -5,7 +5,7 @@
 7 stdcall ADsBuildVarArrayStr(ptr long ptr)
 8 stdcall ADsBuildVarArrayInt(ptr long ptr)
 9 stdcall ADsOpenObject(wstr wstr wstr long ptr ptr)
-12 stdcall ADsSetLastError(long str str)
+12 stdcall ADsSetLastError(long ptr ptr)
 13 stdcall ADsGetLastError(ptr ptr long ptr long)
 14 stdcall AllocADsMem(long)
 15 stdcall FreeADsMem(ptr)
