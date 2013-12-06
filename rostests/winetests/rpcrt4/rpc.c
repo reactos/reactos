@@ -28,10 +28,12 @@
 #include <winbase.h>
 #include <winnt.h>
 #include <winerror.h>
-#include <ntsecapi.h>
 
 #include "rpc.h"
 #include "rpcdce.h"
+#include "secext.h"
+
+typedef long NTSTATUS;
 
 typedef unsigned int unsigned32;
 typedef struct twr_t
@@ -814,6 +816,7 @@ static void test_UuidCreateSequential(void)
     if (version == 1)
     {
         UUID guid2;
+        char buf[39];
 
         if (!ret)
         {
@@ -821,7 +824,8 @@ static void test_UuidCreateSequential(void)
              * address in the uuid:
              */
             ok(!(guid1.Data4[2] & 0x01),
-               "GUID does not appear to contain a MAC address\n");
+               "GUID does not appear to contain a MAC address: %s\n",
+               printGuid(buf, sizeof(buf), &guid1));
         }
         else
         {
@@ -829,7 +833,8 @@ static void test_UuidCreateSequential(void)
              * address in the uuid:
              */
             ok((guid1.Data4[2] & 0x01),
-               "GUID does not appear to contain a multicast MAC address\n");
+               "GUID does not appear to contain a multicast MAC address: %s\n",
+               printGuid(buf, sizeof(buf), &guid1));
         }
         /* Generate another GUID, and make sure its MAC address matches the
          * first.
@@ -840,7 +845,8 @@ static void test_UuidCreateSequential(void)
         version = (guid2.Data3 & 0xf000) >> 12;
         ok(version == 1, "unexpected version %d\n", version);
         ok(!memcmp(guid1.Data4, guid2.Data4, sizeof(guid2.Data4)),
-           "unexpected value in MAC address\n");
+           "unexpected value in MAC address: %s\n",
+           printGuid(buf, sizeof(buf), &guid2));
     }
 }
 
@@ -853,6 +859,59 @@ static void test_RpcBindingFree(void)
     ok(status == RPC_S_INVALID_BINDING,
        "RpcBindingFree should have returned RPC_S_INVALID_BINDING instead of %d\n",
        status);
+}
+
+static void test_RpcServerInqDefaultPrincName(void)
+{
+    RPC_STATUS ret;
+    RPC_CSTR principal, saved_principal;
+    BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT,LPSTR,PULONG);
+    char *username;
+    ULONG len = 0;
+
+    pGetUserNameExA = (void *)GetProcAddress( LoadLibraryA("secur32.dll"), "GetUserNameExA" );
+    if (!pGetUserNameExA)
+    {
+        win_skip( "GetUserNameExA not exported\n" );
+        return;
+    }
+    pGetUserNameExA( NameSamCompatible, NULL, &len );
+    username = HeapAlloc( GetProcessHeap(), 0, len );
+    pGetUserNameExA( NameSamCompatible, username, &len );
+
+    ret = RpcServerInqDefaultPrincNameA( 0, NULL );
+    ok( ret == RPC_S_UNKNOWN_AUTHN_SERVICE, "got %u\n", ret );
+
+    ret = RpcServerInqDefaultPrincNameA( RPC_C_AUTHN_DEFAULT, NULL );
+    ok( ret == RPC_S_UNKNOWN_AUTHN_SERVICE, "got %u\n", ret );
+
+    principal = (RPC_CSTR)0xdeadbeef;
+    ret = RpcServerInqDefaultPrincNameA( RPC_C_AUTHN_DEFAULT, &principal );
+    ok( ret == RPC_S_UNKNOWN_AUTHN_SERVICE, "got %u\n", ret );
+    ok( principal == (RPC_CSTR)0xdeadbeef, "got unexpected principal\n" );
+
+    saved_principal = (RPC_CSTR)0xdeadbeef;
+    ret = RpcServerInqDefaultPrincNameA( RPC_C_AUTHN_WINNT, &saved_principal );
+    ok( ret == RPC_S_OK, "got %u\n", ret );
+    ok( saved_principal != (RPC_CSTR)0xdeadbeef, "expected valid principal\n" );
+    ok( !strcmp( (const char *)saved_principal, username ), "got \'%s\'\n", saved_principal );
+    trace("%s\n", saved_principal);
+
+    ret = RpcServerRegisterAuthInfoA( (RPC_CSTR)"wine\\test", RPC_C_AUTHN_WINNT, NULL, NULL );
+    ok( ret == RPC_S_OK, "got %u\n", ret );
+
+    principal = (RPC_CSTR)0xdeadbeef;
+    ret = RpcServerInqDefaultPrincNameA( RPC_C_AUTHN_WINNT, &principal );
+    ok( ret == RPC_S_OK, "got %u\n", ret );
+    ok( principal != (RPC_CSTR)0xdeadbeef, "expected valid principal\n" );
+    ok( !strcmp( (const char *)principal, username ), "got \'%s\'\n", principal );
+    RpcStringFree( &principal );
+
+    ret = RpcServerRegisterAuthInfoA( saved_principal, RPC_C_AUTHN_WINNT, NULL, NULL );
+    ok( ret == RPC_S_OK, "got %u\n", ret );
+
+    RpcStringFree( &saved_principal );
+    HeapFree( GetProcessHeap(), 0, username );
 }
 
 START_TEST( rpc )
@@ -868,4 +927,5 @@ START_TEST( rpc )
     test_UuidCreate();
     test_UuidCreateSequential();
     test_RpcBindingFree();
+    test_RpcServerInqDefaultPrincName();
 }
