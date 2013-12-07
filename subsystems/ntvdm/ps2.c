@@ -65,8 +65,8 @@ static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
     WaitForSingleObject(QueueMutex, INFINITE);
 
     /*
-     * Recheck whether keyboard queue is not empty (it may
-     * have been changed after having grabbed the mutex).
+     * Recheck whether keyboard queue is not empty (it
+     * may have changed after having grabbed the mutex).
      */
     if (KeyboardQueueEmpty)
     {
