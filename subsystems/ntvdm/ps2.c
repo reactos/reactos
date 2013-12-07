@@ -31,10 +31,16 @@ static HANDLE InputThread = NULL;
 
 static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
 {
-    /* Check if the keyboard queue is full */
+    BOOLEAN Result = TRUE;
+
     WaitForSingleObject(QueueMutex, INFINITE);
 
-    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd)) return FALSE;
+    /* Check if the keyboard queue is full */
+    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
+    {
+        Result = FALSE;
+        goto Done;
+    }
 
     /* Insert the value in the queue */
     KeyboardQueue[KeyboardQueueEnd] = ScanCode;
@@ -44,19 +50,24 @@ static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
     /* Since we inserted a value, it's not empty anymore */
     KeyboardQueueEmpty = FALSE;
 
+Done:
     ReleaseMutex(QueueMutex);
-    return TRUE;
+    return Result;
 }
 
 static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
 {
     BOOLEAN Result = TRUE;
 
-    /* Make sure the keyboard queue is not empty */
+    /* Make sure the keyboard queue is not empty (fast check) */
     if (KeyboardQueueEmpty) return FALSE;
 
     WaitForSingleObject(QueueMutex, INFINITE);
 
+    /*
+     * Recheck whether keyboard queue is not empty (it may
+     * have been changed after having grabbed the mutex).
+     */
     if (KeyboardQueueEmpty)
     {
         Result = FALSE;
