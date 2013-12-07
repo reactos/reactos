@@ -30,25 +30,17 @@
 
 #define NONAMELESSUNION
 #include <windows.h>
-#include <commctrl.h>
 #include <commdlg.h>
 
-#ifdef UNICODE
-#define _UNICODE
-#endif
+//#ifdef UNICODE
+//#define _UNICODE
+//#endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
 #include <locale.h>
 #include <time.h>
 
 #include <shellapi.h>   /* for ShellExecuteW() */
-#include <shlobj.h>     /* for SHFormatDrive() */
-
-#ifndef _NO_EXTENSIONS
-#define _SHELL_FOLDERS
-#endif /* _NO_EXTENSIONS */
+#include <shlobj.h>
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
 #define FILE_ATTRIBUTE_ENCRYPTED            0x00000040
@@ -92,12 +84,7 @@ enum IMAGE {
 
 #define COLOR_COMPRESSED    RGB(0,0,255)
 #define COLOR_SELECTION     RGB(0,0,128)
-
-#ifdef _NO_EXTENSIONS
-#define COLOR_SPLITBAR      WHITE_BRUSH
-#else
 #define COLOR_SPLITBAR      LTGRAY_BRUSH
-#endif
 
 #define FRM_CALC_CLIENT     0xBF83
 #define Frame_CalcFrameClient(hwnd, prt) (SendMessageW(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
@@ -135,14 +122,12 @@ typedef struct
   WCHAR     drives[BUFFER_LEN];
   BOOL      prescan_node;   /*TODO*/
   BOOL      saveSettings;
-  
-#ifdef _SHELL_FOLDERS
+
   IShellFolder* iDesktop;
   IMalloc*      iMalloc;
   UINT          cfStrFName;
-#endif
 } WINEFILE_GLOBALS;
 
 extern WINEFILE_GLOBALS Globals;
 
-extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
+//extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
