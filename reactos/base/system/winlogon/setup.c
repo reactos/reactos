@@ -56,7 +56,8 @@ GetSetupType(VOID)
 static
 DWORD
 WINAPI
-RunSetupThreadProc(IN LPVOID lpParameter)
+RunSetupThreadProc(
+    IN LPVOID lpParameter)
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;

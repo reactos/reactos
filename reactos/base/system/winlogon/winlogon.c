@@ -213,9 +213,10 @@ InitKeyboardLayouts(VOID)
 
 
 BOOL
-DisplayStatusMessage(IN PWLSESSION Session,
-                     IN HDESK hDesktop,
-                     IN UINT ResourceId)
+DisplayStatusMessage(
+     IN PWLSESSION Session,
+     IN HDESK hDesktop,
+     IN UINT ResourceId)
 {
     WCHAR StatusMsg[MAX_PATH];
 
@@ -233,7 +234,8 @@ DisplayStatusMessage(IN PWLSESSION Session,
 
 
 BOOL
-RemoveStatusMessage(IN PWLSESSION Session)
+RemoveStatusMessage(
+    IN PWLSESSION Session)
 {
     if (Session->Gina.Version < WLX_VERSION_1_3)
         return TRUE;
@@ -245,10 +247,11 @@ RemoveStatusMessage(IN PWLSESSION Session)
 static
 INT_PTR
 CALLBACK
-GinaLoadFailedWindowProc(IN HWND hwndDlg,
-                         IN UINT uMsg,
-                         IN WPARAM wParam,
-                         IN LPARAM lParam)
+GinaLoadFailedWindowProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -292,10 +295,11 @@ GinaLoadFailedWindowProc(IN HWND hwndDlg,
 
 int
 WINAPI
-WinMain(IN HINSTANCE hInstance,
-        IN HINSTANCE hPrevInstance,
-        IN LPSTR lpCmdLine,
-        IN int nShowCmd)
+WinMain(
+    IN HINSTANCE hInstance,
+    IN HINSTANCE hPrevInstance,
+    IN LPSTR lpCmdLine,
+    IN int nShowCmd)
 {
 #if 0
     LSA_STRING ProcessName, PackageName;
