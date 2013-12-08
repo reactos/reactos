@@ -36,12 +36,18 @@ VOID WINAPI RegisterIoPort(ULONG Port,
     if (IoPortProc[Port].In == NULL)
         IoPortProc[Port].In = InHandler;
     else
-        DPRINT1("IoPortProc[%d].In already registered\n", Port);
+        DPRINT1("IoPortProc[0x%X].In already registered\n", Port);
 
     if (IoPortProc[Port].Out == NULL)
         IoPortProc[Port].Out = OutHandler;
     else
-        DPRINT1("IoPortProc[%d].Out already registered\n", Port);
+        DPRINT1("IoPortProc[0x%X].Out already registered\n", Port);
+}
+
+VOID WINAPI UnregisterIoPort(ULONG Port)
+{
+    IoPortProc[Port].In  = NULL;
+    IoPortProc[Port].Out = NULL;
 }
 
 VOID WINAPI

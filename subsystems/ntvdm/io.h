@@ -23,6 +23,8 @@ VOID WINAPI RegisterIoPort(ULONG Port,
                            EMULATOR_IN_PROC  InHandler,
                            EMULATOR_OUT_PROC OutHandler);
 
+VOID WINAPI UnregisterIoPort(ULONG Port);
+
 VOID WINAPI EmulatorReadIo
 (
     PFAST486_STATE State,
@@ -40,7 +42,6 @@ VOID WINAPI EmulatorWriteIo
     ULONG DataCount,
     UCHAR DataSize
 );
-
 
 #endif // _IO_H_
 

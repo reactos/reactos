@@ -15,24 +15,6 @@
 
 /* DEFINES ********************************************************************/
 
-/* Register I/O ports */
-#define VGA_AC_INDEX 0x3C0
-#define VGA_AC_WRITE 0x3C0
-#define VGA_AC_READ 0x3C1
-#define VGA_SEQ_INDEX 0x3C4
-#define VGA_SEQ_DATA 0x3C5
-#define VGA_DAC_READ_INDEX 0x3C7
-#define VGA_DAC_WRITE_INDEX 0x3C8
-#define VGA_DAC_DATA 0x3C9
-#define VGA_MISC_READ 0x3CC
-#define VGA_MISC_WRITE 0x3C2
-#define VGA_CRTC_INDEX 0x3D4
-#define VGA_CRTC_DATA 0x3D5
-#define VGA_GC_INDEX 0x3CE
-#define VGA_GC_DATA 0x3CF
-#define VGA_STAT_MONO 0x3BA
-#define VGA_STAT_COLOR 0x3DA
-
 #define VGA_NUM_BANKS 4
 #define VGA_BANK_SIZE 0x10000
 #define VGA_MAX_COLORS 256
@@ -43,72 +25,81 @@
 #define VGA_DAC_TO_COLOR(x) (((x) << 2) | ((x) >> 6))
 #define VGA_COLOR_TO_DAC(x) ((x) >> 2)
 
-/* Sequencer reset register bits */
-#define VGA_SEQ_RESET_AR (1 << 0)
-#define VGA_SEQ_RESET_SR (1 << 1)
 
-/* Sequencer clock register bits */
-#define VGA_SEQ_CLOCK_98DM (1 << 0)
-#define VGA_SEQ_CLOCK_SLR (1 << 2)
-#define VGA_SEQ_CLOCK_DCR (1 << 3)
-#define VGA_SEQ_CLOCK_S4 (1 << 4)
-#define VGA_SEQ_CLOCK_SD (1 << 5)
 
-/* Sequencer memory register bits */
-#define VGA_SEQ_MEM_EXT (1 << 1)
-#define VGA_SEQ_MEM_OE (1 << 2)
-#define VGA_SEQ_MEM_C4 (1 << 3)
+/* Register I/O ports */
 
-/* Graphics controller mode register bits */
-#define VGA_GC_MODE_READ (1 << 3)
-#define VGA_GC_MODE_OE (1 << 4)
-#define VGA_GC_MODE_SHIFTREG (1 << 5)
-#define VGA_GC_MODE_SHIFT256 (1 << 6)
+#define VGA_MISC_READ       0x3CC
+#define VGA_MISC_WRITE      0x3C2
 
-/* Graphics controller miscellaneous register bits */
-#define VGA_GC_MISC_NOALPHA (1 << 0)
-#define VGA_GC_MISC_OE (1 << 1)
+#define VGA_INSTAT0_READ    0x3C2
 
-/* CRTC overflow register bits */
-#define VGA_CRTC_OVERFLOW_VT8 (1 << 0)
-#define VGA_CRTC_OVERFLOW_VDE8 (1 << 1)
-#define VGA_CRTC_OVERFLOW_VRS8 (1 << 2)
-#define VGA_CRTC_OVERFLOW_SVB8 (1 << 3)
-#define VGA_CRTC_OVERFLOW_LC8 (1 << 4)
-#define VGA_CRTC_OVERFLOW_VT9 (1 << 5)
-#define VGA_CRTC_OVERFLOW_VDE9 (1 << 6)
-#define VGA_CRTC_OVERFLOW_VRS9 (1 << 7)
+#define VGA_INSTAT1_READ_MONO   0x3BA
+#define VGA_INSTAT1_READ_COLOR  0x3DA
 
-/* CRTC underline register bits */
-#define VGA_CRTC_UNDERLINE_DWORD (1 << 6)
+#define VGA_FEATURE_READ        0x3CA
+#define VGA_FEATURE_WRITE_MONO  0x3BA
+#define VGA_FEATURE_WRITE_COLOR 0x3DA
 
-/* CRTC max scanline register bits */
-#define VGA_CRTC_MAXSCANLINE_DOUBLE (1 << 7)
+#define VGA_AC_INDEX        0x3C0
+#define VGA_AC_WRITE        0x3C0
+#define VGA_AC_READ         0x3C1
 
-/* CRTC mode control register bits */
-#define VGA_CRTC_MODE_CONTROL_WRAP (1 << 5)
-#define VGA_CRTC_MODE_CONTROL_BYTE (1 << 6)
-#define VGA_CRTC_MODE_CONTROL_SYNC (1 << 7)
+#define VGA_SEQ_INDEX       0x3C4
+#define VGA_SEQ_DATA        0x3C5
 
-/* AC control register bits */
-#define VGA_AC_CONTROL_ATGE (1 << 0)
-#define VGA_AC_CONTROL_MONO (1 << 1)
-#define VGA_AC_CONTROL_LGE (1 << 2)
-#define VGA_AC_CONTROL_BLINK (1 << 3)
-#define VGA_AC_CONTROL_PPM (1 << 5)
-#define VGA_AC_CONTROL_8BIT (1 << 6)
-#define VGA_AC_CONTROL_P54S (1 << 7)
+#define VGA_DAC_MASK        0x3C6
+#define VGA_DAC_READ_INDEX  0x3C7
+#define VGA_DAC_WRITE_INDEX 0x3C8
+#define VGA_DAC_DATA        0x3C9
+
+#define VGA_CRTC_INDEX_MONO     0x3B4
+#define VGA_CRTC_DATA_MONO      0x3B5
+#define VGA_CRTC_INDEX_COLOR    0x3D4
+#define VGA_CRTC_DATA_COLOR     0x3D5
+
+#define VGA_GC_INDEX        0x3CE
+#define VGA_GC_DATA         0x3CF
+
+
+
+//
+// Miscellaneous and Status Registers
+//
 
 /* Miscellaneous register bits */
-#define VGA_MISC_COLOR (1 << 0)
-#define VGA_MISC_RAM_ENABLED (1 << 1)
-#define VGA_MISC_OE_INVERT (1 << 5)
-#define VGA_MISC_HSYNCP (1 << 6)
-#define VGA_MISC_VSYNCP (1 << 7)
+#define VGA_MISC_COLOR          (1 << 0)
+#define VGA_MISC_RAM_ENABLED    (1 << 1)
+// #define VGA_MISC_CSEL1         (1 << 2)
+// #define VGA_MISC_CSEL2         (1 << 3)
+#define VGA_MISC_OE_INVERT      (1 << 5)
+#define VGA_MISC_HSYNCP         (1 << 6)
+#define VGA_MISC_VSYNCP         (1 << 7)
 
 /* Status register flags */
-#define VGA_STAT_DD (1 << 0)
-#define VGA_STAT_VRETRACE (1 << 3)
+#define VGA_STAT_DD             (1 << 0)
+#define VGA_STAT_VRETRACE       (1 << 3)
+
+
+//
+// Sequencer Registers
+//
+
+/* Sequencer reset register bits */
+#define VGA_SEQ_RESET_AR    (1 << 0)
+#define VGA_SEQ_RESET_SR    (1 << 1)
+
+/* Sequencer clock register bits */
+#define VGA_SEQ_CLOCK_98DM  (1 << 0)
+#define VGA_SEQ_CLOCK_SLR   (1 << 2)
+#define VGA_SEQ_CLOCK_DCR   (1 << 3)
+#define VGA_SEQ_CLOCK_S4    (1 << 4)
+#define VGA_SEQ_CLOCK_SD    (1 << 5)
+
+/* Sequencer memory register bits */
+#define VGA_SEQ_MEM_EXT     (1 << 1)
+#define VGA_SEQ_MEM_OE      (1 << 2)
+#define VGA_SEQ_MEM_C4      (1 << 3)
 
 enum
 {
@@ -120,19 +111,31 @@ enum
     VGA_SEQ_MAX_REG
 };
 
-enum
-{
-    VGA_GC_RESET_REG,
-    VGA_GC_ENABLE_RESET_REG,
-    VGA_GC_COLOR_COMPARE_REG,
-    VGA_GC_ROTATE_REG,
-    VGA_GC_READ_MAP_SEL_REG,
-    VGA_GC_MODE_REG,
-    VGA_GC_MISC_REG,
-    VGA_GC_COLOR_IGNORE_REG,
-    VGA_GC_BITMASK_REG,
-    VGA_GC_MAX_REG
-};
+
+//
+// CRT Controller Registers
+//
+
+/* CRTC overflow register bits */
+#define VGA_CRTC_OVERFLOW_VT8       (1 << 0)
+#define VGA_CRTC_OVERFLOW_VDE8      (1 << 1)
+#define VGA_CRTC_OVERFLOW_VRS8      (1 << 2)
+#define VGA_CRTC_OVERFLOW_SVB8      (1 << 3)
+#define VGA_CRTC_OVERFLOW_LC8       (1 << 4)
+#define VGA_CRTC_OVERFLOW_VT9       (1 << 5)
+#define VGA_CRTC_OVERFLOW_VDE9      (1 << 6)
+#define VGA_CRTC_OVERFLOW_VRS9      (1 << 7)
+
+/* CRTC underline register bits */
+#define VGA_CRTC_UNDERLINE_DWORD    (1 << 6)
+
+/* CRTC max scanline register bits */
+#define VGA_CRTC_MAXSCANLINE_DOUBLE (1 << 7)
+
+/* CRTC mode control register bits */
+#define VGA_CRTC_MODE_CONTROL_WRAP  (1 << 5)
+#define VGA_CRTC_MODE_CONTROL_BYTE  (1 << 6)
+#define VGA_CRTC_MODE_CONTROL_SYNC  (1 << 7)
 
 enum
 {
@@ -164,6 +167,50 @@ enum
     VGA_CRTC_MAX_REG
 };
 
+
+//
+// Graphics Controller Registers
+//
+
+/* Graphics controller mode register bits */
+#define VGA_GC_MODE_READ        (1 << 3)
+#define VGA_GC_MODE_OE          (1 << 4)
+#define VGA_GC_MODE_SHIFTREG    (1 << 5)
+#define VGA_GC_MODE_SHIFT256    (1 << 6)
+
+/* Graphics controller miscellaneous register bits */
+#define VGA_GC_MISC_NOALPHA     (1 << 0)
+#define VGA_GC_MISC_OE          (1 << 1)
+
+enum
+{
+    VGA_GC_RESET_REG,
+    VGA_GC_ENABLE_RESET_REG,
+    VGA_GC_COLOR_COMPARE_REG,
+    VGA_GC_ROTATE_REG,
+    VGA_GC_READ_MAP_SEL_REG,
+    VGA_GC_MODE_REG,
+    VGA_GC_MISC_REG,
+    VGA_GC_COLOR_IGNORE_REG,
+    VGA_GC_BITMASK_REG,
+    VGA_GC_MAX_REG
+};
+
+
+//
+// Attribute Controller Registers
+// They are a relinquish of the CGA/EGA era.
+//
+
+/* AC mode control register bits */
+#define VGA_AC_CONTROL_ATGE     (1 << 0)
+#define VGA_AC_CONTROL_MONO     (1 << 1)
+#define VGA_AC_CONTROL_LGE      (1 << 2)
+#define VGA_AC_CONTROL_BLINK    (1 << 3)
+#define VGA_AC_CONTROL_PPM      (1 << 5)
+#define VGA_AC_CONTROL_8BIT     (1 << 6)
+#define VGA_AC_CONTROL_P54S     (1 << 7)
+
 enum
 {
     VGA_AC_PAL_0_REG,
@@ -189,6 +236,17 @@ enum
     VGA_AC_COLOR_SEL_REG,
     VGA_AC_MAX_REG
 };
+
+
+typedef struct _VGA_REGISTERS
+{
+    UCHAR Misc;
+    UCHAR Sequencer[VGA_SEQ_MAX_REG];
+    UCHAR CRT[VGA_CRTC_MAX_REG];
+    UCHAR Graphics[VGA_GC_MAX_REG];
+    UCHAR Attribute[VGA_AC_MAX_REG];
+} VGA_REGISTERS, *PVGA_REGISTERS;
+
 
 /* FUNCTIONS ******************************************************************/
 
