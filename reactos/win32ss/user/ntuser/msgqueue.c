@@ -1239,7 +1239,7 @@ MsqPostMessage(PTHREADINFO pti,
    Message->dwQEvent = dwQEvent;
    Message->QS_Flags = MessageBits;
    Message->pti = pti;
-   MsqWakeQueue(pti, MessageBits, (MessageBits & QS_TIMER ? FALSE : TRUE));
+   MsqWakeQueue(pti, MessageBits, TRUE);
 }
 
 VOID FASTCALL
