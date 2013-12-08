@@ -307,6 +307,64 @@ IntValidateOwnerDepth(PWND Wnd, PWND Owner)
    return FALSE;
 }
 
+HWND FASTCALL
+IntGetWindow(HWND hWnd,
+          UINT uCmd)
+{
+    PWND Wnd, FoundWnd;
+    HWND Ret = NULL;
+
+    Wnd = ValidateHwndNoErr(hWnd);
+    if (!Wnd)
+        return NULL;
+
+    FoundWnd = NULL;
+    switch (uCmd)
+    {
+            case GW_OWNER:
+                if (Wnd->spwndOwner != NULL)
+                    FoundWnd = Wnd->spwndOwner;
+                break;
+
+            case GW_HWNDFIRST:
+                if(Wnd->spwndParent != NULL)
+                {
+                    FoundWnd = Wnd->spwndParent;
+                    if (FoundWnd->spwndChild != NULL)
+                        FoundWnd = FoundWnd->spwndChild;
+                }
+                break;
+            case GW_HWNDNEXT:
+                if (Wnd->spwndNext != NULL)
+                    FoundWnd = Wnd->spwndNext;
+                break;
+
+            case GW_HWNDPREV:
+                if (Wnd->spwndPrev != NULL)
+                    FoundWnd = Wnd->spwndPrev;
+                break;
+   
+            case GW_CHILD:
+                if (Wnd->spwndChild != NULL)
+                    FoundWnd = Wnd->spwndChild;
+                break;
+
+            case GW_HWNDLAST:
+                FoundWnd = Wnd;
+                while ( FoundWnd->spwndNext != NULL)
+                    FoundWnd = FoundWnd->spwndNext;
+                break;
+
+            default:
+                Wnd = NULL;
+                break;
+    }
+
+    if (FoundWnd != NULL)
+        Ret = UserHMGetHandle(FoundWnd);
+    return Ret;
+}
+
 /***********************************************************************
  *           IntSendDestroyMsg
  */
@@ -3403,6 +3461,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    }
 
    UserRefObjectCo(WndShell, &Ref);
+   WndShell->state2 |= WNDS2_BOTTOMMOST;
    co_WinPosSetWindowPos(WndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
    WinStaObject->ShellWindow = hwndShell;
