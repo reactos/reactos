@@ -33,303 +33,309 @@
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
                                     (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 
-static NTSTATUS
-VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
-                  PBOOLEAN RecognizedFS,
-                  PFATINFO pFatInfo)
+static
+NTSTATUS
+VfatHasFileSystem(
+    PDEVICE_OBJECT DeviceToMount,
+    PBOOLEAN RecognizedFS,
+    PFATINFO pFatInfo)
 {
-   NTSTATUS Status;
-   PARTITION_INFORMATION PartitionInfo;
-   DISK_GEOMETRY DiskGeometry;
-   FATINFO FatInfo;
-   ULONG Size;
-   ULONG Sectors;
-   LARGE_INTEGER Offset;
-   struct _BootSector* Boot;
-   struct _BootSectorFatX* BootFatX;
-   BOOLEAN PartitionInfoIsValid = FALSE;
+    NTSTATUS Status;
+    PARTITION_INFORMATION PartitionInfo;
+    DISK_GEOMETRY DiskGeometry;
+    FATINFO FatInfo;
+    ULONG Size;
+    ULONG Sectors;
+    LARGE_INTEGER Offset;
+    struct _BootSector* Boot;
+    struct _BootSectorFatX* BootFatX;
+    BOOLEAN PartitionInfoIsValid = FALSE;
 
-   DPRINT("VfatHasFileSystem\n");
+    DPRINT("VfatHasFileSystem\n");
 
-   *RecognizedFS = FALSE;
+    *RecognizedFS = FALSE;
 
-   Size = sizeof(DISK_GEOMETRY);
-   Status = VfatBlockDeviceIoControl(DeviceToMount,
-                                     IOCTL_DISK_GET_DRIVE_GEOMETRY,
-                                     NULL,
-                                     0,
-                                     &DiskGeometry,
-                                     &Size,
-                                     FALSE);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
-      return Status;
-   }
-   FatInfo.FixedMedia = DiskGeometry.MediaType == FixedMedia ? TRUE : FALSE;
-   if (DiskGeometry.MediaType == FixedMedia || DiskGeometry.MediaType == RemovableMedia)
-   {
-      // We have found a hard disk
-      Size = sizeof(PARTITION_INFORMATION);
-      Status = VfatBlockDeviceIoControl(DeviceToMount,
-                                        IOCTL_DISK_GET_PARTITION_INFO,
-                                        NULL,
-                                        0,
-                                        &PartitionInfo,
-                                        &Size,
-                                        FALSE);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
-         return Status;
-      }
-      PartitionInfoIsValid = TRUE;
-      DPRINT("Partition Information:\n");
-      DPRINT("StartingOffset      %I64x\n", PartitionInfo.StartingOffset.QuadPart  / 512);
-      DPRINT("PartitionLength     %I64x\n", PartitionInfo.PartitionLength.QuadPart / 512);
-      DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
-      DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
-      DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
-      DPRINT("BootIndicator       %u\n", PartitionInfo.BootIndicator);
-      DPRINT("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
-      DPRINT("RewritePartition    %u\n", PartitionInfo.RewritePartition);
-      if (PartitionInfo.PartitionType)
-      {
-         if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
-             PartitionInfo.PartitionType == PARTITION_FAT_16       ||
-             PartitionInfo.PartitionType == PARTITION_HUGE         ||
-             PartitionInfo.PartitionType == PARTITION_FAT32        ||
-             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
-             PartitionInfo.PartitionType == PARTITION_XINT13)
-         {
+    Size = sizeof(DISK_GEOMETRY);
+    Status = VfatBlockDeviceIoControl(DeviceToMount,
+                                      IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                      NULL,
+                                      0,
+                                      &DiskGeometry,
+                                      &Size,
+                                      FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
+        return Status;
+    }
+
+    FatInfo.FixedMedia = DiskGeometry.MediaType == FixedMedia ? TRUE : FALSE;
+    if (DiskGeometry.MediaType == FixedMedia || DiskGeometry.MediaType == RemovableMedia)
+    {
+        // We have found a hard disk
+        Size = sizeof(PARTITION_INFORMATION);
+        Status = VfatBlockDeviceIoControl(DeviceToMount,
+                                          IOCTL_DISK_GET_PARTITION_INFO,
+                                          NULL,
+                                          0,
+                                          &PartitionInfo,
+                                          &Size,
+                                          FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
+            return Status;
+        }
+
+        PartitionInfoIsValid = TRUE;
+        DPRINT("Partition Information:\n");
+        DPRINT("StartingOffset      %I64x\n", PartitionInfo.StartingOffset.QuadPart  / 512);
+        DPRINT("PartitionLength     %I64x\n", PartitionInfo.PartitionLength.QuadPart / 512);
+        DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
+        DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
+        DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
+        DPRINT("BootIndicator       %u\n", PartitionInfo.BootIndicator);
+        DPRINT("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
+        DPRINT("RewritePartition    %u\n", PartitionInfo.RewritePartition);
+        if (PartitionInfo.PartitionType)
+        {
+            if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
+                PartitionInfo.PartitionType == PARTITION_FAT_16       ||
+                PartitionInfo.PartitionType == PARTITION_HUGE         ||
+                PartitionInfo.PartitionType == PARTITION_FAT32        ||
+                PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
+                PartitionInfo.PartitionType == PARTITION_XINT13)
+            {
+                *RecognizedFS = TRUE;
+            }
+        }
+        else if (DiskGeometry.MediaType == RemovableMedia &&
+                 PartitionInfo.PartitionNumber > 0 &&
+                 PartitionInfo.StartingOffset.QuadPart == 0 &&
+                 PartitionInfo.PartitionLength.QuadPart > 0)
+        {
+            /* This is possible a removable media formated as super floppy */
             *RecognizedFS = TRUE;
-         }
-      }
-      else if (DiskGeometry.MediaType == RemovableMedia &&
-               PartitionInfo.PartitionNumber > 0 &&
-               PartitionInfo.StartingOffset.QuadPart == 0 &&
-               PartitionInfo.PartitionLength.QuadPart > 0)
-      {
-         /* This is possible a removable media formated as super floppy */
-         *RecognizedFS = TRUE;
-      }
-   }
-   else if (DiskGeometry.MediaType == Unknown)
-   {
-      /*
-       * Floppy disk driver can return Unknown as media type if it
-       * doesn't know yet what floppy in the drive really is. This is
-       * perfectly correct to do under Windows.
-       */
-      *RecognizedFS = TRUE;
-      DiskGeometry.BytesPerSector = 512;
-   }
-   else
-   {
-      *RecognizedFS = TRUE;
-   }
-   if (*RecognizedFS)
-   {
+        }
+    }
+    else if (DiskGeometry.MediaType == Unknown)
+    {
+        /*
+         * Floppy disk driver can return Unknown as media type if it
+         * doesn't know yet what floppy in the drive really is. This is
+         * perfectly correct to do under Windows.
+         */
+        *RecognizedFS = TRUE;
+        DiskGeometry.BytesPerSector = 512;
+    }
+    else
+    {
+        *RecognizedFS = TRUE;
+    }
 
-      Boot = ExAllocatePoolWithTag(NonPagedPool, DiskGeometry.BytesPerSector, TAG_VFAT);
-      if (Boot == NULL)
-      {
-         return STATUS_INSUFFICIENT_RESOURCES;
-      }
+    if (*RecognizedFS)
+    {
+        Boot = ExAllocatePoolWithTag(NonPagedPool, DiskGeometry.BytesPerSector, TAG_VFAT);
+        if (Boot == NULL)
+        {
+           return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-      Offset.QuadPart = 0;
+        Offset.QuadPart = 0;
 
-      /* Try to recognize FAT12/FAT16/FAT32 partitions */
-      Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
-      if (NT_SUCCESS(Status))
-      {
-         if (Boot->Signatur1 != 0xaa55)
-         {
-            *RecognizedFS = FALSE;
-         }
-         if (*RecognizedFS &&
-         Boot->BytesPerSector != 512 &&
-         Boot->BytesPerSector != 1024 &&
-             Boot->BytesPerSector != 2048 &&
-         Boot->BytesPerSector != 4096)
-         {
-            DPRINT1("BytesPerSector %u\n", Boot->BytesPerSector);
-            *RecognizedFS = FALSE;
-         }
-
-         if (*RecognizedFS &&
-             Boot->FATCount != 1 &&
-             Boot->FATCount != 2)
-         {
-            DPRINT1("FATCount %u\n", Boot->FATCount);
-            *RecognizedFS = FALSE;
-         }
-
-         if (*RecognizedFS &&
-             Boot->Media != 0xf0 &&
-             Boot->Media != 0xf8 &&
-             Boot->Media != 0xf9 &&
-             Boot->Media != 0xfa &&
-             Boot->Media != 0xfb &&
-             Boot->Media != 0xfc &&
-             Boot->Media != 0xfd &&
-             Boot->Media != 0xfe &&
-             Boot->Media != 0xff)
-         {
-            DPRINT1("Media             %02x\n", Boot->Media);
-            *RecognizedFS = FALSE;
-         }
-
-         if (*RecognizedFS &&
-             Boot->SectorsPerCluster != 1 &&
-             Boot->SectorsPerCluster != 2 &&
-             Boot->SectorsPerCluster != 4 &&
-             Boot->SectorsPerCluster != 8 &&
-             Boot->SectorsPerCluster != 16 &&
-             Boot->SectorsPerCluster != 32 &&
-             Boot->SectorsPerCluster != 64 &&
-             Boot->SectorsPerCluster != 128)
-         {
-            DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
-            *RecognizedFS = FALSE;
-         }
-
-         if (*RecognizedFS &&
-             Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
-         {
-            DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
-            *RecognizedFS = FALSE;
-         }
-
-         if (*RecognizedFS)
-         {
-            FatInfo.VolumeID = Boot->VolumeID;
-            FatInfo.FATStart = Boot->ReservedSectors;
-            FatInfo.FATCount = Boot->FATCount;
-            FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
-            FatInfo.BytesPerSector = Boot->BytesPerSector;
-            FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
-            FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
-            FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
-            FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
-            FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-            FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
-            Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
-            FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
-            if (FatInfo.NumberOfClusters < 4085)
+        /* Try to recognize FAT12/FAT16/FAT32 partitions */
+        Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            if (Boot->Signatur1 != 0xaa55)
             {
-               DPRINT("FAT12\n");
-               FatInfo.FatType = FAT12;
-               FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
-            }
-            else if (FatInfo.NumberOfClusters >= 65525)
-            {
-               DPRINT("FAT32\n");
-               FatInfo.FatType = FAT32;
-               FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
-               FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
-               FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
-            }
-            else
-            {
-               DPRINT("FAT16\n");
-               FatInfo.FatType = FAT16;
-               FatInfo.RootCluster = FatInfo.rootStart / FatInfo.SectorsPerCluster;
-            }
-            if (PartitionInfoIsValid &&
-                FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
-            {
-               *RecognizedFS = FALSE;
+                *RecognizedFS = FALSE;
             }
 
-            if (pFatInfo && *RecognizedFS)
+            if (*RecognizedFS &&
+                Boot->BytesPerSector != 512 &&
+                Boot->BytesPerSector != 1024 &&
+                Boot->BytesPerSector != 2048 &&
+                Boot->BytesPerSector != 4096)
             {
-               *pFatInfo = FatInfo;
+                DPRINT1("BytesPerSector %u\n", Boot->BytesPerSector);
+                *RecognizedFS = FALSE;
             }
-         }
-      }
 
-      ExFreePool(Boot);
-   }
+            if (*RecognizedFS &&
+                Boot->FATCount != 1 &&
+                Boot->FATCount != 2)
+            {
+                DPRINT1("FATCount %u\n", Boot->FATCount);
+                *RecognizedFS = FALSE;
+            }
 
-   if (!*RecognizedFS && PartitionInfoIsValid)
-   {
-      BootFatX = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _BootSectorFatX), TAG_VFAT);
-      if (BootFatX == NULL)
-      {
-         *RecognizedFS=FALSE;
-         return STATUS_INSUFFICIENT_RESOURCES;
-      }
+            if (*RecognizedFS &&
+                Boot->Media != 0xf0 &&
+                Boot->Media != 0xf8 &&
+                Boot->Media != 0xf9 &&
+                Boot->Media != 0xfa &&
+                Boot->Media != 0xfb &&
+                Boot->Media != 0xfc &&
+                Boot->Media != 0xfd &&
+                Boot->Media != 0xfe &&
+                Boot->Media != 0xff)
+            {
+                DPRINT1("Media             %02x\n", Boot->Media);
+                *RecognizedFS = FALSE;
+            }
 
-      Offset.QuadPart = 0;
+            if (*RecognizedFS &&
+                Boot->SectorsPerCluster != 1 &&
+                Boot->SectorsPerCluster != 2 &&
+                Boot->SectorsPerCluster != 4 &&
+                Boot->SectorsPerCluster != 8 &&
+                Boot->SectorsPerCluster != 16 &&
+                Boot->SectorsPerCluster != 32 &&
+                Boot->SectorsPerCluster != 64 &&
+                Boot->SectorsPerCluster != 128)
+            {
+                DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
+                *RecognizedFS = FALSE;
+            }
 
-      /* Try to recognize FATX16/FATX32 partitions (Xbox) */
-      Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, FALSE);
-      if (NT_SUCCESS(Status))
-      {
-         *RecognizedFS = TRUE;
-         if (BootFatX->SysType[0] != 'F' ||
-             BootFatX->SysType[1] != 'A' ||
-             BootFatX->SysType[2] != 'T' ||
-             BootFatX->SysType[3] != 'X')
-         {
-            DPRINT1("SysType %c%c%c%c\n", BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3]);
+            if (*RecognizedFS &&
+                Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
+            {
+                DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
+                *RecognizedFS = FALSE;
+            }
+
+            if (*RecognizedFS)
+            {
+                FatInfo.VolumeID = Boot->VolumeID;
+                FatInfo.FATStart = Boot->ReservedSectors;
+                FatInfo.FATCount = Boot->FATCount;
+                FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
+                FatInfo.BytesPerSector = Boot->BytesPerSector;
+                FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
+                FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
+                FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
+                FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
+                FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
+                FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
+                Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
+                FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
+                if (FatInfo.NumberOfClusters < 4085)
+                {
+                    DPRINT("FAT12\n");
+                    FatInfo.FatType = FAT12;
+                    FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
+                }
+                else if (FatInfo.NumberOfClusters >= 65525)
+                {
+                    DPRINT("FAT32\n");
+                    FatInfo.FatType = FAT32;
+                    FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
+                    FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
+                    FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+                }
+                else
+                {
+                    DPRINT("FAT16\n");
+                    FatInfo.FatType = FAT16;
+                    FatInfo.RootCluster = FatInfo.rootStart / FatInfo.SectorsPerCluster;
+                }
+
+                if (PartitionInfoIsValid &&
+                    FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
+                {
+                    *RecognizedFS = FALSE;
+                }
+
+                if (pFatInfo && *RecognizedFS)
+                {
+                    *pFatInfo = FatInfo;
+                }
+            }
+        }
+
+        ExFreePool(Boot);
+    }
+
+    if (!*RecognizedFS && PartitionInfoIsValid)
+    {
+        BootFatX = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _BootSectorFatX), TAG_VFAT);
+        if (BootFatX == NULL)
+        {
             *RecognizedFS=FALSE;
-         }
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-         if (*RecognizedFS &&
-            BootFatX->SectorsPerCluster != 1 &&
-            BootFatX->SectorsPerCluster != 2 &&
-            BootFatX->SectorsPerCluster != 4 &&
-            BootFatX->SectorsPerCluster != 8 &&
-            BootFatX->SectorsPerCluster != 16 &&
-            BootFatX->SectorsPerCluster != 32 &&
-            BootFatX->SectorsPerCluster != 64 &&
-            BootFatX->SectorsPerCluster != 128)
-         {
-            DPRINT1("SectorsPerCluster %lu\n", BootFatX->SectorsPerCluster);
-            *RecognizedFS=FALSE;
-         }
+        Offset.QuadPart = 0;
 
-         if (*RecognizedFS)
-         {
-            FatInfo.BytesPerSector = DiskGeometry.BytesPerSector;
-            FatInfo.SectorsPerCluster = BootFatX->SectorsPerCluster;
-            FatInfo.rootDirectorySectors = BootFatX->SectorsPerCluster;
-            FatInfo.BytesPerCluster = BootFatX->SectorsPerCluster * DiskGeometry.BytesPerSector;
-            FatInfo.Sectors = (ULONG)(PartitionInfo.PartitionLength.QuadPart / DiskGeometry.BytesPerSector);
-            if (FatInfo.Sectors / FatInfo.SectorsPerCluster < 65525)
+        /* Try to recognize FATX16/FATX32 partitions (Xbox) */
+        Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            *RecognizedFS = TRUE;
+            if (BootFatX->SysType[0] != 'F' ||
+                BootFatX->SysType[1] != 'A' ||
+                BootFatX->SysType[2] != 'T' ||
+                BootFatX->SysType[3] != 'X')
             {
-               DPRINT("FATX16\n");
-               FatInfo.FatType = FATX16;
+                DPRINT1("SysType %c%c%c%c\n", BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3]);
+                *RecognizedFS=FALSE;
             }
-            else
-            {
-               DPRINT("FATX32\n");
-               FatInfo.FatType = FATX32;
-            }
-            FatInfo.VolumeID = BootFatX->VolumeID;
-            FatInfo.FATStart = sizeof(struct _BootSectorFatX) / DiskGeometry.BytesPerSector;
-            FatInfo.FATCount = BootFatX->FATCount;
-            FatInfo.FATSectors =
-                  ROUND_UP(FatInfo.Sectors / FatInfo.SectorsPerCluster * (FatInfo.FatType == FATX16 ? 2 : 4), 4096) /
-                  FatInfo.BytesPerSector;
-            FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
-            FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
-            FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-            FatInfo.NumberOfClusters = (FatInfo.Sectors - FatInfo.dataStart) / FatInfo.SectorsPerCluster;
 
-            if (pFatInfo && *RecognizedFS)
+            if (*RecognizedFS &&
+                BootFatX->SectorsPerCluster != 1 &&
+                BootFatX->SectorsPerCluster != 2 &&
+                BootFatX->SectorsPerCluster != 4 &&
+                BootFatX->SectorsPerCluster != 8 &&
+                BootFatX->SectorsPerCluster != 16 &&
+                BootFatX->SectorsPerCluster != 32 &&
+                BootFatX->SectorsPerCluster != 64 &&
+                BootFatX->SectorsPerCluster != 128)
             {
-               *pFatInfo = FatInfo;
+                DPRINT1("SectorsPerCluster %lu\n", BootFatX->SectorsPerCluster);
+                *RecognizedFS=FALSE;
             }
-         }
-      }
-      ExFreePool(BootFatX);
-   }
 
-   DPRINT("VfatHasFileSystem done\n");
-   return Status;
+            if (*RecognizedFS)
+            {
+                FatInfo.BytesPerSector = DiskGeometry.BytesPerSector;
+                FatInfo.SectorsPerCluster = BootFatX->SectorsPerCluster;
+                FatInfo.rootDirectorySectors = BootFatX->SectorsPerCluster;
+                FatInfo.BytesPerCluster = BootFatX->SectorsPerCluster * DiskGeometry.BytesPerSector;
+                FatInfo.Sectors = (ULONG)(PartitionInfo.PartitionLength.QuadPart / DiskGeometry.BytesPerSector);
+                if (FatInfo.Sectors / FatInfo.SectorsPerCluster < 65525)
+                {
+                    DPRINT("FATX16\n");
+                    FatInfo.FatType = FATX16;
+                }
+                else
+                {
+                    DPRINT("FATX32\n");
+                    FatInfo.FatType = FATX32;
+                }
+                FatInfo.VolumeID = BootFatX->VolumeID;
+                FatInfo.FATStart = sizeof(struct _BootSectorFatX) / DiskGeometry.BytesPerSector;
+                FatInfo.FATCount = BootFatX->FATCount;
+                FatInfo.FATSectors =
+                    ROUND_UP(FatInfo.Sectors / FatInfo.SectorsPerCluster * (FatInfo.FatType == FATX16 ? 2 : 4), 4096) /
+                    FatInfo.BytesPerSector;
+                FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
+                FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
+                FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
+                FatInfo.NumberOfClusters = (FatInfo.Sectors - FatInfo.dataStart) / FatInfo.SectorsPerCluster;
+
+                if (pFatInfo && *RecognizedFS)
+                {
+                    *pFatInfo = FatInfo;
+                }
+            }
+        }
+        ExFreePool(BootFatX);
+    }
+
+    DPRINT("VfatHasFileSystem done\n");
+    return Status;
 }
 
 static NTSTATUS

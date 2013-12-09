@@ -19,166 +19,178 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
-FAT32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
-		    ULONG CurrentCluster,
-		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT32 cluster from the FAT table via a physical
  *           disk read
  */
+NTSTATUS
+FAT32GetNextCluster(
+    PDEVICE_EXTENSION DeviceExt,
+    ULONG CurrentCluster,
+    PULONG NextCluster)
 {
-  PVOID BaseAddress;
-  ULONG FATOffset;
-  ULONG ChunkSize;
-  PVOID Context;
-  LARGE_INTEGER Offset;
+    PVOID BaseAddress;
+    ULONG FATOffset;
+    ULONG ChunkSize;
+    PVOID Context;
+    LARGE_INTEGER Offset;
 
-  ChunkSize = CACHEPAGESIZE(DeviceExt);
-  FATOffset = CurrentCluster * sizeof(ULONG);
-  Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
-  {
-    return STATUS_UNSUCCESSFUL;
-  }
-  CurrentCluster = (*(PULONG)((char*)BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
-  if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
-    CurrentCluster = 0xffffffff;
-  CcUnpinData(Context);
-  *NextCluster = CurrentCluster;
-  return (STATUS_SUCCESS);
+    ChunkSize = CACHEPAGESIZE(DeviceExt);
+    FATOffset = CurrentCluster * sizeof(ULONG);
+    Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
+    if (!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CurrentCluster = (*(PULONG)((char*)BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
+    if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
+        CurrentCluster = 0xffffffff;
+
+    CcUnpinData(Context);
+    *NextCluster = CurrentCluster;
+    return STATUS_SUCCESS;
 }
 
-NTSTATUS
-FAT16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
-		    ULONG CurrentCluster,
-		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT16 cluster from the FAT table
  */
+NTSTATUS
+FAT16GetNextCluster(
+    PDEVICE_EXTENSION DeviceExt,
+    ULONG CurrentCluster,
+    PULONG NextCluster)
 {
-  PVOID BaseAddress;
-  ULONG FATOffset;
-  ULONG ChunkSize;
-  PVOID Context;
-  LARGE_INTEGER Offset;
+    PVOID BaseAddress;
+    ULONG FATOffset;
+    ULONG ChunkSize;
+    PVOID Context;
+    LARGE_INTEGER Offset;
 
-  ChunkSize = CACHEPAGESIZE(DeviceExt);
-  FATOffset = CurrentCluster * 2;
-  Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
-  {
-    return STATUS_UNSUCCESSFUL;
-  }
-  CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
-  if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
-    CurrentCluster = 0xffffffff;
-  CcUnpinData(Context);
-  *NextCluster = CurrentCluster;
-  return (STATUS_SUCCESS);
+    ChunkSize = CACHEPAGESIZE(DeviceExt);
+    FATOffset = CurrentCluster * 2;
+    Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
+    if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
+    {
+         return STATUS_UNSUCCESSFUL;
+    }
+
+    CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
+    if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
+        CurrentCluster = 0xffffffff;
+    CcUnpinData(Context);
+    *NextCluster = CurrentCluster;
+    return STATUS_SUCCESS;
 }
 
-NTSTATUS
-FAT12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
-		    ULONG CurrentCluster,
-		    PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next FAT12 cluster from the FAT table
  */
+NTSTATUS
+FAT12GetNextCluster(
+    PDEVICE_EXTENSION DeviceExt,
+    ULONG CurrentCluster,
+    PULONG NextCluster)
 {
-  PUSHORT CBlock;
-  ULONG Entry;
-  PVOID BaseAddress;
-  PVOID Context;
-  LARGE_INTEGER Offset;
+    PUSHORT CBlock;
+    ULONG Entry;
+    PVOID BaseAddress;
+    PVOID Context;
+    LARGE_INTEGER Offset;
 
+    *NextCluster = 0;
 
-  *NextCluster = 0;
-
-  Offset.QuadPart = 0;
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
-  {
-    return STATUS_UNSUCCESSFUL;
-  }
-  CBlock = (PUSHORT)((char*)BaseAddress + (CurrentCluster * 12) / 8);
-  if ((CurrentCluster % 2) == 0)
+    Offset.QuadPart = 0;
+    if (!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
     {
-      Entry = *CBlock & 0x0fff;
+        return STATUS_UNSUCCESSFUL;
     }
-  else
+
+    CBlock = (PUSHORT)((char*)BaseAddress + (CurrentCluster * 12) / 8);
+    if ((CurrentCluster % 2) == 0)
     {
-      Entry = *CBlock >> 4;
+         Entry = *CBlock & 0x0fff;
     }
-//  DPRINT("Entry %x\n",Entry);
-  if (Entry >= 0xff8 && Entry <= 0xfff)
-    Entry = 0xffffffff;
-//  DPRINT("Returning %x\n",Entry);
-  *NextCluster = Entry;
-  CcUnpinData(Context);
-//  return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
-  return STATUS_SUCCESS;
+    else
+    {
+        Entry = *CBlock >> 4;
+    }
+
+//    DPRINT("Entry %x\n",Entry);
+    if (Entry >= 0xff8 && Entry <= 0xfff)
+        Entry = 0xffffffff;
+
+//    DPRINT("Returning %x\n",Entry);
+    *NextCluster = Entry;
+    CcUnpinData(Context);
+//    return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-NTSTATUS
-FAT16FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
-                                 PULONG Cluster)
 /*
  * FUNCTION: Finds the first available cluster in a FAT16 table
  */
+NTSTATUS
+FAT16FindAndMarkAvailableCluster(
+    PDEVICE_EXTENSION DeviceExt,
+    PULONG Cluster)
 {
-  ULONG FatLength;
-  ULONG StartCluster;
-  ULONG i, j;
-  PVOID BaseAddress;
-  ULONG ChunkSize;
-  PVOID Context = 0;
-  LARGE_INTEGER Offset;
-  PUSHORT Block;
-  PUSHORT BlockEnd;
+    ULONG FatLength;
+    ULONG StartCluster;
+    ULONG i, j;
+    PVOID BaseAddress;
+    ULONG ChunkSize;
+    PVOID Context = 0;
+    LARGE_INTEGER Offset;
+    PUSHORT Block;
+    PUSHORT BlockEnd;
 
-  ChunkSize = CACHEPAGESIZE(DeviceExt);
-  FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2);
-  *Cluster = 0;
-  StartCluster = DeviceExt->LastAvailableCluster;
+    ChunkSize = CACHEPAGESIZE(DeviceExt);
+    FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2);
+    *Cluster = 0;
+    StartCluster = DeviceExt->LastAvailableCluster;
 
-  for (j = 0; j < 2; j++)
-  {
-    for (i = StartCluster; i < FatLength; )
+    for (j = 0; j < 2; j++)
     {
-      Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
-      if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
-      {
-        DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
-        return STATUS_UNSUCCESSFUL;
-      }
-      Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
-      BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
-
-      /* Now process the whole block */
-      while (Block < BlockEnd && i < FatLength)
-      {
-        if (*Block == 0)
+        for (i = StartCluster; i < FatLength;)
         {
-          DPRINT("Found available cluster 0x%x\n", i);
-          DeviceExt->LastAvailableCluster = *Cluster = i;
-          *Block = 0xffff;
-          CcSetDirtyPinnedData(Context, NULL);
-          CcUnpinData(Context);
-          if (DeviceExt->AvailableClustersValid)
-            InterlockedDecrement((PLONG)&DeviceExt->AvailableClusters);
-          return(STATUS_SUCCESS);
+            Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
+            if (!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
+            {
+                DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+                return STATUS_UNSUCCESSFUL;
+            }
+
+            Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
+            BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
+
+            /* Now process the whole block */
+            while (Block < BlockEnd && i < FatLength)
+            {
+                if (*Block == 0)
+                {
+                    DPRINT("Found available cluster 0x%x\n", i);
+                    DeviceExt->LastAvailableCluster = *Cluster = i;
+                    *Block = 0xffff;
+                    CcSetDirtyPinnedData(Context, NULL);
+                    CcUnpinData(Context);
+                    if (DeviceExt->AvailableClustersValid)
+                        InterlockedDecrement((PLONG)&DeviceExt->AvailableClusters);
+                    return STATUS_SUCCESS;
+                }
+
+                Block++;
+                i++;
+            }
+
+            CcUnpinData(Context);
         }
 
-        Block++;
-        i++;
-      }
-
-      CcUnpinData(Context);
+        FatLength = StartCluster;
+        StartCluster = 2;
     }
-    FatLength = StartCluster;
-    StartCluster = 2;
-  }
-  return(STATUS_DISK_FULL);
+
+    return STATUS_DISK_FULL;
 }
 
 NTSTATUS

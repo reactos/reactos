@@ -341,12 +341,12 @@ FsdSetFsLabelInformation(
 }
 
 
-NTSTATUS
-VfatQueryVolumeInformation(
-    PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified volume information
  */
+NTSTATUS
+VfatQueryVolumeInformation(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     FS_INFORMATION_CLASS FsInformationClass;
     NTSTATUS RC = STATUS_SUCCESS;
@@ -416,12 +416,12 @@ VfatQueryVolumeInformation(
 }
 
 
-NTSTATUS
-VfatSetVolumeInformation(
-    PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Set the specified volume information
  */
+NTSTATUS
+VfatSetVolumeInformation(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     FS_INFORMATION_CLASS FsInformationClass;
     NTSTATUS Status = STATUS_SUCCESS;

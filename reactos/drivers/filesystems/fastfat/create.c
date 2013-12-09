@@ -30,34 +30,37 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void
-vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
+VOID
+vfat8Dot3ToString(
+    PFAT_DIR_ENTRY pEntry,
+    PUNICODE_STRING NameU)
 {
-	OEM_STRING StringA;
-	USHORT Length;
-	CHAR  cString[12];
+    OEM_STRING StringA;
+    USHORT Length;
+    CHAR  cString[12];
 
-	RtlCopyMemory(cString, pEntry->ShortName, 11);
-	cString[11] = 0;
-	if (cString[0] == 0x05)
-	{
-		cString[0] = 0xe5;
-	}
+    RtlCopyMemory(cString, pEntry->ShortName, 11);
+    cString[11] = 0;
+    if (cString[0] == 0x05)
+    {
+        cString[0] = 0xe5;
+    }
 
-	StringA.Buffer = cString;
-	for (StringA.Length = 0;
-	StringA.Length < 8 && StringA.Buffer[StringA.Length] != ' ';
-	StringA.Length++);
-	StringA.MaximumLength = StringA.Length;
+    StringA.Buffer = cString;
+    for (StringA.Length = 0;
+         StringA.Length < 8 && StringA.Buffer[StringA.Length] != ' ';
+         StringA.Length++);
+    StringA.MaximumLength = StringA.Length;
 
-	RtlOemStringToUnicodeString(NameU, &StringA, FALSE);
+    RtlOemStringToUnicodeString(NameU, &StringA, FALSE);
 
-	if (pEntry->lCase & VFAT_CASE_LOWER_BASE)
-	{
-		RtlDowncaseUnicodeString(NameU, NameU, FALSE);
-	}
-	if (cString[8] != ' ')
-	{
+    if (pEntry->lCase & VFAT_CASE_LOWER_BASE)
+    {
+        RtlDowncaseUnicodeString(NameU, NameU, FALSE);
+    }
+
+    if (cString[8] != ' ')
+    {
 		Length = NameU->Length;
 		NameU->Buffer += Length / sizeof(WCHAR);
 		if (!FAT_ENTRY_VOLUME(pEntry))
@@ -83,8 +86,9 @@ vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
 		NameU->Length += Length;
 		NameU->MaximumLength += Length;
 	}
-	NameU->Buffer[NameU->Length / sizeof(WCHAR)] = 0;
-	DPRINT("'%wZ'\n", NameU);
+
+    NameU->Buffer[NameU->Length / sizeof(WCHAR)] = 0;
+    DPRINT("'%wZ'\n", NameU);
 }
 
 NTSTATUS
