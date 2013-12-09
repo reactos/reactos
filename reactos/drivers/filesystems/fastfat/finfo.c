@@ -964,9 +964,8 @@ VfatSetInformation(
 {
     FILE_INFORMATION_CLASS FileInformationClass;
     PVFATFCB FCB = NULL;
-    NTSTATUS RC = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
-    BOOLEAN CanWait = (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0;
 
     /* PRECONDITION */
     ASSERT(IrpContext);
@@ -1007,7 +1006,7 @@ VfatSetInformation(
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
-                                            (BOOLEAN)CanWait))
+                                            (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
         {
             return VfatQueueRequest(IrpContext);
         }
@@ -1016,38 +1015,38 @@ VfatSetInformation(
     switch (FileInformationClass)
     {
         case FilePositionInformation:
-            RC = VfatSetPositionInformation(IrpContext->FileObject,
-                                            SystemBuffer);
+            Status = VfatSetPositionInformation(IrpContext->FileObject,
+                                                SystemBuffer);
             break;
 
         case FileDispositionInformation:
-            RC = VfatSetDispositionInformation(IrpContext->FileObject,
-                                               FCB,
-                                               IrpContext->DeviceObject,
-                                               SystemBuffer);
+            Status = VfatSetDispositionInformation(IrpContext->FileObject,
+                                                   FCB,
+                                                   IrpContext->DeviceObject,
+                                                   SystemBuffer);
             break;
 
         case FileAllocationInformation:
         case FileEndOfFileInformation:
-            RC = VfatSetAllocationSizeInformation(IrpContext->FileObject,
-                                                  FCB,
-                                                  IrpContext->DeviceExt,
-                                                  (PLARGE_INTEGER)SystemBuffer);
+            Status = VfatSetAllocationSizeInformation(IrpContext->FileObject,
+                                                      FCB,
+                                                      IrpContext->DeviceExt,
+                                                      (PLARGE_INTEGER)SystemBuffer);
             break;
 
         case FileBasicInformation:
-            RC = VfatSetBasicInformation(IrpContext->FileObject,
-                                         FCB,
-                                         IrpContext->DeviceExt,
-                                         SystemBuffer);
+            Status = VfatSetBasicInformation(IrpContext->FileObject,
+                                             FCB,
+                                             IrpContext->DeviceExt,
+                                             SystemBuffer);
             break;
 
         case FileRenameInformation:
-            RC = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         default:
-            RC = STATUS_NOT_SUPPORTED;
+            Status = STATUS_NOT_SUPPORTED;
     }
 
     if (!(FCB->Flags & FCB_IS_PAGE_FILE))
@@ -1055,12 +1054,12 @@ VfatSetInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    IrpContext->Irp->IoStatus.Status = RC;
+    IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
     IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
     VfatFreeIrpContext(IrpContext);
 
-    return RC;
+    return Status;
 }
 
 /* EOF */
