@@ -112,7 +112,8 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
 
       /* Send palette messages */
       if (gpsi->PUSIFlags & PUSIF_PALETTEDISPLAY &&
-          co_IntPostOrSendMessage(UserHMGetHandle(Window), WM_QUERYNEWPALETTE, 0, 0))
+          //co_IntPostOrSendMessage(UserHMGetHandle(Window), WM_QUERYNEWPALETTE, 0, 0))
+          co_IntSendMessage(UserHMGetHandle(Window), WM_QUERYNEWPALETTE, 0, 0))
       {
          UserSendNotifyMessage( HWND_BROADCAST,
                                 WM_PALETTEISCHANGING,
@@ -276,12 +277,14 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
    {
       if (pWndPrev)
       {
-         co_IntPostOrSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, (WPARAM)UserHMGetHandle(pWnd), 0);
+         //co_IntPostOrSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, (WPARAM)UserHMGetHandle(pWnd), 0);
+         co_IntSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, (WPARAM)UserHMGetHandle(pWnd), 0);
       }
       if (ThreadQueue->spwndFocus == pWnd)
       {
          IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
-         co_IntPostOrSendMessage(UserHMGetHandle(pWnd), WM_SETFOCUS, (WPARAM)(pWndPrev ? UserHMGetHandle(pWndPrev) : NULL), 0);
+         //co_IntPostOrSendMessage(UserHMGetHandle(pWnd), WM_SETFOCUS, (WPARAM)(pWndPrev ? UserHMGetHandle(pWndPrev) : NULL), 0);
+         co_IntSendMessage(UserHMGetHandle(pWnd), WM_SETFOCUS, (WPARAM)(pWndPrev ? UserHMGetHandle(pWndPrev) : NULL), 0);
       }
    }
    else
@@ -289,7 +292,8 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
       if (pWndPrev)
       {
          IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-         co_IntPostOrSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, 0, 0);
+         //co_IntPostOrSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, 0, 0);
+         co_IntSendMessage(UserHMGetHandle(pWndPrev), WM_KILLFOCUS, 0, 0);
       }
    }
 }
@@ -958,7 +962,8 @@ co_UserSetCapture(HWND hWnd)
    {
       if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
 
-      co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+      //co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+      co_IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
 
       ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
    }

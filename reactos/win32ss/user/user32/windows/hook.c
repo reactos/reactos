@@ -595,7 +595,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
      }
      if (mod)
      {
-        TRACE("Loading Hook Module.\n");
+        TRACE("Loading Hook Module. %S\n",Common->ModuleName);
         Proc = (HOOKPROC)((char *)mod + Common->offPfn);
      }
   }
@@ -764,6 +764,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     default:
       if (Loaded) FreeLibrary(mod);
+      ERR("WH_ not supported = %d\n", Common->HookId);
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
   }
   if (Hit)
@@ -772,7 +773,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
      Status = STATUS_UNSUCCESSFUL;
   }
   if (Loaded) FreeLibrary(mod);
-  return ZwCallbackReturn(&Result, sizeof(LRESULT), Status);
+  Common->Result = Result;
+  return ZwCallbackReturn(Arguments, ArgumentLength, Status);
 }
 
 NTSTATUS WINAPI

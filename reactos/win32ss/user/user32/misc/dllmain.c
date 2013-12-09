@@ -417,6 +417,6 @@ User32CallSetWndIconsFromKernel(PVOID Arguments, ULONG ArgumentLength)
   }
   Common->hIconSmWindows = hIconSmWindows;
   Common->hIconWindows = hIconWindows;
-
+  ERR("hIconSmWindows %p hIconWindows %p \n",hIconSmWindows,hIconWindows);
   return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }

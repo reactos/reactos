@@ -870,10 +870,14 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
       for (; *cursor; cursor++)
       {
          TRACE("Sending notify\n");
-         co_IntPostOrSendMessage(*cursor,
+         UserPostMessage(*cursor,
+                          gpsi->uiShellMsg,
+                          Message,
+                         (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );
+/*         co_IntPostOrSendMessage(*cursor,
                                  gpsi->uiShellMsg,
                                  Message,
-                                 (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );
+                                 (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );*/
       }
 
       ExFreePoolWithTag(HwndList, USERTAG_WINDOWLIST);
