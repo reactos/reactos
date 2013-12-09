@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Super DX-Ball
+Version = 1.1
+Licence = Shareware
+Description = Super DX-Ball is a vibrant and colorful brick-breaking game.
+Size = 3.8 MB
+Category = 4
+URLSite = http://www.blitwise.com/superdxb.html
+URLDownload = http://www.blitwise.com/superdxb.exe
+CDPath = none
+
+[Section.0407]
+Description = Super DX-Ball ist ein lebendiges und buntes Brick-Breaking-Spiel.
+
+[Section.041f]
+Name = Süper DX-Ball
+Licence = Kısıtlı
+Description = Süper DX-Ball, canlı ve renkli bir tuğla kırma oyunudur.

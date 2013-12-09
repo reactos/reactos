@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Pocket Tanks
+Version = 1.6
+Licence = Shareware
+Description = The fastest game of artillery you'll ever play.
+Size = 2.86 MB
+Category = 4
+URLSite = http://www.blitwise.com/ptanks.html
+URLDownload = http://www.blitwise.com/ptanks.exe
+CDPath = none
+
+[Section.0407]
+Description = Das schnellste Artillerie-Spiel, das Sie jemals gespielt haben.
+
+[Section.041f]
+Name = Küçük Tanklar
+Licence = Kısıtlı
+Description = Bu güne kadar oynadığınız en hızlı topçu oyunu.

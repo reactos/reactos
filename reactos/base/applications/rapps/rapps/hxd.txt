@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = HxD
+Version = 1.7.7.0
+Licence = Freeware
+Description = A good hex editor.
+Size = 852 KB
+Category = 7
+URLSite = http://mh-nexus.de/en/
+URLDownload = http://mh-nexus.de/downloads/HxDSetupEN.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein guter HEX Editor.
+
+[Section.041f]
+Licence = Ücretsiz
+Description = İyi bir onaltılık düzenleyici.
+Size = 854KB

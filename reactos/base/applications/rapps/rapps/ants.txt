@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Ants
+Version = N/A
+Licence = Freeware
+Description = A card strategic game. You're building your own castle and trying to destroy enemy castle. You need a ZIP decompression program to install it.
+Size = 632 KB
+Category = 4
+URLSite = http://peter.hostuju.cz/index.htm
+URLDownload = http://petr.hostuju.cz/program/download/ANTS.zip
+CDPath = none
+
+[Section.0407]
+Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren.
+
+[Section.041f]
+Name = Karıncalar
+Licence = Ücretsiz
+Description = Bir kartlarla izlem oyunu. Kalenizi bitirmeye veyâ rakip kaleyi yıkmaya çalışın. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
