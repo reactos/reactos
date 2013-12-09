@@ -17,10 +17,11 @@
 
 /* Function like DosDateTimeToFileTime */
 BOOLEAN
-FsdDosDateTimeToSystemTime(PDEVICE_EXTENSION DeviceExt,
-                           USHORT DosDate,
-                           USHORT DosTime,
-                           PLARGE_INTEGER SystemTime)
+FsdDosDateTimeToSystemTime(
+    PDEVICE_EXTENSION DeviceExt,
+    USHORT DosDate,
+    USHORT DosTime,
+    PLARGE_INTEGER SystemTime)
 {
     PDOSTIME pdtime = (PDOSTIME)&DosTime;
     PDOSDATE pddate = (PDOSDATE)&DosDate;
@@ -47,10 +48,11 @@ FsdDosDateTimeToSystemTime(PDEVICE_EXTENSION DeviceExt,
 
 /* Function like FileTimeToDosDateTime */
 BOOLEAN
-FsdSystemTimeToDosDateTime(PDEVICE_EXTENSION DeviceExt,
-                           PLARGE_INTEGER SystemTime,
-                           PUSHORT pDosDate,
-                           PUSHORT pDosTime)
+FsdSystemTimeToDosDateTime(
+    PDEVICE_EXTENSION DeviceExt,
+    PLARGE_INTEGER SystemTime,
+    PUSHORT pDosDate,
+    PUSHORT pDosTime)
 {
     PDOSTIME pdtime = (PDOSTIME)pDosTime;
     PDOSDATE pddate = (PDOSDATE)pDosDate;
@@ -82,10 +84,12 @@ FsdSystemTimeToDosDateTime(PDEVICE_EXTENSION DeviceExt,
 
 #define ULONG_ROUND_UP(x)   ROUND_UP((x), (sizeof(ULONG)))
 
-static NTSTATUS
-VfatGetFileNameInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                           PFILE_NAMES_INFORMATION pInfo,
-                           ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileNameInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PFILE_NAMES_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -101,11 +105,13 @@ VfatGetFileNameInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                                PDEVICE_EXTENSION DeviceExt,
-                                PFILE_DIRECTORY_INFORMATION pInfo,
-                                ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileDirectoryInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_DIRECTORY_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -191,11 +197,13 @@ VfatGetFileDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileFullDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                                    PDEVICE_EXTENSION DeviceExt,
-                                    PFILE_FULL_DIR_INFORMATION pInfo,
-                                    ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileFullDirectoryInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_FULL_DIR_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -262,11 +270,13 @@ VfatGetFileFullDirectoryInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-VfatGetFileBothInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
-                           PDEVICE_EXTENSION DeviceExt,
-                           PFILE_BOTH_DIR_INFORMATION pInfo,
-                           ULONG BufferLength)
+static
+NTSTATUS
+VfatGetFileBothInformation(
+    PVFAT_DIRENTRY_CONTEXT DirContext,
+    PDEVICE_EXTENSION DeviceExt,
+    PFILE_BOTH_DIR_INFORMATION pInfo,
+    ULONG BufferLength)
 {
     if ((sizeof(FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
         return STATUS_BUFFER_OVERFLOW;
@@ -372,8 +382,10 @@ VfatGetFileBothInformation(PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-DoQuery(PVFAT_IRP_CONTEXT IrpContext)
+static
+NTSTATUS
+DoQuery(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LONG BufferLength = 0;
@@ -575,7 +587,8 @@ DoQuery(PVFAT_IRP_CONTEXT IrpContext)
  * FUNCTION: directory control : read/write directory informations
  */
 NTSTATUS
-VfatDirectoryControl(PVFAT_IRP_CONTEXT IrpContext)
+VfatDirectoryControl(
+    PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 

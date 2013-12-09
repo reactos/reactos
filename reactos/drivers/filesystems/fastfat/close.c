@@ -49,7 +49,7 @@ VfatCloseFile(
         {
             if (pFcb->Flags & FCB_DELETE_PENDING)
             {
-                VfatDelEntry (DeviceExt, pFcb);
+                VfatDelEntry(DeviceExt, pFcb);
             }
             else
             {
@@ -57,7 +57,7 @@ VfatCloseFile(
             }
         }
 
-        vfatReleaseFCB (DeviceExt, pFcb);
+        vfatReleaseFCB(DeviceExt, pFcb);
     }
 
     FileObject->FsContext2 = NULL;
@@ -106,7 +106,7 @@ VfatClose(
 ByeBye:
     IrpContext->Irp->IoStatus.Status = Status;
     IrpContext->Irp->IoStatus.Information = 0;
-    IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
     VfatFreeIrpContext(IrpContext);
 
     return Status;
