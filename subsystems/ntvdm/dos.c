@@ -2014,11 +2014,13 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     if (getCF()) break;
 
                     // FIXME: Security checks!
+                    DosPrintCharacter(Character);
                     Buffer[Stack[STACK_COUNTER]++] = Character;
 
                     if (Character == '\r')
                     {
                         /* Stop on first carriage return */
+                        DosPrintCharacter('\n');
                         break;
                     }
                 }
