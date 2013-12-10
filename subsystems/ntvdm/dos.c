@@ -2001,26 +2001,34 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD Count     = getCX();
             WORD BytesRead = 0;
             WORD ErrorCode = ERROR_SUCCESS;
+            CHAR Character;
 
             if (IsConsoleHandle(DosGetRealHandle(Handle)))
             {
                 while (Stack[STACK_COUNTER] < Count)
                 {
                     /* Read a character from the BIOS */
-                    // FIXME: Security checks!
-                    Buffer[Stack[STACK_COUNTER]] = LOBYTE(BiosGetCharacter());
+                    Character = LOBYTE(BiosGetCharacter());
 
                     /* Stop if the BOP needs to be repeated */
                     if (getCF()) break;
 
-                    /* Increment the counter */
-                    Stack[STACK_COUNTER]++;
+                    // FIXME: Security checks!
+                    Buffer[Stack[STACK_COUNTER]++] = Character;
+
+                    if (Character == '\r')
+                    {
+                        /* Stop on first carriage return */
+                        break;
+                    }
                 }
 
-                if (Stack[STACK_COUNTER] < Count)
-                    ErrorCode = ERROR_NOT_READY;
-                else
-                    BytesRead = Count;
+                if (Character != '\r')
+                {
+                    if (Stack[STACK_COUNTER] < Count) ErrorCode = ERROR_NOT_READY;
+                    else BytesRead = Count;
+                }
+                else BytesRead = Stack[STACK_COUNTER];
             }
             else
             {
