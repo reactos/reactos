@@ -694,6 +694,13 @@ VfatCreateFile(
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
+            if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                *pFcb->Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+                *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
+                VfatUpdateEntry(pFcb);
+            }
+
             ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
             Status = VfatSetAllocationSizeInformation(FileObject,
                                                       pFcb,
