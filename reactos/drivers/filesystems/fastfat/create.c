@@ -551,6 +551,8 @@ VfatCreateFile(
             RequestedDisposition == FILE_SUPERSEDE)
         {
             Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+            if (!(RequestedOptions & FILE_DIRECTORY_FILE))
+                Attributes |= FILE_ATTRIBUTE_ARCHIVE;
             vfatSplitPathName(&PathNameU, NULL, &FileNameU);
             Status = VfatAddEntry(DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
                                   (UCHAR)(Attributes & FILE_ATTRIBUTE_VALID_FLAGS));
