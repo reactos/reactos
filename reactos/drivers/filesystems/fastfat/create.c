@@ -349,6 +349,7 @@ VfatOpenFile(
     PDEVICE_EXTENSION DeviceExt,
     PUNICODE_STRING PathNameU,
     PFILE_OBJECT FileObject,
+    ULONG RequestedDisposition,
     PVFATFCB *ParentFcb)
 {
     PVFATFCB Fcb;
@@ -404,6 +405,15 @@ VfatOpenFile(
         vfatReleaseFCB (DeviceExt, Fcb);
         return STATUS_DELETE_PENDING;
     }
+
+    /* Fail, if we try to overwrite a read-only file */
+    if ((*Fcb->Attributes & FILE_ATTRIBUTE_READONLY) &&
+        (RequestedDisposition == FILE_OVERWRITE))
+    {
+        vfatReleaseFCB(DeviceExt, Fcb);
+        return STATUS_ACCESS_DENIED;
+    }
+
     DPRINT("Attaching FCB to fileObject\n");
     Status = vfatAttachFCBToFileObject(DeviceExt, Fcb, FileObject);
     if (!NT_SUCCESS(Status))
@@ -519,7 +529,7 @@ VfatCreateFile(
     }
 
     /* Try opening the file. */
-    Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, &ParentFcb);
+    Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, &ParentFcb);
 
     /*
      * If the directory containing the file to open doesn't exist then
