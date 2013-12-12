@@ -15,17 +15,17 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN EmulatorGetFlag(ULONG Flag)
+static inline BOOLEAN EmulatorGetFlag(ULONG Flag)
 {
     return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
 }
 
-VOID EmulatorSetFlag(ULONG Flag)
+static inline VOID EmulatorSetFlag(ULONG Flag)
 {
     EmulatorContext.Flags.Long |= Flag;
 }
 
-VOID EmulatorClearFlag(ULONG Flag)
+static inline VOID EmulatorClearFlag(ULONG Flag)
 {
     EmulatorContext.Flags.Long &= ~Flag;
 }

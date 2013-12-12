@@ -111,7 +111,7 @@ BOOLEAN EmulatorInitialize(VOID)
                       NULL /* TODO: Use a TLB */);
 
     /* Enable interrupts */
-    EmulatorSetFlag(EMULATOR_FLAG_IF);
+    setIF(1);
 
     return TRUE;
 }

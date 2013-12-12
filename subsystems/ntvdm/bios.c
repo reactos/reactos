@@ -260,7 +260,7 @@ static PVGA_REGISTERS VideoModes[] =
     &VideoMode_40x25_text,          /* Mode 01h */      // 16 color
     &VideoMode_80x25_text,          /* Mode 02h */      // 16 color (mono)
     &VideoMode_80x25_text,          /* Mode 03h */      // 16 color
-    &VideoMode_320x200_4color,      /* Mode 04h */
+    &VideoMode_320x200_4color,      /* Mode 04h */      // 4 color
     &VideoMode_320x200_4color,      /* Mode 05h */      // same (m)
     &VideoMode_640x200_2color,      /* Mode 06h */      // 640*200 2 color
     NULL,                           /* Mode 07h */      // MDA monochrome text 80*25
@@ -274,8 +274,8 @@ static PVGA_REGISTERS VideoModes[] =
     NULL,                           /* Mode 0Fh */      // EGA 640*350 mono
     &VideoMode_640x350_16color,     /* Mode 10h */      // EGA 640*350 16 color
     &VideoMode_640x480_2color,      /* Mode 11h */      // VGA 640*480 mono
-    &VideoMode_640x480_16color,     /* Mode 12h */
-    &VideoMode_320x200_256color,    /* Mode 13h */
+    &VideoMode_640x480_16color,     /* Mode 12h */      // VGA
+    &VideoMode_320x200_256color,    /* Mode 13h */      // VGA
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -385,7 +385,7 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 
     if (Registers == NULL) return FALSE;
 
-    /* Clear interrupts */
+    /* Disable interrupts */
     setIF(0);
 
     /*
@@ -453,7 +453,7 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
     VgaWritePort(VGA_AC_INDEX, 0x20);
 
-    /* Set interrupts */
+    /* Enable interrupts */
     setIF(1);
 
     return TRUE;
@@ -702,7 +702,7 @@ WORD BiosGetCharacter(VOID)
     else
     {
         /* No key available. Set the handler CF to repeat the BOP */
-        EmulatorSetFlag(EMULATOR_FLAG_CF);
+        setCF(1);
         // CharacterData = 0xFFFF;
     }
 
@@ -1079,6 +1079,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     /* Write the data */
                     VgaWritePort(VGA_AC_WRITE, getBH());
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1092,6 +1095,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     /* Write the data */
                     VgaWritePort(VGA_AC_WRITE, getBH());
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1116,6 +1122,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
                     VgaWritePort(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1129,6 +1138,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     /* Read the data */
                     setBH(VgaReadPort(VGA_AC_READ));
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1142,6 +1154,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     /* Read the data */
                     setBH(VgaReadPort(VGA_AC_READ));
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1166,6 +1181,9 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
                     VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
                     Buffer[VGA_AC_PAL_F_REG + 1] = VgaReadPort(VGA_AC_READ);
 
+                    /* Enable screen and disable palette access */
+                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
+                    VgaWritePort(VGA_AC_INDEX, 0x20);
                     break;
                 }
 

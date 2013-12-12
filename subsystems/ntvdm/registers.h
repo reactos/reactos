@@ -11,9 +11,6 @@
 
 /* INCLUDES *******************************************************************/
 
-BOOLEAN EmulatorGetFlag(ULONG Flag);
-VOID EmulatorSetFlag(ULONG Flag);
-VOID EmulatorClearFlag(ULONG Flag);
 VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 
 
