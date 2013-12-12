@@ -272,7 +272,7 @@ FindFile(
         return Status;
     }
 
-    while(TRUE)
+    while (TRUE)
     {
         Status = DeviceExt->GetNextDirEntry(&Context, &Page, Parent, DirContext, First);
         First = FALSE;
@@ -380,7 +380,7 @@ VfatOpenFile(
                                           FALSE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT ("Status %lx\n", Status);
+            DPRINT("Status %lx\n", Status);
             *ParentFcb = NULL;
             return Status;
         }
@@ -395,14 +395,14 @@ VfatOpenFile(
     DPRINT("Checking for existing FCB in memory\n");
 
     Status = vfatGetFCBForFile(DeviceExt, ParentFcb, &Fcb, PathNameU);
-    if (!NT_SUCCESS (Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT ("Could not make a new FCB, status: %x\n", Status);
         return  Status;
     }
     if (Fcb->Flags & FCB_DELETE_PENDING)
     {
-        vfatReleaseFCB (DeviceExt, Fcb);
+        vfatReleaseFCB(DeviceExt, Fcb);
         return STATUS_DELETE_PENDING;
     }
 
@@ -418,7 +418,7 @@ VfatOpenFile(
     Status = vfatAttachFCBToFileObject(DeviceExt, Fcb, FileObject);
     if (!NT_SUCCESS(Status))
     {
-        vfatReleaseFCB (DeviceExt, Fcb);
+        vfatReleaseFCB(DeviceExt, Fcb);
     }
     return  Status;
 }
@@ -446,7 +446,7 @@ VfatCreateFile(
     ULONG Attributes;
 
     /* Unpack the various parameters. */
-    Stack = IoGetCurrentIrpStackLocation (Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
     RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
     PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;

@@ -159,12 +159,12 @@ VfatBuildRequest(
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest (Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     else
     {
         FsRtlEnterFileSystem();
-        Status = VfatDispatchRequest (IrpContext);
+        Status = VfatDispatchRequest(IrpContext);
         FsRtlExitFileSystem();
     }
     return Status;
