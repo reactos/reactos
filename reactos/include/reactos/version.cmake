@@ -65,3 +65,4 @@ endif()
 
 configure_file(include/reactos/version.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/version.h)
 configure_file(include/reactos/buildno.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
+configure_file(include/reactos/builddir.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/builddir.h)
