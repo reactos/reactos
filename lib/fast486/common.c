@@ -178,7 +178,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
         {
             /* Read the TSS */
             if (!Fast486ReadLinearMemory(State,
-                                         State->Tss.Address,
+                                         State->TaskReg.Base,
                                          &Tss,
                                          sizeof(Tss)))
             {

@@ -81,6 +81,8 @@
 #define FAST486_IDT_INT_GATE_32     0xE
 #define FAST486_IDT_TRAP_GATE_32    0xF
 
+#define FAST486_TSS_SIGNATURE 0x09
+
 #define FAST486_PREFIX_SEG      (1 << 0)
 #define FAST486_PREFIX_OPSIZE   (1 << 1)
 #define FAST486_PREFIX_ADSIZE   (1 << 2)
@@ -254,6 +256,14 @@ typedef struct _FAST486_SEG_REG
     ULONG Base;
 } FAST486_SEG_REG, *PFAST486_SEG_REG;
 
+typedef struct
+{
+    USHORT Selector;
+    ULONG Base;
+    ULONG Limit;
+    BOOLEAN Busy;
+} FAST486_TASK_REG, *PFAST486_TASK_REG;
+
 #pragma pack(push, 1)
 
 typedef struct
@@ -278,6 +288,24 @@ typedef struct
 
 /* Verify the structure size */
 C_ASSERT(sizeof(FAST486_GDT_ENTRY) == sizeof(ULONGLONG));
+
+typedef struct
+{
+    ULONG Limit         : 16;
+    ULONG Base          : 16;
+    ULONG BaseMid       : 8;
+    ULONG Signature     : 5;
+    ULONG Dpl           : 2;
+    ULONG Present       : 1;
+    ULONG LimitHigh     : 4;
+    ULONG Avl           : 1;
+    ULONG Reserved      : 2;
+    ULONG Granularity   : 1;
+    ULONG BaseHigh      : 8;
+} FAST486_TSS_DESCRIPTOR, *PFAST486_TSS_DESCRIPTOR;
+
+/* Verify the structure size */
+C_ASSERT(sizeof(FAST486_TSS_DESCRIPTOR) == sizeof(ULONGLONG));
 
 typedef struct
 {
@@ -439,7 +467,8 @@ struct _FAST486_STATE
     FAST486_SEG_REG SegmentRegs[FAST486_NUM_SEG_REGS];
     FAST486_REG InstPtr, SavedInstPtr;
     FAST486_FLAGS_REG Flags;
-    FAST486_TABLE_REG Gdtr, Idtr, Ldtr, Tss;
+    FAST486_TABLE_REG Gdtr, Idtr, Ldtr;
+    FAST486_TASK_REG TaskReg;
     UCHAR Cpl;
     ULONG ControlRegisters[FAST486_NUM_CTRL_REGS];
     ULONG DebugRegisters[FAST486_NUM_DBG_REGS];

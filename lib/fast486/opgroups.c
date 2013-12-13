@@ -1700,6 +1700,288 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
     return TRUE;
 }
 
+FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
+{
+    UCHAR TableReg[6];
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    FAST486_SEG_REGS Segment = FAST486_REG_DS;
+
+    NO_LOCK_PREFIX();
+    TOGGLE_ADSIZE(AddressSize);
+
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check for the segment override */
+    if (State->PrefixFlags & FAST486_PREFIX_SEG)
+    {
+        /* Use the override segment instead */
+        Segment = State->SegmentOverride;
+    }
+
+    /* Check which operation this is */
+    switch (ModRegRm.Register)
+    {
+        /* SLDT */
+        case 0:
+        {
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Fill the 6-byte table register */
+            RtlCopyMemory(TableReg, &State->Ldtr.Size, sizeof(USHORT));
+            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Ldtr.Address, sizeof(ULONG));
+
+            /* Store the LDTR */
+            return Fast486WriteMemory(State,
+                                      Segment,
+                                      ModRegRm.MemoryAddress,
+                                      TableReg,
+                                      sizeof(TableReg));
+        }
+
+        /* STR */
+        case 1:
+        {
+            /* Not recognized in real mode or virtual 8086 mode */
+            if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                || State->Flags.Vm)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+
+            return Fast486WriteModrmWordOperands(State,
+                                                 &ModRegRm,
+                                                 FALSE,
+                                                 State->TaskReg.Selector);
+        }
+
+        /* LLDT */
+        case 2:
+        {
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
+            }
+
+            /* Read the new LDTR */
+            if (!Fast486ReadMemory(State,
+                                   Segment,
+                                   ModRegRm.MemoryAddress,
+                                   FALSE,
+                                   TableReg,
+                                   sizeof(TableReg)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Load the new LDT */
+            State->Ldtr.Size = *((PUSHORT)TableReg);
+            State->Ldtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
+
+            return TRUE;
+        }
+
+        /* LTR */
+        case 3:
+        {
+            USHORT Selector;
+            FAST486_TSS_DESCRIPTOR GdtEntry;
+
+            /* Not recognized in real mode or virtual 8086 mode */
+            if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                || State->Flags.Vm)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!Fast486ReadModrmWordOperands(State,
+                                              &ModRegRm,
+                                              NULL,
+                                              &Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Make sure the GDT contains the entry */
+            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
+            /* Read the GDT */
+            if (!Fast486ReadLinearMemory(State,
+                                         State->Gdtr.Address
+                                         + GET_SEGMENT_INDEX(Selector),
+                                         &GdtEntry,
+                                         sizeof(GdtEntry)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            if (GET_SEGMENT_INDEX(Selector) == 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!GdtEntry.Present)
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                return FALSE;
+            }
+
+            if (GdtEntry.Signature != FAST486_TSS_SIGNATURE)
+            {
+                /* This is not a TSS descriptor */
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
+            /* Update the TR */
+            State->TaskReg.Selector = Selector;
+            State->TaskReg.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
+            State->TaskReg.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
+            if (GdtEntry.Granularity) State->TaskReg.Limit <<= 12;
+            State->TaskReg.Busy = TRUE;
+
+            return TRUE;
+        }
+
+        /* VERR/VERW */
+        case 4:
+        case 5:
+        {
+            USHORT Selector;
+            FAST486_GDT_ENTRY GdtEntry;
+
+            /* Not recognized in real mode or virtual 8086 mode */
+            if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                || State->Flags.Vm)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!Fast486ReadModrmWordOperands(State,
+                                              &ModRegRm,
+                                              NULL,
+                                              &Selector))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            if (!(Selector & SEGMENT_TABLE_INDICATOR))
+            {
+                /* Make sure the GDT contains the entry */
+                if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+                {
+                    /* Clear ZF */
+                    State->Flags.Zf = FALSE;
+                    return TRUE;
+                }
+
+                /* Read the GDT */
+                if (!Fast486ReadLinearMemory(State,
+                                             State->Gdtr.Address
+                                             + GET_SEGMENT_INDEX(Selector),
+                                             &GdtEntry,
+                                             sizeof(GdtEntry)))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+            }
+            else
+            {
+                /* Make sure the LDT contains the entry */
+                if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Size + 1))
+                {
+                    /* Clear ZF */
+                    State->Flags.Zf = FALSE;
+                    return TRUE;
+                }
+
+                /* Read the LDT */
+                if (!Fast486ReadLinearMemory(State,
+                                             State->Ldtr.Address
+                                             + GET_SEGMENT_INDEX(Selector),
+                                             &GdtEntry,
+                                             sizeof(GdtEntry)))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+            }
+
+            /* Set ZF if it is valid and accessible */
+            State->Flags.Zf = GdtEntry.Present // must be present
+                               && GdtEntry.SystemType // must be a segment
+                               && (((ModRegRm.Register == 4)
+                               /* code segments are only readable if the RW bit is set */
+                               && (!GdtEntry.Executable || GdtEntry.ReadWrite))
+                               || ((ModRegRm.Register == 5)
+                               /* code segments are never writable, data segments are writable when RW is set */
+                               && (!GdtEntry.Executable && GdtEntry.ReadWrite)))
+                               /*
+                                * for segments other than conforming code segments,
+                                * both RPL and CPL must be less than or equal to DPL
+                                */
+                               && ((!GdtEntry.Executable || !GdtEntry.DirConf)
+                               && ((GET_SEGMENT_RPL(Selector) <= GdtEntry.Dpl)
+                               && (Fast486GetCurrentPrivLevel(State) <= GdtEntry.Dpl)))
+                               /* for conforming code segments, DPL must be less than or equal to CPL */
+                               && ((GdtEntry.Executable && GdtEntry.DirConf)
+                               && (GdtEntry.Dpl <= Fast486GetCurrentPrivLevel(State)));
+
+
+            return TRUE;
+        }
+
+        /* Invalid */
+        default:
+        {
+            Fast486Exception(State, FAST486_EXCEPTION_UD);
+            return FALSE;
+        }
+    }
+}
+
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
 {
     UCHAR TableReg[6];
