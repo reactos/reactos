@@ -92,7 +92,7 @@ endif()
 
 # Link-time code generation
 if(LTCG)
-    add_compile_flags("-flto -Wno-error=clobbered")
+    add_compile_flags("-flto -ffat-lto-objects")
 endif()
 
 if(ARCH STREQUAL "i386")
