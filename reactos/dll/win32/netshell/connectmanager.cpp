@@ -604,12 +604,15 @@ CNetConnectionManager::EnumerateINetConnections()
             }
             RegCloseKey(hSubKey);
         }
-        if (SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, (PBYTE)szNetCfg, sizeof(szNetCfg)/sizeof(WCHAR), &dwSize))
+
+        /* Get the adapter device description */
+        dwSize = 0;
+        SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, NULL, 0, &dwSize);
+        if (dwSize != 0)
         {
-            szNetCfg[(sizeof(szNetCfg)/sizeof(WCHAR))-1] = L'\0';
-            pNew->Props.pszwDeviceName = (LPWSTR)CoTaskMemAlloc((wcslen(szNetCfg)+1) * sizeof(WCHAR));
+            pNew->Props.pszwDeviceName = (LPWSTR)CoTaskMemAlloc(dwSize);
             if (pNew->Props.pszwDeviceName)
-                wcscpy(pNew->Props.pszwDeviceName, szNetCfg);
+                SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, (PBYTE)pNew->Props.pszwDeviceName, dwSize, &dwSize);
         }
 
         if (pCurrent)
