@@ -1798,8 +1798,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
 
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
-                return FALSE;
+                RtlZeroMemory(&State->Ldtr, sizeof(State->Ldtr));
+                return TRUE;
             }
 
             if (!GdtEntry.Present)
