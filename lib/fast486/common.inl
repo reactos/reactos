@@ -420,7 +420,7 @@ Fast486LoadSegment(PFAST486_STATE State,
         else
         {
             /* Make sure the LDT contains the entry */
-            if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Size + 1))
+            if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
             {
                 Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return FALSE;
@@ -428,7 +428,7 @@ Fast486LoadSegment(PFAST486_STATE State,
 
             /* Read the LDT */
             if (!Fast486ReadLinearMemory(State,
-                                         State->Ldtr.Address
+                                         State->Ldtr.Base
                                          + GET_SEGMENT_INDEX(Selector),
                                          &GdtEntry,
                                          sizeof(GdtEntry)))

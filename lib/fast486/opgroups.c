@@ -1702,10 +1702,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
 {
-    UCHAR TableReg[6];
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
-    FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
     NO_LOCK_PREFIX();
     TOGGLE_ADSIZE(AddressSize);
@@ -1716,36 +1714,23 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
         return FALSE;
     }
 
-    /* Check for the segment override */
-    if (State->PrefixFlags & FAST486_PREFIX_SEG)
-    {
-        /* Use the override segment instead */
-        Segment = State->SegmentOverride;
-    }
-
     /* Check which operation this is */
     switch (ModRegRm.Register)
     {
         /* SLDT */
         case 0:
         {
-            if (!ModRegRm.Memory)
+            /* Not recognized in real mode or virtual 8086 mode */
+            if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                || State->Flags.Vm)
             {
-                /* The second operand must be a memory location */
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
-                return FALSE;
             }
 
-            /* Fill the 6-byte table register */
-            RtlCopyMemory(TableReg, &State->Ldtr.Size, sizeof(USHORT));
-            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Ldtr.Address, sizeof(ULONG));
-
-            /* Store the LDTR */
-            return Fast486WriteMemory(State,
-                                      Segment,
-                                      ModRegRm.MemoryAddress,
-                                      TableReg,
-                                      sizeof(TableReg));
+            return Fast486WriteModrmWordOperands(State,
+                                                 &ModRegRm,
+                                                 FALSE,
+                                                 State->Ldtr.Selector);
         }
 
         /* STR */
@@ -1767,6 +1752,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
         /* LLDT */
         case 2:
         {
+            USHORT Selector;
+            FAST486_SYSTEM_DESCRIPTOR GdtEntry;
+
+            /* Not recognized in real mode or virtual 8086 mode */
+            if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+                || State->Flags.Vm)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+
             /* This is a privileged instruction */
             if (Fast486GetCurrentPrivLevel(State) != 0)
             {
@@ -1774,28 +1769,57 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 return FALSE;
             }
 
-            if (!ModRegRm.Memory)
-            {
-                /* The second operand must be a memory location */
-                Fast486Exception(State, FAST486_EXCEPTION_UD);
-                return FALSE;
-            }
-
-            /* Read the new LDTR */
-            if (!Fast486ReadMemory(State,
-                                   Segment,
-                                   ModRegRm.MemoryAddress,
-                                   FALSE,
-                                   TableReg,
-                                   sizeof(TableReg)))
+            if (!Fast486ReadModrmWordOperands(State,
+                                              &ModRegRm,
+                                              NULL,
+                                              &Selector))
             {
                 /* Exception occurred */
                 return FALSE;
             }
 
-            /* Load the new LDT */
-            State->Ldtr.Size = *((PUSHORT)TableReg);
-            State->Ldtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
+            /* Make sure the GDT contains the entry */
+            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
+            /* Read the GDT */
+            if (!Fast486ReadLinearMemory(State,
+                                         State->Gdtr.Address
+                                         + GET_SEGMENT_INDEX(Selector),
+                                         &GdtEntry,
+                                         sizeof(GdtEntry)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            if (GET_SEGMENT_INDEX(Selector) == 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return FALSE;
+            }
+
+            if (!GdtEntry.Present)
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                return FALSE;
+            }
+
+            if (GdtEntry.Signature != FAST486_LDT_SIGNATURE)
+            {
+                /* This is not a LDT descriptor */
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
+            /* Update the LDTR */
+            State->Ldtr.Selector = Selector;
+            State->Ldtr.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
+            State->Ldtr.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
+            if (GdtEntry.Granularity) State->Ldtr.Limit <<= 12;
 
             return TRUE;
         }
@@ -1804,7 +1828,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
         case 3:
         {
             USHORT Selector;
-            FAST486_TSS_DESCRIPTOR GdtEntry;
+            FAST486_SYSTEM_DESCRIPTOR GdtEntry;
 
             /* Not recognized in real mode or virtual 8086 mode */
             if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
@@ -1930,7 +1954,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
             else
             {
                 /* Make sure the LDT contains the entry */
-                if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Size + 1))
+                if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
                 {
                     /* Clear ZF */
                     State->Flags.Zf = FALSE;
@@ -1939,7 +1963,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
 
                 /* Read the LDT */
                 if (!Fast486ReadLinearMemory(State,
-                                             State->Ldtr.Address
+                                             State->Ldtr.Base
                                              + GET_SEGMENT_INDEX(Selector),
                                              &GdtEntry,
                                              sizeof(GdtEntry)))

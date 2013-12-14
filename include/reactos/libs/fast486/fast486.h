@@ -81,6 +81,7 @@
 #define FAST486_IDT_INT_GATE_32     0xE
 #define FAST486_IDT_TRAP_GATE_32    0xF
 
+#define FAST486_LDT_SIGNATURE 0x02
 #define FAST486_TSS_SIGNATURE 0x09
 
 #define FAST486_PREFIX_SEG      (1 << 0)
@@ -261,6 +262,13 @@ typedef struct
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
+} FAST486_LDT_REG;
+
+typedef struct
+{
+    USHORT Selector;
+    ULONG Base;
+    ULONG Limit;
     BOOLEAN Busy;
 } FAST486_TASK_REG, *PFAST486_TASK_REG;
 
@@ -302,10 +310,10 @@ typedef struct
     ULONG Reserved      : 2;
     ULONG Granularity   : 1;
     ULONG BaseHigh      : 8;
-} FAST486_TSS_DESCRIPTOR, *PFAST486_TSS_DESCRIPTOR;
+} FAST486_SYSTEM_DESCRIPTOR, *PFAST486_SYSTEM_DESCRIPTOR;
 
 /* Verify the structure size */
-C_ASSERT(sizeof(FAST486_TSS_DESCRIPTOR) == sizeof(ULONGLONG));
+C_ASSERT(sizeof(FAST486_SYSTEM_DESCRIPTOR) == sizeof(ULONGLONG));
 
 typedef struct
 {
@@ -467,7 +475,8 @@ struct _FAST486_STATE
     FAST486_SEG_REG SegmentRegs[FAST486_NUM_SEG_REGS];
     FAST486_REG InstPtr, SavedInstPtr;
     FAST486_FLAGS_REG Flags;
-    FAST486_TABLE_REG Gdtr, Idtr, Ldtr;
+    FAST486_TABLE_REG Gdtr, Idtr;
+    FAST486_LDT_REG Ldtr;
     FAST486_TASK_REG TaskReg;
     UCHAR Cpl;
     ULONG ControlRegisters[FAST486_NUM_CTRL_REGS];
