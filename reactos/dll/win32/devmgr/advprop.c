@@ -398,6 +398,73 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
     return Ret;
 }
 
+BOOL
+WINAPI
+DevInstallW(
+    IN HWND hWndParent,
+    IN HINSTANCE hInstance,
+    IN LPCWSTR InstanceId,
+    IN INT Show);
+
+static
+VOID
+UpdateDriver(
+    IN HWND hwndDlg,
+    IN PDEVADVPROP_INFO dap)
+{
+    TOKEN_PRIVILEGES Privileges;
+    HANDLE hToken;
+    BOOL NeedReboot = FALSE;
+
+    // Better use InstallDevInst:
+    //     BOOL
+    //     WINAPI
+    //     InstallDevInst(
+    //         HWND hWnd,
+    //         LPWSTR wszDeviceId,
+    //         BOOL bUpdate,
+    //         DWORD *dwReboot);
+    // See: http://comp.os.ms-windows.programmer.win32.narkive.com/J8FTd4KK/signature-of-undocumented-installdevinstex
+    if (!DevInstallW(hwndDlg, NULL, dap->szDeviceID, SW_SHOWNOACTIVATE))
+        return;
+
+    if (NeedReboot == FALSE)
+        return;
+
+    //FIXME: load text from resource file
+    if (MessageBoxW(hwndDlg, L"Reboot now?", L"Reboot required", MB_YESNO | MB_ICONQUESTION) != IDYES)
+        return;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+        DPRINT("OpenProcessToken failed\n");
+        return;
+    }
+
+    /* Get the LUID for the Shutdown privilege */
+    if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
+    {
+        DPRINT("LookupPrivilegeValue failed\n");
+        return;
+    }
+
+    /* Assign the Shutdown privilege to our process */
+    Privileges.PrivilegeCount = 1;
+    Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
+    {
+        DPRINT("AdjustTokenPrivileges failed\n");
+        return;
+    }
+
+    /* Finally shut down the system */
+    if (!ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
+    {
+        DPRINT("ExitWindowsEx failed\n");
+    }
+}
+
 
 static VOID
 UpdateDriverDlg(IN HWND hwndDlg,
@@ -486,64 +553,16 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDC_DRIVERDETAILS:
-                    {
                         DialogBoxParam(hDllInstance,
                                        MAKEINTRESOURCE(IDD_DRIVERDETAILS),
                                        hwndDlg,
                                        DriverDetailsDlgProc,
                                        (ULONG_PTR)dap);
                         break;
-                    }
+
                     case IDC_UPDATEDRIVER:
-                    {
-                        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
-                        {
-                            BOOL NeedReboot;
-                            if (DiShowUpdateDevice(hwndDlg, dap->CurrentDeviceInfoSet, &dap->CurrentDeviceInfoData, 0, &NeedReboot))
-                            {
-                                if (NeedReboot)
-                                {                              
-                                    //FIXME: load text from resource file
-                                    if(MessageBoxW(hwndDlg, L"Reboot now?", L"Reboot required", MB_YESNO | MB_ICONQUESTION) == IDYES)
-                                    {
-                                        HANDLE hToken;
-                                        TOKEN_PRIVILEGES Privileges;
-
-                                        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-                                        {
-                                            DPRINT("OpenProcessToken failed\n");
-                                            break;
-                                        }
-
-                                        /* Get the LUID for the Shutdown privilege */
-                                        if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
-                                        {
-                                            DPRINT("LookupPrivilegeValue failed\n");
-                                            break;
-                                        }
-
-                                        /* Assign the Shutdown privilege to our process */
-                                        Privileges.PrivilegeCount = 1;
-                                        Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-                                        if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
-                                        {
-                                            DPRINT("AdjustTokenPrivileges failed\n");
-                                            break;
-                                        }
-
-                                        /* Finally shut down the system */
-                                        if(!ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
-                                        {
-                                            DPRINT("ExitWindowsEx failed\n");
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        UpdateDriver(hwndDlg, dap);
                         break;
-                    }
                 }
                 break;
             }
