@@ -160,7 +160,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
             {
                 /* Read only a part of the page */
-                PageLength = PAGE_OFFSET(LinearAddress) + Size - PageOffset;
+                PageLength = PAGE_OFFSET(LinearAddress + Size - 1) - PageOffset + 1;
             }
 
             /* Read the memory */
@@ -228,7 +228,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
             {
                 /* Write only a part of the page */
-                PageLength = PAGE_OFFSET(LinearAddress) + Size - PageOffset;
+                PageLength = PAGE_OFFSET(LinearAddress + Size - 1) - PageOffset + 1;
             }
 
             /* Write the memory */
