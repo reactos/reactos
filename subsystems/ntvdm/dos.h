@@ -16,9 +16,11 @@
 /* DEFINES ********************************************************************/
 
 //
-// We are DOS 6.00
+// We are DOS 5.00 (reported by INT 21h, AH=30h)
+//    and DOS 5.50 (reported by INT 21h, AX=3306h) for Windows NT Compatibility
 //
-#define DOS_VERSION MAKEWORD(6, 0)
+#define DOS_VERSION     MAKEWORD(5, 00)
+#define NTDOS_VERSION   MAKEWORD(5, 50)
 
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"

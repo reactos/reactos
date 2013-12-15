@@ -1780,6 +1780,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
 
             /*
+             * DOS 2+ - GET DOS VERSION
              * See Ralf Brown: http://www.ctyme.com/intr/rb-2711.htm
              * for more information.
              */
@@ -1808,8 +1809,45 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             setBL(0x00);
             setCX(0x0000);
 
-            /* Return DOS version: Minor:Major in AH:AL */
+            /*
+             * Return DOS version: Minor:Major in AH:AL
+             * The Windows NT DOS box returns version 5.00, subject to SETVER.
+             */
             setAX(PspBlock->DosVersion);
+
+            break;
+        }
+
+        /* Extended functionalities */
+        case 0x33:
+        {
+            if (getAL() == 0x06)
+            {
+                /*
+                 * DOS 5+ - GET TRUE VERSION NUMBER
+                 * This function always returns the true version number, unlike
+                 * AH=30h, whose return value may be changed with SETVER.
+                 * See Ralf Brown: http://www.ctyme.com/intr/rb-2730.htm
+                 * for more information.
+                 */
+
+                /*
+                 * Return the true DOS version: Minor:Major in BH:BL
+                 * The Windows NT DOS box returns BX=3205h (version 5.50).
+                 */
+                setBX(NTDOS_VERSION);
+
+                /* DOS revision 0 */
+                setDL(0x00);
+
+                /* Unpatched DOS */
+                setDH(0x00);
+            }
+            // else
+            // {
+                // /* Invalid subfunction */
+                // setAL(0xFF);
+            // }
 
             break;
         }
@@ -1873,10 +1911,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             }
             else
             {
+                /* Invalid subfunction */
                 setAL(0xFF);
             }
 
-             break;
+            break;
         }
 
         /* Create Directory */
