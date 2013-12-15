@@ -128,6 +128,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
         ULONG Page;
         FAST486_PAGE_TABLE TableEntry;
         INT Cpl = Fast486GetCurrentPrivLevel(State);
+        ULONG BufferOffset = 0;
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -152,6 +153,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
             {
                 /* Start reading from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
+                PageLength -= PageOffset;
             }
 
             /* Check if this is the last page */
@@ -164,8 +166,10 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
             /* Read the memory */
             State->MemReadCallback(State,
                                    (TableEntry.Address << 12) | PageOffset,
-                                   Buffer,
+                                   (PVOID)((ULONG_PTR)Buffer + BufferOffset),
                                    PageLength);
+
+            BufferOffset += PageLength;
         }
     }
     else
@@ -190,6 +194,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
         ULONG Page;
         FAST486_PAGE_TABLE TableEntry;
         INT Cpl = Fast486GetCurrentPrivLevel(State);
+        ULONG BufferOffset = 0;
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
@@ -216,6 +221,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             {
                 /* Start writing from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
+                PageLength -= PageOffset;
             }
 
             /* Check if this is the last page */
@@ -228,8 +234,10 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             /* Write the memory */
             State->MemWriteCallback(State,
                                     (TableEntry.Address << 12) | PageOffset,
-                                    Buffer,
+                                    (PVOID)((ULONG_PTR)Buffer + BufferOffset),
                                     PageLength);
+
+            BufferOffset += PageLength;
         }
     }
     else
