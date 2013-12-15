@@ -12,9 +12,6 @@
 
 /* DEFINES ********************************************************************/
 
-/* 32-bit Interrupt dispatcher function code for the Control BOP Handler */
-#define CTRL_BOP_INT32 0xFF
-
 /* 32-bit Interrupt Identifiers */
 #define EMULATOR_MAX_INT32_NUM  0xFF + 1
 

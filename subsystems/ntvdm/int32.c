@@ -37,6 +37,13 @@ LPCWSTR ExceptionName[] =
  */
 EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 
+/* BOP Identifiers */
+#define BOP_CONTROL             0xFF    // Control BOP Handler
+    #define BOP_CONTROL_DEFFUNC 0x00    // Default Control BOP Function
+
+/* 32-bit Interrupt dispatcher function code for the Control BOP Handler */
+#define BOP_CONTROL_INT32       0xFF
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID WINAPI Exception(BYTE ExceptionNumber, LPWORD Stack)
@@ -127,6 +134,18 @@ VOID WINAPI Int32Dispatch(LPWORD Stack)
         DPRINT1("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
 }
 
+VOID WINAPI ControlBop(LPWORD Stack)
+{
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    if (FuncNum == BOP_CONTROL_INT32)
+        Int32Dispatch(Stack);
+    else
+        DPRINT1("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
+}
+
 VOID WINAPI InitializeInt32(WORD BiosSegment)
 {
     LPDWORD IntVecTable = (LPDWORD)BaseAddress;
@@ -163,8 +182,8 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
 
     BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
     BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-    BiosCode[Offset++] = EMULATOR_CTRL_BOP;     // Control BOP
-    BiosCode[Offset++] = CTRL_BOP_INT32;        // 32-bit Interrupt dispatcher
+    BiosCode[Offset++] = BOP_CONTROL;           // Control BOP
+    BiosCode[Offset++] = BOP_CONTROL_INT32;     // 32-bit Interrupt dispatcher
 
     BiosCode[Offset++] = 0x73; // jnc EXIT (offset +4)
     BiosCode[Offset++] = 0x04;
@@ -183,6 +202,9 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
     BiosCode[Offset++] = 0x04;
 
     BiosCode[Offset++] = 0xCF; // iret
+
+    /* Register the Control BOP */
+    RegisterBop(BOP_CONTROL, ControlBop);
 }
 
 VOID WINAPI RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)

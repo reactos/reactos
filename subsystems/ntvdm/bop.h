@@ -14,17 +14,13 @@
 
 /* BOP Identifiers */
 #define EMULATOR_BOP            0xC4C4
-
-#define EMULATOR_CTRL_BOP       0xFF    // Control BOP Handler
-         #define CTRL_BOP_DEFLT 0x00    // Default Control BOP Function
-
 #define EMULATOR_MAX_BOP_NUM    0xFF + 1
 
 /* FUNCTIONS ******************************************************************/
 
 typedef VOID (WINAPI *EMULATOR_BOP_PROC)(LPWORD Stack);
 
-VOID WINAPI ControlBop(LPWORD Stack);
+VOID WINAPI RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler);
 VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode);
 
 #endif // _BOP_H_

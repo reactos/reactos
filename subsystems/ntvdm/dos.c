@@ -14,6 +14,7 @@
 #include "dos.h"
 
 #include "bios.h"
+#include "bop.h"
 #include "int32.h"
 #include "registers.h"
 
@@ -30,6 +31,10 @@ static WORD DosSftRefCount[DOS_SFT_SIZE];
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 static WORD DosErrorLevel = 0x0000;
+
+/* BOP Identifiers */
+#define BOP_DOS 0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
+#define BOP_CMD 0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -1402,6 +1407,24 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
     }
 }
 
+VOID WINAPI DosSystemBop(LPWORD Stack)
+{
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
+}
+
+VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
+{
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    DPRINT1("Unknown DOS CMD Interpreter BOP Function: 0x%02X\n", FuncNum);
+}
+
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
@@ -2627,6 +2650,10 @@ BOOLEAN DosInitialize(VOID)
     DosSystemFileTable[0] = GetStdHandle(STD_INPUT_HANDLE);
     DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
     DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
+
+    /* Register the DOS BOPs */
+    RegisterBop(BOP_DOS, DosSystemBop        );
+    RegisterBop(BOP_CMD, DosCmdInterpreterBop);
 
     /* Register the DOS 32-bit Interrupts */
     RegisterInt32(0x20, DosInt20h        );
