@@ -231,7 +231,8 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
         return dwError;
     }
 
-    SendMessage(hTrackBar, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(1, mciStatus.dwReturn));
+    SendMessage(hTrackBar, TBM_SETRANGEMIN, (WPARAM) TRUE, (LPARAM) 1);
+    SendMessage(hTrackBar, TBM_SETRANGEMAX, (WPARAM) TRUE, (LPARAM) mciStatus.dwReturn);
     SendMessage(hTrackBar, TBM_SETPAGESIZE, 0, 10);
     SendMessage(hTrackBar, TBM_SETLINESIZE, 0, 1);
     SendMessage(hTrackBar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 1);
