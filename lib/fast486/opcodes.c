@@ -883,7 +883,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     }
 
     /* Halt */
-    while (State->IntStatus != FAST486_INT_SIGNAL) State->IdleCallback(State);
+    // TODO: Halt the CPU until an interrupt occurs, using IdleCallback if needed.
 
     /* Return success */
     return TRUE;
