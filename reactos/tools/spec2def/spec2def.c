@@ -481,9 +481,9 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         fprintf(fileDest, " @%d", pexp->nOrdinal);
     }
 
-    if (pexp->nCallingConvention == CC_EXTERN)
+    if (pexp->uFlags & FL_NONAME)
     {
-        fprintf(fileDest, " DATA");
+        fprintf(fileDest, " NONAME");
     }
 
     if (pexp->uFlags & FL_PRIVATE)
@@ -491,9 +491,9 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         fprintf(fileDest, " PRIVATE");
     }
 
-    if (pexp->uFlags & FL_NONAME)
+    if (pexp->nCallingConvention == CC_EXTERN)
     {
-        fprintf(fileDest, " NONAME");
+        fprintf(fileDest, " DATA");
     }
 
     fprintf(fileDest, "\n");
