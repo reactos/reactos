@@ -24,6 +24,9 @@ FAST486_STATE EmulatorContext;
 
 static BOOLEAN A20Line = FALSE;
 
+/* BOP Identifiers */
+#define BOP_DEBUGGER    0x56    // Break into the debugger from a 16-bit app
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
@@ -91,6 +94,12 @@ UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
     return PicGetInterrupt();
 }
 
+VOID WINAPI EmulatorDebugBreak(LPWORD Stack)
+{
+    DPRINT1("NTVDM: BOP_DEBUGGER\n");
+    DebugBreak();
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize(VOID)
@@ -112,6 +121,9 @@ BOOLEAN EmulatorInitialize(VOID)
 
     /* Enable interrupts */
     setIF(1);
+
+    /* Register the DebugBreak BOP */
+    RegisterBop(BOP_DEBUGGER, EmulatorDebugBreak);
 
     return TRUE;
 }
