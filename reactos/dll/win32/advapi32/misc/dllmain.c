@@ -15,8 +15,10 @@ extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);
 extern VOID UnloadNtMarta(VOID);
 
-BOOL WINAPI
-DllMain(HINSTANCE hinstDll,
+BOOL
+WINAPI
+DllMain(
+    HINSTANCE hinstDll,
     DWORD dwReason,
     LPVOID reserved)
 {
@@ -26,7 +28,9 @@ DllMain(HINSTANCE hinstDll,
             DisableThreadLibraryCalls(hinstDll);
             RegInitialize();
             break;
+
         case DLL_PROCESS_DETACH:
+            CloseLogonLsaHandle();
             RegCleanup();
             UnloadNtMarta();
             break;

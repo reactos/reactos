@@ -9,7 +9,82 @@
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+/* GLOBALS *****************************************************************/
+
+HANDLE LsaHandle = NULL;
+ULONG AuthenticationPackage = 0;
+
 /* FUNCTIONS ***************************************************************/
+
+static
+NTSTATUS
+OpenLogonLsaHandle(VOID)
+{
+    LSA_STRING LogonProcessName;
+    LSA_STRING PackageName;
+    LSA_OPERATIONAL_MODE SecurityMode = 0;
+    NTSTATUS Status;
+
+    RtlInitAnsiString((PANSI_STRING)&LogonProcessName,
+                      "User32LogonProcess");
+
+    Status = LsaRegisterLogonProcess(&LogonProcessName,
+                                     &LsaHandle,
+                                     &SecurityMode);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsaRegisterLogonProcess failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    RtlInitAnsiString((PANSI_STRING)&PackageName,
+                      MSV1_0_PACKAGE_NAME);
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &AuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("AuthenticationPackage: 0x%08lx\n", AuthenticationPackage);
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (LsaHandle != NULL)
+        {
+            Status = LsaDeregisterLogonProcess(LsaHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+            }
+        }
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+CloseLogonLsaHandle(VOID)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (LsaHandle != NULL)
+    {
+        Status = LsaDeregisterLogonProcess(LsaHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+        }
+    }
+
+    return Status;
+}
+
 
 /*
  * @implemented
@@ -224,11 +299,6 @@ LogonUserW(LPWSTR lpszUsername,
 {
     SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    LSA_STRING LogonProcessName;
-    LSA_STRING PackageName;
-    HANDLE LsaHandle = NULL;
-    LSA_OPERATIONAL_MODE SecurityMode = 0;
-    ULONG AuthenticationPackage = 0;
     PSID LogonSid = NULL;
     PSID LocalSid = NULL;
     LSA_STRING OriginName;
@@ -251,32 +321,12 @@ LogonUserW(LPWSTR lpszUsername,
 
     *phToken = NULL;
 
-    RtlInitAnsiString((PANSI_STRING)&LogonProcessName,
-                      "User32LogonProcess");
-
-    Status = LsaRegisterLogonProcess(&LogonProcessName,
-                                     &LsaHandle,
-                                     &SecurityMode);
-    if (!NT_SUCCESS(Status))
+    if (LsaHandle == NULL)
     {
-        TRACE("LsaRegisterLogonProcess failed (Status 0x%08lx)\n", Status);
-        goto done;
+        Status = OpenLogonLsaHandle();
+        if (!NT_SUCCESS(Status))
+            return Status;
     }
-
-    RtlInitAnsiString((PANSI_STRING)&PackageName,
-                      MSV1_0_PACKAGE_NAME);
-
-    Status = LsaLookupAuthenticationPackage(LsaHandle,
-                                            &PackageName,
-                                            &AuthenticationPackage);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
-    TRACE("AuthenticationPackage: 0x%08lx\n", AuthenticationPackage);
-
 
     RtlInitAnsiString((PANSI_STRING)&OriginName,
                       "Testapp");
@@ -453,15 +503,6 @@ done:
 
     if (AuthInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AuthInfo);
-
-    if (LsaHandle != NULL)
-    {
-        Status = LsaDeregisterLogonProcess(LsaHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            TRACE("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
-        }
-    }
 
     if (!NT_SUCCESS(Status))
     {

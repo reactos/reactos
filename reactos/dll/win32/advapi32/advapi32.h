@@ -56,6 +56,11 @@
 #define FN_PROGRESSA FN_PROGRESS
 #endif
 
+/* logon.c */
+
+NTSTATUS
+CloseLogonLsaHandle(VOID);
+
 /* rpc.c */
 
 RPC_STATUS EvtBindRpc(LPCWSTR pszMachine,
