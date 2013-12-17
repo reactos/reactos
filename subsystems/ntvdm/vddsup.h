@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            vddsup.h
- * PURPOSE:         Virtual DOS Drivers (VDD) Support
+ * PURPOSE:         Virtual Device Drivers (VDD) Support
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
