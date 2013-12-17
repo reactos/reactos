@@ -29,9 +29,15 @@ typedef struct _VDD_MODULE
 
 /* PRIVATE VARIABLES **********************************************************/
 
+// TODO: Maybe use a linked list.
+// But the number of elements must be <= MAXUSHORT
 #define MAX_VDD_MODULES 0xFF + 1
-VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}}; // TODO: Maybe use a linked list.
-                                                // But the number of elements must be <= MAXUSHORT
+VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
+
+// Valid handles of VDD DLLs start at 1 and finish at MAX_VDD_MODULES
+#define ENTRY_TO_HANDLE(Entry)  ((Entry)  + 1)
+#define HANDLE_TO_ENTRY(Handle) ((Handle) - 1)
+#define IS_VALID_HANDLE(Handle) ((Handle) > 0 && (Handle) <= MAX_VDD_MODULES)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -72,14 +78,14 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             setCF(0);
 
             /* Retrieve the VDD name in DS:SI */
-            DllName = SEG_OFF_TO_PTR(getDS(), getSI());
+            DllName = (LPCSTR)SEG_OFF_TO_PTR(getDS(), getSI());
 
             /* Retrieve the initialization routine API name in ES:DI (optional --> ES=DI=0) */
             if (getES() != 0 || getDI() != 0)
-                InitRoutineName = SEG_OFF_TO_PTR(getES(), getDI());
+                InitRoutineName = (LPCSTR)SEG_OFF_TO_PTR(getES(), getDI());
 
             /* Retrieve the dispatch routine API name in DS:BX */
-            DispatchRoutineName = SEG_OFF_TO_PTR(getDS(), getBX());
+            DispatchRoutineName = (LPCSTR)SEG_OFF_TO_PTR(getDS(), getBX());
 
             DPRINT1("DllName = '%s' - InitRoutineName = '%s' - DispatchRoutineName = '%s'\n",
                     (DllName ? DllName : "n/a"),
@@ -147,9 +153,9 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             /* Call the initialization routine if needed */
             if (InitRoutine) InitRoutine();
 
-            /* We succeeded */
+            /* We succeeded. RetVal will contain a valid VDD DLL handle */
             Success = TRUE;
-            RetVal = Entry;
+            RetVal  = ENTRY_TO_HANDLE(Entry); // Convert the entry to a valid handle
 
 Quit:
             if (!Success)
@@ -172,12 +178,13 @@ Quit:
         /* UnRegisterModule */
         case 1:
         {
-            WORD Entry = getAX();
+            WORD Handle = getAX();
+            WORD Entry  = HANDLE_TO_ENTRY(Handle); // Convert the handle to a valid entry
 
             DPRINT1("UnRegisterModule() called\n");
 
             /* Sanity checks */
-            if (Entry > MAX_VDD_MODULES || VDDList[Entry].hDll == NULL)
+            if (!IS_VALID_HANDLE(Handle) || VDDList[Entry].hDll == NULL)
             {
                 DPRINT1("Invalid VDD DLL Handle: %d\n", Entry);
                 /* Stop the VDM */
@@ -195,12 +202,13 @@ Quit:
         /* DispatchCall */
         case 2:
         {
-            WORD Entry = getAX();
+            WORD Handle = getAX();
+            WORD Entry  = HANDLE_TO_ENTRY(Handle); // Convert the handle to a valid entry
 
             DPRINT1("DispatchCall() called\n");
 
             /* Sanity checks */
-            if (Entry > MAX_VDD_MODULES ||
+            if (!IS_VALID_HANDLE(Handle)    ||
                 VDDList[Entry].hDll == NULL ||
                 VDDList[Entry].DispatchRoutine == NULL)
             {
