@@ -38,112 +38,112 @@ VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 
 
 ULONG
-CDECL
+WINAPI
 getEAX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEAX(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getAX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EAX].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setAX(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EAX].LowWord = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getAH(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EAX].HighByte;
 }
 
 VOID
-CDECL
+WINAPI
 setAH(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EAX].HighByte = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getAL(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EAX].LowByte;
 }
 
 VOID
-CDECL
+WINAPI
 setAL(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EAX].LowByte = Value;
 }
 
 ULONG
-CDECL
+WINAPI
 getEBX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBX].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEBX(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBX].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getBX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBX].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setBX(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBX].LowWord = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getBH(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBX].HighByte;
 }
 
 VOID
-CDECL
+WINAPI
 setBH(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBX].HighByte = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getBL(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBX].LowByte;
 }
 
 VOID
-CDECL
+WINAPI
 setBL(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBX].LowByte = Value;
@@ -152,56 +152,56 @@ setBL(UCHAR Value)
 
 
 ULONG
-CDECL
+WINAPI
 getECX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ECX].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setECX(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ECX].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getCX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ECX].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setCX(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ECX].LowWord = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getCH(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ECX].HighByte;
 }
 
 VOID
-CDECL
+WINAPI
 setCH(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ECX].HighByte = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getCL(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ECX].LowByte;
 }
 
 VOID
-CDECL
+WINAPI
 setCL(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ECX].LowByte = Value;
@@ -210,56 +210,56 @@ setCL(UCHAR Value)
 
 
 ULONG
-CDECL
+WINAPI
 getEDX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDX].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEDX(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDX].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getDX(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDX].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setDX(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDX].LowWord = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getDH(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDX].HighByte;
 }
 
 VOID
-CDECL
+WINAPI
 setDH(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDX].HighByte = Value;
 }
 
 UCHAR
-CDECL
+WINAPI
 getDL(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDX].LowByte;
 }
 
 VOID
-CDECL
+WINAPI
 setDL(UCHAR Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDX].LowByte = Value;
@@ -268,28 +268,28 @@ setDL(UCHAR Value)
 
 
 ULONG
-CDECL
+WINAPI
 getESP(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ESP].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setESP(ULONG Value)
 {
     EmulatorSetStack(getSS(), Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getSP(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ESP].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setSP(USHORT Value)
 {
     EmulatorSetStack(getSS(), Value);
@@ -298,28 +298,28 @@ setSP(USHORT Value)
 
 
 ULONG
-CDECL
+WINAPI
 getEBP(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBP].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEBP(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBP].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getBP(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EBP].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setBP(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EBP].LowWord = Value;
@@ -328,28 +328,28 @@ setBP(USHORT Value)
 
 
 ULONG
-CDECL
+WINAPI
 getESI(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ESI].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setESI(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ESI].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getSI(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_ESI].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setSI(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_ESI].LowWord = Value;
@@ -358,28 +358,28 @@ setSI(USHORT Value)
 
 
 ULONG
-CDECL
+WINAPI
 getEDI(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDI].Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEDI(ULONG Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDI].Long = Value;
 }
 
 USHORT
-CDECL
+WINAPI
 getDI(VOID)
 {
     return EmulatorContext.GeneralRegs[FAST486_REG_EDI].LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setDI(USHORT Value)
 {
     EmulatorContext.GeneralRegs[FAST486_REG_EDI].LowWord = Value;
@@ -388,28 +388,28 @@ setDI(USHORT Value)
 
 
 ULONG
-CDECL
+WINAPI
 getEIP(VOID)
 {
     return EmulatorContext.InstPtr.Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEIP(ULONG Value)
 {
     EmulatorExecute(getCS(), Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getIP(VOID)
 {
     return EmulatorContext.InstPtr.LowWord;
 }
 
 VOID
-CDECL
+WINAPI
 setIP(USHORT Value)
 {
     EmulatorExecute(getCS(), Value);
@@ -418,84 +418,84 @@ setIP(USHORT Value)
 
 
 USHORT
-CDECL
+WINAPI
 getCS(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_CS].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setCS(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_CS, Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getSS(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_SS].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setSS(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_SS, Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getDS(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_DS].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setDS(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_DS, Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getES(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_ES].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setES(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_ES, Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getFS(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_FS].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setFS(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_FS, Value);
 }
 
 USHORT
-CDECL
+WINAPI
 getGS(VOID)
 {
     return EmulatorContext.SegmentRegs[FAST486_REG_GS].Selector;
 }
 
 VOID
-CDECL
+WINAPI
 setGS(USHORT Value)
 {
     Fast486SetSegment(&EmulatorContext, FAST486_REG_GS, Value);
@@ -504,14 +504,14 @@ setGS(USHORT Value)
 
 
 ULONG
-CDECL
+WINAPI
 getCF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_CF);
 }
 
 VOID
-CDECL
+WINAPI
 setCF(ULONG Flag)
 {
     if (Flag & 1)
@@ -521,14 +521,14 @@ setCF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getPF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_PF);
 }
 
 VOID
-CDECL
+WINAPI
 setPF(ULONG Flag)
 {
     if (Flag & 1)
@@ -538,14 +538,14 @@ setPF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getAF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_AF);
 }
 
 VOID
-CDECL
+WINAPI
 setAF(ULONG Flag)
 {
     if (Flag & 1)
@@ -555,14 +555,14 @@ setAF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getZF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_ZF);
 }
 
 VOID
-CDECL
+WINAPI
 setZF(ULONG Flag)
 {
     if (Flag & 1)
@@ -572,14 +572,14 @@ setZF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getSF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_SF);
 }
 
 VOID
-CDECL
+WINAPI
 setSF(ULONG Flag)
 {
     if (Flag & 1)
@@ -589,14 +589,14 @@ setSF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getIF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_IF);
 }
 
 VOID
-CDECL
+WINAPI
 setIF(ULONG Flag)
 {
     if (Flag & 1)
@@ -606,14 +606,14 @@ setIF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getDF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_DF);
 }
 
 VOID
-CDECL
+WINAPI
 setDF(ULONG Flag)
 {
     if (Flag & 1)
@@ -623,14 +623,14 @@ setDF(ULONG Flag)
 }
 
 ULONG
-CDECL
+WINAPI
 getOF(VOID)
 {
     return EmulatorGetFlag(EMULATOR_FLAG_OF);
 }
 
 VOID
-CDECL
+WINAPI
 setOF(ULONG Flag)
 {
     if (Flag & 1)
@@ -642,14 +642,14 @@ setOF(ULONG Flag)
 
 
 ULONG
-CDECL
+WINAPI
 getEFLAGS(VOID)
 {
     return EmulatorContext.Flags.Long;
 }
 
 VOID
-CDECL
+WINAPI
 setEFLAGS(ULONG Flags)
 {
     EmulatorContext.Flags.Long = Flags;
@@ -658,14 +658,14 @@ setEFLAGS(ULONG Flags)
 
 
 USHORT
-CDECL
+WINAPI
 getMSW(VOID)
 {
     return LOWORD(EmulatorContext.ControlRegisters[FAST486_REG_CR0]);
 }
 
 VOID
-CDECL
+WINAPI
 setMSW(USHORT Value)
 {
     /* Set the lower 16 bits (Machine Status Word) of CR0 */

@@ -171,4 +171,25 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
     A20Line = Enabled;
 }
 
+
+
+PBYTE WINAPI Sim32pGetVDMPointer(ULONG Address, BOOL ProtectedMode)
+{
+    // FIXME
+    UNREFERENCED_PARAMETER(ProtectedMode);
+
+    /*
+     * HIWORD(Address) == Segment  (if ProtectedMode == FALSE)
+     *                 or Selector (if ProtectedMode == TRUE )
+     * LOWORD(Address) == Offset
+     */
+    return SEG_OFF_TO_PTR(HIWORD(Address), LOWORD(Address));
+}
+
+PBYTE WINAPI MGetVdmPointer(ULONG Address, ULONG Size, BOOL ProtectedMode)
+{
+    UNREFERENCED_PARAMETER(Size);
+    return Sim32pGetVDMPointer(Address, ProtectedMode);
+}
+
 /* EOF */

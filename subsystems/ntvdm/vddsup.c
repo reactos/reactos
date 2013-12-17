@@ -16,13 +16,12 @@
 #include "bop.h"
 #include "registers.h"
 
-typedef VOID (CDECL *VDD_INIT_PROC)(VOID);
-typedef VOID (CDECL *VDD_DISPATCH_PROC)(VOID);
+typedef VOID (WINAPI *VDD_PROC)(VOID);
 
 typedef struct _VDD_MODULE
 {
-    HMODULE hDll;
-    VDD_DISPATCH_PROC DispatchRoutine;
+    HMODULE  hDll;
+    VDD_PROC DispatchRoutine;
 } VDD_MODULE, *PVDD_MODULE;
 
 /* BOP Identifiers */
@@ -30,7 +29,7 @@ typedef struct _VDD_MODULE
 
 /* PRIVATE VARIABLES **********************************************************/
 
-#define MAX_VDD_MODULES 0xFF
+#define MAX_VDD_MODULES 0xFF + 1
 VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}}; // TODO: Maybe use a linked list.
                                                 // But the number of elements must be <= MAXUSHORT
 
@@ -58,14 +57,14 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
         case 0:
         {
             BOOL Success = TRUE;
-            WORD RetVal = 0;
-            WORD Entry = 0;
+            WORD RetVal  = 0;
+            WORD Entry   = 0;
             LPCSTR DllName = NULL,
-                   InitRoutineName = NULL,
+                   InitRoutineName     = NULL,
                    DispatchRoutineName = NULL;
             HMODULE hDll = NULL;
-            VDD_INIT_PROC     InitRoutine = NULL;
-            VDD_DISPATCH_PROC DispatchRoutine = NULL;
+            VDD_PROC InitRoutine     = NULL,
+                     DispatchRoutine = NULL;
 
             DPRINT1("RegisterModule() called\n");
 
@@ -111,7 +110,7 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             /* Load the initialization routine if needed */
             if (InitRoutineName)
             {
-                InitRoutine = (VDD_INIT_PROC)GetProcAddress(hDll, InitRoutineName);
+                InitRoutine = (VDD_PROC)GetProcAddress(hDll, InitRoutineName);
                 if (InitRoutine == NULL)
                 {
                     DPRINT1("Failed to load the initialization routine '%s'\n", InitRoutineName);
@@ -122,7 +121,7 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             }
 
             /* Load the dispatch routine */
-            DispatchRoutine = (VDD_DISPATCH_PROC)GetProcAddress(hDll, DispatchRoutineName);
+            DispatchRoutine = (VDD_PROC)GetProcAddress(hDll, DispatchRoutineName);
             if (DispatchRoutine == NULL)
             {
                 DPRINT1("Failed to load the dispatch routine '%s'\n", DispatchRoutineName);
