@@ -539,6 +539,54 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
 }
 
 
+static
+NTSTATUS
+LsapCopyLocalGroups(
+    IN PLSAP_LOGON_CONTEXT LogonContext,
+    IN PTOKEN_GROUPS ClientGroups,
+    IN ULONG ClientGroupsCount,
+    OUT PTOKEN_GROUPS *TokenGroups)
+{
+    ULONG LocalGroupsLength = 0;
+    PTOKEN_GROUPS LocalGroups = NULL;
+    NTSTATUS Status;
+
+    LocalGroupsLength = sizeof(TOKEN_GROUPS) +
+                        (ClientGroupsCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+    LocalGroups = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  LocalGroupsLength);
+    if (LocalGroups == NULL)
+    {
+        TRACE("RtlAllocateHeap() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                 ClientGroups,
+                                 LocalGroups,
+                                 LocalGroupsLength,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *TokenGroups = LocalGroups;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (LocalGroups != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        LocalGroups);
+        }
+    }
+
+    return Status;
+}
+
+
 NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext)
@@ -553,6 +601,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     PUNICODE_STRING AuthenticatingAuthority = NULL;
     PUNICODE_STRING MachineName = NULL;
     PVOID LocalAuthInfo = NULL;
+    PTOKEN_GROUPS LocalGroups = NULL;
     HANDLE TokenHandle = NULL;
     ULONG i;
     ULONG PackageId;
@@ -594,6 +643,18 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
             RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
             return Status;
         }
+    }
+
+    if (RequestMsg->LogonUser.Request.LocalGroupsCount > 0)
+    {
+        Status = LsapCopyLocalGroups(LogonContext,
+                                     RequestMsg->LogonUser.Request.LocalGroups,
+                                     RequestMsg->LogonUser.Request.LocalGroupsCount,
+                                     &LocalGroups);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        TRACE("GroupCount: %lu\n", LocalGroups->GroupCount);
     }
 
     if (Package->LsaApLogonUserEx2 != NULL)
@@ -721,6 +782,12 @@ done:
             NtClose(TokenHandle);
     }
 
+    /* Free the local groups */
+    if (LocalGroups != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
+    }
+
     /* Free the local authentication info buffer */
     if (LocalAuthInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
@@ -795,6 +862,8 @@ done:
 
         LsapFreeHeap(MachineName);
     }
+
+    TRACE("LsapLogonUser done (Status 0x%08lx)\n", Status);
 
     return Status;
 }
