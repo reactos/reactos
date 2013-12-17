@@ -13,6 +13,7 @@
 #include "emulator.h"
 #include "bios.h"
 #include "bop.h"
+#include "vddsup.h"
 #include "io.h"
 #include "registers.h"
 #include "vga.h"
@@ -121,6 +122,9 @@ BOOLEAN EmulatorInitialize(VOID)
 
     /* Enable interrupts */
     setIF(1);
+
+    /* Initialize VDD support */
+    VDDSupInitialize();
 
     /* Register the DebugBreak BOP */
     RegisterBop(BOP_DEBUGGER, EmulatorDebugBreak);
