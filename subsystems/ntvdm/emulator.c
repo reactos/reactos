@@ -19,6 +19,9 @@
 #include "vga.h"
 #include "pic.h"
 
+// HACK
+typedef INT VDM_MODE;
+
 /* PRIVATE VARIABLES **********************************************************/
 
 FAST486_STATE EmulatorContext;
@@ -173,7 +176,10 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
 
 
 
-PBYTE WINAPI Sim32pGetVDMPointer(ULONG Address, BOOL ProtectedMode)
+PBYTE
+WINAPI
+Sim32pGetVDMPointer(IN ULONG Address,
+                    IN BOOL  ProtectedMode)
 {
     // FIXME
     UNREFERENCED_PARAMETER(ProtectedMode);
@@ -186,10 +192,50 @@ PBYTE WINAPI Sim32pGetVDMPointer(ULONG Address, BOOL ProtectedMode)
     return SEG_OFF_TO_PTR(HIWORD(Address), LOWORD(Address));
 }
 
-PBYTE WINAPI MGetVdmPointer(ULONG Address, ULONG Size, BOOL ProtectedMode)
+PBYTE
+WINAPI
+MGetVdmPointer(IN ULONG Address,
+               IN ULONG Size,
+               IN BOOL ProtectedMode)
 {
     UNREFERENCED_PARAMETER(Size);
     return Sim32pGetVDMPointer(Address, ProtectedMode);
+}
+
+PVOID
+WINAPI
+VdmMapFlat(IN USHORT   Segment,
+           IN ULONG    Offset,
+           IN VDM_MODE Mode)
+{
+    // FIXME
+    UNREFERENCED_PARAMETER(Mode);
+
+    return SEG_OFF_TO_PTR(Segment, Offset);
+}
+
+BOOL 
+WINAPI
+VdmFlushCache(IN USHORT   Segment,
+              IN ULONG    Offset,
+              IN ULONG    Size,
+              IN VDM_MODE Mode)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
+BOOL
+WINAPI
+VdmUnmapFlat(IN USHORT   Segment,
+             IN ULONG    Offset,
+             IN PVOID    Buffer,
+             IN VDM_MODE Mode)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return TRUE;
 }
 
 /* EOF */

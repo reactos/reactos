@@ -91,3 +91,7 @@
 
 @ stdcall MGetVdmPointer(long long long)
 @ stdcall Sim32pGetVDMPointer(long long)
+
+;@ stdcall VdmFlushCache(long long long long) ; Not exported on x86
+@ stdcall VdmMapFlat(long long long)
+;@ stdcall VdmUnmapFlat(long long ptr long)  ; Not exported on x86
