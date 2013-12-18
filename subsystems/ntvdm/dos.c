@@ -1422,7 +1422,77 @@ VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
     BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
     setIP(getIP() + 1);
 
-    DPRINT1("Unknown DOS CMD Interpreter BOP Function: 0x%02X\n", FuncNum);
+    switch (FuncNum)
+    {
+        case 0x08: // Launch external command
+        {
+#define CMDLINE_LENGTH  1024
+
+            BOOL Result;
+            DWORD dwExitCode;
+
+            LPSTR Command = (LPSTR)SEG_OFF_TO_PTR(getDS(), getSI());
+            CHAR CommandLine[CMDLINE_LENGTH] = "";
+            STARTUPINFOA StartupInfo;
+            PROCESS_INFORMATION ProcessInformation;
+            DPRINT1("CMD Run Command '%s'\n", Command);
+
+            Command[strlen(Command)-1] = 0;
+            
+            strcpy(CommandLine, "cmd.exe /c ");
+            strcat(CommandLine, Command);
+
+            ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+            ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+
+            StartupInfo.cb = sizeof(StartupInfo);
+
+            DosPrintCharacter('\n');
+
+            Result = CreateProcessA(NULL,
+                                    CommandLine,
+                                    NULL,
+                                    NULL,
+                                    TRUE,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    &StartupInfo,
+                                    &ProcessInformation);
+            if (Result)
+            {
+                DPRINT1("Command '%s' launched successfully\n");
+
+                /* Wait for process termination */
+                WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+
+                /* Get the exit code */
+                GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
+
+                /* Close handles */
+                CloseHandle(ProcessInformation.hThread);
+                CloseHandle(ProcessInformation.hProcess);
+            }
+            else
+            {
+                DPRINT1("Failed when launched command '%s'\n");
+                dwExitCode = GetLastError();
+            }
+            
+            DosPrintCharacter('\n');
+
+            setAL((UCHAR)dwExitCode);
+
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("Unknown DOS CMD Interpreter BOP Function: 0x%02X\n", FuncNum);
+            // setCF(1); // Disable, otherwise we enter an infinite loop
+            break;
+        }
+    }
 }
 
 VOID WINAPI DosInt20h(LPWORD Stack)
