@@ -143,7 +143,7 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, în geliütirme evresinde oldußundan daha",
+        "ReactOS Kur, în geliüme evresinde oldußundan daha",
         TEXT_STYLE_NORMAL
     },
     {
@@ -443,7 +443,7 @@ static MUI_ENTRY trTRRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, în geliütirme evresinde oldußundan daha",
+        "ReactOS Kur, în geliüme evresinde oldußundan daha",
         TEXT_STYLE_NORMAL
     },
     {
