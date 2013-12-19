@@ -22,8 +22,10 @@
 #include <wingdi.h>
 #include <objbase.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <gdiplus.h>
 #include <tchar.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -69,6 +71,75 @@ static void pLoadImage(LPWSTR szOpenFileName)
     }
 }
 
+static void pSaveImageAs(HWND hwnd)
+{
+    OPENFILENAMEW sfn;
+    ImageCodecInfo *codecInfo;
+    WCHAR szSaveFileName[MAX_PATH];
+    WCHAR szFilterMask[2048];
+    GUID rawFormat;
+    UINT num;
+    UINT size;
+    UINT sizeRemain;
+    UINT j;
+    WCHAR *c;
+
+    ZeroMemory(szSaveFileName, sizeof(szSaveFileName));
+    ZeroMemory(szFilterMask, sizeof(szFilterMask));
+    ZeroMemory(&sfn, sizeof(sfn));
+    sfn.lStructSize = sizeof(sfn);
+    sfn.hwndOwner   = hwnd;
+    sfn.hInstance   = hInstance;
+    sfn.lpstrFile   = szSaveFileName;
+    sfn.lpstrFilter = szFilterMask;
+    sfn.nMaxFile    = MAX_PATH;
+    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
+    GdipGetImageEncodersSize(&num, &size);
+    codecInfo = malloc(size);
+    if (!codecInfo)
+    {
+        DPRINT1("malloc() failed in pSaveImageAs()\n");
+        return;
+    }
+
+    GdipGetImageEncoders(num, size, codecInfo);
+    GdipGetImageRawFormat(image, &rawFormat);
+
+    sizeRemain = sizeof(szFilterMask);
+    c = szFilterMask;
+
+    for (j = 0; j < num; ++j)
+    {
+        StringCbPrintfExW(c, sizeRemain, &c, &sizeRemain, 0, L"%ls (%ls)", codecInfo[j].FormatDescription, codecInfo[j].FilenameExtension);
+
+        /* Skip the NULL character */
+        c++;
+        sizeRemain -= sizeof(*c);
+
+        StringCbPrintfExW(c, sizeRemain, &c, &sizeRemain, 0, L"%ls", codecInfo[j].FilenameExtension);
+
+        /* Skip the NULL character */
+        c++;
+        sizeRemain -= sizeof(*c);
+
+        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID) == TRUE)
+        {
+            sfn.nFilterIndex = j + 1;
+        }
+    }
+
+    if (GetSaveFileNameW(&sfn))
+    {
+        if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+        {
+            DPRINT1("GdipSaveImageToFile() failed\n");
+        }
+    }
+
+    free(codecInfo);
+}
+
 static VOID
 ImageView_DrawImage(HWND hwnd)
 {
@@ -92,7 +163,7 @@ ImageView_DrawImage(HWND hwnd)
         DPRINT1("GdipCreateFromHDC() failed\n");
         return;
     }
-  
+
     GdipGetImageWidth(image, &uImgWidth);
     GdipGetImageHeight(image, &uImgHeight);
 
@@ -332,6 +403,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 break;
                 case IDC_SAVE:
+                    pSaveImageAs(hwnd);
 
                 break;
                 case IDC_PRINT:
@@ -453,7 +525,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 
     // Create the window
     WndClass.lpszClassName  = _T("shimgvw_window");
-    WndClass.lpfnWndProc    = (WNDPROC)ImageView_WndProc;
+    WndClass.lpfnWndProc    = ImageView_WndProc;
     WndClass.hInstance      = hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
@@ -466,7 +538,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     hMainWnd = CreateWindow(_T("shimgvw_window"), szBuf,
                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
                             CW_USEDEFAULT, CW_USEDEFAULT,
-                            0, 0, NULL, NULL, hInstance, NULL); 
+                            0, 0, NULL, NULL, hInstance, NULL);
 
     // Show it
     ShowWindow(hMainWnd, SW_SHOW);
