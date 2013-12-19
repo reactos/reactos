@@ -50,11 +50,4 @@ target_link_libraries(kernel32_winetest wine)
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(kernel32_winetest "-Wno-format")
-    #allow_warnings(kernel32_winetest)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-error")
-endif()
-
 add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)
