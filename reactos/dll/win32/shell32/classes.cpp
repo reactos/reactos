@@ -206,7 +206,7 @@ static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 *
 * Gets the icon for a filetype, szName can be NULL, in which case the default icon is loaded
 */
-static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx)
+static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
     DWORD dwType;
     WCHAR sTemp[MAX_PATH];
@@ -230,7 +230,7 @@ static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPWSTR szName, DWORD len, 
     return FALSE;
 }
 
-static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPSTR szName, DWORD len, int* picon_idx)
+static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
     DWORD dwType;
     char sTemp[MAX_PATH];
@@ -254,7 +254,7 @@ static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPSTR szName, DWORD len, in
     return FALSE;
 }
 
-BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx)
+BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
     static const WCHAR swDefaultIcon[] = L"\\DefaultIcon";
     HKEY hKey;
@@ -280,7 +280,7 @@ BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPWSTR szName, DWORD len, int*
     return ret;
 }
 
-BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPSTR szName, DWORD len, int* picon_idx)
+BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
     HKEY hKey;
     char sTemp[MAX_PATH];

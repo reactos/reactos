@@ -46,13 +46,13 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags );
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot);
 BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
-BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx);
+BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx);
 BOOL HCR_GetIconFromGUIDW(REFIID riid, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
 
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
 BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot);
-BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPSTR sName, DWORD len, int* picon_idx);
+BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR sName, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len);
 
 BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes);

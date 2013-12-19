@@ -224,9 +224,11 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
                  riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                  riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
 
-        WCHAR* iconname = NULL;
+        const WCHAR* iconname = NULL;
         if (_ILIsBitBucket(pSimplePidl))
         {
+            static const WCHAR szFull[] = {'F','u','l','l',0};
+            static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
             IEnumIDList *EnumIDList = NULL;
             CoInitialize(NULL);
 
@@ -244,9 +246,9 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
             {
                 CoTaskMemFree(pidl);
-                iconname = L"Full";
+                iconname = szFull;
             } else {
-                iconname = L"Empty";
+                iconname = szEmpty;
             }
 
             if (psfDesktop)
