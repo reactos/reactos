@@ -4,8 +4,6 @@
 #include <ks.h>
 #include <ksmedia.h>
 #include <math.h>
-#define NDEBUG
-#include <debug.h>
 #include <stdio.h>
 
 typedef struct
