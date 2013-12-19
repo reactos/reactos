@@ -21,7 +21,6 @@ list(APPEND SOURCE
     format_msg.c
     #generated.c
     heap.c
-    interlck.c
     loader.c
     locale.c
     mailslot.c
@@ -39,7 +38,6 @@ list(APPEND SOURCE
     version.c
     virtual.c
     volume.c
-    dosdev.c
     testlist.c)
 
 add_executable(kernel32_winetest

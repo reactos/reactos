@@ -80,8 +80,5 @@ const struct test winetest_testlist[] =
     { "version", func_version },
     { "virtual", func_virtual },
     { "volume", func_volume },
-    /* ReactOS */
-    { "dosdev", func_dosdev },
-    { "interlck", func_interlck },
     { 0, 0 }
 };
