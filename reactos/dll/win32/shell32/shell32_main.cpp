@@ -584,7 +584,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 TRACE("szExt=%s\n", debugstr_w(szExt));
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
-                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &psfi->iIcon))
+                     HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &psfi->iIcon))
                 {
                     if (lstrcmpW(p1W, sTemp))
                         wcscpy(psfi->szDisplayName, sTemp);
@@ -640,7 +640,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 szExt = PathFindExtensionW(sTemp);
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
-                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &icon_idx))
+                     HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
                 {
                     if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
                         wcscpy(sTemp, szFullPath);

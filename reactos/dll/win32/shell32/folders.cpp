@@ -48,13 +48,13 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     }
     else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
              wszCLSIDValue, CHARS_IN_GUID) &&
-             HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
+             HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
     {
         *piIndex = icon_idx;
     }
     else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid2,
              wszCLSIDValue, CHARS_IN_GUID) &&
-             HCR_GetDefaultIconW(wszCLSIDValue, szIconFile, cchMax, &icon_idx))
+             HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
     {
         *piIndex = icon_idx;
     }
@@ -62,7 +62,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     {
         static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
 
-        if (!HCR_GetDefaultIconW(folder, szIconFile, cchMax, &icon_idx))
+        if (!HCR_GetIconW(folder, szIconFile, NULL, cchMax, &icon_idx))
         {
             lstrcpynW(szIconFile, swShell32Name, cchMax);
             icon_idx = -IDI_SHELL_FOLDER;
@@ -224,7 +224,40 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
                  riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                  riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
 
-        if (HCR_GetDefaultIconW(xriid, wTemp, MAX_PATH, &icon_idx))
+        WCHAR* iconname = NULL;
+        if (_ILIsBitBucket(pSimplePidl))
+        {
+            IEnumIDList *EnumIDList = NULL;
+            CoInitialize(NULL);
+
+            IShellFolder2 *psfRecycleBin = NULL;
+            IShellFolder *psfDesktop = NULL;
+            hr = SHGetDesktopFolder(&psfDesktop);
+
+            if (SUCCEEDED(hr))
+                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_IShellFolder2, (void**) &psfRecycleBin);
+            if (SUCCEEDED(hr))
+                hr = psfRecycleBin->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &EnumIDList);
+
+            ULONG itemcount;
+            LPITEMIDLIST pidl = NULL;
+            if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
+            {
+                CoTaskMemFree(pidl);
+                iconname = L"Full";
+            } else {
+                iconname = L"Empty";
+            }
+
+            if (psfDesktop)
+                psfDesktop->Release();
+            if (psfRecycleBin)
+                psfRecycleBin->Release();
+            if (EnumIDList)
+                EnumIDList->Release();
+        }
+
+        if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
         }
@@ -274,7 +307,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         }
         else
         {
-            if (HCR_GetDefaultIconW(drive, wTemp, MAX_PATH, &icon_idx))
+            if (HCR_GetIconW(drive, wTemp, NULL, MAX_PATH, &icon_idx))
                 initIcon->SetNormalIcon(wTemp, icon_idx);
             else
                 initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DRIVE);
@@ -324,7 +357,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         else if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
         {
             if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
-                    && HCR_GetDefaultIconA(sTemp, sTemp, MAX_PATH, &icon_idx))
+                    && HCR_GetIconA(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
             {
                 if (!lstrcmpA("%1", sTemp)) /* icon is in the file */
                 {
