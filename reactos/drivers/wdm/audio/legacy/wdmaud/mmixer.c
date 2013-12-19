@@ -8,6 +8,8 @@
 
 #include "wdmaud.h"
 
+#define NDEBUG
+#include <debug.h>
 
 PVOID Alloc(ULONG NumBytes);
 MIXER_STATUS Close(HANDLE hDevice);

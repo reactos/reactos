@@ -2,8 +2,6 @@
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
-#define NDEBUG
-#include <debug.h>
 #include <ksmedia.h>
 #include <mmreg.h>
 #include <mmsystem.h>
