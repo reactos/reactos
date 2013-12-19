@@ -36,3 +36,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGAUGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
