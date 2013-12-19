@@ -58,9 +58,3 @@ add_importlibs(quartz dsound msacm32 msvfw32 ole32 oleaut32 shlwapi rpcrt4 user3
 add_dependencies(quartz dxsdk quartz_idlheader stdole2)
 add_pch(quartz quartz_private.h)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(quartz)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()

@@ -79,12 +79,6 @@ add_library(shell32 SHARED
     ${SOURCE}
     shell32.rc)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(shell32)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 set_module_type(shell32 win32dll UNICODE)
 
 target_link_libraries(shell32

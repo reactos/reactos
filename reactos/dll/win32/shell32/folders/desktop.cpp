@@ -1353,7 +1353,7 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
  */
 BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 {
-    /* TODO Windows does different drop effects if dragging across drives. 
+    /* TODO Windows does different drop effects if dragging across drives.
     i.e., it will copy instead of move if the directories are on different disks. */
 
     DWORD dwEffect = DROPEFFECT_MOVE;
@@ -1436,24 +1436,24 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
         return E_FAIL;
     }
 
-    /* We only want to really move files around if they don't already 
+    /* We only want to really move files around if they don't already
        come from the desktop, or we're linking or copying */
     if ((!_ILIsDesktop(pidl)) || (dwKeyState & MK_CONTROL))
     {
         LPITEMIDLIST pidl = NULL;
 
         WCHAR szPath[MAX_PATH];
-        LPWSTR pathPtr;
+        //LPWSTR pathPtr;
 
         /* build a complete path to create a simple pidl */
         lstrcpynW(szPath, sPathTarget, MAX_PATH);
-        pathPtr = PathAddBackslashW(szPath);
+        /*pathPtr = */PathAddBackslashW(szPath);
         //hr = _ILCreateFromPathW(szPath, &pidl);
         hr = this->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
 
         if (SUCCEEDED(hr))
         {
-            IDropTarget *pDT; 
+            IDropTarget *pDT;
             hr = this->BindToObject(pidl, NULL, IID_IDropTarget, (LPVOID*)&pDT);
             CoTaskMemFree(pidl);
             if (SUCCEEDED(hr))
@@ -1465,7 +1465,7 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
             ERR("Error creating from %s\n", debugstr_w(szPath));
     }
 
-    /* Todo, rewrite the registry such that the icons are well placed. 
+    /* Todo, rewrite the registry such that the icons are well placed.
     Blocked by no bags implementation. */
 
     SHFree(pidl);

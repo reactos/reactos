@@ -74,12 +74,6 @@ else()
 
     add_library(dbghelp SHARED ${SOURCE} version.rc)
 
-    if(NOT MSVC)
-        # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-        #allow_warnings(dbghelp)
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-    endif()
-
     set_module_type(dbghelp win32dll)
     target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames zlib)
     add_delay_importlibs(dbghelp version)

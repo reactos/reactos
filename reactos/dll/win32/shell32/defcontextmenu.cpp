@@ -413,7 +413,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
 BOOL
 CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
 {
-    
+
     WCHAR wszName[MAX_PATH], wszBuf[MAX_PATH], *pwszClsid;
     DWORD cchName;
     HRESULT hr;
@@ -636,7 +636,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         {
             WCHAR wszKey[256];
             HRESULT hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"%s\\shell\\%s", pEntry->szClass, pEntry->szVerb);
-            
+
             if (SUCCEEDED(hr))
             {
                 DWORD cbVerb = sizeof(wszVerb);
@@ -1004,7 +1004,7 @@ CDefaultContextMenu::DoPaste(
     FORMATETC formatetc2;
     STGMEDIUM medium2;
     InitFormatEtc(formatetc2, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-    
+
     DWORD dwKey= 0;
 
     if (SUCCEEDED(pda->GetData(&formatetc2, &medium2)))
@@ -1104,7 +1104,7 @@ CDefaultContextMenu::DoCreateLink(
         ERR("no IDropTarget Interface\n");
         return hr;
     }
-    DWORD link = DROPEFFECT_LINK;
+    //DWORD link = DROPEFFECT_LINK;
     SHSimulateDrop(pDT, pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
     NotifyShellViewWindow(lpcmi, TRUE);
 
@@ -1278,7 +1278,7 @@ CDefaultContextMenu::DoProperties(
     if (!pidlParent)
     {
         IPersistFolder2 *pf;
-        
+
         /* pidlFolder is optional */
         if (SUCCEEDED(m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
@@ -1400,7 +1400,7 @@ CDefaultContextMenu::DoDynamicShellExtensions(
     return E_FAIL;
 }
 
-DWORD 
+DWORD
 CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry)
 {
     LPSHELLBROWSER lpSB;
@@ -1436,7 +1436,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
     return 0;
 }
 
-HRESULT 
+HRESULT
 CDefaultContextMenu::TryToBrowse(
     LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags)
 {
@@ -1451,7 +1451,7 @@ CDefaultContextMenu::TryToBrowse(
     return hr;
 }
 
-HRESULT 
+HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
     LPITEMIDLIST pidlFull = ILCombine(m_Dcm.pidlFolder, pidl);
@@ -1462,7 +1462,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
 
     WCHAR wszPath[MAX_PATH];
     BOOL bHasPath = SHGetPathFromIDListW(pidlFull, wszPath);
-    
+
     WCHAR wszDir[MAX_PATH];
     if(bHasPath)
     {
@@ -1526,7 +1526,7 @@ CDefaultContextMenu::DoStaticShellExtensions(
         if (wFlags > 0)
         {
             /* In xp if we have browsed, we don't open any more folders .
-             * In win7 we browse to the first folder we find and 
+             * In win7 we browse to the first folder we find and
              * open new windows fo for each of the rest of the folders */
             if (bBrowsed)
                 continue;
