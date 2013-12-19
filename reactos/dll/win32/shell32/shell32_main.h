@@ -94,8 +94,9 @@ LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST);
 
 #define KeyStateToDropEffect(kst)\
     ((((kst)&(MK_CONTROL|MK_SHIFT))==(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_LINK :\
-    (((kst)&(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_COPY :\
-    DROPEFFECT_MOVE))
+    (((kst)&(MK_CONTROL)) ? DROPEFFECT_COPY :\
+    (((kst)&(MK_SHIFT)) ? DROPEFFECT_MOVE :\
+    DROPEFFECT_NONE)))
 
 
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);

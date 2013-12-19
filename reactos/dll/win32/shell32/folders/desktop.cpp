@@ -254,10 +254,21 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
     return ret ? S_OK : E_FAIL;
 }
 
+void CDesktopFolder::SF_RegisterClipFmt()
+{
+    TRACE ("(%p)\n", this);
+
+    if (!cfShellIDList)
+        cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+}
+
 CDesktopFolder::CDesktopFolder()
 {
     pidlRoot = NULL;
     sPathTarget = NULL;
+    cfShellIDList = 0;
+    SF_RegisterClipFmt();
+    fAcceptFmt = FALSE;
 }
 
 CDesktopFolder::~CDesktopFolder()
@@ -512,8 +523,7 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        WARN ("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
+        hr = this->QueryInterface (IID_IDropTarget, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
@@ -638,9 +648,12 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
         SHFree (pidl);
         hr = S_OK;
     }
-    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
+    else if (IsEqualIID (riid, IID_IDropTarget))
     {
-        hr = this->QueryInterface (IID_IDropTarget, (LPVOID *)&pObj);
+        /* only interested in attempting to bind to shell folders, not files, semicolon intentionate */
+        if (cidl == 1 && SUCCEEDED(this->BindToObject(apidl[0], NULL, IID_IDropTarget, (LPVOID*)&pObj)));
+        else
+            hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
     }
     else if ((IsEqualIID(riid, IID_IShellLinkW) ||
               IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
@@ -1325,4 +1338,138 @@ HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCIT
             return S_OK;
     }
     return E_FAIL;
+}
+
+/****************************************************************************
+ * IDropTarget implementation
+ *
+ * This should allow two somewhat separate things, copying files to the users directory,
+ * as well as allowing icons to be moved anywhere and updating the registry to save.
+ *
+ * The first thing I think is best done using fs.cpp to prevent WET code. So we'll simulate
+ * a drop to the user's home directory. The second will look at the pointer location and
+ * set sensible places for the icons to live.
+ *
+ */
+BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
+{
+    /* TODO Windows does different drop effects if dragging across drives. 
+    i.e., it will copy instead of move if the directories are on different disks. */
+
+    DWORD dwEffect = DROPEFFECT_MOVE;
+
+    *pdwEffect = DROPEFFECT_NONE;
+
+    if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
+        *pdwEffect = KeyStateToDropEffect (dwKeyState);
+
+        if (*pdwEffect == DROPEFFECT_NONE)
+            *pdwEffect = dwEffect;
+
+        /* ... matches the desired effect ? */
+        if (dwEffect & *pdwEffect) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+HRESULT WINAPI CDesktopFolder::DragEnter(IDataObject *pDataObject,
+                                    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    FORMATETC fmt;
+
+    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+    fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ?
+                 TRUE : FALSE;
+
+    QueryDrop(dwKeyState, pdwEffect);
+    return S_OK;
+}
+
+HRESULT WINAPI CDesktopFolder::DragOver(DWORD dwKeyState, POINTL pt,
+                                   DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+
+    if (!pdwEffect)
+        return E_INVALIDARG;
+
+    QueryDrop(dwKeyState, pdwEffect);
+
+    return S_OK;
+}
+
+HRESULT WINAPI CDesktopFolder::DragLeave()
+{
+    TRACE("(%p)\n", this);
+    fAcceptFmt = FALSE;
+    return S_OK;
+}
+
+HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
+                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p) object dropped desktop\n", this);
+
+    STGMEDIUM medium;
+    FORMATETC formatetc;
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    HRESULT hr = pDataObject->GetData(&formatetc, &medium);
+    if (FAILED(hr))
+        return hr;
+
+    /* lock the handle */
+    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+    if (!lpcida)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* convert the clipboard data into pidl (pointer to id list) */
+    LPITEMIDLIST pidl;
+    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+    if (!apidl)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* We only want to really move files around if they don't already 
+       come from the desktop, or we're linking or copying */
+    if ((!_ILIsDesktop(pidl)) || (dwKeyState & MK_CONTROL))
+    {
+        LPITEMIDLIST pidl = NULL;
+
+        WCHAR szPath[MAX_PATH];
+        LPWSTR pathPtr;
+
+        /* build a complete path to create a simple pidl */
+        lstrcpynW(szPath, sPathTarget, MAX_PATH);
+        pathPtr = PathAddBackslashW(szPath);
+        //hr = _ILCreateFromPathW(szPath, &pidl);
+        hr = this->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
+
+        if (SUCCEEDED(hr))
+        {
+            IDropTarget *pDT; 
+            hr = this->BindToObject(pidl, NULL, IID_IDropTarget, (LPVOID*)&pDT);
+            CoTaskMemFree(pidl);
+            if (SUCCEEDED(hr))
+                SHSimulateDrop(pDT, pDataObject, dwKeyState, NULL, pdwEffect);
+            else
+                ERR("Error Binding");
+        }
+        else
+            ERR("Error creating from %s\n", debugstr_w(szPath));
+    }
+
+    /* Todo, rewrite the registry such that the icons are well placed. 
+    Blocked by no bags implementation. */
+
+    SHFree(pidl);
+    _ILFreeaPidl(apidl, lpcida->cidl);
+    ReleaseStgMedium(&medium);
+    return hr;
 }

@@ -937,7 +937,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     }
 
     if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
-        RegisterDragDrop(m_hWnd, pdt);
+    {
+        if (FAILED(RegisterDragDrop(m_hWnd, pdt)))
+            ERR("Registering Drag Drop Failed");
+    }
 
     /* register for receiving notifications */
     m_pSFParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
@@ -1688,6 +1691,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     {
                         DWORD dwEffect2;
                         DoDragDrop(pda, pds, dwEffect, &dwEffect2);
+                        if ((dwEffect2 & DROPEFFECT_MOVE) == DROPEFFECT_MOVE)
+                            this->Refresh();
                     }
                     pda->Release();
                 }
@@ -2482,10 +2487,11 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
     {
         m_pCurDropTarget->Drop(pDataObject, grfKeyState, pt, pdwEffect);
         m_pCurDropTarget.Release();
+
+        this->Refresh();
     }
 
-    m_pCurDataObject.Release();
-    m_iDragOverItem = 0;
+    m_pCurDataObject.Release();    m_iDragOverItem = 0;
 
     return S_OK;
 }

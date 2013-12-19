@@ -58,8 +58,7 @@ class CDefaultContextMenu :
         UINT BuildBackgroundContextMenu(HMENU hMenu, UINT iIdCmdFirst, UINT iIdCmdLast, UINT uFlags);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT IndexMenu);
         UINT BuildShellItemContextMenu(HMENU hMenu, UINT iIdCmdFirst, UINT iIdCmdLast, UINT uFlags);
-        HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoPasteLink(LPCMINVOKECOMMANDINFO lpcmi);
+        HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink);
         HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoDelete(LPCMINVOKECOMMANDINFO lpcmi);
@@ -947,7 +946,7 @@ NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
 
 HRESULT
 CDefaultContextMenu::DoPaste(
-    LPCMINVOKECOMMANDINFO lpcmi)
+    LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
 {
     HRESULT hr;
 
@@ -956,56 +955,12 @@ CDefaultContextMenu::DoPaste(
     if (FAILED(hr))
         return hr;
 
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pda->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return hr;
-
-    /* lock the handle */
-    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-    if (!lpcida)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* convert the data into pidl */
-    LPITEMIDLIST pidl;
-    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-    if (!apidl)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
     CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IShellFolder> psfFrom = NULL;
     CComPtr<IShellFolder> psfTarget = NULL;
-    CComPtr<ISFHelper> psfhlpdst;
-    CComPtr<ISFHelper> psfhlpsrc;
-    bool bCopy = TRUE;
 
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(hr))
-        goto cleanup;
-
-    /* Find source folder */
-    if (_ILIsDesktop(pidl))
-    {
-        /* use desktop shellfolder */
-        psfFrom = psfDesktop;
-    }
-    else 
-    {
-        hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
-        if (FAILED(hr)) 
-        {
-            ERR("no IShellFolder\n");
-            goto cleanup;
-        }
-    }
+        return hr;
 
     /* Find target folder */
     if (m_Dcm.cidl)
@@ -1043,267 +998,49 @@ CDefaultContextMenu::DoPaste(
     if (FAILED(hr))
     {
         ERR("no IShellFolder\n");
-        goto cleanup;
-    }
-
-    /* get source and destination shellfolder */
-    hr = psfTarget->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlpdst));
-    if (FAILED(hr))
-    {
-        ERR("no IID_ISFHelper for destination\n");
-        goto cleanup;
-    }
-
-    hr = psfFrom->QueryInterface(IID_PPV_ARG(ISFHelper, &psfhlpsrc));
-    if (FAILED(hr))
-    {
-        ERR("no IID_ISFHelper for source\n");
-        goto cleanup;
+        return hr;
     }
 
     FORMATETC formatetc2;
     STGMEDIUM medium2;
     InitFormatEtc(formatetc2, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
+    
+    DWORD dwKey= 0;
 
-    if SUCCEEDED(pda->GetData(&formatetc2, &medium2))
+    if (SUCCEEDED(pda->GetData(&formatetc2, &medium2)))
     {
         DWORD * pdwFlag = (DWORD*)GlobalLock(medium2.hGlobal);
         if (pdwFlag)
         {
-            TRACE("Current drop effect flag %i\n", *pdwFlag);
-            if (*pdwFlag & DROPEFFECT_MOVE)
-                bCopy = FALSE;
+            if (*pdwFlag == DROPEFFECT_COPY)
+                dwKey = MK_CONTROL;
+            else
+                dwKey = MK_SHIFT;
+        }
+        else {
+            ERR("No drop effect obtained");
         }
         GlobalUnlock(medium2.hGlobal);
     }
 
-    hr = psfhlpdst->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
+    if (bLink)
+    {
+        dwKey = MK_CONTROL|MK_SHIFT;
+    }
 
+    IDropTarget *pdrop;
+    hr = psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pdrop));
+    if (FAILED(hr))
+    {
+        ERR("Error getting IDropTarget interface\n");
+        return hr;
+    }
+
+    SHSimulateDrop(pdrop, pda, dwKey, NULL, NULL);
     NotifyShellViewWindow(lpcmi, TRUE);
-
-cleanup:
-    SHFree(pidl);
-    _ILFreeaPidl(apidl, lpcida->cidl);
-    ReleaseStgMedium(&medium);
 
     TRACE("CP result %x\n", hr);
     return S_OK;
-}
-
-BOOL
-GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
-{
-    WCHAR wszLink[40];
-
-    if (!bShortcut)
-    {
-        if (!LoadStringW(shell32_hInstance, IDS_LNK_FILE, wszLink, _countof(wszLink)))
-            wszLink[0] = L'\0';
-    }
-
-    if (!bShortcut)
-        swprintf(pwszTarget, L"%s%s%s", wszLink, pwszBasePath, pwszExt);
-    else
-        swprintf(pwszTarget, L"%s%s", pwszBasePath, pwszExt);
-
-    for (UINT i = 2; PathFileExistsW(pwszTarget); ++i)
-    {
-        if (!bShortcut)
-            swprintf(pwszTarget, L"%s%s (%u)%s", wszLink, pwszBasePath, i, pwszExt);
-        else
-            swprintf(pwszTarget, L"%s (%u)%s", pwszBasePath, i, pwszExt);
-    }
-
-    return TRUE;
-}
-
-HRESULT
-CDefaultContextMenu::DoPasteLink(
-    LPCMINVOKECOMMANDINFO lpcmi)
-{
-    HRESULT hr;
-    WCHAR wszPath[MAX_PATH];
-    WCHAR wszTarget[MAX_PATH];
-
-    CComPtr<IDataObject> pda;
-    hr = OleGetClipboard(&pda);
-    if (FAILED(hr))
-        return hr;
-
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pda->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return hr;
-
-    /* lock the handle */
-    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-    if (!lpcida)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* convert the clipboard data into pidl (pointer to id list) */
-    LPITEMIDLIST pidl;
-    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-    if (!apidl)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IPersistFolder2> ppf2 = NULL;
-    CComPtr<IShellFolder> psfFrom = NULL;
-
-    /* Grab the desktop shell folder */
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
-    {
-        ERR("SHGetDesktopFolder failed\n");
-        goto cleanup;
-    }
-
-    /* Find source folder, this is where the clipboard data was copied from */
-    if (_ILIsDesktop(pidl))
-    {
-        /* use desktop shell folder */
-        psfFrom = psfDesktop;
-    }
-    else 
-    {
-        hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom);
-        if (FAILED(hr))
-        {
-            ERR("no IShellFolder\n");
-            goto cleanup;
-        }
-    }
-    
-    /* Find the target path, where we will be saving the new links (where the user right clicked) */
-    STRRET strFile;
-    WCHAR wszTargetPath[MAX_PATH];
-
-    LPITEMIDLIST targetpidl;
-
-    hr = m_Dcm.psf->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
-    if (SUCCEEDED(hr))
-    {
-        hr = ppf2->GetCurFolder(&targetpidl);
-        if (SUCCEEDED(hr))
-        {
-            hr = psfDesktop->GetDisplayNameOf(targetpidl, SHGDN_FORPARSING, &strFile);
-            ILFree(targetpidl);
-            if (SUCCEEDED(hr)) 
-            {
-                hr = StrRetToBufW(&strFile, NULL, wszTargetPath, _countof(wszTargetPath));
-            }
-        }
-    }
-
-    if (FAILED(hr)) 
-    {
-        ERR("Error obtaining target path");
-        goto cleanup;
-    }
-    TRACE("target path = %s", debugstr_w(wszTargetPath));
-
-    /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
-    for (UINT i = 0; i < lpcida->cidl; i++)
-    {
-        //Find out which file we're copying
-        STRRET strFile;
-        hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
-        if (FAILED(hr)) 
-        {
-            ERR("Error source obtaining path");
-            break;
-        }
-
-        hr = StrRetToBufW(&strFile, apidl[i], wszPath, _countof(wszPath));
-        if (FAILED(hr)) 
-        {
-            ERR("Error putting source path into buffer");
-            break;
-        }
-        TRACE("source path = %s", debugstr_w(wszPath));
-
-        // Creating a buffer to hold the combined path
-        WCHAR buffer_1[MAX_PATH] = L"";
-        WCHAR *lpStr1;
-        lpStr1 = buffer_1;
-
-        LPWSTR pwszFileName = PathFindFileNameW(wszPath);
-        LPWSTR pwszExt = PathFindExtensionW(wszPath);
-        LPWSTR placementPath = PathCombineW(lpStr1, wszTargetPath, pwszFileName);
-        CComPtr<IPersistFile> ppf;
-
-        //Check to see if it's already a link. 
-        if (!wcsicmp(pwszExt, L".lnk"))
-        {
-            //It's a link so, we create a new one which copies the old.
-            if(!GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE)) 
-            {
-                ERR("Error getting unique file name");
-                hr = E_FAIL;
-                break;
-            }
-            hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, ILCombine(pidl, apidl[i]), (LPVOID*)&ppf);
-            if (FAILED(hr)) {
-                ERR("Error constructing link from file");
-                break;
-            }
-
-            hr = ppf->Save(wszTarget, FALSE);
-        }
-        else
-        {
-            //It's not a link, so build a new link using the creator class and fill it in.
-            //Create a file name for the link
-            if (!GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
-            {
-                ERR("Error creating unique file name");
-                hr = E_FAIL;
-                break;
-            }
-
-            CComPtr<IShellLinkW> pLink;
-            hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
-            if (FAILED(hr)) {
-                ERR("Error instantiating IShellLinkW");
-                break;
-            }
-
-            WCHAR szDirPath[MAX_PATH], *pwszFile;
-            GetFullPathName(wszPath, MAX_PATH, szDirPath, &pwszFile);
-            if (pwszFile) pwszFile[0] = 0;
-
-            hr = pLink->SetPath(wszPath);
-            if(FAILED(hr))
-                break;
-
-            hr = pLink->SetWorkingDirectory(szDirPath);
-            if(FAILED(hr))
-                break;
-
-            hr = pLink->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-            if(FAILED(hr))
-                break;
-
-            hr = ppf->Save(wszTarget, TRUE);
-        }
-    }
-
-    NotifyShellViewWindow(lpcmi, TRUE);
-
-cleanup:
-    SHFree(pidl);
-    _ILFreeaPidl(apidl, lpcida->cidl);
-    ReleaseStgMedium(&medium);
-
-    return hr;
 }
 
 HRESULT
@@ -1318,75 +1055,60 @@ HRESULT
 CDefaultContextMenu::DoCreateLink(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    WCHAR wszTarget[MAX_PATH];
-    IPersistFile *ppf;
+    LPDATAOBJECT pDataObj;
+    IDropTarget *pDT;
     HRESULT hr;
-    STRRET strFile;
+    CComPtr<IPersistFolder2> ppf2 = NULL;
+    LPITEMIDLIST pidl;
+    CComPtr<IShellFolder> psfDesktop;
+    CComPtr<IShellFolder> psfTarget = NULL;
 
-    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
-    if (FAILED(hr))
-    {
-        ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
-        return hr;
-    }
-
-    WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strFile, m_Dcm.apidl[0], wszPath, _countof(wszPath));
+    hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(hr))
         return hr;
 
-    LPWSTR pwszExt = PathFindExtensionW(wszPath);
-
-    if (!wcsicmp(pwszExt, L".lnk"))
+    if (SUCCEEDED(hr = SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
-        if (!GetUniqueFileName(wszPath, pwszExt, wszTarget, TRUE))
-            return E_FAIL;
-
-        IPersistFolder2 *ppf2 = NULL;
-        LPITEMIDLIST pidl;
         hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
         if (SUCCEEDED(hr))
         {
             hr = ppf2->GetCurFolder(&pidl);
-            ppf2->Release();
             if (SUCCEEDED(hr))
-                hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, ILCombine(pidl, m_Dcm.apidl[0]), (LPVOID*)&ppf);
-        }
-        if (FAILED(hr))
-            return hr;
-
-        hr = ppf->Save(wszTarget, FALSE);
-        ppf->Release();
-        NotifyShellViewWindow(lpcmi, TRUE);
-        return hr;
-    }
-    else
-    {
-        if (!GetUniqueFileName(wszPath, L".lnk", wszTarget, TRUE))
-            return E_FAIL;
-
-        IShellLinkW *pLink;
-        hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
-        if (hr != S_OK)
-            return hr;
-
-        WCHAR szDirPath[MAX_PATH], *pwszFile;
-        GetFullPathName(wszPath, MAX_PATH, szDirPath, &pwszFile);
-        if (pwszFile) pwszFile[0] = 0;
-
-        if (SUCCEEDED(pLink->SetPath(wszPath)) &&
-            SUCCEEDED(pLink->SetWorkingDirectory(szDirPath)))
-        {
-            if (SUCCEEDED(pLink->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf))))
             {
-                hr = ppf->Save(wszTarget, TRUE);
-                ppf->Release();
+                if (_ILIsDesktop(pidl))
+                {
+                    /* use desktop shellfolder */
+                    psfTarget = psfDesktop;
+                }
+                else
+                {
+                    /* retrieve target desktop folder */
+                    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
+                }
+                TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget.p, _ILIsDesktop(pidl));
+                ILFree(pidl);
             }
         }
-        pLink->Release();
-        NotifyShellViewWindow(lpcmi, TRUE);
+
+    }
+
+    if (FAILED(hr))
+    {
+        ERR("no IShellFolder\n");
         return hr;
     }
+
+    psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pDT));
+    if (FAILED(hr))
+    {
+        ERR("no IDropTarget Interface\n");
+        return hr;
+    }
+    DWORD link = DROPEFFECT_LINK;
+    SHSimulateDrop(pDT, pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
+    NotifyShellViewWindow(lpcmi, TRUE);
+
+    return S_OK;
 }
 
 HRESULT
@@ -1843,9 +1565,9 @@ CDefaultContextMenu::InvokeCommand(
         case FCIDM_SHVIEW_REFRESH:
             return NotifyShellViewWindow(lpcmi, FALSE);
         case FCIDM_SHVIEW_INSERT:
-            return DoPaste(lpcmi);
+            return DoPaste(lpcmi, FALSE);
         case FCIDM_SHVIEW_INSERTLINK:
-            return DoPasteLink(lpcmi);
+            return DoPaste(lpcmi, TRUE);
         case FCIDM_SHVIEW_OPEN:
         case FCIDM_SHVIEW_EXPLORE:
             return DoOpenOrExplore(lpcmi);

@@ -43,11 +43,15 @@ class CFSFolder :
 
         UINT cfShellIDList;    /* clipboardformat for IDropTarget */
         BOOL fAcceptFmt;       /* flag for pending Drop */
+        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        void SF_RegisterClipFmt();
+        BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
+        DWORD _DoDropThreadProc(LPVOID lpParameter);
+
     public:
         CFSFolder();
         ~CFSFolder();
-        void SF_RegisterClipFmt();
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes);
@@ -107,6 +111,7 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
 };

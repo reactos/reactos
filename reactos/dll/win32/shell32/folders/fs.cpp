@@ -79,6 +79,7 @@ CFSFolder::CFSFolder()
     sPathTarget = NULL;
     pidlRoot = NULL;
     cfShellIDList = 0;
+    SF_RegisterClipFmt();
     fAcceptFmt = FALSE;
 }
 
@@ -498,10 +499,15 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
             SHFree (pidl);
             hr = S_OK;
         }
-        else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
-            hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
+        else if (IsEqualIID (riid, IID_IDropTarget))
+        {
+            /* only interested in attempting to bind to shell folders, not files (except exe), so if we fail, rebind to root */
+            if (cidl == 1 && SUCCEEDED(hr = this->BindToObject(apidl[0], NULL, IID_IDropTarget, (LPVOID*)&pObj)));
+            else
+                hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
+        }
         else if ((IsEqualIID(riid, IID_IShellLinkW) ||
-                    IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
+            IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
         {
             pidl = ILCombine (pidlRoot, apidl[0]);
             hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
@@ -571,9 +577,9 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 {
     /*FIXME: MSDN also mentions SHGDN_FOREDITING which is not yet handled. */
     if (!(dwFlags & SHGDN_FORPARSING) &&
-            ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
-        if (SHELL_FS_HideExtension(szPath) && szPath[0] != '.')
-            PathRemoveExtensionW(szPath);
+        ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
+            if (SHELL_FS_HideExtension(szPath) && szPath[0] != '.')
+                PathRemoveExtensionW(szPath);
     }
 }
 
@@ -808,7 +814,7 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(LPCITEMIDLIST pidl,
         {
             case 0:                /* name */
                 hr = GetDisplayNameOf (pidl,
-                                       SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                    SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case 1:                /* size */
                 _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
@@ -931,7 +937,7 @@ HRESULT WINAPI CFSFolder::AddFolder(HWND hwnd, LPCWSTR pwszName,
         LoadStringW(shell32_hInstance, IDS_CREATEFOLDER_DENIED, wszTempText,
                     _countof(wszTempText));
         LoadStringW(shell32_hInstance, IDS_CREATEFOLDER_CAPTION, wszCaption,
-                     _countof(wszCaption));
+                    _countof(wszCaption));
         swprintf(wszText, wszTempText, wszNewDir);
         MessageBoxW(hwnd, wszText, wszCaption, MB_OK | MB_ICONEXCLAMATION);
     }
@@ -1314,17 +1320,50 @@ HRESULT WINAPI CFSFolder::GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO * ppfti
     return E_NOTIMPL;
 }
 
+BOOL
+CFSFolder::GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
+{
+    WCHAR wszLink[40];
+
+    if (!bShortcut)
+    {
+        if (!LoadStringW(shell32_hInstance, IDS_LNK_FILE, wszLink, _countof(wszLink)))
+            wszLink[0] = L'\0';
+    }
+
+    if (!bShortcut)
+        swprintf(pwszTarget, L"%s%s%s", wszLink, pwszBasePath, pwszExt);
+    else
+        swprintf(pwszTarget, L"%s%s", pwszBasePath, pwszExt);
+
+    for (UINT i = 2; PathFileExistsW(pwszTarget); ++i)
+    {
+        if (!bShortcut)
+            swprintf(pwszTarget, L"%s%s (%u)%s", wszLink, pwszBasePath, i, pwszExt);
+        else
+            swprintf(pwszTarget, L"%s (%u)%s", pwszBasePath, i, pwszExt);
+    }
+
+    return TRUE;
+}
+
 /****************************************************************************
- * ISFDropTarget implementation
+ * IDropTarget implementation
  */
 BOOL CFSFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 {
-    DWORD dwEffect = *pdwEffect;
+    /* TODO Windows does different drop effects if dragging across drives. 
+    i.e., it will copy instead of move if the directories are on different disks. */
+
+    DWORD dwEffect = DROPEFFECT_MOVE;
 
     *pdwEffect = DROPEFFECT_NONE;
 
     if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
         *pdwEffect = KeyStateToDropEffect (dwKeyState);
+
+        if (*pdwEffect == DROPEFFECT_NONE)
+            *pdwEffect = dwEffect;
 
         /* ... matches the desired effect ? */
         if (dwEffect & *pdwEffect) {
@@ -1338,16 +1377,18 @@ HRESULT WINAPI CFSFolder::DragEnter(IDataObject *pDataObject,
                                     DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     FORMATETC fmt;
-
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
-
     InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
 
-    fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ?
-                 TRUE : FALSE;
+    fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ? TRUE : FALSE;
+
+    if (!fAcceptFmt) 
+    {
+        InitFormatEtc(fmt, RegisterClipboardFormatW(CFSTR_FILEDESCRIPTOR), TYMED_HGLOBAL);
+        fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ? TRUE : FALSE;
+    }
 
     QueryDrop(dwKeyState, pdwEffect);
-
     return S_OK;
 }
 
@@ -1376,7 +1417,219 @@ HRESULT WINAPI CFSFolder::DragLeave()
 HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
                                DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    FIXME("(%p) object dropped\n", this);
+    TRACE("(%p) object dropped, effect %u\n", this, *pdwEffect);
 
-    return E_NOTIMPL;
+    HRESULT hr;
+    bool bCopy = TRUE;
+    bool bLinking = FALSE;
+
+    STGMEDIUM medium;
+    FORMATETC formatetc;
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    hr = pDataObject->GetData(&formatetc, &medium);
+    if (FAILED(hr))
+        return hr;
+
+    /* lock the handle */
+    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+    if (!lpcida)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* convert the data into pidl */
+    LPITEMIDLIST pidl;
+    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+    if (!apidl)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* Figure out what drop operation we're doing */
+    if (pdwEffect)
+    {
+        TRACE("Current drop effect flag %i\n", *pdwEffect);
+        if (*pdwEffect & DROPEFFECT_MOVE)
+            bCopy = FALSE;
+        if (*pdwEffect & DROPEFFECT_LINK)
+            bLinking = TRUE;
+    }
+
+    CComPtr<IShellFolder> psfDesktop;
+    CComPtr<IShellFolder> psfFrom = NULL;
+    CComPtr<IShellFolder> psfTarget = NULL;
+
+    hr = this->QueryInterface(IID_PPV_ARG(IShellFolder, &psfTarget));
+    if (FAILED(hr))
+    {
+        ERR("psfTarget setting failed\n");
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* Grab the desktop shell folder */
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+    {
+        ERR("SHGetDesktopFolder failed\n");
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* Find source folder, this is where the clipboard data was copied from */
+    if (_ILIsDesktop(pidl))
+    {
+        /* use desktop shell folder */
+        psfFrom = psfDesktop;
+    }
+    else 
+    {
+        hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom);
+        if (FAILED(hr))
+        {
+            ERR("no IShellFolder\n");
+            SHFree(pidl);
+            _ILFreeaPidl(apidl, lpcida->cidl);
+            ReleaseStgMedium(&medium);
+            return E_FAIL;
+        }
+    }
+
+    if (bLinking)
+    {
+        CComPtr<IPersistFolder2> ppf2 = NULL;
+        STRRET strFile;
+        WCHAR wszTargetPath[MAX_PATH];
+        LPITEMIDLIST targetpidl;
+        WCHAR wszPath[MAX_PATH];
+        WCHAR wszTarget[MAX_PATH];
+
+        hr = this->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
+        if (SUCCEEDED(hr))
+        {
+            hr = ppf2->GetCurFolder(&targetpidl);
+            if (SUCCEEDED(hr))
+            {
+                hr = psfDesktop->GetDisplayNameOf(targetpidl, SHGDN_FORPARSING, &strFile);
+                ILFree(targetpidl);
+                if (SUCCEEDED(hr)) 
+                {
+                    hr = StrRetToBufW(&strFile, NULL, wszTargetPath, _countof(wszTargetPath));
+                }
+            }
+        }
+
+        if (FAILED(hr)) 
+        {
+            ERR("Error obtaining target path");
+            
+        }
+        TRACE("target path = %s", debugstr_w(wszTargetPath));
+
+        /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
+        for (UINT i = 0; i < lpcida->cidl; i++)
+        {
+            //Find out which file we're copying
+            STRRET strFile;
+            hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
+            if (FAILED(hr)) 
+            {
+                ERR("Error source obtaining path");
+                break;
+            }
+
+            hr = StrRetToBufW(&strFile, apidl[i], wszPath, _countof(wszPath));
+            if (FAILED(hr)) 
+            {
+                ERR("Error putting source path into buffer");
+                break;
+            }
+            TRACE("source path = %s", debugstr_w(wszPath));
+
+            // Creating a buffer to hold the combined path
+            WCHAR buffer_1[MAX_PATH] = L"";
+            WCHAR *lpStr1;
+            lpStr1 = buffer_1;
+
+            LPWSTR pwszFileName = PathFindFileNameW(wszPath);
+            LPWSTR pwszExt = PathFindExtensionW(wszPath);
+            LPWSTR placementPath = PathCombineW(lpStr1, wszTargetPath, pwszFileName);
+            CComPtr<IPersistFile> ppf;
+
+            //Check to see if it's already a link. 
+            if (!wcsicmp(pwszExt, L".lnk"))
+            {
+                //It's a link so, we create a new one which copies the old.
+                if(!GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE)) 
+                {
+                    ERR("Error getting unique file name");
+                    hr = E_FAIL;
+                    break;
+                }
+                hr = IShellLink_ConstructFromFile(NULL, IID_IPersistFile, ILCombine(pidl, apidl[i]), (LPVOID*)&ppf);
+                if (FAILED(hr)) {
+                    ERR("Error constructing link from file");
+                    break;
+                }
+
+                hr = ppf->Save(wszTarget, FALSE);
+            }
+            else
+            {
+                //It's not a link, so build a new link using the creator class and fill it in.
+                //Create a file name for the link
+                if (!GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
+                {
+                    ERR("Error creating unique file name");
+                    hr = E_FAIL;
+                    break;
+                }
+
+                CComPtr<IShellLinkW> pLink;
+                hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
+                if (FAILED(hr)) {
+                    ERR("Error instantiating IShellLinkW");
+                    break;
+                }
+
+                WCHAR szDirPath[MAX_PATH], *pwszFile;
+                GetFullPathName(wszPath, MAX_PATH, szDirPath, &pwszFile);
+                if (pwszFile) pwszFile[0] = 0;
+
+                hr = pLink->SetPath(wszPath);
+                if(FAILED(hr))
+                    break;
+
+                hr = pLink->SetWorkingDirectory(szDirPath);
+                if(FAILED(hr))
+                    break;
+
+                hr = pLink->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
+                if(FAILED(hr))
+                    break;
+
+                hr = ppf->Save(wszTarget, TRUE);
+            }
+        }
+    }
+    else 
+    {
+        hr = this->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
+    }
+
+    SHFree(pidl);
+    _ILFreeaPidl(apidl, lpcida->cidl);
+    ReleaseStgMedium(&medium);
+
+    return hr;
+}
+
+DWORD CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
+    return 0;
 }
