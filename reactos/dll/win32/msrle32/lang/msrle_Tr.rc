@@ -1,7 +1,7 @@
 /*
  * Turkish resource file for MS-RLE
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyrights: 2006 - Fatih AÅŸÄ±cÄ± (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine MS-RLE vidyo çözücü"
-	IDS_ABOUT       "Wine MS-RLE vidyo çözücü\nTelif Hakký 2002 Michael Günnewig"
+	IDS_NAME	"ReactOS MS-RLE"
+	IDS_DESCRIPTION	"ReactOS MS-RLE Vidyo Kodeki"
+	IDS_ABOUT       "ReactOS MS-RLE Vidyo Kodeki\nTelif HakkÄ±: 2002 - Michael GÃ¼nnewig"
 }

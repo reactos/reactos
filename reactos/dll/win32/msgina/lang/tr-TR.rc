@@ -90,7 +90,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Olarak Oturum Aç:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT
     LTEXT "Eski Şifre:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
@@ -106,7 +106,7 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Hoşgeldiniz!"
     IDS_LOCKEDSAS "Bu bilgisayar şimdilik kilitli."
-    IDS_PRESSCTRLALTDELETE "Oturum açmak için Denetim, Seçenek ve Silme düğmelerine basınız."
+    IDS_PRESSCTRLALTDELETE "Oturum açmak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız."
     IDS_ASKFORUSER "Kullanıcı Adı: "
     IDS_ASKFORPASSWORD "Şifre: "
     IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve tüm kaydedilmemiş bilgiler yitirilecek. Sürdürülsün mü?"

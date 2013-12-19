@@ -1,7 +1,7 @@
 /*
- * Turkish Resources
+ * cryptdlg Turkish resource
  *
- * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,12 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msvidc32_private.h"
+#include "cryptres.h"
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "MS-CRAM"
-    IDS_DESCRIPTION "Wine Vidyo 1 Vidyo Kodeki"
+    IDS_CERT_POLICY "Onay Belgesi Poliçesi"
+    IDS_POLICY_ID "Poliçe Tanımlayıcısı: "
+    IDS_POLICY_QUALIFIER_INFO "Poliçe Niteleyici Bilgisi"
+    IDS_POLICY_QUALIFIER_ID "Poliçe Niteleyici Kimliği="
+    IDS_CPS "CPS" /* Onay Belgesi Uygulama Esasları */
+    IDS_USER_NOTICE "Kullanıcı Bildirimi"
+    IDS_QUALIFIER "Niteleyici"
+    IDS_NOTICE_REF "Bildirim Kaynağı"
+    IDS_ORGANIZATION "Kurum="
+    IDS_NOTICE_NUM "Bildirim Numarası="
+    IDS_NOTICE_TEXT "Bildirim Metni="
 }
