@@ -9,8 +9,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * Uncomment to enable strict verification of cluster/offset pair

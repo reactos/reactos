@@ -10,12 +10,14 @@
 
 /*  -------------------------------------------------------  INCLUDES  */
 
+#include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
+
 #ifdef __GNUC__
 #include <wctype.h> /* towlower prototype */
 #endif
-
-#define NDEBUG
-#include "vfat.h"
 
 /*  --------------------------------------------------------  DEFINES  */
 
