@@ -176,6 +176,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #ifdef LANGUAGE_RU_RU
     #include "explorer-ru.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "explorer-sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "explorer-uk.rc"
 #endif
