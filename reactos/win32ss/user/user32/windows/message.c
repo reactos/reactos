@@ -565,6 +565,9 @@ MsgiKMToUMReply(PMSG KMMsg, PMSG UMMsg, LRESULT *Result)
   return TRUE;
 }
 
+//
+//  Ansi to Unicode -> callout
+//
 static BOOL FASTCALL
 MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
@@ -579,7 +582,8 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
       {
         LPWSTR Buffer;
         if (!AnsiMsg->lParam) break;
-        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam * sizeof(WCHAR));
+        Buffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, AnsiMsg->wParam * sizeof(WCHAR));
+        //ERR("WM_GETTEXT A2U Size %d\n",AnsiMsg->wParam);
         if (!Buffer) return FALSE;
         UnicodeMsg->lParam = (LPARAM)Buffer;
         break;
@@ -587,32 +591,32 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
 
     case LB_GETTEXT:
       {
-        DWORD Size;
+        DWORD Size = 1024 * sizeof(WCHAR);
         if (!AnsiMsg->lParam || !listbox_has_strings( AnsiMsg->hwnd )) break;
-        Size = SendMessageW( AnsiMsg->hwnd, LB_GETTEXTLEN, AnsiMsg->wParam, 0 );
+        /*Size = SendMessageW( AnsiMsg->hwnd, LB_GETTEXTLEN, AnsiMsg->wParam, 0 );
         if (Size == LB_ERR)
         {
            ERR("LB_GETTEXT LB_ERR\n");
            Size = sizeof(ULONG_PTR);
         }
-        Size = (Size + 1) * sizeof(WCHAR);
-        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, Size);
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
         if (!UnicodeMsg->lParam) return FALSE;
         break;
       }
 
     case CB_GETLBTEXT:
       {
-        DWORD Size;
+        DWORD Size = 1024 * sizeof(WCHAR);
         if (!AnsiMsg->lParam || !combobox_has_strings( AnsiMsg->hwnd )) break;
-        Size = SendMessageW( AnsiMsg->hwnd, CB_GETLBTEXTLEN, AnsiMsg->wParam, 0 );
+        /*Size = SendMessageW( AnsiMsg->hwnd, CB_GETLBTEXTLEN, AnsiMsg->wParam, 0 );
         if (Size == LB_ERR)
         {
            ERR("CB_GETTEXT LB_ERR\n");
            Size = sizeof(ULONG_PTR);
         }
-        Size = (Size + 1) * sizeof(WCHAR);
-        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, Size);
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        UnicodeMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
         if (!UnicodeMsg->lParam) return FALSE;
         break;
       }
@@ -747,6 +751,10 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case WM_IME_CHAR:
       UnicodeMsg->wParam = map_wparam_AtoW( AnsiMsg->message, AnsiMsg->wParam );
       break;
+    case EM_GETLINE:
+      ERR("FIXME EM_GETLINE A2U\n");
+      break;
+
     }
 
   return TRUE;
@@ -861,7 +869,7 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 }
 
 /*
- *    Unicode Result to Ansi Result
+ *    callout return -> Unicode Result to Ansi Result
  */
 static BOOL FASTCALL
 MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
@@ -877,9 +885,10 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
         if (UnicodeMsg->wParam)
         {
            DWORD len = 0;
-           if (*Result) RtlUnicodeToMultiByteN( AnsiBuffer, UnicodeMsg->wParam - 1, &len, Buffer, strlenW(Buffer) * sizeof(WCHAR) );
+           if (*Result) RtlUnicodeToMultiByteN( AnsiBuffer, UnicodeMsg->wParam - 1, &len, Buffer, strlenW(Buffer) * sizeof(WCHAR));
            AnsiBuffer[len] = 0;
            *Result = len;
+           //ERR("WM_GETTEXT U2A Result %d Size %d\n",*Result,AnsiMsg->wParam);
         }
         break;
       }
@@ -912,6 +921,9 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
   return TRUE;
 }
 
+//
+//  Unicode to Ansi callout ->
+//
 static BOOL FASTCALL
 MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
 {
@@ -979,40 +991,40 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
         {
           if (!UnicodeMsg->lParam) break;
           /* Ansi string might contain MBCS chars so we need 2 * the number of chars */
-          AnsiMsg->wParam = UnicodeMsg->wParam * 2;
-          AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam);
+          AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, UnicodeMsg->wParam * 2);
+          //ERR("WM_GETTEXT U2A Size %d\n",AnsiMsg->wParam);
           if (!AnsiMsg->lParam) return FALSE;
           break;
         }
 
     case LB_GETTEXT:
       {
-        DWORD Size;
+        DWORD Size = 1024;
         if (!UnicodeMsg->lParam || !listbox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageA( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
+        /*Size = SendMessageA( UnicodeMsg->hwnd, LB_GETTEXTLEN, UnicodeMsg->wParam, 0 );
         if (Size == LB_ERR)
         {
            ERR("LB_GETTEXT LB_ERR\n");
            Size = sizeof(ULONG_PTR);
         }
-        Size = (Size + 1) * sizeof(WCHAR);
-        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, Size);
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
         if (!AnsiMsg->lParam) return FALSE;
         break;
       }
 
     case CB_GETLBTEXT:
       {
-        DWORD Size;
+        DWORD Size = 1024;
         if (!UnicodeMsg->lParam || !combobox_has_strings( UnicodeMsg->hwnd )) break;
-        Size = SendMessageA( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
+        /*Size = SendMessageA( UnicodeMsg->hwnd, CB_GETLBTEXTLEN, UnicodeMsg->wParam, 0 );
         if (Size == LB_ERR)
         {
            ERR("CB_GETTEXT LB_ERR\n");
            Size = sizeof(ULONG_PTR);
         }
-        Size = (Size + 1) * sizeof(WCHAR);
-        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, Size);
+        Size = (Size + 1) * sizeof(WCHAR);*/
+        AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
         if (!AnsiMsg->lParam) return FALSE;
         break;
       }
@@ -1168,6 +1180,9 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case WM_IME_CHAR:
           AnsiMsg->wParam = map_wparam_char_WtoA(UnicodeMsg->wParam,2);
           break;
+      case EM_GETLINE:
+          ERR("FIXME EM_GETLINE U2A\n");
+          break;
     }
   return TRUE;
 }
@@ -1273,7 +1288,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
 }
 
 /*
- *    Ansi Result to Unicode Result
+ *    callout return -> Ansi Result to Unicode Result
  */
 static BOOL FASTCALL
 MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
@@ -1286,13 +1301,14 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
     case WM_GETTEXT:
     case WM_ASKCBFORMATNAME:
       {
-        DWORD len = AnsiMsg->wParam * 2;
+        DWORD len = AnsiMsg->wParam;// * 2;
         if (len)
         { 
            if (*Result)
            {
               RtlMultiByteToUnicodeN( UBuffer, AnsiMsg->wParam*sizeof(WCHAR), &len, Buffer, strlen(Buffer)+1 );
               *Result = len/sizeof(WCHAR) - 1;  /* do not count terminating null */
+              //ERR("WM_GETTEXT U2A Result %d Size %d\n",*Result,AnsiMsg->wParam);
            }
            UBuffer[*Result] = 0;
         }
@@ -2377,7 +2393,8 @@ SendMessageW(HWND Wnd,
 
       if ( Window != NULL &&
            Window->head.pti == ti &&
-          !IsThreadHooked(GetWin32ClientInfo()) && // This is why HOOKs are bad! They slow the system down!
+          !ISITHOOKED(WH_CALLWNDPROC) && 	 
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
@@ -2440,7 +2457,8 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
       if ( Window != NULL &&
            Window->head.pti == ti &&
-          !IsThreadHooked(GetWin32ClientInfo()) && // This is why HOOKs are bad! They slow the system down!
+          !ISITHOOKED(WH_CALLWNDPROC) && 	 
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
