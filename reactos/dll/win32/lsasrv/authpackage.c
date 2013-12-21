@@ -833,12 +833,14 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     TokenHandle = NULL;
 
+#if 0
     Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);
         goto done;
     }
+#endif
 
 done:
     if (!NT_SUCCESS(Status))
