@@ -21,11 +21,8 @@
  * - Implements IParseDisplayName interface which creates a moniker
  *   from a string in a special format
  */
+
 #include "devenum_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
 static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName *iface,
         REFIID riid, void **ppv)

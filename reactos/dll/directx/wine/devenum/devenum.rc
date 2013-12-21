@@ -20,10 +20,8 @@
 
 #pragma code_page(65001)
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-#include "devenum_private.h"
+#include <windef.h>
+#include "resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
