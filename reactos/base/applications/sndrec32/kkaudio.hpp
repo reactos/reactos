@@ -10,4 +10,4 @@
 #include "audio_producer.hpp"
 #include "audio_receiver.hpp"
 
-#endif //ifdef _KKAUDIO__H_
+#endif /* _AUDIO__H_ */

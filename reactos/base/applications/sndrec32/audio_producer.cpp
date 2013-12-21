@@ -7,4 +7,3 @@
 
 #include "stdafx.h"
 #include "audio_producer.hpp"
-
