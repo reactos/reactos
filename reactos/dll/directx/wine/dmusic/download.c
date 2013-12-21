@@ -20,8 +20,6 @@
 
 #include "dmusic_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
-
 static inline IDirectMusicDownloadImpl* impl_from_IDirectMusicDownload(IDirectMusicDownload *iface)
 {
     return CONTAINING_RECORD(iface, IDirectMusicDownloadImpl, IDirectMusicDownload_iface);

@@ -19,9 +19,6 @@
  */
 
 #include "dmusic_private.h"
-//#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
 /*
  * Near the bottom of this file are the exported DllRegisterServer and

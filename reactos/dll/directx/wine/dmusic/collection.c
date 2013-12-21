@@ -20,7 +20,6 @@
 
 #include "dmusic_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 WINE_DECLARE_DEBUG_CHANNEL(dmfile);
 
 static inline IDirectMusicCollectionImpl *impl_from_IDirectMusicCollection(IDirectMusicCollection *iface)
