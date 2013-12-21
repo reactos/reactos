@@ -407,7 +407,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
 
     if (OperandSize)
     {
-        /* Read the value */
+        /* Return the limit */
         if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, Limit))
         {
             /* Exception occurred */
@@ -416,7 +416,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
     }
     else
     {
-        /* Read the value */
+        /* Return the limit */
         if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(Limit)))
         {
             /* Exception occurred */
