@@ -32,9 +32,6 @@
 #include "regfs.h"
 #include "fatfs.h"
 
-#include "../resource.h"
-
-
 FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE etype)
  :	super(hmdiclient),
 	_etype(etype)

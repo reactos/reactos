@@ -30,8 +30,6 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
 #include "searchprogram.h"
 
 

@@ -28,9 +28,6 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
-
 enum IMAGE {
 	IMG_NONE=-1,	IMG_FILE=0, 		IMG_DOCUMENT,	IMG_EXECUTABLE,
 	IMG_FOLDER, 	IMG_OPEN_FOLDER,	IMG_FOLDER_PLUS,IMG_OPEN_PLUS,	IMG_OPEN_MINUS,
