@@ -4,8 +4,6 @@
 #define INITGUID
 
 #include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>

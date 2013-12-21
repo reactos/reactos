@@ -10,6 +10,9 @@
 
 #include "usbehci.h"
 
+#define NDEBUG
+#include <debug.h>
+
 typedef VOID __stdcall HD_INIT_CALLBACK(IN PVOID CallBackContext);
 
 BOOLEAN

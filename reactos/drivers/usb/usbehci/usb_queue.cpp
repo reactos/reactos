@@ -10,6 +10,9 @@
 
 #include "usbehci.h"
 
+#define NDEBUG
+#include <debug.h>
+
 class CUSBQueue : public IEHCIQueue
 {
 public:
