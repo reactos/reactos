@@ -40,11 +40,11 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeGroup0F00,
     Fast486OpcodeGroup0F01,
     NULL, // TODO: OPCODE 0x02 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x03 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x04 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x05 NOT IMPLEMENTED
+    Fast486ExtOpcodeLsl,
+    NULL, // Invalid
+    NULL, // Invalid
     Fast486ExtOpcodeClts,
-    NULL, // TODO: OPCODE 0x07 NOT IMPLEMENTED
+    NULL, // Invalid
     NULL, // TODO: OPCODE 0x08 NOT IMPLEMENTED
     NULL, // TODO: OPCODE 0x09 NOT IMPLEMENTED
     NULL, // Invalid
@@ -211,7 +211,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeBts,
     Fast486ExtOpcodeShrd,
     Fast486ExtOpcodeShrd,
-    NULL, // TODO: OPCODE 0xAE NOT IMPLEMENTED
+    NULL, // Invalid
     Fast486ExtOpcodeImul,
     Fast486ExtOpcodeCmpXchgByte,
     Fast486ExtOpcodeCmpXchg,
@@ -296,6 +296,136 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
+{
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+    USHORT Selector;
+    ULONG Limit;
+    FAST486_GDT_ENTRY GdtEntry;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+        || State->Flags.Vm)
+    {
+        /* Not recognized */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    NO_LOCK_PREFIX();
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Value;
+
+        /* Read the value */
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        Selector = LOWORD(Value);
+    }
+    else
+    {
+        /* Read the value */
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    if (!(Selector & SEGMENT_TABLE_INDICATOR))
+    {
+        /* Check if the GDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        {
+            State->Flags.Zf = FALSE;
+            return TRUE;
+        }
+
+        /* Read the GDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Gdtr.Address
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     &GdtEntry,
+                                     sizeof(GdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Check if the LDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
+        {
+            State->Flags.Zf = FALSE;
+            return TRUE;
+        }
+
+        /* Read the LDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Ldtr.Base
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     &GdtEntry,
+                                     sizeof(GdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    /* Privilege check */
+    if (((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl))
+        || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+    {
+        State->Flags.Zf = FALSE;
+        return TRUE;
+    }
+
+    /* Calculate the limit */
+    Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
+    if (GdtEntry.Granularity) Limit <<= 12;
+
+    /* Set ZF */
+    State->Flags.Zf = TRUE;
+
+    if (OperandSize)
+    {
+        /* Read the value */
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, Limit))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Read the value */
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(Limit)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeClts)
 {
