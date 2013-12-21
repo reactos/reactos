@@ -25,6 +25,9 @@
 #ifndef __WINE_WINED3D_PRIVATE_H
 #define __WINE_WINED3D_PRIVATE_H
 
+#include <config.h>
+#include <wine/port.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -35,14 +38,18 @@
 #define WINE_GLAPI
 #endif
 
+#ifdef HAVE_FLOAT_H
+# include <float.h>
+#endif
+
 #include <stdarg.h>
+#include <stdio.h>
 #include <math.h>
-//#include <limits.h>
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
 #include <windef.h>
-//#include "winbase.h"
+#include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
