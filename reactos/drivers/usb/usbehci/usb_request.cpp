@@ -8,10 +8,7 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
-
 #include "usbehci.h"
-#include "hardware.h"
 
 class CUSBRequest : public IEHCIRequest
 {

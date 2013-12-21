@@ -9,7 +9,6 @@
  */
 
 #include "usbehci.h"
-#include "hardware.h"
 
 class CUSBQueue : public IEHCIQueue
 {

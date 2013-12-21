@@ -1,6 +1,8 @@
 #ifndef USBEHCI_H__
 #define USBEHCI_H__
 
+#define INITGUID
+
 #include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
@@ -31,6 +33,7 @@ extern "C"
 #include <dmusicks.h>
 #include <kcom.h>
 
+#include "hardware.h"
 #include "interfaces.h"
 
 //
