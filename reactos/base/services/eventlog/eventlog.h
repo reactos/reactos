@@ -9,7 +9,6 @@
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
-#define NDEBUG
 #define WIN32_NO_STATUS
 
 #include <stdio.h>
@@ -22,7 +21,6 @@
 #include <rtlfuncs.h>
 #include <obfuncs.h>
 #include <iofuncs.h>
-#include <debug.h>
 #include <eventlogrpc_s.h>
 
 typedef struct _IO_ERROR_LPC

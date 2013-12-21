@@ -11,6 +11,9 @@
 
 #include "eventlog.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
 HANDLE ConnectPortHandle = NULL;

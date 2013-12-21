@@ -11,6 +11,9 @@
 
 #include "eventlog.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY LogFileListHead;
