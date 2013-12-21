@@ -499,6 +499,8 @@ static void Test_DWP_OwnerZOrder()
 
 START_TEST(DeferWindowPos)
 {
+    SetCursorPos(0,0);
+
     RegisterSimpleClass(DWPTestProc, L"ownertest"); 
     hWnd1 = CreateWindowExW(0, L"ownertest", L"abc", 0, 10, 20,
         200, 210, NULL, NULL, 0, NULL);
