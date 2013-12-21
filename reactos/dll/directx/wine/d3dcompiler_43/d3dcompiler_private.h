@@ -22,16 +22,21 @@
 #ifndef __WINE_D3DCOMPILER_PRIVATE_H
 #define __WINE_D3DCOMPILER_PRIVATE_H
 
-#include "wine/debug.h"
-#include "wine/list.h"
-#include "wine/rbtree.h"
+#include <config.h>
+#include <wine/port.h>
+
+#include <stdio.h>
+
+#include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/rbtree.h>
 
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 
-#include "d3dcompiler.h"
+#include <d3dcompiler.h>
 
 #include <assert.h>
 
