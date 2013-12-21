@@ -22,7 +22,8 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include "tiffiop.h"
+
+#include <precomp.h>
 
 static const char TIFFVersion[] = TIFFLIB_VERSION_STR;
 

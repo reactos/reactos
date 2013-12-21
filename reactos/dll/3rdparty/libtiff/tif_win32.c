@@ -28,9 +28,14 @@
  * TIFF Library Win32-specific Routines.  Adapted from tif_unix.c 4/5/95 by
  * Scott Wagner (wagner@itek.com), Itek Graphix, Rochester, NY USA
  */
-#include "tiffiop.h"
 
-#include <windows.h>
+#include <precomp.h>
+
+#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
 
 static tmsize_t
 _tiffReadProc(thandle_t fd, void* buf, tmsize_t size)

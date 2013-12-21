@@ -24,14 +24,14 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
+
 #ifdef PACKBITS_SUPPORT
 /*
  * TIFF Library.
  *
  * PackBits Compression Algorithm Support
  */
-#include <stdio.h>
 
 static int
 PackBitsPreEncode(TIFF* tif, uint16 s)

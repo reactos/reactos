@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
+
 #ifdef NEXT_SUPPORT
 /*
  * TIFF Library.
