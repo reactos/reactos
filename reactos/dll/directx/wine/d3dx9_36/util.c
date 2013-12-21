@@ -17,10 +17,7 @@
  *
  */
 
-#include <wine/debug.h>
 #include "d3dx9_36_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 static void la_from_rgba(const struct vec4 *rgba, struct vec4 *la)
 {

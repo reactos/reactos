@@ -18,16 +18,10 @@
  *
  */
 
-#include <wine/debug.h>
-//#include "wine/unicode.h"
 #include "d3dx9_36_private.h"
 
-#include <initguid.h>
 #include <ole2.h>
 #include <wincodec.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
-
 
 /* Wine-specific WIC GUIDs */
 DEFINE_GUID(GUID_WineContainerFormatTga, 0x0c44fda1,0xa5c5,0x4298,0x96,0x85,0x47,0x3f,0xc1,0x7c,0xd3,0x22);

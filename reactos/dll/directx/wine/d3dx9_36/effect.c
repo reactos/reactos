@@ -17,21 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-#define NONAMELESSUNION
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-#include "windef.h"
-#include "wingdi.h"
 #include "d3dx9_36_private.h"
 
 /* Constants for special INT/FLOAT conversation */
 #define INT_FLOAT_MULTI 255.0f
 #define INT_FLOAT_MULTI_INVERSE (1/INT_FLOAT_MULTI)
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 enum STATE_CLASS
 {
