@@ -549,6 +549,12 @@ LsapCopyLocalGroups(
 {
     ULONG LocalGroupsLength = 0;
     PTOKEN_GROUPS LocalGroups = NULL;
+    ULONG SidHeaderLength = 0;
+    PSID SidHeader = NULL;
+    PSID Sid;
+    ULONG SidLength;
+    ULONG CopiedSids = 0;
+    ULONG i;
     NTSTATUS Status;
 
     LocalGroupsLength = sizeof(TOKEN_GROUPS) +
@@ -570,16 +576,68 @@ LsapCopyLocalGroups(
     if (!NT_SUCCESS(Status))
         goto done;
 
+
+    SidHeaderLength  = RtlLengthRequiredSid(0);
+    SidHeader = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                SidHeaderLength);
+    if (SidHeader == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    for (i = 0; i < ClientGroupsCount; i++)
+    {
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     LocalGroups->Groups[i].Sid,
+                                     SidHeader,
+                                     SidHeaderLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        SidLength = RtlLengthSid(SidHeader);
+        TRACE("Sid %lu: Length %lu\n", i, SidLength);
+
+        Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              SidLength);
+        if (SidHeader == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     LocalGroups->Groups[i].Sid,
+                                     Sid,
+                                     SidLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+            goto done;
+        }
+
+        LocalGroups->Groups[i].Sid = Sid;
+        CopiedSids++;
+    }
+
     *TokenGroups = LocalGroups;
 
 done:
+    if (SidHeader != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SidHeader);
+
     if (!NT_SUCCESS(Status))
     {
         if (LocalGroups != NULL)
         {
-            RtlFreeHeap(RtlGetProcessHeap(),
-                        0,
-                        LocalGroups);
+            for (i = 0; i < CopiedSids; i++)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
         }
     }
 
@@ -775,6 +833,13 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     TokenHandle = NULL;
 
+    Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
 done:
     if (!NT_SUCCESS(Status))
     {
@@ -785,6 +850,9 @@ done:
     /* Free the local groups */
     if (LocalGroups != NULL)
     {
+        for (i = 0; i < LocalGroups->GroupCount; i++)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
     }
 
