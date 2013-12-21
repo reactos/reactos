@@ -23,6 +23,8 @@
 #ifndef __WINE_D3D9_PRIVATE_H
 #define __WINE_D3D9_PRIVATE_H
 
+#include <config.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -36,10 +38,11 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
-#include <wine/debug.h>
-//#include "wine/unicode.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
+
+#include <initguid.h>
 #include <d3d9.h>
 #include <wine/wined3d.h>
 

@@ -21,11 +21,7 @@
  *
  */
 
-#include <config.h>
-#include <initguid.h>
 #include "d3d9_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static int D3DPERF_event_level = 0;
 
