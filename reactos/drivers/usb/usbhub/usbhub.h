@@ -1,6 +1,7 @@
 #pragma once
 
-#define NDEBUG
+#define INITGUID
+
 #include <ntifs.h>
 #include <ntddk.h>
 #include <wdmguid.h>
@@ -8,9 +9,10 @@
 #include <usbbusif.h>
 #include <usbioctl.h>
 #include <usb.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <usbdlib.h>
-#include <debug.h>
+
 //BROKEN: #include <usbprotocoldefs.h>
 #include <pseh/pseh2.h>
 
