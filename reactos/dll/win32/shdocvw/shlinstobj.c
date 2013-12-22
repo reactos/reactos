@@ -23,22 +23,7 @@
  * some registry entries. This feature was introduced with win2k. Please
  * search for 'Shell Instance Objects' on MSDN to get more information. */
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-//#include "objbase.h"
-//#include "oleauto.h"
-
 #include "shdocvw.h"
-
-//#include "wine/unicode.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 #define CHARS_IN_GUID 39
 
