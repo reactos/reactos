@@ -20,7 +20,7 @@ add_library(cmipci SHARED
 
 target_link_libraries(cmipci stdunk libcntpr)
 
-set_module_type(cmipci wdmdriver UNICODE ENTRYPOINT 0)
+set_module_type(cmipci wdmdriver UNICODE)
 
 add_importlibs(cmipci portcls hal ntoskrnl)
 
