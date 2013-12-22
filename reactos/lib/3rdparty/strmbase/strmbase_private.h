@@ -18,6 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <config.h>
+
+#include <assert.h>
+
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
+#define COBJMACROS
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
+
+#include <dshow.h>
+
+#include <wine/list.h>
+#include <wine/strmbase.h>
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
+
 /* Quality Control */
 typedef struct QualityControlImpl {
     IQualityControl IQualityControl_iface;
