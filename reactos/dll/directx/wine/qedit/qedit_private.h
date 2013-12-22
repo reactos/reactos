@@ -40,6 +40,9 @@
 #define __WINE_DDRAW_H /* ROS HACK */
 #include <qedit.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(qedit);
+
 HRESULT MediaDet_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT SampleGrabber_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 
