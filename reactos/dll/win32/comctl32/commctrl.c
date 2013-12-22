@@ -52,26 +52,10 @@
  *   -- ICC_WIN95_CLASSES
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "comctl32.h"
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-//#include "winuser.h"
-#include <winnls.h>
-//#include "commctrl.h"
-//#include "winerror.h"
-#include <winreg.h>
 #define NO_SHLWAPI_STREAM
 #include <shlwapi.h>
-#include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 

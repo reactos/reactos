@@ -37,26 +37,10 @@
  *    - Thread-safe locking
  */
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <stdlib.h>
-//#include <string.h>
-
-#define COBJMACROS
-
-//#include "winerror.h"
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "wingdi.h"
-#include <winnls.h>
-//#include "winuser.h"
-//#include "commctrl.h"
 #include "comctl32.h"
+
+#include <objbase.h>
 #include <commoncontrols.h>
-#include <wine/debug.h>
 #include <wine/exception.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imagelist);
