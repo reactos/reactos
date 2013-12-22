@@ -14,6 +14,7 @@
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdio.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -49,16 +50,9 @@
 #include <win/conmsg.h>
 #include <win/winmsg.h>
 
-/* C Headers */
-//#include <ctype.h>
-//#include <limits.h>
-//#include <stdio.h>
-//#include <wchar.h>
-
 /* DDK Driver Headers */
 #include <ntddbeep.h>
 #include <mountmgr.h>
-//#include <mountdev.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"

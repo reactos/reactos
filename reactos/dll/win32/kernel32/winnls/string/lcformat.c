@@ -22,29 +22,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "config.h"
-//#include "wine/port.h"
+#include <k32.h>
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "winternl.h"
+#define NDEBUG
+#include <debug.h>
+DEBUG_CHANNEL(nls);
 
 #define CRITICAL_SECTION RTL_CRITICAL_SECTION
 #define CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG
 #define CALINFO_MAX_YEAR 2029
-
-#define HeapAlloc RtlAllocateHeap
-#define HeapReAlloc RtlReAllocateHeap
-#define HeapFree RtlFreeHeap
-
-WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */

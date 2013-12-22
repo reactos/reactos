@@ -21,39 +21,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "config.h"
-//#include "wine/port.h"
+#include <k32.h>
 
-#include <assert.h>
-#include <locale.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"  /* for RT_STRINGW */
-#include "winternl.h"
-#include "wine/unicode.h"
-#include "winnls.h"
-#include "winerror.h"
-#include "winver.h"
-#include "wine/debug.h"
+#define NDEBUG
+#include <debug.h>
+DEBUG_CHANNEL(nls);
 
 #include "lcformat_private.h"
+
 #define REG_SZ 1
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
-
-#define HeapAlloc RtlAllocateHeap
-#define HeapReAlloc RtlReAllocateHeap
-#define HeapFree RtlFreeHeap
-WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
 extern HMODULE kernel32_handle;
 
@@ -997,7 +976,7 @@ BOOL WINAPI SetLocaleInfoW( LCID lcid, LCTYPE lctype, LPCWSTR data )
 
     if (!(hkey = create_registry_key())) return FALSE;
     RtlInitUnicodeString( &valueW, value );
-    status = NtSetValueKey( hkey, &valueW, 0, REG_SZ, data, (strlenW(data)+1)*sizeof(WCHAR) );
+    status = NtSetValueKey( hkey, &valueW, 0, REG_SZ, (PVOID)data, (strlenW(data)+1)*sizeof(WCHAR) );
 
     if (lctype == LOCALE_SSHORTDATE || lctype == LOCALE_SLONGDATE)
     {
