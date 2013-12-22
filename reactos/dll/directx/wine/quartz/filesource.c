@@ -18,22 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "quartz_private.h"
 
-#include <wine/debug.h>
-#include <wine/unicode.h>
-#include "pin.h"
-//#include "uuids.h"
-//#include "vfwmsgs.h"
-//#include "winbase.h"
-//#include "winreg.h"
 #include <shlwapi.h>
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const WCHAR wszOutputPinName[] = { 'O','u','t','p','u','t',0 };
 

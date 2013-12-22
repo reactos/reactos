@@ -19,15 +19,6 @@
  */
 
 #include "quartz_private.h"
-#include "pin.h"
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "uuids.h"
-//#include "vfwmsgs.h"
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const IPinVtbl PullPin_Vtbl;
 

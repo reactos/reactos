@@ -20,20 +20,6 @@
  */
 
 #include "quartz_private.h"
-#include "pin.h"
-
-//#include "vfwmsgs.h"
-//#include "amvideo.h"
-
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
-//#include <math.h>
-#include <assert.h>
-
-#include "parser.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const WCHAR wcsInputPinName[] = {'i','n','p','u','t',' ','p','i','n',0};
 static const IMediaSeekingVtbl Parser_Seeking_Vtbl;
