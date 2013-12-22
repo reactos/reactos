@@ -11,7 +11,21 @@
  *              10/06/2002: Created
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+
+#include <psapi.h>
+
+#include <pseh/pseh2.h>
 
 #define NDEBUG
 #include <debug.h>
