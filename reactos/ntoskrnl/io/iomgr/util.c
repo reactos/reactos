@@ -99,8 +99,8 @@ NTAPI
 IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
                         IN UCHAR MinorVersion)
 {
-    /* Return support for WDM 1.10 (Windows 2000) */
-    if (MajorVersion <= 1 && MinorVersion <= 0x10) return TRUE;
+    /* Return support for WDM 1.30 (Windows Server 2003) */
+    if (MajorVersion <= 1 && MinorVersion <= 0x30) return TRUE;
     return FALSE;
 }
 
