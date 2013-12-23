@@ -16,31 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-//#include <math.h>
-//#include <limits.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "wingdi.h"
-#include <wine/unicode.h>
-
-#define COBJMACROS
-//#include "objbase.h"
-//#include "ocidl.h"
-//#include "olectl.h"
-//#include "ole2.h"
+#include "gdiplus_private.h"
 
 #include <winreg.h>
-
-//#include "gdiplus.h"
-#include "gdiplus_private.h"
 #include <shlwapi.h>
-#include <wine/debug.h>
-//#include "wine/list.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 /* Mike "tamlin" Nordell 2012-09-14 for ReactOS:
  * NOTE: Wine uses per-GpGraphics id's ('contid' starting from zero in
