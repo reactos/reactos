@@ -21,7 +21,7 @@
 #include <windef.h>
 #include <winuser.h>
 
-//#include "avifile_private.h"
+#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -36,8 +36,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_FILEVERSION_STR "4.03.1998"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include "wine/wine_common_ver.rc"
-//#include "avifile_private.h"
+#include <wine/wine_common_ver.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)
