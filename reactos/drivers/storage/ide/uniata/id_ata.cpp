@@ -2236,7 +2236,7 @@ AtapiResetController__(
         if(ChipFlags & UNIATA_AHCI) {
             KdPrint2((PRINT_PREFIX "  AHCI path\n"));
             if(UniataAhciChanImplemented(deviceExtension, j)) {
-#if DBG
+#ifdef _DEBUG
                 UniataDumpAhciPortRegs(chan);
 #endif
                 AtapiDisableInterrupts(deviceExtension, j);
@@ -4771,13 +4771,13 @@ ServiceInterrupt:
                 statusByte |= IDE_STATUS_ERROR;
             } else {
                 // We have only Overflow. Abort operation and continue
-#if DBG
+#ifdef _DEBUG
                 UniataDumpAhciPortRegs(chan);
 #endif
                 if(!UniataAhciAbortOperation(chan)) {
                     KdPrint2((PRINT_PREFIX "need UniataAhciReset\n"));
                 }
-#if DBG
+#ifdef _DEBUG
                 UniataDumpAhciPortRegs(chan);
 #endif
                 UniataAhciWaitCommandReady(chan, 10);
@@ -4948,7 +4948,7 @@ try_dpc_wait:
         if(deviceExtension->HwFlags & UNIATA_AHCI) {
             error = AtaReq->ahci.in_error;
             // wait ready
-#if DBG
+#ifdef _DEBUG
             UniataDumpAhciPortRegs(chan);
 #endif
             if(!UniataAhciAbortOperation(chan)) {
@@ -4956,11 +4956,11 @@ try_dpc_wait:
             }
             // clear interrupts again
             UniataAhciWaitCommandReady(chan, 10);
-#if DBG
+#ifdef _DEBUG
             UniataDumpAhciPortRegs(chan);
 #endif
             UniataAhciStatus(HwDeviceExtension, lChannel, DEVNUM_NOT_SPECIFIED);
-#if DBG
+#ifdef _DEBUG
             UniataDumpAhciPortRegs(chan);
 #endif
         } else {
