@@ -20,13 +20,18 @@
 #ifndef HHCTRL_H
 #define HHCTRL_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #define COBJMACROS
+
+#include <initguid.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -38,13 +43,14 @@
 #include <mshtmhst.h>
 #include <commctrl.h>
 
-#ifdef INIT_GUID
-#include <initguid.h>
-#endif
-
 #include <wine/itss.h>
 #include <wine/unicode.h>
 #include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
+
+#include "stream.h"
 
 #define WB_GOBACK     0
 #define WB_GOFORWARD  1
