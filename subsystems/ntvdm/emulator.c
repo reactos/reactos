@@ -43,21 +43,24 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
     /* Make sure the requested address is valid */
     if ((Address + Size) >= MAX_ADDRESS) return;
 
-    /* Read the data from the virtual address space and store it in the buffer */
-    RtlCopyMemory(Buffer, (LPVOID)((ULONG_PTR)BaseAddress + Address), Size);
-
-    /* Check if we modified the console video memory */
+    /*
+     * Check if we are going to read the VGA memory and
+     * copy it into the virtual address space if needed.
+     */
     if (((Address + Size) >= VgaGetVideoBaseAddress())
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
         DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
                            - VgaAddress + 1;
-        LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
+        LPBYTE DestBuffer = (LPBYTE)((ULONG_PTR)BaseAddress + VgaAddress);
 
         /* Read from the VGA memory */
-        VgaReadMemory(VgaAddress, VgaBuffer, ActualSize);
+        VgaReadMemory(VgaAddress, DestBuffer, ActualSize);
     }
+
+    /* Read the data from the virtual address space and store it in the buffer */
+    RtlCopyMemory(Buffer, (LPVOID)((ULONG_PTR)BaseAddress + Address), Size);
 }
 
 VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
@@ -76,17 +79,19 @@ VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffe
     /* Read the data from the buffer and store it in the virtual address space */
     RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + Address), Buffer, Size);
 
-    /* Check if we modified the console video memory */
+    /*
+     * Check if we modified the VGA memory.
+     */
     if (((Address + Size) >= VgaGetVideoBaseAddress())
         && (Address < VgaGetVideoLimitAddress()))
     {
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
         DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
                            - VgaAddress + 1;
-        LPBYTE VgaBuffer = (LPBYTE)((ULONG_PTR)Buffer + VgaAddress - Address);
+        LPBYTE SrcBuffer = (LPBYTE)((ULONG_PTR)BaseAddress + VgaAddress);
 
         /* Write to the VGA memory */
-        VgaWriteMemory(VgaAddress, VgaBuffer, ActualSize);
+        VgaWriteMemory(VgaAddress, SrcBuffer, ActualSize);
     }
 }
 
@@ -178,8 +183,8 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
 
 PBYTE
 WINAPI
-Sim32pGetVDMPointer(IN ULONG Address,
-                    IN BOOL  ProtectedMode)
+Sim32pGetVDMPointer(IN ULONG   Address,
+                    IN BOOLEAN ProtectedMode)
 {
     // FIXME
     UNREFERENCED_PARAMETER(ProtectedMode);
@@ -189,14 +194,14 @@ Sim32pGetVDMPointer(IN ULONG Address,
      *                 or Selector (if ProtectedMode == TRUE )
      * LOWORD(Address) == Offset
      */
-    return SEG_OFF_TO_PTR(HIWORD(Address), LOWORD(Address));
+    return (PBYTE)FAR_POINTER(Address);
 }
 
 PBYTE
 WINAPI
-MGetVdmPointer(IN ULONG Address,
-               IN ULONG Size,
-               IN BOOL ProtectedMode)
+MGetVdmPointer(IN ULONG   Address,
+               IN ULONG   Size,
+               IN BOOLEAN ProtectedMode)
 {
     UNREFERENCED_PARAMETER(Size);
     return Sim32pGetVDMPointer(Address, ProtectedMode);
