@@ -2575,6 +2575,24 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
     VdmRunning = FALSE;
 }
 
+VOID WINAPI DosFastConOut(LPWORD Stack)
+{
+    /*
+     * This is the DOS 2+ Fast Console Output Interrupt.
+     * See Ralf Brown: http://www.ctyme.com/intr/rb-4124.htm
+     * for more information.
+     */
+    UNREFERENCED_PARAMETER(Stack);
+
+    /*
+     * The default handler under DOS 2.x and 3.x simply calls INT 10/AH=0Eh.
+     * Do better and call directly BiosPrintCharacter: it's what INT 10/AH=0Eh
+     * does. Otherwise we would have to set BL to DOS_CHAR_ATTRIBUTE and
+     * BH to Bda->VideoPage.
+     */
+    BiosPrintCharacter(getAL(), DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+}
+
 VOID WINAPI DosInt2Fh(LPWORD Stack)
 {
     DPRINT1("DOS System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
@@ -2731,6 +2749,7 @@ BOOLEAN DosInitialize(VOID)
 //  RegisterInt32(0x22, DosInt22h        ); // Termination
     RegisterInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
 //  RegisterInt32(0x24, DosInt24h        ); // Critical Error
+    RegisterInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterInt32(0x2F, DosInt2Fh        );
 
     return TRUE;
