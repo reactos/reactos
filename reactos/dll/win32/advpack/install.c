@@ -18,27 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <winternl.h>
-//#include "winnls.h"
-//#include "setupapi.h"
-#include <advpub.h>
-#include <ole2.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
 #include "advpack_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(advpack);
+#include <ole2.h>
 
 #define SPAPI_ERROR     0xE0000000L
 #define SPAPI_PREFIX    0x800F0000L
