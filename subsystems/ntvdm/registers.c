@@ -37,6 +37,14 @@ VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 
 
 
+PVOID
+WINAPI
+getIntelRegistersPointer(VOID)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 ULONG
 WINAPI
 getEAX(VOID)

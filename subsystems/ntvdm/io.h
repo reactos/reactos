@@ -16,14 +16,28 @@
 
 /* FUNCTIONS ******************************************************************/
 
-typedef BYTE (WINAPI *EMULATOR_IN_PROC)(ULONG Port);
-typedef VOID (WINAPI *EMULATOR_OUT_PROC)(ULONG Port, BYTE Data);
+typedef UCHAR  (WINAPI *EMULATOR_INB_PROC)(ULONG Port);
+typedef USHORT (WINAPI *EMULATOR_INW_PROC)(ULONG Port);
+typedef ULONG  (WINAPI *EMULATOR_IND_PROC)(ULONG Port);
 
-VOID WINAPI RegisterIoPort(ULONG Port,
-                           EMULATOR_IN_PROC  InHandler,
-                           EMULATOR_OUT_PROC OutHandler);
+typedef VOID (WINAPI *EMULATOR_INSB_PROC)(ULONG Port, PUCHAR  Buffer, ULONG Count);
+typedef VOID (WINAPI *EMULATOR_INSW_PROC)(ULONG Port, PUSHORT Buffer, ULONG Count);
+typedef VOID (WINAPI *EMULATOR_INSD_PROC)(ULONG Port, PULONG  Buffer, ULONG Count);
 
-VOID WINAPI UnregisterIoPort(ULONG Port);
+typedef VOID (WINAPI *EMULATOR_OUTB_PROC)(ULONG Port, UCHAR  Data);
+typedef VOID (WINAPI *EMULATOR_OUTW_PROC)(ULONG Port, USHORT Data);
+typedef VOID (WINAPI *EMULATOR_OUTD_PROC)(ULONG Port, ULONG  Data);
+
+typedef VOID (WINAPI *EMULATOR_OUTSB_PROC)(ULONG Port, PUCHAR  Buffer, ULONG Count);
+typedef VOID (WINAPI *EMULATOR_OUTSW_PROC)(ULONG Port, PUSHORT Buffer, ULONG Count);
+typedef VOID (WINAPI *EMULATOR_OUTSD_PROC)(ULONG Port, PULONG  Buffer, ULONG Count);
+
+
+VOID RegisterIoPort(ULONG Port,
+                    EMULATOR_INB_PROC  InHandler,
+                    EMULATOR_OUTB_PROC OutHandler);
+
+VOID UnregisterIoPort(ULONG Port);
 
 VOID WINAPI EmulatorReadIo
 (

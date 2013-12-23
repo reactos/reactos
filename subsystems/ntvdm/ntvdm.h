@@ -21,7 +21,10 @@
 #include <wingdi.h>
 #include <wincon.h>
 #include <winnls.h>
+#include <winreg.h>
 #include <winuser.h>
+
+#include <nt_vdd.h>
 
 #include <debug.h>
 
