@@ -23,7 +23,7 @@ EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] = { NULL };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID WINAPI RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler)
+VOID RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler)
 {
     BopProc[BopCode] = BopHandler;
 }

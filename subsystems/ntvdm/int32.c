@@ -146,7 +146,7 @@ VOID WINAPI ControlBop(LPWORD Stack)
         DPRINT1("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
 }
 
-VOID WINAPI InitializeInt32(WORD BiosSegment)
+VOID InitializeInt32(WORD BiosSegment)
 {
     LPDWORD IntVecTable = (LPDWORD)BaseAddress;
     LPBYTE  BiosCode    = (LPBYTE)SEG_OFF_TO_PTR(BiosSegment, 0);
@@ -207,7 +207,7 @@ VOID WINAPI InitializeInt32(WORD BiosSegment)
     RegisterBop(BOP_CONTROL, ControlBop);
 }
 
-VOID WINAPI RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)
+VOID RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)
 {
     Int32Proc[IntNumber] = IntHandler;
 }

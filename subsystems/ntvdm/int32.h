@@ -23,8 +23,8 @@
 typedef VOID (WINAPI *EMULATOR_INT32_PROC)(LPWORD Stack);
 
 VOID WINAPI Int32Dispatch(LPWORD Stack);
-VOID WINAPI InitializeInt32(WORD BiosSegment);
-VOID WINAPI RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler);
+VOID InitializeInt32(WORD BiosSegment);
+VOID RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler);
 
 #endif // _INT32_H_
 

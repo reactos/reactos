@@ -20,7 +20,7 @@
 
 typedef VOID (WINAPI *EMULATOR_BOP_PROC)(LPWORD Stack);
 
-VOID WINAPI RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler);
+VOID RegisterBop(BYTE BopCode, EMULATOR_BOP_PROC BopHandler);
 VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode);
 
 #endif // _BOP_H_
