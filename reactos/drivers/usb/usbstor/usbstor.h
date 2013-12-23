@@ -2,8 +2,6 @@
 #pragma once
 
 #include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
 #include <usbdi.h>
 #include <hubbusif.h>
 #include <usbbusif.h>

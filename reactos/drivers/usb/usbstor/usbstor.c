@@ -10,9 +10,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NDEBUG
 #define INITGUID
 #include "usbstor.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* PUBLIC AND PRIVATE FUNCTIONS **********************************************/
 
