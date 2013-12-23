@@ -12,7 +12,6 @@
 #include <winbase.h>
 
 #include <authz.h>
-#include <debug.h>
 
 #if DBG
 
