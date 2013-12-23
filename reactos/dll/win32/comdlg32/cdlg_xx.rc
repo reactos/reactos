@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "cdlg.h"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILEDESCRIPTION_STR "Common Dialog Boxes"
@@ -28,7 +26,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_FILEVERSION 4,0,0,950 /* Maybe 4.1.0.980 for win98?? */
 #define WINE_FILEVERSION_STR "4.0"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 /* Translators do not need to translate this text, unless the language uses a
  * different character set or if the distribution of characters looks wrong.

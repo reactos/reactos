@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "cdlg.h"
-//#include "winspool.h"
-//#include "filedlgbrowser.h"
+#include <windef.h>
+#include <winuser.h>
+#include <dlgs.h>
+
+#include "filedlgbrowser.h"
+#include "resource.h"
 
 /*
  * Everything that does not depend on language,
