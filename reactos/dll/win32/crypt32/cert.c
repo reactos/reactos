@@ -17,22 +17,9 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <assert.h>
-#include <stdarg.h>
-
-#define NONAMELESSUNION
-#include <windef.h>
-#include <winbase.h>
-#include <wincrypt.h>
-//#include "winnls.h"
-#include <rpc.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
 #include "crypt32_private.h"
+
+#include <rpc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 

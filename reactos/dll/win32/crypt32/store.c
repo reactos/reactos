@@ -23,20 +23,6 @@
  * - Many flags, options and whatnot are unimplemented.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <assert.h>
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "wincrypt.h"
-#include "wine/debug.h"
-#include "wine/list.h"
-#include "wine/exception.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);

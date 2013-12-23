@@ -17,20 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdio.h>
-#include <stdarg.h>
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/list.h"
 #include "crypt32_private.h"
+
 #include "cryptres.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);

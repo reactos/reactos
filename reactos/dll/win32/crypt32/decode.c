@@ -30,23 +30,6 @@
  * MSDN, especially "Constants for CryptEncodeObject and CryptDecodeObject"
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#define NONAMELESSUNION
-
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winnls.h"
-#include "snmp.h"
-#include "wine/debug.h"
-#include "wine/exception.h"
 #include "crypt32_private.h"
 
 /* This is a bit arbitrary, but to set some limit: */

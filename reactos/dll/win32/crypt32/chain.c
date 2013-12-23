@@ -16,17 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include <stdarg.h>
-#define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#define CERT_CHAIN_PARA_HAS_EXTRA_FIELDS
-#define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
-#include "wincrypt.h"
-#include "wininet.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+
 #include "crypt32_private.h"
+
+#include <wininet.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 WINE_DECLARE_DEBUG_CHANNEL(chain);

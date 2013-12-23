@@ -19,6 +19,35 @@
 #ifndef __CRYPT32_PRIVATE_H__
 #define __CRYPT32_PRIVATE_H__
 
+#include <config.h>
+#include <wine/port.h>
+
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <snmp.h>
+
+#define CERT_CHAIN_PARA_HAS_EXTRA_FIELDS
+#define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
+#include <wincrypt.h>
+
+#include <mssip.h>
+
+#include <wine/unicode.h>
+#include <wine/list.h>
+#include <wine/exception.h>
+#include <wine/debug.h>
+
 /* a few asn.1 tags we need */
 #define ASN_BOOL            (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x01)
 #define ASN_BITSTRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x03)
