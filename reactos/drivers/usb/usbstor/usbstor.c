@@ -10,7 +10,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#define INITGUID
 #include "usbstor.h"
 
 #define NDEBUG

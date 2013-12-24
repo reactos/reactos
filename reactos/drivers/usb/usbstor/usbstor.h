@@ -1,6 +1,8 @@
 
 #pragma once
 
+#define INITGUID
+
 #include <ntddk.h>
 #include <usbdi.h>
 #include <hubbusif.h>
