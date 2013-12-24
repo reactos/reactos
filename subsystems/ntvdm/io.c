@@ -16,16 +16,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-typedef struct _EMULATOR_IOPORT_HANDLERS
+typedef struct _EMULATOR_IO_HANDLERS
 {
-    /* For Windows compatibility only, not used internally */
-    HANDLE          hVdd; // == 0 if unused,
-                          //    INVALID_HANDLE_VALUE if handled internally,
-                          //    a valid VDD handle   if handled externally.
-    VDD_IO_HANDLERS VddIoHandlers;
-
-    /* We use these members internally */
-
     EMULATOR_INB_PROC   InB;
     EMULATOR_INW_PROC   InW;
     EMULATOR_IND_PROC   InD;
@@ -41,6 +33,21 @@ typedef struct _EMULATOR_IOPORT_HANDLERS
     EMULATOR_OUTSB_PROC OutsB;
     EMULATOR_OUTSW_PROC OutsW;
     EMULATOR_OUTSD_PROC OutsD;
+} EMULATOR_IO_HANDLERS, *PEMULATOR_IO_HANDLERS;
+
+typedef struct _EMULATOR_IOPORT_HANDLERS
+{
+    HANDLE hVdd; // == 0 if unused,
+                 //    INVALID_HANDLE_VALUE if handled internally,
+                 //    a valid VDD handle   if handled externally.
+    union
+    {
+        /* For Windows compatibility only, not used internally... */
+        VDD_IO_HANDLERS VddIoHandlers;
+
+        /* ... we use these members internally */
+        EMULATOR_IO_HANDLERS IoHandlers;
+    };
 } EMULATOR_IOPORT_HANDLERS, *PEMULATOR_IOPORT_HANDLERS;
 
 /*
@@ -55,9 +62,9 @@ IOReadB(ULONG  Port,
         PUCHAR Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InB)
+        IoPortProc[Port].IoHandlers.InB)
     {
-        *Buffer = IoPortProc[Port].InB(Port);
+        *Buffer = IoPortProc[Port].IoHandlers.InB(Port);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.inb_handler)
@@ -79,9 +86,9 @@ IOReadStrB(ULONG  Port,
            ULONG  Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InsB)
+        IoPortProc[Port].IoHandlers.InsB)
     {
-        IoPortProc[Port].InsB(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.InsB(Port, Buffer, Count);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.insb_handler)
@@ -101,9 +108,9 @@ IOWriteB(ULONG  Port,
          PUCHAR Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutB)
+        IoPortProc[Port].IoHandlers.OutB)
     {
-        IoPortProc[Port].OutB(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutB(Port, *Buffer);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outb_handler)
@@ -124,9 +131,9 @@ IOWriteStrB(ULONG  Port,
             ULONG  Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutsB)
+        IoPortProc[Port].IoHandlers.OutsB)
     {
-        IoPortProc[Port].OutsB(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.OutsB(Port, Buffer, Count);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outsb_handler)
@@ -146,9 +153,9 @@ IOReadW(ULONG   Port,
         PUSHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InW)
+        IoPortProc[Port].IoHandlers.InW)
     {
-        *Buffer = IoPortProc[Port].InW(Port);
+        *Buffer = IoPortProc[Port].IoHandlers.InW(Port);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.inw_handler)
@@ -173,9 +180,9 @@ IOReadStrW(ULONG   Port,
            ULONG   Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InsW)
+        IoPortProc[Port].IoHandlers.InsW)
     {
-        IoPortProc[Port].InsW(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.InsW(Port, Buffer, Count);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.insw_handler)
@@ -195,9 +202,9 @@ IOWriteW(ULONG   Port,
          PUSHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutW)
+        IoPortProc[Port].IoHandlers.OutW)
     {
-        IoPortProc[Port].OutW(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutW(Port, *Buffer);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outw_handler)
@@ -223,9 +230,9 @@ IOWriteStrW(ULONG   Port,
             ULONG   Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutsW)
+        IoPortProc[Port].IoHandlers.OutsW)
     {
-        IoPortProc[Port].OutsW(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.OutsW(Port, Buffer, Count);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outsw_handler)
@@ -245,9 +252,9 @@ IOReadD(ULONG  Port,
         PULONG Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InD)
+        IoPortProc[Port].IoHandlers.InD)
     {
-        *Buffer = IoPortProc[Port].InD(Port);
+        *Buffer = IoPortProc[Port].IoHandlers.InD(Port);
     }
     else
     {
@@ -266,9 +273,9 @@ IOReadStrD(ULONG  Port,
            ULONG  Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].InsD)
+        IoPortProc[Port].IoHandlers.InsD)
     {
-        IoPortProc[Port].InsD(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.InsD(Port, Buffer, Count);
     }
     else
     {
@@ -281,9 +288,9 @@ IOWriteD(ULONG  Port,
          PULONG Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutD)
+        IoPortProc[Port].IoHandlers.OutD)
     {
-        IoPortProc[Port].OutD(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutD(Port, *Buffer);
     }
     else
     {
@@ -303,9 +310,9 @@ IOWriteStrD(ULONG  Port,
             ULONG  Count)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
-        IoPortProc[Port].OutsD)
+        IoPortProc[Port].IoHandlers.OutsD)
     {
-        IoPortProc[Port].OutsD(Port, Buffer, Count);
+        IoPortProc[Port].IoHandlers.OutsD(Port, Buffer, Count);
     }
     else
     {
@@ -319,15 +326,15 @@ VOID RegisterIoPort(ULONG Port,
                     EMULATOR_INB_PROC  InHandler,
                     EMULATOR_OUTB_PROC OutHandler)
 {
-    if (IoPortProc[Port].InB == NULL)
-        IoPortProc[Port].InB = InHandler;
+    if (IoPortProc[Port].IoHandlers.InB == NULL)
+        IoPortProc[Port].IoHandlers.InB = InHandler;
     else
-        DPRINT1("IoPortProc[0x%X].InB already registered\n", Port);
+        DPRINT1("IoPortProc[0x%X].IoHandlers.InB already registered\n", Port);
 
-    if (IoPortProc[Port].OutB == NULL)
-        IoPortProc[Port].OutB = OutHandler;
+    if (IoPortProc[Port].IoHandlers.OutB == NULL)
+        IoPortProc[Port].IoHandlers.OutB = OutHandler;
     else
-        DPRINT1("IoPortProc[0x%X].OutB already registered\n", Port);
+        DPRINT1("IoPortProc[0x%X].IoHandlers.OutB already registered\n", Port);
 
     /* We hold the I/O port internally */
     IoPortProc[Port].hVdd = INVALID_HANDLE_VALUE;
@@ -533,21 +540,21 @@ VDDInstallIOHook(HANDLE            hVdd,
             IoPortProc[i].hVdd = hVdd;
 
             /* Disable the internal handlers */
-            IoPortProc[i].InB = NULL;
-            IoPortProc[i].InW = NULL;
-            IoPortProc[i].InD = NULL;
+            IoPortProc[i].IoHandlers.InB = NULL;
+            IoPortProc[i].IoHandlers.InW = NULL;
+            IoPortProc[i].IoHandlers.InD = NULL;
 
-            IoPortProc[i].InsB = NULL;
-            IoPortProc[i].InsW = NULL;
-            IoPortProc[i].InsD = NULL;
+            IoPortProc[i].IoHandlers.InsB = NULL;
+            IoPortProc[i].IoHandlers.InsW = NULL;
+            IoPortProc[i].IoHandlers.InsD = NULL;
 
-            IoPortProc[i].OutB = NULL;
-            IoPortProc[i].OutW = NULL;
-            IoPortProc[i].OutD = NULL;
+            IoPortProc[i].IoHandlers.OutB = NULL;
+            IoPortProc[i].IoHandlers.OutW = NULL;
+            IoPortProc[i].IoHandlers.OutD = NULL;
 
-            IoPortProc[i].OutsB = NULL;
-            IoPortProc[i].OutsW = NULL;
-            IoPortProc[i].OutsD = NULL;
+            IoPortProc[i].IoHandlers.OutsB = NULL;
+            IoPortProc[i].IoHandlers.OutsW = NULL;
+            IoPortProc[i].IoHandlers.OutsD = NULL;
 
             /* Save our handlers */
             IoPortProc[i].VddIoHandlers = *IOhandler; // IOhandler[i]; ?????????
