@@ -20,8 +20,6 @@
 *
 */
 
-#include "res.h"
-
 LANGUAGE LANG_WELSH, SUBLANG_DEFAULT
 
 STRINGTABLE

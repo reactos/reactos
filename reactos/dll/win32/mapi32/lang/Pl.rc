@@ -19,8 +19,6 @@
 *
 */
 
-#include "res.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
