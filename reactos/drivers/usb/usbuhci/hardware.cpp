@@ -8,9 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
 #include "usbuhci.h"
-#include "hardware.h"
+
+#define NDEBUG
+#include <debug.h>
 
 typedef VOID __stdcall HD_INIT_CALLBACK(IN PVOID CallBackContext);
 

@@ -1,9 +1,9 @@
 #ifndef USBUHCI_H__
 #define USBUHCI_H__
 
+#define INITGUID
+
 #include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
@@ -30,6 +30,7 @@ extern
 #include <dmusicks.h>
 #include <kcom.h>
 
+#include "hardware.h"
 #include "interfaces.h"
 
 //
