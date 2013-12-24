@@ -181,6 +181,14 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
 
 
 
+VOID
+WINAPI
+VDDTerminateVDM(VOID)
+{
+    /* Stop the VDM */
+    VdmRunning = FALSE;
+}
+
 PBYTE
 WINAPI
 Sim32pGetVDMPointer(IN ULONG   Address,

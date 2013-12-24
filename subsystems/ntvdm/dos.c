@@ -2572,6 +2572,7 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 {
     UNREFERENCED_PARAMETER(Stack);
 
+    /* Stop the VDM */
     VdmRunning = FALSE;
 }
 

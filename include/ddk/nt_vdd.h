@@ -29,6 +29,14 @@ extern "C" {
 #endif
 
 /*
+ * VDM Control
+ */
+
+VOID
+WINAPI
+VDDTerminateVDM(VOID);
+
+/*
  * I/O Port services
  */
 

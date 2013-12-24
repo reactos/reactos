@@ -185,3 +185,5 @@
 @ stdcall call_ica_hw_interrupt(long long long)
 @ stdcall VDDInstallIOHook(long long ptr ptr)
 @ stdcall VDDDeInstallIOHook(long long ptr)
+
+@ stdcall VDDTerminateVDM()
