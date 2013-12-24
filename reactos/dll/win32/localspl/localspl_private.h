@@ -21,19 +21,34 @@
 #ifndef __WINE_LOCALSPL_PRIVATE__
 #define __WINE_LOCALSPL_PRIVATE__
 
-//#include <windef.h>
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <winspool.h>
+
+#include <wine/list.h>
+#include <wine/unicode.h>
+#include <ddk/winsplp.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(localspl);
+
+#include "resource.h"
 
 /* ## DLL-wide Globals ## */
 extern HINSTANCE LOCALSPL_hInstance DECLSPEC_HIDDEN;
 void setup_provider(void) DECLSPEC_HIDDEN;
-
-/* ## Resource-ID ## */
-#define IDS_LOCALPORT       500
-#define IDS_LOCALMONITOR    507
-
-/* ## Reserved memorysize for the strings (in WCHAR) ## */
-#define IDS_LOCALMONITOR_MAXLEN 64
-#define IDS_LOCALPORT_MAXLEN 32
 
 /* ## Type of Ports ## */
 /* windows types */
