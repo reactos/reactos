@@ -34,9 +34,12 @@
 
 VOID
 WINAPI
-call_ica_hw_interrupt(INT  ms,
-                      BYTE line,
-                      INT  count);
+call_ica_hw_interrupt
+(
+    INT  ms,
+    BYTE line,
+    INT  count
+);
 
 #define VDDSimulateInterrupt(ms, line, count)   \
     call_ica_hw_interrupt((ms), (line), (count)) // Windows specifies a count of 1 ...
