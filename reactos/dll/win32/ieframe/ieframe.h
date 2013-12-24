@@ -19,32 +19,43 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+
 #define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
+#include <winreg.h>
 #include <wincon.h>
-
-//#include "ole2.h"
-//#include "olectl.h"
 #include <shlobj.h>
 #include <mshtmhst.h>
-//#include "exdisp.h"
+#include <mshtmdid.h>
+#include <exdispid.h>
 #include <hlink.h>
 #include <htiface.h>
-#include "shdeprecated.h"
+#include <idispids.h>
+#include <intshcut.h>
+#include <perhist.h>
+#include <shellapi.h>
+#include <shlwapi.h>
+#include <shdeprecated.h>
 #include <docobjectservice.h>
 
 #include <wine/unicode.h>
 #include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+
+#include "resource.h"
 
 typedef struct ConnectionPoint ConnectionPoint;
 typedef struct DocHost DocHost;

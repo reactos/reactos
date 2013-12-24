@@ -19,30 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-//#include <stdarg.h>
-
 #include "ieframe.h"
-#include "resource.h"
-
-//#include "winuser.h"
-//#include "wingdi.h"
-//#include "winnls.h"
-//#include "ole2.h"
-//#include "exdisp.h"
-//#include "oleidl.h"
 
 #include <mshtmcid.h>
-#include <shellapi.h>
-#include <winreg.h>
-#include <shlwapi.h>
-#include <intshcut.h>
 #include <ddeml.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 #define IDI_APPICON 1
 

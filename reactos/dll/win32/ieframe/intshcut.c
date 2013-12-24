@@ -27,21 +27,7 @@
  * The installer for the Zuma Deluxe Popcap game is good for testing.
  */
 
-#include <stdio.h>
-
 #include "ieframe.h"
-
-//#include "shlobj.h"
-//#include "shobjidl.h"
-#include <intshcut.h>
-#include <shellapi.h>
-#include <winreg.h>
-//#include "shlwapi.h"
-//#include "shlguid.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 typedef struct
 {
