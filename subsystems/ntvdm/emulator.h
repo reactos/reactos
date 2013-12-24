@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            emulator.h
- * PURPOSE:         Minimal x86 machine emulator for the VDM (header file)
+ * PURPOSE:         Minimal x86 machine emulator for the VDM
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
