@@ -557,11 +557,12 @@ VDDInstallIOHook(HANDLE            hVdd,
             IoPortProc[i].IoHandlers.OutsD = NULL;
 
             /* Save our handlers */
-            IoPortProc[i].VddIoHandlers = *IOhandler; // IOhandler[i]; ?????????
+            IoPortProc[i].VddIoHandlers = *IOhandler;
         }
 
-        /* Go to next range */
+        /* Go to the next range */
         ++pPortRange;
+        ++IOhandler;
     }
 
     return TRUE;
@@ -601,7 +602,7 @@ VDDDeInstallIOHook(HANDLE            hVdd,
             ZeroMemory(&IoPortProc[i], sizeof(IoPortProc[i]));
         }
 
-        /* Go to next range */
+        /* Go to the next range */
         ++pPortRange;
     }
 }
