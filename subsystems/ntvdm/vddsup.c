@@ -16,6 +16,8 @@
 #include "bop.h"
 #include "registers.h"
 
+#include <isvbop.h>
+
 typedef VOID (WINAPI *VDD_PROC)(VOID);
 
 typedef struct _VDD_MODULE
@@ -24,13 +26,10 @@ typedef struct _VDD_MODULE
     VDD_PROC DispatchRoutine;
 } VDD_MODULE, *PVDD_MODULE;
 
-/* BOP Identifiers */
-#define BOP_3RDPARTY    0x58    // 3rd-party VDD BOP
-
 /* PRIVATE VARIABLES **********************************************************/
 
 // TODO: Maybe use a linked list.
-// But the number of elements must be <= MAXUSHORT
+// But the number of elements must be <= MAXUSHORT (MAXWORD)
 #define MAX_VDD_MODULES 0xFF + 1
 VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
 
@@ -77,11 +76,21 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             /* Clear the Carry Flag (no error happened so far) */
             setCF(0);
 
+            /* Retrieve the next free entry in the table (used later on) */
+            Entry = GetNextFreeVDDEntry();
+            if (Entry >= MAX_VDD_MODULES)
+            {
+                DPRINT1("Failed to create a new VDD module entry\n");
+                Success = FALSE;
+                RetVal = 4;
+                goto Quit;
+            }
+
             /* Retrieve the VDD name in DS:SI */
             DllName = (LPCSTR)SEG_OFF_TO_PTR(getDS(), getSI());
 
             /* Retrieve the initialization routine API name in ES:DI (optional --> ES=DI=0) */
-            if (getES() != 0 || getDI() != 0)
+            if (TO_LINEAR(getES(), getDI()) != 0)
                 InitRoutineName = (LPCSTR)SEG_OFF_TO_PTR(getES(), getDI());
 
             /* Retrieve the dispatch routine API name in DS:BX */
@@ -139,14 +148,6 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             /* If we arrived there, that means everything is OK */
 
             /* Register the VDD DLL */
-            Entry = GetNextFreeVDDEntry();
-            if (Entry == MAX_VDD_MODULES)
-            {
-                DPRINT1("Failed to create a new VDD module entry\n");
-                Success = FALSE;
-                RetVal = 4;
-                goto Quit;
-            }
             VDDList[Entry].hDll = hDll;
             VDDList[Entry].DispatchRoutine = DispatchRoutine;
 
@@ -232,12 +233,110 @@ Quit:
     }
 }
 
+BOOL LoadInstallableVDD(VOID)
+{
+#define ERROR_MEMORYVDD L"Insufficient memory to load installable Virtual Device Drivers."
+#define ERROR_REGVDD    L"Virtual Device Driver format in the registry is invalid."
+#define ERROR_LOADVDD   L"An installable Virtual Device Driver failed Dll initialization."
+
+    BOOL  Success = TRUE;
+    LONG  Error   = 0;
+    DWORD Type    = 0;
+    DWORD BufSize = 0;
+
+    HKEY    hVDDKey;
+    LPCWSTR VDDKeyName   = L"SYSTEM\\CurrentControlSet\\Control\\VirtualDeviceDrivers";
+    LPWSTR  VDDValueName = L"VDD";
+    LPWSTR  VDDList      = NULL;
+
+    HANDLE hVDD;
+
+    /* Open the VDD registry key */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      VDDKeyName,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hVDDKey) != ERROR_SUCCESS)
+    {
+        DisplayMessage(ERROR_REGVDD);
+        return FALSE;
+    }
+
+    /*
+     * Retrieve the size of the VDD registry value
+     * and check that it's of REG_MULTI_SZ type.
+     */
+    Error = RegQueryValueExW(hVDDKey,
+                             VDDValueName,
+                             NULL,
+                             &Type,
+                             NULL,
+                             &BufSize);
+    if (Error != ERROR_SUCCESS || Type != REG_MULTI_SZ)
+    {
+        DisplayMessage(ERROR_REGVDD);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Allocate the buffer */
+    BufSize = (BufSize < 2*sizeof(WCHAR) ? 2*sizeof(WCHAR) : BufSize);
+    VDDList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BufSize);
+    if (VDDList == NULL)
+    {
+        DisplayMessage(ERROR_MEMORYVDD);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Retrieve the list of VDDs to load */
+    if (RegQueryValueExW(hVDDKey,
+                         VDDValueName,
+                         NULL,
+                         NULL,
+                         (LPBYTE)VDDList,
+                         &BufSize) != ERROR_SUCCESS)
+    {
+        DisplayMessage(ERROR_REGVDD);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Load the VDDs */
+    VDDValueName = VDDList;
+    while (*VDDList)
+    {
+        DPRINT1("Loading VDD '%S'...", VDDList);
+        hVDD = LoadLibraryW(VDDList);
+        if (hVDD == NULL)
+        {
+            DbgPrint("Failed\n");
+            DisplayMessage(ERROR_LOADVDD);
+        }
+        else
+        {
+            DbgPrint("Succeeded\n");
+        }
+        /* Go to next string */
+        VDDList += wcslen(VDDList) + 1;
+    }
+    VDDList = VDDValueName;
+
+Quit:
+    if (VDDList) HeapFree(GetProcessHeap(), 0, VDDList);
+    RegCloseKey(hVDDKey);
+    return Success;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID VDDSupInitialize(VOID)
 {
     /* Register the 3rd-party VDD BOP Handler */
     RegisterBop(BOP_3RDPARTY, ThirdPartyVDDBop);
+
+    /* Load the installable VDDs from the registry */
+    LoadInstallableVDD();
 }
 
 /* EOF */
