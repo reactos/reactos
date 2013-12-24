@@ -1377,6 +1377,11 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
         {
             WORD InfoWord = 0;
 
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2820.htm
+             * for a list of possible flags.
+             */
+
             if (Handle == DosSystemFileTable[0])
             {
                 /* Console input */
@@ -1388,7 +1393,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
                 InfoWord |= 1 << 1;
             }
 
-            /* It is a character device */
+            /* It is a device */
             InfoWord |= 1 << 7;
 
             /* Return the device information word */
