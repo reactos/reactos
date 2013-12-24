@@ -6,11 +6,7 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 typedef enum _LSA_TOKEN_INFORMATION_TYPE
 {

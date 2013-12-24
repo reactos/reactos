@@ -6,12 +6,7 @@
  * COPYRIGHT:   Copyright 2011 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
 
 /* FUNCTIONS ***************************************************************/
 
