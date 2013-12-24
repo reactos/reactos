@@ -27,14 +27,15 @@
 
 #include <stdarg.h>
 #include <windef.h>
-//#include "winbase.h"
 #include <wingdi.h>
-//#include "winuser.h"
 #include <mmddk.h>
 #include <digitalv.h>
 #include <vfw.h>
 #include <wownt32.h>
 #include <mciavi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
 struct MMIOPos {
     DWORD	dwOffset;
