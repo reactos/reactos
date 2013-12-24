@@ -27,6 +27,22 @@
 #endif
 
 /*
+ * Interrupts services
+ */
+#define ICA_MASTER  0
+#define ICA_SLAVE   1
+
+VOID
+WINAPI
+call_ica_hw_interrupt(INT  ms,
+                      BYTE line,
+                      INT  count);
+
+#define VDDSimulateInterrupt(ms, line, count)   \
+    call_ica_hw_interrupt((ms), (line), (count)) // Windows specifies a count of 1 ...
+
+
+/*
  * Registers manipulation
  */
 PVOID  WINAPI getIntelRegistersPointer(VOID);

@@ -3,6 +3,7 @@
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            pic.c
  * PURPOSE:         Programmable Interrupt Controller emulation
+ *                  (Interrupt Controller Adapter (ICA) in Windows terminology)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -200,7 +201,7 @@ VOID PicInterruptRequest(BYTE Number)
     if (Number >= 0 && Number < 8)
     {
         /* Check if any of the higher-priority interrupts are busy */
-        for (i = 0; i <= Number ; i++)
+        for (i = 0; i <= Number; i++)
         {
             if (MasterPic.InServiceRegister & (1 << Number)) return;
         }
@@ -299,6 +300,43 @@ BOOLEAN PicInitialize(VOID)
     RegisterIoPort(PIC_SLAVE_DATA , PicReadPort, PicWritePort);
 
     return TRUE;
+}
+
+
+
+VOID
+WINAPI
+call_ica_hw_interrupt(INT  ms,
+                      BYTE line,
+                      INT  count)
+{
+    BYTE InterruptNumber = line;
+
+    /* Check for PIC validity */
+    if (ms != ICA_MASTER || ms != ICA_SLAVE) return;
+
+    /*
+     * Adjust the interrupt request number according to the parameters,
+     * by adding an offset == 8 to the interrupt number.
+     * 
+     * Indeed VDDs calling this function usually subtracts 8 so that they give:
+     *
+     *      ms     |  line  | corresponding interrupt number
+     * ------------+--------+--------------------------------
+     *  ICA_MASTER | 0 -- 7 |            0 -- 7
+     *  ICA_SLAVE  | 0 -- 7 |            8 -- 15
+     *
+     * and PicInterruptRequest subtracts again 8 to the interrupt number
+     * if it is greater or equal than 8 (so that it determines which PIC
+     * to use via the interrupt number).
+     */
+    if (ms == ICA_SLAVE) InterruptNumber += 8;
+
+    /* Send the specified number of interrupt requests */
+    while (count-- > 0)
+    {
+        PicInterruptRequest(InterruptNumber);
+    }
 }
 
 /* EOF */

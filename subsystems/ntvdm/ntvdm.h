@@ -24,7 +24,7 @@
 #include <winreg.h>
 #include <winuser.h>
 
-#include <nt_vdd.h>
+#include <vddsvc.h>
 
 #include <debug.h>
 

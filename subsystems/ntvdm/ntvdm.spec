@@ -175,8 +175,6 @@
 
 
 
-
-
 @ stdcall MGetVdmPointer(long long long)
 @ stdcall Sim32pGetVDMPointer(long long)
 
@@ -184,5 +182,6 @@
 @ stdcall VdmMapFlat(long long long)
 ;@ stdcall VdmUnmapFlat(long long ptr long)  ; Not exported on x86
 
+@ stdcall call_ica_hw_interrupt(long long long)
 @ stdcall VDDInstallIOHook(long long ptr ptr)
 @ stdcall VDDDeInstallIOHook(long long ptr)
