@@ -7,18 +7,18 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "I pavlershem numri i parametrave - perdor xcopy /? per ndihmë\n"
-    STRING_INVPARM "Parametra te pavlershme '%s' -  perdor xcopy /? per ndihmë\n"
+    STRING_INVPARM "Parametra te pavlershme '%1' -  perdor xcopy /? per ndihmë\n"
     STRING_PAUSE "Shtyp <enter> per të kopjuar\n"
-    STRING_SIMCOPY "%d dokumenta(t) do të kopjohen\n"
-    STRING_COPY "%d dokumenta(t) u kopjuan\n"
-    STRING_QISDIR "është '%s' një dokument ose skedare\n\
+    STRING_SIMCOPY "%1!d! dokumenta(t) do të kopjohen\n"
+    STRING_COPY "%1!d! dokumenta(t) u kopjuan\n"
+    STRING_QISDIR "është '%1' një dokument ose skedare\n\
                      në ogjekt?\n\
                      (F - Dokument, D - Skedë)\n"
-    STRING_SRCPROMPT "%s? (Po|Jo)\n"
-    STRING_OVERWRITE "Overwrite %s? (Po|Jo|Të gjith)\n"
-    STRING_COPYFAIL "Kopje e '%s' në '%s' dështuar me r/c %d\n"
-    STRING_OPENFAIL "Dështuar per tu hapur '%s'\n"
-    STRING_READFAIL "Dështuar duke lexuar në '%s'\n"
+    STRING_SRCPROMPT "%1? (Po|Jo)\n"
+    STRING_OVERWRITE "Overwrite %1? (Po|Jo|Të gjith)\n"
+    STRING_COPYFAIL "Kopje e '%1' në '%2' dështuar me r/c %3!d!\n"
+    STRING_OPENFAIL "Dështuar per tu hapur '%1'\n"
+    STRING_READFAIL "Dështuar duke lexuar në '%1'\n"
     STRING_YES_CHAR "P"
     STRING_NO_CHAR "J"
     STRING_ALL_CHAR "T"

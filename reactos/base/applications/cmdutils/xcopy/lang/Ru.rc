@@ -4,18 +4,18 @@ STRINGTABLE
 BEGIN
     STRING_INVPARMS "Недопустимое число параметров - попробуйте 'xcopy /?' для получения\n\
 подробного описания.\n"
-    STRING_INVPARM "Недопустимый параметр '%s' - попробуйте 'xcopy /?' для получения подробного\n\
+    STRING_INVPARM "Недопустимый параметр '%1' - попробуйте 'xcopy /?' для получения подробного\n\
 описания.\n"
     STRING_PAUSE "Нажмите клавишу <Enter>, чтобы начать копирование.\n"
-    STRING_SIMCOPY "%d файл(ов) было бы скопировано.\n"
-    STRING_COPY "%d файл(ов) скопировано.\n"
-    STRING_QISDIR "'%s' является файлом или папкой?\n\
+    STRING_SIMCOPY "%1!d! файл(ов) было бы скопировано.\n"
+    STRING_COPY "%1!d! файл(ов) скопировано.\n"
+    STRING_QISDIR "'%1' является файлом или папкой?\n\
                      (F - Файл, D - Папка)\n"
-    STRING_SRCPROMPT "%s? (Yes|No)\n"
-    STRING_OVERWRITE "Переписать %s? (Yes|No|All)\n"
-    STRING_COPYFAIL "При копировании '%s' в '%s' произошла ошибка: %d\n"
-    STRING_OPENFAIL "Невозможно открыть '%s'\n"
-    STRING_READFAIL "При чтении '%s' произошла ошибка\n"
+    STRING_SRCPROMPT "%1? (Yes|No)\n"
+    STRING_OVERWRITE "Переписать %1? (Yes|No|All)\n"
+    STRING_COPYFAIL "При копировании '%1' в '%2' произошла ошибка: %3!d!\n"
+    STRING_OPENFAIL "Невозможно открыть '%1'\n"
+    STRING_READFAIL "При чтении '%1' произошла ошибка\n"
     STRING_YES_CHAR "Y"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "A"

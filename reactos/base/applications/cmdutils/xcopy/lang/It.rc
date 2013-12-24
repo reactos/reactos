@@ -3,18 +3,18 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
-    STRING_INVPARM "Parametro '%s' non valido -  Digita xcopy /? per l'aiuto\n"
+    STRING_INVPARM "Parametro '%1' non valido -  Digita xcopy /? per l'aiuto\n"
     STRING_PAUSE "Premi Invio per iniziare a copiare\n"
-    STRING_SIMCOPY "%d file saranno copiati\n"
-    STRING_COPY "%d file copiato/i\n"
-    STRING_QISDIR "'%s' è il nome di un file o una cartella\n\
+    STRING_SIMCOPY "%1!d! file saranno copiati\n"
+    STRING_COPY "%1!d! file copiato/i\n"
+    STRING_QISDIR "'%1' è il nome di un file o una cartella\n\
                      nella destinazione?\n\
                      (F - File, C - Cartella)\n"
-    STRING_SRCPROMPT "%s? (Sì|No)\n"
-    STRING_OVERWRITE "Sovrascrivere %s? (Sì|No|Tutti)\n"
-    STRING_COPYFAIL "La copia di '%s' in '%s' è fallita con r/c %d\n"
-    STRING_OPENFAIL "Impossibile aprire '%s'\n"
-    STRING_READFAIL "Errore durante la lettura di '%s'\n"
+    STRING_SRCPROMPT "%1? (Sì|No)\n"
+    STRING_OVERWRITE "Sovrascrivere %1? (Sì|No|Tutti)\n"
+    STRING_COPYFAIL "La copia di '%1' in '%2' è fallita con r/c %3!d!\n"
+    STRING_OPENFAIL "Impossibile aprire '%1'\n"
+    STRING_READFAIL "Errore durante la lettura di '%1'\n"
     STRING_YES_CHAR "S"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "T"

@@ -3,18 +3,18 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "Neveljavno število parametrov - za pomoč uporabite xcopy /?\n"
-    STRING_INVPARM "Neveljaven parameter '%s' -  za pomoč uporabite xcopy /?\n"
+    STRING_INVPARM "Neveljaven parameter '%1' -  za pomoč uporabite xcopy /?\n"
     STRING_PAUSE "Za začetek kopiranja pritisnite <enter>\n"
-    STRING_SIMCOPY "Prekopiral bom %d datotek\n"
-    STRING_COPY "Prekopiral sem %d datotek\n"
-    STRING_QISDIR "Ali je '%s' ime ciljne datoteke\n\
+    STRING_SIMCOPY "Prekopiral bom %1!d! datotek\n"
+    STRING_COPY "Prekopiral sem %1!d! datotek\n"
+    STRING_QISDIR "Ali je '%1' ime ciljne datoteke\n\
                      ali mape?\n\
                      (D - Datoteka, M - Mapa)\n"
-    STRING_SRCPROMPT "%s? (Da|Ne)\n"
-    STRING_OVERWRITE "Ali naj prepišem %s? (Da|Ne|Vse)\n"
-    STRING_COPYFAIL "Kopiranje '%s' v '%s' ni uspelo (koda napake: %d)\n"
-    STRING_OPENFAIL "Napaka pri odpiranju '%s'\n"
-    STRING_READFAIL "Napaka pri branju '%s'\n"
+    STRING_SRCPROMPT "%1? (Da|Ne)\n"
+    STRING_OVERWRITE "Ali naj prepišem %1? (Da|Ne|Vse)\n"
+    STRING_COPYFAIL "Kopiranje '%1' v '%2' ni uspelo (koda napake: %3!d!)\n"
+    STRING_OPENFAIL "Napaka pri odpiranju '%1'\n"
+    STRING_READFAIL "Napaka pri branju '%1'\n"
     STRING_YES_CHAR "D"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "V"

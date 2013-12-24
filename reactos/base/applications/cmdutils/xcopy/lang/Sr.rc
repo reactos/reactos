@@ -3,18 +3,18 @@ LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "Неисправан број параметара. Користите xcopy /? за помоћ\n"
-    STRING_INVPARM "Неисправан параметар „%s“. Користите xcopy /? за помоћ\n"
+    STRING_INVPARM "Неисправан параметар „%1“. Користите xcopy /? за помоћ\n"
     STRING_PAUSE "Притисните <enter> да започнете умножавање\n"
-    STRING_SIMCOPY "%d датотека/е ће бити уможено\n"
-    STRING_COPY "%d датотека/е је умножено\n"
-    STRING_QISDIR "Да ли је „%s“ назив датотеке или фасцикла\n\
+    STRING_SIMCOPY "%1!d! датотека/е ће бити уможено\n"
+    STRING_COPY "%1!d! датотека/е је умножено\n"
+    STRING_QISDIR "Да ли је „%1“ назив датотеке или фасцикла\n\
                      на одредишту?\n\
                      (Д - датотека, Ф - фасцикла)\n"
-    STRING_SRCPROMPT "%s? (Да|Не)\n"
-    STRING_OVERWRITE "Заменити %s? (Да|Не|Све)\n"
-    STRING_COPYFAIL "Умножавање „%s“ у „%s“ није успело са r/c %d\n"
-    STRING_OPENFAIL "Отварање „%s“ датотеке није успело\n"
-    STRING_READFAIL "Читање „%s“ датотеке није успело\n"
+    STRING_SRCPROMPT "%1? (Да|Не)\n"
+    STRING_OVERWRITE "Заменити %1? (Да|Не|Све)\n"
+    STRING_COPYFAIL "Умножавање „%1“ у „%2“ није успело са r/c %3!d!\n"
+    STRING_OPENFAIL "Отварање „%1“ датотеке није успело\n"
+    STRING_READFAIL "Читање „%1“ датотеке није успело\n"
     STRING_YES_CHAR "Д"
     STRING_NO_CHAR "Н"
     STRING_ALL_CHAR "С"
@@ -59,18 +59,18 @@ LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "Neispravan broj parametara. Koristite xcopy /? za pomoć\n"
-    STRING_INVPARM "Neispravan parametar „%s“. Koristite xcopy /? za pomoć\n"
+    STRING_INVPARM "Neispravan parametar „%1“. Koristite xcopy /? za pomoć\n"
     STRING_PAUSE "Pritisnite <enter> da započnete umnožavanje\n"
-    STRING_SIMCOPY "%d datoteka/e će biti umoženo\n"
-    STRING_COPY "%d datoteka/e je umnoženo\n"
-    STRING_QISDIR "Da li je „%s“ naziv datoteke ili fascikla\n\
+    STRING_SIMCOPY "%1!d! datoteka/e će biti umoženo\n"
+    STRING_COPY "%1!d! datoteka/e je umnoženo\n"
+    STRING_QISDIR "Da li je „%1“ naziv datoteke ili fascikla\n\
                      na odredištu?\n\
                      (D - datoteka, F - fascikla)\n"
-    STRING_SRCPROMPT "%s? (Da|Ne)\n"
-    STRING_OVERWRITE "Zameniti %s? (Da|Ne|Sve)\n"
-    STRING_COPYFAIL "Umnožavanje „%s“ u „%s“ nije uspelo sa r/c %d\n"
-    STRING_OPENFAIL "Otvaranje „%s“ datoteke nije uspelo\n"
-    STRING_READFAIL "Čitanje „%s“ datoteke nije uspelo\n"
+    STRING_SRCPROMPT "%1? (Da|Ne)\n"
+    STRING_OVERWRITE "Zameniti %1? (Da|Ne|Sve)\n"
+    STRING_COPYFAIL "Umnožavanje „%1“ u „%2“ nije uspelo sa r/c %3!d!\n"
+    STRING_OPENFAIL "Otvaranje „%1“ datoteke nije uspelo\n"
+    STRING_READFAIL "Čitanje „%1“ datoteke nije uspelo\n"
     STRING_YES_CHAR "D"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "S"

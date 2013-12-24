@@ -3,18 +3,18 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "Ugyldigt antal parametere; brug «xcopy /?» for hjelp\n"
-    STRING_INVPARM "Ugyldigt parameter «%s»; brug «xcopy /?» for hjelp\n"
+    STRING_INVPARM "Ugyldigt parameter «%1»; brug «xcopy /?» for hjelp\n"
     STRING_PAUSE "Tryk Enter for at begynde at kopiere\n"
-    STRING_SIMCOPY "%d fil(er) vil blive kopieret\n"
-    STRING_COPY "%d fil(er) kopieret\n"
-    STRING_QISDIR "Er «%s» et filnavn eller katalog\n\
+    STRING_SIMCOPY "%1!d! fil(er) vil blive kopieret\n"
+    STRING_COPY "%1!d! fil(er) kopieret\n"
+    STRING_QISDIR "Er «%1» et filnavn eller katalog\n\
                      på destinationen?\n\
                      (F - Fil, K - Katalog)\n"
-    STRING_SRCPROMPT "%s? (Ja|Nei)\n"
-    STRING_OVERWRITE "Overskrive «%s»? (Ja|Nei|Alle)\n"
-    STRING_COPYFAIL "Kunne ikke kopiere «%s» til «%s»; fejlet med r/c %d\n"
-    STRING_OPENFAIL "Kunne ikke åbne «%s»\n"
-    STRING_READFAIL "Kunne ikke læse «%s»\n"
+    STRING_SRCPROMPT "%1? (Ja|Nei)\n"
+    STRING_OVERWRITE "Overskrive «%1»? (Ja|Nei|Alle)\n"
+    STRING_COPYFAIL "Kunne ikke kopiere «%1» til «%2»; fejlet med r/c %3!d!\n"
+    STRING_OPENFAIL "Kunne ikke åbne «%1»\n"
+    STRING_READFAIL "Kunne ikke læse «%1»\n"
     STRING_YES_CHAR "J"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "A"

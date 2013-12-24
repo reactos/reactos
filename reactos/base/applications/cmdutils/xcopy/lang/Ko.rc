@@ -3,18 +3,18 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_INVPARMS "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
-    STRING_INVPARM "올바르지 않은 매개변수 '%s' -  xcopy /?로 도움말을 보시오\n"
+    STRING_INVPARM "올바르지 않은 매개변수 '%1' -  xcopy /?로 도움말을 보시오\n"
     STRING_PAUSE "<enter> 를 누르면 복사가 시작될 것입니다\n"
-    STRING_SIMCOPY "%d 파일이 복사될 것입니다\n"
-    STRING_COPY "%d 파일이 복사되었습니다\n"
-    STRING_QISDIR "'%s'이 복사할 파일이나 디렉토리?\n\
+    STRING_SIMCOPY "%1!d! 파일이 복사될 것입니다\n"
+    STRING_COPY "%1!d! 파일이 복사되었습니다\n"
+    STRING_QISDIR "'%1'이 복사할 파일이나 디렉토리?\n\
                      입니까?\n\
                      (F - 파일, D - 디렉토리)\n"
-    STRING_SRCPROMPT "%s? (예|아니오)\n"
-    STRING_OVERWRITE "%s를 덮어쓰겠습니까? (예|아니오|모두)\n"
-    STRING_COPYFAIL "Copying of '%s' to '%s' failed with r/c %d\n"
-    STRING_OPENFAIL "'%s' 열기 실패\n"
-    STRING_READFAIL "'%s를 읽지 못했습니다'\n"
+    STRING_SRCPROMPT "%1? (예|아니오)\n"
+    STRING_OVERWRITE "%1를 덮어쓰겠습니까? (예|아니오|모두)\n"
+    STRING_COPYFAIL "Copying of '%1' to '%2' failed with r/c %3!d!\n"
+    STRING_OPENFAIL "'%1' 열기 실패\n"
+    STRING_READFAIL "'%1를 읽지 못했습니다'\n"
     STRING_YES_CHAR "Y"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "A"
