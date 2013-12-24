@@ -25,5 +25,5 @@ list(APPEND SOURCE
 add_executable(ntvdm ${SOURCE})
 set_module_type(ntvdm win32cui UNICODE)
 target_link_libraries(ntvdm fast486)
-add_importlibs(ntvdm msvcrt user32 gdi32 kernel32 ntdll)
+add_importlibs(ntvdm user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)
