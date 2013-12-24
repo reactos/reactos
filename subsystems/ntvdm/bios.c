@@ -254,7 +254,7 @@ static VGA_REGISTERS VideoMode_320x200_256color =
 };
 
 /* See http://wiki.osdev.org/Drawing_In_Protected_Mode#Locating_Video_Memory */
-static PVGA_REGISTERS VideoModes[] =
+static PVGA_REGISTERS VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
 {
     &VideoMode_40x25_text,          /* Mode 00h */      // 16 color (mono)
     &VideoMode_40x25_text,          /* Mode 01h */      // 16 color
@@ -272,10 +272,21 @@ static PVGA_REGISTERS VideoModes[] =
     &VideoMode_320x200_16color,     /* Mode 0Dh */      // EGA 320*200 16 color
     &VideoMode_640x200_16color,     /* Mode 0Eh */      // EGA 640*200 16 color
     NULL,                           /* Mode 0Fh */      // EGA 640*350 mono
-    &VideoMode_640x350_16color,     /* Mode 10h */      // EGA 640*350 16 color
+    &VideoMode_640x350_16color,     /* Mode 10h */      // EGA 640*350 HiRes 16 color
     &VideoMode_640x480_2color,      /* Mode 11h */      // VGA 640*480 mono
     &VideoMode_640x480_16color,     /* Mode 12h */      // VGA
     &VideoMode_320x200_256color,    /* Mode 13h */      // VGA
+};
+
+// FIXME: Are they computable with the previous data ??
+// Values taken from DosBox
+static WORD VideoModePageSize[BIOS_MAX_VIDEO_MODE + 1] =
+{
+    0x0800, 0x0800, 0x1000, 0x1000,
+    0x4000, 0x4000, 0x4000, 0x1000,
+    0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x2000, 0x4000, 0x8000,
+    0x8000, 0xA000, 0xA000, 0x2000
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -469,6 +480,8 @@ BYTE BiosGetVideoMode(VOID)
 BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 {
     INT i;
+    BYTE Page;
+
     COORD Resolution;
     PVGA_REGISTERS VgaMode = VideoModes[ModeNumber];
 
@@ -504,12 +517,20 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 
     // Bda->CrtModeControl;
     // Bda->CrtColorPaletteMask;
+    // Bda->EGAFlags;
+    // Bda->VGAFlags;
 
     /* Update the values in the BDA */
-    Bda->VideoMode = ModeNumber;
-    Bda->VideoPage = 0;
-    Bda->VideoPageSize = BIOS_PAGE_SIZE;
-    Bda->VideoPageOffset = 0;
+    Bda->VideoMode       = ModeNumber;
+    Bda->VideoPageSize   = VideoModePageSize[ModeNumber];
+    Bda->VideoPage       = 0;
+    Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
+
+    /* Set the start address in the CRTC */
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
+    VgaWritePort(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
+    VgaWritePort(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
     /* Get the character height */
     VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
@@ -519,27 +540,39 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
 
+    /* Set cursor position for each page */
+    for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
+        BiosSetCursorPosition(0, 0, Page);
+
     return TRUE;
 }
 
 BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 {
+    BYTE Row, Column;
+
     /* Check if the page exists */
     if (PageNumber >= BIOS_MAX_PAGES) return FALSE;
 
     /* Check if this is the same page */
     if (PageNumber == Bda->VideoPage) return TRUE;
 
-    /* Set the values in the BDA */
-    Bda->VideoPage = PageNumber;
-    Bda->VideoPageSize = BIOS_PAGE_SIZE;
-    Bda->VideoPageOffset = PageNumber * BIOS_PAGE_SIZE;
+    /* Update the values in the BDA */
+    Bda->VideoPage       = PageNumber;
+    Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
 
     /* Set the start address in the CRTC */
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
     VgaWritePort(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
     VgaWritePort(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
+
+    /*
+     * Get the cursor location (we don't update anything on the BIOS side
+     * but we update the cursor location on the VGA side).
+     */
+    BiosGetCursorPosition(&Row, &Column, PageNumber);
+    BiosSetCursorPosition(Row, Column, PageNumber);
 
     return TRUE;
 }

@@ -645,8 +645,8 @@ static VOID VgaUpdateFramebuffer(VOID)
     INT i, j, k;
     COORD Resolution = VgaGetDisplayResolution();
     INT AddressSize = VgaGetAddressSize();
-    DWORD Address = (VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG] << 8)
-                    + VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG];
+    DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                             VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG]);
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 
     /*
