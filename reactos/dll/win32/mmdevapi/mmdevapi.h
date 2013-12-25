@@ -32,7 +32,6 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
-#include <initguid.h>
 #include <objbase.h>
 #include <audiopolicy.h>
 #include <endpointvolume.h>

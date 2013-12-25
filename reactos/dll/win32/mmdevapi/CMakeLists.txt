@@ -10,6 +10,7 @@ list(APPEND SOURCE
     audiovolume.c
     devenum.c
     main.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/mmdevapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mmdevapi.def)
 

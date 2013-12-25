@@ -18,12 +18,13 @@
 
 #include "mmdevapi.h"
 
-#define _WINDOWS_H
+#include <wine/list.h>
+
 #include <ole2.h>
+#include <initguid.h>
+#define _WINDOWS_H
 #include <dshow.h>
 #include <devpkey.h>
-
-#include <wine/list.h>
 
 static const WCHAR software_mmdevapi[] =
     { 'S','o','f','t','w','a','r','e','\\',
