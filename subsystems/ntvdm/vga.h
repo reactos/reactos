@@ -258,7 +258,6 @@ VOID VgaHorizontalRetrace(VOID);
 VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaClearMemory(VOID);
-VOID VgaResetPalette(VOID);
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 
 BYTE WINAPI VgaReadPort(ULONG Port);
