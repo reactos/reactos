@@ -28,22 +28,7 @@
  *	+ properly close ACM streams
  */
 
-#define WIN32_NO_STATUS
-
-//#include <stdarg.h>
-//#include <string.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "mmsystem.h"
-#define NOBITMAP
-//#include "mmreg.h"
-//#include "msacm.h"
-#include <msacmdrv.h>
 #include "wineacm.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 static PWINE_ACMSTREAM	ACM_GetStream(HACMSTREAM has)
 {
