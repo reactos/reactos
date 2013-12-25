@@ -16,31 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
-#define NONAMELESSUNION
-#define COBJMACROS
-#include "config.h"
-
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-#include "ole2.h"
-#include "mmdeviceapi.h"
-#include "mmsystem.h"
-#include "dsound.h"
-#include "audioclient.h"
-#include "endpointvolume.h"
-#include "audiopolicy.h"
-
 #include "mmdevapi.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mmdevapi);
 
 static const IAudioEndpointVolumeExVtbl AEVImpl_Vtbl;
 

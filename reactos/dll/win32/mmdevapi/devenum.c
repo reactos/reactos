@@ -16,33 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-
-#define NONAMELESSUNION
-#define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "wine/list.h"
-#include "wine/unicode.h"
-
-#include "initguid.h"
-#include "ole2.h"
-#include "mmdeviceapi.h"
-#include "dshow.h"
-#include "dsound.h"
-#include "audioclient.h"
-#include "endpointvolume.h"
-#include "audiopolicy.h"
-
 #include "mmdevapi.h"
-#include "devpkey.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mmdevapi);
+#define _WINDOWS_H
+#include <ole2.h>
+#include <dshow.h>
+#include <devpkey.h>
+
+#include <wine/list.h>
 
 static const WCHAR software_mmdevapi[] =
     { 'S','o','f','t','w','a','r','e','\\',
