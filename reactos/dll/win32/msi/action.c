@@ -18,31 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "msipriv.h"
 
-//#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-//#include "winbase.h"
-//#include "winerror.h"
-#include <winreg.h>
 #include <winsvc.h>
 #include <odbcinst.h>
-#include <wine/debug.h>
-//#include "msidefs.h"
-#include "msipriv.h"
-//#include "winuser.h"
-#include <shlobj.h>
-//#include "objbase.h"
-//#include "mscoree.h"
-//#include "shlwapi.h"
 #include <imagehlp.h>
-#include <wine/unicode.h>
-//#include "winver.h"
 
 #define REG_PROGRESS_VALUE 13200
 #define COMPONENT_PROGRESS_VALUE 24000
