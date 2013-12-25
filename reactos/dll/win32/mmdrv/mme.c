@@ -12,6 +12,9 @@
 
 #include "mmdrv.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /*
     Sends a message to the client (application), such as WOM_DONE. This
     is just a wrapper around DriverCallback which translates the
