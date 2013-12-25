@@ -15,7 +15,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <ole2.h>
-#include <initguid.h>
 
 #include <wine/itss.h>
 #include <wine/unicode.h>
