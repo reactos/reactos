@@ -92,6 +92,7 @@ extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
 
 extern PSID LsapLocalSystemSid;
+extern PSID LsapAdministratorsSid;
 
 
 /* authpackage.c */

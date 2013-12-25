@@ -645,6 +645,47 @@ done:
 
 static
 NTSTATUS
+LsapSetTokenOwner(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PSID OwnerSid = NULL;
+    ULONG i, Length;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Owner.Owner != NULL)
+            return STATUS_SUCCESS;
+
+        OwnerSid = TokenInfo1->User.User.Sid;
+        for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        {
+            if (EqualSid(TokenInfo1->Groups->Groups[i].Sid, LsapAdministratorsSid))
+            {
+                OwnerSid = LsapAdministratorsSid;
+                break;
+            }
+        }
+
+        Length = RtlLengthSid(OwnerSid);
+        TokenInfo1->Owner.Owner = DispatchTable.AllocateLsaHeap(Length);
+        if (TokenInfo1->Owner.Owner == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(TokenInfo1->Owner.Owner,
+                      OwnerSid,
+                      Length);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 LsapAddTokenDefaultDacl(
     IN PVOID TokenInformation,
     IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
@@ -821,6 +862,13 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         goto done;
     }
 
+    Status = LsapSetTokenOwner(TokenInformation,
+                               TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetTokenOwner() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
     Status = LsapAddTokenDefaultDacl(TokenInformation,
                                      TokenInformationType);

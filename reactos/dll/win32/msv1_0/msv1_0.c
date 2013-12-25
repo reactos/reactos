@@ -271,8 +271,7 @@ NTSTATUS
 BuildTokenGroups(IN PSID AccountDomainSid,
                  IN PLUID LogonId,
                  OUT PTOKEN_GROUPS *Groups,
-                 OUT PSID *PrimaryGroupSid,
-                 OUT PSID *OwnerSid)
+                 OUT PSID *PrimaryGroupSid)
 {
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
@@ -374,7 +373,6 @@ BuildTokenGroups(IN PSID AccountDomainSid,
     TokenGroups->Groups[GroupCount].Attributes =
         SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
     GroupCount++;
-    *OwnerSid = Sid;
 
     /* Member of 'Local users */
     RtlAllocateAndInitializeSid(&LocalAuthority,
@@ -548,38 +546,12 @@ done:
 
 static
 NTSTATUS
-BuildTokenOwner(PTOKEN_OWNER Owner,
-                PSID OwnerSid)
-{
-    ULONG RidCount;
-    ULONG Size;
-
-    RidCount = *RtlSubAuthorityCountSid(OwnerSid);
-    Size = RtlLengthRequiredSid(RidCount);
-
-    Owner->Owner = DispatchTable.AllocateLsaHeap(Size);
-    if (Owner->Owner == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlCopyMemory(Owner->Owner,
-                  OwnerSid,
-                  Size);
-
-    return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
 BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
                             PRPC_SID AccountDomainSid,
                             ULONG RelativeId,
                             PLUID LogonId)
 {
     PLSA_TOKEN_INFORMATION_V1 Buffer = NULL;
-    PSID OwnerSid = NULL;
     PSID PrimaryGroupSid = NULL;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -604,8 +576,7 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
     Status = BuildTokenGroups((PSID)AccountDomainSid,
                               LogonId,
                               &Buffer->Groups,
-                              &PrimaryGroupSid,
-                              &OwnerSid);
+                              &PrimaryGroupSid);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -615,11 +586,6 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
         goto done;
 
     Status = BuildTokenPrivileges(&Buffer->Privileges);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    Status = BuildTokenOwner(&Buffer->Owner,
-                             OwnerSid);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -649,9 +615,6 @@ done:
 
             if (Buffer->Privileges != NULL)
                 DispatchTable.FreeLsaHeap(Buffer->Privileges);
-
-            if (Buffer->Owner.Owner != NULL)
-                DispatchTable.FreeLsaHeap(Buffer->Owner.Owner);
 
             if (Buffer->DefaultDacl.DefaultDacl != NULL)
                 DispatchTable.FreeLsaHeap(Buffer->DefaultDacl.DefaultDacl);

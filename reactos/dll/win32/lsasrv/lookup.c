@@ -81,6 +81,7 @@ typedef struct _WELL_KNOWN_SID
 
 LIST_ENTRY WellKnownSidListHead;
 PSID LsapLocalSystemSid = NULL;
+PSID LsapAdministratorsSid = NULL;
 
 
 /* FUNCTIONS ***************************************************************/
@@ -521,7 +522,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   szDomainName,
                   SidTypeAlias,
-                  NULL);
+                  &LsapAdministratorsSid);
 
     /* Users Alias Sid */
     LsapLoadString(hInstance, IDS_ALIAS_RID_USERS, szAccountName, 80);
