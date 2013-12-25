@@ -85,6 +85,7 @@ list(APPEND SOURCE
     task.c
     txtrange.c
     view.c
+    guid.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)

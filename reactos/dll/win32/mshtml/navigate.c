@@ -16,37 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-
-#include <stdarg.h>
-#include <assert.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <winreg.h>
-#include <ole2.h>
-#include <hlguids.h>
-#include <shlguid.h>
-#include <wininet.h>
-#include <shlwapi.h>
-#include "htiface.h"
-#include "shdeprecated.h"
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-#include "htmlscript.h"
-#include "binding.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+#include <hlguids.h>
+#include <htiface.h>
 
 #define CONTENT_LENGTH "Content-Length"
 #define UTF8_STR "utf-8"

@@ -16,29 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-#include <stdarg.h>
-#include <assert.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-//#include "shlobj.h"
-#include <mshtmdid.h>
-
 #include "mshtml_private.h"
-#include "pluginhost.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 const IID IID_HTMLPluginContainer =
     {0xbd7a6050,0xb373,0x4f6f,{0xa4,0x93,0xdd,0x40,0xc5,0x23,0xa8,0x6a}};

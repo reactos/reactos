@@ -16,28 +16,47 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <config.h>
+
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #include <wingdi.h>
-#include "docobj.h"
-#include "docobjectservice.h"
-#include <comcat.h>
-#include <mshtml.h>
+#include <ole2.h>
+#include <docobjectservice.h>
 #include <mshtmhst.h>
-#include <hlink.h>
+#include <mshtmcid.h>
+#include <mshtmdid.h>
 #include <perhist.h>
-#include <dispex.h>
-#include "objsafe.h"
-#include "htiframe.h"
-#include "tlogstg.h"
+#include <objsafe.h>
+#include <htiframe.h>
+#include <tlogstg.h>
 #include <shdeprecated.h>
+#include <shlguid.h>
+#define NO_SHLWAPI_REG
+#include <shlwapi.h>
+#include <optary.h>
+#include <idispids.h>
+#include <wininet.h>
+#include <nsiface.h>
 
 #include <wine/list.h>
 #include <wine/unicode.h>
 
-#ifdef INIT_GUID
-#include <initguid.h>
-#endif
-
-#include <nsiface.h>
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define NS_ERROR_GENERATE_FAILURE(module,code) \
     ((nsresult) (((UINT32)(1<<31)) | ((UINT32)(module+0x45)<<16) | ((UINT32)(code))))
@@ -1178,3 +1197,10 @@ HINSTANCE get_shdoclc(void) DECLSPEC_HIDDEN;
 void set_statustext(HTMLDocumentObj*,INT,LPCWSTR) DECLSPEC_HIDDEN;
 
 extern HINSTANCE hInst DECLSPEC_HIDDEN;
+
+#include "binding.h"
+#include "htmlevent.h"
+#include "htmlscript.h"
+#include "htmlstyle.h"
+#include "pluginhost.h"
+#include "resource.h"
