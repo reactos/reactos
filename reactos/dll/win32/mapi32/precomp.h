@@ -16,7 +16,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <initguid.h>
 #include <mapival.h>
 #include <mapiutil.h>
 
