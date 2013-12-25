@@ -31,7 +31,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <ole2.h>
-#include <initguid.h>
 #include <mimeole.h>
 #include <winsock2.h>
 #include <imnxport.h>
