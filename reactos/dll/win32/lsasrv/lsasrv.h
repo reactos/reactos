@@ -396,6 +396,9 @@ NTSTATUS
 NTAPI
 LsapDeleteLogonSession(IN PLUID LogonId);
 
+NTSTATUS
+LsapSetLogonSessionData(IN PLUID LogonId);
+
 /* utils.c */
 INT
 LsapLoadString(HINSTANCE hInstance,

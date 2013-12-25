@@ -54,6 +54,22 @@ LsapGetLogonSession(IN PLUID LogonId)
 
 
 NTSTATUS
+LsapSetLogonSessionData(IN PLUID LogonId)
+{
+    PLSAP_LOGON_SESSION Session;
+
+    TRACE("()\n");
+
+    Session = LsapGetLogonSession(LogonId);
+    if (Session == NULL)
+        return STATUS_NO_SUCH_LOGON_SESSION;
+
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 NTAPI
 LsapCreateLogonSession(IN PLUID LogonId)
 {
