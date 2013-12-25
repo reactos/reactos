@@ -42,7 +42,6 @@ static const WCHAR Cunc[] = L"\\??\\C:";
 
 /*
  * TODO:
- * - MountMgrQueryDosVolumePath
  * - MountMgrQueryDosVolumePaths
  * - MountMgrQueryVolumePaths
  * - MountMgrValidateBackPointer
