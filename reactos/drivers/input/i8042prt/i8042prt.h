@@ -1,6 +1,4 @@
 
-#define INITGUID
-
 #include <ntifs.h>
 #include <kbdmou.h>
 #include <ntdd8042.h>
