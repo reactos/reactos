@@ -1,3 +1,6 @@
+#ifndef _MSGINA_H
+#define _MSGINA_H
+
 #define WIN32_NO_STATUS
 
 #include <stdarg.h>
@@ -12,7 +15,9 @@
 #include <winuser.h>
 #include <userenv.h>
 #include <winwlx.h>
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
 #include "resource.h"
 
@@ -75,5 +80,7 @@ DoLoginTasks(
     IN PWSTR UserName,
     IN PWSTR Domain,
     IN PWSTR Password);
+
+#endif /* _MSGINA_H */
 
 /* EOF */

@@ -26,8 +26,6 @@
 
 #include "msgina.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msgina);
-
 HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;

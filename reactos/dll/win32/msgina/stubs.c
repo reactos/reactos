@@ -11,8 +11,6 @@
 
 #include "msgina.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msgina);
-
 /*
  * @unimplemented
  */
