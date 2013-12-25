@@ -15,6 +15,7 @@ add_library(hhctrl SHARED
     search.c
     stream.c
     webbrowser.c
+    guid.c
     hhctrl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
 
@@ -30,7 +31,7 @@ set_source_files_properties(hhctrl.rc PROPERTIES OBJECT_DEPENDS "${hhctrl_rc_dep
 add_dependencies(hhctrl stdole2)
 
 set_module_type(hhctrl win32ocx)
-target_link_libraries(hhctrl uuid wine itss_guid)
+target_link_libraries(hhctrl uuid wine)
 add_importlibs(hhctrl advapi32 comctl32 shlwapi ole32 oleaut32 user32 gdi32 msvcrt kernel32 ntdll)
 add_dependencies(hhctrl wineheaders)
 add_pch(hhctrl hhctrl.h)
