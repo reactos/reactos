@@ -547,9 +547,9 @@ LsapCopyLocalGroups(
     PTOKEN_GROUPS LocalGroups = NULL;
     ULONG SidHeaderLength = 0;
     PSID SidHeader = NULL;
-    PSID Sid;
+    PSID SrcSid, DstSid;
     ULONG SidLength;
-    ULONG CopiedSids = 0;
+    ULONG AllocatedSids = 0;
     ULONG i;
     NTSTATUS Status;
 
@@ -585,8 +585,10 @@ LsapCopyLocalGroups(
 
     for (i = 0; i < ClientGroupsCount; i++)
     {
+        SrcSid = LocalGroups->Groups[i].Sid;
+
         Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
-                                     LocalGroups->Groups[i].Sid,
+                                     SrcSid,
                                      SidHeader,
                                      SidHeaderLength,
                                      NULL);
@@ -596,28 +598,28 @@ LsapCopyLocalGroups(
         SidLength = RtlLengthSid(SidHeader);
         TRACE("Sid %lu: Length %lu\n", i, SidLength);
 
-        Sid = RtlAllocateHeap(RtlGetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              SidLength);
-        if (SidHeader == NULL)
+        DstSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 SidLength);
+        if (DstSid == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto done;
         }
 
         Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
-                                     LocalGroups->Groups[i].Sid,
-                                     Sid,
+                                     SrcSid,
+                                     DstSid,
                                      SidLength,
                                      NULL);
         if (!NT_SUCCESS(Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DstSid);
             goto done;
         }
 
-        LocalGroups->Groups[i].Sid = Sid;
-        CopiedSids++;
+        LocalGroups->Groups[i].Sid = DstSid;
+        AllocatedSids++;
     }
 
     *TokenGroups = LocalGroups;
@@ -630,7 +632,7 @@ done:
     {
         if (LocalGroups != NULL)
         {
-            for (i = 0; i < CopiedSids; i++)
+            for (i = 0; i < AllocatedSids; i++)
                 RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
 
             RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
@@ -638,6 +640,52 @@ done:
     }
 
     return Status;
+}
+
+
+static
+NTSTATUS
+LsapAddTokenDefaultDacl(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PACL Dacl = NULL;
+    ULONG Length;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->DefaultDacl.DefaultDacl != NULL)
+            return STATUS_SUCCESS;
+
+        Length = sizeof(ACL) +
+                 (2 * sizeof(ACCESS_ALLOWED_ACE)) +
+                 RtlLengthSid(TokenInfo1->Owner.Owner) +
+                 RtlLengthSid(LsapLocalSystemSid);
+
+        Dacl = DispatchTable.AllocateLsaHeap(Length);
+        if (Dacl == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCreateAcl(Dacl, Length, ACL_REVISION);
+
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               TokenInfo1->Owner.Owner);
+
+        /* SID: S-1-5-18 */
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               LsapLocalSystemSid);
+
+        TokenInfo1->DefaultDacl.DefaultDacl = Dacl;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -669,7 +717,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     Package = LsapGetAuthenticationPackage(PackageId);
     if (Package == NULL)
     {
-        TRACE("LsapGetAuthenticationPackage() failed to find a package\n");
+        ERR("LsapGetAuthenticationPackage() failed to find a package\n");
         return STATUS_NO_SUCH_PACKAGE;
     }
 
@@ -681,7 +729,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                         RequestMsg->LogonUser.Request.AuthenticationInformationLength);
         if (LocalAuthInfo == NULL)
         {
-            TRACE("RtlAllocateHeap() failed\n");
+            ERR("RtlAllocateHeap() failed\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -693,7 +741,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                      NULL);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
+            ERR("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
             RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
             return Status;
         }
@@ -706,7 +754,10 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                      RequestMsg->LogonUser.Request.LocalGroupsCount,
                                      &LocalGroups);
         if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapCopyLocalGroups failed (Status 0x%08lx)\n", Status);
             goto done;
+        }
 
         TRACE("GroupCount: %lu\n", LocalGroups->GroupCount);
     }
@@ -766,7 +817,16 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     if (!NT_SUCCESS(Status))
     {
-        TRACE("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
+        ERR("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+
+    Status = LsapAddTokenDefaultDacl(TokenInformation,
+                                     TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddTokenDefaultDacl() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -802,7 +862,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                &RequestMsg->LogonUser.Request.SourceContext);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("NtCreateToken failed (Status 0x%08lx)\n", Status);
+            ERR("NtCreateToken failed (Status 0x%08lx)\n", Status);
             goto done;
         }
     }
@@ -823,7 +883,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_CLOSE_SOURCE);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("NtDuplicateObject failed (Status 0x%08lx)\n", Status);
+        ERR("NtDuplicateObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -832,7 +892,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);
+        ERR("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -847,7 +907,10 @@ done:
     if (LocalGroups != NULL)
     {
         for (i = 0; i < LocalGroups->GroupCount; i++)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+        {
+            if (LocalGroups->Groups[i].Sid != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups->Groups[i].Sid);
+        }
 
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalGroups);
     }

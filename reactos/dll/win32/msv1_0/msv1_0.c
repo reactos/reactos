@@ -573,66 +573,6 @@ BuildTokenOwner(PTOKEN_OWNER Owner,
 
 static
 NTSTATUS
-BuildTokenDefaultDacl(PTOKEN_DEFAULT_DACL DefaultDacl,
-                      PSID OwnerSid)
-{
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    PSID LocalSystemSid = NULL;
-    PACL Dacl = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                1,
-                                SECURITY_LOCAL_SYSTEM_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &LocalSystemSid);
-
-    Dacl = DispatchTable.AllocateLsaHeap(1024);
-    if (Dacl == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_ALL,
-                           OwnerSid);
-
-    /* SID: S-1-5-18 */
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_ALL,
-                           LocalSystemSid);
-
-    DefaultDacl->DefaultDacl = Dacl;
-
-done:
-    if (!NT_SUCCESS(Status))
-    {
-        if (Dacl != NULL)
-            DispatchTable.FreeLsaHeap(Dacl);
-    }
-
-    if (LocalSystemSid != NULL)
-        RtlFreeSid(LocalSystemSid);
-
-    return Status;
-}
-
-
-static
-NTSTATUS
 BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
                             PRPC_SID AccountDomainSid,
                             ULONG RelativeId,
@@ -680,11 +620,6 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
 
     Status = BuildTokenOwner(&Buffer->Owner,
                              OwnerSid);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    Status = BuildTokenDefaultDacl(&Buffer->DefaultDacl,
-                                   OwnerSid);
     if (!NT_SUCCESS(Status))
         goto done;
 

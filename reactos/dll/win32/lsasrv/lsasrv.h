@@ -91,6 +91,9 @@ extern UNICODE_STRING BuiltinDomainName;
 extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
 
+extern PSID LsapLocalSystemSid;
+
+
 /* authpackage.c */
 NTSTATUS
 LsapInitAuthPackages(VOID);
