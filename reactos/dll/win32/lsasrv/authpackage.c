@@ -645,6 +645,90 @@ done:
 
 static
 NTSTATUS
+LsapAddLocalGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    IN PTOKEN_GROUPS LocalGroups)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PTOKEN_GROUPS Groups;
+    ULONG Length;
+    ULONG i;
+    ULONG j;
+
+    if (LocalGroups == NULL || LocalGroups->GroupCount == 0)
+        return STATUS_SUCCESS;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Groups != NULL)
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (LocalGroups->GroupCount + TokenInfo1->Groups->GroupCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = LocalGroups->GroupCount + TokenInfo1->Groups->GroupCount;
+
+            for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = TokenInfo1->Groups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = TokenInfo1->Groups->Groups[i].Attributes;
+            }
+
+            for (j = 0; j < LocalGroups->GroupCount; i++, j++)
+            {
+                Groups->Groups[i].Sid = LocalGroups->Groups[j].Sid;
+                Groups->Groups[i].Attributes = LocalGroups->Groups[j].Attributes;
+                LocalGroups->Groups[j].Sid = NULL;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TokenInfo1->Groups);
+
+            TokenInfo1->Groups = Groups;
+        }
+        else
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (LocalGroups->GroupCount - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = LocalGroups->GroupCount;
+
+            for (i = 0; i < LocalGroups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = LocalGroups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = LocalGroups->Groups[i].Attributes;
+            }
+
+            TokenInfo1->Groups = Groups;
+        }
+    }
+    else
+    {
+        FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 LsapSetTokenOwner(
     IN PVOID TokenInformation,
     IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
@@ -860,6 +944,19 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     {
         ERR("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
+
+    if (LocalGroups->GroupCount > 0)
+    {
+        /* Add local groups to the token information */
+        Status = LsapAddLocalGroups(TokenInformation,
+                                    TokenInformationType,
+                                    LocalGroups);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("LsapAddLocalGroupsToTokenInfo() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
     }
 
     Status = LsapSetTokenOwner(TokenInformation,

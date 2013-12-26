@@ -274,10 +274,9 @@ BuildTokenGroups(IN PSID AccountDomainSid,
                  OUT PSID *PrimaryGroupSid)
 {
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
-    SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     PTOKEN_GROUPS TokenGroups;
-#define MAX_GROUPS 8
+#define MAX_GROUPS 6
     DWORD GroupCount = 0;
     PSID Sid;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -345,40 +344,6 @@ BuildTokenGroups(IN PSID AccountDomainSid,
                                 2,
                                 SECURITY_BUILTIN_DOMAIN_RID,
                                 DOMAIN_ALIAS_RID_USERS,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-    /* Logon SID */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                SECURITY_LOGON_IDS_RID_COUNT,
-                                SECURITY_LOGON_IDS_RID,
-                                LogonId->HighPart,
-                                LogonId->LowPart,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
-    GroupCount++;
-
-    /* Member of 'Local users */
-    RtlAllocateAndInitializeSid(&LocalAuthority,
-                                1,
-                                SECURITY_LOCAL_RID,
-                                SECURITY_NULL_RID,
                                 SECURITY_NULL_RID,
                                 SECURITY_NULL_RID,
                                 SECURITY_NULL_RID,
