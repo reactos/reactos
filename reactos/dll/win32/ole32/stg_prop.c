@@ -36,31 +36,14 @@
  *   PropertyStorage_ReadFromStream
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <assert.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-//#include "winuser.h"
-#include <wine/unicode.h>
-#include <wine/debug.h>
-#include "dictionary.h"
+#include "precomp.h"
 #include "storage32.h"
-#include "enumx.h"
-#include <oleauto.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
+
+#ifdef _MSC_VER
+#define __ASM_STDCALL_FUNC(name,args,code)
+#endif
 
 static inline StorageImpl *impl_from_IPropertySetStorage( IPropertySetStorage *iface )
 {

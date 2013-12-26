@@ -23,28 +23,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <assert.h>
-#include <stdarg.h>
-//#include <limits.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <objbase.h>
-//#include "rpc.h"
-
-#include <wine/debug.h>
-#include "compobj_private.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
 
 /* generates an ipid in the following format (similar to native version):
  * Data1 = apartment-local ipid counter
