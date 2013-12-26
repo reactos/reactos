@@ -21,7 +21,9 @@
 #include <netcon.h>
 #include <netcfgx.h>
 #include <netcfgn.h>
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #include "resource.h"
 

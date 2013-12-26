@@ -1,7 +1,5 @@
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL (shell);
-
 typedef struct tagINetConnectionItem
 {
     struct tagINetConnectionItem * Next;
