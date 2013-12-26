@@ -20,8 +20,6 @@
 
 #include "newdev_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(newdev);
-
 HANDLE hThread;
 
 static VOID
