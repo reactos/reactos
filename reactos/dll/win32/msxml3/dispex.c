@@ -16,37 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-//# include <libxml/xmlerror.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winnls.h"
-#include <ole2.h>
-#include <msxml6.h>
-//#include "wininet.h"
-//#include "urlmon.h"
-//#include "winreg.h"
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
 #include <wine/list.h>
-//#include "wine/unicode.h"
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 static CRITICAL_SECTION cs_dispex_static_data;
 static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =

@@ -19,39 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <config.h>
+#include "precomp.h"
 
 #include <assert.h>
-//#include <stdarg.h>
+
 #ifdef HAVE_LIBXML2
-//# include <libxml/xmlerror.h>
-//# include <libxml/tree.h>
 # include <libxml/xmlschemas.h>
 # include <libxml/schemasInternals.h>
-//# include <libxml/hash.h>
-//# include <libxml/parser.h>
 # include <libxml/parserInternals.h>
-//# include <libxml/xmlIO.h>
-//# include <libxml/xmlversion.h>
 # include <libxml/xpath.h>
 #endif
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <msxml6.h>
-
-#include <wine/debug.h>
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 /* We use a chained hashtable, which can hold any number of schemas
  * TODO: grow/shrink hashtable depending on load factor
