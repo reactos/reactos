@@ -23,6 +23,8 @@
 #include <debug.h>
 
 #define SECTORSIZE 2048
+#define TAG_ISO_BUFFER 'BosI'
+#define TAG_ISO_FILE 'FosI'
 
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
@@ -112,7 +114,7 @@ static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG
     // Attempt to allocate memory for directory buffer
     //
     TRACE("Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength);
-    DirectoryBuffer = MmHeapAlloc(DirectoryLength);
+    DirectoryBuffer = FrLdrTempAlloc(DirectoryLength, TAG_ISO_BUFFER);
     if (!DirectoryBuffer)
         return ENOMEM;
 
@@ -124,13 +126,13 @@ static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG
     ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (ret != ESUCCESS)
     {
-        MmHeapFree(DirectoryBuffer);
+        FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
         return ret;
     }
     ret = ArcRead(DeviceId, DirectoryBuffer, SectorCount * SECTORSIZE, &Count);
     if (ret != ESUCCESS || Count != SectorCount * SECTORSIZE)
     {
-        MmHeapFree(DirectoryBuffer);
+        FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
         return EIO;
     }
 
@@ -215,11 +217,11 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
         //
         if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
         {
-            MmHeapFree(DirectoryBuffer);
+            FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
             return ENOENT;
         }
 
-        MmHeapFree(DirectoryBuffer);
+        FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
 
         //
         // If we have another sub-directory to go then
@@ -242,7 +244,7 @@ LONG IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-    MmHeapFree(FileHandle);
+    FrLdrTempFree(FileHandle, TAG_ISO_FILE);
 
     return ESUCCESS;
 }
@@ -280,7 +282,7 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (ret != ESUCCESS)
         return ENOENT;
 
-    FileHandle = MmHeapAlloc(sizeof(ISO_FILE_INFO));
+    FileHandle = FrLdrTempAlloc(sizeof(ISO_FILE_INFO), TAG_ISO_FILE);
     if (!FileHandle)
         return ENOMEM;
 

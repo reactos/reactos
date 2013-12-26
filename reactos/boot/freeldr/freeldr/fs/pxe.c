@@ -22,6 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_PXE_FILE 'FexP'
 #define NO_FILE ((ULONG)-1)
 
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
@@ -129,7 +130,7 @@ static LONG PxeClose(ULONG FileId)
     _OpenFile = NO_FILE;
     if (_CachedFile)
     {
-        MmHeapFree(_CachedFile);
+        FrLdrTempFree(_CachedFile, TAG_PXE_FILE);
         _CachedFile = NULL;
     }
     return ESUCCESS;
@@ -165,7 +166,7 @@ static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     _FileSize = sizeData.FileSize;
     if (_FileSize < 1024 * 1024)
     {
-        _CachedFile = MmHeapAlloc(_FileSize);
+        _CachedFile = FrLdrTempAlloc(_FileSize, TAG_PXE_FILE);
         // Don't check for allocation failure, we support _CachedFile = NULL
     }
     _CachedLength = 0;
@@ -179,7 +180,7 @@ static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     {
         if (_CachedFile)
         {
-            MmHeapFree(_CachedFile);
+            FrLdrTempFree(_CachedFile, TAG_PXE_FILE);
             _CachedFile = NULL;
         }
         return ENOENT;

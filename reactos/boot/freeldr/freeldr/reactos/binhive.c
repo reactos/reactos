@@ -35,7 +35,7 @@ PVOID
 NTAPI
 CmpAllocate (SIZE_T Size, BOOLEAN Paged, ULONG Tag)
 {
-    return MmHeapAlloc(Size);
+    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, Size, Tag);
 }
 
 
@@ -44,7 +44,7 @@ VOID
 NTAPI
 CmpFree (PVOID Ptr, IN ULONG Quota)
 {
-    MmHeapFree(Ptr);
+    FrLdrHeapFreeEx(FrLdrDefaultHeap, Ptr, 0);
 }
 
 static
@@ -68,7 +68,7 @@ RegImportValue (
 
     if (ValueCell->Flags & VALUE_COMP_NAME)
     {
-        wName = MmHeapAlloc ((ValueCell->NameLength + 1) * sizeof(WCHAR));
+        wName = FrLdrTempAlloc((ValueCell->NameLength + 1) * sizeof(WCHAR), TAG_REG_NAME);
         for (i = 0; i < ValueCell->NameLength; i++)
         {
             wName[i] = ((PCHAR)ValueCell->Name)[i];
@@ -77,7 +77,7 @@ RegImportValue (
     }
     else
     {
-        wName = MmHeapAlloc(ValueCell->NameLength + sizeof(WCHAR));
+        wName = FrLdrTempAlloc(ValueCell->NameLength + sizeof(WCHAR), TAG_REG_NAME);
         memcpy(wName, ValueCell->Name, ValueCell->NameLength);
         wName[ValueCell->NameLength / sizeof(WCHAR)] = 0;
     }
@@ -97,7 +97,7 @@ RegImportValue (
         if (Error != ERROR_SUCCESS)
         {
             ERR("RegSetValue() failed!\n");
-            MmHeapFree(wName);
+            FrLdrTempFree(wName, TAG_REG_NAME);
             return FALSE;
         }
     }
@@ -115,12 +115,12 @@ RegImportValue (
         if (Error != ERROR_SUCCESS)
         {
             ERR("RegSetValue() failed!\n");
-            MmHeapFree(wName);
+            FrLdrTempFree(wName, TAG_REG_NAME);
             return FALSE;
         }
     }
 
-    MmHeapFree(wName);
+    FrLdrTempFree(wName, TAG_REG_NAME);
 
     return TRUE;
 }
@@ -199,7 +199,7 @@ RegImportSubKey(
 
     if (KeyCell->Flags & KEY_COMP_NAME)
     {
-        wName = MmHeapAlloc((KeyCell->NameLength + 1) * sizeof(WCHAR));
+        wName = FrLdrTempAlloc((KeyCell->NameLength + 1) * sizeof(WCHAR), TAG_REG_NAME);
         for (i = 0; i < KeyCell->NameLength; i++)
         {
             wName[i] = ((PCHAR)KeyCell->Name)[i];
@@ -208,7 +208,7 @@ RegImportSubKey(
     }
     else
     {
-        wName = MmHeapAlloc(KeyCell->NameLength + sizeof(WCHAR));
+        wName = FrLdrTempAlloc(KeyCell->NameLength + sizeof(WCHAR), TAG_REG_NAME);
         memcpy(wName, KeyCell->Name, KeyCell->NameLength);
         wName[KeyCell->NameLength / sizeof(WCHAR)] = 0;
     }
@@ -217,7 +217,7 @@ RegImportSubKey(
 
     /* Create new sub key */
     Error = RegCreateKey(ParentKey, wName, &SubKey);
-    MmHeapFree(wName);
+    FrLdrTempFree(wName, TAG_REG_NAME);
     if (Error != ERROR_SUCCESS)
     {
         ERR("RegCreateKey() failed!\n");

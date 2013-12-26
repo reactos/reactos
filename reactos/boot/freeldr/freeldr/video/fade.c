@@ -19,8 +19,9 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 
-#define RGB_MAX                        64
+#define RGB_MAX                      64
 #define RGB_MAX_PER_ITERATION        64
+#define TAG_PALETTE_COLORS           'claP'
 
 VOID VideoSetAllColorsToBlack(ULONG ColorCount)
 {
@@ -40,7 +41,7 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
     UCHAR                Color;
     PPALETTE_ENTRY    PaletteColors;
 
-    PaletteColors = MmHeapAlloc(sizeof(PALETTE_ENTRY) * ColorCount);
+    PaletteColors = FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * ColorCount, TAG_PALETTE_COLORS);
     if (!PaletteColors) return;
 
     for (Index=0; Index<RGB_MAX; Index++)
@@ -91,7 +92,7 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
         }
     }
 
-    MmHeapFree(PaletteColors);
+    FrLdrTempFree(PaletteColors, TAG_PALETTE_COLORS);
 }
 
 VOID VideoFadeOut(ULONG ColorCount)

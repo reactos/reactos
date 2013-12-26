@@ -43,6 +43,9 @@
 
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008
 
+#define TAG_SCSI_DEVEXT 'DscS'
+#define TAG_SCSI_ACCESS_RANGES 'AscS'
+
 DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 typedef struct
@@ -1097,7 +1100,7 @@ ScsiPortInitialize(
         Again = FALSE;
 
         DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) + HwInitializationData->DeviceExtensionSize;
-        DeviceExtension = MmHeapAlloc(DeviceExtensionSize);
+        DeviceExtension = FrLdrTempAlloc(DeviceExtensionSize, TAG_SCSI_DEVEXT);
         if (!DeviceExtension)
         {
             return STATUS_NO_MEMORY;
@@ -1116,15 +1119,16 @@ ScsiPortInitialize(
                                      FirstConfigCall);
         if (Status != STATUS_SUCCESS)
         {
-            MmHeapFree(DeviceExtension);
+            FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
             return Status;
         }
 
         PortConfig.NumberOfAccessRanges = HwInitializationData->NumberOfAccessRanges;
-        PortConfig.AccessRanges = MmHeapAlloc(sizeof(ACCESS_RANGE) * HwInitializationData->NumberOfAccessRanges);
+        PortConfig.AccessRanges = FrLdrTempAlloc(sizeof(ACCESS_RANGE) * HwInitializationData->NumberOfAccessRanges,
+                                                 TAG_SCSI_ACCESS_RANGES);
         if (!PortConfig.AccessRanges)
         {
-           MmHeapFree(DeviceExtension);
+           FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
            return STATUS_NO_MEMORY;
         }
         RtlZeroMemory(PortConfig.AccessRanges, sizeof(ACCESS_RANGE) * HwInitializationData->NumberOfAccessRanges);
@@ -1151,14 +1155,14 @@ ScsiPortInitialize(
                                      &SlotNumber))
             {
                 /* Continue to the next bus, nothing here */
-                MmHeapFree(DeviceExtension);
+                FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
                 return STATUS_INTERNAL_ERROR;
             }
 
             if (!PortConfig.BusInterruptLevel)
             {
                 /* Bypass this slot, because no interrupt was assigned */
-                MmHeapFree(DeviceExtension);
+                FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
                 return STATUS_INTERNAL_ERROR;
             }
         }
@@ -1171,7 +1175,7 @@ ScsiPortInitialize(
              &PortConfig,
              &Again) != SP_RETURN_FOUND)
         {
-            MmHeapFree(DeviceExtension);
+            FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
             return STATUS_INTERNAL_ERROR;
         }
 
@@ -1189,7 +1193,7 @@ ScsiPortInitialize(
         /* Initialize adapter */
         if (!DeviceExtension->HwInitialize(DeviceExtension->MiniPortDeviceExtension))
         {
-            MmHeapFree(DeviceExtension);
+            FrLdrTempFree(DeviceExtension, TAG_SCSI_DEVEXT);
             return STATUS_INTERNAL_ERROR;
         }
 

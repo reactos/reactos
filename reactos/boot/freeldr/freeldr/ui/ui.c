@@ -21,6 +21,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
+#define TAG_UI_TEXT 'xTiU'
+
 DBG_DEFAULT_CHANNEL(UI);
 
 ULONG    UiScreenWidth;                                        // Screen Width
@@ -401,7 +403,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
             //if (MessageBoxTextSize > 0)
             {
                 // Allocate enough memory to hold the text
-                MessageBoxText = MmHeapAlloc(MessageBoxTextSize);
+                MessageBoxText = FrLdrTempAlloc(MessageBoxTextSize, TAG_UI_TEXT);
 
                 if (MessageBoxText)
                 {
@@ -415,7 +417,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
                     UiMessageBox(MessageBoxText);
 
                     // Free the memory
-                    MmHeapFree(MessageBoxText);
+                    FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
                 }
             }
         }

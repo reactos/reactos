@@ -24,9 +24,6 @@
 
 DBG_DEFAULT_CHANNEL(HEAP);
 
-#define DEFAULT_HEAP_SIZE (1024 * 1024)
-#define TEMP_HEAP_SIZE (1024 * 1024)
-
 #define REDZONE_MARK 0xCCCCCCCCCCCCCCCCULL
 #define REDZONE_ALLOCATION 24
 #define REDZONE_LOW_OFFSET 16
@@ -147,6 +144,11 @@ FrLdrHeapDestroy(
                              (ULONG_PTR)Heap / MM_PAGE_SIZE,
                              (PFN_COUNT)(Heap->MaximumSize / MM_PAGE_SIZE),
                              LoaderFirmwareTemporary);
+
+#if DBG
+    /* Make sure everything is dead */
+    RtlFillMemory(Heap, Heap->MaximumSize, 0xCCCCCCCC);
+#endif
 }
 
 #ifdef FREELDR_HEAP_VERIFIER
@@ -182,7 +184,7 @@ FrLdrHeapRelease(
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block;
     PUCHAR StartAddress, EndAddress;
-    PFN_COUNT FreePages, AllFreePages = 0;
+    PFN_COUNT FreePages, AllPages, AllFreePages = 0;
     TRACE("HeapRelease(%p)\n", HeapHandle);
 
     /* Loop all heap chunks */
@@ -238,7 +240,8 @@ FrLdrHeapRelease(
         if (Block->Size == 0) break;
     }
 
-    TRACE("HeapRelease() done, freed %ld pages\n", AllFreePages);
+    AllPages = Heap->MaximumSize / MM_PAGE_SIZE;
+    TRACE("HeapRelease() done, freed %lu of %lu pages\n", AllFreePages, AllPages);
 }
 
 VOID
@@ -256,7 +259,7 @@ FrLdrHeapCleanupAll(VOID)
         Heap->AllocationTime, Heap->FreeTime, Heap->AllocationTime + Heap->FreeTime);
 
 
-    /* Release fre pages */
+    /* Release free pages from the default heap */
     FrLdrHeapRelease(FrLdrDefaultHeap);
 
     Heap = FrLdrTempHeap;
@@ -266,7 +269,7 @@ FrLdrHeapCleanupAll(VOID)
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
           Heap->NumAllocs, Heap->NumFrees);
 
-    /* Destroy the heap */
+    /* Destroy the temp heap */
     FrLdrHeapDestroy(FrLdrTempHeap);
 }
 
@@ -311,7 +314,7 @@ FrLdrHeapInsertFreeList(
 }
 
 PVOID
-FrLdrHeapAllocate(
+FrLdrHeapAllocateEx(
     PVOID HeapHandle,
     SIZE_T ByteSize,
     ULONG Tag)
@@ -426,7 +429,7 @@ FrLdrHeapAllocate(
 }
 
 VOID
-FrLdrHeapFree(
+FrLdrHeapFreeEx(
     PVOID HeapHandle,
     PVOID Pointer,
     ULONG Tag)
@@ -470,6 +473,11 @@ FrLdrHeapFree(
 
     /* Mark as free */
     Block->Tag = 0;
+
+#if DBG
+    /* Erase contents */
+    RtlFillMemory(Block->Data, Block->Size * sizeof(HEAP_BLOCK), 0xCCCCCCCC);
+#endif
 
     /* Update heap usage */
     Heap->NumFrees++;
@@ -531,25 +539,13 @@ MmInitializeHeap(PVOID PageLookupTable)
 }
 
 PVOID
-MmHeapAlloc(SIZE_T MemorySize)
-{
-    return FrLdrHeapAllocate(FrLdrDefaultHeap, MemorySize, 'pHmM');
-}
-
-VOID
-MmHeapFree(PVOID MemoryPointer)
-{
-    FrLdrHeapFree(FrLdrDefaultHeap, MemoryPointer, 'pHmM');
-}
-
-PVOID
 NTAPI
 ExAllocatePoolWithTag(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes,
     IN ULONG Tag)
 {
-    return FrLdrHeapAllocate(FrLdrDefaultHeap, NumberOfBytes, Tag);
+    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, NumberOfBytes, Tag);
 }
 
 PVOID
@@ -558,7 +554,7 @@ ExAllocatePool(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    return FrLdrHeapAllocate(FrLdrDefaultHeap, NumberOfBytes, 0);
+    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, NumberOfBytes, 0);
 }
 
 VOID
@@ -566,7 +562,7 @@ NTAPI
 ExFreePool(
     IN PVOID P)
 {
-    FrLdrHeapFree(FrLdrDefaultHeap, P, 0);
+    FrLdrHeapFreeEx(FrLdrDefaultHeap, P, 0);
 }
 
 VOID
@@ -575,7 +571,7 @@ ExFreePoolWithTag(
   IN PVOID P,
   IN ULONG Tag)
 {
-    FrLdrHeapFree(FrLdrDefaultHeap, P, Tag);
+    FrLdrHeapFreeEx(FrLdrDefaultHeap, P, Tag);
 }
 
 PVOID
@@ -587,7 +583,7 @@ RtlAllocateHeap(
 {
     PVOID ptr;
 
-    ptr = FrLdrHeapAllocate(FrLdrDefaultHeap, Size, ' ltR');
+    ptr = FrLdrHeapAllocateEx(FrLdrDefaultHeap, Size, ' ltR');
     if (ptr && (Flags & HEAP_ZERO_MEMORY))
     {
         RtlZeroMemory(ptr, Size);
@@ -603,6 +599,6 @@ RtlFreeHeap(
     IN ULONG Flags,
     IN PVOID HeapBase)
 {
-    FrLdrHeapFree(FrLdrDefaultHeap, HeapBase, ' ltR');
+    FrLdrHeapFreeEx(FrLdrDefaultHeap, HeapBase, ' ltR');
     return TRUE;
 }

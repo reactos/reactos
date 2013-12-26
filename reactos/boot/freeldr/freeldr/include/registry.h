@@ -21,6 +21,11 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
+#define TAG_REG_NAME 'NgeR'
+#define TAG_REG_KEY 'KgeR'
+#define TAG_REG_KEY_DATA 'DgeR'
+#define TAG_REG_VALUE 'VgeR'
+
 typedef struct _REG_KEY
 {
   LIST_ENTRY KeyList;

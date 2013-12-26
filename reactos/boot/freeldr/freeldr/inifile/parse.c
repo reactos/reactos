@@ -48,7 +48,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
     // Start with an 80-byte buffer
     IniFileLineSize = 80;
-    IniFileLine = MmHeapAlloc(IniFileLineSize);
+    IniFileLine = FrLdrTempAlloc(IniFileLineSize, TAG_INI_FILE);
     if (!IniFileLine)
     {
         return FALSE;
@@ -63,8 +63,8 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
         if (IniFileLineSize < IniGetNextLineSize(IniFileData, IniFileSize, CurrentOffset))
         {
             IniFileLineSize = IniGetNextLineSize(IniFileData, IniFileSize, CurrentOffset);
-            MmHeapFree(IniFileLine);
-            IniFileLine = MmHeapAlloc(IniFileLineSize);
+            FrLdrTempFree(IniFileLine, TAG_INI_FILE);
+            IniFileLine = FrLdrTempAlloc(IniFileLineSize, TAG_INI_FILE);
             if (!IniFileLine)
             {
                 return FALSE;
@@ -86,21 +86,21 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
         if (IniIsSectionName(IniFileLine, LineLength))
         {
             // Allocate a new section structure
-            CurrentSection = MmHeapAlloc(sizeof(INI_SECTION));
+            CurrentSection = FrLdrTempAlloc(sizeof(INI_SECTION), TAG_INI_SECTION);
             if (!CurrentSection)
             {
-                MmHeapFree(IniFileLine);
+                FrLdrTempFree(IniFileLine, TAG_INI_FILE);
                 return FALSE;
             }
 
             RtlZeroMemory(CurrentSection, sizeof(INI_SECTION));
 
             // Allocate the section name buffer
-            CurrentSection->SectionName = MmHeapAlloc(IniGetSectionNameSize(IniFileLine, LineLength));
+            CurrentSection->SectionName = FrLdrTempAlloc(IniGetSectionNameSize(IniFileLine, LineLength), TAG_INI_NAME);
             if (!CurrentSection->SectionName)
             {
-                MmHeapFree(CurrentSection);
-                MmHeapFree(IniFileLine);
+                FrLdrTempFree(CurrentSection, TAG_INI_FILE);
+                FrLdrTempFree(IniFileLine, TAG_INI_FILE);
                 return FALSE;
             }
 
@@ -130,31 +130,31 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
             }
 
             // Allocate a new item structure
-            CurrentItem = MmHeapAlloc(sizeof(INI_SECTION_ITEM));
+            CurrentItem = FrLdrTempAlloc(sizeof(INI_SECTION_ITEM), TAG_INI_SECTION_ITEM);
             if (!CurrentItem)
             {
-                MmHeapFree(IniFileLine);
+                FrLdrTempFree(IniFileLine, TAG_INI_FILE);
                 return FALSE;
             }
 
             RtlZeroMemory(CurrentItem, sizeof(INI_SECTION_ITEM));
 
             // Allocate the setting name buffer
-            CurrentItem->ItemName = MmHeapAlloc(IniGetSettingNameSize(IniFileLine, LineLength));
+            CurrentItem->ItemName = FrLdrTempAlloc(IniGetSettingNameSize(IniFileLine, LineLength), TAG_INI_NAME);
             if (!CurrentItem->ItemName)
             {
-                MmHeapFree(CurrentItem);
-                MmHeapFree(IniFileLine);
+                FrLdrTempFree(CurrentItem, TAG_INI_SECTION_ITEM);
+                FrLdrTempFree(IniFileLine, TAG_INI_FILE);
                 return FALSE;
             }
 
             // Allocate the setting value buffer
-            CurrentItem->ItemValue = MmHeapAlloc(IniGetSettingValueSize(IniFileLine, LineLength));
+            CurrentItem->ItemValue = FrLdrTempAlloc(IniGetSettingValueSize(IniFileLine, LineLength), TAG_INI_VALUE);
             if (!CurrentItem->ItemValue)
             {
-                MmHeapFree(CurrentItem->ItemName);
-                MmHeapFree(CurrentItem);
-                MmHeapFree(IniFileLine);
+                FrLdrTempFree(CurrentItem->ItemName, TAG_INI_NAME);
+                FrLdrTempFree(CurrentItem, TAG_INI_SECTION_ITEM);
+                FrLdrTempFree(IniFileLine, TAG_INI_FILE);
                 return FALSE;
             }
 
@@ -173,6 +173,8 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
         CurrentLineNumber++;
     }
+
+    FrLdrTempFree(IniFileLine, TAG_INI_FILE);
 
     TRACE("Parsed %d sections and %d settings.\n", IniFileSectionCount, IniFileSettingCount);
     TRACE("IniParseFile() done.\n");

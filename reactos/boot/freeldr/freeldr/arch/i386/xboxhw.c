@@ -48,7 +48,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate a full resource descriptor\n");
@@ -82,7 +82,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     else
     {
         ERR("Reading disk geometry failed\n");
-        MmHeapFree(PartialResourceList);
+        FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
         return NULL;
     }
     TRACE("Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
@@ -114,7 +114,7 @@ DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
-    MmHeapFree(Context);
+    FrLdrTempFree(Context, TAG_HW_DISK_CONTEXT);
     return ESUCCESS;
 }
 
@@ -171,7 +171,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         SectorCount = 0; /* FIXME */
     }
 
-    Context = MmHeapAlloc(sizeof(DISKCONTEXT));
+    Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
     if (!Context)
         return ENOMEM;
     Context->DriveNumber = DriveNumber;
@@ -338,7 +338,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     GEOMETRY Geometry;
     PCONFIGURATION_COMPONENT_DATA DiskKey, ControllerKey;
     UCHAR DiskCount;
-    USHORT i;
+    ULONG i;
     ULONG Size;
     BOOLEAN Changed;
 
@@ -377,7 +377,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -463,7 +463,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
            sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         TRACE(

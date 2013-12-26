@@ -37,6 +37,11 @@ BOOLEAN    FatReadClusterChain(PFAT_VOLUME_INFO Volume, ULONG StartClusterNumber
 BOOLEAN    FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
 BOOLEAN    FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
+#define TAG_FAT_CHAIN 'CtaT'
+#define TAG_FAT_FILE 'FtaF'
+#define TAG_FAT_VOLUME 'VtaF'
+#define TAG_FAT_BUFFER 'BtaF'
+
 typedef struct _FAT_VOLUME_INFO
 {
     ULONG BytesPerSector; /* Number of bytes per sector */
@@ -431,7 +436,8 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
     // Attempt to allocate memory for directory buffer
     //
     TRACE("Trying to allocate (DirectorySize) %d bytes.\n", *DirectorySize);
-    DirectoryBuffer = MmHeapAlloc(*DirectorySize + sizeof(DIRECTORY_BUFFER));
+    DirectoryBuffer = FrLdrTempAlloc(*DirectorySize + sizeof(DIRECTORY_BUFFER),
+                                     TAG_FAT_BUFFER);
 
     if (DirectoryBuffer == NULL)
     {
@@ -445,7 +451,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
     {
         if (!FatReadVolumeSectors(Volume, Volume->RootDirSectorStart, Volume->RootDirSectors, DirectoryBuffer->Data))
         {
-            MmHeapFree(DirectoryBuffer);
+            FrLdrTempFree(DirectoryBuffer, TAG_FAT_BUFFER);
             return NULL;
         }
     }
@@ -453,7 +459,7 @@ PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, U
     {
         if (!FatReadClusterChain(Volume, DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer->Data))
         {
-            MmHeapFree(DirectoryBuffer);
+            FrLdrTempFree(DirectoryBuffer, TAG_FAT_BUFFER);
             return NULL;
         }
     }
@@ -831,11 +837,11 @@ LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT
             //
             if (!(FatFileInfo.Attributes & ATTR_DIRECTORY))
             {
-                MmHeapFree(FatFileInfo.FileFatChain);
+                FrLdrTempFree(FatFileInfo.FileFatChain, TAG_FAT_CHAIN);
                 return ENOTDIR;
             }
             DirectoryStartCluster = FatFileInfo.FileFatChain[0];
-            MmHeapFree(FatFileInfo.FileFatChain);
+            FrLdrTempFree(FatFileInfo.FileFatChain, TAG_FAT_CHAIN);
             FatFileInfo.FileFatChain = NULL;
         }
     }
@@ -911,9 +917,7 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
     //TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
     // We need a buffer for 2 secors
-    ReadBuffer = FrLdrHeapAllocate(FrLdrTempHeap,
-                                   2 * Volume->BytesPerSector,
-                                   'xTAF');
+    ReadBuffer = FrLdrTempAlloc(2 * Volume->BytesPerSector, TAG_FAT_BUFFER);
     if (!ReadBuffer)
     {
         return FALSE;
@@ -999,7 +1003,7 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
     //TRACE("FAT entry is 0x%x.\n", fat);
 
-    FrLdrHeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+    FrLdrTempFree(ReadBuffer, TAG_FAT_BUFFER);
 
     *ClusterPointer = fat;
 
@@ -1058,7 +1062,7 @@ ULONG* FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
     //
     // Allocate array memory
     //
-    ArrayPointer = MmHeapAlloc(ArraySize);
+    ArrayPointer = FrLdrTempAlloc(ArraySize, TAG_FAT_CHAIN);
 
     if (ArrayPointer == NULL)
     {
@@ -1091,7 +1095,7 @@ ULONG* FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
         //
         if (!FatGetFatEntry(Volume, StartCluster, &StartCluster))
         {
-            MmHeapFree(ArrayPointer);
+            FrLdrTempFree(ArrayPointer, TAG_FAT_CHAIN);
             return NULL;
         }
     }
@@ -1183,7 +1187,7 @@ BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULON
     // Calculate rounded up read size
     ReadSize = SectorCount * Volume->BytesPerSector;
 
-    ReadBuffer = FrLdrHeapAllocate(FrLdrTempHeap, ReadSize, 'xTAF');
+    ReadBuffer = FrLdrTempAlloc(ReadSize, TAG_FAT_BUFFER);
     if (!ReadBuffer)
     {
         return FALSE;
@@ -1195,7 +1199,7 @@ BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULON
         status = TRUE;
     }
 
-    FrLdrHeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+    FrLdrTempFree(ReadBuffer, TAG_FAT_BUFFER);
 
     return status;
 }
@@ -1397,8 +1401,8 @@ LONG FatClose(ULONG FileId)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-    if (FileHandle->FileFatChain) MmHeapFree(FileHandle->FileFatChain);
-    MmHeapFree(FileHandle);
+    if (FileHandle->FileFatChain) FrLdrTempFree(FileHandle->FileFatChain, TAG_FAT_CHAIN);
+    FrLdrTempFree(FileHandle, TAG_FAT_FILE);
 
     return ESUCCESS;
 }
@@ -1450,7 +1454,7 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     else if (!IsDirectory && OpenMode != OpenReadOnly)
         return ENOTDIR;
 
-    FileHandle = MmHeapAlloc(sizeof(FAT_FILE_INFO));
+    FileHandle = FrLdrTempAlloc(sizeof(FAT_FILE_INFO), TAG_FAT_FILE);
     if (!FileHandle)
         return ENOMEM;
 
@@ -1523,7 +1527,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     //
     // Allocate data for volume information
     //
-    Volume = MmHeapAlloc(sizeof(FAT_VOLUME_INFO));
+    Volume = FrLdrTempAlloc(sizeof(FAT_VOLUME_INFO), TAG_FAT_VOLUME);
     if (!Volume)
         return NULL;
     RtlZeroMemory(Volume, sizeof(FAT_VOLUME_INFO));
@@ -1536,13 +1540,13 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (ret != ESUCCESS)
     {
-        MmHeapFree(Volume);
+        FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
     ret = ArcRead(DeviceId, Buffer, sizeof(Buffer), &Count);
     if (ret != ESUCCESS || Count != sizeof(Buffer))
     {
-        MmHeapFree(Volume);
+        FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
 
@@ -1554,7 +1558,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
         !RtlEqualMemory(BootSector32->FileSystemType, "FAT32   ", 8) &&
         !RtlEqualMemory(BootSectorX->FileSystemType, "FATX", 4))
     {
-        MmHeapFree(Volume);
+        FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
 
@@ -1564,7 +1568,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     ret = ArcGetFileInformation(DeviceId, &FileInformation);
     if (ret != ESUCCESS)
     {
-        MmHeapFree(Volume);
+        FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
     SectorCount.HighPart = FileInformation.EndingAddress.HighPart;
@@ -1581,7 +1585,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     //
     if (!FatOpenVolume(Volume, BootSector, SectorCount.QuadPart))
     {
-        MmHeapFree(Volume);
+        FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
 

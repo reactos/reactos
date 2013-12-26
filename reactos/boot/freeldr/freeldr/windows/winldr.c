@@ -144,9 +144,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         PARC_DISK_SIGNATURE_EX ArcDiskSig;
 
         /* Allocate the ARC structure */
-        ArcDiskSig = FrLdrHeapAllocate(FrLdrDefaultHeap,
-                                       sizeof(ARC_DISK_SIGNATURE_EX),
-                                       'giSD');
+        ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
 
         /* Copy the data over */
         ArcDiskSig->DiskSignature.Signature = reactos_arc_disk_info[i].Signature;
@@ -751,6 +749,9 @@ LoadAndBootWindowsCommon(
 
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS(Setup);
+
+    /* Cleanup ini file */
+    IniCleanup();
 
     /* Debugging... */
     //DumpMemoryAllocMap();
