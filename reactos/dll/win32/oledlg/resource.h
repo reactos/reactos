@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <oledlg.h>
+#pragma once
 
 #define IDS_RESULTOBJDESC               101
 #define IDS_RESULTFILEOBJDESC           102
