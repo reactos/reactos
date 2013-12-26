@@ -236,7 +236,7 @@ reactos/base/applications/iexplore          # Synced to Wine-1.7.1
 reactos/base/applications/notepad           # Forked at Wine-20041201
 reactos/base/applications/regedit           # Out of sync
 reactos/base/applications/winhlp32          # Synced to Wine-1.5.26
-reactos/base/applications/wordpad           # Synced to Wine-1.5.26
+reactos/base/applications/wordpad           # Synced to Wine-1.7.9
 reactos/base/services/rpcss                 # Synced to Wine-1.7.1
 reactos/base/system/expand                  # Synced to Wine-1.7.1
 reactos/base/system/msiexec                 # Synced to Wine-1.7.1
