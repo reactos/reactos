@@ -224,7 +224,7 @@ static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static inline INT VgaGetAddressSize(VOID)
+static inline DWORD VgaGetAddressSize(VOID)
 {
     if (VgaCrtcRegisters[VGA_CRTC_UNDERLINE_REG] & VGA_CRTC_UNDERLINE_DWORD)
     {
@@ -551,6 +551,10 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
         Width  *= 2;
         Height *= 2;
     }
+    else
+    {
+        DoubleVision = FALSE;
+    }
 
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
@@ -713,7 +717,7 @@ static VOID VgaUpdateFramebuffer(VOID)
 {
     INT i, j, k;
     COORD Resolution = VgaGetDisplayResolution();
-    INT AddressSize = VgaGetAddressSize();
+    DWORD AddressSize = VgaGetAddressSize();
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG]);
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
@@ -755,7 +759,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                         /* One byte per pixel */
                         PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
                                               + (Address + (j / VGA_NUM_BANKS))
-                                              * AddressSize];
+                                                * AddressSize];
                     }
                     else
                     {
@@ -763,7 +767,7 @@ static VOID VgaUpdateFramebuffer(VOID)
 
                         PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
                                               + (Address + (j / (VGA_NUM_BANKS * 2)))
-                                              * AddressSize];
+                                                * AddressSize];
 
                         /* Check if we should use the highest 4 bits or lowest 4 */
                         if (((j / VGA_NUM_BANKS) % 2) == 0)
@@ -818,10 +822,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                         {
                             /* The data is on plane k, 4 pixels per byte */
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + (Address + (j / 4)) * AddressSize];
+                                                       + (Address + (j / VGA_NUM_BANKS))
+                                                         * AddressSize];
 
                             /* The mask of the first bit in the pair */
-                            BYTE BitMask = 1 << (((3 - (j % 4)) * 2) + 1);
+                            BYTE BitMask = 1 << (((3 - (j % VGA_NUM_BANKS)) * 2) + 1);
 
                             /* Bits 0, 1, 2 and 3 come from the first bit of the pair */
                             if (PlaneData & BitMask) PixelData |= 1 << k;
@@ -837,7 +842,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                         for (k = 0; k < VGA_NUM_BANKS; k++)
                         {
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + (Address + (j / 8)) * AddressSize];
+                                                       + (Address + (j / (VGA_NUM_BANKS * 2)))
+                                                         * AddressSize];
 
                             /* If the bit on that plane is set, set it */
                             if (PlaneData & (1 << (7 - (j % 8)))) PixelData |= 1 << k;
@@ -1462,7 +1468,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 {
     INT i, j;
     COORD Resolution;
-    INT AddressSize;
+    DWORD AddressSize;
     DWORD ScanlineSize;
     COORD Origin = { 0, 0 };
     SMALL_RECT ScreenRect;
