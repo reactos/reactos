@@ -21,11 +21,7 @@
 #ifndef __WINE_RPC_BINDING_H
 #define __WINE_RPC_BINDING_H
 
-//#include "rpcndr.h"
-#include <security.h>
-#include <wine/list.h>
 #include "rpc_defs.h"
-
 
 enum secure_packet_direction
 {

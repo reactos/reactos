@@ -23,31 +23,7 @@
  *  - Some types of binding handles
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-//#include "rpc.h"
-#include <rpcproxy.h>
-
-#include <wine/exception.h>
-#include <wine/debug.h>
-#include <wine/rpcfc.h>
-
-#include "cpsf.h"
-#include "ndr_misc.h"
-#include "ndr_stubless.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 

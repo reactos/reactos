@@ -19,24 +19,7 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-#include <assert.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <rpc.h>
-//#include "rpcndr.h"
-#include <winternl.h>
-
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
-//#include "rpc_binding.h"
-#include "rpc_assoc.h"
-#include "rpc_message.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 

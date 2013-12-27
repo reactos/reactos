@@ -27,25 +27,7 @@
  *  - Checks for integer addition overflow in user marshall functions
  */
 
-#include <assert.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <limits.h>
-
-#define NONAMELESSUNION
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-
-#include "ndr_misc.h"
-//#include "rpcndr.h"
-#include <ndrtypes.h>
-
-#include <wine/unicode.h>
-#include <wine/rpcfc.h>
-
-#include <wine/debug.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

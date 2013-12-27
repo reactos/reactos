@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 #define NCA_S_COMM_FAILURE               0x1C010001
 #define NCA_S_OP_RNG_ERROR               0x1C010002
 #define NCA_S_UNK_IF                     0x1C010003

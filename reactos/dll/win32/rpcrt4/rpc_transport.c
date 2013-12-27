@@ -23,20 +23,7 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <string.h>
-#include <assert.h>
-//#include <stdlib.h>
-//#include <sys/types.h>
-
-#include <windef.h>
-#include <winbase.h>
+#include "precomp.h"
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 # include <ws2tcpip.h>
@@ -82,21 +69,8 @@
 # define ioctlsocket ioctl
 #endif /* defined(__MINGW32__) || defined (_MSC_VER) */
 
-//#include "winnls.h"
-//#include "winerror.h"
 #include <wininet.h>
-#include <winternl.h>
-#include <wine/unicode.h>
 
-#include <rpc.h>
-//#include "rpcndr.h"
-
-#include <wine/debug.h>
-
-//#include "rpc_binding.h"
-#include "rpc_assoc.h"
-#include "rpc_message.h"
-#include "rpc_server.h"
 #include "epm_towers.h"
 
 #ifndef SOL_TCP
