@@ -20,8 +20,6 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};

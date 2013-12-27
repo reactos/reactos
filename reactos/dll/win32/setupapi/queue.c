@@ -22,8 +22,6 @@
 
 #include <aclapi.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 /* Unicode constants */
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
 

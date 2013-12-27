@@ -25,6 +25,10 @@
 
 #include "setupapi_private.h"
 
+#include <fcntl.h>
+#include <share.h>
+#include <fdi.h>
+
 HINSTANCE hInstance = 0;
 OSVERSIONINFOW OsVersionInfo;
 
@@ -55,8 +59,6 @@ typedef struct {
   PVOID context;
   WCHAR most_recent_cabinet_name[MAX_PATH];
 } SC_HSC_W, *PSC_HSC_W;
-
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 static BOOL LoadCABINETDll(void)
 {
