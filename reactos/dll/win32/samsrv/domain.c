@@ -6,12 +6,7 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "samsrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
-
 
 /* FUNCTIONS ***************************************************************/
 

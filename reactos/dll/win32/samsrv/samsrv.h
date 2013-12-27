@@ -31,6 +31,7 @@
 #include <sam_s.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 #include "resources.h"
 
