@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_ERR_DIALOG DIALOG 0, 0, 220, 60
