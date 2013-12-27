@@ -19,6 +19,28 @@
 #ifndef _SCRRUN_PRIVATE_H_
 #define _SCRRUN_PRIVATE_H_
 
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <dispex.h>
+#include <scrrun.h>
+
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(scrrun);
+
 extern HRESULT WINAPI FileSystem_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI Dictionary_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 

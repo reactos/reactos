@@ -16,25 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include "config.h"
-#include <stdarg.h>
-#include <limits.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "olectl.h"
-#include "dispex.h"
-#include "ntsecapi.h"
-#include "scrrun.h"
 #include "scrrun_private.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(scrrun);
+#include <winver.h>
+#include <olectl.h>
+#include <ntsecapi.h>
 
 struct folder {
     IFolder IFolder_iface;

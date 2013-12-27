@@ -10,6 +10,7 @@ list(APPEND SOURCE
     dictionary.c
     filesystem.c
     scrrun.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/scrrun_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/scrrun.def)
 
