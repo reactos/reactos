@@ -9,7 +9,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
+// #define NDEBUG
 
 #include "emulator.h"
 #include "bop.h"
@@ -44,7 +44,7 @@ VOID WINAPI EmulatorBiosOperation(PFAST486_STATE State, UCHAR BopCode)
     if (BopProc[BopCode] != NULL)
         BopProc[BopCode](Stack);
     else
-        DPRINT1("Invalid BOP code: 0x%02X\n", BopCode);
+        DPRINT("Invalid BOP code: 0x%02X\n", BopCode);
 }
 
 /* EOF */

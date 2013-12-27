@@ -71,7 +71,7 @@ VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
             VDD_PROC InitRoutine     = NULL,
                      DispatchRoutine = NULL;
 
-            DPRINT1("RegisterModule() called\n");
+            DPRINT("RegisterModule() called\n");
 
             /* Clear the Carry Flag (no error happened so far) */
             setCF(0);
@@ -182,7 +182,7 @@ Quit:
             WORD Handle = getAX();
             WORD Entry  = HANDLE_TO_ENTRY(Handle); // Convert the handle to a valid entry
 
-            DPRINT1("UnRegisterModule() called\n");
+            DPRINT("UnRegisterModule() called\n");
 
             /* Sanity checks */
             if (!IS_VALID_HANDLE(Handle) || VDDList[Entry].hDll == NULL)
@@ -206,7 +206,7 @@ Quit:
             WORD Handle = getAX();
             WORD Entry  = HANDLE_TO_ENTRY(Handle); // Convert the handle to a valid entry
 
-            DPRINT1("DispatchCall() called\n");
+            DPRINT("DispatchCall() called\n");
 
             /* Sanity checks */
             if (!IS_VALID_HANDLE(Handle)    ||

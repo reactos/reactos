@@ -9,7 +9,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
+// #define NDEBUG
 
 #include "emulator.h"
 #include "io.h"
@@ -75,7 +75,7 @@ IOReadB(ULONG  Port,
     else
     {
         /* Return an empty port byte value */
-        DPRINT1("Read from unknown port: 0x%X\n", Port);
+        DPRINT("Read from unknown port: 0x%X\n", Port);
         *Buffer = 0xFF;
     }
 }
@@ -121,7 +121,7 @@ IOWriteB(ULONG  Port,
     else
     {
         /* Do nothing */
-        DPRINT1("Write to unknown port: 0x%X\n", Port);
+        DPRINT("Write to unknown port: 0x%X\n", Port);
     }
 }
 

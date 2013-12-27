@@ -9,7 +9,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
+// #define NDEBUG
 
 #include "emulator.h"
 #include "int32.h"
@@ -131,7 +131,7 @@ VOID WINAPI Int32Dispatch(LPWORD Stack)
     if (Int32Proc[IntNum] != NULL)
         Int32Proc[IntNum](Stack);
     else
-        DPRINT1("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
+        DPRINT("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
 }
 
 VOID WINAPI ControlBop(LPWORD Stack)
@@ -143,7 +143,7 @@ VOID WINAPI ControlBop(LPWORD Stack)
     if (FuncNum == BOP_CONTROL_INT32)
         Int32Dispatch(Stack);
     else
-        DPRINT1("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
+        DPRINT("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
 }
 
 VOID InitializeInt32(WORD BiosSegment)
