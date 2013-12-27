@@ -981,7 +981,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
 
 TryWithVolumeName:
     /* If we didn't find anything, try differently */
-    if (DeviceLength < 2 * sizeof(WCHAR) || DeviceString[2] != L':')
+    if (DeviceLength < 2 * sizeof(WCHAR) || DeviceString[1] != L':')
     {
         if (DeviceString)
         {
