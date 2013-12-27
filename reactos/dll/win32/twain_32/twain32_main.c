@@ -19,17 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "twain.h"
 #include "twain_i.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 /* A helper function that looks up a destination identity in the active
    source list */

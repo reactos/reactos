@@ -20,15 +20,19 @@
 #ifndef _TWAIN32_H
 #define _TWAIN32_H
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h first
-#endif
+#include <config.h>
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "twain.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
+#include <twain.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 /* internal information about an active data source */
 typedef struct tagActiveDS
