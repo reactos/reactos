@@ -18,12 +18,6 @@
  */
 
 #include "urlmon_main.h"
-//#include "winreg.h"
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const WCHAR feature_control_keyW[] =
     {'S','o','f','t','w','a','r','e','\\',

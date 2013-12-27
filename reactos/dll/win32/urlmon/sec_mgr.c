@@ -21,18 +21,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-
 #include "urlmon_main.h"
-//#include "winreg.h"
-//#include "wininet.h"
-
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const WCHAR currentlevelW[] = {'C','u','r','r','e','n','t','L','e','v','e','l',0};
 static const WCHAR descriptionW[] = {'D','e','s','c','r','i','p','t','i','o','n',0};

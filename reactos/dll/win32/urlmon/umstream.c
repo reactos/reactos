@@ -21,15 +21,6 @@
 
 #include "urlmon_main.h"
 
-//#include "winreg.h"
-//#include "winternl.h"
-//#include "wininet.h"
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
-
 typedef struct ProxyBindStatusCallback
 {
     IBindStatusCallback IBindStatusCallback_iface;
