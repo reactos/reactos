@@ -40,13 +40,13 @@
 #include <wincon.h>
 #include <winver.h>
 #include <msiquery.h>
-#include <msidefs.h>
 #include <objbase.h>
 #include <msiserver.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <fusion.h>
 #include <sddl.h>
+#include <msidefs.h>
 
 #include <wine/list.h>
 #include <wine/debug.h>
