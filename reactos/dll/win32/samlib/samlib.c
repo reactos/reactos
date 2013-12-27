@@ -24,11 +24,7 @@
  * PROGRAMER:         Eric Kohl
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "precomp.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
 NTSTATUS
 WINAPI

@@ -13,3 +13,4 @@
 #include <sam_c.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(samlib);
