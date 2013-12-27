@@ -15,8 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef _SCRRUN_PRIVATE_H_
-#define _SCRRUN_PRIVATE_H
+#define _SCRRUN_PRIVATE_H_
 
 extern HRESULT WINAPI FileSystem_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI Dictionary_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
@@ -44,4 +45,4 @@ static inline BOOL heap_free(void *mem)
     return HeapFree(GetProcessHeap(), 0, mem);
 }
 
-#endif
+#endif /* _SCRRUN_PRIVATE_H_ */
