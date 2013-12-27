@@ -2,7 +2,7 @@
 #pragma once
 
 #ifndef RC_INVOKED
-#ifdef __MINGW32__
+#if defined(__GNUC__) && defined(_WIN32) // We can't use __MINGW32__ here
 #  include "mingw32/intrin.h"
 #elif defined(_MSC_VER)
 #  include "msc/intrin.h"
