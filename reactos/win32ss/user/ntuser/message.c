@@ -1328,6 +1328,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         else
         {
            lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+           // If zero, do not allow callback on client side to allocate a buffer!!!!! See CORE-7695.
+           if (!lParamBufferSize) lParamBufferSize = -1;
         }
 
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
@@ -1569,6 +1571,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     else
     {
         lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+        if (!lParamBufferSize) lParamBufferSize = -1;
     }
 
     if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
