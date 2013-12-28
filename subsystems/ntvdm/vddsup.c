@@ -251,13 +251,20 @@ BOOL LoadInstallableVDD(VOID)
 
     HANDLE hVDD;
 
-    /* Open the VDD registry key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      VDDKeyName,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hVDDKey) != ERROR_SUCCESS)
+    /* Try to open the VDD registry key */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          VDDKeyName,
+                          0,
+                          KEY_QUERY_VALUE,
+                          &hVDDKey);
+    if (Error == ERROR_FILE_NOT_FOUND)
     {
+        /* If the key just doesn't exist, don't do anything else */
+        return TRUE;
+    }
+    else if (Error != ERROR_SUCCESS)
+    {
+        /* The key exists but there was an access error: display an error and quit */
         DisplayMessage(ERROR_REGVDD);
         return FALSE;
     }
@@ -272,8 +279,18 @@ BOOL LoadInstallableVDD(VOID)
                              &Type,
                              NULL,
                              &BufSize);
-    if (Error != ERROR_SUCCESS || Type != REG_MULTI_SZ)
+    if (Error == ERROR_FILE_NOT_FOUND)
     {
+        /* If the value just doesn't exist, don't do anything else */
+        Success = TRUE;
+        goto Quit;
+    }
+    else if (Error != ERROR_SUCCESS || Type != REG_MULTI_SZ)
+    {
+        /*
+         * The value exists but there was an access error or
+         * is of the wrong type: display an error and quit.
+         */
         DisplayMessage(ERROR_REGVDD);
         Success = FALSE;
         goto Quit;
