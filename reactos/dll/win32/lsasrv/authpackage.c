@@ -726,6 +726,128 @@ LsapAddLocalGroups(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+LsapAddDefaultGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    IN SECURITY_LOGON_TYPE LogonType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    PTOKEN_GROUPS Groups;
+    ULONG i, Length;
+    PSID SrcSid;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        if (TokenInfo1->Groups != NULL)
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (TokenInfo1->Groups->GroupCount + 2 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Groups->GroupCount = TokenInfo1->Groups->GroupCount;
+
+            for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+            {
+                Groups->Groups[i].Sid = TokenInfo1->Groups->Groups[i].Sid;
+                Groups->Groups[i].Attributes = TokenInfo1->Groups->Groups[i].Attributes;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TokenInfo1->Groups);
+
+            TokenInfo1->Groups = Groups;
+
+        }
+        else
+        {
+            Length = sizeof(TOKEN_GROUPS) +
+                     (2 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+            Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+            if (Groups == NULL)
+            {
+                ERR("Group buffer allocation failed!\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            TokenInfo1->Groups = Groups;
+        }
+
+        /* Append the World SID (aka Everyone) */
+        Length = RtlLengthSid(LsapWorldSid);
+        Groups->Groups[Groups->GroupCount].Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 Length);
+        if (Groups->Groups[Groups->GroupCount].Sid == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Groups->Groups[Groups->GroupCount].Sid,
+                      LsapWorldSid,
+                      Length);
+
+        Groups->Groups[Groups->GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+
+        /* Append the logon type SID */
+        switch (LogonType)
+        {
+            case Interactive:
+                SrcSid = LsapInteractiveSid;
+                break;
+
+            case Network:
+                SrcSid = LsapNetworkSid;
+                break;
+
+            case Batch:
+                SrcSid = LsapBatchSid;
+                break;
+
+            case Service:
+                SrcSid = LsapServiceSid;
+                break;
+
+            default:
+                FIXME("LogonType %d is not supported!\n", LogonType);
+                return STATUS_NOT_IMPLEMENTED;
+        }
+
+        Length = RtlLengthSid(SrcSid);
+        Groups->Groups[Groups->GroupCount].Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 Length);
+        if (Groups->Groups[Groups->GroupCount].Sid == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Groups->Groups[Groups->GroupCount].Sid,
+                      SrcSid,
+                      Length);
+
+        Groups->Groups[Groups->GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+    }
+    else
+    {
+        FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 static
 NTSTATUS
@@ -832,11 +954,13 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     HANDLE TokenHandle = NULL;
     ULONG i;
     ULONG PackageId;
+    SECURITY_LOGON_TYPE LogonType;
     NTSTATUS Status;
 
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     PackageId = RequestMsg->LogonUser.Request.AuthenticationPackage;
+    LogonType = RequestMsg->LogonUser.Request.LogonType;
 
     /* Get the right authentication package */
     Package = LsapGetAuthenticationPackage(PackageId);
@@ -957,6 +1081,15 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
             ERR("LsapAddLocalGroupsToTokenInfo() failed (Status 0x%08lx)\n", Status);
             goto done;
         }
+    }
+
+    Status = LsapAddDefaultGroups(TokenInformation,
+                                  TokenInformationType,
+                                  LogonType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddDefaultGroups() failed (Status 0x%08lx)\n", Status);
+        goto done;
     }
 
     Status = LsapSetTokenOwner(TokenInformation,

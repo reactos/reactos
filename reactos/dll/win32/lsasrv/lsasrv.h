@@ -91,6 +91,11 @@ extern UNICODE_STRING BuiltinDomainName;
 extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
 
+extern PSID LsapWorldSid;
+extern PSID LsapNetworkSid;
+extern PSID LsapBatchSid;
+extern PSID LsapInteractiveSid;
+extern PSID LsapServiceSid;
 extern PSID LsapLocalSystemSid;
 extern PSID LsapAdministratorsSid;
 

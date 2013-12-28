@@ -273,10 +273,9 @@ BuildTokenGroups(IN PSID AccountDomainSid,
                  OUT PTOKEN_GROUPS *Groups,
                  OUT PSID *PrimaryGroupSid)
 {
-    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     PTOKEN_GROUPS TokenGroups;
-#define MAX_GROUPS 6
+#define MAX_GROUPS 4
     DWORD GroupCount = 0;
     PSID Sid;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -301,22 +300,6 @@ BuildTokenGroups(IN PSID AccountDomainSid,
     *PrimaryGroupSid = Sid;
     GroupCount++;
 
-    /* Member of 'Everyone' */
-    RtlAllocateAndInitializeSid(&WorldAuthority,
-                                1,
-                                SECURITY_WORLD_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
 
 #if 1
     /* Member of 'Administrators' */
@@ -356,22 +339,6 @@ BuildTokenGroups(IN PSID AccountDomainSid,
         SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
     GroupCount++;
 
-    /* Member of 'Interactive users' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                1,
-                                SECURITY_INTERACTIVE_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
 
     /* Member of 'Authenticated users' */
     RtlAllocateAndInitializeSid(&SystemAuthority,

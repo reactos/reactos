@@ -80,6 +80,11 @@ typedef struct _WELL_KNOWN_SID
 
 
 LIST_ENTRY WellKnownSidListHead;
+PSID LsapWorldSid = NULL;
+PSID LsapNetworkSid = NULL;
+PSID LsapBatchSid = NULL;
+PSID LsapInteractiveSid = NULL;
+PSID LsapServiceSid = NULL;
 PSID LsapLocalSystemSid = NULL;
 PSID LsapAdministratorsSid = NULL;
 
@@ -215,7 +220,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   L"",
                   SidTypeWellKnownGroup,
-                  NULL);
+                  &LsapWorldSid);
 
     /* Local Sid */
     LsapLoadString(hInstance, IDS_LOCAL_RID, szAccountName, 80);
@@ -300,7 +305,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   szDomainName,
                   SidTypeWellKnownGroup,
-                  NULL);
+                  &LsapNetworkSid);
 
     /* Batch Sid*/
     LsapLoadString(hInstance, IDS_BATCH_RID, szAccountName, 80);
@@ -312,7 +317,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   szDomainName,
                   SidTypeWellKnownGroup,
-                  NULL);
+                  &LsapBatchSid);
 
     /* Interactive Sid */
     LsapLoadString(hInstance, IDS_INTERACTIVE_RID, szAccountName, 80);
@@ -324,7 +329,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   szDomainName,
                   SidTypeWellKnownGroup,
-                  NULL);
+                  &LsapInteractiveSid);
 
     /* Service Sid */
     LsapLoadString(hInstance, IDS_SERVICE_RID, szAccountName, 80);
@@ -336,7 +341,7 @@ LsapInitSids(VOID)
                   szAccountName,
                   szDomainName,
                   SidTypeWellKnownGroup,
-                  NULL);
+                  &LsapServiceSid);
 
     /* Anonymous Logon Sid */
     LsapLoadString(hInstance, IDS_ANONYMOUS_LOGON_RID, szAccountName, 80);
