@@ -7,9 +7,6 @@
  */
  
 #include "uxthemep.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 USERAPIHOOK user32ApiHook;
 BYTE gabDWPmessages[UAHOWP_MAX_SIZE];

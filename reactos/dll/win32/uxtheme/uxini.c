@@ -19,10 +19,7 @@
  */
 
 #include "uxthemep.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
-
+#include <winnls.h>
 /***********************************************************************
  * Defines and global variables
  */
