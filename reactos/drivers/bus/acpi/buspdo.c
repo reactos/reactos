@@ -406,7 +406,7 @@ Bus_PDO_QueryDeviceId(
       PIRP   Irp )
 {
     PIO_STACK_LOCATION      stack;
-    PWCHAR                  buffer;
+    PWCHAR                  buffer, src;
     WCHAR                   temp[256];
     ULONG                   length;
     NTSTATUS                status = STATUS_SUCCESS;
@@ -490,15 +490,45 @@ Bus_PDO_QueryDeviceId(
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-            length += swprintf(&temp[length],
-                               L"ACPI\\%hs",
-                               Device->pnp.hardware_id);
-            length++;
+            DPRINT1("Device name: %s\n", Device->pnp.device_name);
+            DPRINT1("Hardware ID: %s\n", Device->pnp.hardware_id);
 
-            length += swprintf(&temp[length],
-                               L"*%hs",
-                               Device->pnp.hardware_id);
-            length++;
+            if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
+            {
+/*
+                length += swprintf(&temp[length],
+                                   L"ACPI\\%s - %s",
+                                   ProcessorVendorIdentifier, ProcessorIdentifier);
+                length++;
+
+                length += swprintf(&temp[length],
+                                   L"*%s - %s",
+                                   ProcessorVendorIdentifier, ProcessorIdentifier);
+                length++;
+*/
+                length = ProcessorHardwareIds.Length / sizeof(WCHAR);
+                src = ProcessorHardwareIds.Buffer;
+            }
+            else
+            {
+                length += swprintf(&temp[length],
+                                   L"ACPI\\%hs",
+                                   Device->pnp.hardware_id);
+                length++;
+
+                length += swprintf(&temp[length],
+                                   L"*%hs",
+                                   Device->pnp.hardware_id);
+                length++;
+
+         temp[length] = UNICODE_NULL;
+
+         length++;
+
+         temp[length] = UNICODE_NULL;
+         src = temp;
+
+            }
          }
          else
          {
@@ -509,13 +539,15 @@ Bus_PDO_QueryDeviceId(
             length += swprintf(&temp[length],
                                L"*FixedButton");
             length++;
-         }
 
          temp[length] = UNICODE_NULL;
 
          length++;
 
          temp[length] = UNICODE_NULL;
+         src = temp;
+         }
+
 
         buffer = ExAllocatePoolWithTag (PagedPool, length * sizeof(WCHAR), 'IPCA');
 
@@ -524,9 +556,54 @@ Bus_PDO_QueryDeviceId(
            break;
         }
 
-        RtlCopyMemory (buffer, temp, length * sizeof(WCHAR));
+        RtlCopyMemory (buffer, src, length * sizeof(WCHAR));
         Irp->IoStatus.Information = (ULONG_PTR) buffer;
         DPRINT("BusQueryHardwareIDs: %ls\n",buffer);
+        break;
+
+    case BusQueryCompatibleIDs:
+        length = 0;
+        status = STATUS_NOT_SUPPORTED;
+
+        /* See comment in BusQueryDeviceID case */
+        if (DeviceData->AcpiHandle)
+        {
+            acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
+
+            if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
+            {
+                DPRINT("Device name: %s\n", Device->pnp.device_name);
+                DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
+
+                length += swprintf(&temp[length],
+                                   L"ACPI\\%hs",
+                                   Device->pnp.hardware_id);
+                length++;
+
+                length += swprintf(&temp[length],
+                                   L"*%hs",
+                                   Device->pnp.hardware_id);
+                length++;
+
+                temp[length] = UNICODE_NULL;
+
+                length++;
+
+                temp[length] = UNICODE_NULL;
+
+                buffer = ExAllocatePoolWithTag (PagedPool, length * sizeof(WCHAR), 'IPCA');
+                if (!buffer)
+                {
+                    status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                RtlCopyMemory (buffer, temp, length * sizeof(WCHAR));
+                Irp->IoStatus.Information = (ULONG_PTR) buffer;
+                DPRINT("BusQueryHardwareIDs: %ls\n",buffer);
+                status = STATUS_SUCCESS;
+            }
+        }
         break;
 
     default:
@@ -604,7 +681,12 @@ Bus_PDO_QueryDeviceText(
            else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
             Temp = L"ACPI Power Resource";
            else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
-            Temp = L"Processor";
+           {
+               if (ProcessorNameString != NULL)
+                   Temp = ProcessorNameString;
+               else
+                   Temp = L"Processor";
+           }
            else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
             Temp = L"ACPI Thermal Zone";
            else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
