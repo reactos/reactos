@@ -1,5 +1,6 @@
 #include <windef.h>
 #include <winuser.h>
+
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -9,4 +10,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "ntvdm.exe"
 #include <reactos/version.rc>
 
-#include "rsrc.rc"
+IDI_APPICON ICON "res/ntvdm.ico"
+
+/* UTF-8 */
+#pragma code_page(65001)
