@@ -316,20 +316,45 @@ LogonUserW(LPWSTR lpszUsername,
     LUID LogonId = {0, 0};
     HANDLE TokenHandle = NULL;
     QUOTA_LIMITS QuotaLimits;
+    SECURITY_LOGON_TYPE LogonType;
     NTSTATUS SubStatus = STATUS_SUCCESS;
     NTSTATUS Status;
 
     *phToken = NULL;
 
+    switch (dwLogonType)
+    {
+        case LOGON32_LOGON_INTERACTIVE:
+            LogonType = Interactive;
+            break;
+
+        case LOGON32_LOGON_NETWORK:
+            LogonType = Network;
+            break;
+
+        case LOGON32_LOGON_BATCH:
+            LogonType = Batch;
+            break;
+
+        case LOGON32_LOGON_SERVICE:
+            LogonType = Service;
+            break;
+
+       default:
+            ERR("Invalid logon type: %ul\n", dwLogonType);
+            Status = STATUS_INVALID_PARAMETER;
+            goto done;
+    }
+
     if (LsaHandle == NULL)
     {
         Status = OpenLogonLsaHandle();
         if (!NT_SUCCESS(Status))
-            return Status;
+            goto done;
     }
 
     RtlInitAnsiString((PANSI_STRING)&OriginName,
-                      "Testapp");
+                      "Advapi32 Logon");
 
     RtlInitUnicodeString(&DomainName,
                          lpszDomain);
@@ -443,7 +468,7 @@ LogonUserW(LPWSTR lpszUsername,
 
     Status = LsaLogonUser(LsaHandle,
                           &OriginName,
-                          Interactive,
+                          LogonType,
                           AuthenticationPackage,
                           (PVOID)AuthInfo,
                           AuthInfoLength,
@@ -457,7 +482,7 @@ LogonUserW(LPWSTR lpszUsername,
                           &SubStatus);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("LsaLogonUser failed (Status 0x%08lx)\n", Status);
+        ERR("LsaLogonUser failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
