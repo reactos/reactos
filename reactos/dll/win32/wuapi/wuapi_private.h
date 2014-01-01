@@ -16,6 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <wuapi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
+
 extern HRESULT AutomaticUpdates_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateSession_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateSearcher_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
