@@ -21,6 +21,24 @@
 #ifndef __XMLLITE_PRIVATE__
 #define __XMLLITE_PRIVATE__
 
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <xmllite.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
+
 /* memory allocation functions */
 static inline void *heap_alloc(size_t len)
 {
