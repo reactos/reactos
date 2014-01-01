@@ -16,22 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <initguid.h>
+#include "vbscript.h"
 
-#include <vbscript.h>
-#include <objsafe.h>
-#include <mshtmhst.h>
 #include <rpcproxy.h>
-//#include "vbscript_classes.h"
-#include "vbsglobal.h"
-#include "vbsregexp55.h"
+#include <initguid.h>
+#include <vbscript_classes.h>
+#include <vbsglobal.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 WINE_DECLARE_DEBUG_CHANNEL(heap);
-
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static HINSTANCE vbscript_hinstance;
 

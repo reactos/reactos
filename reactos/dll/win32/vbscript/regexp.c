@@ -31,14 +31,7 @@
  * the Initial Developer. All Rights Reserved.
  */
 
-#include <assert.h>
-
 #include "vbscript.h"
-#include "regexp.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 /* FIXME: Better error handling */
 #define ReportRegExpError(a,b,c)
