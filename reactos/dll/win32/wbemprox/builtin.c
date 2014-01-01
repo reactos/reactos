@@ -16,39 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "config.h"
-#include <stdarg.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "initguid.h"
-#include "objbase.h"
-#include "oleauto.h"
-#include "wbemcli.h"
-#include "wbemprov.h"
-#include "winsock2.h"
-#include "iphlpapi.h"
-#include "tlhelp32.h"
-#include "d3d10.h"
-#include "winternl.h"
-#include "winioctl.h"
-#include "winsvc.h"
-#include "winver.h"
-
-#include "wine/debug.h"
 #include "wbemprox_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
+#include <wingdi.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <tlhelp32.h>
+#include <winternl.h>
+#include <winioctl.h>
+#include <winver.h>
+
+#include <initguid.h>
+#include <d3d10.h>
 
 static const WCHAR class_baseboardW[] =
     {'W','i','n','3','2','_','B','a','s','e','B','o','a','r','d',0};
