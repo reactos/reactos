@@ -9,6 +9,9 @@
 
 #include "wdmaud.h"
 
+#define NDEBUG
+#include <debug.h>
+
 extern HANDLE KernelHandle;
 
 DWORD

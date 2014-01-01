@@ -15,7 +15,6 @@
 #include <float_cast.h>
 #include <interface.h>
 #include <mmixer.h>
-#include <debug.h>
 
 BOOL
 WdmAudInitUserModeMixer(VOID);
