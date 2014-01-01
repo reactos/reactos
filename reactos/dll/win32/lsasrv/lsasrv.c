@@ -117,6 +117,17 @@ LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
 }
 
 
+VOID
+NTAPI
+LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr)
+{
+    if (Ptr != NULL)
+    {
+        midl_user_free(Ptr);
+    }
+}
+
+
 NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
