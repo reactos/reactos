@@ -16,9 +16,6 @@
 #include <wdbgexts.h>
 #include <ioaccess.h> /* port intrinsics */
 
-#define NDEBUG
-#include <debug.h>
-
 //#define KDDEBUG /* uncomment to enable debugging this dll */
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);

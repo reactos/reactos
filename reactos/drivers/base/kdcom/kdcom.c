@@ -10,6 +10,8 @@
 #include <cportlib/cportlib.h>
 #include <stdlib.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /* Serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
