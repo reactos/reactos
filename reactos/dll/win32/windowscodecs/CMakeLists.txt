@@ -51,6 +51,7 @@ list(APPEND SOURCE
     tgaformat.c
     tiffformat.c
     ungif.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def

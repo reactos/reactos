@@ -16,34 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-#include <wine/port.h>
-
-//#include <stdarg.h>
+#include "wincodecs_private.h"
 
 #ifdef HAVE_PNG_H
 #include <png.h>
 #endif
 
-#define NONAMELESSUNION
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-//#include "wincodec.h"
 #include <wincodecsdk.h>
 
-#include "wincodecs_private.h"
-
-#include <wine/debug.h>
 #include <wine/library.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 static HRESULT read_png_chunk(IStream *stream, BYTE *type, BYTE **data, ULONG *data_size)
 {
