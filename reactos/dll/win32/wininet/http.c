@@ -27,59 +27,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "internet.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-//#include <time.h>
-#include <assert.h>
 #ifdef HAVE_ZLIB
 #  include <zlib.h>
 #endif
 
-#include <windef.h>
-#include <winbase.h>
-#include <wininet.h>
-//#include "winerror.h"
 #include <winternl.h>
-#define NO_SHLWAPI_STREAM
-#define NO_SHLWAPI_REG
-#define NO_SHLWAPI_STRFCNS
-#define NO_SHLWAPI_GDI
-#include <shlwapi.h>
-#include <sspi.h>
-//#include "wincrypt.h"
-#include <winuser.h>
-#include <cryptuiapi.h>
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#endif
-
-#include "internet.h"
-#include <wine/debug.h>
 #include <wine/exception.h>
-//#include "wine/unicode.h"
 
 // ReactOS
 #include "inet_ntop.c"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 static const WCHAR g_szHttp1_0[] = {'H','T','T','P','/','1','.','0',0};
 static const WCHAR g_szHttp1_1[] = {'H','T','T','P','/','1','.','1',0};
