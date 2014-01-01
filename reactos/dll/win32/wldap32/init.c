@@ -18,22 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdio.h>
-//#include <stdarg.h>
-#ifdef HAVE_LDAP_H
-#include <ldap.h>
-#endif
-
-#include <windef.h>
-//#include "winbase.h"
-//#include "winnls.h"
-
 #include "winldap_private.h"
-//#include "wldap32.h"
-#include <wine/debug.h>
 
 #ifdef HAVE_LDAP
 /* Should eventually be determined by the algorithm documented on MSDN. */
@@ -204,8 +189,6 @@ static char *urlify_hostnames( const char *scheme, char *hostnames, ULONG port )
     return url;
 }
 #endif
-
-WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      cldap_openA     (WLDAP32.@)
