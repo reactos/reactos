@@ -18,20 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-#define COBJMACROS
-
 #include "editor.h"
-//#include "ole2.h"
-//#include "richole.h"
-//#include "imm.h"
-//#include "textserv.h"
-//#include "wine/debug.h"
-//#include "editstr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 

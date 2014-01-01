@@ -21,40 +21,6 @@
 #ifndef __EDITSTR_H
 #define __EDITSTR_H
 
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
-#endif
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <assert.h>
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <stdlib.h>
-//#include <limits.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-//#include <winnls.h>
-//#include <winnt.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <richedit.h>
-//#include <commctrl.h>
-#include <ole2.h>
-#include <richole.h>
-#include <imm.h>
-#include <textserv.h>
-
-#include <wine/debug.h>
-#include <wine/list.h>
-
 #ifdef __i386__
 extern const struct ITextHostVtbl itextHostStdcallVtbl;
 #endif /* __i386__ */
