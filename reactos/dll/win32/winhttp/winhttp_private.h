@@ -19,14 +19,27 @@
 #ifndef _WINE_WINHTTP_PRIVATE_H_
 #define _WINE_WINHTTP_PRIVATE_H_
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h to use this header
-#endif
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <winsock2.h>
+#include <winhttp.h>
 
 #include <wine/list.h>
 #include <wine/unicode.h>
 
-//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -42,8 +55,11 @@
 # define closesocket close
 # define ioctlsocket ioctl
 #endif
-#include <ole2.h>
+
 #include <sspi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 static const WCHAR getW[]    = {'G','E','T',0};
 static const WCHAR postW[]   = {'P','O','S','T',0};

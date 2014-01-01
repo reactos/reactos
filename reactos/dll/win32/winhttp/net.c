@@ -17,19 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "winhttp_private.h"
 
-#include <config.h>
-//#include <wine/port.h>
-
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <errno.h>
 #include <assert.h>
+#include <schannel.h>
 
-//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -42,25 +34,6 @@
 #ifdef HAVE_POLL_H
 # include <poll.h>
 #endif
-
-#define NONAMELESSUNION
-
-#include <wine/debug.h>
-#include <wine/library.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <winhttp.h>
-//#include "wincrypt.h"
-#include <schannel.h>
-
-#include "winhttp_private.h"
-
-/* to avoid conflicts with the Unix socket headers */
-#define USE_WS_PREFIX
-//#include "winsock2.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 #ifndef HAVE_GETADDRINFO
 

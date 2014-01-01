@@ -19,32 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "winhttp_private.h"
 
-#define COBJMACROS
-#include <config.h>
-//#include "wine/port.h"
-#include <wine/debug.h>
-
-#include <stdarg.h>
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif
 
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-//#include "initguid.h"
+#include <winuser.h>
 #include <httprequest.h>
-#include <winhttp.h>
-
-#include "winhttp_private.h"
 
 #include "inet_ntop.c"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 static const WCHAR attr_accept[] = {'A','c','c','e','p','t',0};
 static const WCHAR attr_accept_charset[] = {'A','c','c','e','p','t','-','C','h','a','r','s','e','t', 0};
