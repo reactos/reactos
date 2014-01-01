@@ -16,23 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "initguid.h"
-#include "objbase.h"
-#include "wbemdisp.h"
-#include "rpcproxy.h"
-
-#include "wine/debug.h"
 #include "wbemdisp_private.h"
-#include "wbemdisp_classes.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(wbemdisp);
+#include <rpcproxy.h>
+#include <wbemdisp_classes.h>
 
 static HINSTANCE instance;
 
