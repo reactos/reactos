@@ -18,6 +18,29 @@
 #ifndef __WINTRUST_PRIV_H__
 #define __WINTRUST_PRIV_H__
 
+#include <config.h>
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <winternl.h>
+#include <wintrust.h>
+#include <softpub.h>
+#include <mscat.h>
+#include <mssip.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
 void * WINAPI WINTRUST_Alloc(DWORD cb) __WINE_ALLOC_SIZE(1) DECLSPEC_HIDDEN;
 void WINAPI WINTRUST_Free(void *p) DECLSPEC_HIDDEN;
 BOOL WINAPI WINTRUST_AddStore(CRYPT_PROVIDER_DATA *data, HCERTSTORE store) DECLSPEC_HIDDEN;

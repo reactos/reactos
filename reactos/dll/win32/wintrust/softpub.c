@@ -15,17 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
 
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <wintrust.h>
-#include <mssip.h>
-#include <softpub.h>
-#include <winnls.h>
-#include <wine/debug.h>
+#include "wintrust_priv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
