@@ -13,6 +13,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_STARTIO i8042StartIo;

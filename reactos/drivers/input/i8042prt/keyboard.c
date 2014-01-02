@@ -13,6 +13,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* GLOBALS *******************************************************************/
 
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
