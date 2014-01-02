@@ -383,92 +383,6 @@ BuildTokenGroups(OUT PTOKEN_GROUPS *Groups,
 
 static
 NTSTATUS
-BuildTokenPrivileges(PTOKEN_PRIVILEGES *TokenPrivileges)
-{
-    /* FIXME shouldn't use hard-coded list of privileges */
-    static struct
-    {
-      LPCWSTR PrivName;
-      DWORD Attributes;
-    }
-    DefaultPrivs[] =
-    {
-      { L"SeMachineAccountPrivilege", 0 },
-      { L"SeSecurityPrivilege", 0 },
-      { L"SeTakeOwnershipPrivilege", 0 },
-      { L"SeLoadDriverPrivilege", 0 },
-      { L"SeSystemProfilePrivilege", 0 },
-      { L"SeSystemtimePrivilege", 0 },
-      { L"SeProfileSingleProcessPrivilege", 0 },
-      { L"SeIncreaseBasePriorityPrivilege", 0 },
-      { L"SeCreatePagefilePrivilege", 0 },
-      { L"SeBackupPrivilege", 0 },
-      { L"SeRestorePrivilege", 0 },
-      { L"SeShutdownPrivilege", 0 },
-      { L"SeDebugPrivilege", 0 },
-      { L"SeSystemEnvironmentPrivilege", 0 },
-      { L"SeChangeNotifyPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
-      { L"SeRemoteShutdownPrivilege", 0 },
-      { L"SeUndockPrivilege", 0 },
-      { L"SeEnableDelegationPrivilege", 0 },
-      { L"SeImpersonatePrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
-      { L"SeCreateGlobalPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT }
-    };
-    PTOKEN_PRIVILEGES Privileges = NULL;
-    ULONG i;
-    RPC_UNICODE_STRING PrivilegeName;
-    LSAPR_HANDLE PolicyHandle = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    Status = LsaIOpenPolicyTrusted(&PolicyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        goto done;
-    }
-
-    /* Allocate and initialize token privileges */
-    Privileges = DispatchTable.AllocateLsaHeap(sizeof(TOKEN_PRIVILEGES) +
-                                               sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]) *
-                                               sizeof(LUID_AND_ATTRIBUTES));
-    if (Privileges == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    Privileges->PrivilegeCount = 0;
-    for (i = 0; i < sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]); i++)
-    {
-        PrivilegeName.Length = wcslen(DefaultPrivs[i].PrivName) * sizeof(WCHAR);
-        PrivilegeName.MaximumLength = PrivilegeName.Length + sizeof(WCHAR);
-        PrivilegeName.Buffer = (LPWSTR)DefaultPrivs[i].PrivName;
-
-        Status = LsarLookupPrivilegeValue(PolicyHandle,
-                                          &PrivilegeName,
-                                          &Privileges->Privileges[Privileges->PrivilegeCount].Luid);
-        if (!NT_SUCCESS(Status))
-        {
-            WARN("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
-        }
-        else
-        {
-            Privileges->Privileges[Privileges->PrivilegeCount].Attributes = DefaultPrivs[i].Attributes;
-            Privileges->PrivilegeCount++;
-        }
-    }
-
-    *TokenPrivileges = Privileges;
-
-done:
-    if (PolicyHandle != NULL)
-        LsarClose(&PolicyHandle);
-
-    return Status;
-}
-
-
-static
-NTSTATUS
 BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
                             PRPC_SID AccountDomainSid,
                             PSAMPR_USER_INFO_BUFFER UserInfo)
@@ -505,10 +419,6 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = BuildTokenPrivileges(&Buffer->Privileges);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
     *TokenInformation = Buffer;
 
 done:
@@ -532,9 +442,6 @@ done:
 
             if (Buffer->PrimaryGroup.PrimaryGroup != NULL)
                 DispatchTable.FreeLsaHeap(Buffer->PrimaryGroup.PrimaryGroup);
-
-            if (Buffer->Privileges != NULL)
-                DispatchTable.FreeLsaHeap(Buffer->Privileges);
 
             if (Buffer->DefaultDacl.DefaultDacl != NULL)
                 DispatchTable.FreeLsaHeap(Buffer->DefaultDacl.DefaultDacl);

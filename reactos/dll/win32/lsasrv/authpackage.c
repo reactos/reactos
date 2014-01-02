@@ -94,12 +94,20 @@ typedef struct _AUTH_PACKAGE
     PLSA_AP_LOGON_USER_INTERNAL LsaApLogonUser;
 } AUTH_PACKAGE, *PAUTH_PACKAGE;
 
+VOID
+NTAPI
+LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr);
 
 /* GLOBALS *****************************************************************/
 
 static LIST_ENTRY PackageListHead;
 static ULONG PackageId;
 static LSA_DISPATCH_TABLE DispatchTable;
+
+#define CONST_LUID(x1, x2) {x1, x2}
+static const LUID SeChangeNotifyPrivilege = CONST_LUID(SE_CHANGE_NOTIFY_PRIVILEGE, 0);
+static const LUID SeCreateGlobalPrivilege = CONST_LUID(SE_CREATE_GLOBAL_PRIVILEGE, 0);
+static const LUID SeImpersonatePrivilege = CONST_LUID(SE_IMPERSONATE_PRIVILEGE, 0);
 
 
 /* FUNCTIONS ***************************************************************/
@@ -936,6 +944,137 @@ LsapAddTokenDefaultDacl(
 }
 
 
+static
+NTSTATUS
+LsapAddPrivilegeToTokenPrivileges(PTOKEN_PRIVILEGES *TokenPrivileges,
+                                  PLSAPR_LUID_AND_ATTRIBUTES Privilege)
+{
+    PTOKEN_PRIVILEGES LocalPrivileges;
+    ULONG Length, TokenPrivilegeCount, i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (*TokenPrivileges == NULL)
+    {
+        Length = sizeof(TOKEN_PRIVILEGES) +
+                 (1 - ANYSIZE_ARRAY) * sizeof(LUID_AND_ATTRIBUTES);
+        LocalPrivileges = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          Length);
+        if (LocalPrivileges == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        LocalPrivileges->PrivilegeCount = 1;
+        LocalPrivileges->Privileges[0].Luid = Privilege->Luid;
+        LocalPrivileges->Privileges[0].Attributes = Privilege->Attributes;
+    }
+    else
+    {
+        TokenPrivilegeCount = (*TokenPrivileges)->PrivilegeCount;
+
+        for (i = 0; i < TokenPrivilegeCount; i++)
+        {
+            if (RtlEqualLuid(&(*TokenPrivileges)->Privileges[i].Luid, &Privilege->Luid))
+                return STATUS_SUCCESS;
+        }
+
+        Length = sizeof(TOKEN_PRIVILEGES) +
+                 (TokenPrivilegeCount + 1 - ANYSIZE_ARRAY) * sizeof(LUID_AND_ATTRIBUTES);
+        LocalPrivileges = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          Length);
+        if (LocalPrivileges == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        LocalPrivileges->PrivilegeCount = TokenPrivilegeCount + 1;
+        for (i = 0; i < TokenPrivilegeCount; i++)
+        {
+            LocalPrivileges->Privileges[i].Luid = (*TokenPrivileges)->Privileges[i].Luid;
+            LocalPrivileges->Privileges[i].Attributes = (*TokenPrivileges)->Privileges[i].Attributes;
+        }
+
+        LocalPrivileges->Privileges[TokenPrivilegeCount].Luid = Privilege->Luid;
+        LocalPrivileges->Privileges[TokenPrivilegeCount].Attributes = Privilege->Attributes;
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *TokenPrivileges);
+    }
+
+    *TokenPrivileges = LocalPrivileges;
+
+    return Status;
+}
+
+static
+NTSTATUS
+LsapSetPrivileges(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    LSAPR_HANDLE PolicyHandle = NULL;
+    LSAPR_HANDLE AccountHandle = NULL;
+    PLSAPR_PRIVILEGE_SET Privileges = NULL;
+    ULONG i, j;
+    NTSTATUS Status;
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        Status = LsarOpenPolicy(NULL,
+                                NULL,
+                                0,
+                                &PolicyHandle);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        {
+            Status = LsarOpenAccount(PolicyHandle,
+                                     TokenInfo1->Groups->Groups[i].Sid,
+                                     ACCOUNT_VIEW,
+                                     &AccountHandle);
+            if (NT_SUCCESS(Status))
+            {
+                Status = LsarEnumeratePrivilegesAccount(AccountHandle,
+                                                        &Privileges);
+                if (NT_SUCCESS(Status))
+                {
+                    for (j = 0; j < Privileges->PrivilegeCount; j++)
+                    {
+                        Status = LsapAddPrivilegeToTokenPrivileges(&TokenInfo1->Privileges,
+                                                                   &(Privileges->Privilege[j]));
+                        if (!NT_SUCCESS(Status))
+                            return Status;
+                    }
+
+                    LsaIFree_LSAPR_PRIVILEGE_SET(Privileges);
+                    Privileges = NULL;
+                }
+            }
+
+            LsarClose(&AccountHandle);
+        }
+
+        LsarClose(&PolicyHandle);
+
+        if (TokenInfo1->Privileges != NULL)
+        {
+            for (i = 0; i < TokenInfo1->Privileges->PrivilegeCount; i++)
+            {
+                if (RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeChangeNotifyPrivilege) ||
+                    RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeCreateGlobalPrivilege) ||
+                    RtlEqualLuid(&TokenInfo1->Privileges->Privileges[i].Luid, &SeImpersonatePrivilege))
+                {
+                    TokenInfo1->Privileges->Privileges[i].Attributes |= SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT;
+                }
+            }
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext)
@@ -1105,6 +1244,14 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapAddTokenDefaultDacl() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapSetPrivileges(TokenInformation,
+                               TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetPrivileges() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
