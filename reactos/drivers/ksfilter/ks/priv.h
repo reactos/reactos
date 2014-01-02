@@ -1,21 +1,13 @@
 #define _KSDDK_
 
-#include <stdio.h>
-
 #include <ntifs.h>
-#define NDEBUG
-//#define YDEBUG
-#include <debug.h>
 #include <portcls.h>
 #include <kcom.h>
 #include <pseh/pseh2.h>
 
-#include <ntimage.h>
-#include <ndk/ldrfuncs.h>
-
+#include "ksiface.h"
+#include "kstypes.h"
 #include "ksfunc.h"
-#include "bdamedia.h"
-#include <swenum.h>
 
 #define TAG_DEVICE_HEADER 'KSDH'
 #define REG_PINFLAG_B_MANY 0x4 /* strmif.h */

@@ -6,9 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-
 #include "priv.h"
 
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS
 NTAPI

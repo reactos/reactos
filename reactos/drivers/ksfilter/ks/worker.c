@@ -6,8 +6,10 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-
 #include "priv.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* ===============================================================
     Worker Management Functions

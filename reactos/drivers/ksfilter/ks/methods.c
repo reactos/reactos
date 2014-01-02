@@ -8,6 +8,9 @@
 
 #include "priv.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 FindMethodHandler(
     IN PIO_STATUS_BLOCK IoStatus,

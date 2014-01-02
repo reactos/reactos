@@ -1,5 +1,8 @@
 #include "priv.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 KspSetDeviceInterfacesState(
     IN PLIST_ENTRY ListHead,
