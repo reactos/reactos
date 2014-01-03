@@ -10,7 +10,8 @@ list(APPEND SOURCE
     usbohci.cpp
     usb_request.cpp
     usb_queue.cpp
-    hardware.cpp)
+    hardware.cpp
+    guid.cpp)
 
 add_library(usbohci SHARED
     ${SOURCE}
