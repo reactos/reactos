@@ -8,6 +8,8 @@
 
 #include "wdmaud.h"
 
+#include <mmixer.h>
+
 #define NDEBUG
 #include <debug.h>
 
