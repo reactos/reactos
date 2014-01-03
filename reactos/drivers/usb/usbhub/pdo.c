@@ -11,6 +11,8 @@
 
 #include "usbhub.h"
 
+#include <wdmguid.h>
+
 #define NDEBUG
 #include <debug.h>
 
