@@ -7,8 +7,13 @@
  *
  */
 
-
 #include "private.hpp"
+
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
 
 //  + for absolute / - for relative
 

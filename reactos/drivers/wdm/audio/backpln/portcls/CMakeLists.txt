@@ -47,6 +47,7 @@ list(APPEND SOURCE
     undoc.cpp
     unregister.cpp
     version.cpp
+    guid.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
 add_library(portcls SHARED

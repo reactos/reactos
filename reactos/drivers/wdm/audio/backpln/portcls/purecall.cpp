@@ -6,9 +6,13 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-
 #include "private.hpp"
 
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
 
 extern "C" {
   void 
