@@ -1,10 +1,4 @@
-#include <ntifs.h>
-#include <ntddk.h>
 #include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <math.h>
-#include <stdio.h>
 
 typedef struct
 {
