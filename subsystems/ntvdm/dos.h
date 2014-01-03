@@ -118,6 +118,22 @@ typedef struct _DOS_DRIVER_HEADER
     CHAR DeviceName[8];
 } DOS_DRIVER_HEADER, *PDOS_DRIVER_HEADER;
 
+typedef struct _VDM_FIND_FILE_BLOCK
+{
+    CHAR DriveLetter;
+    CHAR Pattern[11];
+    UCHAR AttribMask;
+    DWORD Unused;
+    HANDLE SearchHandle;
+
+    /* The following part of the structure is documented */
+    UCHAR Attributes;
+    WORD FileTime;
+    WORD FileDate;
+    DWORD FileSize;
+    CHAR FileName[13];
+} VDM_FIND_FILE_BLOCK, *PVDM_FIND_FILE_BLOCK;
+
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/

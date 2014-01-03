@@ -890,6 +890,69 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
     return TRUE;
 }
 
+WORD DosFindFirstFile(LPSTR FileSpec, WORD AttribMask)
+{
+    BOOLEAN Success = TRUE;
+    WIN32_FIND_DATAA FindData;
+    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)FAR_POINTER(DiskTransferArea);
+
+    /* Fill the block */
+    FindFileBlock->DriveLetter = CurrentDrive + 'A';
+    FindFileBlock->AttribMask = AttribMask;
+    FindFileBlock->SearchHandle = FindFirstFileA(FileSpec, &FindData);
+    if (FindFileBlock->SearchHandle == INVALID_HANDLE_VALUE) return GetLastError();
+
+    do
+    {
+        /* Check the attributes */
+        if (!((FindData.dwFileAttributes
+            & (FILE_ATTRIBUTE_HIDDEN
+            | FILE_ATTRIBUTE_SYSTEM
+            | FILE_ATTRIBUTE_DIRECTORY))
+            & ~AttribMask)) break;
+    }
+    while ((Success = FindNextFileA(FindFileBlock->SearchHandle, &FindData)));
+
+    if (!Success) return GetLastError();
+
+    FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
+    FileTimeToDosDateTime(&FindData.ftLastWriteTime,
+                          &FindFileBlock->FileDate,
+                          &FindFileBlock->FileTime);
+    FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
+                                                     : FindData.nFileSizeLow;
+    strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
+
+    return ERROR_SUCCESS;
+}
+
+WORD DosFindNextFile(VOID)
+{
+    WIN32_FIND_DATAA FindData;
+    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)FAR_POINTER(DiskTransferArea);
+
+    do
+    {
+        if (!FindNextFileA(FindFileBlock->SearchHandle, &FindData)) return GetLastError();
+
+        /* Update the block */
+        FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
+        FileTimeToDosDateTime(&FindData.ftLastWriteTime,
+                              &FindFileBlock->FileDate,
+                              &FindFileBlock->FileTime);
+        FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
+                                                         : FindData.nFileSizeLow;
+        strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
+    }
+    while((FindData.dwFileAttributes
+          & (FILE_ATTRIBUTE_HIDDEN
+          | FILE_ATTRIBUTE_SYSTEM
+          | FILE_ATTRIBUTE_DIRECTORY))
+          & ~FindFileBlock->AttribMask);
+
+    return ERROR_SUCCESS;
+}
+
 BOOLEAN DosChangeDrive(BYTE Drive)
 {
     WCHAR DirectoryPath[DOS_CMDLINE_LENGTH];
@@ -2479,6 +2542,30 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             setAX(DosErrorLevel);
             DosErrorLevel = 0x0000; // Clear it
+            break;
+        }
+
+        /* Find First File */
+        case 0x4E:
+        {
+            WORD Result = DosFindFirstFile(SEG_OFF_TO_PTR(getDS(), getDX()), getCX());
+
+            setAX(Result);
+            if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            else Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        /* Find Next File */
+        case 0x4F:
+        {
+            WORD Result = DosFindNextFile();
+
+            setAX(Result);
+            if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            else Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
             break;
         }
 
