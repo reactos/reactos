@@ -1,18 +1,11 @@
 
 #pragma once
 
-#include <ntddk.h>
+#include <wdm.h>
 #include <usbdi.h>
-#include <hubbusif.h>
 #include <usbbusif.h>
-#include <usbioctl.h>
-#include <usbiodef.h>
-#include <usb.h>
 #include <usbdlib.h>
-#include <stdio.h>
-#include <wdmguid.h>
 #include <classpnp.h>
-#include <scsi.h>
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
