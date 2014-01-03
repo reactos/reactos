@@ -8,10 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
-
 #include "libusb.h"
 
+#define NDEBUG
+#include <debug.h>
 
 extern "C" {
   void 
@@ -23,4 +23,3 @@ extern "C" {
 
   }
 }
-
