@@ -10,6 +10,11 @@
 
 #include "precomp.h"
 
+#include <wdmguid.h>
+
+#define NDEBUG
+#include <debug.h>
+
 PHIDP_COLLECTION_DESC
 HidClassPDO_GetCollectionDescription(
     PHIDP_DEVICE_DESC DeviceDescription,
