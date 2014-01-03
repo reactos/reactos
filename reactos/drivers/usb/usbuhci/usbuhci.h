@@ -1,34 +1,7 @@
 #ifndef USBUHCI_H__
 #define USBUHCI_H__
 
-#define INITGUID
-
-#include <ntddk.h>
-#include <hubbusif.h>
-#include <usbbusif.h>
-#include <usbioctl.h>
-
-extern
-"C"
-{
-#include <usbdlib.h>
-}
-
-//
-// FIXME: 
-// #include <usbprotocoldefs.h>
-//
-#include <usb.h>
-#include <stdio.h>
-#include <wdmguid.h>
-
-//
-// FIXME:
-// the following includes are required to get kcom to compile
-//
-#include <portcls.h>
-#include <dmusicks.h>
-#include <kcom.h>
+#include <libusb.h>
 
 #include "hardware.h"
 #include "interfaces.h"
