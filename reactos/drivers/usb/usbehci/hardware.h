@@ -1,8 +1,5 @@
 #pragma once
 
-#include <ntddk.h>
-
-
 //
 // Host Controller Capability Registers
 //
