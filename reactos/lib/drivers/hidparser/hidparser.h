@@ -15,10 +15,6 @@
 #include <ntddk.h>
 #include <hidpddi.h>
 #include <hidpi.h>
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#include <debug.h>
 
 //
 // function prototypes
