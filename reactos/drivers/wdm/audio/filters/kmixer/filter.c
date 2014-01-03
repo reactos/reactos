@@ -8,6 +8,11 @@
 
 #include "kmixer.h"
 
+#include <swenum.h>
+
+#define YDEBUG
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 Dispatch_fnDeviceIoControl(
