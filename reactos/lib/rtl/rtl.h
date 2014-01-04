@@ -6,8 +6,6 @@
  * PROGRAMMER:      Alex Ionescu
  */
 
-/* INCLUDES ******************************************************************/
-
 #ifndef RTL_H
 #define RTL_H
 
@@ -23,14 +21,14 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#define COBJMACROS
+#define CONST_VTABLE
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <objbase.h>
-#include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
-#include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/ldrfuncs.h>
 #include <ndk/mmfuncs.h>
@@ -44,11 +42,6 @@
 /* Internal RTL header */
 #include "rtlp.h"
 
-/* PSEH Support */
-#include <pseh/pseh2.h>
-
-#include <intrin.h>
-
 /* Use intrinsics for x86 and x64 */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #define InterlockedCompareExchange _InterlockedCompareExchange
@@ -61,5 +54,3 @@
 #endif
 
 #endif /* RTL_H */
-
-/* EOF */

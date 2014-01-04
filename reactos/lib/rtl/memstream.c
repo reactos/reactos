@@ -7,9 +7,6 @@
 
 /* INCLUDES *******************************************************************/
 
-#define COBJMACROS
-#define CONST_VTABLE
-
 #include <rtl.h>
 
 #define NDEBUG
