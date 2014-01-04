@@ -2,7 +2,6 @@
 #define _WINDOWS_H
 #include <stdarg.h>
 #include <windef.h>
-#include <guiddef.h>
 #include <wingdi.h>
 #include <winddi.h>
 #include <winioctl.h>
@@ -10,8 +9,6 @@
 #include <ioaccess.h>
 
 #include "vgavideo/vgavideo.h"
-#include "objects/brush.h"
-#include "objects/bitblt.h"
 
 #ifndef NDEBUG
 #define DPRINT DbgPrint
