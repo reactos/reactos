@@ -1,6 +1,13 @@
 #ifndef CARDLIB_INCLUDED
 #define CARDLIB_INCLUDED
 
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+
 #define CARDLIBPROC __stdcall
 
 void CardBlt(HDC hdc, int x, int y, int nCardNum);
