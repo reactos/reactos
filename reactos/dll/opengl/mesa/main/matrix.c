@@ -34,17 +34,7 @@
  * -# Transformation of a point p by a matrix M is: p' = M * p
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "context.h"
-#include "enums.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "matrix.h"
-#include "mtypes.h"
-#include "math/m_matrix.h"
-
+#include <precomp.h>
 
 /**
  * Apply a perspective projection matrix.

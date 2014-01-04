@@ -27,22 +27,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "mfeatures.h"
-#include "bufferobj.h"
-#include "colortab.h"
-#include "context.h"
-#include "enums.h"
-#include "formats.h"
-#include "hash.h"
-#include "imports.h"
-#include "macros.h"
-#include "teximage.h"
-#include "texobj.h"
-#include "texstate.h"
-#include "mtypes.h"
-
-
+#include <precomp.h>
 
 /**********************************************************************/
 /** \name Internal functions */

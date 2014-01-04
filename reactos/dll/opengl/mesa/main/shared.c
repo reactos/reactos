@@ -27,14 +27,7 @@
  * Shared-context state
  */
 
-#include "imports.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "hash.h"
-#include "bufferobj.h"
-#include "shared.h"
-#include "dlist.h"
-
+#include <precomp.h>
 
 /**
  * Allocate and initialize a shared context state structure.

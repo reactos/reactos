@@ -27,19 +27,7 @@
  */
 
 
-#include "glheader.h"
-#include "clip.h"
-#include "context.h"
-#include "enable.h"
-#include "light.h"
-#include "simple_list.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "enums.h"
-#include "api_arrayelt.h"
-#include "texstate.h"
-
-
+#include <precomp.h>
 
 #define CHECK_EXTENSION(EXTNAME, CAP)					\
    if (!ctx->Extensions.EXTNAME) {					\

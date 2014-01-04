@@ -30,21 +30,7 @@
  * This file manages recalculation of derived values in struct gl_context.
  */
 
-
-#include "glheader.h"
-#include "mtypes.h"
-#include "context.h"
-#include "macros.h"
-#include "framebuffer.h"
-#include "light.h"
-#include "matrix.h"
-#include "pixel.h"
-#include "state.h"
-#include "stencil.h"
-#include "texobj.h"
-#include "texstate.h"
-#include "varray.h"
-
+#include <precomp.h>
 
 static void
 update_separate_specular(struct gl_context *ctx)

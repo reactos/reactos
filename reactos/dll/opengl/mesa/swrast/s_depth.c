@@ -22,20 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/formats.h"
-#include "main/format_unpack.h"
-#include "main/format_pack.h"
-#include "main/macros.h"
-#include "main/imports.h"
-
-#include "s_context.h"
-#include "s_depth.h"
-#include "s_span.h"
-
-
+#include <precomp.h>
 
 #define Z_TEST(COMPARE)                      \
    do {                                      \

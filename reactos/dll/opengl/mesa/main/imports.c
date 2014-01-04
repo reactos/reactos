@@ -43,11 +43,7 @@
  */
 
 
-
-#include "imports.h"
-#include "context.h"
-#include "mtypes.h"
-#include "version.h"
+#include <precomp.h>
 
 #ifdef _GNU_SOURCE
 #include <locale.h>
@@ -55,7 +51,6 @@
 #include <xlocale.h>
 #endif
 #endif
-
 
 #define MAXSTRING 4000  /* for vsnprintf() */
 

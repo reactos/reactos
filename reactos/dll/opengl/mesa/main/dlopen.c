@@ -21,14 +21,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /**
  * Wrapper functions for dlopen(), dlsym(), dlclose().
  * Note that the #ifdef tests for various environments should be expanded.
  */
 
+#include <precomp.h>
 
-#include "compiler.h"
 #include "dlopen.h"
 
 #if defined(_GNU_SOURCE) && !defined(__MINGW32__) && !defined(__blrts)

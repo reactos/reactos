@@ -22,15 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "clip.h"
-#include "context.h"
-#include "macros.h"
-#include "mtypes.h"
-
-#include "math/m_matrix.h"
-
+#include <precomp.h>
 
 /**
  * Update derived clip plane state.

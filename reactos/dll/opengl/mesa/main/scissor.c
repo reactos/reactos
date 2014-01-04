@@ -22,12 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/mtypes.h"
-#include "main/scissor.h"
-
+#include <precomp.h>
 
 /**
  * Called via glScissor

@@ -27,13 +27,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "context.h"
-#include "macros.h"
-#include "points.h"
-#include "mtypes.h"
-
+#include <precomp.h>
 
 /**
  * Set current point size.

@@ -23,7 +23,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /**
  * \file swrast/s_span.c
  * \brief Span processing functions used by all rasterization functions.
@@ -31,24 +30,7 @@
  * \author Brian Paul
  */
 
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/format_pack.h"
-#include "main/format_unpack.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/image.h"
-
-#include "s_alpha.h"
-#include "s_blend.h"
-#include "s_context.h"
-#include "s_depth.h"
-#include "s_fog.h"
-#include "s_logic.h"
-#include "s_masking.h"
-#include "s_span.h"
-#include "s_stencil.h"
-#include "s_texcombine.h"
+#include <precomp.h>
 
 /**
  * Set default fragment attributes for the span using the

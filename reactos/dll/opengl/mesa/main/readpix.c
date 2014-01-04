@@ -22,20 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "bufferobj.h"
-#include "context.h"
-#include "enums.h"
-#include "readpix.h"
-#include "framebuffer.h"
-#include "formats.h"
-#include "format_unpack.h"
-#include "image.h"
-#include "mtypes.h"
-#include "pack.h"
-#include "state.h"
-
+#include <precomp.h>
 
 /**
  * Tries to implement glReadPixels() of GL_DEPTH_COMPONENT using memcpy of the

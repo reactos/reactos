@@ -22,27 +22,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /*
  * When the device driver doesn't implement triangle rasterization it
  * can hook in _swrast_Triangle, which eventually calls one of these
  * functions to draw triangles.
  */
 
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/imports.h"
-#include "main/macros.h"
-#include "main/mtypes.h"
-#include "main/state.h"
-
-#include "s_aatriangle.h"
-#include "s_context.h"
-#include "s_feedback.h"
-#include "s_span.h"
-#include "s_triangle.h"
-
+#include <precomp.h>
 
 /**
  * Test if a triangle should be culled.  Used for feedback and selection mode.

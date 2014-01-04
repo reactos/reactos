@@ -30,23 +30,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/bufferobj.h"
-#include "main/context.h"
-#include "main/macros.h"
-#include "main/mfeatures.h"
-#include "main/vtxfmt.h"
-#include "main/dlist.h"
-#include "main/eval.h"
-#include "main/state.h"
-#include "main/light.h"
-#include "main/api_arrayelt.h"
-#include "main/api_validate.h"
-#include "main/dispatch.h"
-
-#include "vbo_context.h"
-#include "vbo_noop.h"
-
+#include <precomp.h>
 
 #ifdef ERROR
 #undef ERROR

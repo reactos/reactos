@@ -46,13 +46,7 @@
  * of zero.
  */
 
-#include "main/glheader.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
-
-#include "vbo.h"
-#include "vbo_attrib.h"
-
+#include <precomp.h>
 
 #define REBASE(TYPE) 						\
 static void *rebase_##TYPE( const void *ptr,			\

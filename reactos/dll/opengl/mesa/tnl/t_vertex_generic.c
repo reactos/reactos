@@ -26,14 +26,7 @@
  *    Keith Whitwell <keithw@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/simple_list.h"
-#include "swrast/s_chan.h"
-#include "t_context.h"
-#include "t_vertex.h"
-
+#include <precomp.h>
 
 #if 0
 #define DEBUG_INSERT printf("%s\n", __FUNCTION__)

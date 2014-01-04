@@ -25,17 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
-
-#include "math/m_xform.h"
-
-#include "t_context.h"
-#include "t_pipeline.h"
+#include <precomp.h>
 
 /* Is there any real benefit seperating texmat from texgen?  It means
  * we need two lots of intermediate storage.  Any changes to

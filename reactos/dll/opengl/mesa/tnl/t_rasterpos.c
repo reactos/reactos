@@ -22,19 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/feedback.h"
-#include "main/light.h"
-#include "main/macros.h"
-#include "main/simple_list.h"
-#include "main/mtypes.h"
-
-#include "math/m_matrix.h"
-#include "tnl/tnl.h"
-
-
+#include <precomp.h>
 
 /**
  * Clip a point against the view volume.

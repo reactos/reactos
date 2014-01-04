@@ -25,13 +25,7 @@
  *    Brian Paul
  */
 
-#include "main/glheader.h"
-#include "main/mtypes.h"
-#include "main/dd.h"
-#include "main/imports.h"
-#include "t_context.h"
-#include "t_pipeline.h"
-
+#include <precomp.h>
 
 struct point_stage_data {
    GLvector4f PointSize;

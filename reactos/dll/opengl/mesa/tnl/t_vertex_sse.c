@@ -25,14 +25,7 @@
  *    Keith Whitwell <keithw@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/simple_list.h"
-#include "main/enums.h"
-#include "swrast/s_chan.h"
-#include "t_context.h"
-#include "t_vertex.h"
+#include <precomp.h>
 
 #if defined(USE_SSE_ASM)
 

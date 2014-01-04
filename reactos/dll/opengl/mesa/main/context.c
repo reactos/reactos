@@ -75,54 +75,7 @@
  *
  */
 
-
-#include "glheader.h"
-#include "mfeatures.h"
-#include "imports.h"
-#include "accum.h"
-#include "api_exec.h"
-#include "arrayobj.h"
-#include "attrib.h"
-#include "blend.h"
-#include "buffers.h"
-#include "bufferobj.h"
-#include "context.h"
-#include "cpuinfo.h"
-#include "depth.h"
-#include "dlist.h"
-#include "eval.h"
-#include "extensions.h"
-#include "feedback.h"
-#include "fog.h"
-#include "formats.h"
-#include "framebuffer.h"
-#include "hint.h"
-#include "hash.h"
-#include "light.h"
-#include "lines.h"
-#include "macros.h"
-#include "matrix.h"
-#include "multisample.h"
-#include "pixel.h"
-#include "pixelstore.h"
-#include "points.h"
-#include "polygon.h"
-#include "rastpos.h"
-#include "scissor.h"
-#include "shared.h"
-#include "simple_list.h"
-#include "state.h"
-#include "stencil.h"
-#include "texstate.h"
-#include "mtypes.h"
-#include "varray.h"
-#include "version.h"
-#include "viewport.h"
-#include "vtxfmt.h"
-#if _HAVE_FULL_GL
-#include "math/m_matrix.h"
-#endif
-#include "main/dispatch.h" /* for _gloffset_COUNT */
+#include <precomp.h>
 
 #ifdef USE_SPARC_ASM
 #include "sparc/sparc.h"

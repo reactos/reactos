@@ -22,15 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-#include "s_context.h"
-#include "s_feedback.h"
-#include "s_points.h"
-#include "s_span.h"
-
+#include <precomp.h>
 
 /**
  * Used to cull points with invalid coords

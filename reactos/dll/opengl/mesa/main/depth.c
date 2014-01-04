@@ -22,15 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "context.h"
-#include "depth.h"
-#include "enums.h"
-#include "macros.h"
-#include "mtypes.h"
-
+#include <precomp.h>
 
 /**********************************************************************/
 /*****                          API Functions                     *****/

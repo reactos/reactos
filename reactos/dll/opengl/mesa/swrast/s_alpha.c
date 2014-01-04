@@ -27,14 +27,7 @@
  * \brief Functions to apply alpha test.
  */
 
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-
-#include "s_alpha.h"
-#include "s_context.h"
-
+#include <precomp.h>
 
 #define ALPHA_TEST(ALPHA, LOOP_CODE)		\
 do {						\

@@ -33,14 +33,7 @@
  * 3. Transformation of a point p by a matrix M is: p' = M * p
  */
 
-#include "main/glheader.h"
-#include "main/macros.h"
-
-#include "m_eval.h"
-#include "m_matrix.h"
-#include "m_translate.h"
-#include "m_xform.h"
-
+#include <precomp.h>
 
 #ifdef DEBUG_MATH
 #include "m_debug.h"

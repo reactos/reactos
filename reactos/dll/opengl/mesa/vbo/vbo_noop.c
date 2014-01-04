@@ -27,15 +27,7 @@
  * GLvertexformat no-op functions.  Used in out-of-memory situations.
  */
 
-
-#include "main/glheader.h"
-#include "main/api_arrayelt.h"
-#include "main/context.h"
-#include "main/dispatch.h"
-#include "main/dlist.h"
-#include "main/eval.h"
-#include "main/mfeatures.h"
-#include "vbo/vbo_noop.h"
+#include <precomp.h>
 
 #if FEATURE_beginend
 
