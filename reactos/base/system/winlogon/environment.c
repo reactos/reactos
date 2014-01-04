@@ -12,8 +12,6 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
-
 /* GLOBALS ******************************************************************/
 
 

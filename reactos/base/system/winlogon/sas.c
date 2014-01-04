@@ -13,8 +13,6 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
-
 /* GLOBALS ******************************************************************/
 
 #define WINLOGON_SAS_CLASS L"SAS Window class"
