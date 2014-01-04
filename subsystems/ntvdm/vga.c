@@ -797,9 +797,9 @@ static VOID VgaUpdateFramebuffer(VOID)
                          * then 2 bits shifted from plane 1 and 3 for the next 4
                          */
                         BYTE LowPlaneData = VgaMemory[((j / 4) % 2) * VGA_BANK_SIZE
-                                                      + (Address + (j / 4)) * AddressSize];
+                                                      + (Address + (j / 8)) * AddressSize];
                         BYTE HighPlaneData = VgaMemory[(((j / 4) % 2) + 2) * VGA_BANK_SIZE
-                                                       + (Address + (j / 4)) * AddressSize];
+                                                       + (Address + (j / 8)) * AddressSize];
 
                         /* Extract the two bits from each plane */
                         LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
@@ -1032,9 +1032,11 @@ COORD VgaGetDisplayResolution(VOID)
         /* Halve the vertical resolution */
         Resolution.Y >>= 1;
     }
-
-    /* Divide the vertical resolution by the maximum scan line (== font size in text mode) */
-    Resolution.Y /= MaximumScanLine;
+    else
+    {
+        /* Divide the vertical resolution by the maximum scan line (== font size in text mode) */
+        Resolution.Y /= MaximumScanLine;
+    }
 
     /* Return the resolution */
     return Resolution;
