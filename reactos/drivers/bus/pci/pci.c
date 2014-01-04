@@ -7,12 +7,11 @@
  *      10-09-2001  CSH  Created
  */
 
-#define INITGUID
 #include "pci.h"
 
-#ifndef NDEBUG
+#include <stdio.h>
+
 #define NDEBUG
-#endif
 #include <debug.h>
 
 static DRIVER_DISPATCH PciDispatchDeviceControl;

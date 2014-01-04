@@ -1,7 +1,4 @@
 #include <ntifs.h>
-#include <wdmguid.h>
-#include <stdio.h>
-#include <ntddk.h>
 
 #define TAG_PCI '0ICP'
 

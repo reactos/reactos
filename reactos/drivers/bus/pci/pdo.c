@@ -9,9 +9,10 @@
 
 #include "pci.h"
 
-#ifndef NDEBUG
+#include <initguid.h>
+#include <wdmguid.h>
+
 #define NDEBUG
-#endif
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/
