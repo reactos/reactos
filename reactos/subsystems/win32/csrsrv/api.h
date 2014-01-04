@@ -7,13 +7,6 @@
 
 #pragma once
 
-#define NTOS_MODE_USER
-#include <ndk/psfuncs.h>
-#include <ndk/rtlfuncs.h>
-
-#include <csr/csrsrv.h>
-
-
 extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
 
 #define CsrAcquireProcessLock() \
