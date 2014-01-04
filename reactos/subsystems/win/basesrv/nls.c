@@ -10,6 +10,8 @@
 
 #include "basesrv.h"
 
+#include <ndk/mmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

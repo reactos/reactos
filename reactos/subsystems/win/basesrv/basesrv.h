@@ -9,18 +9,19 @@
 #ifndef __BASESRV_H__
 #define __BASESRV_H__
 
-#pragma once
-
 /* PSDK/NDK Headers */
-#include <stdarg.h>
+#include <stdio.h>
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/umfuncs.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
@@ -63,6 +64,4 @@ extern HANDLE BaseSrvHeap;
 extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
-#endif // __BASESRV_H__
-
-/* EOF */
+#endif /* __BASESRV_H__ */
