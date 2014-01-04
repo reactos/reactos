@@ -1,8 +1,6 @@
 #ifndef CARDSTACK_INCLUDED
 #define CARDSTACK_INCLUDED
 
-#include "card.h"
-
 #define MAX_CARDSTACK_SIZE 128
 
 class CardStack
@@ -50,4 +48,5 @@ private:
 	int  nNumCards;
 };
 
-#endif
+#endif /* CARDSTACK_INCLUDED */
+

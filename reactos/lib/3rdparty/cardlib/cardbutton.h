@@ -3,8 +3,6 @@
 
 #define MAXBUTTONTEXT 64
 
-//#include "cardlib.h"
-
 class CardButton
 {
 	friend class CardWindow;
@@ -98,4 +96,4 @@ private:
 	pButtonProc	ButtonCallback;
 };
 
-#endif
+#endif /* CARDBUTTON_INCLUDED */

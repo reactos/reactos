@@ -1,3 +1,4 @@
+#pragma once
 
 COLORREF ColorScaleRGB(	const COLORREF Col1,
 						const COLORREF Col2,

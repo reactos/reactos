@@ -1,18 +1,6 @@
 #ifndef _CARDCOUNT_INCLUDED
 #define _CARDCOUNT_INCLUDED
 
-//#include <windows.h>
-
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <stdlib.h>
-
-#include "cardstack.h"
-
 class CardCount
 {
 public:
@@ -36,4 +24,4 @@ private:
 					//(ace,2,3,4,5,6,7,8,9,10,J,Q,K)
 };
 
-#endif
+#endif /* _CARDCOUNT_INCLUDED */
