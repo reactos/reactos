@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#include <winver.h>
+
 typedef struct
 {
     WCHAR Guid[40];
