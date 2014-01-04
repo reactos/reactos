@@ -5,14 +5,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <winreg.h>
 #include <wingdi.h>
-#include <windowsx.h>
-#include <tchar.h>
-//#include <stdio.h>
-#include <stdlib.h>
-#include <commctrl.h>
-#include <richedit.h>
 
 #include "resource.h"
 

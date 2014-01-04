@@ -9,6 +9,9 @@
 
 #include <precomp.h>
 
+#include <commctrl.h>
+#include <richedit.h>
+
 #define ID_ABOUT    0x1
 
 HINSTANCE hInstance;
