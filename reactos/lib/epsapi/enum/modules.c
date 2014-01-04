@@ -19,6 +19,10 @@
 
 #include "precomp.h"
 
+#include <ndk/mmfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
