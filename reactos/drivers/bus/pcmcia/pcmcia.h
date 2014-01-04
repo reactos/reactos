@@ -1,8 +1,4 @@
-
-#include <ntifs.h>
-#include <wdmguid.h>
-#include <stdio.h>
-#include <ntddk.h>
+#include <wdm.h>
 
 typedef enum
 {
