@@ -19,17 +19,10 @@
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
-#include <time.h>
-#include <limits.h> // for INT_MAX definition
-
-#include "check/dosfsck.h"
 #include "check/common.h"
 #include "check/io.h"
-#include "check/lfn.h"
-#include "check/boot.h"
 #include "check/fat.h"
 #include "check/file.h"
-#include "check/check.h"
 
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR

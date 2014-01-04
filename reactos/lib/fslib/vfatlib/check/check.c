@@ -10,6 +10,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "lfn.h"
+
 static DOS_FILE *root;
 
 /* get start field of a dir entry */
