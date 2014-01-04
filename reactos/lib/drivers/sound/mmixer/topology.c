@@ -8,6 +8,9 @@
 
 #include "priv.h"
 
+#define YDEBUG
+#include <debug.h>
+
 VOID
 MMixerPrintTopology(
     PTOPOLOGY Topology)
