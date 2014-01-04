@@ -7,7 +7,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE network/i386/checksum.S)
+    add_asm_files(ip_asm network/i386/checksum.S)
 endif()
 
 list(APPEND SOURCE
@@ -32,6 +32,6 @@ list(APPEND SOURCE
     transport/tcp/tcp.c
     transport/udp/udp.c)
 
-add_library(ip ${SOURCE})
+add_library(ip ${SOURCE} ${ip_asm})
 add_pch(ip precomp.h)
 add_dependencies(ip bugcodes)
