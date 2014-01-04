@@ -3,11 +3,12 @@
  * PROJECT:     ReactOS VFAT filesystem library
  * FILE:        vfatxlib.h
  */
+
 #define NTOS_MODE_USER
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include <ndk/ldrtypes.h>
 #include <ndk/iofuncs.h>
-#include <ndk/kefuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 
 #include <pshpack1.h>
