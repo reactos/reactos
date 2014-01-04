@@ -5,7 +5,7 @@
 //    Copyright J Brown 2001
 //
 
-#include "cardstack.h"
+#include "cardlib.h"
 
 Card &CardStack::operator[] (size_t index)
 {

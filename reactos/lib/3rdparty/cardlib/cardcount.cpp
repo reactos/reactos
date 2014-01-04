@@ -19,6 +19,7 @@
 //        count.Clear();
 //
 
+#include "cardlib.h"
 #include "cardcount.h"
 
 CardCount::CardCount()
