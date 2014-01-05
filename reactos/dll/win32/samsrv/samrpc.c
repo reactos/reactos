@@ -3250,6 +3250,7 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
     ULONG ValueCount;
     ULONG DataLength;
     ULONG i, j;
+    ULONG RidIndex;
     NTSTATUS Status;
     WCHAR NameBuffer[9];
 
@@ -3334,6 +3335,7 @@ TRACE("Open %S\n", MemberSidString);
         goto done;
     }
 
+    RidIndex = 0;
     for (i = 0; i < SidArray->Count; i++)
     {
         ConvertSidToStringSid(SidArray->Sids[i].SidPointer, &MemberSidString);
@@ -3365,7 +3367,9 @@ TRACE("Open %S\n", MemberSidString);
                                                    NULL);
                     if (NT_SUCCESS(Status))
                     {
-                        RidArray[j] = wcstoul(NameBuffer, NULL, 16);
+                        /* FIXME: Do not return each RID more than once. */
+                        RidArray[RidIndex] = wcstoul(NameBuffer, NULL, 16);
+                        RidIndex++;
                     }
                 }
             }
