@@ -128,7 +128,8 @@ NtGdiSetPixelFormat(
         return FALSE;
     }
 
-    if (!pdc->ipfdDevMax) IntGetipfdDevMax(pdc);
+    if (!pdc->ipfdDevMax)
+        IntGetipfdDevMax(pdc);
 
     if ( ipfd < 1 ||
         ipfd > pdc->ipfdDevMax )
@@ -182,10 +183,59 @@ Exit:
 BOOL
 APIENTRY
 NtGdiSwapBuffers(
-    _In_ HDC  hDC)
+    _In_ HDC hdc)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDC pdc;
+    PPDEVOBJ ppdev;
+    HWND hWnd;
+    PWNDOBJ pWndObj;
+    SURFOBJ *pso = NULL;
+    BOOL Ret = FALSE;
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    UserEnterExclusive();
+    hWnd = UserGethWnd(hdc, &pWndObj);
+    UserLeave();
+
+    if (!hWnd)
+    {
+        EngSetLastError(ERROR_INVALID_WINDOW_STYLE);
+        goto Exit;
+    }
+
+    ppdev = pdc->ppdev;
+
+    /*
+        WndObj is needed so exit on NULL pointer.
+    */
+    if (pWndObj)
+        pso = pWndObj->psoOwner;
+    else
+    {
+        EngSetLastError(ERROR_INVALID_PIXEL_FORMAT);
+        goto Exit;
+    }
+
+    if (ppdev->flFlags & PDEV_META_DEVICE)
+    {
+        UNIMPLEMENTED;
+        goto Exit;
+    }
+
+    if (ppdev->DriverFunctions.SwapBuffers)
+    {
+        Ret = ppdev->DriverFunctions.SwapBuffers(pso, pWndObj);
+    }
+
+Exit:
+    DC_UnlockDc(pdc);
+    return Ret;
 }
 
 /* EOF */
