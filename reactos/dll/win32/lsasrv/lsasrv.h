@@ -415,4 +415,9 @@ LsapLoadString(HINSTANCE hInstance,
                LPWSTR lpBuffer,
                INT nBufferMax);
 
+PSID
+LsapAppendRidToSid(
+    PSID SrcSid,
+    ULONG Rid);
+
 /* EOF */

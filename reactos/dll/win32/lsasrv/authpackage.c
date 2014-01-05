@@ -98,6 +98,60 @@ VOID
 NTAPI
 LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr);
 
+typedef wchar_t *PSAMPR_SERVER_NAME;
+typedef void *SAMPR_HANDLE;
+
+typedef struct _SAMPR_ULONG_ARRAY
+{
+    unsigned long Count;
+    unsigned long *Element;
+} SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
+typedef struct _SAMPR_SID_INFORMATION
+{
+    PRPC_SID SidPointer;
+} SAMPR_SID_INFORMATION, *PSAMPR_SID_INFORMATION;
+
+typedef struct _SAMPR_PSID_ARRAY
+{
+    unsigned long Count;
+    PSAMPR_SID_INFORMATION Sids;
+} SAMPR_PSID_ARRAY, *PSAMPR_PSID_ARRAY;
+
+NTSTATUS
+NTAPI
+SamIConnect(
+    PSAMPR_SERVER_NAME ServerName,
+    SAMPR_HANDLE *ServerHandle,
+    ACCESS_MASK DesiredAccess,
+    BOOLEAN Trusted);
+
+VOID
+NTAPI
+SamIFree_SAMPR_ULONG_ARRAY(
+    PSAMPR_ULONG_ARRAY Ptr);
+
+NTSTATUS
+__stdcall
+SamrCloseHandle(
+    SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+__stdcall
+SamrOpenDomain(
+    SAMPR_HANDLE ServerHandle,
+    ACCESS_MASK DesiredAccess,
+    PRPC_SID DomainId,
+    SAMPR_HANDLE *DomainHandle);
+
+NTSTATUS
+__stdcall
+SamrGetAliasMembership(
+    SAMPR_HANDLE DomainHandle,
+    PSAMPR_PSID_ARRAY SidArray,
+    PSAMPR_ULONG_ARRAY Membership);
+
+
 /* GLOBALS *****************************************************************/
 
 static LIST_ENTRY PackageListHead;
@@ -859,6 +913,223 @@ LsapAddDefaultGroups(
 
 static
 NTSTATUS
+LsapAppendSidToGroups(
+    IN PTOKEN_GROUPS *TokenGroups,
+    IN PSID DomainSid,
+    IN ULONG RelativeId)
+{
+    PTOKEN_GROUPS Groups;
+    PSID Sid;
+    ULONG Length;
+    ULONG i;
+
+    Sid = LsapAppendRidToSid(DomainSid, RelativeId);
+    if (Sid == NULL)
+    {
+        ERR("Group SID creation failed!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (*TokenGroups == NULL)
+    {
+        Length = sizeof(TOKEN_GROUPS) +
+                 (1 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+        Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+        if (Groups == NULL)
+        {
+            ERR("Group buffer allocation failed!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Groups->GroupCount = 1;
+
+        Groups->Groups[0].Sid = Sid;
+        Groups->Groups[0].Attributes = 
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        *TokenGroups = Groups;
+    }
+    else
+    {
+        for (i = 0; i < (*TokenGroups)->GroupCount; i++)
+        {
+            if (RtlEqualSid((*TokenGroups)->Groups[i].Sid, Sid))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        Length = sizeof(TOKEN_GROUPS) +
+                 ((*TokenGroups)->GroupCount + 1 - ANYSIZE_ARRAY) * sizeof(SID_AND_ATTRIBUTES);
+
+        Groups = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+        if (Groups == NULL)
+        {
+            ERR("Group buffer allocation failed!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Groups->GroupCount = (*TokenGroups)->GroupCount;
+
+        for (i = 0; i < (*TokenGroups)->GroupCount; i++)
+        {
+            Groups->Groups[i].Sid = (*TokenGroups)->Groups[i].Sid;
+            Groups->Groups[i].Attributes = (*TokenGroups)->Groups[i].Attributes;
+        }
+
+        Groups->Groups[Groups->GroupCount].Sid = Sid;
+        Groups->Groups[Groups->GroupCount].Attributes = 
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+
+        Groups->GroupCount++;
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *TokenGroups);
+
+        *TokenGroups = Groups;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAddSamGroups(
+    IN PVOID TokenInformation,
+    IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
+{
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE BuiltinDomainHandle = NULL;
+    SAMPR_HANDLE AccountDomainHandle = NULL;
+    SAMPR_PSID_ARRAY SidArray;
+    SAMPR_ULONG_ARRAY BuiltinMembership;
+    SAMPR_ULONG_ARRAY AccountMembership;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (TokenInformationType != LsaTokenInformationV1)
+        return STATUS_SUCCESS;
+
+    TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+    SidArray.Count = TokenInfo1->Groups->GroupCount + 1;
+    SidArray.Sids = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    (TokenInfo1->Groups->GroupCount + 1) * sizeof(PRPC_SID));
+    if (SidArray.Sids == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SidArray.Sids[0].SidPointer = TokenInfo1->User.User.Sid;
+    for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+        SidArray.Sids[i + 1].SidPointer = TokenInfo1->Groups->Groups[i].Sid;
+
+    Status = SamIConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                         FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamIConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_GET_ALIAS_MEMBERSHIP,
+                            BuiltinDomainSid,
+                            &BuiltinDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_GET_ALIAS_MEMBERSHIP,
+                            AccountDomainSid,
+                            &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    BuiltinMembership.Element = NULL;
+    Status = SamrGetAliasMembership(BuiltinDomainHandle,
+                                    &SidArray,
+                                    &BuiltinMembership);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrGetAliasMembership failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    AccountMembership.Element = NULL;
+    Status = SamrGetAliasMembership(AccountDomainHandle,
+                                    &SidArray,
+                                    &AccountMembership);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrGetAliasMembership failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("Builtin Memberships: %lu\n", BuiltinMembership.Count);
+    for (i = 0; i < BuiltinMembership.Count; i++)
+    {
+        TRACE("RID %lu: %lu (0x%lx)\n", i, BuiltinMembership.Element[i], BuiltinMembership.Element[i]);
+        Status = LsapAppendSidToGroups(&TokenInfo1->Groups,
+                                       BuiltinDomainSid,
+                                       BuiltinMembership.Element[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapAppendSidToGroups failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    TRACE("Account Memberships: %lu\n", AccountMembership.Count);
+    for (i = 0; i < AccountMembership.Count; i++)
+    {
+        TRACE("RID %lu: %lu (0x%lx)\n", i, AccountMembership.Element[i], AccountMembership.Element[i]);
+        Status = LsapAppendSidToGroups(&TokenInfo1->Groups,
+                                       AccountDomainSid,
+                                       AccountMembership.Element[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapAppendSidToGroups failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+
+done:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, SidArray.Sids);
+
+    if (AccountMembership.Element != NULL)
+        SamIFree_SAMPR_ULONG_ARRAY(&AccountMembership);
+
+    if (BuiltinMembership.Element != NULL)
+        SamIFree_SAMPR_ULONG_ARRAY(&BuiltinMembership);
+
+    if (AccountDomainHandle != NULL)
+        SamrCloseHandle(&AccountDomainHandle);
+
+    if (BuiltinDomainHandle != NULL)
+        SamrCloseHandle(&BuiltinDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+//    return Status;
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 LsapSetTokenOwner(
     IN PVOID TokenInformation,
     IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
@@ -1228,6 +1499,14 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapAddDefaultGroups() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = LsapAddSamGroups(TokenInformation,
+                              TokenInformationType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapAddSamGroups() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 

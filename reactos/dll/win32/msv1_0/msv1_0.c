@@ -291,7 +291,7 @@ BuildTokenGroups(OUT PTOKEN_GROUPS *Groups,
 {
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     PTOKEN_GROUPS TokenGroups;
-#define MAX_GROUPS 4
+#define MAX_GROUPS 2
     DWORD GroupCount = 0;
     PSID Sid;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -310,45 +310,6 @@ BuildTokenGroups(OUT PTOKEN_GROUPS *Groups,
     }
 
     /* Member of the domain */
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-
-
-#if 1
-    /* Member of 'Administrators' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                2,
-                                SECURITY_BUILTIN_DOMAIN_RID,
-                                DOMAIN_ALIAS_RID_ADMINS,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
-#else
-    TRACE("Not adding user to Administrators group\n");
-#endif
-
-    /* Member of 'Users' */
-    RtlAllocateAndInitializeSid(&SystemAuthority,
-                                2,
-                                SECURITY_BUILTIN_DOMAIN_RID,
-                                DOMAIN_ALIAS_RID_USERS,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                SECURITY_NULL_RID,
-                                &Sid);
     TokenGroups->Groups[GroupCount].Sid = Sid;
     TokenGroups->Groups[GroupCount].Attributes =
         SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
