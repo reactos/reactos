@@ -171,6 +171,9 @@ static CONST COLORREF VgaDefaultPalette[VGA_MAX_COLORS] =
 
 #endif
 
+static HANDLE VgaSavedConsoleHandle = NULL;
+static CONSOLE_SCREEN_BUFFER_INFO VgaSavedConsoleInfo;
+
 static BYTE VgaMemory[VGA_NUM_BANKS * VGA_BANK_SIZE];
 static LPVOID ConsoleFramebuffer = NULL;
 static HANDLE TextConsoleBuffer = NULL;
@@ -605,11 +608,11 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 
 static VOID VgaLeaveGraphicsMode(VOID)
 {
-    /* Release the console framebuffer mutex if needed */
+    /* Release the console framebuffer mutex */
     ReleaseMutex(ConsoleMutex);
 
-    /* Switch back to the text buffer */
-    SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+    /* Switch back to the default console buffer */
+    // SetConsoleActiveScreenBuffer(VgaSavedConsoleHandle);
 
     /* Cleanup the video data */
     CloseHandle(ConsoleMutex);
@@ -621,8 +624,29 @@ static VOID VgaLeaveGraphicsMode(VOID)
 
 static BOOL VgaEnterTextMode(PCOORD Resolution)
 {
+    SMALL_RECT ConRect;
+
+    /* Switch to the text buffer */
+    SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+
     /* Resize the console */
+    ConRect.Left   = 0; // VgaSavedConsoleInfo.srWindow.Left;
+    ConRect.Top    = VgaSavedConsoleInfo.srWindow.Top;
+    ConRect.Right  = ConRect.Left + Resolution->X - 1;
+    ConRect.Bottom = ConRect.Top  + Resolution->Y - 1;
+    /*
+     * Use this trick to effectively resize the console buffer and window,
+     * because:
+     * - SetConsoleScreenBufferSize fails if the new console screen buffer size
+     *   is smaller than the current console window size, and:
+     * - SetConsoleWindowInfo fails if the new console window size is larger
+     *   than the current console screen buffer size.
+     */
     SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+    SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+    SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+    /* Update the saved console information */
+    GetConsoleScreenBufferInfo(TextConsoleBuffer, &VgaSavedConsoleInfo);
 
     /* Allocate a framebuffer */
     ConsoleFramebuffer = HeapAlloc(GetProcessHeap(),
@@ -693,7 +717,7 @@ static VOID VgaChangeMode(VOID)
     }
     else
     {
-        /* Enter 8-bit graphics mode */
+        /* Enter graphics mode */
         if (!VgaEnterGraphicsMode(&Resolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode.");
@@ -1478,12 +1502,24 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     DWORD Address = 0;
     DWORD CurrentAddr;
 
+    /* Save the console information */
+    if (TextHandle == INVALID_HANDLE_VALUE) return FALSE;
+    VgaSavedConsoleHandle = TextHandle;
+    if (!GetConsoleScreenBufferInfo(VgaSavedConsoleHandle,
+                                    &VgaSavedConsoleInfo))
+    {
+        return FALSE;
+    }
+
     /* Initialize the VGA palette and fail if it isn't successfully created */
     if (!VgaInitializePalette()) return FALSE;
     /***/ VgaResetPalette(); /***/
 
-    /* Set the global handle */
+    /* Save the default text-mode console output handle */
     TextConsoleBuffer = TextHandle;
+
+    /* Clear the VGA memory */
+    VgaClearMemory();
 
     /* Register the I/O Ports */
     RegisterIoPort(0x3CC, VgaReadPort, NULL);           // VGA_MISC_READ
@@ -1500,9 +1536,6 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3CE, VgaReadPort, VgaWritePort);   // VGA_GC_INDEX
     RegisterIoPort(0x3CF, VgaReadPort, VgaWritePort);   // VGA_GC_DATA
 
-    /* Clear the VGA memory */
-    VgaClearMemory();
-
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
     VgaChangeMode();
@@ -1512,7 +1545,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     CharBuffer = (PCHAR_INFO)ConsoleFramebuffer;
     AddressSize = VgaGetAddressSize();
     ScreenRect.Left = ScreenRect.Top = 0;
-    ScreenRect.Right = Resolution.X;
+    ScreenRect.Right  = Resolution.X;
     ScreenRect.Bottom = Resolution.Y;
     ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 
