@@ -46,7 +46,8 @@ class CFSFolder :
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         void SF_RegisterClipFmt();
         BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
-        DWORD _DoDropThreadProc(LPVOID lpParameter);
+        static DWORD _DoDropThreadProc(LPVOID lpParameter);
+        virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
 
     public:
         CFSFolder();
@@ -114,6 +115,14 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
+};
+
+struct _DoDropData {
+    CFSFolder *This;
+    IDataObject *pDataObject;
+    DWORD dwKeyState;
+    POINTL pt; 
+    DWORD pdwEffect;
 };
 
 #endif // _CFSFOLDER_H_

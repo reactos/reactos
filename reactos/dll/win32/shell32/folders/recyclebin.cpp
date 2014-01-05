@@ -429,10 +429,24 @@ static HRESULT WINAPI CRecycleBinItemContextMenuConstructor(REFIID riid, LPCITEM
     return S_OK;
 }
 
+/**************************************************************************
+* registers clipboardformat once
+*/
+void CRecycleBin::SF_RegisterClipFmt()
+{
+    TRACE ("(%p)\n", this);
+
+    if (!cfShellIDList)
+        cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+}
+
 CRecycleBin::CRecycleBin()
 {
     pidl = NULL;
     iIdEmpty = 0;
+    cfShellIDList = 0;
+    SF_RegisterClipFmt();
+    fAcceptFmt = FALSE;
 }
 
 CRecycleBin::~CRecycleBin()
@@ -556,8 +570,7 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        WARN ("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
+        hr = this->QueryInterface (IID_IDropTarget, ppv);
     }
     else if (IsEqualIID (riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2))
     {
@@ -605,7 +618,7 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLI
     {
         hr = CRecycleBinItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
     }
-    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
+    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
     {
         hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
     }
@@ -1371,4 +1384,215 @@ EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 
 
     return S_OK;
+}
+
+/****************************************************************************
+ * IDropTarget implementation
+ */
+BOOL CRecycleBin::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
+{
+    /* TODO on shift we should delete, we should update the cursor manager to show this. */
+
+    DWORD dwEffect = DROPEFFECT_COPY;
+
+    *pdwEffect = DROPEFFECT_NONE;
+
+    if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
+        *pdwEffect = KeyStateToDropEffect (dwKeyState);
+
+        if (*pdwEffect == DROPEFFECT_NONE)
+            *pdwEffect = dwEffect;
+
+        /* ... matches the desired effect ? */
+        if (dwEffect & *pdwEffect) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+HRESULT WINAPI CRecycleBin::DragEnter(IDataObject *pDataObject,
+                                    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    FIXME("Recycle bin drag over (%p)\n", this);
+    /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
+    fAcceptFmt = TRUE;
+
+    QueryDrop(dwKeyState, pdwEffect);
+    return S_OK;
+}
+
+HRESULT WINAPI CRecycleBin::DragOver(DWORD dwKeyState, POINTL pt,
+                                   DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+
+    if (!pdwEffect)
+        return E_INVALIDARG;
+
+    QueryDrop(dwKeyState, pdwEffect);
+
+    return S_OK;
+}
+
+HRESULT WINAPI CRecycleBin::DragLeave()
+{
+    TRACE("(%p)\n", this);
+
+    fAcceptFmt = FALSE;
+
+    return S_OK;
+}
+
+HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
+                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    FIXME("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
+    
+    /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
+
+    FORMATETC fmt;
+    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
+    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+
+    /* Handle cfShellIDList Drop objects here, otherwise send the approriate message to other software */
+    if (SUCCEEDED(pDataObject->QueryGetData(&fmt))) {
+        pDataObject->AddRef();
+        SHCreateThread(DoDeleteThreadProc, pDataObject, NULL, NULL);
+    }
+    else
+    {
+        /* 
+         * TODO call SetData on the data object with format CFSTR_TARGETCLSID
+         * set to the Recycle Bin's class identifier CLSID_RecycleBin.
+         */
+    }
+    return S_OK;
+}
+
+DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter) 
+{
+    IDataObject *pda = (IDataObject*) lpParameter;
+    DoDeleteDataObject(pda);
+    //Release the data object
+    pda->Release();
+    return 0;
+}
+
+HRESULT WINAPI DoDeleteDataObject(IDataObject *pda) 
+{
+    TRACE("performing delete");
+    HRESULT hr;
+
+    STGMEDIUM medium;
+    FORMATETC formatetc;
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    hr = pda->GetData(&formatetc, &medium);
+    if (FAILED(hr))
+        return hr;
+
+    /* lock the handle */
+    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+    if (!lpcida)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* convert the data into pidl */
+    LPITEMIDLIST pidl;
+    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+    if (!apidl)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    CComPtr<IShellFolder> psfDesktop;
+    CComPtr<IShellFolder> psfFrom = NULL;
+
+    /* Grab the desktop shell folder */
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+    {
+        ERR("SHGetDesktopFolder failed\n");
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* Find source folder, this is where the clipboard data was copied from */
+    if (_ILIsDesktop(pidl))
+    {
+        psfFrom = psfDesktop;
+    }
+    else 
+    {
+        hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom);
+        if (FAILED(hr))
+        {
+            ERR("no IShellFolder\n");
+            SHFree(pidl);
+            _ILFreeaPidl(apidl, lpcida->cidl);
+            ReleaseStgMedium(&medium);
+            return E_FAIL;
+        }
+    }
+
+    STRRET strTemp;
+    hr = psfFrom->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strTemp);
+    if (FAILED(hr))
+    {
+        ERR("IShellFolder_GetDisplayNameOf failed with %x\n", hr);
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return hr;
+    }
+
+    WCHAR wszPath[MAX_PATH];
+    hr = StrRetToBufW(&strTemp, apidl[0], wszPath, _countof(wszPath));
+    if (FAILED(hr))
+    {
+        ERR("StrRetToBufW failed with %x\n", hr);
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return hr;
+    }
+
+    /* Only keep the base path */
+    LPWSTR pwszFilename = PathFindFileNameW(wszPath);
+    *pwszFilename = L'\0';
+
+    /* Build paths list */
+    LPWSTR pwszPaths = BuildPathsList(wszPath, lpcida->cidl, (LPCITEMIDLIST*) apidl);
+    if (!pwszPaths)
+    {
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* Delete them */
+    SHFILEOPSTRUCTW FileOp;
+    ZeroMemory(&FileOp, sizeof(FileOp));
+    FileOp.wFunc = FO_DELETE;
+    FileOp.pFrom = pwszPaths;
+    FileOp.fFlags = FOF_ALLOWUNDO;
+
+    if (SHFileOperationW(&FileOp) != 0)
+    {
+        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(pwszPaths));
+        hr = E_FAIL;
+    }
+
+    HeapFree(GetProcessHeap(), 0, pwszPaths);
+    SHFree(pidl);
+    _ILFreeaPidl(apidl, lpcida->cidl);
+    ReleaseStgMedium(&medium);
+
+    return hr;
 }

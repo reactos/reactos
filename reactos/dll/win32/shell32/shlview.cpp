@@ -1691,8 +1691,6 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     {
                         DWORD dwEffect2;
                         DoDragDrop(pda, pds, dwEffect, &dwEffect2);
-                        if ((dwEffect2 & DROPEFFECT_MOVE) == DROPEFFECT_MOVE)
-                            this->Refresh();
                     }
                     pda->Release();
                 }

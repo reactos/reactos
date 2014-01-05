@@ -1037,7 +1037,6 @@ CDefaultContextMenu::DoPaste(
     }
 
     SHSimulateDrop(pdrop, pda, dwKey, NULL, NULL);
-    NotifyShellViewWindow(lpcmi, TRUE);
 
     TRACE("CP result %x\n", hr);
     return S_OK;
@@ -1104,73 +1103,24 @@ CDefaultContextMenu::DoCreateLink(
         ERR("no IDropTarget Interface\n");
         return hr;
     }
-    //DWORD link = DROPEFFECT_LINK;
     SHSimulateDrop(pDT, pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
-    NotifyShellViewWindow(lpcmi, TRUE);
 
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoDelete(
-    LPCMINVOKECOMMANDINFO lpcmi)
-{
-    STRRET strTemp;
-    HRESULT hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strTemp);
-    if(hr != S_OK)
+HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi) {
+    TRACE("(%p) Deleting\n", this);
+
+    LPDATAOBJECT pDataObj;
+
+    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
-        ERR("IShellFolder_GetDisplayNameOf failed with %x\n", hr);
-        return hr;
-    }
-
-    WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strTemp, m_Dcm.apidl[0], wszPath, _countof(wszPath));
-    if (hr != S_OK)
-    {
-        ERR("StrRetToBufW failed with %x\n", hr);
-        return hr;
-    }
-
-    /* Only keep the base path */
-    LPWSTR pwszFilename = PathFindFileNameW(wszPath);
-    *pwszFilename = L'\0';
-
-    /* Build paths list */
-    LPWSTR pwszPaths = BuildPathsList(wszPath, m_Dcm.cidl, m_Dcm.apidl);
-    if (!pwszPaths)
+        pDataObj->AddRef();
+        SHCreateThread(DoDeleteThreadProc, pDataObj, NULL, NULL);
+        pDataObj->Release();
+    } 
+    else 
         return E_FAIL;
-
-    /* Delete them */
-    SHFILEOPSTRUCTW FileOp;
-    ZeroMemory(&FileOp, sizeof(FileOp));
-    FileOp.hwnd = GetActiveWindow();
-    FileOp.wFunc = FO_DELETE;
-    FileOp.pFrom = pwszPaths;
-    FileOp.fFlags = FOF_ALLOWUNDO;
-
-    if (SHFileOperationW(&FileOp) != 0)
-    {
-        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(pwszPaths));
-        return S_OK;
-    }
-
-    /* Get the active IShellView */
-    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageW(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (lpSB)
-    {
-        /* Is the treeview focused */
-        HWND hwnd;
-        if (SUCCEEDED(lpSB->GetControlWindow(FCW_TREE, &hwnd)))
-        {
-            /* Remove selected items from treeview */
-            HTREEITEM hItem = TreeView_GetSelection(hwnd);
-            if (hItem)
-                (void)TreeView_DeleteItem(hwnd, hItem);
-        }
-    }
-    NotifyShellViewWindow(lpcmi, TRUE);
-
-    HeapFree(GetProcessHeap(), 0, pwszPaths);
     return S_OK;
 
 }

@@ -1419,6 +1419,27 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
 {
     TRACE("(%p) object dropped, effect %u\n", this, *pdwEffect);
 
+    _DoDropData *data = reinterpret_cast<_DoDropData*> (HeapAlloc(GetProcessHeap(), 0, sizeof(_DoDropData)));
+    data->This = this;
+    // Need to maintain this class in case the window is closed or the class exists temporarily (when dropping onto a folder).
+    data->This->AddRef();
+    data->pDataObject = pDataObject;
+    // Also keep the data object in case it gets freed elsewhere.
+    data->pDataObject->AddRef();
+    data->dwKeyState = dwKeyState;
+    data->pt = pt;
+    // Need to dereference as pdweffect is freed.
+    data->pdwEffect = *pdwEffect;
+
+    SHCreateThread(reinterpret_cast<LPTHREAD_START_ROUTINE> (CFSFolder::_DoDropThreadProc), reinterpret_cast<void *> (data), NULL, NULL);
+    return S_OK;
+}
+
+HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
+                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p) performing drop, effect %u\n", this, *pdwEffect);
+
     HRESULT hr;
     bool bCopy = TRUE;
     bool bLinking = FALSE;
@@ -1451,9 +1472,9 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
     if (pdwEffect)
     {
         TRACE("Current drop effect flag %i\n", *pdwEffect);
-        if (*pdwEffect & DROPEFFECT_MOVE)
+        if ((*pdwEffect & DROPEFFECT_MOVE) == DROPEFFECT_MOVE)
             bCopy = FALSE;
-        if (*pdwEffect & DROPEFFECT_LINK)
+        if ((*pdwEffect & DROPEFFECT_LINK) == DROPEFFECT_LINK)
             bLinking = TRUE;
     }
 
@@ -1631,5 +1652,12 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
 }
 
 DWORD CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
+    _DoDropData *data = reinterpret_cast<_DoDropData*>(lpParameter);
+    data->This->_DoDrop(data->pDataObject, data->dwKeyState, data->pt, &data->pdwEffect);
+    //Release the CFSFolder and data object holds in the copying thread.
+    data->pDataObject->Release();
+    data->This->Release();
+    //Release the parameter from the heap.
+    HeapFree(GetProcessHeap(), 0, data);
     return 0;
 }
