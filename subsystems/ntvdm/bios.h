@@ -151,31 +151,12 @@ C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
 
 extern PBIOS_DATA_AREA Bda;
 
-BOOLEAN BiosInitialize(VOID);
-VOID BiosCleanup(VOID);
-BYTE BiosGetVideoMode(VOID);
-BOOLEAN BiosSetVideoMode(BYTE ModeNumber);
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
-VOID BiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page);
-VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page);
 VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page);
-BOOLEAN BiosScrollWindow(
-    INT Direction,
-    DWORD Amount,
-    SMALL_RECT Rectangle,
-    BYTE Page,
-    BYTE FillAttribute
-);
 
-VOID WINAPI BiosVideoService(LPWORD Stack);
-VOID WINAPI BiosEquipmentService(LPWORD Stack);
-VOID WINAPI BiosGetMemorySize(LPWORD Stack);
-VOID WINAPI BiosMiscService(LPWORD Stack);
-VOID WINAPI BiosKeyboardService(LPWORD Stack);
-VOID WINAPI BiosTimeService(LPWORD Stack);
-VOID WINAPI BiosSystemTimerInterrupt(LPWORD Stack);
-
+BOOLEAN BiosInitialize(VOID);
+VOID BiosCleanup(VOID);
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
 
 #endif // _BIOS_H_

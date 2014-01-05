@@ -264,9 +264,9 @@ static PVGA_REGISTERS VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
     &VideoMode_40x25_text,          /* Mode 01h */      // 16 color
     &VideoMode_80x25_text,          /* Mode 02h */      // 16 color (mono)
     &VideoMode_80x25_text,          /* Mode 03h */      // 16 color
-    &VideoMode_320x200_4color,      /* Mode 04h */      // 4 color
-    &VideoMode_320x200_4color,      /* Mode 05h */      // same (m)
-    &VideoMode_640x200_2color,      /* Mode 06h */      // 640*200 2 color
+    &VideoMode_320x200_4color,      /* Mode 04h */      // CGA 4 color
+    &VideoMode_320x200_4color,      /* Mode 05h */      // CGA same (m)
+    &VideoMode_640x200_2color,      /* Mode 06h */      // CGA 640*200 2 color
     NULL,                           /* Mode 07h */      // MDA monochrome text 80*25
     NULL,                           /* Mode 08h */      // PCjr
     NULL,                           /* Mode 09h */      // PCjr
@@ -710,6 +710,138 @@ static VOID BiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
     }
 }
 
+static BOOLEAN BiosScrollWindow(INT Direction,
+                                DWORD Amount,
+                                SMALL_RECT Rectangle,
+                                BYTE Page,
+                                BYTE FillAttribute)
+{
+    DWORD i;
+    LPWORD WindowData;
+    WORD WindowWidth = Rectangle.Right - Rectangle.Left + 1;
+    WORD WindowHeight = Rectangle.Bottom - Rectangle.Top + 1;
+    DWORD WindowSize = WindowWidth * WindowHeight;
+
+    /* Allocate a buffer for the window */
+    WindowData = (LPWORD)HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   WindowSize * sizeof(WORD));
+    if (WindowData == NULL) return FALSE;
+
+    /* Read the window data */
+    BiosReadWindow(WindowData, Rectangle, Page);
+
+    if ((Amount == 0)
+        || (((Direction == SCROLL_DIRECTION_UP)
+        || (Direction == SCROLL_DIRECTION_DOWN))
+        && (Amount >= WindowHeight))
+        || (((Direction == SCROLL_DIRECTION_LEFT)
+        || (Direction == SCROLL_DIRECTION_RIGHT))
+        && (Amount >= WindowWidth)))
+    {
+        /* Fill the window */
+        for (i = 0; i < WindowSize; i++)
+        {
+            WindowData[i] = MAKEWORD(' ', FillAttribute);
+        }
+
+        goto Done;
+    }
+
+    switch (Direction)
+    {
+        case SCROLL_DIRECTION_UP:
+        {
+            RtlMoveMemory(WindowData,
+                          &WindowData[WindowWidth * Amount],
+                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
+
+            for (i = 0; i < Amount * WindowWidth; i++)
+            {
+                WindowData[WindowSize - i - 1] = MAKEWORD(' ', FillAttribute);
+            }
+
+            break;
+        }
+
+        case SCROLL_DIRECTION_DOWN:
+        {
+            RtlMoveMemory(&WindowData[WindowWidth * Amount],
+                          WindowData,
+                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
+
+            for (i = 0; i < Amount * WindowWidth; i++)
+            {
+                WindowData[i] = MAKEWORD(' ', FillAttribute);
+            }
+
+            break;
+        }
+
+        default:
+        {
+            // TODO: NOT IMPLEMENTED!
+            UNIMPLEMENTED;
+        }
+    }
+
+Done:
+    /* Write back the window data */
+    BiosWriteWindow(WindowData, Rectangle, Page);
+
+    /* Free the window buffer */
+    HeapFree(GetProcessHeap(), 0, WindowData);
+
+    return TRUE;
+}
+
+static VOID BiosCopyTextConsoleToVgaMemory(VOID)
+{
+    PCHAR_INFO CharBuffer;
+    COORD BufferSize = {Bda->ScreenColumns, Bda->ScreenRows + 1};
+    COORD Origin = { 0, 0 };
+    SMALL_RECT ScreenRect;
+
+    INT i, j;
+    INT Counter = 0;
+    WORD Character;
+    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
+
+    /* Allocate a temporary buffer for ReadConsoleOutput */
+    CharBuffer = HeapAlloc(GetProcessHeap(),
+                           HEAP_ZERO_MEMORY,
+                           BufferSize.X * BufferSize.Y
+                             * sizeof(CHAR_INFO));
+    if (CharBuffer == NULL) return;
+
+    ScreenRect.Left = ScreenRect.Top = 0;
+    ScreenRect.Right  = BufferSize.X;
+    ScreenRect.Bottom = BufferSize.Y;
+
+    /* Read the data from the console into the temporary buffer... */
+    ReadConsoleOutputA(BiosConsoleOutput,
+                       CharBuffer,
+                       BufferSize,
+                       Origin,
+                       &ScreenRect);
+
+    /* ... and copy the temporary buffer into the VGA memory */
+    for (i = 0; i < BufferSize.Y; i++)
+    {
+        for (j = 0; j < BufferSize.X; j++)
+        {
+            Character = MAKEWORD(CharBuffer[Counter].Char.AsciiChar,
+                                 (BYTE)CharBuffer[Counter].Attributes);
+            ++Counter;
+
+            /* Write to video memory */
+            VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                           (LPVOID)&Character,
+                           sizeof(WORD));
+        }
+    }
+}
+
 static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 {
     INT i;
@@ -850,14 +982,43 @@ static VOID VgaChangePalette(BYTE ModeNumber)
     VgaSetPalette(Palette, Size);
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+static VOID BiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
+{
+    /* Make sure the selected video page is valid */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Get the cursor location */
+    *Row    = HIBYTE(Bda->CursorPosition[Page]);
+    *Column = LOBYTE(Bda->CursorPosition[Page]);
+}
+
+static VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
+{
+    /* Make sure the selected video page is valid */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Update the position in the BDA */
+    Bda->CursorPosition[Page] = MAKEWORD(Column, Row);
+
+    /* Check if this is the current video page */
+    if (Page == Bda->VideoPage)
+    {
+        WORD Offset = Row * Bda->ScreenColumns + Column;
+
+        /* Modify the CRTC registers */
+        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+        VgaWritePort(VGA_CRTC_DATA , LOBYTE(Offset));
+        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+        VgaWritePort(VGA_CRTC_DATA , HIBYTE(Offset));
+    }
+}
 
 BYTE BiosGetVideoMode(VOID)
 {
     return Bda->VideoMode;
 }
 
-BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
+static BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 {
     BYTE Page;
 
@@ -869,6 +1030,14 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     if (!VgaSetRegisters(VgaMode)) return FALSE;
 
     VgaChangePalette(ModeNumber);
+
+    /*
+     * IBM standard modes do not clear the screen if the
+     * high bit of AL is set (EGA or higher only).
+     * See Ralf Brown: http://www.ctyme.com/intr/rb-0069.htm
+     * for more information.
+     */
+    if ((ModeNumber & 0x08) == 0) VgaClearMemory();
 
     // Bda->CrtModeControl;
     // Bda->CrtColorPaletteMask;
@@ -895,14 +1064,14 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
 
-    /* Set cursor position for each page */
+    /* Set the cursor position for each page */
     for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
         BiosSetCursorPosition(0, 0, Page);
 
     return TRUE;
 }
 
-BOOLEAN BiosSetVideoPage(BYTE PageNumber)
+static BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 {
     BYTE Row, Column;
 
@@ -932,391 +1101,7 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
-BOOLEAN BiosInitialize(VOID)
-{
-    /* Initialize the BDA */
-    Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
-    Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
-    /*
-     * Conventional memory size is 640 kB,
-     * see: http://webpages.charter.net/danrollins/techhelp/0184.HTM
-     * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
-     * for more information.
-     */
-    Bda->MemorySize = 0x0280;
-    Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
-    Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
-    Bda->KeybdBufferHead = Bda->KeybdBufferTail = 0;
-
-    /* Initialize the 32-bit Interrupt system */
-    InitializeInt32(BIOS_SEGMENT);
-
-    /* Register the BIOS 32-bit Interrupts */
-    RegisterInt32(BIOS_VIDEO_INTERRUPT    , BiosVideoService        );
-    RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
-    RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
-    RegisterInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
-    RegisterInt32(BIOS_KBD_INTERRUPT      , BiosKeyboardService     );
-    RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
-    RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
-
-    /* Some interrupts are in fact addresses to tables */
-    ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x1E] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
-
-    ((PDWORD)BaseAddress)[0x41] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x46] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
-
-    /* Get the input handle to the real console, and check for success */
-    BiosConsoleInput = CreateFileW(L"CONIN$",
-                                   GENERIC_READ | GENERIC_WRITE,
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   0,
-                                   NULL);
-    if (BiosConsoleInput == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    /* Get the output handle to the real console, and check for success */
-    BiosConsoleOutput = CreateFileW(L"CONOUT$",
-                                    GENERIC_READ | GENERIC_WRITE,
-                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                    NULL,
-                                    OPEN_EXISTING,
-                                    0,
-                                    NULL);
-    if (BiosConsoleOutput == INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
-    /* Save the console screen buffer information */
-    if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
-    {
-        CloseHandle(BiosConsoleOutput);
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
-    /* Initialize VGA */
-    if (!VgaInitialize(BiosConsoleOutput))
-    {
-        CloseHandle(BiosConsoleOutput);
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
-    /* Update the cursor position */
-    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.Y,
-                          BiosSavedBufferInfo.dwCursorPosition.X,
-                          0);
-
-    /* Set the console input mode */
-    SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
-
-    /* Initialize PS2 */
-    PS2Initialize(BiosConsoleInput);
-
-    /* Initialize the PIC */
-    PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
-    PicWriteCommand(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
-
-    /* Set the interrupt offsets */
-    PicWriteData(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
-    PicWriteData(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
-
-    /* Tell the master PIC there is a slave at IRQ 2 */
-    PicWriteData(PIC_MASTER_DATA, 1 << 2);
-    PicWriteData(PIC_SLAVE_DATA , 2);
-
-    /* Make sure the PIC is in 8086 mode */
-    PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
-    PicWriteData(PIC_SLAVE_DATA , PIC_ICW4_8086);
-
-    /* Clear the masks for both PICs */
-    PicWriteData(PIC_MASTER_DATA, 0x00);
-    PicWriteData(PIC_SLAVE_DATA , 0x00);
-
-    PitWriteCommand(0x34);
-    PitWriteData(0, 0x00);
-    PitWriteData(0, 0x00);
-
-    return TRUE;
-}
-
-VOID BiosCleanup(VOID)
-{
-    PS2Cleanup();
-
-    /* Restore the old screen buffer */
-    SetConsoleActiveScreenBuffer(BiosConsoleOutput);
-
-    /* Restore the screen buffer size */
-    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
-
-    /* Close the console handles */
-    if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
-    if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
-}
-
-WORD BiosPeekCharacter(VOID)
-{
-    WORD CharacterData = 0;
-
-    /* Get the key from the queue, but don't remove it */
-    if (BiosKbdBufferTop(&CharacterData)) return CharacterData;
-    else return 0xFFFF;
-}
-
-WORD BiosGetCharacter(VOID)
-{
-    WORD CharacterData = 0;
-
-    /* Check if there is a key available */
-    if (BiosKbdBufferTop(&CharacterData))
-    {
-        /* A key was available, remove it from the queue */
-        BiosKbdBufferPop();
-    }
-    else
-    {
-        /* No key available. Set the handler CF to repeat the BOP */
-        setCF(1);
-        // CharacterData = 0xFFFF;
-    }
-
-    return CharacterData;
-}
-
-VOID BiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
-{
-    /* Make sure the selected video page is valid */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Get the cursor location */
-    *Row    = HIBYTE(Bda->CursorPosition[Page]);
-    *Column = LOBYTE(Bda->CursorPosition[Page]);
-}
-
-VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
-{
-    /* Make sure the selected video page is valid */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Update the position in the BDA */
-    Bda->CursorPosition[Page] = MAKEWORD(Column, Row);
-
-    /* Check if this is the current video page */
-    if (Page == Bda->VideoPage)
-    {
-        WORD Offset = Row * Bda->ScreenColumns + Column;
-
-        /* Modify the CRTC registers */
-        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
-        VgaWritePort(VGA_CRTC_DATA , LOBYTE(Offset));
-        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
-        VgaWritePort(VGA_CRTC_DATA , HIBYTE(Offset));
-    }
-}
-
-BOOLEAN BiosScrollWindow(INT Direction,
-                         DWORD Amount,
-                         SMALL_RECT Rectangle,
-                         BYTE Page,
-                         BYTE FillAttribute)
-{
-    DWORD i;
-    LPWORD WindowData;
-    WORD WindowWidth = Rectangle.Right - Rectangle.Left + 1;
-    WORD WindowHeight = Rectangle.Bottom - Rectangle.Top + 1;
-    DWORD WindowSize = WindowWidth * WindowHeight;
-
-    /* Allocate a buffer for the window */
-    WindowData = (LPWORD)HeapAlloc(GetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   WindowSize * sizeof(WORD));
-    if (WindowData == NULL) return FALSE;
-
-    /* Read the window data */
-    BiosReadWindow(WindowData, Rectangle, Page);
-
-    if ((Amount == 0)
-        || (((Direction == SCROLL_DIRECTION_UP)
-        || (Direction == SCROLL_DIRECTION_DOWN))
-        && (Amount >= WindowHeight))
-        || (((Direction == SCROLL_DIRECTION_LEFT)
-        || (Direction == SCROLL_DIRECTION_RIGHT))
-        && (Amount >= WindowWidth)))
-    {
-        /* Fill the window */
-        for (i = 0; i < WindowSize; i++)
-        {
-            WindowData[i] = MAKEWORD(' ', FillAttribute);
-        }
-
-        goto Done;
-    }
-
-    switch (Direction)
-    {
-        case SCROLL_DIRECTION_UP:
-        {
-            RtlMoveMemory(WindowData,
-                          &WindowData[WindowWidth * Amount],
-                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
-
-            for (i = 0; i < Amount * WindowWidth; i++)
-            {
-                WindowData[WindowSize - i - 1] = MAKEWORD(' ', FillAttribute);
-            }
-
-            break;
-        }
-
-        case SCROLL_DIRECTION_DOWN:
-        {
-            RtlMoveMemory(&WindowData[WindowWidth * Amount],
-                          WindowData,
-                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
-
-            for (i = 0; i < Amount * WindowWidth; i++)
-            {
-                WindowData[i] = MAKEWORD(' ', FillAttribute);
-            }
-
-            break;
-        }
-
-        default:
-        {
-            // TODO: NOT IMPLEMENTED!
-            UNIMPLEMENTED;
-        }
-    }
-
-Done:
-    /* Write back the window data */
-    BiosWriteWindow(WindowData, Rectangle, Page);
-
-    /* Free the window buffer */
-    HeapFree(GetProcessHeap(), 0, WindowData);
-
-    return TRUE;
-}
-
-VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
-{
-    WORD CharData = MAKEWORD(Character, Attribute);
-    BYTE Row, Column;
-
-    /* Make sure the page exists */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Get the cursor location */
-    BiosGetCursorPosition(&Row, &Column, Page);
-
-    if (Character == '\a')
-    {
-        /* Bell control character */
-        // NOTE: We may use what the terminal emulator offers to us...
-        Beep(800, 200);
-        return;
-    }
-    else if (Character == '\b')
-    {
-        /* Backspace control character */
-        if (Column > 0)
-        {
-            Column--;
-        }
-        else if (Row > 0)
-        {
-            Column = Bda->ScreenColumns - 1;
-            Row--;
-        }
-
-        /* Erase the existing character */
-        CharData = MAKEWORD(' ', Attribute);
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
-    }
-    else if (Character == '\t')
-    {
-        /* Horizontal Tabulation control character */
-        do
-        {
-            // Taken from DOSBox
-            BiosPrintCharacter(' ', Attribute, Page);
-            BiosGetCursorPosition(&Row, &Column, Page);
-        } while (Column % 8);
-    }
-    else if (Character == '\n')
-    {
-        /* Line Feed control character */
-        Row++;
-    }
-    else if (Character == '\r')
-    {
-        /* Carriage Return control character */
-        Column = 0;
-    }
-    else
-    {
-        /* Default character */
-
-        /* Write the character */
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
-
-        /* Advance the cursor */
-        Column++;
-    }
-
-    /* Check if it passed the end of the row */
-    if (Column >= Bda->ScreenColumns)
-    {
-        /* Return to the first column and go to the next line */
-        Column = 0;
-        Row++;
-    }
-
-    /* Scroll the screen up if needed */
-    if (Row > Bda->ScreenRows)
-    {
-        /* The screen must be scrolled up */
-        SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
-
-        BiosScrollWindow(SCROLL_DIRECTION_UP,
-                         1,
-                         Rectangle,
-                         Page,
-                         DEFAULT_ATTRIBUTE);
-
-        Row--;
-    }
-
-    /* Set the cursor position */
-    BiosSetCursorPosition(Row, Column, Page);
-}
-
-VOID WINAPI BiosVideoService(LPWORD Stack)
+static VOID WINAPI BiosVideoService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1324,7 +1109,6 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
         case 0x00:
         {
             BiosSetVideoMode(getAL());
-            VgaClearMemory();
             break;
         }
 
@@ -1698,19 +1482,19 @@ VOID WINAPI BiosVideoService(LPWORD Stack)
     }
 }
 
-VOID WINAPI BiosEquipmentService(LPWORD Stack)
+static VOID WINAPI BiosEquipmentService(LPWORD Stack)
 {
     /* Return the equipment list */
     setAX(Bda->EquipmentList);
 }
 
-VOID WINAPI BiosGetMemorySize(LPWORD Stack)
+static VOID WINAPI BiosGetMemorySize(LPWORD Stack)
 {
     /* Return the conventional memory size in kB, typically 640 kB */
     setAX(Bda->MemorySize);
 }
 
-VOID WINAPI BiosMiscService(LPWORD Stack)
+static VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1766,7 +1550,7 @@ VOID WINAPI BiosMiscService(LPWORD Stack)
     }
 }
 
-VOID WINAPI BiosKeyboardService(LPWORD Stack)
+static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1848,7 +1632,7 @@ VOID WINAPI BiosKeyboardService(LPWORD Stack)
     }
 }
 
-VOID WINAPI BiosTimeService(LPWORD Stack)
+static VOID WINAPI BiosTimeService(LPWORD Stack)
 {
     switch (getAH())
     {
@@ -1886,10 +1670,303 @@ VOID WINAPI BiosTimeService(LPWORD Stack)
     }
 }
 
-VOID WINAPI BiosSystemTimerInterrupt(LPWORD Stack)
+static VOID WINAPI BiosSystemTimerInterrupt(LPWORD Stack)
 {
     /* Increase the system tick count */
     Bda->TickCounter++;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+WORD BiosPeekCharacter(VOID)
+{
+    WORD CharacterData = 0;
+
+    /* Get the key from the queue, but don't remove it */
+    if (BiosKbdBufferTop(&CharacterData)) return CharacterData;
+    else return 0xFFFF;
+}
+
+WORD BiosGetCharacter(VOID)
+{
+    WORD CharacterData = 0;
+
+    /* Check if there is a key available */
+    if (BiosKbdBufferTop(&CharacterData))
+    {
+        /* A key was available, remove it from the queue */
+        BiosKbdBufferPop();
+    }
+    else
+    {
+        /* No key available. Set the handler CF to repeat the BOP */
+        setCF(1);
+        // CharacterData = 0xFFFF;
+    }
+
+    return CharacterData;
+}
+
+VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+{
+    WORD CharData = MAKEWORD(Character, Attribute);
+    BYTE Row, Column;
+
+    /* Make sure the page exists */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Get the cursor location */
+    BiosGetCursorPosition(&Row, &Column, Page);
+
+    if (Character == '\a')
+    {
+        /* Bell control character */
+        // NOTE: We may use what the terminal emulator offers to us...
+        Beep(800, 200);
+        return;
+    }
+    else if (Character == '\b')
+    {
+        /* Backspace control character */
+        if (Column > 0)
+        {
+            Column--;
+        }
+        else if (Row > 0)
+        {
+            Column = Bda->ScreenColumns - 1;
+            Row--;
+        }
+
+        /* Erase the existing character */
+        CharData = MAKEWORD(' ', Attribute);
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
+    }
+    else if (Character == '\t')
+    {
+        /* Horizontal Tabulation control character */
+        do
+        {
+            // Taken from DOSBox
+            BiosPrintCharacter(' ', Attribute, Page);
+            BiosGetCursorPosition(&Row, &Column, Page);
+        } while (Column % 8);
+    }
+    else if (Character == '\n')
+    {
+        /* Line Feed control character */
+        Row++;
+    }
+    else if (Character == '\r')
+    {
+        /* Carriage Return control character */
+        Column = 0;
+    }
+    else
+    {
+        /* Default character */
+
+        /* Write the character */
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
+
+        /* Advance the cursor */
+        Column++;
+    }
+
+    /* Check if it passed the end of the row */
+    if (Column >= Bda->ScreenColumns)
+    {
+        /* Return to the first column and go to the next line */
+        Column = 0;
+        Row++;
+    }
+
+    /* Scroll the screen up if needed */
+    if (Row > Bda->ScreenRows)
+    {
+        /* The screen must be scrolled up */
+        SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
+
+        BiosScrollWindow(SCROLL_DIRECTION_UP,
+                         1,
+                         Rectangle,
+                         Page,
+                         DEFAULT_ATTRIBUTE);
+
+        Row--;
+    }
+
+    /* Set the cursor position */
+    BiosSetCursorPosition(Row, Column, Page);
+}
+
+BOOLEAN BiosInitialize(VOID)
+{
+    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
+
+    /* Initialize the BDA */
+    Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
+    Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
+    /*
+     * Conventional memory size is 640 kB,
+     * see: http://webpages.charter.net/danrollins/techhelp/0184.HTM
+     * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
+     * for more information.
+     */
+    Bda->MemorySize = 0x0280;
+    Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
+    Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
+    Bda->KeybdBufferHead = Bda->KeybdBufferTail = 0;
+
+    /* Initialize the 32-bit Interrupt system */
+    InitializeInt32(BIOS_SEGMENT);
+
+    /* Register the BIOS 32-bit Interrupts */
+    RegisterInt32(BIOS_VIDEO_INTERRUPT    , BiosVideoService        );
+    RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
+    RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
+    RegisterInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
+    RegisterInt32(BIOS_KBD_INTERRUPT      , BiosKeyboardService     );
+    RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
+    RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
+
+    /* Some interrupts are in fact addresses to tables */
+    ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x1E] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
+
+    ((PDWORD)BaseAddress)[0x41] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x46] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
+    ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
+
+    /* Get the input handle to the real console, and check for success */
+    BiosConsoleInput = CreateFileW(L"CONIN$",
+                                   GENERIC_READ | GENERIC_WRITE,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   NULL,
+                                   OPEN_EXISTING,
+                                   0,
+                                   NULL);
+    if (BiosConsoleInput == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    /* Get the output handle to the real console, and check for success */
+    BiosConsoleOutput = CreateFileW(L"CONOUT$",
+                                    GENERIC_READ | GENERIC_WRITE,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                    NULL,
+                                    OPEN_EXISTING,
+                                    0,
+                                    NULL);
+    if (BiosConsoleOutput == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(BiosConsoleInput);
+        return FALSE;
+    }
+
+    /* Save the original console screen buffer information */
+    if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
+    {
+        CloseHandle(BiosConsoleOutput);
+        CloseHandle(BiosConsoleInput);
+        return FALSE;
+    }
+
+    /* Initialize VGA */
+    if (!VgaInitialize(BiosConsoleOutput))
+    {
+        CloseHandle(BiosConsoleOutput);
+        CloseHandle(BiosConsoleInput);
+        return FALSE;
+    }
+
+    /* Set the default video mode */
+    BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
+
+    /* Copy console data into VGA memory */
+    BiosCopyTextConsoleToVgaMemory();
+
+    /* Update the cursor position for the current page (page 0) */
+    GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
+    BiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
+                          ConsoleInfo.dwCursorPosition.X,
+                          Bda->VideoPage);
+
+    /* Set the console input mode */
+    SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+
+    /* Initialize PS2 */
+    PS2Initialize(BiosConsoleInput);
+
+    /* Initialize the PIC */
+    PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
+    PicWriteCommand(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
+
+    /* Set the interrupt offsets */
+    PicWriteData(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
+    PicWriteData(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
+
+    /* Tell the master PIC there is a slave at IRQ 2 */
+    PicWriteData(PIC_MASTER_DATA, 1 << 2);
+    PicWriteData(PIC_SLAVE_DATA , 2);
+
+    /* Make sure the PIC is in 8086 mode */
+    PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
+    PicWriteData(PIC_SLAVE_DATA , PIC_ICW4_8086);
+
+    /* Clear the masks for both PICs */
+    PicWriteData(PIC_MASTER_DATA, 0x00);
+    PicWriteData(PIC_SLAVE_DATA , 0x00);
+
+    PitWriteCommand(0x34);
+    PitWriteData(0, 0x00);
+    PitWriteData(0, 0x00);
+
+    return TRUE;
+}
+
+VOID BiosCleanup(VOID)
+{
+    SMALL_RECT ConRect;
+    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
+
+    PS2Cleanup();
+
+    /* Restore the old screen buffer */
+    SetConsoleActiveScreenBuffer(BiosConsoleOutput);
+
+    /* Restore the original console size */
+    GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
+    ConRect.Left = 0; // BiosSavedBufferInfo.srWindow.Left;
+    // ConRect.Top  = ConsoleInfo.dwCursorPosition.Y / (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
+    // ConRect.Top *= (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
+    ConRect.Top    = ConsoleInfo.dwCursorPosition.Y;
+    ConRect.Right  = ConRect.Left + BiosSavedBufferInfo.srWindow.Right - BiosSavedBufferInfo.srWindow.Left;
+    ConRect.Bottom = ConRect.Top  + (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top);
+    /* See the following trick explanation in vga.c:VgaEnterTextMode() */
+    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
+    SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &ConRect);
+    // SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &BiosSavedBufferInfo.srWindow);
+    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
+
+    /* Close the console handles */
+    if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
+    if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
