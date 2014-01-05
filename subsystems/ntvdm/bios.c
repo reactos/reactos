@@ -37,6 +37,8 @@ PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
 static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
+static DWORD BiosSavedConInMode, BiosSavedConOutMode;
+static CONSOLE_CURSOR_INFO        BiosSavedCursorInfo;
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
 
 /*
@@ -1879,8 +1881,18 @@ BOOLEAN BiosInitialize(VOID)
         return FALSE;
     }
 
-    /* Save the original console screen buffer information */
-    if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
+    /* Save the original input and output console modes */
+    if (!GetConsoleMode(BiosConsoleInput , &BiosSavedConInMode ) ||
+        !GetConsoleMode(BiosConsoleOutput, &BiosSavedConOutMode))
+    {
+        CloseHandle(BiosConsoleOutput);
+        CloseHandle(BiosConsoleInput);
+        return FALSE;
+    }
+
+    /* Save the original cursor and console screen buffer information */
+    if (!GetConsoleCursorInfo(BiosConsoleOutput, &BiosSavedCursorInfo) ||
+        !GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
     {
         CloseHandle(BiosConsoleOutput);
         CloseHandle(BiosConsoleInput);
@@ -1901,7 +1913,7 @@ BOOLEAN BiosInitialize(VOID)
     /* Copy console data into VGA memory */
     BiosCopyTextConsoleToVgaMemory();
 
-    /* Update the cursor position for the current page (page 0) */
+    /* Update the cursor position for the current page */
     GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
     BiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
                           ConsoleInfo.dwCursorPosition.X,
@@ -1963,6 +1975,13 @@ VOID BiosCleanup(VOID)
     SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &ConRect);
     // SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &BiosSavedBufferInfo.srWindow);
     SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
+
+    /* Restore the original cursor shape */
+    SetConsoleCursorInfo(BiosConsoleOutput, &BiosSavedCursorInfo);
+
+    /* Restore the original input and output console modes */
+    SetConsoleMode(BiosConsoleOutput, BiosSavedConOutMode);
+    SetConsoleMode(BiosConsoleInput , BiosSavedConInMode );
 
     /* Close the console handles */
     if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
