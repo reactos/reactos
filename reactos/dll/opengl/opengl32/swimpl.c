@@ -204,7 +204,6 @@ sw_fb_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
         DIB_RGB_COLORS,
         (void**)&srb->swrast.Buffer,
         NULL, 0);
-    assert(srb->hbmp);
     if(!srb->hbmp)
     {
         ERR("Failed to create the DIB section for the front buffer, %lu.\n", GetLastError());
@@ -554,6 +553,7 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
        !_tnl_CreateContext(&sw_ctx->mesa) ||
        !_swsetup_CreateContext(&sw_ctx->mesa))
     {
+        ERR("Failed initializing helpers.\n");
         _mesa_free_context_data(&sw_ctx->mesa);
         free(sw_ctx);
         return NULL;
@@ -809,7 +809,7 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
         0,
         0,
         0,
-        fb->bmi.bmiHeader.biWidth,
+        fb->bmi.bmiHeader.biHeight,
         fb->backbuffer.Buffer,
         &fb->bmi,
         DIB_RGB_COLORS) != 0);
