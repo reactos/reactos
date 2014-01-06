@@ -2,19 +2,14 @@
 #define __DEVMGMT_PRECOMP_H
 
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #include <winreg.h>
 #include <wingdi.h>
-#include <winnls.h>
-#include <windowsx.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <cfgmgr32.h>
-#include <dll/devmgr/devmgr.h>
-#include <initguid.h>
-#include <devguid.h>
 
 #include "resource.h"
 
