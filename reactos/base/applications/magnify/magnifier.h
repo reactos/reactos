@@ -20,14 +20,6 @@
 
 #include <stdarg.h>
 #include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <tchar.h>
-#include <winnls.h> //test
-
-#include "resource.h"
 
 extern int iZoom;
 

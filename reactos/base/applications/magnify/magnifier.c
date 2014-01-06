@@ -10,6 +10,13 @@
 /* TODO: AppBar */
 #include "magnifier.h"
 
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <winnls.h>
+
+#include "resource.h"
+
 const TCHAR szWindowClass[] = TEXT("MAGNIFIER");
 
 #define MAX_LOADSTRING 100
