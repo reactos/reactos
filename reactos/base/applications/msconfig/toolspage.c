@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#include <shlwapi.h>
+
 HWND hToolsPage;
 HWND hToolsListCtrl;
 HWND hToolsDialog;

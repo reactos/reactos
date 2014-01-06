@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#include <winsvc.h>
+#include <winver.h>
+
 HWND hServicesPage;
 HWND hServicesListCtrl;
 HWND hServicesDialog;
