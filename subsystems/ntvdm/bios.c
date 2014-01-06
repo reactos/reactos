@@ -797,12 +797,12 @@ Done:
     return TRUE;
 }
 
-static VOID BiosCopyTextConsoleToVgaMemory(VOID)
+static VOID BiosCopyTextConsoleToVgaMemory(PCOORD ConsoleSize)
 {
     PCHAR_INFO CharBuffer;
     COORD BufferSize = {Bda->ScreenColumns, Bda->ScreenRows + 1};
     COORD Origin = { 0, 0 };
-    SMALL_RECT ScreenRect;
+    SMALL_RECT ConRect;
 
     INT i, j;
     INT Counter = 0;
@@ -816,16 +816,17 @@ static VOID BiosCopyTextConsoleToVgaMemory(VOID)
                              * sizeof(CHAR_INFO));
     if (CharBuffer == NULL) return;
 
-    ScreenRect.Left = ScreenRect.Top = 0;
-    ScreenRect.Right  = BufferSize.X;
-    ScreenRect.Bottom = BufferSize.Y;
+    ConRect.Left   = 0;
+    ConRect.Top    = ConsoleSize->Y - BufferSize.Y;
+    ConRect.Right  = ConRect.Left + BufferSize.X - 1;
+    ConRect.Bottom = ConRect.Top  + BufferSize.Y - 1;
 
     /* Read the data from the console into the temporary buffer... */
     ReadConsoleOutputA(BiosConsoleOutput,
                        CharBuffer,
                        BufferSize,
                        Origin,
-                       &ScreenRect);
+                       &ConRect);
 
     /* ... and copy the temporary buffer into the VGA memory */
     for (i = 0; i < BufferSize.Y; i++)
@@ -842,6 +843,9 @@ static VOID BiosCopyTextConsoleToVgaMemory(VOID)
                            sizeof(WORD));
         }
     }
+
+    /* Free the temporary buffer */
+    HeapFree(GetProcessHeap(), 0, CharBuffer);
 }
 
 static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
@@ -1910,11 +1914,12 @@ BOOLEAN BiosInitialize(VOID)
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
 
+    GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
+
     /* Copy console data into VGA memory */
-    BiosCopyTextConsoleToVgaMemory();
+    BiosCopyTextConsoleToVgaMemory(&ConsoleInfo.dwSize);
 
     /* Update the cursor position for the current page */
-    GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
     BiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
                           ConsoleInfo.dwCursorPosition.X,
                           Bda->VideoPage);
@@ -1968,8 +1973,8 @@ VOID BiosCleanup(VOID)
     // ConRect.Top  = ConsoleInfo.dwCursorPosition.Y / (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
     // ConRect.Top *= (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
     ConRect.Top    = ConsoleInfo.dwCursorPosition.Y;
-    ConRect.Right  = ConRect.Left + BiosSavedBufferInfo.srWindow.Right - BiosSavedBufferInfo.srWindow.Left;
-    ConRect.Bottom = ConRect.Top  + (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top);
+    ConRect.Right  = ConRect.Left + BiosSavedBufferInfo.srWindow.Right  - BiosSavedBufferInfo.srWindow.Left;
+    ConRect.Bottom = ConRect.Top  + BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top ;
     /* See the following trick explanation in vga.c:VgaEnterTextMode() */
     SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
     SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &ConRect);
