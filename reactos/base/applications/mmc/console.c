@@ -19,6 +19,8 @@
 
 #include "precomp.h"
 
+#include "resource.h"
+
 static const TCHAR szMMCMainFrame[] = TEXT("MMCMainFrame");
 static const TCHAR szMMCChildFrm[] = TEXT("MMCChildFrm");
 
