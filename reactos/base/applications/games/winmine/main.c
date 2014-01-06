@@ -18,18 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
+#include "main.h"
+
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <time.h>
 #include <stdlib.h>
 #include <shellapi.h>
-
-#include "main.h"
-#include "resource.h"
 
 #include <wine/debug.h>
 
