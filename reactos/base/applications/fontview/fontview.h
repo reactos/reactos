@@ -1,11 +1,4 @@
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <shellapi.h>
-
-#include "resource.h"
-#include "display.h"
+#pragma once
 
 #define MAX_LOADSTRING 50
 #define MAX_BUTTONNAME 30
