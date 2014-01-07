@@ -32,6 +32,10 @@
 
 #include "precomp.h"
 
+#include <locale.h>
+#include <io.h>
+#include <sys/stat.h>
+
 // Turn off the "forcing value to bool 'true' or 'false'" warning
 #ifdef _MSC_VER
 #pragma warning(disable: 4800)

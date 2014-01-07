@@ -44,6 +44,8 @@
 
 #include "precomp.h"
 
+#include <time.h>
+
 #ifndef LANG_USER_DEFAULT
 #define LANG_USER_DEFAULT 400
 #endif
