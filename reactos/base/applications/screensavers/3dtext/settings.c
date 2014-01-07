@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//////////////////////////////////////////////////////////////////
-
 #include "3dtext.h"
+
+#include <winreg.h>
 
 TCHAR m_Text[MAX_PATH] = _T("ReactOS Rocks!");
 
