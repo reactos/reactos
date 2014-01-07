@@ -22,6 +22,8 @@
 
 #include "notepad.h"
 
+#include <winreg.h>
+
 static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
 
 

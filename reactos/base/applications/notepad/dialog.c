@@ -22,6 +22,10 @@
 
 #include "notepad.h"
 
+#include <assert.h>
+#include <commctrl.h>
+#include <strsafe.h>
+
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static const TCHAR helpfile[]     = _T("notepad.hlp");
