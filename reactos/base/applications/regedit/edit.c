@@ -20,6 +20,9 @@
 
 #include "regedit.h"
 
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h>
+
 typedef enum _EDIT_MODE
 {
     EDIT_MODE_DEC,

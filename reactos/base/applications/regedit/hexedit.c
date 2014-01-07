@@ -19,6 +19,7 @@
  */
 
 #include "regedit.h"
+
 typedef struct
 {
     HWND hWndSelf;

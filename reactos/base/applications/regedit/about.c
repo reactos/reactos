@@ -20,6 +20,8 @@
 
 #include "regedit.h"
 
+#include <shellapi.h>
+
 void ShowAboutBox(HWND hWnd)
 {
     WCHAR AppStr[255];
