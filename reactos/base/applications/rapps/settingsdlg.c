@@ -6,7 +6,6 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#define _WIN32_DCOM // For CoInitializeEx, etc...
 #include "rapps.h"
 
 SETTINGS_INFO NewSettingsInfo;

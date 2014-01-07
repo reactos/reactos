@@ -1,7 +1,10 @@
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+#define COBJMACROS
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
@@ -10,8 +13,6 @@
 #include <winuser.h>
 #include <wincon.h>
 #include <richedit.h>
-#include <shellapi.h>
-#include <shlwapi.h>
 #include <shlobj.h>
 #include <stdio.h>
 

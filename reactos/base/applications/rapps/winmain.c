@@ -8,12 +8,13 @@
 
 #include "rapps.h"
 
+#include <shellapi.h>
+
 HWND hMainWnd;
 HINSTANCE hInst;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
-
 
 VOID
 FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)

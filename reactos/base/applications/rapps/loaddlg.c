@@ -25,9 +25,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define COBJMACROS
-#define WIN32_NO_STATUS
-
 #include "rapps.h"
 
 static PAPPLICATION_INFO AppInfo;

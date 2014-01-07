@@ -11,7 +11,6 @@
 HWND hListView;
 BOOL bAscending = TRUE;
 
-
 PVOID
 ListViewGetlParam(INT Index)
 {

@@ -8,7 +8,6 @@
 
 #include "rapps.h"
 
-
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
