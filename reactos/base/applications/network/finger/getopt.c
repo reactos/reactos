@@ -34,11 +34,11 @@
  *     Ported to Win32, changed index/rindex to strchr/strrchr
  */
 
+#include "precomp.h"
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)getopt.c	4.13 (Berkeley) 2/23/91";
 #endif /* LIBC_SCCS and not lint */
-
-#include "precomp.h"
 
 /*
  * get option letter from argument vector
