@@ -9,8 +9,12 @@
 
 /* INCLUDES *********************************************************/
 
-//#include <htmlhelp.h>
 #include "precomp.h"
+
+#include <shellapi.h>
+
+#include "dialogs.h"
+#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 
