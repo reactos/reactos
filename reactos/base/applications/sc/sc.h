@@ -1,8 +1,8 @@
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
-#include <conio.h>
 #include <tchar.h>
 
 #define SCDBG
