@@ -2431,7 +2431,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 {
     PVOID Object = NULL;
     UNICODE_STRING ObjectName;
-    NTSTATUS Status;
+    NTSTATUS Status, Status2;
     POBJECT_HEADER ObjectHeader;
     PGENERIC_MAPPING GenericMapping = NULL;
     OB_OPEN_REASON OpenReason;
@@ -2557,17 +2557,21 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     else
     {
         /* Create the actual handle now */
-        Status = ObpCreateHandle(OpenReason,
-                                 Object,
-                                 ObjectType,
-                                 PassedAccessState,
-                                 0,
-                                 TempBuffer->ObjectCreateInfo.Attributes,
-                                 &TempBuffer->LookupContext,
-                                 AccessMode,
-                                 NULL,
-                                 Handle);
-        if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
+        Status2 = ObpCreateHandle(OpenReason,
+                                  Object,
+                                  ObjectType,
+                                  PassedAccessState,
+                                  0,
+                                  TempBuffer->ObjectCreateInfo.Attributes,
+                                  &TempBuffer->LookupContext,
+                                  AccessMode,
+                                  NULL,
+                                  Handle);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject(Object);
+            Status = Status2;
+        }
     }
 
 Cleanup:
