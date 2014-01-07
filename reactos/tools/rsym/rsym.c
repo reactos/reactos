@@ -461,7 +461,6 @@ struct DbgHelpStringTab {
   char ***Table;
   ULONG LineEntries, CurLineEntries;
   struct DbgHelpLineEntry *LineEntryData;
-  ULONG NumberOfSymbols;
   void *process;
   DWORD module_base;
   char *PathChop;
