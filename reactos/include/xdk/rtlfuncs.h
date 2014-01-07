@@ -1104,7 +1104,7 @@ VOID
 NTAPI
 RtlUpperString(
   _Inout_ PSTRING DestinationString,
-  _In_ const PSTRING SourceString);
+  _In_ const STRING *SourceString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _When_(AllocateDestinationString, _Must_inspect_result_)
@@ -1140,8 +1140,8 @@ NTSYSAPI
 LONG
 NTAPI
 RtlCompareString(
-  _In_ const PSTRING String1,
-  _In_ const PSTRING String2,
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
   _In_ BOOLEAN CaseInSensitive);
 
 NTSYSAPI
@@ -1149,7 +1149,7 @@ VOID
 NTAPI
 RtlCopyString(
   _Out_ PSTRING DestinationString,
-  _In_opt_ const PSTRING SourceString);
+  _In_opt_ const STRING *SourceString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
@@ -1157,8 +1157,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlEqualString(
-  _In_ const PSTRING String1,
-  _In_ const PSTRING String2,
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
   _In_ BOOLEAN CaseInSensitive);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1232,6 +1232,16 @@ RtlCreateUnicodeString(
   _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem))
     PUNICODE_STRING DestinationString,
   _In_z_ PCWSTR SourceString);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlPrefixString(
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
+  _In_ BOOLEAN CaseInsensitive);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI

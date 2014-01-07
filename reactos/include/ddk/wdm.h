@@ -3441,6 +3441,12 @@ typedef struct _KEY_WRITE_TIME_INFORMATION {
   LARGE_INTEGER LastWriteTime;
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
 
+#if (NTDDI_VERSION < NTDDI_VISTA)
+typedef struct _KEY_USER_FLAGS_INFORMATION {
+    ULONG   UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+#endif
+
 typedef enum _REG_NOTIFY_CLASS {
   RegNtDeleteKey,
   RegNtPreDeleteKey = RegNtDeleteKey,
@@ -8333,7 +8339,7 @@ KeRestoreFloatingPointState(PVOID FloatingState)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
-extern DECLSPEC_CACHEALIGN volatile LARGE_INTEGER KeTickCount;
+extern volatile LARGE_INTEGER KeTickCount;
 
 #define PAUSE_PROCESSOR __yield();
 
