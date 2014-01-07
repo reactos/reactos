@@ -8,6 +8,9 @@
 
 #include "nslookup.h"
 
+#include <winbase.h>
+#include <iphlpapi.h>
+
 STATE   State;
 HANDLE  ProcessHeap;
 ULONG   RequestID;

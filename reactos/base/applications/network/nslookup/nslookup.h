@@ -1,12 +1,11 @@
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
-#include <winbase.h>
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <iphlpapi.h>
 
 #define TypeA       "A"
 #define TypeAAAA    "AAAA"
