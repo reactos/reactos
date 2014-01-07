@@ -357,7 +357,7 @@ RtlEncodeSystemPointer(IN PVOID Pointer)
  *   http://www.geoffchappell.com/studies/windows/win32/ntdll/api/rtl/peb/setprocessiscritical.htm
  */
 NTSTATUS
-NTAPI
+__cdecl
 RtlSetProcessIsCritical(IN BOOLEAN NewValue,
                         OUT PBOOLEAN OldValue OPTIONAL,
                         IN BOOLEAN NeedBreaks)

@@ -846,7 +846,7 @@
 @ stdcall RtlSetLastWin32ErrorAndNtStatusFromNtStatus(long)
 @ stdcall RtlSetMemoryStreamSize(ptr int64)
 @ stdcall RtlSetOwnerSecurityDescriptor(ptr ptr long)
-@ stdcall RtlSetProcessIsCritical(long ptr long)
+@ cdecl RtlSetProcessIsCritical(long ptr long)
 ;@ stdcall RtlSetProperties ; RtlSetProperties
 ;@ stdcall RtlSetPropertyClassId ; 4.0 only
 ;@ stdcall RtlSetPropertyNames ; 4.0 only
@@ -856,7 +856,7 @@
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 @ stdcall RtlSetSecurityObjectEx(long ptr ptr long ptr ptr)
 @ stdcall RtlSetThreadErrorMode(long ptr)
-@ stdcall RtlSetThreadIsCritical(long ptr long)
+@ cdecl RtlSetThreadIsCritical(long ptr long)
 @ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
 @ stdcall RtlSetTimeZoneInformation(ptr)
 ;@ stdcall RtlSetTimer

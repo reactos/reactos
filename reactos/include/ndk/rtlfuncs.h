@@ -2564,7 +2564,7 @@ RtlRemoteCall(
 
 NTSYSAPI
 NTSTATUS
-NTAPI
+__cdecl
 RtlSetProcessIsCritical(
     _In_ BOOLEAN NewValue,
     _Out_opt_ PBOOLEAN OldValue,
@@ -2573,7 +2573,7 @@ RtlSetProcessIsCritical(
 
 NTSYSAPI
 NTSTATUS
-NTAPI
+__cdecl
 RtlSetThreadIsCritical(
     _In_ BOOLEAN NewValue,
     _Out_opt_ PBOOLEAN OldValue,
@@ -4244,7 +4244,7 @@ RtlFinalReleaseOutOfProcessMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlQueryInterfaceMemoryStream( 
+RtlQueryInterfaceMemoryStream(
     _In_ struct IStream *This,
     _In_ REFIID RequestedIid,
     _Outptr_ PVOID *ResultObject
@@ -4253,21 +4253,21 @@ RtlQueryInterfaceMemoryStream(
 NTSYSAPI
 ULONG
 NTAPI
-RtlAddRefMemoryStream( 
+RtlAddRefMemoryStream(
     _In_ struct IStream *This
 );
 
 NTSYSAPI
 ULONG
 NTAPI
-RtlReleaseMemoryStream( 
+RtlReleaseMemoryStream(
     _In_ struct IStream *This
 );
 
 NTSYSAPI
 HRESULT
 NTAPI
-RtlReadMemoryStream( 
+RtlReadMemoryStream(
     _In_ struct IStream *This,
     _Out_writes_bytes_(Length) PVOID Buffer,
     _In_ ULONG Length,
@@ -4277,7 +4277,7 @@ RtlReadMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlReadOutOfProcessMemoryStream( 
+RtlReadOutOfProcessMemoryStream(
     _In_ struct IStream *This,
     _Out_writes_bytes_(Length) PVOID Buffer,
     _In_ ULONG Length,
@@ -4287,7 +4287,7 @@ RtlReadOutOfProcessMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlSeekMemoryStream( 
+RtlSeekMemoryStream(
     _In_ struct IStream *This,
     _In_ LARGE_INTEGER RelativeOffset,
     _In_ ULONG Origin,
@@ -4297,7 +4297,7 @@ RtlSeekMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlCopyMemoryStreamTo( 
+RtlCopyMemoryStreamTo(
     _In_ struct IStream *This,
     _In_ struct IStream *Target,
     _In_ ULARGE_INTEGER Length,
@@ -4308,7 +4308,7 @@ RtlCopyMemoryStreamTo(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlCopyOutOfProcessMemoryStreamTo( 
+RtlCopyOutOfProcessMemoryStreamTo(
     _In_ struct IStream *This,
     _In_ struct IStream *Target,
     _In_ ULARGE_INTEGER Length,
@@ -4319,7 +4319,7 @@ RtlCopyOutOfProcessMemoryStreamTo(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlStatMemoryStream( 
+RtlStatMemoryStream(
     _In_ struct IStream *This,
     _Out_ struct tagSTATSTG *Stats,
     _In_ ULONG Flags
@@ -4329,7 +4329,7 @@ RtlStatMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlWriteMemoryStream( 
+RtlWriteMemoryStream(
     _In_ struct IStream *This,
     _In_reads_bytes_(Length) CONST VOID *Buffer,
     _In_ ULONG Length,
@@ -4339,7 +4339,7 @@ RtlWriteMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlSetMemoryStreamSize( 
+RtlSetMemoryStreamSize(
     _In_ struct IStream *This,
     _In_ ULARGE_INTEGER NewSize
 );
@@ -4347,7 +4347,7 @@ RtlSetMemoryStreamSize(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlCommitMemoryStream( 
+RtlCommitMemoryStream(
     _In_ struct IStream *This,
     _In_ ULONG CommitFlags
 );
@@ -4355,14 +4355,14 @@ RtlCommitMemoryStream(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlRevertMemoryStream( 
+RtlRevertMemoryStream(
     _In_ struct IStream *This
 );
 
 NTSYSAPI
 HRESULT
 NTAPI
-RtlLockMemoryStreamRegion( 
+RtlLockMemoryStreamRegion(
     _In_ struct IStream *This,
     _In_ ULARGE_INTEGER Offset,
     _In_ ULARGE_INTEGER Length,
@@ -4372,7 +4372,7 @@ RtlLockMemoryStreamRegion(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlUnlockMemoryStreamRegion( 
+RtlUnlockMemoryStreamRegion(
     _In_ struct IStream *This,
     _In_ ULARGE_INTEGER Offset,
     _In_ ULARGE_INTEGER Length,
@@ -4382,7 +4382,7 @@ RtlUnlockMemoryStreamRegion(
 NTSYSAPI
 HRESULT
 NTAPI
-RtlCloneMemoryStream( 
+RtlCloneMemoryStream(
     _In_ struct IStream *This,
     _Outptr_ struct IStream **ResultStream
 );
