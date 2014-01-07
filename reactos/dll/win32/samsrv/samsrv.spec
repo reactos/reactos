@@ -38,7 +38,7 @@
 @ stub SamIGetFixedAttributes
 @ stub SamIGetInterdomainTrustAccountPasswordsForUpgrade
 @ stub SamIGetPrivateData
-@ stub SamIGetResourceGroupmembershipsTransitive
+@ stub SamIGetResourceGroupMembershipsTransitive
 @ stub SamIGetSerialNumberDomain
 @ stub SamIGetUserLogonInformation
 @ stub SamIGetUserLogonInformation2
