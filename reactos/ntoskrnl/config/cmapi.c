@@ -1313,7 +1313,6 @@ CmpQueryKeyDataFromCache(
     _Out_ PULONG ResultLength)
 {
     PCM_KEY_NODE Node;
-    ULONG SubKeyCount;
     PHHIVE KeyHive;
     HCELL_INDEX KeyCell;
     USHORT NameLength;
@@ -1328,6 +1327,7 @@ CmpQueryKeyDataFromCache(
     Node = HvGetCell(KeyHive, KeyCell);
     if (Node != NULL)
     {
+        ULONG SubKeyCount;
         ASSERT(Node->ValueList.Count == Kcb->ValueCache.Count);
 
         if (!(Kcb->ExtFlags & CM_KCB_INVALID_CACHED_INFO))
