@@ -8,9 +8,7 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(EngDev)
 
 PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 PGRAPHICS_DEVICE gpVgaGraphicsDevice;
@@ -53,7 +51,7 @@ EngpRegisterGraphicsDevice(
     PDEVMODEW pdm, pdmEnd;
     PLDEVOBJ pldev;
 
-    DPRINT("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
+    TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
     /* Allocate a GRAPHICS_DEVICE structure */
     pGraphicsDevice = ExAllocatePoolWithTag(PagedPool,
@@ -61,7 +59,7 @@ EngpRegisterGraphicsDevice(
                                             GDITAG_GDEVICE);
     if (!pGraphicsDevice)
     {
-        DPRINT1("ExAllocatePoolWithTag failed\n");
+        ERR("ExAllocatePoolWithTag failed\n");
         return NULL;
     }
 
@@ -72,7 +70,7 @@ EngpRegisterGraphicsDevice(
                                       &pDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Could not open driver %wZ, 0x%lx\n", pustrDeviceName, Status);
+        ERR("Could not open driver %wZ, 0x%lx\n", pustrDeviceName, Status);
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
@@ -98,7 +96,7 @@ EngpRegisterGraphicsDevice(
     pwsz = ExAllocatePoolWithTag(PagedPool, cj, GDITAG_DRVSUP);
     if (!pwsz)
     {
-        DPRINT1("Could not allocate string buffer\n");
+        ERR("Could not allocate string buffer\n");
         ASSERT(FALSE); // FIXME
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
@@ -128,12 +126,12 @@ EngpRegisterGraphicsDevice(
      * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
-        DPRINT("trying driver: %ls\n", pwsz);
+        TRACE("trying driver: %ls\n", pwsz);
         /* Try to load the display driver */
         pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
         {
-            DPRINT1("Could not load driver: '%ls'\n", pwsz);
+            ERR("Could not load driver: '%ls'\n", pwsz);
             continue;
         }
 
@@ -141,7 +139,7 @@ EngpRegisterGraphicsDevice(
         pdminfo = LDEVOBJ_pdmiGetModes(pldev, pDeviceObject);
         if (!pdminfo)
         {
-            DPRINT1("Could not get mode list for '%ls'\n", pwsz);
+            ERR("Could not get mode list for '%ls'\n", pwsz);
             continue;
         }
 
@@ -169,7 +167,7 @@ EngpRegisterGraphicsDevice(
 
     if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
     {
-        DPRINT1("No devmodes\n");
+        ERR("No devmodes\n");
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
@@ -181,10 +179,17 @@ EngpRegisterGraphicsDevice(
                                                           GDITAG_GDEVICE);
     if (!pGraphicsDevice->pDevModeList)
     {
-        DPRINT1("No devmode list\n");
+        ERR("No devmode list\n");
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
+
+    TRACE("Looking for mode %lux%lux%lu(%lu Hz)\n",
+        pdm->dmDeviceName,
+        pdm->dmPelsWidth,
+        pdm->dmPelsHeight,
+        pdm->dmBitsPerPel,
+        pdm->dmDisplayFrequency);
 
     /* Loop through all DEVMODEINFOs */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
@@ -199,6 +204,12 @@ EngpRegisterGraphicsDevice(
              (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
              pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
         {
+            TRACE("    %S has mode %lux%lux%lu(%lu Hz)\n",
+                  pdm->dmDeviceName,
+                  pdm->dmPelsWidth,
+                  pdm->dmPelsHeight,
+                  pdm->dmBitsPerPel,
+                  pdm->dmDisplayFrequency);
             /* Compare with the default entry */
             if (pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
                 pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
@@ -207,7 +218,7 @@ EngpRegisterGraphicsDevice(
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
-                DPRINT("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
+                TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
             }
 
             /* Initialize the entry */
@@ -233,7 +244,7 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    DPRINT("Prepared %lu modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
+    TRACE("Prepared %lu modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
 
     return pGraphicsDevice;
 }
@@ -249,7 +260,7 @@ EngpFindGraphicsDevice(
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    DPRINT("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
+    TRACE("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
            pustrDevice, iDevNum, dwFlags);
 
     /* Lock list */
@@ -437,7 +448,7 @@ EngDeviceIoControl(
     IO_STATUS_BLOCK Iosb;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("EngDeviceIoControl() called\n");
+    TRACE("EngDeviceIoControl() called\n");
 
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
@@ -462,7 +473,7 @@ EngDeviceIoControl(
         Status = Iosb.Status;
     }
 
-    DPRINT("EngDeviceIoControl(): Returning %X/%X\n", Iosb.Status,
+    TRACE("EngDeviceIoControl(): Returning %X/%X\n", Iosb.Status,
            Iosb.Information);
 
     /* Return information to the caller about the operation. */
