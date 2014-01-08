@@ -67,11 +67,11 @@ NTAPI
 SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
               IN HANDLE SbApiPort,
               IN ULONG ImageType,
-              IN HANDLE SmApiPort)
+              OUT PHANDLE SmApiPort)
 {
     NTSTATUS Status;
     SB_CONNECTION_INFO ConnectInfo;
-    UNICODE_STRING DestinationString;
+    UNICODE_STRING PortName;
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
 
@@ -81,7 +81,7 @@ SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Set the SM API port name */
-    RtlInitUnicodeString(&DestinationString, L"\\SmApiPort");
+    RtlInitUnicodeString(&PortName, L"\\SmApiPort");
 
     /* Check if this is a client connecting to SMSS, or SMSS to itself */
     if (SbApiPortName)
@@ -108,7 +108,7 @@ SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
 
     /* Connect to SMSS and exchange connection information */
     Status = NtConnectPort(SmApiPort,
-                           &DestinationString,
+                           &PortName,
                            &SecurityQos,
                            NULL,
                            NULL,
