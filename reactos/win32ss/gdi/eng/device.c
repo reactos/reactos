@@ -50,6 +50,7 @@ EngpRegisterGraphicsDevice(
     PDEVMODEINFO pdminfo;
     PDEVMODEW pdm, pdmEnd;
     PLDEVOBJ pldev;
+    BOOLEAN bModeMatch = FALSE;
 
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
@@ -185,11 +186,10 @@ EngpRegisterGraphicsDevice(
     }
 
     TRACE("Looking for mode %lux%lux%lu(%lu Hz)\n",
-        pdm->dmDeviceName,
-        pdm->dmPelsWidth,
-        pdm->dmPelsHeight,
-        pdm->dmBitsPerPel,
-        pdm->dmDisplayFrequency);
+        pdmDefault->dmPelsWidth,
+        pdmDefault->dmPelsHeight,
+        pdmDefault->dmBitsPerPel,
+        pdmDefault->dmDisplayFrequency);
 
     /* Loop through all DEVMODEINFOs */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
@@ -211,14 +211,19 @@ EngpRegisterGraphicsDevice(
                   pdm->dmBitsPerPel,
                   pdm->dmDisplayFrequency);
             /* Compare with the default entry */
-            if (pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
+            if (!bModeMatch && 
+                pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
                 pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
-                pdm->dmPelsHeight == pdmDefault->dmPelsHeight &&
-                pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
+                pdm->dmPelsHeight == pdmDefault->dmPelsHeight)
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
                 TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
+                if (pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
+                {
+                    /* Uh oh, even the display frequency matches. */
+                    bModeMatch = TRUE;
+                }
             }
 
             /* Initialize the entry */
