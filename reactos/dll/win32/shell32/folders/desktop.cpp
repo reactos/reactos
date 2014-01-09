@@ -1377,11 +1377,18 @@ BOOL CDesktopFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 HRESULT WINAPI CDesktopFolder::DragEnter(IDataObject *pDataObject,
                                     DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
+    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
     FORMATETC fmt;
+    FORMATETC fmt2;
+    fAcceptFmt = FALSE;
 
     InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
-    fAcceptFmt = (S_OK == pDataObject->QueryGetData(&fmt)) ?
-                 TRUE : FALSE;
+    InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
+
+    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
+        fAcceptFmt = TRUE;
+    else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
+        fAcceptFmt = TRUE;
 
     QueryDrop(dwKeyState, pdwEffect);
     return S_OK;
@@ -1413,32 +1420,45 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
     TRACE("(%p) object dropped desktop\n", this);
 
     STGMEDIUM medium;
+    bool passthroughtofs = FALSE;
     FORMATETC formatetc;
     InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    
     HRESULT hr = pDataObject->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return hr;
-
-    /* lock the handle */
-    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-    if (!lpcida)
+    if (SUCCEEDED(hr))
     {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
+        /* lock the handle */
+        LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+        if (!lpcida)
+        {
+            ReleaseStgMedium(&medium);
+            return E_FAIL;
+        }
 
-    /* convert the clipboard data into pidl (pointer to id list) */
-    LPITEMIDLIST pidl;
-    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-    if (!apidl)
+        /* convert the clipboard data into pidl (pointer to id list) */
+        LPITEMIDLIST pidl;
+        LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+        if (!apidl)
+        {
+            ReleaseStgMedium(&medium);
+            return E_FAIL;
+        }
+        passthroughtofs = !_ILIsDesktop(pidl) || (dwKeyState & MK_CONTROL);
+        SHFree(pidl);
+        _ILFreeaPidl(apidl, lpcida->cidl);
+        ReleaseStgMedium(&medium);
+    }
+    else
     {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
+        InitFormatEtc (formatetc, CF_HDROP, TYMED_HGLOBAL);
+        if SUCCEEDED(pDataObject->QueryGetData(&formatetc));
+        {
+            passthroughtofs = TRUE;
+        }
     }
-
     /* We only want to really move files around if they don't already
        come from the desktop, or we're linking or copying */
-    if ((!_ILIsDesktop(pidl)) || (dwKeyState & MK_CONTROL))
+    if (passthroughtofs)
     {
         LPITEMIDLIST pidl = NULL;
 
@@ -1467,9 +1487,5 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
 
     /* Todo, rewrite the registry such that the icons are well placed.
     Blocked by no bags implementation. */
-
-    SHFree(pidl);
-    _ILFreeaPidl(apidl, lpcida->cidl);
-    ReleaseStgMedium(&medium);
     return hr;
 }

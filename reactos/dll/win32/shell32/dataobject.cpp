@@ -163,7 +163,8 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 
 class IDataObjectImpl :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDataObject
+    public IDataObject,
+    public IAsyncOperation 
 {
 private:
     LPITEMIDLIST    pidl;
@@ -176,6 +177,7 @@ private:
     UINT        cfFileNameA;
     UINT        cfFileNameW;
     UINT        cfPreferredDropEffect;
+    BOOL        doasync;
 public:
     IDataObjectImpl();
     ~IDataObjectImpl();
@@ -191,9 +193,15 @@ public:
     virtual HRESULT WINAPI DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
     virtual HRESULT WINAPI DUnadvise(DWORD dwConnection);
     virtual HRESULT WINAPI EnumDAdvise(IEnumSTATDATA **ppenumAdvise);
+    virtual HRESULT WINAPI GetAsyncMode(BOOL *pfIsOpAsync);
+    virtual HRESULT WINAPI InOperation(BOOL *pfInAsyncOp);
+    virtual HRESULT WINAPI SetAsyncMode(BOOL fDoOpAsync);
+    virtual HRESULT WINAPI StartOperation(IBindCtx *pbcReserved);
+    virtual HRESULT WINAPI EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects);
 
 BEGIN_COM_MAP(IDataObjectImpl)
     COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)
+    COM_INTERFACE_ENTRY_IID(IID_IAsyncOperation,  IAsyncOperation)
 END_COM_MAP()
 };
 
@@ -207,6 +215,7 @@ IDataObjectImpl::IDataObjectImpl()
     cfFileNameA = 0;
     cfFileNameW = 0;
     cfPreferredDropEffect = 0;
+    doasync = FALSE;
 }
 
 IDataObjectImpl::~IDataObjectImpl()
@@ -370,6 +379,37 @@ HRESULT WINAPI IDataObjectImpl::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
+
+HRESULT WINAPI IDataObjectImpl::GetAsyncMode(BOOL *pfIsOpAsync)
+{
+    TRACE("(%p)->()\n", this);
+    *pfIsOpAsync = doasync;
+    return S_OK;
+}
+HRESULT WINAPI IDataObjectImpl::InOperation(BOOL *pfInAsyncOp)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+HRESULT WINAPI IDataObjectImpl::SetAsyncMode(BOOL fDoOpAsync) 
+{
+    TRACE("(%p)->()\n", this);
+    doasync = fDoOpAsync;
+    return S_OK;
+}
+
+HRESULT WINAPI IDataObjectImpl::StartOperation(IBindCtx *pbcReserved)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+HRESULT WINAPI IDataObjectImpl::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+
+
 
 /**************************************************************************
 *  IDataObject_Constructor

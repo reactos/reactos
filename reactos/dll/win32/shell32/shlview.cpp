@@ -1686,10 +1686,16 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                             dwEffect |= DROPEFFECT_LINK;
                         }
                     }
+                    
+                    CComPtr<IAsyncOperation> piaso;
+                    if (SUCCEEDED(pda->QueryInterface(IID_PPV_ARG(IAsyncOperation, &piaso))))
+                    {
+                        piaso->SetAsyncMode(TRUE);
+                        piaso->Release();
+                    }
 
                     if (pds)
-                    {
-                        DWORD dwEffect2;
+                    {                        DWORD dwEffect2;
                         DoDragDrop(pda, pds, dwEffect, &dwEffect2);
                     }
                     pda->Release();
