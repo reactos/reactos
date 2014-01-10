@@ -19,7 +19,7 @@ PropVariantToAdsType(
     PADSVALUE *ppAdsValues,
     PDWORD pdwNumValues)
 {
-    UNIMPLEMENTED;
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
     return E_NOTIMPL;
 }
 
@@ -30,7 +30,7 @@ AdsTypeToPropVariant(
     DWORD dwNumValues,
     VARIANT * pVariant)
 {
-    UNIMPLEMENTED;
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
     return E_NOTIMPL;
 }
 
@@ -40,7 +40,7 @@ AdsFreeAdsValues(
     PADSVALUE pAdsValues,
     DWORD dwNumValues)
 {
-    UNIMPLEMENTED;
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
 }
 
 HRESULT
@@ -50,34 +50,34 @@ ADsDecodeBinaryData(
    PBYTE  *ppbDestData,
    ULONG  *pdwDestLen)
 {
-    UNIMPLEMENTED;
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
     return E_NOTIMPL;
 }
 
 int AdsTypeToPropVariant2()
 {
-    DPRINT1("WARNING: calling stub AdsTypeToPropVariant2()\n");
+    DbgPrint("WARNING: calling stub AdsTypeToPropVariant2()\n");
     __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
     return 0;
 }
 
 int PropVariantToAdsType2()
 {
-    DPRINT1("WARNING: calling stub PropVariantToAdsType2()\n");
+    DbgPrint("WARNING: calling stub PropVariantToAdsType2()\n");
     __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
     return 0;
 }
 
 int ConvertSecDescriptorToVariant()
 {
-    DPRINT1("WARNING: calling stub ConvertSecDescriptorToVariant()\n");
+    DbgPrint("WARNING: calling stub ConvertSecDescriptorToVariant()\n");
     __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
     return 0;
 }
 
 int ConvertSecurityDescriptorToSecDes()
 {
-    DPRINT1("WARNING: calling stub ConvertSecurityDescriptorToSecDes()\n");
+    DbgPrint("WARNING: calling stub ConvertSecurityDescriptorToSecDes()\n");
     __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
     return 0;
 }

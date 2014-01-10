@@ -204,7 +204,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         }
         fprintf(file, " a%d", i);
     }
-    fprintf(file, ")\n{\n\tDPRINT1(\"WARNING: calling stub %.*s(",
+    fprintf(file, ")\n{\n\tDbgPrint(\"WARNING: calling stub %.*s(",
             pexp->strName.len, pexp->strName.buf);
 
     for (i = 0; i < pexp->nArgCount; i++)

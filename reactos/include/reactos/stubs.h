@@ -1,11 +1,11 @@
-
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wine/config.h"
-#include "wine/exception.h"
+#include <windef.h>
+#include <winbase.h>
 
-#include <reactos/debug.h>
+#include <wine/config.h>
+#include <wine/exception.h>
+
+ULONG __cdecl DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...);
 
 #define __wine_spec_unimplemented_stub(module, function) \
 { \
