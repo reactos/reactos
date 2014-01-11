@@ -334,6 +334,9 @@ WinMain(
     ZeroMemory(WLSession, sizeof(WLSESSION));
     WLSession->DialogTimeout = 120; /* 2 minutes */
 
+    /* Initialize the dialog tracking list */
+    InitDialogListHead();
+
     if (!CreateWindowStationAndDesktops(WLSession))
     {
         ERR("WL: Could not create window station and desktops\n");

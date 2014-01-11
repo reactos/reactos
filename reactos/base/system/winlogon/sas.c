@@ -845,6 +845,7 @@ DoGenericAction(
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             break;
         case WLX_SAS_ACTION_NONE: /* 0x02 */
+            Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
             if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
@@ -923,6 +924,13 @@ DispatchSAS(
             default:
             {
                 PSID LogonSid = NULL; /* FIXME */
+                HWND hwnd;
+
+                hwnd = GetTopDialogWindow();
+                if (hwnd != NULL)
+                {
+                    SendMessage(hwnd, WM_USER, 0, 0);
+                }
 
                 Session->Options = 0;
 

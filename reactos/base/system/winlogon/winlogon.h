@@ -189,17 +189,17 @@ typedef struct _GINAINSTANCE
  */
 typedef enum _LOGON_STATE
 {
-    STATE_INIT,            // not user yet
+    STATE_INIT,            // not used yet
     STATE_LOGGED_OFF,
-    STATE_LOGGED_OFF_SAS,  // not user yet
+    STATE_LOGGED_OFF_SAS,  // not used yet
     STATE_LOGGED_ON,
-    STATE_LOGGED_ON_SAS,   // not user yet
-    STATE_SCREENSAVER,     // not user yet
+    STATE_LOGGED_ON_SAS,   // not used yet
+    STATE_SCREENSAVER,     // not used yet
     STATE_LOCKED,
-    STATE_LOCKED_SAS,      // not user yet
-    STATE_LOGGING_OFF,     // not user yet
-    STATE_SHUTTING_DOWN,   // not user yet
-    STATE_SHUT_DOWN        // not user yet
+    STATE_LOCKED_SAS,      // not used yet
+    STATE_LOGGING_OFF,     // not used yet
+    STATE_SHUTTING_DOWN,   // not used yet
+    STATE_SHUT_DOWN        // not used yet
 } LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
@@ -291,6 +291,12 @@ BOOL
 RemoveStatusMessage(IN PWLSESSION Session);
 
 /* wlx.c */
+VOID
+InitDialogListHead(VOID);
+
+HWND
+GetTopDialogWindow(VOID);
+
 BOOL
 GinaInit(IN OUT PWLSESSION Session);
 

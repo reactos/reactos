@@ -26,12 +26,106 @@
 #define GENERIC_ACCESS (GENERIC_READ | GENERIC_WRITE | \
     GENERIC_EXECUTE | GENERIC_ALL)
 
+typedef struct _DIALOG_LIST_ENTRY
+{
+    LIST_ENTRY Entry;
+    HWND hWnd;
+    DLGPROC DlgProc;
+    LPARAM lParam;
+} DIALOG_LIST_ENTRY, *PDIALOG_LIST_ENTRY;
+
 /* GLOBALS ******************************************************************/
 
-static DLGPROC PreviousWindowProc;
-static UINT_PTR IdTimer;
+//static UINT_PTR IdTimer;
+static LIST_ENTRY DialogListHead;
 
 /* FUNCTIONS ****************************************************************/
+
+VOID
+InitDialogListHead(VOID)
+{
+    InitializeListHead(&DialogListHead);
+}
+
+
+static
+PDIALOG_LIST_ENTRY
+AddDialogListEntry(VOID)
+{
+    PDIALOG_LIST_ENTRY ListEntry;
+
+    ListEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DIALOG_LIST_ENTRY));
+    if (ListEntry == NULL)
+        return NULL;
+
+    TRACE("Add entry %p\n", ListEntry);
+
+    InsertHeadList(&DialogListHead,
+                   &ListEntry->Entry);
+
+    return ListEntry;
+}
+
+
+static
+VOID
+RemoveDialogListEntry(PDIALOG_LIST_ENTRY ListEntry)
+{
+    TRACE("Remove entry %p\n", ListEntry);
+
+    RemoveEntryList(&ListEntry->Entry);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ListEntry);
+}
+
+
+static
+PDIALOG_LIST_ENTRY
+GetDialogListEntry(HWND hwndDlg)
+{
+    PDIALOG_LIST_ENTRY Current;
+    PLIST_ENTRY ListEntry;
+
+    ListEntry = DialogListHead.Flink;
+    while (ListEntry != &DialogListHead)
+    {
+        Current = CONTAINING_RECORD(ListEntry,
+                                    DIALOG_LIST_ENTRY,
+                                    Entry);
+        if (Current->hWnd == hwndDlg)
+        {
+            TRACE("Found entry: %p\n", Current);
+            return Current;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    TRACE("Found no entry!\n");
+    return NULL;
+}
+
+
+HWND
+GetTopDialogWindow(VOID)
+{
+    PDIALOG_LIST_ENTRY Current;
+    PLIST_ENTRY ListEntry;
+
+    ListEntry = DialogListHead.Flink;
+    if (ListEntry != &DialogListHead)
+    {
+        Current = CONTAINING_RECORD(ListEntry,
+                                    DIALOG_LIST_ENTRY,
+                                    Entry);
+
+        TRACE("Found entry: %p window %p\n", Current, Current->hWnd);
+        return Current->hWnd;
+    }
+
+    TRACE("Found no window\n");
+    return NULL;
+}
+
 
 static
 INT_PTR
@@ -42,6 +136,36 @@ DefaultWlxWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PDIALOG_LIST_ENTRY ListEntry;
+    INT_PTR ret;
+
+    if (uMsg == WM_INITDIALOG)
+    {
+        ListEntry = (PDIALOG_LIST_ENTRY)lParam;
+
+        TRACE("Set dialog handle: %p\n", hwndDlg);
+        ListEntry->hWnd = hwndDlg;
+        lParam = ListEntry->lParam;
+//        SetTopTimeout(hWnd);
+    }
+    else
+    {
+        ListEntry = GetDialogListEntry(hwndDlg);
+        if (ListEntry == NULL)
+            return FALSE;
+    }
+
+    if (uMsg == WM_USER)
+    {
+        EndDialog(hwndDlg, 0);
+        return 0;
+    }
+
+    ret = ListEntry->DlgProc(hwndDlg, uMsg, wParam, lParam);
+
+    return ret;
+
+/*
     if (uMsg == WM_TIMER && (UINT_PTR)wParam == IdTimer)
     {
         EndDialog(hwndDlg, -1);
@@ -64,6 +188,7 @@ DefaultWlxWindowProc(
     {
         return PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
     }
+*/
 }
 
 /*
@@ -186,10 +311,7 @@ WlxDialogBox(
 
     TRACE("WlxDialogBox()\n");
 
-    if (PreviousWindowProc != NULL)
-        return -1;
-    PreviousWindowProc = dlgprc;
-    return (int)DialogBoxW((HINSTANCE) hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
+    return (int)WlxDialogBoxParam(hWlx, hInst, lpszTemplate, hwndOwner, dlgprc, 0);
 }
 
 /*
@@ -205,14 +327,25 @@ WlxDialogBoxParam(
     DLGPROC dlgprc,
     LPARAM dwInitParam)
 {
+    PDIALOG_LIST_ENTRY ListEntry;
+    int ret;
+
     UNREFERENCED_PARAMETER(hWlx);
 
     TRACE("WlxDialogBoxParam()\n");
 
-    if (PreviousWindowProc != NULL)
+    ListEntry = AddDialogListEntry();
+    if (ListEntry == NULL)
         return -1;
-    PreviousWindowProc = dlgprc;
-    return (int)DialogBoxParamW(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
+
+    ListEntry->DlgProc = dlgprc;
+    ListEntry->lParam = dwInitParam;
+
+    ret = (int)DialogBoxParamW(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc, (LPARAM)ListEntry);
+
+    RemoveDialogListEntry(ListEntry);
+
+    return ret;
 }
 
 /*
@@ -231,10 +364,7 @@ WlxDialogBoxIndirect(
 
     TRACE("WlxDialogBoxIndirect()\n");
 
-    if (PreviousWindowProc != NULL)
-        return -1;
-    PreviousWindowProc = dlgprc;
-    return (int)DialogBoxIndirectW(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc);
+    return (int)WlxDialogBoxIndirectParam(hWlx, hInst, hDialogTemplate, hwndOwner, dlgprc, 0);
 }
 
 /*
@@ -250,14 +380,25 @@ WlxDialogBoxIndirectParam(
     DLGPROC dlgprc,
     LPARAM dwInitParam)
 {
+    PDIALOG_LIST_ENTRY ListEntry;
+    int ret;
+
     UNREFERENCED_PARAMETER(hWlx);
 
     TRACE("WlxDialogBoxIndirectParam()\n");
 
-    if (PreviousWindowProc != NULL)
+    ListEntry = AddDialogListEntry();
+    if (ListEntry == NULL)
         return -1;
-    PreviousWindowProc = dlgprc;
-    return (int)DialogBoxIndirectParamW(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
+
+    ListEntry->DlgProc = dlgprc;
+    ListEntry->lParam = dwInitParam;
+
+    ret = (int)DialogBoxIndirectParamW(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc, (LPARAM)ListEntry);
+
+    RemoveDialogListEntry(ListEntry);
+
+    return ret;
 }
 
 /*
@@ -789,7 +930,6 @@ GinaInit(
     Session->Gina.Version = GinaDllVersion;
     Session->Gina.UseCtrlAltDelete = FALSE;
     Session->SuppressStatus = FALSE;
-    PreviousWindowProc = NULL;
 
     TRACE("Calling WlxInitialize(\"%S\")\n", Session->InteractiveWindowStationName);
     return Session->Gina.Functions.WlxInitialize(
