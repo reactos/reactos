@@ -21,9 +21,6 @@
 
 #include "devenum_private.h"
 #include <rpcproxy.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
 DECLSPEC_HIDDEN LONG dll_refs;
 DECLSPEC_HIDDEN HINSTANCE DEVENUM_hInstance;

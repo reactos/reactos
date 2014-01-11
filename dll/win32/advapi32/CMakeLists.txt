@@ -58,7 +58,7 @@ add_library(advapi32 SHARED ${SOURCE})
 set_module_type(advapi32 win32dll UNICODE)
 target_link_libraries(advapi32 wine ${PSEH_LIB})
 add_delay_importlibs(advapi32 rpcrt4)
-add_importlibs(advapi32 msvcrt kernel32 ntdll)
+add_importlibs(advapi32 secur32 msvcrt kernel32 ntdll)
 
 add_pch(advapi32 advapi32.h
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.h

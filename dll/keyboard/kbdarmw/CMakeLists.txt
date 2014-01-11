@@ -5,7 +5,7 @@ spec2def(kbdarmw.dll kbdarmw.spec)
 
 add_library(kbdarmw SHARED kbdarmw.c kbdarmw.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdarmw.def)
 
-set_entrypoint(kbdarmw 0)
+set_module_type(kbdarmw kbdlayout)
 
 add_dependencies(kbdarmw psdk)
 

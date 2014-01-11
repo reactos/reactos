@@ -346,7 +346,6 @@ RetryRequest(
     ULONG RetryInterval
     )
 {
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     ULONG transferByteCount;
@@ -847,7 +846,6 @@ Return Value:
 --*/            
 
 {
-    PCLASS_PRIVATE_FDO_DATA privateData = FdoExtension->PrivateFdoData;
     PCOMMON_DEVICE_EXTENSION commonExt = &FdoExtension->CommonExtension;
     //KIRQL oldIrql;
     //PIRP blockedIrp;

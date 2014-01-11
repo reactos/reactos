@@ -40,29 +40,7 @@
  *   Scroll (instead of repaint) as much as possible.
  */
 
-#include <config.h>
-//#include "wine/port.h"
-
-#include <assert.h>
-//#include <ctype.h>
-//#include <stdarg.h>
-//#include <string.h>
-//#include <limits.h>
-//#include <stdlib.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(treeview);
 

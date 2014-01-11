@@ -1,35 +1,35 @@
-/*  TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- *  DATE OF TR.:  12-03-2009
- *  LAST CHANGE:  12-03-2009
+/*  TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ *  DATE OF TR.: 12-03-2009
+ *  LAST CHANGE: 12-03-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Súbor"
-	BEGIN
-		MENUITEM "&Otvoriť...", IDM_OPEN_FILE
-		MENUITEM "&Zavrieť",    IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "S&končiť",    IDM_EXIT
-	END
-	POPUP "&Pomocník"
-	BEGIN
-		MENUITEM "Č&o je...",   IDM_ABOUT
-	END
+    POPUP "&Súbor"
+    BEGIN
+        MENUITEM "&Otvoriť...", IDM_OPEN_FILE
+        MENUITEM "&Zavrieť", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "S&končiť", IDM_EXIT
+    END
+    POPUP "&Pomocník"
+    BEGIN
+        MENUITEM "Č&o je...", IDM_ABOUT
+    END
 END
 
 STRINGTABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Všetky podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Prehrať"
-	IDS_TOOLTIP_STOP "Zastaviť"
-	IDS_TOOLTIP_EJECT "Vysunúť"
-	IDS_TOOLTIP_BACKWARD "Preskočiť dozadu"
-	IDS_TOOLTIP_SEEKBACK "Vyhľadať dozadu"
-	IDS_TOOLTIP_SEEKFORW "Vyhľadať dopredu"
-	IDS_TOOLTIP_FORWARD "Preskočiť dopredu"
+    IDS_ALL_TYPES_FILTER "Všetky podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY "Prehrať"
+    IDS_TOOLTIP_STOP "Zastaviť"
+    IDS_TOOLTIP_EJECT "Vysunúť"
+    IDS_TOOLTIP_BACKWARD "Preskočiť dozadu"
+    IDS_TOOLTIP_SEEKBACK "Vyhľadať dozadu"
+    IDS_TOOLTIP_SEEKFORW "Vyhľadať dopredu"
+    IDS_TOOLTIP_FORWARD "Preskočiť dopredu"
     IDS_APPTITLE "Multimediálny prehrávač systému ReactOS"
-	IDS_PLAY "Prehrať"
+    IDS_PLAY "Prehrať"
 END

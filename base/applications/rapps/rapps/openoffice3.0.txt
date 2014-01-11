@@ -2,43 +2,43 @@
 
 [Section]
 Name = OpenOffice 4.0
-Version = 4.0.0
+Version = 4.0.1
 Licence = LGPL
 Description = THE Open Source Office Suite.
 Size = 136.79MB
 Category = 6
 URLSite = http://www.openoffice.org/
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/en-US/Apache_OpenOffice_4.0.0_Win_x86_install_en-US.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/en-US/Apache_OpenOffice_4.0.1_Win_x86_install_en-US.exe
 CDPath = none
 
 [Section.0407]
 Description = DIE Open Source Office Suite.
 URLSite = http://de.openoffice.org/
 Size = 154.88MB
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/de/Apache_OpenOffice_4.0.0_Win_x86_install_de.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/de/Apache_OpenOffice_4.0.1_Win_x86_install_de.exe
 
 [Section.040a]
 Description = La suite de ofimática de código abierto.
 URLSite = http://es.openoffice.org/
 Size = 126.29MB
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/es/Apache_OpenOffice_4.0.0_Win_x86_install_es.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/es/Apache_OpenOffice_4.0.1_Win_x86_install_es.exe
 
 [Section.040c]
 Description = LA suite bureautique open source.
 URLSite = http://fr.openoffice.org/
 Size = 127,22 Mo
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/fr/Apache_OpenOffice_4.0.0_Win_x86_install_fr.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/fr/Apache_OpenOffice_4.0.1_Win_x86_install_fr.exe
 
 [Section.0410]
 URLSite = http://it.openoffice.org/
 Size = 132.39MB
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/it/Apache_OpenOffice_4.0.0_Win_x86_install_it.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/it/Apache_OpenOffice_4.0.1_Win_x86_install_it.exe
 
 [Section.0413]
 Description = Open-bron Office Pakket.
 URLSite = http://nl.openoffice.org/
 Size = 132.11MB
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/nl/Apache_OpenOffice_4.0.0_Win_x86_install_nl.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/nl/Apache_OpenOffice_4.0.1_Win_x86_install_nl.exe
 
 [Section.0415]
 Description = Otwarty pakiet biurowy.
@@ -50,6 +50,10 @@ Description = Suita de aplicații de birotică open-source.
 Size = 136,79 Mo
 URLSite = http://www.openoffice.org/ro/
 
+[Section.041f]
+Description = Bir açık kaynak büro takımı.
+URLSite = http://tr.openoffice.org/
+
 [Section.0422]
 Description = Відкритий офісний пакет.
 URLSite = http://ua.openoffice.org/
@@ -59,4 +63,4 @@ Size = 136.79MB
 Description = Open-bron Office Pakket.
 URLSite = http://nl.openoffice.org/
 Size = 132.11MB
-URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.0/binaries/nl/Apache_OpenOffice_4.0.0_Win_x86_install_nl.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/nl/Apache_OpenOffice_4.0.1_Win_x86_install_nl.exe

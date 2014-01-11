@@ -1,0 +1,225 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactX-Programi i diaknostikimit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
+    PUSHBUTTON "&Ndihmë", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Faqja tjetër", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Ruaj të gjithë informacionet...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Dil", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ky mjet raporton informacione të detajuara rreth komponentëve të ReactX dhe driverave të instaluar në sistemin tuaj.", -1, 10, 10, 443, 17
+    LTEXT "Nëse ju e dini se çfarë zonë është duke u shkaktuar problemin, klikoni butonin e duhur më lart. Përndryshe ju mund të përdorni ""Faqen Tjetëre"" button poshtë për të vizituar çdo faqe në rend.", -1, 10, 30, 443, 25
+    GROUPBOX "Informacioni i Sistemit", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Data/Ora aktuale:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Emri i Kompjuterit:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "Sistemi Operativ:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Gjuha:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "Prodhuesi i Sistemit:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "Modeli i Sistemit:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT "Procesori:", -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT "Memoria:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "Faqja e Dokumentave:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "Versioni-ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_LANG, 155, 100, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MANU, 155, 110, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MODEL, 155, 120, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Device", -1, 10, 10, 250, 100
+    RTEXT "Emri:", -1, 20, 25, 70, 10
+    RTEXT "Prodhuesi:", -1, 20, 35, 70, 10
+    RTEXT "Tipi i procesorit:", -1, 20, 45, 70, 10
+    RTEXT "Tipi DAC:", -1, 20, 55, 70, 10
+    RTEXT "Memoria Totale:", -1, 20, 65, 70, 10
+    RTEXT "Modaliteti vizual aktual:", -1, 20, 75, 70, 10
+    RTEXT "Monitor:", -1, 20, 85, 70, 10
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
+    GROUPBOX "Driver", -1, 270, 10, 190, 100
+    RTEXT "Driver Kryesor:", -1, 275, 25, 55, 10
+    RTEXT "Versioni:", -1, 275, 35, 55, 10
+    RTEXT "Data:", -1, 275, 45, 55, 10
+    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Mini-VDD:", -1, 275, 65, 55, 10
+    RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
+    RTEXT "DDI Versioni:", -1, 275, 85, 55, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
+    GROUPBOX "Karakteristikat e ReactX", -1, 10, 115, 450, 60
+    RTEXT "Përshpejtimi i DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT "Përshpejtimi i Direct3D:", -1, 15, 145, 110, 12
+    RTEXT "Përshpejtimi i tekstit për AGP:", -1, 15, 160, 110, 12
+    LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "Mundëso", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Mundëso", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Mundëso", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "Testo DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "Testo Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
+    GROUPBOX "Notes", -1, 10, 180, 450, 40
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Device", -1, 10, 10, 250, 100
+    RTEXT "Emri:", -1, 20, 25, 70, 10
+    RTEXT "Device ID:", -1, 20, 35, 70, 10
+    RTEXT "ID e prodhimit:", -1, 20, 45, 70, 10
+    RTEXT "ID e produktit:", -1, 20, 55, 70, 10
+    RTEXT "Tipi:", -1, 20, 65, 70, 10
+    RTEXT "Default Device:", -1, 20, 75, 70, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX "Driver", -1, 270, 10, 190, 100
+    RTEXT "Emri:", -1, 275, 25, 55, 10
+    RTEXT "Versioni:", -1, 275, 35, 55, 10
+    RTEXT "Data:", -1, 275, 45, 55, 10
+    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Dokumta të tjerë:", -1, 275, 65, 55, 10
+    RTEXT "Ofruesi:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "Karakteristikat e ReactX", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "Karakteristikat e ReactX:", -1, 20, 135, 90, 20
+    PUSHBUTTON "Testo ZërinDirekt", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    GROUPBOX "Shënime", -1, 10, 180, 450, 40
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "PjesëHyrese Elektronike", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+    GROUPBOX "PjesëHyrese Elektronike", -1, 10, 100, 452, 60
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    GROUPBOX "Informacione", -1, 10, 170, 452, 50
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Regjistro shërbimet ofruese të DirectPlay", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MAIN_DIALOG "Veglat diaknostikuse të ReactX"
+    IDS_SYSTEM_DIALOG "Sistemi"
+    IDS_DISPLAY_DIALOG "Monitori"
+    IDS_SOUND_DIALOG "Zëri"
+    IDS_MUSIC_DIALOG "Muzika"
+    IDS_INPUT_DIALOG "Të dhena"
+    IDS_NETWORK_DIALOG "Networku"
+    IDS_HELP_DIALOG "Ndihmë"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB në perdorim, %I64u MB i mundshem"
+    IDS_FORMAT_UNIPROC "%s (%u CPU)"
+    IDS_FORMAT_MPPROC "%s (%u CPUs)"
+    IDS_VERSION_UNKNOWN "Version i paditur"
+    IDS_DEVICE_STATUS_ATTACHED "I lidhur"
+    IDS_DEVICE_STATUS_MISSING "I shkeputur"
+    IDS_DEVICE_STATUS_UNKNOWN "I paditur"
+    IDS_DEVICE_NAME "Emri i pjesës"
+    IDS_DEVICE_STATUS "Statusi"
+    IDS_DEVICE_CONTROLLER "ID e kontrolluesit"
+    IDS_DEVICE_MANUFACTURER "ID e proshuesit"
+    IDS_DEVICE_PRODUCT "ID e produktit"
+    IDS_DEVICE_FORCEFEEDBACK "Detyro prapaveprimin e Driverit"
+    IDS_NOT_APPLICABLE "Nuk aplikohet"
+    IDS_OPTION_YES "Po"
+    IDS_DIRECTPLAY_COL_NAME1 "Emri"
+    IDS_DIRECTPLAY_COL_NAME2 "Regjistri"
+    IDS_DIRECTPLAY_COL_NAME3 "Dokumenta"
+    IDS_DIRECTPLAY_COL_NAME4 "Versioni"
+    IDS_DIRECTPLAY8_MODEMSP "Sherbimi ofrues i DirectPlay8"
+    IDS_DIRECTPLAY8_SERIALSP "Sherbim ofrues serial i DirectPlay8"
+    IDS_DIRECTPLAY8_IPXSP "Sherbimbi ofrues IPX i DirectPlay8"
+    IDS_DIRECTPLAY8_TCPSP "Sherbimi ofrues DirectPlay8-TCP/IP"
+    IDS_DIRECTPLAY_TCPCONN "Lidhja e Internetit me TCP/IP nga DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "Lidhaj IPX për DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Lidhja me modem për DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Lidhaj seriale për DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Error"
+    IDS_DDTEST_ERROR "Testi dështoj!"
+    IDS_DDTEST_DESCRIPTION "Kjo do të fillojë ndërfaqen e testit për DirectDraw ndërfaqes. Vazhdo?"
+    IDS_DDPRIMARY_DESCRIPTION "Ky test do të përdorë DirectDraw për të nxjerrë në sipërfaqe primare. Drejtkëndësh të zi dhe të bardhë duhet të nxirren. Vazhdo?"
+    IDS_DDPRIMARY_RESULT "A e shihni ju drejtkëndësh  të zi dhe të bardhë?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Ky test do të përdorë DirectDraw për të nxjerrë në një tampon paangazhuar. Moving white rectangle should be drawn. Continue?"
+    IDS_DDOFFSCREEN_RESULT "Did you see white moving reactangle?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Ky test do të përdorë DirectDraw për të nxjerrë në një buffer të paangazhuar. Lëvizja e drejtkëndëshit të bardhë duhet të vizatohet. Vazhdo?"
+    IDS_DDFULLSCREEN_RESULT "A e shihni ju drejtkëndësh të bardhë të lëvizshem në ekran të plotë?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "No"
+    IDS_D3DTEST_DESCRIPTION "Kjo do të fillojë ndërfaqes etestit Direct3D. Vazhdo?"
+    IDS_D3DTEST_D3Dx "Ky test do të përdore pjesë elektronike të përshpejtuara për Direct3D %u ndërfaqe."
+END

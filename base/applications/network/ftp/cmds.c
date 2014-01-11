@@ -15,17 +15,17 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
-#endif /* not lint */
-
 /*
  * FTP User Program -- Command Routines.
  */
-//#include <sys/param.h>
-//#include <sys/wait.h>
 
 #include "precomp.h"
+
+#include "pathnames.h"
+
+#ifndef lint
+static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
+#endif /* not lint */
 
 extern	char *globerr;
 extern	char home[];

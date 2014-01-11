@@ -18,20 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include <config.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <wingdi.h>
-//#include "winnls.h"
-#include <usp10.h>
-//#include "winternl.h"
-
-#include <wine/debug.h>
 #include "usp10_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);

@@ -19,32 +19,42 @@
 
 /* GLOBALS ********************************************************************/
 
-LUID SeCreateTokenPrivilege;
-LUID SeAssignPrimaryTokenPrivilege;
-LUID SeLockMemoryPrivilege;
-LUID SeIncreaseQuotaPrivilege;
-LUID SeUnsolicitedInputPrivilege;
-LUID SeTcbPrivilege;
-LUID SeSecurityPrivilege;
-LUID SeTakeOwnershipPrivilege;
-LUID SeLoadDriverPrivilege;
-LUID SeCreatePagefilePrivilege;
-LUID SeIncreaseBasePriorityPrivilege;
-LUID SeSystemProfilePrivilege;
-LUID SeSystemtimePrivilege;
-LUID SeProfileSingleProcessPrivilege;
-LUID SeCreatePermanentPrivilege;
-LUID SeBackupPrivilege;
-LUID SeRestorePrivilege;
-LUID SeShutdownPrivilege;
-LUID SeDebugPrivilege;
-LUID SeAuditPrivilege;
-LUID SeSystemEnvironmentPrivilege;
-LUID SeChangeNotifyPrivilege;
-LUID SeRemoteShutdownPrivilege;
-LUID SeUndockPrivilege;
-LUID SeSyncAgentPrivilege;
-LUID SeEnableDelegationPrivilege;
+#define CONST_LUID(x1, x2) {x1, x2}
+const LUID SeCreateTokenPrivilege = CONST_LUID(SE_CREATE_TOKEN_PRIVILEGE, 0);
+const LUID SeAssignPrimaryTokenPrivilege = CONST_LUID(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, 0);
+const LUID SeLockMemoryPrivilege = CONST_LUID(SE_LOCK_MEMORY_PRIVILEGE, 0);
+const LUID SeIncreaseQuotaPrivilege = CONST_LUID(SE_INCREASE_QUOTA_PRIVILEGE, 0);
+const LUID SeUnsolicitedInputPrivilege = CONST_LUID(6, 0);
+const LUID SeTcbPrivilege = CONST_LUID(SE_TCB_PRIVILEGE, 0);
+const LUID SeSecurityPrivilege = CONST_LUID(SE_SECURITY_PRIVILEGE, 0);
+const LUID SeTakeOwnershipPrivilege = CONST_LUID(SE_TAKE_OWNERSHIP_PRIVILEGE, 0);
+const LUID SeLoadDriverPrivilege = CONST_LUID(SE_LOAD_DRIVER_PRIVILEGE, 0);
+const LUID SeSystemProfilePrivilege = CONST_LUID(SE_SYSTEM_PROFILE_PRIVILEGE, 0);
+const LUID SeSystemtimePrivilege = CONST_LUID(SE_SYSTEMTIME_PRIVILEGE, 0);
+const LUID SeProfileSingleProcessPrivilege = CONST_LUID(SE_PROF_SINGLE_PROCESS_PRIVILEGE, 0);
+const LUID SeIncreaseBasePriorityPrivilege = CONST_LUID(SE_INC_BASE_PRIORITY_PRIVILEGE, 0);
+const LUID SeCreatePagefilePrivilege = CONST_LUID(SE_CREATE_PAGEFILE_PRIVILEGE, 0);
+const LUID SeCreatePermanentPrivilege = CONST_LUID(SE_CREATE_PERMANENT_PRIVILEGE, 0);
+const LUID SeBackupPrivilege = CONST_LUID(SE_BACKUP_PRIVILEGE, 0);
+const LUID SeRestorePrivilege = CONST_LUID(SE_RESTORE_PRIVILEGE, 0);
+const LUID SeShutdownPrivilege = CONST_LUID(SE_SHUTDOWN_PRIVILEGE, 0);
+const LUID SeDebugPrivilege = CONST_LUID(SE_DEBUG_PRIVILEGE, 0);
+const LUID SeAuditPrivilege = CONST_LUID(SE_AUDIT_PRIVILEGE, 0);
+const LUID SeSystemEnvironmentPrivilege = CONST_LUID(SE_SYSTEM_ENVIRONMENT_PRIVILEGE, 0);
+const LUID SeChangeNotifyPrivilege = CONST_LUID(SE_CHANGE_NOTIFY_PRIVILEGE, 0);
+const LUID SeRemoteShutdownPrivilege = CONST_LUID(SE_REMOTE_SHUTDOWN_PRIVILEGE, 0);
+const LUID SeUndockPrivilege = CONST_LUID(SE_UNDOCK_PRIVILEGE, 0);
+const LUID SeSyncAgentPrivilege = CONST_LUID(SE_SYNC_AGENT_PRIVILEGE, 0);
+const LUID SeEnableDelegationPrivilege = CONST_LUID(SE_ENABLE_DELEGATION_PRIVILEGE, 0);
+const LUID SeManageVolumePrivilege = CONST_LUID(SE_MANAGE_VOLUME_PRIVILEGE, 0);
+const LUID SeImpersonatePrivilege = CONST_LUID(SE_IMPERSONATE_PRIVILEGE, 0);
+const LUID SeCreateGlobalPrivilege = CONST_LUID(SE_CREATE_GLOBAL_PRIVILEGE, 0);
+const LUID SeTrustedCredmanPrivilege = CONST_LUID(SE_TRUSTED_CREDMAN_ACCESS_PRIVILEGE, 0);
+const LUID SeRelabelPrivilege = CONST_LUID(SE_RELABEL_PRIVILEGE, 0);
+const LUID SeIncreaseWorkingSetPrivilege = CONST_LUID(SE_INC_WORKING_SET_PRIVILEGE, 0);
+const LUID SeTimeZonePrivilege = CONST_LUID(SE_TIME_ZONE_PRIVILEGE, 0);
+const LUID SeCreateSymbolicLinkPrivilege = CONST_LUID(SE_CREATE_SYMBOLIC_LINK_PRIVILEGE, 0);
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -53,58 +63,7 @@ INIT_FUNCTION
 NTAPI
 SepInitPrivileges(VOID)
 {
-    SeCreateTokenPrivilege.LowPart = SE_CREATE_TOKEN_PRIVILEGE;
-    SeCreateTokenPrivilege.HighPart = 0;
-    SeAssignPrimaryTokenPrivilege.LowPart = SE_ASSIGNPRIMARYTOKEN_PRIVILEGE;
-    SeAssignPrimaryTokenPrivilege.HighPart = 0;
-    SeLockMemoryPrivilege.LowPart = SE_LOCK_MEMORY_PRIVILEGE;
-    SeLockMemoryPrivilege.HighPart = 0;
-    SeIncreaseQuotaPrivilege.LowPart = SE_INCREASE_QUOTA_PRIVILEGE;
-    SeIncreaseQuotaPrivilege.HighPart = 0;
-    SeUnsolicitedInputPrivilege.LowPart = SE_UNSOLICITED_INPUT_PRIVILEGE;
-    SeUnsolicitedInputPrivilege.HighPart = 0;
-    SeTcbPrivilege.LowPart = SE_TCB_PRIVILEGE;
-    SeTcbPrivilege.HighPart = 0;
-    SeSecurityPrivilege.LowPart = SE_SECURITY_PRIVILEGE;
-    SeSecurityPrivilege.HighPart = 0;
-    SeTakeOwnershipPrivilege.LowPart = SE_TAKE_OWNERSHIP_PRIVILEGE;
-    SeTakeOwnershipPrivilege.HighPart = 0;
-    SeLoadDriverPrivilege.LowPart = SE_LOAD_DRIVER_PRIVILEGE;
-    SeLoadDriverPrivilege.HighPart = 0;
-    SeSystemProfilePrivilege.LowPart = SE_SYSTEM_PROFILE_PRIVILEGE;
-    SeSystemProfilePrivilege.HighPart = 0;
-    SeSystemtimePrivilege.LowPart = SE_SYSTEMTIME_PRIVILEGE;
-    SeSystemtimePrivilege.HighPart = 0;
-    SeProfileSingleProcessPrivilege.LowPart = SE_PROF_SINGLE_PROCESS_PRIVILEGE;
-    SeProfileSingleProcessPrivilege.HighPart = 0;
-    SeIncreaseBasePriorityPrivilege.LowPart = SE_INC_BASE_PRIORITY_PRIVILEGE;
-    SeIncreaseBasePriorityPrivilege.HighPart = 0;
-    SeCreatePagefilePrivilege.LowPart = SE_CREATE_PAGEFILE_PRIVILEGE;
-    SeCreatePagefilePrivilege.HighPart = 0;
-    SeCreatePermanentPrivilege.LowPart = SE_CREATE_PERMANENT_PRIVILEGE;
-    SeCreatePermanentPrivilege.HighPart = 0;
-    SeBackupPrivilege.LowPart = SE_BACKUP_PRIVILEGE;
-    SeBackupPrivilege.HighPart = 0;
-    SeRestorePrivilege.LowPart = SE_RESTORE_PRIVILEGE;
-    SeRestorePrivilege.HighPart = 0;
-    SeShutdownPrivilege.LowPart = SE_SHUTDOWN_PRIVILEGE;
-    SeShutdownPrivilege.HighPart = 0;
-    SeDebugPrivilege.LowPart = SE_DEBUG_PRIVILEGE;
-    SeDebugPrivilege.HighPart = 0;
-    SeAuditPrivilege.LowPart = SE_AUDIT_PRIVILEGE;
-    SeAuditPrivilege.HighPart = 0;
-    SeSystemEnvironmentPrivilege.LowPart = SE_SYSTEM_ENVIRONMENT_PRIVILEGE;
-    SeSystemEnvironmentPrivilege.HighPart = 0;
-    SeChangeNotifyPrivilege.LowPart = SE_CHANGE_NOTIFY_PRIVILEGE;
-    SeChangeNotifyPrivilege.HighPart = 0;
-    SeRemoteShutdownPrivilege.LowPart = SE_REMOTE_SHUTDOWN_PRIVILEGE;
-    SeRemoteShutdownPrivilege.HighPart = 0;
-    SeUndockPrivilege.LowPart = SE_UNDOCK_PRIVILEGE;
-    SeUndockPrivilege.HighPart = 0;
-    SeSyncAgentPrivilege.LowPart = SE_SYNC_AGENT_PRIVILEGE;
-    SeSyncAgentPrivilege.HighPart = 0;
-    SeEnableDelegationPrivilege.LowPart = SE_ENABLE_DELEGATION_PRIVILEGE;
-    SeEnableDelegationPrivilege.HighPart = 0;
+
 }
 
 
@@ -233,7 +192,7 @@ SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
-    
+
     /* copy the array to the buffer */
     _SEH2_TRY
     {

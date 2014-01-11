@@ -1,21 +1,18 @@
 #ifndef __SERVMAN_PRECOMP_H
 #define __SERVMAN_PRECOMP_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-#include <winnls.h>
 #include <winsvc.h>
-#include <winuser.h>
-#include <windowsx.h> /* GET_X/Y_LPARAM */
 #include <wincon.h>
 #include <tchar.h>
-#include <commdlg.h>
-#include <cderr.h>
 #include <shlobj.h>
 
 #include "resource.h"

@@ -33,13 +33,7 @@
  * -# Transformation of a point p by a matrix M is: p' = M * p
  */
 
-
-#include "main/glheader.h"
-#include "main/imports.h"
-#include "main/macros.h"
-
-#include "m_matrix.h"
-
+#include <precomp.h>
 
 /**
  * \defgroup MatFlags MAT_FLAG_XXX-flags

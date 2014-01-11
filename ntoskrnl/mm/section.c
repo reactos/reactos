@@ -200,7 +200,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ULONG cbHeadersSize = 0;
     ULONG nSectionAlignment;
     ULONG nFileAlignment;
-    ULONG ImageBase;
+    ULONG_PTR ImageBase;
     const IMAGE_DOS_HEADER * pidhDosHeader;
     const IMAGE_NT_HEADERS32 * pinhNtHeader;
     const IMAGE_OPTIONAL_HEADER32 * piohOptHeader;
@@ -461,7 +461,7 @@ l_ReadHeaderFromFile:
 
             break;
         }
-
+#ifdef _WIN64
         /* PE64 */
         case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
         {
@@ -539,6 +539,7 @@ l_ReadHeaderFromFile:
 
             break;
         }
+#endif // _WIN64
     }
 
     /* [1], section 3.4.2 */
@@ -1129,6 +1130,10 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             return Status;
          }
       }
+
+      /* Probe the page, since it's PDE might not be synced */
+      (void)*((volatile char*)BaseAddress + FileOffset - BaseOffset);
+
       /*
        * Retrieve the page from the cache segment that we actually want.
        */
@@ -2816,7 +2821,8 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
 
    if (UMaximumSize == NULL)
    {
-      return(STATUS_UNSUCCESSFUL);
+      DPRINT1("MmCreatePageFileSection: (UMaximumSize == NULL)\n");
+      return(STATUS_INVALID_PARAMETER);
    }
    MaximumSize = *UMaximumSize;
 
@@ -2834,6 +2840,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
                            (PVOID*)(PVOID)&Section);
    if (!NT_SUCCESS(Status))
    {
+      DPRINT1("MmCreatePageFileSection: failed to create object (0x%lx)\n", Status);
       return(Status);
    }
 
@@ -3901,7 +3908,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
+   ULONG Granularity;
 
    if (Segment->WriteCopy)
    {
@@ -3920,7 +3927,10 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
            Protect = PAGE_EXECUTE_READWRITE;
    }
 
-   BoundaryAddressMultiple.QuadPart = 0;
+   if (*BaseAddress == NULL)
+      Granularity = MM_ALLOCATION_GRANULARITY;
+   else
+      Granularity = PAGE_SIZE;
 
 #ifdef NEWCC
    if (Segment->Flags & MM_DATAFILE_SEGMENT) {
@@ -3938,7 +3948,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                                &MArea,
                                FALSE,
                                AllocationType,
-                               BoundaryAddressMultiple);
+                               Granularity);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Mapping between 0x%p and 0x%p failed (%X).\n",
@@ -4471,9 +4481,19 @@ MmMapViewOfSection(IN PVOID SectionObject,
       ImageSectionObject->ImageInformation.ImageFileSize = (ULONG)ImageSize;
 
       /* Check for an illegal base address */
-      if ((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress)
+      if (((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress) ||
+          ((ImageBase + ImageSize) < ImageSize))
       {
-          ImageBase = PAGE_ROUND_DOWN((ULONG_PTR)MmHighestUserAddress - ImageSize);
+         NT_ASSERT(*BaseAddress == NULL);
+         ImageBase = ALIGN_DOWN_BY((ULONG_PTR)MmHighestUserAddress - ImageSize,
+                                   MM_VIRTMEM_GRANULARITY);
+         NotAtBase = TRUE;
+      }
+      else if (ImageBase != ALIGN_DOWN_BY(ImageBase, MM_VIRTMEM_GRANULARITY))
+      {
+         NT_ASSERT(*BaseAddress == NULL);
+         ImageBase = ALIGN_DOWN_BY(ImageBase, MM_VIRTMEM_GRANULARITY);
+         NotAtBase = TRUE;
       }
 
       /* Check there is enough space to map the section at that point. */
@@ -4484,14 +4504,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
          if ((*BaseAddress) != NULL)
          {
             MmUnlockAddressSpace(AddressSpace);
-            return(STATUS_UNSUCCESSFUL);
+            return(STATUS_CONFLICTING_ADDRESSES);
          }
          /* Otherwise find a gap to map the image. */
-         ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
+         ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), MM_VIRTMEM_GRANULARITY, FALSE);
          if (ImageBase == 0)
          {
             MmUnlockAddressSpace(AddressSpace);
-            return(STATUS_UNSUCCESSFUL);
+            return(STATUS_CONFLICTING_ADDRESSES);
          }
          /* Remember that we loaded image at a different base address */
          NotAtBase = TRUE;
@@ -4599,6 +4619,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    }
 
    MmUnlockAddressSpace(AddressSpace);
+   NT_ASSERT(*BaseAddress == ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY));
 
    if (NotAtBase)
        Status = STATUS_IMAGE_NOT_AT_BASE;

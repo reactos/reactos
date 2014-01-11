@@ -27,7 +27,8 @@
 /*
  * TIFF Library.
  */
-#include "tiffiop.h"
+
+#include <precomp.h>
 
 /*
  * Dummy functions to fill the omitted client procedures.

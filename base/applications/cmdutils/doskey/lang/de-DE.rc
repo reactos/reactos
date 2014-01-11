@@ -2,8 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Verwaltet Einstellungen, Verlauf und Makros der Kommandozeile.\n\
+    IDS_HELP "Verwaltet Einstellungen, Verlauf und Makros der Kommandozeile.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -22,7 +21,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=file     Lädt Makrodefinitionen aus einer Datei.\n\
   macroname           Legt den Namen eines zu erstellenden Makros fest.\n\
   text                Legt den ersetzenden Text des Makros fest.\n"
-
-IDS_INVALID_MACRO_DEF, "Ungültige Makrodefinition: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Ungültige Makrodefinition: %s\n"
 END

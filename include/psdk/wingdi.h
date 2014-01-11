@@ -1547,22 +1547,13 @@ typedef struct _devicemodeA {
       short dmCopies;
       short dmDefaultSource;
       short dmPrintQuality;
-#ifdef __WINESRC__
     } DUMMYSTRUCTNAME1;
-#else
-    } DUMMYSTRUCTNAME;
-#endif
     struct {
       POINTL dmPosition;
       DWORD  dmDisplayOrientation;
       DWORD  dmDisplayFixedOutput;
     } DUMMYSTRUCTNAME2;
-#ifdef __WINESRC__
   } DUMMYUNIONNAME1;
-#else
-  } DUMMYUNIONNAME;
-#endif
-
   short  dmColor;
   short  dmDuplex;
   short  dmYResolution;
@@ -1608,22 +1599,13 @@ typedef struct _devicemodeW {
       short dmCopies;
       short dmDefaultSource;
       short dmPrintQuality;
-#ifdef __WINESRC__
     } DUMMYSTRUCTNAME1;
-#else
-    } DUMMYSTRUCTNAME;
-#endif
     struct {
       POINTL dmPosition;
       DWORD  dmDisplayOrientation;
       DWORD  dmDisplayFixedOutput;
     } DUMMYSTRUCTNAME2;
-#ifdef __WINESRC__
   } DUMMYUNIONNAME1;
-#else
-  } DUMMYUNIONNAME;
-#endif
-
   short  dmColor;
   short  dmDuplex;
   short  dmYResolution;

@@ -1,33 +1,34 @@
-/* Превод на Български/ Bulgarian translation */
-/* http://www.reactos.org/wiki/Bulgarian_translation */
-/* LOCATION:\base\applications\mplay32\lang */
+/* Превод на Български/ Bulgarian translation
+ * http://www.reactos.org/wiki/Bulgarian_translation
+ * LOCATION:\base\applications\mplay32\lang */
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
-	BEGIN
-		MENUITEM "&Отваряне...", IDM_OPEN_FILE
-		MENUITEM "&Затваряне", IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "Из&ход", IDM_EXIT
-	END
-	POPUP "Помо&щ"
-	BEGIN
-		MENUITEM "&За...", IDM_ABOUT
-	END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Отваряне...", IDM_OPEN_FILE
+        MENUITEM "&Затваряне", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "Из&ход", IDM_EXIT
+    END
+    POPUP "Помо&щ"
+    BEGIN
+        MENUITEM "&За...", IDM_ABOUT
+    END
 END
 
 STRINGTABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Всички поддържани (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Пускане"
-	IDS_TOOLTIP_STOP "Спиране"
-	IDS_TOOLTIP_EJECT "Изваждане"
-	IDS_TOOLTIP_BACKWARD "Прескачане назад"
-	IDS_TOOLTIP_SEEKBACK "Търсене назад"
-	IDS_TOOLTIP_SEEKFORW "Търсене напред"
-	IDS_TOOLTIP_FORWARD "Търсене напред"
+    IDS_ALL_TYPES_FILTER "Всички поддържани (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY "Пускане"
+    IDS_TOOLTIP_STOP "Спиране"
+    IDS_TOOLTIP_EJECT "Изваждане"
+    IDS_TOOLTIP_BACKWARD "Прескачане назад"
+    IDS_TOOLTIP_SEEKBACK "Търсене назад"
+    IDS_TOOLTIP_SEEKFORW "Търсене напред"
+    IDS_TOOLTIP_FORWARD "Търсене напред"
     IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
-	IDS_PLAY "Възпроизвеждане"
+    IDS_PLAY "Възпроизвеждане"
 END

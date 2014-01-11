@@ -20,8 +20,6 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 static const WCHAR source_disks_names[] =
     {'S','o','u','r','c','e','D','i','s','k','s','N','a','m','e','s',0};
 static const WCHAR source_disks_files[] =

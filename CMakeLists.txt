@@ -199,12 +199,6 @@ else()
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
     endif()
 
-    if(MSVC)
-        include_directories(include/crt/msc)
-    else()
-        include_directories(include/crt/mingw32)
-    endif()
-
     add_dependency_header()
 
     add_subdirectory(include/psdk)

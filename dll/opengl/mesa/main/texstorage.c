@@ -27,19 +27,7 @@
  * GL_ARB_texture_storage functions
  */
 
-
-
-#include "glheader.h"
-#include "context.h"
-#include "enums.h"
-#include "imports.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "teximage.h"
-#include "texstorage.h"
-#include "mtypes.h"
-
-
+#include <precomp.h>
 
 /**
  * Check if the given texture target is a legal texture object target

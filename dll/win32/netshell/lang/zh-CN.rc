@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Netshell
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/netshell/lang/zh-CN.rc
- * PURPOSE:     Chinese (Simplified) Language File
- * TRANSLATOR:  2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS Netshell
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       dll/win32/netshell/lang/zh-CN.rc
+ * PURPOSE:    Chinese (Simplified) Language File
+ * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -13,8 +13,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "常规"
 FONT 9, "MS Shell Dlg"
 BEGIN
-	CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "连接时使用:", -1, 9,9,217,8
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    LTEXT "连接时使用:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "配置(&C)", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Components checked are used by this connection:", -1, 9, 59, 217, 8
@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "常规"
 FONT 9, "MS Shell Dlg"
@@ -52,12 +52,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "&Properties", IDC_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "&Disable", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Support"
 FONT 9, "MS Shell Dlg"
@@ -67,16 +67,14 @@ BEGIN
     LTEXT "IP 地址:", -1, 22, 34, 80, 8
     LTEXT "子网掩码:", -1, 22, 48, 80, 8
     LTEXT "默认网关:", -1, 22, 62, 80, 8
-
     RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
-
     PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Network Connection Details"
 FONT 8, "MS Shell Dlg"
@@ -88,47 +86,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Physical Address"
-    IDS_IP_ADDRESS              "IP 地址"
-    IDS_SUBNET_MASK             "子网掩码"
-    IDS_DEF_GATEWAY             "默认网关"
-    IDS_DHCP_SERVER             "DHCP Server"
-    IDS_LEASE_OBTAINED          "Lease Obtained"
-    IDS_LEASE_EXPIRES           "Lease Expires"
-    IDS_DNS_SERVERS             "DNS Servers"
-    IDS_WINS_SERVERS            "WINS Servers"
-    IDS_PROPERTY                "Property"
-    IDS_VALUE                   "Value"
-    IDS_NETWORKCONNECTION       "Network Connection"
-    IDS_SHV_COLUMN_NAME         "名称"
-    IDS_SHV_COLUMN_TYPE         "类型"
-    IDS_SHV_COLUMN_STATE        "状态"
-    IDS_SHV_COLUMN_DEVNAME      "Device Name"
-    IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-    IDS_SHV_COLUMN_OWNER        "Owner"
-    IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-    IDS_STATUS_NON_OPERATIONAL  "Disabled"
-    IDS_STATUS_UNREACHABLE      "未连接"
-    IDS_STATUS_DISCONNECTED     "Network cable unplugged"
-    IDS_STATUS_CONNECTING       "Acquiring network address"
-    IDS_STATUS_CONNECTED        "已连接"
-    IDS_STATUS_OPERATIONAL      "已连接"
-
-    IDS_NET_ACTIVATE            "啟用"
-    IDS_NET_DEACTIVATE          "停用"
-    IDS_NET_STATUS              "状态"
-    IDS_NET_REPAIR              "修復"
-    IDS_NET_CREATELINK          "创建快捷方式"
-    IDS_NET_DELETE              "删除"
-    IDS_NET_RENAME              "重命名"
-    IDS_NET_PROPERTIES          "属性"
-
-    IDS_FORMAT_BIT              "%u Bit/秒"
-    IDS_FORMAT_KBIT             "%u KBit/秒"
-    IDS_FORMAT_MBIT             "%u MBit/秒"
-    IDS_FORMAT_GBIT             "%u GBit/秒"
-    IDS_DURATION_DAY            "%d 天 %s"
-    IDS_DURATION_DAYS           "%d 天 %s"
-    IDS_ASSIGNED_DHCP           "由 DHCP 指派"
-    IDS_ASSIGNED_MANUAL         "手动设定"
+    IDS_PHYSICAL_ADDRESS "Physical Address"
+    IDS_IP_ADDRESS "IP 地址"
+    IDS_SUBNET_MASK "子网掩码"
+    IDS_DEF_GATEWAY "默认网关"
+    IDS_DHCP_SERVER "DHCP Server"
+    IDS_LEASE_OBTAINED "Lease Obtained"
+    IDS_LEASE_EXPIRES "Lease Expires"
+    IDS_DNS_SERVERS "DNS Servers"
+    IDS_WINS_SERVERS "WINS Servers"
+    IDS_PROPERTY "Property"
+    IDS_VALUE "Value"
+    IDS_NETWORKCONNECTION "Network Connection"
+    IDS_SHV_COLUMN_NAME "名称"
+    IDS_SHV_COLUMN_TYPE "类型"
+    IDS_SHV_COLUMN_STATE "状态"
+    IDS_SHV_COLUMN_DEVNAME "Device Name"
+    IDS_SHV_COLUMN_PHONE "Phone # or Host Address"
+    IDS_SHV_COLUMN_OWNER "Owner"
+    IDS_TYPE_ETHERNET "LAN or High-Speed Internet"
+    IDS_STATUS_NON_OPERATIONAL "Disabled"
+    IDS_STATUS_UNREACHABLE "未连接"
+    IDS_STATUS_DISCONNECTED "Network cable unplugged"
+    IDS_STATUS_CONNECTING "Acquiring network address"
+    IDS_STATUS_CONNECTED "已连接"
+    IDS_STATUS_OPERATIONAL "已连接"
+    IDS_NET_ACTIVATE "啟用"
+    IDS_NET_DEACTIVATE "停用"
+    IDS_NET_STATUS "状态"
+    IDS_NET_REPAIR "修復"
+    IDS_NET_CREATELINK "创建快捷方式"
+    IDS_NET_DELETE "删除"
+    IDS_NET_RENAME "重命名"
+    IDS_NET_PROPERTIES "属性"
+    IDS_FORMAT_BIT "%u Bit/秒"
+    IDS_FORMAT_KBIT "%u KBit/秒"
+    IDS_FORMAT_MBIT "%u MBit/秒"
+    IDS_FORMAT_GBIT "%u GBit/秒"
+    IDS_DURATION_DAY "%d 天 %s"
+    IDS_DURATION_DAYS "%d 天 %s"
+    IDS_ASSIGNED_DHCP "由 DHCP 指派"
+    IDS_ASSIGNED_MANUAL "手动设定"
 END

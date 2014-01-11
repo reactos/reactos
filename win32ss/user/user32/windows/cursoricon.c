@@ -376,7 +376,7 @@ static BOOL CURSORICON_GetResCursorEntry( LPCVOID dir, DWORD size, int n,
                                           int *width, int *height, int *bits )
 {
     const CURSORICONDIR *resdir = dir;
-    const CURSORDIR *cursor;
+    const CURSORRESDIR *cursor;
 
     if ( resdir->idCount <= n )
         return FALSE;
@@ -2205,5 +2205,12 @@ User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
                      Common->fuFlags);
 
   return ZwCallbackReturn(&Result, sizeof(HANDLE), STATUS_SUCCESS);
+}
+
+HCURSOR
+WINAPI
+GetCursorFrameInfo(HCURSOR hCursor, DWORD reserved, DWORD istep, PINT rate_jiffies, DWORD *num_steps)
+{
+   return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
 }
 

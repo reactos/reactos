@@ -29,23 +29,9 @@
  *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32  
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <stdarg.h>
-//#include <limits.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "commctrl.h"
-#include <objbase.h>
-
 #include "comctl32.h"
-#include <wine/debug.h>
+
+#include <objbase.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dpa);
 

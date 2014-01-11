@@ -2,7 +2,8 @@
 /* generated from http://www.unicode.org/Public/6.2.0/ucd/BidiMirroring.txt */
 /* DO NOT EDIT!! */
 
-#include <wine/unicode.h>
+#include <windef.h>
+#include <winnt.h>
 
 const WCHAR wine_mirror_map[3292] =
 {

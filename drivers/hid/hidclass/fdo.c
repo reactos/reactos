@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 NTAPI
 HidClassFDO_QueryCapabilitiesCompletionRoutine(

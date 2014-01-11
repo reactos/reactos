@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <icmp.h>
+
 NTSTATUS ICMPStartup()
 {
     IPRegisterProtocol(IPPROTO_ICMP, ICMPReceive);

@@ -25,18 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/bufferobj.h"
-#include "main/compiler.h"
-#include "main/context.h"
-#include "main/enums.h"
-#include "main/mfeatures.h"
-#include "main/state.h"
-#include "main/vtxfmt.h"
-
-#include "vbo_context.h"
-#include "vbo_noop.h"
-
+#include <precomp.h>
 
 #if FEATURE_beginend
 

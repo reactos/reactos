@@ -30,23 +30,28 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
 #include <winreg.h>
-//#include "winerror.h"
 
 #define COBJMACROS
 
 #include <ole2.h>
 #include <strmif.h>
-//#include "olectl.h"
 #include <uuids.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
 #ifndef RC_INVOKED
 #include <wine/unicode.h>
 #endif
+
+#include "resource.h"
 
 /**********************************************************************
  * Dll lifetime tracking declaration for devenum.dll
@@ -89,13 +94,3 @@ HRESULT DEVENUM_GetCategoryKey(REFCLSID clsidDeviceClass, HKEY *pBaseKey, WCHAR 
 extern const WCHAR clsid_keyname[6];
 extern const WCHAR wszInstanceKeyName[];
 #define CLSID_STR_LEN (sizeof(clsid_keyname) / sizeof(WCHAR))
-
-/**********************************************************************
- * Resource IDs
- */
-#define IDS_DEVENUM_DSDEFAULT 7
-#define IDS_DEVENUM_DS        8
-#define IDS_DEVENUM_WODEFAULT 9
-#define IDS_DEVENUM_MIDEFAULT 10
-#define IDS_DEVENUM_KSDEFAULT 11
-#define IDS_DEVENUM_KS        12

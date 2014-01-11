@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static LPWSTR ClientIdentificationAddress = L"HIDCLASS";
 static ULONG HidClassDeviceNumber = 0;
 

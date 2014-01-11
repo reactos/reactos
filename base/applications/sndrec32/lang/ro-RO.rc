@@ -1,18 +1,18 @@
 /* 
- * FILE:             base/applications/sndrec32/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:       2011-08-25  initial translation
- *                   2011-08-30  technical correction (icon)
- *                   2011-10-30  minor changes
+ * FILE:       base/applications/sndrec32/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG: 2011-08-25  initial translation
+ *             2011-08-30  technical correction (icon)
+ *             2011-10-30  minor changes
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
@@ -20,44 +20,44 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Despre înregistratorul audio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "Înregistrator audio, versiunea 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
-    LTEXT           "Drept de autor (C) 2009",IDC_STATIC,55,25,114,8
-    DEFPUSHBUTTON   "Î&nchide",IDOK,139,54,50,14,WS_GROUP
+    ICON IDI_SNDREC32, -1, 19, 14, 21, 20
+    LTEXT "Înregistrator audio, versiunea 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Drept de autor (C) 2009", IDC_STATIC, 55, 25, 114, 8
+    DEFPUSHBUTTON "Î&nchide", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou",             ID_NEW
-        MENUITEM "&Deschidere…",     ID_FILE_OPEN
-        MENUITEM "Pă&strează",       ID_FILE_SAVE, GRAYED
-        MENUITEM "&Păstrare în…",    ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Nou", ID_NEW
+        MENUITEM "&Deschidere…", ID_FILE_OPEN
+        MENUITEM "Pă&strează", ID_FILE_SAVE, GRAYED
+        MENUITEM "&Păstrare în…", ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire",          ID_EXIT
+        MENUITEM "I&eșire", ID_EXIT
     END
-    MENUITEM "todo1",                0
-    MENUITEM "todo2",                0
+    MENUITEM "todo1", 0
+    MENUITEM "todo2", 0
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…",         ID__ABOUT
+        MENUITEM "&Despre…", ID__ABOUT
     END
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Înregistrator audio"
-    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+    IDS_APP_TITLE "Înregistrator audio"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_STRPOS              "Poziție: %.2f s"
-    IDS_STRDUR              "Lungime: %.2f s"
-    IDS_STRBUF              "Memorie: %.2f kb"
-    IDS_STRFMT              "%.1f kHz %u biți"
-    IDS_STRMONO             "mono"
-    IDS_STRSTEREO           "stereo"
-    IDS_STRCHAN             "%s"
+    IDS_STRPOS "Poziție: %.2f s"
+    IDS_STRDUR "Lungime: %.2f s"
+    IDS_STRBUF "Memorie: %.2f kb"
+    IDS_STRFMT "%.1f kHz %u biți"
+    IDS_STRMONO "mono"
+    IDS_STRSTEREO "stereo"
+    IDS_STRCHAN "%s"
 END

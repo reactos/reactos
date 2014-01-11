@@ -5,21 +5,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Lautstärke"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
-    GROUPBOX "Gerätelautstärke", -1, 7,30,230,100
-    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE,17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "Niedrig",-1,62,66,30,17
-    LTEXT "Hoch",-1,195,66,30,17
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
+    LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 36
+    GROUPBOX "Gerätelautstärke", -1, 7, 30, 230, 100
+    CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
+    CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "Niedrig", -1, 62, 66, 30, 17
+    LTEXT "Hoch", -1, 195, 66, 30, 17
     CHECKBOX "Stu&mm schalten", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "Lautstärkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
-    PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150,105,75,15
-    GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7,140,230,80
+    PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstäre einzelner Geräte und andere Einstellungen zu verändern.",-1,70,155,150,36
-    PUSHBUTTON "&Lautstärke...", IDC_SPEAKER_VOL_BTN, 70,195,75,15
-    PUSHBUTTON "E&rweitert...", IDC_ADVANCED2_BTN, 150,195,75,15
+    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstäre einzelner Geräte und andere Einstellungen zu verändern.", -1, 70, 155, 150, 36
+    PUSHBUTTON "&Lautstärke...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    PUSHBUTTON "E&rweitert...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -27,18 +27,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Klänge"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ein Klangschema ist eine Sammlung von Klängen, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema auswählen oder ein modifiziertes speichern.",-1,8,7,230,40
-    LTEXT "Klang&schema:",-1,8,42,150,17
+    LTEXT "Ein Klangschema ist eine Sammlung von Klängen, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema auswählen oder ein modifiziertes speichern.", -1, 8, 7, 230, 40
+    LTEXT "Klang&schema:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Sp&eichern unter...", IDC_SAVEAS_BTN, 120,70,65,15
-    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "Um Klänge zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Klang aus. Sie können Änderungen als neue Klangschemata speichern.",-1,8,90,230,40
-    LTEXT "&Programmereignisse:",-1,8,118,150,17
+    PUSHBUTTON "Sp&eichern unter...", IDC_SAVEAS_BTN, 120, 70, 65, 15
+    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "Um Klänge zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Klang aus. Sie können Änderungen als neue Klangschemata speichern.", -1, 8, 90, 230, 40
+    LTEXT "&Programmereignisse:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Klänge:", IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "&Klänge:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 135, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "", IDC_PLAY_SOUND, 148,205,15,15, WS_DISABLED | BS_ICON
-    PUSHBUTTON "&Durchsuchen...", IDC_BROWSE_SOUND, 168,205,70,15, WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 148, 205, 15, 15, WS_DISABLED | BS_ICON
+    PUSHBUTTON "&Durchsuchen...", IDC_BROWSE_SOUND, 168, 205, 70, 15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -46,24 +46,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Audio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Soundwiedergabe", -1, 7,7,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&Standardgerät:",-1,50,20,80,17
+    GROUPBOX "Soundwiedergabe", -1, 7, 7, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
+    LTEXT "&Standardgerät:", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Lautstärke...", IDC_VOLUME1_BTN, 85,47,70,15
-    PUSHBUTTON "&Erweitert...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "Tonaufnahme", -1, 7,75,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "S&tandardgerät:",-1,50,88,80,17
+    PUSHBUTTON "&Lautstärke...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "&Erweitert...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "Tonaufnahme", -1, 7, 75, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
+    LTEXT "S&tandardgerät:", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "L&autstärke...", IDC_VOLUME2_BTN, 85,115,70,15
-    PUSHBUTTON "E&rweitert...", IDC_ADV1_BTN, 160,115,70,15
-    GROUPBOX "MIDI-Wiedergabe", -1, 7,145,230,60
-    ICON IDI_MIDICON, IDI_MIDICON, 15,158,32,32
-    LTEXT "St&andardgerät:",-1,50,158,80,17
+    PUSHBUTTON "L&autstärke...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "E&rweitert...", IDC_ADV1_BTN, 160, 115, 70, 15
+    GROUPBOX "MIDI-Wiedergabe", -1, 7, 145, 230, 60
+    ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
+    LTEXT "St&andardgerät:", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "La&utstärke...", IDC_VOLUME3_BTN, 85,185,70,15
-    PUSHBUTTON "Ü&ber...", IDC_ADV3_BTN, 160,185,70,15
+    PUSHBUTTON "La&utstärke...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "Ü&ber...", IDC_ADV3_BTN, 160, 185, 70, 15
     CHECKBOX "&Nur Standardgeräte verwenden", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
@@ -72,20 +72,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Stimme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Diese Einstellungen legen die Lautstärke und die erweiterten Einstellungen für Stimmenwiedergabe und -aufnahme des gewählten Gerätes fest.",-1,8,7,230,40
-    GROUPBOX "Stimmenwiedergabe", -1, 7,37,230,60
-    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "&Standardgerät:",-1,50,50,80,17
+    LTEXT "Diese Einstellungen legen die Lautstärke und die erweiterten Einstellungen für Stimmenwiedergabe und -aufnahme des gewählten Gerätes fest.", -1, 8, 7, 230, 40
+    GROUPBOX "Stimmenwiedergabe", -1, 7, 37, 230, 60
+    ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
+    LTEXT "&Standardgerät:", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Lautstärke..", IDC_VOLUME4_BTN, 85,77,70,15
-    PUSHBUTTON "&Erweitert...", IDC_ADV4_BTN, 160,77,70,15
-    GROUPBOX "Stimmenaufnahme", -1, 7,105,230,60
-    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "S&tandardgerät:",-1,50,118,80,17
+    PUSHBUTTON "&Lautstärke..", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "&Erweitert...", IDC_ADV4_BTN, 160, 77, 70, 15
+    GROUPBOX "Stimmenaufnahme", -1, 7, 105, 230, 60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
+    LTEXT "S&tandardgerät:", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "L&autstärke..", IDC_VOLUME5_BTN, 85,145,70,15
-    PUSHBUTTON "E&rweitert...", IDC_ADV5_BTN, 160,145,70,15
-    PUSHBUTTON "&Hardware testen...", IDC_TEST_HARDWARE, 160,175,70,15
+    PUSHBUTTON "L&autstärke..", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "E&rweitert...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "&Hardware testen...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -93,7 +93,6 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-
 END
 
 IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
@@ -234,8 +233,7 @@ BEGIN
     IDS_CPLNAME "Klänge und Audiogeräte"
     IDS_CPLDESCRIPTION "Ändert das Klangschema Ihres Computers oder konfiguriert die Einstellungen für Ihre Lautsprecher und Aufnahmegeräte."
     IDS_NO_SOUND "(Kein)"
-	IDS_NO_DEVICES "Keine Geräte"
-
+    IDS_NO_DEVICES "Keine Geräte"
     5825 "Programmfehler"
     5826 "Programm schließen"
     5827 "Alarm bei kritischem Batteriestand"
@@ -265,5 +263,5 @@ BEGIN
     5851 "Startmenü"
     5852 "ReactOS-Abmeldung"
     5853 "ReactOS-Anmeldung"
-	5854 "ReactOS Explorer"
+    5854 "ReactOS Explorer"
 END

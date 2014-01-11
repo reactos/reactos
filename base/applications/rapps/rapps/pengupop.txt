@@ -12,3 +12,9 @@ CDPath = none
 
 [Section.0407]
 Description = Das Ziel des Spiels ist es farbige Orbs ins Spielfeld zu feuern, so dass diese Gruppen von drei oder mehr bilden.
+
+[Section.0410]
+Description = Lo scopo di questo gioco è quello di sparare sfere colorate nel vostro campo di gioco, in modo da formare gruppi di tre o più.
+
+[Section.041f]
+Description = Oyunun amacı, oyun alanınızda üç ya da daha çok takımdan oluşan renkli küreleri vurmaktır.

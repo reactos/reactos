@@ -1,11 +1,11 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Dec,2007)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *         UTF-8 conversion by Caemyr (May, 2011) 
- *         Update by wojo664 - repositioning the titles
+ *    Translated by Caemyr - Olaf Siejka (Dec, 2007)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+ *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    Update by wojo664 - repositioning the titles
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -14,37 +14,37 @@ IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Ustawienia logowania",IDC_STATIC,7,7,228,89
-    GROUPBOX        "Ustawienia połączenia",IDC_STATIC,7,103,228,65
-    ICON            "", IDC_LOGONICON, 15,19,20,20
-    LTEXT           "Wpisz adres serwera",IDC_STATIC,47,24,81,8
-    LTEXT           "Serwer:",IDC_STATIC,39,42,29,8
-    LTEXT           "Nazwa użytkownika:",IDC_STATIC,39,57,42,18 
-    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON      "Zapisz",IDC_SAVE,67,139,50,14
-    PUSHBUTTON      "Zapisz jako...",IDC_SAVEAS,123,139,50,14
-    PUSHBUTTON      "Otwórz...",IDC_OPEN,177,139,50,14
-    ICON            "", IDC_CONNICON, 16,114,20,20
-    LTEXT           "Zapisz obecne połączenie albo otwórz już istniejący plik z ustawieniami",IDC_STATIC,50,115,172,20
+    GROUPBOX "Ustawienia logowania", IDC_STATIC, 7, 7, 228, 89
+    GROUPBOX "Ustawienia połączenia", IDC_STATIC, 7, 103, 228, 65
+    ICON "", IDC_LOGONICON, 15, 19, 20, 20
+    LTEXT "Wpisz adres serwera", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Serwer:", IDC_STATIC, 39, 42, 29, 8
+    LTEXT "Nazwa użytkownika:", IDC_STATIC, 39, 57, 42, 18
+    COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Zapisz", IDC_SAVE, 67, 139, 50, 14
+    PUSHBUTTON "Zapisz jako...", IDC_SAVEAS, 123, 139, 50, 14
+    PUSHBUTTON "Otwórz...", IDC_OPEN, 177, 139, 50, 14
+    ICON "", IDC_CONNICON, 16, 114, 20, 20
+    LTEXT "Zapisz obecne połączenie albo otwórz już istniejący plik z ustawieniami", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Rozmiar pulpitu zdalnego",IDC_STATIC,7,7,228,68
-    GROUPBOX        "Liczba kolorów",IDC_STATIC,7,83,228,85
-    ICON            "", IDC_REMICON, 15,19,20,20
-    ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "Ustaw rozmiar twojego pulpitu zdalnego. Przesuń suwak do końca w prawo, aby uruchomić pulpit na pełnym ekranie",IDC_STATIC,53,16,175,24
-    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
-    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
-    LTEXT           "Uwaga: Ustawienia na komputerze zdalnym mają pierwszeństwo nad bieżącymi.",IDC_STATIC,56,143,165,18
-    LTEXT           "Mniej",IDC_STATIC,32,42,20,8
-    LTEXT           "Więcej",IDC_STATIC,189,42,21,8
-    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+    GROUPBOX "Rozmiar pulpitu zdalnego", IDC_STATIC, 7, 7, 228, 68
+    GROUPBOX "Liczba kolorów", IDC_STATIC, 7, 83, 228, 85
+    ICON "", IDC_REMICON, 15, 19, 20, 20
+    ICON "", IDC_COLORSICON, 15, 98, 20, 20
+    LTEXT "Ustaw rozmiar twojego pulpitu zdalnego. Przesuń suwak do końca w prawo, aby uruchomić pulpit na pełnym ekranie", IDC_STATIC, 53, 16, 175, 24
+    CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10
+    LTEXT "Uwaga: Ustawienia na komputerze zdalnym mają pierwszeństwo nad bieżącymi.", IDC_STATIC, 56, 143, 165, 18
+    LTEXT "Mniej", IDC_STATIC, 32, 42, 20, 8
+    LTEXT "Więcej", IDC_STATIC, 189, 42, 21, 8
+    LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
@@ -52,23 +52,22 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Połączenie pulpitu zdalnego"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Połącz",IDOK,147,245,50,14
-    PUSHBUTTON      "Anuluj",IDCANCEL,203,245,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+    DEFPUSHBUTTON "Połącz", IDOK, 147, 245, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 203, 245, 50, 14
+    CONTROL "", IDC_TAB, "SysTabControl32", 0x0, 7, 50, 246, 190
 END
 
-
-STRINGTABLE 
+STRINGTABLE
 BEGIN
-    IDS_TAB_GENERAL         "Ogólne"
-    IDS_TAB_DISPLAY         "Ekran"
-    IDS_256COLORS           "256 kolorów"
-    IDS_HIGHCOLOR15         "32,768 kolorów (15 bit)"
-    IDS_HIGHCOLOR16         "65,536 kolorów (16 bit)"
-    IDS_HIGHCOLOR24         "16,777,216 kolorów (24 bit)"
-    IDS_PIXEL               "%lux%lu pikseli"
-    IDS_FULLSCREEN          "Pełny ekran"
-    IDS_BROWSESERVER        "<Wybierz inne...>"
-    IDS_HEADERTEXT1         "Pulpit zdalny"
-    IDS_HEADERTEXT2         "Połączenie"
+    IDS_TAB_GENERAL "Ogólne"
+    IDS_TAB_DISPLAY "Ekran"
+    IDS_256COLORS "256 kolorów"
+    IDS_HIGHCOLOR15 "32,768 kolorów (15 bit)"
+    IDS_HIGHCOLOR16 "65,536 kolorów (16 bit)"
+    IDS_HIGHCOLOR24 "16,777,216 kolorów (24 bit)"
+    IDS_PIXEL "%lux%lu pikseli"
+    IDS_FULLSCREEN "Pełny ekran"
+    IDS_BROWSESERVER "<Wybierz inne...>"
+    IDS_HEADERTEXT1 "Pulpit zdalny"
+    IDS_HEADERTEXT2 "Połączenie"
 END

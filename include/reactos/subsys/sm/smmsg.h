@@ -244,7 +244,7 @@ SmConnectToSm(
     IN PUNICODE_STRING SbApiPortName,
     IN HANDLE SbApiPort,
     IN ULONG ImageType,
-    IN HANDLE SmApiPort
+    OUT PHANDLE SmApiPort
 );
 
 NTSTATUS

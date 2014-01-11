@@ -18,29 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <assert.h>
-
-#define COBJMACROS
-#define INITGUID
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-//#include "guiddef.h"
-#include <fusion.h>
-#include <corerror.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
 #include "fusionpriv.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(fusion);
+#include <assert.h>
+#include <corerror.h>
 
 typedef struct {
     IAssemblyName IAssemblyName_iface;

@@ -11,6 +11,9 @@
 
 #include "srv.h"
 
+#include <winreg.h>
+#include <ndk/cmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

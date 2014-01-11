@@ -1,53 +1,26 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Lithuanian language support
- *
- * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "Neteisingas parametrų skaičius - pagalba: xcopy /?\n"
-    STRING_INVPARM,  "Neteisingas parametras „%s“ - pagalba: xcopy /?\n"
-    STRING_PAUSE,    "Spauskite <enter> kopijavimui pradėti\n"
-    STRING_SIMCOPY,  "bus nukopijuota failų: %d\n"
-    STRING_COPY,     "nukopijuota failų: %d\n"
-    STRING_QISDIR,   "Ar „%s“ yra failas, ar katalogas,\n\
+BEGIN
+    STRING_INVPARMS "Neteisingas parametrų skaičius - pagalba: xcopy /?\n"
+    STRING_INVPARM "Neteisingas parametras „%1“ - pagalba: xcopy /?\n"
+    STRING_PAUSE "Spauskite <enter> kopijavimui pradėti\n"
+    STRING_SIMCOPY "bus nukopijuota failų: %1!d!\n"
+    STRING_COPY "nukopijuota failų: %1!d!\n"
+    STRING_QISDIR "Ar „%1“ yra failas, ar katalogas,\n\
                      ar paskirtis?\n\
                      (F - failas, K - katalogas)\n"
-    STRING_SRCPROMPT,"%s? (Taip|Ne)\n"
-    STRING_OVERWRITE,"Perrašyti %s? (Taip|Ne|Visus)\n"
-    STRING_COPYFAIL, "„%s“ kopijavimas į „%s“ nepavyko su r/c %d\n"
-    STRING_OPENFAIL, "Nepavyko atverti „%s“\n"
-    STRING_READFAIL, "Klaida skaitant „%s“\n"
-    STRING_YES_CHAR, "T"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "V"
-    STRING_FILE_CHAR,"F"
-    STRING_DIR_CHAR, "K"
-
-    STRING_HELP,
+    STRING_SRCPROMPT "%1? (Taip|Ne)\n"
+    STRING_OVERWRITE "Perrašyti %1? (Taip|Ne|Visus)\n"
+    STRING_COPYFAIL "„%1“ kopijavimas į „%2“ nepavyko su r/c %3!d!\n"
+    STRING_OPENFAIL "Nepavyko atverti „%1“\n"
+    STRING_READFAIL "Klaida skaitant „%1“\n"
+    STRING_YES_CHAR "T"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "V"
+    STRING_FILE_CHAR "F"
+    STRING_DIR_CHAR "K"
+    STRING_HELP
 "XCOPY - Kopijuoja šaltinio failus ir katalogų medžius į paskirties vietą\n\
 \n\
 Sintaksė:\n\
@@ -79,5 +52,4 @@ Kur:\n\
 [/D | /D:m-d-y] Kopijuoti naujus failus arba modifikuotos po nurodytos datos.\n\
 \t\tJei data nenurodyta, kopijuoti tik jei paskirties failas yra\n\
 \t\tsenesnis už šaltinio failą\n\n"
-
-}
+END

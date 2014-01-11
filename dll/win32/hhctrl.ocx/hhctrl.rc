@@ -19,13 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
 #include <windef.h>
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winnls.h"
-//#include "htmlhelp.h"
-//#include "resource.h"
+#include <htmlhelp.h>
+
+#include "resource.h"
 
 #ifdef LANGUAGE_CS_CZ
     #include "lang/Cs.rc"
@@ -122,5 +119,5 @@ IDB_HHTOOLBAR BITMAP "res/hhtoolbar.bmp"
 /* @makedep: hhtreeview.bmp */
 IDB_HHTREEVIEW BITMAP "res/hhtreeview.bmp"
 
-1 TYPELIB hhctrl_tlb.tlb
-1 WINE_REGISTRY hhctrl_tlb.rgs
+1 TYPELIB "hhctrl_tlb.tlb"
+1 WINE_REGISTRY "hhctrl_tlb.rgs"

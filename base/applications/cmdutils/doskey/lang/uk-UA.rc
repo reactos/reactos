@@ -3,15 +3,14 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/cmdutils/doskey/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for ReactOS DOSKey
- * TRANSLATOR:  Sakara Yevhen, Igor Paliychuk
+ * TRANSLATORS: Sakara Yevhen, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Менеджер командного рядка для редагування налаштувань, iсторiї та макросiв.\n\
+    IDS_HELP "Менеджер командного рядка для редагування налаштувань, iсторiї та макросiв.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -29,7 +28,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=filename Завантаження визначень макросiв з файлу.\n\
   macroname           Визначення iменi макросу для створення.\n\
   text                Визначення замiни тексту в макросi.\n"
-
-IDS_INVALID_MACRO_DEF, "Недiйсний макрос визначення: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Недiйсний макрос визначення: %s\n"
 END

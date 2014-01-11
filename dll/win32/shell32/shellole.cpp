@@ -23,8 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-extern HRESULT WINAPI IFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
-
 static const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
 
 /**************************************************************************
@@ -129,7 +127,7 @@ HRESULT WINAPI SHCoCreateInstance(
 
     /* now we create an instance */
     if (bLoadFromShell32) {
-        if (! SUCCEEDED(DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
+        if (! SUCCEEDED(DllGetClassObject(*myclsid, IID_PPV_ARG(IClassFactory, &pcf)))) {
             ERR("LoadFromShell failed for CLSID=%s\n", shdebugstr_guid(myclsid));
         }
     } else if (bLoadWithoutCOM) {
@@ -286,7 +284,7 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
 
     if(!psf) return E_INVALIDARG;
     *psf = NULL;
-    hres = CDesktopFolder::_CreatorClass::CreateInstance(NULL, IID_IShellFolder, (void**)psf);
+    hres = CDesktopFolder::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellFolder, psf));
 
     TRACE("-- %p->(%p)\n",psf, *psf);
     return hres;
@@ -388,7 +386,7 @@ HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const I
     ATLTRY (theClassObject = new CComObject<IDefClFImpl>);
     if (theClassObject == NULL)
         return E_OUTOFMEMORY;
-    hResult = theClassObject->QueryInterface (IID_IClassFactory, (void **)&result);
+    hResult = theClassObject->QueryInterface (IID_PPV_ARG(IClassFactory, &result));
     if (FAILED (hResult))
     {
         delete theClassObject;
@@ -422,7 +420,7 @@ HRESULT WINAPI SHCreateDefClassObject(
     if (FAILED(hResult))
         return hResult;
     *ppv = pcf;
-    return NOERROR;
+    return S_OK;
 }
 
 /*************************************************************************

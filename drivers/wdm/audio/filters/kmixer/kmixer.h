@@ -1,12 +1,4 @@
-#include <ntddk.h>
 #include <portcls.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <swenum.h>
-#define YDEBUG
-#include <debug.h>
-
-#include <samplerate.h>
 #include <float_cast.h>
 
 typedef struct

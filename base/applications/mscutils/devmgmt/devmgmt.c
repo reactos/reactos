@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#include <winnls.h>
+
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 HANDLE hMutex;

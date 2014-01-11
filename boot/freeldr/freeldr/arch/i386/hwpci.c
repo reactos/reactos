@@ -120,7 +120,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         /* Set 'Configuration Data' value */
         Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
                2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -178,7 +178,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         /* Set 'Configuration Data' value */
         Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -216,7 +216,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                     PartialDescriptors) +
                        sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                        sizeof(PCI_REGISTRY_INFO);
-                PartialResourceList = MmHeapAlloc(Size);
+                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {
                     ERR("Failed to allocate resource descriptor\n");
@@ -241,7 +241,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 /* Set 'Configuration Data' value */
                 Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                                     PartialDescriptors);
-                PartialResourceList = MmHeapAlloc(Size);
+                PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {
                     ERR("Failed to allocate resource descriptor\n");

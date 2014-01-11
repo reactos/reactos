@@ -1,5 +1,5 @@
-/* TRANSLATOR:  Kario (kario@szm.sk)
- * DATE OF TR:  22-09-2007
+/* TRANSLATOR: Kario (kario@szm.sk)
+ * DATE OF TR: 22-09-2007
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -7,5 +7,5 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Logon - šetrič obrazovky"
-    IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
+    IDS_TEXT "Nie sú potrebné žiadne nastavenia."
 END

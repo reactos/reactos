@@ -22,6 +22,27 @@
  * native headers.
  */
 
+#include <config.h>
+
+#include <stdarg.h>
+
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
+
+#include "wldap32.h"
+
 typedef enum {
     WLDAP32_LDAP_SUCCESS                 =   0x00,
     WLDAP32_LDAP_UNWILLING_TO_PERFORM    =   0x35,

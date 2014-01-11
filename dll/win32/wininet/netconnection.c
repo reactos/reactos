@@ -21,78 +21,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <config.h>
-//#include "wine/port.h"
-
-#define NONAMELESSUNION
+#include "internet.h"
 
 #include <sys/types.h>
 #ifdef HAVE_POLL_H
 #include <poll.h>
 #endif
-#ifdef HAVE_SYS_POLL_H
-# include <sys/poll.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
 #ifdef HAVE_SYS_FILIO_H
 # include <sys/filio.h>
 #endif
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#ifdef HAVE_SYS_IOCTL_H
-# include <sys/ioctl.h>
-#endif
 #include <time.h>
-#ifdef HAVE_NETDB_H
-# include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
 #ifdef HAVE_NETINET_TCP_H
 # include <netinet/tcp.h>
 #endif
 
-#include <stdarg.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <stdio.h>
-//#include <errno.h>
-#include <assert.h>
-
-//#include "wine/library.h"
-#include <windef.h>
-#include <winbase.h>
-#include <wininet.h>
-//#include "winerror.h"
-//#include "wincrypt.h"
-
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#endif
-
-#include <wine/debug.h>
-#include "internet.h"
-
-/* To avoid conflicts with the Unix socket headers. we only need it for
- * the error codes anyway. */
-#define USE_WS_PREFIX
-//#include "winsock2.h"
-
 #define RESPONSE_TIMEOUT        30            /* FROM internet.c */
-
-
-WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 /* FIXME!!!!!!
  *    This should use winsock - To use winsock the functions will have to change a bit

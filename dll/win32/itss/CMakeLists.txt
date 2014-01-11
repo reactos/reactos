@@ -11,6 +11,7 @@ list(APPEND SOURCE
     moniker.c
     protocol.c
     storage.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
 

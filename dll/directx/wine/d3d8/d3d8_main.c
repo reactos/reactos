@@ -19,12 +19,7 @@
  *
  */
 
-#include <config.h>
-#include <initguid.h>
 #include "d3d8_private.h"
-//#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 HRESULT WINAPI D3D8GetSWInfo(void) {
     FIXME("(void): stub\n");

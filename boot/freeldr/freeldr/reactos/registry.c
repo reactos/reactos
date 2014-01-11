@@ -29,7 +29,7 @@ VOID
 RegInitializeRegistry (VOID)
 {
     /* Create root key */
-    RootKey = MmHeapAlloc(sizeof(KEY));
+    RootKey = FrLdrHeapAlloc(sizeof(KEY), TAG_REG_KEY);
 
     InitializeListHead(&RootKey->SubKeyList);
     InitializeListHead(&RootKey->ValueList);
@@ -39,7 +39,7 @@ RegInitializeRegistry (VOID)
     RootKey->ValueCount = 0;
 
     RootKey->NameSize = 4;
-    RootKey->Name = MmHeapAlloc(4);
+    RootKey->Name = FrLdrHeapAlloc(4, TAG_REG_NAME);
     wcscpy (RootKey->Name, L"\\");
 
     RootKey->DataType = 0;
@@ -242,7 +242,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
         if (CmpResult != 0)
         {
             /* no key found -> create new subkey */
-            NewKey = MmHeapAlloc(sizeof(KEY));
+            NewKey = FrLdrHeapAlloc(sizeof(KEY), TAG_REG_KEY);
             if (NewKey == NULL) return ERROR_OUTOFMEMORY;
 
             InitializeListHead(&NewKey->SubKeyList);
@@ -259,7 +259,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
             CurrentKey->SubKeyCount++;
 
             NewKey->NameSize = NameSize;
-            NewKey->Name = (PWCHAR)MmHeapAlloc(NewKey->NameSize);
+            NewKey->Name = (PWCHAR)FrLdrHeapAlloc(NewKey->NameSize, TAG_REG_NAME);
             if (NewKey->Name == NULL) return ERROR_OUTOFMEMORY;
 
             memcpy(NewKey->Name, name, NewKey->NameSize - sizeof(WCHAR));
@@ -452,7 +452,7 @@ RegSetValue(FRLDRHKEY Key,
         /* set default value */
         if ((Key->Data != NULL) && (Key->DataSize > sizeof(PUCHAR)))
         {
-            MmHeapFree(Key->Data);
+            FrLdrHeapFree(Key->Data, TAG_REG_KEY_DATA);
         }
 
         if (DataSize <= sizeof(PUCHAR))
@@ -463,7 +463,7 @@ RegSetValue(FRLDRHKEY Key,
         }
         else
         {
-            Key->Data = MmHeapAlloc(DataSize);
+            Key->Data = FrLdrHeapAlloc(DataSize, TAG_REG_KEY_DATA);
             Key->DataSize = DataSize;
             Key->DataType = Type;
             memcpy(Key->Data, Data, DataSize);
@@ -489,14 +489,14 @@ RegSetValue(FRLDRHKEY Key,
             /* add new value */
             TRACE("No value found - adding new value\n");
 
-            Value = (PVALUE)MmHeapAlloc(sizeof(VALUE));
+            Value = (PVALUE)FrLdrHeapAlloc(sizeof(VALUE), TAG_REG_VALUE);
             if (Value == NULL) return ERROR_OUTOFMEMORY;
 
             InsertTailList(&Key->ValueList, &Value->ValueList);
             Key->ValueCount++;
 
             Value->NameSize = (ULONG)(wcslen(ValueName)+1) * sizeof(WCHAR);
-            Value->Name = MmHeapAlloc(Value->NameSize);
+            Value->Name = FrLdrHeapAlloc(Value->NameSize, TAG_REG_NAME);
             if (Value->Name == NULL) return ERROR_OUTOFMEMORY;
             wcscpy(Value->Name, ValueName);
             Value->DataType = REG_NONE;
@@ -507,7 +507,7 @@ RegSetValue(FRLDRHKEY Key,
         /* set new value */
         if ((Value->Data != NULL) && (Value->DataSize > sizeof(PUCHAR)))
         {
-            MmHeapFree(Value->Data);
+            FrLdrHeapFree(Value->Data, TAG_REG_KEY_DATA);
         }
 
         if (DataSize <= sizeof(PUCHAR))
@@ -518,7 +518,7 @@ RegSetValue(FRLDRHKEY Key,
         }
         else
         {
-            Value->Data = MmHeapAlloc(DataSize);
+            Value->Data = FrLdrHeapAlloc(DataSize, TAG_REG_KEY_DATA);
             if (Value->Data == NULL) return ERROR_OUTOFMEMORY;
             Value->DataType = Type;
             Value->DataSize = DataSize;
@@ -620,7 +620,7 @@ RegDeleteValue(FRLDRHKEY Key,
     if ((ValueName == NULL) || (*ValueName == 0))
     {
         /* delete default value */
-        if (Key->Data != NULL) MmFreeMemory(Key->Data);
+        if (Key->Data != NULL) FrLdrHeapFree(Key->Data, TAG_REG_KEY_DATA);
         Key->Data = NULL;
         Key->DataSize = 0;
         Key->DataType = 0;
@@ -641,20 +641,20 @@ RegDeleteValue(FRLDRHKEY Key,
 
         /* delete value */
         Key->ValueCount--;
-        if (Value->Name != NULL) MmFreeMemory(Value->Name);
+        if (Value->Name != NULL) FrLdrHeapFree(Value->Name, TAG_REG_NAME);
         Value->Name = NULL;
         Value->NameSize = 0;
 
         if (Value->DataSize > sizeof(PUCHAR))
         {
-            if (Value->Data != NULL) MmFreeMemory(Value->Data);
+            if (Value->Data != NULL) FrLdrHeapFree(Value->Data, TAG_REG_KEY_DATA);
         }
         Value->Data = NULL;
         Value->DataSize = 0;
         Value->DataType = 0;
 
         RemoveEntryList(&Value->ValueList);
-        MmFreeMemory(Value);
+        FrLdrHeapFree(Value, TAG_REG_VALUE);
     }
     return ERROR_SUCCESS;
 }

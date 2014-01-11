@@ -22,24 +22,25 @@
 #ifndef __WINE_SHDOCVW_H
 #define __WINE_SHDOCVW_H
 
+#include <config.h>
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include <stdarg.h>
-
 #include <windef.h>
 #include <winbase.h>
-//#include "winuser.h"
-
-#include <ole2.h>
+#include <winreg.h>
 #include <shlobj.h>
-//#include "exdisp.h"
 
 #include <wine/unicode.h>
-//#include "wine/list.h"
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 /**********************************************************************
  * Shell Instance Objects

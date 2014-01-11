@@ -12,3 +12,11 @@ CDPath = none
 
 [Section.0407]
 Description = Eines der besten Mahjongg Solitaire Spiele im Netz.
+
+[Section.0410]
+Description = Uno dei migliori giochi di Mahjongg Solitaire.
+
+[Section.041f]
+Name = Kyodai Çin Dominosu
+Licence = Kısıtlı
+Description = Çin dominosu türündeki solitaire oyunları arasında en iyisi.

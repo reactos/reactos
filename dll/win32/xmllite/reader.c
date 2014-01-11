@@ -18,26 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <initguid.h>
-#include <objbase.h>
-#include <xmllite.h>
 #include "xmllite_private.h"
 
-#include <wine/debug.h>
+#include <stdio.h>
+
 #include <wine/list.h>
 #include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
 
 /* not defined in public headers */
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);

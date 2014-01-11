@@ -12,3 +12,9 @@ CDPath = none
 
 [Section.0407]
 Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu finden war.
+
+[Section.0410]
+Description = Il classico gioco Hover CTF che trovate sul CD di Windows 95.
+
+[Section.041f]
+Description = Pencereler 95 CD'sinde bulunan bir bayrak kapmaca oyunu.

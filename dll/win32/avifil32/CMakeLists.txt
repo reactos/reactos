@@ -17,10 +17,11 @@ add_library(avifil32 SHARED
     icmstream.c
     tmpfile.c
     wavfile.c
+    guid.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
-target_link_libraries(avifil32 uuid wine)
+target_link_libraries(avifil32 wine)
 add_importlibs(avifil32 msacm32 msvfw32 winmm ole32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

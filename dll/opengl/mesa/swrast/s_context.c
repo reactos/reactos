@@ -26,21 +26,7 @@
  *    Brian Paul
  */
 
-#include "main/imports.h"
-#include "main/bufferobj.h"
-#include "main/colormac.h"
-#include "main/mtypes.h"
-#include "main/teximage.h"
-#include "swrast.h"
-#include "s_blend.h"
-#include "s_context.h"
-#include "s_lines.h"
-#include "s_points.h"
-#include "s_span.h"
-#include "s_texfetch.h"
-#include "s_triangle.h"
-#include "s_texfilter.h"
-
+#include <precomp.h>
 
 /**
  * Recompute the value of swrast->_RasterMask, etc. according to

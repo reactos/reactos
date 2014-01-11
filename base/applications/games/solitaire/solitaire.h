@@ -1,14 +1,4 @@
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include <tchar.h>
 #include <cardlib.h>
-
-#include "resource.h"
 
 extern CardWindow SolWnd;
 extern TCHAR szAppName[];
@@ -48,7 +38,6 @@ extern CardRegion *pDeck;
 extern CardRegion *pPile;
 extern CardRegion *pSuitStack[];
 extern CardRegion *pRowStack[];
-
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);
 bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  CardStack &dragcards);

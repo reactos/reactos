@@ -20,13 +20,9 @@
  */
 
 #include "hhctrl.h"
-#include "stream.h"
 
 #include <winreg.h>
 #include <shlwapi.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 /* Reads a string from the #STRINGS section in the CHM file */
 static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)

@@ -2,8 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Управлява настройките за обработка в командния ред, дневника и макротата.\n\
+    IDS_HELP "Управлява настройките за обработка в командния ред, дневника и макротата.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=размер]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=файл] [macroname=[текст]]\n\
@@ -21,7 +20,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=размер
   /MACROFILE=файловоиме Зарежда макрота от файл.\n\
   macroname           Указва името на макрото, което да бъде създадено.\n\
   text                Указва текстът за замяна от макрото.\n"
-
-IDS_INVALID_MACRO_DEF, "Неправилно определено макро: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Неправилно определено макро: %s\n"
 END

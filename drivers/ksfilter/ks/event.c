@@ -8,6 +8,9 @@
 
 #include "priv.h"
 
+#define NDEBUG
+#include <debug.h>
+
 BOOLEAN
 KspSynchronizedEventRoutine(
     IN KSEVENTS_LOCKTYPE EventsFlags,

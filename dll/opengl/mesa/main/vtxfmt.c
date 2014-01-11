@@ -26,17 +26,7 @@
  *    Gareth Hughes
  */
 
-#include "glheader.h"
-#include "api_arrayelt.h"
-#include "context.h"
-#include "imports.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "vtxfmt.h"
-#include "eval.h"
-#include "dlist.h"
-#include "main/dispatch.h"
-
+#include <precomp.h>
 
 #if FEATURE_beginend
 

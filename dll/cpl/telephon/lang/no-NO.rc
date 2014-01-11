@@ -1,9 +1,9 @@
-// Norwegian (no) resources by LMH1 
+/* Translated by LMH1 */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Telefon og Modem valg"
-	IDS_CPLSYSTEMDESCRIPTION "Konfigurer din telefon nummerslåing regler og modem innstillinger."
+    IDS_CPLSYSTEMNAME "Telefon og Modem valg"
+    IDS_CPLSYSTEMDESCRIPTION "Konfigurer din telefon nummerslåing regler og modem innstillinger."
 END

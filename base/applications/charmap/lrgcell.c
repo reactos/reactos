@@ -9,7 +9,6 @@
 
 #include <precomp.h>
 
-
 static
 HFONT
 SetLrgFont(PMAP infoPtr)

@@ -1,7 +1,4 @@
-/*
- * Spanish Language resource file
- * Traducido por: Javier Remacha 2007-12-24
- */
+/* Spanish translation by Javier Remacha */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -10,19 +7,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nombre de equipo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Descripción del equipo:", IDC_STATIC, 6, 40, 85, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Nombre completo del equipo:", IDC_STATIC, 6, 66, 64, 16
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Grupo de trabajo:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Para usar el Asistente para identificación de red para unirse a un dominio y crear una cuenta de usuario local, haga clic en ""Id de red"".", IDC_STATIC, 6, 108, 172, 24
-    PUSHBUTTON  "&Id de red...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "Para cambiar el nombre de este equipo o unirse a un dominio, haga clic en ""Cambiar"".", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "Cam&biar...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT       "Nota: Sólo los Administradores pueden cambiar la identificación de este equipo.", IDC_STATIC, 6, 179, 250, 17
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "ReactOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Descripción del equipo:", IDC_STATIC, 6, 40, 85, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Nombre completo del equipo:", IDC_STATIC, 6, 66, 64, 16
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Grupo de trabajo:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Para usar el Asistente para identificación de red para unirse a un dominio y crear una cuenta de usuario local, haga clic en ""Id de red"".", IDC_STATIC, 6, 108, 172, 24
+    PUSHBUTTON "&Id de red...", IDC_NETWORK_ID, 190, 114, 58, 15
+    LTEXT "Para cambiar el nombre de este equipo o unirse a un dominio, haga clic en ""Cambiar"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON "Cam&biar...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    LTEXT "Nota: Sólo los Administradores pueden cambiar la identificación de este equipo.", IDC_STATIC, 6, 179, 250, 17
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

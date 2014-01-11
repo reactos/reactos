@@ -350,25 +350,25 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
                 /* Destroy the PTE */
-                PointerPte->u.Long = 0;
+                MI_ERASE_PTE(PointerPte);
+            }
+            else
+            {
+                /*
+                 * The only other ARM3 possibility is a demand zero page, which would
+                 * mean freeing some of the paged pool pages that haven't even been
+                 * touched yet, as part of a larger allocation.
+                 *
+                 * Right now, we shouldn't expect any page file information in the PTE
+                 */
+                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+
+                /* Destroy the PTE */
+                MI_ERASE_PTE(PointerPte);
             }
 
             /* Actual legitimate pages */
             ActualPages++;
-        }
-        else
-        {
-            /*
-             * The only other ARM3 possibility is a demand zero page, which would
-             * mean freeing some of the paged pool pages that haven't even been
-             * touched yet, as part of a larger allocation.
-             *
-             * Right now, we shouldn't expect any page file information in the PTE
-             */
-            ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
-
-            /* Destroy the PTE */
-            PointerPte->u.Long = 0;
         }
 
         /* Keep going */
@@ -486,7 +486,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     }
 
     /* Destroy the PTE and flush the TLB */
-    PointerPte->u.Long = 0;
+    MI_ERASE_PTE(PointerPte);
     KeFlushCurrentTb();
 }
 
@@ -503,7 +503,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     KIRQL OldIrql;
     BOOLEAN AddressGap = FALSE;
     PSUBSECTION Subsection;
-    PUSHORT UsedPageTableEntries;
 
     /* Get out if this is a fake VAD, RosMm will free the marea pages */
     if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
@@ -560,7 +559,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* Now we should have a valid PDE, mapped in, and still have some VA */
         ASSERT(PointerPde->u.Hard.Valid == 1);
         ASSERT(Va <= EndingAddress);
-        UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Va)];
 
         /* Check if this is a section VAD with gaps in it */
         if ((AddressGap) && (LastPrototypePte))
@@ -590,11 +588,10 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             TempPte = *PointerPte;
             if (TempPte.u.Long)
             {
-                *UsedPageTableEntries -= 1;
-                ASSERT((*UsedPageTableEntries) < PTE_COUNT);
+                MiDecrementPageTableReferences((PVOID)Va);
 
                 /* Check if the PTE is actually mapped in */
-                if (TempPte.u.Long & 0xFFFFFC01)
+                if (MI_IS_MAPPED_PTE(&TempPte))
                 {
                     /* Are we dealing with section VAD? */
                     if ((LastPrototypePte) && (PrototypePte > LastPrototypePte))
@@ -621,7 +618,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                         (TempPte.u.Soft.Prototype == 1))
                     {
                         /* Just nuke it */
-                        PointerPte->u.Long = 0;
+                        MI_ERASE_PTE(PointerPte);
                     }
                     else
                     {
@@ -635,7 +632,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                 else
                 {
                     /* The PTE was never mapped, just nuke it here */
-                    PointerPte->u.Long = 0;
+                    MI_ERASE_PTE(PointerPte);
                 }
             }
 
@@ -652,7 +649,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* The PDE should still be valid at this point */
         ASSERT(PointerPde->u.Hard.Valid == 1);
 
-        if (*UsedPageTableEntries == 0)
+        /* Check remaining PTE count (go back 1 page due to above loop) */
+        if (MiQueryPageTableReferences((PVOID)(Va - PAGE_SIZE)) == 0)
         {
             if (PointerPde->u.Long != 0)
             {
@@ -2115,7 +2113,8 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 ASSERT(PteContents.u.Soft.Transition == 0);
 
                 /* The PTE is already demand-zero, just update the protection mask */
-                PointerPte->u.Soft.Protection = ProtectionMask;
+                PteContents.u.Soft.Protection = ProtectionMask;
+                MI_WRITE_INVALID_PTE(PointerPte, PteContents);
                 ASSERT(PointerPte->u.Long != 0);
             }
 
@@ -4078,7 +4077,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         Status = STATUS_CONFLICTING_ADDRESSES;
         goto FailPath;
     }
-	
+
 	if ((AllocationType & MEM_RESET) == MEM_RESET)
     {
         /// @todo HACK: pretend success
@@ -4253,6 +4252,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     TempPte.u.Long = 0;
     TempPte.u.Soft.Protection = ProtectionMask;
+    NT_ASSERT(TempPte.u.Long != 0);
 
     //
     // Get the PTE, PDE and the last PTE for this address range
@@ -4831,5 +4831,51 @@ FailPath:
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
     return Status;
 }
+
+
+PHYSICAL_ADDRESS
+NTAPI
+MmGetPhysicalAddress(PVOID Address)
+{
+    PHYSICAL_ADDRESS PhysicalAddress;
+    MMPDE TempPde;
+    MMPTE TempPte;
+
+    /* Check if the PXE/PPE/PDE is valid */
+    if (
+#if (_MI_PAGING_LEVELS == 4)
+        (MiAddressToPxe(Address)->u.Hard.Valid) &&
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        (MiAddressToPpe(Address)->u.Hard.Valid) &&
+#endif
+        (MiAddressToPde(Address)->u.Hard.Valid))
+    {
+        /* Check for large pages */
+        TempPde = *MiAddressToPde(Address);
+        if (TempPde.u.Hard.LargePage)
+        {
+            /* Physical address is base page + large page offset */
+            PhysicalAddress.QuadPart = TempPde.u.Hard.PageFrameNumber << PAGE_SHIFT;
+            PhysicalAddress.QuadPart += ((ULONG_PTR)Address & (PAGE_SIZE * PTE_PER_PAGE - 1));
+            return PhysicalAddress;
+        }
+
+        /* Check if the PTE is valid */
+        TempPte = *MiAddressToPte(Address);
+        if (TempPte.u.Hard.Valid)
+        {
+            /* Physical address is base page + page offset */
+            PhysicalAddress.QuadPart = TempPte.u.Hard.PageFrameNumber << PAGE_SHIFT;
+            PhysicalAddress.QuadPart += ((ULONG_PTR)Address & (PAGE_SIZE - 1));
+            return PhysicalAddress;
+        }
+    }
+
+    DPRINT1("MM:MmGetPhysicalAddressFailed base address was %p\n", Address);
+    PhysicalAddress.QuadPart = 0;
+    return PhysicalAddress;
+}
+
 
 /* EOF */

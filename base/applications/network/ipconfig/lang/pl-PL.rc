@@ -1,36 +1,36 @@
 /*
- *         translated by TestamenT
- *         testament@users.sourceforge.net
- *         https://sourceforge.net/projects/reactospl
- *         UTF-8 conversion by Caemyr (May, 2011) 
+ *    Translated by TestamenT
+ *    testament@users.sourceforge.net
+ *    https://sourceforge.net/projects/reactospl
+ *    UTF-8 conversion by Caemyr (May, 2011) 
  */
- 
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mieszany"
-  IDS_HYBRID  "Hybrydowy"
-  IDS_UNKNOWN "nieznany"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mieszany"
+    IDS_HYBRID "Hybrydowy"
+    IDS_UNKNOWN "nieznany"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "inny rodzaj karty"
-  IDS_ETH     "karta Ethernet"
-  IDS_TOKEN   "karta Token Ring"
-  IDS_FDDI    "karta FDDI"
-  IDS_PPP     "karta PPP"
-  IDS_LOOP    "karta Loopback"
-  IDS_SLIP    "karta SLIP"
+    IDS_OTHER "inny rodzaj karty"
+    IDS_ETH "karta Ethernet"
+    IDS_TOKEN "karta Token Ring"
+    IDS_FDDI "karta FDDI"
+    IDS_PPP "karta PPP"
+    IDS_LOOP "karta Loopback"
+    IDS_SLIP "karta SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nSPOSÓB UŻYCIA:\n \
         ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
                   /flushdns | /displaydns | /registerdns \n \

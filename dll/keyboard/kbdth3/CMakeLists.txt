@@ -5,7 +5,7 @@ spec2def(kbdth3.dll kbdth3.spec)
 
 add_library(kbdth3 SHARED kbdth3.c kbdth3.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdth3.def)
 
-set_entrypoint(kbdth3 0)
+set_module_type(kbdth3 kbdlayout)
 
 add_dependencies(kbdth3 psdk)
 

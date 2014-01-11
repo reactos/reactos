@@ -1,0 +1,15 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "shfaq"
+    BEGIN
+        MENUITEM "&Preferencat...", ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&Dil", ID_EXIT
+    END
+END

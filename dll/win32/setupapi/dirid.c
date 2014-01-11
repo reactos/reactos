@@ -20,8 +20,6 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
-
 #define MAX_SYSTEM_DIRID DIRID_PRINTPROCESSOR
 #define MIN_CSIDL_DIRID 0x4000
 #define MAX_CSIDL_DIRID 0x403f

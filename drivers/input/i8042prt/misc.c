@@ -10,6 +10,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
 

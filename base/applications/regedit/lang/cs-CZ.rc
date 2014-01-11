@@ -1,47 +1,26 @@
-/*
- * Regedit resources
- *
- * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
-/*
- * Menu
- */
+/* Menus */
 
 IDC_REGEDIT MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "U&končit",                       ID_REGISTRY_EXIT
+        MENUITEM "U&končit", ID_REGISTRY_EXIT
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O editoru registru ...",                  ID_HELP_ABOUT
+        MENUITEM "&O editoru registru ...", ID_HELP_ABOUT
     END
 END
 
@@ -49,222 +28,211 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Registry"
     BEGIN
-        MENUITEM "&Importovat soubor registru...",    ID_REGISTRY_IMPORTREGISTRYFILE
-
-        MENUITEM "&Exportovat do souboru registru...",    ID_REGISTRY_EXPORTREGISTRYFILE
-
+        MENUITEM "&Importovat soubor registru...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exportovat do souboru registru...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Načíst strom registru...",              ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Uvolnit strom registru...",             ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Načíst strom registru...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Uvolnit strom registru...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Připojit síťový registr...",
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-        MENUITEM "&Odpojit síťový registr...",
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+        MENUITEM "&Připojit síťový registr...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Odpojit síťový registr...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Tisk\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Tisk\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "U&končit",                       ID_REGISTRY_EXIT
+        MENUITEM "U&končit", ID_REGISTRY_EXIT
     END
     POPUP "&Úpravy"
     BEGIN
-        MENUITEM "&Změnit hodnotu",                     ID_EDIT_MODIFY
+        MENUITEM "&Změnit hodnotu", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Víceřetězcová hodnota",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Rozšiřitelná řetězcová hodnota",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Řetězec", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binární hodnota", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Hodnota DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Víceřetězcová hodnota", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Rozšiřitelná řetězcová hodnota", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "Oprá&vnění...",		ID_EDIT_PERMISSIONS
+        MENUITEM "Oprá&vnění...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
-        MENUITEM "&Přejmenovat",                     ID_EDIT_RENAME
+        MENUITEM "&Odstranit\tDel", ID_EDIT_DELETE
+        MENUITEM "&Přejmenovat", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Z&kopírovat název klíče",              ID_EDIT_COPYKEYNAME
+        MENUITEM "Z&kopírovat název klíče", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Najít\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "Najít &další\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&Najít\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "Najít &další\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Stavový řádek",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Stavový řádek", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Rozdělit",                      ID_VIEW_SPLIT
+        MENUITEM "&Rozdělit", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualizovat\tF5",                ID_VIEW_REFRESH
+        MENUITEM "&Aktualizovat\tF5", ID_VIEW_REFRESH
     END
     POPUP "&Oblíbené"
     BEGIN
-        MENUITEM "&Přidat k oblíbeným",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Odebrat z oblíbených",           ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "&Přidat k oblíbeným", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Odebrat z oblíbených", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&Témata nápovědy\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM "&Témata nápovědy\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&O editoru registru",      ID_HELP_ABOUT
+        MENUITEM "&O editoru registru", ID_HELP_ABOUT
     END
 END
 
 IDR_POPUP_MENUS MENU
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "&Upravit",                     ID_EDIT_MODIFY
-	MENUITEM "Upravit &binární data",          ID_EDIT_MODIFY_BIN
-	MENUITEM SEPARATOR
-	MENUITEM "&Odstranit\tDel",                ID_EDIT_DELETE
-	MENUITEM "&Přejmenovat",                     ID_EDIT_RENAME
-  END
-  POPUP ""
-  BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Upravit", ID_EDIT_MODIFY
+        MENUITEM "Upravit &binární data", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Odstranit\tDel", ID_EDIT_DELETE
+        MENUITEM "&Přejmenovat", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Víceřetězcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Rozšiřitelná řetězcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Řetězec", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binární hodnota", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Hodnota DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Víceřetězcová hodnota", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Rozšiřitelná řetězcová hodnota", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-  END
-  POPUP ""
-  BEGIN
-        MENUITEM "Rozbalit/Sbalit",                 ID_TREE_EXPANDBRANCH
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Rozbalit/Sbalit", ID_TREE_EXPANDBRANCH
         POPUP "&Nový"
         BEGIN
-            MENUITEM "&Klíč",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Klíč", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Řetězec",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binární hodnota",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Hodnota DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Víceřetězcová hodnota",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Rozšiřitelná řetězcová hodnota",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Řetězec", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binární hodnota", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Hodnota DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Víceřetězcová hodnota", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Rozšiřitelná řetězcová hodnota", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Najít",                           ID_EDIT_FIND
+        MENUITEM "&Najít", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Odstranit",                         ID_TREE_DELETE
-        MENUITEM "&Přejmenovat",                         ID_TREE_RENAME
+        MENUITEM "&Odstranit", ID_TREE_DELETE
+        MENUITEM "&Přejmenovat", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportovat",                         ID_TREE_EXPORT
-        MENUITEM "Oprá&vnění...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Exportovat", ID_TREE_EXPORT
+        MENUITEM "Oprá&vnění...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Z&kopírovat název klíče",                  ID_EDIT_COPYKEYNAME
-  END
-  POPUP ""
-  BEGIN
+        MENUITEM "Z&kopírovat název klíče", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "Vyj&mout", ID_HEXEDIT_CUT
         MENUITEM "&Kopírovat", ID_HEXEDIT_COPY
         MENUITEM "V&ložit", ID_HEXEDIT_PASTE
         MENUITEM "O&dstranit", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Vybr&at vše", ID_HEXEDIT_SELECT_ALL
-  END
+    END
 END
 
+/* Dialogs */
 
-/*
- * Dialog
- */
-
-IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Úprava řetězce"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Název:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,196,64,50,14
+    LTEXT "&Název:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 196, 64, 50, 14
 END
 
-IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Úprava více-řetězce"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Název:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,196,154,50,14
+    LTEXT "&Název:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 196, 154, 50, 14
 END
 
-IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Úprava binární hodnoty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Název:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,196,154,50,14
+    LTEXT "&Název:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 196, 154, 50, 14
 END
 
-
-IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Úprava DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Název:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "Soustava",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "&Šestnáctková",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "&Desítková",IDC_FORMAT_DEC,141,59,60,10
-    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,196,82,50,14
+    LTEXT "&Název:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "Soustava", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "&Šestnáctková", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "&Desítková", IDC_FORMAT_DEC, 141, 59, 60, 10
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 196, 82, 50, 14
 END
 
-
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resource List"
 FONT 8, "MS Shell Dlg"
-{
-    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
     PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
-}
+END
 
-
-IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resources"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
-    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
     LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
-    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
     LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
-    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
-    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
     LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
-    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
     LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
@@ -278,259 +246,248 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
     RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
-    DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
+    DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
-}
+END
 
-
-/*
- * String Table
- */
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "Název"
-    IDS_LIST_COLUMN_TYPE    "Typ"
-    IDS_LIST_COLUMN_DATA    "Data"
+    IDS_LIST_COLUMN_NAME "Název"
+    IDS_LIST_COLUMN_TYPE "Typ"
+    IDS_LIST_COLUMN_DATA "Data"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Editor registru"
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+    IDS_APP_TITLE "Editor registru"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU        "Obsahuje příkazy pro práci s celým registrem"
-    ID_EDIT_MENU            "Obsahuje příkazy pro úpravu hodnot a klíčů"
-    ID_VIEW_MENU            "Obsahuje příkazy pro přizpůsobení okna registru"
-    ID_FAVOURITES_MENU      "Obsahuje příkazy pro přístup k často používaným klíčům"
-    ID_HELP_MENU            "Obsahuje příkazy pro zobrazení nápovědy a informací o editoru registru"
-    ID_EDIT_NEW_MENU        "Obsahuje příkazy pro vytváření nových klíčů a hodnot"
+    ID_REGISTRY_MENU "Obsahuje příkazy pro práci s celým registrem"
+    ID_EDIT_MENU "Obsahuje příkazy pro úpravu hodnot a klíčů"
+    ID_VIEW_MENU "Obsahuje příkazy pro přizpůsobení okna registru"
+    ID_FAVOURITES_MENU "Obsahuje příkazy pro přístup k často používaným klíčům"
+    ID_HELP_MENU "Obsahuje příkazy pro zobrazení nápovědy a informací o editoru registru"
+    ID_EDIT_NEW_MENU "Obsahuje příkazy pro vytváření nových klíčů a hodnot"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY          "Upravuje data položky"
-    ID_EDIT_NEW_KEY         "Přidá nový klíč"
+    ID_EDIT_MODIFY "Upravuje data položky"
+    ID_EDIT_NEW_KEY "Přidá nový klíč"
     ID_EDIT_NEW_STRINGVALUE "Přidá novou položku ve formě řetězce"
     ID_EDIT_NEW_BINARYVALUE "Přidá novou položku s binární hodnotou"
-    ID_EDIT_NEW_DWORDVALUE  "Přidá novou DWORD položku"
+    ID_EDIT_NEW_DWORDVALUE "Přidá novou DWORD položku"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importuje textový soubor do registru"
-    ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Exportuje všechny části registru do textového souboru"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Připojí se ke vzdálenému registru jiného počítače"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Odpojí se od vzdálenému registru jiného počítače"
-    ID_REGISTRY_PRINT       "Vytiskne všechny části registru"
-/*    ID_HELP_HELPTOPICS      "Otevře témata nápovědy pro editor registru" */
-    ID_HELP_ABOUT           "Zobrazí informace o aplikaci, verzi a copyright"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exportuje všechny části registru do textového souboru"
+    ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"
+    ID_REGISTRY_UNLOADHIVE "Unloads a hive from the registry"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Připojí se ke vzdálenému registru jiného počítače"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odpojí se od vzdálenému registru jiného počítače"
+    ID_REGISTRY_PRINT "Vytiskne všechny části registru"
+/*    ID_HELP_HELPTOPICS "Otevře témata nápovědy pro editor registru" */
+    ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Ukončí editor registru"
+    ID_REGISTRY_EXIT "Ukončí editor registru"
     ID_FAVOURITES_ADDTOFAVOURITES "Přidá klíč do seznamu oblíbených"
     ID_FAVOURITES_REMOVEFAVOURITE "Odebere klíč ze seznamu oblíbených"
-    ID_VIEW_STATUSBAR       "Zobrazí nebo skryje stavový řádek"
-    ID_VIEW_SPLIT           "Upravuje polohu rozdělovače obou panelů"
-    ID_VIEW_REFRESH         "Obnoví okno"
-    ID_EDIT_DELETE          "Smaže výběr"
-    ID_EDIT_RENAME          "Přejmenuje výběr"
-    ID_EDIT_COPYKEYNAME     "Zkopíruje název klíče do schránky"
-    ID_EDIT_FIND            "Vyhledá textový řetězec v klíči, položkách, nebo datech"
-    ID_EDIT_FINDNEXT        "Vyhledá další výskyt textu zadaného v předchozím hledání"
+    ID_VIEW_STATUSBAR "Zobrazí nebo skryje stavový řádek"
+    ID_VIEW_SPLIT "Upravuje polohu rozdělovače obou panelů"
+    ID_VIEW_REFRESH "Obnoví okno"
+    ID_EDIT_DELETE "Smaže výběr"
+    ID_EDIT_RENAME "Přejmenuje výběr"
+    ID_EDIT_COPYKEYNAME "Zkopíruje název klíče do schránky"
+    ID_EDIT_FIND "Vyhledá textový řetězec v klíči, položkách, nebo datech"
+    ID_EDIT_FINDNEXT "Vyhledá další výskyt textu zadaného v předchozím hledání"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR               "Chyba"
-    IDS_WARNING             "Upozornění"
-    IDS_BAD_KEY             "Nelze se dotázat klíče '%s'"
-    IDS_BAD_VALUE           "Nelze se dotázat položky '%s'"
-    IDS_UNSUPPORTED_TYPE    "Nelze upravovat klíče tohoto typu (%ld)"
-    IDS_TOO_BIG_VALUE       "Položka je příliš velká (%ld)"
+    IDS_ERROR "Chyba"
+    IDS_WARNING "Upozornění"
+    IDS_BAD_KEY "Nelze se dotázat klíče '%s'"
+    IDS_BAD_VALUE "Nelze se dotázat položky '%s'"
+    IDS_UNSUPPORTED_TYPE "Nelze upravovat klíče tohoto typu (%ld)"
+    IDS_TOO_BIG_VALUE "Položka je příliš velká (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Položky typu REG_MULTI_SZ nemohou obsahovat prázdné řetezce.\nPrázdné řetězce byly odebrány ze seznamu."
-    IDS_QUERY_DELETE_KEY_ONE    "Opravdu chcete odstranit tento klíč?"
-    IDS_QUERY_DELETE_KEY_MORE   "Opravdu chcete odstranit tyto klíče?"
+    IDS_QUERY_DELETE_KEY_ONE "Opravdu chcete odstranit tento klíč?"
+    IDS_QUERY_DELETE_KEY_MORE "Opravdu chcete odstranit tyto klíče?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Potvrzení smazání klíče"
-    IDS_QUERY_DELETE_ONE    "Opravdu chcete odstranit tuto položku?"
-    IDS_QUERY_DELETE_MORE   "Opravdu chcete odstranit tyto položky?"
+    IDS_QUERY_DELETE_ONE "Opravdu chcete odstranit tuto položku?"
+    IDS_QUERY_DELETE_MORE "Opravdu chcete odstranit tyto položky?"
     IDS_QUERY_DELETE_CONFIRM "Potvrzení odstranění položky"
-    IDS_ERR_DELVAL_CAPTION  "Chyba při odstraňování položek"
-    IDS_ERR_DELETEVALUE     "Nelze odstranit všechny vybrané položky!"
-    IDS_ERR_RENVAL_CAPTION  "Chyba při přejmenování položky"
-    IDS_ERR_RENVAL_TOEMPTY  "Nelze přejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
+    IDS_ERR_DELVAL_CAPTION "Chyba při odstraňování položek"
+    IDS_ERR_DELETEVALUE "Nelze odstranit všechny vybrané položky!"
+    IDS_ERR_RENVAL_CAPTION "Chyba při přejmenování položky"
+    IDS_ERR_RENVAL_TOEMPTY "Nelze přejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
-    IDS_NEW_KEY             "Nový klíč #%d"
-    IDS_NEW_VALUE           "Nová hodnota #%d"
+    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_NEW_KEY "Nový klíč #%d"
+    IDS_NEW_VALUE "Nová hodnota #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY        "(binární položka nulové hodnoty)"
-    IDS_DEFAULT_VALUE_NAME  "(Výchozí)"
-    IDS_VALUE_NOT_SET       "(Hodnota nezadána)"
-    IDS_UNKNOWN_TYPE        "Neznámý typ: (0x%lx)"
-    IDS_MY_COMPUTER         "Tento počítač"
-    IDS_IMPORT_REG_FILE     "Importovat soubor registru"
-    IDS_EXPORT_REG_FILE     "Exportovat do souboru registru"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
-    IDS_INVALID_DWORD       "(Neplatná hodnota DWORD)"
+    IDS_BINARY_EMPTY "(binární položka nulové hodnoty)"
+    IDS_DEFAULT_VALUE_NAME "(Výchozí)"
+    IDS_VALUE_NOT_SET "(Hodnota nezadána)"
+    IDS_UNKNOWN_TYPE "Neznámý typ: (0x%lx)"
+    IDS_MY_COMPUTER "Tento počítač"
+    IDS_IMPORT_REG_FILE "Importovat soubor registru"
+    IDS_EXPORT_REG_FILE "Exportovat do souboru registru"
+    IDS_LOAD_HIVE "Load Hive"
+    IDS_UNLOAD_HIVE "Unload Hive"
+    IDS_INVALID_DWORD "(Neplatná hodnota DWORD)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE         "Soubor registru"
-    IDS_FLT_REGFILES        "Soubory registru (*.reg)"
-    IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
-    IDS_FLT_HIVFILES_FLT    "*.*"
-    IDS_FLT_REGEDIT4        "Soubory registru Win9x/NT4 (REGEDIT4) (*.reg)"
-    IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "Všechny soubory (*.*)"
-    IDS_FLT_ALLFILES_FLT    "*.*"
+    IDS_FLT_REGFILE "Soubor registru"
+    IDS_FLT_REGFILES "Soubory registru (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Soubory registru Win9x/NT4 (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "Všechny soubory (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Úplné oprávnění"
-  IDS_ACCESS_READ               "Čtení"
-  IDS_ACCESS_QUERYVALUE         "Dotaz na hodnotu"
-  IDS_ACCESS_SETVALUE           "Nastavení hodnoty"
-  IDS_ACCESS_CREATESUBKEY       "Vytvořit podklíč"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Zjistit počet podklíčů"
-  IDS_ACCESS_NOTIFY             "Upozornit"
-  IDS_ACCESS_CREATELINK         "Vytvořit odkaz"
-  IDS_ACCESS_DELETE             "Odstranit"
-  IDS_ACCESS_WRITEDAC           "Zapsat DAC"
-  IDS_ACCESS_WRITEOWNER         "Zapsat vlastníka"
-  IDS_ACCESS_READCONTROL        "Oprávnění ke čtení"
+    IDS_ACCESS_FULLCONTROL "Úplné oprávnění"
+    IDS_ACCESS_READ "Čtení"
+    IDS_ACCESS_QUERYVALUE "Dotaz na hodnotu"
+    IDS_ACCESS_SETVALUE "Nastavení hodnoty"
+    IDS_ACCESS_CREATESUBKEY "Vytvořit podklíč"
+    IDS_ACCESS_ENUMERATESUBKEYS "Zjistit počet podklíčů"
+    IDS_ACCESS_NOTIFY "Upozornit"
+    IDS_ACCESS_CREATELINK "Vytvořit odkaz"
+    IDS_ACCESS_DELETE "Odstranit"
+    IDS_ACCESS_WRITEDAC "Zapsat DAC"
+    IDS_ACCESS_WRITEOWNER "Zapsat vlastníka"
+    IDS_ACCESS_READCONTROL "Oprávnění ke čtení"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "Pouze tento klíč"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "Tento klíč a jeho podklíče"
-  IDS_INHERIT_SUBKEYSONLY        "Pouze podklíče"
+    IDS_INHERIT_THISKEYONLY "Pouze tento klíč"
+    IDS_INHERIT_THISKEYANDSUBKEYS "Tento klíč a jeho podklíče"
+    IDS_INHERIT_SUBKEYSONLY "Pouze podklíče"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_EXPAND                     "&Rozbalit"
-  IDS_COLLAPSE                   "&Sbalit"
-  IDS_GOTO_SUGGESTED_KEY         "&Jít na '%s'"
-  IDS_FINISHEDFIND               "Prohledávání registru bylo dokončeno."
+    IDS_EXPAND "&Rozbalit"
+    IDS_COLLAPSE "&Sbalit"
+    IDS_GOTO_SUGGESTED_KEY "&Jít na '%s'"
+    IDS_FINISHEDFIND "Prohledávání registru bylo dokončeno."
 END
 
 STRINGTABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Přidáváním informací můžete neúmyslně změnit nebo odstranit hodnoty a způsobit, že komponenty přestanou správně fungovat\nPokud nevěříte zdroji těchto informací v '%s', nepřidávejte je do registru.\n\nOpravdu chcete pokračovat?"
-  IDS_IMPORT_OK                  "Klíče a hodnoty z '%s' byly úspěšně přidány do registru."
-  IDS_IMPORT_ERROR               "Nelze importovat '%s': Chyba při otevírání souboru. Došlo k chybě disku nebo souborového systému, nebo soubor neexistuje."
-  IDS_EXPORT_ERROR               "Nelze exportovat '%s': Chyba při vytváření či psaní do souboru. Došlo k chybě disku nebo souborového systému."
+    IDS_IMPORT_PROMPT "Přidáváním informací můžete neúmyslně změnit nebo odstranit hodnoty a způsobit, že komponenty přestanou správně fungovat\nPokud nevěříte zdroji těchto informací v '%s', nepřidávejte je do registru.\n\nOpravdu chcete pokračovat?"
+    IDS_IMPORT_OK "Klíče a hodnoty z '%s' byly úspěšně přidány do registru."
+    IDS_IMPORT_ERROR "Nelze importovat '%s': Chyba při otevírání souboru. Došlo k chybě disku nebo souborového systému, nebo soubor neexistuje."
+    IDS_EXPORT_ERROR "Nelze exportovat '%s': Chyba při vytváření či psaní do souboru. Došlo k chybě disku nebo souborového systému."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
-    IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
-    IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_BUSNUMBER "Bus Number"
+    IDS_INTERFACE "Interface"
+    IDS_DMA_CHANNEL "Channel"
+    IDS_DMA_PORT "Port"
+    IDS_INTERRUPT_VECTOR "Vector"
+    IDS_INTERRUPT_LEVEL "Level"
+    IDS_INTERRUPT_AFFINITY "Affinity"
+    IDS_INTERRUPT_TYPE "Type"
+    IDS_MEMORY_ADDRESS "Physical Address"
+    IDS_MEMORY_LENGTH "Length"
+    IDS_MEMORY_ACCESS "Access"
+    IDS_PORT_ADDRESS "Physical Address"
+    IDS_PORT_LENGTH "Length"
+    IDS_PORT_ACCESS "Access"
+    IDS_SPECIFIC_RESERVED1 "Reserved 1"
+    IDS_SPECIFIC_RESERVED2 "Reserved 2"
+    IDS_SPECIFIC_DATASIZE "Data Size"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
+    IDS_PORT_PORT_IO "Port"
+    IDS_PORT_MEMORY_IO "Memory"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_MEMORY_READ_ONLY "Read Only"
+    IDS_MEMORY_WRITE_ONLY "Write Only"
+    IDS_MEMORY_READ_WRITE "Read / Write"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
-    IDS_BUS_ISA                   "ISA"
-    IDS_BUS_EISA                  "EISA"
-    IDS_BUS_MICROCHANNEL          "MicroChannel"
-    IDS_BUS_TURBOCHANNEL          "TurboChannel"
-    IDS_BUS_PCIBUS                "PCI"
-    IDS_BUS_VMEBUS                "VME"
-    IDS_BUS_NUBUS                 "NuBus"
-    IDS_BUS_PCMCIABUS             "PCMCIA"
-    IDS_BUS_CBUS                  "C-Bus"
-    IDS_BUS_MPIBUS                "MPI-Bus"
-    IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
-    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
-    IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNDEFINED "Undefined"
+    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PNPISABUS "PnP-ISA Bus"
+    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
 END
 
 /*****************************************************************/
 
-
-/*
- * Dialog
- */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Rozsah exportu",IDC_STATIC,2,0,366,48
-   CONTROL "&Vše",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "V&ybraná větev",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+    GROUPBOX "Rozsah exportu", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "&Vše", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
+    CONTROL "V&ybraná větev", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Načíst registr"
 FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Klíč:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
+BEGIN
+    LTEXT "&Klíč:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
+END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Přidat do Oblíbených"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,129,24,50,14
-    LTEXT           "&Název oblíbené položky:",IDC_STATIC,7,7,70,10
-    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 129, 24, 50, 14
+    LTEXT "&Název oblíbené položky:", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
@@ -538,11 +495,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Odebrat z Oblíbených"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
-                    WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Vyberte Oblíbené:",IDC_STATIC,7,7,99,12
+    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "Vyberte Oblíbené:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -550,55 +507,38 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Najít"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Najít &další",IDOK,197,7,50,14
-    PUSHBUTTON      "Storno",IDCANCEL,197,24,50,14
-    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
-    LTEXT           "&Najít:",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Klíče",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,36,35,8
-    CONTROL         "&Hodnoty",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,36,8
-    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,60,42,8
-    CONTROL         "Hledat pouze &celý řetězec",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Rozlišovat &velikost písmen",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,90,12
+    DEFPUSHBUTTON "Najít &další", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "Look at", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "&Najít:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    CONTROL "&Klíče", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 35, 8
+    CONTROL "&Hodnoty", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 36, 8
+    CONTROL "&Data", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "Hledat pouze &celý řetězec", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 94, 13
+    CONTROL "Rozlišovat &velikost písmen", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 48, 90, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Najít"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "Storno",IDCANCEL,93,29,45,14
-    LTEXT           "Probíhá prohledávání registru...",IDC_STATIC,33,12,83,8
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "Storno", IDCANCEL, 93, 29, 45, 14
+    LTEXT "Probíhá prohledávání registru...", IDC_STATIC, 33, 12, 83, 8
 END
 
-/*
- * TEXTINCLUDE
- */
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-
-
-/*
- * String Table
- */
-
+/* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Otevře nápovědu pro editor registru."
- *    ID_HELP_ABOUT           "Zobrazí informace o aplikaci, verzi a copyright."
+ *    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru."
+ *    ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright."
  *END
  */
-
-/*****************************************************************/

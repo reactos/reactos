@@ -53,10 +53,3 @@ target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
 add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
-
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(rpcrt4)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()

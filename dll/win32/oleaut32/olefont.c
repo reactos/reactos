@@ -21,31 +21,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
 
-//#include <assert.h>
-//#include <stdarg.h>
-#include <string.h>
+#include "precomp.h"
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "winerror.h"
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-//#include "winuser.h"
 #include <wine/list.h>
-#include <wine/unicode.h>
-#include <objbase.h>
-#include <oleauto.h>    /* for SysAllocString(....) */
-//#include "ole2.h"
-#include <olectl.h>
-#include <wine/debug.h>
-#include "connpt.h" /* for CreateConnectionPoint */
-//#include "oaidl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

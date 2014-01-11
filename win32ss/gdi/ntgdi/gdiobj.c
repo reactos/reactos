@@ -249,6 +249,7 @@ IncrementGdiHandleCount(ULONG ulProcessId)
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedIncrement((LONG*)&ppi->GDIHandleCount);
+    if (NT_SUCCESS(Status)) ObDereferenceObject(pep);
 }
 
 FORCEINLINE
@@ -264,6 +265,7 @@ DecrementGdiHandleCount(ULONG ulProcessId)
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
+    if (NT_SUCCESS(Status)) ObDereferenceObject(pep);
 }
 
 static

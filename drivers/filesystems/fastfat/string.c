@@ -9,15 +9,18 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "vfat.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
 const WCHAR *long_illegals = L"\"*\\<>/?:|";
 
 BOOLEAN
-vfatIsLongIllegal(WCHAR c)
+vfatIsLongIllegal(
+    WCHAR c)
 {
-  return wcschr(long_illegals, c) ? TRUE : FALSE;
+    return wcschr(long_illegals, c) ? TRUE : FALSE;
 }

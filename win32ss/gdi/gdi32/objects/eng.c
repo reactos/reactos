@@ -112,11 +112,14 @@ EngFindResource(HANDLE h,
     HGLOBAL Hg;
     LPVOID Lock = NULL;
 
-    if ((HRSrc = FindResourceW( (HMODULE) h, MAKEINTRESOURCEW(iName), MAKEINTRESOURCEW(iType))))
+    HRSrc = FindResourceW((HMODULE)h, MAKEINTRESOURCEW(iName), MAKEINTRESOURCEW(iType));
+    if (HRSrc != NULL)
     {
-        if ((Size = SizeofResource( (HMODULE) h, HRSrc )))
+        Size = SizeofResource((HMODULE)h, HRSrc);
+        if (Size != 0)
         {
-            if ((Hg = LoadResource( (HMODULE) h, HRSrc )))
+            Hg = LoadResource((HMODULE)h, HRSrc);
+            if (Hg != NULL)
             {
                 Lock = LockResource( Hg );
             }

@@ -6,7 +6,7 @@ CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Koble til med:", -1, 9,9,217,8
+    LTEXT "Koble til med:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Konfigurere", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Komponentene bruker følgende elementer for tilkobling:", -1, 9, 59, 217, 8
@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
@@ -44,12 +44,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "&Egenskaper", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "&Deaktiver", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hjelp"
 FONT 8, "MS Shell Dlg"
@@ -59,16 +59,14 @@ BEGIN
     LTEXT "IP adresse:", -1, 22, 34, 80, 8
     LTEXT "Subnet maske:", -1, 22, 48, 80, 8
     LTEXT "Standard Gateway:", -1, 22, 62, 80, 8
-
     RTEXT "Ikke tilgjengelig", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
-
     PUSHBUTTON "&Detaljer...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Nettverk tilkobling detaljer"
 FONT 8, "MS Shell Dlg"
@@ -80,47 +78,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Fysisk adresse"
-    IDS_IP_ADDRESS              "IP addresse"
-    IDS_SUBNET_MASK             "Subnet Maske"
-    IDS_DEF_GATEWAY             "Standard Gateway"
-    IDS_DHCP_SERVER             "DHCP tjener"
-    IDS_LEASE_OBTAINED          "Lease Obtained"
-    IDS_LEASE_EXPIRES           "Lease Expires"
-    IDS_DNS_SERVERS             "DNS tjenere"
-    IDS_WINS_SERVERS            "WINS tjenere"
-    IDS_PROPERTY                "Egenskaper"
-    IDS_VALUE                   "Verdi"
-    IDS_NETWORKCONNECTION       "Nettverk tilkobling"
-    IDS_SHV_COLUMN_NAME         "Navn"
-    IDS_SHV_COLUMN_TYPE         "Type"
-    IDS_SHV_COLUMN_STATE        "Status"
-    IDS_SHV_COLUMN_DEVNAME      "Enhetsnavn"
-    IDS_SHV_COLUMN_PHONE        "Telefon # eller vert addresse"
-    IDS_SHV_COLUMN_OWNER        "Eier"
-    IDS_TYPE_ETHERNET           "Nettverk eller høy-hastighet internett"
-    IDS_STATUS_NON_OPERATIONAL  "Deaktivert"
-    IDS_STATUS_UNREACHABLE      "Ikke tilkoblet"
-    IDS_STATUS_DISCONNECTED     "Nettverkkabel er frakoblet"
-    IDS_STATUS_CONNECTING       "Henter nettverk addresse"
-    IDS_STATUS_CONNECTED        "Tilkoblet"
-    IDS_STATUS_OPERATIONAL      "Tilkoblet"
-
-    IDS_NET_ACTIVATE            "Aktivere"
-    IDS_NET_DEACTIVATE          "Deaktivere"
-    IDS_NET_STATUS              "Status"
-    IDS_NET_REPAIR              "Reparere"
-    IDS_NET_CREATELINK          "Opprett snarvei"
-    IDS_NET_DELETE              "Slett"
-    IDS_NET_RENAME              "Rename"
-    IDS_NET_PROPERTIES          "Egenskaper"
-
-    IDS_FORMAT_BIT              "%u Bit/s"
-    IDS_FORMAT_KBIT             "%u KBit/s"
-    IDS_FORMAT_MBIT             "%u MBit/s"
-    IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d dag %s"
-    IDS_DURATION_DAYS           "%d dager %s"
-    IDS_ASSIGNED_DHCP           "Tilordnet av DHCP"
-    IDS_ASSIGNED_MANUAL         "Manuelt konfigurert"
+    IDS_PHYSICAL_ADDRESS "Fysisk adresse"
+    IDS_IP_ADDRESS "IP addresse"
+    IDS_SUBNET_MASK "Subnet Maske"
+    IDS_DEF_GATEWAY "Standard Gateway"
+    IDS_DHCP_SERVER "DHCP tjener"
+    IDS_LEASE_OBTAINED "Lease Obtained"
+    IDS_LEASE_EXPIRES "Lease Expires"
+    IDS_DNS_SERVERS "DNS tjenere"
+    IDS_WINS_SERVERS "WINS tjenere"
+    IDS_PROPERTY "Egenskaper"
+    IDS_VALUE "Verdi"
+    IDS_NETWORKCONNECTION "Nettverk tilkobling"
+    IDS_SHV_COLUMN_NAME "Navn"
+    IDS_SHV_COLUMN_TYPE "Type"
+    IDS_SHV_COLUMN_STATE "Status"
+    IDS_SHV_COLUMN_DEVNAME "Enhetsnavn"
+    IDS_SHV_COLUMN_PHONE "Telefon # eller vert addresse"
+    IDS_SHV_COLUMN_OWNER "Eier"
+    IDS_TYPE_ETHERNET "Nettverk eller høy-hastighet internett"
+    IDS_STATUS_NON_OPERATIONAL "Deaktivert"
+    IDS_STATUS_UNREACHABLE "Ikke tilkoblet"
+    IDS_STATUS_DISCONNECTED "Nettverkkabel er frakoblet"
+    IDS_STATUS_CONNECTING "Henter nettverk addresse"
+    IDS_STATUS_CONNECTED "Tilkoblet"
+    IDS_STATUS_OPERATIONAL "Tilkoblet"
+    IDS_NET_ACTIVATE "Aktivere"
+    IDS_NET_DEACTIVATE "Deaktivere"
+    IDS_NET_STATUS "Status"
+    IDS_NET_REPAIR "Reparere"
+    IDS_NET_CREATELINK "Opprett snarvei"
+    IDS_NET_DELETE "Slett"
+    IDS_NET_RENAME "Rename"
+    IDS_NET_PROPERTIES "Egenskaper"
+    IDS_FORMAT_BIT "%u Bit/s"
+    IDS_FORMAT_KBIT "%u KBit/s"
+    IDS_FORMAT_MBIT "%u MBit/s"
+    IDS_FORMAT_GBIT "%u GBit/s"
+    IDS_DURATION_DAY "%d dag %s"
+    IDS_DURATION_DAYS "%d dager %s"
+    IDS_ASSIGNED_DHCP "Tilordnet av DHCP"
+    IDS_ASSIGNED_MANUAL "Manuelt konfigurert"
 END

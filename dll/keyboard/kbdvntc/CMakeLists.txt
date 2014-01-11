@@ -5,7 +5,7 @@ spec2def(kbdvntc.dll kbdvntc.spec)
 
 add_library(kbdvntc SHARED kbdvntc.c kbdvntc.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdvntc.def)
 
-set_entrypoint(kbdvntc 0)
+set_module_type(kbdvntc kbdlayout)
 
 add_dependencies(kbdvntc psdk)
 

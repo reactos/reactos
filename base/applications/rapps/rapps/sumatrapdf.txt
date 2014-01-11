@@ -35,5 +35,8 @@ Description = Lector PDF - ușor, gratuit (open-source), și portabil.
 Size = 4,0 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
+[Section.041f]
+Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Taşınabilirdir.
+
 [Section.0813]
 Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.

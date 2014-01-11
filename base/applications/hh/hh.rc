@@ -1,8 +1,6 @@
-//#include <windows.h>
-
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS HTML Help Executable\0"
-#define REACTOS_STR_INTERNAL_NAME	"hh\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"hh.exe\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS HTML Help Executable"
+#define REACTOS_STR_INTERNAL_NAME     "hh"
+#define REACTOS_STR_ORIGINAL_FILENAME "hh.exe"
 #include <reactos/version.rc>
 
 2 ICON hh.ico

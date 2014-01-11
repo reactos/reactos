@@ -23,12 +23,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "imports.h"
-#include "formats.h"
-#include "mfeatures.h"
-#include "macros.h"
-
+#include <precomp.h>
 
 /**
  * Information about texture formats.

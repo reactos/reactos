@@ -34,6 +34,9 @@ Description = Edytor tekstu.
 Description = Procesor de text.
 Size = 9,4 Mo
 
+[Section.041f]
+Description = Bir kelime işlemci.
+
 [Section.0422]
 Description = Текстовий процесор.
 

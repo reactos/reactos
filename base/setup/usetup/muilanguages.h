@@ -412,7 +412,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"00000436", L"1252", L"850", L"10000", L"Afrikaans", L"1", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, afZALayouts },
 #endif
 #ifdef LANGUAGE_SQ_AL
-     {L"0000041C", L"1250", L"852", L"10029", L"Albanian", L"355", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, sqALLayouts },
+    {L"0000041C", L"1250", L"852", L"10029", L"Albanian (Albania)", L"355", sqALPages, sqALErrorEntries, sqALStrings, LatinFonts, sqALLayouts },
 #endif
 #ifdef LANGUAGE_AR_SA
      {L"00000401", L"1256", L"720", L"10004", L"Arabic (Saudi Arabia)", L"966", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arSALayouts },
@@ -511,7 +511,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"00000406", L"1252", L"850", L"10000", L"Danish", L"45", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, daDKLayouts },
 #endif
 #ifdef LANGUAGE_DV_MV
-     {L"00000465", L"0", L"1", L"2", L"Divehi (Maldives)", L"960", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, dvMVLayouts },
+     {L"00000465", L"0", L"1", L"2", L"Dhivehi (Maldives)", L"960", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, dvMVLayouts },
 #endif
 #ifdef LANGUAGE_NL_NL
      {L"00000413", L"1252", L"850", L"10000", L"Dutch (Netherlands)", L"31", nlNLPages, nlNLErrorEntries, nlNLStrings, LatinFonts, nlNLLayouts },
@@ -805,7 +805,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"0000041E", L"874", L"874", L"10021", L"Thai", L"1", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, thTHLayouts },
 #endif
 #ifdef LANGUAGE_TR_TR
-     {L"0000041F", L"1254", L"857", L"10081", L"Turkish", L"90", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, trTRLayouts },
+     {L"0000041F", L"1254", L"857", L"10081", L"Turkish", L"90", trTRPages, trTRErrorEntries, trTRStrings, LatinFonts, trTRLayouts },
 #endif
 #ifdef LANGUAGE_UK_UA
      {L"00000422", L"1251", L"866", L"10017", L"Ukrainian", L"380", ukUAPages, ukUAErrorEntries, ukUAStrings, CyrillicFonts, ukUALayouts },

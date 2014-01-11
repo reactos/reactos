@@ -44,16 +44,6 @@
                              RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENTION_LOCK)
 #define RTL_SRWLOCK_BITS    4
 
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303)
-/* This macro will cause the code to assert if compiled with a buggy
-   version of GCC that doesn't align the wait blocks properly on the stack! */
-#define ASSERT_SRW_WAITBLOCK(ptr) \
-    ASSERT(((ULONG_PTR)ptr & ((1 << RTL_SRWLOCK_BITS) - 1)) == 0)
-#else
-#define ASSERT_SRW_WAITBLOCK(ptr) ((void)0)
-#endif
-
 typedef struct _RTLP_SRWLOCK_SHARED_WAKE
 {
     LONG Wake;
@@ -231,7 +221,6 @@ RtlpAcquireWaitBlockLock(IN OUT PRTL_SRWLOCK SRWLock)
 
     WaitBlock = (PRTLP_SRWLOCK_WAITBLOCK)(PrevValue & ~RTL_SRWLOCK_MASK);
 
-    ASSERT_SRW_WAITBLOCK(WaitBlock);
     return WaitBlock;
 }
 
@@ -395,8 +384,6 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
 
                     Shared->LastSharedWake = &SharedWake;
 
-                    ASSERT_SRW_WAITBLOCK(Shared);
-
                     RtlpReleaseWaitBlockLock(SRWLock);
 
                     RtlpAcquireSRWLockSharedWait(SRWLock,
@@ -467,8 +454,6 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                             Shared->LastSharedWake->Next = &SharedWake;
                         }
 
-                        ASSERT_SRW_WAITBLOCK(Shared);
-
                         Shared->SharedCount++;
                         Shared->LastSharedWake = &SharedWake;
 
@@ -495,8 +480,6 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                     StackWaitBlock.Last = &StackWaitBlock;
                     StackWaitBlock.SharedWakeChain = &SharedWake;
                     StackWaitBlock.LastSharedWake = &SharedWake;
-
-                    ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
 
                     NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_OWNED | RTL_SRWLOCK_CONTENDED;
                     if ((LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr,
@@ -635,8 +618,6 @@ RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock)
                     StackWaitBlock.Last = &StackWaitBlock;
                     StackWaitBlock.Wake = 0;
 
-                    ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
-
                     NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENDED | RTL_SRWLOCK_OWNED;
 
                     if ((LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr,
@@ -666,8 +647,6 @@ AddWaitBlock:
                         StackWaitBlock.Last = &StackWaitBlock;
                         StackWaitBlock.Wake = 0;
 
-                        ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
-
                         First = RtlpAcquireWaitBlockLock(SRWLock);
                         if (First != NULL)
                         {
@@ -693,8 +672,6 @@ AddWaitBlock:
                         StackWaitBlock.Next = NULL;
                         StackWaitBlock.Last = &StackWaitBlock;
                         StackWaitBlock.Wake = 0;
-
-                        ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
 
                         NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_OWNED | RTL_SRWLOCK_CONTENDED;
                         if ((LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr,

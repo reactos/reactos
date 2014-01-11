@@ -21,7 +21,8 @@
 
 #include "setupapi_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+#include <winsvc.h>
+#include <ndk/cmfuncs.h>
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};

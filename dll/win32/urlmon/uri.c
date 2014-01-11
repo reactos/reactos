@@ -17,13 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <limits.h>
-
 #include "urlmon_main.h"
-#include <wine/debug.h>
-
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
 
 #include <strsafe.h>
 
@@ -41,8 +35,6 @@
 #define RAW_URI_CONVERT_TO_DOS_PATH 0x2
 
 #define COMBINE_URI_FORCE_FLAG_USE  0x1
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const IID IID_IUriObj = {0x4b364760,0x9f51,0x11df,{0x98,0x1c,0x08,0x00,0x20,0x0c,0x9a,0x66}};
 

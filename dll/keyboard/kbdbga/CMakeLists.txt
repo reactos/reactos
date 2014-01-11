@@ -5,7 +5,7 @@ spec2def(kbdbga.dll kbdbga.spec)
 
 add_library(kbdbga SHARED kbdbga.c kbdbga.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbga.def)
 
-set_entrypoint(kbdbga 0)
+set_module_type(kbdbga kbdlayout)
 
 add_dependencies(kbdbga psdk)
 

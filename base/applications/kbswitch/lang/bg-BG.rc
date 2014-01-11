@@ -4,8 +4,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Предпочитания...",  ID_PREFERENCES
+        MENUITEM "&Предпочитания...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход",            ID_EXIT
+        MENUITEM "Из&ход", ID_EXIT
     END
 END

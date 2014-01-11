@@ -1,0 +1,41 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nKonfiguro nje adaptor WLAN'i.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tLidhet me nje furnizues SSID,\n\
+\t-w WEP\t\tSpecifikon nje çeles WEP për përdorim.\n\
+\t-a\t\tSpecifikon nje objektiv rrjeti si ad-hoc\n\
+\t-d\t\tShkeputet nga AP'ja aktual.\n\
+\t-s\t\tSkanon dhe shfaq liste e pikave te aksesit\n\
+\t\t\tnë zonë.\n\n\
+Duke kaluar pa parametra do të shfaq informacion në lidhje me gjendejn e tanishme të WLAN\n"
+    IDS_NO_NETWORK "Nuk gjinden rrjete ne zone\n"
+    IDS_NO_WLAN_ADAPTER "E pamundur gjetja e nje adapteri WLAN ne sistem\n"
+    IDS_SUCCESS "Operacioni përfundoi me sukses.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN u shkeput\n"
+    IDS_MSG_WEP_ENABLED "WEP aktivizua: %s\n"
+    IDS_MSG_NETWORK_MODE "Mënyra e rrjetit: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformacionet e konfigurimit aktual te wireless'it:\n\n"
+    IDS_MSG_ENCRYPTED "E'kriptuar: %s\n"
+    IDS_MSG_NETWORK_TYPE "Tipi Rrjetit: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Masa suportuse (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Forca e transmetimit: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Numri i antenave: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antene transmetuese: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antene transmetuese: Any\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antene marrese: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antene marrese: Any\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Copëzim fragmentimi: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Copezim RTS: %d bytes\n"
+    IDS_YES "pO"
+    IDS_NO "jo"
+    IDS_ADHOC "Adhoc"
+    IDS_INFRASTRUCTURE "Infrastruktura"
+END

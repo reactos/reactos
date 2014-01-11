@@ -28,14 +28,10 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
-
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 const LPCTSTR C_DRIVE = C_DRIVE_STR;
 #endif
-
 
 ShellBrowser::ShellBrowser(HWND hwnd, HWND hwndFrame, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
 							BrowserCallback* cb, CtxMenuInterfaces& cm_ifs)

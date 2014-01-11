@@ -16,16 +16,16 @@
  *
  */
 
+#ifndef _MINGW_FLOAT_H_
+#define _MINGW_FLOAT_H_
+
 #if defined(__GNUC__)
-#include <gcc_float.h>
+#include "mingw32/gcc_float.h"
 #elif defined(_MSC_VER)
-#include <msc_float.h>
+#include "msc/msc_float.h"
 #else
 #error
 #endif
-
-#ifndef _MINGW_FLOAT_H_
-#define _MINGW_FLOAT_H_
 
 #include <crtdefs.h>
 

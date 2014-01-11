@@ -48,3 +48,5 @@
 
 #include "globals.h"
 #include "externals.h"
+
+#include "resource.h"

@@ -16,17 +16,8 @@
 #define EXPORT __declspec(dllexport)
 
 
-//#include <stdio.h>
-//#include <windows.h>
-//#include <mmsystem.h>
-//#include <mmddk.h>
-
 // This needs to be done to get winioctl.h to work:
 //typedef unsigned __int64 DWORD64, *PDWORD64;
-
-//#include <winioctl.h>
-//#include "mmddk.h"
-
 
 #define SOUND_MAX_DEVICE_NAME 1024   // GUESSWORK
 #define SOUND_MAX_DEVICES 256       // GUESSWORK

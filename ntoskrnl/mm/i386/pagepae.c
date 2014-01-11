@@ -810,126 +810,6 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
-/*
- * FUNCTION: Delete a virtual mapping
- */
-{
-   BOOLEAN WasValid;
-   if (Ke386Pae)
-   {
-      ULONGLONG Pte;
-      ULONGLONG tmpPte;
-      PULONGLONG Pt;
-
-      Pt = MmGetPageTableForProcessForPAE(Process, Address, FALSE);
-      if (Pt == NULL)
-      {
-         ASSERT(FALSE);
-      }
-      /*
-       * Atomically disable the present bit and get the old value.
-       */
-      do
-      {
-         Pte = *Pt;
-         tmpPte = Pte & ~PA_PRESENT;
-      } while (Pte != ExfInterlockedCompareExchange64UL(Pt, &tmpPte, &Pte));
-
-      MiFlushTlb((PULONG)Pt, Address);
-      WasValid = PAE_PAGE_MASK(Pte) != 0LL ? TRUE : FALSE;
-      if (!WasValid)
-      {
-         ASSERT(FALSE);
-      }
-
-      /*
-       * Return some information to the caller
-       */
-      if (WasDirty != NULL)
-      {
-         *WasDirty = Pte & PA_DIRTY ? TRUE : FALSE;
-      }
-      if (Page != NULL)
-      {
-         *Page = PAE_PTE_TO_PFN(Pte);
-      }
-   }
-   else
-   {
-      ULONG Pte;
-      PULONG Pt;
-
-      Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-      if (Pt == NULL)
-      {
-         ASSERT(FALSE);
-      }
-      /*
-       * Atomically disable the present bit and get the old value.
-       */
-      do
-      {
-        Pte = *Pt;
-      } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_PRESENT, Pte));
-
-      MiFlushTlb(Pt, Address);
-      WasValid = (PAGE_MASK(Pte) != 0);
-      if (!WasValid)
-      {
-         ASSERT(FALSE);
-      }
-
-      /*
-       * Return some information to the caller
-       */
-      if (WasDirty != NULL)
-      {
-         *WasDirty = Pte & PA_DIRTY;
-      }
-      if (Page != NULL)
-      {
-         *Page = PTE_TO_PFN(Pte);
-      }
-   }
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address)
-{
-   if (Ke386Pae)
-   {
-      PULONGLONG Pt;
-      ULONGLONG ZeroPte = 0LL;
-      Pt = MmGetPageTableForProcessForPAE(NULL, Address, FALSE);
-      if (Pt)
-      {
-         /*
-          * Set the entry to zero
-          */
-         (void)ExfpInterlockedExchange64UL(Pt, &ZeroPte);
-         MiFlushTlb((PULONG)Pt, Address);
-      }
-   }
-   else
-   {
-      PULONG Pt;
-
-      Pt = MmGetPageTableForProcess(NULL, Address, FALSE);
-      if (Pt && *Pt)
-      {
-         /*
-          * Set the entry to zero
-          */
-         (void)InterlockedExchangeUL(Pt, 0);
-         MiFlushTlb(Pt, Address);
-      }
-   }
-}
-
-VOID
-NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
                        BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
@@ -2431,13 +2311,11 @@ MiInitPageDirectoryMap(VOID)
 {
    MEMORY_AREA* kernel_map_desc = NULL;
    MEMORY_AREA* hyperspace_desc = NULL;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PVOID BaseAddress;
    NTSTATUS Status;
 
    DPRINT("MiInitPageDirectoryMap()\n");
 
-   BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_SYSTEM,
@@ -2447,7 +2325,7 @@ MiInitPageDirectoryMap(VOID)
                                &kernel_map_desc,
                                TRUE,
                                0,
-                               BoundaryAddressMultiple);
+                               PAGE_SIZE);
    if (!NT_SUCCESS(Status))
    {
       ASSERT(FALSE);
@@ -2461,7 +2339,7 @@ MiInitPageDirectoryMap(VOID)
                                &hyperspace_desc,
                                TRUE,
                                0,
-                               BoundaryAddressMultiple);
+                               PAGE_SIZE);
    if (!NT_SUCCESS(Status))
    {
       ASSERT(FALSE);

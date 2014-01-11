@@ -21,9 +21,9 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"xcopy command\0"
-#define REACTOS_STR_INTERNAL_NAME	"xcopy\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"xcopy.exe\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "xcopy command"
+#define REACTOS_STR_INTERNAL_NAME     "xcopy"
+#define REACTOS_STR_ORIGINAL_FILENAME "xcopy.exe"
 #include <reactos/version.rc>
 
 #ifdef LANGUAGE_DA_DK
@@ -43,6 +43,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #endif
 
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/De.rc"
 #endif
@@ -81,6 +83,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/Sv.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/Sq.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"

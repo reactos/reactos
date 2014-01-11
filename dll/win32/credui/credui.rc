@@ -83,6 +83,9 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #ifdef LANGUAGE_SL_SI
     #include "lang/credui_Si.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/credui_Tr.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/credui_Uk.rc"
 #endif

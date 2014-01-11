@@ -6,7 +6,7 @@ CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "התחבר באמצעות:", -1, 9,9,217,8
+    LTEXT "התחבר באמצעות:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "הגדרה", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Components checked are used by this connection:", -1, 9, 59, 217, 8
@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
@@ -44,12 +44,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "מאפיינים", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "הפסק", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "תמיכה"
 FONT 8, "MS Shell Dlg"
@@ -59,16 +59,14 @@ BEGIN
     LTEXT "כתובת IP:", -1, 22, 34, 80, 8
     LTEXT "מסכת רשת משנה:", -1, 22, 48, 80, 8
     LTEXT "שער ברירת מחדל:", -1, 22, 62, 80, 8
-
     RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
-
     PUSHBUTTON "מאפיינים...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "פרטי חיבור הרשת"
 FONT 8, "MS Shell Dlg"
@@ -80,47 +78,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "כתובת פיזית"
-    IDS_IP_ADDRESS              "כתובת IP"
-    IDS_SUBNET_MASK             "מסכת רשת משנה"
-    IDS_DEF_GATEWAY             "שער ברירת מחדל"
-    IDS_DHCP_SERVER             "שרת DHCP"
-    IDS_LEASE_OBTAINED          "חכירה הושגה"
-    IDS_LEASE_EXPIRES           "פקיעת תוקף החכירה"
-    IDS_DNS_SERVERS             "שרתי DNS"
-    IDS_WINS_SERVERS            "שרתי WINS"
-    IDS_PROPERTY                "מאפיין"
-    IDS_VALUE                   "ערך"
-    IDS_NETWORKCONNECTION       "חיבור רשת"
-    IDS_SHV_COLUMN_NAME         "שם"
-    IDS_SHV_COLUMN_TYPE         "סוג"
-    IDS_SHV_COLUMN_STATE        "מצב"
-    IDS_SHV_COLUMN_DEVNAME      "שם התקן"
-    IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-    IDS_SHV_COLUMN_OWNER        "בעלים"
-    IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-    IDS_STATUS_NON_OPERATIONAL  "מופסק"
-    IDS_STATUS_UNREACHABLE      "לא מחובר"
-    IDS_STATUS_DISCONNECTED     "כבל רשת מנותק"
-    IDS_STATUS_CONNECTING       "משיג כתובת רשת"
-    IDS_STATUS_CONNECTED        "מחובר"
-    IDS_STATUS_OPERATIONAL      "מחובר"
-
-    IDS_NET_ACTIVATE            "הפעל"
-    IDS_NET_DEACTIVATE          "הפסק"
-    IDS_NET_STATUS              "מצב"
-    IDS_NET_REPAIR              "תקן"
-    IDS_NET_CREATELINK          "צור קיצור דרך"
-    IDS_NET_DELETE              "מחק"
-    IDS_NET_RENAME              "שנה שם"
-    IDS_NET_PROPERTIES          "מאפיינים"
-
-    IDS_FORMAT_BIT              "%u Bit/s"
-    IDS_FORMAT_KBIT             "%u KBit/s"
-    IDS_FORMAT_MBIT             "%u MBit/s"
-    IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d יום %s"
-    IDS_DURATION_DAYS           "%d ימים %s"
-    IDS_ASSIGNED_DHCP           "מוקצה ע""י DHCP"
-    IDS_ASSIGNED_MANUAL         "מוגדר ידנית"
+    IDS_PHYSICAL_ADDRESS "כתובת פיזית"
+    IDS_IP_ADDRESS "כתובת IP"
+    IDS_SUBNET_MASK "מסכת רשת משנה"
+    IDS_DEF_GATEWAY "שער ברירת מחדל"
+    IDS_DHCP_SERVER "שרת DHCP"
+    IDS_LEASE_OBTAINED "חכירה הושגה"
+    IDS_LEASE_EXPIRES "פקיעת תוקף החכירה"
+    IDS_DNS_SERVERS "שרתי DNS"
+    IDS_WINS_SERVERS "שרתי WINS"
+    IDS_PROPERTY "מאפיין"
+    IDS_VALUE "ערך"
+    IDS_NETWORKCONNECTION "חיבור רשת"
+    IDS_SHV_COLUMN_NAME "שם"
+    IDS_SHV_COLUMN_TYPE "סוג"
+    IDS_SHV_COLUMN_STATE "מצב"
+    IDS_SHV_COLUMN_DEVNAME "שם התקן"
+    IDS_SHV_COLUMN_PHONE "Phone # or Host Address"
+    IDS_SHV_COLUMN_OWNER "בעלים"
+    IDS_TYPE_ETHERNET "LAN or High-Speed Internet"
+    IDS_STATUS_NON_OPERATIONAL "מופסק"
+    IDS_STATUS_UNREACHABLE "לא מחובר"
+    IDS_STATUS_DISCONNECTED "כבל רשת מנותק"
+    IDS_STATUS_CONNECTING "משיג כתובת רשת"
+    IDS_STATUS_CONNECTED "מחובר"
+    IDS_STATUS_OPERATIONAL "מחובר"
+    IDS_NET_ACTIVATE "הפעל"
+    IDS_NET_DEACTIVATE "הפסק"
+    IDS_NET_STATUS "מצב"
+    IDS_NET_REPAIR "תקן"
+    IDS_NET_CREATELINK "צור קיצור דרך"
+    IDS_NET_DELETE "מחק"
+    IDS_NET_RENAME "שנה שם"
+    IDS_NET_PROPERTIES "מאפיינים"
+    IDS_FORMAT_BIT "%u Bit/s"
+    IDS_FORMAT_KBIT "%u KBit/s"
+    IDS_FORMAT_MBIT "%u MBit/s"
+    IDS_FORMAT_GBIT "%u GBit/s"
+    IDS_DURATION_DAY "%d יום %s"
+    IDS_DURATION_DAYS "%d ימים %s"
+    IDS_ASSIGNED_DHCP "מוקצה ע""י DHCP"
+    IDS_ASSIGNED_MANUAL "מוגדר ידנית"
 END

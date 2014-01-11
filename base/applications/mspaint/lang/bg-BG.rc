@@ -1,9 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
+ * PROJECT:  PAINT for ReactOS
+ * LICENSE:  LGPL
  * Превод на Български/ Bulgarian translation
  * http://www.reactos.org/wiki/Bulgarian_translation
- * LOCATION: \base\applications\mspaint\lang
+ * LOCATION: base/applications/mspaint/lang
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Изход\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Обработка"
     BEGIN
         MENUITEM "Отмяна\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "Запомняне в...", IDM_EDITCOPYTO
         MENUITEM "Поставяне в...", IDM_EDITPASTEFROM
     END
-
     POPUP "Из&глед"
     BEGIN
         MENUITEM "Кутия с принадлежности\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "Цял екран", IDM_VIEWFULLSCREEN
     END
-
     POPUP "Из&ображение"
     BEGIN
         MENUITEM "Завъртане/Огледало\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "Изтриване на изображението\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Непрозрачно изчертаване", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Цветове"
     BEGIN
         MENUITEM "Промяна на палитрите...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "Помощ", IDM_HELPHELPTOPICS
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Рисуване"
-    IDS_WINDOWTITLE, "%s - рисуване"
-    IDS_INFOTITLE, "Рисувач (Paint) за РеактОС"
-    IDS_INFOTEXT, "Рисувач (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL) версия 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Искате ли да запишете промените в %s?"
-    IDS_DEFAULTFILENAME, "Без име.bmp"
-    IDS_MINIATURETITLE, "Изображенийце"
-    IDS_TOOLTIP1, "Свободно избиране"
-    IDS_TOOLTIP2, "Избор"
-    IDS_TOOLTIP3, "Гумичка"
-    IDS_TOOLTIP4, "Запълване с цвят"
-    IDS_TOOLTIP5, "Избор на цвят"
-    IDS_TOOLTIP6, "Приближение"
-    IDS_TOOLTIP7, "Молив"
-    IDS_TOOLTIP8, "Четка"
-    IDS_TOOLTIP9, "Пръскалка"
-    IDS_TOOLTIP10, "Текст"
-    IDS_TOOLTIP11, "Черта"
-    IDS_TOOLTIP12, "Крива на Безие"
-    IDS_TOOLTIP13, "Правоъгълник"
-    IDS_TOOLTIP14, "Многоъгълник"
-    IDS_TOOLTIP15, "Елипса"
-    IDS_TOOLTIP16, "Заоблен правоъгълник"
-    IDS_OPENFILTER, "Файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Всички файлове (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 разрядни файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d разряда"
-    IDS_PRINTRES, "%d x %d точки на метър"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Рисуване"
+    IDS_WINDOWTITLE "%s - рисуване"
+    IDS_INFOTITLE "Рисувач (Paint) за РеактОС"
+    IDS_INFOTEXT "Рисувач (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL) версия 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Искате ли да запишете промените в %s?"
+    IDS_DEFAULTFILENAME "Без име.bmp"
+    IDS_MINIATURETITLE "Изображенийце"
+    IDS_TOOLTIP1 "Свободно избиране"
+    IDS_TOOLTIP2 "Избор"
+    IDS_TOOLTIP3 "Гумичка"
+    IDS_TOOLTIP4 "Запълване с цвят"
+    IDS_TOOLTIP5 "Избор на цвят"
+    IDS_TOOLTIP6 "Приближение"
+    IDS_TOOLTIP7 "Молив"
+    IDS_TOOLTIP8 "Четка"
+    IDS_TOOLTIP9 "Пръскалка"
+    IDS_TOOLTIP10 "Текст"
+    IDS_TOOLTIP11 "Черта"
+    IDS_TOOLTIP12 "Крива на Безие"
+    IDS_TOOLTIP13 "Правоъгълник"
+    IDS_TOOLTIP14 "Многоъгълник"
+    IDS_TOOLTIP15 "Елипса"
+    IDS_TOOLTIP16 "Заоблен правоъгълник"
+    IDS_OPENFILTER "Файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Всички файлове (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 разрядни файлове bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d разряда"
+    IDS_PRINTRES "%d x %d точки на метър"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

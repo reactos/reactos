@@ -51,6 +51,8 @@
 #include "main/imports.h"
 #include "common_x86_asm.h"
 
+#include <pseh/pseh2.h>
+
 
 /** Bitmask of X86_FEATURE_x bits */
 int _mesa_x86_cpu_features = 0x0;
@@ -80,37 +82,6 @@ extern GLuint	_ASMAPI _mesa_x86_cpuid_edx(GLuint op);
 /* These are assembly functions: */
 extern void _mesa_test_os_sse_support( void );
 extern void _mesa_test_os_sse_exception_support( void );
-
-
-#if defined(WIN32)
-#ifndef STATUS_FLOAT_MULTIPLE_TRAPS
-# define STATUS_FLOAT_MULTIPLE_TRAPS (0xC00002B5L)
-#endif
-static LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS exp)
-{
-   PEXCEPTION_RECORD rec = exp->ExceptionRecord;
-   PCONTEXT ctx = exp->ContextRecord;
-
-   if ( rec->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION ) {
-      _mesa_debug(NULL, "EXCEPTION_ILLEGAL_INSTRUCTION\n" );
-      _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
-   } else if ( rec->ExceptionCode == STATUS_FLOAT_MULTIPLE_TRAPS ) {
-      _mesa_debug(NULL, "STATUS_FLOAT_MULTIPLE_TRAPS\n");
-      /* Windows seems to clear the exception flag itself, we just have to increment Eip */
-   } else {
-      _mesa_debug(NULL, "UNEXPECTED EXCEPTION (0x%08x), terminating!\n" );
-      return EXCEPTION_EXECUTE_HANDLER;
-   }
-
-   if ( (ctx->ContextFlags & CONTEXT_CONTROL) != CONTEXT_CONTROL ) {
-      _mesa_debug(NULL, "Context does not contain control registers, terminating!\n");
-      return EXCEPTION_EXECUTE_HANDLER;
-   }
-   ctx->Eip += 3;
-
-   return EXCEPTION_CONTINUE_EXECUTION;
-}
-#endif /* WIN32 */
 
 
 /**
@@ -150,43 +121,53 @@ void _mesa_check_os_sse_support( void )
          _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
    }
 #elif defined(WIN32)
-   LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
-   
-   /* Install our ExceptionFilter */
-   oldFilter = SetUnhandledExceptionFilter( ExceptionFilter );
-   
-   if ( cpu_has_xmm ) {
-      _mesa_debug(NULL, "Testing OS support for SSE...\n");
+    if ( cpu_has_xmm ) {
+        _mesa_debug(NULL, "Testing OS support for SSE...\n");
 
-      _mesa_test_os_sse_support();
+        _SEH2_TRY
+        {
+            _mesa_test_os_sse_support();
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            if(_SEH2_GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION)
+                _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+        }
+        _SEH2_END;
 
-      if ( cpu_has_xmm ) {
-	 _mesa_debug(NULL, "Yes.\n");
-      } else {
-	 _mesa_debug(NULL, "No!\n");
-      }
-   }
+        if ( cpu_has_xmm ) {
+            _mesa_debug(NULL, "Yes.\n");
+        } else {
+            _mesa_debug(NULL, "No!\n");
+        }
+    }
 
-   if ( cpu_has_xmm ) {
-      _mesa_debug(NULL, "Testing OS support for SSE unmasked exceptions...\n");
+    if ( cpu_has_xmm ) {
+        _mesa_debug(NULL, "Testing OS support for SSE unmasked exceptions...\n");
 
-      _mesa_test_os_sse_exception_support();
+        _SEH2_TRY
+        {
+            _mesa_test_os_sse_exception_support();
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            if(_SEH2_GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION)
+                _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+        }
+        _SEH2_END;
 
-      if ( cpu_has_xmm ) {
-	 _mesa_debug(NULL, "Yes.\n");
-      } else {
-	 _mesa_debug(NULL, "No!\n");
-      }
-   }
+        if ( cpu_has_xmm ) {
+            _mesa_debug(NULL, "Yes.\n");
+        } else {
+            _mesa_debug(NULL, "No!\n");
+        }
+    }
 
-   /* Restore previous exception filter */
-   SetUnhandledExceptionFilter( oldFilter );
-
-   if ( cpu_has_xmm ) {
-      _mesa_debug(NULL, "Tests of OS support for SSE passed.\n");
-   } else {
-      _mesa_debug(NULL, "Tests of OS support for SSE failed!\n");
-   }
+    if ( cpu_has_xmm ) {
+        _mesa_debug(NULL, "Tests of OS support for SSE passed.\n");
+    } else {
+        _mesa_debug(NULL, "Tests of OS support for SSE failed!\n");
+    }
 #else
    /* Do nothing on other platforms for now.
     */

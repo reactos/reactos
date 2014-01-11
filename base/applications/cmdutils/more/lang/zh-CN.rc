@@ -1,19 +1,16 @@
-/*
- * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-  IDS_USAGE, "在屏幕上一页一页地显示内容。\n\n\
+    IDS_USAGE "在屏幕上一页一页地显示内容。\n\n\
   MORE < [驱动器:][路径]文件名\n\
   命令 | MORE \n\
   MORE [驱动器:][路径]文件名\n\n\
   [驱动器:][路径]文件名    一个将要被如此显示内容的文件。\n\
   命令\t\t     一个输出将要被如此显示的命令。\n\n\
   在 ""-- 继续 --"" 的提示出现时你可以按任意键来显示下一页。\n"
-
-  IDS_CONTINUE, " -- 继续 (100%) -- "
-  IDS_FILE_ACCESS, "无法访问文件 %s。"
+    IDS_CONTINUE " -- 继续 (100%) -- "
+    IDS_FILE_ACCESS "无法访问文件 %s。"
 END

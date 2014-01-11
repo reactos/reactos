@@ -23,31 +23,7 @@
  *  - Some types of binding handles
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-
-#include <objbase.h>
-//#include "rpc.h"
-#include <rpcproxy.h>
-
-#include <wine/exception.h>
-#include <wine/debug.h>
-#include <wine/rpcfc.h>
-
-#include "cpsf.h"
-#include "ndr_misc.h"
-#include "ndr_stubless.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -152,6 +128,15 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
     DWORD size;
     switch(*pFormat)
     {
+    case RPC_FC_RP:
+        if (pFormat[1] & RPC_FC_P_SIMPLEPOINTER)
+        {
+            FIXME("Simple reference pointer (type %#x).\n", pFormat[2]);
+            size = sizeof(void *);
+            break;
+        }
+        size = calc_arg_size(pStubMsg, &pFormat[2] + *(const SHORT*)&pFormat[2]);
+        break;
     case RPC_FC_STRUCT:
     case RPC_FC_PSTRUCT:
         size = *(const WORD*)(pFormat + 2);
@@ -206,7 +191,7 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
     default:
         FIXME("Unhandled type %02x\n", *pFormat);
         /* fallthrough */
-    case RPC_FC_RP:
+    case RPC_FC_IP:
         size = sizeof(void *);
         break;
     }
@@ -620,9 +605,9 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
-        procedure_number = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
+        procedure_number = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else
@@ -809,7 +794,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 }
             }
 
-            /* convert strings, floating point values and endianess into our
+            /* convert strings, floating point values and endianness into our
              * preferred format */
             if ((rpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
                 NdrConvert(&stubMsg, pFormat);
@@ -847,7 +832,7 @@ LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 if (comm_fault_offsets->FaultOffset == -1)
                     fault_status = (ULONG *)&RetVal;
                 else if (comm_fault_offsets->FaultOffset >= 0)
-                    fault_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->CommOffset);
+                    fault_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->FaultOffset);
                 else
                     fault_status = NULL;
 
@@ -1226,8 +1211,8 @@ LONG WINAPI NdrStubCall2(
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
 
     }
@@ -1341,7 +1326,7 @@ LONG WINAPI NdrStubCall2(
                                     NdrCorrCache, sizeof(NdrCorrCache), &number_of_params );
     }
 
-    /* convert strings, floating point values and endianess into our
+    /* convert strings, floating point values and endianness into our
      * preferred format */
     if ((pRpcMsg->DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
         NdrConvert(&stubMsg, pFormat);
@@ -1514,9 +1499,9 @@ LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING 
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        async_call_data->stack_size = pProcHeader->stack_size;
-        procedure_number = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        async_call_data->stack_size = header_rpc->stack_size;
+        procedure_number = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else

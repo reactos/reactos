@@ -16,13 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};

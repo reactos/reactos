@@ -7,9 +7,6 @@
  */
  
 #include "uxthemep.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 HFONT hMenuFont = NULL;
 HFONT hMenuFontBold = NULL;
@@ -87,7 +84,7 @@ UserGetWindowIcon(HWND hwnd)
         hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
 
     if(!hIcon)
-        hIcon = LoadIcon(NULL, IDI_WINLOGO);
+        hIcon = LoadIconW(NULL, (LPCWSTR)IDI_WINLOGO);
 
     return hIcon;
 }

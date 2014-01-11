@@ -13,3 +13,10 @@ CDPath = none
 
 [Section.0407]
 Description = Theme, der speziell für ReactOS entwickelt wird. Entpacken in das "ReactOS"-Verzeichnis, dann den Design Dienst auf "Automatisch" stellen und starten.
+
+[Section.0410]
+Description = Tema creato appositamente per ReactOS. Scompattare nella cartella "ReactOS", quindi impostare il servizio themeing "Automatico" e avviarlo.
+
+[Section.041f]
+Name = Lautus Teması
+Description = ReactOS'a husûsî olarak yapılmış bir tema. Bunu, ReactOS'un dizinine çıkartıp "Temalar" hizmetini "Kendiliğinden" olarak ayarlayınız ve bu hizmeti başlatınız.

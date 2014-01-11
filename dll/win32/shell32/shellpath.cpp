@@ -1811,7 +1811,7 @@ HRESULT WINAPI SHGetFolderLocation(
         }
     }
     if(*ppidl)
-        hr = NOERROR;
+        hr = S_OK;
 
     TRACE("-- (new pidl %p)\n",*ppidl);
     return hr;

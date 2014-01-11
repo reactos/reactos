@@ -7,7 +7,11 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+
 #include "precomp.h"
+
+#include <dispatch.h>
+#include <fileobjs.h>
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;

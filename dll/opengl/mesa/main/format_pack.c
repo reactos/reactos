@@ -34,11 +34,7 @@
  *   glAccum, and glTexImage.
  */
 
-
-#include "colormac.h"
-#include "format_pack.h"
-#include "macros.h"
-
+#include <precomp.h>
 
 typedef void (*pack_ubyte_rgba_row_func)(GLuint n,
                                          const GLubyte src[][4], void *dst);

@@ -6,7 +6,10 @@
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
+
 #include "sc.h"
+
+#include <conio.h>
 
 VOID MainUsage(VOID)
 {

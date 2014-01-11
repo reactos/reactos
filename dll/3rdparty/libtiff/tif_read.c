@@ -28,8 +28,8 @@
  * TIFF Library.
  * Scanline-oriented Read Support
  */
-#include "tiffiop.h"
-#include <stdio.h>
+
+#include <precomp.h>
 
 int TIFFFillStrip(TIFF* tif, uint32 strip);
 int TIFFFillTile(TIFF* tif, uint32 tile);

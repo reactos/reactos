@@ -1,4 +1,5 @@
-// 2012.03.10 - Fulea Ștefan: resource first addition
+/* 2012.03.10 - Fulea Ștefan: resource first addition */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
@@ -19,7 +20,6 @@ BEGIN
     LTEXT "Redă fixarea țintei:", -1, 15, 175, 100, 10, SS_LEFT
     COMBOBOX IDC_LOCKING, 120, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
-
 
 STRINGTABLE
 BEGIN

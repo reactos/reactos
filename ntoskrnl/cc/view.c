@@ -611,13 +611,11 @@ CcRosCreateCacheSegment (
 #ifdef CACHE_BITMAP
     ULONG StartingOffset;
 #endif
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
     ASSERT(Bcb);
 
     DPRINT("CcRosCreateCacheSegment()\n");
 
-    BoundaryAddressMultiple.QuadPart = 0;
     if (FileOffset >= Bcb->FileSize.u.LowPart)
     {
         CacheSeg = NULL;
@@ -742,7 +740,7 @@ CcRosCreateCacheSegment (
                                 (PMEMORY_AREA*)&current->MemoryArea,
                                 FALSE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     if (!NT_SUCCESS(Status))
     {
@@ -1370,12 +1368,10 @@ CcInitView (
 #ifdef CACHE_BITMAP
     PMEMORY_AREA marea;
     PVOID Buffer;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 #endif
 
     DPRINT("CcInitView()\n");
 #ifdef CACHE_BITMAP
-    BoundaryAddressMultiple.QuadPart = 0;
     CiCacheSegMappingRegionHint = 0;
     CiCacheSegMappingRegionBase = NULL;
 
@@ -1389,7 +1385,7 @@ CcInitView (
                                 &marea,
                                 FALSE,
                                 0,
-                                BoundaryAddressMultiple);
+                                PAGE_SIZE);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     if (!NT_SUCCESS(Status))
     {

@@ -1,50 +1,24 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Swedish language support
- *
- * Copyright (C) 2010 Anders Jonsson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
-#pragma code_page(65001)
-
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "Ogiltigt antal parametrar - Använd xcopy /? för hjälp\n"
-    STRING_INVPARM,  "Ogiltig parameter '%s' -  Använd xcopy /? för hjälp\n"
-    STRING_PAUSE,    "Tryck <enter> för att börja kopiera\n"
-    STRING_SIMCOPY,  "%d fil(er) skulle kopieras\n"
-    STRING_COPY,     "%d fil(er) kopierade\n"
-    STRING_QISDIR,   "Är '%s' ett filnamn eller en katalog\npå målet?\n(F - Fil, K - Katalog)\n"
-    STRING_SRCPROMPT,"%s? (Ja|Nej)\n"
-    STRING_OVERWRITE,"Skriv över %s? (Ja|Nej|Alla)\n"
-    STRING_COPYFAIL, "Kunde inte kopiera '%s' till '%s'; misslyckades med r/c %d\n"
-    STRING_OPENFAIL, "Kunde inte öppna '%s'\n"
-    STRING_READFAIL, "Kunde inte läsa '%s'\n"
-    STRING_YES_CHAR, "J"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "A"
-    STRING_FILE_CHAR,"F"
-    STRING_DIR_CHAR, "K"
-
-    STRING_HELP,
+BEGIN
+    STRING_INVPARMS "Ogiltigt antal parametrar - Använd xcopy /? för hjälp\n"
+    STRING_INVPARM "Ogiltig parameter '%1' -  Använd xcopy /? för hjälp\n"
+    STRING_PAUSE "Tryck <enter> för att börja kopiera\n"
+    STRING_SIMCOPY "%1!d! fil(er) skulle kopieras\n"
+    STRING_COPY "%1!d! fil(er) kopierade\n"
+    STRING_QISDIR "Är '%1' ett filnamn eller en katalog\npå målet?\n(F - Fil, K - Katalog)\n"
+    STRING_SRCPROMPT "%1? (Ja|Nej)\n"
+    STRING_OVERWRITE "Skriv över %1? (Ja|Nej|Alla)\n"
+    STRING_COPYFAIL "Kunde inte kopiera '%1' till '%2'; misslyckades med r/c %3!d!\n"
+    STRING_OPENFAIL "Kunde inte öppna '%1'\n"
+    STRING_READFAIL "Kunde inte läsa '%1'\n"
+    STRING_YES_CHAR "J"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "A"
+    STRING_FILE_CHAR "F"
+    STRING_DIR_CHAR "K"
+    STRING_HELP
 "XCOPY - Kopierar källfiler eller katalogträd till ett mål\n\
 \n\
 Syntax:\n\
@@ -76,5 +50,4 @@ Där:\n\
 [/D | /D:m-d-y] Kopiera nya filer eller de ändrade efter angivet datum.\n\
 \t\tOm inget datum angivits utförs endast kopiering om målet är\n\
 \t\täldre än källan\n\n"
-
-}
+END

@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -28,7 +26,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kısayol Oluştur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Bu sihirbaz, ağdaki ya da mahallî çizeylemlere, kütüklere,\ndizinlere, bilgisayarlara ve örütbağ adreslerine\nkısayol oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
+    LTEXT "Bu yardımcı, ağdaki ya da yakındaki çizeylemlere, kütüklere,\ndizinlere, bilgisayarlara ve örütbağ adreslerine\nkısayol oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
     LTEXT "Nesnenin konumunu yazınız:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -48,7 +46,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Yazılım Ekle/Kaldır"
-    IDS_CPLSYSTEMDESCRIPTION "Yazılımları kurar ve kısayolları oluşturur."
+    IDS_CPLSYSTEMDESCRIPTION "Yazılımları kurar ve kısayol oluşturur."
     IDS_CREATE_SHORTCUT "Kısayol Oluştur"
     IDS_ERROR_NOT_FOUND "%s kütüğü bulunamadı."
 END

@@ -1,0 +1,15 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tShfaq informacionin në lidhje me veprimet e kryera.\n\
+  /?\t\tTregon këtë informacion.\n\n"
+    IDS_LOGOFF_REMOTE "Ndërpren seancen në lidhjen me remote te kompjuterit."
+    IDS_LOGOFF_LOCAL "Ndërpren seasen aktual ne këtë kompjuter."
+    IDS_ILLEGAL_PARAM "Parametra invalid(e)\n"
+END

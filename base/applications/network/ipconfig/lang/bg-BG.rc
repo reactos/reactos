@@ -2,28 +2,28 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Разпръскване"
-  IDS_P2P     "Равен с равен (P2P)"
-  IDS_MIXED   "Смесен"
-  IDS_HYBRID  "Хибриден"
-  IDS_UNKNOWN "неизвестен"
+    IDS_BCAST "Разпръскване"
+    IDS_P2P "Равен с равен (P2P)"
+    IDS_MIXED "Смесен"
+    IDS_HYBRID "Хибриден"
+    IDS_UNKNOWN "неизвестен"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Друг вид карта"
-  IDS_ETH     "Карта Ethernet"
-  IDS_TOKEN   "Карта Token Ring"
-  IDS_FDDI    "Карта FDDI"
-  IDS_PPP     "Карта PPP"
-  IDS_LOOP    "Карта Loopback"
-  IDS_SLIP    "Карта SLIP"
+    IDS_OTHER "Друг вид карта"
+    IDS_ETH "Карта Ethernet"
+    IDS_TOKEN "Карта Token Ring"
+    IDS_FDDI "Карта FDDI"
+    IDS_PPP "Карта PPP"
+    IDS_LOOP "Карта Loopback"
+    IDS_SLIP "Карта SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nУПОТРЕБА:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

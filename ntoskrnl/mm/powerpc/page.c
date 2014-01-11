@@ -201,25 +201,6 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
-/*
- * FUNCTION: Delete a virtual mapping
- */
-{
-    ppc_map_info_t info = { 0 };
-    info.proc = Process ? (int)Process->UniqueProcessId : 0;
-    info.addr = (vaddr_t)Address;
-    MmuUnmapPage(&info, 1);
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address)
-{
-}
-
-VOID
-NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
                        BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*

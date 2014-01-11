@@ -467,7 +467,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         /* get the parent shellfolder */
         if (pidl)
         {
-            hr = SHBindToParent( pidl, IID_IShellFolder, (LPVOID*)&psfParent,
+            hr = SHBindToParent( pidl, IID_PPV_ARG(IShellFolder, &psfParent),
                                 (LPCITEMIDLIST*)&pidlLast );
             if (SUCCEEDED(hr))
                 pidlLast = ILClone(pidlLast);
@@ -584,7 +584,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 TRACE("szExt=%s\n", debugstr_w(szExt));
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
-                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &psfi->iIcon))
+                     HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &psfi->iIcon))
                 {
                     if (lstrcmpW(p1W, sTemp))
                         wcscpy(psfi->szDisplayName, sTemp);
@@ -640,7 +640,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 szExt = PathFindExtensionW(sTemp);
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
-                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &icon_idx))
+                     HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
                 {
                     if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
                         wcscpy(sTemp, szFullPath);
@@ -1013,7 +1013,7 @@ EXTERN_C HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
 
     CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void **)&ptr);
     if (ptr)
-        return NOERROR;
+        return S_OK;
     return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -1463,7 +1463,11 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         GetModuleFileNameW(hInstance, swShell32Name, MAX_PATH);
         swShell32Name[MAX_PATH - 1] = '\0';
 
-        InitCommonControlsEx(NULL);
+        /* Initialize comctl32 */
+        INITCOMMONCONTROLSEX InitCtrls;
+        InitCtrls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        InitCtrls.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES;
+        InitCommonControlsEx(&InitCtrls);
 
         SIC_Initialize();
         InitChangeNotifications();

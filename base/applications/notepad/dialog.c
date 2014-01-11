@@ -22,6 +22,10 @@
 
 #include "notepad.h"
 
+#include <assert.h>
+#include <commctrl.h>
+#include <strsafe.h>
+
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static const TCHAR helpfile[]     = _T("notepad.hlp");
@@ -130,7 +134,7 @@ static void UpdateWindowCaption(void)
   {
       LoadString(Globals.hInstance, STRING_UNTITLED, szCaption, SIZEOF(szCaption));
   }
-  
+
   StringCchCat(szCaption, SIZEOF(szCaption), _T(" - "));
   StringCchCat(szCaption, SIZEOF(szCaption), szNotepad);
   SetWindowText(Globals.hMainWnd, szCaption);
@@ -790,6 +794,7 @@ VOID DoCreateEditWindow(VOID)
     DWORD  dwStyle;
     int    iSize;
     LPTSTR pTemp = NULL;
+    BOOL   bModified = FALSE;
 
     iSize = 0;
 
@@ -812,6 +817,9 @@ VOID DoCreateEditWindow(VOID)
 
             // Recover the text into the control.
             GetWindowText(Globals.hEdit, pTemp, iSize + 1);
+
+            if (SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0))
+                bModified = TRUE;
         }
 
         // Restore original window procedure
@@ -863,6 +871,9 @@ VOID DoCreateEditWindow(VOID)
     {
         SetWindowText(Globals.hEdit, pTemp);
         HeapFree(GetProcessHeap(), 0, pTemp);
+
+        if (bModified)
+            SendMessage(Globals.hEdit, EM_SETMODIFY, TRUE, 0);
     }
 
     // Sub-class a new window callback for row/column detection.

@@ -1,11 +1,3 @@
-/*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/he-IL.rc
- * PURPOSE:     Hebrew Language resource file
- * TRANSLATORS: first times touched from en-US.rc file
- */
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 ID_MENU MENU
@@ -23,7 +15,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "י&ציאה\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&עריכה"
     BEGIN
         MENUITEM "בטל\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +30,6 @@ BEGIN
         MENUITEM "העתק ל...", IDM_EDITCOPYTO
         MENUITEM "הדבק מ...", IDM_EDITPASTEFROM
     END
-
     POPUP "&תצוגה"
     BEGIN
         MENUITEM "ערכת כלים\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +55,6 @@ BEGIN
         END
         MENUITEM "מסך מלא\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "ת&מונה"
     BEGIN
         MENUITEM "סובב/הפוך...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +65,6 @@ BEGIN
         MENUITEM "מחק תמונה\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "צביעה אטומה", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&צבעים"
     BEGIN
         MENUITEM "עריכת ערכה...", IDM_COLORSEDITPALETTE
@@ -84,7 +72,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELPHELPTOPICS
@@ -188,34 +175,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "צייר"
-    IDS_WINDOWTITLE, "%s - צייר"
-    IDS_INFOTITLE, "צייר עבור ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "האם ברצונך לשמור את השינויים של %s?"
-    IDS_DEFAULTFILENAME, "ללא שם.bmp"
-    IDS_MINIATURETITLE, "ממוזער"
-    IDS_TOOLTIP1, "בחירה חופשית"
-    IDS_TOOLTIP2, "בחירה"
-    IDS_TOOLTIP3, "מחק"
-    IDS_TOOLTIP4, "מלא עם צבע"
-    IDS_TOOLTIP5, "בחירת צבע"
-    IDS_TOOLTIP6, "זכוכית מגדלת"
-    IDS_TOOLTIP7, "עפרון"
-    IDS_TOOLTIP8, "מברשת"
-    IDS_TOOLTIP9, "מברשת אוויר"
-    IDS_TOOLTIP10, "טקסט"
-    IDS_TOOLTIP11, "קו"
-    IDS_TOOLTIP12, "Bezier curve"
-    IDS_TOOLTIP13, "מרובע"
-    IDS_TOOLTIP14, "מצולע"
-    IDS_TOOLTIP15, "אליפסה"
-    IDS_TOOLTIP16, "מרובע עם קודקודים מרובעים"
-    IDS_OPENFILTER, "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d בתים"
+    IDS_PROGRAMNAME "צייר"
+    IDS_WINDOWTITLE "%s - צייר"
+    IDS_INFOTITLE "צייר עבור ReactOS"
+    IDS_INFOTEXT "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
+    IDS_DEFAULTFILENAME "ללא שם.bmp"
+    IDS_MINIATURETITLE "ממוזער"
+    IDS_TOOLTIP1 "בחירה חופשית"
+    IDS_TOOLTIP2 "בחירה"
+    IDS_TOOLTIP3 "מחק"
+    IDS_TOOLTIP4 "מלא עם צבע"
+    IDS_TOOLTIP5 "בחירת צבע"
+    IDS_TOOLTIP6 "זכוכית מגדלת"
+    IDS_TOOLTIP7 "עפרון"
+    IDS_TOOLTIP8 "מברשת"
+    IDS_TOOLTIP9 "מברשת אוויר"
+    IDS_TOOLTIP10 "טקסט"
+    IDS_TOOLTIP11 "קו"
+    IDS_TOOLTIP12 "Bezier curve"
+    IDS_TOOLTIP13 "מרובע"
+    IDS_TOOLTIP14 "מצולע"
+    IDS_TOOLTIP15 "אליפסה"
+    IDS_TOOLTIP16 "מרובע עם קודקודים מרובעים"
+    IDS_OPENFILTER "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d בתים"
     IDS_PRINTRES, "%d x %d פיקסלים למטר"
     IDS_INTNUMBERS, "Please enter integral numbers only!"
     IDS_PERCENTAGE, "The percentage must be between 1 and 500."
     IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT, "The file %s could not be loaded."
 END

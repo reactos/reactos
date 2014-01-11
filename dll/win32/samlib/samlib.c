@@ -24,11 +24,7 @@
  * PROGRAMER:         Eric Kohl
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "precomp.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
 NTSTATUS
 WINAPI
@@ -1609,23 +1605,19 @@ SamQuerySecurityObject(IN SAM_HANDLE ObjectHandle,
                        IN SECURITY_INFORMATION SecurityInformation,
                        OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    SAMPR_SR_SECURITY_DESCRIPTOR LocalSecurityDescriptor;
-    PSAMPR_SR_SECURITY_DESCRIPTOR pLocalSecurityDescriptor;
+    PSAMPR_SR_SECURITY_DESCRIPTOR SamSecurityDescriptor = NULL;
     NTSTATUS Status;
 
     TRACE("SamQuerySecurityObject(%p %lu %p)\n",
           ObjectHandle, SecurityInformation, SecurityDescriptor);
 
-    LocalSecurityDescriptor.Length = 0;
-    LocalSecurityDescriptor.SecurityDescriptor = NULL;
+    *SecurityDescriptor = NULL;
 
     RpcTryExcept
     {
-        pLocalSecurityDescriptor = &LocalSecurityDescriptor;
-
         Status = SamrQuerySecurityObject((SAMPR_HANDLE)ObjectHandle,
                                          SecurityInformation,
-                                         &pLocalSecurityDescriptor);
+                                         &SamSecurityDescriptor);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1633,7 +1625,17 @@ SamQuerySecurityObject(IN SAM_HANDLE ObjectHandle,
     }
     RpcEndExcept;
 
-    *SecurityDescriptor = LocalSecurityDescriptor.SecurityDescriptor;
+    TRACE("SamSecurityDescriptor: %p\n", SamSecurityDescriptor);
+
+    if (SamSecurityDescriptor != NULL)
+    {
+        TRACE("SamSecurityDescriptor->Length: %lu\n", SamSecurityDescriptor->Length);
+        TRACE("SamSecurityDescriptor->SecurityDescriptor: %p\n", SamSecurityDescriptor->SecurityDescriptor);
+
+        *SecurityDescriptor = SamSecurityDescriptor->SecurityDescriptor;
+
+        midl_user_free(SamSecurityDescriptor);
+    }
 
     return Status;
 }

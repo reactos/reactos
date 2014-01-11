@@ -1,16 +1,16 @@
 /* 
- * FILE:             base/applications/cmdutils/doskey/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-20  initial translation
- *                   2011-10-17  diacritics change, other minor changes
+ * FILE:       base/applications/cmdutils/doskey/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG: 2011-08-20  initial translation
+ *             2011-10-17  diacritics change, other minor changes
  */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Gestionează starea de editare a liniei de comandă, istoric și macrodefiniții.\n\
+    IDS_HELP "Gestionează starea de editare a liniei de comandă, istoric și macrodefiniții.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
        [/HISTORY] [/LISTSIZE=dimensiune] [/REINSTALL]\n\
@@ -30,7 +30,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
   /MACROFILE=fișier       Încarcă macrodefinițiile din fișier.\n\
   nume_macro              Numele macrodefiniției în curs de creare.\n\
   text                    Textul înlocuitor dintr-o macrodefiniție.\n"
-
-IDS_INVALID_MACRO_DEF, "Macrodefiniția «%s» este nevalidă!\n"
-
+    IDS_INVALID_MACRO_DEF "Macrodefiniția «%s» este nevalidă!\n"
 END

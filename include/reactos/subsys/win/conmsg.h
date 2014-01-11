@@ -469,13 +469,11 @@ typedef struct
 typedef struct
 {
     HANDLE InputHandle;
-    BOOL Unicode;
-    BOOL bRead; // TRUE --> Read ; FALSE --> Peek
-
     ULONG InputsRead;
-
-    ULONG Length;
     PINPUT_RECORD InputRecord;
+    ULONG Length;
+    WORD wFlags;
+    BOOLEAN Unicode;
 } CONSOLE_GETINPUT, *PCONSOLE_GETINPUT;
 
 typedef struct
@@ -492,9 +490,10 @@ typedef struct
 typedef struct
 {
     HANDLE InputHandle;
-    BOOL Unicode;
     DWORD Length;
     INPUT_RECORD* InputRecord;
+    BOOL Unicode;
+    BOOL AppendToEnd;
 } CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
 
 typedef struct

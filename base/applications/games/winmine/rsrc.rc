@@ -24,30 +24,31 @@
 
 #include "resource.h"
 
-LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDA_WINEMINE ACCELERATORS
-{
+BEGIN
     VK_F2, IDM_NEW, VIRTKEY, NOINVERT
     "X", IDM_EXIT, VIRTKEY, ALT, NOINVERT
-}
+END
 
 /* @makedep: winemine.ico */
-WINEMINE ICON rc/winemine.ico
+WINEMINE ICON "rc/winemine.ico"
 
 /* @makedep: faces.bmp */
-FACES BITMAP rc/faces.bmp
+FACES BITMAP "rc/faces.bmp"
 
 /* @makedep: leds.bmp */
-LEDS BITMAP rc/leds.bmp
+LEDS BITMAP "rc/leds.bmp"
 
 /* @makedep: mines.bmp */
-MINES BITMAP rc/mines.bmp
+MINES BITMAP "rc/mines.bmp"
 
 #include <reactos/manifest_exe.rc>
 
 /* include localised resources */
-// UTF-8
+
+/* UTF-8 */
 #pragma code_page(65001)
 
 #ifdef LANGUAGE_BG_BG
@@ -115,6 +116,9 @@ MINES BITMAP rc/mines.bmp
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

@@ -20,7 +20,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include "precomp.h"
+
+#include <winnls.h>
+#include <shellapi.h>
+
 #include "fontview.h"
+#include "resource.h"
 
 HINSTANCE g_hInstance;
 EXTLOGFONTW g_ExtLogFontW;

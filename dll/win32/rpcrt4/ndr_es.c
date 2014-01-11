@@ -18,24 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <stdarg.h>
-//#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <rpc.h>
 #include <midles.h>
-//#include "ndrtypes.h"
-
-//#include "ndr_misc.h"
-#include "ndr_stubless.h"
-
-#include <wine/debug.h>
-#include <wine/rpcfc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -351,9 +336,9 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
-        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
-        stack_size = pProcHeader->stack_size;
-        pEsMsg->ProcNumber = pProcHeader->proc_num;
+        const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        stack_size = header_rpc->stack_size;
+        pEsMsg->ProcNumber = header_rpc->proc_num;
         pFormat += sizeof(NDR_PROC_HEADER_RPC);
     }
     else

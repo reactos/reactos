@@ -6,7 +6,11 @@
  * PROGRAMMER:      Andrew Greenwood
  *                  Johannes Anderwald
  */
+
 #include "wdmaud.h"
+
+#define NDEBUG
+#include <debug.h>
 
 const GUID KSPROPSETID_Sysaudio                 = {0xCBE3FAA0L, 0xCC75, 0x11D0, {0xB4, 0x65, 0x00, 0x00, 0x1A, 0x18, 0x18, 0xE6}};
 

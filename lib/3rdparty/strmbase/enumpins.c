@@ -19,13 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include "dshow.h"
-#include "wine/strmbase.h"
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
+#include "strmbase_private.h"
 
 typedef struct IEnumPinsImpl
 {

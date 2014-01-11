@@ -10,6 +10,9 @@
 
 #include "parser.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 TranslateHidParserStatus(
     IN HIDPARSER_STATUS Status)

@@ -16,13 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+}
+
+STRINGTABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Default"
+    POPUP "" /* Default */
     {
         MENUITEM "На&зад",                  IDM_GOBACKWARD
         MENUITEM "На&пред",               IDM_GOFORWARD
@@ -44,11 +53,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Пе&чат",                 IDM_PRINT
         MENUITEM "Опр&есни",               _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Сво&йства",            IDM_PROPERTIES
     }
 
-    POPUP "Image"
+    POPUP "" /* Image */
     {
         MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
         MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
@@ -70,11 +78,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Добави към от&метките...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Сво&йства",              IDM_PROPERTIES
     }
 
-    POPUP "Control"
+    POPUP "" /* Control */
     {
         MENUITEM "&Отмени",       IDM_UNDO
         MENUITEM SEPARATOR
@@ -83,11 +90,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Вмъкни",      IDM_PASTE
         MENUITEM "Из&трий",     IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Маркирай &всичко", IDM_SELECTALL
     }
 
-    POPUP "Table"
+    POPUP "" /* Table */
     {
         POPUP "&Избери"
         {
@@ -97,12 +103,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "&Таблица",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "&Свойства на клетката",  IDM_CELLPROPERTIES
         MENUITEM "&Свойства на таблицата", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "&Изрежи",        IDM_CUT
         MENUITEM "&Копирай",       IDM_COPY
@@ -112,7 +117,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Anchor"
+    POPUP "" /* Anchor */
     {
         MENUITEM "&Отвори",                IDM_FOLLOWLINKC
         MENUITEM "Отвори в &нов прозорец",  IDM_FOLLOWLINKN
@@ -126,16 +131,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Добави към от&метките...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "&Свойства",          IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC Image"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
         MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
@@ -154,13 +158,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Добави към от&метките...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Възпроизведи",                     IDM_DYNSRCPLAY
         MENUITEM "Спри",                     IDM_DYNSRCSTOP
         MENUITEM "&Свойства",              IDM_PROPERTIES
     }
 
-    POPUP "ART Image"
+    POPUP "" /* ART Image */
     {
         MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
         MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
@@ -183,11 +186,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Спри",                     IDM_IMGARTSTOP
         MENUITEM "Върни се в началото",                   IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "&Свойства",              IDM_PROPERTIES
     }
 
-    POPUP "Debug"
+    POPUP "" /* Debug */
     {
         MENUITEM "Trace Tags",         IDM_TRACETAGS
         MENUITEM "Resource Failures",  IDM_RESOURCEFAILURES
@@ -207,7 +209,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Edit View",         IDM_EDITMODE
     }
 
-    POPUP "Vertical Scrollbar"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "Превърти тук",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -221,7 +223,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Превърти надолу",  IDM_SCROLL_DOWN
     }
 
-    POPUP "Horizontal Scrollbar"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "Превърти тук",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR

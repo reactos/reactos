@@ -200,22 +200,22 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  { VK_OEM_3, 0, {'\"',     0x00e9,   '<'     } },
-  { '1',      0, {'1',      '!',      '>'     } },
-  { '3',      0, {'3',      WCH_DEAD, '#'     } },
-  { 0xff,     0, {WCH_NONE, '^',      WCH_NONE} },
-  { '4',      0, {'4',      '+',      '$'     } },
-  { '5',      0, {'5',      '%',      0x00bd  } },
-  { '7',      0, {'7',      '/',      '{'     } },
-  { '8',      0, {'8',      '(',      '['     } },
-  { '9',      0, {'9',      ')',      ']'     } },
-  { '0',      0, {'0',      '=',      '}'     } },
-  { VK_OEM_8, 0, {'*',      '?',      '\\'    } },
-  { 'Q',      CAPLOK,   {'q',      'Q',      '@'     } },
-  { 'E',      CAPLOK,   {'e',      'E',      0x20ac  } },
-  { 'S',      CAPLOK,   {'s',      'S',      0x00df  } },
-  { VK_OEM_1, CAPLOK,   {0x015f,   0x015e,   WCH_DEAD} },
-  { 0xff,     0, {WCH_NONE, WCH_NONE, 0x00b4  } },
+  { VK_OEM_3,     0, {'\"',     0x00e9,   '<'     } },
+  { '1',          0, {'1',      '!',      '>'     } },
+  { '3',          0, {'3',      WCH_DEAD, '#'     } },
+  { 0xff,         0, {WCH_NONE, '^',      WCH_NONE} },
+  { '4',          0, {'4',      '+',      '$'     } },
+  { '5',          0, {'5',      '%',      0x00bd  } },
+  { '7',          0, {'7',      '/',      '{'     } },
+  { '8',          0, {'8',      '(',      '['     } },
+  { '9',          0, {'9',      ')',      ']'     } },
+  { '0',          0, {'0',      '=',      '}'     } },
+  { VK_OEM_MINUS, 0, {'*',      '?',      '\\'    } },
+  { 'Q',          CAPLOK,   {'q',      'Q',      '@'     } },
+  { 'E',          CAPLOK,   {'e',      'E',      0x20ac  } },
+  { 'S',          CAPLOK,   {'s',      'S',      0x00df  } },
+  { VK_OEM_1,     CAPLOK,   {0x015f,   0x015e,   WCH_DEAD} },
+  { 0xff,         0, {WCH_NONE, WCH_NONE, 0x00b4  } },
   { 0, 0 }
 };
 
@@ -238,7 +238,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   { '2',          0, {'2', '\'', 0x00a3,   WCH_NONE, 0x0000} },
   { '6',          0, {'6', '&',  WCH_NONE, WCH_NONE, 0x001e} },
-  { VK_OEM_MINUS, 0, {'-', '_',  '|',      WCH_NONE, 0x001f} },
+  { VK_OEM_PLUS,  0, {'-', '_',  '|',      WCH_NONE, 0x001f} },
   { 0, 0 }
 };
 

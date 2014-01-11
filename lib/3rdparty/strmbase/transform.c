@@ -18,26 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
-#include <stdarg.h>
 
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "dshow.h"
-#include "amvideo.h"
-#include "strmif.h"
-#include "vfw.h"
-
-#include <assert.h>
-
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "wine/strmbase.h"
 #include "strmbase_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
 
 static const WCHAR wcsInputPinName[] = {'i','n','p','u','t',' ','p','i','n',0};
 static const WCHAR wcsOutputPinName[] = {'o','u','t','p','u','t',' ','p','i','n',0};

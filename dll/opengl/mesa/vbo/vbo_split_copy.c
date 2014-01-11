@@ -29,17 +29,7 @@
 /* Split indexed primitives with per-vertex copying.
  */
 
-#include "main/glheader.h"
-#include "main/bufferobj.h"
-#include "main/imports.h"
-#include "main/image.h"
-#include "main/macros.h"
-#include "main/mtypes.h"
-
-#include "vbo_attrib.h"
-#include "vbo_split.h"
-#include "vbo.h"
-
+#include <precomp.h>
 
 #define ELT_TABLE_SIZE 16
 

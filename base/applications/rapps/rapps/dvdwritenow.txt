@@ -14,7 +14,14 @@ CDPath = none
 [Section.0407]
 Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, kann man CD/DVD RW als USB Flash oder Wechseldatenträger beschreiben. Auch kann man hiermit auf CD/DVD RW schreiben, welche mit dem UDF Dateisystem beschrieben wurden. Auch kann man mit dieser Software UDF Disks, welche mit anderer Software erstellt wurden, lesen. (Microsoft DVD−ROMs, RW Disks erstellt mit Ahead InCD). Es wird für die Installation ein ZIP Dekomprimierprogramm benötigt.
 
+[Section.0410]
+Description = Un software di masterizzazione CD/DVD diretto e gratuito. Una volta installato, è possibile utilizzare il CD/DVD RW da flash USB o dischi rigidi rimovibili. Insieme a questo è possibile scrivere CD/DVD RW registrati con filesystem UDF. È anche possibile leggere i dischi UDF creati con altri software. (Microsoft DVD-ROM, dischi RW registrati con InCD Ahead). Il programma ha bisogno di un programma di decompressione ZIP per installarlo.
+
 [Section.0419]
 Description = DVD Write Now - бесплатная программа для прямой записи на CD и DVD диски. Позволяет использовать перезаписываемые CD и DVD диски как USB-Flash или съемные жесткие диски, записывать файлы на перезаписываемые CD/DVD диски, созданные в формате UDF, и читать UDF-диски, созданные другими программами.
 URLSite = http://dwn.alter.org.ua/ru/
 
+[Section.041f]
+Name = DVD Şimdi Yaz
+Licence = Ücretsiz
+Description =  Ücretsiz bir doğrudan CD/DVD kaydedicisi. Kurulur kurulmaz CD/DVD RW'leri çıkartılabilir disk olarak kullanabilirsiniz. Bununla birlikte CD/DVD RW'leri UDF kütük dizgesiyle kaydedebilirsiniz. Ayrıca, Mikroyazılım DVD−ROM'ları, Ahead InCD ile kaydedilen RW diskleri gibi diğer yazılımlarla oluşturulan UDF diskleri okutabilirsiniz. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.

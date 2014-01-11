@@ -23,44 +23,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "accum.h"
-#include "arrayobj.h"
-#include "attrib.h"
-#include "blend.h"
-#include "buffers.h"
-#include "bufferobj.h"
-#include "clear.h"
-#include "colormac.h"
-#include "context.h"
-#include "depth.h"
-#include "enable.h"
-#include "enums.h"
-#include "fog.h"
-#include "hint.h"
-#include "light.h"
-#include "lines.h"
-#include "macros.h"
-#include "matrix.h"
-#include "mfeatures.h"
-#include "multisample.h"
-#include "points.h"
-#include "polygon.h"
-#include "shared.h"
-#include "scissor.h"
-#include "stencil.h"
-#include "texenv.h"
-#include "texgen.h"
-#include "texobj.h"
-#include "texparam.h"
-#include "texstate.h"
-#include "varray.h"
-#include "viewport.h"
-#include "mtypes.h"
-#include "main/dispatch.h"
-#include "hash.h"
-
+#include <precomp.h>
 
 /**
  * glEnable()/glDisable() attribute group (GL_ENABLE_BIT).

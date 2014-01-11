@@ -1,6 +1,6 @@
-/* FILE:        applications/mmc/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-29
+/* FILE:       applications/mmc/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2008-02-29
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -13,7 +13,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Nápověda"
     BEGIN
         MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT
@@ -28,12 +27,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "&Nápověda"
     BEGIN
         MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT

@@ -18,10 +18,6 @@
 
 #include "jscript.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
-
 /*
  * This file implements algorithm for decoding scripts encoded by
  * screnc.exe. The 'secret' algorithm that's well documented here:

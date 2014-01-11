@@ -18,25 +18,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-//#include <ctype.h>
-//#include <stdlib.h>
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-#include <windef.h>
-//#include "winbase.h"
-//#include "winnls.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
-#include <winreg.h>
-#include <winternl.h>
-#include <commdlg.h>
-#include <shlwapi.h>
-//#include "cderr.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #include "cdlg.h"
 

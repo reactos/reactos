@@ -36,38 +36,15 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
-//#include "wine/port.h"
+#include "precomp.h"
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <string.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include "winerror.h"
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
 #include <ole2.h>
-#include <olectl.h>
-//#include "oleauto.h"
-#include "connpt.h"
-//#include "urlmon.h"
 #include <initguid.h>
 #include <wincodec.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "wine/library.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(olepicture);
 

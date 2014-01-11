@@ -1,5 +1,9 @@
 #include "calc.h"
 
+#include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
+
 #define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
 
 #define MAKE_BITMASK4(_show_b16, _show_b10, _show_b8, _show_b2) \

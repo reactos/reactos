@@ -216,6 +216,7 @@ list(APPEND SOURCE
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
     mm/ARM3/section.c
+    mm/ARM3/session.c
     mm/ARM3/special.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
@@ -393,12 +394,8 @@ if(NOT _WINKD_)
             kdbg/kdb_cli.c
             kdbg/kdb_expr.c
             kdbg/kdb_keyboard.c
-            kdbg/kdb_serial.c)
-    endif()
-
-    if(DBG OR KDBG)
-        #list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
-        list(APPEND SOURCE kdbg/kdb_symbols.c)
+            kdbg/kdb_serial.c
+            kdbg/kdb_symbols.c)
     endif()
 
     list(APPEND SOURCE

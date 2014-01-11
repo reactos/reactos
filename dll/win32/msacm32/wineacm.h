@@ -20,8 +20,20 @@
 #ifndef __WINE_WINEACM_H
 #define __WINE_WINEACM_H
 
-//#include <windef.h>
-//#include <winuser.h>
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define NOBITMAP
+
+#include <wine/msacmdrv.h>
+#include <wine/unicode.h>
+
+#include <winuser.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 /***********************************************************************
  * Wine specific - Win32

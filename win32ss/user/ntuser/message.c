@@ -128,6 +128,7 @@ static MSGMEMORY g_MsgMemory[] =
     { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
+    { WM_SETTINGCHANGE, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
     { WM_COPYDATA, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
     { WM_COPYGLOBALDATA, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
@@ -173,7 +174,14 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
         }
         else if (MMS_SIZE_LPARAMSZ == MsgMemoryEntry->Size)
         {
-            Size = (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
+            // WM_SETTEXT and WM_SETTINGCHANGE can be null!
+            if (!lParam)
+            {
+               TRACE("lParam is NULL!\n");
+               Size = 0;
+            }
+            else
+               Size = (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
         }
         else if (MMS_SIZE_SPECIAL == MsgMemoryEntry->Size)
         {
@@ -435,10 +443,11 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         /* Copy data if required */
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
         {
+            TRACE("Copy Message %d from usermode buffer\n", KernelModeMsg->message);
             Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                ERR("Failed to copy message to kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message to kernel: invalid usermode lParam buffer\n");
                 ExFreePoolWithTag(KernelMem, TAG_MSG);
                 return Status;
             }
@@ -483,7 +492,7 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
             Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
-                ERR("Failed to copy message from kernel: invalid usermode buffer\n");
+                ERR("Failed to copy message from kernel: invalid usermode lParam buffer\n");
                 ExFreePool((PVOID) KernelModeMsg->lParam);
                 return Status;
             }
@@ -676,7 +685,7 @@ IntDispatchMessage(PMSG pMsg)
                                               WM_TIMER,
                                               pMsg->wParam,
                                               (LPARAM)Time,
-                                              0);
+                                              -1);
             }
             return retval;
         }
@@ -730,7 +739,7 @@ IntDispatchMessage(PMSG pMsg)
                                    pMsg->message,
                                    pMsg->wParam,
                                    pMsg->lParam,
-                                   0);
+                                   -1);
 
     if (pMsg->message == WM_PAINT)
     {
@@ -1091,12 +1100,13 @@ IntSendTo(PWND Window, PTHREADINFO ptiCur, UINT Msg)
 {
    if ( ptiCur )
    {
-      if ( Window->head.pti->MessageQueue == ptiCur->MessageQueue )
+      if (!Window ||
+           Window->head.pti->MessageQueue == ptiCur->MessageQueue )
       {
          return NULL;
       }
    }
-   return Window->head.pti;
+   return Window ? Window->head.pti : NULL;
 }
 
 BOOL FASTCALL
@@ -1318,6 +1328,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         else
         {
            lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+           // If zero, do not allow callback on client side to allocate a buffer!!!!! See CORE-7695.
+           if (!lParamBufferSize) lParamBufferSize = -1;
         }
 
         if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
@@ -1350,7 +1362,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(ptiSendTo/*Window->head.pti*/))
+    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(ptiSendTo))
     {
         // FIXME: Set window hung and add to a list.
         /* FIXME: Set a LastError? */
@@ -1366,7 +1378,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     do
     {
-        Status = co_MsqSendMessage( ptiSendTo, //Window->head.pti,
+        Status = co_MsqSendMessage( ptiSendTo,
                                     hWnd,
                                     Msg,
                                     wParam,
@@ -1378,7 +1390,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(ptiSendTo/*Window->head.pti*/)); // FIXME: Set window hung and add to a list.
+           !MsqIsHung(ptiSendTo)); // FIXME: Set window hung and add to a list.
 
     if (STATUS_TIMEOUT == Status)
     {
@@ -1559,6 +1571,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     else
     {
         lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+        if (!lParamBufferSize) lParamBufferSize = -1;
     }
 
     if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, !!ptiSendTo)))
@@ -1641,7 +1654,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->Result = 0;
     Message->lResult = 0;
     Message->QS_Flags = 0;
-    Message->ptiReceiver = ptiSendTo; //Window->head.pti;
+    Message->ptiReceiver = ptiSendTo;
     Message->ptiSender = NULL; // mjmartin, you are right! This is null.
     Message->ptiCallBackSender = Win32Thread;
     Message->DispatchingListEntry.Flink = NULL;
@@ -1652,10 +1665,10 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->QS_Flags = QS_SENDMESSAGE;
 
     if (Msg & 0x80000000) // Higher priority event message!
-       InsertHeadList(&ptiSendTo->SentMessagesListHead/*&Window->head.pti->SentMessagesListHead*/, &Message->ListEntry);
+       InsertHeadList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
     else
-       InsertTailList(&ptiSendTo->SentMessagesListHead/*&Window->head.pti->SentMessagesListHead*/, &Message->ListEntry);
-    MsqWakeQueue(ptiSendTo/*Window->head.pti*/, QS_SENDMESSAGE, TRUE);
+       InsertTailList(&ptiSendTo->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(ptiSendTo, QS_SENDMESSAGE, TRUE);
 
     RETURN(TRUE);
 
@@ -1709,20 +1722,19 @@ co_IntPostOrSendMessage( HWND hWnd,
     return (LRESULT)Result;
 }
 
-LRESULT FASTCALL
+static LRESULT FASTCALL
 co_IntDoSendMessage( HWND hWnd,
                      UINT Msg,
                      WPARAM wParam,
                      LPARAM lParam,
                      PDOSENDMESSAGE dsm)
 {
-    //PTHREADINFO pti;
     LRESULT Result = TRUE;
     NTSTATUS Status;
     PWND Window = NULL;
-    MSG UserModeMsg;
-    MSG KernelModeMsg;
+    MSG UserModeMsg, KernelModeMsg;
     PMSGMEMORY MsgMemoryEntry;
+    PTHREADINFO ptiSendTo;
 
     if (hWnd != HWND_BROADCAST && hWnd != HWND_TOPMOST)
     {
@@ -1739,20 +1751,30 @@ co_IntDoSendMessage( HWND hWnd,
         ERR("co_IntDoSendMessage Window Exiting!\n");
     }
 
-    /* See if the current thread can handle the message */
-    //pti = PsGetCurrentThreadWin32Thread();
+    /* See if the current thread can handle this message */
+    ptiSendTo = IntSendTo(Window, gptiCurrent, Msg);
 
-    UserModeMsg.hwnd = hWnd;
-    UserModeMsg.message = Msg;
-    UserModeMsg.wParam = wParam;
-    UserModeMsg.lParam = lParam;
-    MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
-
-    Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
-    if (! NT_SUCCESS(Status))
+    // If broadcasting or sending to another thread, save the users data.
+    if (!Window || ptiSendTo )
     {
-       EngSetLastError(ERROR_INVALID_PARAMETER);
-       return (dsm ? 0 : -1);
+       UserModeMsg.hwnd    = hWnd;
+       UserModeMsg.message = Msg;
+       UserModeMsg.wParam  = wParam;
+       UserModeMsg.lParam  = lParam;
+       MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+       Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+       if (!NT_SUCCESS(Status))
+       {
+          EngSetLastError(ERROR_INVALID_PARAMETER);
+          return (dsm ? 0 : -1);
+       }
+    }
+    else
+    {
+       KernelModeMsg.hwnd    = hWnd;
+       KernelModeMsg.message = Msg;
+       KernelModeMsg.wParam  = wParam;
+       KernelModeMsg.lParam  = lParam;
     }
 
     if (!dsm)
@@ -1773,11 +1795,14 @@ co_IntDoSendMessage( HWND hWnd,
                                          &dsm->Result );
     }
 
-    Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
-    if (! NT_SUCCESS(Status))
+    if (!Window || ptiSendTo )
     {
-       EngSetLastError(ERROR_INVALID_PARAMETER);
-       return(dsm ? 0 : -1);
+       Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
+       if (!NT_SUCCESS(Status))
+       {
+          EngSetLastError(ERROR_INVALID_PARAMETER);
+          return(dsm ? 0 : -1);
+       }
     }
 
     return (LRESULT)Result;

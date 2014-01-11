@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
+
 #ifdef LOGLUV_SUPPORT
 
 /*

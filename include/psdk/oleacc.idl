@@ -100,6 +100,14 @@ cpp_quote("#define SELFLAG_ADDSELECTION    0x08")
 cpp_quote("#define SELFLAG_REMOVESELECTION 0x10")
 cpp_quote("#define SELFLAG_VALID           0x1f")
 
+typedef GUID MSAAPROPID;
+
+typedef enum AnnoScope
+{
+    ANNO_THIS,
+    ANNO_CONTAINER
+} AnnoScope;
+
 [
   local,
   object,
@@ -153,6 +161,114 @@ interface IAccessible : IDispatch
     [hidden, propput, id(DISPID_ACC_NAME)] HRESULT accName([in]VARIANT varID, [in]BSTR pszName);
     [hidden, propput, id(DISPID_ACC_VALUE)] HRESULT accValue([in]VARIANT varID, [out, retval]BSTR pszValue);
 }
+
+[
+    object,
+    uuid(03022430-ABC4-11d0-BDE2-00AA001A1953),
+    hidden,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IAccessibleHandler : IUnknown
+{
+    typedef [unique] IAccessibleHandler *LPACCESSIBLEHANDLER;
+
+    HRESULT AccessibleObjectFromID( [in] long hwnd, [in] long lObjectID, [out] LPACCESSIBLE *pIAccessible );
+}
+
+[
+    object,
+    uuid(7852b78d-1cfd-41c1-a615-9c0c85960b5f),
+    pointer_default(unique)
+]
+interface IAccIdentity : IUnknown
+{
+    HRESULT GetIdentityString ([in] DWORD dwIDChild, [out] BYTE **ppIDString, [out] DWORD *pdwIDStringLen);
+}
+
+[
+    object,
+    uuid(76c0dbbb-15e0-4e7b-b61b-20eeea2001e0),
+    pointer_default(unique)
+]
+interface IAccPropServer: IUnknown
+{
+    HRESULT GetPropValue ([in] const BYTE *pIDString, [in] DWORD  dwIDStringLen, [in] MSAAPROPID idProp,
+        [out] VARIANT *pvarValue, [out] BOOL *pfHasProp);
+}
+
+[
+    object,
+    uuid(6e26e776-04f0-495d-80e4-3330352e3169),
+    pointer_default(unique)
+]
+interface IAccPropServices : IUnknown
+{
+    HRESULT SetPropValue([in] const BYTE *pIDString, [in] DWORD dwIDStringLen, [in] MSAAPROPID idProp, [in] VARIANT var);
+
+    HRESULT SetPropServer([in] const BYTE * pIDString, [in] DWORD dwIDStringLen, [in] const MSAAPROPID* paProps,
+                    [in] int cProps, [in] IAccPropServer* pServer, [in] AnnoScope AnnoScope);
+
+    HRESULT ClearProps([in] const BYTE *pIDString, [in] DWORD dwIDStringLen, [in] const MSAAPROPID* paProps, [in] int cProps);
+
+    HRESULT SetHwndProp([in] HWND hwnd, [in] DWORD idObject, [in] DWORD idChild,
+                    [in] MSAAPROPID idProp, [in] VARIANT var);
+
+    HRESULT SetHwndPropStr([in] HWND hwnd, [in] DWORD idObject, [in] DWORD idChild,
+                    [in] MSAAPROPID idProp, [in] LPWSTR str);
+
+    HRESULT SetHwndPropServer([in] HWND hwnd, [in] DWORD idObject, [in] DWORD idChild,
+                    [in] const MSAAPROPID* paProps, [in] int cProps, [in] IAccPropServer* pServer, [in] AnnoScope AnnoScope);
+
+    HRESULT ClearHwndProps([in] HWND hwnd, [in] DWORD idObject, [in] DWORD idChild,
+                    [in] const MSAAPROPID* paProps, [in] int cProps);
+
+    HRESULT ComposeHwndIdentityString([in] HWND hwnd, [in] DWORD idObject, [in] DWORD idChild,
+                    [out] BYTE **ppIDString, [out] DWORD* pdwIDStringLen);
+
+    HRESULT DecomposeHwndIdentityString([in] const BYTE *pIDString, [in] DWORD dwIDStringLen,
+                    [out] HWND* phwnd, [out] DWORD* pidObject, [out] DWORD* pidChild);
+
+    HRESULT SetHmenuProp([in] HMENU hmenu, [in] DWORD idChild, [in] MSAAPROPID idProp, [in] VARIANT var);
+
+    HRESULT SetHmenuPropStr([in] HMENU hmenu, [in] DWORD idChild, [in] MSAAPROPID idProp, [in] LPWSTR str);
+
+    HRESULT SetHmenuPropServer([in] HMENU hmenu, [in] DWORD idChild, [in] const MSAAPROPID* paProps,
+                    [in] int cProps, [in] IAccPropServer* pServer, [in] AnnoScope AnnoScope);
+
+    HRESULT ClearHmenuProps([in] HMENU hmenu, [in] DWORD idChild, [in] const MSAAPROPID* paProps, [in] int cProps);
+
+    HRESULT ComposeHmenuIdentityString([in] HMENU hmenu, [in] DWORD idChild,
+                    [out] BYTE **ppIDString, [out] DWORD *pdwIDStringLen);
+
+    HRESULT DecomposeHmenuIdentityString([in] const BYTE *pIDString, [in] DWORD dwIDStringLen,
+                    [out] HMENU *phmenu, [out] DWORD *pidChild);
+}
+
+[
+    uuid(1ea4dbf0-3c3b-11cf-810c-00aa00389b71),
+    lcid(0),
+    version(1.1),
+    hidden
+]
+library Accessibility
+{
+    importlib ("stdole2.tlb");
+    interface IAccessible;
+    interface IAccessibleHandler;
+
+    interface IAccIdentity;
+    interface IAccPropServer;
+    interface IAccPropServices;
+
+    [
+        uuid(b5f8350b-0548-48b1-a6ee-88bd00b4a5e7)
+    ]
+    coclass CAccPropServices
+    {
+        interface IAccPropServices;
+    }
+};
 
 cpp_quote("DEFINE_GUID(LIBID_Accessibility, 0x1ea4dbf0, 0x3c3b, 0x11cf, 0x81, 0x0c, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);")
 cpp_quote("DEFINE_GUID(CLSID_AccPropServices, 0xb5f8350b, 0x0548, 0x48b1, 0xa6, 0xee, 0x88, 0xbd, 0x00, 0xb4, 0xa5, 0xe7);")

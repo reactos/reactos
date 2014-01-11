@@ -17,11 +17,6 @@
  */
 
 #include "vbscript.h"
-#include "vbscript_defs.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 static HRESULT Err_Description(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
 {

@@ -25,18 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/bufferobj.h"
-#include "main/context.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
-#include "main/macros.h"
-#include "main/enums.h"
-
-#include "t_context.h"
-#include "tnl.h"
-
-
+#include <precomp.h>
 
 static GLubyte *get_space(struct gl_context *ctx, GLuint bytes)
 {

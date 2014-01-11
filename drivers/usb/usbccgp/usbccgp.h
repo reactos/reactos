@@ -2,20 +2,14 @@
 #define USBEHCI_H__
 
 #include <ntddk.h>
-#define NDEBUG
-#include <debug.h>
-#include <initguid.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
-#include <usbioctl.h>
 #include <usbdlib.h>
 
 /* FIXME:
 #include <usbprotocoldefs.h> */
 
-#include <usb.h>
 #include <stdio.h>
-#include <wdmguid.h>
 
 typedef struct
 {

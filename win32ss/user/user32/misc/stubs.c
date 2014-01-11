@@ -540,15 +540,6 @@ DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
     return FALSE;
 }
 
-HCURSOR
-WINAPI
-GetCursorFrameInfo(HCURSOR hCursor, LPCWSTR name, DWORD istep, PDWORD rate_jiffies, INT *num_steps)
-{
-   if (hCursor) return NtUserGetCursorFrameInfo(hCursor, istep, rate_jiffies, num_steps);
-
-   return LoadImageW( NULL, name, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
-}
-
 BOOL
 WINAPI
 GetReasonTitleFromReasonCode(DWORD dw1, DWORD dw2, DWORD dw3)

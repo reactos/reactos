@@ -3762,7 +3762,7 @@ StartScan:
         }
 
         /* Account for the quotes and space between the two */
-        n += ((sizeof('""') * 2) + sizeof(' '));
+        n += sizeof("\" \"") - sizeof(ANSI_NULL);
 
         /* Convert to bytes, and make sure we don't overflow */
         n *= sizeof(WCHAR);
@@ -3923,7 +3923,7 @@ StartScan:
         RealTimePrivilegeState = NULL;
 
         /* Is realtime priority being requested? */
-        if (PriorityClass.PriorityClass == REALTIME_PRIORITY_CLASS)
+        if (PriorityClass.PriorityClass == PROCESS_PRIORITY_CLASS_REALTIME)
         {
             /* Check if the caller has real-time access, and enable it if so */
             RealTimePrivilegeState = BasepIsRealtimeAllowed(TRUE);

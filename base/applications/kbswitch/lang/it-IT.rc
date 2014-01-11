@@ -4,8 +4,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Preferenze...",  ID_PREFERENCES
+        MENUITEM "&Preferenze...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Esci",            ID_EXIT
+        MENUITEM "&Esci", ID_EXIT
     END
 END

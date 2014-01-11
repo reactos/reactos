@@ -23,22 +23,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "bufferobj.h"
-#include "context.h"
-#include "enable.h"
-#include "enums.h"
-#include "hash.h"
-#include "image.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "varray.h"
-#include "arrayobj.h"
-#include "main/dispatch.h"
-
+#include <precomp.h>
 
 /** Used to indicate which GL datatypes are accepted by each of the
  * glVertex/Color/Attrib/EtcPointer() functions.

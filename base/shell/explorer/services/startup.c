@@ -54,7 +54,6 @@
 
 #include <stdio.h>
 #include <windows.h>
-#include <ctype.h>
 
 EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 

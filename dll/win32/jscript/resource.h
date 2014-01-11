@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
+#pragma once
 
 #define JSCRIPT_MAJOR_VERSION 5
 #define JSCRIPT_MINOR_VERSION 8

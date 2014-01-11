@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Management Console
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mmc/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for MMC
- * TRANSLATOR:  Artem Reznikov
+ * PROJECT:    ReactOS Management Console
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mmc/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for MMC
+ * TRANSLATOR: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -16,7 +16,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Довідка"
     BEGIN
         MENUITEM "&Про консоль керування ReactOS...", IDM_HELP_ABOUT
@@ -31,12 +30,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "&Довідка"
     BEGIN
         MENUITEM "&Про консоль керування ReactOS...", IDM_HELP_ABOUT

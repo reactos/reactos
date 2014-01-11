@@ -1,40 +1,14 @@
-/*
- * REG.EXE - Wine-compatible reg program.
- * German language support
- *
- * Copyright 2008 Andrej Sinicyn
- * Copyright 2009 Michael Stefaniuc
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "reg.h"
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
-{
-    STRING_USAGE, "Die Syntax von diesem Befehl ist:\n\nREG [ ADD | DELETE | QUERY ]\nREG Befehl /?\n"
-    STRING_ADD_USAGE, "REG ADD Schlüssel [/v Wert | /ve] [/t Typ] [/s Trenner] [/d Daten] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE Schlüssel [/v Wert | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY Schlüssel [/v Wert | /ve] [/s]\n"
-    STRING_SUCCESS, "Der Vorgang wurde erfolgreich abgeschlossen\n"
-    STRING_INVALID_KEY, "Fehler: Ungültiger Schlüssel\n"
-    STRING_INVALID_CMDLINE, "Fehler: Ungültige Befehlszeilenargumente\n"
-    STRING_NO_REMOTE, "Fehler: Konnte Schlüssel nicht zum remote Rechner hinzufügen\n"
-    STRING_CANNOT_FIND, "Fehler: Der angegebene Schlüssel oder Wert konnte nicht gefunden werden\n"
-}
+BEGIN
+    STRING_USAGE "Die Syntax von diesem Befehl ist:\n\nREG [ ADD | DELETE | QUERY ]\nREG Befehl /?\n"
+    STRING_ADD_USAGE "REG ADD Schlüssel [/v Wert | /ve] [/t Typ] [/s Trenner] [/d Daten] [/f]\n"
+    STRING_DELETE_USAGE "REG DELETE Schlüssel [/v Wert | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE "REG QUERY Schlüssel [/v Wert | /ve] [/s]\n"
+    STRING_SUCCESS "Der Vorgang wurde erfolgreich abgeschlossen\n"
+    STRING_INVALID_KEY "Fehler: Ungültiger Schlüssel\n"
+    STRING_INVALID_CMDLINE "Fehler: Ungültige Befehlszeilenargumente\n"
+    STRING_NO_REMOTE "Fehler: Konnte Schlüssel nicht zum remote Rechner hinzufügen\n"
+    STRING_CANNOT_FIND "Fehler: Der angegebene Schlüssel oder Wert konnte nicht gefunden werden\n"
+END

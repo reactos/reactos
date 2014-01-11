@@ -22,21 +22,35 @@
 #ifndef __WINE_MSI_PRIVATE__
 #define __WINE_MSI_PRIVATE__
 
-#include <stdarg.h>
+#include <config.h>
 
-#include "windef.h"
+#include <stdarg.h>
+#include <assert.h>
+
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
 #include <winbase.h>
-#include "fdi.h"
-#include "msi.h"
+#include <winreg.h>
+#include <wincon.h>
+#include <winver.h>
 #include <msiquery.h>
-#include <msidefs.h>
-#include "objbase.h"
-#include "objidl.h"
+#include <objbase.h>
+#include <msiserver.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <fusion.h>
-#include "winnls.h"
-#include "winver.h"
+#include <sddl.h>
+#include <msidefs.h>
+
 #include <wine/list.h>
-#include "wine/debug.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 BOOL is_wow64;
@@ -1250,5 +1264,7 @@ static inline LPWSTR strdupW( LPCWSTR src )
         lstrcpyW(dest, src);
     return dest;
 }
+
+#include "query.h"
 
 #endif /* __WINE_MSI_PRIVATE__ */

@@ -5,24 +5,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 228, 27
- CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
- GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "Adresse IP :", -1, 14, 75, 135, 8
- CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
- CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Passerelle par défaut :", -1, 14, 105, 135, 8
- CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
- CONTROL "Obtenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
- GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "&Utiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Serveur DNS primaire :", -1, 14, 171, 135, 8
- CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "Serveur DNS secondaire :", -1, 14, 186, 135, 8
- CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "&Avancé", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 228, 27
+    CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    LTEXT "Adresse IP :", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "Passerelle par défaut :", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "Obtenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Utiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    LTEXT "Serveur DNS primaire :", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "Serveur DNS secondaire :", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Avancé", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
@@ -35,15 +35,15 @@ BEGIN
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "Utili&sateur configuré", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
     LTEXT "Masque de so&us-réseau :", -1, 14, 95, 135, 8
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
     LTEXT "Passerelle par &défaut :", -1, 14, 115, 135, 8
-    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
     LTEXT "Serveur DNS &préféré :", -1, 14, 150, 135, 8
-    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
     LTEXT "Serveur DNS &alternatif :", -1, 14, 165, 180, 8
-    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
@@ -93,7 +93,6 @@ BEGIN
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "Enregistrer les adresses de cette connexion dans le DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Utiliser le suffixe DNS de cette connexion pour l'enregistrement DNS", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -104,7 +103,7 @@ BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "Paramètres optionnels", -1, 5, 15, 130, 12
     PUSHBUTTON "Propriétés", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
-    GROUPBOX "Description :", -1, 5, 120, 240, 70
+    GROUPBOX "Description:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
@@ -113,10 +112,10 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adresse TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Adresse IP:", -1, 5, 15, 70, 12
     LTEXT "Masque de sous-réseau:", -1, 5, 30, 70, 12
-    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "Ajouter", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Annuler", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -126,7 +125,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adresse de passerelle TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
     LTEXT "Passerelle :", -1, 5, 15, 70, 12
     CHECKBOX "Métrique automatique", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "Métrique :", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
@@ -140,7 +139,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Serveur DNS TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
     LTEXT "Serveur DNS :", -1, 5, 10, 120, 12
     PUSHBUTTON "Ajouter", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "Annuler", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -198,32 +197,32 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Connexion réseau"
-	IDS_NO_IPADDR_SET   "La carte réseau nécessite au moins une adresse IP. Veuillez en entre une."
-	IDS_NO_SUBMASK_SET  "Vous avez entré une adresse sans entrer son masque de sous-réseau. Veuillez ajouter un masque de sous-réseau."
-	IDS_TCPFILTERDESC   "Le filtrage TCP/IP vous permet de contrôler le type de trafic TCP/IP qui atteint l'ordinateur."
-	IDS_TCPFILTER       "Filtrage TCP/IP"
-	IDS_IPADDR          "Adresse IP"
-	IDS_SUBMASK         "Masque de sous-réseau"
-	IDS_GATEWAY         "Passerelle"
-	IDS_METRIC          "Métrique"
-	IDS_DHCPACTIVE      "DHCP activé"
-	IDS_AUTOMATIC       "Automatique"
-	IDS_NOITEMSEL       "Vous n'avez pas sélectionné d'élément. Veuillez en sélectionner un d'abord."
-	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Ajouter"
-	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "Ports TCP"
-	IDS_UDP_PORTS       "Ports UDP"
-	IDS_IP_PROTO        "Protocoles IP"
-	IDS_PORT_RANGE      "Les numéros de port doivent être supérieurs à 0 et inférieurs à 65536. Veuillez entrer un nombre entre ces valeurs."
-	IDS_PROT_RANGE      "Les numéros de protocole doivent être supérieurs à 0 et inférieurs à 256. Veuillez entrer un nombre entre ces valeurs."
-	IDS_DUP_NUMBER      "Le nombre que vous essayez d'ajouter est déjà dans la liste. Veuillez entrer un nombre différent."
-	IDS_DISABLE_FILTER  "Désactiver ce paramètre global TCP/IP affectera toutes les cartes."
-	IDS_NO_SUFFIX       "Le paramétrage actuel de la méthode de recherche nécessite au moins un suffixe DNS. Veuillez entrer un ou modifier le paramétrage."
-	IDS_DOMAIN_SUFFIX   "Le suffixe de domaine n'est pas un suffixe valide."
-	IDS_DNS_SUFFIX      "Le nom de domaine DNS ""%s"" n'est pas valide."
-	IDS_DUP_SUFFIX      "Le suffixe DNS est déjà dans la liste."
-	IDS_DUP_IPADDR      "L'adresse IP est déjà dans la liste."
-	IDS_DUP_GW          "La passerelle par défaut est déjà dans la liste."
+    IDS_NET_CONNECT "Connexion réseau"
+    IDS_NO_IPADDR_SET "La carte réseau nécessite au moins une adresse IP. Veuillez en entre une."
+    IDS_NO_SUBMASK_SET "Vous avez entré une adresse sans entrer son masque de sous-réseau. Veuillez ajouter un masque de sous-réseau."
+    IDS_TCPFILTERDESC "Le filtrage TCP/IP vous permet de contrôler le type de trafic TCP/IP qui atteint l'ordinateur."
+    IDS_TCPFILTER "Filtrage TCP/IP"
+    IDS_IPADDR "Adresse IP"
+    IDS_SUBMASK "Masque de sous-réseau"
+    IDS_GATEWAY "Passerelle"
+    IDS_METRIC "Métrique"
+    IDS_DHCPACTIVE "DHCP activé"
+    IDS_AUTOMATIC "Automatique"
+    IDS_NOITEMSEL "Vous n'avez pas sélectionné d'élément. Veuillez en sélectionner un d'abord."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Ajouter"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "Ports TCP"
+    IDS_UDP_PORTS "Ports UDP"
+    IDS_IP_PROTO "Protocoles IP"
+    IDS_PORT_RANGE "Les numéros de port doivent être supérieurs à 0 et inférieurs à 65536. Veuillez entrer un nombre entre ces valeurs."
+    IDS_PROT_RANGE "Les numéros de protocole doivent être supérieurs à 0 et inférieurs à 256. Veuillez entrer un nombre entre ces valeurs."
+    IDS_DUP_NUMBER "Le nombre que vous essayez d'ajouter est déjà dans la liste. Veuillez entrer un nombre différent."
+    IDS_DISABLE_FILTER "Désactiver ce paramètre global TCP/IP affectera toutes les cartes."
+    IDS_NO_SUFFIX "Le paramétrage actuel de la méthode de recherche nécessite au moins un suffixe DNS. Veuillez entrer un ou modifier le paramétrage."
+    IDS_DOMAIN_SUFFIX "Le suffixe de domaine n'est pas un suffixe valide."
+    IDS_DNS_SUFFIX "Le nom de domaine DNS ""%s"" n'est pas valide."
+    IDS_DUP_SUFFIX "Le suffixe DNS est déjà dans la liste."
+    IDS_DUP_IPADDR "L'adresse IP est déjà dans la liste."
+    IDS_DUP_GW "La passerelle par défaut est déjà dans la liste."
 END

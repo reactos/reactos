@@ -51,7 +51,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio 6")
 endif()
 if(NOT CMAKE_NO_BUILD_TYPE AND CMAKE_GENERATOR MATCHES "Visual Studio")
   set (CMAKE_NO_BUILD_TYPE 1)
-  set (CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING
+  set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING
      "Semicolon separated list of supported configuration types, only supports Debug, Release, MinSizeRel, and RelWithDebInfo, anything else will be ignored.")
   mark_as_advanced(CMAKE_CONFIGURATION_TYPES)
 endif()

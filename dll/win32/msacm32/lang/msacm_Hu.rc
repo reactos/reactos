@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wineacm.h"
-
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 100

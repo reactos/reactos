@@ -62,9 +62,6 @@ PFN_NUMBER MmHighestPhysicalPage = 0;
 PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 
-extern ULONG_PTR    MmHeapPointer;
-extern ULONG_PTR    MmHeapStart;
-
 ULONG
 AddMemoryDescriptor(
     IN OUT PFREELDR_MEMORY_DESCRIPTOR List,

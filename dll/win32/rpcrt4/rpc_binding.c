@@ -21,28 +21,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <assert.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winnls.h"
-//#include "winerror.h"
-//#include "winternl.h"
-#include <wine/unicode.h>
-
-#include <rpc.h>
-//#include "rpcndr.h"
-
-#include <wine/debug.h>
-
-//#include "rpc_binding.h"
-#include "rpc_assoc.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -266,6 +245,7 @@ RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding)
   RPCRT4_strfree(Binding->NetworkAddr);
   RPCRT4_strfree(Binding->Protseq);
   HeapFree(GetProcessHeap(), 0, Binding->NetworkOptions);
+  HeapFree(GetProcessHeap(), 0, Binding->CookieAuth);
   if (Binding->AuthInfo) RpcAuthInfo_Release(Binding->AuthInfo);
   if (Binding->QOS) RpcQualityOfService_Release(Binding->QOS);
   HeapFree(GetProcessHeap(), 0, Binding);
@@ -280,7 +260,7 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
 
   if (!Binding->server) {
      return RpcAssoc_GetClientConnection(Binding->Assoc, InterfaceId,
-         TransferSyntax, Binding->AuthInfo, Binding->QOS, Connection);
+         TransferSyntax, Binding->AuthInfo, Binding->QOS, Binding->CookieAuth, Connection);
   } else {
     /* we already have a connection with acceptable binding, so use it */
     if (Binding->FromConn) {
@@ -301,7 +281,7 @@ RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection)
     /* don't destroy a connection that is cached in the binding */
     if (Binding->FromConn == Connection)
       return RPC_S_OK;
-    return RPCRT4_DestroyConnection(Connection);
+    return RPCRT4_ReleaseConnection(Connection);
   }
   else {
     RpcAssoc_ReleaseIdleConnection(Binding->Assoc, Connection);
@@ -854,21 +834,22 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
 
   if (ret == RPC_S_OK)
     ret = RPCRT4_CreateBindingA(&bind, FALSE, (char*)Protseq);
-  if (ret != RPC_S_OK) return ret;
-  ret = RPCRT4_SetBindingObject(bind, &Uuid);
-  if (ret == RPC_S_OK)
-    ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
+  if (ret == RPC_S_OK) {
+      ret = RPCRT4_SetBindingObject(bind, &Uuid);
+      if (ret == RPC_S_OK)
+        ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
+
+      if (ret == RPC_S_OK)
+        *Binding = (RPC_BINDING_HANDLE)bind;
+      else
+        RPCRT4_ReleaseBinding(bind);
+  }
 
   RpcStringFreeA(&Options);
   RpcStringFreeA(&Endpoint);
   RpcStringFreeA(&NetworkAddr);
   RpcStringFreeA(&Protseq);
   RpcStringFreeA(&ObjectUuid);
-
-  if (ret == RPC_S_OK) 
-    *Binding = (RPC_BINDING_HANDLE)bind;
-  else 
-    RPCRT4_ReleaseBinding(bind);
 
   return ret;
 }
@@ -893,21 +874,22 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
 
   if (ret == RPC_S_OK)
     ret = RPCRT4_CreateBindingW(&bind, FALSE, Protseq);
-  if (ret != RPC_S_OK) return ret;
-  ret = RPCRT4_SetBindingObject(bind, &Uuid);
-  if (ret == RPC_S_OK)
-    ret = RPCRT4_CompleteBindingW(bind, NetworkAddr, Endpoint, Options);
+  if (ret == RPC_S_OK) {
+      ret = RPCRT4_SetBindingObject(bind, &Uuid);
+      if (ret == RPC_S_OK)
+        ret = RPCRT4_CompleteBindingW(bind, NetworkAddr, Endpoint, Options);
+
+      if (ret == RPC_S_OK)
+        *Binding = (RPC_BINDING_HANDLE)bind;
+      else
+        RPCRT4_ReleaseBinding(bind);
+  }
 
   RpcStringFreeW(&Options);
   RpcStringFreeW(&Endpoint);
   RpcStringFreeW(&NetworkAddr);
   RpcStringFreeW(&Protseq);
   RpcStringFreeW(&ObjectUuid);
-
-  if (ret == RPC_S_OK)
-    *Binding = (RPC_BINDING_HANDLE)bind;
-  else
-    RPCRT4_ReleaseBinding(bind);
 
   return ret;
 }
@@ -1003,6 +985,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
   DestBinding->NetworkAddr = RPCRT4_strndupA(SrcBinding->NetworkAddr, -1);
   DestBinding->Endpoint = RPCRT4_strndupA(SrcBinding->Endpoint, -1);
   DestBinding->NetworkOptions = RPCRT4_strdupW(SrcBinding->NetworkOptions);
+  DestBinding->CookieAuth = RPCRT4_strdupW(SrcBinding->CookieAuth);
   if (SrcBinding->Assoc) SrcBinding->Assoc->refs++;
   DestBinding->Assoc = SrcBinding->Assoc;
 
@@ -1415,7 +1398,18 @@ BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQuali
         if (http_credentials1->AuthenticationTarget != http_credentials2->AuthenticationTarget)
             return FALSE;
 
-        /* authentication schemes and server certificate subject not currently used */
+        if (http_credentials1->NumberOfAuthnSchemes != http_credentials2->NumberOfAuthnSchemes)
+            return FALSE;
+
+        if ((!http_credentials1->AuthnSchemes && http_credentials2->AuthnSchemes) ||
+            (http_credentials1->AuthnSchemes && !http_credentials2->AuthnSchemes))
+            return FALSE;
+
+        if (memcmp(http_credentials1->AuthnSchemes, http_credentials2->AuthnSchemes,
+                   http_credentials1->NumberOfAuthnSchemes * sizeof(http_credentials1->AuthnSchemes[0])))
+            return FALSE;
+
+        /* server certificate subject not currently used */
 
         if (http_credentials1->TransportCredentials != http_credentials2->TransportCredentials)
         {
@@ -1653,12 +1647,13 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
           const RPC_SECURITY_QOS_V2_A *SecurityQos2 = (const RPC_SECURITY_QOS_V2_A *)SecurityQos;
           TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p(%u), %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,
                     SecurityQos2->u.HttpCredentials->NumberOfAuthnSchemes,
                     SecurityQos2->u.HttpCredentials->AuthnSchemes,
+                    SecurityQos2->u.HttpCredentials->AuthnSchemes ? *SecurityQos2->u.HttpCredentials->AuthnSchemes : 0,
                     SecurityQos2->u.HttpCredentials->ServerCertificateSubject);
       }
       TRACE("}\n");
@@ -1730,7 +1725,7 @@ RpcBindingSetAuthInfoExA( RPC_BINDING_HANDLE Binding, RPC_CSTR ServerPrincName,
     if (r == RPC_S_OK)
     {
       new_auth_info->server_principal_name = RPCRT4_strdupAtoW((char *)ServerPrincName);
-      if (new_auth_info->server_principal_name)
+      if (!ServerPrincName || new_auth_info->server_principal_name)
       {
         if (bind->AuthInfo) RpcAuthInfo_Release(bind->AuthInfo);
         bind->AuthInfo = new_auth_info;
@@ -1783,12 +1778,13 @@ RpcBindingSetAuthInfoExW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, 
           const RPC_SECURITY_QOS_V2_W *SecurityQos2 = (const RPC_SECURITY_QOS_V2_W *)SecurityQos;
           TRACE(", AdditionalSecurityInfoType=%d", SecurityQos2->AdditionalSecurityInfoType);
           if (SecurityQos2->AdditionalSecurityInfoType == RPC_C_AUTHN_INFO_TYPE_HTTP)
-              TRACE(", { %p, 0x%x, %d, %d, %p, %s }",
+              TRACE(", { %p, 0x%x, %d, %d, %p(%u), %s }",
                     SecurityQos2->u.HttpCredentials->TransportCredentials,
                     SecurityQos2->u.HttpCredentials->Flags,
                     SecurityQos2->u.HttpCredentials->AuthenticationTarget,
                     SecurityQos2->u.HttpCredentials->NumberOfAuthnSchemes,
                     SecurityQos2->u.HttpCredentials->AuthnSchemes,
+                    SecurityQos2->u.HttpCredentials->AuthnSchemes ? *SecurityQos2->u.HttpCredentials->AuthnSchemes : 0,
                     debugstr_w(SecurityQos2->u.HttpCredentials->ServerCertificateSubject));
       }
       TRACE("}\n");
@@ -1911,6 +1907,27 @@ RpcBindingSetAuthInfoW( RPC_BINDING_HANDLE Binding, RPC_WSTR ServerPrincName, UL
  */
 RPC_STATUS WINAPI RpcBindingSetOption(RPC_BINDING_HANDLE BindingHandle, ULONG Option, ULONG_PTR OptionValue)
 {
-    FIXME("(%p, %d, %ld): stub\n", BindingHandle, Option, OptionValue);
+    TRACE("(%p, %d, %ld)\n", BindingHandle, Option, OptionValue);
+
+    switch (Option)
+    {
+    case RPC_C_OPT_COOKIE_AUTH:
+    {
+        RPC_C_OPT_COOKIE_AUTH_DESCRIPTOR *cookie = (RPC_C_OPT_COOKIE_AUTH_DESCRIPTOR *)OptionValue;
+        RpcBinding *binding = BindingHandle;
+        int len = MultiByteToWideChar(CP_ACP, 0, cookie->Buffer, cookie->BufferSize, NULL, 0);
+        WCHAR *str;
+
+        if (!(str = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR)))) return ERROR_OUTOFMEMORY;
+        MultiByteToWideChar(CP_ACP, 0, cookie->Buffer, cookie->BufferSize, str, len);
+        str[len] = 0;
+        HeapFree(GetProcessHeap(), 0, binding->CookieAuth);
+        binding->CookieAuth = str;
+        break;
+    }
+    default:
+        FIXME("option %u not supported\n", Option);
+        break;
+    }
     return RPC_S_OK;
 }

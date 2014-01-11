@@ -9,7 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

@@ -26,13 +26,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-
-#include "main/mtypes.h"
-#include "main/macros.h"
-#include "main/enums.h"
-#include "main/image.h"
-#include "vbo_split.h"
-
+#include <precomp.h>
 
 #define MAX_PRIM 32
 

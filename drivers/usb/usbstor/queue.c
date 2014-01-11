@@ -11,6 +11,9 @@
 
 #include "usbstor.h"
 
+#define NDEBUG
+#include <debug.h>
+
 VOID
 USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension)

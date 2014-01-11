@@ -21,6 +21,12 @@
 
 #define INI_FILE_COMMENT_CHAR    ';'
 
+#define TAG_INI_FILE 'FinI'
+#define TAG_INI_SECTION 'SinI'
+#define TAG_INI_SECTION_ITEM 'IinI'
+#define TAG_INI_NAME 'NinI'
+#define TAG_INI_VALUE 'VinI'
+
 // This structure describes a single .ini file item
 // The item format in the .ini file is:
 // Name=Value
@@ -75,3 +81,4 @@ BOOLEAN    IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHA
 BOOLEAN    IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize);
 BOOLEAN    IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId);
 BOOLEAN    IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
+VOID IniCleanup(VOID);

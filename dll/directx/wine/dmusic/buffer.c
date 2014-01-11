@@ -20,10 +20,7 @@
  */
 
 #include "dmusic_private.h"
-//#include "initguid.h"
 #include <dmksctrl.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
 static inline IDirectMusicBufferImpl *impl_from_IDirectMusicBuffer(IDirectMusicBuffer *iface)
 {

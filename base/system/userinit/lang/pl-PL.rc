@@ -1,14 +1,13 @@
 /*
- *      translated by xrogers (http://rogers.cyberdusk.pl/)
- *      xxrogers@users.sourceforge.net
- *      https://sourceforge.net/projects/reactospl
- *      UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by xrogers (http://rogers.cyberdusk.pl/)
+ *    xxrogers@users.sourceforge.net
+ *    https://sourceforge.net/projects/reactospl
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
 STRINGTABLE
 BEGIN
-
-STRING_USERINIT_FAIL, "Nie powiodło się uruchomienie powłoki przez userinit!\n"
-
+    STRING_USERINIT_FAIL "Nie powiodło się uruchomienie powłoki przez userinit!\n"
 END

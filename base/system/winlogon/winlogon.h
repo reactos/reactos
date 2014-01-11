@@ -46,6 +46,7 @@
 #include <reactos/winlogon.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 #include "setup.h"
 #include "resource.h"
@@ -329,5 +330,3 @@ BOOL WINAPI WlxDisconnect(VOID);
 DWORD WINAPI WlxQueryTerminalServicesData(HANDLE hWlx, PWLX_TERMINAL_SERVICES_DATA pTSData, WCHAR* UserName, WCHAR* Domain);
 
 #endif /* __WINLOGON_MAIN_H__ */
-
-/* EOF */

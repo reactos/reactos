@@ -1,6 +1,6 @@
-/* FILE:        dll/cpl/joy/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-01-10
+/* FILE:       dll/cpl/joy/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2009-01-10
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

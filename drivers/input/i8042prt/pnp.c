@@ -11,6 +11,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 /* This is all pretty confusing. There's more than one way to

@@ -37,6 +37,10 @@ Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej infor
 Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consultați wiki ReactOS.
 Size = 31,6 Mo
 
+[Section.041f]
+Name = ReactOS Derleme Ortamı
+Description = ReactOS Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
 

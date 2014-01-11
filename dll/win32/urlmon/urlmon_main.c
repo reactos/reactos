@@ -18,23 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
 #include "urlmon_main.h"
 
-//#include "winreg.h"
-
-#define NO_SHLWAPI_REG
-//#include "shlwapi.h"
-#include <advpub.h>
 #include <initguid.h>
-
-#include <wine/debug.h>
-
-#include "urlmon.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
-
 DEFINE_GUID(CLSID_CUri, 0xDF2FCE13, 0x25EC, 0x45BB, 0x9D,0x4C, 0xCE,0xCD,0x47,0xC2,0x43,0x0C);
 
 LONG URLMON_refCount = 0;

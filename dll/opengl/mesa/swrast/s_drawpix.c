@@ -22,24 +22,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <precomp.h>
 
-#include "main/glheader.h"
-#include "main/bufferobj.h"
-#include "main/colormac.h"
-#include "main/context.h"
-#include "main/format_pack.h"
-#include "main/image.h"
-#include "main/imports.h"
-#include "main/macros.h"
-#include "main/pack.h"
-#include "main/pixeltransfer.h"
-#include "main/state.h"
-
-#include "s_context.h"
-#include "s_span.h"
-#include "s_stencil.h"
-#include "s_zoom.h"
-
+#include <main/pack.h>
 
 /**
  * Handle a common case of drawing GL_RGB/GL_UNSIGNED_BYTE into a

@@ -8,6 +8,12 @@
 
 #include "priv.h"
 
+#include <ntimage.h>
+#include <ndk/ldrfuncs.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /*
     @implemented
 */

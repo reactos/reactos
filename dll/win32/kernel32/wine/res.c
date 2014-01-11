@@ -20,30 +20,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "config.h"
-//#include "wine/port.h"
+#include <k32.h>
 
-#include <stdarg.h>
+#include <wine/list.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winternl.h"
-#include "wine/debug.h"
-#include "wine/exception.h"
-#include "wine/unicode.h"
-#include "wine/list.h"
-
-#define HeapAlloc RtlAllocateHeap
-#define HeapReAlloc RtlReAllocateHeap
-#define HeapFree RtlFreeHeap
-WINE_DEFAULT_DEBUG_CHANNEL(resource);
-
-/* we don't want to include winuser.h just for this */
-#define IS_INTRESOURCE(x)   (((ULONG_PTR)(x) >> 16) == 0)
+#define NDEBUG
+#include <debug.h>
+DEBUG_CHANNEL(resource);
 
 /* retrieve the resource name to pass to the ntdll functions */
 static NTSTATUS get_res_nameA( LPCSTR name, UNICODE_STRING *str )
@@ -94,7 +77,7 @@ static HRSRC find_resourceA( HMODULE hModule, LPCSTR type, LPCSTR name, WORD lan
     NTSTATUS status;
     UNICODE_STRING nameW, typeW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DATA_ENTRY *entry = NULL;
+    IMAGE_RESOURCE_DATA_ENTRY *entry = NULL;
 
     nameW.Buffer = NULL;
     typeW.Buffer = NULL;
@@ -128,7 +111,7 @@ static HRSRC find_resourceW( HMODULE hModule, LPCWSTR type, LPCWSTR name, WORD l
     NTSTATUS status;
     UNICODE_STRING nameW, typeW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DATA_ENTRY *entry = NULL;
+    IMAGE_RESOURCE_DATA_ENTRY *entry = NULL;
 
     nameW.Buffer = typeW.Buffer = NULL;
 
@@ -206,7 +189,7 @@ BOOL WINAPI EnumResourceTypesA( HMODULE hmod, ENUMRESTYPEPROCA lpfun, LONG_PTR l
     LPSTR type = NULL;
     DWORD len = 0, newlen;
     NTSTATUS status;
-    const IMAGE_RESOURCE_DIRECTORY *resdir;
+    IMAGE_RESOURCE_DIRECTORY *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
 
@@ -222,9 +205,9 @@ BOOL WINAPI EnumResourceTypesA( HMODULE hmod, ENUMRESTYPEPROCA lpfun, LONG_PTR l
     et = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(resdir + 1);
     for (i = 0; i < resdir->NumberOfNamedEntries+resdir->NumberOfIdEntries; i++)
     {
-        if (et[i].u1.s1.NameIsString)
+        if (et[i].NameIsString)
         {
-            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)resdir + et[i].u1.s1.NameOffset);
+            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)resdir + et[i].NameOffset);
             newlen = WideCharToMultiByte( CP_ACP, 0, str->NameString, str->Length, NULL, 0, NULL, NULL);
             if (newlen + 1 > len)
             {
@@ -238,7 +221,7 @@ BOOL WINAPI EnumResourceTypesA( HMODULE hmod, ENUMRESTYPEPROCA lpfun, LONG_PTR l
         }
         else
         {
-            ret = lpfun( hmod, UIntToPtr(et[i].u1.Id), lparam );
+            ret = lpfun( hmod, UIntToPtr(et[i].Id), lparam );
         }
         if (!ret) break;
     }
@@ -256,7 +239,7 @@ BOOL WINAPI EnumResourceTypesW( HMODULE hmod, ENUMRESTYPEPROCW lpfun, LONG_PTR l
     BOOL ret = FALSE;
     LPWSTR type = NULL;
     NTSTATUS status;
-    const IMAGE_RESOURCE_DIRECTORY *resdir;
+    IMAGE_RESOURCE_DIRECTORY *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
 
@@ -272,9 +255,9 @@ BOOL WINAPI EnumResourceTypesW( HMODULE hmod, ENUMRESTYPEPROCW lpfun, LONG_PTR l
     et = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(resdir + 1);
     for (i = 0; i < resdir->NumberOfNamedEntries + resdir->NumberOfIdEntries; i++)
     {
-        if (et[i].u1.s1.NameIsString)
+        if (et[i].NameIsString)
         {
-            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)resdir + et[i].u1.s1.NameOffset);
+            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)resdir + et[i].NameOffset);
             if (str->Length + 1 > len)
             {
                 len = str->Length + 1;
@@ -287,7 +270,7 @@ BOOL WINAPI EnumResourceTypesW( HMODULE hmod, ENUMRESTYPEPROCW lpfun, LONG_PTR l
         }
         else
         {
-            ret = lpfun( hmod, UIntToPtr(et[i].u1.Id), lparam );
+            ret = lpfun( hmod, UIntToPtr(et[i].Id), lparam );
         }
         if (!ret) break;
     }
@@ -308,7 +291,7 @@ BOOL WINAPI EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfu
     NTSTATUS status;
     UNICODE_STRING typeW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
+    IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
 
@@ -329,9 +312,9 @@ BOOL WINAPI EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfu
     {
         for (i = 0; i < resdir->NumberOfNamedEntries+resdir->NumberOfIdEntries; i++)
         {
-            if (et[i].u1.s1.NameIsString)
+            if (et[i].NameIsString)
             {
-                str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)basedir + et[i].u1.s1.NameOffset);
+                str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)basedir + et[i].NameOffset);
                 newlen = WideCharToMultiByte(CP_ACP, 0, str->NameString, str->Length, NULL, 0, NULL, NULL);
                 if (newlen + 1 > len)
                 {
@@ -349,7 +332,7 @@ BOOL WINAPI EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfu
             }
             else
             {
-                ret = lpfun( hmod, type, UIntToPtr(et[i].u1.Id), lparam );
+                ret = lpfun( hmod, type, UIntToPtr(et[i].Id), lparam );
             }
             if (!ret) break;
         }
@@ -380,7 +363,7 @@ BOOL WINAPI EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpf
     NTSTATUS status;
     UNICODE_STRING typeW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
+    IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
 
@@ -401,9 +384,9 @@ BOOL WINAPI EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpf
     {
         for (i = 0; i < resdir->NumberOfNamedEntries+resdir->NumberOfIdEntries; i++)
         {
-            if (et[i].u1.s1.NameIsString)
+            if (et[i].NameIsString)
             {
-                str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)basedir + et[i].u1.s1.NameOffset);
+                str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const BYTE *)basedir + et[i].NameOffset);
                 if (str->Length + 1 > len)
                 {
                     len = str->Length + 1;
@@ -420,7 +403,7 @@ BOOL WINAPI EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpf
             }
             else
             {
-                ret = lpfun( hmod, type, UIntToPtr(et[i].u1.Id), lparam );
+                ret = lpfun( hmod, type, UIntToPtr(et[i].Id), lparam );
             }
             if (!ret) break;
         }
@@ -450,7 +433,7 @@ BOOL WINAPI EnumResourceLanguagesA( HMODULE hmod, LPCSTR type, LPCSTR name,
     NTSTATUS status;
     UNICODE_STRING typeW, nameW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
+    IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
 
     TRACE( "%p %s %s %p %lx\n", hmod, debugstr_a(type), debugstr_a(name), lpfun, lparam );
@@ -473,7 +456,7 @@ BOOL WINAPI EnumResourceLanguagesA( HMODULE hmod, LPCSTR type, LPCSTR name,
     {
         for (i = 0; i < resdir->NumberOfNamedEntries + resdir->NumberOfIdEntries; i++)
         {
-            ret = lpfun( hmod, type, name, et[i].u1.Id, lparam );
+            ret = lpfun( hmod, type, name, et[i].Id, lparam );
             if (!ret) break;
         }
     }
@@ -502,7 +485,7 @@ BOOL WINAPI EnumResourceLanguagesW( HMODULE hmod, LPCWSTR type, LPCWSTR name,
     NTSTATUS status;
     UNICODE_STRING typeW, nameW;
     LDR_RESOURCE_INFO info;
-    const IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
+    IMAGE_RESOURCE_DIRECTORY *basedir, *resdir;
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
 
     TRACE( "%p %s %s %p %lx\n", hmod, debugstr_w(type), debugstr_w(name), lpfun, lparam );
@@ -525,7 +508,7 @@ BOOL WINAPI EnumResourceLanguagesW( HMODULE hmod, LPCWSTR type, LPCWSTR name,
     {
         for (i = 0; i < resdir->NumberOfNamedEntries + resdir->NumberOfIdEntries; i++)
         {
-            ret = lpfun( hmod, type, name, et[i].u1.Id, lparam );
+            ret = lpfun( hmod, type, name, et[i].Id, lparam );
             if (!ret) break;
         }
     }
@@ -951,10 +934,10 @@ static LPWSTR resource_dup_string( const IMAGE_RESOURCE_DIRECTORY *root, const I
     const IMAGE_RESOURCE_DIR_STRING_U* string;
     LPWSTR s;
 
-    if (!entry->u1.s1.NameIsString)
-        return UIntToPtr(entry->u1.Id);
+    if (!entry->NameIsString)
+        return UIntToPtr(entry->Id);
 
-    string = (const IMAGE_RESOURCE_DIR_STRING_U*) (((const char *)root) + entry->u1.s1.NameOffset);
+    string = (const IMAGE_RESOURCE_DIR_STRING_U*) (((const char *)root) + entry->NameOffset);
     s = HeapAlloc(GetProcessHeap(), 0, (string->Length + 1)*sizeof (WCHAR) );
     memcpy( s, string->NameString, (string->Length + 1)*sizeof (WCHAR) );
     s[string->Length] = 0;
@@ -983,7 +966,7 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
         Type = resource_dup_string( root, e1 );
 
-        namedir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e1->u2.s3.OffsetToDirectory);
+        namedir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e1->OffsetToDirectory);
         for (j = 0; j < namedir->NumberOfNamedEntries + namedir->NumberOfIdEntries; j++)
         {
             LPWSTR Name;
@@ -992,7 +975,7 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
             Name = resource_dup_string( root, e2 );
 
-            langdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e2->u2.s3.OffsetToDirectory);
+            langdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + e2->OffsetToDirectory);
             for (k = 0; k < langdir->NumberOfNamedEntries + langdir->NumberOfIdEntries; k++)
             {
                 LANGID Lang;
@@ -1001,9 +984,9 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
                 e3 = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)(langdir + 1) + k;
 
-                Lang = e3->u1.Id;
+                Lang = e3->Id;
 
-                data = (const IMAGE_RESOURCE_DATA_ENTRY *)((const char *)root + e3->u2.OffsetToData);
+                data = (const IMAGE_RESOURCE_DATA_ENTRY *)((const char *)root + e3->OffsetToData);
 
                 p = address_from_rva( base, mapping_size, data->OffsetToData, data->Size );
 
@@ -1238,8 +1221,8 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
             DWORD len;
 
             root->NumberOfNamedEntries++;
-            e1->u1.s1.NameIsString = 1;
-            e1->u1.s1.NameOffset = si->strings_ofs;
+            e1->NameIsString = 1;
+            e1->NameOffset = si->strings_ofs;
 
             strings = (WCHAR*) &base[si->strings_ofs];
             len = lstrlenW( types->id );
@@ -1250,10 +1233,10 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
         else
         {
             root->NumberOfIdEntries++;
-            e1->u1.Id = LOWORD( types->id );
+            e1->Id = LOWORD( types->id );
         }
-        e1->u2.s3.OffsetToDirectory = si->names_ofs;
-        e1->u2.s3.DataIsDirectory = TRUE;
+        e1->OffsetToDirectory = si->names_ofs;
+        e1->DataIsDirectory = TRUE;
         si->types_ofs += sizeof (IMAGE_RESOURCE_DIRECTORY_ENTRY);
 
         namedir = (IMAGE_RESOURCE_DIRECTORY*) &base[si->names_ofs];
@@ -1274,8 +1257,8 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
                 DWORD len;
 
                 namedir->NumberOfNamedEntries++;
-                e2->u1.s1.NameIsString = 1;
-                e2->u1.s1.NameOffset = si->strings_ofs;
+                e2->NameIsString = 1;
+                e2->NameOffset = si->strings_ofs;
 
                 strings = (WCHAR*) &base[si->strings_ofs];
                 len = lstrlenW( names->id );
@@ -1286,10 +1269,10 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
             else
             {
                 namedir->NumberOfIdEntries++;
-                e2->u1.Id = LOWORD( names->id );
+                e2->Id = LOWORD( names->id );
             }
-            e2->u2.s3.OffsetToDirectory = si->langs_ofs;
-            e2->u2.s3.DataIsDirectory = TRUE;
+            e2->OffsetToDirectory = si->langs_ofs;
+            e2->DataIsDirectory = TRUE;
             si->names_ofs += sizeof (IMAGE_RESOURCE_DIRECTORY_ENTRY);
 
             langdir = (IMAGE_RESOURCE_DIRECTORY*) &base[si->langs_ofs];
@@ -1306,8 +1289,8 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
                 e3 = (IMAGE_RESOURCE_DIRECTORY_ENTRY*) &base[si->langs_ofs];
                 memset( e3, 0, sizeof *e3 );
                 langdir->NumberOfIdEntries++;
-                e3->u1.Id = LOWORD( data->lang );
-                e3->u2.OffsetToData = si->data_entry_ofs;
+                e3->Id = LOWORD( data->lang );
+                e3->OffsetToData = si->data_entry_ofs;
 
                 si->langs_ofs += sizeof (IMAGE_RESOURCE_DIRECTORY_ENTRY);
 

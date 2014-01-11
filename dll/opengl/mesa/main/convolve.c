@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /*
  * Image convolution functions.
  *
@@ -30,16 +29,7 @@
  * the GL spec.
  */
 
-
-#include "glheader.h"
-#include "bufferobj.h"
-#include "colormac.h"
-#include "convolve.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "main/dispatch.h"
-
+#include <precomp.h>
 
 #if FEATURE_convolve
 

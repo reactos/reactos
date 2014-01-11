@@ -18,9 +18,9 @@
 
 /* @makedep: scrrun.rgs */
 1 WINE_REGISTRY scrrun.rgs
-2 WINE_REGISTRY scrrun_tlb.rgs
+2 WINE_REGISTRY "scrrun_tlb.rgs"
 
-1 TYPELIB scrrun.tlb
+1 TYPELIB "scrrun.tlb"
 
 #define WINE_FILEDESCRIPTION_STR "Wine ScrRun dll"
 #define WINE_FILENAME_STR "scrrun.dll"

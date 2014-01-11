@@ -4,20 +4,10 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-//#include <windows.h>
 
-#define WIN32_NO_STATUS
-#include <windef.h>
+#include "cardlib.h"
 
 #include <tchar.h>
-//#include <stdlib.h>
-
-//#include "globals.h"
-#include "cardlib.h"
-//#include "cardbutton.h"
-//#include "cardregion.h"
-//#include "cardwindow.h"
-#include "cardcolor.h"
 
 extern HPALETTE __holdplacepal;
 

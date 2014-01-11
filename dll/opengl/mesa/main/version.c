@@ -21,10 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <precomp.h>
 
-#include "imports.h"
-#include "mtypes.h"
-#include "version.h"
 #include "git_sha1.h"
 
 /**

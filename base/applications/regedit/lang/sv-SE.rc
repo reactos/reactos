@@ -1,47 +1,26 @@
-/*
- * Regedit (Swedish resources)
- *
- * Copyright 2005 Andreas Bjerkeholt modifierad 2011 Jaix Bly
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
-/*
- * Menu
- */
+/* Menus */
 
 IDC_REGEDIT MENU
 BEGIN
     POPUP "&Arkiv"
     BEGIN
-        MENUITEM "&Avsluta",                    ID_REGISTRY_EXIT
+        MENUITEM "&Avsluta", ID_REGISTRY_EXIT
     END
     POPUP "&Hjälp"
     BEGIN
-        MENUITEM "&Om ...",                     ID_HELP_ABOUT
+        MENUITEM "&Om ...", ID_HELP_ABOUT
     END
 END
 
@@ -49,222 +28,211 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "R&egistret"
     BEGIN
-        MENUITEM "&Importera registerfil...",   ID_REGISTRY_IMPORTREGISTRYFILE
-
-        MENUITEM "&Exportera registerfil...",   ID_REGISTRY_EXPORTREGISTRYFILE
-
+        MENUITEM "&Importera registerfil...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exportera registerfil...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Läs in Registerdata...",      ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Ta bort Registerdata...",     ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Läs in Registerdata...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Ta bort Registerdata...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Anslut Nätverksregister...",
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-        MENUITEM "&Koppla ifrån Nätverksregister...",
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+        MENUITEM "&Anslut Nätverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Koppla ifrån Nätverksregister...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Skriv &ut\tCtrl+P",           ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "Skriv &ut\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Avsluta",                    ID_REGISTRY_EXIT
+        MENUITEM "&Avsluta", ID_REGISTRY_EXIT
     END
     POPUP "&Redigera"
     BEGIN
-        MENUITEM "&Ändra",                      ID_EDIT_MODIFY
+        MENUITEM "&Ändra", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Nytt"
         BEGIN
-            MENUITEM "&Nyckel",                     ID_EDIT_NEW_KEY
+            MENUITEM "&Nyckel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Strängvärde",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binärvärde",                 ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Multisträngvärde",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Expanderbart Strängvärde",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Strängvärde", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multisträngvärde", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expanderbart Strängvärde", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "B&ehörigheter...",		ID_EDIT_PERMISSIONS
+        MENUITEM "B&ehörigheter...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Ta bort\tDel",               ID_EDIT_DELETE
-        MENUITEM "&Byt namn",                   ID_EDIT_RENAME
+        MENUITEM "&Ta bort\tDel", ID_EDIT_DELETE
+        MENUITEM "&Byt namn", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiera nyckelnamn",         ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopiera nyckelnamn", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Sök...\tCtrl+F",                ID_EDIT_FIND
-        MENUITEM "Sök N&ästa\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&Sök...\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "Sök N&ästa\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Visa"
     BEGIN
-        MENUITEM "Statusfält",                  ID_VIEW_STATUSBAR
+        MENUITEM "Statusfält", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "Dela",                        ID_VIEW_SPLIT
+        MENUITEM "Dela", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera\tF5",              ID_VIEW_REFRESH
+        MENUITEM "&Uppdatera\tF5", ID_VIEW_REFRESH
     END
     POPUP "&Favoriter"
     BEGIN
-        MENUITEM "&Lägg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Ta bort från Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "&Lägg till i Favoriter", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Ta bort från Favoriter", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Hjälp"
     BEGIN
-        MENUITEM "&Hjälpavsnitt\tF1",           ID_HELP_HELPTOPICS
+        MENUITEM "&Hjälpavsnitt\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Om Registereditorn",         ID_HELP_ABOUT
+        MENUITEM "&Om Registereditorn", ID_HELP_ABOUT
     END
 END
 
 IDR_POPUP_MENUS MENU
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "&Ändra",                      ID_EDIT_MODIFY
-	MENUITEM "Ändra binärdata",             ID_EDIT_MODIFY_BIN
-	MENUITEM SEPARATOR
-	MENUITEM "&Ta bort\tDel",               ID_EDIT_DELETE
-	MENUITEM "&Byt namn",                   ID_EDIT_RENAME
-  END
-  POPUP ""
-  BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Ändra", ID_EDIT_MODIFY
+        MENUITEM "Ändra binärdata", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Ta bort\tDel", ID_EDIT_DELETE
+        MENUITEM "&Byt namn", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
         POPUP "&Nytt"
         BEGIN
-            MENUITEM "&Nyckel",                     ID_EDIT_NEW_KEY
+            MENUITEM "&Nyckel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Strängvärde",                ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binärvärde",                 ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multisträngvärde",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expanderbart Strängvalue",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Strängvärde", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multisträngvärde", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expanderbart Strängvalue", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-  END
-  POPUP ""
-  BEGIN
-        MENUITEM "Visa/dölj nivå",                 ID_TREE_EXPANDBRANCH
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Visa/dölj nivå", ID_TREE_EXPANDBRANCH
         POPUP "&Ny(tt)"
         BEGIN
-            MENUITEM "&Nyckel",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Nyckel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Strängvärde",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binärvärde",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Strängvärde", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Sök",                           ID_EDIT_FIND
+        MENUITEM "&Sök", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Ta bort",                         ID_TREE_DELETE
-        MENUITEM "&Byt namn",                         ID_TREE_RENAME
+        MENUITEM "&Ta bort", ID_TREE_DELETE
+        MENUITEM "&Byt namn", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportera",                         ID_TREE_EXPORT
-        MENUITEM "&Behörigheter...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Exportera", ID_TREE_EXPORT
+        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME
-  END
-  POPUP ""
-  BEGIN
+        MENUITEM "&Kopiera nyckelnamn", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "Klipp &ut", ID_HEXEDIT_CUT
         MENUITEM "&Kopiera", ID_HEXEDIT_COPY
         MENUITEM "Klistra &in", ID_HEXEDIT_PASTE
         MENUITEM "&Ta bort", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Markera &Allt", ID_HEXEDIT_SELECT_ALL
-  END
+    END
 END
 
+/* Dialogs */
 
-/*
- * Dialog
- */
-
-IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ändra sträng"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Värde:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,196,64,50,14
+    LTEXT "&Värde:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 196, 64, 50, 14
 END
 
-IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ändra multisträng"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Värde:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,196,154,50,14
+    LTEXT "&Värde:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 196, 154, 50, 14
 END
 
-IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ändra Binärvärde"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Värde:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,196,154,50,14
+    LTEXT "&Värde:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 196, 154, 50, 14
 END
 
-
-IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ändra DWORD-värde"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Värde:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Data:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "Bas",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "&Hexadecimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "&Decimal",IDC_FORMAT_DEC,141,59,60,10
-    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,196,82,50,14
+    LTEXT "&Värde:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Data:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "Bas", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "&Hexadecimal", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "&Decimal", IDC_FORMAT_DEC, 141, 59, 60, 10
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 196, 82, 50, 14
 END
 
-
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resource List"
 FONT 8, "MS Shell Dlg"
-{
-    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
     PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
-}
+END
 
-
-IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resources"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
-    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
     LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
-    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
     LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
-    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
-    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
     LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
-    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
     LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
@@ -278,259 +246,248 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
     RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
-    DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
+    DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
-}
+END
 
-
-/*
- * String Table
- */
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "Namn"
-    IDS_LIST_COLUMN_TYPE    "Typ"
-    IDS_LIST_COLUMN_DATA    "Data"
+    IDS_LIST_COLUMN_NAME "Namn"
+    IDS_LIST_COLUMN_TYPE "Typ"
+    IDS_LIST_COLUMN_DATA "Data"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Registereditorn"
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+    IDS_APP_TITLE "Registereditorn"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU        "Innehåller kommandon för att arbeta med hela registret"
-    ID_EDIT_MENU            "Innehåller kommandon för att ändra värden och nycklar"
-    ID_VIEW_MENU            "Innehåller kommandon för att anpassa registerfönstret"
-    ID_FAVOURITES_MENU      "Innehåller kommandon för att komma åt nycklar som används ofta"
-    ID_HELP_MENU            "Innehåller kommandon för att visa hjälpen och information om Registereditorn"
-    ID_EDIT_NEW_MENU        "Innehåller kommandon för att skapa nya nycklar eller värden"
+    ID_REGISTRY_MENU "Innehåller kommandon för att arbeta med hela registret"
+    ID_EDIT_MENU "Innehåller kommandon för att ändra värden och nycklar"
+    ID_VIEW_MENU "Innehåller kommandon för att anpassa registerfönstret"
+    ID_FAVOURITES_MENU "Innehåller kommandon för att komma åt nycklar som används ofta"
+    ID_HELP_MENU "Innehåller kommandon för att visa hjälpen och information om Registereditorn"
+    ID_EDIT_NEW_MENU "Innehåller kommandon för att skapa nya nycklar eller värden"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY          "Ändrar värdets data"
-    ID_EDIT_NEW_KEY         "Lägger till en ny nyckel"
+    ID_EDIT_MODIFY "Ändrar värdets data"
+    ID_EDIT_NEW_KEY "Lägger till en ny nyckel"
     ID_EDIT_NEW_STRINGVALUE "Lägger till ett nytt strängvärde"
     ID_EDIT_NEW_BINARYVALUE "Lägger till ett nytt binärt värde"
-    ID_EDIT_NEW_DWORDVALUE  "Lägger till ett nytt dubbelordsvärde"
+    ID_EDIT_NEW_DWORDVALUE "Lägger till ett nytt dubbelordsvärde"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importerar en textfil till registret"
-    ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Exporterar hela eller en del av registret till en textfil"
-    ID_REGISTRY_LOADHIVE
-                            "Läser in registerdatafil till registret"
-    ID_REGISTRY_UNLOADHIVE
-                            "Tar bort registerdatafil från registret"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Ansluter till en annan dators register"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Kopplar ifrån en annan dators register"
-    ID_REGISTRY_PRINT       "Skriver ut hela eller en del av registret"
-/*    ID_HELP_HELPTOPICS      "Öppnar hjälpen för Registereditorn" */
-    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsrätt"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exporterar hela eller en del av registret till en textfil"
+    ID_REGISTRY_LOADHIVE "Läser in registerdatafil till registret"
+    ID_REGISTRY_UNLOADHIVE "Tar bort registerdatafil från registret"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Ansluter till en annan dators register"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Kopplar ifrån en annan dators register"
+    ID_REGISTRY_PRINT "Skriver ut hela eller en del av registret"
+/*    ID_HELP_HELPTOPICS "Öppnar hjälpen för Registereditorn" */
+    ID_HELP_ABOUT "Visar programinformation, versionsnummer, och upphovsrätt"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Avslutar Registereditorn"
+    ID_REGISTRY_EXIT "Avslutar Registereditorn"
     ID_FAVOURITES_ADDTOFAVOURITES "Lägger till nycklar till Favoriter"
     ID_FAVOURITES_REMOVEFAVOURITE "Tar bort nycklar från Favoriter"
-    ID_VIEW_STATUSBAR       "Visar eller döljer statusfältet"
-    ID_VIEW_SPLIT           "Ändra storlek på delningslisten"
-    ID_VIEW_REFRESH         "Uppdaterar fönstret"
-    ID_EDIT_DELETE          "Tar bort markeringen"
-    ID_EDIT_RENAME          "Byter namn på markeringen"
-    ID_EDIT_COPYKEYNAME     "Kopierar namnet på den valda nyckeln till urklippet"
-    ID_EDIT_FIND            "Hittar en textsträng i en nyckel, ett värde eller data"
-    ID_EDIT_FINDNEXT        "Söker igen efter nästa träff i registret"
+    ID_VIEW_STATUSBAR "Visar eller döljer statusfältet"
+    ID_VIEW_SPLIT "Ändra storlek på delningslisten"
+    ID_VIEW_REFRESH "Uppdaterar fönstret"
+    ID_EDIT_DELETE "Tar bort markeringen"
+    ID_EDIT_RENAME "Byter namn på markeringen"
+    ID_EDIT_COPYKEYNAME "Kopierar namnet på den valda nyckeln till urklippet"
+    ID_EDIT_FIND "Hittar en textsträng i en nyckel, ett värde eller data"
+    ID_EDIT_FINDNEXT "Söker igen efter nästa träff i registret"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR               "Fel"
-    IDS_WARNING             "Varning"
-    IDS_BAD_KEY             "Kan inte läsa nyckel '%s'"
-    IDS_BAD_VALUE           "Kan inte läsa värdet  '%s'"
-    IDS_UNSUPPORTED_TYPE    "Kan inte ändra nycklar av typen %ld"
-    IDS_TOO_BIG_VALUE       "Värdet är för stort (%ld)"
+    IDS_ERROR "Fel"
+    IDS_WARNING "Varning"
+    IDS_BAD_KEY "Kan inte läsa nyckel '%s'"
+    IDS_BAD_VALUE "Kan inte läsa värdet  '%s'"
+    IDS_UNSUPPORTED_TYPE "Kan inte ändra nycklar av typen %ld"
+    IDS_TOO_BIG_VALUE "Värdet är för stort (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data av typen REG_MULTI_SZ kan inte innehålla tomma strängar.\nDe tomma strängarna har tagits bort från listan."
-    IDS_QUERY_DELETE_KEY_ONE    "Är du säker på att du vill ta bort denna nyckeln?"
-    IDS_QUERY_DELETE_KEY_MORE   "Är du säker på att du vill ta bort dessa nycklarna?"
+    IDS_QUERY_DELETE_KEY_ONE "Är du säker på att du vill ta bort denna nyckeln?"
+    IDS_QUERY_DELETE_KEY_MORE "Är du säker på att du vill ta bort dessa nycklarna?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Bekärfta borttagning av nyckel"
-    IDS_QUERY_DELETE_ONE    "Är du säker på att du vill ta bort detta värdet?"
-    IDS_QUERY_DELETE_MORE   "Är du säker på att du vill ta bort dessa värdena?"
+    IDS_QUERY_DELETE_ONE "Är du säker på att du vill ta bort detta värdet?"
+    IDS_QUERY_DELETE_MORE "Är du säker på att du vill ta bort dessa värdena?"
     IDS_QUERY_DELETE_CONFIRM "Bekräfta borttagning av värde"
-    IDS_ERR_DELVAL_CAPTION  "Fel vid borttagning av värde"
-    IDS_ERR_DELETEVALUE     "Det gick inte att ta bort alla specificerade värden!"
-    IDS_ERR_RENVAL_CAPTION  "Fel vid namnändring av värde"
-    IDS_ERR_RENVAL_TOEMPTY  "Kunde inte byta namn på %s. Det specificerade värdenamnet är tomt. Ange ett annat namn och försök igen."
+    IDS_ERR_DELVAL_CAPTION "Fel vid borttagning av värde"
+    IDS_ERR_DELETEVALUE "Det gick inte att ta bort alla specificerade värden!"
+    IDS_ERR_RENVAL_CAPTION "Fel vid namnändring av värde"
+    IDS_ERR_RENVAL_TOEMPTY "Kunde inte byta namn på %s. Det specificerade värdenamnet är tomt. Ange ett annat namn och försök igen."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
-    IDS_NEW_KEY             "Ny Nyckel #%d"
-    IDS_NEW_VALUE           "Nytt Värde #%d"
+    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_NEW_KEY "Ny Nyckel #%d"
+    IDS_NEW_VALUE "Nytt Värde #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(Tomt binärvärde)"
-    IDS_DEFAULT_VALUE_NAME  "(Standard)"
-    IDS_VALUE_NOT_SET       "(värde ej angivet)"
-    IDS_UNKNOWN_TYPE        "Okänd typ: (0x%lx)"
-    IDS_MY_COMPUTER         "Den här datorn"
-    IDS_IMPORT_REG_FILE     "Importera registerfil"
-    IDS_EXPORT_REG_FILE     "Exportera registerfil"
-    IDS_LOAD_HIVE           "Läs in registerdatafil"
-    IDS_UNLOAD_HIVE         "Ta bort registerdatafil"
-    IDS_INVALID_DWORD       "(felaktigt DWORD-värde)"
+    IDS_BINARY_EMPTY "(Tomt binärvärde)"
+    IDS_DEFAULT_VALUE_NAME "(Standard)"
+    IDS_VALUE_NOT_SET "(värde ej angivet)"
+    IDS_UNKNOWN_TYPE "Okänd typ: (0x%lx)"
+    IDS_MY_COMPUTER "Den här datorn"
+    IDS_IMPORT_REG_FILE "Importera registerfil"
+    IDS_EXPORT_REG_FILE "Exportera registerfil"
+    IDS_LOAD_HIVE "Läs in registerdatafil"
+    IDS_UNLOAD_HIVE "Ta bort registerdatafil"
+    IDS_INVALID_DWORD "(felaktigt DWORD-värde)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE         "Registerfil"
-    IDS_FLT_REGFILES        "Registerfiler (*.reg)"
-    IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
-    IDS_FLT_HIVFILES_FLT    "*.*"
-    IDS_FLT_REGEDIT4        "Win9x/NT4-Registerfiler (REGEDIT4) (*.reg)"
-    IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "Alla filer (*.*)"
-    IDS_FLT_ALLFILES_FLT    "*.*"
+    IDS_FLT_REGFILE "Registerfil"
+    IDS_FLT_REGFILES "Registerfiler (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Win9x/NT4-Registerfiler (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "Alla filer (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Fullständig behörighet"
-  IDS_ACCESS_READ               "Läsa"
-  IDS_ACCESS_QUERYVALUE         "Läsa värde"
-  IDS_ACCESS_SETVALUE           "Ange värde"
-  IDS_ACCESS_CREATESUBKEY       "Skapa undernyckel"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Räkna upp undernycklar"
-  IDS_ACCESS_NOTIFY             "Meddela"
-  IDS_ACCESS_CREATELINK         "Skapa länk"
-  IDS_ACCESS_DELETE             "Ta bort"
-  IDS_ACCESS_WRITEDAC           "Skriva DAC"
-  IDS_ACCESS_WRITEOWNER         "Skriva ägare"
-  IDS_ACCESS_READCONTROL        "Läsa behörighet"
+    IDS_ACCESS_FULLCONTROL "Fullständig behörighet"
+    IDS_ACCESS_READ "Läsa"
+    IDS_ACCESS_QUERYVALUE "Läsa värde"
+    IDS_ACCESS_SETVALUE "Ange värde"
+    IDS_ACCESS_CREATESUBKEY "Skapa undernyckel"
+    IDS_ACCESS_ENUMERATESUBKEYS "Räkna upp undernycklar"
+    IDS_ACCESS_NOTIFY "Meddela"
+    IDS_ACCESS_CREATELINK "Skapa länk"
+    IDS_ACCESS_DELETE "Ta bort"
+    IDS_ACCESS_WRITEDAC "Skriva DAC"
+    IDS_ACCESS_WRITEOWNER "Skriva ägare"
+    IDS_ACCESS_READCONTROL "Läsa behörighet"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "Endast denna nyckel"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "Denna nyckel samt undernycklar"
-  IDS_INHERIT_SUBKEYSONLY        "Endast undernycklar"
+    IDS_INHERIT_THISKEYONLY "Endast denna nyckel"
+    IDS_INHERIT_THISKEYANDSUBKEYS "Denna nyckel samt undernycklar"
+    IDS_INHERIT_SUBKEYSONLY "Endast undernycklar"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_EXPAND                     "&Visa nivå"
-  IDS_COLLAPSE                   "&Dölj nivå"
-  IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
-  IDS_FINISHEDFIND               "Slutfört sökningen av registret."
+    IDS_EXPAND "&Visa nivå"
+    IDS_COLLAPSE "&Dölj nivå"
+    IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
+    IDS_FINISHEDFIND "Slutfört sökningen av registret."
 END
 
 STRINGTABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
+    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
+    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
+    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
-    IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
-    IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_BUSNUMBER "Bus Number"
+    IDS_INTERFACE "Interface"
+    IDS_DMA_CHANNEL "Channel"
+    IDS_DMA_PORT "Port"
+    IDS_INTERRUPT_VECTOR "Vector"
+    IDS_INTERRUPT_LEVEL "Level"
+    IDS_INTERRUPT_AFFINITY "Affinity"
+    IDS_INTERRUPT_TYPE "Type"
+    IDS_MEMORY_ADDRESS "Physical Address"
+    IDS_MEMORY_LENGTH "Length"
+    IDS_MEMORY_ACCESS "Access"
+    IDS_PORT_ADDRESS "Physical Address"
+    IDS_PORT_LENGTH "Length"
+    IDS_PORT_ACCESS "Access"
+    IDS_SPECIFIC_RESERVED1 "Reserved 1"
+    IDS_SPECIFIC_RESERVED2 "Reserved 2"
+    IDS_SPECIFIC_DATASIZE "Data Size"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
+    IDS_PORT_PORT_IO "Port"
+    IDS_PORT_MEMORY_IO "Memory"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_MEMORY_READ_ONLY "Read Only"
+    IDS_MEMORY_WRITE_ONLY "Write Only"
+    IDS_MEMORY_READ_WRITE "Read / Write"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
-    IDS_BUS_ISA                   "ISA"
-    IDS_BUS_EISA                  "EISA"
-    IDS_BUS_MICROCHANNEL          "MicroChannel"
-    IDS_BUS_TURBOCHANNEL          "TurboChannel"
-    IDS_BUS_PCIBUS                "PCI"
-    IDS_BUS_VMEBUS                "VME"
-    IDS_BUS_NUBUS                 "NuBus"
-    IDS_BUS_PCMCIABUS             "PCMCIA"
-    IDS_BUS_CBUS                  "C-Bus"
-    IDS_BUS_MPIBUS                "MPI-Bus"
-    IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
-    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
-    IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNDEFINED "Undefined"
+    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PNPISABUS "PnP-ISA Bus"
+    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
 END
 
 /*****************************************************************/
 
-
-/*
- * Dialog
- */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Exportera Intervall",IDC_STATIC,2,0,366,48
-   CONTROL "&Alla",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "&Vald Gren",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+    GROUPBOX "Exportera Intervall", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "&Alla", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
+    CONTROL "&Vald Gren", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Läs in registerdata"
 FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Nyckel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Avbryt", IDCANCEL, 89, 17, 50, 14
-}
+BEGIN
+    LTEXT "&Nyckel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 89, 17, 50, 14
+END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Lägg till i Favoriter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,129,24,50,14
-    LTEXT           "&Namn på Favorit:",IDC_STATIC,7,7,70,10
-    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 129, 24, 50, 14
+    LTEXT "&Namn på Favorit:", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
@@ -538,11 +495,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ta bort Favoriter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
-                    WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Välj Favorit(er):",IDC_STATIC,7,7,99,12
+    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "Välj Favorit(er):", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -550,55 +507,38 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sök"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Sök Nästa",IDOK,197,7,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,197,24,50,14
-    GROUPBOX        "Sök i",IDC_STATIC,7,25,63,51
-    LTEXT           "&Sök efter:",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Nycklar",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,36,35,8
-    CONTROL         "&Värden",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,36,8
-    CONTROL         "&Data",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,60,42,8
-    CONTROL         "Matcha endast &hela strängar",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Matcha &shiftläge",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,90,12
+    DEFPUSHBUTTON "&Sök Nästa", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "Sök i", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "&Sök efter:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    CONTROL "&Nycklar", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 35, 8
+    CONTROL "&Värden", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 36, 8
+    CONTROL "&Data", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "Matcha endast &hela strängar", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 94, 13
+    CONTROL "Matcha &shiftläge", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 48, 90, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sök"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "&Avbryt",IDCANCEL,93,29,45,14
-    LTEXT           "Sök i registret...",IDC_STATIC,33,12,83,8
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "&Avbryt", IDCANCEL, 93, 29, 45, 14
+    LTEXT "Sök i registret...", IDC_STATIC, 33, 12, 83, 8
 END
 
-/*
- * TEXTINCLUDE
- */
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-
-
-/*
- * String Table
- */
-
+/* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Öppnar hjälpen för Registereditorn."
- *    ID_HELP_ABOUT           "Visar programinformation, versionsnummer, och upphovsrätt."
+ *    ID_HELP_HELPTOPICS "Öppnar hjälpen för Registereditorn."
+ *    ID_HELP_ABOUT "Visar programinformation, versionsnummer, och upphovsrätt."
  *END
  */
-
-/*****************************************************************/

@@ -20,12 +20,6 @@
 
 #include "quartz_private.h"
 
-#include <wine/unicode.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
-
 typedef struct IEnumRegFiltersImpl
 {
     IEnumRegFilters IEnumRegFilters_iface;

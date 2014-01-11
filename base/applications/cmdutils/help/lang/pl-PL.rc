@@ -1,27 +1,25 @@
 /*
- *         Translated by Caemyr - Olaf Siejka (Jan,2008)
- *         Updated by niski - Maciej Bialas (Mar,2010)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *    Updated by niski - Maciej Bialas (Mar, 2010)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Lista wszystkich dostępnych komend (+opisy)\n\n\
+    IDS_HELP1 "Lista wszystkich dostępnych komend (+opisy)\n\n\
   help komenda\n\
   komenda /?     Wyświetla dokładny opis danej komendy\n\n\
 ?        Lista wszystkich dostępnych komend (bez opisów).\n\
@@ -68,7 +66,7 @@ RMDIR    Usuwa katalog.\n\
 SCREEN   Przenosi kursor i opcjonalnie wyświetla tekst.\n\
 SET      Wyświetla, ustawia lub usuwa zmienne środowiskowe.\n\
 SHIFT    Przenosi zamienne parametry w programach wsadowych.\n"
-IDS_HELP2, "START    Uruchamia oddzielne okno do wykonania określonego polecenia lub komendy.\n\
+    IDS_HELP2 "START    Uruchamia oddzielne okno do wykonania określonego polecenia lub komendy.\n\
          Wykonuje polecenie.\n\
 TIME     Wyświetla lub zmienia czas systemowy.\n\
 TIMER    Pozwala na użycie do 10 stoperów.\n\
@@ -78,5 +76,4 @@ VER      Wyświetla wersję systemu ReactOS.\n\
 VERIFY   Decyduje czy ReactOS ma sprawdzać poprawność zapisu plików\n\
          na dysku.\n\
 VOL      Wyświetla etykietę woluminu na danym napędzie i numer seryjny.\n"
-
 END

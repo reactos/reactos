@@ -94,7 +94,7 @@ GetTListInfo(IN PSAC_SYSTEM_INFORMATION SacInfo,
 
     /* Make sure it's at least big enough to hold the static structure */
     BufferLength = InputSize - sizeof(SAC_SYSTEM_INFORMATION);
-    if ((INT)InputSize - sizeof(SAC_SYSTEM_INFORMATION) < 0)
+    if (InputSize < sizeof(SAC_SYSTEM_INFORMATION))
     {
         SAC_DBG(SAC_DBG_ENTRY_EXIT, "Exiting, no memory (2).\n");
         return STATUS_NO_MEMORY;

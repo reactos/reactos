@@ -16,28 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <stdarg.h>
-#include <assert.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winreg.h"
-#include <ole2.h>
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-#include "htmlevent.h"
-#include "htmlstyle.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static const WCHAR aW[]        = {'A',0};
 static const WCHAR bodyW[]     = {'B','O','D','Y',0};

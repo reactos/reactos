@@ -76,11 +76,6 @@
 /* Line 268 of yacc.c  */
 #line 21 "hlsl.y"
 
-#include "config.h"
-#include "wine/debug.h"
-
-#include <stdio.h>
-
 #include "d3dcompiler_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hlsl_parser);

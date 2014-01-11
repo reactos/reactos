@@ -8,7 +8,9 @@
 #include <cmtypes.h>
 #include <msports.h>
 #include <setupapi.h>
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msports);
 
 #include "internal.h"
 #include "resource.h"

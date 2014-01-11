@@ -22,18 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
-#include "accum.h"
-#include "context.h"
-#include "format_unpack.h"
-#include "format_pack.h"
-#include "imports.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "state.h"
-#include "mtypes.h"
-#include "main/dispatch.h"
-
+#include <precomp.h>
 
 #if FEATURE_accum
 

@@ -28,61 +28,9 @@
  * Initialize dispatch table with the immidiate mode functions.
  */
 
+#include <precomp.h>
 
-#include "mfeatures.h"
-#include "accum.h"
-#include "api_loopback.h"
-#include "api_exec.h"
-#include "attrib.h"
-#include "blend.h"
-#include "bufferobj.h"
-#include "arrayobj.h"
-#if FEATURE_draw_read_buffer
-#include "buffers.h"
-#endif
-#include "clear.h"
-#include "clip.h"
-#include "colortab.h"
-#include "context.h"
-#include "convolve.h"
-#include "depth.h"
-#include "dlist.h"
-#include "drawpix.h"
-#include "rastpos.h"
-#include "enable.h"
-#include "eval.h"
-#include "get.h"
-#include "feedback.h"
-#include "fog.h"
-#include "framebuffer.h"
-#include "hint.h"
 #include "histogram.h"
-#include "imports.h"
-#include "light.h"
-#include "lines.h"
-#include "matrix.h"
-#include "multisample.h"
-#include "pixel.h"
-#include "pixelstore.h"
-#include "points.h"
-#include "polygon.h"
-#include "readpix.h"
-#include "scissor.h"
-#include "stencil.h"
-#include "texenv.h"
-#include "texgetimage.h"
-#include "teximage.h"
-#include "texgen.h"
-#include "texobj.h"
-#include "texparam.h"
-#include "texstate.h"
-#include "texstorage.h"
-#include "texturebarrier.h"
-#include "mtypes.h"
-#include "varray.h"
-#include "viewport.h"
-#include "main/dispatch.h"
-
 
 #if FEATURE_GL
 

@@ -57,26 +57,25 @@ BEGIN
         MENUITEM "&Executar...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "&Sincronizar", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Logoff %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Log Off %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "De&sconectar...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "Desbloquear Co&mputador", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Desl&igar...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
-
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Barra de Tarefas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Aparência da barra de tarefas", IDC_STATIC, 6,6,240,104
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
-    AUTOCHECKBOX    "&Bloquear a barra de tarefas", IDC_TASKBARPROP_LOCK, 13,45,200,10
-    AUTOCHECKBOX    "&Ocultar automaticamente a barra de tarefas", IDC_TASKBARPROP_HIDE, 13,58,200,10
-    AUTOCHECKBOX    "&Manter barra de tarefas sobre outros janelas", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX    "&Agrupar botões similares da barra de tarefas", IDC_TASKBARPROP_GROUP, 13,84,200,10
-    AUTOCHECKBOX    "&Exibir Inicialização Rápida", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    GROUPBOX "Aparência da barra de tarefas", IDC_STATIC, 6, 6, 240, 104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    AUTOCHECKBOX "&Bloquear a barra de tarefas", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "&Ocultar automaticamente a barra de tarefas", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "&Manter barra de tarefas sobre outros janelas", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Agrupar botões similares da barra de tarefas", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Exibir Inicialização Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -84,15 +83,15 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Menu Iniciar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Menu Iniciar", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "Acesso facilitado a suas pastas, programas favoritos e busca.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "M&enu Inicar clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Estilo e funcionalidades do menu clássico",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "&Personalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
-    GROUPBOX        "Privacidade",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Armazenar e exibir itens abertos recentemente no &menu Iniciar e na barra de tarefas", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Armazenar e e&xibir programas abertos recentemente no menu Iniciar",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTORADIOBUTTON "&Menu Iniciar", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
+    LTEXT "Acesso facilitado a suas pastas, programas favoritos e busca.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
+    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "M&enu Inicar clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
+    LTEXT "Estilo e funcionalidades do menu clássico", -1, 20, 57, 150, 24, WS_DISABLED
+    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 53, 14, WS_DISABLED
+    GROUPBOX "Privacidade", IDC_STATIC, 7, 100, 238, 42
+    AUTOCHECKBOX "Armazenar e exibir itens abertos recentemente no &menu Iniciar e na barra de tarefas", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
+    AUTOCHECKBOX "Armazenar e e&xibir programas abertos recentemente no menu Iniciar", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
@@ -100,18 +99,17 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Área de Notificação"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
-    GROUPBOX        "Ícones", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "Você pode manter a área de notificação organizada escondendo os ícones que você não tenha clicado recentemente.", IDC_STATIC, 13,48,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Esconder ícones inativos", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
-    PUSHBUTTON      "&Personalizar...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
-    GROUPBOX        "Ícones do sistema", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Selecione os ícones do sistema que serão exibidos automaticamente.", IDC_STATIC, 13,112,223,16, WS_DISABLED
-    AUTOCHECKBOX    "Reló&gio", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Volume", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Rede", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Energia", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
-
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
+    GROUPBOX "Ícones", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
+    LTEXT "Você pode manter a área de notificação organizada escondendo os ícones que você não tenha clicado recentemente.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "&Esconder ícones inativos", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
+    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
+    GROUPBOX "Ícones do sistema", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
+    LTEXT "Selecione os ícones do sistema que serão exibidos automaticamente.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "Reló&gio", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Volume", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Rede", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Energia", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
@@ -119,8 +117,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Barras de Ferramentas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Selecione as barras de ferramentas a serem adicionadas à barra de tarefas.", IDC_STATIC, 7,7,223,12, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+    LTEXT "Selecione as barras de ferramentas a serem adicionadas à barra de tarefas.", IDC_STATIC, 7, 7, 223, 12, WS_DISABLED
+    CONTROL "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32", WS_BORDER | WS_TABSTOP | WS_DISABLED, 7, 20, 236, 160, WS_EX_CLIENTEDGE
 END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
@@ -128,19 +126,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Advanced options", IDC_STATIC, 6,6,240,121
-    AUTOCHECKBOX    "Show s&econds", IDC_TASKBARPROP_SECONDS, 13,18,200,10
-    AUTOCHECKBOX    "E&xibir miniaturas (thumbnails)", IDC_TASKBARPROP_WNDPREV, 13,31,200,10
+    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "E&xibir miniaturas (thumbnails)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_START             "Iniciar"
-    IDS_PROPERTIES        "P&ropriedades"
-    IDS_OPEN_ALL_USERS    "A&brir Todos os Usuários"
+    IDS_START "Iniciar"
+    IDS_PROPERTIES "P&ropriedades"
+    IDS_OPEN_ALL_USERS "A&brir Todos os Usuários"
     IDS_EXPLORE_ALL_USERS "E&xplorar Todos os Usuários"
-    IDS_STARTUP_ERROR     "O sistema não pode iniciar o explorer porque o registro está corrompido ou inacessível."
+    IDS_STARTUP_ERROR "O sistema não pode iniciar o explorer porque o registro está corrompido ou inacessível."
 END
 
 STRINGTABLE

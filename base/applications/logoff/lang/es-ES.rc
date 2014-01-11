@@ -7,14 +7,10 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Terminar una sesión.\n\n\
+    IDS_USAGE "Terminar una sesión.\n\n\
   /v\t\tMuestra información acerca de las acciónes realizadas.\n\
   /?\t\tMuestra esta información.\n\n"
-
-IDS_LOGOFF_REMOTE, "Terminando sesión en una máquina remota."
-IDS_LOGOFF_LOCAL, "Terminando la sesión actual de esta máquina."
-
-IDS_ILLEGAL_PARAM, "Parámetro(s) no válido(s)\n"
+    IDS_LOGOFF_REMOTE "Terminando sesión en una máquina remota."
+    IDS_LOGOFF_LOCAL "Terminando la sesión actual de esta máquina."
+    IDS_ILLEGAL_PARAM "Parámetro(s) no válido(s)\n"
 END
-/* EOF */

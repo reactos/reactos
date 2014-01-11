@@ -14,7 +14,7 @@ list(APPEND SOURCE
     filedlgbrowser.c
     finddlg.c
     fontdlg.c
-    itemdlg.c
+    #itemdlg.c /* Win 7 */
     printdlg.c
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)

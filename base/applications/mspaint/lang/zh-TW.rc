@@ -1,9 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/zh-TW.rc
- * PURPOSE:     Chinese (Traditional) Language resource file
- * TRANSLATORS: Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language resource file
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "結束(&Q)\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "編輯(&E)"
     BEGIN
         MENUITEM "復原\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "複製到...", IDM_EDITCOPYTO
         MENUITEM "從...貼上", IDM_EDITPASTEFROM
     END
-
     POPUP "檢視(&V)"
     BEGIN
         MENUITEM "工具箱\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "全屏顯示\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "圖像(&I)"
     BEGIN
         MENUITEM "旋轉/翻轉...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "刪除圖像\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "不透明處理", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "顏色(&C)"
     BEGIN
         MENUITEM "編輯色彩...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "說明(&?)"
     BEGIN
         MENUITEM "說明主題", IDM_HELPHELPTOPICS
@@ -125,9 +120,9 @@ BEGIN
     AUTORADIOBUTTON "水平翻轉", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "垂直翻轉", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "旋轉角度", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "確定", IDOK, 125, 8, 48, 14
     PUSHBUTTON "取消", IDCANCEL, 125, 24, 48, 14
 END
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "畫圖"
-    IDS_WINDOWTITLE, "%s - 畫圖"
-    IDS_INFOTITLE, "ReactOS 畫圖"
-    IDS_INFOTEXT, "ReactOS 畫圖是在 GNU LGPL 協議版本 3 下發佈的 (詳見 www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "您想把改變保存到 %s 嗎？"
-    IDS_DEFAULTFILENAME, "未命名.bmp"
-    IDS_MINIATURETITLE, "縮圖"
-    IDS_TOOLTIP1, "自由選擇"
-    IDS_TOOLTIP2, "選擇"
-    IDS_TOOLTIP3, "橡皮擦"
-    IDS_TOOLTIP4, "填充"
-    IDS_TOOLTIP5, "取色"
-    IDS_TOOLTIP6, "縮放"
-    IDS_TOOLTIP7, "鉛筆"
-    IDS_TOOLTIP8, "刷子"
-    IDS_TOOLTIP9, "噴槍"
-    IDS_TOOLTIP10, "文字"
-    IDS_TOOLTIP11, "直線"
-    IDS_TOOLTIP12, "貝塞爾曲線"
-    IDS_TOOLTIP13, "矩形"
-    IDS_TOOLTIP14, "多邊形"
-    IDS_TOOLTIP15, "橢圓形"
-    IDS_TOOLTIP16, "圓角矩形"
-    IDS_OPENFILTER, "點陣圖文件 (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 位元點陣圖 (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d 位元組"
-    IDS_PRINTRES, "%d x %d 像素每米"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "畫圖"
+    IDS_WINDOWTITLE "%s - 畫圖"
+    IDS_INFOTITLE "ReactOS 畫圖"
+    IDS_INFOTEXT "ReactOS 畫圖是在 GNU LGPL 協議版本 3 下發佈的 (詳見 www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "您想把改變保存到 %s 嗎？"
+    IDS_DEFAULTFILENAME "未命名.bmp"
+    IDS_MINIATURETITLE "縮圖"
+    IDS_TOOLTIP1 "自由選擇"
+    IDS_TOOLTIP2 "選擇"
+    IDS_TOOLTIP3 "橡皮擦"
+    IDS_TOOLTIP4 "填充"
+    IDS_TOOLTIP5 "取色"
+    IDS_TOOLTIP6 "縮放"
+    IDS_TOOLTIP7 "鉛筆"
+    IDS_TOOLTIP8 "刷子"
+    IDS_TOOLTIP9 "噴槍"
+    IDS_TOOLTIP10 "文字"
+    IDS_TOOLTIP11 "直線"
+    IDS_TOOLTIP12 "貝塞爾曲線"
+    IDS_TOOLTIP13 "矩形"
+    IDS_TOOLTIP14 "多邊形"
+    IDS_TOOLTIP15 "橢圓形"
+    IDS_TOOLTIP16 "圓角矩形"
+    IDS_OPENFILTER "點陣圖文件 (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 位元點陣圖 (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d 位元組"
+    IDS_PRINTRES "%d x %d 像素每米"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

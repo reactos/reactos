@@ -2,13 +2,13 @@
 
 [Section]
 Name = Miranda IM
-Version = 0.10.17
+Version = 0.10.19
 Licence = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
 Size = 2.81MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://files.miranda-im.org/stable/0.10.17.0/miranda-im-v0.10.17-unicode.exe
+URLDownload = http://files.miranda-im.org/stable/0.10.19.0/miranda-im-v0.10.19-unicode.exe
 CDPath = none
 
 [Section.0407]
@@ -33,6 +33,9 @@ Description = Otwarty komunikator internetowy, obsługujący wiele różnych pro
 [Section.0418]
 Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
 Size = 2,81 Mo
+
+[Section.041f]
+Description = Bir açık kaynak, çoklu iletişim kurallı ve evgin iletileşme yazılımı. Eksiksiz olarak çalışmayabilir.
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

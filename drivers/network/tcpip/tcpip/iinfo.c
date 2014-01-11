@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <ipifcons.h>
+
 TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
 				       PIP_INTERFACE Interface,
 				       PNDIS_BUFFER Buffer,

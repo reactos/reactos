@@ -1,50 +1,26 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Spanish language support
- *
- * Copyright (C) 2007 Jeisson T.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
 LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "Cantidad invalido de parametros - Use xcopy /? para obtener ayuda\n"
-    STRING_INVPARM,  "Parametro invalido '%s' -  Use xcopy /? para obtener ayuda\n"
-    STRING_PAUSE,    "Unde <enter> para iniciar la copia\n"
-    STRING_SIMCOPY,  "%d archivo(s) seran copiado(s)\n"
-    STRING_COPY,     "%d archivo(s) copiado(s)\n"
-    STRING_QISDIR,   "Es '%s' un nombre de archivo o de directorio\n\
+BEGIN
+    STRING_INVPARMS "Cantidad invalido de parametros - Use xcopy /? para obtener ayuda\n"
+    STRING_INVPARM "Parametro invalido '%1' -  Use xcopy /? para obtener ayuda\n"
+    STRING_PAUSE "Unde <enter> para iniciar la copia\n"
+    STRING_SIMCOPY "%1!d! archivo(s) seran copiado(s)\n"
+    STRING_COPY "%1!d! archivo(s) copiado(s)\n"
+    STRING_QISDIR "Es '%1' un nombre de archivo o de directorio\n\
                      en el punto de destino?\n\
                      (F - Archivo, D - Directorio)\n"
-    STRING_SRCPROMPT,"%s? (Si|No)\n"
-    STRING_OVERWRITE,"Destruir y escribir encima %s? (Si|No|Todo)\n"
-    STRING_COPYFAIL, "La copia de '%s' a '%s' ha faillecido con r/c %d\n"
-    STRING_OPENFAIL, "Impossible de abrir '%s'\n"
-    STRING_READFAIL, "Hubo un error durante la lectura de '%s'\n"
-    STRING_YES_CHAR, "S"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "T"
-    STRING_FILE_CHAR,"A"
-    STRING_DIR_CHAR, "D"
-
-    STRING_HELP,
+    STRING_SRCPROMPT "%1? (Si|No)\n"
+    STRING_OVERWRITE "Destruir y escribir encima %1? (Si|No|Todo)\n"
+    STRING_COPYFAIL "La copia de '%1' a '%2' ha faillecido con r/c %3!d!\n"
+    STRING_OPENFAIL "Impossible de abrir '%1'\n"
+    STRING_READFAIL "Hubo un error durante la lectura de '%1'\n"
+    STRING_YES_CHAR "S"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "T"
+    STRING_FILE_CHAR "A"
+    STRING_DIR_CHAR "D"
+    STRING_HELP
 "XCOPY - Copia los archivos o directorios fuentes a un destino\n\
 \n\
 Sintaxis:\n\
@@ -76,5 +52,4 @@ En la cual:\n\
 [/D | /D:m-d-y] Copia los nuevos archivos or los que fueront modificado despues la fecha especificada.\n\
 \t\tSi la fecha no esta especificada, copia unicamente cuando el archivo de destino est mas viejo\n\
 \t\tque el archivo fuente\n\n"
-
-}
+END

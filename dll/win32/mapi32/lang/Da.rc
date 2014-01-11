@@ -20,8 +20,6 @@
  *
  */
 
-#include "res.h"
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE

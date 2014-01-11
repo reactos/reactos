@@ -1,27 +1,25 @@
 /*
- * FILE:         base/shell/cmd/lang/ro-RO.rc
- *               ReactOS Project (http://www.reactos.org)
- * AUTHOR:       Magnus Olsen, 2005
- * TRANSLATOR:   Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:   2011-08-25  initial translation
- *               2011-10-30  UTF-8 encoding (with diacritics conversion), minor changes
+ * FILE:       base/shell/cmd/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * AUTHOR:     Magnus Olsen, 2005
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG: 2011-08-25  initial translation
+ *             2011-10-30  UTF-8 encoding (with diacritics conversion), minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Enumeră toate comenzile disponibile (+ descriere)\n\n\
+    IDS_HELP1 "Enumeră toate comenzile disponibile (+ descriere)\n\n\
   help comandă\n\
   comandă /?     Pentru mai multe informații referitoare la o anume comandă.\n\n\
 ?         Enumeră toate comenzile disponibile (fără descriere).\n\
@@ -65,7 +63,7 @@ MD        Crează un director.\n\
 MKDIR     Crează un director.\n\
 MKLINK    Crează un obiect-legătură în sistemul de fișiere.\n\
 MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n"
-IDS_HELP2, "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
+    IDS_HELP2 "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
 PAUSE     Suspendă execuția unui fișier de comenzi și afișează un mesaj.\n\
 POPD      Restabilește valoarea precedentă a directorului curent, anterior\n\
           stocată cu PUSHD.\n\
@@ -89,5 +87,4 @@ TYPE      Afișează conținutul unui fișier text.\n\
 VER       Afișează versiunea ReactOS.\n\
 VERIFY    Verifică scrierea corectă a fișierelor pe disc.\n\
 VOL       Afișează eticheta și numărul de serie a unui volum.\n"
-
 END

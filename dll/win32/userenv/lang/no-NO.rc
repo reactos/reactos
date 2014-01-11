@@ -1,50 +1,30 @@
-/*
- * Norwegian Translation By Fork
- *
- * Copyright (C) 2004 Eric Kohl
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH    "%SystemDrive%\\Dokumenter og innstillinger"
-    IDS_APPDATA        "Programdata"
-    IDS_DESKTOP        "Skrivebord"
-    IDS_FAVORITES      "Favoritter"
-    IDS_STARTMENU      "Start-Meny"
-    IDS_PROGRAMS       "Start-Meny\\Programmer"
-    IDS_ADMINTOOLS     "Start-Meny\\Programmer\\Administrative verktøy"
-    IDS_STARTUP        "Start-Meny\\Programmer\\Oppstart"
-    IDS_MYDOCUMENTS    "Mine dokumenter"
-    IDS_MYPICTURES     "Mine dokumenter\\Mine bilder"
-    IDS_MYMUSIC        "Mine dokumenter\\Min musikk"
-    IDS_MYVIDEOS       "Mine dokumenter\\Mine filmer"
-    IDS_TEMPLATES      "Templates"
-    IDS_RECENT         "Siste"
-    IDS_SENDTO         "Send til"
-    IDS_PRINTHOOD      "PrintHood"
-    IDS_NETHOOD        "NetHood"
-    IDS_LOCALSETTINGS  "Lokale innstillinger"
-    IDS_LOCALAPPDATA   "Lokale innstillinger\\Programdata"
-    IDS_TEMP           "Lokale innstillinger\\Midlertidig"
-    IDS_CACHE          "Lokale innstillinger\\Midlertidig internett filer"
-    IDS_HISTORY        "Lokale innstillinger\\Logg"
-    IDS_COOKIES        "Informasjonkapsel"
-    IDS_PROGRAMFILES   "%SystemDrive%\\Programfiler"
-    IDS_COMMONFILES    "Common Files"
+    IDS_PROFILEPATH "%SystemDrive%\\Dokumenter og innstillinger"
+    IDS_APPDATA "Programdata"
+    IDS_DESKTOP "Skrivebord"
+    IDS_FAVORITES "Favoritter"
+    IDS_STARTMENU "Start-Meny"
+    IDS_PROGRAMS "Start-Meny\\Programmer"
+    IDS_ADMINTOOLS "Start-Meny\\Programmer\\Administrative verktøy"
+    IDS_STARTUP "Start-Meny\\Programmer\\Oppstart"
+    IDS_MYDOCUMENTS "Mine dokumenter"
+    IDS_MYPICTURES "Mine dokumenter\\Mine bilder"
+    IDS_MYMUSIC "Mine dokumenter\\Min musikk"
+    IDS_MYVIDEOS "Mine dokumenter\\Mine filmer"
+    IDS_TEMPLATES "Templates"
+    IDS_RECENT "Siste"
+    IDS_SENDTO "Send til"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_NETHOOD "NetHood"
+    IDS_LOCALSETTINGS "Lokale innstillinger"
+    IDS_LOCALAPPDATA "Lokale innstillinger\\Programdata"
+    IDS_TEMP "Lokale innstillinger\\Midlertidig"
+    IDS_CACHE "Lokale innstillinger\\Midlertidig internett filer"
+    IDS_HISTORY "Lokale innstillinger\\Logg"
+    IDS_COOKIES "Informasjonkapsel"
+    IDS_PROGRAMFILES "%SystemDrive%\\Programfiler"
+    IDS_COMMONFILES "Common Files"
 END

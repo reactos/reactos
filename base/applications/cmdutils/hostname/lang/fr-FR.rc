@@ -2,7 +2,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Affiche le nom de l'hôte actuel.\n\nhostname"
-    IDS_NOSET, "hostname -s n'est pas pris en charge."
-    IDS_ERROR, "Erreur Win32"
+    IDS_USAGE "Affiche le nom de l'hôte actuel.\n\nhostname"
+    IDS_NOSET "hostname -s n'est pas pris en charge."
+    IDS_ERROR "Erreur Win32"
 END

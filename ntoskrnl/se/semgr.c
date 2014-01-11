@@ -121,6 +121,10 @@ NTAPI
 INIT_FUNCTION
 SepInitializationPhase1(VOID)
 {
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE SecurityHandle;
+    HANDLE EventHandle;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -135,7 +139,42 @@ SepInitializationPhase1(VOID)
                             NULL);
     ASSERT(NT_SUCCESS(Status));
 
-    /* FIXME: TODO \\ Security directory */
+    /* TODO: Create a security desscriptor for the directory */
+
+    /* Create '\Security' directory */
+    RtlInitUnicodeString(&Name, L"\\Security");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               0,
+                               NULL);
+
+    Status = ZwCreateDirectoryObject(&SecurityHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create 'LSA_AUTHENTICATION_INITIALIZED' event */
+    RtlInitUnicodeString(&Name, L"LSA_AUTHENTICATION_INITIALIZED");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               SecurityHandle,
+                               SePublicDefaultSd);
+
+    Status = ZwCreateEvent(&EventHandle,
+                           GENERIC_WRITE,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = ZwClose(EventHandle);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = ZwClose(SecurityHandle);
+    ASSERT(NT_SUCCESS(Status));
+
     return TRUE;
 }
 
@@ -167,60 +206,6 @@ SeInitSystem(VOID)
                          0);
             return FALSE;
     }
-}
-
-BOOLEAN
-NTAPI
-INIT_FUNCTION
-SeInitSRM(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name;
-    HANDLE DirectoryHandle;
-    HANDLE EventHandle;
-    NTSTATUS Status;
-
-    /* Create '\Security' directory */
-    RtlInitUnicodeString(&Name, L"\\Security");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_PERMANENT,
-                               0,
-                               NULL);
-    Status = ZwCreateDirectoryObject(&DirectoryHandle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create 'Security' directory!\n");
-        return FALSE;
-    }
-
-    /* Create 'LSA_AUTHENTICATION_INITIALIZED' event */
-    RtlInitUnicodeString(&Name, L"\\LSA_AUTHENTICATION_INITIALIZED");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_PERMANENT,
-                               DirectoryHandle,
-                               SePublicDefaultSd);
-    Status = ZwCreateEvent(&EventHandle,
-                           EVENT_ALL_ACCESS,
-                           &ObjectAttributes,
-                           SynchronizationEvent,
-                           FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create 'LSA_AUTHENTICATION_INITIALIZED' event!\n");
-        NtClose(DirectoryHandle);
-        return FALSE;
-    }
-
-    ZwClose(EventHandle);
-    ZwClose(DirectoryHandle);
-
-    /* FIXME: Create SRM port and listener thread */
-
-    return TRUE;
 }
 
 NTSTATUS

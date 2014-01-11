@@ -2,7 +2,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Stampa il nome dell'host attuale.\n\nhostname"
-    IDS_NOSET, "hostname -s non è supportato."
-    IDS_ERROR, "errore Win32"
+    IDS_USAGE "Stampa il nome dell'host attuale.\n\nhostname"
+    IDS_NOSET "hostname -s non è supportato."
+    IDS_ERROR "errore Win32"
 END

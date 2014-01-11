@@ -20,22 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-
-//#include <stdarg.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "wine/debug.h"
-//#include "wine/unicode.h"
-
 #include "d3d8_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 static inline struct d3d8 *impl_from_IDirect3D8(IDirect3D8 *iface)
 {

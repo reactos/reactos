@@ -10,6 +10,12 @@
 
 #include "precomp.h"
 
+#include "winproc.h"
+#include "palette.h"
+#include "toolsettings.h"
+#include "selection.h"
+#include "sizebox.h"
+
 /* FUNCTIONS ********************************************************/
 
 HDC hDrawingDC;

@@ -22,17 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/glheader.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/format_pack.h"
-#include "main/colormac.h"
-
-#include "s_context.h"
-#include "s_span.h"
-#include "s_stencil.h"
-#include "s_zoom.h"
-
+#include <precomp.h>
 
 /**
  * Compute the bounds of the region resulting from zooming a pixel span.

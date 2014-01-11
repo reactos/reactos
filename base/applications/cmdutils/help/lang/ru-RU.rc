@@ -1,8 +1,5 @@
 /*
- * Russian language file by
- * Andrey Korotaev (unC0Rr@inbox.ru)
- * and
- * Aleksey Bragin (aleksey@reactos.com)
+ * Russian language file by Andrey Korotaev (unC0Rr@inbox.ru) and Aleksey Bragin (aleksey@reactos.com)
  * Copyright 2005
  */
 
@@ -10,17 +7,15 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Список всех доступных команд с коротким описанием\n\n\
+    IDS_HELP1 "Список всех доступных команд с коротким описанием\n\n\
   help команда\n\
   команда /?     Выводит подробную информацию о команде\n\n\
 ?        Список всех доступных команд без описания.\n\
@@ -66,7 +61,7 @@ RMDIR    Удаление каталога.\n\
 SCREEN   Перемещение курсора и вывод текста.\n\
 SET      Вывод, задание и удаление переменных среды.\n\
 SHIFT    Изменение содержимого (сдвиг) подставляемых параметров для пакетного файла\n"
-IDS_HELP2, "START    Открывает отдельное окно для запуска указанных команд или программ.\n\
+    IDS_HELP2 "START    Открывает отдельное окно для запуска указанных команд или программ.\n\
          Выполняет команду.\n\
 TIME     Вывод или изменение времени.\n\
 TIMER    Секундомер.\n\
@@ -76,5 +71,4 @@ VER      Вывод версии ОС.\n\
 VERIFY   Включение или отключение режима проверки правильности записи файлов\n\
          на диск.\n\
 VOL      Выводит метку тома и серийный номер.\n"
-
 END

@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE.
  */
 
-#include "tiffiop.h"
+#include <precomp.h>
+
 #ifdef ZIP_SUPPORT
 /*
  * TIFF Library.
@@ -48,8 +49,6 @@
  */
 #include "tif_predict.h"
 #include "zlib.h"
-
-#include <stdio.h>
 
 /*
  * Sigh, ZLIB_VERSION is defined as a string so there's no

@@ -21,12 +21,6 @@ add_library(winmm SHARED
     ${SOURCE}
     winmm_res.rc)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(winmm)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 set_module_type(winmm win32dll)
 target_link_libraries(winmm wine ${PSEH_LIB})
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)

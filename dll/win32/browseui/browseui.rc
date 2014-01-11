@@ -29,22 +29,18 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// REGISTRY
-//
-IDR_ADDRESSBAND          REGISTRY                "res/addressband.rgs"
-IDR_ADDRESSEDITBOX       REGISTRY                "res/addresseditbox.rgs"
-IDR_ACLMULTI             REGISTRY                "res/autocompletecontainer.rgs"
-IDR_BANDPROXY            REGISTRY                "res/bandproxy.rgs"
-IDR_BANDSITE             REGISTRY                "res/rebarbandsite.rgs"
-IDR_BANDSITEMENU         REGISTRY                "res/bandsitemenu.rgs"
-IDR_BRANDBAND            REGISTRY                "res/brandband.rgs"
-IDR_COMMONBROWSER        REGISTRY                "res/commonbrowser.rgs"
-IDR_GLOBALFOLDERSETTINGS REGISTRY                "res/globalfoldersettings.rgs"
-IDR_INTERNETTOOLBAR      REGISTRY                "res/internettoolbar.rgs"
-IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
-
+/* REGISTRY */
+IDR_ADDRESSBAND REGISTRY "res/addressband.rgs"
+IDR_ADDRESSEDITBOX REGISTRY "res/addresseditbox.rgs"
+IDR_ACLMULTI REGISTRY "res/autocompletecontainer.rgs"
+IDR_BANDPROXY REGISTRY "res/bandproxy.rgs"
+IDR_BANDSITE REGISTRY "res/rebarbandsite.rgs"
+IDR_BANDSITEMENU REGISTRY "res/bandsitemenu.rgs"
+IDR_BRANDBAND REGISTRY "res/brandband.rgs"
+IDR_COMMONBROWSER REGISTRY "res/commonbrowser.rgs"
+IDR_GLOBALFOLDERSETTINGS REGISTRY "res/globalfoldersettings.rgs"
+IDR_INTERNETTOOLBAR REGISTRY "res/internettoolbar.rgs"
+IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
 
 /*
  * Everything specific to any language goes

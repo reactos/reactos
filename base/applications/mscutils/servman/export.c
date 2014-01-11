@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#include <commdlg.h>
+#include <cderr.h>
+
 static DWORD
 GetTextFromListView(PMAIN_WND_INFO Info,
                     TCHAR Text[500],

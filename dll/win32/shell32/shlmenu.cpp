@@ -156,7 +156,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
     if (SUCCEEDED (SHGetDesktopFolder(&lpsf)))
     {
-      if (SUCCEEDED(lpsf->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID *)&lpsf2)))
+      if (SUCCEEDED(lpsf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &lpsf2))))
       {
         IEnumIDList    *lpe = NULL;
 
@@ -166,7 +166,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
           LPITEMIDLIST pidlTemp = NULL;
           ULONG ulFetched;
 
-          while ((!bAbortInit) && (NOERROR == lpe->Next(1,&pidlTemp,&ulFetched)))
+          while ((!bAbortInit) && (S_OK == lpe->Next(1,&pidlTemp,&ulFetched)))
           {
         if (SUCCEEDED (lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulItemAttr)))
         {
@@ -354,7 +354,7 @@ static BOOL FileMenu_AppendItemW(
     if ((menudata == 0) || (MenuInfo.cbSize != sizeof(MENUINFO)))
     {
       ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
-      return 0;
+      return FALSE;
     }
 
     menudata->bFixedItems = TRUE;
@@ -531,7 +531,7 @@ BOOL WINAPI FileMenu_GetLastSelectedItemPidls(
     LPCITEMIDLIST    *ppidlItem)
 {
     FIXME("0x%08x %p %p\n",uReserved, ppidlFolder, ppidlItem);
-    return 0;
+    return FALSE;
 }
 
 #define FM_ICON_SIZE    16
@@ -740,7 +740,7 @@ EXTERN_C BOOL WINAPI FileMenu_DeleteItemByFirstID(
     UINT    uID)
 {
     TRACE("%p 0x%08x\n", hMenu, uID);
-    return 0;
+    return FALSE;
 }
 
 /*************************************************************************
@@ -749,7 +749,7 @@ EXTERN_C BOOL WINAPI FileMenu_DeleteItemByFirstID(
 BOOL WINAPI FileMenu_DeleteSeparator(HMENU hMenu)
 {
     TRACE("%p\n", hMenu);
-    return 0;
+    return FALSE;
 }
 
 /*************************************************************************
@@ -761,7 +761,7 @@ BOOL WINAPI FileMenu_EnableItemByCmd(
     BOOL    bEnable)
 {
     TRACE("%p 0x%08x 0x%08x\n", hMenu, uID,bEnable);
-    return 0;
+    return FALSE;
 }
 
 /*************************************************************************

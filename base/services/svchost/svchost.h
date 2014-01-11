@@ -37,7 +37,7 @@
 // FIXME: GLOBAL HEADER
 //
 typedef VOID
-    (*CALLBACK PSVCHOST_STOP_CALLBACK) (
+    (CALLBACK *PSVCHOST_STOP_CALLBACK) (
     _In_ PVOID lpParameter,
     _In_ BOOLEAN TimerOrWaitFired
     );

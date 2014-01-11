@@ -61,9 +61,11 @@
 #else
 #define KERNEL_HANDLE_FLAG 0x80000000
 #endif
-#define ObIsKernelHandle(Handle, ProcessorMode)         \
-    (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&      \
-    ((ProcessorMode) == KernelMode))
+#define ObpIsKernelHandle(Handle, ProcessorMode)        \
+    ((((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) == KERNEL_HANDLE_FLAG) && \
+     ((ProcessorMode) == KernelMode) && \
+     ((Handle) != NtCurrentProcess()) && \
+     ((Handle) != NtCurrentThread()))
 
 //
 // Converts to and from a Kernel Handle to a normal handle

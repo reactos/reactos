@@ -348,27 +348,6 @@ MmGetPfnForProcess(PEPROCESS Process,
     return Pte.u.Hard.Valid ? Pte.u.Hard.PageFrameNumber : 0;
 }
 
-PHYSICAL_ADDRESS
-NTAPI
-MmGetPhysicalAddress(PVOID Address)
-{
-    PHYSICAL_ADDRESS p;
-    MMPTE Pte;
-
-    Pte.u.Long = MiGetPteValueForProcess(NULL, Address);
-    if (Pte.u.Hard.Valid)
-    {
-        p.QuadPart = Pte.u.Hard.PageFrameNumber * PAGE_SIZE;
-        p.u.LowPart |= (ULONG_PTR)Address & (PAGE_SIZE - 1);
-    }
-    else
-    {
-        p.QuadPart = 0;
-    }
-
-    return p;
-}
-
 BOOLEAN
 NTAPI
 MmIsPagePresent(PEPROCESS Process, PVOID Address)
@@ -525,20 +504,6 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(PVOID Address)
-{
-    UNIMPLEMENTED;
 }
 
 VOID

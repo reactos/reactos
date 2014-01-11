@@ -290,6 +290,15 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
     ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
 }
 
+FORCEINLINE
+BOOLEAN
+MI_IS_MAPPED_PTE(PMMPTE PointerPte)
+{
+    /// FIXME
+    __debugbreak();
+    return (PointerPte->u.Long & 0xFFFFFC01 != 0);
+}
+
 VOID
 FORCEINLINE
 MmInitGlobalKernelPageDirectory(VOID)

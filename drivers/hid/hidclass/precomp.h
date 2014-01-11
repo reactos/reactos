@@ -1,14 +1,12 @@
 #pragma once
 
 #define _HIDPI_NO_FUNCTION_MACROS_
-#define NDEBUG
-#include <ntddk.h>
-#include <initguid.h>
-#include <hidport.h>
+#include <wdm.h>
 #include <hidpddi.h>
 #include <stdio.h>
-#include <wdmguid.h>
-#include <debug.h>
+
+#include <initguid.h>
+#include <hidport.h>
 
 #define HIDCLASS_TAG 'CdiH'
 

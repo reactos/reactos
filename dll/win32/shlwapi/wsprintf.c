@@ -23,20 +23,9 @@
  */
 
 #define WIN32_NO_STATUS
-
-//#include <stdarg.h>
-//#include <string.h>
-//#include <stdio.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#define NO_SHLWAPI_REG
-//#include "shlwapi.h"
-
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
-
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */

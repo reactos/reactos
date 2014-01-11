@@ -2,6 +2,6 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "אפשרויות טלפון ומודם"
-	IDS_CPLSYSTEMDESCRIPTION "הגדר את חוקי החיוג שלך והגדרות המודם"
+    IDS_CPLSYSTEMNAME "אפשרויות טלפון ומודם"
+    IDS_CPLSYSTEMDESCRIPTION "הגדר את חוקי החיוג שלך והגדרות המודם"
 END

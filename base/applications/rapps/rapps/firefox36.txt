@@ -53,6 +53,12 @@ URLSite = http://www.mozilla-europe.org/ru/
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
 URLSite = http://www.mozilla-europe.org/sk/
 
+[Section.041f]
+Name = Mozilla Ateştilkisi 3.6
+Description = Özgür örütbağ tarayıcıları arasında en tutulanı ve en iyisi.
+URLSite = http://www.mozilla.org/tr/firefox/new/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/tr/Firefox%20Setup%203.6.28.exe
+
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 URLSite = http://www.mozilla-europe.org/uk/

@@ -25,14 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-
-#include "main/mtypes.h"
-#include "main/bufferobj.h"
-#include "main/imports.h"
-#include "main/mfeatures.h"
-
-#include "vbo_context.h"
-
+#include <precomp.h>
 
 #if FEATURE_dlist
 

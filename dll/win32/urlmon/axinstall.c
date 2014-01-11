@@ -16,19 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define OEMRESOURCE
+#include "urlmon_main.h"
 
 #include <assert.h>
 
-#include "urlmon_main.h"
 #include "resource.h"
-
-#include "advpub.h"
-#include "fdi.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static const WCHAR ctxW[] = {'c','t','x',0};
 static const WCHAR cab_extW[] = {'.','c','a','b',0};

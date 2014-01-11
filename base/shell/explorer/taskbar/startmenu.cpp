@@ -32,8 +32,6 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
 #include "desktopbar.h"
 #include "startmenu.h"
 

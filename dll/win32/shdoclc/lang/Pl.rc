@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -33,7 +31,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Domyœlne"
+    POPUP "" /* Default */
     {
         MENUITEM "&Wstecz",                        IDM_GOBACKWARD
         MENUITEM "&Dalej",                         IDM_GOFORWARD
@@ -48,18 +46,17 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Utwórz &skrót",                  IDM_CREATESHORTCUT
         MENUITEM "Dodaj do ulu&bionych",           IDM_ADDFAVORITES
-        MENUITEM "&Poka¿ Ÿród³o",                 IDM_VIEWSOURCE
+        MENUITEM "&Poka¿ Ÿród³o",                  IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "&Kodowanie",                     IDM_LANGUAGE
         MENUITEM SEPARATOR
         MENUITEM "D&rukuj",                        IDM_PRINT
-        MENUITEM "&Odœwie¿",                      _IDM_REFRESH
+        MENUITEM "&Odœwie¿",                       _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "W³aœ&ciwoœci",                 IDM_PROPERTIES
+        MENUITEM "W³aœ&ciwoœci",                   IDM_PROPERTIES
     }
 
-    POPUP "Obrazek"
+    POPUP "" /* Image */
     {
         MENUITEM "&Otwórz ³¹cze",                     IDM_FOLLOWLINKC
         MENUITEM "Otwórz ³¹cze w &nowym oknie",       IDM_FOLLOWLINKN
@@ -68,9 +65,9 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&Poka¿ obraz",                      IDM_SHOWPICTURE
         MENUITEM "&Zapisz obraz jako...",             IDM_SAVEPICTURE
-        MENUITEM "&Wyœlij obraz poczt¹ e-mail...",   IDM_MP_EMAILPICTURE
+        MENUITEM "&Wyœlij obraz poczt¹ e-mail...",    IDM_MP_EMAILPICTURE
         MENUITEM "D&rukuj obraz...",                  IDM_MP_PRINTPICTURE
-        MENUITEM "PrzejdŸ do &Moich obrazów",        IDM_MP_MYPICS
+        MENUITEM "PrzejdŸ do &Moich obrazów",         IDM_MP_MYPICS
         MENUITEM "&Ustaw jako t³o",                   IDM_SETWALLPAPER
         MENUITEM "Ustaw jako &element pulpitu...",    IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -81,11 +78,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych...",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "W³aœ&ciwoœci",                    IDM_PROPERTIES
+        MENUITEM "W³aœ&ciwoœci",                      IDM_PROPERTIES
     }
 
-    POPUP "Sterowanie"
+    POPUP "" /* Control */
     {
         MENUITEM "&Confij",           IDM_UNDO
         MENUITEM SEPARATOR
@@ -94,11 +90,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Wkl&ej",            IDM_PASTE
         MENUITEM "&Usuñ",             IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "&Zaznacz wszystko", IDM_SELECTALL
     }
 
-    POPUP "Tabela"
+    POPUP "" /* Table */
     {
         POPUP "&Zaznacz"
         {
@@ -108,12 +103,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "&Tabela",          IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "W³aœciwoœci &komórki", IDM_CELLPROPERTIES
         MENUITEM "W³aœciwoœci &tabeli",  IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite Select"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "Wyt&nij",           IDM_CUT
         MENUITEM "&Kopiuj",           IDM_COPY
@@ -123,7 +117,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Kotwica"
+    POPUP "" /* Anchor */
     {
         MENUITEM "&Otwórz",                          IDM_FOLLOWLINKC
         MENUITEM "Otwórz w &nowym oknie",            IDM_FOLLOWLINKN
@@ -137,16 +131,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych...",          IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "W³aœ&ciwoœci",                     IDM_PROPERTIES
     }
 
-    POPUP "Context Unknown"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC obrazek"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "&Otwórz ³¹cze",                     IDM_FOLLOWLINKC
         MENUITEM "Otwórz ³¹cze w &nowym oknie",       IDM_FOLLOWLINKN
@@ -165,13 +158,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Dodaj do ulu&bionych",              IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Odtwarzaj",                         IDM_DYNSRCPLAY
         MENUITEM "Zatrzymaj",                         IDM_DYNSRCSTOP
-        MENUITEM "W³aœ&ciwoœci",                    IDM_PROPERTIES
+        MENUITEM "W³aœ&ciwoœci",                      IDM_PROPERTIES
     }
 
-    POPUP "ART obrazek"
+    POPUP "" /* ART Image */
     {
         MENUITEM "&Otwórz ³¹cze",                     IDM_FOLLOWLINKC
         MENUITEM "Otwórz ³¹cze w &nowym oknie",       IDM_FOLLOWLINKN
@@ -194,31 +186,30 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Zatrzymaj",                         IDM_IMGARTSTOP
         MENUITEM "Przewiñ",                           IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "W³aœ&ciwoœci",                    IDM_PROPERTIES
+        MENUITEM "W³aœ&ciwoœci",                      IDM_PROPERTIES
     }
 
-    POPUP "Debug"
+    POPUP "" /* Debug */
     {
         MENUITEM "Znaczniki œledzenia",        IDM_TRACETAGS
-        MENUITEM "Niepowodzenia zasobów",       IDM_RESOURCEFAILURES
+        MENUITEM "Niepowodzenia zasobów",      IDM_RESOURCEFAILURES
         MENUITEM "Zrzuæ informacjê œledzenia", IDM_DUMPTRACKINGINFO
-        MENUITEM "Przerwa debugowania",         IDM_DEBUGBREAK
-        MENUITEM "Widok debugowania",           IDM_DEBUGVIEW
-        MENUITEM "Zrzuæ drzewa",                IDM_DUMPTREE
-        MENUITEM "Zrzuæ linie",                 IDM_DUMPLINES
-        MENUITEM "Zrzuæ DisplayTree",           IDM_DUMPDISPLAYTREE
-        MENUITEM "Zrzuæ FormatCaches",          IDM_DUMPFORMATCACHES
-        MENUITEM "Zrzuæ LayoutRects",           IDM_DUMPLAYOUTRECTS
-        MENUITEM "Monitor pamiêci",             IDM_MEMORYMONITOR
+        MENUITEM "Przerwa debugowania",        IDM_DEBUGBREAK
+        MENUITEM "Widok debugowania",          IDM_DEBUGVIEW
+        MENUITEM "Zrzuæ drzewa",               IDM_DUMPTREE
+        MENUITEM "Zrzuæ linie",                IDM_DUMPLINES
+        MENUITEM "Zrzuæ DisplayTree",          IDM_DUMPDISPLAYTREE
+        MENUITEM "Zrzuæ FormatCaches",         IDM_DUMPFORMATCACHES
+        MENUITEM "Zrzuæ LayoutRects",          IDM_DUMPLAYOUTRECTS
+        MENUITEM "Monitor pamiêci",            IDM_MEMORYMONITOR
         MENUITEM "Mierniki wydajnoœci",        IDM_PERFORMANCEMETERS
-        MENUITEM "Zapisz HTML",                 IDM_SAVEHTML
+        MENUITEM "Zapisz HTML",                IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "Widok &przegl¹dania",         IDM_BROWSEMODE
-        MENUITEM "Widok &edycji",               IDM_EDITMODE
+        MENUITEM "Widok &przegl¹dania",        IDM_BROWSEMODE
+        MENUITEM "Widok &edycji",              IDM_EDITMODE
     }
 
-    POPUP "Pionowy suwak"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "Przewiñ tutaj",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -232,12 +223,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Przewiñ w dó³",  IDM_SCROLL_DOWN
     }
 
-    POPUP "Poziomy suwak"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "Przewiñ tutaj",   IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Lewa krawêdŸ",   IDM_SCROLL_LEFTEDGE
-        MENUITEM "Prawa krawêdŸ",  IDM_SCROLL_RIGHTEDGE
+        MENUITEM "Lewa krawêdŸ",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "Prawa krawêdŸ",   IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
         MENUITEM "Strona w lewo",   IDM_SCROLL_PAGELEFT
         MENUITEM "Strona w prawo",  IDM_SCROLL_PAGERIGHT

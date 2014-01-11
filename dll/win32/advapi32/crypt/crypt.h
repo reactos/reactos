@@ -57,6 +57,8 @@ typedef struct tagPROVFUNCS
 } PROVFUNCS, *PPROVFUNCS;
 
 #define MAGIC_CRYPTPROV 0xA39E741F
+#define MAGIC_CRYPTKEY  0xA39E741E
+#define MAGIC_CRYPTHASH 0xA39E741D
 
 typedef struct tagCRYPTPROV
 {
@@ -70,12 +72,14 @@ typedef struct tagCRYPTPROV
 
 typedef struct tagCRYPTKEY
 {
+	DWORD dwMagic;
 	PCRYPTPROV pProvider;
         HCRYPTKEY hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
 } CRYPTKEY, *PCRYPTKEY;
 
 typedef struct tagCRYPTHASH
 {
+	DWORD dwMagic;
 	PCRYPTPROV pProvider;
         HCRYPTHASH hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
 } CRYPTHASH, *PCRYPTHASH;
@@ -83,9 +87,9 @@ typedef struct tagCRYPTHASH
 #define MAXPROVTYPES 999
 
 extern unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *key,
-                                     const unsigned char *src );
+                                     const unsigned char *src ) DECLSPEC_HIDDEN;
 extern unsigned char *CRYPT_DESunhash( unsigned char *dst, const unsigned char *key,
-                                       const unsigned char *src );
+                                       const unsigned char *src ) DECLSPEC_HIDDEN;
 
 void byteReverse(unsigned char *buf, unsigned longs);
 struct ustring {
@@ -111,7 +115,6 @@ VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len 
 VOID WINAPI MD4Final(MD4_CTX *ctx);
 void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen);
 void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length);
-NTSTATUS WINAPI SystemFunction032(struct ustring *data, struct ustring *key);
-
+NTSTATUS WINAPI SystemFunction032(struct ustring *data, const struct ustring *key);
 
 #endif /* __WINE_CRYPT_H_ */

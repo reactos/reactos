@@ -20,12 +20,6 @@
 
 #include "precomp.h"
 
-//#include <openssl/rc4.h>
-//#include <openssl/md5.h>
-//#include <openssl/sha.h>
-//#include <openssl/bn.h>
-//#include <openssl/x509v3.h>
-
 void *
 ssl_sha1_info_create(void);
 void

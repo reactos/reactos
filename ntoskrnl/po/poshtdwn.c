@@ -18,8 +18,129 @@
 /* GLOBALS *******************************************************************/
 
 ULONG PopShutdownPowerOffPolicy;
+KEVENT PopShutdownEvent;
+PPOP_SHUTDOWN_WAIT_ENTRY PopShutdownThreadList;
+LIST_ENTRY PopShutdownQueue;
+KGUARDED_MUTEX PopShutdownListMutex;
+BOOLEAN PopShutdownListAvailable;
+
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+PopInitShutdownList(VOID)
+{
+    PAGED_CODE();
+
+    /* Initialize the global shutdown event */
+    KeInitializeEvent(&PopShutdownEvent, NotificationEvent, FALSE);
+
+    /* Initialize the shutdown lists */
+    PopShutdownThreadList = NULL;
+    InitializeListHead(&PopShutdownQueue);
+
+    /* Initialize the shutdown list lock */
+    KeInitializeGuardedMutex(&PopShutdownListMutex);
+
+    /* The list is available now */
+    PopShutdownListAvailable = TRUE;
+}
+
+NTSTATUS
+NTAPI
+PoRequestShutdownWait(
+    _In_ PETHREAD Thread)
+{
+    PPOP_SHUTDOWN_WAIT_ENTRY ShutDownWaitEntry;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Allocate a new shutdown wait entry */
+    ShutDownWaitEntry = ExAllocatePoolWithTag(PagedPool, 8u, 'LSoP');
+    if (ShutDownWaitEntry == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Reference the thread and save it in the wait entry */
+    ObReferenceObject(Thread);
+    ShutDownWaitEntry->Thread = Thread;
+
+    /* Acquire the shutdown list lock */
+    KeAcquireGuardedMutex(&PopShutdownListMutex);
+
+    /* Check if the list is still available */
+    if (PopShutdownListAvailable)
+    {
+        /* Insert the item in the list */
+        ShutDownWaitEntry->NextEntry = PopShutdownThreadList;
+        PopShutdownThreadList = ShutDownWaitEntry;
+
+        /* We are successful */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We cannot proceed, cleanup and return failure */
+        ObDereferenceObject(Thread);
+        ExFreePoolWithTag(ShutDownWaitEntry, 0);
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Release the list lock */
+    KeReleaseGuardedMutex(&PopShutdownListMutex);
+
+    /* Return the status */
+    return Status;
+}
+
+VOID
+NTAPI
+PopProcessShutDownLists(VOID)
+{
+    PPOP_SHUTDOWN_WAIT_ENTRY ShutDownWaitEntry;
+    PWORK_QUEUE_ITEM WorkItem;
+    PLIST_ENTRY ListEntry;
+
+    /* First signal the shutdown event */
+    KeSetEvent(&PopShutdownEvent, IO_NO_INCREMENT, FALSE);
+
+    /* Acquire the shutdown list lock */
+    KeAcquireGuardedMutex(&PopShutdownListMutex);
+
+    /* Block any further attempts to register a shutdown event */
+    PopShutdownListAvailable = FALSE;
+
+    /* Release the list lock, since we are exclusively using the lists now */
+    KeReleaseGuardedMutex(&PopShutdownListMutex);
+
+    /* Process the shutdown queue */
+    while (!IsListEmpty(&PopShutdownQueue))
+    {
+        /* Get the head entry */
+        ListEntry = RemoveHeadList(&PopShutdownQueue);
+        WorkItem = CONTAINING_RECORD(ListEntry, WORK_QUEUE_ITEM, List);
+
+        /* Call the shutdown worker routine */
+        WorkItem->WorkerRoutine(WorkItem->Parameter);
+    }
+
+    /* Now process the shutdown thread list */
+    while (PopShutdownThreadList != NULL)
+    {
+        /* Get the top entry and remove it from the list */
+        ShutDownWaitEntry = PopShutdownThreadList;
+        PopShutdownThreadList = PopShutdownThreadList->NextEntry;
+
+        /* Wait for the thread to finish and dereference it */
+        KeWaitForSingleObject(ShutDownWaitEntry->Thread, 0, 0, 0, 0);
+        ObfDereferenceObject(ShutDownWaitEntry->Thread);
+
+        /* Finally free the entry */
+        ExFreePoolWithTag(ShutDownWaitEntry, 0);
+    }
+}
 
 VOID
 NTAPI
@@ -27,7 +148,7 @@ PopShutdownHandler(VOID)
 {
     PUCHAR Logo1, Logo2;
     ULONG i;
-    
+
     /* Stop all interrupts */
     KeRaiseIrqlToDpcLevel();
     _disable();
@@ -72,7 +193,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
     /* Unload symbols */
     DPRINT1("It's the final countdown...%lx\n", SystemAction);
     DbgUnLoadImageSymbols(NULL, (PVOID)-1, 0);
-    
+
     /* Run the thread on the boot processor */
     KeSetSystemAffinityThread(1);
 
@@ -101,7 +222,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
 
             /* Call shutdown handler */
             //PopInvokeSystemStateHandler(PowerStateShutdownOff, NULL);
-            
+
             /* ReactOS Hack */
             PopSetSystemPowerState(PowerSystemShutdown, SystemAction);
             PopShutdownHandler();
@@ -124,6 +245,9 @@ PopGracefulShutdown(IN PVOID Context)
 {
     PEPROCESS Process = NULL;
 
+    /* Process the registered waits and work items */
+    PopProcessShutDownLists();
+
     /* Loop every process */
     Process = PsGetNextProcess(Process);
     while (Process)
@@ -144,13 +268,13 @@ PopGracefulShutdown(IN PVOID Context)
     HalEndOfBoot();
 
     /* In this step, the I/O manager does first-chance shutdown notification */
-    DPRINT1("I/O manager shutting down in phase 0\n");    
+    DPRINT1("I/O manager shutting down in phase 0\n");
     IoShutdownSystem(0);
-    
+
     /* In this step, all workers are killed and hives are flushed */
     DPRINT1("Configuration Manager shutting down\n");
     CmShutdownSystem();
-    
+
     /* Note that modified pages should be written here (MiShutdownSystem) */
 #ifdef NEWCC
 	/* Flush all user files before we start shutting down IO */
@@ -159,7 +283,7 @@ PopGracefulShutdown(IN PVOID Context)
 #endif
 
     /* In this step, the I/O manager does last-chance shutdown notification */
-    DPRINT1("I/O manager shutting down in phase 1\n"); 
+    DPRINT1("I/O manager shutting down in phase 1\n");
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
 
@@ -168,7 +292,7 @@ PopGracefulShutdown(IN PVOID Context)
     /* In this step, the HAL disables any wake timers */
     DPRINT1("Disabling wake timers\n");
     HalSetWakeEnable(FALSE);
-    
+
     /* And finally the power request is sent */
     DPRINT1("Taking the system down\n");
     PopShutdownSystem(PopAction.Action);
@@ -185,7 +309,7 @@ PopReadShutdownPolicy(VOID)
     ULONG Length;
     UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
     PKEY_VALUE_PARTIAL_INFORMATION Info = (PVOID)Buffer;
-    
+
     /* Setup object attributes */
     RtlInitUnicodeString(&KeyString,
                          L"\\Registry\\Machine\\Software\\Policies\\Microsoft\\Windows NT");
@@ -219,4 +343,61 @@ PopReadShutdownPolicy(VOID)
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+PoQueueShutdownWorkItem(
+    _In_ PWORK_QUEUE_ITEM WorkItem)
+{
+    NTSTATUS Status;
+
+    /* Acquire the shutdown list lock */
+    KeAcquireGuardedMutex(&PopShutdownListMutex);
+
+    /* Check if the list is (already/still) available */
+    if (PopShutdownListAvailable)
+    {
+        /* Insert the item into the list */
+        InsertTailList(&PopShutdownQueue, &WorkItem->List);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We are already in shutdown */
+        Status = STATUS_SYSTEM_SHUTDOWN;
+    }
+
+    /* Release the list lock */
+    KeReleaseGuardedMutex(&PopShutdownListMutex);
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+PoRequestShutdownEvent(OUT PVOID *Event)
+{
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Initialize to NULL */
+    if (Event) *Event = NULL;
+
+    /* Request a shutdown wait */
+    Status = PoRequestShutdownWait(PsGetCurrentThread());
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Return the global shutdown event */
+    if (Event) *Event = &PopShutdownEvent;
+    return STATUS_SUCCESS;
+}
 

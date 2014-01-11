@@ -2,28 +2,28 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Siarkan"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Campuran"
-  IDS_HYBRID  "Hibrid"
-  IDS_UNKNOWN "tidak dikenal"
+    IDS_BCAST "Siarkan"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Campuran"
+    IDS_HYBRID "Hibrid"
+    IDS_UNKNOWN "tidak dikenal"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Adapter Tipe Lainnya"
-  IDS_ETH     "Adapter Ethernet"
-  IDS_TOKEN   "Adapter Token Ring"
-  IDS_FDDI    "Adapter FDDI"
-  IDS_PPP     "Adapter PPP"
-  IDS_LOOP    "Adapter Loopback"
-  IDS_SLIP    "Adapter SLIP"
+    IDS_OTHER "Adapter Tipe Lainnya"
+    IDS_ETH "Adapter Ethernet"
+    IDS_TOKEN "Adapter Token Ring"
+    IDS_FDDI "Adapter FDDI"
+    IDS_PPP "Adapter PPP"
+    IDS_LOOP "Adapter Loopback"
+    IDS_SLIP "Adapter SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nPENGGUNAAN:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

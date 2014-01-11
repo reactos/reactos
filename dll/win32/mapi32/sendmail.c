@@ -19,37 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdio.h>
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
 #include <winuser.h>
-//#include "objbase.h"
-//#include "objidl.h"
-//#include "mapi.h"
-//#include "mapix.h"
-#include <mapiutil.h>
-//#include "mapidefs.h"
-//#include "winreg.h"
-//#include "shellapi.h"
-//#include "shlwapi.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
-#include "util.h"
-#include "res.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mapi);
+#include "res.h"
 
 #define READ_BUF_SIZE    4096
 

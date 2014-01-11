@@ -6,12 +6,7 @@
  * COPYRIGHT:   Copyright 2006-2009 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -118,6 +113,17 @@ LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
         }
 
         midl_user_free(PolicyInformation);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr)
+{
+    if (Ptr != NULL)
+    {
+        midl_user_free(Ptr);
     }
 }
 

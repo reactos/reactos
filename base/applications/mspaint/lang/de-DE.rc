@@ -1,12 +1,12 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/lang/de-DE.rc
- * PURPOSE:     German Language resource file (reference language file)
- * TRANSLATORS: Benedikt Freisen
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/de-DE.rc
+ * PURPOSE:    German Language resource file (reference language file)
+ * TRANSLATOR: Benedikt Freisen
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 ID_MENU MENU
 BEGIN
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Beenden\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Bearbeiten"
     BEGIN
         MENUITEM "Rückgängig\tStrg+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "Kopieren nach...", IDM_EDITCOPYTO
         MENUITEM "Einfügen aus...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Ansicht"
     BEGIN
         MENUITEM "Werkzeugkasten\tStrg+W", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "Gesamtbild\tStrg+G", IDM_VIEWFULLSCREEN
     END
-
     POPUP "B&ild"
     BEGIN
         MENUITEM "Drehen/Spiegeln...\tStrg+D", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "Bild löschen\tStrg+Umschalt+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Deckend zeichnen", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Farben"
     BEGIN
         MENUITEM "Palette bearbeiten...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Moderne Palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Alte Palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "Hilfethemen", IDM_HELPHELPTOPICS
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint für ReactOS"
-    IDS_INFOTEXT, "Paint für ReactOS steht unter der GNU Lesser General Public License (LGPL) Version 3. (siehe www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Möchten Sie die Änderungen an %s speichern?"
-    IDS_DEFAULTFILENAME, "Unbenannt.bmp"
-    IDS_MINIATURETITLE, "Miniaturansicht"
-    IDS_TOOLTIP1, "Freie Auswahl"
-    IDS_TOOLTIP2, "Auswahl"
-    IDS_TOOLTIP3, "Radierer"
-    IDS_TOOLTIP4, "Farbfüller"
-    IDS_TOOLTIP5, "Farbe auswählen"
-    IDS_TOOLTIP6, "Zoom"
-    IDS_TOOLTIP7, "Stift"
-    IDS_TOOLTIP8, "Pinsel"
-    IDS_TOOLTIP9, "Sprühdose"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Linie"
-    IDS_TOOLTIP12, "Bézier-Kurve"
-    IDS_TOOLTIP13, "Rechteck"
-    IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Ellipse"
-    IDS_TOOLTIP16, "Abgerundetes Rechteck"
-    IDS_OPENFILTER, "Bitmapdateien (*.bmp;*.dib)\1*.bmp;*.dib\1Alle Dateien (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24-Bit-Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d Bytes"
-    IDS_PRINTRES, "%d x %d Pixel pro Meter"
-    IDS_INTNUMBERS, "Bitte geben Sie nur ganze Zahlen ein!"
-    IDS_PERCENTAGE, "Der Prozentsatz muss zwischen 1 und 500 liegen."
-    IDS_ANGLE, "Der Winkel muss zwischen -89 und 89 liegen."
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint für ReactOS"
+    IDS_INFOTEXT "Paint für ReactOS steht unter der GNU Lesser General Public License (LGPL) Version 3. (siehe www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Möchten Sie die Änderungen an %s speichern?"
+    IDS_DEFAULTFILENAME "Unbenannt.bmp"
+    IDS_MINIATURETITLE "Miniaturansicht"
+    IDS_TOOLTIP1 "Freie Auswahl"
+    IDS_TOOLTIP2 "Auswahl"
+    IDS_TOOLTIP3 "Radierer"
+    IDS_TOOLTIP4 "Farbfüller"
+    IDS_TOOLTIP5 "Farbe auswählen"
+    IDS_TOOLTIP6 "Zoom"
+    IDS_TOOLTIP7 "Stift"
+    IDS_TOOLTIP8 "Pinsel"
+    IDS_TOOLTIP9 "Sprühdose"
+    IDS_TOOLTIP10 "Text"
+    IDS_TOOLTIP11 "Linie"
+    IDS_TOOLTIP12 "Bézier-Kurve"
+    IDS_TOOLTIP13 "Rechteck"
+    IDS_TOOLTIP14 "Polygon"
+    IDS_TOOLTIP15 "Ellipse"
+    IDS_TOOLTIP16 "Abgerundetes Rechteck"
+    IDS_OPENFILTER "Bitmapdateien (*.bmp;*.dib)\1*.bmp;*.dib\1Alle Dateien (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24-Bit-Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d Bytes"
+    IDS_PRINTRES "%d x %d Pixel pro Meter"
+    IDS_INTNUMBERS "Bitte geben Sie nur ganze Zahlen ein!"
+    IDS_PERCENTAGE "Der Prozentsatz muss zwischen 1 und 500 liegen."
+    IDS_ANGLE "Der Winkel muss zwischen -89 und 89 liegen."
+    IDS_LOADERRORTEXT "Die Datei %s konnte nicht geladen werden."
 END

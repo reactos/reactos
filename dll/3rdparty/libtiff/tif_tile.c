@@ -29,7 +29,8 @@
  *
  * Tiled Image Support Routines.
  */
-#include "tiffiop.h"
+
+#include <precomp.h>
 
 /*
  * Compute which tile an (x,y,z,s) value is in.

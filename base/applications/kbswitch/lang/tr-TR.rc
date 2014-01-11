@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,8 +6,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Yeğlemeler...",    ID_PREFERENCES
+        MENUITEM "&Yeğlemeler...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış",            ID_EXIT
+        MENUITEM "&Çıkış", ID_EXIT
     END
 END

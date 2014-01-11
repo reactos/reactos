@@ -112,7 +112,7 @@ HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,        /* GIL
     *piIndex = -IDI_SHELL_PRINTERS_FOLDER; /* FIXME: other icons for default, network, print to file */
 
     TRACE("-- %s %x\n", debugstr_w(szIconFile), *piIndex);
-    return NOERROR;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -389,7 +389,7 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     ATLTRY (theEnumerator = new CComObject<CPrintersEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;

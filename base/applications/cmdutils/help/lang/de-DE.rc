@@ -1,22 +1,18 @@
-/*
- *  German language file by Klemens Friedl <frik85> 2005-06-03
- */
+/* German language file by Klemens Friedl <frik85> 2005-06-03 */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "Dieser Befehl wird von der Hilfe nicht unterstützt.\nVersuchen Sie ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
-
-IDS_HELP1, "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
+    IDS_USAGE "Liefert Informationen über ReactOS Befehle.\n\n\
+HELP [Befehl]\n\n\
+  Befehl - Zeige Informationen über diesen Befehl.\n"
+    IDS_HELP1 "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
   help Befehl\n\
   Befehl /?     Um nähere Informationen zu einem bestimmten Befehl\n\
                 zu erhalten.\n\n\
@@ -53,7 +49,7 @@ MKDIR    Erstellt ein Verzeichnis.\n\
 MKLINK   Erzeugt eine Dateisystemverknüpfung.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
          ein anderes.\n"
-IDS_HELP2, "PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
+    IDS_HELP2 "PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
 PAUSE    Hält die Ausführung einer Batchdatei an und zeigt eine Meldung an.\n\
 POPD     Wechselt zu dem Verzeichnis, das durch PUSHD gespeichert wurde.\n\
 PROMPT   Ändert die Eingabeaufforderung.\n\
@@ -78,5 +74,4 @@ VER      Zeigt die ReactOS-Version an.\n\
 VERIFY   Legt fest, ob überwacht werden soll, ob Dateien korrekt auf den\n\
          Datenträger geschrieben werden.\n\
 VOL      Zeigt die Datenträgervolumebezeichnung und die Seriennummer an.\n"
-
 END

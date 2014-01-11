@@ -9,8 +9,9 @@ IDI_SOLITAIRE ICON "solitaire.ico"
 
 #include <reactos/manifest_exe.rc>
 
-// UTF-8
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -85,6 +86,9 @@ IDI_SOLITAIRE ICON "solitaire.ico"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

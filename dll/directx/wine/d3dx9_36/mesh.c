@@ -24,36 +24,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "d3dx9_36_private.h"
 
-#include <config.h>
-#include <wine/port.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#include <stdarg.h>
 #include <assert.h>
 #ifdef HAVE_FLOAT_H
 # include <float.h>
 #endif
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <d3dx9.h>
+
 #undef MAKE_DDHRESULT
 #include "dxfile.h"
 #include "rmxfguid.h"
 #include "rmxftmpl.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/list.h"
-#include "d3dx9_36_private.h"
 
 #define fmax(a, b) ((a) > (b) ? (a) : (b))
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 typedef struct ID3DXMeshImpl
 {

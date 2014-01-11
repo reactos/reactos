@@ -2,28 +2,28 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mixte"
-  IDS_HYBRID  "Hybride"
-  IDS_UNKNOWN "Inconnu"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mixte"
+    IDS_HYBRID "Hybride"
+    IDS_UNKNOWN "Inconnu"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Autre Type d'adapteur"
-  IDS_ETH     "Adapteur Ethernet"
-  IDS_TOKEN   "Adapteur Token Ring"
-  IDS_FDDI    "Adapteur FDDI"
-  IDS_PPP     "Adapteur PPP"
-  IDS_LOOP    "Adapteur Loopback"
-  IDS_SLIP    "Adapteur SLIP"
+    IDS_OTHER "Autre Type d'adapteur"
+    IDS_ETH "Adapteur Ethernet"
+    IDS_TOKEN "Adapteur Token Ring"
+    IDS_FDDI "Adapteur FDDI"
+    IDS_PPP "Adapteur PPP"
+    IDS_LOOP "Adapteur Loopback"
+    IDS_SLIP "Adapteur SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nUSAGE:\n \
         ipconfig [/? | /all | /renew [adapteur] | /release [adapteur] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

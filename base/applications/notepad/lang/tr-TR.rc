@@ -1,23 +1,4 @@
-/*
- * Turkish Resources for ReactOS Notepad
- *
- * Copyrights: 2012 Arda Tanrıkulu (ardatanrikulu@gmail.com)
- *             2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
+/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -43,156 +24,147 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N",           CMD_NEW
-        MENUITEM "&Aç...\tCtrl+O",          CMD_OPEN
-        MENUITEM "&Kaydet\tCtrl+S",         CMD_SAVE
-        MENUITEM "Ay&rı Kaydet...",         CMD_SAVE_AS
+        MENUITEM "&Yeni\tCtrl+N", CMD_NEW
+        MENUITEM "&Aç...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Kaydet\tCtrl+S", CMD_SAVE
+        MENUITEM "Ay&rı Kaydet...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Sayfa Yapısı...",        CMD_PAGE_SETUP
-        MENUITEM "Ya&zdır...\tCtrl+P",      CMD_PRINT
-        MENUITEM "Yaz&ıcı Ayarları...",     CMD_PRINTER_SETUP
+        MENUITEM "&Sayfa Yapısı...", CMD_PAGE_SETUP
+        MENUITEM "Ya&zdır...\tCtrl+P", CMD_PRINT
+        MENUITEM "Yaz&ıcı Ayarları...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış",                  CMD_EXIT
+        MENUITEM "&Çıkış", CMD_EXIT
     END
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Geri Al\tCtrl+Z",        CMD_UNDO
+        MENUITEM "&Geri Al\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Kes\tCtrl+X",            CMD_CUT
-        MENUITEM "&Çoğalt\tCtrl+C",         CMD_COPY
-        MENUITEM "&Yapıştır\tCtrl+V",       CMD_PASTE
-        MENUITEM "&Sil\tDel",               CMD_DELETE
+        MENUITEM "&Kes\tCtrl+X", CMD_CUT
+        MENUITEM "&Çoğalt\tCtrl+C", CMD_COPY
+        MENUITEM "&Yapıştır\tCtrl+V", CMD_PASTE
+        MENUITEM "&Sil\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Ara...\tCtrl+F",         CMD_SEARCH
-        MENUITEM "S&onrakini Ara\tF3",      CMD_SEARCH_NEXT
-        MENUITEM "&Değiştir...\tCtrl+H",    CMD_REPLACE
-        MENUITEM "G&it...\tCtrl+G",         CMD_GOTO
+        MENUITEM "&Ara...\tCtrl+F", CMD_SEARCH
+        MENUITEM "S&onrakini Ara\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Değiştir...\tCtrl+H", CMD_REPLACE
+        MENUITEM "G&it...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "&Tümünü Seç\tCtrl+A",     CMD_SELECT_ALL
+        MENUITEM "&Tümünü Seç\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Şimdiki Zamanı Koy\tF5", CMD_TIME_DATE
     END
     POPUP "&Biçim"
     BEGIN
-        MENUITEM "&Yataç Kaydır",           CMD_WRAP
-        MENUITEM "Y&azı Türü...",           CMD_FONT
+        MENUITEM "&Yataç Kaydır", CMD_WRAP
+        MENUITEM "Y&azı Türü...", CMD_FONT
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Durum Çubuğu",           CMD_STATUSBAR
+        MENUITEM "&Durum Çubuğu", CMD_STATUSBAR
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları",        CMD_HELP_CONTENTS
-        MENUITEM "Y&ardımda Ara",           CMD_HELP_SEARCH
-        MENUITEM "Ya&rdım İçin Yardım",     CMD_HELP_ON_HELP
+        MENUITEM "&Yardım Konuları", CMD_HELP_CONTENTS
+        MENUITEM "Y&ardımda Ara", CMD_HELP_SEARCH
+        MENUITEM "Ya&rdım İçin Yardım", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Bilgi",                  CMD_ABOUT
-        MENUITEM "&Hakkında",               CMD_ABOUT_WINE
+        MENUITEM "&Bilgi", CMD_ABOUT
+        MENUITEM "&Hakkında", CMD_ABOUT_WINE
     END
 END
 
-/* Dialog `Page setup' */
+/* Dialog 'Page setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Sayfa Yapısı"
 BEGIN
-LTEXT    "Üst Bilgi:",   0x140,   10, 07, 40, 15
-EDITTEXT                 0x141,   60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "Alt Bilgi:",   0x142,   10, 24, 40, 15
-EDITTEXT                 0x143,   60, 22,110, 12, WS_BORDER | WS_TABSTOP
-
-GROUPBOX "Kenar Payı:",  0x144,   10, 43,160, 45
-LTEXT    "Sol:",         0x145,   20, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,   50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "Üst:",         0x148,   20, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,   50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "Sağ:",         0x14B,  100, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,  130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "Alt:",         0x14E,  100, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,  130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-
-DEFPUSHBUTTON "Tamam",  IDOK,     180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "İptal", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Yardım", IDHELP,   180, 39, 40, 15, WS_TABSTOP
+    LTEXT "Üst Bilgi:", 0x140, 10, 07, 40, 15
+    EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
+    LTEXT "Alt Bilgi:", 0x142, 10, 24, 40, 15
+    EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
+    GROUPBOX "Kıyı Payı:", 0x144, 10, 43, 160, 45
+    LTEXT "Sol:", 0x145, 20, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Üst:", 0x148, 20, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/ 0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Sağ:", 0x14B, 100, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/ 0x14D, 130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Alt:", 0x14E, 100, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150, 130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "Tamam", IDOK, 180, 3, 40, 15, WS_TABSTOP
+    PUSHBUTTON "İptal", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
+    PUSHBUTTON "Yardım", IDHELP, 180, 39, 40, 15, WS_TABSTOP
 END
 
-/* Dialog `Encoding' */
+/* Dialog 'Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Kodlama"
 BEGIN
-COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Kodlama:",0x155,5,2,41,12
-COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Sonlanma:",0x156,5,20,41,12
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kodlama:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Sonlanma:", 0x156, 5, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
-DIALOG_GOTO DIALOGEX 0,0,165,50
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Yataca Git"
 BEGIN
-EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Yataç Numarası:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
-DEFPUSHBUTTON   "Tamam",IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "İptal",IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Yataç Numarası:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "Tamam", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "İptal", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Metin Düzenleyicisi Hakkında"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Metin Düzenleyicisi - Sürüm: 1.0\r\nTelif Hakları: 1997,98 Marcel Baur (mbaur@g26.ethz.ch)\r\n               2000 Mike McCormack (Mike_McCormack@looksmart.com.au)\r\n               2002 Sylvain Petreolle (spetreolle@yahoo.fr)\r\n               2002 Andriy Palamarchuk\r\n",
-                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
-    CONTROL         " ",
-                    -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Tamam",IDOK,114,149,44,15,WS_GROUP
-    ICON            IDI_NPICON,-1,12,9,20,30
-    EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+    CONTROL "Metin Düzenleyicisi - Sürüm: 1.0\r\nTelif Hakları: 1997,98 Marcel Baur (mbaur@g26.ethz.ch)\r\n               2000 Mike McCormack (Mike_McCormack@looksmart.com.au)\r\n               2002 Sylvain Petreolle (spetreolle@yahoo.fr)\r\n               2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Tamam", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-  STRING_LICENSE, "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
 BEGIN
-STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Sayfa &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,     "20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,      "25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
-
-STRING_NOTEPAD,                                 "Metin Düzenleyicisi"
-STRING_ERROR,                                   "YANLIŞLIK"
-STRING_WARNING,                                 "UYARI"
-STRING_INFO,                                    "Bilgi"
-
-STRING_UNTITLED,                                "Adsız"
-
-STRING_ALL_FILES,                               "Tüm Kütükler (*.*)"
-STRING_TEXT_FILES_TXT,                          "Metin Belgeleri (*.txt)"
-
-STRING_TOOLARGE,                                "%s kütüğü Metin Düzenleyicisi için çok büyük. Bu kütüğü düzenlemek için başka bir düzenleyici kullanınız."
-STRING_NOTEXT,                                  "Hiçbir şey yazmadınız. Lütfen bir şeyler yazıp yeniden deneyiniz."
-STRING_DOESNOTEXIST,                            "%s kütüğü yok. Yeni bir kütük oluşturmak ister misiniz?"
-STRING_NOTSAVED,                                "%s kütüğündeki metin değiştirilmiş. Değişiklikleri kaydetmek istiyor musunuz?"
-STRING_NOTFOUND,                                "%s kütüğü bulunamadı."
-STRING_OUT_OF_MEMORY,                           "Bu işlemi bitirmek için gereken bellek yetersiz. Kullanılabilen belleği arttırmak için bir veyâ daha çok uygulamadan çıkıp bu işlemi yeniden deneyiniz."
-STRING_CANNOTFIND                               "%s kütüğü bulunamadı."
-STRING_ANSI,                                    "ANSI"
-STRING_UNICODE,                                 "Unikod"
-STRING_UNICODE_BE,                              "Unikod (Büyük Sonlu)"
-STRING_UTF8,                                    "UTF-8"
-STRING_CRLF,                                    "Pencereler (CR + LF)"
-STRING_LF,                                      "UNIX (LF)"
-STRING_CR,                                      "Mac (CR)"
-STRING_LINE_COLUMN,                             "%d. Yataç, %d. Dikeç"
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Sayfa &s"   /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "Metin Düzenleyicisi"
+    STRING_ERROR "YANLIŞLIK"
+    STRING_WARNING "UYARI"
+    STRING_INFO "Bilgi"
+    STRING_UNTITLED "Adsız"
+    STRING_ALL_FILES "Tüm Kütükler (*.*)"
+    STRING_TEXT_FILES_TXT "Metin Belgeleri (*.txt)"
+    STRING_TOOLARGE "%s kütüğü Metin Düzenleyicisi için çok büyük. Bu kütüğü düzenlemek için başka bir düzenleyici kullanınız."
+    STRING_NOTEXT "Hiçbir şey yazmadınız. Birşeyler yazıp yeniden deneyiniz."
+    STRING_DOESNOTEXIST "%s kütüğü yok. Yeni bir kütük oluşturmak ister misiniz?"
+    STRING_NOTSAVED "%s kütüğündeki metin değiştirilmiş. Değişiklikleri kaydetmek istiyor musunuz?"
+    STRING_NOTFOUND "%s kütüğü bulunamadı."
+    STRING_OUT_OF_MEMORY "Bu işlemi bitirmek için gereken bellek yetersiz. Kullanılabilen belleği arttırmak için bir veyâ daha çok uygulamadan çıkıp bu işlemi yeniden deneyiniz."
+    STRING_CANNOTFIND "%s kütüğü bulunamadı."
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Evrenlik Düzgü"
+    STRING_UNICODE_BE "Evrenlik Düzgü (Büyük Sonlu)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Pencereler (CR + LF)"
+    STRING_LF "UNIX (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "%d. Yataç, %d. Dikeç"
 END

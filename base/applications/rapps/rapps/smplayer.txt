@@ -6,7 +6,7 @@ Version = 0.8.6
 Licence = GPL
 Description = Graphical Frontend for MPlayer.
 Size = 16.98MB
-Category = 1
+Category = 2
 URLSite = http://smplayer.sourceforge.net/
 URLDownload = http://freefr.dl.sourceforge.net/project/smplayer/SMPlayer/0.8.6/smplayer-0.8.6-win32.exe
 CDPath = none
@@ -38,6 +38,9 @@ Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
 Description = Lector multimedia (interfață pentru MPlayer).
 Size = 16,98 Mo
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=ro
+
+[Section.041f]
+Description = MPlayer için çizgelik önyüz.
 
 [Section.0422]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=uk

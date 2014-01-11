@@ -845,23 +845,23 @@ ExpBlockOnLockedHandleEntry(IN PHANDLE_TABLE HandleTable,
                             IN PHANDLE_TABLE_ENTRY HandleTableEntry)
 {
     LONG_PTR OldValue;
-    DEFINE_WAIT_BLOCK(WaitBlock);
+    EX_PUSH_LOCK_WAIT_BLOCK WaitBlock;
 
     /* Block on the pushlock */
-    ExBlockPushLock(&HandleTable->HandleContentionEvent, WaitBlock);
+    ExBlockPushLock(&HandleTable->HandleContentionEvent, &WaitBlock);
 
     /* Get the current value and check if it's been unlocked */
     OldValue = HandleTableEntry->Value;
     if (!(OldValue) || (OldValue & EXHANDLE_TABLE_ENTRY_LOCK_BIT))
     {
         /* Unblock the pushlock and return */
-        ExfUnblockPushLock(&HandleTable->HandleContentionEvent, WaitBlock);
+        ExfUnblockPushLock(&HandleTable->HandleContentionEvent, &WaitBlock);
     }
     else
     {
         /* Wait for it to be unblocked */
         ExWaitForUnblockPushLock(&HandleTable->HandleContentionEvent,
-                                 WaitBlock);
+                                 &WaitBlock);
     }
 }
 

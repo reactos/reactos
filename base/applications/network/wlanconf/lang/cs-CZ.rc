@@ -1,13 +1,13 @@
-/* FILE:        base/applications/network/wlanconf/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2013-02-15
+/* FILE:       base/applications/network/wlanconf/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2013-02-15
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-IDS_USAGE, "\nNakonfiguruje bezdrátový síťový adaptér (WLAN).\n\n\
+    IDS_USAGE "\nNakonfiguruje bezdrátový síťový adaptér (WLAN).\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-c SSID\t\tPřipojí se k zadanému SSID.\n\
 \t-w WEP\t\tSpecifikuje použitý WEP klíč.\n\
@@ -15,30 +15,27 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-d\t\tOdpojí se od současného AP (přístupového bodu).\n\
 \t-s\t\tProhledá a zobrazí seznam přístupových bodů v dosahu.\n\
 Spuštění bez parametrů vypíše informace o současném bezdrátovém připojení.\n"
-/* === */
-IDS_NO_NETWORK, "Nebyly nalezeny žádné sítě\n"
-IDS_NO_WLAN_ADAPTER, "V systému nebyl nalezen WLAN adaptér\n"
-IDS_SUCCESS, "Operace byla úspěšně dokončena.\n"
-IDS_WLAN_DISCONNECT, "\nWLAN odpojen\n"
-/* === */
-IDS_MSG_WEP_ENABLED, "WEP zapnuto: %s\n"
-IDS_MSG_NETWORK_MODE, "Režim sítě: %s\n"
-IDS_MSG_CURRENT_WIRELESS, "\nAktuální informace o bezdrátové konfiguraci:\n\n"
-IDS_MSG_ENCRYPTED, "Zašifrováno: %s\n"
-IDS_MSG_NETWORK_TYPE, "Typ sítě: %s\n"
-IDS_MSG_RSSI, "RSSI: %i dBm\n"
-IDS_MSG_SUPPORT_RATE, "Podporované rychlosti (Mbps): "
-IDS_MSG_TRANSMISSION_POWER, "Přenosový výkon: %d mW\n"
-IDS_MSG_ANTENNA_COUNT, "Počet antén: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA, "Vysílací anténa: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA_ANY, "Vysílací anténa: jakákoliv\n"
-IDS_MSG_RECEIVE_ANTENNA, "Přijímací anténa: %d\n"
-IDS_MSG_RECEIVE_ANTENNA_ANY, "Přijímací anténa: jakákoliv\n"
-IDS_MSG_FRAGMENT_THRESHOLD, "Hranice fragmentace: %d bajtů\n"
-IDS_MSG_RTS_THRESHOLD, "Hranice RTS: %d bajtů\n"
-/* === */
-IDS_YES, "Ano"
-IDS_NO, "Ne"
-IDS_ADHOC, "Ad hoc"
-IDS_INFRASTRUCTURE, "Infrastruktura"
+    IDS_NO_NETWORK "Nebyly nalezeny žádné sítě\n"
+    IDS_NO_WLAN_ADAPTER "V systému nebyl nalezen WLAN adaptér\n"
+    IDS_SUCCESS "Operace byla úspěšně dokončena.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN odpojen\n"
+    IDS_MSG_WEP_ENABLED "WEP zapnuto: %s\n"
+    IDS_MSG_NETWORK_MODE "Režim sítě: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nAktuální informace o bezdrátové konfiguraci:\n\n"
+    IDS_MSG_ENCRYPTED "Zašifrováno: %s\n"
+    IDS_MSG_NETWORK_TYPE "Typ sítě: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Podporované rychlosti (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Přenosový výkon: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Počet antén: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Vysílací anténa: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Vysílací anténa: jakákoliv\n"
+    IDS_MSG_RECEIVE_ANTENNA "Přijímací anténa: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Přijímací anténa: jakákoliv\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Hranice fragmentace: %d bajtů\n"
+    IDS_MSG_RTS_THRESHOLD "Hranice RTS: %d bajtů\n"
+    IDS_YES "Ano"
+    IDS_NO "Ne"
+    IDS_ADHOC "Ad hoc"
+    IDS_INFRASTRUCTURE "Infrastruktura"
 END

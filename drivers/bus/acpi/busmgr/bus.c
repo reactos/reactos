@@ -1287,7 +1287,7 @@ acpi_bus_add (
 	case ACPI_BUS_TYPE_PROCESSOR:
 		hid = ACPI_PROCESSOR_HID;
 		uid = static_uid_buffer;
-		sprintf(uid, "%d", (ProcessorCount++));
+		sprintf(uid, "_%d", (ProcessorCount++));
 		break;
 	case ACPI_BUS_TYPE_SYSTEM:
 		hid = ACPI_SYSTEM_HID;

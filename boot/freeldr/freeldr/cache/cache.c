@@ -72,8 +72,8 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
                                                CACHE_BLOCK,
                                                ListEntry);
 
-            MmHeapFree(NextCacheBlock->BlockData);
-            MmHeapFree(NextCacheBlock);
+            FrLdrTempFree(NextCacheBlock->BlockData, TAG_CACHE_DATA);
+            FrLdrTempFree(NextCacheBlock, TAG_CACHE_BLOCK);
         }
     }
 
@@ -93,9 +93,9 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
     CacheBlockCount = 0;
     CacheSizeLimit = TotalPagesInLookupTable / 8 * MM_PAGE_SIZE;
     CacheSizeCurrent = 0;
-    if (CacheSizeLimit < (64 * 1024))
+    if (CacheSizeLimit > TEMP_HEAP_SIZE - (128 * 1024))
     {
-        CacheSizeLimit = (64 * 1024);
+        CacheSizeLimit = TEMP_HEAP_SIZE - (128 * 1024);
     }
 
     CacheManagerInitialized = TRUE;

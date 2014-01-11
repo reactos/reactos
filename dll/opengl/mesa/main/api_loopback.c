@@ -28,13 +28,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "macros.h"
-#include "api_loopback.h"
-#include "mtypes.h"
-#include "main/dispatch.h"
-#include "mfeatures.h"
+#include <precomp.h>
 
 /* KW: A set of functions to convert unusual Color/Normal/Vertex/etc
  * calls to a smaller set of driver-provided formats.  Currently just

@@ -1,10 +1,10 @@
 /*
- *         PROJECT:     PAINT for ReactOS
- *         LICENSE:     unknown (LGPL assumed)
- *         FILE:        base/applications/mspaint/lang/pl-PL.rc
- *         PURPOSE:     Polish Language resource file
- *         TRANSLATORS: Caemyr - Olaf Siejka (May,2009), Use ReactOS forum PM or IRC to contact me
- *         UTF-8 conversion by Caemyr (May, 2011) 
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/pl-PL.rc
+ * PURPOSE:    Polish Language resource file
+ * TRANSLATOR: Caemyr - Olaf Siejka (May, 2009), Use ReactOS forum PM or IRC to contact me
+ * UTF-8 conversion by Caemyr (May, 2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -24,7 +24,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Wyjdź\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Edytuj"
     BEGIN
         MENUITEM "Cofnij\tCtrl+Z", IDM_EDITUNDO
@@ -40,7 +39,6 @@ BEGIN
         MENUITEM "Kopiuj do...", IDM_EDITCOPYTO
         MENUITEM "Wklej z...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Widok"
     BEGIN
         MENUITEM "Pasek narzędzi\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -66,7 +64,6 @@ BEGIN
         END
         MENUITEM "Pełny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Obraz"
     BEGIN
         MENUITEM "Obrót/Odbicie...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -77,7 +74,6 @@ BEGIN
         MENUITEM "Wyczyść obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Kolory"
     BEGIN
         MENUITEM "Edytuj kolory...", IDM_COLORSEDITPALETTE
@@ -85,7 +81,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "Tematy pomocy", IDM_HELPHELPTOPICS
@@ -126,9 +121,9 @@ BEGIN
     AUTORADIOBUTTON "Odbicie poziome", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Odbicie pionowe", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Obrót o kąt:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 125, 24, 48, 14
 END
@@ -189,34 +184,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint dla ReactOS"
-    IDS_INFOTEXT, "Paint dla ReactOS jest dostępny na licencji GNU Lesser General Public License (LGPL) wersja 3 (www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Czy chcesz zapisać zmiany do %s?"
-    IDS_DEFAULTFILENAME, "bez tytułu.bmp"
-    IDS_MINIATURETITLE, "Miniatura"
-    IDS_TOOLTIP1, "Zaznaczenie dowolne"
-    IDS_TOOLTIP2, "Zaznaczenie"
-    IDS_TOOLTIP3, "Gumka"
-    IDS_TOOLTIP4, "Wypełnij kolorem"
-    IDS_TOOLTIP5, "Wybierz kolor"
-    IDS_TOOLTIP6, "Przybliżenie"
-    IDS_TOOLTIP7, "Ołówek"
-    IDS_TOOLTIP8, "Pędzel"
-    IDS_TOOLTIP9, "Aerograf"
-    IDS_TOOLTIP10, "Tekst"
-    IDS_TOOLTIP11, "Linia"
-    IDS_TOOLTIP12, "Krzywa Beziera"
-    IDS_TOOLTIP13, "Prostokąt"
-    IDS_TOOLTIP14, "Wielokąt"
-    IDS_TOOLTIP15, "Elipsa"
-    IDS_TOOLTIP16, "Zaokrąglony Prostokąt"
-    IDS_OPENFILTER, "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bajtów"
-    IDS_PRINTRES, "%d x %d pikseli na metr"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint dla ReactOS"
+    IDS_INFOTEXT "Paint dla ReactOS jest dostępny na licencji GNU Lesser General Public License (LGPL) wersja 3 (www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do %s?"
+    IDS_DEFAULTFILENAME "bez tytułu.bmp"
+    IDS_MINIATURETITLE "Miniatura"
+    IDS_TOOLTIP1 "Zaznaczenie dowolne"
+    IDS_TOOLTIP2 "Zaznaczenie"
+    IDS_TOOLTIP3 "Gumka"
+    IDS_TOOLTIP4 "Wypełnij kolorem"
+    IDS_TOOLTIP5 "Wybierz kolor"
+    IDS_TOOLTIP6 "Przybliżenie"
+    IDS_TOOLTIP7 "Ołówek"
+    IDS_TOOLTIP8 "Pędzel"
+    IDS_TOOLTIP9 "Aerograf"
+    IDS_TOOLTIP10 "Tekst"
+    IDS_TOOLTIP11 "Linia"
+    IDS_TOOLTIP12 "Krzywa Beziera"
+    IDS_TOOLTIP13 "Prostokąt"
+    IDS_TOOLTIP14 "Wielokąt"
+    IDS_TOOLTIP15 "Elipsa"
+    IDS_TOOLTIP16 "Zaokrąglony Prostokąt"
+    IDS_OPENFILTER "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
+    IDS_SAVEFILTER "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bajtów"
+    IDS_PRINTRES "%d x %d pikseli na metr"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

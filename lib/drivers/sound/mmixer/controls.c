@@ -8,6 +8,9 @@
  
 #include "priv.h"
 
+#define YDEBUG
+#include <debug.h>
+
 const GUID KSNODETYPE_DESKTOP_MICROPHONE = {0xDFF21BE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID KSNODETYPE_LEGACY_AUDIO_CONNECTOR = {0xDFF21FE4, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID KSNODETYPE_TELEPHONE = {0xDFF21EE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -513,8 +516,12 @@ MMixerCountMixerControls(
         /* get next nodes upstream */
         MMixerGetNextNodesFromNodeIndex(MixerContext, Topology, NodeIndex, bUpStream, &NodesCount, Nodes);
 
-        /* assume there is a node connected */
-        ASSERT(NodesCount != 0);
+        if (NodesCount != 1)
+        {
+            DPRINT("PinId %lu bInputMixer %lu bUpStream %lu NodeIndex %lu is not connected", PinId, bInputMixer, bUpStream, NodeIndex);
+            break;
+        }
+
         ASSERT(NodesCount == 1);
 
         /* use first index */

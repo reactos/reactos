@@ -1,16 +1,15 @@
 /*
- * PROJECT:         ReactOS RAPPS
- * FILE:            base\applications\cmdutils\doskey\lang\sv-SE.rc
- * PURPOSE:         Swedish resource file
- * Translation:     Jaix Bly
+ * PROJECT:     ReactOS DOSKey
+ * FILE:        base\applications\cmdutils\doskey\lang\sv-SE.rc
+ * PURPOSE:     Swedish resource file
+ * Translation: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-
-IDS_HELP, "Hanterar commandoradseditering; settings, history, and macros.\n\
+    IDS_HELP "Hanterar commandoradseditering; settings, history, and macros.\n\
 \n\
 DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
@@ -28,7 +27,5 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROFILE=file     Laddar makrodefinitioner från file.\n\
   macroname           Specificerar namnet på ett makro man vill skapa.\n\
   text                Specificerar utbytestexten för macrot.\n"
-
-IDS_INVALID_MACRO_DEF, "Ogiltig makrodefinition: %s\n"
-
+    IDS_INVALID_MACRO_DEF "Ogiltig makrodefinition: %s\n"
 END

@@ -6,4 +6,4 @@ extern HWND hStartupListCtrl;
 
 INT_PTR CALLBACK StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-#endif
+#endif /* _STARTUPPAGE_H_ */

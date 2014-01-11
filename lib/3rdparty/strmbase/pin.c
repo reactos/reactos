@@ -19,17 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include "dshow.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/strmbase.h"
-#include "uuids.h"
-#include "vfwmsgs.h"
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
+#include "strmbase_private.h"
 
 static const IPinVtbl InputPin_Vtbl;
 static const IPinVtbl OutputPin_Vtbl;

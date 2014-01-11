@@ -17,6 +17,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 /* http://cryptopp.sourceforge.net/docs/ref521/arc4_8cpp-source.html */
 
 #include <advapi32.h>
@@ -65,3 +66,30 @@ void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length)
     a4i->y = y;
 }
 
+#ifndef __REACTOS__
+/******************************************************************************
+ * SystemFunction032  [ADVAPI32.@]
+ *
+ * Encrypts a string data using ARC4
+ *
+ * PARAMS
+ *   data    [I/O] data to encrypt
+ *   key     [I] key data
+ *
+ * RETURNS
+ *  Success: STATUS_SUCCESS
+ *  Failure: STATUS_UNSUCCESSFUL
+ *
+ * NOTES
+ *  see http://web.it.kth.se/~rom/ntsec.html#crypto-strongavail
+ */
+NTSTATUS WINAPI SystemFunction032(struct ustring *data, const struct ustring *key)
+{
+    arc4_info a4i;
+
+    arc4_init(&a4i, key->Buffer, key->Length);
+    arc4_ProcessString(&a4i, data->Buffer, data->Length);
+
+    return STATUS_SUCCESS;
+}
+#endif

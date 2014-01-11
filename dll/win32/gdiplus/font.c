@@ -17,21 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winnls.h"
-//#include "winreg.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
-
-//#include "objbase.h"
-
-//#include "gdiplus.h"
 #include "gdiplus_private.h"
 
 /* PANOSE is 10 bytes in size, need to pack the structure properly */

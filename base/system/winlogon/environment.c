@@ -12,16 +12,16 @@
 
 #include "winlogon.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
-
 /* GLOBALS ******************************************************************/
 
 
 /* FUNCTIONS ****************************************************************/
 
-static VOID
-BuildVolatileEnvironment(IN PWLSESSION Session,
-                         IN HKEY hKeyCurrentUser)
+static
+VOID
+BuildVolatileEnvironment(
+    IN PWLSESSION Session,
+    IN HKEY hKeyCurrentUser)
 {
     WCHAR szPath[MAX_PATH + 1];
     LPCWSTR wstr;
@@ -128,7 +128,8 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
 
 
 BOOL
-CreateUserEnvironment(IN PWLSESSION Session)
+CreateUserEnvironment(
+    IN PWLSESSION Session)
 {
     HKEY hKeyCurrentUser;
     LONG lError;

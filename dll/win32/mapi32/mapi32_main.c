@@ -18,24 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-//#include "objbase.h"
-#include <initguid.h>
 #include <mapix.h>
-//#include "mapiform.h"
-//#include "mapi.h"
-#include <wine/debug.h>
-#include "util.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
 DECLSPEC_HIDDEN LONG MAPI_ObjectCount = 0;
 DECLSPEC_HIDDEN HINSTANCE hInstMAPI32;

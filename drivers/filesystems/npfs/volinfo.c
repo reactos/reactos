@@ -140,7 +140,7 @@ NpCommonQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
                                IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    FILE_INFORMATION_CLASS InfoClass;
+    FS_INFORMATION_CLASS InfoClass;
     ULONG Length;
     PVOID Buffer;
     NTSTATUS Status;

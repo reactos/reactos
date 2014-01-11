@@ -18,7 +18,13 @@
 
 #pragma once
 
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
 #include <winuser.h>
+
+#include "resource.h"
 
 #define BEGINNER_MINES        10
 #define BEGINNER_COLS         9

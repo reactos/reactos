@@ -1,6 +1,6 @@
-/* FILE:        dll/cpl/wined3dcfg/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2013-06-01
+/* FILE:       dll/cpl/wined3dcfg/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2013-06-01
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -23,7 +23,6 @@ BEGIN
     LTEXT "Render target locking:", -1, 15, 175, 72, 10, SS_LEFT
     COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
-
 
 STRINGTABLE
 BEGIN

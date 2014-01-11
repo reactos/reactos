@@ -631,7 +631,11 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        }
        else
        {
-           //if (!IntGetCaptureWindow()) ptiLastInput = pti;
+           if (!IntGetCaptureWindow())
+           {
+             // ERR("ptiLastInput is set\n");
+             // ptiLastInput = pti; // Once this is set during Reboot or Shutdown, this prevents the exit window having foreground.
+           }
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
        }
@@ -1102,15 +1106,17 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    }
    else
    {
-      PVOID WaitObjects[2];
+      PVOID WaitObjects[3];
 
-      WaitObjects[0] = &CompletionEvent;
-      WaitObjects[1] = pti->pEventQueueServer;
+      WaitObjects[0] = &CompletionEvent;       // Wait 0
+      WaitObjects[1] = pti->pEventQueueServer; // Wait 1
+      WaitObjects[2] = ptirec->pEThread;       // Wait 2
+
       do
       {
          UserLeaveCo();
 
-         WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+         WaitStatus = KeWaitForMultipleObjects(3, WaitObjects, WaitAny, UserRequest,
                                                UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
 
          UserEnterCo();
@@ -1158,14 +1164,33 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             TRACE("MsqSendMessage timed out 2\n");
             break;
          }
+         // Receiving thread passed on and left us hanging with issues still pending.
+         if ( WaitStatus == STATUS_WAIT_2 )
+         {
+            ERR("Receiving Thread woken up dead!\n");
+            Entry = pti->DispatchingMessagesHead.Flink;
+            while (Entry != &pti->DispatchingMessagesHead)
+            {
+               if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
+                     == Message)
+               {
+                  Message->CompletionEvent = NULL;
+                  Message->Result = NULL;
+                  RemoveEntryList(&Message->DispatchingListEntry);
+                  Message->DispatchingListEntry.Flink = NULL;
+                  break;
+               }
+               Entry = Entry->Flink;
+            }
+         }
          while (co_MsqDispatchOneSentMessage(pti))
             ;
       }
-      while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
+      while (NT_SUCCESS(WaitStatus) && WaitStatus == STATUS_WAIT_1);
    }
 
    if(WaitStatus != STATUS_TIMEOUT)
-      *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+      if (uResult) *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
 
    return WaitStatus;
 }
@@ -1214,7 +1239,7 @@ MsqPostMessage(PTHREADINFO pti,
    Message->dwQEvent = dwQEvent;
    Message->QS_Flags = MessageBits;
    Message->pti = pti;
-   MsqWakeQueue(pti, MessageBits, (MessageBits & QS_TIMER ? FALSE : TRUE));
+   MsqWakeQueue(pti, MessageBits, TRUE);
 }
 
 VOID FASTCALL

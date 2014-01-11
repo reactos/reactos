@@ -22,16 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/imports.h"
-#include "main/macros.h"
-#include "main/mtypes.h"
-#include "swrast/s_aaline.h"
-#include "swrast/s_context.h"
-#include "swrast/s_span.h"
-#include "swrast/swrast.h"
-
+#include <precomp.h>
 
 #define SUB_PIXEL 4
 

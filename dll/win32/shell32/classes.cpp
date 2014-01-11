@@ -188,11 +188,6 @@ BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPW
     return ret;
 }
 
-/***************************************************************************************
-*    HCR_GetDefaultIcon    [internal]
-*
-* Gets the icon for a filetype
-*/
 static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 {
     WCHAR xriid[50];
@@ -206,13 +201,18 @@ static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
     return (RegOpenKeyExW(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey) == ERROR_SUCCESS);
 }
 
-static BOOL HCR_RegGetDefaultIconW(HKEY hkey, LPWSTR szDest, DWORD len, int* picon_idx)
+/***************************************************************************************
+*    HCR_GetIcon    [internal]
+*
+* Gets the icon for a filetype, szName can be NULL, in which case the default icon is loaded
+*/
+static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
     DWORD dwType;
     WCHAR sTemp[MAX_PATH];
     WCHAR sNum[7];
 
-    if (!RegQueryValueExW(hkey, NULL, 0, &dwType, (LPBYTE)szDest, &len))
+    if (!RegQueryValueExW(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
     {
         if (dwType == REG_EXPAND_SZ)
         {
@@ -230,13 +230,13 @@ static BOOL HCR_RegGetDefaultIconW(HKEY hkey, LPWSTR szDest, DWORD len, int* pic
     return FALSE;
 }
 
-static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, int* picon_idx)
+static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
     DWORD dwType;
     char sTemp[MAX_PATH];
     char  sNum[5];
 
-    if (!RegQueryValueExA(hkey, NULL, 0, &dwType, (LPBYTE)szDest, &len))
+    if (!RegQueryValueExA(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
     {
         if (dwType == REG_EXPAND_SZ)
         {
@@ -254,7 +254,7 @@ static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, int* pico
     return FALSE;
 }
 
-BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_idx)
+BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
     static const WCHAR swDefaultIcon[] = L"\\DefaultIcon";
     HKEY hKey;
@@ -268,7 +268,7 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_i
 
     if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hKey))
     {
-        ret = HCR_RegGetDefaultIconW(hKey, szDest, len, picon_idx);
+        ret = HCR_RegGetIconW(hKey, szDest, szName, len, picon_idx);
         RegCloseKey(hKey);
     }
 
@@ -280,7 +280,7 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_i
     return ret;
 }
 
-BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx)
+BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
     HKEY hKey;
     char sTemp[MAX_PATH];
@@ -292,21 +292,21 @@ BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx
 
     if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hKey))
     {
-        ret = HCR_RegGetDefaultIconA(hKey, szDest, len, picon_idx);
+        ret = HCR_RegGetIconA(hKey, szDest, szName, len, picon_idx);
         RegCloseKey(hKey);
     }
     TRACE("-- %s %i\n", szDest, *picon_idx);
     return ret;
 }
 
-BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, int* picon_idx)
+BOOL HCR_GetIconFromGUIDW(REFIID riid, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx)
 {
     HKEY hKey;
     BOOL ret = FALSE;
 
     if (HCR_RegOpenClassIDKey(riid, &hKey))
     {
-        ret = HCR_RegGetDefaultIconW(hKey, szDest, len, picon_idx);
+        ret = HCR_RegGetIconW(hKey, szDest, szName, len, picon_idx);
         RegCloseKey(hKey);
     }
     TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
@@ -487,8 +487,7 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
         hr = SHGetDesktopFolder(&psfDesktop);
         if (SUCCEEDED(hr))
         {
-            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_IShellFolder,
-                                          (LPVOID*)&psfFolder);
+            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder,&psfFolder));
             if (SUCCEEDED(hr))
                 hr = psfFolder->GetAttributesOf(0, NULL, pdwAttributes);
         }

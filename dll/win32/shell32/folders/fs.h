@@ -43,11 +43,16 @@ class CFSFolder :
 
         UINT cfShellIDList;    /* clipboardformat for IDropTarget */
         BOOL fAcceptFmt;       /* flag for pending Drop */
+        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        void SF_RegisterClipFmt();
+        BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
+        static DWORD _DoDropThreadProc(LPVOID lpParameter);
+        virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+
     public:
         CFSFolder();
         ~CFSFolder();
-        void SF_RegisterClipFmt();
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes);
@@ -93,7 +98,7 @@ class CFSFolder :
         virtual HRESULT WINAPI GetUniqueName(LPWSTR pwszName, UINT uLen);
         virtual HRESULT WINAPI AddFolder(HWND hwnd, LPCWSTR pwszName, LPITEMIDLIST *ppidlOut);
         virtual HRESULT WINAPI DeleteItems(UINT cidl, LPCITEMIDLIST *apidl);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl);
+        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, bool bCopy);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
@@ -107,8 +112,18 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_ISFHelper, ISFHelper)
         END_COM_MAP()
+};
+
+struct _DoDropData {
+    CFSFolder *This;
+    IDataObject *pDataObject;
+    IAsyncOperation *pAsyncOperation;
+    DWORD dwKeyState;
+    POINTL pt; 
+    DWORD pdwEffect;
 };
 
 #endif // _CFSFOLDER_H_

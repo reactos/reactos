@@ -215,7 +215,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PWND pWindow);
   do { \
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
-      ERR("Free message queue 0x%p\n", (MsgQueue)); \
+      TRACE("Free message queue 0x%p\n", (MsgQueue)); \
       ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)

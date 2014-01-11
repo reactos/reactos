@@ -1,7 +1,7 @@
 /*
  * Turkish Resources
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyrights: 2006 - Fatih AÅŸÄ±cÄ± (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,5 +25,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_NAME "MS-CRAM"
-    IDS_DESCRIPTION "Wine Vidyo 1 vidyo çözücü"
+    IDS_DESCRIPTION "Wine Vidyo 1 Vidyo Kodeki"
 }

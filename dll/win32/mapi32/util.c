@@ -19,32 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-//#include <stdarg.h>
 #include <stdio.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-//#include "winuser.h"
-//#include "winerror.h"
 #include <winternl.h>
-//#include "objbase.h"
 #include <shlwapi.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-#include <mapival.h>
 #include <xcmc.h>
 #include <msi.h>
-#include "util.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
 static const BYTE digitsToHex[] = {
   0,1,2,3,4,5,6,7,8,9,0xff,0xff,0xff,0xff,0xff,0xff,0xff,10,11,12,13,14,15,

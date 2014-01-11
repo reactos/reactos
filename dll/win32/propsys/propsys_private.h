@@ -18,4 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <propsys.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(propsys);
+
 HRESULT PropertyStore_CreateInstance(IUnknown *outer, REFIID riid, void **ppv) DECLSPEC_HIDDEN;

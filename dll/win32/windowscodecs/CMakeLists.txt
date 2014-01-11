@@ -51,16 +51,11 @@ list(APPEND SOURCE
     tgaformat.c
     tiffformat.c
     ungif.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_wincodec_p.c)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(windowscodecs)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
 
 add_library(windowscodecs SHARED ${SOURCE} version.rc)
 set_module_type(windowscodecs win32dll)

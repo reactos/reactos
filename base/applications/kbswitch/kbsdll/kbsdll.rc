@@ -1,8 +1,5 @@
-#include <windows.h>
-
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Keyboard Layout Switcher\0"
-#define REACTOS_STR_INTERNAL_NAME	"kbsdll\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"kbsdll.dll\0"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Keyboard Layout Switcher"
+#define REACTOS_STR_INTERNAL_NAME     "kbsdll"
+#define REACTOS_STR_ORIGINAL_FILENAME "kbsdll.dll"
 #include <reactos/version.rc>
-

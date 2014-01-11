@@ -8,9 +8,10 @@
 
 #include "rapps.h"
 
+#include <shlwapi.h>
+
 HWND hRichEdit;
 PWSTR pLink = NULL;
-
 
 VOID
 RichEditOnLink(HWND hwnd, ENLINK *Link)

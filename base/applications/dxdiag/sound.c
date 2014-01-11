@@ -8,6 +8,9 @@
  */
 
 #include "precomp.h"
+
+#include <mmsystem.h>
+#include <mmreg.h>
 #include <dsound.h>
 
 #if 0

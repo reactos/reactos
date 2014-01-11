@@ -388,7 +388,7 @@ HRESULT WINAPI CControlPanelFolder::EnumObjects(
     ATLTRY (theEnumerator = new CComObject<CControlPanelEnum>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;
@@ -1024,11 +1024,11 @@ ERR("here\n");
             FIXME("Couldn't retrieve pointer to cpl structure\n");
             return E_FAIL;
         }
-        hResult = CShellLink::_CreatorClass::CreateInstance(NULL, IID_IShellLinkA, (void **)&isl);
+        hResult = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkA, &isl));
         if (SUCCEEDED(hResult))
         {
             isl->SetPath(szTarget);
-            if (SUCCEEDED(isl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf)))
+            if (SUCCEEDED(isl->QueryInterface(IID_PPV_ARG(IPersistFile,&ppf))))
                 ppf->Save(szPath, TRUE);
         }
         return NOERROR;

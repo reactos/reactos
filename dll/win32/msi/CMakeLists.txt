@@ -56,10 +56,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
 
-if(MSVC)
-    set_source_files_properties(custom.c PROPERTIES COMPILE_FLAGS /FImsvchelper.h)
-endif()
-
 add_library(msi SHARED ${SOURCE})
 add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msiserver.idl)

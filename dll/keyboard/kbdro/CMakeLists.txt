@@ -5,7 +5,7 @@ spec2def(kbdro.dll kbdro.spec)
 
 add_library(kbdro SHARED kbdro.c kbdro.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdro.def)
 
-set_entrypoint(kbdro 0)
+set_module_type(kbdro kbdlayout)
 
 add_dependencies(kbdro psdk)
 

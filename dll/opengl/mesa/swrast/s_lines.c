@@ -22,17 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-#include "s_aaline.h"
-#include "s_context.h"
-#include "s_feedback.h"
-#include "s_lines.h"
-#include "s_span.h"
-
+#include <precomp.h>
 
 /*
  * Init the mask[] array to implement a line stipple.

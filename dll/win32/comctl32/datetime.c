@@ -40,20 +40,8 @@
  */
 
 #include <math.h>
-//#include <string.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <limits.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 

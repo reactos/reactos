@@ -20,6 +20,8 @@
 
 #include "precomp.h"
 
+#include "bsops.h"
+
 char g_username[256] = "";
 char g_hostname[256] = "";
 char g_servername[256] = "";

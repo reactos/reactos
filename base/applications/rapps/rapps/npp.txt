@@ -2,13 +2,13 @@
 
 [Section]
 Name = Notepad++
-Version = 6.5
+Version = 6.5.1
 Licence = GPL
 Description = A text editor.
 Size = 7.2MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
-URLDownload = http://download.tuxfamily.org/notepadplus/6.5/npp.6.5.Installer.exe
+URLDownload = http://download.tuxfamily.org/notepadplus/6.5.1/npp.6.5.1.Installer.exe
 CDPath = none
 
 [Section.0407]
@@ -39,6 +39,9 @@ Description = Текстовый редактор.
 
 [Section.041b]
 Description = Textový editor.
+
+[Section.041f]
+Description = Bir metin düzenleyicisi.
 
 [Section.0422]
 Description = Текстовый редактор.

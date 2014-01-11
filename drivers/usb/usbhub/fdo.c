@@ -8,8 +8,12 @@
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-#define INITGUID
 #include "usbhub.h"
+
+#include <stdio.h>
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS
 QueryStatusChangeEndpoint(

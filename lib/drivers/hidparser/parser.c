@@ -8,8 +8,10 @@
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
 #include "parser.h"
+
+#define NDEBUG
+#include <debug.h>
 
 static UCHAR ItemSize[4] = { 0, 1, 2, 4 };
 

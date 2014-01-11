@@ -1,32 +1,11 @@
-/*
- * Copyright 1998 Juergen Schmied
- * Copyright 2003 Marcelo Duarte
- * Copyright 2006-2007 Américo José Melo
- * Copyright 2010 Manuel D V Silva
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "Ícones &grandes",   FCIDM_SHVIEW_BIGICON
-    MENUITEM "Ícones &pequenos",  FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Lista",            FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Detalhes",         FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
+    MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -36,29 +15,29 @@ BEGIN
     BEGIN
         POPUP "&Mostrar"
         BEGIN
-            MENUITEM "Ícones &grandes",     FCIDM_SHVIEW_BIGICON
-            MENUITEM "Ícones &pequenos",    FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Lista",              FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Detalhes",           FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
+            MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
         POPUP "O&rganizar ícones"
         BEGIN
-            MENUITEM "Por &nome",           0x30  /* column 0 */
-            MENUITEM "Por &tipo",           0x32  /* column 2 */
-            MENUITEM "Por ta&manho",        0x31  /* ... */
-            MENUITEM "Por &data",           0x33
+            MENUITEM "Por &nome", 0x30  /* column 0 */
+            MENUITEM "Por &tipo", 0x32  /* column 2 */
+            MENUITEM "Por ta&manho", 0x31  /* ... */
+            MENUITEM "Por &data", 0x33
             MENUITEM SEPARATOR
-            MENUITEM "Auto organi&zar",     FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Alin&har ícones",       FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Alin&har ícones", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar",           FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Co&lar",                FCIDM_SHVIEW_INSERT
-        MENUITEM "Colar a&talho",         FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
+        MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
-        MENUITEM "Propriedades",          FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Propriedades", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -67,17 +46,17 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorador",             FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Abrir",                FCIDM_SHVIEW_OPEN
+        MENUITEM "E&xplorador", FCIDM_SHVIEW_EXPLORE
+        MENUITEM "&Abrir", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "C&ortar",                 FCIDM_SHVIEW_CUT
-        MENUITEM "&Copiar",                FCIDM_SHVIEW_COPY
+        MENUITEM "C&ortar", FCIDM_SHVIEW_CUT
+        MENUITEM "&Copiar", FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Criar &Link",         FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Apagar",              FCIDM_SHVIEW_DELETE
-        MENUITEM "&Renomear",              FCIDM_SHVIEW_RENAME
+        MENUITEM "Criar &Link", FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Apagar", FCIDM_SHVIEW_DELETE
+        MENUITEM "&Renomear", FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Propriadades",          FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Propriadades", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -144,7 +123,6 @@ BEGIN
     LTEXT "Memória física instalada:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
-    
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -302,13 +280,11 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Tipo:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Sistema de Ficheiros:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
     LTEXT "Espaço utilizado:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -318,7 +294,6 @@ BEGIN
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     LTEXT "Capacidade:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -326,7 +301,6 @@ BEGIN
     LTEXT "Disco %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "Limpeza do &Disco", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-
     CHECKBOX "Comprimir unidade para libertar espaço no disco", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Permitir indexar este disco para acelerar a procura de ficheiros", 14012, 8, 205, 222, 10, WS_DISABLED
 END
@@ -366,7 +340,6 @@ BEGIN
     CHECKBOX "O seguinte utilizador:", 14002, 10, 100, 90, 10
     LTEXT "Nome do utilizador:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "Palavra-passe:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -398,7 +371,7 @@ BEGIN
     LTEXT "Escolha o programa que quer utilizar para abrir este ficheiro:", -1, 44, 12, 211, 10
     LTEXT "Ficheiro:    ", 14001, 44, 25, 188, 10
     GROUPBOX "&Programas", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Utilizar sempre o programa seleccionado para abrir este tipo de ficheiros", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Seleccione...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -412,7 +385,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "File", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -442,14 +415,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
-//ICON
-LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
-PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
-CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restaurar valores por &Defeito", 14004, 180, 210, 80, 14, WS_TABSTOP
+    GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
+    //ICON
+    LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    PUSHBUTTON "Restaurar valores por &Defeito", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -457,17 +430,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipos de Ficheiros"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 70, 10
-CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Novo", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Apagar", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Detalhes para '%s' extensão", 14003, 7, 130, 249, 70
-LTEXT "Abre com:", -1, 12, 140, 40, 10
-//ICON
-LTEXT "Appnome", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Mudar...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "", 14007, 12, 155, 160, 30
-PUSHBUTTON "A&vançado", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&Novo", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Apagar", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Detalhes para '%s' extensão", 14003, 7, 130, 249, 70
+    LTEXT "Abre com:", -1, 12, 140, 40, 10
+    //ICON
+    LTEXT "Appnome", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Mudar...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "A&vançado", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -625,187 +598,187 @@ CAPTION "Trocar Icone"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Nome do ficheiro:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "procurar...",IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
+    PUSHBUTTON "procurar...", IDC_BUTTON_PATH, 148, 24, 67, 14
+    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancelar",IDCANCEL, 167, 181, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1             "Ficheiro"
-    IDS_SHV_COLUMN2             "Tamanho"
-    IDS_SHV_COLUMN3             "Tipo"
-    IDS_SHV_COLUMN4             "Modificado"
-    IDS_SHV_COLUMN5             "propriedades"
-    IDS_SHV_COLUMN6             "Tamanho"
-    IDS_SHV_COLUMN7             "Disponível"
-    IDS_SHV_COLUMN8             "Nome"
-    IDS_SHV_COLUMN9             "Comentários"
-    IDS_SHV_COLUMN10            "Dono"
-    IDS_SHV_COLUMN11            "Grupo"
-    IDS_SHV_COLUMN12            "Nome do ficheiro"
-    IDS_SHV_COLUMN13            "Categoria"
-    IDS_SHV_COLUMN_DELFROM      "Localização original"
-    IDS_SHV_COLUMN_DELDATE      "Data da eliminação"
-    IDS_SHV_COLUMN_FONTTYPE     "Tipo de letra"
-    IDS_SHV_COLUMN_WORKGROUP    "Grupo de trabalho"
-    IDS_SHV_NETWORKLOCATION     "localizações na rede"
-    IDS_SHV_COLUMN_DOCUMENTS    "Documentos"
-    IDS_SHV_COLUMN_STATUS       "Estado"
-    IDS_SHV_COLUMN_COMMENTS     "Commentários"
-    IDS_SHV_COLUMN_LOCATION     "Localização"
-    IDS_SHV_COLUMN_MODEL        "Modelo"
+    IDS_SHV_COLUMN1 "Ficheiro"
+    IDS_SHV_COLUMN2 "Tamanho"
+    IDS_SHV_COLUMN3 "Tipo"
+    IDS_SHV_COLUMN4 "Modificado"
+    IDS_SHV_COLUMN5 "propriedades"
+    IDS_SHV_COLUMN6 "Tamanho"
+    IDS_SHV_COLUMN7 "Disponível"
+    IDS_SHV_COLUMN8 "Nome"
+    IDS_SHV_COLUMN9 "Comentários"
+    IDS_SHV_COLUMN10 "Dono"
+    IDS_SHV_COLUMN11 "Grupo"
+    IDS_SHV_COLUMN12 "Nome do ficheiro"
+    IDS_SHV_COLUMN13 "Categoria"
+    IDS_SHV_COLUMN_DELFROM "Localização original"
+    IDS_SHV_COLUMN_DELDATE "Data da eliminação"
+    IDS_SHV_COLUMN_FONTTYPE "Tipo de letra"
+    IDS_SHV_COLUMN_WORKGROUP "Grupo de trabalho"
+    IDS_SHV_NETWORKLOCATION "localizações na rede"
+    IDS_SHV_COLUMN_DOCUMENTS "Documentos"
+    IDS_SHV_COLUMN_STATUS "Estado"
+    IDS_SHV_COLUMN_COMMENTS "Commentários"
+    IDS_SHV_COLUMN_LOCATION "Localização"
+    IDS_SHV_COLUMN_MODEL "Modelo"
 
     /* special folders */
-    IDS_DESKTOP                 "Ambiente de trabalho"
-    IDS_MYCOMPUTER              "O Meu Computador"
-    IDS_RECYCLEBIN_FOLDER_NAME  "Reciclagem"
-    IDS_CONTROLPANEL            "Painel de Controlo"
-    IDS_ADMINISTRATIVETOOLS     "Ferramentas Administrativas"
+    IDS_DESKTOP "Ambiente de trabalho"
+    IDS_MYCOMPUTER "O Meu Computador"
+    IDS_RECYCLEBIN_FOLDER_NAME "Reciclagem"
+    IDS_CONTROLPANEL "Painel de Controlo"
+    IDS_ADMINISTRATIVETOOLS "Ferramentas Administrativas"
 
     /* context menus */
-    IDS_VIEW_LARGE              "Ícones &grandes"
-    IDS_VIEW_SMALL              "Ícones &pequenos"
-    IDS_VIEW_LIST               "&Lista"
-    IDS_VIEW_DETAILS            "&Detalhes"
-    IDS_SELECT                  "Seleccionar"
-    IDS_OPEN                    "Abrir"
-    IDS_CREATELINK              "Criar &Atalho"
-    IDS_COPY                    "Copiar"
-    IDS_DELETE                  "Apagar"
-    IDS_PROPERTIES              "Propriedades"
-    IDS_CUT                     "Cortar"
-    IDS_RESTORE                 "Restaurar"
-    IDS_FORMATDRIVE             "Formatar..."
-    IDS_RENAME                  "Renaomear"
-    IDS_INSERT                  "Inserir"
+    IDS_VIEW_LARGE "Ícones &grandes"
+    IDS_VIEW_SMALL "Ícones &pequenos"
+    IDS_VIEW_LIST "&Lista"
+    IDS_VIEW_DETAILS "&Detalhes"
+    IDS_SELECT "Seleccionar"
+    IDS_OPEN "Abrir"
+    IDS_CREATELINK "Criar &Atalho"
+    IDS_COPY "Copiar"
+    IDS_DELETE "Apagar"
+    IDS_PROPERTIES "Propriedades"
+    IDS_CUT "Cortar"
+    IDS_RESTORE "Restaurar"
+    IDS_FORMATDRIVE "Formatar..."
+    IDS_RENAME "Renaomear"
+    IDS_INSERT "Inserir"
 
-    IDS_CREATEFOLDER_DENIED     "Não é possível criar nova pasta: Permissão negada."
-    IDS_CREATEFOLDER_CAPTION    "Erro durante a criação da nova pasta"
-    IDS_DELETEITEM_CAPTION      "Confirmar exclusão do ficheiro"
-    IDS_DELETEFOLDER_CAPTION    "Confirmar exclusão da pasta"
-    IDS_DELETEITEM_TEXT         "Tem certeza que deseja excluir '%1'?"
-    IDS_DELETEMULTIPLE_TEXT     "Tem certeza que deseja excluir estes %1 itens?"
-    IDS_DELETESELECTED_TEXT     "Tem a certeza que quer eliminar os item(s) seleccionado(s)?"
-    IDS_TRASHITEM_TEXT          "Tem a certeza que quer enviar '%1' para a reciclagem?"
-    IDS_TRASHFOLDER_TEXT        "Tem a certeza que quer enviar '%1' e todo o seu conteúdo para a reciclagem?"
-    IDS_TRASHMULTIPLE_TEXT      "Tem a certeza que quer enviar este '%1' item para a reciclagem?"
-    IDS_CANTTRASH_TEXT          "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
-    IDS_OVERWRITEFILE_TEXT      "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
-    IDS_OVERWRITEFILE_CAPTION   "Confirmar substituição de ficheiro"
-    IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
+    IDS_CREATEFOLDER_DENIED "Não é possível criar nova pasta: Permissão negada."
+    IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+    IDS_DELETEITEM_CAPTION "Confirmar exclusão do ficheiro"
+    IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
+    IDS_DELETEITEM_TEXT "Tem certeza que deseja excluir '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Tem certeza que deseja excluir estes %1 itens?"
+    IDS_DELETESELECTED_TEXT "Tem a certeza que quer eliminar os item(s) seleccionado(s)?"
+    IDS_TRASHITEM_TEXT "Tem a certeza que quer enviar '%1' para a reciclagem?"
+    IDS_TRASHFOLDER_TEXT "Tem a certeza que quer enviar '%1' e todo o seu conteúdo para a reciclagem?"
+    IDS_TRASHMULTIPLE_TEXT "Tem a certeza que quer enviar este '%1' item para a reciclagem?"
+    IDS_CANTTRASH_TEXT "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
+    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
+    IDS_OVERWRITEFILE_CAPTION "Confirmar substituição de ficheiro"
+    IDS_OVERWRITEFOLDER_TEXT "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
 
     /* message box strings */
-    IDS_RESTART_TITLE           "Reiniciar"
-    IDS_RESTART_PROMPT          "Deseja simular a reinicialização do Windows?"
-    IDS_SHUTDOWN_TITLE          "Desligar"
-    IDS_SHUTDOWN_PROMPT         "Deseja finalizar esta sessão do ReactOS?"
-    IDS_LOGOFF_TITLE            "Terminar a sessão"
-    IDS_LOGOFF_PROMPT           "Pretende terminar a sessão?"
+    IDS_RESTART_TITLE "Reiniciar"
+    IDS_RESTART_PROMPT "Deseja simular a reinicialização do Windows?"
+    IDS_SHUTDOWN_TITLE "Desligar"
+    IDS_SHUTDOWN_PROMPT "Deseja finalizar esta sessão do ReactOS?"
+    IDS_LOGOFF_TITLE "Terminar a sessão"
+    IDS_LOGOFF_PROMPT "Pretende terminar a sessão?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
+    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS                "Menu Iniciar\\Programas"
-    IDS_PERSONAL                "OS Meus Documentos"
-    IDS_FAVORITES               "Favoritos"
-    IDS_STARTUP                 "Menu Iniciar\\Programas\\Iniciar"
-    IDS_RECENT                  "Recentes"
-    IDS_SENDTO                  "Enviar Para"
-    IDS_STARTMENU               "Menu Iniciar"
-    IDS_MYMUSIC                 "As Minhas Músicas"
-    IDS_MYVIDEO                 "Os Meus Vídeos"
-    IDS_DESKTOPDIRECTORY        "Ambiente de Trabalho"
-    IDS_NETHOOD                 "Visinhança na rede"
-    IDS_TEMPLATES               "Modelos"
-    IDS_APPDATA                 "Dados de Aplicação"
-    IDS_PRINTHOOD               "PrintHood"
-    IDS_LOCAL_APPDATA           "Definições locais\\Dados de Aplicação"
-    IDS_INTERNET_CACHE          "Definições locais\\Ficheiros Temporários da Internet"
-    IDS_COOKIES                 "Cookies"
-    IDS_HISTORY                 "Definições locais\\Histórico"
-    IDS_PROGRAM_FILES           "Programas"
-    IDS_MYPICTURES              "As Minhas Imagens"
-    IDS_PROGRAM_FILES_COMMON    "Programas\\Ficheiros comuns"
-    IDS_COMMON_DOCUMENTS        "Os Meus Documentos"
-    IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
-    IDS_COMMON_MUSIC            "Os Meus Documentos\\As Minhas Músicas"
-    IDS_COMMON_PICTURES         "Os Meus Documentos\\As Minhas Imagens"
-    IDS_COMMON_VIDEO            "Os Meus Documentos\\Os Meus Vídeos"
-    IDS_CDBURN_AREA             "Definições locais\\Dados de Aplicação\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE            "Os Meus Locais da Rede"
+    IDS_PROGRAMS "Menu Iniciar\\Programas"
+    IDS_PERSONAL "OS Meus Documentos"
+    IDS_FAVORITES "Favoritos"
+    IDS_STARTUP "Menu Iniciar\\Programas\\Iniciar"
+    IDS_RECENT "Recentes"
+    IDS_SENDTO "Enviar Para"
+    IDS_STARTMENU "Menu Iniciar"
+    IDS_MYMUSIC "As Minhas Músicas"
+    IDS_MYVIDEO "Os Meus Vídeos"
+    IDS_DESKTOPDIRECTORY "Ambiente de Trabalho"
+    IDS_NETHOOD "Visinhança na rede"
+    IDS_TEMPLATES "Modelos"
+    IDS_APPDATA "Dados de Aplicação"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Definições locais\\Dados de Aplicação"
+    IDS_INTERNET_CACHE "Definições locais\\Ficheiros Temporários da Internet"
+    IDS_COOKIES "Cookies"
+    IDS_HISTORY "Definições locais\\Histórico"
+    IDS_PROGRAM_FILES "Programas"
+    IDS_MYPICTURES "As Minhas Imagens"
+    IDS_PROGRAM_FILES_COMMON "Programas\\Ficheiros comuns"
+    IDS_COMMON_DOCUMENTS "Os Meus Documentos"
+    IDS_ADMINTOOLS "Menu Iniciar\\Programas\\Ferramentas Administrativas"
+    IDS_COMMON_MUSIC "Os Meus Documentos\\As Minhas Músicas"
+    IDS_COMMON_PICTURES "Os Meus Documentos\\As Minhas Imagens"
+    IDS_COMMON_VIDEO "Os Meus Documentos\\Os Meus Vídeos"
+    IDS_CDBURN_AREA "Definições locais\\Dados de Aplicação\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "Os Meus Locais da Rede"
 
-    IDS_NEWFOLDER               "Nova Pasta"
+    IDS_NEWFOLDER "Nova Pasta"
 
-    IDS_DRIVE_FIXED             "Disco Local"
-    IDS_DRIVE_CDROM             "CDROM"
-    IDS_DRIVE_NETWORK           "Disco de Rede"
+    IDS_DRIVE_FIXED "Disco Local"
+    IDS_DRIVE_CDROM "CDROM"
+    IDS_DRIVE_NETWORK "Disco de Rede"
 
     /* Open With */
-    IDS_OPEN_WITH               "Abre com..."
-    IDS_OPEN_WITH_CHOOSE        "Escolha Programa..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH "Abre com..."
+    IDS_OPEN_WITH_CHOOSE "Escolha Programa..."
+    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
+    IDS_OPEN_WITH_OTHER "Other Programs:"
 
-    IDS_SHELL_ABOUT_AUTHORS     "&Autores"
-    IDS_SHELL_ABOUT_BACK        "< &Trás"
-    FCIDM_SHVIEW_NEW         "Novo"
-    FCIDM_SHVIEW_NEWFOLDER         "&Pasta"
-    FCIDM_SHVIEW_NEWLINK         "&Atalho"
-    IDS_FOLDER_OPTIONS          "Opções das Pastas"
-    IDS_RECYCLEBIN_LOCATION     "Localização da Reciclagem"
-    IDS_RECYCLEBIN_DISKSPACE    "Espaço Disponível"
-    IDS_EMPTY_BITBUCKET         "Esvaziar Reciclagem"
-    IDS_PICK_ICON_TITLE         "Escolha Ícone"
-    IDS_PICK_ICON_FILTER        "Ficheiros de Ícones (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER        "Ficheiros Executáveis (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
-    IDS_DIRECTORY               "Pasta"
-    IDS_VIRTUAL_DRIVER          "Driver de Dispositivo Virtual"
-    IDS_BAT_FILE                "ReactOS Batch File"
-    IDS_CMD_FILE                "ReactOS Command Script"
-    IDS_COM_FILE                "Aplicação Dos"
-    IDS_CPL_FILE                "Item do Painel de Controle"
-    IDS_CUR_FILE                "Cursor"
-    IDS_DLL_FILE                "Extensão da Aplicação"
-    IDS_DRV_FILE                "Driver do Dispositivo"
-    IDS_EXE_FILE                "Aplicação"
-    IDS_FON_FILE                "Ficheiro de tipo de letra"
-    IDS_TTF_FILE                "Tipo de letra TrueType"
-    IDS_HLP_FILE                "Ficheiro de Ajuda"
-    IDS_INI_FILE                "Definições"
-    IDS_LNK_FILE                "Atalho"
-    IDS_SYS_FILE                "Ficheiro de Sistema"
+    IDS_SHELL_ABOUT_AUTHORS "&Autores"
+    IDS_SHELL_ABOUT_BACK "< &Trás"
+    FCIDM_SHVIEW_NEW "Novo"
+    FCIDM_SHVIEW_NEWFOLDER "&Pasta"
+    FCIDM_SHVIEW_NEWLINK "&Atalho"
+    IDS_FOLDER_OPTIONS "Opções das Pastas"
+    IDS_RECYCLEBIN_LOCATION "Localização da Reciclagem"
+    IDS_RECYCLEBIN_DISKSPACE "Espaço Disponível"
+    IDS_EMPTY_BITBUCKET "Esvaziar Reciclagem"
+    IDS_PICK_ICON_TITLE "Escolha Ícone"
+    IDS_PICK_ICON_FILTER "Ficheiros de Ícones (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Ficheiros Executáveis (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_DIRECTORY "Pasta"
+    IDS_VIRTUAL_DRIVER "Driver de Dispositivo Virtual"
+    IDS_BAT_FILE "ReactOS Batch File"
+    IDS_CMD_FILE "ReactOS Command Script"
+    IDS_COM_FILE "Aplicação Dos"
+    IDS_CPL_FILE "Item do Painel de Controle"
+    IDS_CUR_FILE "Cursor"
+    IDS_DLL_FILE "Extensão da Aplicação"
+    IDS_DRV_FILE "Driver do Dispositivo"
+    IDS_EXE_FILE "Aplicação"
+    IDS_FON_FILE "Ficheiro de tipo de letra"
+    IDS_TTF_FILE "Tipo de letra TrueType"
+    IDS_HLP_FILE "Ficheiro de Ajuda"
+    IDS_INI_FILE "Definições"
+    IDS_LNK_FILE "Atalho"
+    IDS_SYS_FILE "Ficheiro de Sistema"
 
-    IDS_OPEN_VERB               "Abrir"
-    IDS_EXPLORE_VERB            "Explore"
-    IDS_RUNAS_VERB              "Executar como "
-    IDS_EDIT_VERB               "Editar"
-    IDS_FIND_VERB               "Procurar"
-    IDS_PRINT_VERB              "Imprimir"
+    IDS_OPEN_VERB "Abrir"
+    IDS_EXPLORE_VERB "Explore"
+    IDS_RUNAS_VERB "Executar como "
+    IDS_EDIT_VERB "Editar"
+    IDS_FIND_VERB "Procurar"
+    IDS_PRINT_VERB "Imprimir"
 
-    IDS_FILE_FOLDER             "%u Ficheiros, %u Pastas"
-    IDS_PRINTERS                "Impressoras"
-    IDS_FONTS                   "Tipos de Letras"
-    IDS_INSTALLNEWFONT          "Instalar novo tipo de letra..."
+    IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
+    IDS_PRINTERS "Impressoras"
+    IDS_FONTS "Tipos de Letras"
+    IDS_INSTALLNEWFONT "Instalar novo tipo de letra..."
 
-    IDS_DEFAULT_CLUSTER_SIZE    "Tamanho da unidade de atribuição"
-    IDS_COPY_OF                 "Cópia de"
+    IDS_DEFAULT_CLUSTER_SIZE "Tamanho da unidade de atribuição"
+    IDS_COPY_OF "Cópia de"
 
-    IDS_SHLEXEC_NOASSOC         "Não existe um programa Windows configurado para abrir este tipo de ficheiro."
-    
-    IDS_FILE_DETAILS            "Detalhes para '%s' extensão"
-    IDS_FILE_DETAILSADV         "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_SHLEXEC_NOASSOC "Não existe um programa Windows configurado para abrir este tipo de ficheiro."
+
+    IDS_FILE_DETAILS "Detalhes para '%s' extensão"
+    IDS_FILE_DETAILSADV "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
+    IDS_FILE_TYPES "FileTypes"
+    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_BYTES_FORMAT "bytes"
+    IDS_UNKNOWN_APP "Unknown application"
+    IDS_EXE_DESCRIPTION "Description:"
 END

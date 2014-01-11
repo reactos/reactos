@@ -18,9 +18,3 @@ set_module_type(localspl win32dll)
 target_link_libraries(localspl wine)
 add_importlibs(localspl spoolss user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(localspl)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()

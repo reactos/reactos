@@ -11,6 +11,9 @@
 
 #include "precomp.h"
 
+#include <datagram.h>
+#include <pseh/pseh2.h>
+
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     KIRQL OldIrql;
 

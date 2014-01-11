@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/netid/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for netid
- * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -11,21 +11,21 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ім'я комп'ютера"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS використовує наступну інформацію для ідентифікації комп'ютера в мережі.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Опис:", IDC_STATIC, 6, 40, 70, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Повне ім'я:", IDC_STATIC, 6, 68, 64, 9
-    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Робоча група:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Щоб запустити майстер мережної ідентифікації для приєднання до домену та створення облікового запису локального користувача, натисніть кнопку ""Ідентифікація"".", IDC_STATIC, 6, 108, 172, 32
-    PUSHBUTTON  "Іденти&фікація...", IDC_NETWORK_ID, 190, 114, 60, 15
-    LTEXT       "Щоб перейменувати цей комп'ютер або приєднати його до домену, натисніть кнопку ""Змінити"".", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON  "&Змінити...",IDC_NETWORK_PROPERTY, 190, 149, 60, 15
-    LTEXT       "Примітка: змінити ідентифікацію цього комп'ютера можуть лише адміністратори.", IDC_STATIC, 6, 179, 230, 18
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "ReactOS використовує наступну інформацію для ідентифікації комп'ютера в мережі.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Опис:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Повне ім'я:", IDC_STATIC, 6, 68, 64, 9
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Робоча група:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Щоб запустити майстер мережної ідентифікації для приєднання до домену та створення облікового запису локального користувача, натисніть кнопку ""Ідентифікація"".", IDC_STATIC, 6, 108, 172, 32
+    PUSHBUTTON "Іденти&фікація...", IDC_NETWORK_ID, 190, 114, 60, 15
+    LTEXT "Щоб перейменувати цей комп'ютер або приєднати його до домену, натисніть кнопку ""Змінити"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON "&Змінити...", IDC_NETWORK_PROPERTY, 190, 149, 60, 15
+    LTEXT "Примітка: змінити ідентифікацію цього комп'ютера можуть лише адміністратори.", IDC_STATIC, 6, 179, 230, 18
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -75,12 +75,12 @@ BEGIN
     22 "Вас вітає робоча група %1."
     23 "Вас вітає домен %1."
     24 "Слід перезапустити комп'ютер, щоб ці зміни набрали сили."
-	25 "Можна знінити ім'я і членство цього комп'ютера. Зміни можуть вплинути на доступ до мережних ресурсів."
+    25 "Можна знінити ім'я і членство цього комп'ютера. Зміни можуть вплинути на доступ до мережних ресурсів."
     1021 "Примітка: змінити ідентифікацію цього комп'ютера можуть лише адміністратори."
     1022 "Примітка: змінити ідентифікацію цього комп'ютера неможливо, оскільки:"
-	1030 "Нове ім'я комп'ютера ""%s"" містить недопустимі символи. До недопустимих символів належать ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / та ?"
+    1030 "Нове ім'я комп'ютера ""%s"" містить недопустимі символи. До недопустимих символів належать ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / та ?"
     3210 "&Подробиці >>"
     3220 "<< &Подробиці"
-	4000 "Інформація"
-	4001 "Не вдалось встановити нове ім'я комп'ютера!"
+    4000 "Інформація"
+    4001 "Не вдалось встановити нове ім'я комп'ютера!"
 END

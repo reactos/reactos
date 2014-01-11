@@ -34,6 +34,11 @@ Description = Bardzo dobry CD Ripper/konwerter plików audio.
 Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
 Size = 4,35 Mo
 
+[Section.041f]
+Name = Ses Yakalayıcısı
+Licence = Ücretsiz
+Description = Çok iyi bir CD ripleyicisi ve ses biçimi dönüştürücüsü.
+
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.
 

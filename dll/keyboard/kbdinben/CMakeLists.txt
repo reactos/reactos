@@ -5,7 +5,7 @@ spec2def(kbdinben.dll kbdinben.spec)
 
 add_library(kbdinben SHARED kbdinben.c kbdinben.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdinben.def)
 
-set_entrypoint(kbdinben 0)
+set_module_type(kbdinben kbdlayout)
 
 add_dependencies(kbdinben psdk)
 

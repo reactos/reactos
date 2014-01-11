@@ -28,6 +28,10 @@ Size = 1020,58 ko
 Licence = Gratita per un uso non-commerciale
 Description = Piccolo e rapido Client BitTorrent.
 
+[Section.0410]
+Licence = Gratuita per un uso non-commerciale
+Description = Piccolo e rapido Client BitTorrent.
+
 [Section.0413]
 Licence = Freeware voor niet-commerciëel gebruik
 Description = Kleine en snelle BitTorrent afnemer.
@@ -44,6 +48,10 @@ Size = 1020,58 ko
 [Section.0419]
 Licence = Бесплатная для некоммерческого использования
 Description = Маленький и быстрый клиент BitTorrent.
+
+[Section.041f]
+Licence = Ticârî olmayan kullanımlarda ücretsiz.
+Description = Küçük ve hızlı bir BitTorrent istemcisi.
 
 [Section.0422]
 Licence = Безплатна для некомерційного використання

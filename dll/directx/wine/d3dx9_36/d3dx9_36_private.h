@@ -22,19 +22,31 @@
 #ifndef __WINE_D3DX9_36_PRIVATE_H
 #define __WINE_D3DX9_36_PRIVATE_H
 
+#include <config.h>
+#include <wine/port.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
 #include <stdarg.h>
 
+#include <initguid.h>
+
 #define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winnls.h>
 #include <winuser.h>
 #include <d3dx9.h>
+
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
 

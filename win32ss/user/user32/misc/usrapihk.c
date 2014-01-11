@@ -132,21 +132,21 @@ ResetUserApiHook(PUSERAPIHOOK puah)
 {
   // Setup Structure.....
   puah->size = sizeof(USERAPIHOOK);
-  puah->DefWindowProcA = (WNDPROC)RealDefWindowProcA;
-  puah->DefWindowProcW = (WNDPROC)RealDefWindowProcW;
+  puah->DefWindowProcA = RealDefWindowProcA;
+  puah->DefWindowProcW = RealDefWindowProcW;
   puah->DefWndProcArray.MsgBitArray = NULL;
   puah->DefWndProcArray.Size = 0;
   puah->GetScrollInfo = (FARPROC)RealGetScrollInfo;
   puah->SetScrollInfo = (FARPROC)RealSetScrollInfo;
   puah->EnableScrollBar = (FARPROC)NtUserEnableScrollBar;
   puah->AdjustWindowRectEx = (FARPROC)RealAdjustWindowRectEx;
-  puah->SetWindowRgn = (FARPROC)NtUserSetWindowRgn;
-  puah->PreWndProc = (WNDPROC_OWP)DefaultOWP;
-  puah->PostWndProc = (WNDPROC_OWP)DefaultOWP;
+  puah->SetWindowRgn = NtUserSetWindowRgn;
+  puah->PreWndProc = DefaultOWP;
+  puah->PostWndProc = DefaultOWP;
   puah->WndProcArray.MsgBitArray = NULL;
   puah->WndProcArray.Size = 0;
-  puah->PreDefDlgProc = (WNDPROC_OWP)DefaultOWP;
-  puah->PostDefDlgProc = (WNDPROC_OWP)DefaultOWP;
+  puah->PreDefDlgProc = DefaultOWP;
+  puah->PostDefDlgProc = DefaultOWP;
   puah->DlgProcArray.MsgBitArray = NULL;
   puah->DlgProcArray.Size = 0;
   puah->GetSystemMetrics = (FARPROC)RealGetSystemMetrics;
@@ -343,19 +343,19 @@ MDIRedrawFrame(HWND hWnd, DWORD flags)
 USERAPIHOOK guah =
 {
   sizeof(USERAPIHOOK),
-  (WNDPROC)RealDefWindowProcA,
-  (WNDPROC)RealDefWindowProcW,
+  RealDefWindowProcA,
+  RealDefWindowProcW,
   {NULL, 0},
   (FARPROC)RealGetScrollInfo,
   (FARPROC)RealSetScrollInfo,
   (FARPROC)NtUserEnableScrollBar,
   (FARPROC)RealAdjustWindowRectEx,
-  (FARPROC)NtUserSetWindowRgn,
-  (WNDPROC_OWP)DefaultOWP,
-  (WNDPROC_OWP)DefaultOWP,
+  NtUserSetWindowRgn,
+  DefaultOWP,
+  DefaultOWP,
   {NULL, 0},
-  (WNDPROC_OWP)DefaultOWP,
-  (WNDPROC_OWP)DefaultOWP,
+  DefaultOWP,
+  DefaultOWP,
   {NULL, 0},
   (FARPROC)RealGetSystemMetrics,
   (FARPROC)RealSystemParametersInfoA,

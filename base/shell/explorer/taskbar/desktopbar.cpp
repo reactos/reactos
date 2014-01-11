@@ -28,8 +28,6 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
 #include "desktopbar.h"
 #include "taskbar.h"
 #include "startmenu.h"

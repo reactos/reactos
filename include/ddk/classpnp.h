@@ -1134,12 +1134,7 @@ NTAPI
 ClassReleaseChildLock(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
-NTSTATUS
-NTAPI
-ClassSignalCompletion(
-  PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  PKEVENT Event);
+IO_COMPLETION_ROUTINE ClassSignalCompletion;
 
 VOID
 NTAPI

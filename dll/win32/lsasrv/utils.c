@@ -7,15 +7,7 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
-
-
-/* GLOBALS *****************************************************************/
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -63,6 +55,42 @@ LsapLoadString(HINSTANCE hInstance,
     }
 
     return i;
+}
+
+
+PSID
+LsapAppendRidToSid(
+    PSID SrcSid,
+    ULONG Rid)
+{
+    ULONG Rids[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    for (i = 0; i < RidCount; i++)
+        Rids[i] = *RtlSubAuthoritySid(SrcSid, i);
+
+    Rids[RidCount] = Rid;
+    RidCount++;
+
+    RtlAllocateAndInitializeSid(RtlIdentifierAuthoritySid(SrcSid),
+                                RidCount,
+                                Rids[0],
+                                Rids[1],
+                                Rids[2],
+                                Rids[3],
+                                Rids[4],
+                                Rids[5],
+                                Rids[6],
+                                Rids[7],
+                                &DstSid);
+
+    return DstSid;
 }
 
 /* EOF */

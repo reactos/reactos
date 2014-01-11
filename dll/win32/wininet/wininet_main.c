@@ -18,17 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winreg.h"
-//#include "shlwapi.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wininet);
+#include "internet.h"
 
 /***********************************************************************
  *		DllInstall (WININET.@)

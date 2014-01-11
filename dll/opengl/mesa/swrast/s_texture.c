@@ -25,12 +25,7 @@
  * Functions for mapping/unmapping texture images.
  */
 
-
-#include "main/context.h"
-#include "main/teximage.h"
-#include "swrast/swrast.h"
-#include "swrast/s_context.h"
-
+#include <precomp.h>
 
 /**
  * Allocate a new swrast_texture_image (a subclass of gl_texture_image).

@@ -2,29 +2,29 @@ LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Fichier"
-	BEGIN
-		MENUITEM "&Ouvrir...", IDM_OPEN_FILE
-		MENUITEM "&Fermer", IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "&Quitter", IDM_EXIT
-	END
-	POPUP "&Aide"
-	BEGIN
-		MENUITEM "&À propos...", IDM_ABOUT
-	END
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Ouvrir...", IDM_OPEN_FILE
+        MENUITEM "&Fermer", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Quitter", IDM_EXIT
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&À propos...", IDM_ABOUT
+    END
 END
 
 STRINGTABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Tous les types supportés (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Lecture"
-	IDS_TOOLTIP_STOP "Stop"
-	IDS_TOOLTIP_EJECT "Éjecter"
-	IDS_TOOLTIP_BACKWARD "Précédent"
-	IDS_TOOLTIP_SEEKBACK "Retour rapide"
-	IDS_TOOLTIP_SEEKFORW "Avance rapide"
-	IDS_TOOLTIP_FORWARD "Suivant"
+    IDS_ALL_TYPES_FILTER "Tous les types supportés (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY "Lecture"
+    IDS_TOOLTIP_STOP "Stop"
+    IDS_TOOLTIP_EJECT "Éjecter"
+    IDS_TOOLTIP_BACKWARD "Précédent"
+    IDS_TOOLTIP_SEEKBACK "Retour rapide"
+    IDS_TOOLTIP_SEEKFORW "Avance rapide"
+    IDS_TOOLTIP_FORWARD "Suivant"
     IDS_APPTITLE "ReactOS Multimedia Player"
-	IDS_PLAY "Lire"
+    IDS_PLAY "Lire"
 END

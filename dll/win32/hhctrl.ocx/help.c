@@ -22,15 +22,10 @@
 
 #include "hhctrl.h"
 
-//#include "wingdi.h"
-//#include "commctrl.h"
+#include <wingdi.h>
 #include <wininet.h>
 
-#include "wine/debug.h"
-
 #include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 static LRESULT Help_OnSize(HWND hWnd);
 static void ExpandContract(HHInfo *pHHInfo);

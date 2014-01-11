@@ -1,19 +1,11 @@
-#include <pseh/pseh2.h>
 #include <ntddk.h>
-
 #include <windef.h>
 #define NOBITMAP
 #include <mmreg.h>
-#include <ks.h>
 #include <ksmedia.h>
-#include <mmreg.h>
 #include <mmsystem.h>
 
 #include "mmixer.h"
-
-#include <stdio.h>
-#define YDEBUG
-#include <debug.h>
 
 typedef struct __TOPOLOGY_NODE__
 {

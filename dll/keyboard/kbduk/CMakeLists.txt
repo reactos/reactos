@@ -5,7 +5,7 @@ spec2def(kbduk.dll kbduk.spec)
 
 add_library(kbduk SHARED kbduk.c kbduk.rc ${CMAKE_CURRENT_BINARY_DIR}/kbduk.def)
 
-set_entrypoint(kbduk 0)
+set_module_type(kbduk kbdlayout)
 
 add_dependencies(kbduk psdk)
 

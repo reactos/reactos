@@ -20,6 +20,10 @@
 
 #include "regedit.h"
 
+#include <commdlg.h>
+#include <cderr.h>
+#include <objsel.h>
+
 /********************************************************************************
  * Global and Local Variables:
  */
@@ -249,9 +253,9 @@ BuildFilterStrings(WCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
     c = 0;
     for(i = 0; i < PairCount; i++)
     {
-        c += LoadStringW(hInst, Pairs[i].DisplayID, &Filter[c], 255 * sizeof(WCHAR));
+        c += LoadStringW(hInst, Pairs[i].DisplayID, &Filter[c], 255);
         Filter[++c] = L'\0';
-        c += LoadStringW(hInst, Pairs[i].FilterID, &Filter[c], 255 * sizeof(WCHAR));
+        c += LoadStringW(hInst, Pairs[i].FilterID, &Filter[c], 255);
         Filter[++c] = L'\0';
     }
     Filter[++c] = L'\0';
@@ -360,7 +364,7 @@ static BOOL LoadHive(HWND hWnd)
     /* build the "All Files" filter up */
     filter.DisplayID = IDS_FLT_ALLFILES;
     filter.FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, &filter, sizeof(filter));
+    BuildFilterStrings(Filter, &filter, 1);
     ofn.lpstrFilter = Filter;
     /* load and set the caption and flags for dialog */
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, COUNT_OF(Caption));

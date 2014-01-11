@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Management Console
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mmc/lang/zh-CN.rc
- * PURPOSE:     Chinese (Simplified) Language File for Management Console
- * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:    ReactOS Management Console
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mmc/lang/zh-CN.rc
+ * PURPOSE:    Chinese (Simplified) Language File for Management Console
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -16,7 +16,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "结束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "帮助(&H)"
     BEGIN
         MENUITEM "关于 ReactOS 控制台(&A)...", IDM_HELP_ABOUT
@@ -31,12 +30,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "结束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-
     POPUP "&Windows"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-
     POPUP "帮助(&H)"
     BEGIN
         MENUITEM "关于 ReactOS 控制台(&A)...", IDM_HELP_ABOUT

@@ -169,7 +169,9 @@ User32CreateWindowEx(DWORD dwExStyle,
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
-    BOOL Unicode;
+    HMODULE hLibModule = NULL;
+    DWORD save_error;
+    BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
 
 #if 0
@@ -178,7 +180,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("User32CreateWindowEx RegisterSystemControls\n");
+       TRACE("RegisterSystemControls\n");
        RegisterSystemControls();
     }
 
@@ -262,21 +264,42 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!Unicode) dwExStyle |= WS_EX_SETANSICREATOR;
 
-    Handle = NtUserCreateWindowEx(dwExStyle,
-                                  plstrClassName,
-                                  NULL,
-                                  &WindowName,
-                                  dwStyle,
-                                  x,
-                                  y,
-                                  nWidth,
-                                  nHeight,
-                                  hWndParent,
-                                  hMenu,
-                                  hInstance,
-                                  lpParam,
-                                  dwFlags,
-                                  NULL);
+    for(;;)
+    {
+       Handle = NtUserCreateWindowEx(dwExStyle,
+                                     plstrClassName,
+                                     NULL,
+                                     &WindowName,
+                                     dwStyle,
+                                     x,
+                                     y,
+                                     nWidth,
+                                     nHeight,
+                                     hWndParent,
+                                     hMenu,
+                                     hInstance,
+                                     lpParam,
+                                     dwFlags,
+                                     NULL);
+       if (Handle) break;
+       if (!ClassFound)
+       {
+          save_error = GetLastError();
+          if ( save_error == ERROR_CANNOT_FIND_WND_CLASS )
+          {
+              ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+              if (ClassFound) continue;
+          }
+       }
+       if (hLibModule)
+       {
+          save_error = GetLastError();
+          FreeLibrary(hLibModule);
+          SetLastError(save_error);
+          hLibModule = 0;
+       }
+       break;
+    }
 
 #if 0
     DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
@@ -845,7 +868,7 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoA(HWND hwnd,
@@ -854,13 +877,12 @@ GetAltTabInfoA(HWND hwnd,
                LPSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,(LPWSTR)pszItemText,cchItemText,TRUE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetAltTabInfoW(HWND hwnd,
@@ -869,8 +891,7 @@ GetAltTabInfoW(HWND hwnd,
                LPWSTR pszItemText,
                UINT cchItemText)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return NtUserGetAltTabInfo(hwnd,iItem,pati,pszItemText,cchItemText,FALSE);
 }
 
 
@@ -1150,7 +1171,7 @@ GetWindowInfo(HWND hWnd,
        pwi->cxWindowBorders = Size.cx;
        pwi->cyWindowBorders = Size.cy;
        pwi->dwWindowStatus = 0;
-       if (pWnd->state & WNDS_ACTIVEFRAME)
+       if (pWnd->state & WNDS_ACTIVEFRAME || (GetActiveWindow() == hWnd))
           pwi->dwWindowStatus = WS_ACTIVECAPTION;
        pwi->atomWindowType = (pCls ? pCls->atomClassName : 0 );
 
@@ -1216,7 +1237,6 @@ GetWindowModuleFileNameW(HWND hwnd,
     return GetModuleFileNameW( Wnd->hModule, lpszFileName, cchFileNameMax );
 }
 
-
 /*
  * @implemented
  */
@@ -1243,7 +1263,6 @@ GetWindowRect(HWND hWnd,
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
@@ -1251,68 +1270,34 @@ int WINAPI
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
     PWND Wnd;
-    PCWSTR Buffer;
     INT Length = 0;
 
-    if (lpString == NULL)
+    if (lpString == NULL || nMaxCount == 0)
         return 0;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return 0;
 
-    _SEH2_TRY
+    lpString[0] = '\0';
+
+    if (!TestWindowProcess( Wnd))
     {
-        if (!TestWindowProcess( Wnd))
-        {
-            if (nMaxCount > 0)
-            {
-                /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->strName.Length / sizeof(WCHAR);
-                if (Length != 0)
-                {
-                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
-                    if (Buffer != NULL)
-                    {
-                        if (!WideCharToMultiByte(CP_ACP,
-                                               0,
-                                               Buffer,
-                                               Length + 1,
-                                               lpString,
-                                               nMaxCount,
-                                               NULL,
-                                               NULL))
-                        {
-                            lpString[nMaxCount - 1] = '\0';
-                        }
-                    }
-                    else
-                    {
-                        Length = 0;
-                        lpString[0] = '\0';
-                    }
-                }
-                else
-                    lpString[0] = '\0';
-            }
-
-            Wnd = NULL; /* Don't send a message */
-        }
+       _SEH2_TRY
+       {
+           Length = DefWindowProcA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+           Length = 0;
+       }
+       _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        lpString[0] = '\0';
-        Length = 0;
-        Wnd = NULL; /* Don't send a message */
-    }
-    _SEH2_END;
-
-    if (Wnd != NULL)
-        Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-
+    else
+       Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    //ERR("GWTA Len %d : %s\n",Length,lpString);
     return Length;
 }
-
 
 /*
  * @implemented
@@ -1323,7 +1308,6 @@ GetWindowTextLengthA(HWND hWnd)
     return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
-
 /*
  * @implemented
  */
@@ -1333,7 +1317,6 @@ GetWindowTextLengthW(HWND hWnd)
     return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
-
 /*
  * @implemented
  */
@@ -1341,57 +1324,32 @@ int WINAPI
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
     PWND Wnd;
-    PCWSTR Buffer;
     INT Length = 0;
 
-    if (lpString == NULL)
+    if (lpString == NULL || nMaxCount == 0)
         return 0;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return 0;
 
-    _SEH2_TRY
+    lpString[0] = L'\0';
+
+    if (!TestWindowProcess( Wnd))
     {
-        if (!TestWindowProcess( Wnd))
-        {
-            if (nMaxCount > 0)
-            {
-                /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->strName.Length / sizeof(WCHAR);
-                if (Length != 0)
-                {
-                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
-                    if (Buffer != NULL)
-                    {
-                        RtlCopyMemory(lpString,
-                                      Buffer,
-                                      (Length + 1) * sizeof(WCHAR));
-                    }
-                    else
-                    {
-                        Length = 0;
-                        lpString[0] = '\0';
-                    }
-                }
-                else
-                    lpString[0] = '\0';
-            }
-
-            Wnd = NULL; /* Don't send a message */
-        }
+       _SEH2_TRY
+       {
+           Length = DefWindowProcW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+           Length = 0;
+       }
+       _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        lpString[0] = '\0';
-        Length = 0;
-        Wnd = NULL; /* Don't send a message */
-    }
-    _SEH2_END;
-
-    if (Wnd != NULL)
-        Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-
+    else
+       Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    //ERR("GWTW Len %d : %S\n",Length,lpString);
     return Length;
 }
 

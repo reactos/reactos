@@ -21,6 +21,30 @@
 #ifndef __WINE_MSCTF_I_H
 #define __WINE_MSCTF_I_H
 
+#include <wine/config.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <olectl.h>
+#include <msctf.h>
+#include <shlwapi.h>
+
+#include <wine/list.h>
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msctf);
+
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020
 #define COOKIE_MAGIC_GUIDATOM 0x0030
@@ -67,4 +91,5 @@ extern HRESULT set_textservice_sink(TfClientId tid, REFCLSID iid, IUnknown* sink
 
 extern const WCHAR szwSystemTIPKey[];
 extern const WCHAR szwSystemCTFKey[];
+
 #endif /* __WINE_MSCTF_I_H */

@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Explorer-New
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/shell/explorer-new/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for ReactOS Explorer-New
- * TRANSLATOR:  Artem Reznikov & Sakara Yevhen
+ * PROJECT:    ReactOS Explorer-New
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/shell/explorer-new/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for ReactOS Explorer-New
+ * TRANSLATOR: Artem Reznikov & Sakara Yevhen
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -70,19 +70,18 @@ BEGIN
     END
 END
 
-
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Панель задач"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Властивості панелі задач", IDC_STATIC, 6,6,240,104
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
-    AUTOCHECKBOX    "&Заборонити панель задач", IDC_TASKBARPROP_LOCK, 13,45,200,10
-    AUTOCHECKBOX    "&Автоматично приховувати панель задач", IDC_TASKBARPROP_HIDE, 13,58,200,10
-    AUTOCHECKBOX    "&Поверх інших вікон", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX    "&Групувати схожі кнопки", IDC_TASKBARPROP_GROUP, 13,84,200,10
-    AUTOCHECKBOX    "Відображати панель &швидкого запуску", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    GROUPBOX "Властивості панелі задач", IDC_STATIC, 6, 6, 240, 104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    AUTOCHECKBOX "&Заборонити панель задач", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "&Автоматично приховувати панель задач", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "&Поверх інших вікон", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Групувати схожі кнопки", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "Відображати панель &швидкого запуску", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -90,15 +89,15 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Меню ""Пуск"""
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Меню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "Цей стиль меню забезпечує зручний доступ до папок, часто використовуваних програм та пошуку.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "Класичне меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Цей стиль меню має класичний вигляд і функціональність",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
-    GROUPBOX        "Конфіденційність",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Зберігати та відображати список недавно відкритих &файлів", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Зберігати та відображати список недавно відкритих &програм",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTORADIOBUTTON "&Меню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
+    LTEXT "Цей стиль меню забезпечує зручний доступ до папок, часто використовуваних програм та пошуку.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
+    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "Класичне меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
+    LTEXT "Цей стиль меню має класичний вигляд і функціональність", -1, 20, 57, 150, 24, WS_DISABLED
+    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 53, 14, WS_DISABLED
+    GROUPBOX "Конфіденційність", IDC_STATIC, 7, 100, 238, 42
+    AUTOCHECKBOX "Зберігати та відображати список недавно відкритих &файлів", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
+    AUTOCHECKBOX "Зберігати та відображати список недавно відкритих &програм", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
@@ -106,18 +105,17 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Область сповіщень"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
-    GROUPBOX        "Значки", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "Можна уникнути захаращення області повідомлень, приховуючи значки, які давно не використовувалися.", IDC_STATIC, 13,48,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Приховувати невживані значки", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
-    PUSHBUTTON      "&Налаштувати...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
-    GROUPBOX        "Системні значки", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Оберіть системні значки для постійного відображення.", IDC_STATIC, 13,112,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Годинник", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Гучність", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Мережа", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Живлення", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
-
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
+    GROUPBOX "Значки", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
+    LTEXT "Можна уникнути захаращення області повідомлень, приховуючи значки, які давно не використовувалися.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "&Приховувати невживані значки", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
+    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
+    GROUPBOX "Системні значки", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
+    LTEXT "Оберіть системні значки для постійного відображення.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "&Годинник", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Гучність", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Мережа", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Живлення", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
@@ -125,8 +123,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Панелі інструментів"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Оберіть панелі інструментів, які будуть відображатись на панелі завдань.", IDC_STATIC, 7,7,223,12, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+    LTEXT "Оберіть панелі інструментів, які будуть відображатись на панелі завдань.", IDC_STATIC, 7, 7, 223, 12, WS_DISABLED
+    CONTROL "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32", WS_BORDER | WS_TABSTOP | WS_DISABLED, 7, 20, 236, 160, WS_EX_CLIENTEDGE
 END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
@@ -134,19 +132,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Advanced options", IDC_STATIC, 6,6,240,121
-    AUTOCHECKBOX    "Show s&econds", IDC_TASKBARPROP_SECONDS, 13,18,200,10
-    AUTOCHECKBOX    "&Відображати зразки вікон (ескізи)", IDC_TASKBARPROP_WNDPREV, 13,31,200,10
+    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "&Відображати зразки вікон (ескізи)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
-
 
 STRINGTABLE
 BEGIN
-    IDS_START             "Пуск"
-    IDS_PROPERTIES        "В&ластивості"
-    IDS_OPEN_ALL_USERS    "&Всі користувачі"
+    IDS_START "Пуск"
+    IDS_PROPERTIES "В&ластивості"
+    IDS_OPEN_ALL_USERS "&Всі користувачі"
     IDS_EXPLORE_ALL_USERS "&Огляд всіх користувачів"
-    IDS_STARTUP_ERROR     "Система не може стартувати explorer, оскільки реєстр пошкоджений або відсутній."
+    IDS_STARTUP_ERROR "Система не може стартувати explorer, оскільки реєстр пошкоджений або відсутній."
 END
 
 STRINGTABLE

@@ -1,15 +1,16 @@
 /* 
- * FILE:             base/applications/cmdutils/more/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-20  initial translation
- *                   2011-10-17  diacritics change, other minor changes
+ * FILE:       base/applications/cmdutils/more/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG: 2011-08-20  initial translation
+ *             2011-10-17  diacritics change, other minor changes
  */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_USAGE, "Afișează date pe ecran, pagină-cu-pagină.\n\n\
+    IDS_USAGE "Afișează date pe ecran, pagină-cu-pagină.\n\n\
   MORE < [Unitate:][Cale]Nume fișier\n\
   Comandă | MORE \n\
   MORE [Unitate:][Cale]Nume fișier\n\n\
@@ -17,7 +18,6 @@ BEGIN
   Comandă                        Comanda a cărei ieșire va fi afișată.\n\n\
   La vederea sugestiei ""-- Continuă --"" veți apăsa o tastă pentru afișarea\n\
   următoarei pagini.\n"
-
-  IDS_CONTINUE, " -- Continuă (100%) -- "
-  IDS_FILE_ACCESS, "Fișierul «%s» nu poate fi accesat!"
+    IDS_CONTINUE " -- Continuă (100%) -- "
+    IDS_FILE_ACCESS "Fișierul «%s» nu poate fi accesat!"
 END

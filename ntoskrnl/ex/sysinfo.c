@@ -21,6 +21,62 @@ FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
 
+FORCEINLINE
+NTSTATUS
+ExpConvertLdrModuleToRtlModule(IN ULONG ModuleCount,
+                               IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+                               OUT PRTL_PROCESS_MODULE_INFORMATION ModuleInfo)
+{
+    PCHAR p;
+    NTSTATUS Status;
+    ANSI_STRING ModuleName;
+
+    /* Fill it out */
+    ModuleInfo->MappedBase = NULL;
+    ModuleInfo->ImageBase = LdrEntry->DllBase;
+    ModuleInfo->ImageSize = LdrEntry->SizeOfImage;
+    ModuleInfo->Flags = LdrEntry->Flags;
+    ModuleInfo->LoadCount = LdrEntry->LoadCount;
+    ModuleInfo->LoadOrderIndex = (USHORT)ModuleCount;
+    ModuleInfo->InitOrderIndex = 0;
+
+    /* Setup name */
+    RtlInitEmptyAnsiString(&ModuleName,
+                           ModuleInfo->FullPathName,
+                           sizeof(ModuleInfo->FullPathName));
+
+    /* Convert it */
+    Status = RtlUnicodeStringToAnsiString(&ModuleName,
+                                          &LdrEntry->FullDllName,
+                                          FALSE);
+    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+    {
+        /* Calculate offset to name */
+        p = ModuleName.Buffer + ModuleName.Length;
+        while ((p > ModuleName.Buffer) && (*--p))
+        {
+            /* Check if we found the separator */
+            if (*p == OBJ_NAME_PATH_SEPARATOR)
+            {
+                /* We did, break out */
+                p++;
+                break;
+            }
+        }
+
+        /* Set the offset */
+        ModuleInfo->OffsetToFileName = (USHORT)(p - ModuleName.Buffer);
+    }
+    else
+    {
+        /* Return empty name */
+        ModuleInfo->FullPathName[0] = ANSI_NULL;
+        ModuleInfo->OffsetToFileName = 0;
+    }
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
@@ -33,10 +89,8 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
     ULONG RequiredLength;
     PRTL_PROCESS_MODULE_INFORMATION ModuleInfo;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    ANSI_STRING ModuleName;
     ULONG ModuleCount = 0;
     PLIST_ENTRY NextEntry;
-    PCHAR p;
 
     /* Setup defaults */
     RequiredLength = FIELD_OFFSET(RTL_PROCESS_MODULES, Modules);
@@ -55,48 +109,9 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
         RequiredLength += sizeof(RTL_PROCESS_MODULE_INFORMATION);
         if (Length >= RequiredLength)
         {
-            /* Fill it out */
-            ModuleInfo->MappedBase = NULL;
-            ModuleInfo->ImageBase = LdrEntry->DllBase;
-            ModuleInfo->ImageSize = LdrEntry->SizeOfImage;
-            ModuleInfo->Flags = LdrEntry->Flags;
-            ModuleInfo->LoadCount = LdrEntry->LoadCount;
-            ModuleInfo->LoadOrderIndex = (USHORT)ModuleCount;
-            ModuleInfo->InitOrderIndex = 0;
-
-            /* Setup name */
-            RtlInitEmptyAnsiString(&ModuleName,
-                                   ModuleInfo->FullPathName,
-                                   sizeof(ModuleInfo->FullPathName));
-
-            /* Convert it */
-            Status = RtlUnicodeStringToAnsiString(&ModuleName,
-                                                  &LdrEntry->FullDllName,
-                                                  FALSE);
-            if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
-            {
-                /* Calculate offset to name */
-                p = ModuleName.Buffer + ModuleName.Length;
-                while ((p > ModuleName.Buffer) && (*--p))
-                {
-                    /* Check if we found the separator */
-                    if (*p == OBJ_NAME_PATH_SEPARATOR)
-                    {
-                        /* We did, break out */
-                        p++;
-                        break;
-                    }
-                }
-
-                /* Set the offset */
-                ModuleInfo->OffsetToFileName = (USHORT)(p - ModuleName.Buffer);
-            }
-            else
-            {
-                /* Return empty name */
-                ModuleInfo->FullPathName[0] = ANSI_NULL;
-                ModuleInfo->OffsetToFileName = 0;
-            }
+            Status = ExpConvertLdrModuleToRtlModule(ModuleCount,
+                                                    LdrEntry,
+                                                    ModuleInfo);
 
             /* Go to the next module */
             ModuleInfo++;
@@ -115,8 +130,35 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
     /* Check if caller also wanted user modules */
     if (UserModeList)
     {
-        /* FIXME: TODO */
-        DPRINT1("User-mode list not yet supported in ReactOS!\n");
+        NextEntry = UserModeList->Flink;
+        while (NextEntry != UserModeList)
+        {
+            /* Get the entry */
+            LdrEntry = CONTAINING_RECORD(NextEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+
+            /* Update size and check if we can manage one more entry */
+            RequiredLength += sizeof(RTL_PROCESS_MODULE_INFORMATION);
+            if (Length >= RequiredLength)
+            {
+                Status = ExpConvertLdrModuleToRtlModule(ModuleCount,
+                                                        LdrEntry,
+                                                        ModuleInfo);
+
+                /* Go to the next module */
+                ModuleInfo++;
+            }
+            else
+            {
+                /* Set error code */
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+
+            /* Update count and move to next entry */
+            ModuleCount++;
+            NextEntry = NextEntry->Flink;
+        }
     }
 
     /* Update return length */
@@ -1355,7 +1397,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
 {
-    PVOID SectionPointer = Buffer;
+    PVOID *SectionPointer = Buffer;
 
     /* Validate size */
     if (Size != sizeof(PVOID))
@@ -1368,7 +1410,7 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
     if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
     /* Unload the image */
-    MmUnloadSystemImage(SectionPointer);
+    MmUnloadSystemImage(*SectionPointer);
     return STATUS_SUCCESS;
 }
 
@@ -1612,27 +1654,50 @@ SSI_DEF(SystemExtendServiceTableInformation)
     /* Check who is calling */
     if (PreviousMode != KernelMode)
     {
+        static const UNICODE_STRING Win32kName = 
+            RTL_CONSTANT_STRING(L"\\SystemRoot\\System32\\win32k.sys");
+
         /* Make sure we can load drivers */
         if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, UserMode))
         {
             /* FIXME: We can't, fail */
-            //return STATUS_PRIVILEGE_NOT_HELD;
+            return STATUS_PRIVILEGE_NOT_HELD;
         }
+        
+        _SEH2_TRY
+        {
+            /* Probe and copy the unicode string */
+            ProbeForRead(Buffer, sizeof(ImageName), 1);
+            ImageName = *(PUNICODE_STRING)Buffer;
+
+            /* Probe the string buffer */
+            ProbeForRead(ImageName.Buffer, ImageName.Length, sizeof(WCHAR));
+
+            /* Check if we have the correct name (nothing else is allowed!) */
+            if (!RtlEqualUnicodeString(&ImageName, &Win32kName, FALSE))
+            {
+                _SEH2_YIELD(return STATUS_PRIVILEGE_NOT_HELD);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+        
+        /* Recursively call the function, so that we are from kernel mode */
+        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
+                                      (PVOID)&Win32kName,
+                                      sizeof(Win32kName));
     }
 
-    /* Probe and capture the driver name */
-    ProbeAndCaptureUnicodeString(&ImageName, PreviousMode, Buffer);
-
     /* Load the image */
-    Status = MmLoadSystemImage(&ImageName,
+    Status = MmLoadSystemImage((PUNICODE_STRING)Buffer,
                                NULL,
                                NULL,
                                0,
                                (PVOID)&ModuleObject,
                                &ImageBase);
-
-    /* Release String */
-    ReleaseCapturedUnicodeString(&ImageName, PreviousMode);
 
     if (!NT_SUCCESS(Status)) return Status;
 

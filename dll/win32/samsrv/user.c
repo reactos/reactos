@@ -6,12 +6,7 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "samsrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -380,6 +375,14 @@ done:
         midl_user_free(GroupsBuffer);
 
     return Status;
+}
+
+
+NTSTATUS
+SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject)
+{
+    FIXME("(%p)\n", UserObject);
+    return STATUS_SUCCESS;
 }
 
 

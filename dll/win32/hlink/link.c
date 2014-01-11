@@ -21,11 +21,6 @@
 #include "hlink_private.h"
 
 #include <shellapi.h>
-#include <hlguids.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
 #define HLINK_SAVE_MAGIC    0x00000002
 #define HLINK_SAVE_MONIKER_PRESENT      0x01

@@ -7,9 +7,6 @@
 
 /* INCLUDES *******************************************************************/
 
-#define COBJMACROS
-#define CONST_VTABLE
-
 #include <rtl.h>
 
 #define NDEBUG
@@ -303,7 +300,7 @@ RtlCopyMemoryStreamTo(
     TotalSize = Length.QuadPart;
     while (TotalSize)
     {
-        Left = min(TotalSize, sizeof(Buffer));
+        Left = (ULONG)min(TotalSize, sizeof(Buffer));
 
         /* Read */
         Result = IStream_Read(This, Buffer, Left, &Amount);

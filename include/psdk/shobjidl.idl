@@ -1833,6 +1833,8 @@ interface IShellChangeNotify : IUnknown
                 [in] LPCITEMIDLIST pidl2);
 }
 
+cpp_quote("#define STR_FILE_SYS_BIND_DATA  L\"File System Bind Data\"")
+
 /*****************************************************************************
  * IFileSystemBindData interface
  */

@@ -22,16 +22,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
-#include <config.h>
-//#include "windef.h"
-//#include "wingdi.h"
 #include "d3dx9_36_private.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 #ifdef _MSC_VER
 #define copysignf(x, y) ((x) < 0.0f ? -fabsf(y) : fabsf(y))

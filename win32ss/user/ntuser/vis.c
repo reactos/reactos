@@ -45,10 +45,9 @@ VIS_ComputeVisibleRegion(
    CurrentWindow = Wnd->spwndParent;
    while (CurrentWindow)
    {
-      if ( CurrentWindow->state2 & WNDS2_INDESTROY ||
-           CurrentWindow->state & WNDS_DESTROYED )
+      if (!VerifyWnd(CurrentWindow))
       {
-         ERR("ATM the Current Window or Parent is dead!\n");
+         ERR("ATM the Current Window or Parent is dead! %p\n",CurrentWindow);
          if (VisRgn) GreDeleteObject(VisRgn);
          return NULL;
       }

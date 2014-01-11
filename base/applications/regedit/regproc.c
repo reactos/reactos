@@ -23,6 +23,8 @@
 
 #include "regedit.h"
 
+#include <assert.h>
+
 #define REG_VAL_BUF_SIZE        4096
 
 /* maximal number of characters in hexadecimal data line,

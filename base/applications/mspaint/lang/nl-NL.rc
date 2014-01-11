@@ -1,9 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/nl-NL.rc
- * PURPOSE:     Dutch Language resource file
- * TRANSLATORS: Wouter De Vlieger
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/nl-NL.rc
+ * PURPOSE:    Dutch Language resource file
+ * TRANSLATOR: Wouter De Vlieger
  */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Afsluiten\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "Be&werken"
     BEGIN
         MENUITEM "Ongedaan maken\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "Kopiëren naar...", IDM_EDITCOPYTO
         MENUITEM "Plakken uit...", IDM_EDITPASTEFROM
     END
-
     POPUP "Beel&d"
     BEGIN
         MENUITEM "Werkset\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "Volledig scherm\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Afbeelding"
     BEGIN
         MENUITEM "Spiegelen/draaien...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "Afbeelding wissen", IDM_IMAGEDELETEIMAGE
         MENUITEM "Ondoorzichtig tekenen", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Kleuren"
     BEGIN
         MENUITEM "Kleurenpalet bewerken...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&?"
     BEGIN
         MENUITEM "Help-onderwerpen", IDM_HELPHELPTOPICS
@@ -125,9 +120,9 @@ BEGIN
     AUTORADIOBUTTON "Horizontaal spiegelen", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Verticaal spiegelen", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Draaihoek", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Annuleren", IDCANCEL, 125, 24, 48, 14
 END
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint for ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Wilt u de wijzigingen die zijn aangebracht in %s opslaan?"
-    IDS_DEFAULTFILENAME, "Naamloos.bmp"
-    IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Vrij selecteren"
-    IDS_TOOLTIP2, "Selecteren"
-    IDS_TOOLTIP3, "Gum"
-    IDS_TOOLTIP4, "Opvullen"
-    IDS_TOOLTIP5, "Kleur selecteren"
-    IDS_TOOLTIP6, "Vergroten"
-    IDS_TOOLTIP7, "Potlood"
-    IDS_TOOLTIP8, "Kwast"
-    IDS_TOOLTIP9, "Spuitbus"
-    IDS_TOOLTIP10, "Tekst"
-    IDS_TOOLTIP11, "Lijn"
-    IDS_TOOLTIP12, "Gebogen lijn"
-    IDS_TOOLTIP13, "Rechthoek"
-    IDS_TOOLTIP14, "Veelhoek"
-    IDS_TOOLTIP15, "Ovaal"
-    IDS_TOOLTIP16, "Afgeronde rechthoek"
-    IDS_OPENFILTER, "Bitmapbestanden (*.bmp;*.dib)\1*.bmp;*.dib\1Alle bestanden (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint for ReactOS"
+    IDS_INFOTEXT "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Wilt u de wijzigingen die zijn aangebracht in %s opslaan?"
+    IDS_DEFAULTFILENAME "Naamloos.bmp"
+    IDS_MINIATURETITLE "Miniature"
+    IDS_TOOLTIP1 "Vrij selecteren"
+    IDS_TOOLTIP2 "Selecteren"
+    IDS_TOOLTIP3 "Gum"
+    IDS_TOOLTIP4 "Opvullen"
+    IDS_TOOLTIP5 "Kleur selecteren"
+    IDS_TOOLTIP6 "Vergroten"
+    IDS_TOOLTIP7 "Potlood"
+    IDS_TOOLTIP8 "Kwast"
+    IDS_TOOLTIP9 "Spuitbus"
+    IDS_TOOLTIP10 "Tekst"
+    IDS_TOOLTIP11 "Lijn"
+    IDS_TOOLTIP12 "Gebogen lijn"
+    IDS_TOOLTIP13 "Rechthoek"
+    IDS_TOOLTIP14 "Veelhoek"
+    IDS_TOOLTIP15 "Ovaal"
+    IDS_TOOLTIP16 "Afgeronde rechthoek"
+    IDS_OPENFILTER "Bitmapbestanden (*.bmp;*.dib)\1*.bmp;*.dib\1Alle bestanden (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bytes"
+    IDS_PRINTRES "%d x %d pixels per meter"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

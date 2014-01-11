@@ -41,8 +41,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <tchar.h>
-//#include <malloc.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -298,6 +296,7 @@ static BOOL XCOPY_ProcessExcludeFile(WCHAR* filename, WCHAR* endOfName) {
     if (!feof(inFile)) {
         XCOPY_wprintf(XCOPY_LoadMessage(STRING_READFAIL), filename);
         *endOfName = endChar;
+        fclose(inFile);
         return TRUE;
     }
 
@@ -634,6 +633,7 @@ static int XCOPY_DoCopy(WCHAR *srcstem, WCHAR *srcspec,
             /* Find next one */
             findres = FindNextFileW(h, finddata);
         }
+        FindClose(h);
     }
 
 cleanup:
@@ -768,7 +768,7 @@ static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
             case 'E': if (CompareStringW(LOCALE_USER_DEFAULT,
                                          NORM_IGNORECASE | SORT_STRINGSORT,
                                          &word[1], 8,
-                                         EXCLUDE, -1) == 2) {
+                                         EXCLUDE, -1) == CSTR_EQUAL) {
                         if (XCOPY_ProcessExcludeList(&word[9])) {
                           XCOPY_FailMessage(ERROR_INVALID_PARAMETER);
                           goto out;
@@ -827,7 +827,8 @@ static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
                       break;
 
             case '-': if (toupper(word[2])=='Y')
-                          flags &= ~OPT_NOPROMPT; break;
+                          flags &= ~OPT_NOPROMPT;
+                      break;
             case '?': XCOPY_wprintf(XCOPY_LoadMessage(STRING_HELP));
                       rc = RC_HELP;
                       goto out;

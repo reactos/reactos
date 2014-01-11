@@ -2,7 +2,6 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <debug.h>
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>
 

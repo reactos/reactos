@@ -8,6 +8,12 @@
 
 #include "private.hpp"
 
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
+
 class CPortTopology : public IPortTopology,
                       public ISubdevice,
                       public IPortEvents

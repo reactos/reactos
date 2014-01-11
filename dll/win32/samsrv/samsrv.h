@@ -31,6 +31,7 @@
 #include <sam_s.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 #include "resources.h"
 
@@ -230,6 +231,10 @@ NTSTATUS
 SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
                                IN PRPC_SID MemberSid);
 
+NTSTATUS
+SampCreateAccountSid(IN PSAM_DB_OBJECT DomainObject,
+                     IN ULONG ulRelativeId,
+                     IN OUT PSID *AccountSid);
 
 /* group.h */
 
@@ -336,6 +341,10 @@ NTSTATUS
 SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
                   OUT PULONG Size);
 
+NTSTATUS
+SampCreateUserSD(IN PSID UserSid,
+                 OUT PSECURITY_DESCRIPTOR *UserSd,
+                 OUT PULONG Size);
 
 /* setup.c */
 
@@ -374,6 +383,9 @@ SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
 
 NTSTATUS
 SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject);
+
+NTSTATUS
+SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject);
 
 NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,

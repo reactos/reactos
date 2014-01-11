@@ -16,10 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
+#include <windef.h>
 #include <winuser.h>
 #include <commctrl.h>
-//#include "mshtmcid.h"
 
 #include "resource.h"
 
@@ -116,4 +115,4 @@ REGINST REGINST mshtml.inf
 /* @makedep: blank.htm */
 blank.htm HTML "blank.htm"
 
-1 WINE_REGISTRY mshtml_classes.rgs
+1 WINE_REGISTRY "mshtml_classes.rgs"

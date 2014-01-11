@@ -1,5 +1,4 @@
 
-
 spec2def(vdmdbg.dll vdmdbg.spec)
 
 list(APPEND SOURCE
@@ -10,5 +9,4 @@ add_library(vdmdbg SHARED ${SOURCE})
 
 set_module_type(vdmdbg win32dll UNICODE)
 add_importlibs(vdmdbg msvcrt kernel32 ntdll)
-add_pch(vdmdbg vdmdbg.h)
 add_cd_file(TARGET vdmdbg DESTINATION reactos/system32 FOR all)

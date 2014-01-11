@@ -6,18 +6,15 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#include <initguid.h>
 #include <ntifs.h>
-#include <ntagp.h>
 #include <wdmguid.h>
 #include <wchar.h>
 #include <acpiioct.h>
 #include <drivers/pci/pci.h>
 #include <drivers/acpi/acpi.h>
-#include "halfuncs.h"
-#include "rtlfuncs.h"
-#include "vffuncs.h"
-#include "bugcodes.h"
+#include <ndk/halfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/vffuncs.h>
 
 //
 // Tag used in all pool allocations (Pci Bus)

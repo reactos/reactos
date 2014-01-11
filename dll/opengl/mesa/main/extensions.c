@@ -29,13 +29,7 @@
  * \brief Extension handling
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "context.h"
-#include "extensions.h"
-#include "mfeatures.h"
-#include "mtypes.h"
+#include <precomp.h>
 
 #define ALIGN(value, alignment)  (((value) + alignment - 1) & ~(alignment - 1))
 

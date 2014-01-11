@@ -5,7 +5,7 @@ spec2def(kbdest.dll kbdest.spec)
 
 add_library(kbdest SHARED kbdest.c kbdest.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdest.def)
 
-set_entrypoint(kbdest 0)
+set_module_type(kbdest kbdlayout)
 
 add_dependencies(kbdest psdk)
 

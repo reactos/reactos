@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/netshell/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for netshell
- * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -14,8 +14,8 @@ CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Підключення через:", -1, 9,9,217,8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_DISABLED | WS_TABSTOP
+    LTEXT "Підключення через:", -1, 9, 9, 217, 8
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Налаштувати", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Відмічені компоненти використовуються цим підключенням:", -1, 9, 59, 217, 8
     PUSHBUTTON "Вст&ановити", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
@@ -52,12 +52,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "Влас&тивості", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "Ви&мкнути", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Підтримка"
 FONT 8, "MS Shell Dlg"
@@ -67,16 +67,14 @@ BEGIN
     LTEXT "IP-адреса:", -1, 22, 34, 80, 8
     LTEXT "Маска підмережі:", -1, 22, 48, 80, 8
     LTEXT "Основний шлюз:", -1, 22, 62, 80, 8
-
     RTEXT "N/A", IDC_DETAILSTYPE, 115, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 115, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 115, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 115, 62, 80, 8
-
     PUSHBUTTON "&Склад...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Відомості про мережне підключення"
 FONT 8, "MS Shell Dlg"
@@ -88,47 +86,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Фізична адреса"
-    IDS_IP_ADDRESS              "IP-адреса"
-    IDS_SUBNET_MASK             "Маска підмережі"
-    IDS_DEF_GATEWAY             "Основний шлюз"
-    IDS_DHCP_SERVER             "DHCP-сервер"
-    IDS_LEASE_OBTAINED          "Оренду отримано"
-    IDS_LEASE_EXPIRES           "Оренда закінчується"
-    IDS_DNS_SERVERS             "DNS-сервери"
-    IDS_WINS_SERVERS            "WINS-сервери"
-    IDS_PROPERTY                "Властивість"
-    IDS_VALUE                   "Значення"
-    IDS_NETWORKCONNECTION       "Мережне підключення"
-    IDS_SHV_COLUMN_NAME         "Ім'я"
-    IDS_SHV_COLUMN_TYPE         "Тип"
-    IDS_SHV_COLUMN_STATE        "Стан"
-    IDS_SHV_COLUMN_DEVNAME      "Ім'я пристрою"
-    IDS_SHV_COLUMN_PHONE        "Номер телефону або адреса вузла"
-    IDS_SHV_COLUMN_OWNER        "Власник"
-    IDS_TYPE_ETHERNET           "ЛОМ або високошвидкісний Інтернет"
-    IDS_STATUS_NON_OPERATIONAL  "Вимкнуто"
-    IDS_STATUS_UNREACHABLE      "Не підключено"
-    IDS_STATUS_DISCONNECTED     "Мережний кабель не підключено"
-    IDS_STATUS_CONNECTING       "Отримання мережної адреси"
-    IDS_STATUS_CONNECTED        "Підключено"
-    IDS_STATUS_OPERATIONAL      "Підключено"
-
-    IDS_NET_ACTIVATE            "Увімкнути"
-    IDS_NET_DEACTIVATE          "Вимкнути"
-    IDS_NET_STATUS              "Стан"
-    IDS_NET_REPAIR              "Виправити"
-    IDS_NET_CREATELINK          "Створити ярлик"
-    IDS_NET_DELETE              "Видалити"
-    IDS_NET_PROPERTIES          "Властивості"
-
-    IDS_FORMAT_BIT              "%u біт/с"
-    IDS_FORMAT_KBIT             "%u Кбіт/с"
-    IDS_FORMAT_MBIT             "%u Мбіт/с"
-    IDS_FORMAT_GBIT             "%u Гбіт/с"
-    IDS_DURATION_DAY            "%d День %s"
-    IDS_DURATION_DAYS           "%d Днів %s"
-    IDS_ASSIGNED_DHCP           "Надано DHCP"
-    IDS_ASSIGNED_MANUAL         "Налаштовано вручну"
+    IDS_PHYSICAL_ADDRESS "Фізична адреса"
+    IDS_IP_ADDRESS "IP-адреса"
+    IDS_SUBNET_MASK "Маска підмережі"
+    IDS_DEF_GATEWAY "Основний шлюз"
+    IDS_DHCP_SERVER "DHCP-сервер"
+    IDS_LEASE_OBTAINED "Оренду отримано"
+    IDS_LEASE_EXPIRES "Оренда закінчується"
+    IDS_DNS_SERVERS "DNS-сервери"
+    IDS_WINS_SERVERS "WINS-сервери"
+    IDS_PROPERTY "Властивість"
+    IDS_VALUE "Значення"
+    IDS_NETWORKCONNECTION "Мережне підключення"
+    IDS_SHV_COLUMN_NAME "Ім'я"
+    IDS_SHV_COLUMN_TYPE "Тип"
+    IDS_SHV_COLUMN_STATE "Стан"
+    IDS_SHV_COLUMN_DEVNAME "Ім'я пристрою"
+    IDS_SHV_COLUMN_PHONE "Номер телефону або адреса вузла"
+    IDS_SHV_COLUMN_OWNER "Власник"
+    IDS_TYPE_ETHERNET "ЛОМ або високошвидкісний Інтернет"
+    IDS_STATUS_NON_OPERATIONAL "Вимкнуто"
+    IDS_STATUS_UNREACHABLE "Не підключено"
+    IDS_STATUS_DISCONNECTED "Мережний кабель не підключено"
+    IDS_STATUS_CONNECTING "Отримання мережної адреси"
+    IDS_STATUS_CONNECTED "Підключено"
+    IDS_STATUS_OPERATIONAL "Підключено"
+    IDS_NET_ACTIVATE "Увімкнути"
+    IDS_NET_DEACTIVATE "Вимкнути"
+    IDS_NET_STATUS "Стан"
+    IDS_NET_REPAIR "Виправити"
+    IDS_NET_CREATELINK "Створити ярлик"
+    IDS_NET_DELETE "Видалити"
+    IDS_NET_RENAME "Rename"
+    IDS_NET_PROPERTIES "Властивості"
+    IDS_FORMAT_BIT "%u біт/с"
+    IDS_FORMAT_KBIT "%u Кбіт/с"
+    IDS_FORMAT_MBIT "%u Мбіт/с"
+    IDS_FORMAT_GBIT "%u Гбіт/с"
+    IDS_DURATION_DAY "%d День %s"
+    IDS_DURATION_DAYS "%d Днів %s"
+    IDS_ASSIGNED_DHCP "Надано DHCP"
+    IDS_ASSIGNED_MANUAL "Налаштовано вручну"
 END
-

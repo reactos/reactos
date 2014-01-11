@@ -5,5 +5,5 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Protetor de Tela de Logon"
-    IDS_TEXT        "Nenhuma opção precisa ser definida."
+    IDS_TEXT "Nenhuma opção precisa ser definida."
 END

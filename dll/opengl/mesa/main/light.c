@@ -23,17 +23,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "context.h"
-#include "enums.h"
-#include "light.h"
-#include "macros.h"
-#include "simple_list.h"
-#include "mtypes.h"
-#include "math/m_matrix.h"
-
+#include <precomp.h>
 
 void GLAPIENTRY
 _mesa_ShadeModel( GLenum mode )

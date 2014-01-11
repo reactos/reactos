@@ -17,11 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
-/* UTF8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -37,7 +32,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "기본"
+    POPUP "" /* Default */
     {
         MENUITEM "뒤로(&B)",                IDM_GOBACKWARD
         MENUITEM "앞으로(&O)",               IDM_GOFORWARD
@@ -59,11 +54,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "인쇄(&I)",                 IDM_PRINT
         MENUITEM "다시 읽기(&R)",               _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "옵션(&P)",            IDM_PROPERTIES
     }
 
-    POPUP "이미지"
+    POPUP "" /* Image */
     {
         MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
         MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
@@ -85,11 +79,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "즐겨 찾기에 추가(&F)...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "속성(&R)",              IDM_PROPERTIES
     }
 
-    POPUP "제어"
+    POPUP "" /* Control */
     {
         MENUITEM "되돌리기(&U)",       IDM_UNDO
         MENUITEM SEPARATOR
@@ -98,11 +91,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "붙여넣기(&P)",      IDM_PASTE
         MENUITEM "지우기(&D)",     IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "모두 선택(&A)", IDM_SELECTALL
     }
 
-    POPUP "표"
+    POPUP "" /* Table */
     {
         POPUP "선택(&S)"
         {
@@ -112,12 +104,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "표(&T)",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "가로줄 속성(&C)",  IDM_CELLPROPERTIES
         MENUITEM "표 속성(&T)", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DSite 선택"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "잘라내기(&T)",        IDM_CUT
         MENUITEM "복사(&C)",       IDM_COPY
@@ -127,7 +118,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "닻"
+    POPUP "" /* Anchor */
     {
         MENUITEM "열기(&O)",                IDM_FOLLOWLINKC
         MENUITEM "새 창에 열기(&N)",  IDM_FOLLOWLINKN
@@ -141,16 +132,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "즐겨찾기에 더하기(&F)...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "속성(&R)",          IDM_PROPERTIES
     }
 
-    POPUP "알수 없는 내용"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC 그림"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
         MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
@@ -169,13 +159,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "즐겨찾기에 더하기(&F)...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "재생",                     IDM_DYNSRCPLAY
         MENUITEM "정지",                     IDM_DYNSRCSTOP
         MENUITEM "속성(&R)",              IDM_PROPERTIES
     }
 
-    POPUP "ART 그림"
+    POPUP "" /* ART Image */
     {
         MENUITEM "링크 열기(&O)",               IDM_FOLLOWLINKC
         MENUITEM "새 창에 링크 열기(&N)", IDM_FOLLOWLINKN
@@ -198,11 +187,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "정지",                     IDM_IMGARTSTOP
         MENUITEM "다시 감기",                   IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "속성(&R)",              IDM_PROPERTIES
     }
 
-    POPUP "디버그"
+    POPUP "" /* Debug */
     {
         MENUITEM "태그 추적",         IDM_TRACETAGS
         MENUITEM "리소스 실패",  IDM_RESOURCEFAILURES
@@ -222,7 +210,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "편집 상태(&E)",         IDM_EDITMODE
     }
 
-    POPUP "세로 스크롤바"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "여기서 스크롤",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -236,7 +224,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "아래로 스크롤",  IDM_SCROLL_DOWN
     }
 
-    POPUP "가로 스크롤바"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "여기서 스크롤",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR

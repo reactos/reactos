@@ -1,0 +1,76 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Hep informacion ndihmë për ReactOS Komande.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "Listo te gjitha komandat e mundshme (+ pershkrime)\n\n\
+  help command\n\
+  command /?     For more information on a specific command\n\n\
+?        Lista e të gjitha komandat në dispozicion (pa pershkrim).\n\
+ALIAS    Vë, heq apo shfaq pseudonimet.\n\
+ATTRIB   Shfaq ose ndryshon atributet e dokumentit.\n\
+BEEP     Sinjali akustik.\n\
+CALL     Therret programet batch nga nje tjeter.\n\
+CD       Shfaq emrin e ose ndryshon skedarin aktual.\n\
+CHCP     Shfaq ose cakton codin dhe numrin e faqes aktive.\n\
+CHOICE   Pret për përdoruesit për të zgjedhur një nga një sërë zgjedhjesh.\n\
+CLS      Pastron ekranin.\n\
+CMD      Fillon një shembull të ri të përkthyesit se komandës ReactOS.\n\
+COLOR    Vë dukshëm panelin e komandimit te parazgjedhur dhe ngjyrat e sfondit.\n\
+COPY     Kopjon një ose më shumë dokumenta në një vend tjetër.\n\
+DATE     Shfaq ose cakton datën.\n\
+DELETE   Fshin një ose më shumë dokumenta.\n\
+DIR      Tregon një listë e dokumentave dhe nendokumentave në një skedë.\n\
+ECHO     Shfaq mesazhe, ose ktheh komandën e bërë jehonë ndezur ose fikur.\n\
+ERASE    Fshin një ose më shumë dokumenta.\n\
+EXIT     Del nga programi CMD.EXE (interpretuesi i komandave).\n\
+FOR      Ekzekuton një komandë të specifikuar për secilin dokument në një grup dokumentësh.\n\
+FREE     (liron) hapsira e diskut.\n\
+GOTO     Drejton përkthyesin e komandave te ReactOS në një linjë të emërtuar të\n\
+         programit batch.\n\
+HELP     Ofron informacione Ndihmë për komandat e ReactOS.\n\
+HISTORY  Listoni të gjitha komandat e cila ka qenë përdorur\n\
+IF       Kryen përpunimin e kushtëzuar në programet batch.\n\
+LABEL    Krijon, ndryshon, apo fshin etiketën e vëllimit te një hardisdisku.\n\
+MD       Krijon nje skedare.\n\
+MKDIR    Krijon nje skedare.\n\
+MKLINK   Krijon një objekt lidhje ne dokumentat e sistemit.\n\
+MOVE     Lëviz një ose më shumë dokumenta nga një skedar në një skedar\n\
+         tjetër.\n\
+PATH     Shfaq ose cakton rrugën e kërkimit për ekzekutimin e dokumentave.\n\
+PAUSE    Pezullon përpunimin e një dokumenti batch dhe tregon një mesazh.\n\
+POPD     Rikthen vlerën e mëparshme te skedarit aktual qe ruhet nga\n\
+         PUSHD.\n\
+PROMPT   Ndryshimet në komandën e shpejtë.\n\
+PUSHD    Ruan skedarin aktual dhe pastaj e ndryshon.\n\
+RD       Fshin skeden.\n\
+REM      Rregjistron komentet (vërejtjet) ne dokumentat batch.\n\
+REN      Riemëron nje dokument ose dokumenta.\n\
+RENAME   Riemëron nje dokument ose dokumenta.\n\
+REPLACE  Zëvendëson nje dokument.\n\
+RMDIR    Fshin nje skedare.\n\
+SCREEN   Zhvendos kursorin dhe tekstin opsional te printuar.\n\
+SET      Paraqet, vendos, ose heq variabëlet e mjedisit te ReactOS.\n\
+SHIFT    Ndërron pozitën e parametrave të dokumentave ne batch.\n"
+    IDS_HELP2 "START    Fillon një dritare të veçantë për të drejtuar një program të caktuar ose të komandës.\n\
+         Executes command.\n\
+TIME     Shfaq dhe përcakton kohën e sistemit.\n\
+TIMER    Lejo përdorimin e dhjetë kronometër.\n\
+TITLE    Vendos titullin e dritares për një seancë CMD.EXE.\n\
+TYPE     Shfaq përmbajtjen e një tekst skedari.\n\
+VER      Shfaq versionin e ReactOS.\n\
+VERIFY   Thuai ReactOS-it për të verifikuar që dosjet tuaja janë të shkruara\n\
+         saktesisht ne harddisk.\n\
+VOL      Paraqet një emërtim te vëllimit ne hardddisk dhe numrin serial.\n"
+END

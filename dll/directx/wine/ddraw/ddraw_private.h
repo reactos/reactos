@@ -19,6 +19,9 @@
 #ifndef __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 #define __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 
+#include <config.h>
+#include <wine/port.h>
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
@@ -26,17 +29,17 @@
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
 
-#include <d3d.h>
-//#include "ddraw.h"
-#ifdef DDRAW_INIT_GUID
 #include <initguid.h>
-#endif
+#include <d3d.h>
+
 #include <wine/list.h>
 #include <wine/wined3d.h>
 

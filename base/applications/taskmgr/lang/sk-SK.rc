@@ -1,4 +1,4 @@
-// Slovak resource files by Kario (kario@szm.sk) (09-08-2007)
+/* Slovak translation by Kario (kario@szm.sk) (09-08-2007) */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
@@ -6,83 +6,75 @@ IDR_TASKMANAGER MENU
 BEGIN
     POPUP "&Súbor"
     BEGIN
-        MENUITEM "&Nová úloha (Spustiť...)",          ID_FILE_NEW
+        MENUITEM "&Nová úloha (Spustiť...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "U&končiť Správcu úloh",          ID_FILE_EXIT
+        MENUITEM "U&končiť Správcu úloh", ID_FILE_EXIT
     END
     POPUP "&Možnosti"
     BEGIN
-        MENUITEM "&Vždy navrchu",              ID_OPTIONS_ALWAYSONTOP
-        , CHECKED
-        MENUITEM "&Minimalizovať pri použití",            ID_OPTIONS_MINIMIZEONUSE
-        , CHECKED
-        MENUITEM "&Skryť pri minimalizovaní",        ID_OPTIONS_HIDEWHENMINIMIZED
-        , CHECKED
-        MENUITEM "&Zobraziť 16-bitové úlohy",          ID_OPTIONS_SHOW16BITTASKS
-        , CHECKED
+        MENUITEM "&Vždy navrchu", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "&Minimalizovať pri použití", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Skryť pri minimalizovaní", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "&Zobraziť 16-bitové úlohy", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Zobraziť"
     BEGIN
-        MENUITEM "&Obnoviť",                ID_VIEW_REFRESH
+        MENUITEM "&Obnoviť", ID_VIEW_REFRESH
         POPUP "&Rýchlosť aktualizácie"
         BEGIN
-            MENUITEM "&Vysoká",                       ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "No&rmálna",                     ID_VIEW_UPDATESPEED_NORMAL
-            , CHECKED
-            MENUITEM "&Nízka",                        ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Pozastavené",                     ID_VIEW_UPDATESPEED_PAUSED
-
+            MENUITEM "&Vysoká", ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "No&rmálna", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
+            MENUITEM "&Nízka", ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Pozastavené", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Veľké ikony",                ID_VIEW_LARGE
-        MENUITEM "&Malé ikony",                ID_VIEW_SMALL
-        MENUITEM "&Podrobnosti",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Vybrať stĺpce...",          ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&Veľké ikony", ID_VIEW_LARGE
+        MENUITEM "&Malé ikony", ID_VIEW_SMALL
+        MENUITEM "&Podrobnosti", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Vybrať stĺpce...", ID_VIEW_SELECTCOLUMNS
         POPUP "&História procesora"
         BEGIN
-            MENUITEM "&Jeden graf pre všetky procesory",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
-
-            MENUITEM "Jeden graf pre &každý procesor",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
-            , CHECKED
+            MENUITEM "&Jeden graf pre všetky procesory", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "Jeden graf pre &každý procesor", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Zobraziť časy jadra",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Zobraziť časy jadra", ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Okna"
     BEGIN
-        MENUITEM "&Pod seba",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Vedľa seba",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimalizovať",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximalizovať",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Kaskáda",                    ID_WINDOWS_CASCADE
-        MENUITEM "Presunúť dopred&u",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Pod seba", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&Vedľa seba", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimalizovať", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximalizovať", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Kaskáda", ID_WINDOWS_CASCADE
+        MENUITEM "Presunúť dopred&u", ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "Témy &Pomocníka pre Správcu úloh",   ID_HELP_TOPICS
+        MENUITEM "Témy &Pomocníka pre Správcu úloh", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Č&o je &Správca úloh",         ID_HELP_ABOUT
+        MENUITEM "Č&o je &Správca úloh", ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU
 BEGIN
-    MENUITEM "&Pod seba",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "&Vedľa seba",            ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "&Minimalizovať",                   ID_WINDOWS_MINIMIZE
-    MENUITEM "Ma&ximalizovať",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Kaskáda",                    ID_WINDOWS_CASCADE
-    MENUITEM "Presunúť d&opredu",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "&Pod seba", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "&Vedľa seba", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Minimalizovať", ID_WINDOWS_MINIMIZE
+    MENUITEM "Ma&ximalizovať", ID_WINDOWS_MAXIMIZE
+    MENUITEM "&Kaskáda", ID_WINDOWS_CASCADE
+    MENUITEM "Presunúť d&opredu", ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Nová úloha (Spustiť...)",          ID_FILE_NEW
+        MENUITEM "&Nová úloha (Spustiť...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Veľké ikony",                ID_VIEW_LARGE
-        MENUITEM "&Malé ikony",                ID_VIEW_SMALL
-        MENUITEM "&Podrobnosti",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Veľké ikony", ID_VIEW_LARGE
+        MENUITEM "&Malé ikony", ID_VIEW_SMALL
+        MENUITEM "&Podrobnosti", ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -90,17 +82,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "P&repnúť",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "Presunúť d&opredu",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "P&repnúť", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "Presunúť d&opredu", ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "&Pod seba",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Vedľa seba",            ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimalizovať",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximalizovať",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Kaskáda",                    ID_WINDOWS_CASCADE
+        MENUITEM "&Pod seba", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&Vedľa seba", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimalizovať", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximalizovať", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Kaskáda", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "Ukončiť úlo&hu",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "Pr&ejsť na proces",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "Ukončiť úlo&hu", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Pr&ejsť na proces", ID_APPLICATION_PAGE_GOTOPROCESS
     END
 END
 
@@ -108,10 +100,10 @@ IDR_TRAY_POPUP MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Obnoviť",                    ID_RESTORE
-        MENUITEM "&Zavrieť",                      ID_FILE_EXIT
+        MENUITEM "&Obnoviť", ID_RESTORE
+        MENUITEM "&Zavrieť", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Vždy navrchu",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Vždy navrchu", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -119,127 +111,113 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Ukončiť proces",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Ukončiť stro&m procesu",           ID_PROCESS_PAGE_ENDPROCESSTREE
-
-        MENUITEM "&Ladiť",                      ID_PROCESS_PAGE_DEBUG
+        MENUITEM "&Ukončiť proces", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Ukončiť stro&m procesu", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Ladiť", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "&Nastaviť prioritu"
         BEGIN
-            MENUITEM "&V reálnom čase",               ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-
-            MENUITEM "Vy&soká",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
-
-            MENUITEM "Vyššia &ako normálna",        ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-
-            MENUITEM "&Normálna",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-
-            MENUITEM "Nižšia ako nor&málna",        ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-
-            MENUITEM "Níz&ka",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
-
+            MENUITEM "&V reálnom čase", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "Vy&soká", ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "Vyššia &ako normálna", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Normálna", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "Nižšia ako nor&málna", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "Níz&ka", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
-        MENUITEM "Nastaviť &afinitu...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Upraviť &kanály ladenia...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "Nastaviť &afinitu...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Upraviť &kanály ladenia...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
+/* Dialogs */
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
+/* TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened */
 
 IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
-    WS_THICKFRAME
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Správca úloh systému"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
+    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Nová úloha...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "&Prepnúť",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "Ukončiť úlo&hu",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&Nová úloha...", IDC_NEWTASK, 187, 189, 53, 14
+    PUSHBUTTON "&Prepnúť", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "Ukončiť úlo&hu", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
-                    WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Ukončiť proces",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "&Zobraziť procesy všetkých používateľov",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,144,10
+    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&Ukončiť proces", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "&Zobraziť procesy všetkých používateľov", IDC_SHOWALLPROCESSES, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 144, 10
 END
 
-//IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
+/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
 IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Procesor",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Stránkovanie",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
-    GROUPBOX        "Súčty",IDC_TOTALS_FRAME,5,122,89,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Využitie pamäte (kB)",IDC_COMMIT_CHARGE_FRAME,5,166,89,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Fyzická pamäť (kB)",IDC_PHYSICAL_MEMORY_FRAME,99,122,143,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Pamäť jadra (kB)",IDC_KERNEL_MEMORY_FRAME,99,166,143,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Popisovače",IDS_TOTALS_HANDLE_COUNT,12,131,40,8
-    LTEXT           "Vlákna",IDS_TOTALS_THREAD_COUNT,12,140,27,8
-    LTEXT           "Procesy",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
-    EDITTEXT        IDC_TOTALS_HANDLE_COUNT,54,131,36,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_TOTALS_THREAD_COUNT,54,140,36,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_TOTALS_PROCESS_COUNT,54,149,36,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Celkovo",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Limit",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
-    LTEXT           "Maximum",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
-    EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,50,174,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,50,184,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_COMMIT_CHARGE_PEAK,50,193,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Celkovo",IDS_PHYSICAL_MEMORY_TOTAL,104,131,27,8
-    LTEXT           "K dispozícii",IDS_PHYSICAL_MEMORY_AVAILABLE,104,140,40,8
-    LTEXT           "Vyrovnáv. pamäť systému",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,104,149,90,8
-    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,196,131,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,196,140,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,196,149,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Celkovo",IDS_KERNEL_MEMORY_TOTAL,104,174,27,8
-    LTEXT           "Stránkovaná",IDS_KERNEL_MEMORY_PAGED,104,184,52,8
-    LTEXT           "Nestránkovaná",IDS_KERNEL_MEMORY_NONPAGED,104,193,52,8
-    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,196,174,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,196,184,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,196,193,40,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "História využitia procesora",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "História využitia stránkovacieho súboru",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Zobrazenie využitia procesora",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Zobrazenie využitia pamäte",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "História využitia procesora",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
-                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "História využitia pamäte",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
-                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    GROUPBOX "Procesor", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Stránkovanie", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX "Súčty", IDC_TOTALS_FRAME, 5, 122, 89, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Využitie pamäte (kB)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 89, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Fyzická pamäť (kB)", IDC_PHYSICAL_MEMORY_FRAME, 99, 122, 143, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Pamäť jadra (kB)", IDC_KERNEL_MEMORY_FRAME, 99, 166, 143, 39, 0, WS_EX_TRANSPARENT
+    LTEXT "Popisovače", IDS_TOTALS_HANDLE_COUNT, 12, 131, 40, 8
+    LTEXT "Vlákna", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
+    LTEXT "Procesy", IDS_TOTALS_PROCESS_COUNT, 12, 149, 34, 8
+    EDITTEXT IDC_TOTALS_HANDLE_COUNT, 54, 131, 36, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_THREAD_COUNT, 54, 140, 36, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_PROCESS_COUNT, 54, 149, 36, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Celkovo", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
+    LTEXT "Limit", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
+    LTEXT "Maximum", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
+    EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 50, 174, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_LIMIT, 50, 184, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_PEAK, 50, 193, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Celkovo", IDS_PHYSICAL_MEMORY_TOTAL, 104, 131, 27, 8
+    LTEXT "K dispozícii", IDS_PHYSICAL_MEMORY_AVAILABLE, 104, 140, 40, 8
+    LTEXT "Vyrovnáv. pamäť systému", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 104, 149, 90, 8
+    EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 196, 131, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 196, 140, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 196, 149, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Celkovo", IDS_KERNEL_MEMORY_TOTAL, 104, 174, 27, 8
+    LTEXT "Stránkovaná", IDS_KERNEL_MEMORY_PAGED, 104, 184, 52, 8
+    LTEXT "Nestránkovaná", IDS_KERNEL_MEMORY_NONPAGED, 104, 193, 52, 8
+    EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 196, 174, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_PAGED, 196, 184, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 196, 193, 40, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX "História využitia procesora", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "História využitia stránkovacieho súboru", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "Zobrazenie využitia procesora", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Zobrazenie využitia pamäte", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "História využitia procesora", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "História využitia pamäte", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
@@ -247,10 +225,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Kanály ladenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
-		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Zavrieť",IDOK,171,189,69,14
+    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
+    PUSHBUTTON "Zavrieť", IDOK, 171, 189, 69, 14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 270, 154
@@ -258,74 +235,41 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Afinita procesorov"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,159,133,50,14
-    PUSHBUTTON      "Zrušiť",IDCANCEL,213,133,50,14
-    LTEXT           "Nastavenie afinity procesorov riadi výber procesorov, na ktorých sa bude môcť proces spustiť.",
-                    IDC_STATIC,5,5,259,16
-    CONTROL         "Procesor č. 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    11,28,58,10
-    CONTROL         "Procesor č. 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,41,58,10
-    CONTROL         "Procesor č. 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,54,58,10
-    CONTROL         "Procesor č. 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,67,58,10
-    CONTROL         "Procesor č. 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,80,58,10
-    CONTROL         "Procesor č. 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,93,58,10
-    CONTROL         "Procesor č. 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,106,58,10
-    CONTROL         "Procesor č. 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,11,119,58,10
-    CONTROL         "Procesor č. 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,72,28,58,10
-    CONTROL         "Procesor č. 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
-                    WS_TABSTOP,72,41,58,10
-    CONTROL         "Procesor č. 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,54,62,10
-    CONTROL         "Procesor č. 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,67,62,10
-    CONTROL         "Procesor č. 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,80,62,10
-    CONTROL         "Procesor č. 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,93,62,10
-    CONTROL         "Procesor č. 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,106,62,10
-    CONTROL         "Procesor č. 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,72,119,62,10
-    CONTROL         "Procesor č. 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,28,62,10
-    CONTROL         "Procesor č. 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,41,62,10
-    CONTROL         "Procesor č. 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,54,62,10
-    CONTROL         "Procesor č. 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,67,62,10
-    CONTROL         "Procesor č. 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,80,62,10
-    CONTROL         "Procesor č. 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,93,62,10
-    CONTROL         "Procesor č. 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,106,62,10
-    CONTROL         "Procesor č. 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,136,119,62,10
-    CONTROL         "Procesor č. 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,28,62,10
-    CONTROL         "Procesor č. 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,41,62,10
-    CONTROL         "Procesor č. 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,54,62,10
-    CONTROL         "Procesor č. 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,67,62,10
-    CONTROL         "Procesor č. 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,80,62,10
-    CONTROL         "Procesor č. 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,93,62,10
-    CONTROL         "Procesor č. 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,106,62,10
-    CONTROL         "Procesor č. 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,200,119,62,10
+    DEFPUSHBUTTON "OK", IDOK, 159, 133, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 213, 133, 50, 14
+    LTEXT "Nastavenie afinity procesorov riadi výber procesorov, na ktorých sa bude môcť proces spustiť.", IDC_STATIC, 5, 5, 259, 16
+    CONTROL "Procesor č. 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 58, 10
+    CONTROL "Procesor č. 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 58, 10
+    CONTROL "Procesor č. 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 58, 10
+    CONTROL "Procesor č. 3", IDC_CPU3, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 67, 58, 10
+    CONTROL "Procesor č. 4", IDC_CPU4, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 80, 58, 10
+    CONTROL "Procesor č. 5", IDC_CPU5, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 93, 58, 10
+    CONTROL "Procesor č. 6", IDC_CPU6, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 106, 58, 10
+    CONTROL "Procesor č. 7", IDC_CPU7, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 119, 58, 10
+    CONTROL "Procesor č. 8", IDC_CPU8, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 28, 58, 10
+    CONTROL "Procesor č. 9", IDC_CPU9, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 41, 58, 10
+    CONTROL "Procesor č. 10", IDC_CPU10, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 54, 62, 10
+    CONTROL "Procesor č. 11", IDC_CPU11, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 67, 62, 10
+    CONTROL "Procesor č. 12", IDC_CPU12, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 80, 62, 10
+    CONTROL "Procesor č. 13", IDC_CPU13, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 93, 62, 10
+    CONTROL "Procesor č. 14", IDC_CPU14, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 106, 62, 10
+    CONTROL "Procesor č. 15", IDC_CPU15, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 72, 119, 62, 10
+    CONTROL "Procesor č. 16", IDC_CPU16, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 28, 62, 10
+    CONTROL "Procesor č. 17", IDC_CPU17, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 41, 62, 10
+    CONTROL "Procesor č. 18", IDC_CPU18, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 54, 62, 10
+    CONTROL "Procesor č. 19", IDC_CPU19, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 67, 62, 10
+    CONTROL "Procesor č. 20", IDC_CPU20, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 80, 62, 10
+    CONTROL "Procesor č. 21", IDC_CPU21, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 93, 62, 10
+    CONTROL "Procesor č. 22", IDC_CPU22, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 106, 62, 10
+    CONTROL "Procesor č. 23", IDC_CPU23, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 136, 119, 62, 10
+    CONTROL "Procesor č. 24", IDC_CPU24, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 28, 62, 10
+    CONTROL "Procesor č. 25", IDC_CPU25, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 41, 62, 10
+    CONTROL "Procesor č. 26", IDC_CPU26, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 54, 62, 10
+    CONTROL "Procesor č. 27", IDC_CPU27, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 67, 62, 10
+    CONTROL "Procesor č. 28", IDC_CPU28, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 80, 62, 10
+    CONTROL "Procesor č. 29", IDC_CPU29, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 93, 62, 10
+    CONTROL "Procesor č. 30", IDC_CPU30, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 106, 62, 10
+    CONTROL "Procesor č. 31", IDC_CPU31, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 200, 119, 62, 10
 END
 
 IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 258, 199
@@ -333,199 +277,55 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Výber stĺpcov"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,147,178,50,14
-    PUSHBUTTON      "Zrušiť",IDCANCEL,201,178,50,14
-    LTEXT           "Vyberte stĺpce, ktoré sa majú zobraziť na karte procesov v Správcovi úloh.",
-                    IDC_STATIC,7,7,244,17
-    CONTROL         "&Názov obrazu",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
-                    WS_DISABLED | WS_TABSTOP,7,28,56,10
-    CONTROL         "I&dentifikátor procesu (PID)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,108,10
-    CONTROL         "Vy&užitie procesora",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,50,73,10
-    CONTROL         "Ča&s procesora",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,61,58,10
-    CONTROL         "&Využitie pamäte",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,63,10
-    CONTROL         "&Rozdiel využitia pamäte",IDC_MEMORYUSAGEDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,83,102,10
-    CONTROL         "M&aximálne využitie pamäte",IDC_PEAKMEMORYUSAGE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,94,102,10
-    CONTROL         "C&hyby stránkovania pamäte",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,102,10
-    CONTROL         "O&bjekty USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,116,62,10
-    CONTROL         "Vstup a výstup - čítanie",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,127,92,10
-    CONTROL         "Vstup a výstup - prečítané bajty",IDC_IOREADBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,112,10
-    CONTROL         "&Identifikácia relácie",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,149,73,10
-    CONTROL         "&Meno používateľa",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,71,10
-    CONTROL         "Rozdiel &chýb stránkovania pamäte",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,28,120,10
-    CONTROL         "V&eľkosť virtuálnej pamäte",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,39,97,10
-    CONTROL         "Stránkovaný &fond",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,50,73,10
-    CONTROL         "Nes&tránkovaný fond",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,61,77,10
-    CONTROL         "&Základná priorita",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,72,75,10
-    CONTROL         "P&očet popisovačov",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,83,79,10
-    CONTROL         "&Počet vlákien",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,94,59,10
-    CONTROL         "Objekty &GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,105,55,10
-    CONTROL         "Vstup a výstup - zápis",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,116,92,10
-    CONTROL         "Vstup a výstup - zapísané bajty",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,127,112,10
-    CONTROL         "Vstup a výstup - iné",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,130,138,77,10
-    CONTROL         "Vstup a výstup - iné bajty",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,130,149,97,10
+    DEFPUSHBUTTON "OK", IDOK, 147, 178, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 201, 178, 50, 14
+    LTEXT "Vyberte stĺpce, ktoré sa majú zobraziť na karte procesov v Správcovi úloh.", IDC_STATIC, 7, 7, 244, 17
+    CONTROL "&Názov obrazu", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
+    CONTROL "I&dentifikátor procesu (PID)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 108, 10
+    CONTROL "Vy&užitie procesora", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 73, 10
+    CONTROL "Ča&s procesora", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 58, 10
+    CONTROL "&Využitie pamäte", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
+    CONTROL "&Rozdiel využitia pamäte", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 102, 10
+    CONTROL "M&aximálne využitie pamäte", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 102, 10
+    CONTROL "C&hyby stránkovania pamäte", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 102, 10
+    CONTROL "O&bjekty USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
+    CONTROL "Vstup a výstup - čítanie", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 92, 10
+    CONTROL "Vstup a výstup - prečítané bajty", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 112, 10
+    CONTROL "&Identifikácia relácie", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 73, 10
+    CONTROL "&Meno používateľa", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 71, 10
+    CONTROL "Rozdiel &chýb stránkovania pamäte", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 28, 120, 10
+    CONTROL "V&eľkosť virtuálnej pamäte", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 39, 97, 10
+    CONTROL "Stránkovaný &fond", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 50, 73, 10
+    CONTROL "Nes&tránkovaný fond", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 61, 77, 10
+    CONTROL "&Základná priorita", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 72, 75, 10
+    CONTROL "P&očet popisovačov", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 83, 79, 10
+    CONTROL "&Počet vlákien", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 94, 59, 10
+    CONTROL "Objekty &GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 105, 55, 10
+    CONTROL "Vstup a výstup - zápis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 116, 92, 10
+    CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 112, 10
+    CONTROL "Vstup a výstup - iné", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 138, 77, 10
+    CONTROL "Vstup a výstup - iné bajty", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 149, 97, 10
 END
 
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-2 TEXTINCLUDE
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""resource.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 252
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_TASKMGR_DIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 3
-        RIGHTMARGIN, 260
-        TOPMARGIN, 3
-        BOTTOMMARGIN, 231
-    END
-
-    IDD_APPLICATION_PAGE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 240
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_PROCESS_PAGE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 240
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 203
-    END
-
-    IDD_PERFORMANCE_PAGE, DIALOG
-    BEGIN
-        LEFTMARGIN, 5
-        RIGHTMARGIN, 242
-        VERTGUIDE, 12
-        VERTGUIDE, 65
-        VERTGUIDE, 110
-        TOPMARGIN, 5
-        BOTTOMMARGIN, 205
-    END
-
-    IDD_AFFINITY_DIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 224
-        VERTGUIDE, 11
-        VERTGUIDE, 61
-        VERTGUIDE, 116
-        VERTGUIDE, 175
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 147
-        HORZGUIDE, 28
-        HORZGUIDE, 38
-        HORZGUIDE, 51
-        HORZGUIDE, 64
-        HORZGUIDE, 77
-        HORZGUIDE, 90
-        HORZGUIDE, 103
-        HORZGUIDE, 116
-        HORZGUIDE, 129
-    END
-
-    IDD_COLUMNS_DIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 188
-        VERTGUIDE, 107
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 192
-        HORZGUIDE, 28
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Správca úloh systému"
-    IDC_TASKMGR             "Správca úloh systému"
-    IDS_IDLE_PROCESS        "Procesy systémovej nečinnosti"
+    IDS_APP_TITLE "Správca úloh systému"
+    IDC_TASKMGR "Správca úloh systému"
+    IDS_IDLE_PROCESS "Procesy systémovej nečinnosti"
 END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW             "Spustí nový program."
-    ID_OPTIONS_ALWAYSONTOP  "Ak Správca úloh nie je minimalizovaný, zostáva v popredí všetkých ostatných úloh."
-    ID_OPTIONS_MINIMIZEONUSE
-                            "Správca úloh sa minimalizuje po prepnutí na inú úlohu"
+    ID_FILE_NEW "Spustí nový program."
+    ID_OPTIONS_ALWAYSONTOP "Ak Správca úloh nie je minimalizovaný, zostáva v popredí všetkých ostatných úloh."
+    ID_OPTIONS_MINIMIZEONUSE "Správca úloh sa minimalizuje po prepnutí na inú úlohu"
     ID_OPTIONS_HIDEWHENMINIMIZED "Skryje Správcu úloh pri minimalizovaní."
-    ID_VIEW_REFRESH         "Správca úloh sa aktualizuje ihneď bez ohľadu na nastavenie rýchlosti aktualizácie."
-    ID_VIEW_LARGE           "Zobrazí úlohy veľkými ikonami."
-    ID_VIEW_SMALL           "Zobrazí úlohy malými ikonami."
-    ID_VIEW_DETAILS         "Zobrazí informácie o každej úlohe."
+    ID_VIEW_REFRESH "Správca úloh sa aktualizuje ihneď bez ohľadu na nastavenie rýchlosti aktualizácie."
+    ID_VIEW_LARGE "Zobrazí úlohy veľkými ikonami."
+    ID_VIEW_SMALL "Zobrazí úlohy malými ikonami."
+    ID_VIEW_DETAILS "Zobrazí informácie o každej úlohe."
     ID_VIEW_UPDATESPEED_HIGH "Aktualizuje obrazovku dvakrát za sekundu."
     ID_VIEW_UPDATESPEED_NORMAL "Aktualizuje obrazovku každé dve sekundy."
     ID_VIEW_UPDATESPEED_LOW "Aktualizuje obrazovku každé štyri sekundy."
@@ -534,109 +334,98 @@ END
 STRINGTABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Obrazovka sa automaticky neaktualizuje."
-    ID_WINDOWS_TILEHORIZONTALLY
-                            "Usporiada okná na pracovnej ploche pod seba."
+    ID_WINDOWS_TILEHORIZONTALLY "Usporiada okná na pracovnej ploche pod seba."
     ID_WINDOWS_TILEVERTICALLY "Usporiada okná na pracovnej ploche vedľa seba."
-    ID_WINDOWS_MINIMIZE     "Minimalizuje okná."
-    ID_WINDOWS_MAXIMIZE     "Maximalizuje okná."
-    ID_WINDOWS_CASCADE      "Vybraté okná usporiada na obrazovke do diagonálnej kaskády."
+    ID_WINDOWS_MINIMIZE "Minimalizuje okná."
+    ID_WINDOWS_MAXIMIZE "Maximalizuje okná."
+    ID_WINDOWS_CASCADE "Vybraté okná usporiada na obrazovke do diagonálnej kaskády."
     ID_WINDOWS_BRINGTOFRONT "Prenesie okno do popredia bez aktivácie."
-    ID_HELP_TOPICS          "Zobrazí témy Pomocníka pre program Správca úloh."
-    ID_HELP_ABOUT           "Zobrazí informácie o programe, jeho verziu a autorské práva."
-    ID_FILE_EXIT            "Ukončí program Správca úloh."
-    ID_OPTIONS_SHOW16BITTASKS
-                            "Zobrazí 16-bitové úlohy pod procesom ntvdm.exe."
-    ID_VIEW_SELECTCOLUMNS   "Vyberte stĺpce, ktoré sa majú zobraziť na karte procesov v Správcovi úloh."
+    ID_HELP_TOPICS "Zobrazí témy Pomocníka pre program Správca úloh."
+    ID_HELP_ABOUT "Zobrazí informácie o programe, jeho verziu a autorské práva."
+    ID_FILE_EXIT "Ukončí program Správca úloh."
+    ID_OPTIONS_SHOW16BITTASKS "Zobrazí 16-bitové úlohy pod procesom ntvdm.exe."
+    ID_VIEW_SELECTCOLUMNS "Vyberte stĺpce, ktoré sa majú zobraziť na karte procesov v Správcovi úloh."
     ID_VIEW_SHOWKERNELTIMES "Zobrazí čas jadra na grafoch výkonu."
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Graf histórie zobrazuje celkové využitie procesora."
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Graf histórie zobrazuje celkové využitie procesora."
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Každý procesor má vlastný graf histórie."
-    ID_APPLICATION_PAGE_SWITCHTO
-                            "Prenesie úlohu do popredia a aktivuje jej okno."
+    ID_APPLICATION_PAGE_SWITCHTO "Prenesie úlohu do popredia a aktivuje jej okno."
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK              "Pokúsi sa ukončiť vybrané úlohy."
-    ID_GOTOPROCESS          "Prepne na proces vybranej úlohy."
-    ID_RESTORE              "Obnoví Správcu úloh zo skrytého stavu."
+    ID_ENDTASK "Pokúsi sa ukončiť vybrané úlohy."
+    ID_GOTOPROCESS "Prepne na proces vybranej úlohy."
+    ID_RESTORE "Obnoví Správcu úloh zo skrytého stavu."
     ID_PROCESS_PAGE_ENDPROCESS "Odstráni proces zo systému."
-    ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "Odstráni proces a jeho potomkov zo systému."
-    ID_PROCESS_PAGE_DEBUG   "Pripojí k procesu ladiaci nástroj."
-    ID_PROCESS_PAGE_SETAFFINITY
-                            "Určuje procesor, na ktorom sa proces môže spustiť."
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "Zaradí proces do triedy priorít REÁLNY ČAS."
+    ID_PROCESS_PAGE_ENDPROCESSTREE "Odstráni proces a jeho potomkov zo systému."
+    ID_PROCESS_PAGE_DEBUG "Pripojí k procesu ladiaci nástroj."
+    ID_PROCESS_PAGE_SETAFFINITY "Určuje procesor, na ktorom sa proces môže spustiť."
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Zaradí proces do triedy priorít REÁLNY ČAS."
     ID_PROCESS_PAGE_SETPRIORITY_HIGH "Zaradí proces do triedy priorít ZVÝŠENÁ."
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Zaradí proces do triedy priorít VYSOKÁ."
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "Zaradí proces do triedy priorít NORMÁLNA."
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Zaradí proces do triedy priorít ZNÍŽENÁ."
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Zaradí proces do triedy priorít VYSOKÁ."
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Zaradí proces do triedy priorít NORMÁLNA."
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Zaradí proces do triedy priorít ZNÍŽENÁ."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Zaradí proces do triedy priorít NÍZKA."
 END
 
-
 STRINGTABLE
 BEGIN
-    IDS_TAB_APPS                  "Aplikácie"
-    IDS_TAB_PROCESSES             "Procesy"
-    IDS_TAB_PERFORMANCE           "Výkon"
-    IDS_TAB_TASK                  "Úloha"
-    IDS_TAB_STATUS                "Stav"
-    IDS_TAB_IMAGENAME             "Názov obrazu"
-    IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Meno používateľa"
-    IDS_TAB_SESSIONID             "Identifikácia relácie"
-    IDS_TAB_CPU                   "Procesor"
-    IDS_TAB_CPUTIME               "Čas procesora"
-    IDS_TAB_MEMUSAGE              "Používanie pamäte"
-    IDS_TAB_PEAKMEMUSAGE          "Využitie maximálnej veľkosti pamäte"
-    IDS_TAB_MEMDELTA              "Rozdiel využitia pamäte"
-    IDS_TAB_PAGEFAULT             "Chyby stránkovania pamäte"
-    IDS_TAB_PFDELTA               "Rozdiel chýb stránkovania pamäte"
-    IDS_TAB_VMSIZE                "Veľkosť virtuálnej pamäte"
-    IDS_TAB_PAGEDPOOL             "Stránkovaný fond"
-    IDS_TAB_NPPOOL                "Nestránkovaný fond"
-    IDS_TAB_BASEPRI               "Základná priorita"
-    IDS_TAB_HANDLES               "Popisovače"
-    IDS_TAB_THREADS               "Vlákna"
-    IDS_TAB_USERPBJECTS           "Objekty USER"
-    IDS_TAB_GDIOBJECTS            "Objekty GDI"
-    IDS_TAB_IOREADS               "Vstup a výstup - čítanie"
-    IDS_TAB_IOWRITES              "Vstup a výstup - zápis"
-    IDS_TAB_IOOTHER               "Vstup a výstup - iné"
-    IDS_TAB_IOREADBYTES           "Vstup a výstup - prečítané bajty"
-    IDS_TAB_IOWRITESBYTES         "Vstup a výstup - zapísané bajty"
-    IDS_TAB_IOOTHERBYTES          "Vstup a výstup - iné bajty"
-    IDS_MENU_SELECTCOLUMNS        "&Vybrať stĺpce..."
-    IDS_MENU_16BITTASK            "&Zobraziť 16-bitové úlohy"
-    IDS_MENU_WINDOWS              "&Okna"
-    IDS_MENU_LARGEICONS           "&Veľké ikony"
-    IDS_MENU_SMALLICONS           "&Malé ikony"
-    IDS_MENU_DETAILS              "&Podrobnosti"
-    IDS_MENU_ONEGRAPHALLCPUS      "&Jeden graf pre všetky procesory"
-    IDS_MENU_ONEGRAPHPERCPU       "Jeden graf pre &každý procesor"
-    IDS_MENU_CPUHISTORY           "&História procesora"
-    IDS_MENU_SHOWKERNELTIMES      "&Zobraziť časy jadra"
-    IDS_CREATENEWTASK             "Vytvoriť novú úlohu"
-    IDS_CREATENEWTASK_DESC        "Zadajte názov programu, priečinka, dokumentu alebo internetového zdroja a systém ReactOS ho otvorí."
-    IDS_MSG_ACCESSPROCESSAFF      "Nie je možné sprístupniť afinitu procesu"
-    IDS_MSG_PROCESSONEPRO         "Proces musí mať afinitu aspoň k jednému procesoru."
-    IDS_MSG_INVALIDOPTION         "Neplatná možnosť"
-    IDS_MSG_UNABLEDEBUGPROCESS    "Ladiaci nástroj sa nepodarilo pripojiť."
-    IDS_MSG_WARNINGDEBUG          "UPOZORNENIE: Proces ladenia môže zapríčiniť stratu údajov.\nNaozaj chcete pripojiť ladiaci nástroj?"
-    IDS_MSG_TASKMGRWARNING        "Upozornenie Správcu úloh"
-    IDS_MSG_WARNINGTERMINATING    "UPOZORNENIE: Ukončenie procesu môže mať nežiadúce\ndôsledky vrátane nestability systému.\nStav alebo údaje o procese sa nebudú dať\npred ukončením uložiť.\nNaozaj chcete proces ukončiť?"
-    IDS_MSG_UNABLETERMINATEPRO    "Proces sa nedá ukončiť."
-    IDS_MSG_UNABLECHANGEPRIORITY  "Priorita sa nedá zmeniť."
+    IDS_TAB_APPS "Aplikácie"
+    IDS_TAB_PROCESSES "Procesy"
+    IDS_TAB_PERFORMANCE "Výkon"
+    IDS_TAB_TASK "Úloha"
+    IDS_TAB_STATUS "Stav"
+    IDS_TAB_IMAGENAME "Názov obrazu"
+    IDS_TAB_PID "PID"
+    IDS_TAB_USERNAME "Meno používateľa"
+    IDS_TAB_SESSIONID "Identifikácia relácie"
+    IDS_TAB_CPU "Procesor"
+    IDS_TAB_CPUTIME "Čas procesora"
+    IDS_TAB_MEMUSAGE "Používanie pamäte"
+    IDS_TAB_PEAKMEMUSAGE "Využitie maximálnej veľkosti pamäte"
+    IDS_TAB_MEMDELTA "Rozdiel využitia pamäte"
+    IDS_TAB_PAGEFAULT "Chyby stránkovania pamäte"
+    IDS_TAB_PFDELTA "Rozdiel chýb stránkovania pamäte"
+    IDS_TAB_VMSIZE "Veľkosť virtuálnej pamäte"
+    IDS_TAB_PAGEDPOOL "Stránkovaný fond"
+    IDS_TAB_NPPOOL "Nestránkovaný fond"
+    IDS_TAB_BASEPRI "Základná priorita"
+    IDS_TAB_HANDLES "Popisovače"
+    IDS_TAB_THREADS "Vlákna"
+    IDS_TAB_USERPBJECTS "Objekty USER"
+    IDS_TAB_GDIOBJECTS "Objekty GDI"
+    IDS_TAB_IOREADS "Vstup a výstup - čítanie"
+    IDS_TAB_IOWRITES "Vstup a výstup - zápis"
+    IDS_TAB_IOOTHER "Vstup a výstup - iné"
+    IDS_TAB_IOREADBYTES "Vstup a výstup - prečítané bajty"
+    IDS_TAB_IOWRITESBYTES "Vstup a výstup - zapísané bajty"
+    IDS_TAB_IOOTHERBYTES "Vstup a výstup - iné bajty"
+    IDS_MENU_SELECTCOLUMNS "&Vybrať stĺpce..."
+    IDS_MENU_16BITTASK "&Zobraziť 16-bitové úlohy"
+    IDS_MENU_WINDOWS "&Okna"
+    IDS_MENU_LARGEICONS "&Veľké ikony"
+    IDS_MENU_SMALLICONS "&Malé ikony"
+    IDS_MENU_DETAILS "&Podrobnosti"
+    IDS_MENU_ONEGRAPHALLCPUS "&Jeden graf pre všetky procesory"
+    IDS_MENU_ONEGRAPHPERCPU "Jeden graf pre &každý procesor"
+    IDS_MENU_CPUHISTORY "&História procesora"
+    IDS_MENU_SHOWKERNELTIMES "&Zobraziť časy jadra"
+    IDS_CREATENEWTASK "Vytvoriť novú úlohu"
+    IDS_CREATENEWTASK_DESC "Zadajte názov programu, priečinka, dokumentu alebo internetového zdroja a systém ReactOS ho otvorí."
+    IDS_MSG_ACCESSPROCESSAFF "Nie je možné sprístupniť afinitu procesu"
+    IDS_MSG_PROCESSONEPRO "Proces musí mať afinitu aspoň k jednému procesoru."
+    IDS_MSG_INVALIDOPTION "Neplatná možnosť"
+    IDS_MSG_UNABLEDEBUGPROCESS "Ladiaci nástroj sa nepodarilo pripojiť."
+    IDS_MSG_WARNINGDEBUG "UPOZORNENIE: Proces ladenia môže zapríčiniť stratu údajov.\nNaozaj chcete pripojiť ladiaci nástroj?"
+    IDS_MSG_TASKMGRWARNING "Upozornenie Správcu úloh"
+    IDS_MSG_WARNINGTERMINATING "UPOZORNENIE: Ukončenie procesu môže mať nežiadúce\ndôsledky vrátane nestability systému.\nStav alebo údaje o procese sa nebudú dať\npred ukončením uložiť.\nNaozaj chcete proces ukončiť?"
+    IDS_MSG_UNABLETERMINATEPRO "Proces sa nedá ukončiť."
+    IDS_MSG_UNABLECHANGEPRIORITY "Priorita sa nedá zmeniť."
     IDS_MSG_WARNINGCHANGEPRIORITY "UPOZORNENIE: Zmena triedy priority procesu môže mať\nnežiadúce dôsledky vrátane nestability systému.\nNaozaj chcete zmeniť triedu priority procesu?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Využitie procesora: %d%%"
-    IDS_STATUS_MEMUSAGE           "Využitá pamäť: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "Využitie procesora: %3d%%"
-    IDS_STATUS_PROCESSES          "Procesy: %d"
-    IDS_Not_Responding            "Neodpovedá"
-    IDS_Running                   "Spustené"
+    IDS_MSG_TRAYICONCPUUSAGE "Využitie procesora: %d%%"
+    IDS_STATUS_MEMUSAGE "Využitá pamäť: %dK / %dK"
+    IDS_STATUS_CPUUSAGE "Využitie procesora: %3d%%"
+    IDS_STATUS_PROCESSES "Procesy: %d"
+    IDS_Not_Responding "Neodpovedá"
+    IDS_Running "Spustené"
 END

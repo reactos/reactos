@@ -3441,6 +3441,12 @@ typedef struct _KEY_WRITE_TIME_INFORMATION {
   LARGE_INTEGER LastWriteTime;
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
 
+#if (NTDDI_VERSION < NTDDI_VISTA)
+typedef struct _KEY_USER_FLAGS_INFORMATION {
+    ULONG   UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+#endif
+
 typedef enum _REG_NOTIFY_CLASS {
   RegNtDeleteKey,
   RegNtPreDeleteKey = RegNtDeleteKey,
@@ -8333,7 +8339,7 @@ KeRestoreFloatingPointState(PVOID FloatingState)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
-extern DECLSPEC_CACHEALIGN volatile LARGE_INTEGER KeTickCount;
+extern volatile LARGE_INTEGER KeTickCount;
 
 #define PAUSE_PROCESSOR __yield();
 
@@ -11010,14 +11016,27 @@ RtlCheckBit(
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
 #define RTL_SOFT_VERIFYMSG(msg, exp) \
-  (VOID)((!(exp)) ? \
+  ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-#define ASSERT(exp) ((void)RTL_VERIFY(exp))
-#define ASSERTMSG(msg, exp) ((void)RTL_VERIFYMSG(msg, exp))
+/* The ASSERTs must be cast to void to avoid warnings about unused results.
+ * We also cannot invoke the VERIFY versions because the indirection messes
+ * with stringify. */
+#define ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE))
 
-#define RTL_SOFT_ASSERT(exp) ((void)RTL_SOFT_VERIFY(exp))
-#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)RTL_SOFT_VERIFYMSG(msg, exp))
+#define ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE))
 
 #if defined(_MSC_VER)
 # define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)

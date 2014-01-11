@@ -10,11 +10,19 @@ if(NOT DEFINED SEPARATE_DBG)
 endif()
 
 if(NOT DEFINED USE_PSEH3)
-    set(USE_PSEH3 0)
+    set(USE_PSEH3 1)
 endif()
 
 if(USE_PSEH3)
     add_definitions(-D_USE_PSEH3=1)
+endif()
+
+if(NOT DEFINED USE_DUMMY_PSEH)
+    set(USE_DUMMY_PSEH 0)
+endif()
+
+if(USE_DUMMY_PSEH)
+    add_definitions(-D_USE_DUMMY_PSEH=1)
 endif()
 
 # Compiler Core
@@ -53,14 +61,11 @@ else()
     add_compile_flags("-march=${OARCH}")
 endif()
 
-# Warnings
-add_compile_flags("-Werror -Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
-
-if(GCC_VERSION VERSION_LESS 4.7)
-    add_compile_flags("-Wno-error=uninitialized")
-elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=narrowing")
-endif()
+# Warnings, errors
+add_compile_flags("-Werror -Wall -Wpointer-arith")
+add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value -Wno-maybe-uninitialized")
+add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=narrowing")
+add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
@@ -74,7 +79,7 @@ if(OPTIMIZE STREQUAL "1")
 elseif(OPTIMIZE STREQUAL "2")
     add_compile_flags("-Os")
 elseif(OPTIMIZE STREQUAL "3")
-    add_compile_flags("-O1 -fno-inline-functions-called-once -fno-tree-sra")
+    add_compile_flags("-Og")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_flags("-O1")
 elseif(OPTIMIZE STREQUAL "5")
@@ -87,11 +92,12 @@ endif()
 
 # Link-time code generation
 if(LTCG)
-    add_compile_flags("-flto -Wno-error=clobbered")
+    add_compile_flags("-flto -ffat-lto-objects")
 endif()
 
 if(ARCH STREQUAL "i386")
     add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    # FIXME: this doesn't work. CMAKE_BUILD_TYPE is always "Debug"
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_flags("-momit-leaf-frame-pointer")
     endif()
@@ -237,7 +243,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
@@ -274,7 +280,7 @@ function(spec2def _dllname _spec_file)
     # generate exports def and stubs C file for the module
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__add_importlib)

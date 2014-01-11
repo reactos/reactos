@@ -9,8 +9,12 @@
 
 /* INCLUDES *********************************************************/
 
-//#include <htmlhelp.h>
 #include "precomp.h"
+
+#include <shellapi.h>
+
+#include "dialogs.h"
+#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -433,8 +437,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (hwnd == hMainWnd)
             {
                 MINMAXINFO *mm = (LPMINMAXINFO) lParam;
-                (*mm).ptMinTrackSize.x = 330;
-                (*mm).ptMinTrackSize.y = 430;
+                mm->ptMinTrackSize.x = 330;
+                mm->ptMinTrackSize.y = 430;
             }
             break;
 
@@ -792,6 +796,16 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             SetWindowText(hMainWnd, tempstr);
                             clearHistory();
                             isAFile = TRUE;
+                        }
+                        else
+                        {
+                            TCHAR programname[20];
+                            TCHAR loaderrortext[100];
+                            TCHAR temptext[500];
+                            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
+                            LoadString(hProgInstance, IDS_LOADERRORTEXT, loaderrortext, SIZEOF(loaderrortext));
+                            _stprintf(temptext, loaderrortext, ofn.lpstrFile);
+                            MessageBox(hwnd, temptext, programname, MB_OK | MB_ICONEXCLAMATION);
                         }
                     }
                     break;

@@ -1,3 +1,0 @@
-#ifdef LANGUAGE_EN_US
-    #include "lang/en-US.rc"
-#endif

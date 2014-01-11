@@ -46,17 +46,16 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags );
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot);
 BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
-BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_idx);
-BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, int* picon_idx);
+BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx);
+BOOL HCR_GetIconFromGUIDW(REFIID riid, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
 
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
 BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot);
-BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx);
+BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR sName, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len);
 
 BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes);
-
 INT_PTR CALLBACK AboutDlgProc(HWND,UINT,WPARAM,LPARAM);
 DWORD WINAPI ParseFieldA(LPCSTR src, DWORD nField, LPSTR dst, DWORD len);
 DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len);
@@ -95,8 +94,9 @@ LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST);
 
 #define KeyStateToDropEffect(kst)\
     ((((kst)&(MK_CONTROL|MK_SHIFT))==(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_LINK :\
-    (((kst)&(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_COPY :\
-    DROPEFFECT_MOVE))
+    (((kst)&(MK_CONTROL)) ? DROPEFFECT_COPY :\
+    (((kst)&(MK_SHIFT)) ? DROPEFFECT_MOVE :\
+    DROPEFFECT_NONE)))
 
 
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);

@@ -31,7 +31,7 @@ add_idl_headers(vbscript_idlheader vbscript_classes.idl vbsglobal.idl vbsregexp5
 add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 add_library(vbscript SHARED ${SOURCE} vbscript.rc)
 set_module_type(vbscript win32dll)
-target_link_libraries(vbscript wine)
+target_link_libraries(vbscript uuid wine)
 add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
 add_cd_file(TARGET vbscript DESTINATION reactos/system32 FOR all)

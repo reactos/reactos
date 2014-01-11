@@ -276,7 +276,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST)
            + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK) + (NodeSize * NodeCount);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -376,7 +376,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate a full resource descriptor\n");
@@ -416,7 +416,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     else
     {
         TRACE("Reading disk geometry failed\n");
-        MmHeapFree(PartialResourceList);
+        FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
         return NULL;
     }
     TRACE("Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
@@ -507,7 +507,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_FLOPPY_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -563,7 +563,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -635,7 +635,7 @@ DetectSystem(VOID)
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -1036,7 +1036,7 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
         /* Set 'Configuration Data' value */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
@@ -1099,7 +1099,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                sizeof(CM_SERIAL_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1203,7 +1203,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         if (Irq[i] != (ULONG) - 1)
             Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1342,7 +1342,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         /* Set 'Configuration Data' value */
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
                sizeof(CM_KEYBOARD_DEVICE_DATA);
-        PartialResourceList = MmHeapAlloc(Size);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1395,7 +1395,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
            2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
@@ -1576,7 +1576,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
     {
         TRACE("Detected PS2 port\n");
 
-        PartialResourceList = MmHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST));
+        PartialResourceList = FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST), TAG_HW_RESOURCE_LIST);
         memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
@@ -1612,7 +1612,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             /* Initialize resource descriptor */
             Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                    sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-            PartialResourceList = MmHeapAlloc(Size);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
             memset(PartialResourceList, 0, Size);
             PartialResourceList->Version = 1;
             PartialResourceList->Revision = 1;
@@ -1695,7 +1695,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
            sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    PartialResourceList = MmHeapAlloc(Size);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");

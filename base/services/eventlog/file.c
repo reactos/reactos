@@ -11,6 +11,9 @@
 
 #include "eventlog.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY LogFileListHead;
@@ -82,7 +85,7 @@ LogfInitializeNew(PLOGFILE LogFile)
 
 
 static NTSTATUS
-LogfInitializeExisting(PLOGFILE LogFile)
+LogfInitializeExisting(PLOGFILE LogFile, BOOL Backup)
 {
     DWORD dwRead;
     DWORD dwRecordsNumber = 0;
@@ -264,27 +267,30 @@ LogfInitializeExisting(PLOGFILE LogFile)
        But for now limit EventLog size to just under 5K. */
     LogFile->Header.MaxSize = 5000;
 
-    if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
-        INVALID_SET_FILE_POINTER)
+    if (!Backup)
     {
-        DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
+        if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
+            INVALID_SET_FILE_POINTER)
+        {
+            DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
 
-    if (!WriteFile(LogFile->hFile,
-                   &LogFile->Header,
-                   sizeof(EVENTLOGHEADER),
-                   &dwRead,
-                   NULL))
-    {
-        DPRINT1("WriteFile failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
+        if (!WriteFile(LogFile->hFile,
+                       &LogFile->Header,
+                       sizeof(EVENTLOGHEADER),
+                       &dwRead,
+                       NULL))
+        {
+            DPRINT1("WriteFile failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
 
-    if (!FlushFileBuffers(LogFile->hFile))
-    {
-        DPRINT1("FlushFileBuffers failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
+        if (!FlushFileBuffers(LogFile->hFile))
+        {
+            DPRINT1("FlushFileBuffers failed! %d\n", GetLastError());
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
     }
 
     return STATUS_SUCCESS;
@@ -380,7 +386,7 @@ LogfCreate(PLOGFILE *LogFile,
     if (bCreateNew)
         Status = LogfInitializeNew(pLogFile);
     else
-        Status = LogfInitializeExisting(pLogFile);
+        Status = LogfInitializeExisting(pLogFile, Backup);
 
     if (!NT_SUCCESS(Status))
         goto fail;

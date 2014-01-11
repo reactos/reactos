@@ -227,9 +227,13 @@ PnpRootCreateDevice(
     Status = IopOpenRegistryKeyEx(&EnumHandle, NULL, &EnumKeyName, KEY_READ);
     if (NT_SUCCESS(Status))
     {
-        InitializeObjectAttributes(&ObjectAttributes, &Device->DeviceID, OBJ_CASE_INSENSITIVE, EnumHandle, NULL);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &Device->DeviceID,
+                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                   EnumHandle,
+                                   NULL);
         Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-        ZwClose(EnumHandle);
+        ObCloseHandle(EnumHandle, KernelMode);
     }
 
     if (!NT_SUCCESS(Status))
@@ -298,16 +302,20 @@ tryagain:
     }
 
     /* Finish creating the instance path in the registry */
-    InitializeObjectAttributes(&ObjectAttributes, &Device->InstanceID, OBJ_CASE_INSENSITIVE, DeviceKeyHandle, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Device->InstanceID,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               DeviceKeyHandle,
+                               NULL);
     Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create instance path (0x%x)\n", Status);
         goto cleanup;
     }
 
     /* Just close the handle */
-    ZwClose(InstanceKeyHandle);
+    ObCloseHandle(InstanceKeyHandle, KernelMode);
 
     if (FullInstancePath)
     {
@@ -370,7 +378,7 @@ cleanup:
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
     if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
-        ZwClose(DeviceKeyHandle);
+        ObCloseHandle(DeviceKeyHandle, KernelMode);
     return Status;
 }
 

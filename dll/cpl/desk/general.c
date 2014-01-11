@@ -50,7 +50,7 @@ InitFontSizeList(HWND hWnd)
                         if ((int)dwValue == ci)
                         {
                             SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
-                            SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_COSTOM), Desc);
+                            SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_CUSTOM), Desc);
                         }
                     }
                 }

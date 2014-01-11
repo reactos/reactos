@@ -69,7 +69,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: msiserver.rgs */
 2 WINE_REGISTRY msiserver.rgs
 
-3 WINE_REGISTRY msi.rgs
+3 WINE_REGISTRY "msi.rgs"
 
 /* @makedep: instadvert.bmp */
 0x1001 BITMAP instadvert.bmp

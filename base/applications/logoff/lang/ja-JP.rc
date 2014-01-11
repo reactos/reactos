@@ -2,14 +2,10 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "セッションを終了します。\n\n\
+    IDS_USAGE "セッションを終了します。\n\n\
   /v\t\t実行中に詳細情報を表示します。\n\
   /?\t\tこの情報を表示します。\n\n"
-
-IDS_LOGOFF_REMOTE, "リモート マシンのセッションを終了しています。"
-IDS_LOGOFF_LOCAL,  "このマシンの現在のセッションを終了しています。"
-
-IDS_ILLEGAL_PARAM, "パラメータが無効です\n"
+    IDS_LOGOFF_REMOTE "リモート マシンのセッションを終了しています。"
+    IDS_LOGOFF_LOCAL "このマシンの現在のセッションを終了しています。"
+    IDS_ILLEGAL_PARAM "パラメータが無効です\n"
 END
-/* EOF */

@@ -57,7 +57,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
     PPROCESSINFO ppiCurrent, *pppi;
-    DECLARE_RETURN(NTSTATUS);
+    NTSTATUS Status;
 
     ASSERT(Process->Peb);
 
@@ -69,23 +69,31 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         LARGE_INTEGER Offset;
         PVOID UserBase = NULL;
         PRTL_USER_PROCESS_PARAMETERS pParams = Process->Peb->ProcessParameters;
-        NTSTATUS Status;
 
-        ASSERT(PsGetProcessWin32Process(Process) == NULL);
+        /* We might be called with an already allocated win32 process */
+        ppiCurrent = PsGetProcessWin32Process(Process);
+        if (ppiCurrent != NULL)
+        {
+            /* There is no more to do for us (this is a success code!) */
+            Status = STATUS_ALREADY_WIN32;
+            goto Leave;
+        }
 
+        /* Allocate a new win32 process */
         ppiCurrent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(PROCESSINFO),
                                            USERTAG_PROCESSINFO);
-
         if (ppiCurrent == NULL)
         {
-            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n", HandleToUlong(Process->UniqueProcessId));
-            RETURN( STATUS_NO_MEMORY);
+            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n",
+                   HandleToUlong(Process->UniqueProcessId));
+            Status = STATUS_NO_MEMORY;
+            goto Leave;
         }
 
         RtlZeroMemory(ppiCurrent, sizeof(PROCESSINFO));
 
-        PsSetProcessWin32Process(Process, ppiCurrent);
+        PsSetProcessWin32Process(Process, ppiCurrent, NULL);
 
 #if DBG
         DbgInitDebugChannels();
@@ -111,7 +119,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         if (!NT_SUCCESS(Status))
         {
             TRACE_CH(UserProcess,"Failed to map the global heap! 0x%x\n", Status);
-            RETURN(Status);
+            goto Leave;
         }
         ppiCurrent->HeapMappings.Next = NULL;
         ppiCurrent->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
@@ -237,15 +245,15 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 #endif
 
         /* Free the PROCESSINFO */
-        PsSetProcessWin32Process(Process, NULL);
+        PsSetProcessWin32Process(Process, NULL, ppiCurrent);
         ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
     }
 
-    RETURN( STATUS_SUCCESS);
+    Status = STATUS_SUCCESS;
 
-CLEANUP:
+Leave:
     UserLeave();
-    END_CLEANUP;
+    return Status;
 }
 
 NTSTATUS NTAPI
@@ -280,7 +288,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     /* Initialize the THREADINFO */
 
-    PsSetThreadWin32Thread(Thread, ptiCurrent);
+    PsSetThreadWin32Thread(Thread, ptiCurrent, NULL);
     IntReferenceThreadInfo(ptiCurrent);
     ptiCurrent->pEThread = Thread;
     ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
@@ -430,7 +438,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
        ptiCurrent->TIF_flags |= TIF_ALLOWFOREGROUNDACTIVATE;
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
-    ERR_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
+    TRACE_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
     return STATUS_SUCCESS;
 
 error:
@@ -448,7 +456,7 @@ UserDeleteW32Thread(PTHREADINFO pti)
 {
     if (!pti->RefCount)
     {
-       ERR_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
+       TRACE_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
        if (pti->hEventQueueClient != NULL)
           ZwClose(pti->hEventQueueClient);
        pti->hEventQueueClient = NULL;
@@ -463,7 +471,7 @@ UserDeleteW32Thread(PTHREADINFO pti)
 
        IntSetThreadDesktop(NULL, TRUE);
 
-       PsSetThreadWin32Thread(pti->pEThread, NULL);
+       PsSetThreadWin32Thread(pti->pEThread, NULL, pti);
        ExFreePoolWithTag(pti, USERTAG_THREADINFO);
     }
 }
@@ -549,7 +557,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
             ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)
         {
-           ERR_CH(UserThread,"DestroyProcessClasses\n");
+           TRACE_CH(UserThread,"DestroyProcessClasses\n");
           /* no process windows should exist at this point, or the function will assert! */
            DestroyProcessClasses(ppiCurrent);
            ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;

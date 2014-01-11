@@ -41,6 +41,11 @@ Licence = Necunoscută
 Description = Visual Basic 5 Runtime. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
 Size = 969,59 ko
 
+[Section.041f]
+Name = Basarî Basic 5 Yürütücüsü
+Licence = Bilinmiyor
+Description = Basarî Basic 5 Yürütücüsü. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
 [Section.0422]
 Licence = Невідома
 Description = Бібліотеки Visual Basic 5. включає: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.

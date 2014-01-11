@@ -19,11 +19,10 @@
  */
 
 #include <windef.h>
-//#include "winbase.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 WINE_REGISTRY objsel.rgs
+1 WINE_REGISTRY "objsel.rgs"
 
 #define WINE_FILENAME_STR "objsel.dll"
 

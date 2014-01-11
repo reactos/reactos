@@ -1,37 +1,37 @@
 /* 
- * FILE:             base/applications/network/ipconfig/lang/ro-RO.rc
- *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG:       2011-08-21  initial translation
- *                   2011-10-26  diacritics correction, other minor changes
+ * FILE:       base/applications/network/ipconfig/lang/ro-RO.rc
+ *             ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG: 2011-08-21  initial translation
+ *             2011-10-26  diacritics correction, other minor changes
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Difuzare"
-  IDS_P2P     "Egal la egal"
-  IDS_MIXED   "Mixtă"
-  IDS_HYBRID  "Hibridă"
-  IDS_UNKNOWN "necunoscută"
+    IDS_BCAST "Difuzare"
+    IDS_P2P "Egal la egal"
+    IDS_MIXED "Mixtă"
+    IDS_HYBRID "Hibridă"
+    IDS_UNKNOWN "necunoscută"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "alt tip de adaptor"
-  IDS_ETH     "adaptor Ethernet"
-  IDS_TOKEN   "adaptor Token Ring"
-  IDS_FDDI    "adaptor FDDI"
-  IDS_PPP     "adaptor PPP"
-  IDS_LOOP    "adaptor Loopback"
-  IDS_SLIP    "adaptor SLIP"
+    IDS_OTHER "alt tip de adaptor"
+    IDS_ETH "adaptor Ethernet"
+    IDS_TOKEN "adaptor Token Ring"
+    IDS_FDDI "adaptor FDDI"
+    IDS_PPP "adaptor PPP"
+    IDS_LOOP "adaptor Loopback"
+    IDS_SLIP "adaptor SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nUTILIZARE:\n \
         ipconfig [/? | /all | /renew [adaptor] | /release [adaptor] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

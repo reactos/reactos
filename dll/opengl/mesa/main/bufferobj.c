@@ -30,18 +30,7 @@
  * \author Brian Paul, Ian Romanick
  */
 
-
-#include "glheader.h"
-#include "enums.h"
-#include "hash.h"
-#include "imports.h"
-#include "image.h"
-#include "context.h"
-#include "bufferobj.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "texobj.h"
-
+#include <precomp.h>
 
 /* Debug flags */
 /*#define VBO_DEBUG*/

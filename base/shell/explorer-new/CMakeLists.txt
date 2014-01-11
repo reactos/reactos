@@ -28,6 +28,7 @@ add_importlibs(explorer_new
     oleaut32
     shell32
     shlwapi
+    shdocvw
     version
     uxtheme
     msvcrt

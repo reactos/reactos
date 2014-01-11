@@ -933,7 +933,7 @@ InstallReactOS(HINSTANCE hInstance)
             HANDLE hToken;
             BOOL ret;
 
-            ret = LogonUserW(L"Administrator", L"", L"", LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &hToken);
+            ret = LogonUserW(L"Administrator", L"", L"", LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &hToken);
             if (!ret)
             {
                 FatalError("LogonUserW() failed!");

@@ -1,3 +1,6 @@
+#ifndef _I8042PRT_PCH_
+#define _I8042PRT_PCH_
+
 #include <ntifs.h>
 #include <kbdmou.h>
 #include <ntdd8042.h>
@@ -5,7 +8,6 @@
 #include <bugcodes.h>
 #include <poclass.h>
 #include <kdfuncs.h>
-#include <debug.h>
 
 /*-----------------------------------------------------
  * Structures
@@ -438,3 +440,5 @@ NTSTATUS
 ReadRegistryEntries(
 	IN PUNICODE_STRING RegistryPath,
 	OUT PI8042_SETTINGS Settings);
+
+#endif /* _I8042PRT_PCH_ */

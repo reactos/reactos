@@ -687,7 +687,7 @@ int main( int argc, char **argv )
 #define ok_char(expression, result) ok_hex(expression, result)
 
 #define ok_err(error) \
-    ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got %d\n", (int)GetLastError())
+    ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
 
 #define ok_str(x, y) \
     ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)

@@ -29,36 +29,9 @@
  * Display lists management functions.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "api_arrayelt.h"
-#include "api_exec.h"
-#include "api_loopback.h"
-#include "api_validate.h"
+#include <precomp.h>
+
 #include "config.h"
-#include "mfeatures.h"
-#include "bufferobj.h"
-#include "arrayobj.h"
-#include "context.h"
-#include "dlist.h"
-#include "enums.h"
-#include "eval.h"
-#include "framebuffer.h"
-#include "hash.h"
-#include "image.h"
-#include "light.h"
-#include "macros.h"
-#include "pack.h"
-#include "teximage.h"
-#include "texstorage.h"
-#include "mtypes.h"
-#include "varray.h"
-
-#include "math/m_matrix.h"
-
-#include "main/dispatch.h"
-
-
 
 /**
  * Other parts of Mesa (such as the VBO module) can plug into the display

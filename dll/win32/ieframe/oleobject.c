@@ -23,17 +23,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <string.h>
-
 #include "ieframe.h"
-
-//#include "htiframe.h"
-#include <idispids.h>
-#include <mshtmdid.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 /* shlwapi.dll */
 HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent);

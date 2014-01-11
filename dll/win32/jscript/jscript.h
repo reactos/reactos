@@ -16,12 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <wine/config.h>
+#include <wine/port.h>
+
+#include <assert.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <stdio.h>
 
 #define COBJMACROS
 
@@ -32,10 +37,13 @@
 #include <dispex.h>
 #include <activscp.h>
 
-#include "resource.h"
-
 #include <wine/unicode.h>
 #include <wine/list.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
+
+#include "resource.h"
 
 typedef struct _jsval_t jsval_t;
 typedef struct _jsstr_t jsstr_t;
@@ -545,3 +553,6 @@ static inline void unlock_module(void)
 {
     InterlockedDecrement(&module_ref);
 }
+
+#include "engine.h"
+#include "regexp.h"

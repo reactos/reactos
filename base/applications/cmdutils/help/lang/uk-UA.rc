@@ -3,24 +3,22 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/shell/cmd/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Command-line interface
- * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY, "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-
-IDS_USAGE, "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-
-IDS_HELP1, "Список всiх доступних команд (+ опис)\n\n\
+    IDS_HELP1 "Список всiх доступних команд (+ опис)\n\n\
   help команда\n\
   команда /?     Для докладної iнформацiї про конкретну команду\n\n\
 ?        Список всiх доступних команд без опису.\n\
@@ -68,7 +66,7 @@ RMDIR    Перемiщення теки.\n\
 SCREEN   Перемiщення курсора i виведення тексту.\n\
 SET      Вiдображення, встановлення, або видалення змiнних оточення ReactOS.\n\
 SHIFT    Зрушення позицiї замiнних параметрiв у командних файлах.\n"
-IDS_HELP2, "START    Вiдкриває окреме вiкно для запуску вказаних команд або програм.\n\
+    IDS_HELP2 "START    Вiдкриває окреме вiкно для запуску вказаних команд або програм.\n\
          Виконує команду.\n\
 TIME     Вiдображення або встановлення системного часу.\n\
 TIMER    Дозволяє використання десяти секундомiрiв.\n\
@@ -78,5 +76,4 @@ VER      Вiдображення версiї ReactOS.\n\
 VERIFY   Включення або вiдключення режиму перевiрки правильностi запису\n\
          файлiв на диск.\n\
 VOL      Вiдображення мiтки тому диска i серiйного номера.\n"
-
 END

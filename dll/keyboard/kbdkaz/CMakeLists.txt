@@ -5,7 +5,7 @@ spec2def(kbdkaz.dll kbdkaz.spec)
 
 add_library(kbdkaz SHARED kbdkaz.c kbdkaz.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdkaz.def)
 
-set_entrypoint(kbdkaz 0)
+set_module_type(kbdkaz kbdlayout)
 
 add_dependencies(kbdkaz psdk)
 

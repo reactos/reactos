@@ -16,35 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <config.h>
-
-//#include <stdarg.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#ifdef HAVE_LIBXML2
-#include <libxml/parser.h>
-#endif
-
-#include <windef.h>
-#include <winbase.h>
 #include <wingdi.h>
-#include <ole2.h>
-#include <msxml6.h>
 #include <mshtml.h>
 #include <mshtmhst.h>
 #include <perhist.h>
-//#include "docobj.h"
-
-#include <wine/debug.h>
-
-#include "msxml_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 

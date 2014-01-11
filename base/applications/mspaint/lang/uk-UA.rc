@@ -1,6 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     GPL - See COPYING in the top level directory
+ * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Paint
  * TRANSLATORS: Artem Reznikov, Sakara Yevhen, igor Paliychuk
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Редагування"
     BEGIN
         MENUITEM "Скасувати\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "Копіювати до файлу...", IDM_EDITCOPYTO
         MENUITEM "Вставити з файлу...", IDM_EDITPASTEFROM
     END
-
     POPUP "В&игляд"
     BEGIN
         MENUITEM "Панель елементів\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "На весь екран\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Зображення"
     BEGIN
         MENUITEM "Відобразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "Видалити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Непрозоре тло", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Кольори"
     BEGIN
         MENUITEM "Змінити палітру...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Довідка"
     BEGIN
         MENUITEM "Виклик довідки", IDM_HELPHELPTOPICS
@@ -125,9 +120,9 @@ BEGIN
     AUTORADIOBUTTON "Відобразити зліва направо", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Відобразити зверху вниз", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Повернути на кут", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 125, 24, 48, 14
 END
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint для ReactOS"
-    IDS_INFOTEXT, "Paint для ReactOS доступний згідно з GNU Lesser General Public License (LGPL) версії 3 (дивіться www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Зберегти зміни до %s?"
-    IDS_DEFAULTFILENAME, "Без_імені.bmp"
-    IDS_MINIATURETITLE, "Мініатюра"
-    IDS_TOOLTIP1, "Виділення довільної області"
-    IDS_TOOLTIP2, "Виділення"
-    IDS_TOOLTIP3, "Гумка"
-    IDS_TOOLTIP4, "Заливка"
-    IDS_TOOLTIP5, "Вибір кольорів"
-    IDS_TOOLTIP6, "Масштаб"
-    IDS_TOOLTIP7, "Олівець"
-    IDS_TOOLTIP8, "Пензель"
-    IDS_TOOLTIP9, "Розпилювач"
-    IDS_TOOLTIP10, "Текст"
-    IDS_TOOLTIP11, "Лінія"
-    IDS_TOOLTIP12, "Крива Без'є"
-    IDS_TOOLTIP13, "Прямокутник"
-    IDS_TOOLTIP14, "Багатокутник"
-    IDS_TOOLTIP15, "Еліпс"
-    IDS_TOOLTIP16, "Прямокутник з округленими кутами"
-    IDS_OPENFILTER, "Точкові рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Усі файли (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24-розрядний рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d байт"
-    IDS_PRINTRES, "%d x %d пікс. на метр"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint для ReactOS"
+    IDS_INFOTEXT "Paint для ReactOS доступний згідно з GNU Lesser General Public License (LGPL) версії 3 (дивіться www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Зберегти зміни до %s?"
+    IDS_DEFAULTFILENAME "Без_імені.bmp"
+    IDS_MINIATURETITLE "Мініатюра"
+    IDS_TOOLTIP1 "Виділення довільної області"
+    IDS_TOOLTIP2 "Виділення"
+    IDS_TOOLTIP3 "Гумка"
+    IDS_TOOLTIP4 "Заливка"
+    IDS_TOOLTIP5 "Вибір кольорів"
+    IDS_TOOLTIP6 "Масштаб"
+    IDS_TOOLTIP7 "Олівець"
+    IDS_TOOLTIP8 "Пензель"
+    IDS_TOOLTIP9 "Розпилювач"
+    IDS_TOOLTIP10 "Текст"
+    IDS_TOOLTIP11 "Лінія"
+    IDS_TOOLTIP12 "Крива Без'є"
+    IDS_TOOLTIP13 "Прямокутник"
+    IDS_TOOLTIP14 "Багатокутник"
+    IDS_TOOLTIP15 "Еліпс"
+    IDS_TOOLTIP16 "Прямокутник з округленими кутами"
+    IDS_OPENFILTER "Точкові рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Усі файли (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24-розрядний рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d байт"
+    IDS_PRINTRES "%d x %d пікс. на метр"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

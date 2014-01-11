@@ -22,10 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/compiler.h"
-#include "main/cpuinfo.h"
-
+#include <precomp.h>
 
 /**
  * This function should be called before the various "cpu_has_foo" macros

@@ -16,27 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <ole2.h>
-#include <mshtmcid.h>
-#include <shlguid.h>
-
-#include <wine/debug.h>
-
 #include "mshtml_private.h"
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define NSCMD_ALIGN        "cmd_align"
 #define NSCMD_BEGINLINE    "cmd_beginLine"

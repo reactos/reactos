@@ -1,63 +1,63 @@
 /*
- * PROJECT:     ReactOS ReactOS Applications Manager
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/rapps/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for ReactOS ReactOS Applications Manager
- * TRANSLATOR:  Sakara Yevhen, Igor Paliychuk
+ * PROJECT:    ReactOS ReactOS Applications Manager
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/rapps/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for ReactOS ReactOS Applications Manager
+ * TRANSLATOR: Sakara Yevhen, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
-	BEGIN
-		MENUITEM "&Налаштування", ID_SETTINGS
-		MENUITEM SEPARATOR
-		MENUITEM "В&ихід",        ID_EXIT
-	END
-	POPUP "&Програми"
-	BEGIN
-		MENUITEM "&Встановити", ID_INSTALL
-		MENUITEM "Вид&алити",   ID_UNINSTALL
-		MENUITEM "&Змінити",    ID_MODIFY
-		MENUITEM SEPARATOR
-		MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
-		MENUITEM SEPARATOR
-		MENUITEM "&Оновити",    ID_REFRESH
-		MENUITEM SEPARATOR
-		MENUITEM "Update Da&tabase",    ID_RESETDB
-	END
-	POPUP "&Довідка"
-	BEGIN
-		MENUITEM "Дов&ідка",         ID_HELP, GRAYED
-		MENUITEM "Про про&граму...", ID_ABOUT
-	END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Налаштування", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "В&ихід", ID_EXIT
+    END
+    POPUP "&Програми"
+    BEGIN
+        MENUITEM "&Встановити", ID_INSTALL
+        MENUITEM "Вид&алити", ID_UNINSTALL
+        MENUITEM "&Змінити", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Оновити", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase", ID_RESETDB
+    END
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "Дов&ідка", ID_HELP, GRAYED
+        MENUITEM "Про про&граму...", ID_ABOUT
+    END
 END
 
 IDR_LINKMENU MENU
 BEGIN
-	POPUP "popup"
-	BEGIN
-		MENUITEM "&Відкрити посилання в браузері",      ID_OPEN_LINK
-		MENUITEM "&Копіювати посилання в буфер обміну", ID_COPY_LINK
-	END
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Відкрити посилання в браузері", ID_OPEN_LINK
+        MENUITEM "&Копіювати посилання в буфер обміну", ID_COPY_LINK
+    END
 END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-	POPUP "popup"
-	BEGIN
-		MENUITEM "&Встановити", ID_INSTALL
-		MENUITEM "В&идалити",   ID_UNINSTALL
-		MENUITEM "&Змінити",    ID_MODIFY
-		MENUITEM SEPARATOR
-		MENUITEM "Вид&алити з реєстру", ID_REGREMOVE
-		MENUITEM SEPARATOR
-		MENUITEM "&Оновити",    ID_REFRESH
-		MENUITEM SEPARATOR
-		MENUITEM "Update Da&tabase",    ID_RESETDB
-	END
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Встановити", ID_INSTALL
+        MENUITEM "В&идалити", ID_UNINSTALL
+        MENUITEM "&Змінити", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Вид&алити з реєстру", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Оновити", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase", ID_RESETDB
+    END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 144
@@ -65,20 +65,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Налаштування"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Загальні", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Зберігати положення вікна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-	AUTOCHECKBOX "&Вести звіт встановлення/видалення програм", IDC_LOG_ENABLED, 15, 46, 219, 12
-
-	GROUPBOX "Завантаження", -1, 4, 65, 240, 51
-	LTEXT "Тека для завантажень:", -1, 16, 75, 100, 9
-	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Обрати", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Видаляти інсталятори програм після встановлення", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-
-	PUSHBUTTON "Стандартно", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Скасувати", IDCANCEL, 181, 124, 60, 14
+    GROUPBOX "Загальні", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Зберігати положення вікна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Вести звіт встановлення/видалення програм", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Завантаження", -1, 4, 65, 240, 51
+    LTEXT "Тека для завантажень:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "&Обрати", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Видаляти інсталятори програм після встановлення", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    PUSHBUTTON "Стандартно", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -86,13 +84,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення програми"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
-
-	AUTORADIOBUTTON "&Встановити з диску", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Завантажити та встановити", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-
-	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Скасувати", IDCANCEL, 150, 78, 60, 14
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Встановити з диску", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Завантажити та встановити", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 76
@@ -110,96 +106,96 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Про програму..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Менеджер додатків ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Закрити", IDOK, 133, 46, 50, 14
-	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Менеджер додатків ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Закрити", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
 STRINGTABLE
 BEGIN
-	IDS_TOOLTIP_INSTALL "Встановити"
-	IDS_TOOLTIP_UNINSTALL "Видалити"
-	IDS_TOOLTIP_MODIFY "Змінити"
-	IDS_TOOLTIP_SETTINGS "Налаштування"
-	IDS_TOOLTIP_REFRESH "Оновити"
-	IDS_TOOLTIP_EXIT "Вихід"
+    IDS_TOOLTIP_INSTALL "Встановити"
+    IDS_TOOLTIP_UNINSTALL "Видалити"
+    IDS_TOOLTIP_MODIFY "Змінити"
+    IDS_TOOLTIP_SETTINGS "Налаштування"
+    IDS_TOOLTIP_REFRESH "Оновити"
+    IDS_TOOLTIP_EXIT "Вихід"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_APP_NAME "Ім’я"
-	IDS_APP_INST_VERSION "Версія"
-	IDS_APP_DESCRIPTION "Опис"
+    IDS_APP_NAME "Ім’я"
+    IDS_APP_INST_VERSION "Версія"
+    IDS_APP_DESCRIPTION "Опис"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_INFO_VERSION "\nВерсія: "
-	IDS_INFO_DESCRIPTION "\nОпис: "
-	IDS_INFO_PUBLISHER "\nВидавець: "
-	IDS_INFO_HELPLINK "\nПосилання підтримки: "
-	IDS_INFO_HELPPHONE "\nТелефон підтримки: "
-	IDS_INFO_README "\nІнформація: "
-	IDS_INFO_REGOWNER "\nЗареєстрований власник: "
-	IDS_INFO_PRODUCTID "\nID продукту: "
-	IDS_INFO_CONTACT "\nКонтактна інформація: "
-	IDS_INFO_UPDATEINFO "\nОновлення інформації: "
-	IDS_INFO_INFOABOUT "\nПро інформація: "
-	IDS_INFO_COMMENTS "\nКоментарі: "
-	IDS_INFO_INSTLOCATION "\nВстановлення мовних локацій: "
-	IDS_INFO_INSTALLSRC "\nВстановити вихідний код: "
-	IDS_INFO_UNINSTALLSTR "\nВидалити рядок: "
-	IDS_INFO_MODIFYPATH "\nЗмінити шлях: "
-	IDS_INFO_INSTALLDATE "\nВстановити дату: "
+    IDS_INFO_VERSION "\nВерсія: "
+    IDS_INFO_DESCRIPTION "\nОпис: "
+    IDS_INFO_PUBLISHER "\nВидавець: "
+    IDS_INFO_HELPLINK "\nПосилання підтримки: "
+    IDS_INFO_HELPPHONE "\nТелефон підтримки: "
+    IDS_INFO_README "\nІнформація: "
+    IDS_INFO_REGOWNER "\nЗареєстрований власник: "
+    IDS_INFO_PRODUCTID "\nID продукту: "
+    IDS_INFO_CONTACT "\nКонтактна інформація: "
+    IDS_INFO_UPDATEINFO "\nОновлення інформації: "
+    IDS_INFO_INFOABOUT "\nПро інформація: "
+    IDS_INFO_COMMENTS "\nКоментарі: "
+    IDS_INFO_INSTLOCATION "\nВстановлення мовних локацій: "
+    IDS_INFO_INSTALLSRC "\nВстановити вихідний код: "
+    IDS_INFO_UNINSTALLSTR "\nВидалити рядок: "
+    IDS_INFO_MODIFYPATH "\nЗмінити шлях: "
+    IDS_INFO_INSTALLDATE "\nВстановити дату: "
 END
 
 STRINGTABLE
 BEGIN
-	IDS_AINFO_VERSION "\nВерсія: "
-	IDS_AINFO_DESCRIPTION "\nОпис: "
-	IDS_AINFO_SIZE "\nРозмір: "
-	IDS_AINFO_URLSITE "\nДомашня сторінка: "
-	IDS_AINFO_LICENCE "\nЛіцензія: "
+    IDS_AINFO_VERSION "\nВерсія: "
+    IDS_AINFO_DESCRIPTION "\nОпис: "
+    IDS_AINFO_SIZE "\nРозмір: "
+    IDS_AINFO_URLSITE "\nДомашня сторінка: "
+    IDS_AINFO_LICENCE "\nЛіцензія: "
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CAT_AUDIO "Аудіо"
-	IDS_CAT_DEVEL "Розробка"
-	IDS_CAT_DRIVERS "Драйвери"
-	IDS_CAT_EDU "Навчання"
-	IDS_CAT_ENGINEER "Техніка"
-	IDS_CAT_FINANCE "Фінанси "
-	IDS_CAT_GAMES "Ігри та розваги"
-	IDS_CAT_GRAPHICS "Графіка"
-	IDS_CAT_INTERNET "Інтернет і мережа"
-	IDS_CAT_LIBS "Бібліотеки"
-	IDS_CAT_OFFICE "Офіс"
-	IDS_CAT_OTHER "Інше"
-	IDS_CAT_SCIENCE "Наука"
-	IDS_CAT_TOOLS "Інструменти"
-	IDS_CAT_VIDEO "Відео"
+    IDS_CAT_AUDIO "Аудіо"
+    IDS_CAT_DEVEL "Розробка"
+    IDS_CAT_DRIVERS "Драйвери"
+    IDS_CAT_EDU "Навчання"
+    IDS_CAT_ENGINEER "Техніка"
+    IDS_CAT_FINANCE "Фінанси "
+    IDS_CAT_GAMES "Ігри та розваги"
+    IDS_CAT_GRAPHICS "Графіка"
+    IDS_CAT_INTERNET "Інтернет і мережа"
+    IDS_CAT_LIBS "Бібліотеки"
+    IDS_CAT_OFFICE "Офіс"
+    IDS_CAT_OTHER "Інше"
+    IDS_CAT_SCIENCE "Наука"
+    IDS_CAT_TOOLS "Інструменти"
+    IDS_CAT_VIDEO "Відео"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE "Менеджер додатків ReactOS"
-	IDS_SEARCH_TEXT "Пошук..."
-	IDS_INSTALL "Встановити"
-	IDS_UNINSTALL "Видалити"
-	IDS_MODIFY "Змінити"
-	IDS_APPS_COUNT "Kількість додатків: %d"
-	IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
-	IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
-	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "Встановлені"
-	IDS_AVAILABLEFORINST "Доступні для встановлення"
-	IDS_UPDATES "Оновлення"
-	IDS_APPLICATIONS "Додатки"
-	IDS_CHOOSE_FOLDER_TEXT "Оберіть теку, яка буде використовуватися для завантаження програм:"
-	IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
-	IDS_USER_NOT_ADMIN "Ви повинні бути адміністратором для запуску ""Менеджера програм ReactOS""!"
-	IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
-	IDS_INFORMATION "Інформація"
-	IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
+    IDS_APPTITLE "Менеджер додатків ReactOS"
+    IDS_SEARCH_TEXT "Пошук..."
+    IDS_INSTALL "Встановити"
+    IDS_UNINSTALL "Видалити"
+    IDS_MODIFY "Змінити"
+    IDS_APPS_COUNT "Kількість додатків: %d"
+    IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
+    IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Встановлені"
+    IDS_AVAILABLEFORINST "Доступні для встановлення"
+    IDS_UPDATES "Оновлення"
+    IDS_APPLICATIONS "Додатки"
+    IDS_CHOOSE_FOLDER_TEXT "Оберіть теку, яка буде використовуватися для завантаження програм:"
+    IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
+    IDS_USER_NOT_ADMIN "Ви повинні бути адміністратором для запуску ""Менеджера програм ReactOS""!"
+    IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
+    IDS_INFORMATION "Інформація"
+    IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
 END

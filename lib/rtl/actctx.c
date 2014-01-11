@@ -14,7 +14,6 @@
 
 /* Based on Wine 1.1.26 */
 
-/* INCLUDES *****************************************************************/
 #include <rtl.h>
 
 #define NDEBUG
@@ -1176,6 +1175,7 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
                                                          struct assembly* assembly)
 {
     xmlstr_t            attr_name, attr_value;
+    UNICODE_STRING      attr_nameU, attr_valueU;
     BOOL                end = FALSE, error;
     struct entity*      entity;
 
@@ -1194,7 +1194,9 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1658,36 +1660,31 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     else
     {
         /* TODO: this doesn't handle arbitrary encodings */
-        ANSI_STRING xmlA;
-        UNICODE_STRING xmlW;
+        WCHAR *new_buff;
+        ULONG sizeU;
 
-        ASSERT(size < MAXUSHORT);
-        xmlA.Buffer = (PCHAR)buffer;
-        xmlA.Length = xmlA.MaximumLength = (USHORT)size;
-
-        _SEH2_TRY
-        {
-            status = RtlAnsiStringToUnicodeString(&xmlW, &xmlA, TRUE);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            DPRINT1("Exception accessing buffer\n");
-            _SEH2_YIELD(return STATUS_SXS_CANT_GEN_ACTCTX);
-        }
-        _SEH2_END;
-
+        status = RtlMultiByteToUnicodeSize(&sizeU, buffer, size);
         if (!NT_SUCCESS(status))
         {
-            DPRINT1("RtlAnsiStringToUnicodeString failed with %lx\n", status);
+            DPRINT1("RtlMultiByteToUnicodeSize failed with %lx\n", status);
             return STATUS_SXS_CANT_GEN_ACTCTX;
         }
-        ASSERT(xmlW.Buffer != NULL);
 
-        xmlbuf.ptr = xmlW.Buffer;
-        xmlbuf.end = xmlbuf.ptr + xmlW.Length / sizeof(WCHAR);
-        status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
+        new_buff = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeU);
+        if (!new_buff)
+            return STATUS_NO_MEMORY;
 
-        RtlFreeUnicodeString(&xmlW);
+        status = RtlMultiByteToUnicodeN(new_buff, sizeU, &sizeU, buffer, size);
+        if (!NT_SUCCESS(status))
+        {
+            DPRINT1("RtlMultiByteToUnicodeN failed with %lx\n", status);
+            return STATUS_SXS_CANT_GEN_ACTCTX;
+        }
+
+        xmlbuf.ptr = new_buff;
+        xmlbuf.end = xmlbuf.ptr + sizeU / sizeof(WCHAR);
+        status = parse_manifest_buffer(acl, assembly, ai, &xmlbuf);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, new_buff);
     }
     return status;
 }

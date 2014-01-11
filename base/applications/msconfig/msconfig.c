@@ -6,7 +6,15 @@
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
  */
+
 #include "precomp.h"
+
+#include "toolspage.h"
+#include "srvpage.h"
+#include "startuppage.h"
+#include "freeldrpage.h"
+#include "systempage.h"
+#include "generalpage.h"
 
 HINSTANCE hInst = 0;
 

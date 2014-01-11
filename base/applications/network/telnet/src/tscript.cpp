@@ -25,6 +25,8 @@
 
 #include "precomp.h"
 
+#include "tscript.h"
+
 // FIX ME!!  This code not yet functional.
 
 #define TERMINATOR '~'

@@ -1,10 +1,3 @@
-#define WIN32_NO_STATUS
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include <tchar.h>
 #include <cardlib.h>
 
 #include "resource.h"

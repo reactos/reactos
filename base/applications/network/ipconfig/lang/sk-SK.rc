@@ -1,33 +1,33 @@
-/* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.:  07-05-2008
+/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.: 07-05-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Vysielací"
-  IDS_P2P     "Rovný s rovným"
-  IDS_MIXED   "Zmiešaný"
-  IDS_HYBRID  "Hybridný"
-  IDS_UNKNOWN "Neznámy"
+    IDS_BCAST "Vysielací"
+    IDS_P2P "Rovný s rovným"
+    IDS_MIXED "Zmiešaný"
+    IDS_HYBRID "Hybridný"
+    IDS_UNKNOWN "Neznámy"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Iný adaptér"
-  IDS_ETH     "Adaptér siete Ethernet"
-  IDS_TOKEN   "Adaptér siete Token Ring"
-  IDS_FDDI    "Adaptér FDDI"
-  IDS_PPP     "Adaptér PPP"
-  IDS_LOOP    "Adaptér pre spätnú slučku"
-  IDS_SLIP    "Adaptér SLIP"
+    IDS_OTHER "Iný adaptér"
+    IDS_ETH "Adaptér siete Ethernet"
+    IDS_TOKEN "Adaptér siete Token Ring"
+    IDS_FDDI "Adaptér FDDI"
+    IDS_PPP "Adaptér PPP"
+    IDS_LOOP "Adaptér pre spätnú slučku"
+    IDS_SLIP "Adaptér SLIP"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE     
+    IDS_USAGE
     "\nPOUŽITIE:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

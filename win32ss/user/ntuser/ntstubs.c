@@ -20,44 +20,6 @@ NtUserAssociateInputContext(
     return 0;
 }
 
-
-BOOL
-APIENTRY
-NtUserAttachThreadInput(
-    IN DWORD idAttach,
-    IN DWORD idAttachTo,
-    IN BOOL fAttach)
-{
-  NTSTATUS Status;
-  PTHREADINFO pti, ptiTo;
-  BOOL Ret = FALSE;
-
-  UserEnterExclusive();
-  ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
-
-  pti = IntTID2PTI((HANDLE)idAttach);
-  ptiTo = IntTID2PTI((HANDLE)idAttachTo);
-
-  if ( !pti || !ptiTo )
-  {
-     ERR("AttachThreadInput pti or ptiTo NULL.\n");
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     goto Exit;
-  }
-
-  Status = UserAttachThreadInput( pti, ptiTo, fAttach);
-  if (!NT_SUCCESS(Status))
-  {
-     EngSetLastError(RtlNtStatusToDosError(Status));
-  }
-  else Ret = TRUE;
-
-Exit:
-  ERR("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
-  UserLeave();
-  return Ret;
-}
-
 //
 // Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
 //
@@ -560,9 +522,14 @@ NtUserConsoleControl(
     {
         case GuiConsoleWndClassAtom:
         {
+            if (ConsoleCtrlInfoLength != sizeof(ATOM))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             _SEH2_TRY
             {
-                ASSERT(ConsoleCtrlInfoLength == sizeof(ATOM));
                 ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
                 gaGuiConsoleWndClass = *(ATOM*)ConsoleCtrlInfo;
             }
@@ -577,23 +544,29 @@ NtUserConsoleControl(
 
         case ConsoleMakePalettePublic:
         {
+            HPALETTE hPalette;
+
+            if (ConsoleCtrlInfoLength != sizeof(HPALETTE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             _SEH2_TRY
             {
-                ASSERT(ConsoleCtrlInfoLength == sizeof(HPALETTE));
                 ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
-                /*
-                 * Make the palette handle public - Use the extended
-                 * function introduced by Timo in revision 60725.
-                 */
-                GreSetObjectOwnerEx(*(HPALETTE*)ConsoleCtrlInfo,
-                                    GDI_OBJ_HMGR_PUBLIC,
-                                    GDIOBJFLAG_IGNOREPID);
+                hPalette = *(HPALETTE*)ConsoleCtrlInfo;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            /* Make the palette handle public */
+            GreSetObjectOwnerEx(hPalette,
+                                GDI_OBJ_HMGR_PUBLIC,
+                                GDIOBJFLAG_IGNOREPID);
 
             break;
         }
@@ -1234,22 +1207,6 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
 {
     STUB;
     return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HCURSOR
-NTAPI
-NtUserGetCursorFrameInfo(
-    HCURSOR hCursor,
-    DWORD istep,
-    PDWORD rate_jiffies,
-    INT *num_steps)
-{
-    STUB
-
-    return 0;
 }
 
 /*

@@ -1,0 +1,34 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Skeda"
+    BEGIN
+        MENUITEM "&Hape...", IDM_OPEN_FILE
+        MENUITEM "&Mbylle", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Dil", IDM_EXIT
+    END
+    POPUP "&Ndihmë"
+    BEGIN
+        MENUITEM "&Rreth...", IDM_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ALL_TYPES_FILTER "Të gjith suportimet (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_TOOLTIP_PLAY "Fillo"
+    IDS_TOOLTIP_STOP "Ndalo"
+    IDS_TOOLTIP_EJECT "Nxjerr"
+    IDS_TOOLTIP_BACKWARD "Kthe Mbrapa"
+    IDS_TOOLTIP_SEEKBACK "Kërko mbrapa"
+    IDS_TOOLTIP_SEEKFORW "Kërko përpara"
+    IDS_TOOLTIP_FORWARD "Kalo para"
+    IDS_APPTITLE "Programi muzikor i ReactOS"
+    IDS_PLAY "Fillo"
+END

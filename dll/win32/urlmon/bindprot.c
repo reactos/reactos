@@ -17,9 +17,6 @@
  */
 
 #include "urlmon_main.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef void (*task_proc_t)(BindProtocol*,task_header_t*);
 

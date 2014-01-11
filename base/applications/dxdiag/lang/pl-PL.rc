@@ -1,28 +1,28 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Apr,2008)
- *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Apr,2008)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "Narzędzie diagnostyki ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Pomoc", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Następna", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Zapisz wszystkie informacje...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Wyjście", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 190
+IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -49,7 +49,7 @@ BEGIN
     LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
-    LTEXT "", IDC_STATIC_SWAP, 155, 160, 210, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
 END
 
@@ -65,14 +65,13 @@ BEGIN
     RTEXT "Pamięć:", -1, 20, 65, 70, 10
     RTEXT "Bieżąca rozdzielczość:", -1, 20, 75, 70, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
-    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 130, 10
-
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
     GROUPBOX "Sterownik", -1, 240, 10, 190, 100
     RTEXT "Główny sterownik:", -1, 245, 30, 55, 10
     RTEXT "Wersja:", -1, 245, 40, 55, 10
@@ -81,14 +80,13 @@ BEGIN
     RTEXT "Mini-VDD:", -1, 245, 70, 55, 10
     RTEXT " vvdddVDD:", -1, 245, 80, 55, 10
     RTEXT "Wersja DDI:", -1, 245, 90, 55, 10
-    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 305, 30, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 305, 40, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_DATE, 305, 50, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 305, 60, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 305, 70, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_VDD, 305, 80, 130, 10
-    LTEXT "", IDC_STATIC_ADAPTER_DDI, 305, 90, 130, 10
-
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
     GROUPBOX "ReactX", -1, 10, 115, 450, 60
     RTEXT "DirectDraw:", -1, 15, 130, 110, 12
     RTEXT "Direct3D:", -1, 15, 145, 110, 12
@@ -101,11 +99,9 @@ BEGIN
     PUSHBUTTON "Włącz", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testuj DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Testuj Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
-
     GROUPBOX "Uwagi", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
-
 
 IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
@@ -142,7 +138,7 @@ BEGIN
     RTEXT "Przyspieszenie sprzętowe\nPoziom:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testuj DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Uwagi", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
@@ -151,7 +147,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-
 IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -159,9 +154,10 @@ BEGIN
     GROUPBOX "Urządzenia DirectInput", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Urządzenia wejścia", -1, 10, 100, 452, 60
-    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Informacje", -1, 10, 170, 452, 50
-    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
@@ -180,55 +176,55 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_MAIN_DIALOG "Narzędzie diagnostyki ReactX"
-	IDS_SYSTEM_DIALOG "System"
-	IDS_DISPLAY_DIALOG "Grafika"
-	IDS_SOUND_DIALOG "Dźwięk"
-	IDS_MUSIC_DIALOG "Muzyka"
-	IDS_INPUT_DIALOG "Peryferia"
-	IDS_NETWORK_DIALOG "Sieć"
-	IDS_HELP_DIALOG "Pomoc"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB użytych, %I64u MB dostępnych"
-	IDS_FORMAT_UNIPROC "%s (%u CPU)"
-	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
-	IDS_VERSION_UNKNOWN "Wersja nieznana"
-	IDS_DEVICE_STATUS_ATTACHED "Połączony"
-	IDS_DEVICE_STATUS_MISSING "Rozłączony"
-	IDS_DEVICE_STATUS_UNKNOWN "Nieznany"
-	IDS_DEVICE_NAME "Nazwa urządzenia"
-	IDS_DEVICE_STATUS "Stan"
-	IDS_DEVICE_CONTROLLER "ID Kontrolera"
-	IDS_DEVICE_MANUFACTURER "ID Producenta"
-	IDS_DEVICE_PRODUCT "ID Produktu"
-	IDS_DEVICE_FORCEFEEDBACK "Sterowniki Force-Feedback"
-	IDS_NOT_APPLICABLE "Nie stosowane"
-	IDS_OPTION_YES "Tak"
-	IDS_DIRECTPLAY_COL_NAME1 "Nazwa"
-	IDS_DIRECTPLAY_COL_NAME2 "Rejestr"
-	IDS_DIRECTPLAY_COL_NAME3 "Plik"
-	IDS_DIRECTPLAY_COL_NAME4 "Wersja"
-	IDS_DIRECTPLAY8_MODEMSP "Dostawca usług modemowych DirectPlay8"
-	IDS_DIRECTPLAY8_SERIALSP "Dostawca usług portu szeregowego DirectPlay8"
-	IDS_DIRECTPLAY8_IPXSP "Dostawca usług IPX DirectPlay8"
-	IDS_DIRECTPLAY8_TCPSP "Dostawca usług TCP/IP DirectPlay8"
-	IDS_DIRECTPLAY_TCPCONN "Połączenie internetowe TCP/IP dla DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "Połączenie IPX dla DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Połączenie modemowe dla DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Połączenie szeregowe dla DirectPlay"
-	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "Błąd"
-	IDS_DDTEST_ERROR "Test nieudany!"
-	IDS_DDTEST_DESCRIPTION "Czy chcesz rozpocząć test interfejsu DirectDraw?"
-	IDS_DDPRIMARY_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania na powierzchni podstawowej. Narysowane zostaną czarne i białe prostokąty. Kontynuować?"
-	IDS_DDPRIMARY_RESULT "Czy było widać czarne i białe prostokąty?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania przy użyciu bufora pozaekranowego. Narysowany zostanie poruszający się biały kwadrat. Kontynuować?"
-	IDS_DDOFFSCREEN_RESULT "Czy było widać poruszający się biały kwadrat?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania w trybie pełnoekranowym. Narysowany zostanie poruszający się biały kwadrat. Kontynuować?"
-	IDS_DDFULLSCREEN_RESULT "Czy było widać poruszający się biały kwadrat, w trybie pełnoekranowym?"
-	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
-	IDS_OPTION_NO "Nie"
-	IDS_D3DTEST_DESCRIPTION "Uruchomiony zostanie test interfejsu Direct3D. Kontynuować?"
-	IDS_D3DTEST_D3Dx "Test obejmie przyspieszany sprzętowo interfejs Direct3D dla %u."
+    IDS_MAIN_DIALOG "Narzędzie diagnostyki ReactX"
+    IDS_SYSTEM_DIALOG "System"
+    IDS_DISPLAY_DIALOG "Grafika"
+    IDS_SOUND_DIALOG "Dźwięk"
+    IDS_MUSIC_DIALOG "Muzyka"
+    IDS_INPUT_DIALOG "Peryferia"
+    IDS_NETWORK_DIALOG "Sieć"
+    IDS_HELP_DIALOG "Pomoc"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB użytych, %I64u MB dostępnych"
+    IDS_FORMAT_UNIPROC "%s (%u CPU)"
+    IDS_FORMAT_MPPROC "%s (%u CPUs)"
+    IDS_VERSION_UNKNOWN "Wersja nieznana"
+    IDS_DEVICE_STATUS_ATTACHED "Połączony"
+    IDS_DEVICE_STATUS_MISSING "Rozłączony"
+    IDS_DEVICE_STATUS_UNKNOWN "Nieznany"
+    IDS_DEVICE_NAME "Nazwa urządzenia"
+    IDS_DEVICE_STATUS "Stan"
+    IDS_DEVICE_CONTROLLER "ID Kontrolera"
+    IDS_DEVICE_MANUFACTURER "ID Producenta"
+    IDS_DEVICE_PRODUCT "ID Produktu"
+    IDS_DEVICE_FORCEFEEDBACK "Sterowniki Force-Feedback"
+    IDS_NOT_APPLICABLE "Nie stosowane"
+    IDS_OPTION_YES "Tak"
+    IDS_DIRECTPLAY_COL_NAME1 "Nazwa"
+    IDS_DIRECTPLAY_COL_NAME2 "Rejestr"
+    IDS_DIRECTPLAY_COL_NAME3 "Plik"
+    IDS_DIRECTPLAY_COL_NAME4 "Wersja"
+    IDS_DIRECTPLAY8_MODEMSP "Dostawca usług modemowych DirectPlay8"
+    IDS_DIRECTPLAY8_SERIALSP "Dostawca usług portu szeregowego DirectPlay8"
+    IDS_DIRECTPLAY8_IPXSP "Dostawca usług IPX DirectPlay8"
+    IDS_DIRECTPLAY8_TCPSP "Dostawca usług TCP/IP DirectPlay8"
+    IDS_DIRECTPLAY_TCPCONN "Połączenie internetowe TCP/IP dla DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "Połączenie IPX dla DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Połączenie modemowe dla DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Połączenie szeregowe dla DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Błąd"
+    IDS_DDTEST_ERROR "Test nieudany!"
+    IDS_DDTEST_DESCRIPTION "Czy chcesz rozpocząć test interfejsu DirectDraw?"
+    IDS_DDPRIMARY_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania na powierzchni podstawowej. Narysowane zostaną czarne i białe prostokąty. Kontynuować?"
+    IDS_DDPRIMARY_RESULT "Czy było widać czarne i białe prostokąty?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania przy użyciu bufora pozaekranowego. Narysowany zostanie poruszający się biały kwadrat. Kontynuować?"
+    IDS_DDOFFSCREEN_RESULT "Czy było widać poruszający się biały kwadrat?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania w trybie pełnoekranowym. Narysowany zostanie poruszający się biały kwadrat. Kontynuować?"
+    IDS_DDFULLSCREEN_RESULT "Czy było widać poruszający się biały kwadrat, w trybie pełnoekranowym?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "Nie"
+    IDS_D3DTEST_DESCRIPTION "Uruchomiony zostanie test interfejsu Direct3D. Kontynuować?"
+    IDS_D3DTEST_D3Dx "Test obejmie przyspieszany sprzętowo interfejs Direct3D dla %u."
 END

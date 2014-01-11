@@ -812,10 +812,22 @@ PsGetCurrentThreadWin32Thread(VOID)
  */
 PVOID
 NTAPI
-PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(VOID)
+PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(
+    _Out_ HANDLE* OutProcessId)
 {
+    PETHREAD CurrentThread;
+
+    /* Get the current thread */
+    CurrentThread = PsGetCurrentThread();
+
+    /* Return the process id */
+    *OutProcessId = CurrentThread->Cid.UniqueProcess;
+
+    /* Enter critical region */
     KeEnterCriticalRegion();
-    return PsGetCurrentThread()->Tcb.Win32Thread;
+
+    /* Return the win32 thread */
+    return CurrentThread->Tcb.Win32Thread;
 }
 
 /*
@@ -892,12 +904,27 @@ PsSetThreadHardErrorsAreDisabled(IN PETHREAD Thread,
 /*
  * @implemented
  */
-VOID
+PVOID
 NTAPI
-PsSetThreadWin32Thread(IN PETHREAD Thread,
-                       IN PVOID Win32Thread)
+PsSetThreadWin32Thread(
+    _Inout_ PETHREAD Thread,
+    _In_ PVOID Win32Thread,
+    _In_ PVOID OldWin32Thread)
 {
-    Thread->Tcb.Win32Thread = Win32Thread;
+    /* Are we setting the win32 process? */
+    if (Win32Thread != NULL)
+    {
+        /* Just exchange it */
+        return InterlockedExchangePointer(&Thread->Tcb.Win32Thread,
+                                          Win32Thread);
+    }
+    else
+    {
+        /* We are resetting, only exchange when the old win32 thread matches */
+        return InterlockedCompareExchangePointer(&Thread->Tcb.Win32Thread,
+                                                 Win32Thread,
+                                                 OldWin32Thread);
+    }
 }
 
 NTSTATUS

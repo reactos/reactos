@@ -1,26 +1,6 @@
-/*
- * Regedit resources
- *
- * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 /* Превод на Български/ Bulgarian translation */
 /* http://www.reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: \svn\base\applications\regedit\lang */
+/* LOCATION: base/applications/regedit/lang */
 /* НЕДОВЪРШЕН/ INCOMPLETE */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
@@ -29,24 +9,23 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
-/*
- * Menu
- */
+/* Menus */
 
 IDC_REGEDIT MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "Из&ход",                       ID_REGISTRY_EXIT
+        MENUITEM "Из&ход", ID_REGISTRY_EXIT
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&За...",                  ID_HELP_ABOUT
+        MENUITEM "&За...", ID_HELP_ABOUT
     END
 END
 
@@ -54,476 +33,455 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Внос...",    ID_REGISTRY_IMPORTREGISTRYFILE
-
-        MENUITEM "&Износ...",    ID_REGISTRY_EXPORTREGISTRYFILE
-
+        MENUITEM "&Внос...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Износ...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Зареждане на рой...",         ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Изоставяне на рой...",        ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Зареждане на рой...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Свързване с мрежов регистър...",
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-        MENUITEM "&Разделяне от мрежов регистър...",
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+        MENUITEM "&Свързване с мрежов регистър...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Разделяне от мрежов регистър...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "От&печатване\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "От&печатване\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход",                       ID_REGISTRY_EXIT
+        MENUITEM "Из&ход", ID_REGISTRY_EXIT
     END
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "&Промяна",                     ID_EDIT_MODIFY
+        MENUITEM "&Промяна", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Нов"
         BEGIN
-            MENUITEM "&Ключ",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Ключ", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Низова стойност",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Двоична стойност",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Стойност на ддума (dword)",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Многонизова стойност",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "&Разширяема низова стойност",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Низова стойност", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Двоична стойност", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Стойност на ддума (dword)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Многонизова стойност", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Разширяема низова стойност", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Права...",		ID_EDIT_PERMISSIONS
+        MENUITEM "&Права...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "Из&триване\tDel",                ID_EDIT_DELETE
-        MENUITEM "Пре&именуване",                     ID_EDIT_RENAME
+        MENUITEM "Из&триване\tDel", ID_EDIT_DELETE
+        MENUITEM "Пре&именуване", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Запомняне на стойността на ключа",              ID_EDIT_COPYKEYNAME
+        MENUITEM "&Запомняне на стойността на ключа", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Търсене\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "Търсене на следва&що\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&Търсене\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "Търсене на следва&що\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Изглед"
     BEGIN
-        MENUITEM "&Лента на състоянието",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Лента на състоянието", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "Раз&делител",                      ID_VIEW_SPLIT
+        MENUITEM "Раз&делител", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване\tF5",                ID_VIEW_REFRESH
+        MENUITEM "О&пресняване\tF5", ID_VIEW_REFRESH
     END
     POPUP "&Любимки"
     BEGIN
-        MENUITEM "&Добавяне към любимките",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "Пре&махване на любимките",           ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "&Добавяне към любимките", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "Пре&махване на любимките", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&Съдържание на помощта\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM "&Съдържание на помощта\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&За регистърния обработчик",      ID_HELP_ABOUT
+        MENUITEM "&За регистърния обработчик", ID_HELP_ABOUT
     END
 END
 
 IDR_POPUP_MENUS MENU
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "&Промяна",                     ID_EDIT_MODIFY
-	MENUITEM "Промяна на двоични данни",          ID_EDIT_MODIFY_BIN
-	MENUITEM SEPARATOR
-	MENUITEM "Из&триване\tDel",                ID_EDIT_DELETE
-	MENUITEM "Пре&именуване",                     ID_EDIT_RENAME
-  END
-  POPUP ""
-  BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "&Промяна", ID_EDIT_MODIFY
+    MENUITEM "Промяна на двоични данни", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+    MENUITEM "Из&триване\tDel", ID_EDIT_DELETE
+    MENUITEM "Пре&именуване", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
         POPUP "&Нов"
         BEGIN
-            MENUITEM "&Ключ",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Ключ", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Низова стойност",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Двоична стойност",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Стойност на двойна дума",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Многонизова стойност",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Разширима многонизова стойност",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Низова стойност", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Двоична стойност", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Стойност на двойна дума", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Многонизова стойност", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Разширима многонизова стойност", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-  END
-  POPUP ""
-  BEGIN
-        MENUITEM "Разгръщане/Свиване",                 ID_TREE_EXPANDBRANCH
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Разгръщане/Свиване", ID_TREE_EXPANDBRANCH
         POPUP "&Нов"
         BEGIN
-            MENUITEM "&Ключ",                        ID_EDIT_NEW_KEY
+            MENUITEM "&Ключ", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Низова стойност",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Двоична стойност",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&Стойност на двойна дума",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Многонизова стойност",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Разширима многонизова стойност",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Низова стойност", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Двоична стойност", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Стойност на двойна дума", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Многонизова стойност", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Разширима многонизова стойност", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Търсене",                           ID_EDIT_FIND
+        MENUITEM "&Търсене", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Изтриване",                         ID_TREE_DELETE
-        MENUITEM "&Преименуване",                         ID_TREE_RENAME
+        MENUITEM "&Изтриване", ID_TREE_DELETE
+        MENUITEM "&Преименуване", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Износ",                         ID_TREE_EXPORT
-        MENUITEM "&Права...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Износ", ID_TREE_EXPORT
+        MENUITEM "&Права...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Запомняне стойността на ключа",                  ID_EDIT_COPYKEYNAME
-  END
-  POPUP ""
-  BEGIN
+        MENUITEM "&Запомняне стойността на ключа", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "От&рязване", ID_HEXEDIT_CUT
         MENUITEM "За&помняне", ID_HEXEDIT_COPY
         MENUITEM "&Поставяне", ID_HEXEDIT_PASTE
         MENUITEM "Из&триване", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Избор на вси&чки", ID_HEXEDIT_SELECT_ALL
-  END
+    END
 END
 
+/* Dialogs */
 
-/*
- * Dialog
- */
-IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Зареждане на рой"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Клавиш:", IDC_STATIC, 4, 4, 28, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 41, 2, 145, 13
-    DEFPUSHBUTTON   "Добре", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Отказ", IDCANCEL, 89, 17, 50, 14
-}
-
-IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Промяна на низа"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Име:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Стойност:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Добре",IDOK,142,64,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,196,64,50,14
+    LTEXT "Име:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Стойност:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 196, 64, 50, 14
 END
 
-IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Промяна на множествен низ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Име:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Стойност:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "Добре",IDOK,142,154,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,196,154,50,14
+    LTEXT "&Име:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Стойност:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 196, 154, 50, 14
 END
 
-IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Промяна на двоична стойност"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Име:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Стойност:",IDC_STATIC,6,35,161,8
-    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "Добре",IDOK,142,154,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,196,154,50,14
+    LTEXT "&Име:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Стойност:", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "Добре", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 196, 154, 50, 14
 END
 
-
-IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Промяна на двойна дума"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Име:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "&Стойност:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "Основа",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "&Шестнадесетична",IDC_FORMAT_HEX,141,46,95,10,WS_GROUP
-    AUTORADIOBUTTON "&Десетична",IDC_FORMAT_DEC,141,59,95,10
-    DEFPUSHBUTTON   "Добре",IDOK,142,82,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,196,82,50,14
+    LTEXT "&Име:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "&Стойност:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "Основа", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "&Шестнадесетична", IDC_FORMAT_HEX, 141, 46, 95, 10, WS_GROUP
+    AUTORADIOBUTTON "&Десетична", IDC_FORMAT_DEC, 141, 59, 95, 10
+    DEFPUSHBUTTON "Добре", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 196, 82, 50, 14
 END
 
-
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Списък на ресурсите"
 FONT 8, "MS Shell Dlg"
-{
-    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "Добре", IDOK, 27, 100, 50, 14
     PUSHBUTTON "Показване...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
-}
+END
 
-
-IDD_EDIT_RESOURCE DIALOGEX  6, 18, 381, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 381, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ресурси"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
-    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 361, 31
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 361, 31
     LTEXT "Прекъсване:", IDC_STATIC, 10, 48, 200, 8
-    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 361, 31
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 361, 31
     LTEXT "Памет:", IDC_STATIC, 10, 91, 32, 8
-    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 361, 31
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 361, 31
     LTEXT "Извод:", IDC_STATIC, 10, 134, 38, 8
-    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 361, 31
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 361, 31
     LTEXT "Обособени данни за устройството:", IDC_STATIC, 10, 177, 200, 8
-    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 361, 31
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 361, 31
     GROUPBOX "Употреба", IDC_STATIC, 10, 219, 179, 39
     LTEXT "Неустановенa", IDC_UNDETERMINED, 18, 230, 50, 8, WS_DISABLED
     LTEXT "Споделена", IDC_SHARED, 18, 240, 50, 8, WS_DISABLED
     LTEXT "устройство, изключителна", IDC_DEVICE_EXCLUSIVE, 77, 230, 108, 8, WS_DISABLED
     LTEXT "водач, изключителна", IDC_DRIVER_EXCLUSIVE, 77, 240, 108, 8, WS_DISABLED
     RTEXT "Вид интерфейс:", IDC_STATIC, 190, 220, 71, 8
-    LTEXT "", IDC_INTERFACETYPE, 275, 220, 86, 8
+    LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "Номер на шина:", IDC_STATIC, 190, 230, 71, 8
-    LTEXT "", IDC_BUSNUMBER, 275, 230, 86, 8
+    LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Издание:", IDC_STATIC, 190, 240, 71, 8
-    LTEXT "", IDC_VERSION, 275, 240, 86, 8
+    LTEXT "", IDC_VERSION, 205, 240, 66, 8
     RTEXT "Разглеждане:", IDC_STATIC, 190, 250, 71, 8
-    LTEXT "", IDC_REVISION, 275, 250, 86, 8
-    DEFPUSHBUTTON "Добре",IDOK, 142, 263, 40, 14
+    LTEXT "", IDC_REVISION, 205, 250, 66, 8
+    DEFPUSHBUTTON "Добре", IDOK, 142, 263, 40, 14
     PUSHBUTTON "&Данни...", IDC_SHOW_RESOURCE_DATA, 198, 263, 40, 14, WS_DISABLED
-}
+END
 
-
-/*
- * String Table
- */
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "Име"
-    IDS_LIST_COLUMN_TYPE    "Вид"
-    IDS_LIST_COLUMN_DATA    "Данни"
+    IDS_LIST_COLUMN_NAME "Име"
+    IDS_LIST_COLUMN_TYPE "Вид"
+    IDS_LIST_COLUMN_DATA "Данни"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Регистърен обработчик"
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+    IDS_APP_TITLE "Регистърен обработчик"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU        "Съдържа команди за работа с целия регистър"
-    ID_EDIT_MENU            "Съдържа команди за промяна на стойности или ключове"
-    ID_VIEW_MENU            "Съдържа команди за нагаждане на прозореца"
-    ID_FAVOURITES_MENU      "Съдържа команди за достъп до често използвани ключове"
-    ID_HELP_MENU            "Съдържа команди за показване на помощ и сведения за регистърен обработчик"
-    ID_EDIT_NEW_MENU        "Съдържа команди за създаване на нови ключове или стойности"
+    ID_REGISTRY_MENU "Съдържа команди за работа с целия регистър"
+    ID_EDIT_MENU "Съдържа команди за промяна на стойности или ключове"
+    ID_VIEW_MENU "Съдържа команди за нагаждане на прозореца"
+    ID_FAVOURITES_MENU "Съдържа команди за достъп до често използвани ключове"
+    ID_HELP_MENU "Съдържа команди за показване на помощ и сведения за регистърен обработчик"
+    ID_EDIT_NEW_MENU "Съдържа команди за създаване на нови ключове или стойности"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY          "Променя стойността"
-    ID_EDIT_NEW_KEY         "Добавя нов ключ"
+    ID_EDIT_MODIFY "Променя стойността"
+    ID_EDIT_NEW_KEY "Добавя нов ключ"
     ID_EDIT_NEW_STRINGVALUE "Добавя нова низова стойност"
     ID_EDIT_NEW_BINARYVALUE "Добавя нова двоична стойност"
-    ID_EDIT_NEW_DWORDVALUE  "Добавя нова стойност за двойна дума"
+    ID_EDIT_NEW_DWORDVALUE "Добавя нова стойност за двойна дума"
     ID_REGISTRY_IMPORTREGISTRYFILE "Внася се словесен файл в регистъра"
-    ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Изнася се целия регистър или части от него в словесен файл"
-    ID_REGISTRY_LOADHIVE
-                            "Зарежда се роеви файл в регистъра"
-    ID_REGISTRY_UNLOADHIVE
-                            "Изхвърля се рой от паметта"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Свързва се с регистъра на далечен компютър"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Разкача се от регистъра на отдалечен компютър"
-    ID_REGISTRY_PRINT       "Разпечатва регистъра или част от него"
-/*    ID_HELP_HELPTOPICS      "Отваря помощта за регистърен обработчик" */
-    ID_HELP_ABOUT           "Показва сведения за приложението, версия и възпроизводствени права"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Изнася се целия регистър или части от него в словесен файл"
+    ID_REGISTRY_LOADHIVE "Зарежда се роеви файл в регистъра"
+    ID_REGISTRY_UNLOADHIVE "Изхвърля се рой от паметта"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Свързва се с регистъра на далечен компютър"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Разкача се от регистъра на отдалечен компютър"
+    ID_REGISTRY_PRINT "Разпечатва регистъра или част от него"
+/*    ID_HELP_HELPTOPICS "Отваря помощта за регистърен обработчик" */
+    ID_HELP_ABOUT "Показва сведения за приложението, версия и възпроизводствени права"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Затваря регистърния обработчик"
+    ID_REGISTRY_EXIT "Затваря регистърния обработчик"
     ID_FAVOURITES_ADDTOFAVOURITES "Добавя ключове в списъка с любимките"
     ID_FAVOURITES_REMOVEFAVOURITE "Премахва ключове от списъка с любимките"
-    ID_VIEW_STATUSBAR       "Показва или скрива лентата на състоянието"
-    ID_VIEW_SPLIT           "Променя разположението на разделителя между крилата"
-    ID_VIEW_REFRESH         "Опреснява прозореца"
-    ID_EDIT_DELETE          "Изтрива избраното"
-    ID_EDIT_RENAME          "Преименува избраното"
-    ID_EDIT_COPYKEYNAME     "Запомня името на избрания ключ в кошницата (clipboard)"
-    ID_EDIT_FIND            "Намира словесен низ в ключ, стойност или данни"
-    ID_EDIT_FINDNEXT        "Намира следваща поява на указания за предишното търсене текст"
+    ID_VIEW_STATUSBAR "Показва или скрива лентата на състоянието"
+    ID_VIEW_SPLIT "Променя разположението на разделителя между крилата"
+    ID_VIEW_REFRESH "Опреснява прозореца"
+    ID_EDIT_DELETE "Изтрива избраното"
+    ID_EDIT_RENAME "Преименува избраното"
+    ID_EDIT_COPYKEYNAME "Запомня името на избрания ключ в кошницата (clipboard)"
+    ID_EDIT_FIND "Намира словесен низ в ключ, стойност или данни"
+    ID_EDIT_FINDNEXT "Намира следваща поява на указания за предишното търсене текст"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR               "Грешка"
-    IDS_WARNING             "Предупреждение"
-    IDS_BAD_KEY             "Невъзможно извличането на ключ '%s'"
-    IDS_BAD_VALUE           "Невъзможно извличането на стойност '%s'"
-    IDS_UNSUPPORTED_TYPE    "Промяната на ключове от този вид е невъзможна (%ld)"
-    IDS_TOO_BIG_VALUE       "Стойността е твърде голяма (%ld)"
+    IDS_ERROR "Грешка"
+    IDS_WARNING "Предупреждение"
+    IDS_BAD_KEY "Невъзможно извличането на ключ '%s'"
+    IDS_BAD_VALUE "Невъзможно извличането на стойност '%s'"
+    IDS_UNSUPPORTED_TYPE "Промяната на ключове от този вид е невъзможна (%ld)"
+    IDS_TOO_BIG_VALUE "Стойността е твърде голяма (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Данните от вид REG_MULTI_SZ не могат да съдържат празни низове.\nПразните низове ще бъдат премахнати от списъка."
-    IDS_QUERY_DELETE_KEY_ONE    "Сигурен ли сте, че искате да изтриете този ключ?"
-    IDS_QUERY_DELETE_KEY_MORE   "Сигурен ли сте, че искате да изтриете тези ключове?"
+    IDS_QUERY_DELETE_KEY_ONE "Сигурен ли сте, че искате да изтриете този ключ?"
+    IDS_QUERY_DELETE_KEY_MORE "Сигурен ли сте, че искате да изтриете тези ключове?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Потвърдете изтриване на ключа"
-    IDS_QUERY_DELETE_ONE    "Сигурен ли сте, че искате да изтриете тази стойност?"
-    IDS_QUERY_DELETE_MORE   "Сигурен ли сте, че искате да изтриете тези стойности?"
+    IDS_QUERY_DELETE_ONE "Сигурен ли сте, че искате да изтриете тази стойност?"
+    IDS_QUERY_DELETE_MORE "Сигурен ли сте, че искате да изтриете тези стойности?"
     IDS_QUERY_DELETE_CONFIRM "Потвърдете изтриване на стойностите"
-    IDS_ERR_DELVAL_CAPTION  "Грешка при изтриване на стойностите"
-    IDS_ERR_DELETEVALUE     "Изтриването на всички указани стойности е невъзможно!"
-    IDS_ERR_RENVAL_CAPTION  "Грешка при преиманеуването"
-    IDS_ERR_RENVAL_TOEMPTY  "Неуспешно преименуване на %s. Указаната стойност не е празна. Опитайте отново с друго име."
+    IDS_ERR_DELVAL_CAPTION "Грешка при изтриване на стойностите"
+    IDS_ERR_DELETEVALUE "Изтриването на всички указани стойности е невъзможно!"
+    IDS_ERR_RENVAL_CAPTION "Грешка при преиманеуването"
+    IDS_ERR_RENVAL_TOEMPTY "Неуспешно преименуване на %s. Указаната стойност не е празна. Опитайте отново с друго име."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
-    IDS_NEW_KEY             "Нов ключ #%d"
-    IDS_NEW_VALUE           "Нова стойност #%d"
+    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_NEW_KEY "Нов ключ #%d"
+    IDS_NEW_VALUE "Нова стойност #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(двоична стойност с нулева дължина)"
-    IDS_DEFAULT_VALUE_NAME  "(Подразбрана)"
-    IDS_VALUE_NOT_SET       "(незададена стойност)"
-    IDS_UNKNOWN_TYPE        "Неизвестен вид: (0x%lx)"
-    IDS_MY_COMPUTER         "Моят компютър"
-    IDS_IMPORT_REG_FILE     "Внос на регистърен файл"
-    IDS_EXPORT_REG_FILE     "Износ на регистърен файл"
-    IDS_LOAD_HIVE           "Зареждане на рой"
-    IDS_UNLOAD_HIVE         "Изхвърляне на рой"
-    IDS_INVALID_DWORD       "(самостоятелна стойност на двойна дума)"
+    IDS_BINARY_EMPTY "(двоична стойност с нулева дължина)"
+    IDS_DEFAULT_VALUE_NAME "(Подразбрана)"
+    IDS_VALUE_NOT_SET "(незададена стойност)"
+    IDS_UNKNOWN_TYPE "Неизвестен вид: (0x%lx)"
+    IDS_MY_COMPUTER "Моят компютър"
+    IDS_IMPORT_REG_FILE "Внос на регистърен файл"
+    IDS_EXPORT_REG_FILE "Износ на регистърен файл"
+    IDS_LOAD_HIVE "Зареждане на рой"
+    IDS_UNLOAD_HIVE "Изхвърляне на рой"
+    IDS_INVALID_DWORD "(самостоятелна стойност на двойна дума)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE         "Вписващ файл"
-    IDS_FLT_REGFILES        "Вписващи (регистърни) файлове (*.reg)"
-    IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
-    IDS_FLT_HIVFILES_FLT    "*.*"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 вписващи файлове (REGEDIT4) (*.reg)"
-    IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "Всички файлове (*.*)"
-    IDS_FLT_ALLFILES_FLT    "*.*"
+    IDS_FLT_REGFILE "Вписващ файл"
+    IDS_FLT_REGFILES "Вписващи (регистърни) файлове (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 вписващи файлове (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "Всички файлове (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Пълен достъп"
-  IDS_ACCESS_READ               "Четене"
-  IDS_ACCESS_QUERYVALUE         "Извличане на стойност"
-  IDS_ACCESS_SETVALUE           "Задаване на стойност"
-  IDS_ACCESS_CREATESUBKEY       "Създаване на подключ"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Оценка на подключовете"
-  IDS_ACCESS_NOTIFY             "Известяване"
-  IDS_ACCESS_CREATELINK         "Създаване на връзка"
-  IDS_ACCESS_DELETE             "Изтриване"
-  IDS_ACCESS_WRITEDAC           "Записване на DAC" /* Неясно */
-  IDS_ACCESS_WRITEOWNER         "Запис на собственика"
-  IDS_ACCESS_READCONTROL        "Право на четене"
+    IDS_ACCESS_FULLCONTROL "Пълен достъп"
+    IDS_ACCESS_READ "Четене"
+    IDS_ACCESS_QUERYVALUE "Извличане на стойност"
+    IDS_ACCESS_SETVALUE "Задаване на стойност"
+    IDS_ACCESS_CREATESUBKEY "Създаване на подключ"
+    IDS_ACCESS_ENUMERATESUBKEYS "Оценка на подключовете"
+    IDS_ACCESS_NOTIFY "Известяване"
+    IDS_ACCESS_CREATELINK "Създаване на връзка"
+    IDS_ACCESS_DELETE "Изтриване"
+    IDS_ACCESS_WRITEDAC "Записване на DAC" /* Неясно */
+    IDS_ACCESS_WRITEOWNER "Запис на собственика"
+    IDS_ACCESS_READCONTROL "Право на четене"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "Само този ключ"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "Този ключ и подключовете му"
-  IDS_INHERIT_SUBKEYSONLY        "Само подключовете"
+    IDS_INHERIT_THISKEYONLY "Само този ключ"
+    IDS_INHERIT_THISKEYANDSUBKEYS "Този ключ и подключовете му"
+    IDS_INHERIT_SUBKEYSONLY "Само подключовете"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_EXPAND                     "&Разгръщане"
-  IDS_COLLAPSE                   "&Свиване"
-  IDS_GOTO_SUGGESTED_KEY         "&Отиване на '%s'"
-  IDS_FINISHEDFIND               "Търсенето в регистъра приключи."
+    IDS_EXPAND "&Разгръщане"
+    IDS_COLLAPSE "&Свиване"
+    IDS_GOTO_SUGGESTED_KEY "&Отиване на '%s'"
+    IDS_FINISHEDFIND "Търсенето в регистъра приключи."
 END
 
 STRINGTABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
+    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
+    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
+    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER                 "Шина №"
-    IDS_INTERFACE                 "Интерфейс"
-    IDS_DMA_CHANNEL               "Канал"
-    IDS_DMA_PORT                  "Извод"
-    IDS_INTERRUPT_VECTOR          "Вектор"
-    IDS_INTERRUPT_LEVEL           "Равнище"
-    IDS_INTERRUPT_AFFINITY        "Сродство"
-    IDS_INTERRUPT_TYPE            "Вид"
-    IDS_MEMORY_ADDRESS            "Физически адрес"
-    IDS_MEMORY_LENGTH             "Дължина"
-    IDS_MEMORY_ACCESS             "Достъп"
-    IDS_PORT_ADDRESS              "Физически адрес"
-    IDS_PORT_LENGTH               "Дължина"
-    IDS_PORT_ACCESS               "Достъп"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1" /* I am not sure if this is to be translated */
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Размер на данните"
+    IDS_BUSNUMBER "Шина №"
+    IDS_INTERFACE "Интерфейс"
+    IDS_DMA_CHANNEL "Канал"
+    IDS_DMA_PORT "Извод"
+    IDS_INTERRUPT_VECTOR "Вектор"
+    IDS_INTERRUPT_LEVEL "Равнище"
+    IDS_INTERRUPT_AFFINITY "Сродство"
+    IDS_INTERRUPT_TYPE "Вид"
+    IDS_MEMORY_ADDRESS "Физически адрес"
+    IDS_MEMORY_LENGTH "Дължина"
+    IDS_MEMORY_ACCESS "Достъп"
+    IDS_PORT_ADDRESS "Физически адрес"
+    IDS_PORT_LENGTH "Дължина"
+    IDS_PORT_ACCESS "Достъп"
+    IDS_SPECIFIC_RESERVED1 "Reserved 1"
+    IDS_SPECIFIC_RESERVED2 "Reserved 2"
+    IDS_SPECIFIC_DATASIZE "Размер на данните"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO              "Извод"
-    IDS_PORT_MEMORY_IO            "Памет"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Чувствителност на нарастване"
+    IDS_PORT_PORT_IO "Извод"
+    IDS_PORT_MEMORY_IO "Памет"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Чувствителност на нарастване"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Чувствителност по равнище"
-    IDS_MEMORY_READ_ONLY          "Само за четене"
-    IDS_MEMORY_WRITE_ONLY         "Само за запис"
-    IDS_MEMORY_READ_WRITE         "Четене/ запис"
+    IDS_MEMORY_READ_ONLY "Само за четене"
+    IDS_MEMORY_WRITE_ONLY "Само за запис"
+    IDS_MEMORY_READ_WRITE "Четене/ запис"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Неуказан"
-    IDS_BUS_INTERNAL              "Вътрешен"
-    IDS_BUS_ISA                   "ISA"
-    IDS_BUS_EISA                  "EISA"
-    IDS_BUS_MICROCHANNEL          "MicroChannel"
-    IDS_BUS_TURBOCHANNEL          "TurboChannel"
-    IDS_BUS_PCIBUS                "PCI"
-    IDS_BUS_VMEBUS                "VME"
-    IDS_BUS_NUBUS                 "NuBus"
-    IDS_BUS_PCMCIABUS             "PCMCIA"
-    IDS_BUS_CBUS                  "C-Bus"
-    IDS_BUS_MPIBUS                "MPI-Bus"
-    IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Процесор вътрешен"
-    IDS_BUS_INTERNALPOWERBUS      "Вътрешна захранваща шина"
-    IDS_BUS_PNPISABUS             "Шина PnP-ISA"
-    IDS_BUS_PNPBUS                "Шина  PnP"
-    IDS_BUS_UNKNOWNTYPE           "Неизвестен вид интерфейс"
+    IDS_BUS_UNDEFINED "Неуказан"
+    IDS_BUS_INTERNAL "Вътрешен"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Процесор вътрешен"
+    IDS_BUS_INTERNALPOWERBUS "Вътрешна захранваща шина"
+    IDS_BUS_PNPISABUS "Шина PnP-ISA"
+    IDS_BUS_PNPBUS "Шина  PnP"
+    IDS_BUS_UNKNOWNTYPE "Неизвестен вид интерфейс"
 END
 
 /*****************************************************************/
 
-
-/*
- * Dialog
- */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Област за износ",IDC_STATIC,2,0,366,48
-   CONTROL "Вси&чки",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,50,11
-   CONTROL "Из&брания клон",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+    GROUPBOX "Област за износ", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "Вси&чки", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 50, 11
+    CONTROL "Из&брания клон", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
+END
+
+IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Зареждане на рой"
+FONT 8, "Ms Shell Dlg"
+BEGIN
+    LTEXT "&Клавиш:", IDC_STATIC, 4, 4, 28, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 41, 2, 145, 13
+    DEFPUSHBUTTON "Добре", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
@@ -531,10 +489,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Добавяне в любимките"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Добре",IDOK,129,7,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,129,24,50,14
-    LTEXT           "&Име на любимка:",IDC_STATIC,7,7,70,10
-    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 129, 24, 50, 14
+    LTEXT "&Име на любимка:", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
@@ -542,11 +500,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Премахване на любимки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Добре",IDOK,107,114,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
-                    WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Избор на любимки:",IDC_STATIC,7,7,99,12
+    DEFPUSHBUTTON "Добре", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "Избор на любимки:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -554,55 +512,38 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Търсене"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Търси още",IDOK,197,7,50,14
-    PUSHBUTTON      "Отказ",IDCANCEL,197,24,50,14
-    GROUPBOX        "Търсене в",IDC_STATIC,7,25,63,51
-    LTEXT           "&Търсене на:",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "&Ключове",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,36,55,8
-    CONTROL         "&Стойности",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,55,8
-    CONTROL         "&Данни",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,60,55,8
-    CONTROL         "Съвпадение само при &цели низове",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,72,39,133,13
-    CONTROL         "Отчитане на &гЛавНоСТта",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,72,53,102,12
+    DEFPUSHBUTTON "&Търси още", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "Търсене в", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "&Търсене на:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    CONTROL "&Ключове", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 55, 8
+    CONTROL "&Стойности", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 55, 8
+    CONTROL "&Данни", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 55, 8
+    CONTROL "Съвпадение само при &цели низове", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 72, 39, 133, 13
+    CONTROL "Отчитане на &гЛавНоСТта", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 72, 53, 102, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Търсене"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "&Отказ",IDCANCEL,93,29,45,14
-    LTEXT           "Претърсване на регистъра...",IDC_STATIC,33,12,105,8
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "&Отказ", IDCANCEL, 93, 29, 45, 14
+    LTEXT "Претърсване на регистъра...", IDC_STATIC, 33, 12, 105, 8
 END
 
-/*
- * TEXTINCLUDE
- */
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-
-
-/*
- * String Table
- */
-
+/* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Отваря помощта за Регистърния обработчик."
- *    ID_HELP_ABOUT           "Показва сведения за приложението, версията и възпроизводственото право."
+ *    ID_HELP_HELPTOPICS "Отваря помощта за Регистърния обработчик."
+ *    ID_HELP_ABOUT "Показва сведения за приложението, версията и възпроизводственото право."
  *END
  */
-
-/*****************************************************************/

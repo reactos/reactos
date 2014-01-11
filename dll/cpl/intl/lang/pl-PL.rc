@@ -1,9 +1,9 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Jan, 2008; May 2010)
- *         Use ReactOS forum PM or IRC to contact me
- *         http://www.reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (Jan, 2008; May 2010)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -93,7 +93,6 @@ BEGIN
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Waluta"
@@ -120,7 +119,6 @@ BEGIN
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
-
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Czas"
@@ -141,10 +139,8 @@ BEGIN
     LTEXT "Notacja formatu czasu\n\n\
 h = godzina     m = minuta    s = sekunda    t = am lub pm\n\n\
 h = 12 godzin   H = 24 godziny\n\
-hh, mm, ss = zero wiodące   h, m, s = bez zera wiodącego",
-        -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+hh, mm, ss = zero wiodące   h, m, s = bez zera wiodącego", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
-
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -179,7 +175,6 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
-
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sortowanie"
@@ -190,7 +185,6 @@ BEGIN
     LTEXT "Wybierz metodę sortowania dla twojego języka:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
-
 
 STRINGTABLE
 BEGIN

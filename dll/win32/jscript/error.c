@@ -15,16 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <config.h>
-#include <wine/port.h>
-
-//#include <math.h>
 
 #include "jscript.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};

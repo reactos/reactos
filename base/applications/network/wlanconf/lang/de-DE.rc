@@ -1,8 +1,8 @@
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-IDS_USAGE, "\nEinen WLAN Adapter konfigurieren.\n\n\
+    IDS_USAGE "\nEinen WLAN Adapter konfigurieren.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-c SSID\t\teine Verbindung mit der angegebenen\n\
 \t\t\tSSID herstellen \n\
@@ -12,30 +12,27 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-s\t\t scannt nach verfügbaren Access Points\n\
 \t\t\tin der Nähe.\n\n\
 Werden keine Parameter angegeben, werden Informationen zur WLAN-Verbindung ausgegeben.\n"
-/* === */
-IDS_NO_NETWORK, "Keine Netzwerke gefunden.\n"
-IDS_NO_WLAN_ADAPTER, "Es konnte kein WLAN Adapter gefunden werden.\n"
-IDS_SUCCESS, "Die Operation wurde erfolgreich abgeschlossen.\n"
-IDS_WLAN_DISCONNECT, "\nWLAN getrennt\n"
-/* === */
-IDS_MSG_WEP_ENABLED, "WEP aktiv: %s\n"
-IDS_MSG_NETWORK_MODE, "Netzwerkmodus: %s\n"
-IDS_MSG_CURRENT_WIRELESS, "\nAktuelle WLAN-Konfiguration:\n\n"
-IDS_MSG_ENCRYPTED, "Verschlüsselt: %s\n"
-IDS_MSG_NETWORK_TYPE, "Netzwerktyp: %s\n"
-IDS_MSG_RSSI, "RSSI: %i dBm\n"
-IDS_MSG_SUPPORT_RATE, "Unterstützte Geschwindigkeiten (Mbps): "
-IDS_MSG_TRANSMISSION_POWER, "Sendeleistung: %d mW\n"
-IDS_MSG_ANTENNA_COUNT, "Anzahl der Antennen: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA, "Sendeantenne: %d\n"
-IDS_MSG_TRANSMIT_ANTENNA_ANY, "Sendeantenne: beliebig\n"
-IDS_MSG_RECEIVE_ANTENNA, "Empfangsantenne: %d\n"
-IDS_MSG_RECEIVE_ANTENNA_ANY, "Empfangsantenne: beliebig\n"
-IDS_MSG_FRAGMENT_THRESHOLD, "Fragmentierungsschwelle: %d Bytes\n"
-IDS_MSG_RTS_THRESHOLD, "RTS-Schwelle: %d Bytes\n"
-/* === */
-IDS_YES, "Ja"
-IDS_NO, "Nein"
-IDS_ADHOC, "Adhoc"
-IDS_INFRASTRUCTURE, "Infrastruktur"
+    IDS_NO_NETWORK "Keine Netzwerke gefunden.\n"
+    IDS_NO_WLAN_ADAPTER "Es konnte kein WLAN Adapter gefunden werden.\n"
+    IDS_SUCCESS "Die Operation wurde erfolgreich abgeschlossen.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN getrennt\n"
+    IDS_MSG_WEP_ENABLED "WEP aktiv: %s\n"
+    IDS_MSG_NETWORK_MODE "Netzwerkmodus: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nAktuelle WLAN-Konfiguration:\n\n"
+    IDS_MSG_ENCRYPTED "Verschlüsselt: %s\n"
+    IDS_MSG_NETWORK_TYPE "Netzwerktyp: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Unterstützte Geschwindigkeiten (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Sendeleistung: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Anzahl der Antennen: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Sendeantenne: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Sendeantenne: beliebig\n"
+    IDS_MSG_RECEIVE_ANTENNA "Empfangsantenne: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Empfangsantenne: beliebig\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Fragmentierungsschwelle: %d Bytes\n"
+    IDS_MSG_RTS_THRESHOLD "RTS-Schwelle: %d Bytes\n"
+    IDS_YES "Ja"
+    IDS_NO "Nein"
+    IDS_ADHOC "Adhoc"
+    IDS_INFRASTRUCTURE "Infrastruktur"
 END

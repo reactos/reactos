@@ -28,12 +28,6 @@
 
 #include <precomp.h>
 
-//#include "shellfs.h"
-//#include "winfs.h"
-
-#include <shlwapi.h>
-
-
 bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi, bool do_access)
 {
 	CONTEXT("ShellDirectory::fill_w32fdata_shell()");

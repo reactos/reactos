@@ -19,18 +19,7 @@
  *
  */
 
-#include <stdarg.h>
-//#include <string.h>
-//#include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <uxtheme.h>
-#include <vssym32.h>
 #include "comctl32.h"
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(themingcombo);
 

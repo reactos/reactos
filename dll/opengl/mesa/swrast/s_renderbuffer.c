@@ -22,22 +22,16 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /**
  * Functions for allocating/managing software-based renderbuffers.
  * Also, routines for reading/writing software-based renderbuffer data as
  * ubytes, ushorts, uints, etc.
  */
 
+#include <precomp.h>
 
-#include "main/glheader.h"
-#include "main/imports.h"
-#include "main/context.h"
-#include "main/formats.h"
-#include "main/mtypes.h"
-#include "main/renderbuffer.h"
-#include "swrast/s_context.h"
-#include "swrast/s_renderbuffer.h"
+#include <main/renderbuffer.h>
+#include "s_renderbuffer.h"
 
 static
 GLenum

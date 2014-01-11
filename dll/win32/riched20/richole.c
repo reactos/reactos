@@ -19,27 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#define COBJMACROS
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "ole2.h"
-//#include "richole.h"
 #include "editor.h"
+
 #include <tom.h>
-//#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 /* there is no way to be consistent across different sets of headers - mingw, Wine, Win32 SDK*/
 
-#include "initguid.h"
+#include <initguid.h>
 DEFINE_GUID(IID_ITextServices, 0x8d33f740, 0xcf58, 0x11ce, 0xa8, 0x9d, 0x00, 0xaa, 0x00, 0x6c, 0xad, 0xc5);
 DEFINE_GUID(IID_ITextHost, 0x13e670f4,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);
 DEFINE_GUID(IID_ITextHost2, 0x13e670f5,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);

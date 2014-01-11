@@ -410,6 +410,15 @@ _tWinMain(IN HINSTANCE hInstance,
 
     if (CreateShellDesktop)
     {
+        /* Initialize shell dde support */
+        ShellDDEInit(TRUE);
+
+        /* Initialize shell icons */
+        FileIconInit(TRUE);
+
+        /* Initialize CLSID_ShellWindows class */
+        WinList_Init();
+
         if (RegisterTrayWindowClass() && RegisterTaskSwitchWndClass())
         {
             Tray = CreateTrayWindow();

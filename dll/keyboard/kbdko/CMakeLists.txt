@@ -5,7 +5,7 @@ spec2def(kbdko.dll kbdko.spec)
 
 add_library(kbdko SHARED kbdko.c kbdko.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdko.def)
 
-set_entrypoint(kbdko 0)
+set_module_type(kbdko kbdlayout)
 
 add_dependencies(kbdko psdk)
 

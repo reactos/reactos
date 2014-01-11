@@ -95,25 +95,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include "config.h"
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "oleauto.h"
-#include "wbemcli.h"
 #include "wbemprox_private.h"
-
-#include "wine/list.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 struct parser
 {

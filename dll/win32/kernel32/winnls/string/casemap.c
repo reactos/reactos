@@ -1,7 +1,7 @@
 /* Unicode case mappings */
 /* Automatically generated; DO NOT EDIT!! */
 
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 const WCHAR wine_casemap_lower[3802] =
 {

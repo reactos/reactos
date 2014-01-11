@@ -291,7 +291,7 @@ HRESULT IEnumIDList_Constructor(IEnumIDList **enumerator)
     ATLTRY (theEnumerator = new CComObject<IEnumIDListImpl>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumIDList, (void **)&result);
+    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;

@@ -16,18 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <math.h>
-
 #include "vbscript.h"
-#include "vbscript_defs.h"
 
-#include <mshtmhst.h>
-#include <objsafe.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
+#include <math.h>
 
 #define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
 

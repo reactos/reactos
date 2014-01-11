@@ -24,19 +24,19 @@
 
 CHAR MmReadWrite[32] =
 {
-    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED, 
+    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED,
     MM_READ_ONLY_ALLOWED, MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
     MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
 
-    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED, 
+    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED,
     MM_READ_ONLY_ALLOWED, MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
     MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
 
-    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED, 
+    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED,
     MM_READ_ONLY_ALLOWED, MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
     MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
 
-    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED, 
+    MM_NO_ACCESS_ALLOWED, MM_READ_ONLY_ALLOWED, MM_READ_ONLY_ALLOWED,
     MM_READ_ONLY_ALLOWED, MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
     MM_READ_WRITE_ALLOWED, MM_READ_WRITE_ALLOWED,
 };
@@ -129,11 +129,10 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
     {
         NTSTATUS Status;
         PMEMORY_AREA MemoryArea;
-        PHYSICAL_ADDRESS BoundaryAddressMultiple;
         SIZE_T Size;
         PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
         PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
-        BoundaryAddressMultiple.QuadPart = 0;
+
         Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
         Status = MmCreateMemoryArea(&Process->Vm,
                                     MEMORY_AREA_OWNED_BY_ARM3,
@@ -143,7 +142,7 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
                                     &MemoryArea,
                                     TRUE,
                                     0,
-                                    BoundaryAddressMultiple);
+                                    PAGE_SIZE);
         ASSERT(NT_SUCCESS(Status));
 
         /* Check if this is VM VAD */
@@ -635,7 +634,7 @@ MiCheckSecuredVad(IN PMMVAD Vad,
         /* This is allowed */
         ProtectionMask = 0;
     }
-    
+
     /* ARM3 doesn't support this yet */
     ASSERT(Vad->u2.VadFlags2.MultipleSecured == 0);
 
@@ -655,7 +654,7 @@ MiCheckSecuredVad(IN PMMVAD Vad,
 
             /* ARM3 doesn't have read-only VADs yet */
             ASSERT(Vad->u2.VadFlags2.ReadOnly == 0);
-            
+
             /* Check if read-write protections are allowed */
             if (MmReadWrite[ProtectionMask] < MM_READ_WRITE_ALLOWED)
             {

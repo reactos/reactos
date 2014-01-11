@@ -1,6 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
+ * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/lang/sk-SK.rc
  * PURPOSE:     Slovak Language resource file
  * TRANSLATORS: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
@@ -24,7 +24,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Skončiť\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Upraviť"
     BEGIN
         MENUITEM "Späť\tCtrl+Z", IDM_EDITUNDO
@@ -40,7 +39,6 @@ BEGIN
         MENUITEM "Kopírovať do...", IDM_EDITCOPYTO
         MENUITEM "Prilepiť z...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Zobraziť"
     BEGIN
         MENUITEM "Panel nástrojov\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
@@ -66,7 +64,6 @@ BEGIN
         END
         MENUITEM "Celá obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Obrázok"
     BEGIN
         MENUITEM "Prevrátiť alebo otočiť...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -77,7 +74,6 @@ BEGIN
         MENUITEM "Vymazať obrázok\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Kresliť nepriesvitne", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Farby"
     BEGIN
         MENUITEM "Upraviť paletu...", IDM_COLORSEDITPALETTE
@@ -85,7 +81,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "&Témy pomocníka", IDM_HELPHELPTOPICS
@@ -126,9 +121,9 @@ BEGIN
     AUTORADIOBUTTON "Prevrátiť vodorovne", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Prevrátiť zvislo", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "&Otočiť o uhol", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Zrušiť", IDCANCEL, 125, 24, 48, 14
 END
@@ -189,34 +184,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Skicár"
-    IDS_WINDOWTITLE, "%s - Skicár"
-    IDS_INFOTITLE, "Skicár systému ReactOS"
-    IDS_INFOTEXT, "Skicár systému ReactOS je dostupný za podmienok GNU Lesser General Public License (LGPL) verzia 3 (viď www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Chcete uložiť vykonané zmeny do %s?"
-    IDS_DEFAULTFILENAME, "Bez názvu.bmp"
-    IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Voľný výber"
-    IDS_TOOLTIP2, "Výber"
-    IDS_TOOLTIP3, "Guma"
-    IDS_TOOLTIP4, "Vyplniť farbou"
-    IDS_TOOLTIP5, "Zvoliť farbu"
-    IDS_TOOLTIP6, "Lupa"
-    IDS_TOOLTIP7, "Ceruzka"
-    IDS_TOOLTIP8, "Štetec"
-    IDS_TOOLTIP9, "Sprej"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Čiara"
-    IDS_TOOLTIP12, "Bézierova krivka" //kreslenie kriviek pomocou bodov
-    IDS_TOOLTIP13, "Obdĺžnik" //pravouholník
-    IDS_TOOLTIP14, "Polygón" //mnohouholník
-    IDS_TOOLTIP15, "Elipsa"
-    IDS_TOOLTIP16, "Zaoblený obdĺžnik"
-    IDS_OPENFILTER, "Súbory bitových máp (*.bmp;*.dib)\1*.bmp;*.dib\1Všetky súbory (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24-bitová mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bajtov"
-    IDS_PRINTRES, "%d x %d pixelov na meter"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Skicár"
+    IDS_WINDOWTITLE "%s - Skicár"
+    IDS_INFOTITLE "Skicár systému ReactOS"
+    IDS_INFOTEXT "Skicár systému ReactOS je dostupný za podmienok GNU Lesser General Public License (LGPL) verzia 3 (viď www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Chcete uložiť vykonané zmeny do %s?"
+    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_MINIATURETITLE "Miniature"
+    IDS_TOOLTIP1 "Voľný výber"
+    IDS_TOOLTIP2 "Výber"
+    IDS_TOOLTIP3 "Guma"
+    IDS_TOOLTIP4 "Vyplniť farbou"
+    IDS_TOOLTIP5 "Zvoliť farbu"
+    IDS_TOOLTIP6 "Lupa"
+    IDS_TOOLTIP7 "Ceruzka"
+    IDS_TOOLTIP8 "Štetec"
+    IDS_TOOLTIP9 "Sprej"
+    IDS_TOOLTIP10 "Text"
+    IDS_TOOLTIP11 "Čiara"
+    IDS_TOOLTIP12 "Bézierova krivka" //kreslenie kriviek pomocou bodov
+    IDS_TOOLTIP13 "Obdĺžnik" //pravouholník
+    IDS_TOOLTIP14 "Polygón" //mnohouholník
+    IDS_TOOLTIP15 "Elipsa"
+    IDS_TOOLTIP16 "Zaoblený obdĺžnik"
+    IDS_OPENFILTER "Súbory bitových máp (*.bmp;*.dib)\1*.bmp;*.dib\1Všetky súbory (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24-bitová mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bajtov"
+    IDS_PRINTRES "%d x %d pixelov na meter"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

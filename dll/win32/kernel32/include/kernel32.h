@@ -8,6 +8,9 @@
 #define actctx                  202
 #define resource                203
 #define kernel32session         204
+#define comm                    205
+#define profile                 206
+#define nls                     207
 
 
 #if DBG
@@ -27,6 +30,7 @@
 
 #define debugstr_a
 #define debugstr_w
+#define debugstr_wn
 #define wine_dbgstr_w
 #define debugstr_guid
 
@@ -61,6 +65,9 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
+#define __TRY _SEH2_TRY
+#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
+#define __ENDTRY _SEH2_END
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
@@ -159,7 +166,7 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapAlloc RtlAllocateHeap
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
-#define _lread  (_readfun)_hread
+#define _lread(a, b, c)  (long)(_hread(a, b, (long)c))
 
 PLARGE_INTEGER
 WINAPI

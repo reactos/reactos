@@ -11,8 +11,10 @@
  * with Windows' system32\logoff.exe commandline application.
  */
 
-#define NDEBUG
 #include "precomp.h"
+
+#include <stdio.h>
+#include <tchar.h>
 
 //Commandline argument switches
 LPTSTR szRemoteServerName = NULL;

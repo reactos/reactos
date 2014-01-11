@@ -23,7 +23,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /*
  * eval.c was written by
  * Bernd Barsuhn (bdbarsuh@cip.informatik.uni-erlangen.de) and
@@ -36,17 +35,7 @@
  * Thanks guys!
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "colormac.h"
-#include "context.h"
-#include "eval.h"
-#include "macros.h"
-#include "mfeatures.h"
-#include "mtypes.h"
-#include "main/dispatch.h"
-
+#include <precomp.h>
 
 #if FEATURE_evaluators
 

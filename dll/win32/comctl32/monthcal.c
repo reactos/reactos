@@ -39,23 +39,7 @@
  *    -- search for FIXME
  */
 
-//#include <math.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
 

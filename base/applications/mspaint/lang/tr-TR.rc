@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Paint
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/tr-TR.rc
- * PURPOSE:     Turkish Resource file for ReactOS Paint
- * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * PROJECT:    ReactOS Paint
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/tr-TR.rc
+ * PURPOSE:    Turkish Resource file for ReactOS Paint
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -12,84 +12,79 @@ ID_MENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N",                  IDM_FILENEW
-        MENUITEM "&Aç...\tCtrl+O",                 IDM_FILEOPEN
-        MENUITEM "&Kaydet\tCtrl+S",                IDM_FILESAVE
-        MENUITEM "Ay&rı Kaydet...",                IDM_FILESAVEAS
+        MENUITEM "&Yeni\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Aç...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Kaydet\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Ay&rı Kaydet...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Döşeyerek Duvar Kağıdı Yap",    IDM_FILEASWALLPAPERPLANE
-        MENUITEM "&Ortalayarak Duvar Kağıdı Yap",  IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "&Uzatarak Duvar Kağıdı Yap",     IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "&Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "&Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "&Uzatarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+F4",                 IDM_FILEEXIT
+        MENUITEM "&Çıkış\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Geri Al\tCtrl+Z",               IDM_EDITUNDO
-        MENUITEM "&Yinele\tCtrl+Y",                IDM_EDITREDO
+        MENUITEM "&Geri Al\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Yinele\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "&Kes\tCtrl+X",                   IDM_EDITCUT
-        MENUITEM "Ç&oğalt\tCtrl+C",                IDM_EDITCOPY
-        MENUITEM "Y&apıştır\tCtrl+V",              IDM_EDITPASTE
-        MENUITEM "&Seçimi Sil\tDel",               IDM_EDITDELETESELECTION
-        MENUITEM "S&eçimi Evir",                   IDM_EDITINVERTSELECTION
-        MENUITEM "&Hepsini Seç\tCtrl+A",           IDM_EDITSELECTALL
+        MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Ç&oğalt\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "S&eçimi Evir", IDM_EDITINVERTSELECTION
+        MENUITEM "&Hepsini Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Se&çimi Şuraya Çoğalt...",       IDM_EDITCOPYTO
-        MENUITEM "&Şuradan Yapıştır...",           IDM_EDITPASTEFROM
+        MENUITEM "Se&çimi Şuraya Çoğalt...", IDM_EDITCOPYTO
+        MENUITEM "&Şuradan Yapıştır...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Araç Çubuğu\tCtrl+T",           IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "&Renklik\tCtrl+L",               IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "&Durum Çubuğu",                  IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "&Metin Çubuğu",                  IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "&Araç Çubuğu\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "&Renklik\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "&Durum Çubuğu", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "&Metin Çubuğu", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "&Büyüt"
         BEGIN
             POPUP "&Kullanıcı Tanımlı"
             BEGIN
-                MENUITEM "%12,5",                  IDM_VIEWZOOM125
-                MENUITEM "%25",                    IDM_VIEWZOOM25
-                MENUITEM "%50",                    IDM_VIEWZOOM50
-                MENUITEM "%100",                   IDM_VIEWZOOM100
-                MENUITEM "%200",                   IDM_VIEWZOOM200
-                MENUITEM "%400",                   IDM_VIEWZOOM400
-                MENUITEM "%800",                   IDM_VIEWZOOM800
+                MENUITEM "%12,5", IDM_VIEWZOOM125
+                MENUITEM "%25", IDM_VIEWZOOM25
+                MENUITEM "%50", IDM_VIEWZOOM50
+                MENUITEM "%100", IDM_VIEWZOOM100
+                MENUITEM "%200", IDM_VIEWZOOM200
+                MENUITEM "%400", IDM_VIEWZOOM400
+                MENUITEM "%800", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "K&ılavuzu Göster\tCtrl+G",   IDM_VIEWSHOWGRID
-            MENUITEM "K&üçüğünü Göster",           IDM_VIEWSHOWMINIATURE
+            MENUITEM "K&ılavuzu Göster\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "K&üçüğünü Göster", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "&Tüm Görüntülük\tCtrl+F",        IDM_VIEWFULLSCREEN
+        MENUITEM "&Tüm Görüntülük\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-
     POPUP "G&örüntü"
     BEGIN
-        MENUITEM "&Döndür ya da Evir...\tCtrl+R",  IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Döndür ya da Evir...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Yeniden Boyutlandır veyâ Eğrilt...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Kırp",                          IDM_IMAGECROP
-        MENUITEM "&Renkleri Evir\tCtrl+I",         IDM_IMAGEINVERTCOLORS
-        MENUITEM "&Öz Nitelikler...\tCtrl+E",      IDM_IMAGEATTRIBUTES
-        MENUITEM "R&esmi Temizle\tCtrl+Shft+N",    IDM_IMAGEDELETEIMAGE
-        MENUITEM "D&onuk Çiz",                     IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Kırp", IDM_IMAGECROP
+        MENUITEM "&Renkleri Evir\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Öz Nitelikler...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "R&esmi Temizle\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "D&onuk Çiz", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Renkler"
     BEGIN
-        MENUITEM "&Renkliği Düzenle...",           IDM_COLORSEDITPALETTE
+        MENUITEM "&Renkliği Düzenle...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "&Yeni Renklik",                  IDM_COLORSMODERNPALETTE
-        MENUITEM "&Eski Renklik",                  IDM_COLORSOLDPALETTE
+        MENUITEM "&Yeni Renklik", IDM_COLORSMODERNPALETTE
+        MENUITEM "&Eski Renklik", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları",               IDM_HELPHELPTOPICS
+        MENUITEM "&Yardım Konuları", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Hakkında",                      IDM_HELPINFO
+        MENUITEM "&Hakkında", IDM_HELPINFO
     END
 END
 
@@ -121,14 +116,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Döndür ya da Evir"
 BEGIN
-    GROUPBOX "Döndür ya da Evir",  IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    GROUPBOX "Döndür ya da Evir", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "&Yatay Evir", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "&Dikey Evir", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "D&öndür",     IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "&90°",  IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "D&öndür", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "1&80°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "2&70°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
-    DEFPUSHBUTTON "Tamam",   IDOK, 125, 8, 48, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 125, 8, 48, 14
     PUSHBUTTON "İptal", IDCANCEL, 125, 24, 48, 14
 END
 
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Görüntü Düzenleyicisi"
-    IDS_WINDOWTITLE, "%s - Görüntü Düzenleyicisi"
-    IDS_INFOTITLE, "Görüntü Düzenleyicisi"
-    IDS_INFOTEXT, "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Ruhsatı'nın (LGPL) 3. sürümüyle ruhsatlıdır. (bkz: www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "%s için yapılan değişiklikler kaydedilsin mi?"
-    IDS_DEFAULTFILENAME, "Adsız.bmp"
-    IDS_MINIATURETITLE, "Küçüğü"
-    IDS_TOOLTIP1, "Özgür Seçim"
-    IDS_TOOLTIP2, "Dikdörtgen Seçim"
-    IDS_TOOLTIP3, "Silgi"
-    IDS_TOOLTIP4, "Boya Kabı"
-    IDS_TOOLTIP5, "Renk Seçici"
-    IDS_TOOLTIP6, "Büyüteç"
-    IDS_TOOLTIP7, "Kalem"
-    IDS_TOOLTIP8, "Fırça"
-    IDS_TOOLTIP9, "Püskürteç"
-    IDS_TOOLTIP10, "Metin"
-    IDS_TOOLTIP11, "Çizgi"
-    IDS_TOOLTIP12, "Kıvrım"
-    IDS_TOOLTIP13, "Dikdörtgen"
-    IDS_TOOLTIP14, "Çokgen"
-    IDS_TOOLTIP15, "Söbek"
-    IDS_TOOLTIP16, "Yuvarlatılmış Dikdörtgen"
-    IDS_OPENFILTER, "İkil Eşlem Görüntüleri (*.bmp;*.dib)\1*.bmp;*.dib\1Tüm Kütükler (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 İkillik İkil Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d çoklu"
-    IDS_PRINTRES, "Her metrekarede %d x %d nokta"
-    IDS_INTNUMBERS, "Buraya yalnızca tamsayı girilmelidir."
-    IDS_PERCENTAGE, "Buradaki değer 1 ilâ 500 olmalıdır."
-    IDS_ANGLE, "Buradaki değer -89 ilâ 89 olmalıdır."
+    IDS_PROGRAMNAME "Görüntü Düzenleyicisi"
+    IDS_WINDOWTITLE "%s - Görüntü Düzenleyicisi"
+    IDS_INFOTITLE "Görüntü Düzenleyicisi"
+    IDS_INFOTEXT "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Ruhsatı'nın (LGPL) 3. sürümüyle ruhsatlıdır. (bkz: www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikler kaydedilsin mi?"
+    IDS_DEFAULTFILENAME "Adsız.bmp"
+    IDS_MINIATURETITLE "Küçüğü"
+    IDS_TOOLTIP1 "Özgür Seçim"
+    IDS_TOOLTIP2 "Dikdörtgen Seçim"
+    IDS_TOOLTIP3 "Silgi"
+    IDS_TOOLTIP4 "Boya Kabı"
+    IDS_TOOLTIP5 "Renk Seçici"
+    IDS_TOOLTIP6 "Büyüteç"
+    IDS_TOOLTIP7 "Kalem"
+    IDS_TOOLTIP8 "Fırça"
+    IDS_TOOLTIP9 "Püskürteç"
+    IDS_TOOLTIP10 "Metin"
+    IDS_TOOLTIP11 "Çizgi"
+    IDS_TOOLTIP12 "Kıvrım"
+    IDS_TOOLTIP13 "Dikdörtgen"
+    IDS_TOOLTIP14 "Çokgen"
+    IDS_TOOLTIP15 "Söbek"
+    IDS_TOOLTIP16 "Yuvarlatılmış Dikdörtgen"
+    IDS_OPENFILTER "İkil Eşlem Görüntüleri (*.bmp;*.dib)\1*.bmp;*.dib\1Tüm Kütükler (*.*)\1*.*\1"
+    IDS_SAVEFILTER "24 İkillik İkil Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d çoklu"
+    IDS_PRINTRES "Her metrekarede %d x %d nokta"
+    IDS_INTNUMBERS "Buraya yalnızca tamsayı girilmelidir."
+    IDS_PERCENTAGE "Buradaki değer 1 ilâ 500 olmalıdır."
+    IDS_ANGLE "Buradaki değer -89 ilâ 89 olmalıdır."
+    IDS_LOADERRORTEXT "%s kütüğü yüklenemedi."
 END

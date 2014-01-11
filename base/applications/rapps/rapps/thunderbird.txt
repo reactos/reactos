@@ -45,6 +45,12 @@ URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
 
+[Section.041f]
+Name = Mozilla Yıldırımkuşu
+Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
+URLSite = https://www.mozilla.org/tr/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe
+
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
 URLSite = http://www.mozillamessaging.com/uk/thunderbird/

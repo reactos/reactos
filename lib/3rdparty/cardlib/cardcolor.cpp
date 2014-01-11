@@ -1,11 +1,8 @@
 //
 //    Colour support
 //
-//#include <windows.h>
 
-#define WIN32_NO_STATUS
-#include <windef.h>
-#include <wingdi.h>
+#include "cardlib.h"
 
 #define MakeRGB RGB
 

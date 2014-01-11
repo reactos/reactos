@@ -25,14 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
-
-#include "t_context.h"
-#include "t_pipeline.h"
-#include "t_vertex.h"
+#include <precomp.h>
 
 void _tnl_install_pipeline( struct gl_context *ctx,
 			    const struct tnl_pipeline_stage **stages )

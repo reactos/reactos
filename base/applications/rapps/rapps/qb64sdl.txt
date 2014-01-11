@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = QB64 (SDL version)
+Version = 0.954
+Licence = Freeware
+Description = QB64 is a self-hosting BASIC compiler for Microsoft Windows, Linux and Mac OS X, designed to be compatible with Microsoft QBasic and Microsoft QuickBASIC. You need 7-Zip or a similar Utility to extract it.
+Size = 33.1 MB
+Category = 7
+URLSite = http://www.qb64.net/
+URLDownload = http://www.qb64.net/qb64v0954-win.7z
+CDPath = none
+
+[Section.0407]
+Description = QB64 ist ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
+
+[Section.041f]
+Name = QB64 (SDL sürümü)
+Licence = Ücretsiz
+Description = QB64; Mikroyazılım Pencereler, Linux ve Mac OS X için yapılmış, Mikroyazılım QBasic ve Mikroyazılım QuickBASIC ile uyumlu olarak tasarlanan, kendi kendini derleyen bir BASIC derleyicisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.

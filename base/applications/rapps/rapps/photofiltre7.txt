@@ -1,0 +1,19 @@
+﻿﻿; UTF-8
+
+[Section]
+Name = PhotoFiltre 7
+Version = 7.1.2
+Licence = Freeware
+Description = This version with layers but more limited than the Studio X version. PhotoFiltre Studio is a complete image retouching program.
+Size = 4,99 MB
+Category = 3
+URLSite = http://www.photofiltre-studio.com/pf7-en.htm
+URLDownload = http://static.infomaniak.ch/photofiltre/utils/pf7/pf7-setup-en.exe
+CDPath = none
+
+[Section.0407]
+Description = Version mit Layers, aber eingeschänkter als die Studio-X Version. PhotoFiltre Studio ist ein komplettes Bildretuschier-Programm.
+
+[Section.041f]
+Licence = Ücretsiz
+Description = Bu sürüm, katmanlarla gelmektedir ancak Stüdyo X sürümünden daha kısıtlıdır. PhotoFiltre Stüdyo, eksiksiz bir resim düzeltme yazılımıdır.

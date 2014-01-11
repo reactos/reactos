@@ -361,7 +361,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
     else
     {
         /* Copy the table */
-        RtlCopyMemory(Table, Owner, OldSize * sizeof(OWNER_ENTRY));
+        if (Owner) RtlCopyMemory(Table, Owner, OldSize * sizeof(OWNER_ENTRY));
 
         /* Acquire dispatcher lock to prevent thread boosting */
         OldIrql = KiAcquireDispatcherLock();

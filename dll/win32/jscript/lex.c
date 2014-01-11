@@ -16,22 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-//#include <limits.h>
-
 #include "jscript.h"
-//#include "activscp.h"
-//#include "objsafe.h"
-#include "engine.h"
 
 #include "parser.tab.h"
-
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 #define LONGLONG_MAX (((LONGLONG)0x7fffffff<<32)|0xffffffff)
 

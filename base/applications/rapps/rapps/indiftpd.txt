@@ -13,3 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = IndiFTPD ist ein eigenständiger FTP Server in einer einzigen Anwendung. Er wurde erstellt für Situationen, in denen ein Anwender keinen Server auf dem System installieren/konfigurieren möchte (oder nicht die Recte dafür besitzt) und schnell einen Server lauffähig bekommen will.
+
+[Section.0410]
+Description = IndiFTPD è un server FTP autonomo che funziona come un unico eseguibile. È stato progettato per le situazioni quando un utente non vuole installare / configurare un server sul sistema (o non ha il permesso di farlo), e vuole ottenere rapidamente un server che esegue.
+
+[Section.041f]
+Description = IndiFTPD, bağımsız (bir tek çalıştırılabilir kütükten oluşan) bir FTP sunucusudur. Bu yazılım, çabucak çalışan bir sunucuya iye olmak isteyen, ancak dizgesinde bir sunucu kurmak/ayarlamak istemeyen veyâ dizgesine bir sunucu kuramayan/ayarlayamayan kullanıcılar için tasarlanmıştır.

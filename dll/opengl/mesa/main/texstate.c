@@ -28,20 +28,7 @@
  * Texture state handling.
  */
 
-#include "glheader.h"
-#include "mfeatures.h"
-#include "bufferobj.h"
-#include "colormac.h"
-#include "colortab.h"
-#include "context.h"
-#include "enums.h"
-#include "macros.h"
-#include "texobj.h"
-#include "teximage.h"
-#include "texstate.h"
-#include "mtypes.h"
-
-
+#include <precomp.h>
 
 /**
  * Default texture combine environment state.  This is used to initialize

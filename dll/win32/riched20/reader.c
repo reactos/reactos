@@ -36,17 +36,6 @@
  * any purpose whatsoever.
  */
 
-//#include <stdio.h>
-//#include <ctype.h>
-//#include <string.h>
-//#include <stdarg.h>
-//#include <stdlib.h>
-//#include <assert.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wine/debug.h"
-
 #include "editor.h"
 #include "rtf.h"
 

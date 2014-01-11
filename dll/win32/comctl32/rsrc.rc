@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winnls.h"
-#include "comctl32.h"
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -102,6 +102,12 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_CS_CZ
     #include "lang/comctl_Cs.rc"
 #endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/comctl_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/comctl_De.rc"
+#endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/comctl_El.rc"
 #endif
@@ -114,41 +120,14 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_ES_ES
     #include "lang/comctl_Es.rc"
 #endif
-#ifdef LANGUAGE_HU_HU
-    #include "lang/comctl_Hu.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/comctl_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/comctl_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/comctl_Pl.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/comctl_Sk.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/comctl_Sv.rc"
-#endif
-#ifdef LANGUAGE_TH_TH
-    #include "lang/comctl_Th.rc"
-#endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/comctl_Tr.rc"
-#endif
-#ifdef LANGUAGE_DA_DK
-    #include "lang/comctl_Da.rc"
-#endif
-#ifdef LANGUAGE_DE_DE
-    #include "lang/comctl_De.rc"
-#endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/comctl_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/comctl_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/comctl_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/comctl_It.rc"
@@ -162,6 +141,15 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_LT_LT
     #include "lang/comctl_Lt.rc"
 #endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/comctl_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/comctl_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/comctl_Pl.rc"
+#endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/comctl_Pt.rc"
 #endif
@@ -171,11 +159,23 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_RU_RU
     #include "lang/comctl_Ru.rc"
 #endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/comctl_Sk.rc"
+#endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/comctl_Si.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/comctl_Sr.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/comctl_Sv.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/comctl_Th.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/comctl_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/comctl_Uk.rc"

@@ -22,19 +22,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 /*
  * Implement the effect of glColorMask and glIndexMask in software.
  */
 
-
-#include "main/glheader.h"
-#include "main/macros.h"
-
-#include "s_context.h"
-#include "s_masking.h"
-#include "s_span.h"
-
+#include <precomp.h>
 
 /**
  * Apply the color mask to a span of rgba values.

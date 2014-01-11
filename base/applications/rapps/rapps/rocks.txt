@@ -1,0 +1,18 @@
+﻿; UTF-8
+
+[Section]
+Name = Rocks'n'Diamonds
+Version = 3.3.1.2
+Licence = GPL v2
+Description = Arcade style game for UNIX, Mac OS X, Windows and DOS in the tradition of: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). You need a ZIP decompression program to install it.
+Size = 2.42 MB
+Category = 4
+URLSite = http://www.artsoft.org/rocksndiamonds/
+URLDownload = http://www.artsoft.org/RELEASES/win32/rocksndiamonds/rocksndiamonds-3.3.1.2-setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Arcade-Style Spiel für UNIX, Mac OS X, Windows und DOS in der Tradition von: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga / PC), "Sokoban" (PC). Sie benötigen ein ZIP-Programm, um es zu installieren.
+
+[Section.041f]
+Description = UNIX, Mac OS X, Pencereler ve DOS için yapılmış, atari oyun salonu türünde bir oyun. Şu gelenekleri içerir: "Boulder Dash" (C64), "Zümrüt Mâdeni" (Amiga), "Supaplex" (Amiga ve PC), "Sokoban" (PC). Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.

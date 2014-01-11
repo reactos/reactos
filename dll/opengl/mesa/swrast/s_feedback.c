@@ -22,16 +22,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/feedback.h"
-#include "main/macros.h"
+#include <precomp.h>
 
-#include "s_context.h"
-#include "s_feedback.h"
-#include "s_triangle.h"
-
-
+#include <main/feedback.h>
 
 static void
 feedback_vertex(struct gl_context * ctx, const SWvertex * v, const SWvertex * pv)

@@ -7,19 +7,13 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "samsrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
-
 
 /* GLOBALS *****************************************************************/
 
 #define TICKS_PER_SECOND 10000000LL
 
 SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -359,6 +353,7 @@ NTSTATUS
 SampSetupCreateUserAccount(HANDLE hDomainKey,
                            LPCWSTR lpAccountName,
                            LPCWSTR lpComment,
+                           PSID lpDomainSid,
                            ULONG ulRelativeId,
                            ULONG UserAccountControl)
 {
@@ -369,7 +364,20 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
     WCHAR szAccountKeyName[32];
     HANDLE hAccountKey = NULL;
     HANDLE hNamesKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
+    PSID UserSid = NULL;
     NTSTATUS Status;
+
+    UserSid = AppendRidToSid(lpDomainSid,
+                             ulRelativeId);
+
+    /* Create the security descriptor */
+    Status = SampCreateUserSD(UserSid,
+                              &Sd,
+                              &SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Initialize fixed user data */
     FixedUserData.Version = 1;
@@ -558,9 +566,14 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-
-    /* FIXME: Set SecDesc attribute*/
-
+    /* Set the SecDesc attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     Status = SampRegOpenKey(hDomainKey,
                             L"Users\\Names",
@@ -577,6 +590,12 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
 
 done:
     SampRegCloseKey(&hNamesKey);
+
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
 
     if (hAccountKey != NULL)
     {
@@ -1057,6 +1076,7 @@ SampInitializeSAM(VOID)
         SampSetupCreateUserAccount(hAccountDomainKey,
                                    szName,
                                    szComment,
+                                   AccountDomainInfo->DomainSid,
                                    DOMAIN_USER_RID_ADMIN,
                                    USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
@@ -1070,6 +1090,7 @@ SampInitializeSAM(VOID)
         SampSetupCreateUserAccount(hAccountDomainKey,
                                    szName,
                                    szComment,
+                                   AccountDomainInfo->DomainSid,
                                    DOMAIN_USER_RID_GUEST,
                                    USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 

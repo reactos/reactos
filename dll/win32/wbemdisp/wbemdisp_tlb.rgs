@@ -1,0 +1,139 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{565783C6-CB41-11D1-8B02-00600806D9B6}'
+        {
+            '1.2' = s 'Microsoft WMI Scripting V1.2 Library'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{27D54D92-0EBE-11D2-8B22-00600806D9B6}' = s 'ISWbemEventSource'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{76A6415B-CB41-11D1-8B02-00600806D9B6}' = s 'ISWbemLocator'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{422E8E90-D955-11D1-8B09-00600806D9B6}' = s 'ISWbemMethod'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{C93BA292-D955-11D1-8B09-00600806D9B6}' = s 'ISWbemMethodSet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{76A64164-CB41-11D1-8B02-00600806D9B6}' = s 'ISWbemNamedValue'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{CF2376EA-CE8C-11D1-8B05-00600806D9B6}' = s 'ISWbemNamedValueSet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{76A6415A-CB41-11D1-8B02-00600806D9B6}' = s 'ISWbemObject'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{5791BC27-CE9C-11D1-97BF-0000F81E849C}' = s 'ISWbemObjectPath'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{76A6415F-CB41-11D1-8B02-00600806D9B6}' = s 'ISWbemObjectSet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{26EE67BD-5804-11D2-8B4A-00600806D9B6}' = s 'ISWbemPrivilege'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{26EE67BF-5804-11D2-8B4A-00600806D9B6}' = s 'ISWbemPrivilegeSet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{1A388F98-D4BA-11D1-8B09-00600806D9B6}' = s 'ISWbemProperty'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{DEA0A7B2-D4BA-11D1-8B09-00600806D9B6}' = s 'ISWbemPropertySet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{79B05932-D3B7-11D1-8B06-00600806D9B6}' = s 'ISWbemQualifier'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{9B16ED16-D3DF-11D1-8B08-00600806D9B6}' = s 'ISWbemQualifierSet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{B54D66E6-2287-11D2-8B33-00600806D9B6}' = s 'ISWbemSecurity'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+        '{76A6415C-CB41-11D1-8B02-00600806D9B6}' = s 'ISWbemServices'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}' { val Version = s '1.2' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{76A64158-CB41-11D1-8B02-00600806D9B6}' = s 'SWbemLocator'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WbemScripting.SWbemLocator.1'
+            TypeLib = s '{565783C6-CB41-11D1-8B02-00600806D9B6}'
+            Version = s '1.2'
+            VersionIndependentProgId = s 'WbemScripting.SWbemLocator'
+        }
+    }
+    'WbemScripting.SWbemLocator.1' = s 'SWbemLocator'
+    {
+        CLSID = s '{76A64158-CB41-11D1-8B02-00600806D9B6}'
+    }
+    'WbemScripting.SWbemLocator' = s 'SWbemLocator'
+    {
+        CLSID = s '{76A64158-CB41-11D1-8B02-00600806D9B6}'
+        CurVer = s 'WbemScripting.SWbemLocator.1'
+    }
+}

@@ -37,6 +37,11 @@ Size = 9,46 Mo
 [Section.041b]
 Description = Neznáma
 
+[Section.041f]
+Name = Pencereler Ortam Düzgüleyicisi 9
+Licence = Bilinmiyor
+Description = Pencereler Ortam Düzgüleyicisi 9
+
 [Section.0422]
 Licence = Невідома
 

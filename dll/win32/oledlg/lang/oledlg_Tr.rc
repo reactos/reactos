@@ -1,7 +1,7 @@
 /*
  * Turkish Resources
  *
- * Copyright 2006 Fatih A��c�
+ * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 UIINSERTOBJECT DIALOG  0, 0, 294, 151
@@ -30,30 +28,70 @@ BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
                     LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
                     WS_TABSTOP
-    LTEXT           "Nesne T�r�:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    LTEXT           "&Nesne Türü:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
     DEFPUSHBUTTON   "Tamam",IDOK,221,7,66,14
-    PUSHBUTTON      "�ptal",IDCANCEL,221,24,66,14
-    GROUPBOX        "Sonu�",IDC_RESULT,7,103,208,41
-    CONTROL         "Yeni Olu�tur",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+    PUSHBUTTON      "İptal",IDCANCEL,221,24,66,14
+    GROUPBOX        "Sonuç",IDC_RESULT,7,103,208,41
+    CONTROL         "&Yeni Oluştur",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,7,20,62,10
-    CONTROL         "Denetim Olu�tur",IDC_CREATECONTROL,"Button",
+    CONTROL         "&Denetim Oluştur",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
-    CONTROL         "Dosyadan Olu�tur",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "&Kütükten Oluştur",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
-    PUSHBUTTON      "&Denetim Ekle...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
-    CONTROL         "Simge Olarak G�ster",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+    PUSHBUTTON      "D&enetim Ekle...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "&Simge Olarak Göster",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
-    PUSHBUTTON      "G�zat...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
-    LTEXT           "Dosya:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    PUSHBUTTON      "&Göz At...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "K&ütük:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"Belgenize yeni bir %s nesnesi ekle"
-  IDS_RESULTFILEOBJDESC	"Dosya i�eri�ini belgenize nesne olarak ekleyin. B�ylece kendisini olu�turan program� kullanarak onu etkinle�tirebilirsiniz."
-  IDS_BROWSE            "G�zat"
-  IDS_NOTOLEMOD         "Dosya ge�erli bir OLE mod�l� olarak g�r�nm�yor. OLE denetimi kaydedilemiyor."
+  IDS_RESULTOBJDESC	"Belgeye yeni bir %s nesnesi ekle."
+  IDS_RESULTFILEOBJDESC	"Kütük içeriğini belgenize nesne olarak ekleyiniz, böylece kendisini oluşturan çizeylemi kullanarak onu etkinleştirebilirsiniz."
+  IDS_BROWSE            "Göz At"
+  IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi kaydedilemiyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
+}
+
+IDD_PASTESPECIAL4 DIALOG 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Husûsî Yapıştır"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "&Kaynak:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "Y&apıştır", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "&Bağlantıyı Yapıştır", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&Olarak:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "Tamam", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "İptal", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "&Yardım", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "&Simge Olarak Göster", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "S&imgeyi Değiştir...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< Sonuç Metni Buraya Gelecek >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "So&nuç", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE
+{
+    IDS_PS_PASTE_DATA                     "Belgeye panonun içeriğini %s olarak ekler."
+    IDS_PS_PASTE_OBJECT                   "Belgeye panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Belgeye panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz. Bu simge olarak gösterilecektir."
+    IDS_PS_PASTE_LINK_DATA                "Belgeye panonun içeriğini %s olarak ekler. Bu bilgi, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
+    IDS_PS_PASTE_LINK_OBJECT              "Belgeye panonun içeriğinin resmini ekler. Bu resim, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Pano içeriğinin konumunu belirten bir kısayol ekler. Bu kısayol, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
+    IDS_PS_NON_OLE                        "Belgeye panonun içeriğini ekler."
+    IDS_PS_UNKNOWN_TYPE                   "Bilinmeyen Tür"
+    IDS_PS_UNKNOWN_SRC                    "Bilinmeyen Kaynak"
+    IDS_PS_UNKNOWN_APP                    "onu oluşturan çizeylem"
 }

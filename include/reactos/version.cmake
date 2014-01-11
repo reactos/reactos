@@ -34,7 +34,7 @@ today(KERNEL_VERSION_BUILD)
 set(KERNEL_VERSION_MAJOR "0")
 set(KERNEL_VERSION_MINOR "4")
 set(KERNEL_VERSION_PATCH_LEVEL "0")
-set(COPYRIGHT_YEAR "2013")
+set(COPYRIGHT_YEAR "2014")
 # KERNEL_VERSION_BUILD_TYPE is "SVN", "RC1", "RC2" or "" (for the release)
 set(KERNEL_VERSION_BUILD_TYPE "SVN")
 
@@ -65,3 +65,4 @@ endif()
 
 configure_file(include/reactos/version.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/version.h)
 configure_file(include/reactos/buildno.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
+configure_file(include/reactos/builddir.h.cmake ${REACTOS_BINARY_DIR}/include/reactos/builddir.h)

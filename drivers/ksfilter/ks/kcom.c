@@ -9,6 +9,9 @@
 
 #include "priv.h"
 
+#define NDEBUG
+#include <debug.h>
+
 const GUID IID_IUnknown = {0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x46}};
 
 /* http://msdn2.microsoft.com/en-us/library/ms809781.aspx */

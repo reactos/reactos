@@ -13,6 +13,8 @@
 
 #include "i8042prt.h"
 
+#include <debug.h>
+
 /* GLOBALS *******************************************************************/
 
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
@@ -468,6 +470,34 @@ i8042KbdDeviceControl(
 	return Status;
 }
 
+VOID
+NTAPI
+i8042InitializeKeyboardAttributes(
+    PI8042_KEYBOARD_EXTENSION DeviceExtension)
+{
+    PPORT_DEVICE_EXTENSION PortDeviceExtension;
+    PI8042_SETTINGS Settings;
+    PKEYBOARD_ATTRIBUTES KeyboardAttributes;
+
+    PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
+    Settings = &PortDeviceExtension->Settings;
+
+    KeyboardAttributes = &DeviceExtension->KeyboardAttributes;
+
+    KeyboardAttributes->KeyboardIdentifier.Type = (UCHAR)Settings->OverrideKeyboardType;
+    KeyboardAttributes->KeyboardIdentifier.Subtype = (UCHAR)Settings->OverrideKeyboardSubtype;
+    KeyboardAttributes->NumberOfFunctionKeys = 4;
+    KeyboardAttributes->NumberOfIndicators = 3;
+    KeyboardAttributes->NumberOfKeysTotal = 101;
+    KeyboardAttributes->InputDataQueueLength = Settings->KeyboardDataQueueSize;
+    KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
+    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
+    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
+    KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
+    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
+    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
+}
+
 /*
  * Runs the keyboard IOCTL_INTERNAL dispatch.
  */
@@ -558,6 +588,8 @@ i8042KbdInternalDeviceControl(
 			DeviceExtension->Common.PortDeviceExtension->KeyboardExtension = DeviceExtension;
 			DeviceExtension->Common.PortDeviceExtension->Flags |= KEYBOARD_CONNECTED;
 
+            i8042InitializeKeyboardAttributes(DeviceExtension);
+
 			IoMarkIrpPending(Irp);
 			/* FIXME: DeviceExtension->KeyboardHook.IsrWritePort = ; */
 			DeviceExtension->KeyboardHook.QueueKeyboardPacket = i8042KbdQueuePacket;
@@ -601,8 +633,8 @@ cleanup:
 		}
 		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		{
-			DPRINT1("IOCTL_KEYBOARD_QUERY_ATTRIBUTES not implemented\n");
-#if 0
+		    PKEYBOARD_ATTRIBUTES KeyboardAttributes;
+
             /* FIXME: KeyboardAttributes are not initialized anywhere */
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
 			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
@@ -611,11 +643,13 @@ cleanup:
 				break;
 			}
 
-			*(PKEYBOARD_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->KeyboardAttributes;
+            KeyboardAttributes = Irp->AssociatedIrp.SystemBuffer;
+            *KeyboardAttributes = DeviceExtension->KeyboardAttributes;
+
 			Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
 			Status = STATUS_SUCCESS;
 			break;
-#endif
+
 			Status = STATUS_NOT_IMPLEMENTED;
 			break;
 		}
@@ -812,7 +846,7 @@ i8042KbdInterruptService(
 		else if (DeviceExtension->TabPressed)
 		{
 			DeviceExtension->TabPressed = FALSE;
-            
+
             /* Check which action to do */
             if (InputData->MakeCode == 0x25)
             {
@@ -826,7 +860,7 @@ i8042KbdInterruptService(
             }
             else
             {
-			    /* Send request to the kernel debugger. 
+			    /* Send request to the kernel debugger.
 			     * Unknown requests will be ignored. */
 			    KdSystemDebugControl(' soR',
 			                         (PVOID)(ULONG_PTR)InputData->MakeCode,

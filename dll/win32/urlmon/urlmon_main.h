@@ -20,11 +20,11 @@
 #ifndef __WINE_URLMON_MAIN_H
 #define __WINE_URLMON_MAIN_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -33,14 +33,19 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-//#include "winuser.h"
 #include <ole2.h>
 #include <urlmon.h>
 #include <wininet.h>
 #include <shellapi.h>
+#include <advpub.h>
+#define NO_SHLWAPI_REG
+#include <shlwapi.h>
 
-#include <wine/unicode.h>
 #include <wine/list.h>
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;

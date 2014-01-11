@@ -22,21 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "main/glheader.h"
-#include "main/context.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-#include "main/pixeltransfer.h"
-#include "main/imports.h"
-
-#include "s_context.h"
-#include "s_depth.h"
-#include "s_span.h"
-#include "s_stencil.h"
-#include "s_zoom.h"
-
-
+#include <precomp.h>
 
 /**
  * Determine if there's overlap in an image copy.

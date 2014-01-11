@@ -13,3 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Pingus ist ein freies Lemings-ähnliches Puzzle Spiel.
+
+[Section.0410]
+Description = Pingus è un gioco gratuito simile a Lemmings.
+
+[Section.041f]
+Description = Pingus, ücretsiz, Yaban Sıçanları gibi bir bulmaca oyunudur.

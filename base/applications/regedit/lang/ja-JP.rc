@@ -1,37 +1,16 @@
-/*
- * Regedit resources
- *
- * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
-/*
- * Menu
- */
+/* Menus */
 
 IDC_REGEDIT MENU
 BEGIN
@@ -41,7 +20,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "バージョン情報(&A)...",       ID_HELP_ABOUT
+        MENUITEM "バージョン情報(&A)...", ID_HELP_ABOUT
     END
 END
 
@@ -49,222 +28,211 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
-        MENUITEM "インポート(&I)...",           ID_REGISTRY_IMPORTREGISTRYFILE
-
-        MENUITEM "エクスポート(&E)...",         ID_REGISTRY_EXPORTREGISTRYFILE
-
+        MENUITEM "インポート(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "エクスポート(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-            MENUITEM "ハイブの読み込み...",     ID_REGISTRY_LOADHIVE, GRAYED
-            MENUITEM "ハイブのアンロード...",   ID_REGISTRY_UNLOADHIVE, GRAYED
-            MENUITEM SEPARATOR
-        MENUITEM "ネットワーク レジストリへの接続(&C)...",
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-        MENUITEM "ネットワーク レジストリの切断(&D)...",
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+        MENUITEM "ハイブの読み込み...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "ハイブのアンロード...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "印刷(&P)\tCtrl+P",            ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "ネットワーク レジストリへの接続(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "ネットワーク レジストリの切断(&D)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "印刷(&P)\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "レジストリ エディタの終了(&X)", ID_REGISTRY_EXIT
     END
     POPUP "編集(&E)"
     BEGIN
-        MENUITEM "修正(&M)",                    ID_EDIT_MODIFY
+        MENUITEM "修正(&M)", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "新規(&N)"
         BEGIN
-            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM "キー(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
-                MENUITEM "複数行文字列値(&M)",  ID_EDIT_NEW_MULTISTRINGVALUE
-                MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "文字列値(&S)", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "複数行文字列値(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "アクセス許可(&P)...",         ID_EDIT_PERMISSIONS
+        MENUITEM "アクセス許可(&P)...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "削除(&D)\tDel",               ID_EDIT_DELETE
-        MENUITEM "名前の変更(&R)",              ID_EDIT_RENAME
+        MENUITEM "削除(&D)\tDel", ID_EDIT_DELETE
+        MENUITEM "名前の変更(&R)", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "キー名のコピー(&C)",          ID_EDIT_COPYKEYNAME
+        MENUITEM "キー名のコピー(&C)", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "検索(&F)\tCtrl+F",            ID_EDIT_FIND
-        MENUITEM "次を検索(&X)\tF3",            ID_EDIT_FINDNEXT
+        MENUITEM "検索(&F)\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "次を検索(&X)\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "表示(&V)"
     BEGIN
-        MENUITEM "ステータス バー(&B)",         ID_VIEW_STATUSBAR
+        MENUITEM "ステータス バー(&B)", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "境界の変更(&L)",              ID_VIEW_SPLIT
+        MENUITEM "境界の変更(&L)", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "最新の情報に更新(&R)\tF5",    ID_VIEW_REFRESH
+        MENUITEM "最新の情報に更新(&R)\tF5", ID_VIEW_REFRESH
     END
     POPUP "お気に入り(&F)"
     BEGIN
-        MENUITEM "お気に入りに追加(&A)",        ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "お気に入りの削除(&R)",        ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "お気に入りに追加(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "お気に入りの削除(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "トピックの検索(&H)\tF1",      ID_HELP_HELPTOPICS
+        MENUITEM "トピックの検索(&H)\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "バージョン情報(&A)",          ID_HELP_ABOUT
+        MENUITEM "バージョン情報(&A)", ID_HELP_ABOUT
     END
 END
 
 IDR_POPUP_MENUS MENU
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "修正(&M)",                    ID_EDIT_MODIFY
-	MENUITEM "バイナリ データの修正",       ID_EDIT_MODIFY_BIN
-	MENUITEM SEPARATOR
-	MENUITEM "削除(&D)\tDel",               ID_EDIT_DELETE
-	MENUITEM "名前の変更(&R)",              ID_EDIT_RENAME
-  END
-  POPUP ""
-  BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "修正(&M)", ID_EDIT_MODIFY
+        MENUITEM "バイナリ データの修正", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "削除(&D)\tDel", ID_EDIT_DELETE
+        MENUITEM "名前の変更(&R)", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
         POPUP "新規(&N)"
         BEGIN
-            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM "キー(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能な文字列値(&E)",  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "文字列値(&S)", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "複数行文字列値(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-  END
-  POPUP ""
-  BEGIN
-        MENUITEM "展開する/閉じる",             ID_TREE_EXPANDBRANCH
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "展開する/閉じる", ID_TREE_EXPANDBRANCH
         POPUP "新規(&N)"
         BEGIN
-            MENUITEM "キー(&K)",                ID_EDIT_NEW_KEY
+            MENUITEM "キー(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "文字列値(&S)",            ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能な文字列値(&E)",  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "文字列値(&S)", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "バイナリ値(&B)", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "DWORD 値(&D)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "複数行文字列値(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "検索(&F)",                    ID_EDIT_FIND
+        MENUITEM "検索(&F)", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "削除(&D)",                    ID_TREE_DELETE
-        MENUITEM "名前の変更(&R)",              ID_TREE_RENAME
+        MENUITEM "削除(&D)", ID_TREE_DELETE
+        MENUITEM "名前の変更(&R)", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "エクスポート(&E)",            ID_TREE_EXPORT
-        MENUITEM "アクセス許可(&P)...",         ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "エクスポート(&E)", ID_TREE_EXPORT
+        MENUITEM "アクセス許可(&P)...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "キー名のコピー(&C)",          ID_EDIT_COPYKEYNAME
-  END
-  POPUP ""
-  BEGIN
+        MENUITEM "キー名のコピー(&C)", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "切り取り(&C)", ID_HEXEDIT_CUT
         MENUITEM "コピー(&C)", ID_HEXEDIT_COPY
         MENUITEM "貼り付け(&P)", ID_HEXEDIT_PASTE
         MENUITEM "削除(&D)", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "すべて選択(&A)", ID_HEXEDIT_SELECT_ALL
-  END
+    END
 END
 
+/* Dialogs */
 
-/*
- * Dialog
- */
-
-IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "文字列の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,196,64,50,14
+    LTEXT "値の名前(&N):", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "値のデータ(&V):", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 196, 64, 50, 14
 END
 
-IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "複数行文字列の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,196,154,50,14
+    LTEXT "値の名前(&N):", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "値のデータ(&V):", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 196, 154, 50, 14
 END
 
-IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "バイナリ値の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
-    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,196,154,50,14
+    LTEXT "値の名前(&N):", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "値のデータ(&V):", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 196, 154, 50, 14
 END
 
-
-IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "DWORD 値の編集"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "値の名前(&N):",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "値のデータ(&V):",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "基数",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "16 進(&H)",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "10 進(&D)",IDC_FORMAT_DEC,141,59,60,10
-    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,196,82,50,14
+    LTEXT "値の名前(&N):", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "値のデータ(&V):", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "基数", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "16 進(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "10 進(&D)", IDC_FORMAT_DEC, 141, 59, 60, 10
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 196, 82, 50, 14
 END
 
-
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "リソース リスト"
 FONT 9, "MS UI Gothic"
-{
-    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
     PUSHBUTTON "表示(S)...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
-}
+END
 
-
-IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resources"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
-    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
     LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
-    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
     LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
-    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
-    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
     LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
-    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
     LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
@@ -278,259 +246,248 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
     RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
-    DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
+    DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
-}
+END
 
-
-/*
- * String Table
- */
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "名前"
-    IDS_LIST_COLUMN_TYPE    "種類"
-    IDS_LIST_COLUMN_DATA    "データ"
+    IDS_LIST_COLUMN_NAME "名前"
+    IDS_LIST_COLUMN_TYPE "種類"
+    IDS_LIST_COLUMN_DATA "データ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "レジストリ エディタ"
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+    IDS_APP_TITLE "レジストリ エディタ"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU        "レジストリ全体で使用するコマンドです。"
-    ID_EDIT_MENU            "値やキーを編集するコマンドです。"
-    ID_VIEW_MENU            "レジストリ ウィンドウをカスタマイズするコマンドです。"
-    ID_FAVOURITES_MENU      "頻繁に使用されるキーにアクセスするコマンドです。"
-    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです。"
-    ID_EDIT_NEW_MENU        "新しいキーや値を作成するコマンドです。"
+    ID_REGISTRY_MENU "レジストリ全体で使用するコマンドです。"
+    ID_EDIT_MENU "値やキーを編集するコマンドです。"
+    ID_VIEW_MENU "レジストリ ウィンドウをカスタマイズするコマンドです。"
+    ID_FAVOURITES_MENU "頻繁に使用されるキーにアクセスするコマンドです。"
+    ID_HELP_MENU "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです。"
+    ID_EDIT_NEW_MENU "新しいキーや値を作成するコマンドです。"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY          "値のデータを変更します。"
-    ID_EDIT_NEW_KEY         "新しいキーを追加します。"
+    ID_EDIT_MODIFY "値のデータを変更します。"
+    ID_EDIT_NEW_KEY "新しいキーを追加します。"
     ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します。"
     ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します。"
-    ID_EDIT_NEW_DWORDVALUE  "新しい DWORD 値を追加します。"
+    ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します。"
     ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします。"
-    ID_REGISTRY_EXPORTREGISTRYFILE
-                            "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
-    ID_REGISTRY_LOADHIVE
-                            "ハイブ ファイルをレジストリに読み込みます。"
-    ID_REGISTRY_UNLOADHIVE
-                            "レジストリからハイブをアンロードします。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "リモート コンピュータのレジストリに接続します。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "リモート コンピュータのレジストリを切断します。"
-    ID_REGISTRY_PRINT       "レジストリの一部または全体を印刷します。"
-/*    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。" */
-    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表示します。"
+    ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
+    ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます。"
+    ID_REGISTRY_UNLOADHIVE "レジストリからハイブをアンロードします。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "リモート コンピュータのレジストリに接続します。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "リモート コンピュータのレジストリを切断します。"
+    ID_REGISTRY_PRINT "レジストリの一部または全体を印刷します。"
+/*    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。" */
+    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT        "レジストリ エディタを終了します。"
+    ID_REGISTRY_EXIT "レジストリ エディタを終了します。"
     ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
     ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
-    ID_VIEW_STATUSBAR       "ステータス バーの表示/非表示を切り替えます。"
-    ID_VIEW_SPLIT           "2つのパネルの境界の位置を変更します。"
-    ID_VIEW_REFRESH         "ウィンドウの内容を最新の情報に更新します。"
-    ID_EDIT_DELETE          "選択範囲を削除します。"
-    ID_EDIT_RENAME          "名前を変更します。"
-    ID_EDIT_COPYKEYNAME     "選択されたキー名をクリップボードにコピーします。"
-    ID_EDIT_FIND            "キー、値、データの中のテキストを検索します。"
-    ID_EDIT_FINDNEXT        "前回と同じ条件で次の項目を検索します。"
+    ID_VIEW_STATUSBAR "ステータス バーの表示/非表示を切り替えます。"
+    ID_VIEW_SPLIT "2つのパネルの境界の位置を変更します。"
+    ID_VIEW_REFRESH "ウィンドウの内容を最新の情報に更新します。"
+    ID_EDIT_DELETE "選択範囲を削除します。"
+    ID_EDIT_RENAME "名前を変更します。"
+    ID_EDIT_COPYKEYNAME "選択されたキー名をクリップボードにコピーします。"
+    ID_EDIT_FIND "キー、値、データの中のテキストを検索します。"
+    ID_EDIT_FINDNEXT "前回と同じ条件で次の項目を検索します。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR               "エラー"
-    IDS_WARNING             "警告"
-    IDS_BAD_KEY             "キー '%s' を照会できません"
-    IDS_BAD_VALUE           "'%s' の値を照会できません。"
-    IDS_UNSUPPORTED_TYPE    "この種類のキーは編集できません (%ld)。"
-    IDS_TOO_BIG_VALUE       "値が大きすぎます (%ld)。"
+    IDS_ERROR "エラー"
+    IDS_WARNING "警告"
+    IDS_BAD_KEY "キー '%s' を照会できません"
+    IDS_BAD_VALUE "'%s' の値を照会できません。"
+    IDS_UNSUPPORTED_TYPE "この種類のキーは編集できません (%ld)。"
+    IDS_TOO_BIG_VALUE "値が大きすぎます (%ld)。"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 型のデータに空白文字列を含むことはできません。\nレジストリ エディタは検出した空白文字列を削除します。"
-    IDS_QUERY_DELETE_KEY_ONE     "このキーを削除してもよろしいですか?"
-    IDS_QUERY_DELETE_KEY_MORE    "これらのキーをすべて削除してもよろしいですか?"
+    IDS_QUERY_DELETE_KEY_ONE "このキーを削除してもよろしいですか?"
+    IDS_QUERY_DELETE_KEY_MORE "これらのキーをすべて削除してもよろしいですか?"
     IDS_QUERY_DELETE_KEY_CONFIRM "キーの削除の確認"
-    IDS_QUERY_DELETE_ONE    "この値を削除してもよろしいですか?"
-    IDS_QUERY_DELETE_MORE   "これらの値をすべて削除してもよろしいですか?"
+    IDS_QUERY_DELETE_ONE "この値を削除してもよろしいですか?"
+    IDS_QUERY_DELETE_MORE "これらの値をすべて削除してもよろしいですか?"
     IDS_QUERY_DELETE_CONFIRM "値の削除の確認"
-    IDS_ERR_DELVAL_CAPTION  "値の削除をするときにエラーが発生しました。"
-    IDS_ERR_DELETEVALUE     "指定された値のすべてを削除できません!"
-    IDS_ERR_RENVAL_CAPTION  "値の名前を変更するときにエラーが発生しました。"
-    IDS_ERR_RENVAL_TOEMPTY  "%s の名前を変更できません。指定された値の名前には文字が含まれていません。別の名前でやり直してください。"
+    IDS_ERR_DELVAL_CAPTION "値の削除をするときにエラーが発生しました。"
+    IDS_ERR_DELETEVALUE "指定された値のすべてを削除できません!"
+    IDS_ERR_RENVAL_CAPTION "値の名前を変更するときにエラーが発生しました。"
+    IDS_ERR_RENVAL_TOEMPTY "%s の名前を変更できません。指定された値の名前には文字が含まれていません。別の名前でやり直してください。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "現在選択中のキーの最上部にキーが格納されます。\nこのキーのすべての値とサブキーが削除されます。\nこの処理を続行しますか?"
-    IDS_NEW_KEY             "新しいキー #%d"
-    IDS_NEW_VALUE           "新しい値 #%d"
+    IDS_QUERY_IMPORT_HIVE_MSG "現在選択中のキーの最上部にキーが格納されます。\nこのキーのすべての値とサブキーが削除されます。\nこの処理を続行しますか?"
+    IDS_NEW_KEY "新しいキー #%d"
+    IDS_NEW_VALUE "新しい値 #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY        "(長さ 0 のバイナリ値)"
-    IDS_DEFAULT_VALUE_NAME  "(既定値)"
-    IDS_VALUE_NOT_SET       "(値の設定なし)"
-    IDS_UNKNOWN_TYPE        "種類不明: (0x%lx)"
-    IDS_MY_COMPUTER         "マイ コンピュータ"
-    IDS_IMPORT_REG_FILE     "レジストリ ファイルのインポート"
-    IDS_EXPORT_REG_FILE     "レジストリ ファイルのエクスポート"
-    IDS_LOAD_HIVE           "ハイブを読み込む"
-    IDS_UNLOAD_HIVE         "ハイブをアンロードする"
-    IDS_INVALID_DWORD       "(無効な DWORD 値)"
+    IDS_BINARY_EMPTY "(長さ 0 のバイナリ値)"
+    IDS_DEFAULT_VALUE_NAME "(既定値)"
+    IDS_VALUE_NOT_SET "(値の設定なし)"
+    IDS_UNKNOWN_TYPE "種類不明: (0x%lx)"
+    IDS_MY_COMPUTER "マイ コンピュータ"
+    IDS_IMPORT_REG_FILE "レジストリ ファイルのインポート"
+    IDS_EXPORT_REG_FILE "レジストリ ファイルのエクスポート"
+    IDS_LOAD_HIVE "ハイブを読み込む"
+    IDS_UNLOAD_HIVE "ハイブをアンロードする"
+    IDS_INVALID_DWORD "(無効な DWORD 値)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE         "登録ファイル"
-    IDS_FLT_REGFILES        "登録ファイル (*.reg)"
-    IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
-    IDS_FLT_HIVFILES_FLT    "*.*"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 登録ファイル (REGEDIT4) (*.reg)"
-    IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "すべてのファイル (*.*)"
-    IDS_FLT_ALLFILES_FLT    "*.*"
+    IDS_FLT_REGFILE "登録ファイル"
+    IDS_FLT_REGFILES "登録ファイル (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 登録ファイル (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "すべてのファイル (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "フル コントロール"
-  IDS_ACCESS_READ               "読み取り"
-  IDS_ACCESS_QUERYVALUE         "値の照会"
-  IDS_ACCESS_SETVALUE           "値の設定"
-  IDS_ACCESS_CREATESUBKEY       "サブキーの作成"
-  IDS_ACCESS_ENUMERATESUBKEYS   "サブキーの列挙"
-  IDS_ACCESS_NOTIFY             "通知"
-  IDS_ACCESS_CREATELINK         "リンクの作成"
-  IDS_ACCESS_DELETE             "削除"
-  IDS_ACCESS_WRITEDAC           "DAC の書き込み"
-  IDS_ACCESS_WRITEOWNER         "所有者の書き込み"
-  IDS_ACCESS_READCONTROL        "読み取り制御"
+    IDS_ACCESS_FULLCONTROL "フル コントロール"
+    IDS_ACCESS_READ "読み取り"
+    IDS_ACCESS_QUERYVALUE "値の照会"
+    IDS_ACCESS_SETVALUE "値の設定"
+    IDS_ACCESS_CREATESUBKEY "サブキーの作成"
+    IDS_ACCESS_ENUMERATESUBKEYS "サブキーの列挙"
+    IDS_ACCESS_NOTIFY "通知"
+    IDS_ACCESS_CREATELINK "リンクの作成"
+    IDS_ACCESS_DELETE "削除"
+    IDS_ACCESS_WRITEDAC "DAC の書き込み"
+    IDS_ACCESS_WRITEOWNER "所有者の書き込み"
+    IDS_ACCESS_READCONTROL "読み取り制御"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "このキーのみ"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "このキーとサブキー"
-  IDS_INHERIT_SUBKEYSONLY        "サブキーのみ"
+    IDS_INHERIT_THISKEYONLY "このキーのみ"
+    IDS_INHERIT_THISKEYANDSUBKEYS "このキーとサブキー"
+    IDS_INHERIT_SUBKEYSONLY "サブキーのみ"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_EXPAND                     "展開(&E)"
-  IDS_COLLAPSE                   "閉じる(&C)"
-  IDS_GOTO_SUGGESTED_KEY         "'%s' へ移動する(&G)"
-  IDS_FINISHEDFIND               "レジストリをすべて検索しました。"
+    IDS_EXPAND "展開(&E)"
+    IDS_COLLAPSE "閉じる(&C)"
+    IDS_GOTO_SUGGESTED_KEY "'%s' へ移動する(&G)"
+    IDS_FINISHEDFIND "レジストリをすべて検索しました。"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "情報を追加することは、意図せずに値を変更または削除し、コンポーネントの正しい動作の停止を引き起こすかも知れません。\nもし '%1' の情報の入手元を信頼していないのなら、レジストリに追加しないで下さい。\n\n続行しますか?"
-  IDS_IMPORT_OK                  "'%1' に含まれるキーと値は、正しくレジストリに追加されました。"
-  IDS_IMPORT_ERROR               "'%1' をインポートできません: ファイルを開くときにエラーが発生しました。ディスクかファイル システムのエラー、もしくはファイルが存在していないのかも知れません。"
-  IDS_EXPORT_ERROR               "'%1' をエクスポートできません: ファイルを作成または書き込むときにエラーが発生しました。ディスクかファイル システムのエラーかも知れません。"
+    IDS_IMPORT_PROMPT "情報を追加することは、意図せずに値を変更または削除し、コンポーネントの正しい動作の停止を引き起こすかも知れません。\nもし '%1' の情報の入手元を信頼していないのなら、レジストリに追加しないで下さい。\n\n続行しますか?"
+    IDS_IMPORT_OK "'%1' に含まれるキーと値は、正しくレジストリに追加されました。"
+    IDS_IMPORT_ERROR "'%1' をインポートできません: ファイルを開くときにエラーが発生しました。ディスクかファイル システムのエラー、もしくはファイルが存在していないのかも知れません。"
+    IDS_EXPORT_ERROR "'%1' をエクスポートできません: ファイルを作成または書き込むときにエラーが発生しました。ディスクかファイル システムのエラーかも知れません。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
-    IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
-    IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_BUSNUMBER "Bus Number"
+    IDS_INTERFACE "Interface"
+    IDS_DMA_CHANNEL "Channel"
+    IDS_DMA_PORT "Port"
+    IDS_INTERRUPT_VECTOR "Vector"
+    IDS_INTERRUPT_LEVEL "Level"
+    IDS_INTERRUPT_AFFINITY "Affinity"
+    IDS_INTERRUPT_TYPE "Type"
+    IDS_MEMORY_ADDRESS "Physical Address"
+    IDS_MEMORY_LENGTH "Length"
+    IDS_MEMORY_ACCESS "Access"
+    IDS_PORT_ADDRESS "Physical Address"
+    IDS_PORT_LENGTH "Length"
+    IDS_PORT_ACCESS "Access"
+    IDS_SPECIFIC_RESERVED1 "Reserved 1"
+    IDS_SPECIFIC_RESERVED2 "Reserved 2"
+    IDS_SPECIFIC_DATASIZE "Data Size"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
+    IDS_PORT_PORT_IO "Port"
+    IDS_PORT_MEMORY_IO "Memory"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_MEMORY_READ_ONLY "Read Only"
+    IDS_MEMORY_WRITE_ONLY "Write Only"
+    IDS_MEMORY_READ_WRITE "Read / Write"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
-    IDS_BUS_ISA                   "ISA"
-    IDS_BUS_EISA                  "EISA"
-    IDS_BUS_MICROCHANNEL          "MicroChannel"
-    IDS_BUS_TURBOCHANNEL          "TurboChannel"
-    IDS_BUS_PCIBUS                "PCI"
-    IDS_BUS_VMEBUS                "VME"
-    IDS_BUS_NUBUS                 "NuBus"
-    IDS_BUS_PCMCIABUS             "PCMCIA"
-    IDS_BUS_CBUS                  "C-Bus"
-    IDS_BUS_MPIBUS                "MPI-Bus"
-    IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
-    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
-    IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNDEFINED "Undefined"
+    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PNPISABUS "PnP-ISA Bus"
+    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
 END
 
 /*****************************************************************/
 
-
-/*
- * Dialog
- */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 9, "MS UI Gothic"
 BEGIN
-   GROUPBOX "エクスポート範囲",IDC_STATIC,2,0,366,48
-   CONTROL "すべて(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,100,11
-   CONTROL "選択された部分(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22,100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+    GROUPBOX "エクスポート範囲", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "すべて(&A)", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 100, 11
+    CONTROL "選択された部分(&E)", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ハイブを読み込む"
 FONT 9, "MS UI Gothic"
-{
-    LTEXT           "キー(&K):", IDC_STATIC, 4, 4, 25, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 33, 2, 157, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "キャンセル", IDCANCEL, 89, 17, 50, 14
-}
+BEGIN
+    LTEXT "キー(&K):", IDC_STATIC, 4, 4, 25, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 33, 2, 157, 13
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 89, 17, 50, 14
+END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "お気に入りに追加"
 FONT 9, "MS UI Gothic"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,129,24,50,14
-    LTEXT           "お気に入りの名前(&F):",IDC_STATIC,7,7,70,10
-    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 129, 24, 50, 14
+    LTEXT "お気に入りの名前(&F):", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
@@ -538,11 +495,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "お気に入りの削除"
 FONT 9, "MS UI Gothic"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
-                    WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "お気に入りの選択:",IDC_STATIC,7,7,99,12
+    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "お気に入りの選択:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -550,55 +507,38 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "検索"
 FONT 9, "MS UI Gothic"
 BEGIN
-    DEFPUSHBUTTON   "次を検索(&F)",IDOK,197,7,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,197,24,50,14
-    GROUPBOX        "検索対象",IDC_STATIC,7,25,63,51
-    LTEXT           "検索する値(&N):",IDC_STATIC,7,8,50,10
-    EDITTEXT        IDC_FINDWHAT,57,7,135,13,ES_AUTOHSCROLL
-    CONTROL         "キー(&K)",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,36,35,8
-    CONTROL         "値(&V)",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,36,8
-    CONTROL         "データ(&D)",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,60,42,8
-    CONTROL         "完全に一致するものだけを検索(&W)",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,109,13
-    CONTROL         "大文字と小文字を区別する(&C)",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,108,12
+    DEFPUSHBUTTON "次を検索(&F)", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "検索対象", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "検索する値(&N):", IDC_STATIC, 7, 8, 50, 10
+    EDITTEXT IDC_FINDWHAT, 57, 7, 135, 13, ES_AUTOHSCROLL
+    CONTROL "キー(&K)", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 35, 8
+    CONTROL "値(&V)", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 36, 8
+    CONTROL "データ(&D)", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "完全に一致するものだけを検索(&W)", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 109, 13
+    CONTROL "大文字と小文字を区別する(&C)", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 48, 108, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "検索"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
-    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "キャンセル(&C)",IDCANCEL,93,29,45,14
-    LTEXT           "レジストリの検索中...",IDC_STATIC,33,12,83,8
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "キャンセル(&C)", IDCANCEL, 93, 29, 45, 14
+    LTEXT "レジストリの検索中...", IDC_STATIC, 33, 12, 83, 8
 END
 
-/*
- * TEXTINCLUDE
- */
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-
-
-/*
- * String Table
- */
-
+/* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。"
- *    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表示します。"
+ *    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。"
+ *    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
  *END
  */
-
-/*****************************************************************/

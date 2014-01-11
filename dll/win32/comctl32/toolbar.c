@@ -68,21 +68,7 @@
  *
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <wine/unicode.h>
-#include <winnls.h>
-#include <commctrl.h>
 #include "comctl32.h"
-#include <uxtheme.h>
-#include <vssym32.h>
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(toolbar);
 

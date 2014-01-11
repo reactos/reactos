@@ -1,6 +1,5 @@
 
 
-add_definitions(-DNDEBUG)
 
 spec2def(mmdrv.dll mmdrv.spec)
 

@@ -7,11 +7,11 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactX-diagnostický program"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Nápověda", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Další stránka", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Uložit všechny informace...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -68,7 +68,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-
     GROUPBOX "Ovladač", -1, 270, 10, 190, 100
     RTEXT "Hlavní ovladač:", -1, 275, 25, 55, 10
     RTEXT "Verze:", -1, 275, 35, 55, 10
@@ -84,7 +83,6 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
-
     GROUPBOX "Vlastnosti ReactX", -1, 10, 115, 450, 60
     RTEXT "DirectDraw akcelerace:", -1, 15, 130, 110, 12
     RTEXT "Direct3D akcelerace:", -1, 15, 145, 110, 12
@@ -97,11 +95,9 @@ BEGIN
     PUSHBUTTON "Zapnout", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Otestovat DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Otestovat Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
-
     GROUPBOX "Poznámky", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
-
 
 IDD_SOUND_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
@@ -138,7 +134,7 @@ BEGIN
     RTEXT "Hardwarový zvuk\nÚroveň akcelerace:", -1, 20, 135, 90, 20
     PUSHBUTTON "Otestovat DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Poznámky", -1, 10, 180, 450, 40
-    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
@@ -147,7 +143,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-
 IDD_INPUT_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
@@ -155,9 +150,10 @@ BEGIN
     GROUPBOX "Zařízení DirectInput", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Vstupní zařízení", -1, 10, 100, 452, 60
-    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+            WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Informace", -1, 10, 170, 452, 50
-    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+    EDITTEXT IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
 END
 
 IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
@@ -176,55 +172,55 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_MAIN_DIALOG "ReactX diagnostický nástroj"
-	IDS_SYSTEM_DIALOG "Systém"
-	IDS_DISPLAY_DIALOG "Obrazovka"
-	IDS_SOUND_DIALOG "Zvuk"
-	IDS_MUSIC_DIALOG "Hudba"
-	IDS_INPUT_DIALOG "Vstup"
-	IDS_NETWORK_DIALOG "Síť"
-	IDS_HELP_DIALOG "Nápověda"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB použito, %I64u MB volných"
-	IDS_FORMAT_UNIPROC "%s (%u CPU)"
-	IDS_FORMAT_MPPROC  "%s (%u CPU)"
-	IDS_VERSION_UNKNOWN "Neznámá verze"
-	IDS_DEVICE_STATUS_ATTACHED "Připojeno"
-	IDS_DEVICE_STATUS_MISSING "Odpojeno"
-	IDS_DEVICE_STATUS_UNKNOWN "Neznámé"
-	IDS_DEVICE_NAME "Název zařízení"
-	IDS_DEVICE_STATUS "Status"
-	IDS_DEVICE_CONTROLLER "ID řadiče"
-	IDS_DEVICE_MANUFACTURER "ID výrobce"
-	IDS_DEVICE_PRODUCT "ID produktu"
-	IDS_DEVICE_FORCEFEEDBACK "Ovladač Force Feedback"
-	IDS_NOT_APPLICABLE "Nelze aplikovat"
-	IDS_OPTION_YES "Ano"
-	IDS_DIRECTPLAY_COL_NAME1 "Název"
-	IDS_DIRECTPLAY_COL_NAME2 "Registr"
-	IDS_DIRECTPLAY_COL_NAME3 "Soubor"
-	IDS_DIRECTPLAY_COL_NAME4 "Verze"
-	IDS_DIRECTPLAY8_MODEMSP "Poskytovatel služby DirectPlay8-Modem"
-	IDS_DIRECTPLAY8_SERIALSP "Poskytovatel služby DirectPlay8 Serial"
-	IDS_DIRECTPLAY8_IPXSP "Poskytovatel služby DirectPlay8 IPX"
-	IDS_DIRECTPLAY8_TCPSP "Poskytovatel služby DirectPlay8-TCP/IP"
-	IDS_DIRECTPLAY_TCPCONN "Internetové připojení TCP/IP pro DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "IPX připojení pro DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Modemové připojení pro DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Sériové připojení pro DirectPlay"
-	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "Chyba"
-	IDS_DDTEST_ERROR "Test selhal!"
-	IDS_DDTEST_DESCRIPTION "Spustí se test rozhraní DirectDraw. Pokračovat?"
-	IDS_DDPRIMARY_DESCRIPTION "Tento test použije DirectDraw k vykreslování na primary surface. Měly by být vykresleny černé a bílé obdélníky. Pokračovat?"
-	IDS_DDPRIMARY_RESULT "Byly vidět černé a bílé obdélníky?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Tento test použije DirectDraw k vykreslování do offscreen bufferu. Měl by být vykreslen bílý pohybující se obdélník. Pokračovat?"
-	IDS_DDOFFSCREEN_RESULT "Byl vidět bílý pohybující se obdélník?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Tento test použije DirectDraw k vykreslování do celoobrazovkového módu. Měl by být vykreslen bílý pohybující se obdélník. Pokračovat?"
-	IDS_DDFULLSCREEN_RESULT "Viděli jste bílý pohybující se obdélník v celoobrazovkovém módu?"
-	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
-	IDS_OPTION_NO "Ne"
-	IDS_D3DTEST_DESCRIPTION "Spustí se test rozhraní Direct3D. Pokračovat?"
-	IDS_D3DTEST_D3Dx "Tento test použije hardwarově akcelerované rozhraní Direct3D %u."
+    IDS_MAIN_DIALOG "ReactX diagnostický nástroj"
+    IDS_SYSTEM_DIALOG "Systém"
+    IDS_DISPLAY_DIALOG "Obrazovka"
+    IDS_SOUND_DIALOG "Zvuk"
+    IDS_MUSIC_DIALOG "Hudba"
+    IDS_INPUT_DIALOG "Vstup"
+    IDS_NETWORK_DIALOG "Síť"
+    IDS_HELP_DIALOG "Nápověda"
+    IDS_FORMAT_MB "%I64uMB RAM"
+    IDS_FORMAT_SWAP "%I64u MB použito, %I64u MB volných"
+    IDS_FORMAT_UNIPROC "%s (%u CPU)"
+    IDS_FORMAT_MPPROC "%s (%u CPU)"
+    IDS_VERSION_UNKNOWN "Neznámá verze"
+    IDS_DEVICE_STATUS_ATTACHED "Připojeno"
+    IDS_DEVICE_STATUS_MISSING "Odpojeno"
+    IDS_DEVICE_STATUS_UNKNOWN "Neznámé"
+    IDS_DEVICE_NAME "Název zařízení"
+    IDS_DEVICE_STATUS "Status"
+    IDS_DEVICE_CONTROLLER "ID řadiče"
+    IDS_DEVICE_MANUFACTURER "ID výrobce"
+    IDS_DEVICE_PRODUCT "ID produktu"
+    IDS_DEVICE_FORCEFEEDBACK "Ovladač Force Feedback"
+    IDS_NOT_APPLICABLE "Nelze aplikovat"
+    IDS_OPTION_YES "Ano"
+    IDS_DIRECTPLAY_COL_NAME1 "Název"
+    IDS_DIRECTPLAY_COL_NAME2 "Registr"
+    IDS_DIRECTPLAY_COL_NAME3 "Soubor"
+    IDS_DIRECTPLAY_COL_NAME4 "Verze"
+    IDS_DIRECTPLAY8_MODEMSP "Poskytovatel služby DirectPlay8-Modem"
+    IDS_DIRECTPLAY8_SERIALSP "Poskytovatel služby DirectPlay8 Serial"
+    IDS_DIRECTPLAY8_IPXSP "Poskytovatel služby DirectPlay8 IPX"
+    IDS_DIRECTPLAY8_TCPSP "Poskytovatel služby DirectPlay8-TCP/IP"
+    IDS_DIRECTPLAY_TCPCONN "Internetové připojení TCP/IP pro DirectPlay"
+    IDS_DIRECTPLAY_IPXCONN "IPX připojení pro DirectPlay"
+    IDS_DIRECTPLAY_MODEMCONN "Modemové připojení pro DirectPlay"
+    IDS_DIRECTPLAY_SERIALCONN "Sériové připojení pro DirectPlay"
+    IDS_REG_SUCCESS "OK"
+    IDS_REG_FAIL "Chyba"
+    IDS_DDTEST_ERROR "Test selhal!"
+    IDS_DDTEST_DESCRIPTION "Spustí se test rozhraní DirectDraw. Pokračovat?"
+    IDS_DDPRIMARY_DESCRIPTION "Tento test použije DirectDraw k vykreslování na primary surface. Měly by být vykresleny černé a bílé obdélníky. Pokračovat?"
+    IDS_DDPRIMARY_RESULT "Byly vidět černé a bílé obdélníky?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Tento test použije DirectDraw k vykreslování do offscreen bufferu. Měl by být vykreslen bílý pohybující se obdélník. Pokračovat?"
+    IDS_DDOFFSCREEN_RESULT "Byl vidět bílý pohybující se obdélník?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Tento test použije DirectDraw k vykreslování do celoobrazovkového módu. Měl by být vykreslen bílý pohybující se obdélník. Pokračovat?"
+    IDS_DDFULLSCREEN_RESULT "Viděli jste bílý pohybující se obdélník v celoobrazovkovém módu?"
+    IDS_FORMAT_ADAPTER_MEM "%u MB"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_OPTION_NO "Ne"
+    IDS_D3DTEST_DESCRIPTION "Spustí se test rozhraní Direct3D. Pokračovat?"
+    IDS_D3DTEST_D3Dx "Tento test použije hardwarově akcelerované rozhraní Direct3D %u."
 END

@@ -10,6 +10,9 @@
 
 #include "hidparse.h"
 
+#define NDEBUG
+#include <debug.h>
+
 PVOID
 NTAPI
 AllocFunction(

@@ -6,7 +6,7 @@ CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Se connecter en utilisant :", -1, 9,9,217,8
+    LTEXT "Se connecter en utilisant :", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Configurer", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "Les composants cochés sont utilisés par cette connexion :", -1, 9, 59, 217, 8
@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
@@ -44,12 +44,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "&Propriétés", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "&Désactiver", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Support"
 FONT 8, "MS Shell Dlg"
@@ -59,16 +59,14 @@ BEGIN
     LTEXT "Adresse IP :", -1, 22, 34, 80, 8
     LTEXT "Masque de sous-réseau :", -1, 22, 48, 80, 8
     LTEXT "Passerelle par défaut :", -1, 22, 62, 80, 8
-
     RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
-
     PUSHBUTTON "&Détails...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Détails de connexion réseau"
 FONT 8, "MS Shell Dlg"
@@ -80,47 +78,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Adresse physique"
-    IDS_IP_ADDRESS              "Adresse IP"
-    IDS_SUBNET_MASK             "Masque de sous-réseau"
-    IDS_DEF_GATEWAY             "Passerelle par défaut"
-    IDS_DHCP_SERVER             "Serveur DHCP"
-    IDS_LEASE_OBTAINED          "Bail obtenu"
-    IDS_LEASE_EXPIRES           "Bail expirant"
-    IDS_DNS_SERVERS             "Serveur DNS"
-    IDS_WINS_SERVERS            "Serveur WINS"
-    IDS_PROPERTY                "Propriété"
-    IDS_VALUE                   "Valeur"
-    IDS_NETWORKCONNECTION       "Connexion réseau"
-    IDS_SHV_COLUMN_NAME         "Nom"
-    IDS_SHV_COLUMN_TYPE         "Type"
-    IDS_SHV_COLUMN_STATE        "État"
-    IDS_SHV_COLUMN_DEVNAME      "Nom du périphérique"
-    IDS_SHV_COLUMN_PHONE        "N° de téléphone ou adresse d'hôte"
-    IDS_SHV_COLUMN_OWNER        "Propriétaire"
-    IDS_TYPE_ETHERNET           "Réseau local ou Internet à haut débit"
-    IDS_STATUS_NON_OPERATIONAL  "Désactivé"
-    IDS_STATUS_UNREACHABLE      "Déconnecté"
-    IDS_STATUS_DISCONNECTED     "Câble réseau débranché"
-    IDS_STATUS_CONNECTING       "Acquisition de l'adresse réseau"
-    IDS_STATUS_CONNECTED        "Connecté"
-    IDS_STATUS_OPERATIONAL      "Connecté"
-
-    IDS_NET_ACTIVATE            "Activer"
-    IDS_NET_DEACTIVATE          "Désactiver"
-    IDS_NET_STATUS              "État"
-    IDS_NET_REPAIR              "Réparer"
-    IDS_NET_CREATELINK          "Créer un raccourci"
-    IDS_NET_DELETE              "Supprimer"
-    IDS_NET_RENAME              "Renommer"
-    IDS_NET_PROPERTIES          "Propriétés"
-
-    IDS_FORMAT_BIT              "%u Bit/s"
-    IDS_FORMAT_KBIT             "%u KBit/s"
-    IDS_FORMAT_MBIT             "%u MBit/s"
-    IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d Jour %s"
-    IDS_DURATION_DAYS           "%d Jours %s"
-    IDS_ASSIGNED_DHCP           "Assignée par DHCP"
-    IDS_ASSIGNED_MANUAL         "Configurée manuellement"
+    IDS_PHYSICAL_ADDRESS "Adresse physique"
+    IDS_IP_ADDRESS "Adresse IP"
+    IDS_SUBNET_MASK "Masque de sous-réseau"
+    IDS_DEF_GATEWAY "Passerelle par défaut"
+    IDS_DHCP_SERVER "Serveur DHCP"
+    IDS_LEASE_OBTAINED "Bail obtenu"
+    IDS_LEASE_EXPIRES "Bail expirant"
+    IDS_DNS_SERVERS "Serveur DNS"
+    IDS_WINS_SERVERS "Serveur WINS"
+    IDS_PROPERTY "Propriété"
+    IDS_VALUE "Valeur"
+    IDS_NETWORKCONNECTION "Connexion réseau"
+    IDS_SHV_COLUMN_NAME "Nom"
+    IDS_SHV_COLUMN_TYPE "Type"
+    IDS_SHV_COLUMN_STATE "État"
+    IDS_SHV_COLUMN_DEVNAME "Nom du périphérique"
+    IDS_SHV_COLUMN_PHONE "N° de téléphone ou adresse d'hôte"
+    IDS_SHV_COLUMN_OWNER "Propriétaire"
+    IDS_TYPE_ETHERNET "Réseau local ou Internet à haut débit"
+    IDS_STATUS_NON_OPERATIONAL "Désactivé"
+    IDS_STATUS_UNREACHABLE "Déconnecté"
+    IDS_STATUS_DISCONNECTED "Câble réseau débranché"
+    IDS_STATUS_CONNECTING "Acquisition de l'adresse réseau"
+    IDS_STATUS_CONNECTED "Connecté"
+    IDS_STATUS_OPERATIONAL "Connecté"
+    IDS_NET_ACTIVATE "Activer"
+    IDS_NET_DEACTIVATE "Désactiver"
+    IDS_NET_STATUS "État"
+    IDS_NET_REPAIR "Réparer"
+    IDS_NET_CREATELINK "Créer un raccourci"
+    IDS_NET_DELETE "Supprimer"
+    IDS_NET_RENAME "Renommer"
+    IDS_NET_PROPERTIES "Propriétés"
+    IDS_FORMAT_BIT "%u Bit/s"
+    IDS_FORMAT_KBIT "%u KBit/s"
+    IDS_FORMAT_MBIT "%u MBit/s"
+    IDS_FORMAT_GBIT "%u GBit/s"
+    IDS_DURATION_DAY "%d Jour %s"
+    IDS_DURATION_DAYS "%d Jours %s"
+    IDS_ASSIGNED_DHCP "Assignée par DHCP"
+    IDS_ASSIGNED_MANUAL "Configurée manuellement"
 END

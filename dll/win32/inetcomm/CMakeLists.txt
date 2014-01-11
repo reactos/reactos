@@ -11,6 +11,7 @@ list(APPEND SOURCE
     mimeole.c
     pop3transport.c
     smtptransport.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
 

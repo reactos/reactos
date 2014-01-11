@@ -8,6 +8,9 @@
 
 #include "priv.h"
 
+#define YDEBUG
+#include <debug.h>
+
 MIXER_STATUS
 MMixerGetPinDataFlowAndCommunication(
     IN PMIXER_CONTEXT MixerContext,

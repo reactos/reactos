@@ -32,33 +32,19 @@
  *   o Check whether the return values are correct
  *
  */
-//#include <k32.h>
+
+#include <k32.h>
+
+#define NDEBUG
+#include <debug.h>
+DEBUG_CHANNEL(kernel32file);
+
 #define HFILE_ERROR ((HFILE)-1)
 
-//#include "config.h"
-#include <string.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <stdarg.h>
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include "windef.h"
-#include "winbase.h"
 #include "lzexpand.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "winternl.h"
-#define HeapAlloc RtlAllocateHeap
-#define HeapReAlloc RtlReAllocateHeap
-#define HeapFree RtlFreeHeap
-#define _lread(a, b, c)  (long)(_hread(a, b, (long)c))
 #define _lwrite(a, b, c) (long)(_hwrite(a, b, (long)c))
-WINE_DEFAULT_DEBUG_CHANNEL(file);
-   
+
 /* The readahead length of the decompressor. Reading single bytes
  * using _lread() would be SLOW.
  */

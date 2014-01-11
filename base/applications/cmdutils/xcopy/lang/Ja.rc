@@ -1,53 +1,26 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Japanese language support
- *
- * Copyright (C) 2007 J. Edmeades
- * Copyright (C) 2009 Akihiro Sagawa
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
-#pragma code_page(65001)
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "パラメータの数が違います。xcopy /? で使い方を表示します\n"
-    STRING_INVPARM,  "無効なパラメータ '%s' です。xcopy /? で使い方を表示します\n"
-    STRING_PAUSE,    "コピーを開始するには <enter> を押してください\n"
-    STRING_SIMCOPY,  "%d ファイルがコピーされる見込みです。\n"
-    STRING_COPY,     "%d ファイルをコピーしました\n"
-    STRING_QISDIR,   "送り先の '%s' はファイル名ですか、\n\
+BEGIN
+    STRING_INVPARMS "パラメータの数が違います。xcopy /? で使い方を表示します\n"
+    STRING_INVPARM "無効なパラメータ '%1' です。xcopy /? で使い方を表示します\n"
+    STRING_PAUSE "コピーを開始するには <enter> を押してください\n"
+    STRING_SIMCOPY "%1!d! ファイルがコピーされる見込みです。\n"
+    STRING_COPY "%1!d! ファイルをコピーしました\n"
+    STRING_QISDIR "送り先の '%1' はファイル名ですか、\n\
                      ディレクトリですか?\n\
                      (F - ファイル、D - ディレクトリ)\n"
-    STRING_SRCPROMPT,"%s? (Yes|No)\n"
-    STRING_OVERWRITE,"%s を上書きしますか? (Yes|No|All)\n"
-    STRING_COPYFAIL, "'%s' から '%s' へのコピーは失敗しました。戻り値 %d\n"
-    STRING_OPENFAIL, "'%s' を開けません\n"
-    STRING_READFAIL, "'%s' の読み込み中に失敗しました\n"
-    STRING_YES_CHAR, "Y"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "A"
-    STRING_FILE_CHAR,"F"
-    STRING_DIR_CHAR, "D"
-
-    STRING_HELP,
+    STRING_SRCPROMPT "%1? (Yes|No)\n"
+    STRING_OVERWRITE "%1 を上書きしますか? (Yes|No|All)\n"
+    STRING_COPYFAIL "'%1' から '%2' へのコピーは失敗しました。戻り値 %3!d!\n"
+    STRING_OPENFAIL "'%1' を開けません\n"
+    STRING_READFAIL "'%1' の読み込み中に失敗しました\n"
+    STRING_YES_CHAR "Y"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "A"
+    STRING_FILE_CHAR "F"
+    STRING_DIR_CHAR "D"
+    STRING_HELP
 "XCOPY - 送り元のファイルやディレクトリを送り先にコピーします\n\
 \n\
 構文:\n\
@@ -79,5 +52,4 @@ XCOPY 送り元 [送り先] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/D | /D:月-日-年] 新しいファイルや指定された日付以降に変更された\n\
 \t\tファイルをコピーします。日付が指定されない場合は、\n\
 \t\tコピー先がコピー元より古いファイルだけコピーします。\n\n"
-
-}
+END

@@ -579,22 +579,23 @@ RtlAddAce(IN PACL Acl,
     /* Bail out if there's no space */
     if (!RtlFirstFreeAce(Acl, &FreeAce)) return STATUS_INVALID_PARAMETER;
 
-    /* Always use the smaller revision */
-    if (Acl->AclRevision <= AclRevision) AclRevision = Acl->AclRevision;
-
     /* Loop over all the ACEs, keeping track of new ACEs as we go along */
     for (Ace = AceList, NewAceCount = 0;
          Ace < (PACE)((ULONG_PTR)AceList + AceListLength);
          NewAceCount++)
     {
-        /* Make sure that the revision of this ACE is valid in this list */
-        if (Ace->Header.AceType <= ACCESS_MAX_MS_V3_ACE_TYPE)
+        /* Make sure that the revision of this ACE is valid in this list.
+           The initial check looks strange, but it is what Windows does. */
+        if (Ace->Header.AceType <= ACCESS_MAX_MS_ACE_TYPE)
         {
-            if (AclRevision < ACL_REVISION3) return STATUS_INVALID_PARAMETER;
-        }
-        else if (Ace->Header.AceType <= ACCESS_MAX_MS_V4_ACE_TYPE)
-        {
-            if (AclRevision < ACL_REVISION4) return STATUS_INVALID_PARAMETER;
+            if (Ace->Header.AceType > ACCESS_MAX_MS_V3_ACE_TYPE)
+            {
+                if (AclRevision < ACL_REVISION4) return STATUS_INVALID_PARAMETER;
+            }
+            else if (Ace->Header.AceType > ACCESS_MAX_MS_V2_ACE_TYPE)
+            {
+                if (AclRevision < ACL_REVISION3) return STATUS_INVALID_PARAMETER;
+            }
         }
 
         /* Move to the next ACE */
@@ -627,9 +628,9 @@ RtlAddAce(IN PACL Acl,
                 Ace,
                 (ULONG_PTR)FreeAce - (ULONG_PTR)Ace);
 
-    /* Fill out the header and return */
-    Acl->AceCount = Acl->AceCount + NewAceCount;
-    Acl->AclRevision = (UCHAR)AclRevision;
+    /* Update the header and return */
+    Acl->AceCount += NewAceCount;
+    Acl->AclRevision = (UCHAR)min(Acl->AclRevision, AclRevision);
     return STATUS_SUCCESS;
 }
 

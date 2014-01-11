@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include "dshow.h"
-#include "wine/unicode.h"
-#include "wine/strmbase.h"
-#include "uuids.h"
-#include "vfwmsgs.h"
-#include <assert.h>
+#include "strmbase_private.h"
 
 HRESULT WINAPI BaseDispatch_Init(BaseDispatch *This, REFIID riid)
 {

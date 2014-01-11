@@ -23,12 +23,12 @@
 /* comment out #define BITMAP_SPEED_OVER_SIZE below for one slower function */
 /* j@american-data.com */
 
-#define BITMAP_SPEED_OVER_SIZE
-
 /* indent is confused by this file */
 /* *INDENT-OFF* */
 
 #include "precomp.h"
+
+#define BITMAP_SPEED_OVER_SIZE
 
 #define CVAL(p)   (*(p++))
 #ifdef NEED_ALIGN

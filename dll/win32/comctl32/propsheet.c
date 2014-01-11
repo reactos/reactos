@@ -52,23 +52,7 @@
  *     o PSP_USEREFPARENT
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winnls.h"
-//#include "commctrl.h"
-//#include "prsht.h"
 #include "comctl32.h"
-#include <uxtheme.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
 
 /******************************************************************************
  * Data structures

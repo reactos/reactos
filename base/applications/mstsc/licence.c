@@ -19,7 +19,6 @@
 */
 
 #include "precomp.h"
-//#include <openssl/rc4.h>
 
 void *
 ssl_rc4_info_create(void);

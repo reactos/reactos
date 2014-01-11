@@ -16,11 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "shdoclc.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -36,7 +31,7 @@ STRINGTABLE
 
 IDR_BROWSE_CONTEXT_MENU MENU
 {
-    POPUP "Numatytasis"
+    POPUP "" /* Default */
     {
         MENUITEM "&Atgal",                          IDM_GOBACKWARD
         MENUITEM "&Pirmyn",                         IDM_GOFORWARD
@@ -58,11 +53,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Spausdinti",                     IDM_PRINT
         MENUITEM "Atsiųsti iš &naujo",             _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Savy&bės",                        IDM_PROPERTIES
     }
 
-    POPUP "Paveikslas"
+    POPUP "" /* Image */
     {
         MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
         MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
@@ -84,11 +78,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Prid&ėti į adresyną...",             IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Savy&bės",                           IDM_PROPERTIES
     }
 
-    POPUP "Valdiklis"
+    POPUP "" /* Control */
     {
         MENUITEM "&Atšaukti",       IDM_UNDO
         MENUITEM SEPARATOR
@@ -97,11 +90,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Į&dėti",          IDM_PASTE
         MENUITEM "&Šalinti",        IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Pažymėti &viską", IDM_SELECTALL
     }
 
-    POPUP "Lentelė"
+    POPUP "" /* Table */
     {
         POPUP "&Pažymėti"
         {
@@ -111,12 +103,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "&lentelę",      IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Lan&gelio savybės", IDM_CELLPROPERTIES
         MENUITEM "&Lentelės savybės", IDM_TABLEPROPERTIES
     }
 
-    POPUP "1DPuslapio žymėjimas"
+    POPUP "" /* 1DSite Select */
     {
         MENUITEM "&Iškirpti",       IDM_CUT
         MENUITEM "&Kopijuoti",      IDM_COPY
@@ -126,7 +117,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Žymė"
+    POPUP "" /* Anchor */
     {
         MENUITEM "&Atverti",                          IDM_FOLLOWLINKC
         MENUITEM "Atverti &naujame lange",            IDM_FOLLOWLINKN
@@ -140,16 +131,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Pridėti į adr&esyną...",            IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Savy&bės",                          IDM_PROPERTIES
     }
 
-    POPUP "Nežinomas kontekstas"
+    POPUP "" /* Context Unknown */
     {
         MENUITEM SEPARATOR
     }
 
-    POPUP "DYNSRC paveikslas"
+    POPUP "" /* DYNSRC Image */
     {
         MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
         MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
@@ -168,13 +158,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Pridėti į adr&esyną...",             IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Leisti",                             IDM_DYNSRCPLAY
         MENUITEM "Stabdyti",                           IDM_DYNSRCSTOP
         MENUITEM "Savy&bės",                           IDM_PROPERTIES
     }
 
-    POPUP "ART paveikslas"
+    POPUP "" /* ART Image */
     {
         MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
         MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
@@ -197,11 +186,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Stabdyti",                           IDM_IMGARTSTOP
         MENUITEM "Perleisti",                          IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "Savy&bės",                           IDM_PROPERTIES
     }
 
-    POPUP "Derinimas"
+    POPUP "" /* Debug */
     {
         MENUITEM "Sekti gaires",                     IDM_TRACETAGS
         MENUITEM "Išteklių klaidos",                 IDM_RESOURCEFAILURES
@@ -221,7 +209,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Redaguoti rodinį",                IDM_EDITMODE
     }
 
-    POPUP "Stačioji slankjuostė"
+    POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "Slinkti čia",      IDM_SCROLL_HERE
         MENUITEM SEPARATOR
@@ -235,7 +223,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Slinkti žemyn",    IDM_SCROLL_DOWN
     }
 
-    POPUP "Gulsčioji slankjuostė"
+    POPUP "" /* Horizontal Scrollbar */
     {
         MENUITEM "Slinkti čia",       IDM_SCROLL_HERE
         MENUITEM SEPARATOR

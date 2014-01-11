@@ -1104,7 +1104,7 @@ VOID
 NTAPI
 RtlUpperString(
   _Inout_ PSTRING DestinationString,
-  _In_ const PSTRING SourceString);
+  _In_ const STRING *SourceString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _When_(AllocateDestinationString, _Must_inspect_result_)
@@ -1140,8 +1140,8 @@ NTSYSAPI
 LONG
 NTAPI
 RtlCompareString(
-  _In_ const PSTRING String1,
-  _In_ const PSTRING String2,
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
   _In_ BOOLEAN CaseInSensitive);
 
 NTSYSAPI
@@ -1149,7 +1149,7 @@ VOID
 NTAPI
 RtlCopyString(
   _Out_ PSTRING DestinationString,
-  _In_opt_ const PSTRING SourceString);
+  _In_opt_ const STRING *SourceString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
@@ -1157,8 +1157,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlEqualString(
-  _In_ const PSTRING String1,
-  _In_ const PSTRING String2,
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
   _In_ BOOLEAN CaseInSensitive);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1232,6 +1232,16 @@ RtlCreateUnicodeString(
   _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem))
     PUNICODE_STRING DestinationString,
   _In_z_ PCWSTR SourceString);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlPrefixString(
+  _In_ const STRING *String1,
+  _In_ const STRING *String2,
+  _In_ BOOLEAN CaseInsensitive);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
@@ -3076,14 +3086,27 @@ RtlCheckBit(
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
 #define RTL_SOFT_VERIFYMSG(msg, exp) \
-  (VOID)((!(exp)) ? \
+  ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-#define ASSERT(exp) ((void)RTL_VERIFY(exp))
-#define ASSERTMSG(msg, exp) ((void)RTL_VERIFYMSG(msg, exp))
+/* The ASSERTs must be cast to void to avoid warnings about unused results.
+ * We also cannot invoke the VERIFY versions because the indirection messes
+ * with stringify. */
+#define ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE))
 
-#define RTL_SOFT_ASSERT(exp) ((void)RTL_SOFT_VERIFY(exp))
-#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)RTL_SOFT_VERIFYMSG(msg, exp))
+#define ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERT(exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE))
+
+#define RTL_SOFT_ASSERTMSG(msg, exp) \
+  ((VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE))
 
 #if defined(_MSC_VER)
 # define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)

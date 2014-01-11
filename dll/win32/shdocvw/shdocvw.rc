@@ -18,9 +18,9 @@
 
 #include <windef.h>
 
-1 WINE_REGISTRY shdocvw_v1.rgs
+1 WINE_REGISTRY "shdocvw_v1.rgs"
 
-1 TYPELIB shdocvw_v1.tlb
+1 TYPELIB "shdocvw_v1.tlb"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

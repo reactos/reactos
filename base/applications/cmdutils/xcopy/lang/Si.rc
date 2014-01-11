@@ -1,52 +1,26 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Slovenian language support
- *
- * Copyright (C) 2008 Rok Mandeljc
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
-#pragma code_page(65001)
-
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "Neveljavno število parametrov - za pomoč uporabite xcopy /?\n"
-    STRING_INVPARM,  "Neveljaven parameter '%s' -  za pomoč uporabite xcopy /?\n"
-    STRING_PAUSE,    "Za začetek kopiranja pritisnite <enter>\n"
-    STRING_SIMCOPY,  "Prekopiral bom %d datotek\n"
-    STRING_COPY,     "Prekopiral sem %d datotek\n"
-    STRING_QISDIR,   "Ali je '%s' ime ciljne datoteke\n\
+BEGIN
+    STRING_INVPARMS "Neveljavno število parametrov - za pomoč uporabite xcopy /?\n"
+    STRING_INVPARM "Neveljaven parameter '%1' -  za pomoč uporabite xcopy /?\n"
+    STRING_PAUSE "Za začetek kopiranja pritisnite <enter>\n"
+    STRING_SIMCOPY "Prekopiral bom %1!d! datotek\n"
+    STRING_COPY "Prekopiral sem %1!d! datotek\n"
+    STRING_QISDIR "Ali je '%1' ime ciljne datoteke\n\
                      ali mape?\n\
                      (D - Datoteka, M - Mapa)\n"
-    STRING_SRCPROMPT,"%s? (Da|Ne)\n"
-    STRING_OVERWRITE,"Ali naj prepišem %s? (Da|Ne|Vse)\n"
-    STRING_COPYFAIL, "Kopiranje '%s' v '%s' ni uspelo (koda napake: %d)\n"
-    STRING_OPENFAIL, "Napaka pri odpiranju '%s'\n"
-    STRING_READFAIL, "Napaka pri branju '%s'\n"
-    STRING_YES_CHAR, "D"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "V"
-    STRING_FILE_CHAR,"D"
-    STRING_DIR_CHAR, "M"
-
-    STRING_HELP,
+    STRING_SRCPROMPT "%1? (Da|Ne)\n"
+    STRING_OVERWRITE "Ali naj prepišem %1? (Da|Ne|Vse)\n"
+    STRING_COPYFAIL "Kopiranje '%1' v '%2' ni uspelo (koda napake: %3!d!)\n"
+    STRING_OPENFAIL "Napaka pri odpiranju '%1'\n"
+    STRING_READFAIL "Napaka pri branju '%1'\n"
+    STRING_YES_CHAR "D"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "V"
+    STRING_FILE_CHAR "D"
+    STRING_DIR_CHAR "M"
+    STRING_HELP
 "XCOPY - kopira navedene izvorne datoteke oz. mape v naveden cilj\n\
 \n\
 Sintaksa:\n\
@@ -78,5 +52,4 @@ Where:\n\
 [/D | /D:m-d-y] Kopiraj datoteke, ustvarjene ali spremenjene po navedenem datumu.\n\
 \t\tČe datum ni podan, gre za kopiranje datotek, katerih obstoječi cilj je\n\
 \t\tod izvora\n\n"
-
-}
+END

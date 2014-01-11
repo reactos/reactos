@@ -19,26 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#include <config.h>
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <rpcproxy.h>
-#include <propsys.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
 #include "propsys_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(propsys);
+#include <rpcproxy.h>
 
 static HINSTANCE propsys_hInstance;
 
@@ -53,10 +36,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             propsys_hInstance = hinstDLL;
             DisableThreadLibraryCalls(hinstDLL);
-            break;
-        case DLL_PROCESS_DETACH:
-            break;
-        default:
             break;
     }
 

@@ -22,20 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "bufferobj.h"
-#include "context.h"
-#include "drawpix.h"
-#include "enums.h"
-#include "feedback.h"
-#include "framebuffer.h"
-#include "image.h"
-#include "mfeatures.h"
-#include "readpix.h"
-#include "state.h"
-#include "dispatch.h"
-
+#include <precomp.h>
 
 #if FEATURE_drawpix
 

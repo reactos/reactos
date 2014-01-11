@@ -1,9 +1,9 @@
 /*
- *      translated by Caemyr - Olaf Siejka (May 2011)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
- *      UTF-8 conversion by Caemyr (May, 2011)
+ *    Translated by Caemyr - Olaf Siejka (May, 2011)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -21,12 +21,11 @@ BEGIN
     COMBOBOX IDC_SERIAL_PARITY, 139, 59, 106, 62, WS_TABSTOP | CBS_DROPDOWNLIST
     RTEXT "Bi&ty stopu:", -1, 74, 82, 62, 8
     COMBOBOX IDC_SERIAL_STOPBITS, 139, 80, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
-    RTEXT "&Kontrola przepływu:", - 1, 74, 102, 62, 8
+    RTEXT "&Kontrola przepływu:", -1, 74, 102, 62, 8
     COMBOBOX IDC_SERIAL_FLOWCONTROL, 139, 100, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
-    PUSHBUTTON "&Zaawansowane...",IDC_SERIAL_ADVANCED, 111, 130, 65, 14,WS_GROUP
-    PUSHBUTTON "P&rzywróć domyślne",IDC_SERIAL_RESTORE, 180, 130, 65, 14, WS_GROUP
+    PUSHBUTTON "&Zaawansowane...", IDC_SERIAL_ADVANCED, 111, 130, 65, 14, WS_GROUP
+    PUSHBUTTON "P&rzywróć domyślne", IDC_SERIAL_RESTORE, 180, 130, 65, 14, WS_GROUP
 END
-
 
 IDD_PARALLELSETTINGS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION

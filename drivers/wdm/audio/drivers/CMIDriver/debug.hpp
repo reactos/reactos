@@ -29,7 +29,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _DEBUG_HPP_
 
 #define CMIVERSION "1.2.6"
-#define WAVERT
+// #define WAVERT
 //#define UART //disabled for improved stability on ULi motherboards
 
 #if (DBG)

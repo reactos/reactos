@@ -1,53 +1,26 @@
-/*
- * XCOPY - Wine-compatible xcopy program
- * Korean language support
- *
- * Copyright (C) 2007 J. Edmeades
- * Copyright (C) 2007,2010 YunSong Hwang
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-#include "xcopy.h"
-
-#pragma code_page(65001)
-
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-{
-    STRING_INVPARMS, "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
-    STRING_INVPARM,  "올바르지 않은 매개변수 '%s' -  xcopy /?로 도움말을 보시오\n"
-    STRING_PAUSE,    "<enter> 를 누르면 복사가 시작될 것입니다\n"
-    STRING_SIMCOPY,  "%d 파일이 복사될 것입니다\n"
-    STRING_COPY,     "%d 파일이 복사되었습니다\n"
-    STRING_QISDIR,   "'%s'이 복사할 파일이나 디렉토리?\n\
+BEGIN
+    STRING_INVPARMS "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
+    STRING_INVPARM "올바르지 않은 매개변수 '%1' -  xcopy /?로 도움말을 보시오\n"
+    STRING_PAUSE "<enter> 를 누르면 복사가 시작될 것입니다\n"
+    STRING_SIMCOPY "%1!d! 파일이 복사될 것입니다\n"
+    STRING_COPY "%1!d! 파일이 복사되었습니다\n"
+    STRING_QISDIR "'%1'이 복사할 파일이나 디렉토리?\n\
                      입니까?\n\
                      (F - 파일, D - 디렉토리)\n"
-    STRING_SRCPROMPT,"%s? (예|아니오)\n"
-    STRING_OVERWRITE,"%s를 덮어쓰겠습니까? (예|아니오|모두)\n"
-    STRING_COPYFAIL, "Copying of '%s' to '%s' failed with r/c %d\n"
-    STRING_OPENFAIL, "'%s' 열기 실패\n"
-    STRING_READFAIL, "'%s를 읽지 못했습니다'\n"
-    STRING_YES_CHAR, "Y"
-    STRING_NO_CHAR,  "N"
-    STRING_ALL_CHAR, "A"
-    STRING_FILE_CHAR,"F"
-    STRING_DIR_CHAR, "D"
-
-    STRING_HELP,
+    STRING_SRCPROMPT "%1? (예|아니오)\n"
+    STRING_OVERWRITE "%1를 덮어쓰겠습니까? (예|아니오|모두)\n"
+    STRING_COPYFAIL "Copying of '%1' to '%2' failed with r/c %3!d!\n"
+    STRING_OPENFAIL "'%1' 열기 실패\n"
+    STRING_READFAIL "'%1를 읽지 못했습니다'\n"
+    STRING_YES_CHAR "Y"
+    STRING_NO_CHAR "N"
+    STRING_ALL_CHAR "A"
+    STRING_FILE_CHAR "F"
+    STRING_DIR_CHAR "D"
+    STRING_HELP
 "XCOPY - 원본 파일이나 디렉토리 구조를 목적지로 복사\n\
 \n\
 문법:\n\
@@ -79,5 +52,4 @@ Where:\n\
 [/D | /D:m-d-y] 지정된 날짜 후에 수정되거나 새로운 파일 복사.\n\
 \t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다\n\
 \t\t대상이 오래된 것만 복사\n\n"
-
-}
+END

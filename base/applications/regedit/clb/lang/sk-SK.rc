@@ -1,7 +1,7 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.:  07-07-2008
+/* TRANSLATOR : M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.: 07-07-2008
  */ 
- 
+
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_COLUMNLISTBOXSTYLES DIALOGEX 0, 0, 227, 215
@@ -28,4 +28,3 @@ BEGIN
    PUSHBUTTON "Zruöiù", IDCANCEL, 93, 125, 40, 14, BS_PUSHBUTTON | WS_GROUP | WS_TABSTOP
    CHECKBOX "&Disable No-Scroll", 1708, 79, 60, 66, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 END
-

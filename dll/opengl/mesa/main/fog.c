@@ -22,15 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
-#include "fog.h"
-#include "macros.h"
-#include "mtypes.h"
-
-
+#include <precomp.h>
 
 void GLAPIENTRY
 _mesa_Fogf(GLenum pname, GLfloat param)

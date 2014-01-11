@@ -13,3 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Zaz ist ein freies Arcade Action Puzzle Spiel, ein wenig wie Frozen Bubble.
+
+[Section.0410]
+Description = Zaz è un puzzle game gratuito, simile a Frozen Bubble.
+
+[Section.041f]
+Description = Zaz, atari salonu oyunu türünde, gelişimli bir bulmaca oyunudur. Bir nebze Donmuş Kabarcıklar'a benzemektedir.

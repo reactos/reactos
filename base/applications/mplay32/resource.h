@@ -1,7 +1,7 @@
 #pragma once
 
 /* Icons */
-#define IDI_MAIN    10
+#define IDI_MAIN 10
 
 /* Bitmaps */
 #define IDB_PLAYICON     50
@@ -35,19 +35,19 @@
 #define IDM_ABOUT      1003
 
 /* ToolBar Icons */
-#define TBICON_PLAY      0
-#define TBICON_STOP      1
-#define TBICON_EJECT     2
-#define TBICON_BACKWARD  3
-#define TBICON_SEEKBACK  4
-#define TBICON_SEEKFORW  5
-#define TBICON_FORWARD   6
+#define TBICON_PLAY     0
+#define TBICON_STOP     1
+#define TBICON_EJECT    2
+#define TBICON_BACKWARD 3
+#define TBICON_SEEKBACK 4
+#define TBICON_SEEKFORW 5
+#define TBICON_FORWARD  6
 
 /* ToolBar Buttons */
-#define IDC_PLAY         1500
-#define IDC_STOP         1501
-#define IDC_EJECT        1502
-#define IDC_BACKWARD     1503
-#define IDC_SEEKBACK     1504
-#define IDC_SEEKFORW     1505
-#define IDC_FORWARD      1506
+#define IDC_PLAY     1500
+#define IDC_STOP     1501
+#define IDC_EJECT    1502
+#define IDC_BACKWARD 1503
+#define IDC_SEEKBACK 1504
+#define IDC_SEEKFORW 1505
+#define IDC_FORWARD  1506

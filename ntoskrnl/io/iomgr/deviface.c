@@ -747,9 +747,11 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     goto cleanup;
                 }
-                RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
                 if (ReturnBuffer.Buffer)
+                {
+                    RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
                     ExFreePool(ReturnBuffer.Buffer);
+                }
                 ReturnBuffer.Buffer = NewBuffer;
             }
             DPRINT("Adding symbolic link %wZ\n", &KeyName);

@@ -1,9 +1,9 @@
 /*
  *  Notepad (Slovak resources)
  *
- *  TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- *  DATE OF TR.:  xx-xx-2007
- *  LAST CHANGE:  27-12-2008
+ *  TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ *  DATE OF TR.: xx-xx-2007
+ *  LAST CHANGE: 27-12-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -30,162 +30,152 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Súbor"
     BEGIN
-        MENUITEM "&Nový\tCtrl+N",            CMD_NEW
-        MENUITEM "&Otvoriť...\tCtrl+O",       CMD_OPEN
-        MENUITEM "&Uložiť\tCtrl+S",           CMD_SAVE
-        MENUITEM "Uložiť &ako...",            CMD_SAVE_AS
+        MENUITEM "&Nový\tCtrl+N", CMD_NEW
+        MENUITEM "&Otvoriť...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Uložiť\tCtrl+S", CMD_SAVE
+        MENUITEM "Uložiť &ako...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Nasta&venie strany...",    CMD_PAGE_SETUP
-        MENUITEM "&Tlačiť\tCtrl+P",           CMD_PRINT
+        MENUITEM "Nasta&venie strany...", CMD_PAGE_SETUP
+        MENUITEM "&Tlačiť\tCtrl+P", CMD_PRINT
         MENUITEM "Nastavenie tlačia&rne...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "&Skončiť",                  CMD_EXIT
- END
+        MENUITEM "&Skončiť", CMD_EXIT
+    END
     POPUP "Úpr&avy"
     BEGIN
-        MENUITEM "&Späť\tCtrl+Z",         CMD_UNDO
+        MENUITEM "&Späť\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Vystrihnúť\tCtrl+X",   CMD_CUT
-        MENUITEM "&Kopírovať\tCtrl+C",    CMD_COPY
-        MENUITEM "Pri&lepiť\tCtrl+V",     CMD_PASTE
-        MENUITEM "&Odstrániť\tDel",       CMD_DELETE
+        MENUITEM "&Vystrihnúť\tCtrl+X", CMD_CUT
+        MENUITEM "&Kopírovať\tCtrl+C", CMD_COPY
+        MENUITEM "Pri&lepiť\tCtrl+V", CMD_PASTE
+        MENUITEM "&Odstrániť\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Hľadať",               CMD_SEARCH
-        MENUITEM "Hľa&dať ďalej\tF3",     CMD_SEARCH_NEXT
-        MENUITEM "&Nahradiť\tCtrl+H",     CMD_REPLACE
+        MENUITEM "&Hľadať", CMD_SEARCH
+        MENUITEM "Hľa&dať ďalej\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Nahradiť\tCtrl+H", CMD_REPLACE
         MENUITEM "Pr&ejsť na...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Vy&brať všetko",        CMD_SELECT_ALL
+        MENUITEM "Vy&brať všetko", CMD_SELECT_ALL
         MENUITEM "Čas alebo dátu&m\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormát"
     BEGIN
         MENUITEM "&Zalomiť text", CMD_WRAP
-        MENUITEM "&Písmo...",    CMD_FONT
-        END
+        MENUITEM "&Písmo...", CMD_FONT
+    END
     POPUP "&Zobraziť"
     BEGIN
         MENUITEM "Stavový &riadok", CMD_STATUSBAR
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "&Témy Pomocníka",       CMD_HELP_CONTENTS
-        MENUITEM "&Hľadať...",             CMD_HELP_SEARCH
-        MENUITEM "&Pomoc",                CMD_HELP_ON_HELP
+        MENUITEM "&Témy Pomocníka", CMD_HELP_CONTENTS
+        MENUITEM "&Hľadať...", CMD_HELP_SEARCH
+        MENUITEM "&Pomoc", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Č&o je Poznámkový blok",CMD_ABOUT
-        MENUITEM "Čo je &Víno (Wine)",    CMD_ABOUT_WINE
-  END
- END
+        MENUITEM "Č&o je Poznámkový blok", CMD_ABOUT
+        MENUITEM "Čo je &Víno (Wine)", CMD_ABOUT_WINE
+    END
+END
 
-/* Dialog `Page setup' */
-
+/* Dialog 'Page setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Nastavenie strany"
 BEGIN
-LTEXT    "H&lavička:",  0x140,   10, 07, 40, 15
-EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Päta:",  0x142,   10, 24, 40, 15
-EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
-
-GROUPBOX "&Okraje:",      0x144,     10, 43,160, 45
-LTEXT    "Ľa&vý:",        0x145,   20, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Horný:",         0x148,    20, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "P&ravý:",       0x14B, 100, 55, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Dolný:",      0x14E,100, 73, 30, 10, WS_CHILD
-EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-
-DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Zrušiť",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Pomocník",  IDHELP,                 180, 39, 40, 15, WS_TABSTOP
+    LTEXT "H&lavička:", 0x140, 10, 07, 40, 15
+    EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
+    LTEXT "&Päta:", 0x142, 10, 24, 40, 15
+    EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
+    GROUPBOX "&Okraje:", 0x144, 10, 43, 160, 45
+    LTEXT "Ľa&vý:", 0x145, 20, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "&Horný:", 0x148, 20, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/ 0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "P&ravý:", 0x14B, 100, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/ 0x14D, 130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "&Dolný:", 0x14E, 100, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150, 130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 180, 3, 40, 15, WS_TABSTOP
+    PUSHBUTTON "Zrušiť", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
+    PUSHBUTTON "&Pomocník", IDHELP, 180, 39, 40, 15, WS_TABSTOP
 END
 
-/* Dialog `Encoding' */
+/* Dialog 'Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Kódovanie"
 BEGIN
-COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Kódovanie:",0x155,5,2,41,12
-COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Koniec riadka:",0x156,5,20,41,12
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kódovanie:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Koniec riadka:", 0x156, 5, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
-DIALOG_GOTO DIALOGEX 0,0,165,50
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Riadok, na ktorý sa má prejsť"
 BEGIN
-EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Číslo riadka:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
-DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Zrušiť", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Číslo riadka:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Zrušiť", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22,16,284,170
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Čo je Poznámkový blok systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Poznámkový blok systému ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nPreklad 2007 Kario <kario@szm.sk>\r\n ",
-                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
-    CONTROL         " ",
-                    -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Zavrieť",IDOK,114,149,44,15,WS_GROUP
-    ICON            IDI_NPICON,-1,12,9,20,30
-    EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+    CONTROL "Poznámkový blok systému ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nPreklad 2007 Kario <kario@szm.sk>\r\n ", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Zavrieť", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-  STRING_LICENSE, "Tento program je voľný softvér; môžete ho šíriť a/alebo modifikovať podľa podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buď verzie 2 tejto licencie, alebo (podľa Vášho uváženia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovaný v nádeji, že bude užitočný, avšak BEZ AKEJKOĽVEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URČITÝ ÚČEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dostať spolu s týmto programom; ak nie, napíšte si o ňu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "Tento program je voľný softvér; môžete ho šíriť a/alebo modifikovať podľa podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buď verzie 2 tejto licencie, alebo (podľa Vášho uváženia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovaný v nádeji, že bude užitočný, avšak BEZ AKEJKOĽVEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URČITÝ ÚČEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dostať spolu s týmto programom; ak nie, napíšte si o ňu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
 BEGIN
-STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,    "Strana &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,        "20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,        "25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,    "25 mm"     /* FIXME */
-
-STRING_NOTEPAD,                    "Poznámkový blok"
-STRING_ERROR,                    "CHYBA"
-STRING_WARNING,                    "UPOZORNENIE"
-STRING_INFO,                    "Informácie"
-
-STRING_UNTITLED,                "Bez názvu"
-
-STRING_ALL_FILES,                "Všetky súbory (*.*)"
-STRING_TEXT_FILES_TXT,            "Textové súbory (*.txt)"
-
-STRING_TOOLARGE,                "Súbor '%s' je pre Poznámkový blok príliš veľký.\n \
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Strana &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "Poznámkový blok"
+    STRING_ERROR "CHYBA"
+    STRING_WARNING "UPOZORNENIE"
+    STRING_INFO "Informácie"
+    STRING_UNTITLED "Bez názvu"
+    STRING_ALL_FILES "Všetky súbory (*.*)"
+    STRING_TEXT_FILES_TXT "Textové súbory (*.txt)"
+    STRING_TOOLARGE "Súbor '%s' je pre Poznámkový blok príliš veľký.\n \
 Na otvorenie súboru použite iný editor."
-STRING_NOTEXT,                    "Nevložili ste žiadny text. \
+    STRING_NOTEXT "Nevložili ste žiadny text. \
 \nProsím, napíšte niečo a skúste to znova."
-STRING_DOESNOTEXIST,                "Nie je možné nájsť súbor '%s'\n\n \
+    STRING_DOESNOTEXIST "Nie je možné nájsť súbor '%s'\n\n \
 Chcete vytvoriť nový súbor?"
-STRING_NOTSAVED,                "Text súboru '%s'\nsa zmenil.\n\n \
+    STRING_NOTSAVED "Text súboru '%s'\nsa zmenil.\n\n \
 Chcete uložiť zmeny?"
-STRING_NOTFOUND,                    "Nie je možné nájsť '%s' ."
-STRING_OUT_OF_MEMORY,            "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu \n \
+    STRING_NOTFOUND "Nie je možné nájsť '%s' ."
+    STRING_OUT_OF_MEMORY "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu \n \
 alebo viac aplikácií, aby sa uvoľnila pamäť a skúste to znova."
-STRING_CANNOTFIND                               "Nemožno nájsť '%s'"
-STRING_ANSI,                                    "ANSI"
-STRING_UNICODE,                                 "Unicode"
-STRING_UNICODE_BE,                              "Unicode (veľký indián)"
-STRING_UTF8,                                    "UTF-8"
-STRING_CRLF,                                    "Windows"
-STRING_LF,                                      "Unix"
-STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Riadok %d, stĺpec %d"
+    STRING_CANNOTFIND "Nemožno nájsť '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (veľký indián)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "Riadok %d, stĺpec %d"
 END

@@ -1,0 +1,16 @@
+﻿; UTF-8
+
+[Section]
+Name = Mozilla Fira Font
+Version = 1.0
+Licence = Unknown
+Description = Mozilla Fira Font Pack, Includes Mono and Sans fonts. Unzip in the "ReactOS" folder.
+Size = 543kB
+Category = 14
+URLSite = https://github.com/mozilla/Fira
+URLDownload = http://svn.reactos.org/packages/Fira.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Mozilla Fira Font Pack, Beinhaltet Mono und Sans Schriften. Bitte in den "ReactOS" Ordner entpacken.

@@ -78,6 +78,7 @@ get_dc_data(HDC hdc)
         data->nb_icd_formats = data->icd_data->DrvDescribePixelFormat(hdc, 0, 0, NULL);
     else
         data->nb_icd_formats = 0;
+    TRACE("ICD %S has %u formats for HDC %x.\n", data->icd_data->DriverName, data->nb_icd_formats, hdc);
     data->nb_sw_formats = sw_DescribePixelFormat(hdc, 0, 0, NULL);
     data->next = dc_data_list;
     dc_data_list = data;
@@ -191,10 +192,31 @@ INT WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR* ppfd)
             continue;
         }
 
-        /* only use bitmap capable for formats for bitmap rendering */
-        if( (ppfd->dwFlags & PFD_DRAW_TO_BITMAP) != (format.dwFlags & PFD_DRAW_TO_BITMAP))
+        /* only use bitmap capable formats for bitmap rendering */
+        if ((ppfd->dwFlags & PFD_DRAW_TO_BITMAP) != (format.dwFlags & PFD_DRAW_TO_BITMAP))
         {
             TRACE( "PFD_DRAW_TO_BITMAP mismatch for iPixelFormat=%d\n", i );
+            continue;
+        }
+
+        /* only use window capable formats for window rendering */
+        if ((ppfd->dwFlags & PFD_DRAW_TO_WINDOW) != (format.dwFlags & PFD_DRAW_TO_WINDOW))
+        {
+            TRACE( "PFD_DRAW_TO_WINDOW mismatch for iPixelFormat=%d\n", i );
+            continue;
+        }
+
+        /* only use opengl capable formats for opengl rendering */
+        if ((ppfd->dwFlags & PFD_SUPPORT_OPENGL) != (format.dwFlags & PFD_SUPPORT_OPENGL))
+        {
+            TRACE( "PFD_SUPPORT_OPENGL mismatch for iPixelFormat=%d\n", i );
+            continue;
+        }
+
+        /* only use GDI capable formats for GDI rendering */
+        if ((ppfd->dwFlags & PFD_SUPPORT_GDI) != (format.dwFlags & PFD_SUPPORT_GDI))
+        {
+            TRACE( "PFD_SUPPORT_GDI mismatch for iPixelFormat=%d\n", i );
             continue;
         }
 

@@ -8,9 +8,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msports);
-
-
 typedef enum _PORT_TYPE
 {
     UnknownPort,

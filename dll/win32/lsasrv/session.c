@@ -6,11 +6,7 @@
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
-/* INCLUDES ****************************************************************/
-
 #include "lsasrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 typedef struct _LSAP_LOGON_SESSION
 {
@@ -54,6 +50,22 @@ LsapGetLogonSession(IN PLUID LogonId)
     }
 
     return NULL;
+}
+
+
+NTSTATUS
+LsapSetLogonSessionData(IN PLUID LogonId)
+{
+    PLSAP_LOGON_SESSION Session;
+
+    TRACE("()\n");
+
+    Session = LsapGetLogonSession(LogonId);
+    if (Session == NULL)
+        return STATUS_NO_SUCH_LOGON_SESSION;
+
+
+    return STATUS_SUCCESS;
 }
 
 

@@ -26,6 +26,10 @@ Author:
 #include <arch/mmtypes.h>
 #include <extypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Page-Rounding Macros
 //
@@ -169,7 +173,8 @@ typedef enum _MEMORY_INFORMATION_CLASS
     MemoryBasicInformation,
     MemoryWorkingSetList,
     MemorySectionName,
-    MemoryBasicVlmInformation
+    MemoryBasicVlmInformation,
+    MemoryWorkingSetExList
 } MEMORY_INFORMATION_CLASS;
 
 //
@@ -1035,5 +1040,9 @@ extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 #endif
 
 #endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // _MMTYPES_H

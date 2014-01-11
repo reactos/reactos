@@ -18,7 +18,7 @@
 
 #define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
 
-#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
+#define MI_SESSION_VIEW_SIZE                    (48 * _1MB)
 #define MI_SESSION_POOL_SIZE                    (16 * _1MB)
 #define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
 #define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
@@ -96,6 +96,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // Protection Bits part of the internal memory manager Protection Mask, from:
 // http://reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// https://www.reactos.org/wiki/Techwiki:Memory_Protection_constants
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
@@ -106,9 +107,22 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_WRITECOPY           5
 #define MM_EXECUTE_READWRITE   6
 #define MM_EXECUTE_WRITECOPY   7
-#define MM_NOCACHE             8
-#define MM_DECOMMIT            0x10
-#define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+#define MM_PROTECT_ACCESS      7
+
+//
+// These are flags on top of the actual protection mask
+//
+#define MM_NOCACHE            0x08
+#define MM_GUARDPAGE          0x10
+#define MM_WRITECOMBINE       0x18
+#define MM_PROTECT_SPECIAL    0x18
+
+//
+// These are special cases
+//
+#define MM_DECOMMIT           (MM_ZERO_ACCESS | MM_GUARDPAGE)
+#define MM_NOACCESS           (MM_ZERO_ACCESS | MM_WRITECOMBINE)
+#define MM_OUTSWAPPED_KSTACK  (MM_EXECUTE_WRITECOPY | MM_WRITECOMBINE)
 #define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
@@ -716,9 +730,10 @@ extern PVOID MmHighSectionBase;
 extern SIZE_T MmSystemLockPagesCount;
 extern ULONG_PTR MmSubsectionBase;
 extern LARGE_INTEGER MmCriticalSectionTimeout;
+extern LIST_ENTRY MmWorkingSetExpansionHead;
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFree) ||
@@ -727,8 +742,8 @@ MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderOsloaderStack));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFirmwarePermanent) ||
@@ -738,44 +753,44 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
 }
 
 #ifdef _M_AMD64
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPxe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPpe(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
 }
 #else
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPde(PVOID Address)
 {
     return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
             (Address <= (PVOID)MiHighestUserPde));
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsUserPte(PVOID Address)
 {
     return (Address <= (PVOID)MiHighestUserPte);
@@ -785,8 +800,8 @@ MiIsUserPte(PVOID Address)
 //
 // Figures out the hardware bits for a PTE
 //
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
@@ -949,6 +964,14 @@ MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
     NewPte->u.Subsect.SubsectionAddressHigh = (Offset & 0xFFFFF80) >> 7;
 }
 
+FORCEINLINE
+BOOLEAN
+MI_IS_MAPPED_PTE(PMMPTE PointerPte)
+{
+    /// \todo Make this reasonable code, this is UGLY!
+    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
+}
+
 #endif
 
 //
@@ -969,8 +992,8 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 //
 // Writes a valid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
                    IN MMPTE TempPte)
 {
@@ -981,23 +1004,51 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
 }
 
 //
-// Writes an invalid PTE
+// Updates a valid PTE
 //
 VOID
 FORCEINLINE
+MI_UPDATE_VALID_PTE(IN PMMPTE PointerPte,
+                   IN MMPTE TempPte)
+{
+    /* Write the valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(PointerPte->u.Hard.PageFrameNumber == TempPte.u.Hard.PageFrameNumber);
+    *PointerPte = TempPte;
+}
+
+//
+// Writes an invalid PTE
+//
+FORCEINLINE
+VOID
 MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
                      IN MMPTE InvalidPte)
 {
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
+    ASSERT(InvalidPte.u.Long != 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Erase the PTE completely
+//
+VOID
+FORCEINLINE
+MI_ERASE_PTE(IN PMMPTE PointerPte)
+{
+    /* Zero out the PTE */
+    ASSERT(PointerPte->u.Long != 0);
+    PointerPte->u.Long = 0;
 }
 
 //
 // Writes a valid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
                    IN MMPDE TempPde)
 {
@@ -1010,13 +1061,14 @@ MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
 //
 // Writes an invalid PDE
 //
-VOID
 FORCEINLINE
+VOID
 MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
                      IN MMPDE InvalidPde)
 {
     /* Write the invalid PDE */
     ASSERT(InvalidPde.u.Hard.Valid == 0);
+    ASSERT(InvalidPde.u.Long != 0);
     *PointerPde = InvalidPde;
 }
 
@@ -1060,8 +1112,8 @@ MI_WS_OWNER(IN PEPROCESS Process)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsRosSectionObject(IN PVOID Section)
 {
     PROS_SECTION_OBJECT RosSection = Section;
@@ -1189,6 +1241,30 @@ MiUnlockProcessWorkingSet(IN PEPROCESS Process,
 
     /* Release the lock and re-enable APCs */
     ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
+    KeLeaveGuardedRegion();
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetShared(IN PEPROCESS Process,
+                                IN PETHREAD Thread)
+{
+    /* Make sure we are the owner of a safe acquisition (because shared) */
+    ASSERT(MI_WS_OWNER(Process));
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+
+    /* Ensure we are in a shared acquisition */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == TRUE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Don't claim the lock anylonger */
+    Thread->OwnsProcessWorkingSetShared = FALSE;
+
+    /* Release the lock and re-enable APCs */
+    ExReleasePushLockShared(&Process->Vm.WorkingSetMutex);
     KeLeaveGuardedRegion();
 }
 
@@ -1330,7 +1406,7 @@ MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
     else
     {
         /* Owner is shared (implies safe), release normally */
-        ASSERT(FALSE);
+        MiUnlockProcessWorkingSetShared(Process, Thread);
         *Safe = TRUE;
         *Shared = TRUE;
     }
@@ -1343,16 +1419,24 @@ MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
                                 IN BOOLEAN Safe,
                                 IN BOOLEAN Shared)
 {
-    ASSERT(Shared == FALSE);
-
     /* Check if this was a safe lock or not */
     if (Safe)
     {
-        /* Reacquire safely */
-        MiLockProcessWorkingSet(Process, Thread);
+        if (Shared)
+        {
+            /* Reacquire safely & shared */
+            MiLockProcessWorkingSetShared(Process, Thread);
+        }
+        else
+        {
+            /* Reacquire safely */
+            MiLockProcessWorkingSet(Process, Thread);
+        }
     }
     else
     {
+        /* Unsafe lock cannot be shared */
+        ASSERT(Shared == FALSE);
         /* Reacquire unsafely */
         MiLockProcessWorkingSetUnsafe(Process, Thread);
     }
@@ -1696,6 +1780,12 @@ VOID
 NTAPI
 MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeSessionWsSupport(
+    VOID
 );
 
 VOID
@@ -2234,8 +2324,8 @@ MiMakePdeExistAndMakeValid(
 // then we'd like to have our own code to grab a free page and zero it out, by
 // using MiRemoveAnyPage. This macro implements this.
 //
-PFN_NUMBER
 FORCEINLINE
+PFN_NUMBER
 MiRemoveZeroPageSafe(IN ULONG Color)
 {
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);

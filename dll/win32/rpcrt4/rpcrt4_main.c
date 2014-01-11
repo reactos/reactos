@@ -28,36 +28,10 @@
  *   NT-based native rpcrt4's.  Commonly-used transport for self-to-self RPC's.
  */
 
-#include <config.h>
+#include "precomp.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#include <windef.h>
-//#include "winerror.h"
-#include <winbase.h>
-//#include "winuser.h"
-//#include "winnt.h"
-#include <winternl.h>
 #include <ntsecapi.h>
-//#include "iptypes.h"
 #include <iphlpapi.h>
-#include <wine/unicode.h>
-#include <rpc.h>
-
-//#include "ole2.h"
-//#include "rpcndr.h"
-//#include "rpcproxy.h"
-
-//#include "rpc_binding.h"
-#include "rpc_server.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -128,6 +102,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             list_remove(&tdata->entry);
             LeaveCriticalSection(&threaddata_cs);
 
+            tdata->cs.DebugInfo->Spare[0] = 0;
             DeleteCriticalSection(&tdata->cs);
             if (tdata->connection)
                 ERR("tdata->connection should be NULL but is still set to %p\n", tdata->connection);
@@ -138,8 +113,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         break;
 
     case DLL_PROCESS_DETACH:
+        if (lpvReserved) break; /* do nothing if process is shutting down */
         RPCRT4_destroy_all_protseqs();
         RPCRT4_ServerFreeAllRegisteredAuthInfo();
+        DeleteCriticalSection(&uuid_cs);
+        DeleteCriticalSection(&threaddata_cs);
         break;
     }
 
@@ -872,6 +850,42 @@ RPC_STATUS RPC_ENTRY RpcErrorStartEnumeration(RPC_ERROR_ENUM_HANDLE* EnumHandle)
 }
 
 /******************************************************************************
+ * RpcErrorEndEnumeration   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcErrorEndEnumeration(RPC_ERROR_ENUM_HANDLE* EnumHandle)
+{
+    FIXME("(%p): stub\n", EnumHandle);
+    return RPC_S_OK;
+}
+
+/******************************************************************************
+ * RpcErrorSaveErrorInfo   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcErrorSaveErrorInfo(RPC_ERROR_ENUM_HANDLE *EnumHandle, void **ErrorBlob, SIZE_T *BlobSize)
+{
+    FIXME("(%p %p %p): stub\n", EnumHandle, ErrorBlob, BlobSize);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/******************************************************************************
+ * RpcErrorLoadErrorInfo   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcErrorLoadErrorInfo(void *ErrorBlob, SIZE_T BlobSize, RPC_ERROR_ENUM_HANDLE *EnumHandle)
+{
+    FIXME("(%p %lu %p): stub\n", ErrorBlob, BlobSize, EnumHandle);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/******************************************************************************
+ * RpcErrorGetNextRecord   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcErrorGetNextRecord(RPC_ERROR_ENUM_HANDLE *EnumHandle, BOOL CopyStrings, RPC_EXTENDED_ERROR_INFO *ErrorInfo)
+{
+    FIXME("(%p %x %p): stub\n", EnumHandle, CopyStrings, ErrorInfo);
+    return RPC_S_ENTRY_NOT_FOUND;
+}
+
+/******************************************************************************
  * RpcMgmtSetCancelTimeout   (rpcrt4.@)
  */
 RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG Timeout)
@@ -889,6 +903,7 @@ static struct threaddata *get_or_create_threaddata(void)
         if (!tdata) return NULL;
 
         InitializeCriticalSection(&tdata->cs);
+        tdata->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": threaddata.cs");
         tdata->thread_id = GetCurrentThreadId();
 
         EnterCriticalSection(&threaddata_cs);

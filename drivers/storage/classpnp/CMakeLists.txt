@@ -34,11 +34,8 @@ add_library(classpnp SHARED
 
 if(ARCH STREQUAL "i386")
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    if(MSVC)
-        #add_target_compile_flags(classpnp "/Gz")
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
-    else()
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-w")
+    if(NOT MSVC)
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=switch")
     endif()
 endif()
 

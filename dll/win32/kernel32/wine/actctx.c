@@ -13,6 +13,7 @@
 /* synched with wine 1.1.26 */
 
 #include <k32.h>
+
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(actctx);

@@ -10,6 +10,10 @@
 
 #include "precomp.h"
 
+#include <ntifs.h>
+#include <receive.h>
+#include <wait.h>
+
 UINT TransferDataCalled = 0;
 UINT TransferDataCompleteCalled = 0;
 

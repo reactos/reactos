@@ -21,12 +21,6 @@
 #ifndef _WINE_TYPELIB_H
 #define _WINE_TYPELIB_H
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <oleauto.h>
-
 #define HELPDLLFLAG (0x0100)
 #define DO_NOT_SEEK (-1)
 

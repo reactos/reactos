@@ -6,7 +6,7 @@ CAPTION "全般"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "接続方法:", -1, 9,9,217,8
+    LTEXT "接続方法:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "設定(&C)", IDC_CONFIGURE, 189, 38, 50, 14
     LTEXT "この接続はチェックされているコンポーネントを使用しています:", -1, 9, 59, 217, 8
@@ -26,7 +26,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic"
@@ -44,12 +44,12 @@ BEGIN
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "プロパティ(&P)", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "無効にする(&D)", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "",IDC_STATUS,83,20,98,8
-    RTEXT "",IDC_DURATION,83,34,98,8
-    RTEXT "",IDC_SPEED,83,48,98,8
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
 END
 
-IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200,180
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "サポート"
 FONT 9, "MS UI Gothic"
@@ -59,16 +59,14 @@ BEGIN
     LTEXT "IP アドレス:", -1, 22, 34, 80, 8
     LTEXT "サブネット マスク:", -1, 22, 48, 80, 8
     LTEXT "デフォルト ゲートウェイ:", -1, 22, 62, 80, 8
-
     RTEXT "利用不可", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
-
     PUSHBUTTON "詳細(&D)...", IDC_DETAILS, 22, 76, 62, 14
 END
 
-IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200,200
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 200, 200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "ネットワーク接続の詳細"
 FONT 9, "MS UI Gothic"
@@ -80,47 +78,45 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "物理アドレス"
-    IDS_IP_ADDRESS              "IP アドレス"
-    IDS_SUBNET_MASK             "サブネット マスク"
-    IDS_DEF_GATEWAY             "デフォルト ゲートウェイ"
-    IDS_DHCP_SERVER             "DHCP サーバー"
-    IDS_LEASE_OBTAINED          "リースの取得日"
-    IDS_LEASE_EXPIRES           "リースの有効期限"
-    IDS_DNS_SERVERS             "DNS サーバー"
-    IDS_WINS_SERVERS            "WINS サーバー"
-    IDS_PROPERTY                "プロパティ"
-    IDS_VALUE                   "値"
-    IDS_NETWORKCONNECTION       "ネットワーク接続"
-    IDS_SHV_COLUMN_NAME         "名前"
-    IDS_SHV_COLUMN_TYPE         "種類"
-    IDS_SHV_COLUMN_STATE        "状態"
-    IDS_SHV_COLUMN_DEVNAME      "デバイス名"
-    IDS_SHV_COLUMN_PHONE        "電話番号またはホスト アドレス"
-    IDS_SHV_COLUMN_OWNER        "所有者"
-    IDS_TYPE_ETHERNET           "LAN または高速インターネット"
-    IDS_STATUS_NON_OPERATIONAL  "無効"
-    IDS_STATUS_UNREACHABLE      "切断"
-    IDS_STATUS_DISCONNECTED     "ネットワーク ケーブルが接続されていません"
-    IDS_STATUS_CONNECTING       "ネットワーク アドレスの取得中"
-    IDS_STATUS_CONNECTED        "接続"
-    IDS_STATUS_OPERATIONAL      "接続"
-
-    IDS_NET_ACTIVATE            "有効"
-    IDS_NET_DEACTIVATE          "無効"
-    IDS_NET_STATUS              "状態"
-    IDS_NET_REPAIR              "修復"
-    IDS_NET_CREATELINK          "ショートカットの作成"
-    IDS_NET_DELETE              "削除"
-    IDS_NET_RENAME              "名前の変更"
-    IDS_NET_PROPERTIES          "プロパティ"
-
-    IDS_FORMAT_BIT              "%u Bit/s"
-    IDS_FORMAT_KBIT             "%u KBit/s"
-    IDS_FORMAT_MBIT             "%u MBit/s"
-    IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d 日 %s"
-    IDS_DURATION_DAYS           "%d 日 %s"
-    IDS_ASSIGNED_DHCP           "DHCP による割り当て"
-    IDS_ASSIGNED_MANUAL         "手動構成"
+    IDS_PHYSICAL_ADDRESS "物理アドレス"
+    IDS_IP_ADDRESS "IP アドレス"
+    IDS_SUBNET_MASK "サブネット マスク"
+    IDS_DEF_GATEWAY "デフォルト ゲートウェイ"
+    IDS_DHCP_SERVER "DHCP サーバー"
+    IDS_LEASE_OBTAINED "リースの取得日"
+    IDS_LEASE_EXPIRES "リースの有効期限"
+    IDS_DNS_SERVERS "DNS サーバー"
+    IDS_WINS_SERVERS "WINS サーバー"
+    IDS_PROPERTY "プロパティ"
+    IDS_VALUE "値"
+    IDS_NETWORKCONNECTION "ネットワーク接続"
+    IDS_SHV_COLUMN_NAME "名前"
+    IDS_SHV_COLUMN_TYPE "種類"
+    IDS_SHV_COLUMN_STATE "状態"
+    IDS_SHV_COLUMN_DEVNAME "デバイス名"
+    IDS_SHV_COLUMN_PHONE "電話番号またはホスト アドレス"
+    IDS_SHV_COLUMN_OWNER "所有者"
+    IDS_TYPE_ETHERNET "LAN または高速インターネット"
+    IDS_STATUS_NON_OPERATIONAL "無効"
+    IDS_STATUS_UNREACHABLE "切断"
+    IDS_STATUS_DISCONNECTED "ネットワーク ケーブルが接続されていません"
+    IDS_STATUS_CONNECTING "ネットワーク アドレスの取得中"
+    IDS_STATUS_CONNECTED "接続"
+    IDS_STATUS_OPERATIONAL "接続"
+    IDS_NET_ACTIVATE "有効"
+    IDS_NET_DEACTIVATE "無効"
+    IDS_NET_STATUS "状態"
+    IDS_NET_REPAIR "修復"
+    IDS_NET_CREATELINK "ショートカットの作成"
+    IDS_NET_DELETE "削除"
+    IDS_NET_RENAME "名前の変更"
+    IDS_NET_PROPERTIES "プロパティ"
+    IDS_FORMAT_BIT "%u Bit/s"
+    IDS_FORMAT_KBIT "%u KBit/s"
+    IDS_FORMAT_MBIT "%u MBit/s"
+    IDS_FORMAT_GBIT "%u GBit/s"
+    IDS_DURATION_DAY "%d 日 %s"
+    IDS_DURATION_DAYS "%d 日 %s"
+    IDS_ASSIGNED_DHCP "DHCP による割り当て"
+    IDS_ASSIGNED_MANUAL "手動構成"
 END

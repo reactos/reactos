@@ -20,8 +20,8 @@ BOOLEAN KiTimeAdjustmentEnabled = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
 FORCEINLINE
+VOID
 KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
 {
 #ifdef _WIN64
@@ -35,8 +35,8 @@ KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
 #endif
 }
 
-VOID
 FORCEINLINE
+VOID
 KiCheckForTimerExpiration(
     PKPRCB Prcb,
     PKTRAP_FRAME TrapFrame,

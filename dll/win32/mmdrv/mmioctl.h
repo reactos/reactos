@@ -12,12 +12,6 @@
 #ifndef MMDRV_IOCTLS
 #define MMDRV_IOCTLS
 
-#include <windows.h>
-//#include <mmsystem.h>
-//#include <mmddk.h>
-#include <winioctl.h>
-
-
 /*
     Base names of the supported devices, as provided by drivers running in
     kernel mode.

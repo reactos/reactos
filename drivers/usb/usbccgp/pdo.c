@@ -11,6 +11,9 @@
 
 #include "usbccgp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 NTSTATUS
 USBCCGP_PdoHandleQueryDeviceText(
     IN PDEVICE_OBJECT DeviceObject,

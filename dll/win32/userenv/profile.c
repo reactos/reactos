@@ -18,7 +18,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/userenv/profile.c
+ * FILE:            dll/win32/userenv/profile.c
  * PURPOSE:         User profile code
  * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau
@@ -814,8 +814,8 @@ GetUserProfileDirectoryW(HANDLE hToken,
     HKEY hKey;
     LONG Error;
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;
@@ -898,8 +898,8 @@ CheckForLoadedProfile(HANDLE hToken)
 
     DPRINT("CheckForLoadedProfile() called\n");
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;
@@ -1166,7 +1166,7 @@ LoadUserProfileW(IN HANDLE hToken,
     }
 
     /* Get user SID string */
-    ret = GetUserSidFromToken(hToken, &SidString);
+    ret = GetUserSidStringFromToken(hToken, &SidString);
     if (!ret)
     {
         DPRINT1("GetUserSidFromToken() failed\n");
@@ -1186,6 +1186,11 @@ LoadUserProfileW(IN HANDLE hToken,
                         SidString.Buffer,
                         szUserHivePath);
     AcquireRemoveRestorePrivilege(FALSE);
+
+    /* HACK: Do not fail if the profile has already been loaded! */
+    if (Error == ERROR_SHARING_VIOLATION)
+        Error = ERROR_SUCCESS;
+
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
@@ -1238,8 +1243,8 @@ UnloadUserProfile(HANDLE hToken,
 
     RegCloseKey(hProfile);
 
-    if (!GetUserSidFromToken(hToken,
-                             &SidString))
+    if (!GetUserSidStringFromToken(hToken,
+                                   &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return FALSE;

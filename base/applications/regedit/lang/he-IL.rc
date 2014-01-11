@@ -1,48 +1,26 @@
-/*
- * Regedit resources
- *
- * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- * Translated by Baruch Rutman
- */
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+    VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
 END
 
-/*
- * Menu
- */
+/* Menus */
 
 IDC_REGEDIT MENU
 BEGIN
     POPUP "&קובץ"
     BEGIN
-        MENUITEM "&יציאה",                       ID_REGISTRY_EXIT
+        MENUITEM "&יציאה", ID_REGISTRY_EXIT
     END
     POPUP "&עזרה"
     BEGIN
-        MENUITEM "&אודות...",                  ID_HELP_ABOUT
+        MENUITEM "&אודות...", ID_HELP_ABOUT
     END
 END
 
@@ -50,222 +28,211 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&קובץ"
     BEGIN
-        MENUITEM "ייבוא...",    ID_REGISTRY_IMPORTREGISTRYFILE
-
-        MENUITEM "ייצוא...",    ID_REGISTRY_EXPORTREGISTRYFILE
-
+        MENUITEM "ייבוא...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "ייצוא...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "טעינת כוורת (Hive)...",                ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "ביטול טעינת כוורת (Hive)...",              ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "טעינת כוורת (Hive)...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "ביטול טעינת כוורת (Hive)...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "התחברות לרישום ברשת...",
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-        MENUITEM "התנתקות מרישום ברשת...",
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+        MENUITEM "התחברות לרישום ברשת...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "התנתקות מרישום ברשת...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "הד&פס\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "הד&פס\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&יציאה",                       ID_REGISTRY_EXIT
+        MENUITEM "&יציאה", ID_REGISTRY_EXIT
     END
     POPUP "&עריכה"
     BEGIN
-        MENUITEM "&שנה",                     ID_EDIT_MODIFY
+        MENUITEM "&שנה", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&חדש"
         BEGIN
-            MENUITEM "&מפתח",                        ID_EDIT_NEW_KEY
+            MENUITEM "&מפתח", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "מחר&וזת",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "ערך &בינארי",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "ערך DWORD",                ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "ערך מרובה מחרוזות",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "ערך מחרוזת הניתן להרחבה",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "מחר&וזת", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "ערך &בינארי", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "ערך DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "ערך מרובה מחרוזות", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "ערך מחרוזת הניתן להרחבה", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&הרשאות...",		ID_EDIT_PERMISSIONS
+        MENUITEM "&הרשאות...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "מחק\tDel",                ID_EDIT_DELETE
-        MENUITEM "שנה שם",                     ID_EDIT_RENAME
+        MENUITEM "מחק\tDel", ID_EDIT_DELETE
+        MENUITEM "שנה שם", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "העתק שם מפתח",              ID_EDIT_COPYKEYNAME
+        MENUITEM "העתק שם מפתח", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "חיפוש\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "חפש את הבא\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "חיפוש\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "חפש את הבא\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "תצוגה"
     BEGIN
-        MENUITEM "שורת מצב",                 ID_VIEW_STATUSBAR
+        MENUITEM "שורת מצב", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "פצל",                      ID_VIEW_SPLIT
+        MENUITEM "פצל", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "רענן\tF5",                ID_VIEW_REFRESH
+        MENUITEM "רענן\tF5", ID_VIEW_REFRESH
     END
     POPUP "מועדפים"
     BEGIN
-        MENUITEM "הוסף למועדפים",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "הסר פריט מועדף",           ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "הוסף למועדפים", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "הסר פריט מועדף", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "נושאי עזרה\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM "נושאי עזרה\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "אודות עורך הרישום",      ID_HELP_ABOUT
+        MENUITEM "אודות עורך הרישום", ID_HELP_ABOUT
     END
 END
 
 IDR_POPUP_MENUS MENU
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "שנה",                     ID_EDIT_MODIFY
-	MENUITEM "שינוי נתונים בינאריים",          ID_EDIT_MODIFY_BIN
-	MENUITEM SEPARATOR
-	MENUITEM "מחק\tDel",                ID_EDIT_DELETE
-	MENUITEM "שנה שם",                     ID_EDIT_RENAME
-  END
-  POPUP ""
-  BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "שנה", ID_EDIT_MODIFY
+        MENUITEM "שינוי נתונים בינאריים", ID_EDIT_MODIFY_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "מחק\tDel", ID_EDIT_DELETE
+        MENUITEM "שנה שם", ID_EDIT_RENAME
+    END
+    POPUP ""
+    BEGIN
         POPUP "חדש"
         BEGIN
-            MENUITEM "מפתח",                        ID_EDIT_NEW_KEY
+            MENUITEM "מפתח", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "מחרוזת",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "ערך בינארי",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "ערך DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "ערך מרובה מחרוזות",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "ערך מחרוזת הניתן להרחבה",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "מחרוזת", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "ערך בינארי", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "ערך DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "ערך מרובה מחרוזות", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "ערך מחרוזת הניתן להרחבה", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-  END
-  POPUP ""
-  BEGIN
-        MENUITEM "הרחב/קפל",                 ID_TREE_EXPANDBRANCH
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "הרחב/קפל", ID_TREE_EXPANDBRANCH
         POPUP "חדש"
         BEGIN
-            MENUITEM "מפתח",                        ID_EDIT_NEW_KEY
+            MENUITEM "מפתח", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "מחרוזת",               ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "ערך בינארי",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "ערך DWORD",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "ערך מרובה מחרוזות",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "ערך מחרוזת הניתן להרחבה",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "מחרוזת", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "ערך בינארי", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "ערך DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "ערך מרובה מחרוזות", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "ערך מחרוזת הניתן להרחבה", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "מצא",                           ID_EDIT_FIND
+        MENUITEM "מצא", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "מחק",                         ID_TREE_DELETE
-        MENUITEM "שנה שם",                         ID_TREE_RENAME
+        MENUITEM "מחק", ID_TREE_DELETE
+        MENUITEM "שנה שם", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "יצא",                         ID_TREE_EXPORT
-        MENUITEM "הרשאות...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "יצא", ID_TREE_EXPORT
+        MENUITEM "הרשאות...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "העתק שם מפתח",                  ID_EDIT_COPYKEYNAME
-  END
-  POPUP ""
-  BEGIN
+        MENUITEM "העתק שם מפתח", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "גזור", ID_HEXEDIT_CUT
         MENUITEM "העתק", ID_HEXEDIT_COPY
         MENUITEM "הדבק", ID_HEXEDIT_PASTE
         MENUITEM "מחק", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "בחר הכל", ID_HEXEDIT_SELECT_ALL
-  END
+    END
 END
 
+/* Dialogs */
 
-/*
- * Dialog
- */
-
-IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "עריכת מחרוזת"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "שם הערך:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "נתוני ערך:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "אישור",IDOK,142,64,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,196,64,50,14
+    LTEXT "שם הערך:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "נתוני ערך:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "אישור", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 196, 64, 50, 14
 END
 
-IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "עריכת מרובה מחרזות"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "שם הערך:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "תוכן הערך:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON   "אישור",IDOK,142,154,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,196,154,50,14
+    LTEXT "שם הערך:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "תוכן הערך:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
+             ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON "אישור", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 196, 154, 50, 14
 END
 
-IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "עריכת ערך בינארי"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "שם הערך:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "תוכן הערך:",IDC_STATIC,6,35,161,8
-    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
-    DEFPUSHBUTTON   "אישור",IDOK,142,154,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,196,154,50,14
+    LTEXT "שם הערך:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "תוכן הערך:", IDC_STATIC, 6, 35, 161, 8
+    CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
+    DEFPUSHBUTTON "אישור", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 196, 154, 50, 14
 END
 
-
-IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "עריכת DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "שם הערך:",IDC_STATIC,6,6,134,8
-    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "תוכן הערך:",IDC_STATIC,6,35,161,8
-    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
-    GROUPBOX        "בסיס",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "הקסהדסימלי",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "עשרוני",IDC_FORMAT_DEC,141,59,60,10
-    DEFPUSHBUTTON   "אישור",IDOK,142,82,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,196,82,50,14
+    LTEXT "שם הערך:", IDC_STATIC, 6, 6, 134, 8
+    EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "תוכן הערך:", IDC_STATIC, 6, 35, 161, 8
+    EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
+    GROUPBOX "בסיס", IDC_STATIC, 130, 35, 116, 39
+    AUTORADIOBUTTON "הקסהדסימלי", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
+    AUTORADIOBUTTON "עשרוני", IDC_FORMAT_DEC, 141, 59, 60, 10
+    DEFPUSHBUTTON "אישור", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 196, 82, 50, 14
 END
 
-
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "רשימת משאבים"
 FONT 8, "MS Shell Dlg"
-{
-    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+BEGIN
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "אישור", IDOK, 27, 100, 50, 14
     PUSHBUTTON "הראה...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
-}
+END
 
-
-IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
-      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "משאבים"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
-    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
     LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
-    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
     LTEXT "זיכרון:", IDC_STATIC, 10, 91, 32, 8
-    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "יציאה:", IDC_STATIC, 10, 134, 38, 8
-    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
     LTEXT "מידע מסוים של ההתקן:", IDC_STATIC, 10, 177, 80, 8
-    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "שימוש", IDC_STATIC, 10, 219, 125, 39
     LTEXT "לא נקבע", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "משותף", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
@@ -279,262 +246,248 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
     RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
-    DEFPUSHBUTTON "אישור",IDOK, 92, 263, 40, 14
+    DEFPUSHBUTTON "אישור", IDOK, 92, 263, 40, 14
     PUSHBUTTON "מידע...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
-}
+END
 
-
-/*
- * String Table
- */
+/* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME    "שם"
-    IDS_LIST_COLUMN_TYPE    "סוג"
-    IDS_LIST_COLUMN_DATA    "מידע"
+    IDS_LIST_COLUMN_NAME "שם"
+    IDS_LIST_COLUMN_TYPE "סוג"
+    IDS_LIST_COLUMN_DATA "מידע"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "עורך הרשום"
-    IDC_REGEDIT             "REGEDIT"
-    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+    IDS_APP_TITLE "עורך הרשום"
+    IDC_REGEDIT "REGEDIT"
+    IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU        "Contains commands for working with the whole registry"
-    ID_EDIT_MENU            "Contains commands for editing values or keys"
-    ID_VIEW_MENU            "Contains commands for customising the registry window"
-    ID_FAVOURITES_MENU      "Contains commands for accessing frequently used keys"
-    ID_HELP_MENU            "Contains commands for displaying help and information about registry editor"
-    ID_EDIT_NEW_MENU        "Contains commands for creating new keys or values"
+    ID_REGISTRY_MENU "Contains commands for working with the whole registry"
+    ID_EDIT_MENU "Contains commands for editing values or keys"
+    ID_VIEW_MENU "Contains commands for customising the registry window"
+    ID_FAVOURITES_MENU "Contains commands for accessing frequently used keys"
+    ID_HELP_MENU "Contains commands for displaying help and information about registry editor"
+    ID_EDIT_NEW_MENU "Contains commands for creating new keys or values"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY          "Modifies the value's data"
-    ID_EDIT_NEW_KEY         "Adds a new key"
+    ID_EDIT_MODIFY "Modifies the value's data"
+    ID_EDIT_NEW_KEY "Adds a new key"
     ID_EDIT_NEW_STRINGVALUE "Adds a new string value"
     ID_EDIT_NEW_BINARYVALUE "Adds a new binary value"
-    ID_EDIT_NEW_DWORDVALUE  "Adds a new double word value"
+    ID_EDIT_NEW_DWORDVALUE "Adds a new double word value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Imports a text file into the registry"
-    ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Exports all or part of the registry to a text file"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Connects to a remote computer's registry"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Disconnects from a remote computer's registry"
-    ID_REGISTRY_PRINT       "Prints all or part of the registry"
-/*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
-    ID_HELP_ABOUT           "Displays program information, version number and copyright"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exports all or part of the registry to a text file"
+    ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"
+    ID_REGISTRY_UNLOADHIVE "Unloads a hive from the registry"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Connects to a remote computer's registry"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Disconnects from a remote computer's registry"
+    ID_REGISTRY_PRINT "Prints all or part of the registry"
+/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
+    ID_HELP_ABOUT "Displays program information, version number and copyright"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Quits the registry editor"
+    ID_REGISTRY_EXIT "Quits the registry editor"
     ID_FAVOURITES_ADDTOFAVOURITES "Adds keys to the favourites list"
     ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
-    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
-    ID_VIEW_SPLIT           "Change position of split between two panes"
-    ID_VIEW_REFRESH         "Refreshes the window"
-    ID_EDIT_DELETE          "Deletes the selection"
-    ID_EDIT_RENAME          "Renames the selection"
-    ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
-    ID_EDIT_FIND            "Finds a text string in a key, value or data"
-    ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+    ID_VIEW_STATUSBAR "Shows or hides the status bar"
+    ID_VIEW_SPLIT "Change position of split between two panes"
+    ID_VIEW_REFRESH "Refreshes the window"
+    ID_EDIT_DELETE "Deletes the selection"
+    ID_EDIT_RENAME "Renames the selection"
+    ID_EDIT_COPYKEYNAME "Copies the name of the selected key to the clipboard"
+    ID_EDIT_FIND "Finds a text string in a key, value or data"
+    ID_EDIT_FINDNEXT "Finds next occurrence of text specified in previous search"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR               "שגיאה"
-    IDS_WARNING             "אזהרה"
-    IDS_BAD_KEY             "Can't query key '%s'"
-    IDS_BAD_VALUE           "Can't query value '%s'"
-    IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
-    IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
+    IDS_ERROR "שגיאה"
+    IDS_WARNING "אזהרה"
+    IDS_BAD_KEY "Can't query key '%s'"
+    IDS_BAD_VALUE "Can't query value '%s'"
+    IDS_UNSUPPORTED_TYPE "Can't edit keys of this type (%ld)"
+    IDS_TOO_BIG_VALUE "Value is too big (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
-    IDS_QUERY_DELETE_KEY_ONE    "Are you sure you want to delete this key?"
-    IDS_QUERY_DELETE_KEY_MORE   "Are you sure you want to delete these keys?"
+    IDS_QUERY_DELETE_KEY_ONE "Are you sure you want to delete this key?"
+    IDS_QUERY_DELETE_KEY_MORE "Are you sure you want to delete these keys?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirm Key Delete"
-    IDS_QUERY_DELETE_ONE    "Are you sure you want to delete this value?"
-    IDS_QUERY_DELETE_MORE   "Are you sure you want to delete these values?"
+    IDS_QUERY_DELETE_ONE "Are you sure you want to delete this value?"
+    IDS_QUERY_DELETE_MORE "Are you sure you want to delete these values?"
     IDS_QUERY_DELETE_CONFIRM "Confirm Value Delete"
-    IDS_ERR_DELVAL_CAPTION  "Error Deleting Values"
-    IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
-    IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
-    IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
+    IDS_ERR_DELVAL_CAPTION "Error Deleting Values"
+    IDS_ERR_DELETEVALUE "Unable to delete all specified values!"
+    IDS_ERR_RENVAL_CAPTION "Error Renaming Value"
+    IDS_ERR_RENVAL_TOEMPTY "Cannot rename %s. The specified value name is empty. Try another name and try again."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
-    IDS_NEW_KEY             "New Key #%d"
-    IDS_NEW_VALUE           "New Value #%d"
+    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_NEW_KEY "New Key #%d"
+    IDS_NEW_VALUE "New Value #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(zero-length binary value)"
-    IDS_DEFAULT_VALUE_NAME  "(ברירת מחדל)"
-    IDS_VALUE_NOT_SET       "(ערך לא נקבע)"
-    IDS_UNKNOWN_TYPE        "Unknown type: (0x%lx)"
-    IDS_MY_COMPUTER         "המחשב שלי"
-    IDS_IMPORT_REG_FILE     "יבא קובץ רשום"
-    IDS_EXPORT_REG_FILE     "יצא קובץ רשום"
-    IDS_LOAD_HIVE           "טעינת כוורת"
-    IDS_UNLOAD_HIVE         "פריקת כוורת"
-    IDS_INVALID_DWORD       "(invalid DWORD value)"
+    IDS_BINARY_EMPTY "(zero-length binary value)"
+    IDS_DEFAULT_VALUE_NAME "(ברירת מחדל)"
+    IDS_VALUE_NOT_SET "(ערך לא נקבע)"
+    IDS_UNKNOWN_TYPE "Unknown type: (0x%lx)"
+    IDS_MY_COMPUTER "המחשב שלי"
+    IDS_IMPORT_REG_FILE "יבא קובץ רשום"
+    IDS_EXPORT_REG_FILE "יצא קובץ רשום"
+    IDS_LOAD_HIVE "טעינת כוורת"
+    IDS_UNLOAD_HIVE "פריקת כוורת"
+    IDS_INVALID_DWORD "(invalid DWORD value)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE         "קובץ רשום"
-    IDS_FLT_REGFILES        "קבצי רשום (*.reg)"
-    IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_HIVFILES        "קבצי כוורות רשום (*.*)"
-    IDS_FLT_HIVFILES_FLT    "*.*"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 קבצי רשום (REGEDIT4) (*.reg)"
-    IDS_FLT_REGEDIT4_FLT    "*.reg"
-    IDS_FLT_ALLFILES        "כל הקבצים (*.*)"
-    IDS_FLT_ALLFILES_FLT    "*.*"
+    IDS_FLT_REGFILE "קובץ רשום"
+    IDS_FLT_REGFILES "קבצי רשום (*.reg)"
+    IDS_FLT_REGFILES_FLT "*.reg"
+    IDS_FLT_HIVFILES "קבצי כוורות רשום (*.*)"
+    IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 קבצי רשום (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4_FLT "*.reg"
+    IDS_FLT_ALLFILES "כל הקבצים (*.*)"
+    IDS_FLT_ALLFILES_FLT "*.*"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "שליטה מלאה"
-  IDS_ACCESS_READ               "קרא"
-  IDS_ACCESS_QUERYVALUE         "Query Value"
-  IDS_ACCESS_SETVALUE           "קבע ערך"
-  IDS_ACCESS_CREATESUBKEY       "צור מפתח משנה"
-  IDS_ACCESS_ENUMERATESUBKEYS   "Enumerate Subkeys"
-  IDS_ACCESS_NOTIFY             "Notify"
-  IDS_ACCESS_CREATELINK         "צור קישור"
-  IDS_ACCESS_DELETE             "מחק"
-  IDS_ACCESS_WRITEDAC           "Write DAC"
-  IDS_ACCESS_WRITEOWNER         "Write Owner"
-  IDS_ACCESS_READCONTROL        "Read Control"
+    IDS_ACCESS_FULLCONTROL "שליטה מלאה"
+    IDS_ACCESS_READ "קרא"
+    IDS_ACCESS_QUERYVALUE "Query Value"
+    IDS_ACCESS_SETVALUE "קבע ערך"
+    IDS_ACCESS_CREATESUBKEY "צור מפתח משנה"
+    IDS_ACCESS_ENUMERATESUBKEYS "Enumerate Subkeys"
+    IDS_ACCESS_NOTIFY "Notify"
+    IDS_ACCESS_CREATELINK "צור קישור"
+    IDS_ACCESS_DELETE "מחק"
+    IDS_ACCESS_WRITEDAC "Write DAC"
+    IDS_ACCESS_WRITEOWNER "Write Owner"
+    IDS_ACCESS_READCONTROL "Read Control"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_INHERIT_THISKEYONLY        "This key only"
-  IDS_INHERIT_THISKEYANDSUBKEYS  "This key and subkeys"
-  IDS_INHERIT_SUBKEYSONLY        "Subkeys only"
+    IDS_INHERIT_THISKEYONLY "This key only"
+    IDS_INHERIT_THISKEYANDSUBKEYS "This key and subkeys"
+    IDS_INHERIT_SUBKEYSONLY "Subkeys only"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_EXPAND                     "הרחב"
-  IDS_COLLAPSE                   "כווץ"
-  IDS_GOTO_SUGGESTED_KEY         "עבור אל '%s'"
-  IDS_FINISHEDFIND               "Finished searching through the registry."
+    IDS_EXPAND "הרחב"
+    IDS_COLLAPSE "כווץ"
+    IDS_GOTO_SUGGESTED_KEY "עבור אל '%s'"
+    IDS_FINISHEDFIND "Finished searching through the registry."
 END
 
 STRINGTABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
+    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
+    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
+    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "ממשק"
-    IDS_DMA_CHANNEL               "ערוץ"
-    IDS_DMA_PORT                  "יציאה"
-    IDS_INTERRUPT_VECTOR          "וקטור"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "שייכות"
-    IDS_INTERRUPT_TYPE            "סוג"
-    IDS_MEMORY_ADDRESS            "כתובת פיזית"
-    IDS_MEMORY_LENGTH             "אורך"
-    IDS_MEMORY_ACCESS             "גישה"
-    IDS_PORT_ADDRESS              "כתובת פיזית"
-    IDS_PORT_LENGTH               "אורך"
-    IDS_PORT_ACCESS               "גישה"
-    IDS_SPECIFIC_RESERVED1        "שמור 1"
-    IDS_SPECIFIC_RESERVED2        "שמור 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_BUSNUMBER "Bus Number"
+    IDS_INTERFACE "ממשק"
+    IDS_DMA_CHANNEL "ערוץ"
+    IDS_DMA_PORT "יציאה"
+    IDS_INTERRUPT_VECTOR "וקטור"
+    IDS_INTERRUPT_LEVEL "Level"
+    IDS_INTERRUPT_AFFINITY "שייכות"
+    IDS_INTERRUPT_TYPE "סוג"
+    IDS_MEMORY_ADDRESS "כתובת פיזית"
+    IDS_MEMORY_LENGTH "אורך"
+    IDS_MEMORY_ACCESS "גישה"
+    IDS_PORT_ADDRESS "כתובת פיזית"
+    IDS_PORT_LENGTH "אורך"
+    IDS_PORT_ACCESS "גישה"
+    IDS_SPECIFIC_RESERVED1 "שמור 1"
+    IDS_SPECIFIC_RESERVED2 "שמור 2"
+    IDS_SPECIFIC_DATASIZE "Data Size"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO              "יציאה"
-    IDS_PORT_MEMORY_IO            "זיכרון"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
+    IDS_PORT_PORT_IO "יציאה"
+    IDS_PORT_MEMORY_IO "זיכרון"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "קריאה בלבד"
-    IDS_MEMORY_WRITE_ONLY         "כתיבה בלבד"
-    IDS_MEMORY_READ_WRITE         "קריאה / כתיבה"
+    IDS_MEMORY_READ_ONLY "קריאה בלבד"
+    IDS_MEMORY_WRITE_ONLY "כתיבה בלבד"
+    IDS_MEMORY_READ_WRITE "קריאה / כתיבה"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "לא מוגדר"
-    IDS_BUS_INTERNAL              "פנימי"
-    IDS_BUS_ISA                   "ISA"
-    IDS_BUS_EISA                  "EISA"
-    IDS_BUS_MICROCHANNEL          "MicroChannel"
-    IDS_BUS_TURBOCHANNEL          "TurboChannel"
-    IDS_BUS_PCIBUS                "PCI"
-    IDS_BUS_VMEBUS                "VME"
-    IDS_BUS_NUBUS                 "NuBus"
-    IDS_BUS_PCMCIABUS             "PCMCIA"
-    IDS_BUS_CBUS                  "C-Bus"
-    IDS_BUS_MPIBUS                "MPI-Bus"
-    IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
-    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
-    IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNDEFINED "לא מוגדר"
+    IDS_BUS_INTERNAL "פנימי"
+    IDS_BUS_ISA "ISA"
+    IDS_BUS_EISA "EISA"
+    IDS_BUS_MICROCHANNEL "MicroChannel"
+    IDS_BUS_TURBOCHANNEL "TurboChannel"
+    IDS_BUS_PCIBUS "PCI"
+    IDS_BUS_VMEBUS "VME"
+    IDS_BUS_NUBUS "NuBus"
+    IDS_BUS_PCMCIABUS "PCMCIA"
+    IDS_BUS_CBUS "C-Bus"
+    IDS_BUS_MPIBUS "MPI-Bus"
+    IDS_BUS_MPSABUS "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PNPISABUS "PnP-ISA Bus"
+    IDS_BUS_PNPBUS "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
 END
 
 /*****************************************************************/
 
-
-/*
- * Dialog
- */
+/* Dialogs */
 
 IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "טווח יצוא",IDC_STATIC,2,0,366,48
-   CONTROL "הכל",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "בחירת ענף",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
-   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+    GROUPBOX "טווח יצוא", IDC_STATIC, 2, 0, 366, 48
+    CONTROL "הכל", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
+    CONTROL "בחירת ענף", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
-//
-// Dialog resources
-//
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "טעינת כוורות"
 FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "מפתח:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "אישור", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "ביטול", IDCANCEL, 89, 17, 50, 14
-}
+BEGIN
+    LTEXT "מפתח:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON "אישור", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 89, 17, 50, 14
+END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "הוספה למועדפים"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "אישור",IDOK,129,7,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,129,24,50,14
-    LTEXT           "שם מועדף:",IDC_STATIC,7,7,70,10
-    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON "אישור", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 129, 24, 50, 14
+    LTEXT "שם מועדף:", IDC_STATIC, 7, 7, 70, 10
+    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
@@ -542,11 +495,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "הסרת מועדפים"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "אישור",IDOK,107,114,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
-                    WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "בחירת מועדפים:",IDC_STATIC,7,7,99,12
+    DEFPUSHBUTTON "אישור", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 7, 114, 50, 14
+    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
+            WS_TABSTOP, 7, 20, 150, 90
+    LTEXT "בחירת מועדפים:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -554,55 +507,38 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "חפש"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "חפש את הבא:",IDOK,197,7,50,14
-    PUSHBUTTON      "ביטול",IDCANCEL,197,24,50,14
-    GROUPBOX        "חפש ב",IDC_STATIC,7,25,63,51
-    LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "מפתחות",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,36,35,8
-    CONTROL         "ערכים",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,48,36,8
-    CONTROL         "מידע",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,14,60,42,8
-    CONTROL         "Match &whole string only",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,90,12
+    DEFPUSHBUTTON "חפש את הבא:", IDOK, 197, 7, 50, 14
+    PUSHBUTTON "ביטול", IDCANCEL, 197, 24, 50, 14
+    GROUPBOX "חפש ב", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "Fi&nd what:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    CONTROL "מפתחות", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 35, 8
+    CONTROL "ערכים", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 36, 8
+    CONTROL "מידע", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 42, 8
+    CONTROL "Match &whole string only", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 32, 94, 13
+    CONTROL "Match &case", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 48, 90, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "חפש"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "ביטול",IDCANCEL,93,29,45,14
-    LTEXT           "מחפש ברשום...",IDC_STATIC,33,12,83,8
+    ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
+    DEFPUSHBUTTON "ביטול", IDCANCEL, 93, 29, 45, 14
+    LTEXT "מחפש ברשום...", IDC_STATIC, 33, 12, 83, 8
 END
 
-/*
- * TEXTINCLUDE
- */
-
-1 TEXTINCLUDE
-BEGIN
-    "resource.h\0"
-END
-
-
-
-/*
- * String Table
- */
-
+/* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
- *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
  *END
  */
-
-/*****************************************************************/

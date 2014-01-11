@@ -1,11 +1,8 @@
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <commctrl.h>
-#include <tchar.h>
-
-#include "resource.h"
 
 #define WM_USER_CLOSE_CHILD (WM_USER + 1)
 

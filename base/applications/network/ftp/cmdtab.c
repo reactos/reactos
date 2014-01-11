@@ -15,11 +15,11 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "precomp.h"
+
 #ifndef lint
 static char sccsid[] = "@(#)cmdtab.c	5.9 (Berkeley) 3/21/89";
 #endif /* not lint */
-
-#include "precomp.h"
 
 /*
  * User FTP -- Command Tables.

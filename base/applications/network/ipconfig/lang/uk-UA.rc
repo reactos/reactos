@@ -1,37 +1,37 @@
 /*
- * PROJECT:     ReactOS IpConfig Network Command
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        /base/applications/network/ipconfig/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for IpConfig Network Command
- * PROGRAMMERS: Rostislav Zabolotny
+ * PROJECT:    ReactOS IpConfig Network Command
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/network/ipconfig/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for IpConfig Network Command
+ * TRANSLATOR: Rostislav Zabolotny
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_BCAST   "Broadcast"
-  IDS_P2P     "Peer To Peer"
-  IDS_MIXED   "Mixed"
-  IDS_HYBRID  "Hybrid"
-  IDS_UNKNOWN "Невідомий"
+    IDS_BCAST "Broadcast"
+    IDS_P2P "Peer To Peer"
+    IDS_MIXED "Mixed"
+    IDS_HYBRID "Hybrid"
+    IDS_UNKNOWN "Невідомий"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_OTHER   "Інший тип адаптера"
-  IDS_ETH     "Ethernet адаптер"
-  IDS_TOKEN   "Token Ring адаптер"
-  IDS_FDDI    "FDDI адаптер"
-  IDS_PPP     "PPP адаптер"
-  IDS_LOOP    "Loopback адаптер"
-  IDS_SLIP    "SLIP адаптер"
+    IDS_OTHER "Інший тип адаптера"
+    IDS_ETH "Ethernet адаптер"
+    IDS_TOKEN "Token Ring адаптер"
+    IDS_FDDI "FDDI адаптер"
+    IDS_PPP "PPP адаптер"
+    IDS_LOOP "Loopback адаптер"
+    IDS_SLIP "SLIP адаптер"
 END
 
 STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE
+    IDS_USAGE
     "\nВИКОРИСТАННЯ:\n \
         ipconfig [/? | /all | /renew [адаптер] | /release [адаптер] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

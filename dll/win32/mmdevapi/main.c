@@ -17,36 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdarg.h>
-
-#define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "wine/library.h"
-
-#include "ole2.h"
-#include "olectl.h"
-#include "rpcproxy.h"
-#include "propsys.h"
-#include "propkeydef.h"
-#include "mmdeviceapi.h"
-#include "mmsystem.h"
-#include "dsound.h"
-#include "audioclient.h"
-#include "endpointvolume.h"
-#include "audiopolicy.h"
-#include "devpkey.h"
-#include "winreg.h"
-
 #include "mmdevapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mmdevapi);
+#include <rpcproxy.h>
 
 static HINSTANCE instance;
 

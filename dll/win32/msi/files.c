@@ -30,24 +30,7 @@
  * RemoveFiles
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "fdi.h"
-//#include "msi.h"
-//#include "msidefs.h"
 #include "msipriv.h"
-//#include "winuser.h"
-#include <winreg.h>
-#include <shlwapi.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 

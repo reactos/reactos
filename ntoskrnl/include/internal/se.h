@@ -24,8 +24,8 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
-PSID
 FORCEINLINE
+PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -43,8 +43,8 @@ SepGetGroupFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PSID
 FORCEINLINE
+PSID
 SepGetOwnerFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -62,8 +62,8 @@ SepGetOwnerFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetDaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -83,8 +83,8 @@ SepGetDaclFromDescriptor(PVOID _Descriptor)
     }
 }
 
-PACL
 FORCEINLINE
+PACL
 SepGetSaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
@@ -145,32 +145,40 @@ extern PSID SeRestrictedSid;
 extern PSID SeAnonymousLogonSid;
 
 /* Privileges */
-extern LUID SeCreateTokenPrivilege;
-extern LUID SeAssignPrimaryTokenPrivilege;
-extern LUID SeLockMemoryPrivilege;
-extern LUID SeIncreaseQuotaPrivilege;
-extern LUID SeUnsolicitedInputPrivilege;
-extern LUID SeTcbPrivilege;
-extern LUID SeSecurityPrivilege;
-extern LUID SeTakeOwnershipPrivilege;
-extern LUID SeLoadDriverPrivilege;
-extern LUID SeCreatePagefilePrivilege;
-extern LUID SeIncreaseBasePriorityPrivilege;
-extern LUID SeSystemProfilePrivilege;
-extern LUID SeSystemtimePrivilege;
-extern LUID SeProfileSingleProcessPrivilege;
-extern LUID SeCreatePermanentPrivilege;
-extern LUID SeBackupPrivilege;
-extern LUID SeRestorePrivilege;
-extern LUID SeShutdownPrivilege;
-extern LUID SeDebugPrivilege;
-extern LUID SeAuditPrivilege;
-extern LUID SeSystemEnvironmentPrivilege;
-extern LUID SeChangeNotifyPrivilege;
-extern LUID SeRemoteShutdownPrivilege;
-extern LUID SeUndockPrivilege;
-extern LUID SeSyncAgentPrivilege;
-extern LUID SeEnableDelegationPrivilege;
+extern const LUID SeCreateTokenPrivilege;
+extern const LUID SeAssignPrimaryTokenPrivilege;
+extern const LUID SeLockMemoryPrivilege;
+extern const LUID SeIncreaseQuotaPrivilege;
+extern const LUID SeUnsolicitedInputPrivilege;
+extern const LUID SeTcbPrivilege;
+extern const LUID SeSecurityPrivilege;
+extern const LUID SeTakeOwnershipPrivilege;
+extern const LUID SeLoadDriverPrivilege;
+extern const LUID SeSystemProfilePrivilege;
+extern const LUID SeSystemtimePrivilege;
+extern const LUID SeProfileSingleProcessPrivilege;
+extern const LUID SeIncreaseBasePriorityPrivilege;
+extern const LUID SeCreatePagefilePrivilege;
+extern const LUID SeCreatePermanentPrivilege;
+extern const LUID SeBackupPrivilege;
+extern const LUID SeRestorePrivilege;
+extern const LUID SeShutdownPrivilege;
+extern const LUID SeDebugPrivilege;
+extern const LUID SeAuditPrivilege;
+extern const LUID SeSystemEnvironmentPrivilege;
+extern const LUID SeChangeNotifyPrivilege;
+extern const LUID SeRemoteShutdownPrivilege;
+extern const LUID SeUndockPrivilege;
+extern const LUID SeSyncAgentPrivilege;
+extern const LUID SeEnableDelegationPrivilege;
+extern const LUID SeManageVolumePrivilege;
+extern const LUID SeImpersonatePrivilege;
+extern const LUID SeCreateGlobalPrivilege;
+extern const LUID SeTrustedCredmanPrivilege;
+extern const LUID SeRelabelPrivilege;
+extern const LUID SeIncreaseWorkingSetPrivilege;
+extern const LUID SeTimeZonePrivilege;
+extern const LUID SeCreateSymbolicLinkPrivilege;
 
 /* DACLs */
 extern PACL SePublicDefaultUnrestrictedDacl;

@@ -8,6 +8,12 @@
 
 #include "private.hpp"
 
+#ifndef YDEBUG
+#define NDEBUG
+#endif
+
+#include <debug.h>
+
 class CPortWaveRT : public IPortWaveRT,
                     public IPortEvents,
                     public ISubdevice

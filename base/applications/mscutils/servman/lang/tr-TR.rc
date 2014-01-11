@@ -1,6 +1,4 @@
-/*
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
+/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,41 +6,41 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Ver...",             ID_EXPORT
+        MENUITEM "&Ver...", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış",              ID_EXIT
+        MENUITEM "&Çıkış", ID_EXIT
     END
     POPUP "&Eylem"
     BEGIN
-        MENUITEM "B&ağlan...",          ID_CONNECT,   GRAYED
+        MENUITEM "B&ağlan...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Başlat",             ID_START,     GRAYED
-        MENUITEM "&Durdur",             ID_STOP,      GRAYED
-        MENUITEM "D&uraklat",           ID_PAUSE,     GRAYED
-        MENUITEM "&Sürdür",             ID_RESUME,    GRAYED
-        MENUITEM "&Yeniden Başlat",     ID_RESTART,   GRAYED
+        MENUITEM "&Başlat", ID_START, GRAYED
+        MENUITEM "&Durdur", ID_STOP, GRAYED
+        MENUITEM "D&uraklat", ID_PAUSE, GRAYED
+        MENUITEM "&Sürdür", ID_RESUME, GRAYED
+        MENUITEM "&Yeniden Başlat", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Y&enile",             ID_REFRESH
+        MENUITEM "Y&enile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "De&ğiştir...",        ID_EDIT,      GRAYED
-        MENUITEM "&Oluştur...",         ID_CREATE,    GRAYED
-        MENUITEM "S&il...",             ID_DELETE,    GRAYED
+        MENUITEM "De&ğiştir...", ID_EDIT, GRAYED
+        MENUITEM "&Oluştur...", ID_CREATE, GRAYED
+        MENUITEM "S&il...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler...",    ID_PROP,      GRAYED
+        MENUITEM "&Husûsiyetler...", ID_PROP, GRAYED
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Büyük Simgeler",     ID_VIEW_LARGE
-        MENUITEM "&Küçük Simgeler",     ID_VIEW_SMALL
-        MENUITEM "&Dizelge",            ID_VIEW_LIST
-        MENUITEM "&Ayrıntılar",         ID_VIEW_DETAILS
+        MENUITEM "&Büyük Simgeler", ID_VIEW_LARGE
+        MENUITEM "&Küçük Simgeler", ID_VIEW_SMALL
+        MENUITEM "&Dizelge", ID_VIEW_LIST
+        MENUITEM "&Ayrıntılar", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsileştir...",    ID_VIEW_CUST, GRAYED
+        MENUITEM "&Husûsileştir...", ID_VIEW_CUST, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları",    ID_HELP
-        MENUITEM "&Hakkında",           ID_ABOUT
+        MENUITEM "&Yardım Konuları", ID_HELP
+        MENUITEM "&Hakkında", ID_ABOUT
     END
 END
 
@@ -50,26 +48,26 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Başlat",             ID_START,     GRAYED
-        MENUITEM "&Durdur",             ID_STOP,      GRAYED
-        MENUITEM "D&uraklat",           ID_PAUSE,     GRAYED
-        MENUITEM "&Sürdür",             ID_RESUME,    GRAYED
-        MENUITEM "&Yeniden Başlat",     ID_RESTART,   GRAYED
+        MENUITEM "&Başlat", ID_START, GRAYED
+        MENUITEM "&Durdur", ID_STOP, GRAYED
+        MENUITEM "D&uraklat", ID_PAUSE, GRAYED
+        MENUITEM "&Sürdür", ID_RESUME, GRAYED
+        MENUITEM "&Yeniden Başlat", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Y&enile",             ID_REFRESH
+        MENUITEM "Y&enile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "De&ğiştir...",        ID_EDIT,      GRAYED
-        MENUITEM "S&il...",             ID_DELETE,    GRAYED
+        MENUITEM "De&ğiştir...", ID_EDIT, GRAYED
+        MENUITEM "S&il...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler...",    ID_PROP,      GRAYED
+        MENUITEM "&Husûsiyetler...", ID_PROP, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Y&ardım...",          ID_HELP
+        MENUITEM "Y&ardım...", ID_HELP
     END
 END
 
-IDD_ABOUTBOX DIALOGEX 22,16,190,182
+IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
 CAPTION "Hakkında"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "Hizmet Yöneticisi - Sürüm: 0.8\nTelif Hakkı: 2005-2007\nGed Murphy (gedmurphy@reactos.org) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 135, 30
@@ -80,10 +78,10 @@ END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Başlıca"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+    LTEXT "", IDC_SERV_NAME, 70, 11, 176, 11, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
     EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
@@ -99,27 +97,31 @@ BEGIN
     LTEXT "B&aşlama Türü:", IDC_STATIC, 6, 108, 53, 11
     LTEXT "Durum:", IDC_STATIC, 4, 138, 53, 11
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-    LTEXT "Burada, buradan başlatılan hizmete uygulanacak olan başlangıç eklemelerini yazabilirsiniz.",IDC_STATIC, 6,177,240,15
+    LTEXT "Burada, buradan başlatılan hizmete uygulanacak olan başlangıç eklemelerini yazabilirsiniz.", IDC_STATIC, 6, 177, 240, 15
     LTEXT "Ba&şlangıç ekleri:", IDC_STATIC, 6, 200, 58, 11
     EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "D&üzenle", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
-IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
 CAPTION "Bağımlılıklar"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |  TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
-    CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-    LTEXT "Birtakım hizmetler, birtakım dizge bileşenlerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da uygun bir şekilde çalışmıyorsa  buna bağımlı olan hizmetler etkilenebilir.", IDC_STATIC,8, 7, 238, 26
+    CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW |
+            WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
+            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+    CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
+            WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
+            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
+    LTEXT "Birtakım hizmetler, birtakım dizge bileşenlerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da uygun bir şekilde çalışmıyorsa  buna bağımlı olan hizmetler etkilenebilir.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "Bu hizmet, aşağıdaki dizge bileşenlerine bağımlıdır:", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
-IDD_DLG_CREATE DIALOGEX 6,6,225,209
+IDD_DLG_CREATE DIALOGEX 6, 6, 225, 209
 CAPTION "Bir Hizmet Oluşturma"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
@@ -137,45 +139,46 @@ BEGIN
     PUSHBUTTON "&Yardım", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
-IDD_DLG_DELETE DIALOGEX 6,6,185,148
+IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148
 CAPTION "Seçili Hizmeti Silme"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
     LTEXT "Aşağıdaki hizmeti silmeyi onaylıyor musunuz? BU İŞLEM GERİ ALINAMAZ!", IDC_STATIC, 50, 6, 125, 25
-    LTEXT "Seçili Hizmetin Adı:",IDC_STATIC, 6, 40, 80, 9
+    LTEXT "Seçili Hizmetin Adı:", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
-    EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+    EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
+             WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
     PUSHBUTTON "&Evet", IDOK, 26, 129, 54, 13
     DEFPUSHBUTTON "&Hayır", IDCANCEL, 102, 129, 54, 13
 END
 
-IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
 CAPTION "Diğer Hizmetleri Kapat"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
     LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
     LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
-    LTEXT "Bu hizmetleri de kapatmak ister misiniz?",IDC_STATIC, 15, 110, 150, 10
+    LTEXT "Bu hizmetleri de kapatmak ister misiniz?", IDC_STATIC, 15, 110, 150, 10
     DEFPUSHBUTTON "&Evet", IDOK, 60, 129, 54, 14
     PUSHBUTTON "&Hayır", IDCANCEL, 120, 129, 54, 14
 END
 
-IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+IDD_DLG_HELP_OPTIONS DIALOGEX 6, 6, 200, 150
 CAPTION "Seçenekler"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE 0x10CF0000
 BEGIN
     LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
     PUSHBUTTON "Tamam", IDOK, 75, 130, 44, 13
 END
 
-IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
 CAPTION "Hizmet Denetimi"
-FONT 8, "MS Shell Dlg",0,0
+FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
@@ -184,8 +187,6 @@ BEGIN
     LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
     PUSHBUTTON "Kapat", IDOK, 100, 70, 54, 13
 END
-
-
 
 STRINGTABLE
 BEGIN
@@ -228,9 +229,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START  "ReactOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
-    IDS_PROGRESS_INFO_STOP   "ReactOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
-    IDS_PROGRESS_INFO_PAUSE  "ReactOS, aşağıdaki hizmeti duraklatmaya çalışıyor:"
+    IDS_PROGRESS_INFO_START "ReactOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
+    IDS_PROGRESS_INFO_STOP "ReactOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS, aşağıdaki hizmeti duraklatmaya çalışıyor:"
     IDS_PROGRESS_INFO_RESUME "ReactOS, aşağıdaki hizmeti sürdürmeye çalışıyor:"
     IDS_CREATE_SUCCESS "Hizmet, başarılı bir şekilde oluşturuldu."
     IDS_DELETE_SUCCESS "Hizmet, başarılı bir şekilde silindi."
@@ -246,37 +247,33 @@ END
 /* Hints */
 STRINGTABLE
 BEGIN
-    IDS_HINT_BLANK        " "
-    IDS_HINT_EXPORT       " Şimdiki dizelgeyi, bir kütüğe aktarır."
-    IDS_HINT_EXIT         " Yazılımdan çıkar."
-
-    IDS_HINT_CONNECT      " Başka bir bilgisayarı yönetir."
-    IDS_HINT_START        " Seçili hizmeti başlatır."
-    IDS_HINT_STOP         " Seçili hizmeti durdurur."
-    IDS_HINT_PAUSE        " Seçili hizmeti duraklatır."
-    IDS_HINT_RESUME       " Seçili hizmeti sürdürür."
-    IDS_HINT_RESTART      " Seçili hizmeti durdurup yeniden başlatır."
-    IDS_HINT_REFRESH      " Hizmet dizelgesini yeniler."
-    IDS_HINT_EDIT         " Seçili hizmetin husûsiyetlerini değiştirir."
-    IDS_HINT_CREATE       " Yeni bir hizmet oluşturur."
-    IDS_HINT_DELETE       " Seçili hizmeti siler."
-    IDS_HINT_PROP         " Seçili hizmetin husûsiyetlerini gösterir."
-
-    IDS_HINT_LARGE        " Ögeleri, büyük simgelerle gösterir."
-    IDS_HINT_SMALL        " Ögeleri, küçük simgelerle gösterir."
-    IDS_HINT_LIST         " Ögeleri, dizelge olarak gösterir."
-    IDS_HINT_DETAILS      " Ögeleri, dizelge olarak, ayrıntılı bir şekilde gösterir."
-    IDS_HINT_CUST         " Görünümü husûsileştirir."
-
-    IDS_HINT_HELP         " Yardım konularını görüntüler."
-    IDS_HINT_ABOUT        " Hizmet Yöneticisi hakkında bilgi görüntüler."
-
-    IDS_HINT_SYS_RESTORE  " Pencerenin boyutlarını, eski durumuna döndürür."
-    IDS_HINT_SYS_MOVE     " Pencerenin konumunu değiştirir."
-    IDS_HINT_SYS_SIZE     " Pencerenin boyutlarını değiştirir."
+    IDS_HINT_BLANK " "
+    IDS_HINT_EXPORT " Şimdiki dizelgeyi, bir kütüğe aktarır."
+    IDS_HINT_EXIT " Yazılımdan çıkar."
+    IDS_HINT_CONNECT " Başka bir bilgisayarı yönetir."
+    IDS_HINT_START " Seçili hizmeti başlatır."
+    IDS_HINT_STOP " Seçili hizmeti durdurur."
+    IDS_HINT_PAUSE " Seçili hizmeti duraklatır."
+    IDS_HINT_RESUME " Seçili hizmeti sürdürür."
+    IDS_HINT_RESTART " Seçili hizmeti durdurup yeniden başlatır."
+    IDS_HINT_REFRESH " Hizmet dizelgesini yeniler."
+    IDS_HINT_EDIT " Seçili hizmetin husûsiyetlerini değiştirir."
+    IDS_HINT_CREATE " Yeni bir hizmet oluşturur."
+    IDS_HINT_DELETE " Seçili hizmeti siler."
+    IDS_HINT_PROP " Seçili hizmetin husûsiyetlerini gösterir."
+    IDS_HINT_LARGE " Ögeleri, büyük simgelerle gösterir."
+    IDS_HINT_SMALL " Ögeleri, küçük simgelerle gösterir."
+    IDS_HINT_LIST " Ögeleri, dizelge olarak gösterir."
+    IDS_HINT_DETAILS " Ögeleri, dizelge olarak, ayrıntılı bir şekilde gösterir."
+    IDS_HINT_CUST " Görünümü husûsileştirir."
+    IDS_HINT_HELP " Yardım konularını görüntüler."
+    IDS_HINT_ABOUT " Hizmet Yöneticisi hakkında bilgi görüntüler."
+    IDS_HINT_SYS_RESTORE " Pencerenin boyutlarını, eski durumuna döndürür."
+    IDS_HINT_SYS_MOVE " Pencerenin konumunu değiştirir."
+    IDS_HINT_SYS_SIZE " Pencerenin boyutlarını değiştirir."
     IDS_HINT_SYS_MINIMIZE " Pencereyi, simge durumuna küçültür."
     IDS_HINT_SYS_MAXIMIZE " Pencereyle görüntülüğü kaplatır."
-    IDS_HINT_SYS_CLOSE    " Pencereyi kapatır."
+    IDS_HINT_SYS_CLOSE " Pencereyi kapatır."
 END
 
 /* Application title */

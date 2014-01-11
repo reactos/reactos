@@ -17,12 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "samsrv.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
-
 
 /* GLOBALS *******************************************************************/
 

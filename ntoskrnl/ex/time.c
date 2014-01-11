@@ -417,7 +417,6 @@ NTAPI
 NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Check if we were called from user-mode */
@@ -429,16 +428,16 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
             ProbeForWriteLargeInteger(SystemTime);
 
             /*
-             * It's safe to pass the pointer directly to KeQuerySystemTime as
-             * it's just a basic copy to this pointer. If it raises an
+             * It's safe to pass the pointer directly to KeQuerySystemTime
+             * as it's just a basic copy to this pointer. If it raises an
              * exception nothing dangerous can happen!
              */
             KeQuerySystemTime(SystemTime);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -448,8 +447,8 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
         KeQuerySystemTime(SystemTime);
     }
 
-    /* Return status to caller */
-    return Status;
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -485,7 +484,7 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
-    /* Check if the call came from user mode */
+    /* Check if the call came from user-mode */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -494,6 +493,17 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
             ProbeForWriteUlong(MinimumResolution);
             ProbeForWriteUlong(MaximumResolution);
             ProbeForWriteUlong(ActualResolution);
+
+            /*
+             * Set the parameters to the actual values.
+             *
+             * NOTE:
+             * MinimumResolution corresponds to the biggest time increment and
+             * MaximumResolution corresponds to the smallest time increment.
+             */
+            *MinimumResolution = KeMaximumIncrement;
+            *MaximumResolution = KeMinimumIncrement;
+            *ActualResolution  = KeTimeIncrement;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -502,17 +512,13 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
         }
         _SEH2_END;
     }
-
-    /*
-     * Set the parameters to the actual values.
-     *
-     * NOTE:
-     * MinimumResolution corresponds to the biggest time increment and
-     * MaximumResolution corresponds to the smallest time increment.
-     */
-    *MinimumResolution = KeMaximumIncrement;
-    *MaximumResolution = KeMinimumIncrement;
-    *ActualResolution  = KeTimeIncrement;
+    else
+    {
+        /* Set the parameters to the actual values */
+        *MinimumResolution = KeMaximumIncrement;
+        *MaximumResolution = KeMinimumIncrement;
+        *ActualResolution  = KeTimeIncrement;
+    }
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -532,7 +538,7 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
     PEPROCESS Process = PsGetCurrentProcess();
     ULONG NewResolution;
 
-    /* Check if the call came from user mode */
+    /* Check if the call came from user-mode */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -550,7 +556,24 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
 
     /* Set and return the new resolution */
     NewResolution = ExSetTimerResolution(DesiredResolution, SetResolution);
-    *CurrentResolution = NewResolution;
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            *CurrentResolution = NewResolution;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        *CurrentResolution = NewResolution;
+    }
 
     if (SetResolution || Process->SetTimerResolution)
     {

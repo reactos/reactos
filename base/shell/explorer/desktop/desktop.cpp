@@ -28,8 +28,6 @@
 
 #include <precomp.h>
 
-#include "../resource.h"
-
 #include "../taskbar/desktopbar.h"
 #include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE
 

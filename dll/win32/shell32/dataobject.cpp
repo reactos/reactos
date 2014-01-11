@@ -139,7 +139,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
     ATLTRY (theEnumerator = new CComObject<IEnumFORMATETCImpl>);
     if (theEnumerator == NULL)
         return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_IEnumFORMATETC, (void **)&result);
+    hResult = theEnumerator->QueryInterface (IID_PPV_ARG(IEnumFORMATETC, &result));
     if (FAILED (hResult))
     {
         delete theEnumerator;
@@ -159,21 +159,25 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 */
 
 /* number of supported formats */
-#define MAX_FORMATS 4
+#define MAX_FORMATS 5
 
 class IDataObjectImpl :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDataObject
+    public IDataObject,
+    public IAsyncOperation 
 {
 private:
     LPITEMIDLIST    pidl;
     LPITEMIDLIST *    apidl;
     UINT        cidl;
+    DWORD        dropeffect;
 
     FORMATETC    pFormatEtc[MAX_FORMATS];
     UINT        cfShellIDList;
     UINT        cfFileNameA;
     UINT        cfFileNameW;
+    UINT        cfPreferredDropEffect;
+    BOOL        doasync;
 public:
     IDataObjectImpl();
     ~IDataObjectImpl();
@@ -189,9 +193,15 @@ public:
     virtual HRESULT WINAPI DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
     virtual HRESULT WINAPI DUnadvise(DWORD dwConnection);
     virtual HRESULT WINAPI EnumDAdvise(IEnumSTATDATA **ppenumAdvise);
+    virtual HRESULT WINAPI GetAsyncMode(BOOL *pfIsOpAsync);
+    virtual HRESULT WINAPI InOperation(BOOL *pfInAsyncOp);
+    virtual HRESULT WINAPI SetAsyncMode(BOOL fDoOpAsync);
+    virtual HRESULT WINAPI StartOperation(IBindCtx *pbcReserved);
+    virtual HRESULT WINAPI EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects);
 
 BEGIN_COM_MAP(IDataObjectImpl)
     COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)
+    COM_INTERFACE_ENTRY_IID(IID_IAsyncOperation,  IAsyncOperation)
 END_COM_MAP()
 };
 
@@ -200,9 +210,12 @@ IDataObjectImpl::IDataObjectImpl()
     pidl = NULL;
     apidl = NULL;
     cidl = 0;
+    dropeffect = 0;
     cfShellIDList = 0;
     cfFileNameA = 0;
     cfFileNameW = 0;
+    cfPreferredDropEffect = 0;
+    doasync = FALSE;
 }
 
 IDataObjectImpl::~IDataObjectImpl()
@@ -219,14 +232,17 @@ HRESULT WINAPI IDataObjectImpl::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl
     if (pidl == NULL || apidl == NULL)
         return E_OUTOFMEMORY;
     cidl = cidlx;
+    dropeffect = DROPEFFECT_COPY;
 
     cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     cfFileNameA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
     cfFileNameW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+    cfPreferredDropEffect = RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECTW);
     InitFormatEtc(pFormatEtc[0], cfShellIDList, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[1], CF_HDROP, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[2], cfFileNameA, TYMED_HGLOBAL);
     InitFormatEtc(pFormatEtc[3], cfFileNameW, TYMED_HGLOBAL);
+    InitFormatEtc(pFormatEtc[4], cfPreferredDropEffect, TYMED_HGLOBAL);
     return S_OK;
 }
 
@@ -260,6 +276,10 @@ HRESULT WINAPI IDataObjectImpl::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pme
     {
       if (cidl < 1) return(E_UNEXPECTED);
       pmedium->hGlobal = RenderFILENAMEW(pidl, apidl, cidl);
+    }
+    else if    (pformatetcIn->cfFormat == cfPreferredDropEffect)
+    {
+      pmedium->hGlobal = RenderPREFEREDDROPEFFECT(dropeffect);
     }
     else
     {
@@ -311,6 +331,19 @@ HRESULT WINAPI IDataObjectImpl::GetCanonicalFormatEtc(LPFORMATETC pformatectIn, 
 
 HRESULT WINAPI IDataObjectImpl::SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
 {
+    if (pformatetc->cfFormat == cfPreferredDropEffect)
+    {
+      const DWORD *src = (const DWORD *)GlobalLock(pmedium->hGlobal);
+      if (src != 0)
+      {
+        dropeffect = *src;
+        GlobalUnlock(pmedium->hGlobal);
+        return S_OK;
+      }
+      FIXME("Error setting data");
+      return E_FAIL;
+    }
+
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
@@ -347,6 +380,37 @@ HRESULT WINAPI IDataObjectImpl::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
     return E_NOTIMPL;
 }
 
+HRESULT WINAPI IDataObjectImpl::GetAsyncMode(BOOL *pfIsOpAsync)
+{
+    TRACE("(%p)->()\n", this);
+    *pfIsOpAsync = doasync;
+    return S_OK;
+}
+HRESULT WINAPI IDataObjectImpl::InOperation(BOOL *pfInAsyncOp)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+HRESULT WINAPI IDataObjectImpl::SetAsyncMode(BOOL fDoOpAsync) 
+{
+    TRACE("(%p)->()\n", this);
+    doasync = fDoOpAsync;
+    return S_OK;
+}
+
+HRESULT WINAPI IDataObjectImpl::StartOperation(IBindCtx *pbcReserved)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+HRESULT WINAPI IDataObjectImpl::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
+{
+    FIXME("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+
+
+
 /**************************************************************************
 *  IDataObject_Constructor
 */
@@ -362,7 +426,7 @@ HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMID
     ATLTRY (theDataObject = new CComObject<IDataObjectImpl>);
     if (theDataObject == NULL)
         return E_OUTOFMEMORY;
-    hResult = theDataObject->QueryInterface (IID_IDataObject, (void **)&result);
+    hResult = theDataObject->QueryInterface(IID_PPV_ARG(IDataObject, &result));
     if (FAILED (hResult))
     {
         delete theDataObject;

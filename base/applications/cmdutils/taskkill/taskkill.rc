@@ -20,22 +20,22 @@
 
 #include "taskkill.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-STRINGTABLE
-{
-    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im ProcessName | /pid ProcessID]\n"
-    STRING_INVALID_OPTION, "Error: Unknown or invalid command line option specified.\n"
-    STRING_INVALID_PARAM, "Error: Invalid command line parameter specified.\n"
-    STRING_MISSING_OPTION, "Error: One of options /im or /pid must be specified.\n"
-    STRING_MISSING_PARAM, "Error: Option %1 expects a command line parameter.\n"
-    STRING_MUTUAL_EXCLUSIVE, "Error: Options /im and /pid are mutually exclusive.\n"
-    STRING_CLOSE_PID_SEARCH, "Close message sent to top-level windows of process with PID %1!u!.\n"
-    STRING_CLOSE_PROC_SRCH, "Close message sent to top-level windows of process ""%1"" with PID %2!u!.\n"
-    STRING_TERM_PID_SEARCH, "Process with PID %1!u! was forcibly terminated.\n"
-    STRING_TERM_PROC_SEARCH, "Process ""%1"" with PID %2!u! was forcibly terminated.\n"
-    STRING_SEARCH_FAILED, "Error: Could not find process ""%1"".\n"
-    STRING_ENUM_FAILED, "Error: Unable to enumerate the process list.\n"
-    STRING_TERMINATE_FAILED, "Error: Unable to terminate process ""%1"".\n"
-    STRING_SELF_TERMINATION, "Error: Process self-termination is not permitted.\n"
-}
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Task Killer"
+#define REACTOS_STR_INTERNAL_NAME     "taskkill"
+#define REACTOS_STR_ORIGINAL_FILENAME "taskkill.exe"
+#include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGAUGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif

@@ -18,10 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
 #include "d3d8_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 static inline struct d3d8_volume *impl_from_IDirect3DVolume8(IDirect3DVolume8 *iface)
 {

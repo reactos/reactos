@@ -1,8 +1,7 @@
 /*
  * Turkish Resources for ReactOS Wordpad
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org)
- *             2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -127,7 +126,7 @@ BEGIN
         MENUITEM "Sarı",                ID_COLOR_YELLOW
         MENUITEM "Mavi",                ID_COLOR_BLUE
         MENUITEM "Küpe Çiçeği",         ID_COLOR_FUCHSIA
-        MENUITEM "Turkuaz",             ID_COLOR_AQUA
+        MENUITEM "Firûze",              ID_COLOR_AQUA
         MENUITEM "Ak",                  ID_COLOR_WHITE
         MENUITEM "Dizge Rengi",         ID_COLOR_AUTOMATIC
     END
@@ -194,7 +193,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Yataç Kaydırma", -1, 10, 10, 130, 85
     RADIOBUTTON "&Kaydırma Yok", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "&Pencere Kenarlığına Kadar", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "&Pencere Kıyılığına Kadar", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "Ç&izgiliğe Kadar", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Çubuklar", -1, 150, 10, 120, 85
     CHECKBOX "&Araç Çubuğu", IDC_PAGEFMT_TB, 160, 20, 80, 15
@@ -208,11 +207,11 @@ STRINGTABLE
 BEGIN
     STRING_ALL_FILES,                 "Tüm Kütükler (*.*)"
     STRING_TEXT_FILES_TXT,            "Metin Belgeleri (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT,    "Unikod Metin Belgeleri (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT,    "Evrenlik Düzgülü Metin Belgeleri (*.txt)"
     STRING_RICHTEXT_FILES_RTF,        "Gelişmiş Metin Belgeleri (*.rtf)"
     STRING_NEWFILE_RICHTEXT,          "Gelişmiş Metin Belgesi"
     STRING_NEWFILE_TXT,               "Metin Belgesi"
-    STRING_NEWFILE_TXT_UNICODE,       "Unikod Metin Belgesi"
+    STRING_NEWFILE_TXT_UNICODE,       "Evrenlik Düzgülü Metin Belgesi"
     STRING_PRINTER_FILES_PRN,         "Yazıcı Kütükleri (*.PRN)"
 END
 

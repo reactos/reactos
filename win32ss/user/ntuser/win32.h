@@ -235,6 +235,7 @@ typedef struct _PROCESSINFO
   ACCESS_MASK amwinsta;
   DWORD dwHotkey;
   HMONITOR hMonitor;
+  struct _CURICON_OBJECT* pCursorCache;
   LUID luidSession;
   USERSTARTUPINFO usi;
   DWORD dwLayout;

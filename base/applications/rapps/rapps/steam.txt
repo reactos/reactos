@@ -36,6 +36,10 @@ Description = Platforma de joc STEAM, utilizată de multe jocuri în zilele de a
 Size = 1,59 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
+[Section.041f]
+Licence = Ücretsiz
+Description = Bu günlerde STEAM oyun platformu, birçok oyun tarafından kullanılmaktadır.
+
 [Section.0422]
 Description = Ігрова платформа, що використовується багатьма іграми.
 

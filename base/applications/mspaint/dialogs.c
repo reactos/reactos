@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <winnls.h>
+
 /* FUNCTIONS ********************************************************/
 
 LRESULT CALLBACK
@@ -228,9 +230,9 @@ CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     TCHAR strrcAngle[100];
                     BOOL tr1, tr2, tr3, tr4;
 
-                    LoadString(hProgInstance, IDS_INTNUMBERS, strrcIntNumbers, sizeof(strrcIntNumbers));
-                    LoadString(hProgInstance, IDS_PERCENTAGE, strrcPercentage, sizeof(strrcPercentage));
-                    LoadString(hProgInstance, IDS_ANGLE, strrcAngle, sizeof(strrcAngle));
+                    LoadString(hProgInstance, IDS_INTNUMBERS, strrcIntNumbers, SIZEOF(strrcIntNumbers));
+                    LoadString(hProgInstance, IDS_PERCENTAGE, strrcPercentage, SIZEOF(strrcPercentage));
+                    LoadString(hProgInstance, IDS_ANGLE, strrcAngle, SIZEOF(strrcAngle));
 
                     stretchSkew.percentage.x = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITHSTRETCH, &tr1, FALSE);
                     stretchSkew.percentage.y = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITVSTRETCH, &tr2, FALSE);

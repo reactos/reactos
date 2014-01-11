@@ -20,7 +20,9 @@
 #include <regstr.h>
 #include <cfgmgr32.h>
 #include <shlobj.h>
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(newdev);
 
 #include <stdio.h>
 

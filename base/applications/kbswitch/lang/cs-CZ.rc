@@ -1,6 +1,6 @@
-/* FILE:        applications/kbswitch/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-04-25
+/* FILE:       applications/kbswitch/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2008-04-25
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -9,8 +9,8 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Předvolby...",  ID_PREFERENCES
+        MENUITEM "&Předvolby...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Ukončit",       ID_EXIT
+        MENUITEM "&Ukončit", ID_EXIT
     END
 END

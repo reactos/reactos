@@ -22,14 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "glheader.h"
-#include "imports.h"
-#include "context.h"
-#include "formats.h"
-#include "mtypes.h"
-#include "renderbuffer.h"
-
+#include <precomp.h>
 
 /**
  * Initialize the fields of a gl_renderbuffer to default values.

@@ -20,7 +20,7 @@ add_library(cmipci SHARED
 
 target_link_libraries(cmipci stdunk libcntpr)
 
-set_module_type(cmipci wdmdriver UNICODE ENTRYPOINT 0)
+set_module_type(cmipci wdmdriver UNICODE)
 
 add_importlibs(cmipci portcls hal ntoskrnl)
 
@@ -33,7 +33,7 @@ endif()
 
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
 if(ARCH STREQUAL "i386")
-    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x32-WaveRT.inf" DESTINATION reactos/inf FOR all)
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x32.inf" DESTINATION reactos/inf FOR all)
 else()
-    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x64-WaveRT.inf" DESTINATION reactos/inf FOR all)
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x64.inf" DESTINATION reactos/inf FOR all)
 endif()

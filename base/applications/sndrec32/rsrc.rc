@@ -5,23 +5,24 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_SNDREC32            ICON                    "resources/record-app.ico"
+IDI_SNDREC32 ICON "resources/record-app.ico"
 
-IDB_BITMAP2_START       BITMAP                  "resources/but_start.bmp"
-IDB_BITMAP2_END         BITMAP                  "resources/but_end.bmp"
-IDB_BITMAP2_PLAY        BITMAP                  "resources/but_play.bmp"
-IDB_BITMAP2_STOP        BITMAP                  "resources/but_stop.bmp"
-IDB_BITMAP2_REC         BITMAP                  "resources/but_rec.bmp"
-IDB_BITMAP2_END_DIS     BITMAP                  "resources/but_end_dis.bmp"
-IDB_BITMAP2_PLAY_DIS    BITMAP                  "resources/but_play_dis.bmp"
-IDB_BITMAP2_REC_DIS     BITMAP                  "resources/but_rec_dis.bmp"
-IDB_BITMAP2_START_DIS   BITMAP                  "resources/but_start_dis.bmp"
-IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
+IDB_BITMAP2_START BITMAP "resources/but_start.bmp"
+IDB_BITMAP2_END BITMAP "resources/but_end.bmp"
+IDB_BITMAP2_PLAY BITMAP "resources/but_play.bmp"
+IDB_BITMAP2_STOP BITMAP "resources/but_stop.bmp"
+IDB_BITMAP2_REC BITMAP "resources/but_rec.bmp"
+IDB_BITMAP2_END_DIS BITMAP "resources/but_end_dis.bmp"
+IDB_BITMAP2_PLAY_DIS BITMAP "resources/but_play_dis.bmp"
+IDB_BITMAP2_REC_DIS BITMAP "resources/but_rec_dis.bmp"
+IDB_BITMAP2_START_DIS BITMAP "resources/but_start_dis.bmp"
+IDB_BITMAP2_STOP_DIS BITMAP "resources/but_stop_dis.bmp"
 
 #include <reactos/manifest_exe.rc>
 
-// UTF-8
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif
@@ -60,6 +61,9 @@ IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

@@ -22,10 +22,8 @@
  *       MMSYSTEM...)
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "mmddk.h"
-#include "winnls.h"
+#include <windef.h>
+#include <mmddk.h>
 
 /* Add your language specific defines here */
 #ifdef LANGUAGE_PT_BR

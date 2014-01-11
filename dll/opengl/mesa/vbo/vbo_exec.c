@@ -25,14 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-
-#include "main/api_arrayelt.h"
-#include "main/glheader.h"
-#include "main/mtypes.h"
-#include "main/vtxfmt.h"
-#include "vbo_context.h"
-
-
+#include <precomp.h>
 
 void vbo_exec_init( struct gl_context *ctx )
 {

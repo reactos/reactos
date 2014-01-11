@@ -1224,7 +1224,7 @@ static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
         pidl = ILCreateFromPathW(fullpath);
     }
 
-    r = SHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&shf, &pidllast);
+    r = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
     if (FAILED(r))
         goto end;
 
@@ -1324,7 +1324,7 @@ static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECU
         goto end;
 
     r = CoCreateInstance(*guid, NULL, CLSCTX_INPROC_SERVER,
-                         IID_IShellExtInit, (LPVOID*)&obj);
+                         IID_PPV_ARG(IShellExtInit, &obj));
     if (FAILED(r))
     {
         ERR("failed %08x\n", r);
@@ -1693,7 +1693,7 @@ BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     {
         IShellExecuteHookW* pSEH;
 
-        HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_IShellExecuteHookW, (LPVOID*)&pSEH, NULL);
+        HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
 
         if (SUCCEEDED(hr))
         {

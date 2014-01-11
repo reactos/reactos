@@ -16,15 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <math.h>
-#include <assert.h>
-
 #include "jscript.h"
-#include "engine.h"
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 WINE_DECLARE_DEBUG_CHANNEL(jscript_disas);
 
 typedef struct _statement_ctx_t {

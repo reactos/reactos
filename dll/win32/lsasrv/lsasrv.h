@@ -7,14 +7,17 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <winuser.h>
+
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
@@ -30,15 +33,13 @@
 
 #include <ntsam.h>
 #include <ntlsa.h>
-//#include <ntsecapi.h>
 #include <sddl.h>
-
-//#include <string.h>
 
 #include <lsass.h>
 #include <lsa_s.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 #include "resources.h"
 
@@ -89,6 +90,15 @@ extern PSID BuiltinDomainSid;
 extern UNICODE_STRING BuiltinDomainName;
 extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
+
+extern PSID LsapWorldSid;
+extern PSID LsapNetworkSid;
+extern PSID LsapBatchSid;
+extern PSID LsapInteractiveSid;
+extern PSID LsapServiceSid;
+extern PSID LsapLocalSystemSid;
+extern PSID LsapAdministratorsSid;
+
 
 /* authpackage.c */
 NTSTATUS
@@ -395,11 +405,19 @@ NTSTATUS
 NTAPI
 LsapDeleteLogonSession(IN PLUID LogonId);
 
+NTSTATUS
+LsapSetLogonSessionData(IN PLUID LogonId);
+
 /* utils.c */
 INT
 LsapLoadString(HINSTANCE hInstance,
                UINT uId,
                LPWSTR lpBuffer,
                INT nBufferMax);
+
+PSID
+LsapAppendRidToSid(
+    PSID SrcSid,
+    ULONG Rid);
 
 /* EOF */

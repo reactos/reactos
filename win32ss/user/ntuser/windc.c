@@ -245,7 +245,7 @@ noparent:
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
    GdiSelectVisRgn(Dce->hDC, hRgnVisible);
 
-   if (Window != NULL)
+   if (VerifyWnd(Window)) // Window maybe dead by this time before finishing the DCE release.
    {
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
    }

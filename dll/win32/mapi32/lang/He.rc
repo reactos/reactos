@@ -21,8 +21,6 @@
 *
 */
 
-#include "res.h"
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE

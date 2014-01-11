@@ -8,12 +8,13 @@
 
 #include "rapps.h"
 
+#include <shellapi.h>
+
 HWND hMainWnd;
 HINSTANCE hInst;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
-
 
 VOID
 FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
@@ -73,7 +74,7 @@ SaveSettings(HWND hwnd)
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\rapps", 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueEx(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
+        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
         RegCloseKey(hKey);
     }
 }
@@ -631,21 +632,31 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 }
                 break;
 
-                case LVN_KEYDOWN:
+                case LVN_ITEMCHANGED:
                 {
-                    LPNMLVKEYDOWN pnkd = (LPNMLVKEYDOWN) lParam;
+                    LPNMLISTVIEW pnic = (LPNMLISTVIEW) lParam;
 
-                    if (pnkd->hdr.hwndFrom == hListView)
+                    if (pnic->hdr.hwndFrom == hListView)
                     {
-                        INT ItemIndex = (INT) SendMessage(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+                        /* Check if this is a valid item
+                         * (technically, it can be also an unselect) */
+                        INT ItemIndex = pnic->iItem;
+                        if (ItemIndex == -1 ||
+                            ItemIndex >= ListView_GetItemCount(pnic->hdr.hwndFrom))
+                        {
+                            break;
+                        }
 
-                        if (pnkd->wVKey == VK_UP) ItemIndex -= 1;
-                        if (pnkd->wVKey == VK_DOWN) ItemIndex += 1;
-
-                        if (IS_INSTALLED_ENUM(SelectedEnumType))
-                            ShowInstalledAppInfo(ItemIndex);
-                        if (IS_AVAILABLE_ENUM(SelectedEnumType))
-                            ShowAvailableAppInfo(ItemIndex);
+                        /* Check if the focus has been moved to another item */
+                        if ((pnic->uChanged & LVIF_STATE) &&
+                            (pnic->uNewState & LVIS_FOCUSED) &&
+                            !(pnic->uOldState & LVIS_FOCUSED))
+                        {
+                            if (IS_INSTALLED_ENUM(SelectedEnumType))
+                                ShowInstalledAppInfo(ItemIndex);
+                            if (IS_AVAILABLE_ENUM(SelectedEnumType))
+                                ShowAvailableAppInfo(ItemIndex);
+                        }
                     }
                 }
                 break;
@@ -763,7 +774,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WCHAR szErrorText[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
-   
+
     switch (GetUserDefaultUILanguage())
   {
     case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -773,7 +784,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     default:
       break;
   }
-    
+
     hInst = hInstance;
 
     if (!IsUserAnAdmin())

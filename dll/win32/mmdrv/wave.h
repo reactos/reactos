@@ -1,3 +1,4 @@
+#pragma once
 
 // FIXME: Should be moved somewhere else?
 typedef struct _WAVE_DD_VOLUME {

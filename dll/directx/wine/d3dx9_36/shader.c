@@ -18,19 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-//#include "windef.h"
-//#include "wingdi.h"
-//#include "d3dx9.h"
-#include "d3dcompiler.h"
 #include "d3dx9_36_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+#include "d3dcompiler.h"
 
 /* This function is not declared in the SDK headers yet */
 HRESULT WINAPI D3DAssemble(LPCVOID data, SIZE_T datasize, LPCSTR filename,

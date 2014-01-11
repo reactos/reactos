@@ -7,8 +7,6 @@
 
 #include "msgina.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msgina);
-
 static BOOL
 TUIInitialize(
     IN OUT PGINA_CONTEXT pgContext)

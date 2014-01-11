@@ -5,7 +5,7 @@ spec2def(kbdda.dll kbdda.spec)
 
 add_library(kbdda SHARED kbdda.c kbdda.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdda.def)
 
-set_entrypoint(kbdda 0)
+set_module_type(kbdda kbdlayout)
 
 add_dependencies(kbdda psdk)
 

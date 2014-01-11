@@ -1,0 +1,28 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "MENAXHO Linjat-Komand ndrysho konfigurimet, historine, dhe makrot.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Mundeso menyren e hyrjes.\n\
+  /OVERSTRIKE         Perjashto menyren e hyrjes.\n\
+  /EXENAME=exename    Vendos emrin e programit per tu vezhguar/ndrysho historine\n\
+                      dhe makrot per. Parazgjedhja edhe cmd.exe.\n\
+  /HISTORY            Shfaq historine e komandave.\n\
+  /LISTSIZE=size      Vendose numnrin e komandave per historine.\n\
+  /REINSTALL          Pastron historine e komandave.\n\
+  /MACROS             Shfaq percaktimin e makrove.\n\
+  /MACROS:exename     Shfaq percaktimin e makrove per programet specifike.\n\
+  /MACROS:ALL         Shfaq percaktimin e makrove per te gjithe programet.\n\
+  /MACROFILE=file     Ngarkon percaktimin e makros nga nje dokument.\n\
+  macroname           Specifikon emrin e makros per tu krijuar.\n\
+  text                Specifikon textin e zëvendësushem per makron.\n"
+    IDS_INVALID_MACRO_DEF "Percaktim invalid i makros: %s\n"
+END

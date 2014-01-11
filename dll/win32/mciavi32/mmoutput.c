@@ -20,9 +20,6 @@
  */
 
 #include "private_mciavi.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
 static BOOL MCIAVI_GetInfoAudio(WINE_MCIAVI* wma, const MMCKINFO* mmckList, MMCKINFO *mmckStream)
 {

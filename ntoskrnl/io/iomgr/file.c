@@ -1719,10 +1719,6 @@ IoCreateFile(OUT PHANDLE FileHandle,
     PAGED_CODE();
     IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
 
-    /* Allocate the open packet */
-    OpenPacket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*OpenPacket), 'pOoI');
-    if (!OpenPacket) return STATUS_INSUFFICIENT_RESOURCES;
-    RtlZeroMemory(OpenPacket, sizeof(*OpenPacket));
 
     /* Check if we have no parameter checking to do */
     if (Options & IO_NO_PARAMETER_CHECKING)
@@ -1736,35 +1732,31 @@ IoCreateFile(OUT PHANDLE FileHandle,
         AccessMode = ExGetPreviousMode();
     }
 
-    /* Check if the call came from user mode */
+    /* Check if we need to do parameter checking */
     if ((AccessMode != KernelMode) || (Options & IO_CHECK_CREATE_PARAMETERS))
     {
         /* Validate parameters */
         if (FileAttributes & ~FILE_ATTRIBUTE_VALID_FLAGS)
         {
             DPRINT1("File Create 'FileAttributes' Parameter contains invalid flags!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (ShareAccess & ~FILE_SHARE_VALID_FLAGS)
         {
             DPRINT1("File Create 'ShareAccess' Parameter contains invalid flags!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (Disposition > FILE_MAXIMUM_DISPOSITION)
         {
             DPRINT1("File Create 'Disposition' Parameter is out of range!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (CreateOptions & ~FILE_VALID_OPTION_FLAGS)
         {
             DPRINT1("File Create 'CreateOptions' parameter contains invalid flags!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1772,14 +1764,12 @@ IoCreateFile(OUT PHANDLE FileHandle,
             (!(DesiredAccess & SYNCHRONIZE)))
         {
             DPRINT1("File Create 'CreateOptions' parameter FILE_SYNCHRONOUS_IO_* requested, but 'DesiredAccess' does not have SYNCHRONIZE!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if ((CreateOptions & FILE_DELETE_ON_CLOSE) && (!(DesiredAccess & DELETE)))
         {
             DPRINT1("File Create 'CreateOptions' parameter FILE_DELETE_ON_CLOSE requested, but 'DesiredAccess' does not have DELETE!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1787,7 +1777,6 @@ IoCreateFile(OUT PHANDLE FileHandle,
             (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT))
         {
             DPRINT1("File Create 'FileAttributes' parameter both FILE_SYNCHRONOUS_IO_NONALERT and FILE_SYNCHRONOUS_IO_ALERT specified!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1805,7 +1794,6 @@ IoCreateFile(OUT PHANDLE FileHandle,
                                FILE_OPEN_REPARSE_POINT)))
         {
             DPRINT1("File Create 'CreateOptions' Parameter has flags incompatible with FILE_DIRECTORY_FILE!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1813,21 +1801,18 @@ IoCreateFile(OUT PHANDLE FileHandle,
             (Disposition != FILE_CREATE) && (Disposition != FILE_OPEN) && (Disposition != FILE_OPEN_IF))
         {
             DPRINT1("File Create 'CreateOptions' Parameter FILE_DIRECTORY_FILE requested, but 'Disposition' is not FILE_CREATE/FILE_OPEN/FILE_OPEN_IF!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if ((CreateOptions & FILE_COMPLETE_IF_OPLOCKED) && (CreateOptions & FILE_RESERVE_OPFILTER))
         {
             DPRINT1("File Create 'CreateOptions' Parameter both FILE_COMPLETE_IF_OPLOCKED and FILE_RESERVE_OPFILTER specified!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if ((CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING) && (DesiredAccess & FILE_APPEND_DATA))
         {
             DPRINT1("File Create 'CreateOptions' parameter FILE_NO_INTERMEDIATE_BUFFERING requested, but 'DesiredAccess' FILE_APPEND_DATA requires it!\n");
-            ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1837,26 +1822,19 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
-                ExFreePool(OpenPacket);
                 return STATUS_INVALID_PARAMETER;
             }
 
             /* Get the parameters and validate them */
             NamedPipeCreateParameters = ExtraCreateParameters;
             if ((NamedPipeCreateParameters->NamedPipeType > FILE_PIPE_MESSAGE_TYPE) ||
-
                 (NamedPipeCreateParameters->ReadMode > FILE_PIPE_MESSAGE_MODE) ||
-
                 (NamedPipeCreateParameters->CompletionMode > FILE_PIPE_COMPLETE_OPERATION) ||
-
                 (ShareAccess & FILE_SHARE_DELETE) ||
-
                 ((Disposition < FILE_OPEN) || (Disposition > FILE_OPEN_IF)) ||
-
                 (CreateOptions & ~FILE_VALID_PIPE_OPTION_FLAGS))
             {
                 /* Invalid named pipe create */
-                ExFreePool(OpenPacket);
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1865,25 +1843,29 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
-                ExFreePool(OpenPacket);
                 return STATUS_INVALID_PARAMETER;
             }
 
             /* Get the parameters and validate them */
             if ((ShareAccess & FILE_SHARE_DELETE) ||
-
                 !(ShareAccess & ~FILE_SHARE_WRITE) ||
-
                 (Disposition != FILE_CREATE) ||
-
                 (CreateOptions & ~FILE_VALID_MAILSLOT_OPTION_FLAGS))
             {
                 /* Invalid mailslot create */
-                ExFreePool(OpenPacket);
                 return STATUS_INVALID_PARAMETER;
             }
         }
+    }
 
+    /* Allocate the open packet */
+    OpenPacket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*OpenPacket), 'pOoI');
+    if (!OpenPacket) return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(OpenPacket, sizeof(*OpenPacket));
+
+    /* Check if the call came from user mode */
+    if (AccessMode != KernelMode)
+    {
         _SEH2_TRY
         {
             /* Probe the output parameters */

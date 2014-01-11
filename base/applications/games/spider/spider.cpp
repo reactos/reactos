@@ -8,6 +8,9 @@
 
 #include "spider.h"
 
+#include <commctrl.h>
+#include <tchar.h>
+
 TCHAR szHelpPath[MAX_PATH];
 
 DWORD        dwAppStartTime;

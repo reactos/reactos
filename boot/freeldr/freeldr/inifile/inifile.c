@@ -181,7 +181,7 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
     PINI_SECTION    Section;
 
     // Allocate a new section structure
-    Section = MmHeapAlloc(sizeof(INI_SECTION));
+    Section = FrLdrTempAlloc(sizeof(INI_SECTION), TAG_INI_SECTION);
     if (!Section)
     {
         return FALSE;
@@ -190,10 +190,10 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
     RtlZeroMemory(Section, sizeof(INI_SECTION));
 
     // Allocate the section name buffer
-    Section->SectionName = MmHeapAlloc(strlen(SectionName) + sizeof(CHAR));
+    Section->SectionName = FrLdrTempAlloc(strlen(SectionName) + sizeof(CHAR), TAG_INI_NAME);
     if (!Section->SectionName)
     {
-        MmHeapFree(Section);
+        FrLdrTempFree(Section, TAG_INI_SECTION);
         return FALSE;
     }
 
@@ -209,13 +209,52 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
     return TRUE;
 }
 
+VOID IniFreeSection(PINI_SECTION Section)
+{
+    PLIST_ENTRY ListEntry;
+    PINI_SECTION_ITEM SectionItem;
+
+    // Loop while there are section items
+    while (!IsListEmpty(&Section->SectionItemList))
+    {
+        // Remove the section item
+        ListEntry = RemoveHeadList(&Section->SectionItemList);
+        SectionItem = CONTAINING_RECORD(ListEntry, INI_SECTION_ITEM, ListEntry);
+
+        // Free it
+        FrLdrTempFree(SectionItem->ItemName, TAG_INI_NAME);
+        FrLdrTempFree(SectionItem->ItemValue, TAG_INI_VALUE);
+        FrLdrTempFree(SectionItem, TAG_INI_SECTION_ITEM);
+    }
+
+    FrLdrTempFree(Section->SectionName, TAG_INI_NAME);
+    FrLdrTempFree(Section, TAG_INI_SECTION);
+}
+
+VOID IniCleanup(VOID)
+{
+    PLIST_ENTRY ListEntry;
+    PINI_SECTION Section;
+
+    // Loop while there are sections
+    while (!IsListEmpty(&IniFileSectionListHead))
+    {
+        // Remove the section
+        ListEntry = RemoveHeadList(&IniFileSectionListHead);
+        Section = CONTAINING_RECORD(ListEntry, INI_SECTION, ListEntry);
+
+        // Free it
+        IniFreeSection(Section);
+    }
+}
+
 BOOLEAN IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue)
 {
     PINI_SECTION        Section = (PINI_SECTION)SectionId;
     PINI_SECTION_ITEM    SectionItem;
 
     // Allocate a new item structure
-    SectionItem = MmHeapAlloc(sizeof(INI_SECTION_ITEM));
+    SectionItem = FrLdrTempAlloc(sizeof(INI_SECTION_ITEM), TAG_INI_SECTION_ITEM);
     if (!SectionItem)
     {
         return FALSE;
@@ -224,19 +263,19 @@ BOOLEAN IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCST
     RtlZeroMemory(SectionItem, sizeof(INI_SECTION_ITEM));
 
     // Allocate the setting name buffer
-    SectionItem->ItemName = MmHeapAlloc(strlen(SettingName) + 1);
+    SectionItem->ItemName = FrLdrTempAlloc(strlen(SettingName) + 1, TAG_INI_NAME);
     if (!SectionItem->ItemName)
     {
-        MmHeapFree(SectionItem);
+        FrLdrTempFree(SectionItem, TAG_INI_SECTION_ITEM);
         return FALSE;
     }
 
     // Allocate the setting value buffer
-    SectionItem->ItemValue = MmHeapAlloc(strlen(SettingValue) + 1);
+    SectionItem->ItemValue = FrLdrTempAlloc(strlen(SettingValue) + 1, TAG_INI_VALUE);
     if (!SectionItem->ItemValue)
     {
-        MmHeapFree(SectionItem->ItemName);
-        MmHeapFree(SectionItem);
+        FrLdrTempFree(SectionItem->ItemName, TAG_INI_NAME);
+        FrLdrTempFree(SectionItem, TAG_INI_SECTION_ITEM);
         return FALSE;
     }
 

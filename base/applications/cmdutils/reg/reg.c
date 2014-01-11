@@ -44,6 +44,10 @@ static int reg_printfW(const WCHAR *msg, ...)
         DWORD len;
         char  *msgA;
 
+        /* On Windows WriteConsoleW() fails if the output is redirected. So fall
+         * back to WriteFile(), assuming the console encoding is still the right
+         * one in that case.
+         */
         len = WideCharToMultiByte(GetConsoleOutputCP(), 0, msg_buffer, wlen,
             NULL, 0, NULL, NULL);
         msgA = HeapAlloc(GetProcessHeap(), 0, len * sizeof(char));
@@ -72,20 +76,30 @@ static int reg_message(int msg)
 static HKEY get_rootkey(LPWSTR key)
 {
     static const WCHAR szHKLM[] = {'H','K','L','M',0};
+    static const WCHAR szHKEY_LOCAL_MACHINE[] = {'H','K','E','Y','_','L','O','C','A','L','_','M','A','C','H','I','N','E',0};
     static const WCHAR szHKCU[] = {'H','K','C','U',0};
+    static const WCHAR szHKEY_CURRENT_USER[] = {'H','K','E','Y','_','C','U','R','R','E','N','T','_','U','S','E','R',0};
     static const WCHAR szHKCR[] = {'H','K','C','R',0};
+    static const WCHAR szHKEY_CLASSES_ROOT[] = {'H','K','E','Y','_','C','L','A','S','S','E','S','_','R','O','O','T',0};
     static const WCHAR szHKU[] = {'H','K','U',0};
+    static const WCHAR szHKEY_USERS[] = {'H','K','E','Y','_','U','S','E','R','S',0};
     static const WCHAR szHKCC[] = {'H','K','C','C',0};
+    static const WCHAR szHKEY_CURRENT_CONFIG[] = {'H','K','E','Y','_','C','U','R','R','E','N','T','_','C','O','N','F','I','G',0};
 
-    if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKLM,4)==2)
+    if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKLM,4)==CSTR_EQUAL ||
+        CompareStringW(CP_ACP,NORM_IGNORECASE,key,18,szHKEY_LOCAL_MACHINE,18)==CSTR_EQUAL)
         return HKEY_LOCAL_MACHINE;
-    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCU,4)==2)
+    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCU,4)==CSTR_EQUAL ||
+             CompareStringW(CP_ACP,NORM_IGNORECASE,key,17,szHKEY_CURRENT_USER,17)==CSTR_EQUAL)
         return HKEY_CURRENT_USER;
-    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCR,4)==2)
+    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCR,4)==CSTR_EQUAL ||
+             CompareStringW(CP_ACP,NORM_IGNORECASE,key,17,szHKEY_CLASSES_ROOT,17)==CSTR_EQUAL)
         return HKEY_CLASSES_ROOT;
-    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,3,szHKU,3)==2)
+    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,3,szHKU,3)==CSTR_EQUAL ||
+             CompareStringW(CP_ACP,NORM_IGNORECASE,key,10,szHKEY_USERS,10)==CSTR_EQUAL)
         return HKEY_USERS;
-    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCC,4)==2)
+    else if (CompareStringW(CP_ACP,NORM_IGNORECASE,key,4,szHKCC,4)==CSTR_EQUAL ||
+             CompareStringW(CP_ACP,NORM_IGNORECASE,key,19,szHKEY_CURRENT_CONFIG,19)==CSTR_EQUAL)
         return HKEY_CURRENT_CONFIG;
     else return NULL;
 }

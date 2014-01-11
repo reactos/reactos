@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
@@ -112,7 +115,7 @@ IDB_IETOOLBAR BITMAP ietoolbar.bmp
 /* @makedep: ieframe.rgs */
 1 WINE_REGISTRY ieframe.rgs
 
-2 WINE_REGISTRY ieframe_v1.rgs
-3 WINE_REGISTRY ieframe_v1.tlb.rgs
+2 WINE_REGISTRY "ieframe_v1.rgs"
+3 WINE_REGISTRY "ieframe_v1.tlb.rgs"
 
-1 TYPELIB ieframe_v1.tlb
+1 TYPELIB "ieframe_v1.tlb"

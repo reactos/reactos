@@ -41,6 +41,11 @@ Licence = Nespecificată
 Description = Modul logic necesar unor aplicații. Conține: comctl32.ocx, mscomctl.ocx, advpack.dll.
 Size = 913,73 ko
 
+[Section.041f]
+Name = Mikroyazılım Basarî Basic 6.0 Ortak Denetimler
+Licence = Bilinmiyor
+Description = Birtakım uygulamalar için gereklidir. Şunları içerir: comctl32.ocx, mscomctl.ocx, advpack.dll.
+
 [Section.0422]
 Licence = Невідома
 Description = Файл потрібен декотрим програмам. включає: comctl32.ocx, mscomctl.ocx, advpack.dll.

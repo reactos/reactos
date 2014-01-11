@@ -757,4 +757,12 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     return FALSE;
 }
 
+VOID
+NTAPI
+RtlCheckForOrphanedCriticalSections(
+    HANDLE ThreadHandle)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */

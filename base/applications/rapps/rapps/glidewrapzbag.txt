@@ -35,6 +35,10 @@ Licence = Gratuită
 Description = Glide wrapper, necesar pentru a executa Diablo 2 în ReactOS.
 Size = 249,02 ko
 
+[Section.041f]
+Licence = Ücretsiz
+Description = glidewrapper, ReactOS'ta Şeytan 2'yi çalıştırmak için gereklidir.
+
 [Section.0422]
 Description = glidewrapper необхідний для запуску Diablo2 в ReactOS.
 

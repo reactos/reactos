@@ -1,0 +1,3 @@
+1 WINE_REGISTRY "wbemdisp_classes.rgs"
+2 WINE_REGISTRY "wbemdisp_tlb.rgs"
+1 TYPELIB "wbemdisp_tlb.tlb"

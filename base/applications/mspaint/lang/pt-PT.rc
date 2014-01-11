@@ -1,9 +1,9 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/mspaint/lang/pt-PT.rc
- * PURPOSE:     Portuguese Language resource file
- * TRANSLATORS: Manuel D V Silva
+ * PROJECT:    PAINT for ReactOS
+ * LICENSE:    LGPL
+ * FILE:       base/applications/mspaint/lang/pt-PT.rc
+ * PURPOSE:    Portuguese Language resource file
+ * TRANSLATOR: Manuel D V Silva
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
@@ -23,7 +23,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILEEXIT
     END
-
     POPUP "&Editar"
     BEGIN
         MENUITEM "An&ular\tCtrl+Z", IDM_EDITUNDO
@@ -39,7 +38,6 @@ BEGIN
         MENUITEM "C&opiar para...", IDM_EDITCOPYTO
         MENUITEM "Colar &de...", IDM_EDITPASTEFROM
     END
-
     POPUP "&Ver"
     BEGIN
         MENUITEM "Caixa de &ferramentas\tCtrl+F", IDM_VIEWTOOLBOX, CHECKED
@@ -65,7 +63,6 @@ BEGIN
         END
         MENUITEM "&Ver mapa de bits\tCtrl+B", IDM_VIEWFULLSCREEN
     END
-
     POPUP "&Imagem"
     BEGIN
         MENUITEM "I&nverter/rodar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,7 +73,6 @@ BEGIN
         MENUITEM "&Limpar imagem\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Desenho opaco", IDM_IMAGEDRAWOPAQUE
     END
-
     POPUP "&Cores"
     BEGIN
         MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
@@ -84,7 +80,6 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-
     POPUP "&Ajuda"
     BEGIN
         MENUITEM "&Tópicos da Ajuda", IDM_HELPHELPTOPICS
@@ -125,9 +120,9 @@ BEGIN
     AUTORADIOBUTTON "Inverter na &horizontal", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Inverter na &vertical", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "&Rodar por ângulo", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 125, 24, 48, 14
 END
@@ -188,34 +183,35 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME, "Paint"
-    IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint para ReactOS"
-    IDS_INFOTEXT, "Paint para ReactOS está disponível sob a licença GNU Lesser General Public License (LGPL) versão 3 (visite www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Pretende guardar as alterações a %s?"
-    IDS_DEFAULTFILENAME, "Imagem.bmp"
-    IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Selecionar forma livre"
-    IDS_TOOLTIP2, "Selecionar"
-    IDS_TOOLTIP3, "Borracha/Apagar cor"
-    IDS_TOOLTIP4, "Preencher com cor"
-    IDS_TOOLTIP5, "Escolher cor"
-    IDS_TOOLTIP6, "Lupa"
-    IDS_TOOLTIP7, "Lápis"
-    IDS_TOOLTIP8, "Pincel"
-    IDS_TOOLTIP9, "Aerógrafo"
-    IDS_TOOLTIP10, "Texto"
-    IDS_TOOLTIP11, "Linnha"
-    IDS_TOOLTIP12, "Curva"
-    IDS_TOOLTIP13, "Retângulo"
-    IDS_TOOLTIP14, "Polígono"
-    IDS_TOOLTIP15, "Elipse"
-    IDS_TOOLTIP16, "Retângulo arredondado"
-    IDS_OPENFILTER, "Ficheiros de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos os arquivos (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
-    IDS_INTNUMBERS, "Please enter integral numbers only!"
-    IDS_PERCENTAGE, "The percentage must be between 1 and 500."
-    IDS_ANGLE, "The angle must be between -89 and 89."
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint para ReactOS"
+    IDS_INFOTEXT "Paint para ReactOS está disponível sob a licença GNU Lesser General Public License (LGPL) versão 3 (visite www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Pretende guardar as alterações a %s?"
+    IDS_DEFAULTFILENAME "Imagem.bmp"
+    IDS_MINIATURETITLE "Miniature"
+    IDS_TOOLTIP1 "Selecionar forma livre"
+    IDS_TOOLTIP2 "Selecionar"
+    IDS_TOOLTIP3 "Borracha/Apagar cor"
+    IDS_TOOLTIP4 "Preencher com cor"
+    IDS_TOOLTIP5 "Escolher cor"
+    IDS_TOOLTIP6 "Lupa"
+    IDS_TOOLTIP7 "Lápis"
+    IDS_TOOLTIP8 "Pincel"
+    IDS_TOOLTIP9 "Aerógrafo"
+    IDS_TOOLTIP10 "Texto"
+    IDS_TOOLTIP11 "Linnha"
+    IDS_TOOLTIP12 "Curva"
+    IDS_TOOLTIP13 "Retângulo"
+    IDS_TOOLTIP14 "Polígono"
+    IDS_TOOLTIP15 "Elipse"
+    IDS_TOOLTIP16 "Retângulo arredondado"
+    IDS_OPENFILTER "Ficheiros de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos os arquivos (*.*)\1*.*\1"
+    IDS_SAVEFILTER "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE "%d bytes"
+    IDS_PRINTRES "%d x %d pixels per meter"
+    IDS_INTNUMBERS "Please enter integral numbers only!"
+    IDS_PERCENTAGE "The percentage must be between 1 and 500."
+    IDS_ANGLE "The angle must be between -89 and 89."
+    IDS_LOADERRORTEXT "The file %s could not be loaded."
 END

@@ -1,127 +1,107 @@
-/*
- * WineMine
- * Portuguese Language Support
- *
- * Copyright 2003 Marcelo Duarte
- * Copyright 2004 Américo José Melo
- * Copyright 2010 Gustavo Henrique Milaré
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-STRINGTABLE BEGIN
-     IDS_APPNAME, "WineMine"
-     IDS_NOBODY,  "Ninguém"
-     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "WineMine"
+    IDS_NOBODY "Ninguém"
+    IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "&Opções" BEGIN
-        MENUITEM "&Novo\tF2",           IDM_NEW
+    POPUP "&Opções"
+    BEGIN
+        MENUITEM "&Novo\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marcas", IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&Principiante",      IDM_BEGINNER
-        MENUITEM "&Intermediário",      IDM_ADVANCED
-        MENUITEM "&Experiente",        IDM_EXPERT
-        MENUITEM "Personali&zar...",        IDM_CUSTOM
+        MENUITEM "&Principiante", IDM_BEGINNER
+        MENUITEM "&Intermediário", IDM_ADVANCED
+        MENUITEM "&Experiente", IDM_EXPERT
+        MENUITEM "Personali&zar...", IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "Sai&r\tAlt+X",       IDM_EXIT
+        MENUITEM "Sai&r\tAlt+X", IDM_EXIT
     END
-    POPUP "Aj&uda" BEGIN
-        MENUITEM "&Melhores tempos",    IDM_TIMES
-        MENUITEM "&Sobre",         IDM_ABOUT
+    POPUP "Aj&uda"
+    BEGIN
+        MENUITEM "&Melhores tempos", IDM_TIMES
+        MENUITEM "&Sobre", IDM_ABOUT
     END
 END
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-STRINGTABLE BEGIN
-     IDS_APPNAME, "WineMine"
-     IDS_NOBODY,  "Ninguém"
-     IDS_ABOUT,   "Direitos de autor 2000, Joshua Thielen"
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "WineMine"
+    IDS_NOBODY "Ninguém"
+    IDS_ABOUT "Direitos de autor 2000, Joshua Thielen"
 END
 
 MENU_WINEMINE MENU
 BEGIN
-    POPUP "&Opções" BEGIN
-        MENUITEM "&Novo\tF2",           IDM_NEW
+    POPUP "&Opções"
+    BEGIN
+        MENUITEM "&Novo\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marcas", IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&Principiante",      IDM_BEGINNER
-        MENUITEM "&Intermediário",      IDM_ADVANCED
-        MENUITEM "&Experiente",        IDM_EXPERT
-        MENUITEM "Personali&zar...",        IDM_CUSTOM
+        MENUITEM "&Principiante", IDM_BEGINNER
+        MENUITEM "&Intermediário", IDM_ADVANCED
+        MENUITEM "&Experiente", IDM_EXPERT
+        MENUITEM "Personali&zar...", IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "Sai&r\tAlt+X",       IDM_EXIT
+        MENUITEM "Sai&r\tAlt+X", IDM_EXIT
     END
     POPUP "Aj&uda" BEGIN
-        MENUITEM "&Melhores tempos",    IDM_TIMES
-        MENUITEM "&Acerca",         IDM_ABOUT
+        MENUITEM "&Melhores tempos", IDM_TIMES
+        MENUITEM "&Acerca", IDM_ABOUT
     END
 END
-
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 DLG_TIMES DIALOGEX 0, 0, 170, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Melhores tempos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Melhores tempos", -1,  10,  10, 150,  45
-    LTEXT           "Principiante",      -1,  20,  20,  50,   8
-    LTEXT           "Intermediário",      -1,  20,  30,  50,   8
-    LTEXT           "Experiente",        -1,  20,  40,  50,   8
-    LTEXT           "999",          IDC_TIME1,  80,  20,  15,   8
-    LTEXT           "999",          IDC_TIME2,  80,  30,  15,   8
-    LTEXT           "999",          IDC_TIME3,  80,  40,  15,   8
-    LTEXT           "",             IDC_NAME1,  100,  20,  55,   8
-    LTEXT           "",             IDC_NAME2,  100,  30,  55,   8
-    LTEXT           "",             IDC_NAME3,  100,  40,  55,   8
-    DEFPUSHBUTTON   "OK",                IDOK,  60,  60,  50,  15
+    GROUPBOX "Melhores tempos", -1, 10, 10, 150, 45
+    LTEXT "Principiante", -1, 20, 20, 50, 8
+    LTEXT "Intermediário", -1, 20, 30, 50, 8
+    LTEXT "Experiente", -1, 20, 40, 50, 8
+    LTEXT "999", IDC_TIME1, 70, 20, 15, 8
+    LTEXT "999", IDC_TIME2, 70, 30, 15, 8
+    LTEXT "999", IDC_TIME3, 70, 40, 15, 8
+    LTEXT "", IDC_NAME1, 90, 20, 55, 8
+    LTEXT "", IDC_NAME2, 90, 30, 55, 8
+    LTEXT "", IDC_NAME3, 90, 40, 55, 8
+    DEFPUSHBUTTON "OK", IDOK, 55, 60, 50, 15
 END
-
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-DLG_CONGRATS DIALOGEX  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CONGRATS DIALOGEX 0, 0, 160, 60
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Parabéns!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Por favor, indique o seu nome", -1,  10,  10, 150,  10
-    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+    LTEXT "Por favor, indique o seu nome", -1, 10, 10, 150, 10
+    EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
+    DEFPUSHBUTTON "OK", IDOK, 60, 40, 40, 15
 END
 
-DLG_CUSTOM DIALOGEX  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_CUSTOM DIALOGEX 0, 0, 100, 100
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Jogo personalizado"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Linhas",   -1,   5,   5,  30,  10
-    LTEXT           "Colunas",   -1,   5,  35,  30,  10
-    LTEXT           "Minas",  -1,   5,  65,  30,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "Cancelar", IDCANCEL,  40,  50,  50,  15
+    LTEXT "Linhas", -1, 5, 5, 30, 10
+    LTEXT "Colunas", -1, 5, 35, 30, 10
+    LTEXT "Minas", -1, 5, 65, 30, 10
+    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 40, 30, 50, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 40, 50, 50, 15
 END

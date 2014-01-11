@@ -186,7 +186,6 @@ static DWORD registry_read_credential(HKEY hkey, PCREDENTIALW credential,
         else if (ret != ERROR_SUCCESS)
             return ret;
         credential->CredentialBlobSize = count;
-        buffer += count;
     }
 
     /* FIXME: Attributes */
@@ -269,6 +268,7 @@ static DWORD mac_read_credential_from_item(SecKeychainItemRef item, BOOL require
     if (!user_name_present)
     {
         WARN("no kSecAccountItemAttr for item\n");
+        SecKeychainItemFreeAttributesAndData(attr_list, cred_blob);
         return ERROR_NOT_FOUND;
     }
 
@@ -420,7 +420,6 @@ static DWORD mac_read_credential_from_item(SecKeychainItemRef item, BOOL require
             str_len = MultiByteToWideChar(CP_UTF8, 0, cred_blob, cred_blob_len,
                                           (LPWSTR)buffer, 0xffff);
             credential->CredentialBlobSize = str_len * sizeof(WCHAR);
-            buffer += str_len * sizeof(WCHAR);
             *len += str_len * sizeof(WCHAR);
         }
         else
@@ -470,10 +469,10 @@ static DWORD registry_write_credential(HKEY hkey, const CREDENTIALW *credential,
 
     GetSystemTimeAsFileTime(&LastWritten);
 
-    ret = RegSetValueExW(hkey, wszFlagsValue, 0, REG_DWORD, (LPVOID)&credential->Flags,
+    ret = RegSetValueExW(hkey, wszFlagsValue, 0, REG_DWORD, (const BYTE*)&credential->Flags,
                          sizeof(credential->Flags));
     if (ret != ERROR_SUCCESS) return ret;
-    ret = RegSetValueExW(hkey, wszTypeValue, 0, REG_DWORD, (LPVOID)&credential->Type,
+    ret = RegSetValueExW(hkey, wszTypeValue, 0, REG_DWORD, (const BYTE*)&credential->Type,
                          sizeof(credential->Type));
     if (ret != ERROR_SUCCESS) return ret;
     ret = RegSetValueExW(hkey, NULL, 0, REG_SZ, (LPVOID)credential->TargetName,
@@ -488,7 +487,7 @@ static DWORD registry_write_credential(HKEY hkey, const CREDENTIALW *credential,
     ret = RegSetValueExW(hkey, wszLastWrittenValue, 0, REG_BINARY, (LPVOID)&LastWritten,
                          sizeof(LastWritten));
     if (ret != ERROR_SUCCESS) return ret;
-    ret = RegSetValueExW(hkey, wszPersistValue, 0, REG_DWORD, (LPVOID)&credential->Persist,
+    ret = RegSetValueExW(hkey, wszPersistValue, 0, REG_DWORD, (const BYTE*)&credential->Persist,
                          sizeof(credential->Persist));
     if (ret != ERROR_SUCCESS) return ret;
     /* FIXME: Attributes */
@@ -619,6 +618,8 @@ static DWORD mac_write_credential(const CREDENTIALW *credential, BOOL preserve_b
     HeapFree(GetProcessHeap(), 0, password);
     /* FIXME: set TargetAlias attribute */
     CFRelease(keychain_item);
+    if (status != noErr)
+        return ERROR_GEN_FAILURE;
     return ERROR_SUCCESS;
 }
 #endif
@@ -710,7 +711,7 @@ static LPWSTR get_key_name_for_target(LPCWSTR target_name, DWORD type)
     return key_name;
 }
 
-static BOOL credential_matches_filter(HKEY hkeyCred, LPCWSTR filter)
+static BOOL registry_credential_matches_filter(HKEY hkeyCred, LPCWSTR filter)
 {
     LPWSTR target_name;
     DWORD ret;
@@ -750,7 +751,7 @@ static BOOL credential_matches_filter(HKEY hkeyCred, LPCWSTR filter)
 
 static DWORD registry_enumerate_credentials(HKEY hkeyMgr, LPCWSTR filter,
                                             LPWSTR target_name,
-                                            DWORD target_name_len, BYTE key_data[KEY_SIZE],
+                                            DWORD target_name_len, const BYTE key_data[KEY_SIZE],
                                             PCREDENTIALW *credentials, char **buffer,
                                             DWORD *len, DWORD *count)
 {
@@ -766,18 +767,12 @@ static DWORD registry_enumerate_credentials(HKEY hkeyMgr, LPCWSTR filter,
             break;
         }
         else if (ret != ERROR_SUCCESS)
-        {
-            ret = ERROR_SUCCESS;
             continue;
-        }
         TRACE("target_name = %s\n", debugstr_w(target_name));
         ret = RegOpenKeyExW(hkeyMgr, target_name, 0, KEY_QUERY_VALUE, &hkeyCred);
         if (ret != ERROR_SUCCESS)
-        {
-            ret = ERROR_SUCCESS;
             continue;
-        }
-        if (!credential_matches_filter(hkeyCred, filter))
+        if (!registry_credential_matches_filter(hkeyCred, filter))
         {
             RegCloseKey(hkeyCred);
             continue;
@@ -801,6 +796,30 @@ static DWORD registry_enumerate_credentials(HKEY hkeyMgr, LPCWSTR filter,
 }
 
 #ifdef __APPLE__
+static BOOL mac_credential_matches_filter(void *data, UInt32 data_len, const WCHAR *filter)
+{
+    int len;
+    WCHAR *target_name;
+    const WCHAR *p;
+    BOOL ret;
+
+    if (!filter) return TRUE;
+
+    len = MultiByteToWideChar(CP_UTF8, 0, data, data_len, NULL, 0);
+    if (!(target_name = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR)))) return FALSE;
+    MultiByteToWideChar(CP_UTF8, 0, data, data_len, target_name, len);
+    target_name[len] = 0;
+
+    TRACE("comparing filter %s to target name %s\n", debugstr_w(filter), debugstr_w(target_name));
+
+    p = strchrW(filter, '*');
+    ret = CompareStringW(GetThreadLocale(), 0, filter,
+                         (p && !p[1] ? p - filter : -1), target_name,
+                         (p && !p[1] ? p - filter : -1)) == CSTR_EQUAL;
+    HeapFree(GetProcessHeap(), 0, target_name);
+    return ret;
+}
+
 static DWORD mac_enumerate_credentials(LPCWSTR filter, PCREDENTIALW *credentials,
                                        char *buffer, DWORD *len, DWORD *count)
 {
@@ -821,6 +840,8 @@ static DWORD mac_enumerate_credentials(LPCWSTR filter, PCREDENTIALW *credentials
             SecKeychainAttributeInfo info;
             SecKeychainAttributeList *attr_list;
             UInt32 info_tags[] = { kSecServerItemAttr };
+            BOOL match;
+
             info.count = sizeof(info_tags)/sizeof(info_tags[0]);
             info.tag = info_tags;
             info.format = NULL;
@@ -837,10 +858,15 @@ static DWORD mac_enumerate_credentials(LPCWSTR filter, PCREDENTIALW *credentials
             }
             else
                 *len += sizeof(CREDENTIALW);
-            if (attr_list->count != 1 || attr_list->attr[0].tag != kSecServerItemAttr) continue;
+            if (attr_list->count != 1 || attr_list->attr[0].tag != kSecServerItemAttr)
+            {
+                SecKeychainItemFreeAttributesAndData(attr_list, NULL);
+                continue;
+            }
             TRACE("server item: %.*s\n", (int)attr_list->attr[0].length, (char *)attr_list->attr[0].data);
-            /* FIXME: filter based on attr_list->attr[0].data */
+            match = mac_credential_matches_filter(attr_list->attr[0].data, attr_list->attr[0].length, filter);
             SecKeychainItemFreeAttributesAndData(attr_list, NULL);
+            if (!match) continue;
             ret = mac_read_credential_from_item(item, FALSE,
                                                 buffer ? credentials[*count] : NULL,
                                                 buffer ? buffer + sizeof(CREDENTIALW) : NULL,
@@ -921,7 +947,7 @@ static DWORD mac_delete_credential(LPCWSTR TargetName)
  *
  */
 
-static INT convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW, PCREDENTIALA CredentialA, INT len)
+static INT convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW, PCREDENTIALA CredentialA, DWORD len)
 {
     char *buffer;
     INT string_len;
@@ -1578,7 +1604,8 @@ BOOL WINAPI CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInf
                                        DWORD Flags, DWORD *Size, PCREDENTIALA **Credentials)
 {
     PCREDENTIAL_TARGET_INFORMATIONW TargetInformationW;
-    INT len, i;
+    INT len;
+    DWORD i;
     WCHAR *buffer, *end;
     BOOL ret;
     PCREDENTIALW* CredentialsW;
@@ -1671,8 +1698,8 @@ BOOL WINAPI CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInf
     if (TargetInformation->PackageName)
     {
         TargetInformationW->PackageName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1,
-                                      TargetInformationW->PackageName, end - buffer);
+        MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1,
+                            TargetInformationW->PackageName, end - buffer);
     } else
         TargetInformationW->PackageName = NULL;
 
@@ -1804,13 +1831,19 @@ BOOL WINAPI CredWriteW(PCREDENTIALW Credential, DWORD Flags)
         return FALSE;
     }
 
+    TRACE("Credential->Flags = 0x%08x\n", Credential->Flags);
+    TRACE("Credential->Type = %u\n", Credential->Type);
     TRACE("Credential->TargetName = %s\n", debugstr_w(Credential->TargetName));
+    TRACE("Credential->Comment = %s\n", debugstr_w(Credential->Comment));
+    TRACE("Credential->Persist = %u\n", Credential->Persist);
+    TRACE("Credential->TargetAlias = %s\n", debugstr_w(Credential->TargetAlias));
     TRACE("Credential->UserName = %s\n", debugstr_w(Credential->UserName));
 
     if (Credential->Type == CRED_TYPE_DOMAIN_PASSWORD)
     {
         if (!Credential->UserName ||
-            (!strchrW(Credential->UserName, '\\') && !strchrW(Credential->UserName, '@')))
+            (Credential->Persist == CRED_PERSIST_ENTERPRISE &&
+            (!strchrW(Credential->UserName, '\\') && !strchrW(Credential->UserName, '@'))))
         {
             ERR("bad username %s\n", debugstr_w(Credential->UserName));
             SetLastError(ERROR_BAD_USERNAME);
@@ -1879,7 +1912,7 @@ BOOL WINAPI CredWriteW(PCREDENTIALW Credential, DWORD Flags)
 /******************************************************************************
  * CredGetSessionTypes [ADVAPI32.@]
  */
-BOOL WINAPI CredGetSessionTypes(DWORD persistCount, LPDWORD persists)
+WINADVAPI BOOL WINAPI CredGetSessionTypes(DWORD persistCount, LPDWORD persists)
 {
     TRACE("(%u, %p)\n", persistCount, persists);
 
@@ -2010,24 +2043,25 @@ BOOL WINAPI CredMarshalCredentialW( CRED_MARSHAL_TYPE type, PVOID cred, LPWSTR *
     return TRUE;
 }
 
-BOOL
-WINAPI
-CredWriteDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo,
-                            PCREDENTIALW Credential,
-                            DWORD Flags)
+/******************************************************************************
+ * CredUnmarshalCredentialA [ADVAPI32.@]
+ */
+BOOL WINAPI CredUnmarshalCredentialA( LPCSTR cred, PCRED_MARSHAL_TYPE type, PVOID *out )
 {
-    WARN("Not implemented\n");
-    return FALSE;
-}
+    BOOL ret;
+    WCHAR *credW = NULL;
 
-BOOL
-WINAPI
-CredWriteDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo,
-                            PCREDENTIALA Credential,
-                            DWORD Flags)
-{
-    WARN("Not implemented\n");
-    return FALSE;
+    TRACE("%s, %p, %p\n", debugstr_a(cred), type, out);
+
+    if (cred)
+    {
+        int len = MultiByteToWideChar( CP_ACP, 0, cred, -1, NULL, 0 );
+        if (!(credW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
+        MultiByteToWideChar( CP_ACP, 0, cred, -1, credW, len );
+    }
+    ret = CredUnmarshalCredentialW( credW, type, out );
+    HeapFree( GetProcessHeap(), 0, credW );
+    return ret;
 }
 
 static inline char char_decode( WCHAR c )
@@ -2157,28 +2191,6 @@ BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVO
     }
     return TRUE;
 }
-
-/******************************************************************************
- * CredUnmarshalCredentialA [ADVAPI32.@]
- */
-BOOL WINAPI CredUnmarshalCredentialA( LPCSTR cred, PCRED_MARSHAL_TYPE type, PVOID *out )
-{
-    BOOL ret;
-    WCHAR *credW = NULL;
-
-    TRACE("%s, %p, %p\n", debugstr_a(cred), type, out);
-
-    if (cred)
-    {
-        int len = MultiByteToWideChar( CP_ACP, 0, cred, -1, NULL, 0 );
-        if (!(credW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
-        MultiByteToWideChar( CP_ACP, 0, cred, -1, credW, len );
-    }
-    ret = CredUnmarshalCredentialW( credW, type, out );
-    HeapFree( GetProcessHeap(), 0, credW );
-    return ret;
-}
-
 
 /******************************************************************************
  * CredIsMarshaledCredentialW [ADVAPI32.@]

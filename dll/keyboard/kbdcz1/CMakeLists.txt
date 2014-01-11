@@ -5,7 +5,7 @@ spec2def(kbdcz1.dll kbdcz1.spec)
 
 add_library(kbdcz1 SHARED kbdcz1.c kbdcz1.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdcz1.def)
 
-set_entrypoint(kbdcz1 0)
+set_module_type(kbdcz1 kbdlayout)
 
 add_dependencies(kbdcz1 psdk)
 

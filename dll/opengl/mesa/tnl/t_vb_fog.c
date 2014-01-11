@@ -25,18 +25,7 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-
-#include "main/glheader.h"
-#include "main/colormac.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
-
-#include "math/m_xform.h"
-
-#include "t_context.h"
-#include "t_pipeline.h"
-
+#include <precomp.h>
 
 struct fog_stage_data {
    GLvector4f fogcoord;		/* has actual storage allocated */

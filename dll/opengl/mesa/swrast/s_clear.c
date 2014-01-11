@@ -22,18 +22,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/glheader.h"
-#include "main/accum.h"
-#include "main/format_pack.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/mtypes.h"
+#include <precomp.h>
 
-#include "s_context.h"
-#include "s_depth.h"
-#include "s_stencil.h"
-
-
+#include <main/accum.h>
 
 /**
  * Clear an rgba color buffer with masking if needed.
