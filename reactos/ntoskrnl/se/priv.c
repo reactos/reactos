@@ -90,7 +90,7 @@ SepPrivilegeCheck(PTOKEN Token,
     Required = (PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) ? PrivilegeCount : 1;
 
     /* Loop all requested privileges until we found the required ones */
-    for (i = 0; i < PrivilegeCount && Required > 0; i++)
+    for (i = 0; i < PrivilegeCount; i++)
     {
         /* Loop the privileges of the token */
         for (j = 0; j < Token->PrivilegeCount; j++)
@@ -107,6 +107,13 @@ SepPrivilegeCheck(PTOKEN Token,
                 {
                     Privileges[i].Attributes |= SE_PRIVILEGE_USED_FOR_ACCESS;
                     Required--;
+
+                    /* Check if we have found all privileges */
+                    if (Required == 0)
+                    {
+                        /* We're done! */
+                        return TRUE;
+                    }
                 }
 
                 /* Leave the inner loop */
@@ -115,8 +122,9 @@ SepPrivilegeCheck(PTOKEN Token,
         }
     }
 
-    /* Return whether we found all required privileges */
-    return (Required == 0);
+    /* When we reached this point, we did not find all privileges */
+    NT_ASSERT(Required > 0);
+    return FALSE;
 }
 
 NTSTATUS
