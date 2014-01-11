@@ -18,7 +18,6 @@ add_definitions(
 spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    glu32.rc
     src/libutil/error.c
     src/libutil/glue.c
     src/libutil/mipmap.c
@@ -110,7 +109,7 @@ list(APPEND SOURCE
     src/libnurbs/nurbtess/searchTree.cc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
-add_library(glu32 SHARED ${SOURCE})
+add_library(glu32 SHARED ${SOURCE} glu32.rc)
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
