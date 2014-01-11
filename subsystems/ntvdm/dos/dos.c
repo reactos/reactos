@@ -13,7 +13,7 @@
 #include "emulator.h"
 #include "dos.h"
 
-#include "bios.h"
+#include "bios/bios.h"
 #include "bop.h"
 #include "int32.h"
 #include "registers.h"

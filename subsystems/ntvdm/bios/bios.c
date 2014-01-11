@@ -14,10 +14,10 @@
 #include "bios.h"
 
 #include "io.h"
-#include "vga.h"
-#include "pic.h"
-#include "ps2.h"
-#include "timer.h"
+#include "hardware/vga.h"
+#include "hardware/pic.h"
+#include "hardware/ps2.h"
+#include "hardware/timer.h"
 
 #include "int32.h"
 #include "registers.h"

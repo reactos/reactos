@@ -13,7 +13,7 @@
 #include "emulator.h"
 #include "cmos.h"
 #include "io.h"
-#include "bios.h"
+#include "bios/bios.h"
 #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/

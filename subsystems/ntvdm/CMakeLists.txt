@@ -1,23 +1,25 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486
+    ntvdm)
 
 spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE
-    bios.c
+    bios/bios.c
+    hardware/cmos.c
+    hardware/pic.c
+    hardware/ps2.c
+    hardware/speaker.c
+    hardware/timer.c
+    hardware/vga.c
+    dos/dos.c
     bop.c
-    cmos.c
-    dos.c
     emulator.c
     int32.c
     io.c
-    pic.c
-    ps2.c
     registers.c
-    speaker.c
-    timer.c
     vddsup.c
-    vga.c
     ntvdm.c
     ntvdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)

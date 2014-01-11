@@ -11,13 +11,13 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "bios.h"
+#include "bios/bios.h"
 #include "bop.h"
 #include "vddsup.h"
 #include "io.h"
 #include "registers.h"
-#include "vga.h"
-#include "pic.h"
+#include "hardware/vga.h"
+#include "hardware/pic.h"
 
 // HACK
 typedef INT VDM_MODE;

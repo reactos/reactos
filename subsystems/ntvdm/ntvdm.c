@@ -12,14 +12,15 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
-#include "cmos.h"
-#include "bios.h"
-#include "speaker.h"
-#include "vga.h"
-#include "dos.h"
-#include "timer.h"
-#include "pic.h"
-#include "ps2.h"
+
+#include "bios/bios.h"
+#include "hardware/cmos.h"
+#include "hardware/pic.h"
+#include "hardware/ps2.h"
+#include "hardware/speaker.h"
+#include "hardware/timer.h"
+#include "hardware/vga.h"
+#include "dos/dos.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:
@@ -142,6 +143,12 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Initialize the PC Speaker */
     SpeakerInitialize();
 
+    
+    
+    
+    
+    
+    
     /* Initialize the system BIOS */
     if (!BiosInitialize())
     {

@@ -15,7 +15,7 @@
 #include "int32.h"
 
 #include "bop.h"
-#include "bios.h"
+#include "bios/bios.h"
 #include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
