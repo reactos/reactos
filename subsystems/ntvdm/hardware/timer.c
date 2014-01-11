@@ -350,15 +350,13 @@ DWORD PitGetResolution(VOID)
     return PIT_BASE_FREQUENCY / MinReloadValue;
 }
 
-BOOLEAN PitInitialize(VOID)
+VOID PitInitialize(VOID)
 {
     /* Register the I/O Ports */
     RegisterIoPort(PIT_COMMAND_PORT, NULL       , PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(0), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(1), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(2), PitReadPort, PitWritePort);
-
-    return TRUE;
 }
 
 /* EOF */

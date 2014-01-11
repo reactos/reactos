@@ -137,7 +137,7 @@ extern PBIOS_DATA_AREA Bda;
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
 
-BOOLEAN BiosInitialize(VOID);
+BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID BiosCleanup(VOID);
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
 

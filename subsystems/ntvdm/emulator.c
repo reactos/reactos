@@ -11,20 +11,24 @@
 #define NDEBUG
 
 #include "emulator.h"
+
 #include "bios/bios.h"
+#include "hardware/cmos.h"
+#include "hardware/pic.h"
+#include "hardware/speaker.h"
+#include "hardware/timer.h"
+#include "hardware/vga.h"
+
 #include "bop.h"
 #include "vddsup.h"
 #include "io.h"
 #include "registers.h"
-#include "hardware/vga.h"
-#include "hardware/pic.h"
-
-// HACK
-typedef INT VDM_MODE;
 
 /* PRIVATE VARIABLES **********************************************************/
 
 FAST486_STATE EmulatorContext;
+LPVOID  BaseAddress = NULL;
+BOOLEAN VdmRunning  = TRUE;
 
 static BOOLEAN A20Line = FALSE;
 
@@ -115,7 +119,14 @@ BOOLEAN EmulatorInitialize(VOID)
 {
     /* Allocate memory for the 16-bit address space */
     BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
-    if (BaseAddress == NULL) return FALSE;
+    if (BaseAddress == NULL)
+    {
+        wprintf(L"FATAL: Failed to allocate VDM memory.\n");
+        return FALSE;
+    }
+
+    /* Initialize I/O ports */
+    /* Initialize RAM */
 
     /* Initialize the CPU */
     Fast486Initialize(&EmulatorContext,
@@ -131,17 +142,30 @@ BOOLEAN EmulatorInitialize(VOID)
     /* Enable interrupts */
     setIF(1);
 
-    /* Initialize VDD support */
-    VDDSupInitialize();
+    /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
+    PicInitialize();
+    PitInitialize();
+    CmosInitialize();
+    SpeakerInitialize();
 
     /* Register the DebugBreak BOP */
     RegisterBop(BOP_DEBUGGER, EmulatorDebugBreak);
+
+    /* Initialize VDD support */
+    VDDSupInitialize();
 
     return TRUE;
 }
 
 VOID EmulatorCleanup(VOID)
 {
+    SpeakerCleanup();
+    CmosCleanup();
+    // PitCleanup();
+    // PicCleanup();
+
+    // Fast486Cleanup();
+
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
@@ -227,7 +251,7 @@ VdmMapFlat(IN USHORT   Segment,
     return SEG_OFF_TO_PTR(Segment, Offset);
 }
 
-BOOL 
+BOOL
 WINAPI
 VdmFlushCache(IN USHORT   Segment,
               IN ULONG    Offset,

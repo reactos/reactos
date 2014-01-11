@@ -293,15 +293,13 @@ BYTE PicGetInterrupt(VOID)
     else return MasterPic.IntOffset + 7;
 }
 
-BOOLEAN PicInitialize(VOID)
+VOID PicInitialize(VOID)
 {
     /* Register the I/O Ports */
     RegisterIoPort(PIC_MASTER_CMD , PicReadPort, PicWritePort);
     RegisterIoPort(PIC_SLAVE_CMD  , PicReadPort, PicWritePort);
     RegisterIoPort(PIC_MASTER_DATA, PicReadPort, PicWritePort);
     RegisterIoPort(PIC_SLAVE_DATA , PicReadPort, PicWritePort);
-
-    return TRUE;
 }
 
 

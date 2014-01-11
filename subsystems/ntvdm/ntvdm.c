@@ -15,9 +15,7 @@
 
 #include "bios/bios.h"
 #include "hardware/cmos.h"
-#include "hardware/pic.h"
 #include "hardware/ps2.h"
-#include "hardware/speaker.h"
 #include "hardware/timer.h"
 #include "hardware/vga.h"
 #include "dos/dos.h"
@@ -30,8 +28,11 @@
 
 /* PUBLIC VARIABLES ***********************************************************/
 
-BOOLEAN VdmRunning = TRUE;
-LPVOID BaseAddress = NULL;
+static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
+static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
+static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
+static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
+static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -67,6 +68,97 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
     return TRUE;
 }
 
+BOOL ConsoleInit(VOID)
+{
+    /* Set the handler routine */
+    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+
+    /* Get the input handle to the real console, and check for success */
+    ConsoleInput = CreateFileW(L"CONIN$",
+                               GENERIC_READ | GENERIC_WRITE,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                               NULL,
+                               OPEN_EXISTING,
+                               0,
+                               NULL);
+    if (ConsoleInput == INVALID_HANDLE_VALUE)
+    {
+        wprintf(L"FATAL: Cannot retrieve a handle to the console input\n");
+        return FALSE;
+    }
+
+    /* Get the output handle to the real console, and check for success */
+    ConsoleOutput = CreateFileW(L"CONOUT$",
+                                GENERIC_READ | GENERIC_WRITE,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                NULL,
+                                OPEN_EXISTING,
+                                0,
+                                NULL);
+    if (ConsoleOutput == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(ConsoleInput);
+        wprintf(L"FATAL: Cannot retrieve a handle to the console output\n");
+        return FALSE;
+    }
+
+    /* Save the original input and output console modes */
+    if (!GetConsoleMode(ConsoleInput , &OrgConsoleInputMode ) ||
+        !GetConsoleMode(ConsoleOutput, &OrgConsoleOutputMode))
+    {
+        CloseHandle(ConsoleOutput);
+        CloseHandle(ConsoleInput);
+        wprintf(L"FATAL: Cannot save console in/out modes\n");
+        return FALSE;
+    }
+
+    /* Save the original cursor and console screen buffer information */
+    if (!GetConsoleCursorInfo(ConsoleOutput, &OrgConsoleCursorInfo) ||
+        !GetConsoleScreenBufferInfo(ConsoleOutput, &OrgConsoleBufferInfo))
+    {
+        CloseHandle(ConsoleOutput);
+        CloseHandle(ConsoleInput);
+        wprintf(L"FATAL: Cannot save console cursor/screen-buffer info\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+VOID ConsoleCleanup(VOID)
+{
+    SMALL_RECT ConRect;
+    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
+
+    /* Restore the old screen buffer */
+    SetConsoleActiveScreenBuffer(ConsoleOutput);
+
+    /* Restore the original console size */
+    GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo);
+    ConRect.Left = 0; // OrgConsoleBufferInfo.srWindow.Left;
+    // ConRect.Top  = ConsoleInfo.dwCursorPosition.Y / (OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top + 1);
+    // ConRect.Top *= (OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top + 1);
+    ConRect.Top    = ConsoleInfo.dwCursorPosition.Y;
+    ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
+    ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
+    /* See the following trick explanation in vga.c:VgaEnterTextMode() */
+    SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
+    SetConsoleWindowInfo(ConsoleOutput, TRUE, &ConRect);
+    // SetConsoleWindowInfo(ConsoleOutput, TRUE, &OrgConsoleBufferInfo.srWindow);
+    SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
+
+    /* Restore the original cursor shape */
+    SetConsoleCursorInfo(ConsoleOutput, &OrgConsoleCursorInfo);
+
+    /* Restore the original input and output console modes */
+    SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
+    SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
+
+    /* Close the console handles */
+    if (ConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleOutput);
+    if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
+}
+
 INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
@@ -80,9 +172,6 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD LastCyclePrintout;
     DWORD Cycles = 0;
     INT KeyboardIntCounter = 0;
-
-    /* Set the handler routine */
-    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
 #ifndef TESTING
     UNREFERENCED_PARAMETER(argc);
@@ -105,10 +194,17 @@ INT wmain(INT argc, WCHAR *argv[])
 
     DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
 
+    /* Initialize the console */
+    if (!ConsoleInit())
+    {
+        wprintf(L"FATAL: A problem occurred when trying to initialize the console\n");
+        goto Cleanup;
+    }
+
     /* Initialize the emulator */
     if (!EmulatorInitialize())
     {
-        wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
+        wprintf(L"FATAL: Failed to initialize the emulator\n");
         goto Cleanup;
     }
 
@@ -119,38 +215,8 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Initialize the PIC */
-    if (!PicInitialize())
-    {
-        wprintf(L"FATAL: Failed to initialize the PIC.\n");
-        goto Cleanup;
-    }
-
-    /* Initialize the PIT */
-    if (!PitInitialize())
-    {
-        wprintf(L"FATAL: Failed to initialize the PIT.\n");
-        goto Cleanup;
-    }
-
-    /* Initialize the CMOS */
-    if (!CmosInitialize())
-    {
-        wprintf(L"FATAL: Failed to initialize the VDM CMOS.\n");
-        goto Cleanup;
-    }
-
-    /* Initialize the PC Speaker */
-    SpeakerInitialize();
-
-    
-    
-    
-    
-    
-    
     /* Initialize the system BIOS */
-    if (!BiosInitialize())
+    if (!BiosInitialize(ConsoleInput, ConsoleOutput))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;
@@ -264,10 +330,9 @@ INT wmain(INT argc, WCHAR *argv[])
     VgaRefreshDisplay();
 
 Cleanup:
-    SpeakerCleanup();
     BiosCleanup();
-    CmosCleanup();
     EmulatorCleanup();
+    ConsoleCleanup();
 
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
 

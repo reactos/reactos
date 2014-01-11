@@ -25,11 +25,6 @@
 
 PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
-static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
-static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
-static DWORD BiosSavedConInMode, BiosSavedConOutMode;
-static CONSOLE_CURSOR_INFO        BiosSavedCursorInfo;
-static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -314,7 +309,7 @@ WORD BiosGetCharacter(VOID)
     return CharacterData;
 }
 
-BOOLEAN BiosInitialize(VOID)
+BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Initialize the BDA */
     Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
@@ -353,64 +348,18 @@ BOOLEAN BiosInitialize(VOID)
     ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
 
-    /* Get the input handle to the real console, and check for success */
-    BiosConsoleInput = CreateFileW(L"CONIN$",
-                                   GENERIC_READ | GENERIC_WRITE,
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   0,
-                                   NULL);
-    if (BiosConsoleInput == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    /* Get the output handle to the real console, and check for success */
-    BiosConsoleOutput = CreateFileW(L"CONOUT$",
-                                    GENERIC_READ | GENERIC_WRITE,
-                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                    NULL,
-                                    OPEN_EXISTING,
-                                    0,
-                                    NULL);
-    if (BiosConsoleOutput == INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
-    /* Save the original input and output console modes */
-    if (!GetConsoleMode(BiosConsoleInput , &BiosSavedConInMode ) ||
-        !GetConsoleMode(BiosConsoleOutput, &BiosSavedConOutMode))
-    {
-        CloseHandle(BiosConsoleOutput);
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
-    /* Save the original cursor and console screen buffer information */
-    if (!GetConsoleCursorInfo(BiosConsoleOutput, &BiosSavedCursorInfo) ||
-        !GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
-    {
-        CloseHandle(BiosConsoleOutput);
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
-
     /* Initialize the Video BIOS */
-    if (!VidBiosInitialize(BiosConsoleOutput))
-    {
-        CloseHandle(BiosConsoleOutput);
-        CloseHandle(BiosConsoleInput);
-        return FALSE;
-    }
+    if (!VidBiosInitialize(ConsoleOutput)) return FALSE;
 
     /* Set the console input mode */
-    SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+    SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
     /* Initialize PS2 */
-    PS2Initialize(BiosConsoleInput);
+    PS2Initialize(ConsoleInput);
+
+    /*
+     * The POST (Power On-Self Test)
+     */
 
     /* Initialize the PIC */
     IOWriteB(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
@@ -441,39 +390,8 @@ BOOLEAN BiosInitialize(VOID)
 
 VOID BiosCleanup(VOID)
 {
-    SMALL_RECT ConRect;
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-
     PS2Cleanup();
     VidBiosCleanup();
-
-    /* Restore the old screen buffer */
-    SetConsoleActiveScreenBuffer(BiosConsoleOutput);
-
-    /* Restore the original console size */
-    GetConsoleScreenBufferInfo(BiosConsoleOutput, &ConsoleInfo);
-    ConRect.Left = 0; // BiosSavedBufferInfo.srWindow.Left;
-    // ConRect.Top  = ConsoleInfo.dwCursorPosition.Y / (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
-    // ConRect.Top *= (BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top + 1);
-    ConRect.Top    = ConsoleInfo.dwCursorPosition.Y;
-    ConRect.Right  = ConRect.Left + BiosSavedBufferInfo.srWindow.Right  - BiosSavedBufferInfo.srWindow.Left;
-    ConRect.Bottom = ConRect.Top  + BiosSavedBufferInfo.srWindow.Bottom - BiosSavedBufferInfo.srWindow.Top ;
-    /* See the following trick explanation in vga.c:VgaEnterTextMode() */
-    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
-    SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &ConRect);
-    // SetConsoleWindowInfo(BiosConsoleOutput, TRUE, &BiosSavedBufferInfo.srWindow);
-    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
-
-    /* Restore the original cursor shape */
-    SetConsoleCursorInfo(BiosConsoleOutput, &BiosSavedCursorInfo);
-
-    /* Restore the original input and output console modes */
-    SetConsoleMode(BiosConsoleOutput, BiosSavedConOutMode);
-    SetConsoleMode(BiosConsoleInput , BiosSavedConInMode );
-
-    /* Close the console handles */
-    if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
-    if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)

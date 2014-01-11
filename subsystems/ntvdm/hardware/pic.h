@@ -50,7 +50,7 @@ typedef struct _PIC
 
 VOID PicInterruptRequest(BYTE Number);
 BYTE PicGetInterrupt(VOID);
-BOOLEAN PicInitialize(VOID);
+VOID PicInitialize(VOID);
 
 #endif // _PIC_H_
 

@@ -384,7 +384,7 @@ VOID RtcTimeUpdate(VOID)
     }
 }
 
-BOOLEAN CmosInitialize(VOID)
+VOID CmosInitialize(VOID)
 {
     DWORD CmosSize = sizeof(CmosMemory);
 
@@ -433,8 +433,6 @@ BOOLEAN CmosInitialize(VOID)
     /* Register the I/O Ports */
     RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
     RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
-
-    return TRUE;
 }
 
 VOID CmosCleanup(VOID)

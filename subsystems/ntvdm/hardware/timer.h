@@ -52,7 +52,7 @@ VOID PitWriteData(BYTE Channel, BYTE Value);
 
 VOID PitDecrementCount(DWORD Count);
 DWORD PitGetResolution(VOID);
-BOOLEAN PitInitialize(VOID);
+VOID PitInitialize(VOID);
 
 #endif // _TIMER_H_
 

@@ -36,6 +36,7 @@ VOID
 WINAPI
 VDDTerminateVDM(VOID);
 
+
 /*
  * I/O Port services
  */
@@ -84,6 +85,69 @@ VDDDeInstallIOHook
     HANDLE            hVdd,
     WORD              cPortRange,
     PVDD_IO_PORTRANGE pPortRange
+);
+
+
+/*
+ * Memory services
+ */
+
+typedef enum
+{
+    VDM_V86,
+    VDM_PM
+} VDM_MODE;
+
+#ifndef MSW_PE
+#define MSW_PE  0x0001
+#endif
+
+#define getMODE() ((getMSW() & MSW_PE) ? VDM_PM : VDM_V86)
+
+PBYTE
+WINAPI
+Sim32pGetVDMPointer
+(
+    IN ULONG   Address,
+    IN BOOLEAN ProtectedMode
+);
+
+PBYTE
+WINAPI
+MGetVdmPointer
+(
+    IN ULONG   Address,
+    IN ULONG   Size,
+    IN BOOLEAN ProtectedMode
+);
+
+PVOID
+WINAPI
+VdmMapFlat
+(
+    IN USHORT   Segment,
+    IN ULONG    Offset,
+    IN VDM_MODE Mode
+);
+
+BOOL
+WINAPI
+VdmFlushCache
+(
+    IN USHORT   Segment,
+    IN ULONG    Offset,
+    IN ULONG    Size,
+    IN VDM_MODE Mode
+);
+
+BOOL
+WINAPI
+VdmUnmapFlat
+(
+    IN USHORT   Segment,
+    IN ULONG    Offset,
+    IN PVOID    Buffer,
+    IN VDM_MODE Mode
 );
 
 #ifdef __cplusplus

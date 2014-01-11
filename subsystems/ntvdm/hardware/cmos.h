@@ -129,7 +129,7 @@ DWORD RtcGetTicksPerSecond(VOID);
 VOID RtcPeriodicTick(VOID);
 VOID RtcTimeUpdate(VOID);
 
-BOOLEAN CmosInitialize(VOID);
+VOID CmosInitialize(VOID);
 VOID CmosCleanup(VOID);
 
 #endif // _CMOS_H_
