@@ -13,6 +13,7 @@
 #include "emulator.h"
 #include "bios.h"
 
+#include "io.h"
 #include "vga.h"
 #include "pic.h"
 #include "ps2.h"
@@ -867,28 +868,28 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
                                                 : VGA_CRTC_INDEX_MONO;
 
     /* Write the misc register */
-    VgaWritePort(VGA_MISC_WRITE, Registers->Misc);
+    IOWriteB(VGA_MISC_WRITE, Registers->Misc);
 
     /* Synchronous reset on */
-    VgaWritePort(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
-    VgaWritePort(VGA_SEQ_DATA , VGA_SEQ_RESET_AR);
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
+    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_AR);
 
     /* Write the sequencer registers */
     for (i = 1; i < VGA_SEQ_MAX_REG; i++)
     {
-        VgaWritePort(VGA_SEQ_INDEX, i);
-        VgaWritePort(VGA_SEQ_DATA, Registers->Sequencer[i]);
+        IOWriteB(VGA_SEQ_INDEX, i);
+        IOWriteB(VGA_SEQ_DATA, Registers->Sequencer[i]);
     }
 
     /* Synchronous reset off */
-    VgaWritePort(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
-    VgaWritePort(VGA_SEQ_DATA , VGA_SEQ_RESET_SR | VGA_SEQ_RESET_AR);
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
+    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_SR | VGA_SEQ_RESET_AR);
 
     /* Unlock CRTC registers 0-7 */
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_END_HORZ_BLANKING_REG);
-    VgaWritePort(VGA_CRTC_DATA, VgaReadPort(VGA_CRTC_DATA) | 0x80);
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_VERT_RETRACE_END_REG);
-    VgaWritePort(VGA_CRTC_DATA, VgaReadPort(VGA_CRTC_DATA) & ~0x80);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_HORZ_BLANKING_REG);
+    IOWriteB(VGA_CRTC_DATA, IOReadB(VGA_CRTC_DATA) | 0x80);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_VERT_RETRACE_END_REG);
+    IOWriteB(VGA_CRTC_DATA, IOReadB(VGA_CRTC_DATA) & ~0x80);
     // Make sure they remain unlocked
     Registers->CRT[VGA_CRTC_END_HORZ_BLANKING_REG] |= 0x80;
     Registers->CRT[VGA_CRTC_VERT_RETRACE_END_REG] &= ~0x80;
@@ -896,34 +897,34 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     /* Write the CRTC registers */
     for (i = 0; i < VGA_CRTC_MAX_REG; i++)
     {
-        VgaWritePort(VGA_CRTC_INDEX, i);
-        VgaWritePort(VGA_CRTC_DATA, Registers->CRT[i]);
+        IOWriteB(VGA_CRTC_INDEX, i);
+        IOWriteB(VGA_CRTC_DATA, Registers->CRT[i]);
     }
 
     /* Write the GC registers */
     for (i = 0; i < VGA_GC_MAX_REG; i++)
     {
-        VgaWritePort(VGA_GC_INDEX, i);
-        VgaWritePort(VGA_GC_DATA, Registers->Graphics[i]);
+        IOWriteB(VGA_GC_INDEX, i);
+        IOWriteB(VGA_GC_DATA, Registers->Graphics[i]);
     }
 
     /* Write the AC registers */
     // DbgPrint("\n");
     for (i = 0; i < VGA_AC_MAX_REG; i++)
     {
-        VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-        VgaWritePort(VGA_AC_INDEX, i);
-        VgaWritePort(VGA_AC_WRITE, Registers->Attribute[i]);
+        IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+        IOWriteB(VGA_AC_INDEX, i);
+        IOWriteB(VGA_AC_WRITE, Registers->Attribute[i]);
         // DbgPrint("Registers->Attribute[%d] = %d\n", i, Registers->Attribute[i]);
     }
     // DbgPrint("\n");
 
     /* Set the PEL mask */
-    VgaWritePort(VGA_DAC_MASK, 0xFF);
+    IOWriteB(VGA_DAC_MASK, 0xFF);
 
     /* Enable screen and disable palette access */
-    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-    VgaWritePort(VGA_AC_INDEX, 0x20);
+    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+    IOWriteB(VGA_AC_INDEX, 0x20);
 
     /* Enable interrupts */
     setIF(1);
@@ -936,29 +937,29 @@ static VOID VgaSetPalette(const COLORREF* Palette, ULONG Size)
     ULONG i;
 
     // /* Disable screen and enable palette access */
-    // VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-    // VgaWritePort(VGA_AC_INDEX, 0x00);
+    // IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+    // IOWriteB(VGA_AC_INDEX, 0x00);
 
     for (i = 0; i < Size; i++)
     {
-        VgaWritePort(VGA_DAC_WRITE_INDEX, i);
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetRValue(Palette[i])));
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetGValue(Palette[i])));
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetBValue(Palette[i])));
+        IOWriteB(VGA_DAC_WRITE_INDEX, i);
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetRValue(Palette[i])));
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetGValue(Palette[i])));
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(GetBValue(Palette[i])));
     }
 
     /* The following step might be optional */
     for (i = Size; i < VGA_MAX_COLORS; i++)
     {
-        VgaWritePort(VGA_DAC_WRITE_INDEX, i);
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
-        VgaWritePort(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
+        IOWriteB(VGA_DAC_WRITE_INDEX, i);
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
+        IOWriteB(VGA_DAC_DATA, VGA_COLOR_TO_DAC(0x00));
     }
 
     /* Enable screen and disable palette access */
-    // VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-    // VgaWritePort(VGA_AC_INDEX, 0x20);
+    // IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+    // IOWriteB(VGA_AC_INDEX, 0x20);
 }
 
 static VOID VgaChangePalette(BYTE ModeNumber)
@@ -1012,10 +1013,10 @@ static VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
         WORD Offset = Row * Bda->ScreenColumns + Column;
 
         /* Modify the CRTC registers */
-        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
-        VgaWritePort(VGA_CRTC_DATA , LOBYTE(Offset));
-        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
-        VgaWritePort(VGA_CRTC_DATA , HIBYTE(Offset));
+        IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+        IOWriteB(VGA_CRTC_DATA , LOBYTE(Offset));
+        IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+        IOWriteB(VGA_CRTC_DATA , HIBYTE(Offset));
     }
 }
 
@@ -1057,14 +1058,14 @@ static BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
 
     /* Set the start address in the CRTC */
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
-    VgaWritePort(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
-    VgaWritePort(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
+    IOWriteB(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
+    IOWriteB(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
     /* Get the character height */
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
-    Bda->CharacterHeight = 1 + (VgaReadPort(VGA_CRTC_DATA) & 0x1F);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
+    Bda->CharacterHeight = 1 + (IOReadB(VGA_CRTC_DATA) & 0x1F);
 
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
@@ -1092,10 +1093,10 @@ static BOOLEAN BiosSetVideoPage(BYTE PageNumber)
     Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
 
     /* Set the start address in the CRTC */
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
-    VgaWritePort(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
-    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
-    VgaWritePort(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
+    IOWriteB(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
+    IOWriteB(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
     /*
      * Get the cursor location (we don't update anything on the BIOS side
@@ -1126,10 +1127,10 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
             Bda->CursorEndLine   = getCL();
 
             /* Modify the CRTC registers */
-            VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
-            VgaWritePort(VGA_CRTC_DATA , Bda->CursorStartLine);
-            VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
-            VgaWritePort(VGA_CRTC_DATA , Bda->CursorEndLine);
+            IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
+            IOWriteB(VGA_CRTC_DATA , Bda->CursorStartLine);
+            IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
+            IOWriteB(VGA_CRTC_DATA , Bda->CursorEndLine);
 
             break;
         }
@@ -1251,15 +1252,15 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 case 0x00:
                 {
                     /* Write the index */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, getBL());
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, getBL());
 
                     /* Write the data */
-                    VgaWritePort(VGA_AC_WRITE, getBH());
+                    IOWriteB(VGA_AC_WRITE, getBH());
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1267,15 +1268,15 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 case 0x01:
                 {
                     /* Write the index */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
 
                     /* Write the data */
-                    VgaWritePort(VGA_AC_WRITE, getBH());
+                    IOWriteB(VGA_AC_WRITE, getBH());
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1289,20 +1290,20 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                     for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
                     {
                         /* Write the index */
-                        VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                        VgaWritePort(VGA_AC_INDEX, i);
+                        IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                        IOWriteB(VGA_AC_INDEX, i);
 
                         /* Write the data */
-                        VgaWritePort(VGA_AC_WRITE, Buffer[i]);
+                        IOWriteB(VGA_AC_WRITE, Buffer[i]);
                     }
 
                     /* Set the overscan register */
-                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
-                    VgaWritePort(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    IOWriteB(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1310,15 +1311,15 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 case 0x07:
                 {
                     /* Write the index */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, getBL());
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, getBL());
 
                     /* Read the data */
-                    setBH(VgaReadPort(VGA_AC_READ));
+                    setBH(IOReadB(VGA_AC_READ));
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1326,15 +1327,15 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 case 0x08:
                 {
                     /* Write the index */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
 
                     /* Read the data */
-                    setBH(VgaReadPort(VGA_AC_READ));
+                    setBH(IOReadB(VGA_AC_READ));
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1348,20 +1349,20 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                     for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
                     {
                         /* Write the index */
-                        VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                        VgaWritePort(VGA_AC_INDEX, i);
+                        IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                        IOWriteB(VGA_AC_INDEX, i);
 
                         /* Read the data */
-                        Buffer[i] = VgaReadPort(VGA_AC_READ);
+                        Buffer[i] = IOReadB(VGA_AC_READ);
                     }
 
                     /* Get the overscan register */
-                    VgaWritePort(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
-                    Buffer[VGA_AC_PAL_F_REG + 1] = VgaReadPort(VGA_AC_READ);
+                    IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
+                    Buffer[VGA_AC_PAL_F_REG + 1] = IOReadB(VGA_AC_READ);
 
                     /* Enable screen and disable palette access */
-                    VgaReadPort(VGA_INSTAT1_READ); // Put the AC register into index state
-                    VgaWritePort(VGA_AC_INDEX, 0x20);
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
                     break;
                 }
 
@@ -1370,12 +1371,12 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 {
                     /* Write the index */
                     // Certainly in BL and not in BX as said by Ralf Brown...
-                    VgaWritePort(VGA_DAC_WRITE_INDEX, getBL());
+                    IOWriteB(VGA_DAC_WRITE_INDEX, getBL());
 
                     /* Write the data in this order: Red, Green, Blue */
-                    VgaWritePort(VGA_DAC_DATA, getDH());
-                    VgaWritePort(VGA_DAC_DATA, getCH());
-                    VgaWritePort(VGA_DAC_DATA, getCL());
+                    IOWriteB(VGA_DAC_DATA, getDH());
+                    IOWriteB(VGA_DAC_DATA, getCH());
+                    IOWriteB(VGA_DAC_DATA, getCL());
 
                     break;
                 }
@@ -1388,14 +1389,14 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
 
                     /* Write the index */
                     // Certainly in BL and not in BX as said by Ralf Brown...
-                    VgaWritePort(VGA_DAC_WRITE_INDEX, getBL());
+                    IOWriteB(VGA_DAC_WRITE_INDEX, getBL());
 
                     for (i = 0; i < getCX(); i++)
                     {
                         /* Write the data in this order: Red, Green, Blue */
-                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
-                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
-                        VgaWritePort(VGA_DAC_DATA, *Buffer++);
+                        IOWriteB(VGA_DAC_DATA, *Buffer++);
+                        IOWriteB(VGA_DAC_DATA, *Buffer++);
+                        IOWriteB(VGA_DAC_DATA, *Buffer++);
                     }
 
                     break;
@@ -1405,12 +1406,12 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
                 case 0x15:
                 {
                     /* Write the index */
-                    VgaWritePort(VGA_DAC_READ_INDEX, getBL());
+                    IOWriteB(VGA_DAC_READ_INDEX, getBL());
 
                     /* Read the data in this order: Red, Green, Blue */
-                    setDH(VgaReadPort(VGA_DAC_DATA));
-                    setCH(VgaReadPort(VGA_DAC_DATA));
-                    setCL(VgaReadPort(VGA_DAC_DATA));
+                    setDH(IOReadB(VGA_DAC_DATA));
+                    setCH(IOReadB(VGA_DAC_DATA));
+                    setCL(IOReadB(VGA_DAC_DATA));
 
                     break;
                 }
@@ -1423,14 +1424,14 @@ static VOID WINAPI BiosVideoService(LPWORD Stack)
 
                     /* Write the index */
                     // Certainly in BL and not in BX as said by Ralf Brown...
-                    VgaWritePort(VGA_DAC_READ_INDEX, getBL());
+                    IOWriteB(VGA_DAC_READ_INDEX, getBL());
 
                     for (i = 0; i < getCX(); i++)
                     {
                         /* Write the data in this order: Red, Green, Blue */
-                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
-                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
-                        *Buffer++ = VgaReadPort(VGA_DAC_DATA);
+                        *Buffer++ = IOReadB(VGA_DAC_DATA);
+                        *Buffer++ = IOReadB(VGA_DAC_DATA);
+                        *Buffer++ = IOReadB(VGA_DAC_DATA);
                     }
 
                     break;
@@ -1931,24 +1932,24 @@ BOOLEAN BiosInitialize(VOID)
     PS2Initialize(BiosConsoleInput);
 
     /* Initialize the PIC */
-    PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
-    PicWriteCommand(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
+    IOWriteB(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
+    IOWriteB(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
 
     /* Set the interrupt offsets */
-    PicWriteData(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
-    PicWriteData(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
+    IOWriteB(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
+    IOWriteB(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
 
     /* Tell the master PIC there is a slave at IRQ 2 */
-    PicWriteData(PIC_MASTER_DATA, 1 << 2);
-    PicWriteData(PIC_SLAVE_DATA , 2);
+    IOWriteB(PIC_MASTER_DATA, 1 << 2);
+    IOWriteB(PIC_SLAVE_DATA , 2);
 
     /* Make sure the PIC is in 8086 mode */
-    PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
-    PicWriteData(PIC_SLAVE_DATA , PIC_ICW4_8086);
+    IOWriteB(PIC_MASTER_DATA, PIC_ICW4_8086);
+    IOWriteB(PIC_SLAVE_DATA , PIC_ICW4_8086);
 
     /* Clear the masks for both PICs */
-    PicWriteData(PIC_MASTER_DATA, 0x00);
-    PicWriteData(PIC_SLAVE_DATA , 0x00);
+    IOWriteB(PIC_MASTER_DATA, 0x00);
+    IOWriteB(PIC_SLAVE_DATA , 0x00);
 
     PitWriteCommand(0x34);
     PitWriteData(0, 0x00);
@@ -2012,7 +2013,7 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
             WORD Character;
 
             /* Get the scan code and virtual key code */
-            ScanCode = PS2ReadPort(PS2_DATA_PORT);
+            ScanCode = IOReadB(PS2_DATA_PORT);
             VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
 
             /* Check if this is a key press or release */
@@ -2074,8 +2075,8 @@ VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
     }
 
     /* Send End-of-Interrupt to the PIC */
-    if (IrqNumber >= 8) PicWriteCommand(PIC_SLAVE_CMD, PIC_OCW2_EOI);
-    PicWriteCommand(PIC_MASTER_CMD, PIC_OCW2_EOI);
+    if (IrqNumber >= 8) IOWriteB(PIC_SLAVE_CMD, PIC_OCW2_EOI);
+    IOWriteB(PIC_MASTER_CMD, PIC_OCW2_EOI);
 }
 
 /* EOF */

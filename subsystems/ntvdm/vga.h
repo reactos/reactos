@@ -260,9 +260,6 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaClearMemory(VOID);
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 
-BYTE WINAPI VgaReadPort(ULONG Port);
-VOID WINAPI VgaWritePort(ULONG Port, BYTE Data);
-
 #endif // _VGA_H_
 
 /* EOF */

@@ -19,9 +19,9 @@
 
 static PIC MasterPic, SlavePic;
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
-BYTE PicReadCommand(BYTE Port)
+static BYTE PicReadCommand(BYTE Port)
 {
     PPIC Pic;
 
@@ -42,7 +42,7 @@ BYTE PicReadCommand(BYTE Port)
     }
 }
 
-VOID PicWriteCommand(BYTE Port, BYTE Value)
+static VOID PicWriteCommand(BYTE Port, BYTE Value)
 {
     PPIC Pic;
 
@@ -88,14 +88,14 @@ VOID PicWriteCommand(BYTE Port, BYTE Value)
     }
 }
 
-BYTE PicReadData(BYTE Port)
+static BYTE PicReadData(BYTE Port)
 {
     /* Read the mask register */
     if (Port == PIC_MASTER_DATA) return MasterPic.MaskRegister;
     else return SlavePic.MaskRegister;
 }
 
-VOID PicWriteData(BYTE Port, BYTE Value)
+static VOID PicWriteData(BYTE Port, BYTE Value)
 {
     PPIC Pic;
 
@@ -154,7 +154,7 @@ VOID PicWriteData(BYTE Port, BYTE Value)
     Pic->Initialization = FALSE;
 }
 
-BYTE WINAPI PicReadPort(ULONG Port)
+static BYTE WINAPI PicReadPort(ULONG Port)
 {
     switch (Port)
     {
@@ -174,7 +174,7 @@ BYTE WINAPI PicReadPort(ULONG Port)
     return 0;
 }
 
-VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
 {
     switch (Port)
     {
@@ -194,11 +194,13 @@ VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
     }
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 VOID PicInterruptRequest(BYTE Number)
 {
     BYTE i;
 
-    if (Number >= 0 && Number < 8)
+    if (/* Number >= 0 && */ Number < 8)
     {
         /* Check if any of the higher-priority interrupts are busy */
         for (i = 0; i <= Number; i++)

@@ -55,32 +55,33 @@ typedef struct _EMULATOR_IOPORT_HANDLERS
  */
 EMULATOR_IOPORT_HANDLERS IoPortProc[EMULATOR_MAX_IOPORTS_NUM] = {{NULL}};
 
-/* PRIVATE FUNCTIONS **********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
-static VOID
-IOReadB(ULONG  Port,
-        PUCHAR Buffer)
+UCHAR
+IOReadB(ULONG Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InB)
     {
-        *Buffer = IoPortProc[Port].IoHandlers.InB(Port);
+        return IoPortProc[Port].IoHandlers.InB(Port);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.inb_handler)
     {
+        UCHAR Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inb_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.inb_handler((WORD)Port, &Data);
+        return Data;
     }
     else
     {
         /* Return an empty port byte value */
         DPRINT("Read from unknown port: 0x%X\n", Port);
-        *Buffer = 0xFF;
+        return 0xFF;
     }
 }
 
-static VOID
+VOID
 IOReadStrB(ULONG  Port,
            PUCHAR Buffer,
            ULONG  Count)
@@ -99,24 +100,25 @@ IOReadStrB(ULONG  Port,
     }
     else
     {
-        while (Count--) IOReadB(Port, Buffer++);
+        while (Count--)
+            *Buffer++ = IOReadB(Port);
     }
 }
 
-static VOID
-IOWriteB(ULONG  Port,
-         PUCHAR Buffer)
+VOID
+IOWriteB(ULONG Port,
+         UCHAR Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutB)
     {
-        IoPortProc[Port].IoHandlers.OutB(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutB(Port, Buffer);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outb_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outb_handler((WORD)Port, *Buffer);
+        IoPortProc[Port].VddIoHandlers.outb_handler((WORD)Port, Buffer);
     }
     else
     {
@@ -125,7 +127,7 @@ IOWriteB(ULONG  Port,
     }
 }
 
-static VOID
+VOID
 IOWriteStrB(ULONG  Port,
             PUCHAR Buffer,
             ULONG  Count)
@@ -144,37 +146,38 @@ IOWriteStrB(ULONG  Port,
     }
     else
     {
-        while (Count--) IOWriteB(Port, Buffer++);
+        while (Count--) IOWriteB(Port, *Buffer++);
     }
 }
 
-static VOID
-IOReadW(ULONG   Port,
-        PUSHORT Buffer)
+USHORT
+IOReadW(ULONG Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InW)
     {
-        *Buffer = IoPortProc[Port].IoHandlers.InW(Port);
+        return IoPortProc[Port].IoHandlers.InW(Port);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.inw_handler)
     {
+        USHORT Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inw_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.inw_handler((WORD)Port, &Data);
+        return Data;
     }
     else
     {
         UCHAR Low, High;
 
         // FIXME: Is it ok on Little endian and Big endian ??
-        IOReadB(Port, &Low);
-        IOReadB(Port + sizeof(UCHAR), &High);
-        *Buffer = MAKEWORD(Low, High);
+        Low  = IOReadB(Port);
+        High = IOReadB(Port + sizeof(UCHAR));
+        return MAKEWORD(Low, High);
     }
 }
 
-static VOID
+VOID
 IOReadStrW(ULONG   Port,
            PUSHORT Buffer,
            ULONG   Count)
@@ -193,38 +196,35 @@ IOReadStrW(ULONG   Port,
     }
     else
     {
-        while (Count--) IOReadW(Port, Buffer++);
+        while (Count--)
+            *Buffer++ = IOReadW(Port);
     }
 }
 
-static VOID
-IOWriteW(ULONG   Port,
-         PUSHORT Buffer)
+VOID
+IOWriteW(ULONG  Port,
+         USHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutW)
     {
-        IoPortProc[Port].IoHandlers.OutW(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutW(Port, Buffer);
     }
     else if (IoPortProc[Port].hVdd > 0 &&
              IoPortProc[Port].VddIoHandlers.outw_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outw_handler((WORD)Port, *Buffer);
+        IoPortProc[Port].VddIoHandlers.outw_handler((WORD)Port, Buffer);
     }
     else
     {
-        UCHAR Low, High;
-
         // FIXME: Is it ok on Little endian and Big endian ??
-        Low  = LOBYTE(*Buffer);
-        High = HIBYTE(*Buffer);
-        IOWriteB(Port, &Low);
-        IOWriteB(Port + sizeof(UCHAR), &High);
+        IOWriteB(Port, LOBYTE(Buffer));
+        IOWriteB(Port + sizeof(UCHAR), HIBYTE(Buffer));
     }
 }
 
-static VOID
+VOID
 IOWriteStrW(ULONG   Port,
             PUSHORT Buffer,
             ULONG   Count)
@@ -243,31 +243,30 @@ IOWriteStrW(ULONG   Port,
     }
     else
     {
-        while (Count--) IOWriteW(Port, Buffer++);
+        while (Count--) IOWriteW(Port, *Buffer++);
     }
 }
 
-static VOID
-IOReadD(ULONG  Port,
-        PULONG Buffer)
+ULONG
+IOReadD(ULONG Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InD)
     {
-        *Buffer = IoPortProc[Port].IoHandlers.InD(Port);
+        return IoPortProc[Port].IoHandlers.InD(Port);
     }
     else
     {
         USHORT Low, High;
 
         // FIXME: Is it ok on Little endian and Big endian ??
-        IOReadW(Port, &Low);
-        IOReadW(Port + sizeof(USHORT), &High);
-        *Buffer = MAKELONG(Low, High);
+        Low  = IOReadW(Port);
+        High = IOReadW(Port + sizeof(USHORT));
+        return MAKELONG(Low, High);
     }
 }
 
-static VOID
+VOID
 IOReadStrD(ULONG  Port,
            PULONG Buffer,
            ULONG  Count)
@@ -279,32 +278,29 @@ IOReadStrD(ULONG  Port,
     }
     else
     {
-        while (Count--) IOReadD(Port, Buffer++);
+        while (Count--)
+            *Buffer++ = IOReadD(Port);
     }
 }
 
-static VOID
-IOWriteD(ULONG  Port,
-         PULONG Buffer)
+VOID
+IOWriteD(ULONG Port,
+         ULONG Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutD)
     {
-        IoPortProc[Port].IoHandlers.OutD(Port, *Buffer);
+        IoPortProc[Port].IoHandlers.OutD(Port, Buffer);
     }
     else
     {
-        USHORT Low, High;
-
         // FIXME: Is it ok on Little endian and Big endian ??
-        Low  = LOWORD(*Buffer);
-        High = HIWORD(*Buffer);
-        IOWriteW(Port, &Low);
-        IOWriteW(Port + sizeof(USHORT), &High);
+        IOWriteW(Port, LOWORD(Buffer));
+        IOWriteW(Port + sizeof(USHORT), HIWORD(Buffer));
     }
 }
 
-static VOID
+VOID
 IOWriteStrD(ULONG  Port,
             PULONG Buffer,
             ULONG  Count)
@@ -316,11 +312,10 @@ IOWriteStrD(ULONG  Port,
     }
     else
     {
-        while (Count--) IOWriteD(Port, Buffer++);
+        while (Count--) IOWriteD(Port, *Buffer++);
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID RegisterIoPort(ULONG Port,
                     EMULATOR_INB_PROC  InHandler,
@@ -364,21 +359,21 @@ EmulatorReadIo(PFAST486_STATE State,
     if (DataSize == sizeof(UCHAR))
     {
         if (DataCount == 1)
-            IOReadB(Port, Buffer);
+            *(PUCHAR)Buffer = IOReadB(Port);
         else
             IOReadStrB(Port, Buffer, DataCount);
     }
     else if (DataSize == sizeof(USHORT))
     {
         if (DataCount == 1)
-            IOReadW(Port, Buffer);
+            *(PUSHORT)Buffer = IOReadW(Port);
         else
             IOReadStrW(Port, Buffer, DataCount);
     }
     else if (DataSize == sizeof(ULONG))
     {
         if (DataCount == 1)
-            IOReadD(Port, Buffer);
+            *(PULONG)Buffer = IOReadD(Port);
         else
             IOReadStrD(Port, Buffer, DataCount);
     }
@@ -397,7 +392,7 @@ EmulatorReadIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(ULONG);
             while (Count--)
             {
-                IOReadD(CurrentPort, (PULONG)Address);
+                *(PULONG)Address = IOReadD(CurrentPort);
                 CurrentPort += sizeof(ULONG);
                 Address     += sizeof(ULONG);
             }
@@ -407,7 +402,7 @@ EmulatorReadIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(USHORT);
             while (Count--)
             {
-                IOReadW(CurrentPort, (PUSHORT)Address);
+                *(PUSHORT)Address = IOReadW(CurrentPort);
                 CurrentPort += sizeof(USHORT);
                 Address     += sizeof(USHORT);
             }
@@ -417,7 +412,7 @@ EmulatorReadIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
-                IOReadB(CurrentPort, (PUCHAR)Address);
+                *(PUCHAR)Address = IOReadB(CurrentPort);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }
@@ -442,21 +437,21 @@ EmulatorWriteIo(PFAST486_STATE State,
     if (DataSize == sizeof(UCHAR))
     {
         if (DataCount == 1)
-            IOWriteB(Port, Buffer);
+            IOWriteB(Port, *(PUCHAR)Buffer);
         else
             IOWriteStrB(Port, Buffer, DataCount);
     }
     else if (DataSize == sizeof(USHORT))
     {
         if (DataCount == 1)
-            IOWriteW(Port, Buffer);
+            IOWriteW(Port, *(PUSHORT)Buffer);
         else
             IOWriteStrW(Port, Buffer, DataCount);
     }
     else if (DataSize == sizeof(ULONG))
     {
         if (DataCount == 1)
-            IOWriteD(Port, Buffer);
+            IOWriteD(Port, *(PULONG)Buffer);
         else
             IOWriteStrD(Port, Buffer, DataCount);
     }
@@ -475,7 +470,7 @@ EmulatorWriteIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(ULONG);
             while (Count--)
             {
-                IOWriteD(CurrentPort, (PULONG)Address);
+                IOWriteD(CurrentPort, *(PULONG)Address);
                 CurrentPort += sizeof(ULONG);
                 Address     += sizeof(ULONG);
             }
@@ -485,7 +480,7 @@ EmulatorWriteIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(USHORT);
             while (Count--)
             {
-                IOWriteW(CurrentPort, (PUSHORT)Address);
+                IOWriteW(CurrentPort, *(PUSHORT)Address);
                 CurrentPort += sizeof(USHORT);
                 Address     += sizeof(USHORT);
             }
@@ -495,7 +490,7 @@ EmulatorWriteIo(PFAST486_STATE State,
             NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
-                IOWriteB(CurrentPort, (PUCHAR)Address);
+                IOWriteB(CurrentPort, *(PUCHAR)Address);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }

@@ -48,8 +48,6 @@ typedef struct _PIC
 
 /* FUNCTIONS ******************************************************************/
 
-VOID PicWriteCommand(BYTE Port, BYTE Value);
-VOID PicWriteData(BYTE Port, BYTE Value);
 VOID PicInterruptRequest(BYTE Number);
 BYTE PicGetInterrupt(VOID);
 BOOLEAN PicInitialize(VOID);

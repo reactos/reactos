@@ -1004,6 +1004,253 @@ static VOID VgaUpdateTextCursor(VOID)
     CursorMoved = FALSE;
 }
 
+static BYTE WINAPI VgaReadPort(ULONG Port)
+{
+    DPRINT("VgaReadPort: Port 0x%X\n", Port);
+
+    switch (Port)
+    {
+        case VGA_MISC_READ:
+            return VgaMiscRegister;
+
+        case VGA_INSTAT0_READ:
+            return 0; // Not implemented
+
+        case VGA_INSTAT1_READ_MONO:
+        case VGA_INSTAT1_READ_COLOR:
+        {
+            BYTE Result = 0;
+
+            /* Reset the AC latch */
+            VgaAcLatch = FALSE;
+
+            /* Set a flag if there is a vertical or horizontal retrace */
+            if (InVerticalRetrace || InHorizontalRetrace) Result |= VGA_STAT_DD;
+
+            /* Set an additional flag if there was a vertical retrace */
+            if (InVerticalRetrace) Result |= VGA_STAT_VRETRACE;
+
+            /* Clear the flags */
+            InHorizontalRetrace = InVerticalRetrace = FALSE;
+
+            return Result;
+        }
+
+        case VGA_FEATURE_READ:
+            return VgaFeatureRegister;
+
+        case VGA_AC_INDEX:
+            return VgaAcIndex;
+
+        case VGA_AC_READ:
+            return VgaAcRegisters[VgaAcIndex];
+
+        case VGA_SEQ_INDEX:
+            return VgaSeqIndex;
+        
+        case VGA_SEQ_DATA:
+            return VgaSeqRegisters[VgaSeqIndex];
+
+        case VGA_DAC_MASK:
+            return VgaDacMask;
+
+        case VGA_DAC_READ_INDEX:
+            /* This returns the read/write state */
+            return (VgaDacReadWrite ? 0 : 3);
+
+        case VGA_DAC_WRITE_INDEX:
+            return (VgaDacIndex / 3);
+
+        case VGA_DAC_DATA:
+        {
+            /* Ignore reads in write mode */
+            if (!VgaDacReadWrite)
+            {
+                BYTE Data = VgaDacRegisters[VgaDacIndex++];
+                VgaDacIndex %= VGA_PALETTE_SIZE;
+                return Data;
+            }
+
+            break;
+        }
+
+        case VGA_CRTC_INDEX_MONO:
+        case VGA_CRTC_INDEX_COLOR:
+            return VgaCrtcIndex;
+
+        case VGA_CRTC_DATA_MONO:
+        case VGA_CRTC_DATA_COLOR:
+            return VgaCrtcRegisters[VgaCrtcIndex];
+
+        case VGA_GC_INDEX:
+            return VgaGcIndex;
+
+        case VGA_GC_DATA:
+            return VgaGcRegisters[VgaGcIndex];
+
+        default:
+            DPRINT1("VgaReadPort: Unknown port 0x%X\n", Port);
+            break;
+    }
+
+    return 0;
+}
+
+static VOID WINAPI VgaWritePort(ULONG Port, BYTE Data)
+{
+    DPRINT("VgaWritePort: Port 0x%X, Data 0x%02X\n", Port, Data);
+
+    switch (Port)
+    {
+        case VGA_MISC_WRITE:
+        {
+            VgaMiscRegister = Data;
+
+            if (VgaMiscRegister & 0x01)
+            {
+                /* Color emulation */
+                DPRINT1("Color emulation\n");
+
+                /* Register the new I/O Ports */
+                RegisterIoPort(0x3D4, VgaReadPort, VgaWritePort);   // VGA_CRTC_INDEX_COLOR
+                RegisterIoPort(0x3D5, VgaReadPort, VgaWritePort);   // VGA_CRTC_DATA_COLOR
+                RegisterIoPort(0x3DA, VgaReadPort, VgaWritePort);   // VGA_INSTAT1_READ_COLOR, VGA_FEATURE_WRITE_COLOR
+
+                /* Unregister the old ones */
+                UnregisterIoPort(0x3B4);    // VGA_CRTC_INDEX_MONO
+                UnregisterIoPort(0x3B5);    // VGA_CRTC_DATA_MONO
+                UnregisterIoPort(0x3BA);    // VGA_INSTAT1_READ_MONO, VGA_FEATURE_WRITE_MONO
+            }
+            else
+            {
+                /* Monochrome emulation */
+                DPRINT1("Monochrome emulation\n");
+
+                /* Register the new I/O Ports */
+                RegisterIoPort(0x3B4, VgaReadPort, VgaWritePort);   // VGA_CRTC_INDEX_MONO
+                RegisterIoPort(0x3B5, VgaReadPort, VgaWritePort);   // VGA_CRTC_DATA_MONO
+                RegisterIoPort(0x3BA, VgaReadPort, VgaWritePort);   // VGA_INSTAT1_READ_MONO, VGA_FEATURE_WRITE_MONO
+
+                /* Unregister the old ones */
+                UnregisterIoPort(0x3D4);    // VGA_CRTC_INDEX_COLOR
+                UnregisterIoPort(0x3D5);    // VGA_CRTC_DATA_COLOR
+                UnregisterIoPort(0x3DA);    // VGA_INSTAT1_READ_COLOR, VGA_FEATURE_WRITE_COLOR
+            }
+
+            // if (VgaMiscRegister & 0x02) { /* Enable RAM access */ } else { /* Disable RAM access */ }
+            break;
+        }
+
+        case VGA_FEATURE_WRITE_MONO:
+        case VGA_FEATURE_WRITE_COLOR:
+        {
+            VgaFeatureRegister = Data;
+            break;
+        }
+
+        case VGA_AC_INDEX:
+        // case VGA_AC_WRITE:
+        {
+            if (!VgaAcLatch)
+            {
+                /* Change the index */
+                BYTE Index = Data & 0x1F;
+                if (Index < VGA_AC_MAX_REG) VgaAcIndex = Index;
+
+                /*
+                 * Change palette protection by checking for
+                 * the Palette Address Source bit.
+                 */
+                VgaAcPalDisable = (Data & 0x20) ? TRUE : FALSE;
+            }
+            else
+            {
+                /* Write the data */
+                VgaWriteAc(Data);
+            }
+
+            /* Toggle the latch */
+            VgaAcLatch = !VgaAcLatch;
+            break;
+        }
+
+        case VGA_SEQ_INDEX:
+        {
+            /* Set the sequencer index register */
+            if (Data < VGA_SEQ_MAX_REG) VgaSeqIndex = Data;
+            break;
+        }
+
+        case VGA_SEQ_DATA:
+        {
+            /* Call the sequencer function */
+            VgaWriteSequencer(Data);
+            break;
+        }
+
+        case VGA_DAC_MASK:
+        {
+            VgaDacMask = Data;
+            break;
+        }
+
+        case VGA_DAC_READ_INDEX:
+        {
+            VgaDacReadWrite = FALSE;
+            VgaDacIndex = Data * 3;
+            break;
+        }
+
+        case VGA_DAC_WRITE_INDEX:
+        {
+            VgaDacReadWrite = TRUE;
+            VgaDacIndex = Data * 3;
+            break;
+        }
+
+        case VGA_DAC_DATA:
+        {
+            /* Ignore writes in read mode */
+            if (VgaDacReadWrite) VgaWriteDac(Data & 0x3F);
+            break;
+        }
+
+        case VGA_CRTC_INDEX_MONO:
+        case VGA_CRTC_INDEX_COLOR:
+        {
+            /* Set the CRTC index register */
+            if (Data < VGA_CRTC_MAX_REG) VgaCrtcIndex = Data;
+            break;
+        }
+
+        case VGA_CRTC_DATA_MONO:
+        case VGA_CRTC_DATA_COLOR:
+        {
+            /* Call the CRTC function */
+            VgaWriteCrtc(Data);
+            break;
+        }
+
+        case VGA_GC_INDEX:
+        {
+            /* Set the GC index register */
+            if (Data < VGA_GC_MAX_REG) VgaGcIndex = Data;
+            break;
+        }
+
+        case VGA_GC_DATA:
+        {
+            /* Call the GC function */
+            VgaWriteGc(Data);
+            break;
+        }
+
+        default:
+            DPRINT1("VgaWritePort: Unknown port 0x%X\n", Port);
+            break;
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 DWORD VgaGetVideoBaseAddress(VOID)
@@ -1223,253 +1470,6 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             /* Copy the value to the VGA memory */
             VgaMemory[VideoAddress + j * VGA_BANK_SIZE] = VgaTranslateByteForWriting(Buffer[i], j);
         }
-    }
-}
-
-BYTE WINAPI VgaReadPort(ULONG Port)
-{
-    DPRINT("VgaReadPort: Port 0x%X\n", Port);
-
-    switch (Port)
-    {
-        case VGA_MISC_READ:
-            return VgaMiscRegister;
-
-        case VGA_INSTAT0_READ:
-            return 0; // Not implemented
-
-        case VGA_INSTAT1_READ_MONO:
-        case VGA_INSTAT1_READ_COLOR:
-        {
-            BYTE Result = 0;
-
-            /* Reset the AC latch */
-            VgaAcLatch = FALSE;
-
-            /* Set a flag if there is a vertical or horizontal retrace */
-            if (InVerticalRetrace || InHorizontalRetrace) Result |= VGA_STAT_DD;
-
-            /* Set an additional flag if there was a vertical retrace */
-            if (InVerticalRetrace) Result |= VGA_STAT_VRETRACE;
-
-            /* Clear the flags */
-            InHorizontalRetrace = InVerticalRetrace = FALSE;
-
-            return Result;
-        }
-
-        case VGA_FEATURE_READ:
-            return VgaFeatureRegister;
-
-        case VGA_AC_INDEX:
-            return VgaAcIndex;
-
-        case VGA_AC_READ:
-            return VgaAcRegisters[VgaAcIndex];
-
-        case VGA_SEQ_INDEX:
-            return VgaSeqIndex;
-        
-        case VGA_SEQ_DATA:
-            return VgaSeqRegisters[VgaSeqIndex];
-
-        case VGA_DAC_MASK:
-            return VgaDacMask;
-
-        case VGA_DAC_READ_INDEX:
-            /* This returns the read/write state */
-            return (VgaDacReadWrite ? 0 : 3);
-
-        case VGA_DAC_WRITE_INDEX:
-            return (VgaDacIndex / 3);
-
-        case VGA_DAC_DATA:
-        {
-            /* Ignore reads in write mode */
-            if (!VgaDacReadWrite)
-            {
-                BYTE Data = VgaDacRegisters[VgaDacIndex++];
-                VgaDacIndex %= VGA_PALETTE_SIZE;
-                return Data;
-            }
-
-            break;
-        }
-
-        case VGA_CRTC_INDEX_MONO:
-        case VGA_CRTC_INDEX_COLOR:
-            return VgaCrtcIndex;
-
-        case VGA_CRTC_DATA_MONO:
-        case VGA_CRTC_DATA_COLOR:
-            return VgaCrtcRegisters[VgaCrtcIndex];
-
-        case VGA_GC_INDEX:
-            return VgaGcIndex;
-
-        case VGA_GC_DATA:
-            return VgaGcRegisters[VgaGcIndex];
-
-        default:
-            DPRINT1("VgaReadPort: Unknown port 0x%X\n", Port);
-            break;
-    }
-
-    return 0;
-}
-
-VOID WINAPI VgaWritePort(ULONG Port, BYTE Data)
-{
-    DPRINT("VgaWritePort: Port 0x%X, Data 0x%02X\n", Port, Data);
-
-    switch (Port)
-    {
-        case VGA_MISC_WRITE:
-        {
-            VgaMiscRegister = Data;
-
-            if (VgaMiscRegister & 0x01)
-            {
-                /* Color emulation */
-                DPRINT1("Color emulation\n");
-
-                /* Register the new I/O Ports */
-                RegisterIoPort(0x3D4, VgaReadPort, VgaWritePort);   // VGA_CRTC_INDEX_COLOR
-                RegisterIoPort(0x3D5, VgaReadPort, VgaWritePort);   // VGA_CRTC_DATA_COLOR
-                RegisterIoPort(0x3DA, VgaReadPort, VgaWritePort);   // VGA_INSTAT1_READ_COLOR, VGA_FEATURE_WRITE_COLOR
-
-                /* Unregister the old ones */
-                UnregisterIoPort(0x3B4);    // VGA_CRTC_INDEX_MONO
-                UnregisterIoPort(0x3B5);    // VGA_CRTC_DATA_MONO
-                UnregisterIoPort(0x3BA);    // VGA_INSTAT1_READ_MONO, VGA_FEATURE_WRITE_MONO
-            }
-            else
-            {
-                /* Monochrome emulation */
-                DPRINT1("Monochrome emulation\n");
-
-                /* Register the new I/O Ports */
-                RegisterIoPort(0x3B4, VgaReadPort, VgaWritePort);   // VGA_CRTC_INDEX_MONO
-                RegisterIoPort(0x3B5, VgaReadPort, VgaWritePort);   // VGA_CRTC_DATA_MONO
-                RegisterIoPort(0x3BA, VgaReadPort, VgaWritePort);   // VGA_INSTAT1_READ_MONO, VGA_FEATURE_WRITE_MONO
-
-                /* Unregister the old ones */
-                UnregisterIoPort(0x3D4);    // VGA_CRTC_INDEX_COLOR
-                UnregisterIoPort(0x3D5);    // VGA_CRTC_DATA_COLOR
-                UnregisterIoPort(0x3DA);    // VGA_INSTAT1_READ_COLOR, VGA_FEATURE_WRITE_COLOR
-            }
-
-            // if (VgaMiscRegister & 0x02) { /* Enable RAM access */ } else { /* Disable RAM access */ }
-            break;
-        }
-
-        case VGA_FEATURE_WRITE_MONO:
-        case VGA_FEATURE_WRITE_COLOR:
-        {
-            VgaFeatureRegister = Data;
-            break;
-        }
-
-        case VGA_AC_INDEX:
-        // case VGA_AC_WRITE:
-        {
-            if (!VgaAcLatch)
-            {
-                /* Change the index */
-                BYTE Index = Data & 0x1F;
-                if (Index < VGA_AC_MAX_REG) VgaAcIndex = Index;
-
-                /*
-                 * Change palette protection by checking for
-                 * the Palette Address Source bit.
-                 */
-                VgaAcPalDisable = (Data & 0x20) ? TRUE : FALSE;
-            }
-            else
-            {
-                /* Write the data */
-                VgaWriteAc(Data);
-            }
-
-            /* Toggle the latch */
-            VgaAcLatch = !VgaAcLatch;
-            break;
-        }
-
-        case VGA_SEQ_INDEX:
-        {
-            /* Set the sequencer index register */
-            if (Data < VGA_SEQ_MAX_REG) VgaSeqIndex = Data;
-            break;
-        }
-
-        case VGA_SEQ_DATA:
-        {
-            /* Call the sequencer function */
-            VgaWriteSequencer(Data);
-            break;
-        }
-
-        case VGA_DAC_MASK:
-        {
-            VgaDacMask = Data;
-            break;
-        }
-
-        case VGA_DAC_READ_INDEX:
-        {
-            VgaDacReadWrite = FALSE;
-            VgaDacIndex = Data * 3;
-            break;
-        }
-
-        case VGA_DAC_WRITE_INDEX:
-        {
-            VgaDacReadWrite = TRUE;
-            VgaDacIndex = Data * 3;
-            break;
-        }
-
-        case VGA_DAC_DATA:
-        {
-            /* Ignore writes in read mode */
-            if (VgaDacReadWrite) VgaWriteDac(Data & 0x3F);
-            break;
-        }
-
-        case VGA_CRTC_INDEX_MONO:
-        case VGA_CRTC_INDEX_COLOR:
-        {
-            /* Set the CRTC index register */
-            if (Data < VGA_CRTC_MAX_REG) VgaCrtcIndex = Data;
-            break;
-        }
-
-        case VGA_CRTC_DATA_MONO:
-        case VGA_CRTC_DATA_COLOR:
-        {
-            /* Call the CRTC function */
-            VgaWriteCrtc(Data);
-            break;
-        }
-
-        case VGA_GC_INDEX:
-        {
-            /* Set the GC index register */
-            if (Data < VGA_GC_MAX_REG) VgaGcIndex = Data;
-            break;
-        }
-
-        case VGA_GC_DATA:
-        {
-            /* Call the GC function */
-            VgaWriteGc(Data);
-            break;
-        }
-
-        default:
-            DPRINT1("VgaWritePort: Unknown port 0x%X\n", Port);
-            break;
     }
 }
 

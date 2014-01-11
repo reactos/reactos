@@ -33,6 +33,52 @@ typedef VOID (WINAPI *EMULATOR_OUTSW_PROC)(ULONG Port, PUSHORT Buffer, ULONG Cou
 typedef VOID (WINAPI *EMULATOR_OUTSD_PROC)(ULONG Port, PULONG  Buffer, ULONG Count);
 
 
+UCHAR
+IOReadB(ULONG Port);
+VOID
+IOReadStrB(ULONG  Port,
+           PUCHAR Buffer,
+           ULONG  Count);
+
+VOID
+IOWriteB(ULONG Port,
+         UCHAR Buffer);
+VOID
+IOWriteStrB(ULONG  Port,
+            PUCHAR Buffer,
+            ULONG  Count);
+
+USHORT
+IOReadW(ULONG Port);
+VOID
+IOReadStrW(ULONG   Port,
+           PUSHORT Buffer,
+           ULONG   Count);
+
+VOID
+IOWriteW(ULONG  Port,
+         USHORT Buffer);
+VOID
+IOWriteStrW(ULONG   Port,
+            PUSHORT Buffer,
+            ULONG   Count);
+
+ULONG
+IOReadD(ULONG Port);
+VOID
+IOReadStrD(ULONG  Port,
+           PULONG Buffer,
+           ULONG  Count);
+
+VOID
+IOWriteD(ULONG Port,
+         ULONG Buffer);
+VOID
+IOWriteStrD(ULONG  Port,
+            PULONG Buffer,
+            ULONG  Count);
+
+
 VOID RegisterIoPort(ULONG Port,
                     EMULATOR_INB_PROC  InHandler,
                     EMULATOR_OUTB_PROC OutHandler);

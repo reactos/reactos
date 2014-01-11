@@ -92,9 +92,7 @@ Done:
     return Result;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-BYTE WINAPI PS2ReadPort(ULONG Port)
+static BYTE WINAPI PS2ReadPort(ULONG Port)
 {
     if (Port == PS2_CONTROL_PORT)
     {
@@ -125,7 +123,7 @@ BYTE WINAPI PS2ReadPort(ULONG Port)
     else return 0;
 }
 
-VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
 {
     if (Port == PS2_CONTROL_PORT)
     {
@@ -283,16 +281,7 @@ VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
     }
 }
 
-VOID GenerateKeyboardInterrupts(VOID)
-{
-    if (KeyboardQueuePop(&KeyboardData))
-    {
-        /* IRQ 1 */
-        PicInterruptRequest(1);
-    }
-}
-
-DWORD WINAPI InputThreadProc(LPVOID Parameter)
+static DWORD WINAPI InputThreadProc(LPVOID Parameter)
 {
     INT i;
     HANDLE ConsoleInput = (HANDLE)Parameter;
@@ -346,6 +335,17 @@ DWORD WINAPI InputThreadProc(LPVOID Parameter)
     }
 
     return 0;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID GenerateKeyboardInterrupts(VOID)
+{
+    if (KeyboardQueuePop(&KeyboardData))
+    {
+        /* IRQ 1 */
+        PicInterruptRequest(1);
+    }
 }
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput)
