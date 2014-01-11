@@ -20,9 +20,9 @@
 static PIT_CHANNEL PitChannels[PIT_CHANNELS];
 PPIT_CHANNEL PitChannel2 = &PitChannels[2];
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
-VOID PitWriteCommand(BYTE Value)
+static VOID PitWriteCommand(BYTE Value)
 {
     BYTE Channel = Value >> 6;
     BYTE Mode = (Value >> 1) & 0x07;
@@ -69,7 +69,7 @@ VOID PitWriteCommand(BYTE Value)
     }
 }
 
-BYTE PitReadData(BYTE Channel)
+static BYTE PitReadData(BYTE Channel)
 {
     WORD CurrentValue = PitChannels[Channel].CurrentValue;
     BYTE AccessMode = PitChannels[Channel].AccessMode;
@@ -119,7 +119,7 @@ BYTE PitReadData(BYTE Channel)
     return 0;
 }
 
-VOID PitWriteData(BYTE Channel, BYTE Value)
+static VOID PitWriteData(BYTE Channel, BYTE Value)
 {
     BYTE AccessMode = PitChannels[Channel].AccessMode;
 
@@ -183,6 +183,8 @@ static VOID WINAPI PitWritePort(ULONG Port, BYTE Data)
         }
     }
 }
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID PitDecrementCount(DWORD Count)
 {

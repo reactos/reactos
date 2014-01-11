@@ -28,14 +28,14 @@
 static BYTE Port61hState = 0x00;
 HANDLE hBeep = NULL;
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
-BYTE SpeakerReadStatus(VOID)
+static BYTE SpeakerReadStatus(VOID)
 {
     return Port61hState;
 }
 
-VOID SpeakerWriteCommand(BYTE Value)
+static VOID SpeakerWriteCommand(BYTE Value)
 {
     BOOLEAN IsConnectedToPITChannel2;
     UCHAR   SpeakerData;
@@ -121,15 +121,17 @@ VOID SpeakerWriteCommand(BYTE Value)
     }
 }
 
-BYTE WINAPI SpeakerReadPort(ULONG Port)
+static BYTE WINAPI SpeakerReadPort(ULONG Port)
 {
     return SpeakerReadStatus();
 }
 
-VOID WINAPI SpeakerWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI SpeakerWritePort(ULONG Port, BYTE Data)
 {
     SpeakerWriteCommand(Data);
 }
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID SpeakerInitialize(VOID)
 {

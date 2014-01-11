@@ -361,29 +361,30 @@ BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
      * The POST (Power On-Self Test)
      */
 
-    /* Initialize the PIC */
+    /* Initialize the master and the slave PICs */
     IOWriteB(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
     IOWriteB(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
 
     /* Set the interrupt offsets */
     IOWriteB(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
-    IOWriteB(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
+    IOWriteB(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT );
 
     /* Tell the master PIC there is a slave at IRQ 2 */
     IOWriteB(PIC_MASTER_DATA, 1 << 2);
     IOWriteB(PIC_SLAVE_DATA , 2);
 
-    /* Make sure the PIC is in 8086 mode */
-    IOWriteB(PIC_MASTER_DATA, PIC_ICW4_8086);
+    /* Make sure both PICs are in 8086 mode */
+    IOWriteB(PIC_MASTER_DATA, PIC_ICW4_8086 /* | PIC_ICW4_AEOI */);
     IOWriteB(PIC_SLAVE_DATA , PIC_ICW4_8086);
 
     /* Clear the masks for both PICs */
     IOWriteB(PIC_MASTER_DATA, 0x00);
     IOWriteB(PIC_SLAVE_DATA , 0x00);
 
-    PitWriteCommand(0x34);
-    PitWriteData(0, 0x00);
-    PitWriteData(0, 0x00);
+    /* Initialize the PIT */
+    IOWriteB(PIT_COMMAND_PORT, 0x34);
+    IOWriteB(PIT_DATA_PORT(0), 0x00);
+    IOWriteB(PIT_DATA_PORT(0), 0x00);
 
     return TRUE;
 }

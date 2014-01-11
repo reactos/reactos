@@ -21,8 +21,6 @@
 
 VOID SpeakerInitialize(VOID);
 VOID SpeakerCleanup(VOID);
-BYTE SpeakerReadStatus(VOID);
-VOID SpeakerWriteCommand(BYTE Value);
 
 #endif // _SPEAKER_H_
 

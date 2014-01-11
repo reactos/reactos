@@ -47,11 +47,9 @@ extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker
 
 /* FUNCTIONS ******************************************************************/
 
-VOID PitWriteCommand(BYTE Value);
-VOID PitWriteData(BYTE Channel, BYTE Value);
-
 VOID PitDecrementCount(DWORD Count);
 DWORD PitGetResolution(VOID);
+
 VOID PitInitialize(VOID);
 
 #endif // _TIMER_H_

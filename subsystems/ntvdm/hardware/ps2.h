@@ -25,6 +25,7 @@
 /* FUNCTIONS ******************************************************************/
 
 VOID GenerateKeyboardInterrupts(VOID);
+
 BOOLEAN PS2Initialize(HANDLE ConsoleInput);
 VOID PS2Cleanup(VOID);
 
