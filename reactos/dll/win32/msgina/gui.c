@@ -184,23 +184,15 @@ static VOID
 GUIDisplaySASNotice(
     IN OUT PGINA_CONTEXT pgContext)
 {
-    INT result;
-
     TRACE("GUIDisplaySASNotice()\n");
 
     /* Display the notice window */
-    result = DialogBoxParam(
-        pgContext->hDllInstance,
-        MAKEINTRESOURCE(IDD_NOTICE_DLG),
-        GetDesktopWindow(),
-        EmptyWindowProc,
-        (LPARAM)NULL);
-    if (result == -1)
-    {
-        /* Failed to display the window. Do as if the user
-         * already has pressed CTRL+ALT+DELETE */
-        pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
-    }
+    pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
+                                            pgContext->hDllInstance,
+                                            MAKEINTRESOURCEW(IDD_NOTICE_DLG),
+                                            GetDesktopWindow(),
+                                            EmptyWindowProc,
+                                            (LPARAM)NULL);
 }
 
 /* Get the text contained in a textbox. Allocates memory in pText
