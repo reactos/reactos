@@ -336,6 +336,16 @@ SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
     UNIMPLEMENTED;
 }
 
+VOID
+NTAPI
+SepAdtCloseObjectAuditAlarm(
+    PUNICODE_STRING SubsystemName,
+    PVOID HandleId,
+    PSID Sid)
+{
+    UNIMPLEMENTED;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS
@@ -357,13 +367,90 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS NTAPI
-NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                        IN PVOID HandleId,
-                        IN BOOLEAN GenerateOnClose)
+NTSTATUS
+NTAPI
+NtCloseObjectAuditAlarm(
+    PUNICODE_STRING SubsystemName,
+    PVOID HandleId,
+    BOOLEAN GenerateOnClose)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING CapturedSubsystemName;
+    KPROCESSOR_MODE PreviousMode;
+    BOOLEAN UseImpersonationToken;
+    PETHREAD CurrentThread;
+    BOOLEAN CopyOnOpen, EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    NTSTATUS Status;
+    PTOKEN Token;
+    PAGED_CODE();
+
+    /* Get the previous mode (only user mode is supported!) */
+    PreviousMode = ExGetPreviousMode();
+    ASSERT(PreviousMode != KernelMode);
+
+    /* Do we even need to do anything? */
+    if (!GenerateOnClose)
+    {
+        /* Nothing to do, return success */
+        return STATUS_SUCCESS;
+    }
+
+    /* Validate privilege */
+    if (!SeSinglePrivilegeCheck(SeAuditPrivilege, PreviousMode))
+    {
+        DPRINT1("Caller does not have SeAuditPrivilege\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Probe and capture the subsystem name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedSubsystemName,
+                                          PreviousMode,
+                                          SubsystemName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture subsystem name!\n");
+        return Status;
+    }
+
+    /* Get the current thread and check if it's impersonating */
+    CurrentThread = PsGetCurrentThread();
+    if (PsIsThreadImpersonating(CurrentThread))
+    {
+        /* Get the impersonation token */
+        Token = PsReferenceImpersonationToken(CurrentThread,
+                                              &CopyOnOpen,
+                                              &EffectiveOnly,
+                                              &ImpersonationLevel);
+        UseImpersonationToken = TRUE;
+    }
+    else
+    {
+        /* Get the primary token */
+        Token = PsReferencePrimaryToken(PsGetCurrentProcess());
+        UseImpersonationToken = FALSE;
+    }
+
+    /* Call the internal function */
+    SepAdtCloseObjectAuditAlarm(&CapturedSubsystemName,
+                                HandleId,
+                                Token->UserAndGroups->Sid);
+
+    /* Release the captured subsystem name */
+    ReleaseCapturedUnicodeString(&CapturedSubsystemName, PreviousMode);
+
+    /* Check what token we used */
+    if (UseImpersonationToken)
+    {
+        /* Release impersonation token */
+        PsDereferenceImpersonationToken(Token);
+    }
+    else
+    {
+        /* Release primary token */
+        PsDereferencePrimaryToken(Token);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 

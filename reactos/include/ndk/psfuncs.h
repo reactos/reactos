@@ -150,6 +150,13 @@ PsGetCurrentProcessSessionId(
 // Process Impersonation Functions
 //
 NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsThreadImpersonating(
+    _In_ PETHREAD Thread
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 PsRevertThreadToSelf(
