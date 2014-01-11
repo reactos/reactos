@@ -845,7 +845,10 @@ DoGenericAction(
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             break;
         case WLX_SAS_ACTION_NONE: /* 0x02 */
-            Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+            if (Session->LogonState == STATE_LOGGED_OFF)
+            {
+                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+            }
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
             if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
@@ -919,7 +922,7 @@ DispatchSAS(
             case WLX_SAS_TYPE_TIMEOUT: /* 0x00 */
             {
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-                break;
+                return;
             }
             default:
             {

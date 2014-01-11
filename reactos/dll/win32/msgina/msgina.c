@@ -572,6 +572,47 @@ cleanup:
     return FALSE;
 }
 
+
+static
+BOOL
+CheckAutoAdminLogon(
+    IN PGINA_CONTEXT pgContext)
+{
+    HKEY WinLogonKey = NULL;
+    LPWSTR AutoLogon = NULL;
+    BOOL result = FALSE;
+    LONG rc;
+
+    if (pgContext->AutoLogonState == AUTOLOGON_DISABLED)
+        return FALSE;
+
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinLogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &WinLogonKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+
+    rc = ReadRegSzKey(WinLogonKey,
+                      L"AutoAdminLogon",
+                      &AutoLogon);
+
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+
+    if (wcscmp(AutoLogon, L"1") == 0)
+        result = TRUE;
+
+cleanup:
+    if (WinLogonKey != NULL)
+        RegCloseKey(WinLogonKey);
+    HeapFree(GetProcessHeap(), 0, AutoLogon);
+
+    return result;
+}
+
+
 static BOOL
 DoAutoLogon(
     IN PGINA_CONTEXT pgContext)
@@ -685,7 +726,7 @@ WlxDisplaySASNotice(
         return;
     }
 
-    if (DoAutoLogon(pgContext))
+    if (CheckAutoAdminLogon(pgContext))
     {
         /* Don't display the window, we want to do an automatic logon */
         pgContext->AutoLogonState = AUTOLOGON_ONCE;
