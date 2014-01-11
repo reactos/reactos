@@ -12,6 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
+#include "vidbios.h"
 
 /* DEFINES ********************************************************************/
 
@@ -24,7 +25,6 @@
 #define BIOS_PIC_MASTER_INT 0x08
 #define BIOS_PIC_SLAVE_INT  0x70
 
-#define BIOS_VIDEO_INTERRUPT        0x10
 #define BIOS_EQUIPMENT_INTERRUPT    0x11
 #define BIOS_MEMORY_SIZE            0x12
 #define BIOS_MISC_INTERRUPT         0x15
@@ -32,17 +32,8 @@
 #define BIOS_TIME_INTERRUPT         0x1A
 #define BIOS_SYS_TIMER_INTERRUPT    0x1C
 
-#define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 16
 #define BIOS_EQUIPMENT_LIST 0x2C // HACK: Disable FPU for now
-
-#define BIOS_DEFAULT_VIDEO_MODE 0x03
-#define BIOS_MAX_PAGES 8
-#define BIOS_MAX_VIDEO_MODE 0x13
-#define DEFAULT_ATTRIBUTE   0x07
-
-#define GRAPHICS_VIDEO_SEG  0xA000
-#define TEXT_VIDEO_SEG      0xB800
 
 #define BDA_KBDFLAG_RSHIFT      (1 << 0)
 #define BDA_KBDFLAG_LSHIFT      (1 << 1)
@@ -60,14 +51,6 @@
 #define BDA_KBDFLAG_NUMLOCK     (1 << 13)
 #define BDA_KBDFLAG_CAPSLOCK    (1 << 14)
 #define BDA_KBDFLAG_INSERT      (1 << 15)
-
-enum
-{
-    SCROLL_DIRECTION_UP,
-    SCROLL_DIRECTION_DOWN,
-    SCROLL_DIRECTION_LEFT,
-    SCROLL_DIRECTION_RIGHT
-};
 
 /*
  * BIOS Data Area at 0040:XXXX
@@ -153,7 +136,6 @@ extern PBIOS_DATA_AREA Bda;
 
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
-VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page);
 
 BOOLEAN BiosInitialize(VOID);
 VOID BiosCleanup(VOID);

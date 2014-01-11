@@ -732,7 +732,7 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
         for (i = 0; i < Count; i++)
         {
             /* Call the BIOS to print the character */
-            BiosPrintCharacter(((LPBYTE)Buffer)[i], DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+            VidBiosPrintCharacter(((LPBYTE)Buffer)[i], DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
             BytesWritten32++;
         }
     }
@@ -2679,11 +2679,11 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
 
     /*
      * The default handler under DOS 2.x and 3.x simply calls INT 10/AH=0Eh.
-     * Do better and call directly BiosPrintCharacter: it's what INT 10/AH=0Eh
+     * Do better and call directly VidBiosPrintCharacter: it's what INT 10/AH=0Eh
      * does. Otherwise we would have to set BL to DOS_CHAR_ATTRIBUTE and
      * BH to Bda->VideoPage.
      */
-    BiosPrintCharacter(getAL(), DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+    VidBiosPrintCharacter(getAL(), DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
 }
 
 VOID WINAPI DosInt2Fh(LPWORD Stack)

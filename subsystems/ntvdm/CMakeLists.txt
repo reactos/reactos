@@ -7,6 +7,7 @@ spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE
     bios/bios.c
+    bios/vidbios.c
     hardware/cmos.c
     hardware/pic.c
     hardware/ps2.c
