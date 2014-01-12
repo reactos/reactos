@@ -102,7 +102,7 @@ ReadRegDwordKey(
 
     cbData = sizeof(DWORD);
     rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
-    if (rc == ERROR_SUCCESS)
+    if (rc == ERROR_SUCCESS && dwType == REG_DWORD)
         *pValue = dwValue;
 
     return ERROR_SUCCESS;
