@@ -6,6 +6,7 @@ add_definitions(
 
 list(APPEND SOURCE
     cminit.c
+    cmtools.c
     hivebin.c
     hivecell.c
     hiveinit.c

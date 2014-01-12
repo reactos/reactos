@@ -130,13 +130,6 @@ extern LIST_ENTRY CmiHiveListHead;
 #define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifdef _WIN32
-#define strncasecmp _strnicmp
-#define strcasecmp _stricmp
-#else
-#include <string.h>
-#endif//_WIN32
-
 #ifndef _MSC_VER
 #define _In_
 #define _Out_

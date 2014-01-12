@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *
- *  Copyright (C) 2001, 2002  Eric Kohl
+ *  Copyright (C) 2001, 2002  Timo Kreuzer <timo.kreuzer@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,53 +19,72 @@
  */
 
 #include <freeldr.h>
+#include <cmlib.h>
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(REGISTRY);
 
-static FRLDRHKEY RootKey;
+static PCMHIVE CmHive;
+static PCM_KEY_NODE RootKeyNode;
+static FRLDRHKEY CurrentControlSetKey;
+
+BOOLEAN
+RegImportBinaryHive(
+    _In_ PCHAR ChunkBase,
+    _In_ ULONG ChunkSize)
+{
+    NTSTATUS Status;
+    TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
+
+    /* Allocate and initialize the hive */
+    CmHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+    Status = HvInitialize(&CmHive->Hive,
+                          HINIT_FLAT,
+                          0,
+                          0,
+                          ChunkBase,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          1,
+                          NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        CmpFree(CmHive, 0);
+        ERR("Invalid hive Signature!\n");
+        return FALSE;
+    }
+
+    /* Save the root key node */
+    RootKeyNode = HvGetCell(&CmHive->Hive, Hive->BaseBlock->RootCell);
+
+    TRACE("RegImportBinaryHive done\n");
+    return TRUE;
+}
 
 VOID
-RegInitializeRegistry (VOID)
+RegInitializeRegistry(VOID)
 {
-    /* Create root key */
-    RootKey = FrLdrHeapAlloc(sizeof(KEY), TAG_REG_KEY);
-
-    InitializeListHead(&RootKey->SubKeyList);
-    InitializeListHead(&RootKey->ValueList);
-    InitializeListHead(&RootKey->KeyList);
-
-    RootKey->SubKeyCount = 0;
-    RootKey->ValueCount = 0;
-
-    RootKey->NameSize = 4;
-    RootKey->Name = FrLdrHeapAlloc(4, TAG_REG_NAME);
-    wcscpy (RootKey->Name, L"\\");
-
-    RootKey->DataType = 0;
-    RootKey->DataSize = 0;
-    RootKey->Data = NULL;
-
-    /* Create 'SYSTEM' key */
-    RegCreateKey (RootKey,
-                  L"Registry\\Machine\\SYSTEM",
-                  NULL);
+    /* Nothing to do */
 }
 
 
 LONG
-RegInitCurrentControlSet(BOOLEAN LastKnownGood)
+RegInitCurrentControlSet(
+    _In_ BOOLEAN LastKnownGood)
 {
     WCHAR ControlSetKeyName[80];
     FRLDRHKEY SelectKey;
     FRLDRHKEY SystemKey;
-    FRLDRHKEY ControlSetKey;
-    FRLDRHKEY LinkKey;
     ULONG CurrentSet = 0;
     ULONG DefaultSet = 0;
     ULONG LastKnownGoodSet = 0;
     ULONG DataSize;
     LONG Error;
+    TRACE("RegInitCurrentControlSet\n");
 
     Error = RegOpenKey(NULL,
                        L"\\Registry\\Machine\\SYSTEM\\Select",
@@ -132,627 +151,439 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood)
 
     Error = RegOpenKey(SystemKey,
                        ControlSetKeyName,
-                       &ControlSetKey);
+                       &CurrentControlSetKey);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey(ControlSetKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey(CurrentControlSetKey) failed (Error %lu)\n", Error);
         return Error;
     }
 
-    Error = RegCreateKey(SystemKey,
-                         L"CurrentControlSet",
-                         &LinkKey);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegCreateKey(LinkKey) failed (Error %lu)\n", Error);
-        return Error;
-    }
-
-    Error = RegSetValue(LinkKey,
-                        NULL,
-                        REG_LINK,
-                        (PCHAR)&ControlSetKey,
-                        sizeof(PVOID));
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegSetValue(LinkKey) failed (Error %lu)\n", Error);
-        return Error;
-    }
-
+    TRACE("RegInitCurrentControlSet done\n");
     return ERROR_SUCCESS;
 }
 
-
-LONG
-RegCreateKey(FRLDRHKEY ParentKey,
-             PCWSTR KeyName,
-             PFRLDRHKEY Key)
+static
+BOOLEAN
+GetNextPathElement(
+    _Out_ PUNICODE_STRING NextElement,
+    _Inout_ PUNICODE_STRING RemainingPath)
 {
-    PLIST_ENTRY Ptr;
-    FRLDRHKEY SearchKey = NULL;
-    FRLDRHKEY CurrentKey;
-    FRLDRHKEY NewKey;
-    PWCHAR p;
-    PCWSTR name;
-    SIZE_T subkeyLength;
-    SIZE_T stringLength;
-    ULONG NameSize;
-    int CmpResult;
-
-    TRACE("KeyName '%S'\n", KeyName);
-
-    if (*KeyName == L'\\')
+    /* Check if there are any characters left */
+    if (RemainingPath->Length < sizeof(WCHAR))
     {
-        KeyName++;
-        CurrentKey = RootKey;
-    }
-    else if (ParentKey == NULL)
-    {
-        CurrentKey = RootKey;
-    }
-    else
-    {
-        CurrentKey = ParentKey;
+        /* Nothing left, bail out early */
+        return FALSE;
     }
 
-    /* Check whether current key is a link */
-    if (CurrentKey->DataType == REG_LINK)
+    /* The next path elements starts with the remaining path */
+    NextElement->Buffer = RemainingPath->Buffer;
+
+    /* Loop until the path element ends */
+    while ((RemainingPath->Length >= sizeof(WCHAR)) &&
+           (RemainingPath->Buffer[0] != '\\'))
     {
-        CurrentKey = (FRLDRHKEY)CurrentKey->Data;
+        /* Skip this character */
+        RemainingPath->Buffer++;
+        RemainingPath->Length -= sizeof(WCHAR);
     }
 
-    while (*KeyName != 0)
+    NextElement->Length = (RemainingPath->Buffer - NextElement->Buffer) * sizeof(WCHAR);
+    NextElement->MaximumLength = NextElement->Length;
+
+    /* Check if the path element ended with a path separator */
+    if (RemainingPath->Length >= sizeof(WCHAR))
     {
-        TRACE("KeyName '%S'\n", KeyName);
+        /* Skip the path separator */
+        ASSERT(RemainingPath->Buffer[0] == '\\');
+        RemainingPath->Buffer++;
+        RemainingPath->Length -= sizeof(WCHAR);
+    }
 
-        if (*KeyName == L'\\')
-            KeyName++;
-        p = wcschr(KeyName, L'\\');
-        if ((p != NULL) && (p != KeyName))
+    /* Return whether we got any characters */
+    return TRUE;
+}
+
+static
+PCM_KEY_NODE
+RegpFindSubkeyInIndex(
+    _In_ PHHIVE Hive,
+    _In_ PCM_KEY_INDEX IndexCell,
+    _In_ PUNICODE_STRING SubKeyName)
+{
+    PCM_KEY_NODE SubKeyNode;
+    ULONG i;
+    TRACE("RegpFindSubkeyInIndex('%wZ')\n", SubKeyName);
+
+    /* Check the cell type */
+    if ((IndexCell->Signature == CM_KEY_INDEX_ROOT) ||
+        (IndexCell->Signature == CM_KEY_INDEX_LEAF))
+    {
+        ASSERT(FALSE);
+
+        /* Enumerate subindex cells */
+        for (i = 0; i < IndexCell->Count; i++)
         {
-            subkeyLength = p - KeyName;
-            stringLength = subkeyLength + 1;
-            name = KeyName;
-        }
-        else
-        {
-            subkeyLength = wcslen(KeyName);
-            stringLength = subkeyLength;
-            name = KeyName;
-        }
-        NameSize = (ULONG)((subkeyLength + 1) * sizeof(WCHAR));
+            /* Get the subindex cell and call the function recursively */
+            PCM_KEY_INDEX SubIndexCell = HvGetCell(Hive, IndexCell->List[i]);
 
-        Ptr = CurrentKey->SubKeyList.Flink;
-        CmpResult = 1;
-        while (Ptr != &CurrentKey->SubKeyList)
-        {
-            TRACE("Ptr 0x%x\n", Ptr);
-
-            SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-            TRACE("SearchKey 0x%x\n", SearchKey);
-            TRACE("Searching '%S'\n", SearchKey->Name);
-            CmpResult = _wcsnicmp(SearchKey->Name, name, subkeyLength);
-
-            if (CmpResult == 0 && SearchKey->NameSize == NameSize) break;
-            else if (CmpResult == -1) break;
-
-            Ptr = Ptr->Flink;
-        }
-
-        if (CmpResult != 0)
-        {
-            /* no key found -> create new subkey */
-            NewKey = FrLdrHeapAlloc(sizeof(KEY), TAG_REG_KEY);
-            if (NewKey == NULL) return ERROR_OUTOFMEMORY;
-
-            InitializeListHead(&NewKey->SubKeyList);
-            InitializeListHead(&NewKey->ValueList);
-
-            NewKey->SubKeyCount = 0;
-            NewKey->ValueCount = 0;
-
-            NewKey->DataType = 0;
-            NewKey->DataSize = 0;
-            NewKey->Data = NULL;
-
-            InsertTailList(Ptr, &NewKey->KeyList);
-            CurrentKey->SubKeyCount++;
-
-            NewKey->NameSize = NameSize;
-            NewKey->Name = (PWCHAR)FrLdrHeapAlloc(NewKey->NameSize, TAG_REG_NAME);
-            if (NewKey->Name == NULL) return ERROR_OUTOFMEMORY;
-
-            memcpy(NewKey->Name, name, NewKey->NameSize - sizeof(WCHAR));
-            NewKey->Name[subkeyLength] = 0;
-
-            TRACE("NewKey 0x%x\n", NewKey);
-            TRACE("NewKey '%S'  Length %d\n", NewKey->Name, NewKey->NameSize);
-
-            CurrentKey = NewKey;
-        }
-        else
-        {
-            CurrentKey = SearchKey;
-
-            /* Check whether current key is a link */
-            if (CurrentKey->DataType == REG_LINK)
+            SubKeyNode = RegpFindSubkeyInIndex(Hive, SubIndexCell, SubKeyName);
+            if (SubKeyNode != NULL)
             {
-                CurrentKey = (FRLDRHKEY)CurrentKey->Data;
+                return SubKeyNode;
             }
         }
-
-        KeyName = KeyName + stringLength;
     }
-
-    if (Key != NULL) *Key = CurrentKey;
-
-    return ERROR_SUCCESS;
-}
-
-
-LONG
-RegDeleteKey(FRLDRHKEY Key,
-             PCWSTR Name)
-{
-
-    if (wcschr(Name, L'\\') != NULL) return ERROR_INVALID_PARAMETER;
-
-    return ERROR_SUCCESS;
-}
-
-
-LONG
-RegEnumKey(FRLDRHKEY Key,
-           ULONG Index,
-           PWCHAR Name,
-           ULONG* NameSize)
-{
-    PLIST_ENTRY Ptr;
-    FRLDRHKEY SearchKey;
-    ULONG Count = 0;
-    ULONG Size;
-
-    Ptr = Key->SubKeyList.Flink;
-    while (Ptr != &Key->SubKeyList)
+    else if ((IndexCell->Signature == CM_KEY_FAST_LEAF) ||
+             (IndexCell->Signature == CM_KEY_HASH_LEAF))
     {
-        if (Index == Count) break;
+        /* Directly enumerate subkey nodes */
+        PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
+        for (i = 0; i < HashCell->Count; i++)
+        {
+            SubKeyNode = HvGetCell(Hive, HashCell->List[i].Cell);
+            ASSERT(SubKeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
-        Count++;
-        Ptr = Ptr->Flink;
-    }
-
-    if (Ptr == &Key->SubKeyList) return ERROR_NO_MORE_ITEMS;
-
-    SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-
-    TRACE("Name '%S'  Length %d\n", SearchKey->Name, SearchKey->NameSize);
-
-    Size = min(SearchKey->NameSize, *NameSize);
-    *NameSize = Size;
-    memcpy(Name, SearchKey->Name, Size);
-
-    return ERROR_SUCCESS;
-}
-
-
-LONG
-RegOpenKey(FRLDRHKEY ParentKey,
-           PCWSTR KeyName,
-           PFRLDRHKEY Key)
-{
-    PLIST_ENTRY Ptr;
-    FRLDRHKEY SearchKey = NULL;
-    FRLDRHKEY CurrentKey;
-    PWCHAR p;
-    PCWSTR name;
-    SIZE_T subkeyLength;
-    SIZE_T stringLength;
-    ULONG NameSize;
-
-    TRACE("KeyName '%S'\n", KeyName);
-
-    *Key = NULL;
-
-    if (*KeyName == L'\\')
-    {
-        KeyName++;
-        CurrentKey = RootKey;
-    }
-    else if (ParentKey == NULL)
-    {
-        CurrentKey = RootKey;
+            TRACE(" RegpFindSubkeyInIndex: checking '%.*s'\n",
+                  SubKeyNode->NameLength, SubKeyNode->Name);
+            if (CmCompareKeyName(SubKeyNode, SubKeyName, TRUE))
+            {
+                return SubKeyNode;
+            }
+        }
     }
     else
     {
-        CurrentKey = ParentKey;
+        ASSERT(FALSE);
     }
 
-    /* Check whether current key is a link */
-    if (CurrentKey->DataType == REG_LINK)
+    return NULL;
+}
+
+// FIXME: optionally return the subkey node/handle as optimization
+LONG
+RegEnumKey(
+    _In_ FRLDRHKEY Key,
+    _In_ ULONG Index,
+    _Out_ PWCHAR Name,
+    _Inout_ ULONG* NameSize)
+{
+    PHHIVE Hive = &CmHive->Hive;
+    PCM_KEY_NODE KeyNode, SubKeyNode;
+    PCM_KEY_INDEX IndexCell;
+    PCM_KEY_FAST_INDEX HashCell;
+    TRACE("RegEnumKey(%p, %lu, %p, %p->%u)\n",
+          Key, Index, Name, NameSize, NameSize ? *NameSize : 0);
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)Key;
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if the index is valid */
+    if ((KeyNode->SubKeyCounts[Stable] == 0) ||
+        (Index >= KeyNode->SubKeyCounts[Stable]))
     {
-        CurrentKey = (FRLDRHKEY)CurrentKey->Data;
+        TRACE("RegEnumKey index out of bounds\n");
+        return ERROR_NO_MORE_ITEMS;
     }
 
-    while (*KeyName != 0)
+    /* Get the index cell */
+    IndexCell = HvGetCell(Hive, KeyNode->SubKeyLists[Stable]);
+    TRACE("IndexCell: %x, SubKeyCounts: %x\n", IndexCell, KeyNode->SubKeyCounts[Stable]);
+
+    /* Check the cell type */
+    if ((IndexCell->Signature == CM_KEY_FAST_LEAF) ||
+        (IndexCell->Signature == CM_KEY_HASH_LEAF))
     {
-        TRACE("KeyName '%S'\n", KeyName);
+        /* Get the value cell */
+        HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
+        SubKeyNode = HvGetCell(Hive, HashCell->List[Index].Cell);
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
 
-        if (*KeyName == L'\\') KeyName++;
-        p = wcschr(KeyName, L'\\');
-        if ((p != NULL) && (p != KeyName))
+    *NameSize = CmCopyKeyName(SubKeyNode, Name, *NameSize);
+
+    TRACE("RegEnumKey done -> %u, '%.*s'\n", *NameSize, *NameSize, Name);
+    return STATUS_SUCCESS;
+}
+
+LONG
+RegOpenKey(
+    _In_ FRLDRHKEY ParentKey,
+    _In_z_ PCWSTR KeyName,
+    _Out_ PFRLDRHKEY Key)
+{
+    UNICODE_STRING RemainingPath, SubKeyName;
+    UNICODE_STRING RegistryStartPath = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\SYSTEM");
+    UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
+    PHHIVE Hive = &CmHive->Hive;
+    PCM_KEY_NODE KeyNode;
+    PCM_KEY_INDEX IndexCell;
+    TRACE("RegOpenKey(%p, '%S', %p)\n", ParentKey, KeyName, Key);
+
+    /* Initialize the remaining path name */
+    RtlInitUnicodeString(&RemainingPath, KeyName);
+
+    /* Get the parent key node */
+    KeyNode = (PCM_KEY_NODE)ParentKey;
+
+    /* Check if we have a parent key */
+    if (KeyNode == NULL)
+    {
+        UNICODE_STRING SubKeyName1, SubKeyName2, SubKeyName3;
+        UNICODE_STRING RegistryPath = RTL_CONSTANT_STRING(L"Registry");
+        UNICODE_STRING MachinePath = RTL_CONSTANT_STRING(L"MACHINE");
+        UNICODE_STRING SystemPath = RTL_CONSTANT_STRING(L"SYSTEM");
+        TRACE("RegOpenKey: absolute path\n");
+
+        if ((RemainingPath.Length < sizeof(WCHAR)) ||
+            RemainingPath.Buffer[0] != '\\')
         {
-            subkeyLength = p - KeyName;
-            stringLength = subkeyLength + 1;
-            name = KeyName;
+            /* The key path is not absolute */
+            ERR("RegOpenKey: invalid path '%S' (%wZ)\n", KeyName, &RemainingPath);
+            return ERROR_PATH_NOT_FOUND;
         }
-        else
+
+        /* Skip initial path separator */
+        RemainingPath.Buffer++;
+        RemainingPath.Length -= sizeof(WCHAR);
+
+        /* Get the first 3 path elements */
+        GetNextPathElement(&SubKeyName1, &RemainingPath);
+        GetNextPathElement(&SubKeyName2, &RemainingPath);
+        GetNextPathElement(&SubKeyName3, &RemainingPath);
+        TRACE("RegOpenKey: %wZ / %wZ / %wZ\n", &SubKeyName1, &SubKeyName2, &SubKeyName3);
+
+        /* Check if we have the correct path */
+        if (!RtlEqualUnicodeString(&SubKeyName1, &RegistryPath, TRUE) ||
+            !RtlEqualUnicodeString(&SubKeyName2, &MachinePath, TRUE) ||
+            !RtlEqualUnicodeString(&SubKeyName3, &SystemPath, TRUE))
         {
-            subkeyLength = wcslen(KeyName);
-            stringLength = subkeyLength;
-            name = KeyName;
+            /* The key path is not inside HKLM\Machine\System */
+            ERR("RegOpenKey: invalid path '%S' (%wZ)\n", KeyName, &RemainingPath);
+            return ERROR_PATH_NOT_FOUND;
         }
-        NameSize = (ULONG)((subkeyLength + 1) * sizeof(WCHAR));
 
-        Ptr = CurrentKey->SubKeyList.Flink;
-        while (Ptr != &CurrentKey->SubKeyList)
+        /* Use the root key */
+        KeyNode = RootKeyNode;
+    }
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if this is the root key */
+    if (KeyNode == RootKeyNode)
+    {
+        UNICODE_STRING TempPath = RemainingPath;
+
+        /* Get the first path element */
+        GetNextPathElement(&SubKeyName, &TempPath);
+
+        /* Check if this is CurrentControlSet */
+        if (RtlEqualUnicodeString(&SubKeyName, &CurrentControlSet, TRUE))
         {
-            TRACE("Ptr 0x%x\n", Ptr);
-
-            SearchKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-
-            TRACE("SearchKey 0x%x\n", SearchKey);
-            TRACE("Searching '%S'\n", SearchKey->Name);
-
-            if (SearchKey->NameSize == NameSize &&
-                _wcsnicmp(SearchKey->Name, name, subkeyLength) == 0) break;
-
-            Ptr = Ptr->Flink;
+            /* Use the CurrentControlSetKey and update the remaining path */
+            KeyNode = (PCM_KEY_NODE)CurrentControlSetKey;
+            RemainingPath = TempPath;
         }
+    }
 
-        if (Ptr == &CurrentKey->SubKeyList)
+    TRACE("RegOpenKey: RemainingPath '%wZ'\n", &RemainingPath);
+
+    /* Loop while there are path elements */
+    while (GetNextPathElement(&SubKeyName, &RemainingPath))
+    {
+        TRACE("RegOpenKey: next element '%wZ'\n", &SubKeyName);
+
+        /* Check if there is any subkey */
+        if (KeyNode->SubKeyCounts[Stable] == 0)
         {
             return ERROR_PATH_NOT_FOUND;
         }
-        else
+
+        /* Get the top level index cell */
+        IndexCell = HvGetCell(Hive, KeyNode->SubKeyLists[Stable]);
+
+        /* Get the next sub key */
+        KeyNode = RegpFindSubkeyInIndex(Hive, IndexCell, &SubKeyName);
+        if (KeyNode == NULL)
         {
-            CurrentKey = SearchKey;
 
-            /* Check whether current key is a link */
-            if (CurrentKey->DataType == REG_LINK)
-            {
-                CurrentKey = (FRLDRHKEY)CurrentKey->Data;
-            }
+            ERR("Did not find sub key '%wZ' (full %S)\n", &RemainingPath, KeyName);
+            return ERROR_PATH_NOT_FOUND;
         }
-
-        KeyName = KeyName + stringLength;
     }
 
-    if (Key != NULL)
-        *Key = CurrentKey;
-
+    TRACE("RegOpenKey done\n");
+    *Key = (FRLDRHKEY)KeyNode;
     return ERROR_SUCCESS;
 }
 
-
-LONG
-RegSetValue(FRLDRHKEY Key,
-            PCWSTR ValueName,
-            ULONG Type,
-            PCSTR Data,
-            ULONG DataSize)
+static
+VOID
+RepGetValueData(
+    _In_ PHHIVE Hive,
+    _In_ PCM_KEY_VALUE ValueCell,
+    _Out_opt_ ULONG* Type,
+    _Out_opt_ PUCHAR Data,
+    _Inout_opt_ ULONG* DataSize)
 {
-    PLIST_ENTRY Ptr;
-    PVALUE Value = NULL;
+    ULONG DataLength;
 
-    TRACE("Key 0x%p, ValueName '%S', Type %ld, Data 0x%p, DataSize %ld\n",
-            Key, ValueName, Type, Data, DataSize);
-
-    if ((ValueName == NULL) || (*ValueName == 0))
+    /* Does the caller want the type? */
+    if (Type != NULL)
     {
-        /* set default value */
-        if ((Key->Data != NULL) && (Key->DataSize > sizeof(PUCHAR)))
-        {
-            FrLdrHeapFree(Key->Data, TAG_REG_KEY_DATA);
-        }
-
-        if (DataSize <= sizeof(PUCHAR))
-        {
-            Key->DataSize = DataSize;
-            Key->DataType = Type;
-            memcpy(&Key->Data, Data, DataSize);
-        }
-        else
-        {
-            Key->Data = FrLdrHeapAlloc(DataSize, TAG_REG_KEY_DATA);
-            Key->DataSize = DataSize;
-            Key->DataType = Type;
-            memcpy(Key->Data, Data, DataSize);
-        }
+        *Type = ValueCell->Type;
     }
-    else
+
+    /* Does the caller provide DataSize? */
+    if (DataSize != NULL)
     {
-        /* set non-default value */
-        Ptr = Key->ValueList.Flink;
-        while (Ptr != &Key->ValueList)
+        /* Get the data length */
+        DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
+
+        /* Does the caller want the data? */
+        if ((Data != NULL) && (*DataSize != 0))
         {
-            Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
-
-            TRACE("Value->Name '%S'\n", Value->Name);
-
-            if (_wcsicmp(Value->Name, ValueName) == 0) break;
-
-            Ptr = Ptr->Flink;
-        }
-
-        if (Ptr == &Key->ValueList)
-        {
-            /* add new value */
-            TRACE("No value found - adding new value\n");
-
-            Value = (PVALUE)FrLdrHeapAlloc(sizeof(VALUE), TAG_REG_VALUE);
-            if (Value == NULL) return ERROR_OUTOFMEMORY;
-
-            InsertTailList(&Key->ValueList, &Value->ValueList);
-            Key->ValueCount++;
-
-            Value->NameSize = (ULONG)(wcslen(ValueName)+1) * sizeof(WCHAR);
-            Value->Name = FrLdrHeapAlloc(Value->NameSize, TAG_REG_NAME);
-            if (Value->Name == NULL) return ERROR_OUTOFMEMORY;
-            wcscpy(Value->Name, ValueName);
-            Value->DataType = REG_NONE;
-            Value->DataSize = 0;
-            Value->Data = NULL;
-        }
-
-        /* set new value */
-        if ((Value->Data != NULL) && (Value->DataSize > sizeof(PUCHAR)))
-        {
-            FrLdrHeapFree(Value->Data, TAG_REG_KEY_DATA);
-        }
-
-        if (DataSize <= sizeof(PUCHAR))
-        {
-            Value->DataSize = DataSize;
-            Value->DataType = Type;
-            memcpy(&Value->Data, Data, DataSize);
-        }
-        else
-        {
-            Value->Data = FrLdrHeapAlloc(DataSize, TAG_REG_KEY_DATA);
-            if (Value->Data == NULL) return ERROR_OUTOFMEMORY;
-            Value->DataType = Type;
-            Value->DataSize = DataSize;
-            memcpy(Value->Data, Data, DataSize);
-        }
-    }
-    return(ERROR_SUCCESS);
-}
-
-
-LONG
-RegQueryValue(FRLDRHKEY Key,
-              PCWSTR ValueName,
-              ULONG* Type,
-              PUCHAR Data,
-              ULONG* DataSize)
-{
-    ULONG Size;
-    PLIST_ENTRY Ptr;
-    PVALUE Value = NULL;
-
-    if ((ValueName == NULL) || (*ValueName == 0))
-    {
-        /* query default value */
-        if (Key->Data == NULL) return ERROR_INVALID_PARAMETER;
-
-        if (Type != NULL)
-            *Type = Key->DataType;
-        if ((Data != NULL) && (DataSize != NULL))
-        {
-            if (Key->DataSize <= sizeof(PUCHAR))
+            /* Check where the data is stored */
+            if ((DataLength <= sizeof(HCELL_INDEX)) &&
+                 (ValueCell->DataLength & REG_DATA_IN_OFFSET))
             {
-                Size = min(Key->DataSize, *DataSize);
-                memcpy(Data, &Key->Data, Size);
-                *DataSize = Size;
+                /* The data member contains the data */
+                RtlCopyMemory(Data,
+                              &ValueCell->Data,
+                              min(*DataSize, DataLength));
             }
             else
             {
-                Size = min(Key->DataSize, *DataSize);
-                memcpy(Data, Key->Data, Size);
-                *DataSize = Size;
+                /* The data member contains the data cell index */
+                PVOID DataCell = HvGetCell(Hive, ValueCell->Data);
+                RtlCopyMemory(Data,
+                              DataCell,
+                              min(*DataSize, ValueCell->DataLength));
             }
+
         }
-        else if ((Data == NULL) && (DataSize != NULL))
-        {
-            *DataSize = Key->DataSize;
-        }
+
+        /* Return the actual data length */
+        *DataSize = DataLength;
     }
-    else
+}
+
+LONG
+RegQueryValue(
+    _In_ FRLDRHKEY Key,
+    _In_z_ PCWSTR ValueName,
+    _Out_opt_ ULONG* Type,
+    _Out_opt_ PUCHAR Data,
+    _Inout_opt_ ULONG* DataSize)
+{
+    PHHIVE Hive = &CmHive->Hive;
+    PCM_KEY_NODE KeyNode;
+    PCM_KEY_VALUE ValueCell;
+    PVALUE_LIST_CELL ValueListCell;
+    UNICODE_STRING ValueNameString;
+    ULONG i;
+    TRACE("RegQueryValue(%p, '%S', %p, %p, %p)\n",
+          Key, ValueName, Type, Data, DataSize);
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)Key;
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if there are any values */
+    if (KeyNode->ValueList.Count == 0)
     {
-        /* query non-default value */
-        Ptr = Key->ValueList.Flink;
-        while (Ptr != &Key->ValueList)
+        TRACE("RegQueryValue no values in key (%.*s)\n",
+              KeyNode->NameLength, KeyNode->Name);
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Initialize value name string */
+    RtlInitUnicodeString(&ValueNameString, ValueName);
+
+    ValueListCell = (PVALUE_LIST_CELL)HvGetCell(Hive, KeyNode->ValueList.List);
+    TRACE("ValueListCell: %x\n", ValueListCell);
+
+    /* Loop all values */
+    for (i = 0; i < KeyNode->ValueList.Count; i++)
+    {
+        /* Get the subkey node and check the name */
+        ValueCell = HvGetCell(Hive, ValueListCell->ValueOffset[i]);
+
+        /* Compare the value name */
+        TRACE("checking %.*s\n", ValueCell->NameLength, ValueCell->Name);
+        if (CmCompareKeyValueName(ValueCell, &ValueNameString, TRUE))
         {
-            Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
-
-            TRACE("Searching for '%S'. Value name '%S'\n", ValueName, Value->Name);
-
-            if (_wcsicmp(Value->Name, ValueName) == 0) break;
-
-            Ptr = Ptr->Flink;
-        }
-
-        if (Ptr == &Key->ValueList) return ERROR_INVALID_PARAMETER;
-
-        if (Type != NULL) *Type = Value->DataType;
-        if ((Data != NULL) && (DataSize != NULL))
-        {
-            if (Value->DataSize <= sizeof(PUCHAR))
-            {
-                Size = min(Value->DataSize, *DataSize);
-                memcpy(Data, &Value->Data, Size);
-                *DataSize = Size;
-            }
-            else
-            {
-                Size = min(Value->DataSize, *DataSize);
-                memcpy(Data, Value->Data, Size);
-                *DataSize = Size;
-            }
-        }
-        else if ((Data == NULL) && (DataSize != NULL))
-        {
-            *DataSize = Value->DataSize;
+            RepGetValueData(Hive, ValueCell, Type, Data, DataSize);
+            TRACE("RegQueryValue success\n");
+            return STATUS_SUCCESS;
         }
     }
 
-    return ERROR_SUCCESS;
+    TRACE("RegQueryValue value not found\n");
+    return ERROR_INVALID_PARAMETER;
 }
 
 
 LONG
-RegDeleteValue(FRLDRHKEY Key,
-               PCWSTR ValueName)
+RegEnumValue(
+    _In_ FRLDRHKEY Key,
+    _In_ ULONG Index,
+    _Out_ PWCHAR ValueName,
+    _Inout_ ULONG* NameSize,
+    _Out_ ULONG* Type,
+    _Out_ PUCHAR Data,
+    _Inout_ ULONG* DataSize)
 {
-    PLIST_ENTRY Ptr;
-    PVALUE Value = NULL;
+    PHHIVE Hive = &CmHive->Hive;
+    PCM_KEY_NODE KeyNode;
+    PCM_KEY_VALUE ValueCell;
+    PVALUE_LIST_CELL ValueListCell;
+    TRACE("RegEnumValue(%p, %lu, %S, %p, %p, %p, %p (%lu))\n",
+          Key, Index, ValueName, NameSize, Type, Data, DataSize, *DataSize);
 
-    if ((ValueName == NULL) || (*ValueName == 0))
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)Key;
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if the index is valid */
+    if ((KeyNode->ValueList.Count == 0) ||
+        (Index >= KeyNode->ValueList.Count))
     {
-        /* delete default value */
-        if (Key->Data != NULL) FrLdrHeapFree(Key->Data, TAG_REG_KEY_DATA);
-        Key->Data = NULL;
-        Key->DataSize = 0;
-        Key->DataType = 0;
-    }
-    else
-    {
-        /* delete non-default value */
-        Ptr = Key->ValueList.Flink;
-        while (Ptr != &Key->ValueList)
-        {
-            Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
-            if (_wcsicmp(Value->Name, ValueName) == 0) break;
-
-            Ptr = Ptr->Flink;
-        }
-
-        if (Ptr == &Key->ValueList) return ERROR_INVALID_PARAMETER;
-
-        /* delete value */
-        Key->ValueCount--;
-        if (Value->Name != NULL) FrLdrHeapFree(Value->Name, TAG_REG_NAME);
-        Value->Name = NULL;
-        Value->NameSize = 0;
-
-        if (Value->DataSize > sizeof(PUCHAR))
-        {
-            if (Value->Data != NULL) FrLdrHeapFree(Value->Data, TAG_REG_KEY_DATA);
-        }
-        Value->Data = NULL;
-        Value->DataSize = 0;
-        Value->DataType = 0;
-
-        RemoveEntryList(&Value->ValueList);
-        FrLdrHeapFree(Value, TAG_REG_VALUE);
-    }
-    return ERROR_SUCCESS;
-}
-
-
-LONG
-RegEnumValue(FRLDRHKEY Key,
-             ULONG Index,
-             PWCHAR ValueName,
-             ULONG* NameSize,
-             ULONG* Type,
-             PUCHAR Data,
-             ULONG* DataSize)
-{
-    PLIST_ENTRY Ptr;
-    PVALUE Value;
-    ULONG Count = 0;
-
-    if (Key->Data != NULL)
-    {
-        if (Index > 0)
-        {
-            Index--;
-        }
-        else
-        {
-            /* enumerate default value */
-            if (ValueName != NULL) *ValueName = 0;
-            if (Type != NULL) *Type = Key->DataType;
-            if (Data != NULL)
-            {
-                if (Key->DataSize <= sizeof(PUCHAR))
-                {
-                    memcpy(Data, &Key->Data, min(Key->DataSize, *DataSize));
-                }
-                else
-                {
-                    memcpy(Data, Key->Data, min(Key->DataSize, *DataSize));
-                }
-            }
-
-            if (DataSize != NULL) *DataSize = min(Key->DataSize, *DataSize);
-
-            return ERROR_SUCCESS;
-        }
+        ERR("RegEnumValue: index invalid\n");
+        return ERROR_NO_MORE_ITEMS;
     }
 
-    Ptr = Key->ValueList.Flink;
-    while (Ptr != &Key->ValueList)
-    {
-        if (Index == Count) break;
+    ValueListCell = (PVALUE_LIST_CELL)HvGetCell(Hive, KeyNode->ValueList.List);
+    TRACE("ValueListCell: %x\n", ValueListCell);
 
-        Count++;
-        Ptr = Ptr->Flink;
+    /* Get the value cell */
+    ValueCell = HvGetCell(Hive, ValueListCell->ValueOffset[Index]);
+    ASSERT(ValueCell != NULL);
+
+    if (NameSize != NULL)
+    {
+        *NameSize = CmCopyKeyValueName(ValueCell, ValueName, *NameSize);
     }
 
-    if (Ptr == &Key->ValueList) return ERROR_NO_MORE_ITEMS;
+    RepGetValueData(Hive, ValueCell, Type, Data, DataSize);
 
-    Value = CONTAINING_RECORD(Ptr, VALUE, ValueList);
-
-    /* enumerate non-default value */
-    if (ValueName != NULL)
+    if (DataSize != NULL)
     {
-        memcpy(ValueName, Value->Name, min(Value->NameSize, *NameSize));
-    }
-    if (Type != NULL) *Type = Value->DataType;
-
-    if (Data != NULL)
-    {
-        if (Value->DataSize <= sizeof(PUCHAR))
+        if ((Data != NULL) && (*DataSize != 0))
         {
-            memcpy(Data, &Value->Data, min(Value->DataSize, *DataSize));
+            RtlCopyMemory(Data,
+                          &ValueCell->Data,
+                          min(*DataSize, ValueCell->DataLength));
         }
-        else
-        {
-            memcpy(Data, Value->Data, min(Value->DataSize, *DataSize));
-        }
+
+        *DataSize = ValueCell->DataLength;
     }
 
-    if (DataSize != NULL) *DataSize = min(Value->DataSize, *DataSize);
-
-    return ERROR_SUCCESS;
-}
-
-
-ULONG
-RegGetSubKeyCount (FRLDRHKEY Key)
-{
-    return Key->SubKeyCount;
-}
-
-
-ULONG
-RegGetValueCount (FRLDRHKEY Key)
-{
-    if (Key->DataSize != 0) return Key->ValueCount + 1;
-
-    return Key->ValueCount;
+    TRACE("RegEnumValue done\n");
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
