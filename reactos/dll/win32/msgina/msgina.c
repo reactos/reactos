@@ -86,6 +86,28 @@ ReadRegSzKey(
     return ERROR_SUCCESS;
 }
 
+static LONG
+ReadRegDwordKey(
+    IN HKEY hKey,
+    IN LPCWSTR pszKey,
+    OUT LPDWORD pValue)
+{
+    LONG rc;
+    DWORD dwType;
+    DWORD cbData;
+    DWORD dwValue;
+
+    if (!pValue)
+        return ERROR_INVALID_PARAMETER;
+
+    cbData = sizeof(DWORD);
+    rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
+    if (rc == ERROR_SUCCESS)
+        *pValue = dwValue;
+
+    return ERROR_SUCCESS;
+}
+
 static VOID
 ChooseGinaUI(VOID)
 {
@@ -133,6 +155,59 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
 }
 
+
+static
+BOOL
+GetRegistrySettings(PGINA_CONTEXT pgContext)
+{
+    HKEY hKey = NULL;
+    LPWSTR lpAutoAdminLogon = NULL;
+    DWORD dwDisableCAD = 0;
+    LONG rc;
+
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("RegOpenKeyExW() failed with error %lu\n", rc);
+        return FALSE;
+    }
+
+    rc = ReadRegSzKey(hKey,
+                      L"AutoAdminLogon",
+                      &lpAutoAdminLogon);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (wcscmp(lpAutoAdminLogon, L"1") == 0)
+            pgContext->bAutoAdminLogon = TRUE;
+    }
+
+    TRACE("bAutoAdminLogon: %s\n", pgContext->bAutoAdminLogon ? "TRUE" : "FALSE");
+
+    rc = ReadRegDwordKey(hKey,
+                         L"DisableCAD",
+                         &dwDisableCAD);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (dwDisableCAD != 0)
+            pgContext->bDisableCAD = TRUE;
+    }
+
+    TRACE("bDisableCAD: %s\n", pgContext->bDisableCAD ? "TRUE" : "FALSE");
+
+    if (lpAutoAdminLogon != NULL)
+        HeapFree(GetProcessHeap(), 0, lpAutoAdminLogon);
+
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+
+    return TRUE;
+}
+
+
 /*
  * @implemented
  */
@@ -152,6 +227,13 @@ WlxInitialize(
     if(!pgContext)
     {
         WARN("LocalAlloc() failed\n");
+        return FALSE;
+    }
+
+    if (!GetRegistrySettings(pgContext))
+    {
+        WARN("GetRegistrySettings() failed\n");
+        LocalFree(pgContext);
         return FALSE;
     }
 
@@ -572,7 +654,7 @@ cleanup:
     return FALSE;
 }
 
-
+#if 0
 static
 BOOL
 CheckAutoAdminLogon(
@@ -611,7 +693,7 @@ cleanup:
 
     return result;
 }
-
+#endif
 
 static BOOL
 DoAutoLogon(
@@ -726,7 +808,8 @@ WlxDisplaySASNotice(
         return;
     }
 
-    if (CheckAutoAdminLogon(pgContext))
+//    if (CheckAutoAdminLogon(pgContext))
+    if (pgContext->bAutoAdminLogon == TRUE)
     {
         /* Don't display the window, we want to do an automatic logon */
         pgContext->AutoLogonState = AUTOLOGON_ONCE;
@@ -735,6 +818,14 @@ WlxDisplaySASNotice(
     }
     else
         pgContext->AutoLogonState = AUTOLOGON_DISABLED;
+
+TRACE("pgContext->bDisableCAD: %lu\n", pgContext->bDisableCAD);
+
+    if (pgContext->bDisableCAD == TRUE)
+    {
+        pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
+        return;
+    }
 
     pGinaUI->DisplaySASNotice(pgContext);
 

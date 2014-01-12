@@ -34,8 +34,10 @@ typedef struct
     HANDLE hDllInstance;
     HWND hStatusWindow;
     DWORD AutoLogonState;
+    BOOL bDisableCAD;
+    BOOL bAutoAdminLogon;
 
-    /* Informations to be filled during logon */
+    /* Information to be filled during logon */
     WCHAR UserName[256];
     WCHAR Domain[256];
     SYSTEMTIME LogonTime;

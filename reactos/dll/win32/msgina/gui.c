@@ -383,7 +383,7 @@ GUILoggedOnSAS(
         return WLX_SAS_ACTION_NONE;
     }
 
-    result = pgContext->pWlxFuncs->WlxSwitchDesktopToWinlogon(
+    pgContext->pWlxFuncs->WlxSwitchDesktopToWinlogon(
         pgContext->hWlx);
 
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
@@ -402,7 +402,7 @@ GUILoggedOnSAS(
 
     if (result == WLX_SAS_ACTION_NONE)
     {
-        result = pgContext->pWlxFuncs->WlxSwitchDesktopToUser(
+        pgContext->pWlxFuncs->WlxSwitchDesktopToUser(
             pgContext->hWlx);
     }
 
@@ -427,6 +427,10 @@ LoggedOutWindowProc(
             /* FIXME: take care of DontDisplayLastUserName, NoDomainUI, ShutdownWithoutLogon */
             pgContext = (PGINA_CONTEXT)lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
+            if (pgContext->bDisableCAD == TRUE)
+                EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
+
             SetFocus(GetDlgItem(hwndDlg, IDC_USERNAME));
 
             pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);

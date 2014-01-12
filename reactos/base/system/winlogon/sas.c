@@ -845,7 +845,11 @@ DoGenericAction(
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             break;
         case WLX_SAS_ACTION_NONE: /* 0x02 */
-            if (Session->LogonState == STATE_LOGGED_OFF)
+            if (Session->LogonState == STATE_LOGGED_ON_SAS)
+            {
+                Session->LogonState = STATE_LOGGED_ON;
+            }
+            else if (Session->LogonState == STATE_LOGGED_OFF)
             {
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
@@ -891,6 +895,7 @@ DoGenericAction(
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
             SwitchDesktop(WLSession->ApplicationDesktop);
+            Session->LogonState = STATE_LOGGED_ON;
             StartTaskManager(Session);
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
@@ -910,8 +915,16 @@ DispatchSAS(
 {
     DWORD wlxAction = WLX_SAS_ACTION_NONE;
 
+    /* Ignore SAS if we are already in an SAS state */
+    if (Session->LogonState == STATE_LOGGED_OFF_SAS ||
+        Session->LogonState == STATE_LOGGED_ON_SAS)
+        return;
+
     if (Session->LogonState == STATE_LOGGED_ON)
+    {
+        Session->LogonState = STATE_LOGGED_ON_SAS;
         wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+    }
     else if (Session->LogonState == STATE_LOCKED)
         wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
     else
