@@ -20,6 +20,16 @@
     #define strcasecmp _stricmp
     #endif//_WIN32
 
+    #ifndef _MSC_VER
+    #define _In_
+    #define _Out_
+    #define _Inout_
+    #endif
+
+    #ifndef min
+    #define min(a, b)  (((a) < (b)) ? (a) : (b))
+    #endif
+
     // Definitions copied from <ntstatus.h>
     // We only want to include host headers, so we define them manually
     #define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
@@ -350,7 +360,7 @@ CmCompareKeyValueName(
 ULONG
 NTAPI
 CmCopyKeyName(
-    IN PCM_KEY_NODE KeyNode,
+    _In_ PCM_KEY_NODE KeyNode,
     _Out_ PWCHAR KeyNameBuffer,
     _Inout_ ULONG BufferLength);
 

@@ -183,7 +183,7 @@ CmCopyPackedName(
         }
     }
 
-    if (BufferLength >= NameLength + sizeof(UNICODE_NULL))
+    if (BufferLength >= NameLength + sizeof(WCHAR))
     {
         Buffer[NameLength / sizeof(WCHAR)] = '\0';
     }
@@ -194,7 +194,7 @@ CmCopyPackedName(
 ULONG
 NTAPI
 CmCopyKeyName(
-    IN PCM_KEY_NODE KeyNode,
+    _In_ PCM_KEY_NODE KeyNode,
     _Out_ PWCHAR KeyNameBuffer,
     _Inout_ ULONG BufferLength)
 {

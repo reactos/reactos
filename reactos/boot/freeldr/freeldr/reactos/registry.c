@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *
- *  Copyright (C) 2001, 2002  Timo Kreuzer <timo.kreuzer@reactos.org>
+ *  Copyright (C) 2014  Timo Kreuzer <timo.kreuzer@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,13 +53,13 @@ RegImportBinaryHive(
                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        CmpFree(CmHive, 0);
+        FrLdrTempFree(CmHive, 'eviH');
         ERR("Invalid hive Signature!\n");
         return FALSE;
     }
 
     /* Save the root key node */
-    RootKeyNode = HvGetCell(&CmHive->Hive, Hive->BaseBlock->RootCell);
+    RootKeyNode = HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
 
     TRACE("RegImportBinaryHive done\n");
     return TRUE;
@@ -316,7 +316,6 @@ RegOpenKey(
     _Out_ PFRLDRHKEY Key)
 {
     UNICODE_STRING RemainingPath, SubKeyName;
-    UNICODE_STRING RegistryStartPath = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\SYSTEM");
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
