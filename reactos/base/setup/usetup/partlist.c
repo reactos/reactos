@@ -26,6 +26,8 @@
 
 #include "usetup.h"
 
+#include <ntddscsi.h>
+
 #define NDEBUG
 #include <debug.h>
 

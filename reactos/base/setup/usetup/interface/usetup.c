@@ -28,6 +28,12 @@
 
 #include <usetup.h>
 
+#include "bootsup.h"
+#include "chkdsk.h"
+#include "format.h"
+#include "drivesup.h"
+#include "settings.h"
+
 #define NDEBUG
 #include <debug.h>
 
