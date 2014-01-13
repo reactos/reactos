@@ -20,6 +20,8 @@
 
 #include "precomp.h"
 
+#include <winver.h>
+
 HINSTANCE hExplorerInstance;
 HMODULE hUser32;
 HANDLE hProcessHeap;
