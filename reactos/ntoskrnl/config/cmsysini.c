@@ -649,7 +649,7 @@ UseSet:
     LoaderExtension = LoaderBlock->Extension;
     if (LoaderExtension)
     {
-        ASSERTMSG("ReactOS doesn't support NTLDR Profiles yet!\n", FALSE);
+        DPRINT("ReactOS doesn't support NTLDR Profiles yet!\n");
     }
 
     /* Create the current hardware profile key */
@@ -816,7 +816,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (HiveBase)
     {
         /* Import it */
-        ((PHBASE_BLOCK)HiveBase)->Length = LoaderBlock->RegistryLength;
         Status = CmpInitializeHive((PCMHIVE*)&SystemHive,
                                    HINIT_MEMORY,
                                    HIVE_NOLAZYFLUSH,
