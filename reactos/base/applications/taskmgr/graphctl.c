@@ -22,6 +22,8 @@
 
 #include "precomp.h"
 
+#include <math.h>
+
 WNDPROC OldGraphCtrlWndProc;
 
 static void GraphCtrl_Init(TGraphCtrl* this)

@@ -5,37 +5,29 @@
 #error Task-Manager uses NDK functions, so it can only be compiled with Unicode support enabled!
 #endif
 
-#include <math.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
 
 #include <windef.h>
 #include <winbase.h>
-#define NTOS_MODE_USER
-#include <ndk/exfuncs.h>
-#include <aclapi.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <commctrl.h>
 #include <shellapi.h>
 
 #include "column.h"
 #include "taskmgr.h"
 #include "perfdata.h"
-#include "perfpage.h"
-#include "about.h"
 #include "procpage.h"
-#include "proclist.h"
-#include "affinity.h"
 #include "applpage.h"
 #include "dbgchnl.h"
-#include "debug.h"
 #include "endproc.h"
 #include "graph.h"
 #include "graphctl.h"
 #include "optnmenu.h"
-#include "priority.h"
 #include "run.h"
 #include "trayicon.h"
 

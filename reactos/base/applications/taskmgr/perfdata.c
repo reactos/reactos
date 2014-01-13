@@ -22,6 +22,12 @@
 
 #include "precomp.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
+
+#define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
+
 CRITICAL_SECTION                           PerfDataCriticalSection;
 PPERFDATA                                  pPerfDataOld = NULL;    /* Older perf data (saved to establish delta values) */
 PPERFDATA                                  pPerfData = NULL;    /* Most recent copy of perf data */

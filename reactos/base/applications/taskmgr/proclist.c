@@ -22,7 +22,6 @@
 
 #include "precomp.h"
 
-
 INT_PTR CALLBACK    ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 WNDPROC             OldProcessListWndProc;
