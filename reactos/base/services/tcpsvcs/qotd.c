@@ -9,6 +9,8 @@
 
 #include "tcpsvcs.h"
 
+#include <stdlib.h>
+
 static WCHAR szFilePath[] = L"\\drivers\\etc\\quotes";
 
 static BOOL
