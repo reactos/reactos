@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <wlansvc_s.h>
+#include "precomp.h"
 
 //#define NDEBUG
 #include <debug.h>
