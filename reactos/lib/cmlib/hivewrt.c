@@ -27,6 +27,8 @@ HvpWriteLog(
    return TRUE;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
+   ASSERT(RegistryHive->BaseBlock->Length ==
+          RegistryHive->Storage[Stable].Length * HV_BLOCK_SIZE);
 
    DPRINT("HvpWriteLog called\n");
 
@@ -150,6 +152,8 @@ HvpWriteHive(
    BOOLEAN Success;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
+   ASSERT(RegistryHive->BaseBlock->Length ==
+          RegistryHive->Storage[Stable].Length * HV_BLOCK_SIZE);
 
    DPRINT("HvpWriteHive called\n");
 
