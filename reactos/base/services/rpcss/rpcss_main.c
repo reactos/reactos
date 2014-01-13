@@ -43,11 +43,7 @@
  *     role of rpcss.exe in wine.
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #include "rpcss.h"
-#include <irot_s.h>
-#include <epm_s.h>
 
 #include <wine/debug.h>
 
