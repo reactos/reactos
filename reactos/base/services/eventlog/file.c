@@ -11,6 +11,8 @@
 
 #include "eventlog.h"
 
+#include <ndk/iofuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

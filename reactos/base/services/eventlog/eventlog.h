@@ -9,18 +9,14 @@
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
-#define WIN32_NO_STATUS
+#include <stdarg.h>
 
-#include <stdio.h>
+#define WIN32_NO_STATUS
 
 #include <windef.h>
 #include <winbase.h>
-#include <netevent.h>
-#include <lpctypes.h>
-#include <lpcfuncs.h>
-#include <rtlfuncs.h>
-#include <obfuncs.h>
-#include <iofuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/obfuncs.h>
 #include <eventlogrpc_s.h>
 
 typedef struct _IO_ERROR_LPC
