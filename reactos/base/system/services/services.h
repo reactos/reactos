@@ -3,18 +3,19 @@
  */
 
 #include <stdio.h>
-#include <time.h>
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
+#include <winreg.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
-#include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/setypes.h>
 #include <services/services.h>
 #include <svcctl_s.h>
 

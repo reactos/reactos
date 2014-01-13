@@ -10,9 +10,10 @@
 
 #include "services.h"
 
+#include <time.h>
+
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS *******************************************************************/
 

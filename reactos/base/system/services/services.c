@@ -12,6 +12,8 @@
 
 #include "services.h"
 
+#include <wincon.h>
+
 #define NDEBUG
 #include <debug.h>
 
