@@ -6,6 +6,10 @@
  */
 
 #include "stdafx.h"
+
+#include <commctrl.h>
+#include <commdlg.h>
+
 #include "sndrec32.h"
 
 #ifndef _UNICODE
