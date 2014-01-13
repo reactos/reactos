@@ -7,11 +7,13 @@
  */
 
 #pragma once
+
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <aclapi.h>
-#include <ntndk.h>
-#include <lmerr.h>
+#define WIN32_LEAN_AND_MEAN
+
+#include <rpc.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/kdtypes.h>
 
 //
 // FIXME: Should go in public headers
