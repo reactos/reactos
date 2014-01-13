@@ -9,10 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
 
 /* FUNCTIONS ******************************************************************/
 
@@ -22,5 +21,3 @@ SmpCheckForCrashDump(IN PUNICODE_STRING FileName)
 {
     return FALSE;
 }
-
-     

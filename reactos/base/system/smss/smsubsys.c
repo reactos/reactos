@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -674,4 +675,3 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     /* Return status */
     return Status;
 }
-

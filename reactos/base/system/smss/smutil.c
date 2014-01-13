@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
+#include <ndk/sefuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
