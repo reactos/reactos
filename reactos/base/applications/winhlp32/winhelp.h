@@ -32,12 +32,29 @@
 
 #ifndef RC_INVOKED
 
-//#include <stdarg.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commdlg.h>
 
 #include "hlpfile.h"
-//#include "windef.h"
-//#include "winbase.h"
 #include "macro.h"
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
+
 #include "winhelp_res.h"
 
 typedef struct tagHelpButton
