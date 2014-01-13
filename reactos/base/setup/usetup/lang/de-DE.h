@@ -1346,8 +1346,8 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
-        "gefunden, die nicht richtig verwendet werden kann!\n"
+        "Setup hat mindestens eine Festplatte mit einer inkompatiblen\n"
+        "Partitionstabelle gefunden, die nicht richtig verwendet werden kann!\n"
         "\n"
         "Partitionen zu erstellen/l”schen kann die Partitionstabelle zerst”ren.\n"
         "\n"
