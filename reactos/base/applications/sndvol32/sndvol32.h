@@ -2,14 +2,12 @@
 #define __SNDVOL32_H
 
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <wingdi.h>
 #include <winuser.h>
 #include <mmsystem.h>
 #include <commctrl.h>
-#include <shellapi.h>
 #include <tchar.h>
 #include <assert.h>
 
