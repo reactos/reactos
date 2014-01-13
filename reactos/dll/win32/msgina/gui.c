@@ -282,6 +282,9 @@ OnInitSecurityDlg(HWND hwnd,
     wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
 
     SetDlgItemTextW(hwnd, IDC_LOGONDATE, Buffer4);
+
+    if (pgContext->bAutoAdminLogon == TRUE)
+        EnableWindow(GetDlgItem(hwnd, IDC_LOGOFF), FALSE);
 }
 
 
@@ -518,16 +521,109 @@ GUILoggedOutSAS(
     return WLX_SAS_ACTION_NONE;
 }
 
+
+static
+INT_PTR
+CALLBACK
+UnlockWindowProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    PGINA_CONTEXT pgContext;
+
+    pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pgContext = (PGINA_CONTEXT)lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
+            if (pgContext->bDisableCAD == TRUE)
+                EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
+
+            SetFocus(GetDlgItem(hwndDlg, IDC_USERNAME));
+
+            pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            return TRUE;
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc;
+            if (pgContext->hBitmap)
+            {
+                hdc = BeginPaint(hwndDlg, &ps);
+                DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                EndPaint(hwndDlg, &ps);
+            }
+            return TRUE;
+        }
+        case WM_DESTROY:
+            DeleteObject(pgContext->hBitmap);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                {
+#if 0
+                    LPWSTR UserName = NULL, Password = NULL;
+                    INT result = WLX_SAS_ACTION_NONE;
+
+                    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+                        break;
+                    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
+                        DoLoginTasks(pgContext, UserName, NULL, Password))
+                    {
+                        result = WLX_SAS_ACTION_LOGON;
+                    }
+                    HeapFree(GetProcessHeap(), 0, UserName);
+                    HeapFree(GetProcessHeap(), 0, Password);
+                    EndDialog(hwndDlg, result);
+#endif
+                    EndDialog(hwndDlg, WLX_SAS_ACTION_UNLOCK_WKSTA);
+                    return TRUE;
+                }
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
 static INT
 GUILockedSAS(
     IN OUT PGINA_CONTEXT pgContext)
 {
+    int result;
+
     TRACE("GUILockedSAS()\n");
 
-    UNREFERENCED_PARAMETER(pgContext);
+    result = pgContext->pWlxFuncs->WlxDialogBoxParam(
+        pgContext->hWlx,
+        pgContext->hDllInstance,
+        MAKEINTRESOURCEW(IDD_UNLOCK_DLG),
+        GetDesktopWindow(),
+        UnlockWindowProc,
+        (LPARAM)pgContext);
+    if (result >= WLX_SAS_ACTION_LOGON &&
+        result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
+    {
+        WARN("GUILockedSAS() returns 0x%x\n", result);
+        return result;
+    }
 
-    UNIMPLEMENTED;
-    return WLX_SAS_ACTION_UNLOCK_WKSTA;
+    WARN("GUILockedSAS() failed (0x%x)\n", result);
+    return WLX_SAS_ACTION_NONE;
 }
 
 

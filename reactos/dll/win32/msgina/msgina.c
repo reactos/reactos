@@ -819,8 +819,6 @@ WlxDisplaySASNotice(
     else
         pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
-TRACE("pgContext->bDisableCAD: %lu\n", pgContext->bDisableCAD);
-
     if (pgContext->bDisableCAD == TRUE)
     {
         pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
@@ -901,6 +899,12 @@ WlxDisplayLockedNotice(PVOID pWlxContext)
     PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
     TRACE("WlxDisplayLockedNotice()\n");
+
+    if (pgContext->bDisableCAD == TRUE)
+    {
+        pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
+        return;
+    }
 
     pGinaUI->DisplayLockedNotice(pgContext);
 }

@@ -861,6 +861,11 @@ DoGenericAction(
             {
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
+            else if (Session->LogonState == STATE_LOCKED_SAS)
+            {
+                Session->LogonState = STATE_LOCKED;
+                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+            }
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
             if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
@@ -922,10 +927,12 @@ DispatchSAS(
     IN DWORD dwSasType)
 {
     DWORD wlxAction = WLX_SAS_ACTION_NONE;
+    HWND hwnd;
 
     /* Ignore SAS if we are already in an SAS state */
     if (Session->LogonState == STATE_LOGGED_OFF_SAS ||
-        Session->LogonState == STATE_LOGGED_ON_SAS)
+        Session->LogonState == STATE_LOGGED_ON_SAS ||
+        Session->LogonState == STATE_LOCKED_SAS)
         return;
 
     if (Session->LogonState == STATE_LOGGED_ON)
@@ -934,7 +941,16 @@ DispatchSAS(
         wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
     }
     else if (Session->LogonState == STATE_LOCKED)
+    {
+        hwnd = GetTopDialogWindow();
+        if (hwnd != NULL)
+        {
+            SendMessage(hwnd, WM_USER, 0, 0);
+        }
+
+        Session->LogonState = STATE_LOCKED_SAS;
         wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
+    }
     else
     {
         /* Display a new dialog (if necessary) */
@@ -948,7 +964,6 @@ DispatchSAS(
             default:
             {
                 PSID LogonSid = NULL; /* FIXME */
-                HWND hwnd;
 
                 hwnd = GetTopDialogWindow();
                 if (hwnd != NULL)

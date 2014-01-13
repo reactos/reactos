@@ -194,7 +194,7 @@ typedef enum _LOGON_STATE
     STATE_LOGGED_ON_SAS,
     STATE_SCREENSAVER,     // not used yet
     STATE_LOCKED,
-    STATE_LOCKED_SAS,      // not used yet
+    STATE_LOCKED_SAS,
     STATE_LOGGING_OFF,     // not used yet
     STATE_SHUTTING_DOWN,   // not used yet
     STATE_SHUT_DOWN        // not used yet
