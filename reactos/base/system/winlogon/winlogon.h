@@ -26,24 +26,22 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+#include <stdarg.h>
+
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <mmsystem.h>
-#include <userenv.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <winwlx.h>
-#include <cmfuncs.h>
-#include <rtlfuncs.h>
-#include <exfuncs.h>
-#include <setypes.h>
-#include <sefuncs.h>
-#include <aclapi.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/exfuncs.h>
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
-#include <reactos/winlogon.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winlogon);

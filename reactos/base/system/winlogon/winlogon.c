@@ -12,6 +12,8 @@
 
 #include "winlogon.h"
 
+#include <ndk/cmfuncs.h>
+
 /* GLOBALS ******************************************************************/
 
 HINSTANCE hAppInstance;

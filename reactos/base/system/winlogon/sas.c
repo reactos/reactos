@@ -13,6 +13,14 @@
 
 #include "winlogon.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
+#include <mmsystem.h>
+#include <userenv.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
+#include <reactos/winlogon.h>
+
 /* GLOBALS ******************************************************************/
 
 #define WINLOGON_SAS_CLASS L"SAS Window class"
