@@ -1351,7 +1351,7 @@ MUI_ERROR deDEErrorEntries[] =
         "\n"
         "Partitionen zu erstellen/l”schen kann die Partitionstabelle zerst”ren.\n"
         "\n"
-        "  \x07  Drcken Sie F3, um das Setup zu beenden."
+        "  \x07  Drcken Sie F3, um das Setup zu beenden.\n"
         "  \x07  Drcken Sie ENTER, um das Setup Fortzusetzen.",
         "F3 = Beenden  ENTER = Fortsetzen"
     },
