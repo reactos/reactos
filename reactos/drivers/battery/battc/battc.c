@@ -151,18 +151,26 @@ BatteryClassInitializeDevice(PBATTERY_MINIPORT_INFO MiniportInfo,
 
   ExInitializeFastMutex(&BattClass->Mutex);
 
-  Status = IoRegisterDeviceInterface(MiniportInfo->Pdo,
-                                     &GUID_DEVICE_BATTERY,
-                                     NULL,
-                                     &BattClass->InterfaceName);
-  if (NT_SUCCESS(Status))
+  if (MiniportInfo->Pdo != NULL)
   {
-      DPRINT("Initialized battery interface: %wZ\n", &BattClass->InterfaceName);
-      IoSetDeviceInterfaceState(&BattClass->InterfaceName, TRUE);
-  }
-  else
-  {
-      DPRINT1("IoRegisterDeviceInterface failed (0x%x)\n", Status);
+    Status = IoRegisterDeviceInterface(MiniportInfo->Pdo,
+                                       &GUID_DEVICE_BATTERY,
+                                       NULL,
+                                       &BattClass->InterfaceName);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("Initialized battery interface: %wZ\n", &BattClass->InterfaceName);
+        Status = IoSetDeviceInterfaceState(&BattClass->InterfaceName, TRUE);
+        if (Status == STATUS_OBJECT_NAME_EXISTS)
+        {
+            DPRINT1("Got STATUS_OBJECT_NAME_EXISTS for SetDeviceInterfaceState\n");
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        DPRINT1("IoRegisterDeviceInterface failed (0x%x)\n", Status);
+    }
   }
 
   *ClassData = BattClass;

@@ -353,6 +353,63 @@ PciIdeXPdoQueryDeviceRelations(
 	return STATUS_SUCCESS;
 }
 
+//GUID_PCIIDE_INTERRUPT_INTERFACE
+//GUID_PCIIDE_REQUEST_PROPER_RESOURCES
+
+DEFINE_GUID(GUID_PCIIDE_SYNC_ACCESS_INTERFACE, 0x681190EB, 0xE4EA, 0x11D0, 0xAB, 0x82, 0x00, 0xA0, 0xC9, 0x06, 0x96, 0x2F);
+DEFINE_GUID(GUID_PCIIDE_XFER_MODE_INTERFACE, 0x681190EC, 0xE4EA, 0x11D0, 0xAB, 0x82, 0x00, 0xA0, 0xC9, 0x06, 0x96, 0x2F);
+
+
+
+NTSTATUS
+PciIdeXPdoPnpQueryInterface(
+    PIRP Irp)
+{
+#if 0
+    PIO_STACK_LOCATION IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    PACPI_INTERFACE_STANDARD AcpiInterface;
+
+    if (IrpStack->Parameters.QueryInterface.Version != 1)
+    {
+        DPRINT1("Invalid version number: %d\n",
+                IrpStack->Parameters.QueryInterface.Version);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (IsEqualGUID(IrpStack->Parameters.QueryInterface.InterfaceType,
+                    &GUID_PCIIDE_XFER_MODE_INTERFACE))
+    {
+        DPRINT1("GUID_PCIIDE_XFER_MODE_INTERFACE\n");
+
+      if (IrpStack->Parameters.QueryInterface.Size < sizeof(ACPI_INTERFACE_STANDARD))
+      {
+          DPRINT1("Buffer too small! (%d)\n", IrpStack->Parameters.QueryInterface.Size);
+          return STATUS_BUFFER_TOO_SMALL;
+      }
+
+     AcpiInterface = (PACPI_INTERFACE_STANDARD)IrpStack->Parameters.QueryInterface.Interface;
+
+     AcpiInterface->InterfaceReference = AcpiInterfaceReference;
+     AcpiInterface->InterfaceDereference = AcpiInterfaceDereference;
+     AcpiInterface->GpeConnectVector = AcpiInterfaceConnectVector;
+     AcpiInterface->GpeDisconnectVector = AcpiInterfaceDisconnectVector;
+     AcpiInterface->GpeEnableEvent = AcpiInterfaceEnableEvent;
+     AcpiInterface->GpeDisableEvent = AcpiInterfaceDisableEvent;
+     AcpiInterface->GpeClearStatus = AcpiInterfaceClearStatus;
+     AcpiInterface->RegisterForDeviceNotifications = AcpiInterfaceNotificationsRegister;
+     AcpiInterface->UnregisterForDeviceNotifications = AcpiInterfaceNotificationsUnregister;
+
+     return STATUS_SUCCESS;
+  }
+  else
+  {
+      DPRINT1("Invalid GUID\n");
+      return STATUS_NOT_SUPPORTED;
+  }
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 NTSTATUS NTAPI
 PciIdeXPdoPnpDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -519,6 +576,11 @@ PciIdeXPdoPnpDispatch(
 			}
 			break;
 		}
+		case IRP_MN_QUERY_INTERFACE:
+        {
+            Status = PciIdeXPdoPnpQueryInterface(Irp);
+            break;
+        }
 		default:
 		{
 			/* We can't forward request to the lower driver, because
