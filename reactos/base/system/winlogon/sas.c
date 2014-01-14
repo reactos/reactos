@@ -844,22 +844,28 @@ DoGenericAction(
     switch (wlxAction)
     {
         case WLX_SAS_ACTION_LOGON: /* 0x01 */
-            if (HandleLogon(Session))
+            if (Session->LogonState == STATE_LOGGED_OFF_SAS)
             {
-                SwitchDesktop(Session->ApplicationDesktop);
-                Session->LogonState = STATE_LOGGED_ON;
+                if (HandleLogon(Session))
+                {
+                    SwitchDesktop(Session->ApplicationDesktop);
+                    Session->LogonState = STATE_LOGGED_ON;
+                }
+                else
+                {
+                    Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                }
             }
-            else
-                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             break;
         case WLX_SAS_ACTION_NONE: /* 0x02 */
-            if (Session->LogonState == STATE_LOGGED_ON_SAS)
+            if (Session->LogonState == STATE_LOGGED_OFF_SAS)
+            {
+                Session->LogonState = STATE_LOGGED_OFF;
+                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+            }
+            else if (Session->LogonState == STATE_LOGGED_ON_SAS)
             {
                 Session->LogonState = STATE_LOGGED_ON;
-            }
-            else if (Session->LogonState == STATE_LOGGED_OFF)
-            {
-                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
             else if (Session->LogonState == STATE_LOCKED_SAS)
             {
@@ -928,82 +934,95 @@ DispatchSAS(
 {
     DWORD wlxAction = WLX_SAS_ACTION_NONE;
     HWND hwnd;
+    PSID LogonSid = NULL; /* FIXME */
+    BOOL bSecure = TRUE;
 
-    /* Ignore SAS if we are already in an SAS state */
-    if (Session->LogonState == STATE_LOGGED_OFF_SAS ||
-        Session->LogonState == STATE_LOGGED_ON_SAS ||
-        Session->LogonState == STATE_LOCKED_SAS)
-        return;
-
-    if (Session->LogonState == STATE_LOGGED_ON)
+    switch (dwSasType)
     {
-        Session->LogonState = STATE_LOGGED_ON_SAS;
-        wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
-    }
-    else if (Session->LogonState == STATE_LOCKED)
-    {
-        hwnd = GetTopDialogWindow();
-        if (hwnd != NULL)
-        {
-            SendMessage(hwnd, WM_USER, 0, 0);
-        }
-
-        Session->LogonState = STATE_LOCKED_SAS;
-        wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
-    }
-    else
-    {
-        /* Display a new dialog (if necessary) */
-        switch (dwSasType)
-        {
-            case WLX_SAS_TYPE_TIMEOUT: /* 0x00 */
+        case WLX_SAS_TYPE_CTRL_ALT_DEL:
+            switch (Session->LogonState)
             {
-                Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-                return;
+                case STATE_INIT:
+                    Session->LogonState = STATE_LOGGED_OFF;
+                    Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+                    return;
+
+                case STATE_LOGGED_OFF:
+                    Session->LogonState = STATE_LOGGED_OFF_SAS;
+
+                    hwnd = GetTopDialogWindow();
+                    if (hwnd != NULL)
+                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
+
+                    Session->Options = 0;
+
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(
+                        Session->Gina.Context,
+                        Session->SASAction,
+                        &Session->LogonId,
+                        LogonSid,
+                        &Session->Options,
+                        &Session->UserToken,
+                        &Session->MprNotifyInfo,
+                        (PVOID*)&Session->Profile);
+                    break;
+
+                case STATE_LOGGED_OFF_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                case STATE_LOGGED_ON:
+                    Session->LogonState = STATE_LOGGED_ON_SAS;
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+                    break;
+
+                case STATE_LOGGED_ON_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                case STATE_LOCKED:
+                    Session->LogonState = STATE_LOCKED_SAS;
+
+                    hwnd = GetTopDialogWindow();
+                    if (hwnd != NULL)
+                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
+
+                    wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
+                    break;
+
+                case STATE_LOCKED_SAS:
+                    /* Ignore SAS if we are already in an SAS state */
+                    return;
+
+                default:
+                    return;
             }
-            default:
-            {
-                PSID LogonSid = NULL; /* FIXME */
+            break;
 
-                hwnd = GetTopDialogWindow();
-                if (hwnd != NULL)
+        case WLX_SAS_TYPE_TIMEOUT:
+            return;
+
+        case WLX_SAS_TYPE_SCRNSVR_TIMEOUT:
+            if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
+            {
+                /* Skip start of screen saver */
+                SetEvent(Session->hEndOfScreenSaver);
+            }
+            else
+            {
+                StartScreenSaver(Session);
+                if (bSecure)
                 {
-                    SendMessage(hwnd, WM_USER, 0, 0);
+                    wlxAction = WLX_SAS_ACTION_LOCK_WKSTA;
+//                    DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
                 }
-
-                Session->Options = 0;
-
-                wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(
-                    Session->Gina.Context,
-                    Session->SASAction,
-                    &Session->LogonId,
-                    LogonSid,
-                    &Session->Options,
-                    &Session->UserToken,
-                    &Session->MprNotifyInfo,
-                    (PVOID*)&Session->Profile);
-                break;
             }
-        }
-    }
+            break;
 
-    if (dwSasType == WLX_SAS_TYPE_SCRNSVR_TIMEOUT)
-    {
-        BOOL bSecure = TRUE;
-        if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
-        {
-            /* Skip start of screen saver */
-            SetEvent(Session->hEndOfScreenSaver);
-        }
-        else
-        {
-            StartScreenSaver(Session);
-            if (bSecure)
-                DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
-        }
+        case WLX_SAS_TYPE_SCRNSVR_ACTIVITY:
+            SetEvent(Session->hUserActivity);
+            break;
     }
-    else if (dwSasType == WLX_SAS_TYPE_SCRNSVR_ACTIVITY)
-        SetEvent(Session->hUserActivity);
 
     DoGenericAction(Session, wlxAction);
 }

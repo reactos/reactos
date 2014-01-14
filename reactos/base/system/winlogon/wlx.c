@@ -155,9 +155,9 @@ DefaultWlxWindowProc(
             return FALSE;
     }
 
-    if (uMsg == WM_USER)
+    if (uMsg == WLX_WM_SAS)
     {
-        EndDialog(hwndDlg, 0);
+        EndDialog(hwndDlg, WLX_DLG_SAS);
         return 0;
     }
 

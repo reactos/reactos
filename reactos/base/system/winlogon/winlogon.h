@@ -155,16 +155,6 @@ typedef struct _GINAINSTANCE
  *    STATE_LOCKED. Pressing "Shutdown" changes the state to
  *    STATE_SHUTTING_DOWN.
  *
- * STATE_SCREENSAVER
- *    Winlogon runs the screen saver. Upon user activity, the screensaver
- *    terminates and the state changes back to STATE_LOGGED_ON if the secure
- *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
- *
- * STATE_LOGGING_OFF
- *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
- *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
- *    and changes the state to STATE_LOGGED_OFF.
- *
  * STATE_LOCKED
  *    Winlogon shows the locked message dialog. When the user presses "Ctrl-
  *    Alt-Del" the state changes to STATE_LOCKED_SAS. If DisableCAD is true,
@@ -177,6 +167,11 @@ typedef struct _GINAINSTANCE
  *    pressing "OK" unlocks the computer and changes the state to
  *    STATE_LOGGED_ON.
  *
+ * STATE_LOGGING_OFF
+ *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
+ *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
+ *    and changes the state to STATE_LOGGED_OFF.
+ *
  * STATE_SHUTTING_DOWN
  *    Winlogon shows the shutdown dialog. Presing "Cancel" or a timeout will
  *    change the state back to STATE_LOGGED_ON_SAS. Pressing "OK" will change
@@ -184,20 +179,25 @@ typedef struct _GINAINSTANCE
  *
  * STATE_SHUT_DOWN
  *    Terminates Winlogon and initiates shut-down.
+ *
+ * STATE_SCREENSAVER
+ *    Winlogon runs the screen saver. Upon user activity, the screensaver
+ *    terminates and the state changes back to STATE_LOGGED_ON if the secure
+ *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
  */
 typedef enum _LOGON_STATE
 {
-    STATE_INIT,            // not used yet
+    STATE_INIT,
     STATE_LOGGED_OFF,
-    STATE_LOGGED_OFF_SAS,  // not used yet
+    STATE_LOGGED_OFF_SAS,
     STATE_LOGGED_ON,
     STATE_LOGGED_ON_SAS,
-    STATE_SCREENSAVER,     // not used yet
     STATE_LOCKED,
     STATE_LOCKED_SAS,
     STATE_LOGGING_OFF,     // not used yet
     STATE_SHUTTING_DOWN,   // not used yet
-    STATE_SHUT_DOWN        // not used yet
+    STATE_SHUT_DOWN,       // not used yet
+    STATE_SCREENSAVER      // not used yet
 } LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
