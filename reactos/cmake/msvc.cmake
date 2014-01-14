@@ -33,11 +33,16 @@ if(MSVC_VERSION GREATER 1799 AND NOT MSVC_IDE)
     add_compile_flags("/FS")
 endif ()
 
-# C++ exception specification ignored... yeah we don't care
+# Disable overly sensitive warnings as well as those that generally aren't
+# useful to us.
+# - TODO: C4018: signed/unsigned mismatch
+# - TODO: C4244: integer truncation
+# - C4290: C++ exception specification ignored
+#add_compile_flags("/wd4018 /wd4244 /wd4290")
 add_compile_flags("/wd4290")
 
 # The following warnings are treated as errors:
-# - TODO: C4013: implicit function declaration
+# - C4013: implicit function declaration
 # - C4022: pointer type mismatch for parameter
 # - TODO: C4028: formal parameter different from declaration
 # - C4047: different level of indirection
@@ -49,7 +54,7 @@ add_compile_flags("/wd4290")
 # - TODO: C4133: incompatible types
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
-add_compile_flags("/we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700")
+add_compile_flags("/we4013 /we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
