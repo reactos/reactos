@@ -13,6 +13,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "Помо&щ"
     BEGIN
         MENUITEM "&За...", IDM_ABOUT
@@ -31,4 +37,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Търсене напред"
     IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
     IDS_PLAY "Възпроизвеждане"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

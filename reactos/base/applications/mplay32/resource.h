@@ -24,6 +24,7 @@
 #define IDS_TOOLTIP_FORWARD  107
 #define IDS_ALL_TYPES_FILTER 108
 #define IDS_PLAY             109
+#define IDS_DEFAULTMCIERRMSG 110
 
 /* Menu */
 #define IDR_MAINMENU 500
@@ -33,6 +34,8 @@
 #define IDM_CLOSE_FILE 1001
 #define IDM_EXIT       1002
 #define IDM_ABOUT      1003
+#define IDM_VOLUMECTL  1004
+#define IDM_DEVPROPS   1005
 
 /* ToolBar Icons */
 #define TBICON_PLAY     0

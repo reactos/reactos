@@ -9,6 +9,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Salir", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "Ay&uda"
     BEGIN
         MENUITEM "&Acerca de...", IDM_ABOUT
@@ -27,4 +33,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Marca siguiente"
     IDS_APPTITLE "Reproductor Multimedia de ReactOS"
     IDS_PLAY "Reproducir"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

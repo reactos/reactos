@@ -17,6 +17,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "結束(&E)", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "說明(&H)"
     BEGIN
         MENUITEM "關於(&A)...", IDM_ABOUT
@@ -35,4 +41,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "快轉"
     IDS_APPTITLE "ReactOS 多媒體播放器"
     IDS_PLAY "播放"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

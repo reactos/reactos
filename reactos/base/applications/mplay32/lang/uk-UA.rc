@@ -17,6 +17,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Вихід", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "&Довідка"
     BEGIN
         MENUITEM "&Про програму...", IDM_ABOUT
@@ -35,4 +41,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Вперед"
     IDS_APPTITLE "Програвач ReactOS"
     IDS_PLAY "Відтворити"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

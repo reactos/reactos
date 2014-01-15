@@ -9,6 +9,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&יציאה", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "&עזרה"
     BEGIN
         MENUITEM "&אודות", IDM_ABOUT
@@ -27,4 +33,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "דלג קדימה"
     IDS_APPTITLE "נגן המולטימדיה של ReactOS"
     IDS_PLAY "נגן"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

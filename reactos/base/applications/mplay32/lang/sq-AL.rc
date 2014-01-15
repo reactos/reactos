@@ -13,6 +13,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Dil", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "&Ndihmë"
     BEGIN
         MENUITEM "&Rreth...", IDM_ABOUT
@@ -31,4 +37,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Kalo para"
     IDS_APPTITLE "Programi muzikor i ReactOS"
     IDS_PLAY "Fillo"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END
