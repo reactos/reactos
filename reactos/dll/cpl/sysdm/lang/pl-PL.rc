@@ -65,7 +65,7 @@ BEGIN
     LTEXT "Informacje o uruchamianiu systemu, awariach systemu i debugowaniu.", IDC_STATIC, 16, 144, 210, 19
     PUSHBUTTON "Us&tawienia", IDC_STAREC, 194, 162, 50, 14
     PUSHBUTTON "Ustawienia systemowe", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
-    PUSHBUTTON "Z&mienne Środowiskowe", IDC_ENVVAR, 84, 192, 80, 14
+    PUSHBUTTON "Z&mienne środowiskowe", IDC_ENVVAR, 84, 192, 80, 14
     PUSHBUTTON "&Raportowanie błędów", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
@@ -219,7 +219,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Zmienne Środowiskowe"
+CAPTION "Zmienne środowiskowe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Zmienne użytkownika", IDC_STATIC, 7, 12, 238, 100

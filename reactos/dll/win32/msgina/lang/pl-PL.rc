@@ -3,6 +3,7 @@
  *    testament@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2013)
  */
 
 
@@ -28,7 +29,7 @@ END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0, 0, 275, 147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Logon"
+CAPTION "Logowanie"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -47,14 +48,14 @@ CAPTION "Bezpieczeństwo"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Logon Information", IDC_STATIC, 7, 61, 261, 52
+    GROUPBOX "Informacje o logowaniu", IDC_STATIC, 7, 61, 261, 52
     LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
     LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Co chcesz teraz zrobić?", IDC_STATIC, 10, 119, 255, 8
     PUSHBUTTON "Blokada komputera", IDC_LOCK, 10, 135, 70, 14
     PUSHBUTTON "Wyloguj", IDC_LOGOFF, 90, 135, 70, 14
     PUSHBUTTON "Wyłącz", IDC_SHUTDOWN, 170, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Zmień hasło", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
     PUSHBUTTON "Menedżer zadań", IDC_TASKMGR, 90, 154, 70, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 170, 154, 70, 14
 END
@@ -90,22 +91,22 @@ END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Zmień hasło"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Nazwa użytkownika:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Zaloguj się do:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Stare hasło:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Nowe hasło:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Potwierdź hasło:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
@@ -127,7 +128,7 @@ BEGIN
     IDS_ASKFORUSER "Nazwa użytkownika: "
     IDS_ASKFORPASSWORD "Hasło: "
     IDS_FORCELOGOFF "To wyloguje aktualnego użytkownika i straci on wszystkie niezapisane dane. Kontynuować?"
-    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
-    IDS_LOGONMSG "You are logged on as %s."
+    IDS_LOCKMSG "Tylko %s lub Administrator może odblokować ten komputer."
+    IDS_LOGONMSG "Jesteś zalogowany jako %s."
     IDS_LOGONDATE "Data logowania: %s %s"
 END
