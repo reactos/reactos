@@ -312,6 +312,56 @@ OnChangePassword(
 
 
 static INT_PTR CALLBACK
+LogOffDialogProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDYES:
+                    EndDialog(hwndDlg, IDYES);
+                    return TRUE;
+
+                case IDNO:
+                    EndDialog(hwndDlg, IDNO);
+                    return TRUE;
+            }
+            break;
+
+        case WM_CLOSE:
+            EndDialog(hwndDlg, IDNO);
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static
+INT
+OnLogOff(
+    IN HWND hwndDlg,
+    IN PGINA_CONTEXT pgContext)
+{
+    return pgContext->pWlxFuncs->WlxDialogBoxParam(
+        pgContext->hWlx,
+        pgContext->hDllInstance,
+        MAKEINTRESOURCEW(IDD_LOGOFF_DLG),
+        hwndDlg,
+        LogOffDialogProc,
+        (LPARAM)pgContext);
+}
+
+
+static INT_PTR CALLBACK
 LoggedOnWindowProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -342,7 +392,8 @@ LoggedOnWindowProc(
                     EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
                     return TRUE;
                 case IDC_LOGOFF:
-                    EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
+                    if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                        EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     return TRUE;
                 case IDC_SHUTDOWN:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
