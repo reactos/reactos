@@ -48,6 +48,10 @@
     KeQuerySystemTime(
         OUT PLARGE_INTEGER CurrentTime);
 
+    WCHAR NTAPI
+    RtlUpcaseUnicodeChar(
+        IN WCHAR Source);
+
     VOID NTAPI
     RtlInitializeBitMap(
         IN PRTL_BITMAP BitMapHeader,
