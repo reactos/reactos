@@ -1359,7 +1359,7 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "Tworzenie lub kasowanie partycji mo¾e zniszczy† caˆ¥ tablic© partycji.\n"
         "\n"
-        "  \x07  Naci˜nij F3, aby wyj˜† z instalatora."
+        "  \x07  Naci˜nij F3, aby wyj˜† z instalatora.\n"
         "  \x07  Naci˜nij ENTER, aby kontynuowa†.",
         "F3= Wyj˜cie  ENTER = Kontynuacja"
     },

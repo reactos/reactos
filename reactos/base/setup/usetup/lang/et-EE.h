@@ -1350,7 +1350,7 @@ MUI_ERROR etEEErrorEntries[] =
           "\n"
           "Partitsioonide loomine väi kustutamine väib vigastada partitsioonitabelit.\n"
           "\n"
-          "  \x07  Vajuta F3, et v„ljuda paigaldusest.."
+          "  \x07  Vajuta F3, et v„ljuda paigaldusest..\n"
           "  \x07  Vajuta ENTER, et j„tkata.",
           "F3= V„lju  ENTER = J„tka"
     },
