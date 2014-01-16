@@ -152,6 +152,7 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     normalize_dirname(targetnorm);
     de = dir_hash_create_dir(dh, targetdir, targetnorm);
     free(targetnorm);
+    free(targetdir);
     tf = calloc(1, sizeof(*tf));
     tf->next = de->head;
     de->head = tf;
