@@ -38,13 +38,27 @@
 #define IDS_STRING406 406
 #define IDS_STRCHAN   406
 
-#define ID_FILE_NEW    32771
-#define ID_FILE_OPEN   32772
-#define ID_FILE_SAVE   32773
-#define ID_FILE_SAVEAS 32774
-#define ID_FILE_EXIT   32775
-#define ID__ABOUT      32776
-#define ID_EXIT        32777
-#define ID_NEW         32778
+#define ID_FILE_NEW          32771
+#define ID_FILE_OPEN         32772
+#define ID_FILE_SAVE         32773
+#define ID_FILE_SAVEAS       32774
+#define ID_FILE_RESTORE      32775
+#define ID_FILE_PROPERTIES   32776
+#define ID_FILE_EXIT         32777
+#define ID_ABOUT             32778
+#define ID_EDIT_COPY         32779
+#define ID_EDIT_PASTE        32780
+#define ID_EDIT_PASTEMIX     32781
+#define ID_EDIT_INSERTFILE   32782
+#define ID_EDIT_MIXFILE      32783
+#define ID_EDIT_DELETEBEFORE 32784
+#define ID_EDIT_DELETEAFTER  32785
+#define ID_EDIT_AUDIOPROPS   32786
+#define ID_EFFECTS_INCVOL    32787
+#define ID_EFFECTS_DECVOL    32788
+#define ID_EFFECTS_INCSPD    32789
+#define ID_EFFECTS_DECSPD    32790
+#define ID_EFFECTS_ECHO      32791
+#define ID_EFFECTS_REVERSE   32792
 
 #define IDC_STATIC -1

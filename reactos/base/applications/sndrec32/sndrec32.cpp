@@ -3,6 +3,7 @@
  * FILE:            base/applications/sndrec32/sndrec32.cpp
  * PURPOSE:         Sound recording
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
+ *                  Robert Naumann (gonzoMD)
  */
 
 #include "stdafx.h"
@@ -11,6 +12,7 @@
 #include <commdlg.h>
 
 #include "sndrec32.h"
+#include "shellapi.h"
 
 #ifndef _UNICODE
 #define gprintf _snprintf
@@ -537,7 +539,7 @@ WndProc(HWND hWnd,
 
             switch (wmId)
             {
-                case ID_NEW:
+                case ID_FILE_NEW:
                     if (!isnew)
                     {
                         if (AUD_IN->current_status() == snd::WAVEIN_RECORDING)
@@ -599,7 +601,7 @@ WndProc(HWND hWnd,
                     InvalidateRect(hWnd, &text2_rect, TRUE);
                     break;
 
-                case ID__ABOUT:
+                case ID_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDlgProc);
                     return TRUE;
                     break;
@@ -621,11 +623,16 @@ WndProc(HWND hWnd,
                         write_wav(file_path);
                         EnableMenuItem(GetMenu(hWnd), ID_FILE_SAVE, MF_ENABLED);
                     }
-                    break;
+            break;
 
-                case ID_EXIT:
-                    DestroyWindow(hWnd);
-                    break;
+
+        case ID_EDIT_AUDIOPROPS:
+            ShellExecute( NULL, NULL, _T("rundll32.exe"), _T("shell32.dll,Control_RunDLL mmsys.cpl,ShowAudioPropertySheet"), NULL, SW_SHOWNORMAL );
+            break;
+
+        case ID_FILE_EXIT:
+            DestroyWindow( hWnd );
+            break;
 
                 /* Sndrec32 buttons routines */
                 case BUTSTART_ID:
