@@ -10,7 +10,7 @@ djb_hash(const char *name)
 {
     unsigned int val = 5381;
     int i = 0;
-  
+
     for (i = 0; name[i]; i++)
     {
         val = (33 * val) + name[i];
@@ -63,6 +63,19 @@ get_entry_by_normname(struct target_dir_hash *dh, const char *norm)
     while (de && strcmp(de->normalized_name, norm))
         de = de->next;
     return de;
+}
+
+static void
+delete_entry_by_normname(struct target_dir_hash *dh, const char *norm)
+{
+    unsigned int hashcode;
+    struct target_dir_entry **ent;
+    hashcode = djb_hash(norm);
+    ent = &dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS];
+    while (*ent && strcmp((*ent)->normalized_name, norm))
+        ent = &(*ent)->next;
+    if (*ent)
+        *ent = (*ent)->next;
 }
 
 void normalize_dirname(char *filename)
@@ -147,9 +160,9 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
 }
 
 struct target_dir_entry *
-dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t) 
+dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
 {
-    if (t->i == -1) 
+    if (t->i == -1)
         return NULL;
     if (!t->it)
     {
@@ -177,14 +190,16 @@ dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
     }
 }
 
-void dir_hash_destroy_dir(struct target_dir_entry *de)
+static void
+dir_hash_destroy_dir(struct target_dir_hash *dh, struct target_dir_entry *de)
 {
     struct target_file *tf;
     struct target_dir_entry *te;
+    unsigned int hashcode;
     while ((te = de->child))
     {
         de->child = te->next;
-        dir_hash_destroy_dir(te);
+        dir_hash_destroy_dir(dh, te);
         free(te);
     }
     while ((tf = de->head))
@@ -194,11 +209,12 @@ void dir_hash_destroy_dir(struct target_dir_entry *de)
         free(tf->target_name);
         free(tf);
     }
+    delete_entry_by_normname(dh, de->normalized_name);
     free(de->normalized_name);
     free(de->case_name);
 }
 
 void dir_hash_destroy(struct target_dir_hash *dh)
 {
-    dir_hash_destroy_dir(&dh->root);
+    dir_hash_destroy_dir(dh, &dh->root);
 }
