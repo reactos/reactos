@@ -1006,8 +1006,8 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
 //
 // Updates a valid PTE
 //
-VOID
 FORCEINLINE
+VOID
 MI_UPDATE_VALID_PTE(IN PMMPTE PointerPte,
                    IN MMPTE TempPte)
 {
@@ -1035,8 +1035,8 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
 //
 // Erase the PTE completely
 //
-VOID
 FORCEINLINE
+VOID
 MI_ERASE_PTE(IN PMMPTE PointerPte)
 {
     /* Zero out the PTE */

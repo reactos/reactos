@@ -1692,7 +1692,12 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
         Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
-        ASSERT(NT_SUCCESS(Status));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p",
+                    MemoryArea, MemoryArea->StartingAddress, MemoryArea->EndingAddress, BaseAddress);
+            NT_ASSERT(NT_SUCCESS(Status));
+        }
     }
     else
     {
@@ -1733,7 +1738,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         ObDereferenceObject(TargetProcess);
     }
 
-    /* Return the data, NtQueryInformation already probed it*/
+    /* Return the data, NtQueryInformation already probed it */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
