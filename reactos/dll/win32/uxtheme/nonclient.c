@@ -1137,7 +1137,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
                              PNONCLIENTMETRICSW pncMetrics,
                              COLORREF* lpaRgbValues)
 {
-    WNDCLASSEXW DummyPreviwWindowClass;
+    WNDCLASSEXW DummyPreviewWindowClass;
     HWND hwndDummy;
     HRESULT hres;
     HTHEMEFILE hThemeFile;
@@ -1148,16 +1148,16 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
      *        and make use of the ncmetrics and colors passed as parameters */
 
     /* Create a dummy window that will be used to trick the paint funtions */
-    memset(&DummyPreviwWindowClass, 0, sizeof(DummyPreviwWindowClass));
-    DummyPreviwWindowClass.cbSize = sizeof(DummyPreviwWindowClass);
-    DummyPreviwWindowClass.lpszClassName = L"DummyPreviwWindowClass";
-    DummyPreviwWindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    DummyPreviwWindowClass.hInstance = hDllInst;
-    DummyPreviwWindowClass.lpfnWndProc = DefWindowProcW;
-    if (!RegisterClassExW(&DummyPreviwWindowClass))
+    memset(&DummyPreviewWindowClass, 0, sizeof(DummyPreviewWindowClass));
+    DummyPreviewWindowClass.cbSize = sizeof(DummyPreviewWindowClass);
+    DummyPreviewWindowClass.lpszClassName = L"DummyPreviewWindowClass";
+    DummyPreviewWindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    DummyPreviewWindowClass.hInstance = hDllInst;
+    DummyPreviewWindowClass.lpfnWndProc = DefWindowProcW;
+    if (!RegisterClassExW(&DummyPreviewWindowClass))
         return E_FAIL;
 
-    hwndDummy = CreateWindowExW(0, L"DummyPreviwWindowClass", L"Active window", WS_OVERLAPPEDWINDOW,30,30,300,150,0,0,hDllInst,NULL);
+    hwndDummy = CreateWindowExW(0, L"DummyPreviewWindowClass", L"Active window", WS_OVERLAPPEDWINDOW,30,30,300,150,0,0,hDllInst,NULL);
     if (!hwndDummy)
         return E_FAIL;
 
@@ -1190,7 +1190,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
 
     /* Cleanup */
     DestroyWindow(hwndDummy);
-    UnregisterClassW(L"DummyPreviwWindowClass", hDllInst);
+    UnregisterClassW(L"DummyPreviewWindowClass", hDllInst);
 
     return S_OK;
 }
