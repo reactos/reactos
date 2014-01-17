@@ -503,9 +503,6 @@ SeCaptureSidAndAttributesArray(
     }
     else
     {
-        /* First copy the source array */
-        RtlCopyMemory(SidAndAttributes, SrcSidAndAttributes, ArraySize);
-
         /* The rest of the data starts after the array */
         CurrentDest = (PUCHAR)SidAndAttributes;
         CurrentDest += ALIGN_UP_BY(ArraySize, sizeof(ULONG));
@@ -516,6 +513,9 @@ SeCaptureSidAndAttributesArray(
             /* Get the SID and it's length */
             Sid = SrcSidAndAttributes[i].Sid;
             SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+
+            /* Copy attributes */
+            SidAndAttributes[i].Attributes = SrcSidAndAttributes[i].Attributes;
 
             /* Copy the SID to the current destination address */
             SidAndAttributes[i].Sid = (PSID)CurrentDest;
