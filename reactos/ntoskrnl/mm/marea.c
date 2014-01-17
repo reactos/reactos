@@ -828,9 +828,9 @@ MmFreeMemoryArea(
             Address < (ULONG_PTR)EndAddress;
             Address += PAGE_SIZE)
        {
-            BOOLEAN Dirty = FALSE;
-            SWAPENTRY SwapEntry = 0;
-            PFN_NUMBER Page = 0;
+             BOOLEAN Dirty = FALSE;
+             SWAPENTRY SwapEntry = 0;
+             PFN_NUMBER Page = 0;
 
              if (MmIsPageSwapEntry(Process, (PVOID)Address))
              {
@@ -1058,7 +1058,11 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                                            TAG_MAREA);
     }
 
-    if (!MemoryArea) return STATUS_NO_MEMORY;
+   if (!MemoryArea)
+   {
+      DPRINT1("Not enough memory.\n");
+      return STATUS_NO_MEMORY;
+   }
 
    RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
    MemoryArea->Type = Type;
