@@ -380,9 +380,10 @@ CmpQueryKeyData(IN PHHIVE Hive,
                 IN OUT PULONG ResultLength)
 {
     NTSTATUS Status;
-    ULONG Size, SizeLeft, MinimumSize;
+    ULONG Size, SizeLeft, MinimumSize, Offset;
     PKEY_INFORMATION Info = (PKEY_INFORMATION)KeyInformation;
     USHORT NameLength;
+    PVOID ClassData;
 
     /* Check if the value is compressed */
     if (Node->Flags & KEY_COMP_NAME)
@@ -516,8 +517,36 @@ CmpQueryKeyData(IN PHHIVE Hive,
             /* Check if the node has a class */
             if (Node->ClassLength > 0)
             {
-                /* It does. We don't support these yet */
-                ASSERTMSG("Classes not supported\n", FALSE);
+                /* Set the class offset */
+                Offset = FIELD_OFFSET(KEY_NODE_INFORMATION, Name) + NameLength;
+                Offset = ALIGN_UP_BY(Offset, sizeof(ULONG));
+                Info->KeyNodeInformation.ClassOffset = Offset;
+
+                /* Get the class data */
+                ClassData = HvGetCell(Hive, Node->Class);
+                if (ClassData == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Check if we can copy anything */
+                if (Length > Offset)
+                {
+                    /* Copy the class data */
+                    RtlCopyMemory((PUCHAR)Info + Offset,
+                                  ClassData,
+                                  min(Node->ClassLength, Length - Offset));
+                }
+
+                /* Check if the buffer was large enough */
+                if (Length < Offset + Node->ClassLength)
+                {
+                    Status = STATUS_BUFFER_OVERFLOW;
+                }
+
+                /* Release the class cell */
+                HvReleaseCell(Hive, Node->Class);
             }
             else
             {
@@ -563,13 +592,37 @@ CmpQueryKeyData(IN PHHIVE Hive,
             /* Check if we have a class */
             if (Node->ClassLength > 0)
             {
-                /* We do, but we currently don't support this */
-                ASSERTMSG("Classes not supported\n", FALSE);
+                /* Set the class offset */
+                Offset = FIELD_OFFSET(KEY_FULL_INFORMATION, Class);
+                Info->KeyFullInformation.ClassOffset = Offset;
+
+                /* Get the class data */
+                ClassData = HvGetCell(Hive, Node->Class);
+                if (ClassData == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Copy the class data */
+                NT_ASSERT(Length > Offset);
+                RtlCopyMemory(Info->KeyFullInformation.Class,
+                              ClassData,
+                              min(Node->ClassLength, Length - Offset));
+
+                /* Check if the buffer was large enough */
+                if (Length < Offset + Node->ClassLength)
+                {
+                    Status = STATUS_BUFFER_OVERFLOW;
+                }
+
+                /* Release the class cell */
+                HvReleaseCell(Hive, Node->Class);
             }
             else
             {
                 /* We don't have a class, so set offset to -1, not 0! */
-                Info->KeyNodeInformation.ClassOffset = 0xFFFFFFFF;
+                Info->KeyFullInformation.ClassOffset = 0xFFFFFFFF;
             }
             break;
 
