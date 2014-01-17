@@ -619,7 +619,7 @@ ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, PRECT prcCurrent)
 }
 
 static void 
-ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
+ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBuffering)
 {
     if(!(pcontext->wi.dwStyle & WS_VISIBLE))
         return;
@@ -632,9 +632,11 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 
     if((pcontext->wi.dwStyle & WS_CAPTION)==WS_CAPTION)
     {
-        ThemeStartBufferedPaint(pcontext, prcCurrent->right, pcontext->CaptionHeight);
+        if (bDoDoubleBuffering)
+            ThemeStartBufferedPaint(pcontext, prcCurrent->right, pcontext->CaptionHeight);
         ThemeDrawCaption(pcontext, prcCurrent);
-        ThemeEndBufferedPaint(pcontext, 0, 0, prcCurrent->right, pcontext->CaptionHeight);
+        if (bDoDoubleBuffering)
+            ThemeEndBufferedPaint(pcontext, 0, 0, prcCurrent->right, pcontext->CaptionHeight);
         ThemeDrawBorders(pcontext, prcCurrent);
     }
     else
@@ -667,7 +669,7 @@ ThemeHandleNCPaint(HWND hWnd, HRGN hRgn)
     rcCurrent = context.wi.rcWindow;
     OffsetRect( &rcCurrent, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
 
-    ThemePaintWindow(&context, &rcCurrent);
+    ThemePaintWindow(&context, &rcCurrent, TRUE);
     ThemeCleanupDrawContext(&context);
 
     return 0;
@@ -1124,4 +1126,71 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     default:
         return DefWndProc(hWnd, Msg, wParam, lParam);
     }
+}
+
+HRESULT WINAPI DrawNCPreview(HDC hDC, 
+                             DWORD DNCP_Flag,
+                             LPRECT prcPreview, 
+                             LPCWSTR pszThemeFileName, 
+                             LPCWSTR pszColorName,
+                             LPCWSTR pszSizeName,
+                             PNONCLIENTMETRICSW pncMetrics,
+                             COLORREF* lpaRgbValues)
+{
+    WNDCLASSEXW DummyPreviwWindowClass;
+    HWND hwndDummy;
+    HRESULT hres;
+    HTHEMEFILE hThemeFile;
+    DRAW_CONTEXT context;
+    RECT rcCurrent;
+
+    /* FIXME: We also need to implement drawing the rest of the preview windows 
+     *        and make use of the ncmetrics and colors passed as parameters */
+
+    /* Create a dummy window that will be used to trick the paint funtions */
+    memset(&DummyPreviwWindowClass, 0, sizeof(DummyPreviwWindowClass));
+    DummyPreviwWindowClass.cbSize = sizeof(DummyPreviwWindowClass);
+    DummyPreviwWindowClass.lpszClassName = L"DummyPreviwWindowClass";
+    DummyPreviwWindowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    DummyPreviwWindowClass.hInstance = hDllInst;
+    DummyPreviwWindowClass.lpfnWndProc = DefWindowProcW;
+    if (!RegisterClassExW(&DummyPreviwWindowClass))
+        return E_FAIL;
+
+    hwndDummy = CreateWindowExW(0, L"DummyPreviwWindowClass", L"Active window", WS_OVERLAPPEDWINDOW,30,30,300,150,0,0,hDllInst,NULL);
+    if (!hwndDummy)
+        return E_FAIL;
+
+    hres = OpenThemeFile(pszThemeFileName, pszColorName, pszSizeName, &hThemeFile,0);
+    if (FAILED(hres))
+        return hres;
+
+    /* Initialize the special draw context for the preview */
+    context.hDC = hDC;
+    context.hWnd = hwndDummy;
+    context.theme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"WINDOW", 0);
+    if (!context.theme)
+        return E_FAIL;
+    context.scrolltheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"SCROLLBAR", 0);
+    if (!context.theme)
+        return E_FAIL;
+    context.Active = TRUE;
+    if (!GetWindowInfo(hwndDummy, &context.wi))
+        return E_FAIL;
+    context.wi.dwStyle |= WS_VISIBLE;
+    context.CaptionHeight = context.wi.cyWindowBorders;
+    context.CaptionHeight += GetSystemMetrics(context.wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
+    context.hRgn = CreateRectRgnIndirect(&context.wi.rcWindow);
+
+    /* Paint the window on the preview hDC */
+    rcCurrent = context.wi.rcWindow;
+    ThemePaintWindow(&context, &rcCurrent, FALSE);
+    context.hDC = NULL;
+    ThemeCleanupDrawContext(&context);
+
+    /* Cleanup */
+    DestroyWindow(hwndDummy);
+    UnregisterClassW(L"DummyPreviwWindowClass", hDllInst);
+
+    return S_OK;
 }
