@@ -738,6 +738,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     for (i = 0; i < GroupCount; i++)
         uLength += RtlLengthSid(Groups[i].Sid);
 
+    // FIXME: should use the object itself
     AccessToken->UserAndGroups = ExAllocatePoolWithTag(PagedPool,
                                                        uLength,
                                                        TAG_TOKEN_USERS);
@@ -775,7 +776,9 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    // FIXME: should use the object itself
     uLength = PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+    if (uLength == 0) uLength = sizeof(PVOID);
     AccessToken->Privileges = ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
                                                     TAG_TOKEN_PRIVILAGES);
@@ -812,18 +815,26 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     /* Update privilege flags */
     SepUpdatePrivilegeFlagsToken(AccessToken);
 
-    AccessToken->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
-                                                     DefaultDacl->AclSize,
-                                                     TAG_TOKEN_ACL);
-    if (AccessToken->DefaultDacl == NULL)
+    if (DefaultDacl != NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
+        // FIXME: should use the object itself
+        AccessToken->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
+                                                         DefaultDacl->AclSize,
+                                                         TAG_TOKEN_ACL);
+        if (AccessToken->DefaultDacl == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
 
-    RtlCopyMemory(AccessToken->DefaultDacl,
-                  DefaultDacl,
-                  DefaultDacl->AclSize);
+        RtlCopyMemory(AccessToken->DefaultDacl,
+                      DefaultDacl,
+                      DefaultDacl->AclSize);
+    }
+    else
+    {
+        AccessToken->DefaultDacl = NULL;
+    }
 
     if (!SystemToken)
     {
@@ -2376,24 +2387,37 @@ Cleanup:
 
 NTSTATUS
 NTAPI
-NtCreateToken(OUT PHANDLE TokenHandle,
-              IN ACCESS_MASK DesiredAccess,
-              IN POBJECT_ATTRIBUTES ObjectAttributes,
-              IN TOKEN_TYPE TokenType,
-              IN PLUID AuthenticationId,
-              IN PLARGE_INTEGER ExpirationTime,
-              IN PTOKEN_USER TokenUser,
-              IN PTOKEN_GROUPS TokenGroups,
-              IN PTOKEN_PRIVILEGES TokenPrivileges,
-              IN PTOKEN_OWNER TokenOwner,
-              IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-              IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-              IN PTOKEN_SOURCE TokenSource)
+NtCreateToken(
+    _Out_ PHANDLE TokenHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ PLUID AuthenticationId,
+    _In_ PLARGE_INTEGER ExpirationTime,
+    _In_ PTOKEN_USER TokenUser,
+    _In_ PTOKEN_GROUPS TokenGroups,
+    _In_ PTOKEN_PRIVILEGES TokenPrivileges,
+    _In_opt_ PTOKEN_OWNER TokenOwner,
+    _In_ PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
+    _In_opt_ PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+    _In_ PTOKEN_SOURCE TokenSource)
 {
     HANDLE hToken;
     KPROCESSOR_MODE PreviousMode;
-    ULONG nTokenPrivileges = 0;
+    ULONG PrivilegeCount, GroupCount;
+    PSID OwnerSid, PrimaryGroupSid;
+    PACL DefaultDacl;
     LARGE_INTEGER LocalExpirationTime = {{0, 0}};
+    LUID LocalAuthenticationId;
+    TOKEN_SOURCE LocalTokenSource;
+    SECURITY_QUALITY_OF_SERVICE LocalSecurityQos;
+    PLUID_AND_ATTRIBUTES CapturedPrivileges = NULL;
+    PSID_AND_ATTRIBUTES CapturedUser = NULL;
+    PSID_AND_ATTRIBUTES CapturedGroups = NULL;
+    PSID CapturedOwnerSid = NULL;
+    PSID CapturedPrimaryGroupSid = NULL;
+    PACL CapturedDefaultDacl = NULL;
+    ULONG PrivilegesLength, UserLength, GroupsLength;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -2405,64 +2429,197 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         _SEH2_TRY
         {
             ProbeForWriteHandle(TokenHandle);
+
+            if (ObjectAttributes != NULL)
+            {
+                ProbeForRead(ObjectAttributes,
+                             sizeof(OBJECT_ATTRIBUTES),
+                             sizeof(ULONG));
+                LocalSecurityQos = *(SECURITY_QUALITY_OF_SERVICE*)ObjectAttributes->SecurityQualityOfService;
+            }
+
             ProbeForRead(AuthenticationId,
                          sizeof(LUID),
                          sizeof(ULONG));
+            LocalAuthenticationId = *AuthenticationId;
+
             LocalExpirationTime = ProbeForReadLargeInteger(ExpirationTime);
+
             ProbeForRead(TokenUser,
                          sizeof(TOKEN_USER),
                          sizeof(ULONG));
+
             ProbeForRead(TokenGroups,
                          sizeof(TOKEN_GROUPS),
                          sizeof(ULONG));
+            GroupCount = TokenGroups->GroupCount;
+
             ProbeForRead(TokenPrivileges,
                          sizeof(TOKEN_PRIVILEGES),
                          sizeof(ULONG));
-            ProbeForRead(TokenOwner,
-                         sizeof(TOKEN_OWNER),
-                         sizeof(ULONG));
+            PrivilegeCount = TokenPrivileges->PrivilegeCount;
+
+            if (TokenOwner != NULL)
+            {
+                ProbeForRead(TokenOwner,
+                             sizeof(TOKEN_OWNER),
+                             sizeof(ULONG));
+                OwnerSid = TokenOwner->Owner;
+            }
+            else
+            {
+                OwnerSid = NULL;
+            }
+
             ProbeForRead(TokenPrimaryGroup,
                          sizeof(TOKEN_PRIMARY_GROUP),
                          sizeof(ULONG));
-            ProbeForRead(TokenDefaultDacl,
-                         sizeof(TOKEN_DEFAULT_DACL),
-                         sizeof(ULONG));
+            PrimaryGroupSid = TokenPrimaryGroup->PrimaryGroup;
+
+            if (TokenDefaultDacl != NULL)
+            {
+                ProbeForRead(TokenDefaultDacl,
+                             sizeof(TOKEN_DEFAULT_DACL),
+                             sizeof(ULONG));
+                DefaultDacl = TokenDefaultDacl->DefaultDacl;
+            }
+            else
+            {
+                DefaultDacl = NULL;
+            }
+
             ProbeForRead(TokenSource,
                          sizeof(TOKEN_SOURCE),
                          sizeof(ULONG));
-            nTokenPrivileges = TokenPrivileges->PrivilegeCount;
+            LocalTokenSource = *TokenSource;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            return _SEH2_GetExceptionCode();
         }
         _SEH2_END;
     }
     else
     {
-        nTokenPrivileges = TokenPrivileges->PrivilegeCount;
+        if (ObjectAttributes != NULL)
+            LocalSecurityQos = *(SECURITY_QUALITY_OF_SERVICE*)ObjectAttributes->SecurityQualityOfService;
+        LocalAuthenticationId = *AuthenticationId;
         LocalExpirationTime = *ExpirationTime;
+        GroupCount = TokenGroups->GroupCount;
+        PrivilegeCount = TokenPrivileges->PrivilegeCount;
+        OwnerSid = TokenOwner ? TokenOwner->Owner : NULL;
+        PrimaryGroupSid = TokenPrimaryGroup->PrimaryGroup;
+        DefaultDacl = TokenDefaultDacl ? TokenDefaultDacl->DefaultDacl : NULL;
+        LocalTokenSource = *TokenSource;
     }
 
+    /* Check token type */
+    if ((TokenType < TokenPrimary) ||
+        (TokenType > TokenImpersonation))
+    {
+        return STATUS_BAD_TOKEN_TYPE;
+    }
+
+    /* Capture the user SID and attributes */
+    Status = SeCaptureSidAndAttributesArray(&TokenUser->User,
+                                            1,
+                                            PreviousMode,
+                                            NULL,
+                                            0,
+                                            PagedPool,
+                                            FALSE,
+                                            &CapturedUser,
+                                            &UserLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* Capture the groups SID and attributes array */
+    Status = SeCaptureSidAndAttributesArray(&TokenGroups->Groups[0],
+                                            GroupCount,
+                                            PreviousMode,
+                                            NULL,
+                                            0,
+                                            PagedPool,
+                                            FALSE,
+                                            &CapturedGroups,
+                                            &GroupsLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* Capture privileges */
+    Status = SeCaptureLuidAndAttributesArray(&TokenPrivileges->Privileges[0],
+                                             PrivilegeCount,
+                                             PreviousMode,
+                                             NULL,
+                                             0,
+                                             PagedPool,
+                                             FALSE,
+                                             &CapturedPrivileges,
+                                             &PrivilegesLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* Capture the token owner SID */
+    if (TokenOwner != NULL)
+    {
+        Status = SepCaptureSid(OwnerSid,
+                               PreviousMode,
+                               PagedPool,
+                               FALSE,
+                               &CapturedOwnerSid);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+    }
+
+    /* Capture the token primary group SID */
+    Status = SepCaptureSid(PrimaryGroupSid,
+                           PreviousMode,
+                           PagedPool,
+                           FALSE,
+                           &CapturedPrimaryGroupSid);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* Capture DefaultDacl */
+    if (DefaultDacl != NULL)
+    {
+        Status = SepCaptureAcl(DefaultDacl,
+                               PreviousMode,
+                               NonPagedPool,
+                               FALSE,
+                               &CapturedDefaultDacl);
+    }
+
+    /* Call the internal function */
     Status = SepCreateToken(&hToken,
                             PreviousMode,
                             DesiredAccess,
                             ObjectAttributes,
                             TokenType,
-                            ((PSECURITY_QUALITY_OF_SERVICE)(ObjectAttributes->SecurityQualityOfService))->ImpersonationLevel,
-                            AuthenticationId,
+                            LocalSecurityQos.ImpersonationLevel,
+                            &LocalAuthenticationId,
                             &LocalExpirationTime,
-                            &TokenUser->User,
-                            TokenGroups->GroupCount,
-                            TokenGroups->Groups,
+                            CapturedUser,
+                            GroupCount,
+                            CapturedGroups,
                             0, // FIXME: Should capture
-                            nTokenPrivileges,
-                            TokenPrivileges->Privileges,
-                            TokenOwner->Owner,
-                            TokenPrimaryGroup->PrimaryGroup,
-                            TokenDefaultDacl->DefaultDacl,
-                            TokenSource,
+                            PrivilegeCount,
+                            CapturedPrivileges,
+                            CapturedOwnerSid,
+                            CapturedPrimaryGroupSid,
+                            CapturedDefaultDacl,
+                            &LocalTokenSource,
                             FALSE);
     if (NT_SUCCESS(Status))
     {
@@ -2476,6 +2633,16 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         }
         _SEH2_END;
     }
+
+Cleanup:
+
+    /* Release what we captured */
+    SeReleaseSidAndAttributesArray(CapturedUser, PreviousMode, FALSE);
+    SeReleaseSidAndAttributesArray(CapturedGroups, PreviousMode, FALSE);
+    SeReleaseLuidAndAttributesArray(CapturedPrivileges, PreviousMode, FALSE);
+    SepReleaseSid(CapturedOwnerSid, PreviousMode, FALSE);
+    SepReleaseSid(CapturedPrimaryGroupSid, PreviousMode, FALSE);
+    SepReleaseAcl(CapturedDefaultDacl, PreviousMode, FALSE);
 
     return Status;
 }
