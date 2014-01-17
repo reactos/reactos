@@ -39,7 +39,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
     Fast486OpcodeGroup0F00,
     Fast486OpcodeGroup0F01,
-    NULL, // TODO: OPCODE 0x02 NOT IMPLEMENTED
+    Fast486ExtOpcodeLar,
     Fast486ExtOpcodeLsl,
     NULL, // Invalid
     NULL, // Invalid
@@ -296,6 +296,134 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar)
+{
+    BOOLEAN OperandSize, AddressSize;
+    FAST486_MOD_REG_RM ModRegRm;
+    USHORT Selector;
+    FAST486_GDT_ENTRY GdtEntry;
+    DWORD AccessRights;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
+    if (!(State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+        || State->Flags.Vm)
+    {
+        /* Not recognized */
+        Fast486Exception(State, FAST486_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    NO_LOCK_PREFIX();
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Value;
+
+        /* Read the value */
+        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        Selector = LOWORD(Value);
+    }
+    else
+    {
+        /* Read the value */
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    if (!(Selector & SEGMENT_TABLE_INDICATOR))
+    {
+        /* Check if the GDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        {
+            State->Flags.Zf = FALSE;
+            return TRUE;
+        }
+
+        /* Read the GDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Gdtr.Address
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     &GdtEntry,
+                                     sizeof(GdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Check if the LDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
+        {
+            State->Flags.Zf = FALSE;
+            return TRUE;
+        }
+
+        /* Read the LDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Ldtr.Base
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     &GdtEntry,
+                                     sizeof(GdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    /* Privilege check */
+    if (((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl))
+        || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+    {
+        State->Flags.Zf = FALSE;
+        return TRUE;
+    }
+
+    /* Set ZF */
+    State->Flags.Zf = TRUE;
+
+    /* Get the access rights */
+    AccessRights = ((PDWORD)&GdtEntry)[1] & 0x00F0FF00;
+
+    /* Return the access rights */
+    if (OperandSize)
+    {
+        if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, TRUE, AccessRights))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (!Fast486WriteModrmWordOperands(State, &ModRegRm, TRUE, LOWORD(AccessRights)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
 {
