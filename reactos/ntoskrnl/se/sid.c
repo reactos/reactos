@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_SID_AND_ATTRIBUTES 'aSeS'
+
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, SepInitSecurityIDs)
 #endif
@@ -339,5 +341,223 @@ SepReleaseSid(IN PSID CapturedSid,
         ExFreePoolWithTag(CapturedSid, TAG_SID);
     }
 }
+
+NTSTATUS
+NTAPI
+SeCaptureSidAndAttributesArray(
+    _In_ PSID_AND_ATTRIBUTES SrcSidAndAttributes,
+    _In_ ULONG AttributeCount,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_opt_ PVOID AllocatedMem,
+    _In_ ULONG AllocatedLength,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSID_AND_ATTRIBUTES *CapturedSidAndAttributes,
+    _Out_ PULONG ResultLength)
+{
+    ULONG ArraySize, RequiredLength, SidLength, i;
+    PSID_AND_ATTRIBUTES SidAndAttributes;
+    PUCHAR CurrentDest;
+    PISID Sid;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    *CapturedSidAndAttributes = NULL;
+    *ResultLength = 0;
+
+    if (AttributeCount == 0)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    if (AttributeCount > 0x1000)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((PreviousMode == KernelMode) && !CaptureIfKernel)
+    {
+        *CapturedSidAndAttributes = SrcSidAndAttributes;
+        return STATUS_SUCCESS;
+    }
+
+    ArraySize = AttributeCount * sizeof(SID_AND_ATTRIBUTES);
+    RequiredLength = ALIGN_UP_BY(ArraySize, sizeof(ULONG));
+
+    /* Check for user mode data */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* First probe the whole array */
+            ProbeForRead(SrcSidAndAttributes, ArraySize, sizeof(ULONG));
+
+            /* Loop the array elements */
+            for (i = 0; i < AttributeCount; i++)
+            {
+                /* Get the SID and probe the minimal structure */
+                Sid = SrcSidAndAttributes[i].Sid;
+                ProbeForRead(Sid, sizeof(*Sid), sizeof(ULONG));
+
+                /* Verify that the SID is valid */
+                if (((Sid->Revision & 0xF) != SID_REVISION) ||
+                    (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
+                {
+                    return STATUS_INVALID_SID;
+                }
+
+                /* Calculate the SID length and probe the full SID */
+                SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+                ProbeForRead(Sid, SidLength, sizeof(ULONG));
+
+                /* Add the aligned length to the required length */
+                RequiredLength += ALIGN_UP_BY(SidLength, sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Loop the array elements */
+        for (i = 0; i < AttributeCount; i++)
+        {
+            /* Get the SID and it's length */
+            Sid = SrcSidAndAttributes[i].Sid;
+            SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+
+            /* Add the aligned length to the required length */
+            RequiredLength += ALIGN_UP_BY(SidLength, sizeof(ULONG));
+        }
+    }
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+    *ResultLength = RequiredLength;
+
+    /* Check if we have no buffer */
+    if (AllocatedMem == NULL)
+    {
+        /* Allocate a new buffer */
+        SidAndAttributes = ExAllocatePoolWithTag(PoolType,
+                                                 RequiredLength,
+                                                 TAG_SID_AND_ATTRIBUTES);
+        if (SidAndAttributes == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    /* Otherwise check if the buffer is large enough */
+    else if (AllocatedLength >= RequiredLength)
+    {
+        /* Buffer is large enough, use it */
+        SidAndAttributes = AllocatedMem;
+    }
+    else
+    {
+        /* Buffer is too small, fail */
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    *CapturedSidAndAttributes = SidAndAttributes;
+
+    /* Check again for user mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* The rest of the data starts after the array */
+            CurrentDest = (PUCHAR)SidAndAttributes;
+            CurrentDest += ALIGN_UP_BY(ArraySize, sizeof(ULONG));
+
+            /* Loop the array elements */
+            for (i = 0; i < AttributeCount; i++)
+            {
+                /* Get the SID and it's length */
+                Sid = SrcSidAndAttributes[i].Sid;
+                SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+
+                /* Copy attributes */
+                SidAndAttributes[i].Attributes = SrcSidAndAttributes[i].Attributes;
+
+                /* Copy the SID to the current destination address */
+                SidAndAttributes[i].Sid = (PSID)CurrentDest;
+                RtlCopyMemory(CurrentDest, SrcSidAndAttributes[i].Sid, SidLength);
+
+                /* Sanity checks */
+                NT_ASSERT(RtlLengthSid(SidAndAttributes[i].Sid) == SidLength);
+                NT_ASSERT(RtlValidSid(SidAndAttributes[i].Sid));
+
+                /* Update the current destination address */
+                CurrentDest += ALIGN_UP_BY(SidLength, sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* First copy the source array */
+        RtlCopyMemory(SidAndAttributes, SrcSidAndAttributes, ArraySize);
+
+        /* The rest of the data starts after the array */
+        CurrentDest = (PUCHAR)SidAndAttributes;
+        CurrentDest += ALIGN_UP_BY(ArraySize, sizeof(ULONG));
+
+        /* Loop the array elements */
+        for (i = 0; i < AttributeCount; i++)
+        {
+            /* Get the SID and it's length */
+            Sid = SrcSidAndAttributes[i].Sid;
+            SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+
+            /* Copy the SID to the current destination address */
+            SidAndAttributes[i].Sid = (PSID)CurrentDest;
+            RtlCopyMemory(CurrentDest, SrcSidAndAttributes[i].Sid, SidLength);
+
+            /* Update the current destination address */
+            CurrentDest += ALIGN_UP_BY(SidLength, sizeof(ULONG));
+        }
+    }
+
+    /* Check for failure */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Check if we allocated a new array */
+        if (SidAndAttributes != AllocatedMem)
+        {
+            /* Free the array */
+            ExFreePoolWithTag(SidAndAttributes, TAG_SID_AND_ATTRIBUTES);
+        }
+
+        /* Set returned address to NULL */
+        *CapturedSidAndAttributes = NULL ;
+    }
+
+    return Status;
+}
+
+VOID
+NTAPI
+SeReleaseSidAndAttributesArray(
+    _In_ _Post_invalid_ PSID_AND_ATTRIBUTES CapturedSidAndAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel)
+{
+    PAGED_CODE();
+
+    if ((CapturedSidAndAttributes != NULL) &&
+        ((AccessMode != KernelMode) || CaptureIfKernel))
+    {
+        ExFreePoolWithTag(CapturedSidAndAttributes, TAG_SID_AND_ATTRIBUTES);
+    }
+}
+
 
 /* EOF */

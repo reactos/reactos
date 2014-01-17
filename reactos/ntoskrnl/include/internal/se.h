@@ -444,6 +444,26 @@ SepReleaseSid(
 
 NTSTATUS
 NTAPI
+SeCaptureSidAndAttributesArray(
+    _In_ PSID_AND_ATTRIBUTES SrcSidAndAttributes,
+    _In_ ULONG AttributeCount,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_opt_ PVOID AllocatedMem,
+    _In_ ULONG AllocatedLength,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSID_AND_ATTRIBUTES *CapturedSidAndAttributes,
+    _Out_ PULONG ResultLength);
+
+VOID
+NTAPI
+SeReleaseSidAndAttributesArray(
+    _In_ _Post_invalid_ PSID_AND_ATTRIBUTES CapturedSidAndAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+NTAPI
 SepCaptureAcl(
     IN PACL InputAcl,
     IN KPROCESSOR_MODE AccessMode,
