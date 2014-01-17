@@ -211,10 +211,12 @@ static void release_memory(void)
     struct directory_record *next =
       root.next_in_memory->next_in_memory;
     if (joliet)
-      free (root.joliet_name);
+      free (root.next_in_memory->joliet_name);
     free (root.next_in_memory);
     root.next_in_memory = next;
   }
+  if (joliet)
+    free (root.joliet_name);
   if (cd.buffer != NULL)
   {
     free (cd.buffer);
