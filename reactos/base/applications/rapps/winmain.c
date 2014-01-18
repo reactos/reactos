@@ -771,7 +771,6 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WNDCLASSEXW WndClass = {0};
     WCHAR szWindowClass[] = L"ROSAPPMGR";
     WCHAR szWindowName[MAX_STR_LEN];
-    WCHAR szErrorText[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
 
