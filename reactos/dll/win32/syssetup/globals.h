@@ -56,10 +56,17 @@ typedef struct _SETUPDATA
     LCID LocaleID;
 } SETUPDATA, *PSETUPDATA;
 
+typedef struct _ADMIN_INFO
+{
+    LPWSTR Name;
+    LPWSTR Domain;
+    LPWSTR Password;
+} ADMIN_INFO, *PADMIN_INFO;
 
 extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
 extern SETUPDATA SetupData;
+extern ADMIN_INFO AdminInfo;
 
 BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
 
@@ -69,6 +76,9 @@ NTSTATUS SetAccountDomain(LPCWSTR DomainName,
 VOID InstallSecurity(VOID);
 NTSTATUS
 SetAdministratorPassword(LPCWSTR Password);
+
+VOID
+SetAutoAdminLogon(VOID);
 
 /* wizard.c */
 VOID InstallWizard (VOID);

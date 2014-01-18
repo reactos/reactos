@@ -317,6 +317,7 @@ NTSTATUS
 SetAdministratorPassword(LPCWSTR Password)
 {
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    PUSER_ACCOUNT_NAME_INFORMATION AccountNameInfo = NULL;
     USER_SET_PASSWORD_INFORMATION PasswordInfo;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
@@ -370,8 +371,8 @@ SetAdministratorPassword(LPCWSTR Password)
     }
 
     Status = SamOpenUser(DomainHandle,
-                         USER_FORCE_PASSWORD_CHANGE,
-                         DOMAIN_USER_RID_ADMIN, /* 500 */
+                         USER_FORCE_PASSWORD_CHANGE | USER_READ_GENERAL,
+                         DOMAIN_USER_RID_ADMIN,
                          &UserHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -391,7 +392,45 @@ SetAdministratorPassword(LPCWSTR Password)
         goto done;
     }
 
+    Status = SamQueryInformationUser(UserHandle,
+                                     UserAccountNameInformation,
+                                     (PVOID*)&AccountNameInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    AdminInfo.Name = RtlAllocateHeap(RtlGetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     AccountNameInfo->UserName.Length + sizeof(WCHAR));
+    if (AdminInfo.Name != NULL)
+        RtlCopyMemory(AdminInfo.Name,
+                      AccountNameInfo->UserName.Buffer,
+                      AccountNameInfo->UserName.Length);
+
+    AdminInfo.Domain = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       HEAP_ZERO_MEMORY,
+                                       OrigInfo->DomainName.Length + sizeof(WCHAR));
+    if (AdminInfo.Domain != NULL)
+        RtlCopyMemory(AdminInfo.Domain,
+                      OrigInfo->DomainName.Buffer,
+                      OrigInfo->DomainName.Length);
+
+    AdminInfo.Password = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         (wcslen(Password) + 1) * sizeof(WCHAR));
+    if (AdminInfo.Password != NULL)
+        wcscpy(AdminInfo.Password, Password);
+
+    DPRINT1("Administrator Name: %S\n", AdminInfo.Name);
+    DPRINT1("Administrator Domain: %S\n", AdminInfo.Domain);
+    DPRINT1("Administrator Password: %S\n", AdminInfo.Password);
+
 done:
+    if (AccountNameInfo != NULL)
+        SamFreeMemory(AccountNameInfo);
+
     if (OrigInfo != NULL)
         LsaFreeMemory(OrigInfo);
 
@@ -411,6 +450,64 @@ done:
 
     return Status;
 }
+
+
+VOID
+SetAutoAdminLogon(VOID)
+{
+    WCHAR szAutoAdminLogon[2];
+    HKEY hKey = NULL;
+    DWORD dwType;
+    DWORD dwSize;
+    LONG lError;
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                           0,
+                           KEY_READ | KEY_WRITE,
+                           &hKey);
+    if (lError != ERROR_SUCCESS)
+        return;
+
+    dwSize = 2 * sizeof(WCHAR);
+    lError = RegQueryValueExW(hKey,
+                              L"AutoAdminLogon",
+                              NULL,
+                              &dwType,
+                              (LPBYTE)szAutoAdminLogon,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS)
+        goto done;
+
+    if (wcscmp(szAutoAdminLogon, L"1") == 0)
+    {
+        RegSetValueExW(hKey,
+                       L"DefaultDomain",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)AdminInfo.Domain,
+                       (wcslen(AdminInfo.Domain) + 1) * sizeof(WCHAR));
+
+        RegSetValueExW(hKey,
+                       L"DefaultUserName",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)AdminInfo.Name,
+                       (wcslen(AdminInfo.Name) + 1) * sizeof(WCHAR));
+
+        RegSetValueExW(hKey,
+                       L"DefaultPassword",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)AdminInfo.Password,
+                       (wcslen(AdminInfo.Password) + 1) * sizeof(WCHAR));
+    }
+
+done:
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+}
+
 
 /* EOF */
 
