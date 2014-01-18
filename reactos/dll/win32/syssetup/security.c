@@ -423,9 +423,9 @@ SetAdministratorPassword(LPCWSTR Password)
     if (AdminInfo.Password != NULL)
         wcscpy(AdminInfo.Password, Password);
 
-    DPRINT1("Administrator Name: %S\n", AdminInfo.Name);
-    DPRINT1("Administrator Domain: %S\n", AdminInfo.Domain);
-    DPRINT1("Administrator Password: %S\n", AdminInfo.Password);
+    DPRINT("Administrator Name: %S\n", AdminInfo.Name);
+    DPRINT("Administrator Domain: %S\n", AdminInfo.Domain);
+    DPRINT("Administrator Password: %S\n", AdminInfo.Password);
 
 done:
     if (AccountNameInfo != NULL)

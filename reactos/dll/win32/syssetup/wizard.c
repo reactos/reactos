@@ -617,6 +617,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMPUTERNAME), WM_SETTEXT, 0, (LPARAM)SetupData.ComputerName);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD1), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD2), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
+                SetAdministratorPassword(SetupData.AdminPassword);
             }
 
         }
