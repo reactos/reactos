@@ -602,7 +602,7 @@ HidParser_GetUsageValueWithReport(
         return HIDPARSER_STATUS_INVALID_REPORT_LENGTH;
     }
 
-    for(Index = 0; Index < Report->ItemCount; Index++)
+    for (Index = 0; Index < Report->ItemCount; Index++)
     {
         //
         // get report item
@@ -632,10 +632,10 @@ HidParser_GetUsageValueWithReport(
         ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
 
         //
-        // FIXME: support items with variable bitlength
+        // one extra shift for skipping the prepended report id
         //
-        ASSERT(ReportItem->BitCount == 16);
-        Data = (ReportDescriptor[ReportItem->ByteOffset +1] & 0xFF) | (ReportDescriptor[ReportItem->ByteOffset +2] & 0xFF) << 8;
+        Data = 0;
+        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
 
         //
         // shift data
@@ -699,7 +699,7 @@ HidParser_GetScaledUsageValueWithReport(
         return HIDPARSER_STATUS_INVALID_REPORT_LENGTH;
     }
 
-    for(Index = 0; Index < Report->ItemCount; Index++)
+    for (Index = 0; Index < Report->ItemCount; Index++)
     {
         //
         // get report item
@@ -732,8 +732,7 @@ HidParser_GetScaledUsageValueWithReport(
         // one extra shift for skipping the prepended report id
         //
         Data = 0;
-        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset +1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
-        Data = ReportDescriptor[ReportItem->ByteOffset + 1];
+        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
 
         //
         // shift data
@@ -812,7 +811,6 @@ HidParser_GetScanCodeFromCustUsage(
             //
             return CustomerScanCodes[i].ScanCode;
         }
-            
     }
 
     //
