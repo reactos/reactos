@@ -149,17 +149,35 @@ SetWelcomeText(VOID)
 }
 
 VOID
-ShowPopupMenu(HWND hwnd, UINT MenuID)
+ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 {
-    HMENU hPopupMenu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(MenuID)), 0);
+    HMENU hMenu = NULL;
+    HMENU hPopupMenu;
+    MENUITEMINFO mii;
     POINT pt;
+
+    if (MenuID)
+    {
+        hMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(MenuID));
+        hPopupMenu = GetSubMenu(hMenu, 0);
+    }
+    else
+        hPopupMenu = GetMenu(hwnd);
+
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STATE;
+    GetMenuItemInfo(hPopupMenu, DefaultItem, FALSE, &mii);
+    if (!(mii.fState & MFS_GRAYED))
+        SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);
 
     GetCursorPos(&pt);
 
     SetForegroundWindow(hwnd);
     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
 
-    DestroyMenu(hPopupMenu);
+    if (hMenu)
+        DestroyMenu(hMenu);
 }
 
 BOOL

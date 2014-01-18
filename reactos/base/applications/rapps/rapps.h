@@ -149,7 +149,7 @@ int GetClientWindowWidth(HWND hwnd);
 int GetClientWindowHeight(HWND hwnd);
 VOID CopyTextToClipboard(LPCWSTR lpszText);
 VOID SetWelcomeText(VOID);
-VOID ShowPopupMenu(HWND hwnd, UINT MenuID);
+VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
 BOOL GetStorageDirectory(PWCHAR lpDirectory, DWORD cch);
 BOOL ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath);

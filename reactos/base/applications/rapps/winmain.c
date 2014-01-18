@@ -588,6 +588,25 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     EndDeferWindowPos(hdwp);
 }
 
+BOOL IsSelectedNodeInstalled(void)
+{
+    HTREEITEM hSelectedItem = TreeView_GetSelection(hTreeView);
+    TV_ITEM tItem;
+
+    tItem.mask = TVIF_PARAM | TVIF_HANDLE;
+    tItem.hItem = hSelectedItem;
+    TreeView_GetItem(hTreeView, &tItem);
+    switch (tItem.lParam)
+    {
+        case IDS_INSTALLED:
+        case IDS_APPLICATIONS:
+        case IDS_UPDATES:
+            return TRUE;
+        default:
+            return FALSE;
+    }
+}
+
 LRESULT CALLBACK
 MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -692,6 +711,42 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                                 break;
                         }
                     }
+
+                    /* Disable/enable items based on treeview selection */
+                    if (IsSelectedNodeInstalled())
+                    {
+                        EnableMenuItem(GetMenu(hwnd), ID_REGREMOVE, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hwnd), ID_INSTALL, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hwnd), ID_UNINSTALL, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hwnd), ID_MODIFY, MF_ENABLED);
+
+                        EnableMenuItem(GetMenu(hListView), ID_REGREMOVE, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hListView), ID_INSTALL, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hListView), ID_UNINSTALL, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hListView), ID_MODIFY, MF_ENABLED);
+
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_INSTALL, FALSE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+                    }
+                    else
+                    {
+                        EnableMenuItem(GetMenu(hwnd), ID_REGREMOVE, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hwnd), ID_INSTALL, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hwnd), ID_UNINSTALL, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hwnd), ID_MODIFY, MF_GRAYED);
+
+                        EnableMenuItem(GetMenu(hListView), ID_REGREMOVE, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hListView), ID_INSTALL, MF_ENABLED);
+                        EnableMenuItem(GetMenu(hListView), ID_UNINSTALL, MF_GRAYED);
+                        EnableMenuItem(GetMenu(hListView), ID_MODIFY, MF_GRAYED);
+
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_INSTALL, TRUE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
+                        SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+                    }
                 }
                 break;
 
@@ -734,19 +789,34 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case NM_CLICK:
-                    if (data->hwndFrom == hListView)
+                {
+                    if (data->hwndFrom == hListView && ((LPNMLISTVIEW)lParam)->iItem != -1)
                     {
                         if (IS_INSTALLED_ENUM(SelectedEnumType))
                             ShowInstalledAppInfo(-1);
                         if (IS_AVAILABLE_ENUM(SelectedEnumType))
                             ShowAvailableAppInfo(-1);
                     }
-                    break;
+                }
+                break;
+
+                case NM_DBLCLK:
+                {
+                    if (data->hwndFrom == hListView && ((LPNMLISTVIEW)lParam)->iItem != -1)
+                    {
+                        SendMessage(hwnd, WM_COMMAND, ID_INSTALL, 0);   //Won't do anything if the program is already installed
+                    }
+                }
+                break;
 
                 case NM_RCLICK:
-                    if (data->hwndFrom == hListView)
-                        ShowPopupMenu(hListView, IDR_APPLICATIONMENU);
-                    break;
+                {
+                    if (data->hwndFrom == hListView && ((LPNMLISTVIEW)lParam)->iItem != -1)
+                    {
+                        ShowPopupMenu(hListView, 0, ID_INSTALL);
+                    }
+                }
+                break;
 
                 case EN_LINK:
                     RichEditOnLink(hwnd, (ENLINK*)lParam);

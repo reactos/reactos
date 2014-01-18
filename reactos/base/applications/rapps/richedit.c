@@ -36,7 +36,7 @@ RichEditOnLink(HWND hwnd, ENLINK *Link)
             SendMessageW(hRichEdit, EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
             SendMessageW(hRichEdit, EM_GETSELTEXT, 0, (LPARAM)pLink);
 
-            ShowPopupMenu(hwnd, IDR_LINKMENU);
+            ShowPopupMenu(hwnd, IDR_LINKMENU, -1);
         }
         break;
     }
