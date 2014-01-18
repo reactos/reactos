@@ -557,7 +557,7 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
             ItemsArray[i]->encoding = ENCODING_UTF8;
         }
 
-    GetCurrentDirectoryW(MAX_PATH, szDir);
+    GetStorageDirectory(szDir, sizeof(szDir) / sizeof(szDir[0]));
 
     wcscpy(buffer, szDir);
     wcscat(buffer, wszSeparator);

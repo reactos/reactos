@@ -208,6 +208,26 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     return TRUE;
 }
 
+BOOL
+GetStorageDirectory(PWCHAR lpDirectory, DWORD cch)
+{
+    if (cch < MAX_PATH)
+        return FALSE;
+
+    if (!SHGetSpecialFolderPathW(NULL, lpDirectory, CSIDL_LOCAL_APPDATA, TRUE))
+        return FALSE;
+
+    if (FAILED(StringCchCatW(lpDirectory, cch, L"\\rapps")))
+        return FALSE;
+
+    if (!CreateDirectoryW(lpDirectory, NULL) &&
+        GetLastError() != ERROR_ALREADY_EXISTS)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 BOOL
 ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
@@ -261,13 +281,13 @@ InitLogs(VOID)
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                         szBuf, 0, NULL,
                         REG_OPTION_NON_VOLATILE,
-                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS) 
+                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS)
     {
         return;
     }
 
-    if (!GetCurrentDirectoryW(MAX_PATH, szPath)) return;
-    wcscat(szPath, L"\\rapps.exe");
+    if (!GetModuleFileName(NULL, szPath, sizeof(szPath) / sizeof(szPath[0])))
+        return;
 
     if (RegSetValueExW(hKey,
                        L"EventMessageFile",
@@ -276,13 +296,13 @@ InitLogs(VOID)
                        (LPBYTE)szPath,
                        (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | 
-             EVENTLOG_INFORMATION_TYPE; 
- 
+    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
+             EVENTLOG_INFORMATION_TYPE;
+
     if (RegSetValueExW(hKey,
                        L"TypesSupported",
                        0,
@@ -290,7 +310,7 @@ InitLogs(VOID)
                        (LPBYTE)&dwData,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
@@ -301,7 +321,7 @@ InitLogs(VOID)
                        (LPBYTE)szPath,
                        (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 
@@ -312,7 +332,7 @@ InitLogs(VOID)
                        (LPBYTE)&dwCategoryNum,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey); 
+        RegCloseKey(hKey);
         return;
     }
 

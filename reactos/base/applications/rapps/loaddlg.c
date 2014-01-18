@@ -227,7 +227,7 @@ ThreadFunc(LPVOID Context)
             AppInfo->szUrlDownload[len - 1] == 'b')
         {
             bCab = TRUE;
-            if (!GetCurrentDirectoryW(MAX_PATH, path))
+            if (!GetStorageDirectory(path, sizeof(path) / sizeof(path[0])))
                 goto end;
         }
         else

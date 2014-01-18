@@ -47,7 +47,7 @@ DeleteCurrentAppsDB(VOID)
     WCHAR szPath[MAX_PATH];
     WCHAR szTmp[MAX_PATH];
 
-    if (!GetCurrentDirectoryW(MAX_PATH, szPath))
+    if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
         return FALSE;
 
     swprintf(szCabPath, L"%s\\rappmgr.cab", szPath);
@@ -94,7 +94,7 @@ UpdateAppsDB(VOID)
 
     DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
 
-    if (!GetCurrentDirectoryW(MAX_PATH, szPath))
+    if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
         return FALSE;
 
     swprintf(szCabPath, L"%s\\rappmgr.cab", szPath);
@@ -120,7 +120,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     WCHAR szLocale[4 + 1];
     APPLICATION_INFO Info;
 
-    if (!GetCurrentDirectoryW(MAX_PATH, szPath))
+    if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
     {
         return FALSE;
     }

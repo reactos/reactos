@@ -15,6 +15,7 @@
 #include <richedit.h>
 #include <shlobj.h>
 #include <stdio.h>
+#include <strsafe.h>
 
 #include <rappsmsg.h>
 
@@ -150,6 +151,7 @@ VOID CopyTextToClipboard(LPCWSTR lpszText);
 VOID SetWelcomeText(VOID);
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
+BOOL GetStorageDirectory(PWCHAR lpDirectory, DWORD cch);
 BOOL ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath);
 VOID InitLogs(VOID);
 VOID FreeLogs(VOID);
