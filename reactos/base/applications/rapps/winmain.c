@@ -10,11 +10,27 @@
 
 #include <shellapi.h>
 
+#define SEARCH_TIMER_ID 'SR'
+
 HWND hMainWnd;
 HINSTANCE hInst;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
+
+PCWSTR (WINAPI *pStrStrIW)(PCWSTR, PCWSTR);
+
+WCHAR szSearchPattern[MAX_STR_LEN] = L"";
+BOOL SearchEnabled = TRUE;
+
+BOOL
+SearchPatternMatch(PCWSTR szHaystack, PCWSTR szNeedle)
+{
+    if (!*szNeedle)
+        return TRUE;
+    /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
+    return pStrStrIW(szHaystack, szNeedle) != NULL;
+}
 
 VOID
 FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
@@ -107,6 +123,9 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, INSTALLED_INFO Info)
     WCHAR szText[MAX_PATH];
     INT Index;
 
+    if (!SearchPatternMatch(lpName, szSearchPattern))
+        return TRUE;
+
     ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
     if (!ItemInfo) return FALSE;
 
@@ -145,6 +164,12 @@ EnumAvailableAppProc(APPLICATION_INFO Info)
 {
     PAPPLICATION_INFO ItemInfo;
     INT Index;
+
+    if (!SearchPatternMatch(Info.szName, szSearchPattern) &&
+        !SearchPatternMatch(Info.szDesc, szSearchPattern))
+    {
+        return TRUE;
+    }
 
     /* Only add a ListView entry if...
          - no RegName was supplied (so we cannot determine whether the application is installed or not) or
@@ -344,6 +369,13 @@ InitControls(HWND hwnd)
     return FALSE;
 }
 
+VOID CALLBACK
+SearchTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+    KillTimer(hwnd, SEARCH_TIMER_ID);
+    UpdateApplicationsList(-1);
+}
+
 VOID
 MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
@@ -361,7 +393,11 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
                 LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
                 GetWindowTextW(hSearchBar, szWndText, MAX_STR_LEN);
-                if (wcscmp(szBuf, szWndText) == 0) SetWindowTextW(hSearchBar, L"");
+                if (wcscmp(szBuf, szWndText) == 0)
+                {
+                    SearchEnabled = FALSE;
+                    SetWindowTextW(hSearchBar, L"");
+                }
             }
             break;
 
@@ -371,14 +407,37 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 if (wcslen(szBuf) < 1)
                 {
                     LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+                    SearchEnabled = FALSE;
                     SetWindowTextW(hSearchBar, szBuf);
                 }
             }
             break;
 
             case EN_CHANGE:
-                /* TODO: Implement search */
-                break;
+            {
+                WCHAR szWndText[MAX_STR_LEN];
+
+                if (!SearchEnabled)
+                {
+                    SearchEnabled = TRUE;
+                    break;
+                }
+
+                LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+                GetWindowTextW(hSearchBar, szWndText, MAX_STR_LEN);
+                if (wcscmp(szBuf, szWndText) != 0)
+                {
+                    StringCbCopy(szSearchPattern, sizeof(szSearchPattern),
+                                 szWndText);
+                }
+                else
+                {
+                    szSearchPattern[0] = UNICODE_NULL;
+                }
+
+                SetTimer(hwnd, SEARCH_TIMER_ID, 250, SearchTimerProc);
+            }
+            break;
         }
 
         return;
@@ -777,6 +836,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WCHAR szWindowName[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
+
+    /* FIXME: CORE-7786 requires this to be loaded at runtime because we
+     *        would get comctl32's version otherwise */
+    pStrStrIW = (PVOID)GetProcAddress(GetModuleHandle(L"shlwapi"), "StrStrIW");
 
     switch (GetUserDefaultUILanguage())
     {
