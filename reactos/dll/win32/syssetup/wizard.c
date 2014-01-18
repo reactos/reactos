@@ -532,18 +532,22 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
 {
     WCHAR Title[64];
     WCHAR ErrorComputerName[256];
+
     if (!SetComputerNameW(ComputerName))
     {
-        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+        if (hwndDlg != NULL)
         {
-            wcscpy(Title, L"ReactOS Setup");
+            if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+            {
+                wcscpy(Title, L"ReactOS Setup");
+            }
+            if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
+                                 sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
+            {
+                wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
+            }
+            MessageBoxW(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
         }
-        if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
-                             sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
-        {
-            wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
-        }
-        MessageBoxW(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
 
         return FALSE;
     }
@@ -617,6 +621,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMPUTERNAME), WM_SETTEXT, 0, (LPARAM)SetupData.ComputerName);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD1), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD2), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
+                WriteComputerSettings(SetupData.ComputerName, NULL);
                 SetAdministratorPassword(SetupData.AdminPassword);
             }
 
