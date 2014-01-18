@@ -191,7 +191,6 @@ BEGIN
     IDS_APPLICATIONS "Aplikácie"
     IDS_CHOOSE_FOLDER_TEXT "Vyberte priečinok, ktorý sa použije pre sťahovanie programov:"
     IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistujúci priečinok!"
-    IDS_USER_NOT_ADMIN "Mali by ste byť administrátor pre spustenie ""Manažéra aplikácií systému ReactOS""!"
     IDS_APP_REG_REMOVE "Naozaj chcete vymazať údaje o nainštalovanom programe z registrov?"
     IDS_INFORMATION "Informácie"
     IDS_UNABLE_TO_REMOVE "Nie je možné odstrániť z registrov údaje o programe!"

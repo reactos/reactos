@@ -186,7 +186,6 @@ BEGIN
     IDS_APPLICATIONS "Aplicaciones"
     IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta donde se descargarán los programas:"
     IDS_CHOOSE_FOLDER_ERROR "¡La carpeta especificada no existe!"
-    IDS_USER_NOT_ADMIN "¡Debe tener privilegios de administrador para ejecutar ""ReactOS Applications Manager""!"
     IDS_APP_REG_REMOVE "¿Esta seguro que quiere borrar los datos del programa instalado del registro?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_REMOVE "!Imposible eliminar los datos del programa del registro!"

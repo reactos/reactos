@@ -188,7 +188,6 @@ BEGIN
     IDS_APPLICATIONS "应用程序"
     IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹："
     IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。创建吗？"
-    IDS_USER_NOT_ADMIN "您必须以管理员权限启动 ""ReactOS 程序管理器""！"
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"

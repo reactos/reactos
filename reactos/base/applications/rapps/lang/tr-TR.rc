@@ -188,7 +188,6 @@ BEGIN
     IDS_APPLICATIONS "Yazılımlar"
     IDS_CHOOSE_FOLDER_TEXT "İndirme dizinini seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_USER_NOT_ADMIN "ReactOS Yazılım Yöneticisi'ni yönetici olarak çalıştırmalısınız."
     IDS_APP_REG_REMOVE "Bu yazılımın bilgilerini Değer Defteri'nden kaldırmayı onaylıyor musunuz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_REMOVE "Bu yazılımın bilgileri Değer Defteri'nden kaldırılamıyor."

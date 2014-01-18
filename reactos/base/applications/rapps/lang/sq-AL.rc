@@ -190,7 +190,6 @@ BEGIN
     IDS_APPLICATIONS "Aplicacione"
     IDS_CHOOSE_FOLDER_TEXT "Zgjidh nje dosje ku do duhen Downloadusit:"
     IDS_CHOOSE_FOLDER_ERROR "Dosja qe keni zgjedhur nuk ekziston. Krijoje?"
-    IDS_USER_NOT_ADMIN "Ju duhet te jeni administrator per te filluar ""ReactOS Applications Manager""!"
     IDS_APP_REG_REMOVE "Jeni te sigurt qe do ti fshini informacionet e programit te instaluar nga regjistri?"
     IDS_INFORMATION "Informacione"
     IDS_UNABLE_TO_REMOVE "E pamundur te fshihen informacionet e programit nga regjistri!"

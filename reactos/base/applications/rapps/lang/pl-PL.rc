@@ -194,7 +194,6 @@ BEGIN
     IDS_APPLICATIONS "Aplikacje"
     IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym będa zapisywane pobrane programy:"
     IDS_CHOOSE_FOLDER_ERROR "Wybrałeś nieistniejący katalog! Czy chcesz utworzyć nowy?"
-    IDS_USER_NOT_ADMIN "Musisz mieć uprawnienia administratora, aby uruchomić ""Menedżer aplikacji ReactOS""!"
     IDS_APP_REG_REMOVE "Czy na pewno chcesz usunąć wpis tego programu z rejestru?"
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"

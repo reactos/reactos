@@ -87,7 +87,6 @@
 #define IDS_APPLICATIONS         112
 #define IDS_CHOOSE_FOLDER_TEXT   113
 #define IDS_CHOOSE_FOLDER_ERROR  114
-#define IDS_USER_NOT_ADMIN       115
 #define IDS_APP_REG_REMOVE       116
 #define IDS_INFORMATION          117
 #define IDS_UNABLE_TO_REMOVE     118

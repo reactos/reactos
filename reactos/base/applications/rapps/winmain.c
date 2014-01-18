@@ -212,7 +212,7 @@ UpdateApplicationsList(INT EnumType)
 
     /* Destroy old image list */
     if (hImageListView)
-		ImageList_Destroy(hImageListView);
+        ImageList_Destroy(hImageListView);
 
     SelectedEnumType = EnumType;
 
@@ -776,23 +776,16 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     MSG Msg;
 
     switch (GetUserDefaultUILanguage())
-  {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
-    default:
-      break;
-  }
+        default:
+            break;
+    }
 
     hInst = hInstance;
-
-    if (!IsUserAnAdmin())
-    {
-        LoadStringW(hInst, IDS_USER_NOT_ADMIN, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
-        MessageBox(0, szErrorText, NULL, MB_OK | MB_ICONWARNING);
-        return 1;
-    }
 
     hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))

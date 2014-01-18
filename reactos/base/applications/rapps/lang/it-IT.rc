@@ -186,7 +186,6 @@ BEGIN
     IDS_APPLICATIONS "Applicazioni"
     IDS_CHOOSE_FOLDER_TEXT "Scegliere una cartella dove scaricare le applicazioni:"
     IDS_CHOOSE_FOLDER_ERROR "La cartella indicata non esiste. Vuoi crearla?"
-    IDS_USER_NOT_ADMIN "Dovete essere Amministratore per avviare ""ReactOS Applications Manager""!"
     IDS_APP_REG_REMOVE "Sicuro di voler cancellare dal registry i dati sui programmi installati?"
     IDS_INFORMATION "Informazioni"
     IDS_UNABLE_TO_REMOVE "Impossibile cancellare i dati dal registry!"

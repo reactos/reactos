@@ -193,7 +193,6 @@ BEGIN
     IDS_APPLICATIONS "Aplicații"
     IDS_CHOOSE_FOLDER_TEXT "Specificați un dosar destinație pentru descărcări:"
     IDS_CHOOSE_FOLDER_ERROR "Dosarul specificat nu există. Doriți crearea lui?"
-    IDS_USER_NOT_ADMIN "Pentru a porni „Gestionar de aplicații ReactOS” sunt necesare drepturi de administrator!"
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru această aplicație!"
