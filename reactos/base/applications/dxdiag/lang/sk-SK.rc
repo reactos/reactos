@@ -58,8 +58,8 @@ BEGIN
     RTEXT "Výrobca:", -1, 20, 35, 70, 10
     RTEXT "Typ čipu:", -1, 20, 45, 70, 10
     RTEXT "Typ D-A konvertora:", -1, 20, 55, 70, 10
-    RTEXT "Pribl. celková pamäť:", -1, 20, 65, 70, 10
-    RTEXT "Súčasný mód obrazovky:", -1, 20, 75, 70, 10
+    RTEXT "Pribl. celková pamäť:", -1, 14, 65, 75, 10
+    RTEXT "Súčasný mód obrazovky:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -194,7 +194,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "ID výrobcu"
     IDS_DEVICE_PRODUCT "ID produktu"
     IDS_DEVICE_FORCEFEEDBACK "Ovládač Force Feedback"
-    IDS_NOT_APPLICABLE "Not applicable"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Áno"
     IDS_DIRECTPLAY_COL_NAME1 "Názov"
     IDS_DIRECTPLAY_COL_NAME2 "Registry"

@@ -57,8 +57,8 @@ BEGIN
     RTEXT "Prodhuesi:", -1, 20, 35, 70, 10
     RTEXT "Tipi i procesorit:", -1, 20, 45, 70, 10
     RTEXT "Tipi DAC:", -1, 20, 55, 70, 10
-    RTEXT "Memoria Totale:", -1, 20, 65, 70, 10
-    RTEXT "Modaliteti vizual aktual:", -1, 20, 75, 70, 10
+    RTEXT "Memoria Totale:", -1, 14, 65, 75, 10
+    RTEXT "Modaliteti vizual aktual:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -193,7 +193,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "ID e proshuesit"
     IDS_DEVICE_PRODUCT "ID e produktit"
     IDS_DEVICE_FORCEFEEDBACK "Detyro prapaveprimin e Driverit"
-    IDS_NOT_APPLICABLE "Nuk aplikohet"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Po"
     IDS_DIRECTPLAY_COL_NAME1 "Emri"
     IDS_DIRECTPLAY_COL_NAME2 "Regjistri"

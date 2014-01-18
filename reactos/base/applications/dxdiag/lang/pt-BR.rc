@@ -55,8 +55,8 @@ BEGIN
     RTEXT "Fabricante:", -1, 20, 35, 70, 10
     RTEXT "Tipo de processador:", -1, 20, 45, 70, 10
     RTEXT "Conv. analógico-digital:", -1, 20, 55, 70, 10
-    RTEXT "Total aprox. memória:", -1, 20, 65, 70, 10
-    RTEXT "Modo de exib. atual:", -1, 20, 75, 70, 10
+    RTEXT "Total aprox. memória:", -1, 14, 65, 75, 10
+    RTEXT "Modo de exib. atual:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -191,7 +191,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "Identificação do fornecedor"
     IDS_DEVICE_PRODUCT "Identificação do produto (Product ID)"
     IDS_DEVICE_FORCEFEEDBACK "Driver do Force Feedback"
-    IDS_NOT_APPLICABLE "Não aplicável"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Sim"
     IDS_DIRECTPLAY_COL_NAME1 "Nome"
     IDS_DIRECTPLAY_COL_NAME2 "Registro"

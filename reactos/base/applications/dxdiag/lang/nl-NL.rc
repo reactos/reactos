@@ -53,8 +53,8 @@ BEGIN
     RTEXT "Fabrikans:", -1, 20, 35, 70, 10
     RTEXT "Chip-type:", -1, 20, 45, 70, 10
     RTEXT "DAC-type:", -1, 20, 55, 70, 10
-    RTEXT "Totaal geheugen:", -1, 20, 65, 70, 10
-    RTEXT "Huidige resolutie:", -1, 20, 75, 70, 10
+    RTEXT "Totaal geheugen:", -1, 14, 65, 75, 10
+    RTEXT "Huidige resolutie:", -1, 14, 75, 75, 10
     RTEXT "Beeldscherm:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
