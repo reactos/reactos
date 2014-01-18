@@ -46,6 +46,9 @@ char  opt_7z[PATH_MAX];          // -z <opt_7z>
 char  opt_scanned[LINESIZE];     // all scanned options
 char  opt_SourcesPath[LINESIZE]; //sources path
 
+/* optionInit returns 0 for normal operation, and -1 in case just "loglines.exe" was written.
+In such case, the help is shown */
+
 int optionInit(int argc, const char **argv)
 {
     int i;
@@ -64,8 +67,20 @@ int optionInit(int argc, const char **argv)
     l2l_dbg(1, "Trunk build revision: %d\n", revinfo.buildrev);
 
     strcpy(opt_scanned, "");
+
+    //The user introduced "log2lines.exe" or "log2lines.exe /?"
+    //Let's help the user
+    if ((argc == 1) || 
+        ((argc == 2) && (argv[1][0] == '/') && (argv[1][1] == '?')))
+    {
+        opt_help++;
+        usage(1);
+        return -1;
+    }
+
     for (i = 1; i < argc; i++)
     {
+
         if ((argv[i][0] == '-') && (i+1 < argc))
         {
             //Because these arguments can contain spaces we cant use getopt(), a known bug:
@@ -90,6 +105,7 @@ int optionInit(int argc, const char **argv)
                 break;
             }
         }
+
         strcat(opt_scanned, argv[i]);
         strcat(opt_scanned, " ");
     }
