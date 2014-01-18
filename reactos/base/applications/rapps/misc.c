@@ -113,7 +113,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
 {
     HRESULT hr;
 
-    if(OpenClipboard(NULL))
+    if (OpenClipboard(NULL))
     {
         HGLOBAL ClipBuffer;
         WCHAR *Buffer;
@@ -122,7 +122,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
         EmptyClipboard();
         cchBuffer = wcslen(lpszText) + 1;
         ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
-        Buffer = (WCHAR*)GlobalLock(ClipBuffer);
+        Buffer = GlobalLock(ClipBuffer);
         hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
         GlobalUnlock(ClipBuffer);
 

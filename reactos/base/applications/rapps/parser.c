@@ -489,7 +489,7 @@ SECTIONKEY
     if (!create) return NULL;
     cch = wcslen(section_name) + 1;
     *section = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(SECTION, name) + cch * sizeof(WCHAR));
-    if(*section == NULL) return NULL;
+    if (*section == NULL) return NULL;
     StringCchCopyW((*section)->name, cch, section_name);
     (*section)->next = NULL;
     cch = wcslen(key_name) + 1;
@@ -562,11 +562,15 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
             ItemsArray[i]->encoding = ENCODING_UTF8;
         }
 
-    GetStorageDirectory(szDir, sizeof(szDir) / sizeof(szDir[0]));
+    if (!GetStorageDirectory(szDir, sizeof(szDir) / sizeof(szDir[0])))
+        return FALSE;
 
-    StringCbPrintfW(buffer, sizeof(buffer),
-                    L"%ls\\rapps\\%ls",
-                    szDir, filename);
+    if (FAILED(StringCbPrintfW(buffer, sizeof(buffer),
+                               L"%ls\\rapps\\%ls",
+                               szDir, filename)))
+    {
+        return FALSE;
+    }
 
     hFile = CreateFileW(buffer, GENERIC_READ | (write_access ? GENERIC_WRITE : 0),
                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,

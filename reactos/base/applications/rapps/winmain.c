@@ -40,7 +40,7 @@ LoadSettings(VOID)
     HKEY hKey;
     DWORD dwSize;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(SETTINGS_INFO);
         if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
@@ -73,7 +73,7 @@ SaveSettings(HWND hwnd)
         SettingsInfo.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
     }
 
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\rapps", 0, NULL,
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
         RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
@@ -115,10 +115,10 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, INSTALLED_INFO Info)
     Index = ListViewAddItem(ItemIndex, 0, lpName, (LPARAM)ItemInfo);
 
     /* Get version info */
-    GetApplicationString((HKEY)ItemInfo->hSubKey, L"DisplayVersion", szText);
+    GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
     ListView_SetItemText(hListView, Index, 1, szText);
     /* Get comments */
-    GetApplicationString((HKEY)ItemInfo->hSubKey, L"Comments", szText);
+    GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
     ListView_SetItemText(hListView, Index, 2, szText);
 
     return TRUE;
@@ -538,8 +538,6 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             if (!InitControls(hwnd))
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
 
-            if (SettingsInfo.bUpdateAtStart)
-                UpdateAppsDB();
             break;
 
         case WM_COMMAND:
@@ -843,8 +841,11 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     if (!hMainWnd) goto Exit;
 
     /* Show it */
-    ShowWindow(hMainWnd, SW_SHOW);
+    ShowWindow(hMainWnd, nShowCmd);
     UpdateWindow(hMainWnd);
+
+    if (SettingsInfo.bUpdateAtStart)
+        UpdateAppsDB();
 
     /* Message Loop */
     while (GetMessage(&Msg, NULL, 0, 0))

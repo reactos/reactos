@@ -47,6 +47,7 @@ DeleteCurrentAppsDB(VOID)
     WCHAR szPath[MAX_PATH];
     WCHAR szTmp[MAX_PATH];
     HRESULT hr;
+    BOOL result = TRUE;
 
     if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
         return FALSE;
@@ -57,11 +58,7 @@ DeleteCurrentAppsDB(VOID)
     if (FAILED(hr))
         return FALSE;
 
-    if (GetFileAttributesW(szCabPath) != INVALID_FILE_ATTRIBUTES)
-    {
-        if (!DeleteFileW(szCabPath))
-            return FALSE;
-    }
+    result = result && DeleteFileW(szCabPath);
 
     hr = StringCbCatW(szPath, sizeof(szPath), L"\\rapps\\");
     if (FAILED(hr))
@@ -75,24 +72,21 @@ DeleteCurrentAppsDB(VOID)
 
     hFind = FindFirstFileW(szSearchPath, &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE)
-        return TRUE;
+        return result;
 
     do
     {
         hr = StringCbPrintfW(szTmp, sizeof(szTmp),
                              L"%ls%ls",
                              szPath, FindFileData.cFileName);
-        if (FAILED(hr) || !DeleteFileW(szTmp))
-        {
-            FindClose(hFind);
-            return FALSE;
-        }
-    }
-    while (FindNextFileW(hFind, &FindFileData) != 0);
+        if (FAILED(hr))
+            continue;
+        result = result && DeleteFileW(szTmp);
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
 
-    return TRUE;
+    return result;
 }
 
 
@@ -145,9 +139,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     HRESULT hr;
 
     if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
-    {
         return FALSE;
-    }
 
     hr = StringCbPrintfW(szCabPath, sizeof(szCabPath),
                          L"%ls\\rappmgr.cab",
@@ -168,11 +160,6 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         return FALSE;
     }
 
-    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE, szLocale, sizeof(szLocale) / sizeof(WCHAR));
-    hr = StringCbCatW(szSectionLocale, sizeof(szSectionLocale), szLocale);
-    if (FAILED(hr))
-        return FALSE;
-
     hr = StringCbCatW(szPath, sizeof(szPath), L"*.txt");
     if (FAILED(hr))
         return FALSE;
@@ -188,6 +175,16 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         if (hFind == INVALID_HANDLE_VALUE)
             return FALSE;
     }
+
+    if (!GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
+                        szLocale, sizeof(szLocale) / sizeof(WCHAR)))
+    {
+        return FALSE;
+    }
+
+    hr = StringCbCatW(szSectionLocale, sizeof(szSectionLocale), szLocale);
+    if (FAILED(hr))
+        return FALSE;
 
 #define GET_STRING1(a, b)  \
     if (!ParserGetString(szSectionLocale, a, b, MAX_PATH, FindFileData.cFileName)) \
@@ -223,8 +220,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         GET_STRING2(L"CDPath", Info.szCDPath);
 
         if (!lpEnumProc(Info)) break;
-    }
-    while (FindNextFileW(hFind, &FindFileData) != 0);
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
 
