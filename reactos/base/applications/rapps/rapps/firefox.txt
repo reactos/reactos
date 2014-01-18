@@ -1,84 +1,85 @@
 ﻿; UTF-8
 
 [Section]
-Name = Mozilla Firefox 25
-Version = 25.0.1
+Name = Mozilla Firefox 26
+Version = 26.0
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
-Size = 21.7MB
+Size = 22.9 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/en-US/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/en-US/Firefox%20Setup%2026.0.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
-Size = 21.5MB
+Size = 22.8 MB
 URLSite = http://www.mozilla-europe.org/de/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/de/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/de/Firefox%20Setup%2026.0.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
-Size = 21.5MB
+Size = 22.7 MB
 URLSite = http://www.mozilla-europe.org/es/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/es-ES/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/es-ES/Firefox%20Setup%2026.0.exe
 
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
-Size = 21,8 Mo
+Size = 23,0 Mo
 URLSite = http://www.mozilla-europe.org/fr/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/fr/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/fr/Firefox%20Setup%2026.0.exe
 
 [Section.0410]
 Description = Il più popolare e uno dei migliori web browser gratuiti.
-Size = 21.5MB
+Size = 22.7 MB
 URLSite = http://www.mozilla-europe.org/it/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/it/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/it/Firefox%20Setup%2026.0.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.
-Size = 22.2MB
+Size = 23.4 MB
 URLSite = http://www.mozilla-europe.org/nl/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/nl/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/nl/Firefox%20Setup%2026.0.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
-Size = 21.5MB
+Size = 22.8 MB
 URLSite = http://www.mozilla-europe.org/no/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/nb-NO/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/nb-NO/Firefox%20Setup%2026.0.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
-Size = 22.4MB
+Size = 23.7 MB
 URLSite = http://www.mozilla-europe.org/pl/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/pl/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/pl/Firefox%20Setup%2026.0.exe
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
-Size = 22,0 Mo
+Size = 23,3 Mo
 URLSite = http://www.mozilla-europe.org/ro/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/ro/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/ro/Firefox%20Setup%2026.0.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 22,0MB
+Size = 23,2 MB
 URLSite = http://www.mozilla-europe.org/ru/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/ru/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/ru/Firefox%20Setup%2026.0.exe
 
 [Section.041b] 
 Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
-Size = 22,2MB
+Size = 23,4 MB
 URLSite = http://www.mozilla-europe.org/sk/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/sk/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/sk/Firefox%20Setup%2026.0.exe
 
 [Section.041f]
-Name = Mozilla Ateştilkisi 24
+Name = Mozilla Ateştilkisi 26
 Description = Özgür örütbağ tarayıcıları arasında en tutulanı ve en iyisi.
+Size = 22,8 MB
 URLSite = http://www.mozilla.org/tr/firefox/new/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/tr/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/tr/Firefox%20Setup%2026.0.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
-Size = 22,0MB
+Size = 23,2 MB
 URLSite = http://www.mozilla-europe.org/uk/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/25.0.1/win32/uk/Firefox%20Setup%2025.0.1.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/uk/Firefox%20Setup%2026.0.exe

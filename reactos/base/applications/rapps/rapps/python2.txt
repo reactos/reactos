@@ -1,0 +1,45 @@
+﻿; UTF-8
+
+[Section]
+Name = Python 2
+Version = 2.7.6
+Licence = GPL/LGPL
+Description = A remarkably powerful dynamic programming language.
+Size = 15.48 MB
+Category = 7
+URLSite = http://www.python.org/
+URLDownload = http://www.python.org/ftp/python/2.7.6/python-2.7.6.msi
+CDPath = none
+
+[Section.0407]
+Description = Eine sehr mächtige, dynamische Programmiersprache.
+
+[Section.040a]
+Description = Un lenguaje de programación dinámico sumamente potente. 
+
+[Section.040c]
+Description = Un langage de programmation dynamique remarquablement puissant.
+Size = 15,48 Mo
+
+[Section.0410]
+Description = Un Linguaggio di programmazione dinamico e potente.
+
+[Section.0413]
+Description = Een opmerkelijk krachtige dynamische programmeertaal.
+
+[Section.0415]
+Description = Potęży i dynamiczny język programowania.
+
+[Section.0418]
+Description = Un limbaj de programare dinamic și puternic.
+Size = 15,48 Mo
+
+[Section.041f]
+Name = Piton 2
+Description = İlgi çekici, güçlü ve devingen bir çizeylemleme dili.
+
+[Section.0422]
+Description = Дуже потужна динамічна мова програмування.
+
+[Section.0813]
+Description = Een opmerkelijk krachtige dynamische programmeertaal.

@@ -5,7 +5,7 @@ Name = Media Player Classic Home Cinema
 Version = 1.7.1
 Licence = GPL
 Description = A media player.
-Size = 9.8MB
+Size = 9.8 MB
 Category = 2
 URLSite = http://mpc-hc.org/
 URLDownload = http://garr.dl.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.1_x86/MPC-HC.1.7.1.x86.exe
@@ -19,7 +19,7 @@ Description = Reproductor multimedia.
 
 [Section.040c]
 Description = Un lecteur media.
-Size = 9,6 Mo
+Size = 9,8 Mo
 
 [Section.0410]
 Description = Lettore multimediale.
@@ -32,7 +32,7 @@ Description = Odtwarzacz multimediów.
 
 [Section.0418]
 Description = Lector multimedia.
-Size = 9,6 Mo
+Size = 9,8 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.

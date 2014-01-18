@@ -4,7 +4,7 @@
 Name = Stamina 2.5
 Description = Free typing tutor.
 URLSite = http://stamina.ru
-Size = 4.7MB
+Size = 4.7 MB
 Category = 8
 URLDownload = http://stamina.ru/files/StaminaSetup.exe
 CDPath = none

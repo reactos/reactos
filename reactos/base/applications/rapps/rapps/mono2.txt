@@ -5,10 +5,10 @@ Name = Mono .net Development Framework
 Version = 2.11.4
 Licence = Unknown
 Description = Open-source .net Framework.
-Size = 91.93MB
+Size = 91.93 MB
 Category = 14
 URLSite = http://www.mono-project.com/Main_Page
-URLDownload = http://origin-download.mono-project.com/archive/2.11.4/windows-installer/mono-2.11.4-gtksharp-2.12.11-win32-0.exe
+URLDownload = http://download.mono-project.com/archive/2.11.4/windows-installer/mono-2.11.4-gtksharp-2.12.11-win32-0.exe
 CDPath = none
 
 [Section.0407]

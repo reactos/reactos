@@ -1,60 +1,73 @@
 ﻿; UTF-8
 
 [Section]
-Name = Mozilla Thunderbird
-Version = 3.1.20
+Name = Mozilla Thunderbird 24
+Version = 24.2.0
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Mail Clients out there.
-Size = 9.06MB
+Size = 21.12 MB
 Category = 5
 URLSite = http://www.mozilla.org/en/thunderbird/
-URLDownload = http://svn.reactos.org/packages/Thunderbird%20Setup%203.1.20.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/en-US/Thunderbird%20Setup%2024.2.0.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Mail-Clients.
+Size = 20.96 MB
 URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/de/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores clientes mail que hay.
+Size = 20.92 MB
 URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/es-ES/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
-Size = 9,06 Mo
+Size = 21,27 Mo
 URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/fr/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0410]
 Description = Il più popolare e il migliore Clients mail gratuito.
+Size = 20.91 MB
 URLSite = http://www.mozilla-europe.org/it/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/it/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
+Size = 21.61 MB
 URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/nl/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
+Size = 21.80 MB
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/pl/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
-Size = 9,06 Mo
+Size = 21,48 Mo
 URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/ro/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
+Size = 21.38 MB
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/ru/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.041f]
 Name = Mozilla Yıldırımkuşu
 Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
+Size = 20,99 MB
 URLSite = https://www.mozilla.org/tr/products/thunderbird/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/tr/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
+Size = 21.41 MB
 URLSite = http://www.mozillamessaging.com/uk/thunderbird/
-
-[Section.0813]
-Description = De meest populaire en een van de beste gratis e-mail-programma's.
-URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/uk/Thunderbird%20Setup%2024.2.0.exe
