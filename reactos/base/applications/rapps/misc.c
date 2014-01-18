@@ -111,18 +111,23 @@ GetClientWindowHeight(HWND hwnd)
 VOID
 CopyTextToClipboard(LPCWSTR lpszText)
 {
+    HRESULT hr;
+
     if(OpenClipboard(NULL))
     {
         HGLOBAL ClipBuffer;
         WCHAR *Buffer;
+        DWORD cchBuffer;
 
         EmptyClipboard();
-        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, (wcslen(lpszText) + 1) * sizeof(TCHAR));
+        cchBuffer = wcslen(lpszText) + 1;
+        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
         Buffer = (WCHAR*)GlobalLock(ClipBuffer);
-        wcscpy(Buffer, lpszText);
+        hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
         GlobalUnlock(ClipBuffer);
 
-        SetClipboardData(CF_UNICODETEXT, ClipBuffer);
+        if (SUCCEEDED(hr))
+            SetClipboardData(CF_UNICODETEXT, ClipBuffer);
 
         CloseClipboard();
     }

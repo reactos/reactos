@@ -22,7 +22,9 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
     pSettingsInfo->bLogEnabled = TRUE;
-    wcscpy(pSettingsInfo->szDownloadDir, L"C:\\Downloads");
+    StringCbCopyW(pSettingsInfo->szDownloadDir,
+                  sizeof(pSettingsInfo->szDownloadDir),
+                  L"C:\\Downloads");
     pSettingsInfo->bDelInstaller = FALSE;
 
     pSettingsInfo->Maximized = FALSE;
@@ -217,7 +219,9 @@ UpdateApplicationsList(INT EnumType)
     SelectedEnumType = EnumType;
 
     LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, sizeof(szBuffer2) / sizeof(WCHAR));
-    swprintf(szBuffer1, szBuffer2, ListView_GetItemCount(hListView));
+    StringCbPrintfW(szBuffer1, sizeof(szBuffer1),
+                    szBuffer2,
+                    ListView_GetItemCount(hListView));
     SetStatusBarText(szBuffer1);
 
     SetWelcomeText();
@@ -330,7 +334,9 @@ InitControls(HWND hwnd)
         InitCategoriesList();
 
         LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, sizeof(szBuffer2) / sizeof(WCHAR));
-        swprintf(szBuffer1, szBuffer2, ListView_GetItemCount(hListView));
+        StringCbPrintfW(szBuffer1, sizeof(szBuffer1),
+                        szBuffer2,
+                        ListView_GetItemCount(hListView));
         SetStatusBarText(szBuffer1);
         return TRUE;
     }
