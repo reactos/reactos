@@ -19,31 +19,7 @@
  *
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
-#define NONAMELESSUNION
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-//#include <prsht.h>
-//#include "commctrl.h"
-
-//#include "ole2.h"
-//#include "urlmon.h"
-//#include "initguid.h"
-#include <winreg.h>
-#include <shlwapi.h>
-
 #include "inetcpl.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
 typedef struct secdlg_data_s {
     HWND hsec;  /* security propsheet */

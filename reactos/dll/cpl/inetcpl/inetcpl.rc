@@ -19,7 +19,11 @@
  *
  */
 
-#include "inetcpl.h"
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
 
 #include <reactos/manifest_dll.rc>
 

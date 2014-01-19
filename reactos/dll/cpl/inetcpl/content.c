@@ -19,19 +19,9 @@
  *
  */
 
-#define NONAMELESSUNION
-#define WIN32_NO_STATUS
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <cryptuiapi.h>
-
 #include "inetcpl.h"
-#include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
+#include <cryptuiapi.h>
 
 /*********************************************************************
  * display_cert_manager (internal)
