@@ -3133,9 +3133,21 @@ RtlCheckBit(
         (__assert_annotationW(msg), \
          DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_ASSERT(exp) ((void)NT_VERIFY(exp))
-#define NT_ASSERTMSG(msg, exp) ((void)NT_VERIFYMSG(msg, exp))
-#define NT_ASSERTMSGW(msg, exp) ((void)NT_VERIFYMSGW(msg, exp))
+/* Can't reuse verify, see above */
+#define NT_ASSERT(exp) \
+   ((VOID)((!(exp)) ? \
+      (__assert_annotationA(#exp), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+
+#define NT_ASSERTMSG(msg, exp) \
+   ((VOID)((!(exp)) ? \
+      (__assert_annotationA(msg), \
+      DbgRaiseAssertionFailure(), FALSE) : TRUE))
+
+#define NT_ASSERTMSGW(msg, exp) \
+    ((VOID)((!(exp)) ? \
+        (__assert_annotationW(msg), \
+         DbgRaiseAssertionFailure(), FALSE) : TRUE))
 
 #else /* !DBG */
 
