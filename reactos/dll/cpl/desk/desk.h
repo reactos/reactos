@@ -19,6 +19,7 @@
 #include <shlobj.h>
 #include <regstr.h>
 #include <dll/desk/deskcplx.h>
+#include <strsafe.h>
 
 #include "appearance.h"
 #include "preview.h"

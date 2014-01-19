@@ -425,7 +425,7 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     /* Fill font size combo */
     for (i = 6; i <= 24; i++)
     {
-        wsprintf(Size, TEXT("%d"), i);
+        StringCbPrintf(Size, sizeof(Size), TEXT("%d"), i);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, CB_ADDSTRING, 0, (LPARAM)&Size);
     }
 
