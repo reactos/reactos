@@ -10,6 +10,8 @@
 
 #include "desk.h"
 
+#include <shellapi.h>
+
 #define MAX_BACKGROUNDS     100
 
 #define PLACEMENT_CENTER    0

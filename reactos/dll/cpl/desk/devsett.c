@@ -7,6 +7,8 @@
 
 #include "desk.h"
 
+#include <cfgmgr32.h>
+
 #define NDEBUG
 #include <debug.h>
 

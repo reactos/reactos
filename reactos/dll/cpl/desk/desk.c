@@ -9,6 +9,8 @@
 
 #include "desk.h"
 
+#include <cplext.h>
+
 #define NUM_APPLETS    (1)
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);

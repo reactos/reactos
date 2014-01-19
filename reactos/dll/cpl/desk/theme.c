@@ -9,6 +9,11 @@
 
 #include "desk.h"
 
+#include <shlwapi.h>
+#include <uxtheme.h>
+#include <uxundoc.h>
+#include <vssym32.h>
+
 static const WCHAR g_CPColors[] = L"Control Panel\\Colors";
 static const WCHAR g_CPANewSchemes[] = L"Control Panel\\Appearance\\New Schemes";
 static const WCHAR g_CPMetrics[] = L"Control Panel\\Desktop\\WindowMetrics";
@@ -890,4 +895,3 @@ DrawThemePreview(IN HDC hdcMem, IN PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSe
 
     return SUCCEEDED(hres);
 }
-
