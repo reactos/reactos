@@ -33,15 +33,27 @@ LoadBootIni(WCHAR *szDrive, HWND hDlg)
     FILE * file;
     UINT length;
     LRESULT pos;
+    HRESULT hr;
 
-    wcscpy(szBuffer, szDrive);
-    wcscat(szBuffer, L"freeldr.ini");
+    hr = StringCbCopyW(szBuffer, sizeof(szBuffer), szDrive);
+    if (FAILED(hr))
+        return FALSE;
+
+    hr = StringCbCatW(szBuffer, sizeof(szBuffer), L"freeldr.ini");
+    if (FAILED(hr))
+        return FALSE;
 
     file = _wfopen(szBuffer, L"rt");
     if (!file)
     {
-        wcscpy(szBuffer, szDrive);
-        wcscat(szBuffer, L"boot.ini");
+        hr = StringCbCopyW(szBuffer, sizeof(szBuffer), szDrive);
+        if (FAILED(hr))
+            return FALSE;
+
+        hr = StringCbCatW(szBuffer, sizeof(szBuffer), L"boot.ini");
+        if (FAILED(hr))
+            return FALSE;
+            
         file = _wfopen(szBuffer, L"rt");
         if (!file)
             return FALSE;
@@ -137,7 +149,7 @@ FreeLdrPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 if (pos != LB_ERR)
                 {
                     LPARAM res = SendMessage((HWND)lParam, LB_GETITEMDATA, pos, 0);
-                    if (!res) //line is not a default one
+                    if (!res) /* line is not a default one */
                         SendMessage((HWND)lParam, LB_SETCURSEL, Settings.szDefaultPos, 0);
                     else
                         Settings.szDefaultPos = pos;

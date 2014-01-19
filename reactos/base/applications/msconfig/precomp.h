@@ -11,6 +11,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <shlobj.h>
+#include <strsafe.h>
 
 #include "msconfig.h"
 #include "resource.h"
