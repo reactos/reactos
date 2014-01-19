@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
+#include "appwiz.h"
 
 #include <stdio.h>
 
@@ -25,19 +24,7 @@
 # include <unistd.h>
 #endif
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
 #include <msi.h>
-
-#include "appwiz.h"
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(appwiz);
 
 #define GECKO_VERSION "2.21"
 
