@@ -1694,7 +1694,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p",
+            DPRINT1("MmQuerySectionView failed. MemoryArea=%p (%p-%p), BaseAddress=%p\n",
                     MemoryArea, MemoryArea->StartingAddress, MemoryArea->EndingAddress, BaseAddress);
             NT_ASSERT(NT_SUCCESS(Status));
         }
