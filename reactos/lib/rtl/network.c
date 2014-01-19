@@ -32,7 +32,7 @@ RtlIpv4AddressToStringA(IN struct in_addr *Addr,
                         OUT PCHAR S)
 {
     INT Length;
-    
+
     if (!S) return (LPSTR)~0;
 
     Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
@@ -88,7 +88,7 @@ RtlIpv4AddressToStringW(IN struct in_addr *Addr,
     INT Length;
 
     if (!S) return (LPWSTR)~0;
-    
+
     Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
                                          Addr->S_un.S_un_b.s_b2,
                                          Addr->S_un.S_un_b.s_b3,
@@ -135,9 +135,9 @@ RtlIpv4AddressToStringExW(IN struct in_addr *Address,
  */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressA(IN PCHAR String,
+RtlIpv4StringToAddressA(IN PCSTR String,
                         IN BOOLEAN Strict,
-                        OUT PCHAR *Terminator,
+                        OUT PCSTR *Terminator,
                         OUT struct in_addr *Addr)
 {
     UNIMPLEMENTED;
@@ -149,10 +149,10 @@ RtlIpv4StringToAddressA(IN PCHAR String,
 */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressExA(IN PCHAR AddressString,
+RtlIpv4StringToAddressExA(IN PCSTR AddressString,
                           IN BOOLEAN Strict,
                           OUT struct in_addr *Address,
-                          IN PUSHORT Port)
+                          OUT PUSHORT Port)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -165,7 +165,7 @@ NTSTATUS
 NTAPI
 RtlIpv4StringToAddressW(IN PCWSTR String,
                         IN BOOLEAN Strict,
-                        OUT LPWSTR *Terminator,
+                        OUT PCWSTR *Terminator,
                         OUT struct in_addr *Addr)
 {
     UNIMPLEMENTED;
@@ -177,7 +177,7 @@ RtlIpv4StringToAddressW(IN PCWSTR String,
 */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressExW(IN PWCHAR AddressString,
+RtlIpv4StringToAddressExW(IN PCWSTR AddressString,
                           IN BOOLEAN Strict,
                           OUT struct in_addr *Address,
                           OUT PUSHORT Port)

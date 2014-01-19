@@ -87,15 +87,18 @@ WINAPI
 ParseV4Address(IN PCWSTR AddressString,
                OUT PDWORD pAddress)
 {
-    DWORD Address;
-    LPWSTR Ip = 0;
+    IN_ADDR Address;
+    PCWSTR Terminator;
+    NTSTATUS Status;
 
-    /* Do the conversion, don't accept wildcard */
-    RtlIpv4StringToAddressW((LPWSTR)AddressString, 0, &Ip, (IN_ADDR *)&Address);
+    *pAddress = 0;
+    Status = RtlIpv4StringToAddressW(AddressString, FALSE, &Terminator, &Address);
 
-    /* Return the address and success */
-    *pAddress = Address;
-    return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    *pAddress = Address.S_un.S_addr;
+    return TRUE;
 }
 
 static

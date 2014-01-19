@@ -1340,7 +1340,7 @@ NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressA(
-  _In_ PCSTR S,
+  _In_ PCSTR String,
   _In_ BOOLEAN Strict,
   _Out_ PCSTR *Terminator,
   _Out_ struct in_addr *Addr);
@@ -1358,9 +1358,9 @@ NTSYSAPI
 LONG
 NTAPI
 RtlIpv4StringToAddressW(
-  _In_ PCWSTR S,
+  _In_ PCWSTR String,
   _In_ BOOLEAN Strict,
-  _Out_ LPCWSTR *Terminator,
+  _Out_ PCWSTR *Terminator,
   _Out_ struct in_addr *Addr);
 
 NTSYSAPI

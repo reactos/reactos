@@ -3994,11 +3994,41 @@ RtlComputeCrc32(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlIpv4StringToAddressA(
+    _In_ PCSTR String,
+    _In_ BOOLEAN Strict,
+    _Out_ PCSTR *Terminator,
+    _Out_ struct in_addr *Addr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlIpv4StringToAddressW(
     _In_ PCWSTR String,
     _In_ BOOLEAN Strict,
-    _Out_ LPWSTR *Terminator,
+    _Out_ PCWSTR *Terminator,
     _Out_ struct in_addr *Addr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv4StringToAddressExA(
+    _In_ PCSTR AddressString,
+    _In_ BOOLEAN Strict,
+    _Out_ struct in_addr *Address,
+    _Out_ PUSHORT Port
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv4StringToAddressExW(
+    _In_ PCWSTR AddressString,
+    _In_ BOOLEAN Strict,
+    _Out_ struct in_addr *Address,
+    _Out_ PUSHORT Port
 );
 
 NTSYSAPI
