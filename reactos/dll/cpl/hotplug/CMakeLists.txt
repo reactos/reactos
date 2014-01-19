@@ -22,5 +22,4 @@ add_importlibs(hotplug
     comctl32
     kernel32)
 
-add_pch(hotplug hotplug.h)
 add_cd_file(TARGET hotplug DESTINATION reactos/system32 FOR all)
