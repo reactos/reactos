@@ -17,6 +17,7 @@
 #include <winuser.h>
 #include <setupapi.h>
 #include <powrprof.h>
+#include <strsafe.h>
 
 #include "resource.h"
 
@@ -73,12 +74,12 @@ PropSheetExtProc(PSP_PROPSHEETPAGE_REQUEST PropPageRequest, LPFNADDPROPSHEETPAGE
 }
 
 void
-AddFeature(WCHAR* szFeatures, WCHAR* Feature, BOOL* bFirst)
+AddFeature(WCHAR* szFeatures, size_t cbDest, WCHAR* Feature, BOOL* bFirst)
 {
     if (!*bFirst)
-        wcscat(szFeatures, L", ");
+        StringCbCatW(szFeatures, cbDest, L", ");
     *bFirst = FALSE;
-    wcscat(szFeatures, Feature);
+    StringCbCatW(szFeatures, cbDest, Feature);
 }
 
 INT_PTR
@@ -97,28 +98,28 @@ ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
             PROCESSOR_POWER_INFORMATION PowerInfo;
 
             if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE))
-                AddFeature(szFeatures, L"MMX", &bFirst);
+                AddFeature(szFeatures, sizeof(szFeatures), L"MMX", &bFirst);
             if (IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE))
-                AddFeature(szFeatures, L"SSE", &bFirst);
+                AddFeature(szFeatures, sizeof(szFeatures), L"SSE", &bFirst);
             if (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE))
-                AddFeature(szFeatures, L"SSE2", &bFirst);
+                AddFeature(szFeatures, sizeof(szFeatures), L"SSE2", &bFirst);
             /*if (IsProcessorFeaturePresent(PF_SSE3_INSTRUCTIONS_AVAILABLE))
-                AddFeature(szFeatures, L"SSE3", &bFirst); */
+                AddFeature(szFeatures, sizeof(szFeatures), L"SSE3", &bFirst); */
             if (IsProcessorFeaturePresent(PF_3DNOW_INSTRUCTIONS_AVAILABLE))
-                AddFeature(szFeatures, L"3DNOW", &bFirst);
+                AddFeature(szFeatures, sizeof(szFeatures), L"3DNOW", &bFirst);
 
             SetDlgItemTextW(hDlg, IDC_FEATURES, szFeatures);
 
             GetSystemInfo(&SystemInfo);
 
-            wsprintf(szModel, L"%x", HIBYTE(SystemInfo.wProcessorRevision));
-            wsprintf(szStepping, L"%d", LOBYTE(SystemInfo.wProcessorRevision));
+            StringCbPrintfW(szModel, sizeof(szModel), L"%x", HIBYTE(SystemInfo.wProcessorRevision));
+            StringCbPrintfW(szStepping, sizeof(szStepping), L"%d", LOBYTE(SystemInfo.wProcessorRevision));
 
             SetDlgItemTextW(hDlg, IDC_MODEL, szModel);
             SetDlgItemTextW(hDlg, IDC_STEPPING, szStepping);
 
             CallNtPowerInformation(11, NULL, 0, &PowerInfo, sizeof(PowerInfo));
-            wsprintf(szCurrentMhz, L"%ld %s", PowerInfo.CurrentMhz, L"MHz");
+            StringCbPrintfW(szCurrentMhz, sizeof(szCurrentMhz), L"%ld %s", PowerInfo.CurrentMhz, L"MHz");
             SetDlgItemTextW(hDlg, IDC_CORESPEED, szCurrentMhz);
 
             return TRUE;
