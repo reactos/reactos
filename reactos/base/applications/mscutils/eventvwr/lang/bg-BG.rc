@@ -85,6 +85,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Преглед на събития"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Warning"

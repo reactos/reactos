@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Visor de sucesos"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "La descripción para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Advertencia"

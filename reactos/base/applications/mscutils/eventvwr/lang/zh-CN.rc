@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "事件查看器"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "来源 ( %s ) 中的事件 ID ( %lu ) 的描述无法找到。本地计算机可能没有显示来自远程计算机消息所必需的注册表信息或消息 DLL 文件。"
     IDS_EVENTLOG_ERROR_TYPE "错误"
     IDS_EVENTLOG_WARNING_TYPE "警告"

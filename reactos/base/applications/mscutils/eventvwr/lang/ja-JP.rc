@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "イベント ビューア"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。"
     IDS_EVENTLOG_ERROR_TYPE "エラー"
     IDS_EVENTLOG_WARNING_TYPE "警告"
