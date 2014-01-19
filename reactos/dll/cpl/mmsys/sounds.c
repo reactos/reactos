@@ -9,6 +9,9 @@
 
 #include "mmsys.h"
 
+#include <commdlg.h>
+#include <debug.h>
+
 struct __APP_MAP__;
 
 typedef struct __LABEL_MAP__
