@@ -25,6 +25,8 @@
 
 #include "intl.h"
 
+#include <debug.h>
+
 #define NUM_APPLETS    (1)
 
 static LONG APIENTRY
