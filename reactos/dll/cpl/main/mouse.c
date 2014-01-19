@@ -29,6 +29,10 @@
 
 #include "main.h"
 
+#include <commdlg.h>
+#include <cplext.h>
+#include <tchar.h>
+
 #define DEFAULT_DOUBLE_CLICK_SPEED	500
 #define DEFAULT_CLICK_LOCK_TIME		2200
 #define DEFAULT_MOUSE_SPEED		10
