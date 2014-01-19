@@ -22,6 +22,7 @@
 #include <shlwapi.h>
 #include <shlguid_undoc.h>
 #include <uxtheme.h>
+#include <strsafe.h>
 
 #include "tmschema.h"
 #include "resource.h"

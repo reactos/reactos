@@ -220,12 +220,14 @@ GetExplorerRegValueSet(IN HKEY hKey,
     DWORD dwType, dwSize;
     BOOL Ret = FALSE;
 
-    _tcscpy(szBuffer,
+    StringCbCopy(szBuffer, sizeof(szBuffer),
             TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"));
-    _tcscat(szBuffer,
-            _T("\\"));
-    _tcscat(szBuffer,
-            lpSubKey);
+    if (FAILED(StringCbCat(szBuffer, sizeof(szBuffer),
+            _T("\\"))))
+        return FALSE;
+    if (FAILED(StringCbCat(szBuffer, sizeof(szBuffer),
+            lpSubKey)))
+    return FALSE;
 
     dwSize = sizeof(szBuffer);
     if (RegOpenKeyEx(hKey,

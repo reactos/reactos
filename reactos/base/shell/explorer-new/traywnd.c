@@ -99,8 +99,13 @@ typedef struct
 BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
 {
     TCHAR szParams[MAX_PATH];
-    _tcscpy(szParams, TEXT("shell32.dll,Control_RunDLL "));
-    _tcscat(szParams, applet);
+
+    StringCbCopy(szParams, sizeof(szParams),
+        TEXT("shell32.dll,Control_RunDLL "));
+    if (FAILED(StringCbCat(szParams, sizeof(szParams),
+            applet)))
+        return FALSE;
+
     return (ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), szParams, NULL, SW_SHOWDEFAULT) > (HINSTANCE)32);
 }
 
