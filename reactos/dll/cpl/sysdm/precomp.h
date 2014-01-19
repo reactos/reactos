@@ -1,25 +1,21 @@
 #ifndef __CPL_PRECOMP_H
 #define __CPL_PRECOMP_H
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
+#include <stdarg.h>
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
-#include <winnls.h>
 #include <wincon.h>
-#include <powrprof.h>
 #include <tchar.h>
-#include <cpl.h>
 #include <shellapi.h>
-#include <shlwapi.h>
 #include <shlobj.h>
-#include <regstr.h>
-#include <setupapi.h>
 
 #include "resource.h"
 

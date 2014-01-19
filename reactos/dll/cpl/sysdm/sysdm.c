@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#include <cpl.h>
+#include <regstr.h>
+
 LONG CALLBACK SystemApplet(VOID);
 HINSTANCE hApplet = 0;
 HWND hCPLWindow;

@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 typedef struct _VARIABLE_DATA
 {
     DWORD dwType;
