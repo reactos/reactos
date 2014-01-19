@@ -162,7 +162,10 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
 {
     HKEY hKey = NULL;
     LPWSTR lpAutoAdminLogon = NULL;
+    LPWSTR lpDontDisplayLastUserName = NULL;
+    LPWSTR lpShutdownWithoutLogon = NULL;
     DWORD dwDisableCAD = 0;
+    DWORD dwSize;
     LONG rc;
 
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -197,6 +200,47 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
     }
 
     TRACE("bDisableCAD: %s\n", pgContext->bDisableCAD ? "TRUE" : "FALSE");
+
+    pgContext->bShutdownWithoutLogon = TRUE;
+    rc = ReadRegSzKey(hKey,
+                      L"ShutdownWithoutLogon",
+                      &lpShutdownWithoutLogon);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (wcscmp(lpShutdownWithoutLogon, L"0") == 0)
+            pgContext->bShutdownWithoutLogon = FALSE;
+    }
+
+    rc = ReadRegSzKey(hKey,
+                      L"DontDisplayLastUserName",
+                      &lpDontDisplayLastUserName);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (wcscmp(lpDontDisplayLastUserName, L"1") == 0)
+            pgContext->bDontDisplayLastUserName = TRUE;
+    }
+
+    dwSize = 256 * sizeof(WCHAR);
+    rc = RegQueryValueExW(hKey,
+                          L"DefaultUserName",
+                          NULL,
+                          NULL,
+                          (LPBYTE)&pgContext->UserName,
+                          &dwSize);
+
+    dwSize = 256 * sizeof(WCHAR);
+    rc = RegQueryValueExW(hKey,
+                          L"DefaultDomainName",
+                          NULL,
+                          NULL,
+                          (LPBYTE)&pgContext->Domain,
+                          &dwSize);
+
+    if (lpShutdownWithoutLogon != NULL)
+        HeapFree(GetProcessHeap(), 0, lpShutdownWithoutLogon);
+
+    if (lpDontDisplayLastUserName != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDontDisplayLastUserName);
 
     if (lpAutoAdminLogon != NULL)
         HeapFree(GetProcessHeap(), 0, lpAutoAdminLogon);

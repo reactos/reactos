@@ -36,6 +36,8 @@ typedef struct
     DWORD AutoLogonState;
     BOOL bDisableCAD;
     BOOL bAutoAdminLogon;
+    BOOL bDontDisplayLastUserName;
+    BOOL bShutdownWithoutLogon;
 
     /* Information to be filled during logon */
     WCHAR UserName[256];
