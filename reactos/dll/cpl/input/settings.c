@@ -11,6 +11,8 @@
 
 #include "input.h"
 
+#include <wingdi.h>
+
 static HWND MainDlgWnd;
 // for SaveInputLang()
 static INT OldLayoutNum;
