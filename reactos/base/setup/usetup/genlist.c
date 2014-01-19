@@ -483,6 +483,20 @@ ScrollUpGenericList (PGENERIC_LIST List)
 
 
 VOID
+RedrawGenericList(PGENERIC_LIST List)
+{
+    if (List->CurrentEntry == NULL)
+        return;
+
+    if (List->Redraw)
+    {
+        DrawListEntries(List);
+        DrawScrollBarGenericList(List);
+    }
+}
+
+
+VOID
 SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry)
 {
     if (Entry->List != List)

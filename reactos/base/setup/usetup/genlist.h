@@ -70,6 +70,9 @@ VOID
 ScrollToPositionGenericList (PGENERIC_LIST List, ULONG uIndex);
 
 VOID
+RedrawGenericList(PGENERIC_LIST List);
+
+VOID
 SetCurrentListEntry(PGENERIC_LIST List, PGENERIC_LIST_ENTRY Entry);
 
 PGENERIC_LIST_ENTRY
