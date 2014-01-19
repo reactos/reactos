@@ -2168,7 +2168,11 @@ typedef VOID
   NDIS50_MINIPORT_CHARACTERISTICS  Ndis50Chars; \
   W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler; \
   W_PNP_EVENT_NOTIFY_HANDLER  PnPEventNotifyHandler; \
-  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler;
+  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler; \
+  PVOID Reserved1; \
+  PVOID Reserved2; \
+  PVOID Reserved3; \
+  PVOID Reserved4;
 
 #else
 
@@ -2176,7 +2180,11 @@ typedef VOID
   NDIS50_MINIPORT_CHARACTERISTICS_S \
   W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler; \
   W_PNP_EVENT_NOTIFY_HANDLER  PnPEventNotifyHandler; \
-  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler;
+  W_MINIPORT_SHUTDOWN_HANDLER  AdapterShutdownHandler; \
+  PVOID Reserved1; \
+  PVOID Reserved2; \
+  PVOID Reserved3; \
+  PVOID Reserved4;
 
 #endif
 
