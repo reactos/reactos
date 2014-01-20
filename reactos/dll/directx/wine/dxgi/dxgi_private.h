@@ -19,25 +19,29 @@
 #ifndef __WINE_DXGI_PRIVATE_H
 #define __WINE_DXGI_PRIVATE_H
 
+#include <wine/config.h>
+#include <wine/port.h>
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include "wine/debug.h"
-
 #define COBJMACROS
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "winnls.h"
 
-#include "dxgi.h"
-#ifdef DXGI_INIT_GUID
-#include "initguid.h"
-#endif
-#include "wine/wined3d.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <objbase.h>
+#include <winnls.h>
+
+#include <wine/debug.h>
+#include <wine/wined3d.h>
 #include <wine/winedxgi.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(dxgi);
 
 extern CRITICAL_SECTION dxgi_cs DECLSPEC_HIDDEN;
 

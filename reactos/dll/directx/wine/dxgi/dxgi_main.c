@@ -17,13 +17,7 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#define DXGI_INIT_GUID
 #include "dxgi_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dxgi);
 
 static CRITICAL_SECTION_DEBUG dxgi_cs_debug =
 {
