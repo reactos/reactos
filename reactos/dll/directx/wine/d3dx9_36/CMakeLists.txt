@@ -21,6 +21,7 @@ list(APPEND SOURCE
     util.c
     volume.c
     xfile.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_36_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_36.def)
 

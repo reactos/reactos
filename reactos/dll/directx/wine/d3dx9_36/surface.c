@@ -21,6 +21,8 @@
 #include "d3dx9_36_private.h"
 
 #include <ole2.h>
+
+#include <initguid.h>
 #include <wincodec.h>
 
 /* Wine-specific WIC GUIDs */
