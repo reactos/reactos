@@ -817,7 +817,15 @@ DoAutoLogon(
         result = DoLoginTasks(pgContext, UserName, DomainName, Password);
 
         if (result == TRUE)
+        {
+            pgContext->Password = HeapAlloc(GetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            (wcslen(Password) + 1) * sizeof(WCHAR));
+            if (pgContext->Password != NULL)
+                wcscpy(pgContext->Password, Password);
+
             NotifyBootConfigStatus(TRUE);
+        }
     }
 
 cleanup:
@@ -852,7 +860,6 @@ WlxDisplaySASNotice(
         return;
     }
 
-//    if (CheckAutoAdminLogon(pgContext))
     if (pgContext->bAutoAdminLogon == TRUE)
     {
         /* Don't display the window, we want to do an automatic logon */

@@ -42,6 +42,7 @@ typedef struct
     /* Information to be filled during logon */
     WCHAR UserName[256];
     WCHAR Domain[256];
+    LPWSTR Password;
     SYSTEMTIME LogonTime;
     HANDLE UserToken;
     PLUID pAuthenticationId;

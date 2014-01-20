@@ -527,6 +527,12 @@ LoggedOutWindowProc(
                     if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
                         DoLoginTasks(pgContext, UserName, NULL, Password))
                     {
+                        pgContext->Password = HeapAlloc(GetProcessHeap(),
+                                                        HEAP_ZERO_MEMORY,
+                                                        (wcslen(Password) + 1) * sizeof(WCHAR));
+                        if (pgContext->Password != NULL)
+                            wcscpy(pgContext->Password, Password);
+
                         result = WLX_SAS_ACTION_LOGON;
                     }
                     HeapFree(GetProcessHeap(), 0, UserName);
@@ -648,22 +654,23 @@ UnlockWindowProc(
             {
                 case IDOK:
                 {
-#if 0
                     LPWSTR UserName = NULL, Password = NULL;
                     INT result = WLX_SAS_ACTION_NONE;
 
                     if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
                         break;
-                    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
-                        DoLoginTasks(pgContext, UserName, NULL, Password))
+                    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
                     {
-                        result = WLX_SAS_ACTION_LOGON;
+                        if (UserName != NULL && Password != NULL &&
+                            wcscmp(UserName, pgContext->UserName) == 0 &&
+                            wcscmp(Password, pgContext->Password) == 0)
+                        {
+                            result = WLX_SAS_ACTION_UNLOCK_WKSTA;
+                        }
                     }
                     HeapFree(GetProcessHeap(), 0, UserName);
                     HeapFree(GetProcessHeap(), 0, Password);
                     EndDialog(hwndDlg, result);
-#endif
-                    EndDialog(hwndDlg, WLX_SAS_ACTION_UNLOCK_WKSTA);
                     return TRUE;
                 }
 
