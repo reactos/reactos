@@ -18,6 +18,7 @@ add_library(dsound SHARED
     primary.c
     propset.c
     sound3d.c
+    guid.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
 

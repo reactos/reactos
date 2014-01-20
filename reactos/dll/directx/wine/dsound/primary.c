@@ -23,25 +23,7 @@
  *       it leaves dsound in unusable (not really open) state.
  */
 
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "mmsystem.h"
-#include <winternl.h>
-#include <mmddk.h>
-#include <wine/debug.h>
-#include <dsound.h>
 #include "dsound_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
 static DWORD DSOUND_fraglen(DirectSoundDevice *device)
 {
