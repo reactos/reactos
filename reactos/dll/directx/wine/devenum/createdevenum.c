@@ -24,7 +24,10 @@
  */
 
 #include "devenum_private.h"
+
 #include <vfw.h>
+
+#include "resource.h"
 
 extern HINSTANCE DEVENUM_hInstance;
 

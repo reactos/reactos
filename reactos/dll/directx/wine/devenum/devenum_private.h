@@ -30,6 +30,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
 
@@ -37,10 +38,8 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
-
-#define COBJMACROS
-
-#include <ole2.h>
+#include <objbase.h>
+#include <oleidl.h>
 #include <strmif.h>
 #include <uuids.h>
 
@@ -50,8 +49,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 #ifndef RC_INVOKED
 #include <wine/unicode.h>
 #endif
-
-#include "resource.h"
 
 /**********************************************************************
  * Dll lifetime tracking declaration for devenum.dll
