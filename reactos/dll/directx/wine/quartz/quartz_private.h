@@ -20,34 +20,29 @@
 #ifndef __QUARTZ_PRIVATE_INCLUDED__
 #define __QUARTZ_PRIVATE_INCLUDED__
 
-#include <config.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <wine/config.h>
 
 #include <stdarg.h>
 #include <assert.h>
 
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#define COBJMACROS
-
 #include <windef.h>
 #include <winbase.h>
-#include <wtypes.h>
-#include <wingdi.h>
-#include <winuser.h>
 #include <objbase.h>
-#include <oleauto.h>
 #include <dshow.h>
 #include <dvdmedia.h>
 #include <vfw.h>
 #include <aviriff.h>
 
 #include <wine/strmbase.h>
-#include <wine/list.h>
 #include <wine/unicode.h>
 
 #include <wine/debug.h>
