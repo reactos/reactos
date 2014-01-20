@@ -6,7 +6,7 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+#pragma once
 
 #define LDR_HASH_TABLE_ENTRIES 32
 #define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
