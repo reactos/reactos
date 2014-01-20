@@ -16,6 +16,8 @@
 #include <winddi.h>
 #include <GL/gl.h>
 
+#include <wine/debug.h>
+
 #include "icd.h"
 
 struct wgl_context

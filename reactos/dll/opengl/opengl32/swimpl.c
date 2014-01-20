@@ -9,7 +9,6 @@
 
 /* MESA includes */
 #include <main/context.h>
-#include <main/formats.h>
 #include <main/framebuffer.h>
 #include <main/renderbuffer.h>
 #include <main/shared.h>
@@ -17,13 +16,11 @@
 #include <swrast/s_context.h>
 #include <swrast/s_renderbuffer.h>
 #include <swrast_setup/swrast_setup.h>
-#include <tnl/t_context.h>
 #include <tnl/t_pipeline.h>
 #include <tnl/tnl.h>
 #include <drivers/common/driverfuncs.h>
 #include <drivers/common/meta.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
 #define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
