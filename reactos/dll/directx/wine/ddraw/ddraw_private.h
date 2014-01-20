@@ -22,26 +22,27 @@
 #include <config.h>
 #include <wine/port.h>
 
+#include <assert.h>
+#include <stdarg.h>
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <assert.h>
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
-
+#include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
-
-#include <initguid.h>
 #include <d3d.h>
 
+#include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/wined3d.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 extern const struct wined3d_parent_ops ddraw_null_wined3d_parent_ops DECLSPEC_HIDDEN;
 extern DWORD force_refresh_rate DECLSPEC_HIDDEN;
@@ -620,4 +621,4 @@ static inline void copy_to_surfacedesc2(DDSURFACEDESC2 *to, DDSURFACEDESC2 *from
 
 HRESULT hr_ddraw_from_wined3d(HRESULT hr) DECLSPEC_HIDDEN;
 
-#endif
+#endif /* __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H */
