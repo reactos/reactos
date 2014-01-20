@@ -18,6 +18,7 @@
  */
 
 #include "qedit_private.h"
+
 #include <rpcproxy.h>
 
 static HINSTANCE instance;

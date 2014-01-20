@@ -18,7 +18,9 @@
  */
 
 #include "qedit_private.h"
+
 #include <assert.h>
+#include <oleauto.h>
 
 typedef struct MediaDetImpl {
     IUnknown IUnknown_inner;
