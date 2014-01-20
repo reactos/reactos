@@ -24,6 +24,8 @@
 
 #include "wined3d_private.h"
 
+#include <winreg.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
 

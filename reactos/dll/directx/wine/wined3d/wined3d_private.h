@@ -25,12 +25,8 @@
 #ifndef __WINE_WINED3D_PRIVATE_H
 #define __WINE_WINED3D_PRIVATE_H
 
-#include <config.h>
+#include <wine/config.h>
 #include <wine/port.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #ifdef USE_WIN32_OPENGL
 #define WINE_GLAPI __stdcall
@@ -42,25 +38,27 @@
 # include <float.h>
 #endif
 
-#include <stdarg.h>
 #include <stdio.h>
-#include <math.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
+
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
 #include <objbase.h>
-#include <wine/wined3d.h>
-#include "wined3d_gl.h"
+
+#include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/rbtree.h>
+#include <wine/wined3d.h>
+#include "wined3d_gl.h"
 #include <wine/wgl_driver.h>
 
 /* Driver quirks */
@@ -3006,4 +3004,4 @@ static inline void context_apply_state(struct wined3d_context *context,
 
 #define MAKEDWORD_VERSION(maj, min) (((maj & 0xffff) << 16) | (min & 0xffff))
 
-#endif
+#endif /* __WINE_WINED3D_PRIVATE_H */
