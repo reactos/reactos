@@ -1099,18 +1099,31 @@ NTSTATUS
 LogfClearFile(PLOGFILE LogFile,
               PUNICODE_STRING BackupFileName)
 {
+    NTSTATUS Status;
+
     RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
 
     if (BackupFileName->Length > 0)
     {
-        /* FIXME: Write a backup file */
+        /* Write a backup file */
+        Status = LogfBackupFile(LogFile,
+                                BackupFileName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("LogfBackupFile failed (Status: 0x%08lx)\n", Status);
+            return Status;
+        }
     }
 
-    LogfInitializeNew(LogFile);
+    Status = LogfInitializeNew(LogFile);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LogfInitializeNew failed (Status: 0x%08lx)\n", Status);
+    }
 
     RtlReleaseResource(&LogFile->Lock);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
