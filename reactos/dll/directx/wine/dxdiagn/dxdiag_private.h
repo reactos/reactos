@@ -21,20 +21,30 @@
 #ifndef __WINE_DXDIAG_PRIVATE_H
 #define __WINE_DXDIAG_PRIVATE_H
 
+#include <wine/config.h>
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 
-#include <wine/list.h>
+#include <wine/debug.h>
 #include <wine/dxdiag.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
 /* DXDiag Interfaces: */
 typedef struct IDxDiagProviderImpl  IDxDiagProviderImpl;

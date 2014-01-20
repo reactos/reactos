@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
+#pragma once
 
 #define IDS_REGIONAL_SETTING 1
 #define IDS_PAGE_FILE_FORMAT 2
