@@ -26,11 +26,9 @@
  *	force feedback
  */
 
-#include "joystick_private.h"
-#include <wine/debug.h>
-#include <winreg.h>
+#include "dinput_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+#include "joystick_private.h"
 
 static inline JoystickGenericImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
 {

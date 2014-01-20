@@ -24,22 +24,8 @@
 
    It also contains all the helper functions.
 */
-#include <config.h>
 
-//#include <stdarg.h>
-//#include <string.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-//#include "windef.h"
-//#include "winbase.h"
-#include <winreg.h>
-#include <winuser.h>
-//#include "winerror.h"
-//#include "dinput.h"
-#include "device_private.h"
-//#include "dinput_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+#include "dinput_private.h"
 
 static inline IDirectInputDeviceImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
 {

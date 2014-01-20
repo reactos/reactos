@@ -20,14 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "dinput_private.h"
 
-//#include <assert.h>
-//#include <stdarg.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <time.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
@@ -50,20 +44,7 @@
 # include <sys/poll.h>
 #endif
 
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-//#include "wine/list.h"
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winreg.h"
-//#include "dinput.h"
-
-//#include "dinput_private.h"
 #include "device_private.h"
-//#include "joystick_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 #ifdef HAS_PROPER_HEADER
 

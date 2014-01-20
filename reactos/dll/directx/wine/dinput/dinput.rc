@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <winuser.h>
+#include <commctrl.h>
+
 #include "resource.h"
 
 1 WINE_REGISTRY dinput_classes.rgs
