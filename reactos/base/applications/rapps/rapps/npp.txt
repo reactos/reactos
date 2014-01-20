@@ -31,7 +31,7 @@ Description = Een teksteditor.
 Description = Edytor tekstu.
 
 [Section.0418]
-Description = A text editor.
+Description = Un editor de text.
 Size = 7,25 Mo
 
 [Section.0419]

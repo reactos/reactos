@@ -31,7 +31,8 @@ Description = Een teksteditor.
 Description = Edytor tekstu.
 
 [Section.0418]
-Description = A text editor.
+Licence = Gratuită
+Description = Un editor de text.
 Size = 4,46 Mo
 
 [Section.0419]

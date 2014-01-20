@@ -45,7 +45,7 @@ Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org/
 Size = 136.79 MB
 
-[Section.0419]
+[Section.0418]
 Description = Suita de aplicații de birotică open-source.
 Size = 136,79 Mo
 URLSite = http://www.openoffice.org/ro/

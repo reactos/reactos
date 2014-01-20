@@ -12,5 +12,9 @@ CDPath = none
 [Section.0407]
 Description = Ein freies Schreiblernprogramm.
 
+[Section.0418]
+Description = Tutor gratuit pentru dactilografiere.
+Size = 4,7 Mo
+
 [Section.041f]
 Description = Ücretsiz bir düğme takımında yazma öğreticisi.

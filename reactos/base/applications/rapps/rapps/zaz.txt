@@ -17,5 +17,9 @@ Description = Zaz ist ein freies Arcade Action Puzzle Spiel, ein wenig wie Froze
 [Section.0410]
 Description = Zaz è un puzzle game gratuito, simile a Frozen Bubble.
 
+[Section.0418]
+Description = Zaz este un joc de acțiune de tip enigmă/arcadă, asemănător cu Frozen Bubble.
+Size = 21,0 Mo
+
 [Section.041f]
 Description = Zaz, atari salonu oyunu türünde, gelişimli bir bulmaca oyunudur. Bir nebze Donmuş Kabarcıklar'a benzemektedir.

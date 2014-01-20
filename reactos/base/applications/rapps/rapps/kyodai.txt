@@ -16,6 +16,11 @@ Description = Eines der besten Mahjongg Solitaire Spiele im Netz.
 [Section.0410]
 Description = Uno dei migliori giochi di Mahjongg Solitaire.
 
+[Section.0418]
+Licence = Versiune de evaluare
+Description = Unul dintre cele mai bune jocuri de pasiență Mahjongg.
+Size = 13,8 Mo
+
 [Section.041f]
 Name = Kyodai Çin Dominosu
 Licence = Kısıtlı

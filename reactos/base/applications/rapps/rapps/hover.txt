@@ -16,5 +16,9 @@ Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu find
 [Section.0410]
 Description = Il classico gioco Hover CTF che trovate sul CD di Windows 95.
 
+[Section.0418]
+Description = Jocul clasic Hover CTF, care se găsea pe CD-ul Windows 95.
+Size = 6,2 Mo
+
 [Section.041f]
 Description = Pencereler 95 CD'sinde bulunan bir bayrak kapmaca oyunu.

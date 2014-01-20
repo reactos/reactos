@@ -14,5 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Arcade-Style Spiel für UNIX, Mac OS X, Windows und DOS in der Tradition von: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga / PC), "Sokoban" (PC). Sie benötigen ein ZIP-Programm, um es zu installieren.
 
+[Section.0418]
+Description = Un joc de tip arcadă pentru UNIX, Mac OS X, Windows și DOS; respectând tradiția: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC).
+Size = 2,42 Mo
+
 [Section.041f]
 Description = UNIX, Mac OS X, Pencereler ve DOS için yapılmış, atari oyun salonu türünde bir oyun. Şu gelenekleri içerir: "Boulder Dash" (C64), "Zümrüt Mâdeni" (Amiga), "Supaplex" (Amiga ve PC), "Sokoban" (PC). Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.

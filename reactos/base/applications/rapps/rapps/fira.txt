@@ -14,3 +14,8 @@ CDPath = none
 [Section.0407]
 Licence = Unbekannt
 Description = Mozilla Fira Font Pack, Beinhaltet Mono und Sans Schriften. Bitte in den "ReactOS" Ordner entpacken.
+
+[Section.0418]
+Licence = Nespecificată
+Description = Pachetul Mozilla Fira Font, include fonturile Mono și Sans. Dezarhivați în dosarul „ReactOS”.
+Size = 543 ko

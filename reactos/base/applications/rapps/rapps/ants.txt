@@ -14,6 +14,11 @@ CDPath = none
 [Section.0407]
 Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren.
 
+[Section.0418]
+Licence = Gratuită
+Description = Un joc strategic de cărți. Jucătorul își va construi un castel și încerca să distrugă castelele oponenților. Este necesar un utilitar de dezarhivare ZIP pentru a instala acest joc.
+Size = 632 ko
+
 [Section.041f]
 Name = Karıncalar
 Licence = Ücretsiz
