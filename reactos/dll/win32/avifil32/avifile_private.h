@@ -33,13 +33,13 @@
 #include <wingdi.h>
 #include <vfw.h>
 
-#include <wine/unicode.h>
-
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
+#include <wine/unicode.h>
 
 #include "extrachunk.h"
 #include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 #ifndef MAX_AVISTREAMS
 #define MAX_AVISTREAMS 8
@@ -71,4 +71,4 @@ extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStr
 
 extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName) DECLSPEC_HIDDEN;
 
-#endif
+#endif /* __AVIFILE_PRIVATE_H */
