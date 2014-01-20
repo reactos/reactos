@@ -1,27 +1,19 @@
 #define _ACLUI_
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <ole2.h>
-
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
-
 #include <objsel.h>
 #include <aclui.h>
-#include <sddl.h>
-#include <ntsecapi.h>
-#ifdef SUPPORT_UXTHEME
-#include <uxtheme.h>
-#include <tmschema.h>
-#endif
-
-#include "resource.h"
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
 
 #define EnableRedrawWindow(hwnd) \
     SendMessage((hwnd), WM_SETREDRAW, TRUE, 0)
