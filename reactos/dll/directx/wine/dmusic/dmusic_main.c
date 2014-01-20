@@ -18,8 +18,9 @@
  */
 
 #include "dmusic_private.h"
+
 #include <stdio.h>
-#include "rpcproxy.h"
+#include <rpcproxy.h>
 
 static HINSTANCE instance;
 LONG DMUSIC_refCount = 0;

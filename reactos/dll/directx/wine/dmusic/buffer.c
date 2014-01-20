@@ -20,6 +20,7 @@
  */
 
 #include "dmusic_private.h"
+
 #include <dmksctrl.h>
 
 static inline IDirectMusicBufferImpl *impl_from_IDirectMusicBuffer(IDirectMusicBuffer *iface)

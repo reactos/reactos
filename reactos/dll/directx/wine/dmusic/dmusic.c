@@ -21,6 +21,8 @@
 
 #include "dmusic_private.h"
 
+#include <winreg.h>
+
 static inline IDirectMusic8Impl *impl_from_IDirectMusic8(IDirectMusic8 *iface)
 {
     return CONTAINING_RECORD(iface, IDirectMusic8Impl, IDirectMusic8_iface);
