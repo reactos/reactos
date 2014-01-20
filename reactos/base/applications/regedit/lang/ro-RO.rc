@@ -1,3 +1,5 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
@@ -394,10 +396,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
-    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din '%s', nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK                  "Cheile și valorile conținute în '%s' au fost adăugate cu succes în registru."
+    IDS_IMPORT_ERROR               "Nu se poate importa '%s': Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
+    IDS_EXPORT_ERROR               "Nu se poate exoprta '%s': Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
 END
 
 STRINGTABLE

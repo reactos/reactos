@@ -1,6 +1,7 @@
 /*
  * Copyright 2008 Nikolay Sivov
  * Copyright 2009 Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,7 +48,7 @@ STRINGTABLE
     ROLE_SYSTEM_BORDER             "margine"
     ROLE_SYSTEM_GROUPING           "grupare"
     ROLE_SYSTEM_SEPARATOR          "separator"
-    ROLE_SYSTEM_TOOLBAR            "bară de unelte"
+    ROLE_SYSTEM_TOOLBAR            "panou de instrumente"
     ROLE_SYSTEM_STATUSBAR          "bară de stare"
     ROLE_SYSTEM_TABLE              "tabel"
     ROLE_SYSTEM_COLUMNHEADER       "antet de coloană"
@@ -55,14 +56,14 @@ STRINGTABLE
     ROLE_SYSTEM_COLUMN             "coloană"
     ROLE_SYSTEM_ROW                "rând"
     ROLE_SYSTEM_CELL               "celulă"
-    ROLE_SYSTEM_LINK               "legătură"
+    ROLE_SYSTEM_LINK               "adresă"
     ROLE_SYSTEM_HELPBALLOON        "balon de ajutor"
     ROLE_SYSTEM_CHARACTER          "caracter"
     ROLE_SYSTEM_LIST               "listă"
     ROLE_SYSTEM_LISTITEM           "element din listă"
     ROLE_SYSTEM_OUTLINE            "contur"
     ROLE_SYSTEM_OUTLINEITEM        "conturare element"
-    ROLE_SYSTEM_PAGETAB            "filă"
+    ROLE_SYSTEM_PAGETAB            "compartiment"
     ROLE_SYSTEM_PROPERTYPAGE       "pagină de proprietăți"
     ROLE_SYSTEM_INDICATOR          "indicator"
     ROLE_SYSTEM_GRAPHIC            "grafică"
@@ -71,7 +72,7 @@ STRINGTABLE
     ROLE_SYSTEM_PUSHBUTTON         "buton de comandă"
     ROLE_SYSTEM_CHECKBUTTON        "buton de bifare"
     ROLE_SYSTEM_RADIOBUTTON        "buton radio"
-    ROLE_SYSTEM_COMBOBOX           "căsuță combinată"
+    ROLE_SYSTEM_COMBOBOX           "listă derulantă"
     ROLE_SYSTEM_DROPLIST           "listă verticală"
     ROLE_SYSTEM_PROGRESSBAR        "bară de progres"
     ROLE_SYSTEM_DIAL               "apelator"

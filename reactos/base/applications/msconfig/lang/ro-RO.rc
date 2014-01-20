@@ -1,4 +1,4 @@
-/* 2011.12.18 - Fulea Ștefan: minor correction */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -166,7 +166,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Merge"
+    IDS_SERVICES_STATUS_RUNNING "Pornit"
     IDS_SERVICES_STATUS_STOPPED "Oprit"
     IDS_SERVICES_YES "Da"
     IDS_SERVICES_UNKNOWN "Nespecificat"

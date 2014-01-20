@@ -1,6 +1,7 @@
 /*
  * Copyright 2003 Mike McCormack for CodeWeavers
  * Copyright 2008 Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,7 +28,7 @@ CAPTION "Introducere parolă de rețea"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Introduceți numele de utilizator și parola:", -1, 40, 6, 150, 15
- LTEXT "Proxy", -1, 40, 26, 50, 10
+ LTEXT "Mandatar", -1, 40, 26, 50, 10
  LTEXT "Domeniu", -1, 40, 46, 50, 10
  LTEXT "Utilizator", -1, 40, 66, 50, 10
  LTEXT "Parolă", -1, 40, 86, 50, 10
@@ -35,10 +36,10 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Salvează această parolă (nesigur)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Păstrează această parolă (nerecomandat)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Renunță", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Con&firmă", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "A&nulează", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 IDD_AUTHDLG DIALOG 36, 24, 250, 154
@@ -55,8 +56,8 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Salvează această parolă (nesigur)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Păstreată această parolă (nerecomandat)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Renunță", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Con&firmă", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "A&nulează", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

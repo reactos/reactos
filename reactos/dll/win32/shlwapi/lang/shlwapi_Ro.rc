@@ -1,6 +1,7 @@
 /*
  * Copyright 2004 Jon Griffiths
  * Copyright 2008 Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,11 +29,11 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "Nu &afișa din nou acest mesaj", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Renunță", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Nu dor&esc recurența acestui mesaj", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Con&firmă", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "A&nulează", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Da", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Nu", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "N&u", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE

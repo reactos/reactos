@@ -1,18 +1,19 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_INVPARMS "Număr de parametri nevalid - Utilizați xcopy /? pentru ajutor\n"
-    STRING_INVPARM "Parametru nevalid „%1” -  Utilizați xcopy /? pentru ajutor\n"
-    STRING_PAUSE "Apăsați pe <enter> pentru a începe copierea\n"
+    STRING_INVPARMS "Număr de parametri nevalid - Utilizați xcopy /? pentru manual\n"
+    STRING_INVPARM "Parametru nevalid «%1» -  Utilizați xcopy /? pentru manual\n"
+    STRING_PAUSE "Apăsați pe «Enter» pentru a începe copierea\n"
     STRING_SIMCOPY "%1!d! fișier(e) ar fi copiat(e)\n"
     STRING_COPY "%1!d! fișier(e) copiat(e)\n"
-    STRING_QISDIR "„%1” este un nume de fișier sau un director\ndin destinație?\n(F - Fișier, D - Director)\n"
+    STRING_QISDIR "«%1» este un nume de fișier sau un director\ndin destinație?\n(F - Fișier, D - Director)\n"
     STRING_SRCPROMPT "%1? (Da|Nu)\n"
     STRING_OVERWRITE "Se suprascrie %1? (Da|Nu|Toate)\n"
-    STRING_COPYFAIL "Copierea „%1” în „%2” a eșuat cu cod de retur %3!d!\n"
-    STRING_OPENFAIL "Deschiderea „%1” a eșuat\n"
-    STRING_READFAIL "Citirea „%1” a eșuat\n"
+    STRING_COPYFAIL "Copierea «%1» în «%2» a eșuat cu cod de retur %3!d!\n"
+    STRING_OPENFAIL "Deschiderea «%1» a eșuat\n"
+    STRING_READFAIL "Citirea «%1» a eșuat\n"
     STRING_YES_CHAR "D"
     STRING_NO_CHAR "N"
     STRING_ALL_CHAR "T"

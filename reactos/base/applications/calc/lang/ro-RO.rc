@@ -1,3 +1,4 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
@@ -535,11 +536,11 @@ END
 /* Lengths */
 STRINGTABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS "Ångströms"
+    IDS_LENGTH_ANGSTROMS "Ångströmi"
     IDS_LENGTH_ASTRONOMICAL_UNITS "Unități astronomice"
     IDS_LENGTH_BARLEYCORNS "Grani"
     IDS_LENGTH_CENTIMETERS "Centimetri"
-    IDS_LENGTH_CHAINS_UK "Chains (Marea Britanie)"
+    IDS_LENGTH_CHAINS_UK "Lanțuri (Marea Britanie)"
     IDS_LENGTH_CHI "Chi"
     IDS_LENGTH_CHOU "Chou"
     IDS_LENGTH_CHR "Chr"
@@ -567,7 +568,7 @@ BEGIN
     IDS_LENGTH_MILLIMETERS "Milimetri"
     IDS_LENGTH_NAUTICAL_MILES "Mile nautice"
     IDS_LENGTH_NIEU "Nieu"
-    IDS_LENGTH_PARSECS "Parsecs"
+    IDS_LENGTH_PARSECS "Parseci"
     IDS_LENGTH_PICAS "Picas"
     IDS_LENGTH_RI_JAPAN "Ri (Japonia)"
     IDS_LENGTH_RI_KOREA "Ri (Corea)"

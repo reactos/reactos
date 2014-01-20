@@ -3,8 +3,7 @@
  * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/lang/ro-RO.rc
  * PURPOSE:     Romanian Language resource file
- * TRANSLATORS: Petru Dimitriu
- *              Fulea Ștefan (2011-12-19): minor changes
+ * TRANSLATORS: Petru Dimitriu, Ștefan Fulea
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -19,8 +18,8 @@ BEGIN
         MENUITEM "&Păstrare în…", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Pune pe fundal (în ca&rou)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Pune pe fundal (&centrat)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Pune pe fundal (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Pune pe fundal (&centrată)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Pune pe fundal (e&xtinsă)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", IDM_FILEEXIT
     END
@@ -66,20 +65,20 @@ BEGIN
     END
     POPUP "&Imagine"
     BEGIN
-        MENUITEM "&Rotire/Oglindire…\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Trunchiază", IDM_IMAGECROP
+        MENUITEM "R&otire/Oglindire…\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Întin&dere/Înclinare…\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Recoltează", IDM_IMAGECROP
         MENUITEM "In&versează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribute…\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Mod &opac", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Mod opac", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Culori"
     BEGIN
         MENUITEM "&Editare paletă…", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Paletă &modernă", IDM_COLORSMODERNPALETTE
+        MENUITEM "Paletă &veche", IDM_COLORSOLDPALETTE
     END
     POPUP "&?"
     BEGIN
@@ -158,9 +157,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Întindere și înclinare imagine"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Întindere", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Orizontală:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -169,15 +168,15 @@ BEGIN
     LTEXT "Verticală:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Înclinare", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Orizontală:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "grade", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "Verticală:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "grade", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "Con&firmă", IDOK, 170, 8, 48, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 170, 24, 48, 14
 END
@@ -211,8 +210,8 @@ BEGIN
     IDS_SAVEFILTER "Bitmap pe 24 biți (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE "%d octeți"
     IDS_PRINTRES "%d x %d pixeli pe metru"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_INTNUMBERS "Introduceți doar numere întregi!"
+    IDS_PERCENTAGE "Procentajul trebuie să fie între 1 și 500."
+    IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
+    IDS_LOADERRORTEXT "Fișierul %s nu poate fi încărcat."
 END

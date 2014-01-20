@@ -2,6 +2,7 @@
  * Copyright 2004 Krzysztof Foltman
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,72 +29,72 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou...\tCtrl+N",                     ID_FILE_NEW
-        MENUITEM "&Deschide...\tCtrl+O",                ID_FILE_OPEN
-        MENUITEM "&Salvează\tCtrl+S",                   ID_FILE_SAVE
-        MENUITEM "S&alvează ca...",                     ID_FILE_SAVEAS
+        MENUITEM "&Nou…\tCtrl+N",                       ID_FILE_NEW
+        MENUITEM "&Deschidere…\tCtrl+O",                ID_FILE_OPEN
+        MENUITEM "Pă&strează\tCtrl+S",                  ID_FILE_SAVE
+        MENUITEM "&Păstrare în…",                       ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Im&primă...\tCtrl+P",                 ID_PRINT
-        MENUITEM "Pre&vizualizare imprimare...",        ID_PREVIEW
-        MENUITEM "&Opțiuni pagină...",                  ID_PRINTSETUP
+        MENUITEM "&Imprimare…\tCtrl+P",                 ID_PRINT
+        MENUITEM "Pre&vizionare imprimare…",            ID_PREVIEW
+        MENUITEM "&Opțiuni pagină…",                    ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&Ieșire",                             ID_FILE_EXIT
+        MENUITEM "I&eșire",                             ID_FILE_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Anulează\tCtrl+Z",                   ID_EDIT_UNDO
-        MENUITEM "R&efă\tCtrl+Y",                       ID_EDIT_REDO
+        MENUITEM "Des&face\tCtrl+Z",                    ID_EDIT_UNDO
+        MENUITEM "&Reface\tCtrl+Y",                     ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "&Taie\tCtrl+X",                       ID_EDIT_CUT
+        MENUITEM "&Decupează\tCtrl+X",                  ID_EDIT_CUT
         MENUITEM "&Copiază\tCtrl+C",                    ID_EDIT_COPY
-        MENUITEM "Li&pește\tCtrl+V",                    ID_EDIT_PASTE
-        MENUITEM "&Curăță\tDEL",                        ID_EDIT_CLEAR
-        MENUITEM "&Selectează tot\tCtrl+A",             ID_EDIT_SELECTALL
+        MENUITEM "&Lipește\tCtrl+V",                    ID_EDIT_PASTE
+        MENUITEM "Șt&erge\tDEL",                        ID_EDIT_CLEAR
+        MENUITEM "Selecte&ază tot\tCtrl+A",             ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Cău&tare...\tCrtl+F",                 ID_FIND
-        MENUITEM "Caută &următorul\tF3",                ID_FIND_NEXT
-        MENUITEM "Î&nlocuire...\tCtrl+H",               ID_REPLACE
+        MENUITEM "Că&utare…\tCrtl+F",                   ID_FIND
+        MENUITEM "Caută u&rmătorul\tF3",                ID_FIND_NEXT
+        MENUITEM "Î&nlocuire…\tCtrl+H",                 ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "D&oar citire",                        ID_EDIT_READONLY
         MENUITEM "&Modificat",                          ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
-        POPUP "S&uplimente"
+        POPUP "&Suplimente"
         BEGIN
-            MENUITEM "Detal&ii pentru selecție",        ID_EDIT_SELECTIONINFO
-            MENUITEM "&Format caracter",                ID_EDIT_CHARFORMAT
-            MENUITEM "For&mat caracter implicit",       ID_EDIT_DEFCHARFORMAT
-            MENUITEM "Format &paragraf",                ID_EDIT_PARAFORMAT
-            MENUITEM "Extra&ge textul",                 ID_EDIT_GETTEXT
+            MENUITEM "&Detalii pentru selecție",        ID_EDIT_SELECTIONINFO
+            MENUITEM "Format &caracter",                ID_EDIT_CHARFORMAT
+            MENUITEM "Format caracter i&mplicit",       ID_EDIT_DEFCHARFORMAT
+            MENUITEM "Format p&aragraf",                ID_EDIT_PARAFORMAT
+            MENUITEM "Extrage te&xtul",                 ID_EDIT_GETTEXT
         END
     END
-    POPUP "&Vizualizare"
+    POPUP "&Afișare"
     BEGIN
-        MENUITEM "Bara de unel&te",                     ID_TOGGLE_TOOLBAR
-        MENUITEM "Bara de &format",                     ID_TOGGLE_FORMATBAR
+        MENUITEM "Instrumente g&enerale",               ID_TOGGLE_TOOLBAR
+        MENUITEM "Instrumente de &formatare",           ID_TOGGLE_FORMATBAR
         MENUITEM "&Riglă",                              ID_TOGGLE_RULER
-        MENUITEM "Bară de &stare",                      ID_TOGGLE_STATUSBAR
+        MENUITEM "&Bară de stare",                      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Opțiuni...",                         ID_VIEWPROPERTIES
+        MENUITEM "&Opțiuni…",                           ID_VIEWPROPERTIES
     END
     POPUP "&Inserare"
     BEGIN
-        MENUITEM "&Data și ora...",                     ID_DATETIME
+        MENUITEM "&Data și ora…",                       ID_DATETIME
     END
-    POPUP "F&ormat"
+    POPUP "F&ormatare"
     BEGIN
-        MENUITEM "&Font...",                            ID_FONTSETTINGS
+        MENUITEM "&Font…",                              ID_FONTSETTINGS
         MENUITEM "Punct &bulină",                       ID_BULLET
-        MENUITEM "&Paragraf...",                        ID_PARAFORMAT
-        MENUITEM "&Taburi...",                          ID_TABSTOPS
+        MENUITEM "&Paragraf…",                          ID_PARAFORMAT
+        MENUITEM "&Taburi…",                            ID_TABSTOPS
         POPUP "Fun&dal"
         BEGIN
             MENUITEM "&Sistem\tCtrl+1",                 ID_BACK_1
-            MENUITEM "Gălbui de &post-it\tCtrl+2",      ID_BACK_2
+            MENUITEM "&Gălbui de post-it\tCtrl+2",      ID_BACK_2
         END
     END
-    POPUP "&Ajutor"
+    POPUP "&?"
     BEGIN
-        MENUITEM "&Despre Wine Wordpad",                ID_ABOUT
+        MENUITEM "&Despre Wine Wordpad…",               ID_ABOUT
     END
 END
 
@@ -101,12 +102,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Taie",               ID_EDIT_CUT
+        MENUITEM "&Decupează",          ID_EDIT_CUT
         MENUITEM "&Copiază",            ID_EDIT_COPY
         MENUITEM "&Lipește",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Punct &bulină",       ID_BULLET
-        MENUITEM "&Paragraf...",        ID_PARAFORMAT
+        MENUITEM "&Paragraf…",          ID_PARAFORMAT
     END
 END
 
@@ -130,7 +131,7 @@ BEGIN
         MENUITEM "Fuchsia",             ID_COLOR_FUCHSIA
         MENUITEM "Culoarea apei",       ID_COLOR_AQUA
         MENUITEM "Alb",                 ID_COLOR_WHITE
-        MENUITEM "Automatic",           ID_COLOR_AUTOMATIC
+        MENUITEM "Automată",            ID_COLOR_AUTOMATIC
     END
 END
 
@@ -140,9 +141,9 @@ CAPTION "Data și ora"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT        "Formate disponibile",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
-    PUSHBUTTON   "&OK",IDOK,87,12,40,12
-    PUSHBUTTON   "&Anulează",IDCANCEL,87,26,40,12
+    LISTBOX                    IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    PUSHBUTTON   "Con&firmă",  IDOK,87,12,40,12
+    PUSHBUTTON   "A&nulează",  IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOG 30, 20, 140, 80
@@ -150,10 +151,10 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Nou"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Nou tip de document",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON   "&OK",IDOK,97,12,40,12
-    PUSHBUTTON   "&Anulează",IDCANCEL,97,26,40,12
+    LTEXT        "Tip nou de document",-1,3,2,100,15
+    LISTBOX                    IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "Con&firmă",  IDOK,97,12,40,12
+    PUSHBUTTON   "A&nulează",  IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
@@ -161,17 +162,17 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Format paragraf"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Indentare", -1, 10, 10, 120, 68
-    LTEXT "Stânga", -1, 15, 22, 40, 13
-    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Dreapta", -1, 15, 40, 40, 13
-    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Primul rând", -1, 15, 58, 40, 13
-    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Aliniere", -1, 15, 87, 40, 13
-    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
-    PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Anulează", IDCANCEL, 137, 33, 50, 15
+    GROUPBOX    "Indentare",    -1, 10, 10, 120, 68
+    LTEXT       "Stânga",       -1, 15, 22, 40, 13
+    EDITTEXT                    IDC_PARA_LEFT, 55, 20, 60, 13
+    LTEXT       "Dreapta",      -1, 15, 40, 40, 13
+    EDITTEXT                    IDC_PARA_RIGHT, 55, 38, 60, 13
+    LTEXT       "Primul rând",  -1, 15, 58, 40, 13
+    EDITTEXT                    IDC_PARA_FIRST, 55, 56, 60, 13
+    LTEXT       "Aliniere",     -1, 15, 87, 40, 13
+    COMBOBOX                    IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
+    PUSHBUTTON  "Con&firmă",    IDOK, 137, 15, 50, 15
+    PUSHBUTTON  "A&nulează",    IDCANCEL, 137, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
@@ -179,13 +180,13 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Taburi"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Spațiere tab", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "&Adaugă", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "&Elimină", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Anulează", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "E&limină tot", ID_TAB_EMPTY, 137, 51, 50, 15
+    GROUPBOX       "Spațiere tab",  -1, 10, 10, 120, 90
+    COMBOBOX                        IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON  "&Adaugă",       ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON     "&Elimină",      ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON     "Con&firmă",     IDOK, 137, 15, 50, 15
+    PUSHBUTTON     "A&nulează",     IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON     "Elimină t&ot",  ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
@@ -193,24 +194,24 @@ STYLE DS_SYSMODAL
 CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Despărțire rânduri", -1, 10, 10, 130, 85
-    RADIOBUTTON "Fără desparțire râ&nduri", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "Încadrează textul în chenarul &ferestrei", IDC_PAGEFMT_WW, 18, 45, 117, 15
-    RADIOBUTTON "Încadrează textul în limitele ri&glei", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Bare de unelte", -1, 150, 10, 120, 85
-    CHECKBOX "Bara de unel&te", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "Bara de &format", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Riglă", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "Bară de &stare", IDC_PAGEFMT_SB, 160, 74, 80, 15
-    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+    GROUPBOX     "Despărțire rânduri", -1, 10, 10, 130, 85
+    RADIOBUTTON  "Fără &desparțire rânduri", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON  "Încadrează textul în &chenarul ferestrei", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON  "Încadrează textul în li&mitele riglei", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX     "Panouri de instrumente",  -1, 150, 10, 120, 85
+    CHECKBOX     "Butoane g&enerale", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX     "Butoane de f&ormatare", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX     "&Riglă",          IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX     "&Bară de stare",  IDC_PAGEFMT_SB, 160, 74, 80, 15
+    LTEXT        "",                IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE
 BEGIN
-    STRING_ALL_FILES,              "Toate documentele (*.*)"
-    STRING_TEXT_FILES_TXT,         "Documentele text (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Documentele text unicode (*.txt)"
-    STRING_RICHTEXT_FILES_RTF,     "Formatul de text îmbogățit (*.rtf)"
+    STRING_ALL_FILES,              "Orice fișier (*.*)"
+    STRING_TEXT_FILES_TXT,         "Documente text (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Documente text unicode (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "Format de text îmbogățit (*.rtf)"
     STRING_NEWFILE_RICHTEXT,       "Document text îmbogățit"
     STRING_NEWFILE_TXT,            "Document text"
     STRING_NEWFILE_TXT_UNICODE,    "Document text unicode"
@@ -252,7 +253,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,          "Document"
-    STRING_PROMPT_SAVE_CHANGES,       "Salvați modificările la „%s”?"
+    STRING_PROMPT_SAVE_CHANGES,       "Păstrați modificările la „%s”?"
     STRING_SEARCH_FINISHED,           "S-a terminat căutarea în document."
     STRING_LOAD_RICHED_FAILED,        "Nu s-a putut încărca biblioteca RichEdit."
     STRING_SAVE_LOSEFORMATTING,       "Ați ales să salvați în formatul de text simplu, care va pierde formatarea. Sigur doriți să continuați?"

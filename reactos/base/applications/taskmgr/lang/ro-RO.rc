@@ -1,4 +1,4 @@
-/* 2011.10.30 - Fulea Ștefan: minor changes */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -91,7 +91,7 @@ BEGIN
         MENUITEM "Ma&ximizează", ID_WINDOWS_MAXIMIZE
         MENUITEM "Aranjări în casca&dă", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&Termină", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Op&rește", ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Salt la proces", ID_APPLICATION_PAGE_GOTOPROCESS
     END
 END
@@ -111,8 +111,8 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Termină procesul", ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Termină &arborele de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "Op&rește procesul", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Oprește &arborele de procese", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Depanează", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "&Stabilire prioritate"
@@ -160,7 +160,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Termină procesul", IDC_ENDPROCESS, 171, 189, 69, 14
+    PUSHBUTTON "Op&rește procesul", IDC_ENDPROCESS, 171, 189, 69, 14
     CONTROL "Afișea&ză procesele tuturor utilizatorilor", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 150, 10
 END
@@ -176,7 +176,7 @@ BEGIN
     GROUPBOX "Memorie încărcată (ko)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 121, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memorie fizică (ko)", IDC_PHYSICAL_MEMORY_FRAME, 136, 122, 106, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memorie nucleu (ko)", IDC_KERNEL_MEMORY_FRAME, 136, 166, 106, 39, 0, WS_EX_TRANSPARENT
-    LTEXT "Rutine de gestiune", IDS_TOTALS_HANDLE_COUNT, 12, 131, 125, 8
+    LTEXT "Id. de gestiune", IDS_TOTALS_HANDLE_COUNT, 12, 131, 125, 8
     LTEXT "Fire de execuție", IDS_TOTALS_THREAD_COUNT, 12, 140, 100, 8
     LTEXT "Procese", IDS_TOTALS_PROCESS_COUNT, 12, 149, 100, 8
     EDITTEXT IDC_TOTALS_HANDLE_COUNT, 75, 131, 45, 8, ES_RIGHT | ES_READONLY |

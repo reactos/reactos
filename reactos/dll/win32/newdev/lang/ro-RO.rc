@@ -1,14 +1,14 @@
-/* 2011.12.10 - Fulea Ștefan: minor changes */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit!", IDC_WELCOMETITLE, 120, 8, 195, 24
-    LTEXT "Acest expert va instala module pilot pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "Acest asistent va instala module pilot pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 120, 169, 195, 17
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 134, 36, 164, 11
     LTEXT "AVERTISMENT: INSTALAREA UNUI DISPOZITIV NECUNOSCUT POATE AVEA EFECTE GRAVE ASUPRA CALCULATORULUI DUMNEAVOASTRĂ!", IDC_STATIC, 120, 59, 195, 30
@@ -18,7 +18,7 @@ END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalarea a eșuat", IDC_FINISHTITLE, 120, 8, 195, 24
@@ -29,7 +29,7 @@ END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalarea a eșuat", IDC_FINISHTITLE, 120, 8, 195, 24
@@ -39,20 +39,20 @@ END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Specific locații de căutare", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
     CONTROL "Specific manual modulele pilot", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
     CONTROL "Caută pe unitățile detașabile", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
     CONTROL "Caută acest dosar", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Specificare…", IDC_BROWSE, 248, 69, 60, 14
+    PUSHBUTTON "Spe&cificare…", IDC_BROWSE, 248, 69, 60, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
 IDD_SEARCHDRV DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 51, 20, 169, 16
@@ -60,7 +60,7 @@ END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 51, 20, 169, 16
@@ -68,22 +68,22 @@ END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalare completă", IDC_FINISHTITLE, 120, 8, 195, 11
     LTEXT "Este necesară repornirea sistemului pentru a încheia instalarea:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Apăsați „Termină” pentru a închide expertul.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Apăsați „Sfârșit” pentru a închide asistentul.", IDC_STATIC, 120, 174, 179, 11
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare dispozitiv"
+CAPTION "Asistentul de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalare completă", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Expertul a încheiat instalarea dispozitivului:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Apăsați „Termină” pentru a închide expertul.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Asistentul a încheiat instalarea dispozitivului:", IDC_STATIC, 120, 32, 195, 19
+    LTEXT "Apăsați „Sfârșit” pentru a închide asistentul.", IDC_STATIC, 120, 174, 179, 11
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 12
 END

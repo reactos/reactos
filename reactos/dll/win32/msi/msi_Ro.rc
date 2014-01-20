@@ -1,6 +1,7 @@
 /*
  * Copyright 2005 Mike McCormack
  * Copyright 2009 Michael Stefaniuc
+ *           2011 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,21 @@ STRINGTABLE
         4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
         5 "calea %s nu a fost găsită"
         9 "inserați discul %s"
-	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+        10 "Instalatorul Windows %s\n\nUtilizare:\nmsiexec command {parametru obligatoriu} [parametru opțional]\n\n" \
+           "Instalarea unui produs:\n\t/i {pachet|cod_produs} [proprietate]" \
+                                  "\n\t/package {pachet|cod_produs} [proprietate]" \
+                                  "\n\t/a pachet [proprietate]\n" \
+           "Repararea unei instalări:\n\t/f[p|o|e|d|c|a|u|m|s|v] {pachet|cod_produs}\n" \
+           "Dezinstalarea unui produs:\n\t/uninstall {pachet|cod_produs} [proprietate]" \
+                                       "\n\t/x {pachet|cod_produs} [proprietate]\n" \
+           "Promovarea unui produs:\n\t/j[u|m] pachet [/t transformare] [/g id_limbă]\n" \
+           "Aplicarea unui patch:\n\t/p pachet_patch [proprietate]" \
+                                  "\n\t/p pachet_patch /a pachet [proprietate]\n" \
+           "Jurnalizare și modificatori de interfață pentru comenzile enumerate:" \
+                                  "\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fișier_jurnal\n\t/q{|n|b|r|f|n+|b+|b-}\n" \
+           "Înregistrarea serviciului MSI:\n\t/y\n" \
+           "Excluderea serviciului MSI:\n\t/z\n" \
+           "Afișarea acestui manual:\n\t/help\n\t/?\n"
         11 "introduceți fișierul care conține %s"
         12 "lipsește sursa de instalare pentru această caracteristică"
         13 "lipsește unitatea de rețea pentru această caracteristică"
