@@ -13,8 +13,9 @@
 
 #include <advapi32.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+#include <lsa_c.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static
 BOOL

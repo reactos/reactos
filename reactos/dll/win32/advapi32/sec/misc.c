@@ -11,8 +11,8 @@
  */
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* Interface to ntmarta.dll ***************************************************/
 

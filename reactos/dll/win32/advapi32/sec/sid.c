@@ -12,6 +12,9 @@
  */
 
 #include <advapi32.h>
+
+#include <sddl.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 #define MAX_GUID_STRING_LEN 39

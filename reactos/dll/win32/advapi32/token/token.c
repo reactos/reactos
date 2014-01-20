@@ -9,6 +9,9 @@
  */
 
 #include <advapi32.h>
+
+#include <ndk/setypes.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /*
