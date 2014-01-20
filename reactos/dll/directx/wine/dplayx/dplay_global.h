@@ -19,17 +19,6 @@
 #ifndef __WINE_DPLAY_GLOBAL_INCLUDED
 #define __WINE_DPLAY_GLOBAL_INCLUDED
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include "dplaysp.h"
-#include "lobbysp.h"
-#include "dplayx_queue.h"
-
 extern HRESULT DPL_EnumAddress( LPDPENUMADDRESSCALLBACK lpEnumAddressCallback,
                                 LPCVOID lpAddress, DWORD dwAddressSize,
                                 LPVOID lpContext ) DECLSPEC_HIDDEN;

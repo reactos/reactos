@@ -19,15 +19,6 @@
 #ifndef __WINE_DPLAYX_MESSAGES__
 #define __WINE_DPLAYX_MESSAGES__
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "dplay.h"
-//#include "rpc.h" /* For GUID */
-
-#include "dplay_global.h"
-
 DWORD CreateLobbyMessageReceptionThread( HANDLE hNotifyEvent, HANDLE hStart,
                                          HANDLE hDeath, HANDLE hConnRead ) DECLSPEC_HIDDEN;
 
@@ -220,4 +211,4 @@ typedef const DPMSG_FORWARDADDPLAYERNACK* LPCDPMSG_FORWARDADDPLAYERNACK;
 
 #include <poppack.h>
 
-#endif
+#endif /* __WINE_DPLAYX_MESSAGES__ */

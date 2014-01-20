@@ -29,24 +29,7 @@
  *
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <wine/debug.h>
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-#include <wine/unicode.h>
-
-//#include "wingdi.h"
-//#include "winuser.h"
-
 #include "dplayx_global.h"
-//#include "dplayx_messages.h" /* For CreateMessageReceptionThread only */
-
-WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 /* FIXME: Need to do all that fun other dll referencing type of stuff */
 
