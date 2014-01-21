@@ -18,10 +18,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef __WINE_CABINET_H
 #define __WINE_CABINET_H
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 
@@ -31,9 +32,7 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winnt.h>
 #include <fdi.h>
-#include <fci.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
