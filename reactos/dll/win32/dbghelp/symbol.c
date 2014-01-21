@@ -19,24 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <assert.h>
-
 #include "dbghelp_private.h"
-
-#ifndef DBGHELP_STATIC_LIB
-#include "wine/debug.h"
-#include "winnls.h"
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 WINE_DECLARE_DEBUG_CHANNEL(dbghelp_symt);

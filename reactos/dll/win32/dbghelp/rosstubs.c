@@ -20,8 +20,7 @@
 
 #include "dbghelp_private.h"
 
-ULONG __cdecl DbgPrint(IN PCCH Format, IN ...);
-#define UNIMPLEMENTED DbgPrint("DBGHELP: %s is unimplemented, please try again later.\n", __FUNCTION__);
+WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 #define PDBGHELP_CREATE_USER_DUMP_CALLBACK PVOID
 #define PSYM_ENUMPROCESSES_CALLBACK PVOID

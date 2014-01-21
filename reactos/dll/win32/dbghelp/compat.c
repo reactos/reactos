@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdarg.h>
 #include "dbghelp_private.h"
 
 void* __HeapAlloc(int heap, int flags, size_t size)

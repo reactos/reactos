@@ -21,30 +21,55 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
+#include <config.h>
+
+#include <assert.h>
+#include <stdio.h>
+
+#ifdef HAVE_SYS_MMAN_H
+# include <sys/mman.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #ifndef DBGHELP_STATIC_LIB
+
+#include <wine/port.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winver.h>
+#include <winternl.h>
 #include <dbghelp.h>
 #include <objbase.h>
 #include <cvconst.h>
+#include <psapi.h>
+
+#include <wine/debug.h>
+#include <wine/mscvpdb.h>
 #include <wine/unicode.h>
-#else
+
+#else /* DBGHELP_STATIC_LIB */
+
 #include <string.h>
 #include "compat.h"
-#endif
 
-//#include "oaidl.h"
-//#include "winnls.h"
+#endif /* DBGHELP_STATIC_LIB */
+
 #include <wine/list.h>
 #include <wine/rbtree.h>
-
 
 /* #define USE_STATS */
 
@@ -815,3 +840,5 @@ extern struct symt_pointer*
 extern struct symt_typedef*
                     symt_new_typedef(struct module* module, struct symt* ref, 
                                      const char* name) DECLSPEC_HIDDEN;
+
+#include "image_private.h"
