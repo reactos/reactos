@@ -130,4 +130,7 @@ BEGIN
     IDS_LOCKMSG "Solo %s o un Amministratore possono sbloccare questo computer."
     IDS_LOGONMSG "You are logged on as %s."
     IDS_LOGONDATE "Dati di accesso: %s %s"
+    IDS_COMPUTERLOCKED "Computer locked"
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
 END

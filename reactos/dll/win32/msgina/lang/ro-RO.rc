@@ -124,4 +124,7 @@ BEGIN
     IDS_LOCKMSG "Doar %s sau un Administrator poate debloca acest calculator."
     IDS_LOGONMSG "Sunteți autentificat ca %s."
     IDS_LOGONDATE "Data autentificării: %s %s"
+    IDS_COMPUTERLOCKED "Computer locked"
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
 END

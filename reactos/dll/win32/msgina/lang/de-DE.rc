@@ -122,4 +122,7 @@ BEGIN
     IDS_LOCKMSG "Nur %s oder ein Administrator kann den Computer entsperren."
     IDS_LOGONMSG "Sie sind angemeldet als %s."
     IDS_LOGONDATE "Anmeldedatum: %s %s"
+    IDS_COMPUTERLOCKED "Computer ist gesperrt"
+    IDS_LOCKEDWRONGPASSWORD "Das Kennwort ist falsch.  Bitte geben Sie das Kennwort erneut ein.  Bei Buchstaben des Kennworts wird Groß- und Kleinschreibung unterschieden."
+    IDS_LOCKEDWRONGUSER "Der Computer ist gesperrt.  Nur %s\\%s oder ein Administrator kann den Computer entsperren."
 END

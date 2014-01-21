@@ -121,4 +121,7 @@ BEGIN
     IDS_FORCELOGOFF "Ini akan mengeluarkan pengguna saat ini dan kehilangan data yang belum disimpan.  Lanjutkan?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
     IDS_LOGONDATE "Logon date: %s %s"
+    IDS_COMPUTERLOCKED "Computer locked"
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
 END

@@ -124,4 +124,7 @@ BEGIN
     IDS_LOCKMSG "Только %s или Администратор могут разблокировать этот компьютер."
     IDS_LOGONMSG "You are logged on as %s."
     IDS_LOGONDATE "Дата входа: %s %s"
+    IDS_COMPUTERLOCKED "Computer locked"
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
 END

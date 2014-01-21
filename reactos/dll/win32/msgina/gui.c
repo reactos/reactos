@@ -604,6 +604,59 @@ SetLockMessage(HWND hwnd,
 
 
 static
+BOOL
+DoUnlock(
+    IN HWND hwndDlg,
+    IN PGINA_CONTEXT pgContext,
+    OUT LPINT Action)
+{
+    WCHAR Buffer1[256];
+    WCHAR Buffer2[256];
+    LPWSTR UserName = NULL;
+    LPWSTR Password = NULL;
+    BOOL res = FALSE;
+
+    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+        return FALSE;
+
+    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
+    {
+        if (UserName != NULL && Password != NULL &&
+            wcscmp(UserName, pgContext->UserName) == 0 &&
+            wcscmp(Password, pgContext->Password) == 0)
+        {
+            *Action = WLX_SAS_ACTION_UNLOCK_WKSTA;
+            res = TRUE;
+        }
+        else if (wcscmp(UserName, pgContext->UserName) == 0 &&
+                 wcscmp(Password, pgContext->Password) != 0)
+        {
+            /* Wrong Password */
+            LoadStringW(pgContext->hDllInstance, IDS_LOCKEDWRONGPASSWORD, Buffer2, 256);
+            LoadStringW(pgContext->hDllInstance, IDS_COMPUTERLOCKED, Buffer1, 256);
+            MessageBoxW(hwndDlg, Buffer2, Buffer1, MB_OK | MB_ICONERROR);
+        }
+        else
+        {
+            /* Wrong user name */
+            LoadStringW(pgContext->hDllInstance, IDS_LOCKEDWRONGUSER, Buffer1, 256);
+            wsprintfW(Buffer2, Buffer1, pgContext->Domain, pgContext->UserName);
+            LoadStringW(pgContext->hDllInstance, IDS_COMPUTERLOCKED, Buffer1, 256);
+            MessageBoxW(hwndDlg, Buffer2, Buffer1, MB_OK | MB_ICONERROR);
+        }
+    }
+
+    if (UserName != NULL)
+        HeapFree(GetProcessHeap(), 0, UserName);
+
+    if (Password != NULL)
+        HeapFree(GetProcessHeap(), 0, Password);
+
+    return res;
+}
+
+
+static
 INT_PTR
 CALLBACK
 UnlockWindowProc(
@@ -613,6 +666,7 @@ UnlockWindowProc(
     IN LPARAM lParam)
 {
     PGINA_CONTEXT pgContext;
+    INT result = WLX_SAS_ACTION_NONE;
 
     pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
 
@@ -653,26 +707,9 @@ UnlockWindowProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                {
-                    LPWSTR UserName = NULL, Password = NULL;
-                    INT result = WLX_SAS_ACTION_NONE;
-
-                    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
-                        break;
-                    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
-                    {
-                        if (UserName != NULL && Password != NULL &&
-                            wcscmp(UserName, pgContext->UserName) == 0 &&
-                            wcscmp(Password, pgContext->Password) == 0)
-                        {
-                            result = WLX_SAS_ACTION_UNLOCK_WKSTA;
-                        }
-                    }
-                    HeapFree(GetProcessHeap(), 0, UserName);
-                    HeapFree(GetProcessHeap(), 0, Password);
-                    EndDialog(hwndDlg, result);
+                    if (DoUnlock(hwndDlg, pgContext, &result))
+                        EndDialog(hwndDlg, result);
                     return TRUE;
-                }
 
                 case IDCANCEL:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);

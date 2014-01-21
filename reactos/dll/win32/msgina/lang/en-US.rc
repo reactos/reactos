@@ -46,7 +46,7 @@ BEGIN
     PUSHBUTTON "Lock computer", IDC_LOCK, 10, 135, 76, 14
     PUSHBUTTON "Log off...", IDC_LOGOFF, 100, 135, 75, 14
     PUSHBUTTON "Shutdown", IDC_SHUTDOWN, 189, 135, 76, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Task manager", IDC_TASKMGR, 100, 154, 75, 14
     PUSHBUTTON "Cancel", IDCANCEL, 189, 154, 76, 14
 END
@@ -122,4 +122,7 @@ BEGIN
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
     IDS_LOGONMSG "You are logged on as %s."
     IDS_LOGONDATE "Logon date: %s %s"
+    IDS_COMPUTERLOCKED "Computer locked"
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
 END
