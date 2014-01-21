@@ -24,7 +24,7 @@
 #ifndef __WINE_COMCTL32_H
 #define __WINE_COMCTL32_H
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 #include <assert.h>
@@ -32,17 +32,16 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
-#define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <winreg.h>
-#include <commctrl.h>
+#include <objbase.h>
 #include <uxtheme.h>
 #include <vssym32.h>
 

@@ -39,7 +39,6 @@
 
 #include "comctl32.h"
 
-#include <objbase.h>
 #include <commoncontrols.h>
 #include <wine/exception.h>
 

@@ -39,9 +39,9 @@
  *    -- FORMATCALLBACK
  */
 
-#include <math.h>
-
 #include "comctl32.h"
+
+#include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 
