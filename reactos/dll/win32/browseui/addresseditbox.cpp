@@ -21,7 +21,9 @@
 /*
 This class handles the combo box of the address band.
 */
+
 #include "precomp.h"
+
 /*
 TODO:
     Add auto completion support

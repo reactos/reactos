@@ -22,6 +22,7 @@
 Implements a class that knows how to hold and manage the menu band, brand band,
 toolbar, and address band for an explorer window
 */
+
 #include "precomp.h"
 
 // navigation controls and menubar just send a message to parent window

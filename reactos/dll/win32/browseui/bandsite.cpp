@@ -21,8 +21,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(browseui);
-
 #ifndef ASSERT
 #define ASSERT(cond) \
     if (!(cond)) \
