@@ -22,8 +22,6 @@
 
 #include <wintrust.h>
 
-#include "cryptres.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 static BOOL CRYPT_ReadBlobFromFile(LPCWSTR fileName, PCERT_BLOB blob)
