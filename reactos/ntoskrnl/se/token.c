@@ -64,7 +64,7 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     /* TokenGroupsAndPrivileges */
     ICI_SQ_SAME( sizeof(TOKEN_GROUPS_AND_PRIVILEGES),  sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenSessionReference */
-    ICI_SQ_SAME( /* FIXME */0,                         sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(ULONG),                        sizeof(ULONG), ICIF_SET | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenSandBoxInert */
     ICI_SQ_SAME( sizeof(ULONG),                        sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenAuditPolicy */
@@ -1759,7 +1759,8 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                        Status = _SEH2_GetExceptionCode();
+                        goto Cleanup;
                     }
                     _SEH2_END;
 
@@ -1798,7 +1799,8 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                        Status = _SEH2_GetExceptionCode();
+                        goto Cleanup;
                     }
                     _SEH2_END;
 
@@ -1837,7 +1839,8 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                        Status = _SEH2_GetExceptionCode();
+                        goto Cleanup;
                     }
                     _SEH2_END;
 
@@ -1891,7 +1894,8 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                    Status = _SEH2_GetExceptionCode();
+                    goto Cleanup;
                 }
                 _SEH2_END;
 
@@ -1906,13 +1910,49 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 break;
             }
 
+            case TokenSessionReference:
+            {
+                ULONG SessionReference;
+
+                _SEH2_TRY
+                {
+                    /* Buffer size was already verified, no need to check here again */
+                    SessionReference = *(PULONG)TokenInformation;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                    goto Cleanup;
+                }
+                _SEH2_END;
+
+                if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+                {
+                    Status = STATUS_PRIVILEGE_NOT_HELD;
+                    goto Cleanup;
+                }
+
+                /* Check if it is 0 */
+                if (SessionReference == 0)
+                {
+                    /* Atomically set the flag in the token */
+                    RtlInterlockedSetBits(&Token->TokenFlags,
+                                          TOKEN_SESSION_NOT_REFERENCED);
+                }
+
+                break;
+
+            }
+
             default:
             {
+                DPRINT1("Unhandled TokenInformationClass: 0x%lx\n",
+                        TokenInformationClass);
                 Status = STATUS_NOT_IMPLEMENTED;
                 break;
             }
         }
-
+Cleanup:
         ObDereferenceObject(Token);
     }
 
