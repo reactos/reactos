@@ -9,10 +9,20 @@
 #define _NO_KSECDD_IMPORT_
 #include <ntifs.h>
 
+// 0x390004
+#define IOCTL_KSEC_GEN_RANDOM \
+    CTL_CODE(FILE_DEVICE_KSEC, 0x01, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 NTSTATUS
 NTAPI
 KsecDdDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
+
+NTSTATUS
+NTAPI
+KsecGenRandom(
+    PVOID Buffer,
+    SIZE_T Length);
 

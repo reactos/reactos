@@ -4,6 +4,7 @@ spec2def(ksecdd.sys ksecdd.spec)
 list(APPEND SOURCE
      ksecdd.c
      dispatch.c
+     random.c
      stubs.c
      ksecdd.rc)
 
