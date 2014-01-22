@@ -1229,22 +1229,23 @@ PsSetProcessPriorityClass(PEPROCESS Process,
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 NTAPI
 PsSetProcessSecurityPort(PEPROCESS Process,
                          PVOID SecurityPort)
 {
     Process->SecurityPort = SecurityPort;
+    return STATUS_SUCCESS;
 }
 
 /*
  * @implemented
  */
-NTSTATUS 
-NTAPI 
+NTSTATUS
+NTAPI
 PsSetProcessWin32Process(
-    _Inout_ PEPROCESS Process, 
-    _In_opt_ PVOID Win32Process, 
+    _Inout_ PEPROCESS Process,
+    _In_opt_ PVOID Win32Process,
     _In_opt_ PVOID OldWin32Process)
 {
     NTSTATUS Status;
