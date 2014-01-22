@@ -26,24 +26,22 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+#include <stdarg.h>
+
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <mmsystem.h>
-#include <userenv.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <winwlx.h>
-#include <cmfuncs.h>
-#include <rtlfuncs.h>
-#include <exfuncs.h>
-#include <setypes.h>
-#include <sefuncs.h>
-#include <aclapi.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/exfuncs.h>
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
-#include <reactos/winlogon.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
@@ -157,16 +155,6 @@ typedef struct _GINAINSTANCE
  *    STATE_LOCKED. Pressing "Shutdown" changes the state to
  *    STATE_SHUTTING_DOWN.
  *
- * STATE_SCREENSAVER
- *    Winlogon runs the screen saver. Upon user activity, the screensaver
- *    terminates and the state changes back to STATE_LOGGED_ON if the secure
- *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
- *
- * STATE_LOGGING_OFF
- *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
- *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
- *    and changes the state to STATE_LOGGED_OFF.
- *
  * STATE_LOCKED
  *    Winlogon shows the locked message dialog. When the user presses "Ctrl-
  *    Alt-Del" the state changes to STATE_LOCKED_SAS. If DisableCAD is true,
@@ -179,6 +167,11 @@ typedef struct _GINAINSTANCE
  *    pressing "OK" unlocks the computer and changes the state to
  *    STATE_LOGGED_ON.
  *
+ * STATE_LOGGING_OFF
+ *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
+ *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
+ *    and changes the state to STATE_LOGGED_OFF.
+ *
  * STATE_SHUTTING_DOWN
  *    Winlogon shows the shutdown dialog. Presing "Cancel" or a timeout will
  *    change the state back to STATE_LOGGED_ON_SAS. Pressing "OK" will change
@@ -186,20 +179,25 @@ typedef struct _GINAINSTANCE
  *
  * STATE_SHUT_DOWN
  *    Terminates Winlogon and initiates shut-down.
+ *
+ * STATE_SCREENSAVER
+ *    Winlogon runs the screen saver. Upon user activity, the screensaver
+ *    terminates and the state changes back to STATE_LOGGED_ON if the secure
+ *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
  */
 typedef enum _LOGON_STATE
 {
-    STATE_INIT,            // not user yet
+    STATE_INIT,
     STATE_LOGGED_OFF,
-    STATE_LOGGED_OFF_SAS,  // not user yet
+    STATE_LOGGED_OFF_SAS,
     STATE_LOGGED_ON,
-    STATE_LOGGED_ON_SAS,   // not user yet
-    STATE_SCREENSAVER,     // not user yet
+    STATE_LOGGED_ON_SAS,
     STATE_LOCKED,
-    STATE_LOCKED_SAS,      // not user yet
-    STATE_LOGGING_OFF,     // not user yet
-    STATE_SHUTTING_DOWN,   // not user yet
-    STATE_SHUT_DOWN        // not user yet
+    STATE_LOCKED_SAS,
+    STATE_LOGGING_OFF,     // not used yet
+    STATE_SHUTTING_DOWN,   // not used yet
+    STATE_SHUT_DOWN,       // not used yet
+    STATE_SCREENSAVER      // not used yet
 } LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
@@ -291,6 +289,12 @@ BOOL
 RemoveStatusMessage(IN PWLSESSION Session);
 
 /* wlx.c */
+VOID
+InitDialogListHead(VOID);
+
+HWND
+GetTopDialogWindow(VOID);
+
 BOOL
 GinaInit(IN OUT PWLSESSION Session);
 

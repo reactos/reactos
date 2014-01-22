@@ -11,7 +11,7 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
@@ -25,7 +25,7 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END

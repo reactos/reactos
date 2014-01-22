@@ -17,23 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-//#include <string.h>
-
-#define COBJMACROS
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "objbase.h"
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "dplay.h"
-//#include "dplobby.h"
-//#include "initguid.h"
-#include "dplay_global.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dplay);
-
+#include "dplayx_global.h"
 
 typedef struct
 {

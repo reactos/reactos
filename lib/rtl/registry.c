@@ -211,7 +211,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 
             /* Check if we have space to copy the data */
             RequiredLength = KeyValueInfo->NameLength + sizeof(UNICODE_NULL);
-            if (SpareLength < RequiredLength)
+            if ((SpareData > DataEnd) || (SpareLength < RequiredLength))
             {
                 /* Fail and return the missing length */
                 *InfoSize = (ULONG)(SpareData - (PCHAR)KeyValueInfo) + RequiredLength;

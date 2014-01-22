@@ -55,8 +55,8 @@ BEGIN
     RTEXT "Üretici:", -1, 20, 35, 70, 10
     RTEXT "Yonga Türü:", -1, 20, 45, 70, 10
     RTEXT "DAC Türü:", -1, 20, 55, 70, 10
-    RTEXT "Yaklaşık Toplam Bellek:", -1, 20, 65, 70, 10
-    RTEXT "Geçerli Görüntü Seçeneği:", -1, 20, 75, 70, 10
+    RTEXT "Yaklaşık Toplam Bellek:", -1, 14, 65, 75, 10
+    RTEXT "Geçerli Görüntü Seçeneği:", -1, 14, 75, 75, 10
     RTEXT "Göstergeç:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -191,7 +191,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "Üretici Kimliği"
     IDS_DEVICE_PRODUCT "Ürün Kimliği"
     IDS_DEVICE_FORCEFEEDBACK "Güç Dönütlü Sürücüsü"
-    IDS_NOT_APPLICABLE "Uygulanamaz"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Evet"
     IDS_DIRECTPLAY_COL_NAME1 "Ad"
     IDS_DIRECTPLAY_COL_NAME2 "Değer"

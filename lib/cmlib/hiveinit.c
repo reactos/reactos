@@ -107,7 +107,7 @@ HvpCreateHive(
    BaseBlock->Format = HBASE_FORMAT_MEMORY;
    BaseBlock->Cluster = 1;
    BaseBlock->RootCell = HCELL_NIL;
-   BaseBlock->Length = HV_BLOCK_SIZE;
+   BaseBlock->Length = 0;
    BaseBlock->Sequence1 = 1;
    BaseBlock->Sequence2 = 1;
    /* FIXME: Fill in the file name */
@@ -145,11 +145,7 @@ HvpInitializeMemoryHive(
    PULONG BitmapBuffer;
    SIZE_T ChunkSize;
 
-   //
-   // This hack is similar in magnitude to the US's National Debt
-   //
    ChunkSize = ((PHBASE_BLOCK)ChunkBase)->Length;
-   ((PHBASE_BLOCK)ChunkBase)->Length = HV_BLOCK_SIZE;
    DPRINT("ChunkSize: %lx\n", ChunkSize);
 
    if (ChunkSize < sizeof(HBASE_BLOCK) ||
@@ -172,7 +168,7 @@ HvpInitializeMemoryHive(
     * we go.
     */
 
-   Hive->Storage[Stable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE) - 1;
+   Hive->Storage[Stable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE);
    Hive->Storage[Stable].BlockList =
       Hive->Allocate(Hive->Storage[Stable].Length *
                      sizeof(HMAP_ENTRY), FALSE, TAG_CM);
@@ -305,8 +301,6 @@ HvpGetHiveHeader(IN PHHIVE Hive,
         Hive->Free(BaseBlock, 0);
         BaseBlock = Hive->Allocate(PAGE_SIZE, TRUE, TAG_CM);
         if (!BaseBlock) return NoMemory;
-
-        //BaseBlock->Length = PAGE_SIZE; ??
     }
 
     /* Clear it */
@@ -384,8 +378,6 @@ HvLoadHive(IN PHHIVE Hive,
                             FileSize);
     if (!Result) return STATUS_NOT_REGISTRY_FILE;
 
-    /* Apply "US National Debt" hack */
-    ((PHBASE_BLOCK)HiveData)->Length = FileSize;
 
     /* Free our base block... it's usless in this implementation */
     Hive->Free(BaseBlock, 0);

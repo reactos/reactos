@@ -5,7 +5,7 @@ Name = FreeBASIC
 Version = 0.90.1
 Licence = GPL/LGPL
 Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
-Size = 7.4MB
+Size = 7.4 MB
 Category = 7
 URLSite = http://www.freebasic.net/
 URLDownload = http://garr.dl.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-0.90.1-win32.exe
@@ -27,7 +27,7 @@ Description = Compilatore BASIC open source. La sintassi del BASIC è compatibil
 [Section.0415]
 Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
 
-[Section.0419]
+[Section.0418]
 Description = Compilator (open-source) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
 Size = 7,4 Mo
 

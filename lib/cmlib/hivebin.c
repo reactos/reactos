@@ -98,6 +98,9 @@ HvpAddBin(
       RtlSetBits(&RegistryHive->DirtyVector,
                  Bin->FileOffset / HV_BLOCK_SIZE,
                  BlockCount);
+
+      /* Update size in the base block */
+      RegistryHive->BaseBlock->Length += BinSize;
    }
 
    return Bin;

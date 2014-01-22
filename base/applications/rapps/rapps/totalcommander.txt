@@ -5,7 +5,7 @@ Name = Total Commander
 Version = 8.01
 Licence = Shareware
 Description = Total Commander is a file manager with two panels side by side.
-Size = 3.3MB
+Size = 3.3 MB
 Category = 12
 URLSite = http://www.ghisler.com/
 URLDownload = http://www.slo.ru/download/total_commander/tcm801x32.exe
@@ -24,8 +24,9 @@ Description = Total Commander is een bestandsbeheerder met twee panelen zij aan 
 Description = Total Commander to popularny menedżer plików z dwoma panelami, ustawionymi obok siebie.
 
 [Section.0418]
+Licence = Versiune de evaluare
 Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
-Size = 3,25 Mo
+Size = 3,3 Mo
 
 [Section.041f]
 Name = Eksiksiz Komutan
@@ -34,4 +35,3 @@ Description = Eksiksiz Komutan, yan yana iki bölmenin bulunduğu bir kütük y�
 
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.
-

@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 typedef enum dwarf_tag_e
 {
   DW_TAG_padding                        = 0x00,

@@ -17,31 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#include <config.h>
-//#include "wine/port.h"
-
-//#include <stdarg.h>
-//#include <string.h>
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <windef.h>
-//#include "winerror.h"
-//#include "winbase.h"
-//#include "winnt.h"
-#include <winreg.h>
-//#include "winnls.h"
-#include <wine/unicode.h>
-#include <wine/debug.h>
-
 #include "dplayx_global.h"
-#include "name_server.h"
-//#include "dplayx_queue.h"
-//#include "dplaysp.h"
-//#include "dplay_global.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 /* FIXME: Should this be externed? */
 extern HRESULT DPL_CreateCompoundAddress

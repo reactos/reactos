@@ -5,7 +5,7 @@ Name = Globulation2
 Version = 0.9.4.4
 Licence = GPL
 Description = Globulation 2 is a real-time strategy game. The game minimizes gaming micromanagement by automatically assigning tasks to units.
-Size = 13.5MB
+Size = 13.5 MB
 Category = 4 
 URLSite = http://www.globulation2.org
 URLDownload = http://dl.sv.nongnu.org/releases/glob2/0.9.4/glob2-0.9.4.4.exe
@@ -16,6 +16,10 @@ Description = Globulation 2 ist ein Echtzeitstrategiespiel. Das Spiel vereinfach
 
 [Section.0410]
 Description = Globulation 2 è un gioco di strategia in tempo reale.
+
+[Section.0418]
+Description = Globulation 2 este un joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.
+Size = 13,5 Mo
 
 [Section.041f]
 Description = Globulation 2, gerçek zamanlı bir izlem oyunudur. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikroyönetimini en aza indirir.

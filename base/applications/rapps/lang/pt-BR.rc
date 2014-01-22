@@ -188,7 +188,6 @@ BEGIN
     IDS_APPLICATIONS "Aplicativos"
     IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
-    IDS_USER_NOT_ADMIN "Você deve possuir privilégios administrativos para iniciar ""Central de Aplicativos ReactOS""!"
     IDS_APP_REG_REMOVE "Você tem certeza que deseja apagar as informações do programa instalado do registro?"
     IDS_INFORMATION "Informações"
     IDS_UNABLE_TO_REMOVE "Não foi possível remover as informações do programa do registro!"

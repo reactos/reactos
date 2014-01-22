@@ -15,6 +15,21 @@
     #include <stdio.h>
     #include <string.h>
 
+    #ifdef _WIN32
+    #define strncasecmp _strnicmp
+    #define strcasecmp _stricmp
+    #endif//_WIN32
+
+    #ifndef _MSC_VER
+    #define _In_
+    #define _Out_
+    #define _Inout_
+    #endif
+
+    #ifndef min
+    #define min(a, b)  (((a) < (b)) ? (a) : (b))
+    #endif
+
     // Definitions copied from <ntstatus.h>
     // We only want to include host headers, so we define them manually
     #define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
@@ -32,6 +47,10 @@
     VOID NTAPI
     KeQuerySystemTime(
         OUT PLARGE_INTEGER CurrentTime);
+
+    WCHAR NTAPI
+    RtlUpcaseUnicodeChar(
+        IN WCHAR Source);
 
     VOID NTAPI
     RtlInitializeBitMap(
@@ -312,6 +331,49 @@ VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive);
 
+BOOLEAN
+NTAPI
+CmCompareHash(
+	IN PCUNICODE_STRING KeyName,
+	IN PCHAR HashString,
+	IN BOOLEAN CaseInsensitive);
+
+BOOLEAN
+NTAPI
+CmComparePackedNames(
+	IN PCUNICODE_STRING Name,
+	IN PVOID NameBuffer,
+	IN USHORT NameBufferSize,
+	IN BOOLEAN NamePacked,
+	IN BOOLEAN CaseInsensitive);
+
+BOOLEAN
+NTAPI
+CmCompareKeyName(
+	IN PCM_KEY_NODE KeyCell,
+	IN PCUNICODE_STRING KeyName,
+	IN BOOLEAN CaseInsensitive);
+
+BOOLEAN
+NTAPI
+CmCompareKeyValueName(
+    IN PCM_KEY_VALUE ValueCell,
+    IN PCUNICODE_STRING KeyName,
+    IN BOOLEAN CaseInsensitive);
+
+ULONG
+NTAPI
+CmCopyKeyName(
+    _In_ PCM_KEY_NODE KeyNode,
+    _Out_ PWCHAR KeyNameBuffer,
+    _Inout_ ULONG BufferLength);
+
+ULONG
+NTAPI
+CmCopyKeyValueName(
+    _In_ PCM_KEY_VALUE ValueCell,
+    _Out_ PWCHAR ValueNameBuffer,
+    _Inout_ ULONG BufferLength);
 
 BOOLEAN
 CMAPI

@@ -34,26 +34,7 @@
  * Sound is LITTLE endian
  */
 
-#include <config.h>
-
-#include <stdarg.h>
-#include <math.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-#include <windef.h>
-#include <winbase.h>
-#include <mmsystem.h>
-#include <winternl.h>
-#include <wine/debug.h>
-#include <dsound.h>
 #include "dsound_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
 #ifdef WORDS_BIGENDIAN
 #define le16(x) RtlUshortByteSwap((x))

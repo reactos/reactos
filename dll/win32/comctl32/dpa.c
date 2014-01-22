@@ -31,8 +31,6 @@
 
 #include "comctl32.h"
 
-#include <objbase.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(dpa);
 
 typedef struct _DPA

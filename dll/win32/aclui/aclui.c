@@ -25,10 +25,15 @@
  * UPDATE HISTORY:
  *      08/10/2004  Created
  */
+
 #include "precomp.h"
+
+#include <sddl.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#include "resource.h"
 
 HINSTANCE hDllInstance;
 

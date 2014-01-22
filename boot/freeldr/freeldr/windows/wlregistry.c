@@ -538,9 +538,9 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 /* Get the Driver's Name */
                 ValueSize = sizeof(ServiceName);
                 rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
-                //TRACE_CH(REACTOS, "RegEnumKey(): rc %d\n", (int)rc);
+                TRACE("RegEnumKey(): rc %d\n", (int)rc);
 
-                /* Makre sure it's valid, and check if we're done */
+                /* Make sure it's valid, and check if we're done */
                 if (rc == ERROR_NO_MORE_ITEMS)
                     break;
                 if (rc != ERROR_SUCCESS)
@@ -627,7 +627,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
                 return;
             }
-            //TRACE_CH(REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName);
+            TRACE("Service %d: '%S'\n", (int)Index, ServiceName);
 
             /* open driver Key */
             rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);

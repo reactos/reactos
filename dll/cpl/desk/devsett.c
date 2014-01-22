@@ -7,6 +7,8 @@
 
 #include "desk.h"
 
+#include <cfgmgr32.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -81,7 +83,7 @@ pCDevSettings_AllocAndCopyString(const TCHAR *pszSrc)
     if (str != NULL)
     {
 #ifdef UNICODE
-        wcscpy(str,
+        StringCbCopyW(str, c * sizeof(WCHAR),
                pszSrc);
 #else
         MultiByteToWideChar(CP_ACP,
@@ -554,7 +556,7 @@ CDevSettings_GetData(IDataObject* iface,
     PCWSTR pszRet = NULL;
     PWSTR pszBuf;
     PCDevSettings This = impl_from_IDataObject(iface);
-
+    
     ZeroMemory(pmedium,
                sizeof(STGMEDIUM));
 
@@ -660,11 +662,12 @@ CDevSettings_GetData(IDataObject* iface,
             pszRet = szEmpty;
 
         pszBuf = GlobalAlloc(GPTR,
-                             (_tcslen(pszRet) + 1) * sizeof(WCHAR));
+                             (wcslen(pszRet) + 1) * sizeof(WCHAR));
         if (pszBuf != NULL)
         {
-            _tcscpy(pszBuf,
-                    pszRet);
+            hr = StringCbCopy(pszBuf, (wcslen(pszRet) + 1) * sizeof(WCHAR), pszRet);
+            if (FAILED(hr))
+                return hr;
 
             pmedium->tymed = TYMED_HGLOBAL;
             pmedium->hGlobal = pszBuf;

@@ -4,7 +4,7 @@
 Name = AlReader
 Description = A FB2 eBook Reader.
 URLSite = http://www.alreader.com
-Size = 4.6MB
+Size = 4.6 MB
 Category = 6
 URLDownload = http://svn.reactos.org/packages/AlReader2Setup.exe
 CDPath = none
@@ -12,8 +12,12 @@ CDPath = none
 [Section.0407]
 Description = Ein FB2 eBook Reader.
 
-[Section.041f]
-Description = Bir FB2 e-Kitap ouyucusu.
-
 [Section.0410]
 Description = Un eBook Reader.
+
+[Section.0418]
+Description = Cititor de cărți electronice în format FB2.
+Size = 4,6 Mo
+
+[Section.041f]
+Description = Bir FB2 e-Kitap ouyucusu.

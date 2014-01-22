@@ -9,6 +9,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Beenden", IDM_EXIT
     END
+    POPUP "&Gerät"
+    BEGIN
+        MENUITEM "&Eigenschaften", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Lautstärkeregelung", IDM_VOLUMECTL
+    END
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "&Über...", IDM_ABOUT
@@ -27,4 +33,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Weiter"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Abspielen"
+    IDS_DEFAULTMCIERRMSG "Für diesen Fehler steht keine Beschreibung zur Verfügung"
 END

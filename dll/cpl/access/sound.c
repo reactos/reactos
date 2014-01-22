@@ -9,7 +9,6 @@
 
 #include "access.h"
 
-
 static VOID
 OnInitDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {

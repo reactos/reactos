@@ -53,8 +53,8 @@ BEGIN
     RTEXT "Производител:", -1, 20, 35, 80, 10
     RTEXT "Вид на чипа:", -1, 20, 45, 80, 10
     RTEXT "Вид ЦАП:", -1, 20, 55, 80, 10
-    RTEXT "Обща памет около:", -1, 20, 65, 80, 10
-    RTEXT "Режим на екрана:", -1, 20, 75, 80, 10
+    RTEXT "Обща памет около:", -1, 14, 65, 80, 10
+    RTEXT "Режим на екрана:", -1, 14, 75, 80, 10
     RTEXT "Екран:", -1, 20, 85, 80, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -189,7 +189,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "ОЗ на производителя"
     IDS_DEVICE_PRODUCT "ОЗ на произведението"
     IDS_DEVICE_FORCEFEEDBACK "Водач за силова обратна връзка"
-    IDS_NOT_APPLICABLE "Неприложимо"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Да"
     IDS_DIRECTPLAY_COL_NAME1 "Име"
     IDS_DIRECTPLAY_COL_NAME2 "Регистър"

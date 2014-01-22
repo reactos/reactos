@@ -21,7 +21,7 @@
 #include "opengl32.h"
 
 #include <math.h>
-#include <wine/debug.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(wgl);
 
 /***********************************************************************

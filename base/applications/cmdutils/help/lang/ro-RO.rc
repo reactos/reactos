@@ -2,23 +2,21 @@
  * FILE:       base/shell/cmd/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
  * AUTHOR:     Magnus Olsen, 2005
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-08-25  initial translation
- *             2011-10-30  UTF-8 encoding (with diacritics conversion), minor changes
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "Această comandă nu este recunoscută de utilitarul manual.\nÎncercați ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
+    IDS_USAGE "Oferă informații de manual referitoare la comenzile ReactOS.\n\n\
+HELP [comandă]\n\n\
+  comandă - Afișează informații de manual pentru această comandă.\n"
     IDS_HELP1 "Enumeră toate comenzile disponibile (+ descriere)\n\n\
   help comandă\n\
   comandă /?     Pentru mai multe informații referitoare la o anume comandă.\n\n\

@@ -25,21 +25,19 @@
 #include <config.h>
 #include <wine/port.h>
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-
-#include <initguid.h>
-
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-#include <winnls.h>
 #include <winuser.h>
 #include <d3dx9.h>
 

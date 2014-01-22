@@ -2,13 +2,13 @@
 
 [Section]
 Name = 7-Zip
-Version = 9.30a
+Version = 9.32a
 Licence = LGPL
 Description = Utility to create and open 7zip, zip, tar, rar and other archive files.
-Size = 1.1MB
+Size = 1.1 MB
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://dl.7-zip.org/7z930.exe
+URLDownload = http://dl.7-zip.org/7z932.exe
 CDPath = none
 
 [Section.0407]
@@ -19,7 +19,7 @@ Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos c
 
 [Section.040c]
 Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et autres archives.
-Size = 1,03 Mo
+Size = 1,1 Mo
 
 [Section.0410]
 Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
@@ -32,7 +32,7 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 
 [Section.0418]
 Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele.
-Size = 1,03 Mo
+Size = 1,1 Mo
 
 [Section.041f]
 Description = 7z, zip, tar, rar ve diğer birçok sıkıştırma biçimini destekleyen bir araç.

@@ -99,7 +99,7 @@ GetServices ( void )
     ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
 
     ScHandle = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-    if (ScHandle != INVALID_HANDLE_VALUE)
+    if (ScHandle != NULL)
     {
         if (EnumServicesStatusEx(ScHandle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)pServiceStatus, 0, &BytesNeeded, &NumServices, &ResumeHandle, 0) == 0)
         {
@@ -107,7 +107,7 @@ GetServices ( void )
             if (GetLastError() == ERROR_MORE_DATA)
             {
                 /* reserve memory for service info array */
-                pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                pServiceStatus = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                 if (!pServiceStatus)
                     return;
 
@@ -145,16 +145,21 @@ GetServices ( void )
 
                 BytesNeeded = 0;
                 hService = OpenService(ScHandle, pServiceStatus[Index].lpServiceName, SC_MANAGER_CONNECT);
-                if (hService != INVALID_HANDLE_VALUE)
+                if (hService != NULL)
                 {
                     /* check if service is required by the system*/
                     if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)NULL, 0, &BytesNeeded))
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
-                            pServiceFailureActions = (LPSERVICE_FAILURE_ACTIONS) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                            pServiceFailureActions = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceFailureActions == NULL)
+                            {
+                                HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                                CloseServiceHandle(hService);
+                                CloseServiceHandle(ScHandle);
                                 return;
+                            }
 
                             if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, BytesNeeded, &BytesNeeded))
                             {
@@ -196,7 +201,7 @@ GetServices ( void )
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
-                            pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                            pServiceConfig = HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceConfig == NULL)
                             {
                                 HeapFree(GetProcessHeap(), 0, pServiceStatus);
@@ -238,7 +243,7 @@ GetServices ( void )
                     dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
                     if (dwLen)
                     {
-                        lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
+                        lpData = HeapAlloc(GetProcessHeap(), 0, dwLen);
                         if (lpData == NULL)
                         {
                             HeapFree(GetProcessHeap(), 0, pServiceStatus);

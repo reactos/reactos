@@ -1346,12 +1346,12 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-        "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
-        "gefunden, die nicht richtig verwendet werden kann!\n"
+        "Setup hat mindestens eine Festplatte mit einer inkompatiblen\n"
+        "Partitionstabelle gefunden, die nicht richtig verwendet werden kann!\n"
         "\n"
         "Partitionen zu erstellen/l”schen kann die Partitionstabelle zerst”ren.\n"
         "\n"
-        "  \x07  Drcken Sie F3, um das Setup zu beenden."
+        "  \x07  Drcken Sie F3, um das Setup zu beenden.\n"
         "  \x07  Drcken Sie ENTER, um das Setup Fortzusetzen.",
         "F3 = Beenden  ENTER = Fortsetzen"
     },

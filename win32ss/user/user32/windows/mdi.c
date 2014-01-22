@@ -123,6 +123,7 @@ typedef struct
     UINT      nTotalCreated;
     UINT      mdiFlags;
     UINT      sbRecalc;   /* SB_xxx flags for scrollbar fixup */
+    DWORD     initialStyle; /* Style when window was created */ // See http://bugs.winehq.org/show_bug.cgi?id=9435
     HBITMAP   hBmpClose; /* ReactOS modification */
 } MDICLIENTINFO;
 
@@ -914,12 +915,18 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
                 (LPCWSTR)HBMMENU_MBAR_CLOSE : (LPCWSTR)HBMMENU_MBAR_CLOSE_D );
 
     /* The system menu is replaced by the child icon */
-    hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICONSM);
+/*    hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICONSM);
     if (!hIcon)
         hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICON);
     if (!hIcon)
         hIcon = LoadIconW(NULL, IDI_APPLICATION);
+*/
 //// End
+    hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_SMALL, 0);
+    if (!hIcon)
+        hIcon = (HICON)SendMessageW(hChild, WM_GETICON, ICON_BIG, 0);
+    if (!hIcon)
+        hIcon = LoadImageW(0, MAKEINTRESOURCEW(IDI_WINLOGO), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
     if (hIcon)
     {
       HDC hMemDC;
@@ -1140,7 +1147,8 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 	ci->nTotalCreated	= 0;
 	ci->frameTitle		= NULL;
 	ci->mdiFlags		= 0;
-        ci->hFrameMenu = GetMenu(cs->hwndParent);
+	ci->initialStyle        = cs->style;
+	ci->hFrameMenu = GetMenu(cs->hwndParent);
 
 	if (!ci->hBmpClose) ci->hBmpClose = CreateMDIMenuBitmap();
 
@@ -1231,8 +1239,11 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 
       case WM_MDINEXT: /* lParam != 0 means previous window */
       {
-        HWND next = MDI_GetWindow( ci, (HWND)wParam, !lParam, 0 );
+        HWND hwnd = wParam ? WIN_GetFullHandle((HWND)wParam) : ci->hwndActiveChild;
+        HWND next = MDI_GetWindow( ci, hwnd, !lParam, 0 );
         MDI_SwitchActiveChild( ci, next, TRUE );
+        if(!lParam)
+            SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 	break;
       }
 
@@ -1431,7 +1442,7 @@ LRESULT WINAPI DefFrameProcW( HWND hwnd, HWND hwndMDIClient,
                     case SC_NEXTWINDOW:
                     case SC_PREVWINDOW:
                     case SC_RESTORE:
-                        return SendMessageW( ci->hwndActiveChild, WM_SYSCOMMAND,
+                        return SendMessageW( ci->hwndChildMaximized, WM_SYSCOMMAND,
                                              wParam, lParam);
                     }
                 }
@@ -1563,7 +1574,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         return 0;
 
     case WM_MENUCHAR:
-        return 0x00010000; /* MDI children don't have menu bars */
+        return MAKELRESULT( 0, MNC_CLOSE ); /* MDI children don't have menu bars */
 
     case WM_CLOSE:
         SendMessageW( client, WM_MDIDESTROY, (WPARAM)hwnd, 0 );
@@ -1593,10 +1604,10 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
                 return SendMessageW( GetParent(client), message, wParam, lParam);
             break;
         case SC_NEXTWINDOW:
-            SendMessageW( client, WM_MDINEXT, 0, 0);
+            SendMessageW( client, WM_MDINEXT, (WPARAM)ci->hwndActiveChild, 0);
             return 0;
         case SC_PREVWINDOW:
-            SendMessageW( client, WM_MDINEXT, 0, 1);
+            SendMessageW( client, WM_MDINEXT, (WPARAM)ci->hwndActiveChild, 1);
             return 0;
         }
         break;
@@ -1604,7 +1615,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
     case WM_SHOWWINDOW:
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
-#endif
+#endif  //// Commented out r57663
         /*if (ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
         else*/ MDI_PostUpdate(client, ci, SB_BOTH+1);
         break;
@@ -1802,8 +1813,10 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     SCROLLINFO info;
     RECT childRect, clientRect;
     HWND *list;
+    MDICLIENTINFO *ci;
     WINDOWINFO WindowInfo;
 
+    ci = get_client_info(hwnd);
     GetClientRect( hwnd, &clientRect );
     SetRectEmpty( &childRect );
 
@@ -1821,6 +1834,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         return;
     }
 
+    ERR("CalcChildScroll 1\n");
     if ((list = WIN_ListChildren( hwnd )))
     {
         int i;
@@ -1831,6 +1845,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
             {
                 HeapFree( GetProcessHeap(), 0, list );
                 ShowScrollBar( hwnd, SB_BOTH, FALSE );
+                ERR("CalcChildScroll 2\n");
                 return;
             }
             if (style & WS_VISIBLE)
@@ -1839,13 +1854,15 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                 GetWindowRect( list[i], &rect );
                 OffsetRect(&rect, -WindowInfo.rcClient.left,
                                   -WindowInfo.rcClient.top);
+                //WIN_GetRectangles( list[i], COORDS_PARENT, &rect, NULL );
+                ERR("CalcChildScroll L\n");
                 UnionRect( &childRect, &rect, &childRect );
             }
         }
         HeapFree( GetProcessHeap(), 0, list );
     }
     UnionRect( &childRect, &clientRect, &childRect );
-
+    ERR("CalcChildScroll 3\n");
     /* set common info values */
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
@@ -1864,15 +1881,30 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 			info.nMax = childRect.right;
 			info.nPos = 0;
 			info.nPage = 1 + clientRect.right - clientRect.left;
-			SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
-			if (scroll == SB_HORZ) break;
+			//info.nMax = childRect.right - clientRect.right;
+			//info.nPos = clientRect.left - childRect.left;
+			if (ci->initialStyle & WS_HSCROLL)
+			    SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
+			if (scroll == SB_HORZ)
+			{
+                           ERR("CalcChildScroll H\n");
+			   break;
+			}
+			else
+			{
+                           ERR("CalcChildScroll B\n");
+                        }
 			/* fall through */
 	case SB_VERT:
 			info.nMin = childRect.top;
 			info.nMax = childRect.bottom;
 			info.nPos = 0;
 			info.nPage = 1 + clientRect.bottom - clientRect.top;
-			SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
+			//info.nMax = childRect.bottom - clientRect.bottom;
+			//info.nPos = clientRect.top - childRect.top;
+			ERR("CalcChildScroll V\n");
+			if (ci->initialStyle & WS_VSCROLL)
+			    SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
 			break;
     }
 }

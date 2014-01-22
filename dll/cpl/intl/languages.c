@@ -1,5 +1,7 @@
 #include "intl.h"
 
+#include <shellapi.h>
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 LanguagesPageProc(HWND hwndDlg,

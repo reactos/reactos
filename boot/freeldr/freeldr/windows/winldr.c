@@ -325,7 +325,8 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
         //FIXME: Maybe remove it from the list and try to continue?
         if (!Status)
         {
-            UiMessageBox("Can't load boot driver!");
+            ERR("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
+            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
             return FALSE;
         }
 

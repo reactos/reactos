@@ -9,38 +9,14 @@
  * daniel@veillard.com
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
+#include "precomp.h"
 
-#ifndef	XSLT_NEED_TRIO
-#include <stdio.h>
-#else
-#include <trio.h>
-#endif
-
-#include <string.h>
-#include <time.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#include <stdarg.h>
-
-#include <libxml/xmlmemory.h>
-#include <libxml/tree.h>
-#include <libxml/HTMLtree.h>
-#include <libxml/xmlerror.h>
-#include <libxml/xmlIO.h>
-#include "xsltutils.h"
-#include "templates.h"
-#include "xsltInternals.h"
-#include "imports.h"
-#include "transform.h"
 
 /* gettimeofday on Windows ??? */
 #if defined(WIN32) && !defined(__CYGWIN__)

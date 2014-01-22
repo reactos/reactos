@@ -19,17 +19,29 @@
 #ifndef __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H
 #define __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H
 
+#include <wine/config.h>
+
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#define COBJMACROS
+#define NONAMELESSUNION
 
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <dinput.h>
 #include <dinputd.h>
+
+#include <wine/debug.h>
 #include <wine/list.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 /* Implementation specification */
 typedef struct IDirectInputImpl IDirectInputImpl;
@@ -81,5 +93,7 @@ extern WCHAR* get_mapping_path(const WCHAR *device, const WCHAR *username) DECLS
 #define DIKEYBOARD_MASK    0x81000000
 #define DIMOUSE_MASK       0x82000000
 #define DIGENRE_ANY        0xFF000000
+
+#include "device_private.h"
 
 #endif /* __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H */

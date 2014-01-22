@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 /* This function will process incoming samples to the pin.
  * Any return value valid in IMemInputPin::Receive is allowed here
  *

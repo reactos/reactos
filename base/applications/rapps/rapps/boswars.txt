@@ -5,7 +5,7 @@ Name = Bos Wars
 Version = 2.6.1
 Licence = GPL
 Description = Bos Wars is a futuristic real time strategy game. To start the game, install Microsoft Visual C++ 2008 runtime.
-Size = 62.3MB
+Size = 62.3 MB
 Category = 4
 URLSite = http://www.boswars.org
 URLDownload = http://www.boswars.org/dist/releases/BosWars-2.6.1.exe
@@ -14,9 +14,13 @@ CDPath = none
 [Section.0407]
 Description = Bos Wars ist ein futuristisches Echtzeitstrategiespiel. Um das Spiel zu starten, installieren Sie die Microsoft Visual C++ 2008 Runtime.
 
+[Section.0410]
+Description = Bos Wars è un gioco futuristico di strategia in tempo reale. Per iniziare il gioco, installare Microsoft Visual C + + 2008 runtime.
+
+[Section.0418]
+Description = Bos Wars e o strategie în timp real, futuristă. Pentru a porni jocul, instalați Microsoft Visual C++ 2008 Runtime.
+Size = 62,3 Mo
+
 [Section.041f]
 Name = Bos Savaşları
 Description = Bos Savaşları, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Mikroyazılım Basarî C++ 2008 Yürütücüsü'nü kurunuz.
-
-[Section.0410]
-Description = Bos Wars è un gioco futuristico di strategia in tempo reale. Per iniziare il gioco, installare Microsoft Visual C + + 2008 runtime.

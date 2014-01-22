@@ -5,7 +5,7 @@ Name = Abyss Web server X1
 Version = 2.9.0.1
 Licence = Freeware
 Description = Abyss Web Server enables you to host your Web sites on your computer. It supports secure SSL/TLS connections (HTTPS) as well as a wide range of Web technologies. It can also run advanced PHP, Perl, Python, ASP, ASP.NET, and Ruby on Rails Web applications, which can be backed by databases such as MySQL, SQLite, MS SQL Server, MS Access, or Oracle.
-Size = 2.1MB
+Size = 2.1 MB
 Category = 5
 URLSite = http://www.aprelium.com/
 URLDownload = http://www.aprelium.com/data/abwsx1.exe
@@ -19,7 +19,7 @@ Description = Abyss Web Server le permite alojar sitios Web en su ordenador. Sop
 
 [Section.040c]
 Description = Abyss Web Server vous permet d'héberger vos sites internet sur votre ordinateur. Il supporte les connexions sécurisées SSL/TLS (HTTPS) ainsi qu'un grand nombre de technologies web. Il peut également faire tourner des applications web PHP, Perl, Python, ASP, ASP.Net, Ruby et Ruby on Rails, qui peuvent être associées à des bases de données telles que MySQL, SQLite, MS SQL Server, MS Access ou Oracle.
-Size = 1,94 Mo
+Size = 2,1 Mo
 
 [Section.0410]
 Description = Abyss Web Server consente di ospitare i vostri siti Web sul computer. Supporta connessioni sicure SSL / TLS (HTTPS), così come una vasta gamma di tecnologie web. E' inoltre possibile eseguire avanzato PHP, Perl, Python, ASP, ASP.NET, e Ruby on Rails, applicazioni Web che possono essere supportate da database come MySQL, SQLite, MS SQL Server, MS Access, o Oracle.
@@ -33,8 +33,9 @@ Może także uruchamiać zaawansowane aplikacje internetowe takie jak PHP, Perl,
 Mogą one zostać oparte o MySQL, SQLite, MS SQL Server, MS Access, lub Oracle.
 
 [Section.0418]
+Licence = Gratuită
 Description = Abyss Web Server vă permite găzduirea de pagini Web pe calculatorul dumneavoastră. Oferă conexiuni securizate SSL/TLS (HTTPS) și multe alte tehnologii Web. Poate executa aplicații Web avansate ]n PHP, Perl, Python, ASP, ASP.NET și Ruby on Rails, ce pot fi susținute de baze de date ca MySQL, SQLite, MS SQL Server, MS Access, sau Oracle.
-Size = 1,94 Mo
+Size = 2,1 Mo
 
 [Section.041f]
 Name = Abyss Örütbağ Sunucusu X1

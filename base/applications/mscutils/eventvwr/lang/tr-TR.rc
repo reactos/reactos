@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Olay Görüntüleyicisi"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Kaynaktaki olay kimliği (%lu) için açıklama (%s) bulunamadı. Yerli bilgisayarda, uzaktaki bilgisayardan ileti görüntülemesi için gerekli, değer bilgileri veyâ kitaplıklar olmayabilir."
     IDS_EVENTLOG_ERROR_TYPE "Yanlışlık"
     IDS_EVENTLOG_WARNING_TYPE "Uyarı"

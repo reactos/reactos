@@ -188,7 +188,6 @@ BEGIN
     IDS_APPLICATIONS "應用程式"
     IDS_CHOOSE_FOLDER_TEXT "請選擇用來儲存下載檔案的資料夾："
     IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。創建嗎？"
-    IDS_USER_NOT_ADMIN "您必須以管理員許可權啟動 ""ReactOS 程式管理器""！"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"

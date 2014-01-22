@@ -21,6 +21,7 @@
 /*
 This class knows how to contain base bar site in a cabinet window.
 */
+
 #include "precomp.h"
 
 /*

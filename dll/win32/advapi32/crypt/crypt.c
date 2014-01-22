@@ -24,7 +24,6 @@
  *  - Thread-safing
   */
 
-#define WINE_STRICT_PROTOTYPES
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 

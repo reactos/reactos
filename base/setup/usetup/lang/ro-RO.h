@@ -1,4 +1,4 @@
-//2011.10.30 - Fulea ∏tefan: minor changes
+/* ∏tefan Fulea (stefan dot fulea at mail dot md) */
 #pragma once
 
 MUI_LAYOUTS roROLayouts[] =
@@ -153,19 +153,19 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         6,
         8,
-        "Instalatorul ReactOS curent este ånc« åntr-un stadiu",
+        "Programul curent de instalare este ånc« åntr-un stadiu primar",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "primar de dezvoltare ≠i nu conÓine toate funcÓionalit«Óile",
+        "de dezvoltare ≠i nu conÓine toate funcÓionalit«Óile unei",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "unei aplicaÓii complete de instalare.",
+        "aplicaÓii de instalare complete.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -177,31 +177,31 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         8,
         14,
-        "- Instalatorul curent nu e capabil de mai mult de",
+        "- Programul curent de instalare nu e capabil de mai mult",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  o partiÓie per disc.",
+        "  de o partiÓie per disc.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "- Instalatorul curent nu poate ≠terge partiÓia primar«",
+        "- Programul curent de instalare nu poate ≠terge o partiÓie",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "  a unui dispozitiv cÉt timp exist« partiÓii extinse.",
+        "  primar« cÉt timp exist« partiÓii extinse.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "- Instalatorul curent nu poate ≠terge prima partiÓie",
+        "- Programul curent de instalare nu poate ≠terge prima partiÓie",
         TEXT_STYLE_NORMAL
     },
     {
@@ -213,7 +213,7 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         8,
         20,
-        "- Instalatorul curent poate opera doar cu sisteme",
+        "- Programul curent de instalare poate opera doar cu sisteme",
         TEXT_STYLE_NORMAL
     },
     {
@@ -277,61 +277,61 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         8,
-        "Sistemul ReactOS este oferit ån termenii GNU GPL, cu p«rÓi",
+        "Sistemul de operare ReactOS este oferit ån termenii GNU GPL,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "de cod din alte licenÓe compatibile, cum ar fi licenÓele",
+        "cu p«rÓi de cod din alte licenÓe compatibile, cum ar fi",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "X11, BSD ≠i GNU LGPL.",
+        "licenÓele X11, BSD ≠i GNU LGPL.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Toate softurile din componenÓa sistemului ReactOS sunt prin",
+        "Toate componentele care fac parte din sistemul ReactOS sunt",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "urmare oferite sub licenÓa GNU GPL menÓinÉndu-≠i ån acela≠i",
+        "prin urmare oferite sub licenÓ« GNU GPL, menÓinÉndu-≠i ån",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "timp ≠i licenÓierea original«.",
+        "acela≠i timp ≠i licenÓierea original«.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "Acest soft nu are ata≠at« nici restricÓie de utilizare",
+        "Acest sistem vine f«r« vreo restricÓie de utilizare, aceasta",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "cu aplicabilitate legislativ« local« ≠i internaÓional«.",
+        "fiind o condiÓie legislativ« aplicabil« atÉt la nivel local",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "LicenÓierea se refer« doar la distribuÓia ReactOS c«tre",
+        "cÉt ≠i internaÓional. LicenÓierea se refer« doar la",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "p«rÓi terÓe.",
+        "distribuirea sistemului ReactOS c«tre p«rÓi terÓe.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -367,19 +367,25 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         28,
-        "Acest« aplicaÓie este distribuit« ån speranÓa c« va fi util«,",
+        "Acest sistem de operare este distribuit doar ån speranÓa c«",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         29,
-        "F∆R∆ åns« NICI O GARANıIE; nici m«car cu garanÓia implicit« a",
+        "va fi util, neavÉnd åns« ata≠at« NICI O GARANıIE; nici m«car",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         30,
-        "VANDABILIT∆ıII sau a UTILIT∆ıII ◊NTR-UN SCOP ANUME.",
+        "garanÓia implicit« a VANDABILIT∆ıII sau a UTILIT∆ıII ◊NTR-UN",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        31,
+        "SCOP ANUME.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -506,13 +512,13 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         6,
         8,
-        "Instalatorul ReactOS este ånc« åntr-o faz« incipient« de dezvoltare",
+        "Programul de instalare ReactOS este ånc« åntr-o faz« incipient« de",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "≠i nu posed« toat« funcÓionalitatea unui instalator complet.",
+        "dezvoltare ≠i nu posed« o funcÓionalitate complet«.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -569,7 +575,7 @@ static MUI_ENTRY roROComputerPageEntries[] =
     {
         6,
         8,
-        "DoriÓi specificarea arhitecturii de calcul.",
+        "DoriÓi specificarea arhitecturii de calcul?",
         TEXT_STYLE_NORMAL
     },
     {
@@ -639,7 +645,7 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         0,
         0,
-        "Eliberarea memoriei...",
+        "Se elibereaz« memoria...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -707,7 +713,7 @@ static MUI_ENTRY roRODisplayPageEntries[] =
     {
         6,
         8,
-        "DoriÓi modificarea parametrilor grafici de afi≠are.",
+        "DoriÓi modificarea parametrilor grafici de afi≠are?",
         TEXT_STYLE_NORMAL
     },
     {   8,
@@ -804,7 +810,7 @@ static MUI_ENTRY roROBootPageEntries[] =
     {
         6,
         8,
-        "Instalatorul nu poate instala aplicaÓia de iniÓializare",
+        "Programul de instalare nu poate instala aplicaÓia de iniÓializare",
         TEXT_STYLE_NORMAL
     },
     {
@@ -909,12 +915,6 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         8,
-        "Formatare partiÓie.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        10,
         "Urmeaz« formatarea partiÓiei.",
         TEXT_STYLE_NORMAL
     },
@@ -1041,19 +1041,19 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         8,
         12,
-        "Instaleaz« iniÓializator pe discul intern (MBR ≠i VBR).",
+        "Instaleaz« iniÓializatorul pe discul intern (MBR ≠i VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Instaleaz« iniÓializator pe discul intern (doar VBR).",
+        "Instaleaz« iniÓializatorul pe discul intern (doar VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Instaleaz« iniÓializator pe un disc flexibil.",
+        "Instaleaz« iniÓializatorul pe un disc flexibil.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1087,7 +1087,7 @@ static MUI_ENTRY roROKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "DoriÓi specificarea modelului tastaturii instalate.",
+        "DoriÓi specificarea modelului tastaturii instalate?",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1139,7 +1139,7 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         6,
         8,
-        "SpecificaÓi pentru instalare un aranjament implicit al tastaturii.",
+        "DoriÓi specificarea unui aranjament implicit de tastatur«?",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1192,13 +1192,13 @@ static MUI_ENTRY roROPrepareCopyEntries[] =
     {
         6,
         8,
-        "Se fac preg«tirile necesare pentru copierea de fi≠iere...",
+        "Se fac preg«tirile necesare pentru copierea de fi≠iere.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Crearea listei de fi≠iere...",
+        "Se creaz« lista de fi≠iere...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1320,13 +1320,13 @@ static MUI_ENTRY roRORegistryEntries[] =
     {
         6,
         8,
-        "Actualizarea configuraÓiei sistemului.",
+        "Se actualizeaz« configuraÓia sistemului...",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Crearea registului...",
+        "Se creaz« registrul...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1347,7 +1347,7 @@ MUI_ERROR roROErrorEntries[] =
 		"acum, va fi nevoie s« o reluaÓi din nou alt« dat«.\n"
         "\n"
         "  \x07  Ap«saÓi ENTER pentru a continua instalarea.\n"
-        "  \x07  Ap«saÓi F3 pentru a ie≠i din Instalator.",
+        "  \x07  Ap«saÓi F3 pentru a abandona instalarea.",
         "F3 = Ie≠ire  ENTER = Continuare"
     },
     {
@@ -1414,12 +1414,12 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_WARN_PARTITION,
         "A fost g«sit cel puÓin un disc cu tabel« de partiÓii\n"
-		"nesuportat«, ce nu pot fi gestionat« corespunz«tor!\n"
+        "nerecunoscut«, ce nu pot fi gestionat« corespunz«tor!\n"
         "\n"
         "Crearea sau ≠tergerea de partiÓii poate astfel cauza\n"
 		"distrugerea tabelei de partiÓii."
         "\n"
-        "  \x07  Ap«saÓi F3 pentru a ie≠i din Instalator.\n"
+        "  \x07  Ap«saÓi F3 pentru a abandona instalarea.\n"
         "  \x07  Ap«saÓi ENTER pentru a continua.",
         "F3= Ie≠ire  ENTER = Continuare"
     },
@@ -1693,9 +1693,9 @@ MUI_STRING roROStrings[] =
     {STRING_NONFORMATTEDPART,
     "AlegeÓi s« instalaÓi ReactOS pe partiÓie nou« sau neformatat«."},
     {STRING_INSTALLONPART,
-    "Instalare ReactOS pe partiÓia"},
+    "ReactOS va fi instalat pe partiÓia"},
     {STRING_CHECKINGPART,
-    "Instalatorul verific« acum partiÓia aleas«."},
+    "Programul de instalare verific« acum partiÓia aleas«."},
     {STRING_QUITCONTINUE,
     "F3= Ie≠ire  ENTER = Continuare"},
     {STRING_REBOOTCOMPUTER,
@@ -1703,23 +1703,23 @@ MUI_STRING roROStrings[] =
     {STRING_TXTSETUPFAILED,
     "Nu s-a reu≠it g«sirea sesiunii\n'%S' ån TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "   Copiere fi≠ier: %S"},
+     "   Fi≠ierul curent: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Copierea fi≠ierelor..."},
+     "Se copie fi≠ierele..."},
     {STRING_REGHIVEUPDATE,
-    "   Actualizare registrului..."},
+    "   Se actualizeaz« registrul..."},
     {STRING_IMPORTFILE,
-    "   Importare %S..."},
+    "   Se import« %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Actualizarea ån registru a configuraÓiei grafice..."},
+    "   Se actualizeaz« registrul configuraÓiei grafice..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Actualizarea particularit«Óilor locale..."},
+    "   Se actualizeaz« particularit«Óile locale..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Actualizarea configuraÓiei tastaturii..."},
+    "   Se actualizeaz« configuraÓia tastaturii..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Ad«ugarea ån registru a datelor de paginare..."},
+    "   Se adaug« datele de paginare ån registru..."},
     {STRING_DONE,
-    "   Terminat..."},
+    "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
     {STRING_CONSOLEFAIL1,
@@ -1729,13 +1729,13 @@ MUI_STRING roROStrings[] =
     {STRING_CONSOLEFAIL3,
     "Tastaturile USB ånc« nu sunt complet suportate\r\n"},
     {STRING_FORMATTINGDISK,
-    "Formatarea discului"},
+    "Se formateaz« discul..."},
     {STRING_CHECKINGDISK,
-    "Verificarea discului"},
+    "Se verific« discul..."},
     {STRING_FORMATDISK1,
-    " Formatarea partiÓiei ca sistem de fi≠iere %S (formatare rapid«) "},
+    " Formateaz« partiÓia ca sistem de fi≠iere %S (formatare rapid«) "},
     {STRING_FORMATDISK2,
-    " Formatarea partiÓiei ca sistem de fi≠iere %S "},
+    " Formateaz« partiÓia ca sistem de fi≠iere %S "},
     {STRING_KEEPFORMAT,
     " P«streaz« sistemul de fi≠iere actual (f«r« schimb«ri) "},
     {STRING_HDINFOPARTCREATE,

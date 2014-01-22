@@ -23,6 +23,12 @@
 
 #include "precomp.h"
 
+#include "perfpage.h"
+#include "about.h"
+#include "affinity.h"
+#include "debug.h"
+#include "priority.h"
+
 #define STATUS_WINDOW   2001
 
 /* Global Variables: */

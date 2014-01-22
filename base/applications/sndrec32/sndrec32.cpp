@@ -3,10 +3,16 @@
  * FILE:            base/applications/sndrec32/sndrec32.cpp
  * PURPOSE:         Sound recording
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
+ *                  Robert Naumann (gonzoMD)
  */
 
 #include "stdafx.h"
+
+#include <commctrl.h>
+#include <commdlg.h>
+
 #include "sndrec32.h"
+#include "shellapi.h"
 
 #ifndef _UNICODE
 #define gprintf _snprintf
@@ -107,7 +113,7 @@ _tWinMain(HINSTANCE hInstance,
 
     MSG msg;
     HACCEL hAccelTable;
-    
+
     s_info.cbSize = sizeof( NONCLIENTMETRICS );
 
     InitCommonControls();
@@ -227,7 +233,7 @@ _tWinMain(HINSTANCE hInstance,
     return (int)msg.wParam;
 }
 
-ATOM 
+ATOM
 MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
@@ -249,7 +255,7 @@ MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassEx(&wcex);
 }
 
-BOOL 
+BOOL
 InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     HWND hWnd;
@@ -280,7 +286,7 @@ InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-ATOM 
+ATOM
 MyRegisterClass_wave(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
@@ -302,7 +308,7 @@ MyRegisterClass_wave(HINSTANCE hInstance)
     return RegisterClassEx(&wcex);
 }
 
-BOOL 
+BOOL
 InitInstance_wave(HWND f,
                   HINSTANCE hInstance,
                   int nCmdShow)
@@ -337,7 +343,7 @@ InitInstance_wave(HWND f,
 }
 
 LRESULT
-CALLBACK 
+CALLBACK
 WndProc_wave(HWND hWnd,
              UINT message,
              WPARAM wParam,
@@ -420,7 +426,7 @@ WndProc_wave(HWND hWnd,
 }
 
 LRESULT
-CALLBACK 
+CALLBACK
 WndProc(HWND hWnd,
         UINT message,
         WPARAM wParam,
@@ -533,7 +539,7 @@ WndProc(HWND hWnd,
 
             switch (wmId)
             {
-                case ID_NEW:
+                case ID_FILE_NEW:
                     if (!isnew)
                     {
                         if (AUD_IN->current_status() == snd::WAVEIN_RECORDING)
@@ -595,7 +601,7 @@ WndProc(HWND hWnd,
                     InvalidateRect(hWnd, &text2_rect, TRUE);
                     break;
 
-                case ID__ABOUT:
+                case ID_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDlgProc);
                     return TRUE;
                     break;
@@ -609,17 +615,22 @@ WndProc(HWND hWnd,
                     ofn.lpstrFilter = TEXT("Audio Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0");
                     ofn.lpstrFile = file_path;
                     ofn.nMaxFile = MAX_PATH;
-                    
+
                     ofn.lpstrDefExt = TEXT("wav");
-             
-                    if (GetSaveFileName (&ofn)) 
+
+                    if (GetSaveFileName (&ofn))
                     {
                         write_wav(file_path);
                         EnableMenuItem(GetMenu(hWnd), ID_FILE_SAVE, MF_ENABLED);
                     }
                     break;
 
-                case ID_EXIT:
+
+                case ID_EDIT_AUDIOPROPS:
+                    ShellExecute(NULL, NULL, _T("rundll32.exe"), _T("shell32.dll,Control_RunDLL mmsys.cpl,ShowAudioPropertySheet"), NULL, SW_SHOWNORMAL);
+                    break;
+
+                case ID_FILE_EXIT:
                     DestroyWindow(hWnd);
                     break;
 
@@ -739,7 +750,7 @@ WndProc(HWND hWnd,
         case WM_TIMER:
             switch (wParam)
             {
-                case 1: 
+                case 1:
                     if (stopped_flag)
                     {
                         KillTimer(hWnd, 1);
@@ -830,7 +841,7 @@ WndProc(HWND hWnd,
             ExtTextOut(hdc,
                        STRBUF_X,
                        STRBUF_Y,
-                       ETO_OPAQUE, 
+                       ETO_OPAQUE,
                        0,
                        str_tmp,
                        _tcslen(str_tmp),
@@ -1104,7 +1115,7 @@ write_wav(TCHAR *f)
                    TEXT("File Error, WriteFile() failed."),
                    TEXT("ERROR"),
                    MB_OK | MB_ICONERROR);
-        
+
         CloseHandle(file);
         return FALSE;
     }
@@ -1116,7 +1127,7 @@ write_wav(TCHAR *f)
                    TEXT("File Error, WriteFile() failed."),
                    TEXT("ERROR"),
                    MB_OK | MB_ICONERROR);
-        
+
         CloseHandle(file);
         return FALSE;
     }

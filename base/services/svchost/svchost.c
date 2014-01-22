@@ -10,6 +10,8 @@
 
 #include "svchost.h"
 
+#include <objidl.h>
+
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY DllList;

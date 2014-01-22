@@ -11,6 +11,9 @@
 
 #include "powercfg.h"
 
+#include <winreg.h>
+#include <regstr.h>
+
 #define NUM_APPLETS	(1)
 
 static LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);

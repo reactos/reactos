@@ -59,6 +59,7 @@
  */
 
 #include "cabinet.h"
+
 #include <stdio.h>
 
 THOSE_ZIP_CONSTS;

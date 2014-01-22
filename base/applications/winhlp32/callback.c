@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <windef.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <wine/debug.h>
-
 #include "winhelp.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 static WORD CALLBACK WHD_GetFSError(void)
 {

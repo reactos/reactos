@@ -5,7 +5,7 @@ Name = Hover!
 Version = 1.0
 Licence = MS EULA
 Description = The classic Hover CTF game which was found on the Windows 95 CD.
-Size = 6.2MB
+Size = 6.2 MB
 Category = 4
 URLDownload = http://svn.reactos.org/packages/Hover.exe
 CDPath = none
@@ -15,6 +15,10 @@ Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu find
 
 [Section.0410]
 Description = Il classico gioco Hover CTF che trovate sul CD di Windows 95.
+
+[Section.0418]
+Description = Jocul clasic Hover CTF, care se găsea pe CD-ul Windows 95.
+Size = 6,2 Mo
 
 [Section.041f]
 Description = Pencereler 95 CD'sinde bulunan bir bayrak kapmaca oyunu.

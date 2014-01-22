@@ -186,7 +186,6 @@ BEGIN
     IDS_APPLICATIONS        "アプリケーション"
     IDS_CHOOSE_FOLDER_TEXT  "プログラムのダウンロードに使用するフォルダを選択してください:"
     IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
-    IDS_USER_NOT_ADMIN      """ReactOS アプリケーション マネージャ"" を起動するには管理者権限である必要があります!"
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
     IDS_INFORMATION "情報"
     IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"

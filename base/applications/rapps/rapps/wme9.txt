@@ -5,7 +5,7 @@ Name = Windows Media Encoder 9
 Version = 9.0
 Licence = Unknown
 Description = Windows Media Encoder 9
-Size = 9.46MB
+Size = 9.46 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=17792
 URLDownload = http://download.microsoft.com/download/8/1/f/81f9402f-efdd-439d-b2a4-089563199d47/WMEncoder.exe

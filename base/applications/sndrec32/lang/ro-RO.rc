@@ -1,10 +1,7 @@
 /* 
  * FILE:       base/applications/sndrec32/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-08-25  initial translation
- *             2011-08-30  technical correction (icon)
- *             2011-10-30  minor changes
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -22,7 +19,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
     LTEXT "Înregistrator audio, versiunea 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
-    LTEXT "Drept de autor (C) 2009", IDC_STATIC, 55, 25, 114, 8
+    LTEXT "Drept de autor (C) 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Î&nchide", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
@@ -30,18 +27,43 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou", ID_NEW
+        MENUITEM "&Nou", ID_FILE_NEW
         MENUITEM "&Deschidere…", ID_FILE_OPEN
         MENUITEM "Pă&strează", ID_FILE_SAVE, GRAYED
         MENUITEM "&Păstrare în…", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Reconstituire…", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Pr&oprietăți…", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", ID_EXIT
+        MENUITEM "I&eșire", ID_FILE_EXIT
     END
-    MENUITEM "todo1", 0
-    MENUITEM "todo2", 0
+    POPUP "&Editare"
+    BEGIN
+        MENUITEM "&Copiază", ID_EDIT_COPY
+        MENUITEM "&Lipește inserție", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Lipește mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Inserare fișier…", ID_EDIT_INSERTFILE
+        MENUITEM "&Mixare cu fișier…", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Șterge în&ainte de poziția curentă",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Șterge d&upă poziția curentă",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Proprietăți audio…", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "Efe&cte"
+    BEGIN
+        MENUITEM "&Crește volum (cu 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Descrește volum", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "C&rește viteză (cu 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "D&escrește viteză", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "&Adaugă ecou", ID_EFFECTS_ECHO
+        MENUITEM "In&versează", ID_EFFECTS_REVERSE
+    END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre…", ID__ABOUT
+        MENUITEM "&Despre…", ID_ABOUT
     END
 END
 

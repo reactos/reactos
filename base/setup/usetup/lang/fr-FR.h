@@ -1363,7 +1363,7 @@ MUI_ERROR frFRErrorEntries[] =
         "\n"
         "Cr‚er ou effacer des partitions peut d‚truire la table de partition.\n"
         "\n"
-        "  \x07  Appuyer sur F3 pour quitter Setup."
+        "  \x07  Appuyer sur F3 pour quitter Setup.\n"
         "  \x07  Appuyer sur ENTRE pour continuer Setup.",
         "F3= Quitter  ENTRE = Continuer"
     },

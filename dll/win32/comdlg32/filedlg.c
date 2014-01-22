@@ -47,6 +47,8 @@
 
 #include "cdlg.h"
 
+#include <shellapi.h>
+
 #define UNIMPLEMENTED_FLAGS \
 (OFN_DONTADDTORECENT |\
 OFN_NODEREFERENCELINKS | OFN_NOREADONLYRETURN |\

@@ -17,12 +17,7 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "dxgi_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dxgi);
 
 static inline struct dxgi_device *impl_from_IWineDXGIDevice(IWineDXGIDevice *iface)
 {

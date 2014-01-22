@@ -65,12 +65,12 @@ typedef struct _LSA_DB_OBJECT
 
 #define LSAP_DB_SIGNATURE 0x12345678
 
-
+#define POLICY_AUDIT_EVENT_TYPE_COUNT (AuditCategoryAccountLogon - AuditCategorySystem + 1)
 typedef struct _LSAP_POLICY_AUDIT_EVENTS_DATA
 {
     BOOLEAN AuditingMode;
+    DWORD AuditEvents[POLICY_AUDIT_EVENT_TYPE_COUNT];
     DWORD MaximumAuditEventCount;
-    DWORD AuditEvents[0];
 } LSAP_POLICY_AUDIT_EVENTS_DATA, *PLSAP_POLICY_AUDIT_EVENTS_DATA;
 
 typedef struct _LSAP_LOGON_CONTEXT

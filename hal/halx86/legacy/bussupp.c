@@ -735,12 +735,12 @@ HalpDebugPciDumpBus(IN ULONG i,
     }
 
     /* Isolate the vendor name */
-    sprintf(LookupString, "%04x  ", PciData->VendorID);
+    sprintf(LookupString, "\r\n%04x  ", PciData->VendorID);
     VendorName = strstr(VendorTable, LookupString);
     if (VendorName)
     {
         /* Copy the vendor name into our buffer */
-        VendorName += 6;
+        VendorName += 8;
         p = strpbrk(VendorName, "\r\n");
         Length = p - VendorName;
         if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;

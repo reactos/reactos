@@ -21,21 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "dbghelp_private.h"
 
 #ifdef HAVE_MACH_O_LOADER_H
-
-#include <assert.h>
-#include <stdarg.h>
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_MMAN_H
-# include <sys/mman.h>
-#endif
 
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>

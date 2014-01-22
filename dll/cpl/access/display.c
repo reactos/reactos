@@ -9,9 +9,9 @@
 
 #include "access.h"
 
+#include <wingdi.h>
 
 #define ID_BLINK_TIMER 346
-
 
 static VOID
 FillColorSchemeComboBox(HWND hwnd)

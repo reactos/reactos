@@ -4,6 +4,7 @@
  * Copyright 2005 James Hawkins
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
+ *                Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,9 +28,9 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_CONTENTS     "&Cuprins"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "C&aută"
-    IDS_FAVORITES    "Favor&ite"
+    IDS_INDEX        "&Index"
+    IDS_SEARCH       "&Caută"
+    IDS_FAVORITES    "F&avorite"
 END
 
 STRINGTABLE
@@ -44,18 +45,18 @@ BEGIN
     IDTB_PRINT       "Imprimă"
     IDTB_OPTIONS     "Opțiuni"
     IDTB_FORWARD     "Înainte"
-    IDTB_NOTES       "IDTB_NOTES"
-    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
-    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
-    IDTB_CONTENTS    "IDTB_CONTENTS"
-    IDTB_INDEX       "IDTB_INDEX"
-    IDTB_SEARCH      "IDTB_SEARCH"
-    IDTB_HISTORY     "IDTB_HISTORY"
-    IDTB_FAVORITES   "IDTB_FAVORITES"
+    IDTB_NOTES       "Note"
+    IDTB_BROWSE_FWD  "Caută înainte"
+    IDTB_BROWSE_BACK "Caută înapoi"
+    IDTB_CONTENTS    "Cuprins"
+    IDTB_INDEX       "Index"
+    IDTB_SEARCH      "Caută"
+    IDTB_HISTORY     "Istoric"
+    IDTB_FAVORITES   "Favorite"
     IDTB_JUMP1       "Salt1"
     IDTB_JUMP2       "Salt2"
     IDTB_CUSTOMIZE   "Personalizare"
-    IDTB_ZOOM        "Zoom"
-    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
-    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+    IDTB_ZOOM        "Scară"
+    IDTB_TOC_NEXT    "Capitol următor"
+    IDTB_TOC_PREV    "Capitol precedent"
 END

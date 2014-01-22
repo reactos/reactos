@@ -7,6 +7,7 @@ list(APPEND SOURCE
     container.c
     dxdiag_main.c
     provider.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/dxdiagn.def)
 
 add_idl_headers(dxdiagn_idlheader fil_data.idl)

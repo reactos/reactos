@@ -9,7 +9,6 @@
 
 #include "access.h"
 
-
 #define BOUNCETICKS 5
 static UINT nBounceArray[BOUNCETICKS] = {500, 700, 1000, 1500, 2000};
 

@@ -24,22 +24,25 @@
 
 #include <config.h>
 
-#define COBJMACROS
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
+#define COBJMACROS
 
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <dmusici.h>
+#include <dmusics.h>
+
+#include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/unicode.h>
-#include <winreg.h>
-#include <objbase.h>
 
-#include <dmusici.h>
-#include <dmusicf.h>
-#include <dmusics.h>
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
 /*****************************************************************************
  * Interfaces

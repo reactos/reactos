@@ -11,6 +11,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#define INITGUID
+#include <guiddef.h>
+#include <libs/umpnpmgr/sysguid.h>
+
 BOOLEAN
 ResetDevice(
     IN LPCWSTR DeviceId)

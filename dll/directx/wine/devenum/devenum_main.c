@@ -20,6 +20,7 @@
  */
 
 #include "devenum_private.h"
+
 #include <rpcproxy.h>
 
 DECLSPEC_HIDDEN LONG dll_refs;

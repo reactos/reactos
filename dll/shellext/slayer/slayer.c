@@ -24,7 +24,22 @@
  * UPDATE HISTORY:
  *      09/25/2004  Created
  */
-#include "precomp.h"
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <tchar.h>
+
+#include "resource.h"
+#include "slayer.h"
 
 HINSTANCE hInstance = NULL;
 static LONG dllrefs = 0;

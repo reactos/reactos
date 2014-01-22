@@ -19,6 +19,9 @@
  */
 
 #include <advapi32.h>
+
+#include <wincred.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(cred);
 
 /* the size of the ARC4 key used to encrypt the password data */

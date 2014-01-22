@@ -366,7 +366,7 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData.UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_OWNERPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
                     break;
@@ -532,18 +532,22 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
 {
     WCHAR Title[64];
     WCHAR ErrorComputerName[256];
+
     if (!SetComputerNameW(ComputerName))
     {
-        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+        if (hwndDlg != NULL)
         {
-            wcscpy(Title, L"ReactOS Setup");
+            if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+            {
+                wcscpy(Title, L"ReactOS Setup");
+            }
+            if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
+                                 sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
+            {
+                wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
+            }
+            MessageBoxW(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
         }
-        if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
-                             sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
-        {
-            wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
-        }
-        MessageBoxW(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
 
         return FALSE;
     }
@@ -617,6 +621,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMPUTERNAME), WM_SETTEXT, 0, (LPARAM)SetupData.ComputerName);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD1), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
                 SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD2), WM_SETTEXT, 0, (LPARAM)SetupData.AdminPassword);
+                WriteComputerSettings(SetupData.ComputerName, NULL);
+                SetAdministratorPassword(SetupData.AdminPassword);
             }
 
         }
@@ -634,7 +640,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData.UnattendSetup && WriteComputerSettings(SetupData.ComputerName, hwndDlg))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_LOCALEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -918,7 +924,7 @@ LocalePageDlgProc(HWND hwndDlg,
                             RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
                         }
 
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_OWNERPAGE);
                         return TRUE;
                     }
                     break;
@@ -2276,6 +2282,15 @@ InstallWizard(VOID)
     psp.pfnDlgProc = AckPageDlgProc;
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
+    /* Create the Locale page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LOCALETITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
+    psp.pfnDlgProc = LocalePageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+
     /* Create the Owner page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
@@ -2290,15 +2305,6 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
     psp.pfnDlgProc = ComputerPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-
-    /* Create the Locale page */
-    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LOCALETITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
-    psp.pfnDlgProc = LocalePageDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
 

@@ -23,6 +23,7 @@
  */
 
 #include "cdlg.h"
+
 #include <assert.h>
 #include <winspool.h>
 

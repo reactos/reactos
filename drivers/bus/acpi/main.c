@@ -225,7 +225,7 @@ ButtonWaitThread(PVOID Context)
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
-    
+
 
 NTSTATUS
 NTAPI
@@ -372,18 +372,27 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
     ULONG BufferLength = 0;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name,
-                         ValueName);
+    RtlInitUnicodeString(&Name, ValueName);
 
     if (DataLength != NULL)
         BufferLength = *DataLength;
 
-    BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    /* Check if the caller provided a valid buffer */
+    if ((Data != NULL) && (BufferLength != 0))
+    {
+        BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
 
-    /* Allocate memory for the value */
-    ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferLength, 'IPCA');
-    if (ValueInfo == NULL)
-        return STATUS_NO_MEMORY;
+        /* Allocate memory for the value */
+        ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferLength, 'IPCA');
+        if (ValueInfo == NULL)
+            return STATUS_NO_MEMORY;
+    }
+    else
+    {
+        /* Caller didn't provide a valid buffer, assume he wants the size only */
+        ValueInfo = NULL;
+        BufferLength = 0;
+    }
 
     /* Query the value */
     Status = ZwQueryValueKey(KeyHandle,
@@ -392,26 +401,37 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
                              ValueInfo,
                              BufferLength,
                              &BufferLength);
-    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+
+    if (DataLength != NULL)
+        *DataLength = BufferLength;
+
+    /* Check if we have the size only */
+    if (ValueInfo == NULL)
+    {
+        /* Check for unexpected status */
+        if ((Status != STATUS_BUFFER_OVERFLOW) &&
+            (Status != STATUS_BUFFER_TOO_SMALL))
+        {
+            return Status;
+        }
+
+        /* All is well */
+        Status = STATUS_SUCCESS;
+    }
+    /* Otherwise the caller wanted data back, check if we got it */
+    else if (NT_SUCCESS(Status))
     {
         if (Type != NULL)
             *Type = ValueInfo->Type;
 
-        if (DataLength != NULL)
-            *DataLength = ValueInfo->DataLength;
-    }
-
-    /* Check if the caller wanted data back, and we got it */
-    if ((NT_SUCCESS(Status)) && (Data != NULL))
-    {
         /* Copy it */
-        RtlMoveMemory(Data,
-                      ValueInfo->Data,
-                      ValueInfo->DataLength);
+        RtlMoveMemory(Data, ValueInfo->Data, ValueInfo->DataLength);
 
         /* if the type is REG_SZ and data is not 0-terminated
          * and there is enough space in the buffer NT appends a \0 */
-        if (((ValueInfo->Type == REG_SZ) || (ValueInfo->Type == REG_EXPAND_SZ) || (ValueInfo->Type == REG_MULTI_SZ)) &&
+        if (((ValueInfo->Type == REG_SZ) ||
+             (ValueInfo->Type == REG_EXPAND_SZ) ||
+             (ValueInfo->Type == REG_MULTI_SZ)) &&
             (ValueInfo->DataLength <= *DataLength - sizeof(WCHAR)))
         {
             WCHAR *ptr = (WCHAR *)((ULONG_PTR)Data + ValueInfo->DataLength);
@@ -421,10 +441,10 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
     }
 
     /* Free the memory and return status */
-    ExFreePoolWithTag(ValueInfo, 'IPCA');
-
-    if ((Data == NULL) && (Status == STATUS_BUFFER_OVERFLOW))
-        Status = STATUS_SUCCESS;
+    if (ValueInfo != NULL)
+    {
+        ExFreePoolWithTag(ValueInfo, 'IPCA');
+    }
 
     return Status;
 }
@@ -438,13 +458,15 @@ GetProcessorInformation(VOID)
     LPWSTR HardwareIdsBuffer = NULL;
     HANDLE ProcessorHandle = NULL;
     ULONG Length, Level1Length = 0, Level2Length = 0, Level3Length = 0;
-    ULONG HardwareIdsLength = 0;
+    SIZE_T HardwareIdsLength = 0;
+    SIZE_T VendorIdentifierLength;
     ULONG i;
     PWCHAR Ptr;
     NTSTATUS Status;
 
     DPRINT1("GetProcessorInformation()\n");
 
+    /* Open the key for CPU 0 */
     Status = AcpiRegOpenKey(NULL,
                             L"\\Registry\\Machine\\Hardware\\Description\\System\\CentralProcessor\\0",
                             KEY_READ,
@@ -452,84 +474,93 @@ GetProcessorInformation(VOID)
     if (!NT_SUCCESS(Status))
         goto done;
 
-    AcpiRegQueryValue(ProcessorHandle,
-                      L"Identifier",
-                      NULL,
-                      NULL,
-                      &Length);
+    /* Query the processor identifier length */
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"Identifier",
+                               NULL,
+                               NULL,
+                               &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (Length != 0)
+    /* Remember the length as fallback for level 1-3 length */
+    Level1Length = Level2Length = Level3Length = Length;
+
+    /* Allocate a buffer large enough to be zero terminated */
+    Length += sizeof(UNICODE_NULL);
+    ProcessorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    if (ProcessorIdentifier == NULL)
     {
-        ProcessorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
-        if (ProcessorIdentifier == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
-        Status = AcpiRegQueryValue(ProcessorHandle,
-                                   L"Identifier",
-                                   NULL,
-                                   ProcessorIdentifier,
-                                   &Length);
-        if (!NT_SUCCESS(Status))
-            goto done;
-
-        Length = 0;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
-    AcpiRegQueryValue(ProcessorHandle,
-                      L"ProcessorNameString",
-                      NULL,
-                      NULL,
-                      &Length);
+    /* Query the processor identifier string */
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"Identifier",
+                               NULL,
+                               ProcessorIdentifier,
+                               &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (Length != 0)
+    /* Query the processor name length */
+    Length = 0;
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"ProcessorNameString",
+                               NULL,
+                               NULL,
+                               &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Allocate a buffer large enough to be zero terminated */
+    Length += sizeof(UNICODE_NULL);
+    ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    if (ProcessorNameString == NULL)
     {
-        ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
-        if (ProcessorNameString == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
-        Status = AcpiRegQueryValue(ProcessorHandle,
-                                   L"ProcessorNameString",
-                                   NULL,
-                                   ProcessorNameString,
-                                   &Length);
-        if (!NT_SUCCESS(Status))
-            goto done;
-
-        Length = 0;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
-    AcpiRegQueryValue(ProcessorHandle,
-                      L"VendorIdentifier",
-                      NULL,
-                      NULL,
-                      &Length);
+    /* Query the processor name string */
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"ProcessorNameString",
+                               NULL,
+                               ProcessorNameString,
+                               &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (Length != 0)
+    /* Query the vendor identifier length */
+    Length = 0;
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"VendorIdentifier",
+                               NULL,
+                               NULL,
+                               &Length);
+    if (!NT_SUCCESS(Status) || (Length == 0))
+        goto done;
+
+    /* Allocate a buffer large enough to be zero terminated */
+    Length += sizeof(UNICODE_NULL);
+    ProcessorVendorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
+    if (ProcessorVendorIdentifier == NULL)
     {
-        ProcessorVendorIdentifier = ExAllocatePoolWithTag(PagedPool, Length, 'IPCA');
-        if (ProcessorVendorIdentifier == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
-        Status = AcpiRegQueryValue(ProcessorHandle,
-                                   L"VendorIdentifier",
-                                   NULL,
-                                   ProcessorVendorIdentifier,
-                                   &Length);
-        if (!NT_SUCCESS(Status))
-            goto done;
-
-        Length = 0;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
+    /* Query the vendor identifier string */
+    Status = AcpiRegQueryValue(ProcessorHandle,
+                               L"VendorIdentifier",
+                               NULL,
+                               ProcessorVendorIdentifier,
+                               &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Change spaces to underscores */
     for (i = 0; i < wcslen(ProcessorIdentifier); i++)
     {
         if (ProcessorIdentifier[i] == L' ')
@@ -557,15 +588,19 @@ GetProcessorInformation(VOID)
         Level3Length = (ULONG)(Ptr - ProcessorIdentifier);
     }
 
-    HardwareIdsLength = 5 + wcslen(ProcessorVendorIdentifier) + 3 + Level1Length + 1 +
-                        1 + wcslen(ProcessorVendorIdentifier) + 3 + Level1Length + 1 +
-                        5 + wcslen(ProcessorVendorIdentifier) + 3 + Level2Length + 1 +
-                        1 + wcslen(ProcessorVendorIdentifier) + 3 + Level2Length + 1 +
-                        5 + wcslen(ProcessorVendorIdentifier) + 3 + Level3Length + 1 +
-                        1 + wcslen(ProcessorVendorIdentifier) + 3 + Level3Length + 1 +
-                        2;
+    VendorIdentifierLength = (USHORT)wcslen(ProcessorVendorIdentifier);
 
-    HardwareIdsBuffer = ExAllocatePoolWithTag(PagedPool, HardwareIdsLength * sizeof(WCHAR), 'IPCA');
+    /* Calculate the size of the full REG_MULTI_SZ data (see swprintf below) */
+    HardwareIdsLength = (5 + VendorIdentifierLength + 3 + Level1Length + 1 +
+                         1 + VendorIdentifierLength + 3 + Level1Length + 1 +
+                         5 + VendorIdentifierLength + 3 + Level2Length + 1 +
+                         1 + VendorIdentifierLength + 3 + Level2Length + 1 +
+                         5 + VendorIdentifierLength + 3 + Level3Length + 1 +
+                         1 + VendorIdentifierLength + 3 + Level3Length + 1 +
+                         1) * sizeof(WCHAR);
+
+    /* Allocate a buffer to the data */
+    HardwareIdsBuffer = ExAllocatePoolWithTag(PagedPool, HardwareIdsLength, 'IPCA');
     if (HardwareIdsBuffer == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -574,25 +609,28 @@ GetProcessorInformation(VOID)
 
     Length = 0;
     Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
-    Length++;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
     Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
-    Length++;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
     Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
-    Length++;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
     Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
-    Length++;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
     Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
-    Length++;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
     Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
-    Length++;
-    HardwareIdsBuffer[Length] = UNICODE_NULL;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
+    HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    ProcessorHardwareIds.Length = HardwareIdsLength * sizeof(WCHAR);
+    /* Make sure we counted correctly */
+    NT_ASSERT(Length * sizeof(WCHAR) == HardwareIdsLength);
+
+    ProcessorHardwareIds.Length = (SHORT)HardwareIdsLength;
     ProcessorHardwareIds.MaximumLength = ProcessorHardwareIds.Length;
     ProcessorHardwareIds.Buffer = HardwareIdsBuffer;
 
@@ -622,9 +660,15 @@ DriverEntry (
     PUNICODE_STRING RegistryPath
     )
 {
+    NTSTATUS Status;
     DPRINT("Driver Entry \n");
 
-    GetProcessorInformation();
+    Status = GetProcessorInformation();
+    if (!NT_SUCCESS(Status))
+    {
+        NT_ASSERT(FALSE);
+        return Status;
+    }
 
     //
     // Set entry points into the driver

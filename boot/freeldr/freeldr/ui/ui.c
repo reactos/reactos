@@ -344,9 +344,15 @@ VOID UiInfoBox(PCSTR MessageText)
     UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID UiMessageBox(PCSTR MessageText)
+VOID UiMessageBox(PCSTR Format, ...)
 {
-    UiVtbl.MessageBox(MessageText);
+    CHAR Buffer[256];
+    va_list ap;
+
+    va_start(ap, Format);
+    vsnprintf(Buffer, sizeof(Buffer) - sizeof(CHAR), Format, ap);
+    UiVtbl.MessageBox(Buffer);
+    va_end(ap);
 }
 
 VOID UiMessageBoxCritical(PCSTR MessageText)

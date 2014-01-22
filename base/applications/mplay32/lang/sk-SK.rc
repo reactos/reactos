@@ -14,6 +14,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "S&končiť", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "Č&o je...", IDM_ABOUT
@@ -32,4 +38,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Preskočiť dopredu"
     IDS_APPTITLE "Multimediálny prehrávač systému ReactOS"
     IDS_PLAY "Prehrať"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

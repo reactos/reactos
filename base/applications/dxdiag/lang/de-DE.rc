@@ -53,8 +53,8 @@ BEGIN
     RTEXT "Hersteller:", -1, 20, 35, 70, 10
     RTEXT "Chiptyp:", -1, 20, 45, 70, 10
     RTEXT "DAC-Typ:", -1, 20, 55, 70, 10
-    RTEXT "Gesamtspeicher ca.:", -1, 20, 65, 70, 10
-    RTEXT "Anzeigemodus:", -1, 20, 75, 70, 10
+    RTEXT "Gesamtspeicher ca.:", -1, 14, 65, 75, 10
+    RTEXT "Anzeigemodus:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -189,7 +189,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "Herstellererkennung"
     IDS_DEVICE_PRODUCT "Produkterkennung"
     IDS_DEVICE_FORCEFEEDBACK "Force-Feedback-Treiber"
-    IDS_NOT_APPLICABLE "Nicht zutreffend"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Ja"
     IDS_DIRECTPLAY_COL_NAME1 "Name"
     IDS_DIRECTPLAY_COL_NAME2 "Registrierung"

@@ -83,7 +83,7 @@ static BOOL CALLBACK ThemeCleanupWndContext(HWND hWnd, LPARAM msg)
     return TRUE;
 }
 
-void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
+void SetThemeRegion(HWND hWnd)
 {
     HTHEME hTheme;
     RECT rcWindow;
@@ -91,24 +91,10 @@ void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
     int CaptionHeight, iPart;
     WINDOWINFO wi;
 
-    if(!IsAppThemed())
-    {
-        if(pcontext->HasThemeRgn)
-        {
-            pcontext->HasThemeRgn = FALSE;
-            user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
-        }
-        return;
-    }
+    TRACE("SetThemeRegion %d\n", hWnd);
 
     wi.cbSize = sizeof(wi);
-
     GetWindowInfo(hWnd, &wi);
-            
-    if((wi.dwStyle & WS_CAPTION)!=WS_CAPTION)
-    {
-        return;
-    }
 
     /* Get the caption part id */
     if (wi.dwExStyle & WS_EX_TOOLWINDOW)
@@ -117,8 +103,6 @@ void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
         iPart = WP_MAXCAPTION;
     else
         iPart = WP_CAPTION;
-
-    pcontext->HasThemeRgn = TRUE;
 
     CaptionHeight = wi.cyWindowBorders;
     CaptionHeight += GetSystemMetrics(wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
@@ -129,10 +113,8 @@ void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
     rcWindow.top = 0;
     rcWindow.left = 0;
 
-    hTheme = OpenThemeData (hWnd, L"WINDOW");
-
+    hTheme = MSSTYLES_OpenThemeClass(ActiveThemeFile, NULL, L"WINDOW");
     GetThemeBackgroundRegion(hTheme, 0, iPart, FS_ACTIVE, &rcWindow, &hrgn);
-
     CloseThemeData(hTheme);
 
     GetWindowRect(hWnd, &rcWindow);
@@ -149,21 +131,51 @@ void SetThemeRegion(HWND hWnd, PWND_CONTEXT pcontext)
     user32ApiHook.SetWindowRgn(hWnd, hrgn, TRUE);
 }
 
-int OnPostWinPosChanged(HWND hWnd)
+int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
 {
-    PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
+    PWND_CONTEXT pcontext;
+    DWORD style;
 
-    if(pcontext &&
-        pcontext->HasAppDefinedRgn == FALSE && 
-        pcontext->UpdatingRgn == FALSE)
+    /* We only proceed to change the window shape if it has a caption */
+    style = GetWindowLongW(hWnd, GWL_STYLE);
+    if((style & WS_CAPTION)!=WS_CAPTION)
+        return 0;
+
+    /* Get theme data for this window */
+    pcontext = ThemeGetWndContext(hWnd);
+    if (pcontext == NULL)
+        return 0;
+
+    /* Do not change the region of the window if its size wasn't changed */
+    if ((pWinPos->flags & SWP_NOSIZE) != 0 && pcontext->DirtyThemeRegion == FALSE)
+        return 0;
+
+    /* We don't touch the shape of the window if the application sets it on its own */
+    if (pcontext->HasAppDefinedRgn == TRUE)
+        return 0;
+
+    /* Calling SetWindowRgn will call SetWindowPos again so we need to avoid this recursion */
+    if (pcontext->UpdatingRgn == TRUE)
+        return 0;
+
+    if(!IsAppThemed())
     {
-        pcontext->UpdatingRgn = TRUE;
-        SetThemeRegion(hWnd, pcontext);
-        pcontext = ThemeGetWndContext(hWnd);
-        pcontext->UpdatingRgn = FALSE;
+        if(pcontext->HasThemeRgn)
+        {
+            pcontext->HasThemeRgn = FALSE;
+            user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
+        }
+        return 0;
     }
-    return 0;
-}
+
+    pcontext->DirtyThemeRegion = FALSE;
+    pcontext->HasThemeRgn = TRUE;
+    pcontext->UpdatingRgn = TRUE;
+    SetThemeRegion(hWnd);
+    pcontext->UpdatingRgn = FALSE;
+
+     return 0;
+ }
 
 /**********************************************************************
  *      Hook Functions
@@ -172,7 +184,7 @@ int OnPostWinPosChanged(HWND hWnd)
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {      
-    if(!IsThemeActive())
+    if(!IsAppThemed())
     {
         return user32ApiHook.DefWindowProcW(hWnd, 
                                             Msg, 
@@ -190,7 +202,7 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    if(!IsThemeActive())
+    if(!IsAppThemed())
     {
         return user32ApiHook.DefWindowProcA(hWnd, 
                                             Msg, 
@@ -211,8 +223,15 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
     switch(Msg)
     {
         case WM_THEMECHANGED:
-            UXTHEME_LoadTheme(TRUE);
-            return 0;
+            if (GetAncestor(hWnd, GA_PARENT) == GetDesktopWindow())
+                UXTHEME_LoadTheme(TRUE);
+        case WM_NCCREATE:
+        {
+            PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
+            if (pcontext == NULL)
+                return 0;
+            pcontext->DirtyThemeRegion = TRUE;
+        }
     }
 
     return 0;
@@ -226,7 +245,7 @@ ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR
     {
         case WM_WINDOWPOSCHANGED:
         {
-            return OnPostWinPosChanged(hWnd);
+            return OnPostWinPosChanged(hWnd, (WINDOWPOS*)lParam);
         }
         case WM_DESTROY:
         {

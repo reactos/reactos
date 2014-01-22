@@ -33,6 +33,7 @@ There is still some work to be done:
 #include "cabinet.h"
 
 #include <assert.h>
+#include <fci.h>
 
 #ifdef HAVE_ZLIB
 # include <zlib.h>

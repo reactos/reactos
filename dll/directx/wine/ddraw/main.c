@@ -25,10 +25,11 @@
  */
 
 #include "ddraw_private.h"
+
+#include <winreg.h>
 #include <rpcproxy.h>
 
 #include <wine/exception.h>
-#include <winreg.h>
 
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
 

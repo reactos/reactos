@@ -7,6 +7,8 @@
 
 #include "sndvol32.h"
 
+#include <wingdi.h>
+
 #define XLEFT (30)
 #define XTOP (20)
 #define DIALOG_VOLUME_SIZE (150)

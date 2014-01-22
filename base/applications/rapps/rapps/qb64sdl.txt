@@ -14,6 +14,11 @@ CDPath = none
 [Section.0407]
 Description = QB64 ist ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
 
+[Section.0418]
+Licence = Gratuită
+Description = QB64 este un compilator BASIC auto-compilabil pentru Windows, Linux și Mac OS X, conceput pentru a fi compatibil cu Microsoft QBasic și Microsoft QuickBASIC. Este necesar un utilitar de derarhivare de tip ZIP.
+Size = 33,1 Mo
+
 [Section.041f]
 Name = QB64 (SDL sürümü)
 Licence = Ücretsiz

@@ -1,13 +1,12 @@
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
 #include <winreg.h>
-#include <wingdi.h>
 #include <winuser.h>
 #include <commctrl.h>
-#include <cpl.h>
 #include <tchar.h>
 
 #include "resource.h"

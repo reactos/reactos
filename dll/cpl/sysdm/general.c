@@ -9,8 +9,10 @@
  *
  */
 
-
 #include "precomp.h"
+
+#include <winnls.h>
+#include <powrprof.h>
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50

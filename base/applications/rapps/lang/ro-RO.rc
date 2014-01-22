@@ -1,8 +1,7 @@
 /* 
  * FILE:        base/applications/rapps/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * LAST CHANGE: 2011-12-18  small correnctions
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -25,7 +24,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "&Actualizează baza de date", ID_RESETDB
     END
     POPUP "&?"
     BEGIN
@@ -55,7 +54,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "&Actualizează baza de date", ID_RESETDB
     END
 END
 
@@ -193,7 +192,6 @@ BEGIN
     IDS_APPLICATIONS "Aplicații"
     IDS_CHOOSE_FOLDER_TEXT "Specificați un dosar destinație pentru descărcări:"
     IDS_CHOOSE_FOLDER_ERROR "Dosarul specificat nu există. Doriți crearea lui?"
-    IDS_USER_NOT_ADMIN "Pentru a porni „Gestionar de aplicații ReactOS” sunt necesare drepturi de administrator!"
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru această aplicație!"

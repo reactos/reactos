@@ -9,6 +9,10 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
+
+#include <ndk/lpcfuncs.h>
+#include <csr/csrsrv.h>
+
 #define NDEBUG
 #include <debug.h>
 

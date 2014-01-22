@@ -20,8 +20,6 @@
  *
  */
 
-#include "inetcpl.h"
-
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 /* UTF-8 */

@@ -5,7 +5,7 @@ Name = DVD Write Now
 Version = 1.5.12 sp2
 Licence = Freeware
 Description =  A free direct CD/DVD recording software. Once installed, you can use your CD/DVD RW as USB Flash or removable hard drives. Along with this you can write to CD/DVD RW recorded with UDF filesystem. You can also read UDF disks created with other software. (Microsoft DVD−ROMs, RW disks recorded with Ahead InCD). You need a ZIP decompression program to install it.
-Size = 1.2MB
+Size = 1.2 MB
 Category = 12
 URLSite = http://dwn.alter.org.ua/
 URLDownload = http://dwn.alter.org.ua/downloads/dwn_1_5_12_sp2.zip
@@ -16,6 +16,11 @@ Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, k
 
 [Section.0410]
 Description = Un software di masterizzazione CD/DVD diretto e gratuito. Una volta installato, è possibile utilizzare il CD/DVD RW da flash USB o dischi rigidi rimovibili. Insieme a questo è possibile scrivere CD/DVD RW registrati con filesystem UDF. È anche possibile leggere i dischi UDF creati con altri software. (Microsoft DVD-ROM, dischi RW registrati con InCD Ahead). Il programma ha bisogno di un programma di decompressione ZIP per installarlo.
+
+[Section.0418]
+Licence = Gratuită
+Description = Un program de înscriere CD/DVD directă. Odată instalat, puteți utiliza CD/DVD ca memorie USB sau disc dur detașabil. Pe lângă aceasta, veți putea scrie pe CD/DVD inscripționate cu sistem de fișiere UDF. Se pot de asemenea citi discuri UDF create cu alte programe. (Microsoft DVD-ROM, discuri RW inscripționate cu Ahead InCD). Este necesar un program de decompresie ZIP pentru a-l instala.
+Size = 1,2 Mo
 
 [Section.0419]
 Description = DVD Write Now - бесплатная программа для прямой записи на CD и DVD диски. Позволяет использовать перезаписываемые CD и DVD диски как USB-Flash или съемные жесткие диски, записывать файлы на перезаписываемые CD/DVD диски, созданные в формате UDF, и читать UDF-диски, созданные другими программами.

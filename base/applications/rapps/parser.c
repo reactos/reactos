@@ -176,7 +176,8 @@ ParserSave(HANDLE hFile, const SECTION *section, ENCODING encoding)
 
     for ( ; section; section = section->next)
     {
-        int len = 0;
+        size_t len = 0;
+        size_t remaining;
 
         if (section->name[0]) len += wcslen(section->name) + 4;
 
@@ -190,28 +191,28 @@ ParserSave(HANDLE hFile, const SECTION *section, ENCODING encoding)
         if (!buffer) return;
 
         p = buffer;
+        remaining = len;
         if (section->name[0])
         {
-            *p++ = '[';
-            wcscpy(p, section->name);
-            p += wcslen(p);
-            *p++ = ']';
-            *p++ = '\r';
-            *p++ = '\n';
+            StringCchPrintfExW(p, remaining, &p, &remaining, 0,
+                               L"[%ls]\r\n",
+                               section->name);
         }
 
         for (key = section->key; key; key = key->next)
         {
-            wcscpy(p, key->name);
-            p += wcslen(p);
             if (key->value)
             {
-                *p++ = '=';
-                wcscpy(p, key->value);
-                p += wcslen(p);
+                StringCchPrintfExW(p, remaining, &p, &remaining, 0,
+                                   L"%ls=%ls\r\n",
+                                   key->name, key->value);
             }
-            *p++ = '\r';
-            *p++ = '\n';
+            else
+            {
+                StringCchPrintfExW(p, remaining, &p, &remaining, 0,
+                                   L"%ls\r\n",
+                                   key->name);
+            }
         }
         ParserWriteLine(hFile, buffer, len, encoding);
         HeapFree(GetProcessHeap(), 0, buffer);
@@ -434,6 +435,7 @@ SECTIONKEY
 *ParserFind(SECTION **section, LPCWSTR section_name, LPCWSTR key_name, BOOL create, BOOL create_always)
 {
     LPCWSTR p;
+    DWORD cch;
     int seclen, keylen;
 
     while (ParserIsSpace(*section_name)) section_name++;
@@ -474,9 +476,10 @@ SECTIONKEY
             }
             if (!create)
                 return NULL;
-            if (!(*key = HeapAlloc(GetProcessHeap(), 0, sizeof(SECTIONKEY) + wcslen(key_name) * sizeof(WCHAR))))
+            cch = wcslen(key_name) + 1;
+            if (!(*key = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(SECTIONKEY, name) + cch * sizeof(WCHAR))))
                 return NULL;
-            wcscpy((*key)->name, key_name);
+            StringCchCopyW((*key)->name, cch, key_name);
             (*key)->value = NULL;
             (*key)->next  = NULL;
             return *key;
@@ -484,17 +487,19 @@ SECTIONKEY
         section = &(*section)->next;
     }
     if (!create) return NULL;
-    *section = HeapAlloc(GetProcessHeap(), 0, sizeof(SECTION) + wcslen(section_name) * sizeof(WCHAR));
-    if(*section == NULL) return NULL;
-    wcscpy((*section)->name, section_name);
+    cch = wcslen(section_name) + 1;
+    *section = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(SECTION, name) + cch * sizeof(WCHAR));
+    if (*section == NULL) return NULL;
+    StringCchCopyW((*section)->name, cch, section_name);
     (*section)->next = NULL;
+    cch = wcslen(key_name) + 1;
     if (!((*section)->key  = HeapAlloc(GetProcessHeap(), 0,
-                                        sizeof(SECTIONKEY) + wcslen(key_name) * sizeof(WCHAR))))
+                                        FIELD_OFFSET(SECTIONKEY, name) + cch * sizeof(WCHAR))))
     {
         HeapFree(GetProcessHeap(), 0, *section);
         return NULL;
     }
-    wcscpy((*section)->key->name, key_name);
+    StringCchCopyW((*section)->key->name, cch, key_name);
     (*section)->key->value = NULL;
     (*section)->key->next  = NULL;
     return (*section)->key;
@@ -541,10 +546,10 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
 {
     WCHAR szDir[MAX_PATH];
     WCHAR buffer[MAX_PATH];
+    DWORD cch;
     HANDLE hFile = INVALID_HANDLE_VALUE;
     int i, j;
     ITEMS *tempProfile;
-    static const WCHAR wszSeparator[] = L"\\rapps\\";
 
     if (!CurProfile)
         for (i = 0; i < N_CACHED_ITEMS; i++)
@@ -557,11 +562,15 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
             ItemsArray[i]->encoding = ENCODING_UTF8;
         }
 
-    GetCurrentDirectoryW(MAX_PATH, szDir);
+    if (!GetStorageDirectory(szDir, sizeof(szDir) / sizeof(szDir[0])))
+        return FALSE;
 
-    wcscpy(buffer, szDir);
-    wcscat(buffer, wszSeparator);
-    wcscat(buffer, filename);
+    if (FAILED(StringCbPrintfW(buffer, sizeof(buffer),
+                               L"%ls\\rapps\\%ls",
+                               szDir, filename)))
+    {
+        return FALSE;
+    }
 
     hFile = CreateFileW(buffer, GENERIC_READ | (write_access ? GENERIC_WRITE : 0),
                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
@@ -605,11 +614,12 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
 
     if (CurProfile->filename) ParserReleaseFile();
 
-    CurProfile->filename = HeapAlloc(GetProcessHeap(), 0, (wcslen(buffer) + 1) * sizeof(WCHAR));
+    cch = wcslen(buffer) + 1;
+    CurProfile->filename = HeapAlloc(GetProcessHeap(), 0, cch * sizeof(WCHAR));
     if (CurProfile->filename == NULL)
         return FALSE;
 
-    wcscpy(CurProfile->filename, buffer);
+    StringCchCopyW(CurProfile->filename, cch, buffer);
 
     if (hFile != INVALID_HANDLE_VALUE)
     {

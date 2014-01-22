@@ -20,6 +20,8 @@
 
 #include "quartz_private.h"
 
+#include <wine/list.h>
+
 typedef struct StdMediaSample2
 {
     IMediaSample2 IMediaSample2_iface;

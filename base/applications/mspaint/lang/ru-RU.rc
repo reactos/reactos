@@ -58,7 +58,7 @@ BEGIN
     POPUP "&Рисунок"
     BEGIN
         MENUITEM "&Отразить/повернуть...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Растянуть/Наклонить...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Обре&зать", IDM_IMAGECROP
         MENUITEM "О&братить цвета\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Атрибуты...\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -69,8 +69,8 @@ BEGIN
     BEGIN
         MENUITEM "&Изменить палитру...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Модернизированный вид", IDM_COLORSMODERNPALETTE
+        MENUITEM "Старый вид", IDM_COLORSOLDPALETTE
     END
     POPUP "&?"
     BEGIN
@@ -149,9 +149,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Растяжение и наклон"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Растянуть", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "По горизонтали:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -160,15 +160,15 @@ BEGIN
     LTEXT "По вертикали:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Наклонить", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "По горизонтали:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "градусов", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "По вертикали:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "градусов", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Отмена", IDCANCEL, 170, 24, 48, 14
 END
@@ -202,8 +202,8 @@ BEGIN
     IDS_SAVEFILTER "24-разрядный рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE "%d байт"
     IDS_PRINTRES "%d x %d пикселей на метр"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_INTNUMBERS, "Необходимо вводить только целые числа!"
+    IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
+    IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
+    IDS_LOADERRORTEXT, "Невозможно загрузить файл %s."
 END

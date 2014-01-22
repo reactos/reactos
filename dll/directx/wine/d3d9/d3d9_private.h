@@ -25,16 +25,17 @@
 
 #include <config.h>
 
+#include <assert.h>
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <assert.h>
-#include <stdarg.h>
-
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -42,7 +43,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
-#include <initguid.h>
 #include <d3d9.h>
 #include <wine/wined3d.h>
 

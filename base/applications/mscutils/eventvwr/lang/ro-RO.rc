@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Observator de evenimente"
+    IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
+    IDS_STATUS_MSG "%s are %lu eveniment(e)"
     IDS_EVENTSTRINGIDNOTFOUND "Nu se poate găsi descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea."
     IDS_EVENTLOG_ERROR_TYPE "Eroare"
     IDS_EVENTLOG_WARNING_TYPE "Avertisment"

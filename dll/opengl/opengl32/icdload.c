@@ -6,9 +6,9 @@
  */
 
 #include "opengl32.h"
+
 #include <winreg.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
 struct Drv_Opengl_Info

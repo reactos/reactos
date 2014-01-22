@@ -30,33 +30,9 @@
  * - Fallout : works great in X and DGA mode
  */
 
-#include <config.h>
-//#include <assert.h>
-//#include <stdarg.h>
-//#include <string.h>
+#include "dinput_private.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <wine/debug.h>
-//#include "wine/unicode.h"
-//#include "windef.h"
-#include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
-//#include "winerror.h"
-#include <objbase.h>
 #include <rpcproxy.h>
-//#include "initguid.h"
-//#include "dinput_private.h"
-#include "device_private.h"
-//#include "dinputd.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 static const IDirectInput7AVtbl ddi7avt;
 static const IDirectInput7WVtbl ddi7wvt;

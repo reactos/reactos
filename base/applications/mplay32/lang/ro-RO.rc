@@ -1,8 +1,7 @@
 /*
  * FILE:        base/applications/mplay32/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * LAST CHANGE: 2011-12-19  minor changes
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -15,6 +14,12 @@ BEGIN
         MENUITEM "Î&nchide", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
+    END
+    POPUP "&Dispozitiv"
+    BEGIN
+        MENUITEM "&Proprietăți…", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "Control &volum…", IDM_VOLUMECTL
     END
     POPUP "&?"
     BEGIN
@@ -34,4 +39,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Salt la următor"
     IDS_APPTITLE "Lector multimedia"
     IDS_PLAY "Lecturare"
+    IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare"
 END

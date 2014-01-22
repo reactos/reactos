@@ -5,20 +5,21 @@
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2013)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "To polecenie nie jest obsługiwane przez narzędzie pomocy.\nSpróbuj ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
+    IDS_USAGE "Podaje informacje o poleceniach ReactOS.\n\n\
+HELP [polecenie]\n\n\
+  polecenie - wyświetla informacje o tym poleceniu.\n"
     IDS_HELP1 "Lista wszystkich dostępnych komend (+opisy)\n\n\
   help komenda\n\
   komenda /?     Wyświetla dokładny opis danej komendy\n\n\

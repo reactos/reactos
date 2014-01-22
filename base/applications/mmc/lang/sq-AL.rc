@@ -8,7 +8,7 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "I Ri\tStrg+N", IDM_FILE_NEW
+        MENUITEM "I Ri\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "D&il\tAlt+F4", IDM_FILE_EXIT
     END
@@ -22,7 +22,7 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "I Ri\tStrg+N", IDM_FILE_NEW
+        MENUITEM "I Ri\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "D&il\tAlt+F4", IDM_FILE_EXIT
     END

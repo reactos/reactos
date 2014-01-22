@@ -37,29 +37,10 @@
  *      Optimize WINMM and negotiate fragment size, decrease DS_HEL_MARGIN
  */
 
-#include <stdarg.h>
-#include <math.h>	/* Insomnia - pow() function */
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <mmsystem.h>
-#include <winternl.h>
-//#include "mmddk.h"
-#include <wine/debug.h>
-#include <dsound.h>
 #include "dsound_private.h"
 
 /* default velocity of sound in the air */
 #define DEFAULT_VELOCITY 340
-
-WINE_DEFAULT_DEBUG_CHANNEL(dsound3d);
 
 /*******************************************************************************
  *              Auxiliary functions

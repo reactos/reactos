@@ -1,8 +1,7 @@
 /* 
  * FILE:       dll/win32/netid/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-09-09  initial translation
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -20,7 +19,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Grup de lucru:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Utilizați Expertul de Identificare a Rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 6, 113, 172, 24
+    LTEXT "Utilizați asistentul de identificare a rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&ID de rețea…", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Pentru a schimba identitatea calculatorului sau a intra într-un domeniu, apăsați „Schimbare”.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "S&chimbare…", IDC_NETWORK_PROPERTY, 190, 149, 58, 15

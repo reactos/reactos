@@ -6,6 +6,8 @@
  * COPYRIGHT:   Copyright 2006, 2007 Eric Kohl
  */
 
+#pragma once
+
 #define IDX_DESKTOP           0
 #define IDX_INACTIVE_CAPTION  1
 #define IDX_INACTIVE_BORDER   2

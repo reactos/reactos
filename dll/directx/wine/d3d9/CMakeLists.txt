@@ -20,6 +20,7 @@ list(APPEND SOURCE
     texture.c
     vertexdeclaration.c
     volume.c
+    guid.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)

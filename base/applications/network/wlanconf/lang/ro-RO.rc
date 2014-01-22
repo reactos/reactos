@@ -1,0 +1,37 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nConfigurează un adaptor WLAN.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tConectează la un SSID furnizat,\n\
+\t-w WEP\t\tSpecifică o cheie WEP.\n\
+\t-a\t\tSpecifică faptul că rețeaua vizată e ad-hoc.\n\
+\t-d\t\tDeconectează de la punctul curent de acces.\n\
+\t-s\t\tIdentifică și afișează într-o listă punctele\n\
+\t\t\tde acces din apropiere.\n\n\
+Apelul fără parametri va oferi informații despre conexiunea WLAN curentă.\n"
+    IDS_NO_NETWORK "Nu sunt găsite rețele în apropiere.\n"
+    IDS_NO_WLAN_ADAPTER "Nu sunt identificate adaptoare WLAN în sistem.\n"
+    IDS_SUCCESS "Operația a fost îndeplinită cu succes.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN este deconectat\n"
+    IDS_MSG_WEP_ENABLED "WEP activat: %s\n"
+    IDS_MSG_NETWORK_MODE "Modul rețelei: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformația de configurare a rețelei fără-fir curente:\n\n"
+    IDS_MSG_ENCRYPTED "Criptat: %s\n"
+    IDS_MSG_NETWORK_TYPE "Tipul rețelei: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Rate acceptate (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Puterea transmisiei: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Antena contată: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antena emițătoare: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena emițătoare: Oricare\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antena receptoare: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena receptoare: Oricare\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Pragul de fragmentare: %d octeți\n"
+    IDS_MSG_RTS_THRESHOLD "Pragul RTS: %d octeți\n"
+    IDS_YES "Da"
+    IDS_NO "Nu"
+    IDS_ADHOC "Adhoc"
+    IDS_INFRASTRUCTURE "Infrastructură"
+END

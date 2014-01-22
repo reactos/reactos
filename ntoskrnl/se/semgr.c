@@ -617,7 +617,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     *GrantedAccess = CurrentAccess & DesiredAccess;
 
-    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
+    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) ==
         (DesiredAccess & ~VALID_INHERIT_FLAGS))
     {
         *AccessStatus = STATUS_SUCCESS;
@@ -1074,29 +1074,6 @@ NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 NTSTATUS
 NTAPI
-NtAccessCheckByTypeAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                                 IN HANDLE HandleId,
-                                 IN PUNICODE_STRING ObjectTypeName,
-                                 IN PUNICODE_STRING ObjectName,
-                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                 IN PSID PrincipalSelfSid,
-                                 IN ACCESS_MASK DesiredAccess,
-                                 IN AUDIT_EVENT_TYPE AuditType,
-                                 IN ULONG Flags,
-                                 IN POBJECT_TYPE_LIST ObjectTypeList,
-                                 IN ULONG ObjectTypeLength,
-                                 IN PGENERIC_MAPPING GenericMapping,
-                                 IN BOOLEAN ObjectCreation,
-                                 OUT PACCESS_MASK GrantedAccess,
-                                 OUT PNTSTATUS AccessStatus,
-                                 OUT PBOOLEAN GenerateOnClose)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN PSID PrincipalSelfSid,
                               IN HANDLE ClientToken,
@@ -1108,53 +1085,6 @@ NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN OUT PULONG PrivilegeSetLength,
                               OUT PACCESS_MASK GrantedAccess,
                               OUT PNTSTATUS AccessStatus)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtAccessCheckByTypeResultListAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                                           IN HANDLE HandleId,
-                                           IN PUNICODE_STRING ObjectTypeName,
-                                           IN PUNICODE_STRING ObjectName,
-                                           IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                           IN PSID PrincipalSelfSid,
-                                           IN ACCESS_MASK DesiredAccess,
-                                           IN AUDIT_EVENT_TYPE AuditType,
-                                           IN ULONG Flags,
-                                           IN POBJECT_TYPE_LIST ObjectTypeList,
-                                           IN ULONG ObjectTypeLength,
-                                           IN PGENERIC_MAPPING GenericMapping,
-                                           IN BOOLEAN ObjectCreation,
-                                           OUT PACCESS_MASK GrantedAccess,
-                                           OUT PNTSTATUS AccessStatus,
-                                           OUT PBOOLEAN GenerateOnClose)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtAccessCheckByTypeResultListAndAuditAlarmByHandle(IN PUNICODE_STRING SubsystemName,
-                                                   IN HANDLE HandleId,
-                                                   IN HANDLE ClientToken,
-                                                   IN PUNICODE_STRING ObjectTypeName,
-                                                   IN PUNICODE_STRING ObjectName,
-                                                   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                                   IN PSID PrincipalSelfSid,
-                                                   IN ACCESS_MASK DesiredAccess,
-                                                   IN AUDIT_EVENT_TYPE AuditType,
-                                                   IN ULONG Flags,
-                                                   IN POBJECT_TYPE_LIST ObjectTypeList,
-                                                   IN ULONG ObjectTypeLength,
-                                                   IN PGENERIC_MAPPING GenericMapping,
-                                                   IN BOOLEAN ObjectCreation,
-                                                   OUT PACCESS_MASK GrantedAccess,
-                                                   OUT PNTSTATUS AccessStatus,
-                                                   OUT PBOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

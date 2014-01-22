@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/debug.h>
-
-#define COBJMACROS
-
-//#include "winbase.h"
-//#include "wingdi.h"
-
-//#include "amstream_private.h"
-#include <amstream.h>
-
-//#include "ddstream.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(amstream);
+#include "amstream_private.h"
 
 static HRESULT ddrawstreamsample_create(IDirectDrawMediaStream *parent, IDirectDrawStreamSample **ddraw_stream_sample);
 static HRESULT audiostreamsample_create(IAudioMediaStream *parent, IAudioData *audio_data, IAudioStreamSample **audio_stream_sample);

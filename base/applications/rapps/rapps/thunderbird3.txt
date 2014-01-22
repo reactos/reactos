@@ -1,0 +1,60 @@
+﻿; UTF-8
+
+[Section]
+Name = Mozilla Thunderbird
+Version = 3.1.20
+Licence = MPL/GPL/LGPL
+Description = The most popular and one of the best free Mail Clients out there.
+Size = 9.06 MB
+Category = 5
+URLSite = http://www.mozilla.org/en/thunderbird/
+URLDownload = http://svn.reactos.org/packages/Thunderbird%20Setup%203.1.20.exe
+CDPath = none
+
+[Section.0407]
+Description = Der populärste und einer der besten freien Mail-Clients.
+URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
+
+[Section.040a]
+Description = El más popular y uno de los mejores clientes mail que hay.
+URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
+
+[Section.040c]
+Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
+Size = 9,06 Mo
+URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
+
+[Section.0410]
+Description = Il più popolare e il migliore Clients mail gratuito.
+URLSite = http://www.mozilla-europe.org/it/products/thunderbird/
+
+[Section.0413]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+
+[Section.0415]
+Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
+URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
+
+[Section.0418]
+Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
+Size = 9,06 Mo
+URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
+
+[Section.0419]
+Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
+URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
+
+[Section.041f]
+Name = Mozilla Yıldırımkuşu
+Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
+URLSite = https://www.mozilla.org/tr/products/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe
+
+[Section.0422]
+Description = Найпопулярніший та один з кращих поштових клієнтів.
+URLSite = http://www.mozillamessaging.com/uk/thunderbird/
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/

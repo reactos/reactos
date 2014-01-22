@@ -19,8 +19,6 @@
  *
  */
 
-#include "inetcpl.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 /* UTF-8 */

@@ -19,7 +19,7 @@
 #ifndef __CRYPT32_PRIVATE_H__
 #define __CRYPT32_PRIVATE_H__
 
-#include <config.h>
+#include <wine/config.h>
 #include <wine/port.h>
 
 #include <assert.h>
@@ -47,6 +47,8 @@
 #include <wine/list.h>
 #include <wine/exception.h>
 #include <wine/debug.h>
+
+#include "cryptres.h"
 
 /* a few asn.1 tags we need */
 #define ASN_BOOL            (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x01)
@@ -460,4 +462,4 @@ void ContextList_Free(struct ContextList *list) DECLSPEC_HIDDEN;
  */
 #define IS_INTOID(x)    (((ULONG_PTR)(x) >> 16) == 0)
 
-#endif
+#endif /* __CRYPT32_PRIVATE_H__ */

@@ -11,6 +11,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "&Volume Control", IDM_VOLUMECTL
+    END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Hakkında", IDM_ABOUT
@@ -29,4 +35,5 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Bir Sonraki"
     IDS_APPTITLE "Ortam Oynatıcısı"
     IDS_PLAY "Çal"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error"
 END

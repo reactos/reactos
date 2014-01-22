@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Zaso&by według typu", IDC_RESBYTYPE, GRAYED
         MENUITEM "Za&soby według połączenia", IDC_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
+        MENUITEM "Pokaż ukryte urządzenia", IDC_SHOWHIDDEN
     END
     POPUP "Pomo&c"
     BEGIN

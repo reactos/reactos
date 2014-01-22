@@ -5,7 +5,7 @@ Name = xiph.org OpenCodecs
 Version = 0.85.17777
 License = BSD
 Description = DirectShow Filters for the Ogg Vorbis, Speex, Theora, FLAC, and WebM file formats.
-Size = 2.53MB
+Size = 2.53 MB
 Category = 1
 URLSite = http://xiph.org/dshow/
 URLDownload = http://downloads.xiph.org/releases/oggdsf/opencodecs_0.85.17777.exe
@@ -16,6 +16,10 @@ Description = DirectShow Filter für Ogg Vorbis, Speex, Theora, FLAC, und WebM D
 
 [Section.0410]
 Description = I filtri DirectShow per la Ogg Vorbis, Speex, Theora, FLAC e formati di file WebM.
+
+[Section.0418]
+Description = Filtrele DirectShow pentru formatele de fișiere Ogg Vorbis, Speex, Theora, FLAC și WebM.
+Size = 2,53 Mo
 
 [Section.041f]
 Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük türleri için DirectShow süzgeçleri.

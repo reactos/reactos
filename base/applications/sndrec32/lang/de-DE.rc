@@ -12,27 +12,52 @@ CAPTION "Information zum Audiorecorder"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "ReactOS Audiorecorder, Version 1.0", IDC_STATIC, 16, 16, 134, 8, SS_NOPREFIX
-    LTEXT "Copyright (C) 2009", IDC_STATIC, 16, 25, 134, 8
+    LTEXT "ReactOS Audiorecorder, Version 1.0", IDC_STATIC, 56, 16, 134, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2009", IDC_STATIC, 56, 25, 134, 8
     DEFPUSHBUTTON "OK", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "Datei"
+    POPUP "&Datei"
     BEGIN
-        MENUITEM "Neu", ID_NEW
-        MENUITEM "Öffnen...", ID_FILE_OPEN
-        MENUITEM "Speichern", ID_FILE_SAVE, GRAYED
-        MENUITEM "Speichern unter...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Neu", ID_FILE_NEW
+        MENUITEM "Ö&ffnen...", ID_FILE_OPEN
+        MENUITEM "&Speichern", ID_FILE_SAVE, GRAYED
+        MENUITEM "Speichern &unter...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Wiederherstellen...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Eigenschaften", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Beenden", ID_EXIT
+        MENUITEM "&Beenden", ID_FILE_EXIT
     END
-    MENUITEM "todo1", 0
-    MENUITEM "todo2", 0
-    POPUP "?"
+    POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "Über...", ID__ABOUT
+        MENUITEM "&Kopieren", ID_EDIT_COPY
+        MENUITEM "&Einfügen", ID_EDIT_PASTE, GRAYED
+        MENUITEM "&Mix Einfügen", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Datei einfügen...", ID_EDIT_INSERTFILE
+        MENUITEM "D&atei einmischen...", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Vor aktueller Position &löschen",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Nach aktueller Position lö&schen",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "A&udioeigenschaften", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "&Effekte"
+    BEGIN
+        MENUITEM "Lautstärke &erhöhen (um 25%)",ID_EFFECTS_INCVOL
+        MENUITEM "Lautstärke &verringern", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "Geschwindigkeit er&höhen (um 100%)",ID_EFFECTS_INCSPD
+        MENUITEM "Geschwindigkeit ver&ringern", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "E&cho hinzufügen", ID_EFFECTS_ECHO
+        MENUITEM "&Umkehren", ID_EFFECTS_REVERSE
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "Inf&o...", ID_ABOUT
     END
 END
 

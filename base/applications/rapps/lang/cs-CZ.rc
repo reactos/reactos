@@ -191,7 +191,6 @@ BEGIN
     IDS_APPLICATIONS "Aplikace"
     IDS_CHOOSE_FOLDER_TEXT "Zvolte složku, do které se budou ukládat stažené soubory:"
     IDS_CHOOSE_FOLDER_ERROR "Zvolená složka neexistuje. Vytvořit?"
-    IDS_USER_NOT_ADMIN "Ke spuštění ""ReactOS Manažera aplikací"" je třeba být administrátor!"
     IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
     IDS_INFORMATION "Informace"
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"

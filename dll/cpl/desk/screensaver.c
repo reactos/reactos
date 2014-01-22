@@ -333,11 +333,17 @@ SearchScreenSavers(HWND hwndScreenSavers,
     ScreenSaverItem *ScreenSaverItem;
     HANDLE           hModule;
     UINT             i, ScreenSaverCount;
+    HRESULT hr;
 
     ScreenSaverCount = pData->ScreenSaverCount;
 
-    _tcscpy(szSearchPath, pszSearchPath);
-    _tcscat(szSearchPath, TEXT("\\*.scr"));
+    
+    hr = StringCbCopy(szSearchPath, sizeof(szSearchPath), pszSearchPath);
+    if (FAILED(hr))
+        return;
+    hr = StringCbCat(szSearchPath, sizeof(szSearchPath), TEXT("\\*.scr"));
+    if (FAILED(hr))
+        return;
 
     hFind = FindFirstFile(szSearchPath, &fd);
 
@@ -351,9 +357,24 @@ SearchScreenSavers(HWND hwndScreenSavers,
         {
             TCHAR filename[MAX_PATH];
 
-            _tcscpy(filename, pszSearchPath);
-            _tcscat(filename, _T("\\"));
-            _tcscat(filename, fd.cFileName);
+            hr = StringCbCopy(filename, sizeof(filename), pszSearchPath);
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
+            hr = StringCbCat(filename, sizeof(filename), _T("\\"));
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
+            hr = StringCbCat(filename, sizeof(filename), fd.cFileName);
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
 
             ScreenSaverItem = pData->ScreenSaverItems + ScreenSaverCount;
 
@@ -370,17 +391,33 @@ SearchScreenSavers(HWND hwndScreenSavers,
                           sizeof(ScreenSaverItem->szDisplayName) / sizeof(TCHAR)))
                 {
                     // If the string does not exists, copy the name of the file
-                    _tcscpy(ScreenSaverItem->szDisplayName, fd.cFileName);
+                    hr = StringCbCopy(ScreenSaverItem->szDisplayName, sizeof(ScreenSaverItem->szDisplayName), fd.cFileName);
+                    if (FAILED(hr))
+                    {
+                        FreeLibrary(hModule);
+                        FindClose(hFind);
+                        return;
+                    }
                     ScreenSaverItem->szDisplayName[_tcslen(fd.cFileName)-4] = '\0';
                 }
                 FreeLibrary(hModule);
             }
             else
             {
-               _tcscpy(ScreenSaverItem->szDisplayName, _T("Unknown"));
+                hr = StringCbCopy(ScreenSaverItem->szDisplayName, sizeof(ScreenSaverItem->szDisplayName), _T("Unknown"));
+                if (FAILED(hr))
+                {
+                    FindClose(hFind);
+                    return;
+                }
             }
 
-            _tcscpy(ScreenSaverItem->szFilename, filename);
+            hr = StringCbCopy(ScreenSaverItem->szFilename, sizeof(ScreenSaverItem->szFilename), filename);
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
 
             i = SendMessage(hwndScreenSavers,
                             CB_ADDSTRING,

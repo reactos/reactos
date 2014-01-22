@@ -9,10 +9,6 @@
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
-//#ifndef NSTATUS
-//typedef long NTSTATUS;
-//#endif
-
 #include "powercfg.h"
 
 HWND hAdv = 0;

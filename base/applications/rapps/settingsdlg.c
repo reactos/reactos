@@ -113,7 +113,9 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                     if (dwAttr != INVALID_FILE_ATTRIBUTES &&
                         (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
                     {
-                        wcscpy(NewSettingsInfo.szDownloadDir, szDir);
+                        StringCbCopyW(NewSettingsInfo.szDownloadDir,
+                                      sizeof(NewSettingsInfo.szDownloadDir),
+                                      szDir);
                     }
                     else
                     {

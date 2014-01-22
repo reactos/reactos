@@ -12,6 +12,10 @@
 #include <initguid.h>
 #include <vfw.h>
 
+/* editstream.c */
+DEFINE_AVIGUID(IID_IEditStreamInternal, 0x0002000A,0,0);
+
+/* avifile_private.h */
 DEFINE_AVIGUID(CLSID_ICMStream, 0x00020001, 0, 0);
 DEFINE_AVIGUID(CLSID_WAVFile,   0x00020003, 0, 0);
 DEFINE_AVIGUID(CLSID_ACMStream, 0x0002000F, 0, 0);

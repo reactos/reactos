@@ -1,30 +1,25 @@
-#define COBJMACROS
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
+#define COBJMACROS
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <wincon.h>
-#include <shellapi.h>
 #include <commdlg.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <assert.h>
-#include <shlwapi.h>
 #include <shlobj.h>
 #include <regstr.h>
-#include <cplext.h>
 #include <dll/desk/deskcplx.h>
-#include <cfgmgr32.h>
-#include <uxtheme.h>
-#include <uxundoc.h>
-#include <vssym32.h>
+#include <strsafe.h>
 
 #include "appearance.h"
 #include "preview.h"

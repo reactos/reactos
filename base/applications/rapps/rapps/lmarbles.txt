@@ -5,7 +5,7 @@ Name = LMarbles
 Version = 1.0.6
 Licence = GPL
 Description = Atomix Clone using SDL libs.
-Size = 1.39MB
+Size = 1.39 MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LMarbles
 URLDownload = http://garr.dl.sourceforge.net/project/lgames/binaries/lmarbles-1.0.6-win32.exe

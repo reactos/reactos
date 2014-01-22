@@ -12,6 +12,8 @@
 
 #include "winlogon.h"
 
+#include <ndk/cmfuncs.h>
+
 /* GLOBALS ******************************************************************/
 
 HINSTANCE hAppInstance;
@@ -334,6 +336,9 @@ WinMain(
     ZeroMemory(WLSession, sizeof(WLSESSION));
     WLSession->DialogTimeout = 120; /* 2 minutes */
 
+    /* Initialize the dialog tracking list */
+    InitDialogListHead();
+
     if (!CreateWindowStationAndDesktops(WLSession))
     {
         ERR("WL: Could not create window station and desktops\n");
@@ -424,7 +429,7 @@ WinMain(
     //DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
 
     /* Display logged out screen */
-    WLSession->LogonState = STATE_LOGGED_OFF;
+    WLSession->LogonState = STATE_INIT;
     RemoveStatusMessage(WLSession);
 
     /* Check for pending setup */
@@ -437,7 +442,7 @@ WinMain(
         RunSetup();
     }
     else
-        PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
+        PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
 
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */

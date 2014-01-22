@@ -23,6 +23,8 @@
 
 #include "precomp.h"
 
+#include "proclist.h"
+
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
 
@@ -468,25 +470,25 @@ void UpdateProcesses()
 
 BOOL ProcessRunning(ULONG ProcessId) 
 {
-	HANDLE hProcess;
-	DWORD exitCode;
+    HANDLE hProcess;
+    DWORD exitCode;
 
-	if (ProcessId == 0) {
-		return TRUE;
-	}
-	
-	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ProcessId);
-	if (hProcess == NULL) {
-		return FALSE;
-	}
+    if (ProcessId == 0) {
+        return TRUE;
+    }
 
-	if (GetExitCodeProcess(hProcess, &exitCode)) {
-		CloseHandle(hProcess);
-		return (exitCode == STILL_ACTIVE);
-	}
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ProcessId);
+    if (hProcess == NULL) {
+        return FALSE;
+    }
 
-	CloseHandle(hProcess);
-	return FALSE;
+    if (GetExitCodeProcess(hProcess, &exitCode)) {
+        CloseHandle(hProcess);
+        return (exitCode == STILL_ACTIVE);
+    }
+
+    CloseHandle(hProcess);
+    return FALSE;
 }
 
 void AddProcess(ULONG Index)

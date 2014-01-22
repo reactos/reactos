@@ -44,7 +44,7 @@ BEGIN
     LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Was wollen Sie tun?", IDC_STATIC, 10, 119, 255, 8
     PUSHBUTTON "Computer sperren", IDC_LOCK, 10, 135, 76, 14
-    PUSHBUTTON "Abmelden", IDC_LOGOFF, 100, 135, 75, 14
+    PUSHBUTTON "Abmelden...", IDC_LOGOFF, 100, 135, 75, 14
     PUSHBUTTON "Herunterfahren", IDC_SHUTDOWN, 189, 135, 76, 14
     PUSHBUTTON "Password ändern", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
     PUSHBUTTON "Task-Manager", IDC_TASKMGR, 100, 154, 75, 14
@@ -100,6 +100,17 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 218, 145, 50, 14
 END
 
+IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
+CAPTION "Von ReactOS abmelden"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    ICON IDI_LOCKICON, -1, 7, 7, 20, 20
+    LTEXT "Wollen Sie sich wirklich abmelden?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Ja", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Nein", IDNO, 95, 39, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Willkommen!"
@@ -111,4 +122,7 @@ BEGIN
     IDS_LOCKMSG "Nur %s oder ein Administrator kann den Computer entsperren."
     IDS_LOGONMSG "Sie sind angemeldet als %s."
     IDS_LOGONDATE "Anmeldedatum: %s %s"
+    IDS_COMPUTERLOCKED "Computer ist gesperrt"
+    IDS_LOCKEDWRONGPASSWORD "Das Kennwort ist falsch.  Bitte geben Sie das Kennwort erneut ein.  Bei Buchstaben des Kennworts wird Groß- und Kleinschreibung unterschieden."
+    IDS_LOCKEDWRONGUSER "Der Computer ist gesperrt.  Nur %s\\%s oder ein Administrator kann den Computer entsperren."
 END

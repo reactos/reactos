@@ -2,13 +2,13 @@
 
 [Section]
 Name = IrfanView
-Version = 4.36
+Version = 4.37
 Licence = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
-Size = 1.77MB
+Size = 1.8 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://ring.maffin.ad.jp/archives/pc/forest/i/irfanview/10829/iview436_setup.exe
+URLDownload = http://ring.maffin.ad.jp/archives/pc/forest/i/irfanview/10829/iview437_setup.exe
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ Description = Visor para toda clase de archivos de imagen,audio y video.
 [Section.040c]
 Licence = Gratuit (pour un usage personnel)
 Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
-Size = 1,57 Mo
+Size = 1,8 Mo
 
 [Section.0410]
 Licence = Gratuita (per uso personale)
@@ -38,8 +38,8 @@ Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz
 
 [Section.0418]
 Licence = Gratuită (pentru uz personal)
-Description = Lector pentru multiple formate de fișiere grafice/audio/video.
-Size = 1,57 Mo
+Description = Lector pentru multiple formaturi de fișiere grafice/audio/video.
+Size = 1,8 Mo
 
 [Section.041f]
 Licence = Şahsî kullanımlar için ücretsiz.

@@ -9,7 +9,6 @@
 
 #include <pseh/pseh2.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(wgl);
 
 static CRITICAL_SECTION dc_data_cs = {NULL, -1, 0, 0, 0, 0};

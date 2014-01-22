@@ -23,7 +23,9 @@
  */
 
 #include "devenum_private.h"
+
 #include <ocidl.h>
+#include <oleauto.h>
 
 typedef struct
 {

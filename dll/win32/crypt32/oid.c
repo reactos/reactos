@@ -19,8 +19,6 @@
 
 #include "crypt32_private.h"
 
-#include "cryptres.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 static const WCHAR DllW[] = { 'D','l','l',0 };

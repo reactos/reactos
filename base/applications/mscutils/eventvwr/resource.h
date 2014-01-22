@@ -49,6 +49,8 @@
 
 /* String IDs */
 #define IDS_APP_TITLE                 103
+#define IDS_APP_TITLE_EX              104
+#define IDS_STATUS_MSG                106
 #define IDS_EVENTSTRINGIDNOTFOUND     209
 #define IDS_EVENTLOG_ERROR_TYPE       251
 #define IDS_EVENTLOG_WARNING_TYPE     252

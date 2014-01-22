@@ -227,12 +227,16 @@ ThreadFunc(LPVOID Context)
             AppInfo->szUrlDownload[len - 1] == 'b')
         {
             bCab = TRUE;
-            if (!GetCurrentDirectoryW(MAX_PATH, path))
+            if (!GetStorageDirectory(path, sizeof(path) / sizeof(path[0])))
                 goto end;
         }
         else
         {
-            wcscpy(path, SettingsInfo.szDownloadDir);
+            if (FAILED(StringCbCopyW(path, sizeof(path),
+                                     SettingsInfo.szDownloadDir)))
+            {
+                goto end;
+            }
         }
     }
     else goto end;
@@ -243,8 +247,10 @@ ThreadFunc(LPVOID Context)
             goto end;
     }
 
-    wcscat(path, L"\\");
-    wcscat(path, p + 1);
+    if (FAILED(StringCbCatW(path, sizeof(path), L"\\")))
+        goto end;
+    if (FAILED(StringCbCatW(path, sizeof(path), p + 1)))
+        goto end;
 
     /* download it */
     bTempfile = TRUE;
@@ -353,7 +359,12 @@ DownloadApplicationsDB(LPWSTR lpUrl)
     APPLICATION_INFO IntInfo;
 
     ZeroMemory(&IntInfo, sizeof(APPLICATION_INFO));
-    wcscpy(IntInfo.szUrlDownload, lpUrl);
+    if (FAILED(StringCbCopyW(IntInfo.szUrlDownload,
+                             sizeof(IntInfo.szUrlDownload),
+                             lpUrl)))
+    {
+        return;
+    }
 
     AppInfo = &IntInfo;
 

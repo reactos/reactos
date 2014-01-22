@@ -62,8 +62,8 @@ BEGIN
     RTEXT "Producent:", -1, 20, 35, 70, 10
     RTEXT "GPU:", -1, 20, 45, 70, 10
     RTEXT "Typ DAC:", -1, 20, 55, 70, 10
-    RTEXT "Pamięć:", -1, 20, 65, 70, 10
-    RTEXT "Bieżąca rozdzielczość:", -1, 20, 75, 70, 10
+    RTEXT "Pamięć:", -1, 14, 65, 75, 10
+    RTEXT "Bieżąca rozdzielczość:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -198,7 +198,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "ID Producenta"
     IDS_DEVICE_PRODUCT "ID Produktu"
     IDS_DEVICE_FORCEFEEDBACK "Sterowniki Force-Feedback"
-    IDS_NOT_APPLICABLE "Nie stosowane"
+    IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Tak"
     IDS_DIRECTPLAY_COL_NAME1 "Nazwa"
     IDS_DIRECTPLAY_COL_NAME2 "Rejestr"

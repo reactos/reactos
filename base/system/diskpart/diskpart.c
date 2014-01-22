@@ -8,7 +8,13 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include "diskpart.h"
+
+#include <stdlib.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winuser.h>
 
 /* FUNCTIONS ******************************************************************/
 VOID

@@ -10,6 +10,8 @@
 
 #include "desk.h"
 
+#include <shellapi.h>
+
 #define MAX_BACKGROUNDS     100
 
 #define PLACEMENT_CENTER    0
@@ -86,6 +88,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     TCHAR *token;
     HWND hwndBackgroundList;
     TCHAR *p;
+    HRESULT hr;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
@@ -132,7 +135,12 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
             /* Allow environment variables in file name */
             if (ExpandEnvironmentStrings(wallpaperFilename, buffer, MAX_PATH))
             {
-                _tcscpy(wallpaperFilename, buffer);
+                hr = StringCbCopy(wallpaperFilename, sizeof(wallpaperFilename), buffer);
+                if (FAILED(hr))
+                {
+                    RegCloseKey(regKey);
+                    return;
+                }
             }
 
             himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
@@ -153,11 +161,23 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
 
                 backgroundItem->bWallpaper = TRUE;
 
-                _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+                hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+                if (FAILED(hr))
+                {
+                    RegCloseKey(regKey);
+                    return;
+                }
+
                 p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
                 if (p)
                     *p = (TCHAR)0;
-                _tcscpy(backgroundItem->szFilename, wallpaperFilename);
+
+                hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
+                if (FAILED(hr))
+                {
+                    RegCloseKey(regKey);
+                    return;
+                }
 
                 ZeroMemory(&listItem, sizeof(LV_ITEM));
                 listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
@@ -188,8 +208,13 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     while (token != NULL)
     {
         GetWindowsDirectory(szSearchPath, MAX_PATH);
-        _tcscat(szSearchPath, TEXT("\\"));
-        _tcscat(szSearchPath, token);
+        
+        hr = StringCbCat(szSearchPath, sizeof(szSearchPath), TEXT("\\"));
+        if (FAILED(hr))
+            return;
+        hr = StringCbCat(szSearchPath, sizeof(szSearchPath), token);
+        if (FAILED(hr))
+            return;
 
         hFind = FindFirstFile(szSearchPath, &fd);
         while (hFind != INVALID_HANDLE_VALUE)
@@ -198,8 +223,18 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
 
             GetWindowsDirectory(filename, MAX_PATH);
 
-            _tcscat(filename, TEXT("\\"));
-            _tcscat(filename, fd.cFileName);
+            hr = StringCbCat(filename, sizeof(filename), TEXT("\\"));
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
+            hr = StringCbCat(filename, sizeof(filename), fd.cFileName);
+            if (FAILED(hr))
+            {
+                FindClose(hFind);
+                return;
+            }
 
             /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
             if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcscmp(wallpaperFilename, filename) != 0))
@@ -223,11 +258,21 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
 
                 backgroundItem->bWallpaper = TRUE;
 
-                _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+                hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+                if (FAILED(hr))
+                {
+                    FindClose(hFind);
+                    return;
+                }
                 p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
                 if (p)
                     *p = (TCHAR)0;
-                _tcscpy(backgroundItem->szFilename, filename);
+                hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), filename);
+                if (FAILED(hr))
+                {
+                    FindClose(hFind);
+                    return;
+                }
 
                 ZeroMemory(&listItem, sizeof(LV_ITEM));
                 listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
@@ -247,6 +292,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
         }
 
         token = _tcstok(NULL, separators);
+        FindClose(hFind);
     }
 }
 
@@ -426,6 +472,7 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     LV_ITEM listItem;
     HWND hwndBackgroundList;
     TCHAR *p;
+    HRESULT hr;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
@@ -467,11 +514,15 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
 
         backgroundItem->bWallpaper = TRUE;
 
-        _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+        hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+        if (FAILED(hr))
+            return;
         p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
         if (p)
             *p = (TCHAR)0;
-        _tcscpy(backgroundItem->szFilename, filename);
+        hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), filename);
+        if (FAILED(hr))
+            return;
 
         ZeroMemory(&listItem, sizeof(LV_ITEM));
         listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
@@ -734,7 +785,7 @@ SetDesktopBackColor(HWND hwndDlg, DATA *pData)
         green = GetGValue(g_GlobalData.desktop_color);
         blue  = GetBValue(g_GlobalData.desktop_color);
         /* Format string to be set to registry */
-        wsprintf(clText, TEXT("%d %d %d"), red, green, blue);
+        StringCbPrintf(clText, sizeof(clText), TEXT("%d %d %d"), red, green, blue);
         RegSetValueEx(hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText,
                       (lstrlen(clText) + 1) * sizeof(TCHAR));
         RegCloseKey(hKey);

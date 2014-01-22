@@ -1,8 +1,7 @@
 /* 
  * FILE:       dll/win32/rasdlg/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-09-12  initial translation
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -534,7 +533,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tastați numele pe care îl dați acestei conexiuni:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Apăsați „Termină” pentru a o păstra în „Conexiuni de rețea”.", -1, 8, 38, 193, 8
+    LTEXT "Apăsați „Sfârșit” pentru a o păstra în „Conexiuni de rețea”.", -1, 8, 38, 193, 8
     LTEXT "Puteți edita această conexiune mai târziu, alegând „Proprietăți” din meniul „Fișier”.", -1, 8, 58, 193, 16
 END
 
@@ -607,7 +606,7 @@ BEGIN
     AUTOCHECKBOX "La apelare, &pornește monitorizarea rețelei de linie comutată", 1138, 8, 44, 226, 10
     AUTOCHECKBOX "Reprezintă &evoluția conectării în timpul apelării", 1143, 8, 61, 224, 10
     AUTOCHECKBOX "A&scunde la apelare", 1137, 8, 79, 220, 10
-    AUTOCHECKBOX "&Utilizează expertul de creare a noilor numere în agendă", 1144, 8, 97, 220, 10
+    AUTOCHECKBOX "&Utilizează asistentul de creare a noilor numere în agendă", 1144, 8, 97, 220, 10
     AUTOCHECKBOX "Solicită confir&mare pentru autoapelări", 1136, 8, 114, 220, 10
 END
 
@@ -640,7 +639,7 @@ BEGIN
     AUTOCHECKBOX "E&xecută script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
     COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Editare…", 1182, 87, 187, 60, 14
-    PUSHBUTTON "&Răsfoire…", 1181, 151, 187, 60, 14
+    PUSHBUTTON "Spe&cificare…", 1181, 151, 187, 60, 14
 END
 
 163 DIALOGEX 0, 0, 317, 143
@@ -726,7 +725,7 @@ BEGIN
     AUTORADIOBUTTON "Agenda p&ersonală", 1324, 14, 34, 216, 10
     AUTORADIOBUTTON "Această agendă &alternativă:", 1323, 14, 46, 217, 10
     COMBOBOX 1321, 26, 61, 201, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "&Răsfoire…", 1322, 167, 81, 60, 14
+    PUSHBUTTON "Spe&cificare…", 1322, 167, 81, 60, 14
 END
 
 170 DIALOGEX 6, 18, 235, 135
@@ -738,7 +737,7 @@ BEGIN
     AUTORADIOBUTTON "Agenda siste&mului", 1325, 14, 22, 217, 10, WS_GROUP
     AUTORADIOBUTTON "Această agendă &alternativă:", 1323, 14, 36, 216, 10
     COMBOBOX 1321, 26, 51, 203, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
-    PUSHBUTTON "&Răsfoire…", 1322, 169, 69, 60, 14
+    PUSHBUTTON "Spe&cificare…", 1322, 169, 69, 60, 14
 END
 
 171 DIALOGEX 6, 18, 317, 144
@@ -760,7 +759,7 @@ BEGIN
     AUTOCHECKBOX "E&xecută scriptul:", 1463, 15, 45, 78, 10
     COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Editare…", 1335, 180, 77, 60, 14
-    PUSHBUTTON "&Răsfoire…", 1465, 244, 77, 60, 14
+    PUSHBUTTON "Spe&cificare…", 1465, 244, 77, 60, 14
 END
 
 173 DIALOGEX 6, 18, 230, 215
@@ -794,8 +793,8 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Expertul de completare a interfeței de apel la cerere.", 1352, 122, 5, 192, 32
-    LTEXT "Ca să finalizați crearea aceastei interfețe și să o activați în serverul de redirecționare, apăsați „Termină”.", 1354, 122, 41, 192, 26, NOT WS_GROUP
+    LTEXT "Asistentul de completare a interfeței de apel la cerere.", 1352, 122, 5, 192, 32
+    LTEXT "Ca să finalizați crearea aceastei interfețe și să o activați în serverul de redirecționare, apăsați „Sfârșit”.", 1354, 122, 41, 192, 26, NOT WS_GROUP
     LTEXT "Pentru a edita această interfață, mergeți în „Gestionarul de redirecționări și acces la distanță”, selectați-o în „Interfețe de redirecționare”, apoi apăsați Proprietăți.", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
 
@@ -1082,11 +1081,11 @@ END
 
 547 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Expertul pentru interfeța de apelare la cerere"
+CAPTION "Asistentul pentru interfeța de apelare la cerere"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la expertul pentru interfața de apelare la cerere.", 1530, 122, 8, 192, 32
-    LTEXT "Utilizând acest expert veți putea crea o interfață de apelare la cerere pentru a conecta acest server de redirecționare la alte asemenea servere.", 1531, 122, 43, 192, 37
+    LTEXT "Bun venit la asistentul pentru interfața de apelare la cerere.", 1530, 122, 8, 192, 32
+    LTEXT "Utilizând acest asistent veți putea crea o interfață de apelare la cerere pentru a conecta acest server de redirecționare la alte asemenea servere.", 1531, 122, 43, 192, 37
     LTEXT "Apăsați „Înainte” pentru a continua.", 1532, 122, 85, 191, 29
 END
 
@@ -1338,7 +1337,7 @@ BEGIN
     GROUPBOX "Opțiuni ale fișierului jurnal:", -1, 7, 64, 215, 91
     LTEXT "N&ume:", -1, 14, 78, 199, 8
     EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
-    PUSHBUTTON "&Răsfoire…", 1639, 153, 108, 60, 14
+    PUSHBUTTON "Spe&cificare…", 1639, 153, 108, 60, 14
     LTEXT "&Limită dimensiune:", -1, 14, 133, 67, 8
     EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "kocteți", -1, 140, 133, 25, 8
@@ -1885,7 +1884,7 @@ BEGIN
     236 "Există deja o înregistrare %1.  Alegeți un alt nume.\0"
     237 "Puteți permite trimiterea parolei fără criptare.\0"
     238 "Criptarea parolei\0"
-    239 "Expertul este pregătit pentru crearea conexiunii.\0"
+    239 "Asistentul este pregătit pentru crearea conexiunii.\0"
     240 "Terminat\0"
     241 "Număr de &telefon:\0"
     242 "Retroapel la\0"
@@ -1909,7 +1908,7 @@ BEGIN
     260 "%1 CP este conectată.\n\0"
     261 "Puteți alege care dintre protocoalele de linie comutată îl folosiți.\0"
     262 "Alegeți protocolul de linie comutată\0"
-    263 "Apăsați „Termină” pentru a păstra '%1'.\0"
+    263 "Apăsați „Sfârșit” pentru a păstra '%1'.\0"
     264 "netcfg.hlp\0"
     265 "&Mutați numărul testat cu succes în capul listei de conectare\0"
     266 "N&oul număr de telefon:\0"
@@ -2360,7 +2359,7 @@ BEGIN
     7389 "Dispozitivul ales nu are disponibile opțiuni de configurare.\0"
     7390 "Domeniu nevalid\0"
     7391 "Ați cerut ca „%1” să fie dezactivat pentru conexiunile de intrare.  Pentru a dezactiva aceasta, e necesară oprirea serviciului „Server”.  Odată oprit, nici un director partajat sau imprimantă din acest calculator nu vor mai fi disponibile altor calculatoare.  Doriți scoaterea unei console sistem care va permite oprirea serviciului „Server”?\r\n\nÎn „Gestionarea calculatorului”, clic pe „Instrumente de sistem”, apoi clic pe „Servicii”.  În panoul din dreapta, clic-dreapta pe „Server”, apoi alegeți oprirea lui.\0"
-    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator.  Acest expert îl va activa.  Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
+    7392 "Acest port serial nu este activat pentru utilizarea într-o conexiune directă cu un alt calculator.  Acest asistent îl va activa.  Îi veți putea configura după asta viteza portului și alte proprietăți prin executarea unui clic-dreapta pe pictograma conexiunii, apoi alegând Proprietăți.\n\0"
     7393 "Conexiuni de intrare\0"
     7394 "Fondul de adrese IP introdus este nevalid.\0"
     7395 "Masca furnizată nu este validă.\0"

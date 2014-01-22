@@ -22,6 +22,7 @@
 Implements the logo band of a cabinet window. Most remarkable feature is the
 animation.
 */
+
 #include "precomp.h"
 
 /*

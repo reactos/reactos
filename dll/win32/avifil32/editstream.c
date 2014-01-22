@@ -18,8 +18,6 @@
 
 #include "avifile_private.h"
 
-#include <initguid.h>
-
 /***********************************************************************/
 
 /* internal interface to get access to table of stream in an editable stream */

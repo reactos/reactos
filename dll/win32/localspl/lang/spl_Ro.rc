@@ -2,6 +2,7 @@
  * Copyright 2005 Huw Davies
  * Copyright 2006 Detlef Riekenberg
  * Copyright 2008 Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,5 +26,5 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     IDS_LOCALPORT "Port local"
-    IDS_LOCALMONITOR "Monitor local"
+    IDS_LOCALMONITOR "Ecran local"
 }

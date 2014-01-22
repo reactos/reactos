@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "smss.h"
+
+#include <pseh/pseh2.h>
+
 #define NDEBUG
 #include <debug.h>
 

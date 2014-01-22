@@ -16,11 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "shlobj.h"
-
-#include <windef.h>
-#include <winuser.h>
-#include <commctrl.h>
+#pragma once
 
 #define IDD_CONFIGUREDEVICES                    1
 

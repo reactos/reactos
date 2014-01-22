@@ -6,6 +6,7 @@
  *					an interactive way
  * PROGRAMMERS:     Lee Schroeder
  */
+
 #include "diskpart.h"
 
 BOOL detach_main(INT argc, LPWSTR *argv)

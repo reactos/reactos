@@ -20,6 +20,7 @@
  */
 
 #include "dmusic_private.h"
+
 #include <assert.h>
 
 static inline IDirectMusicDownloadedInstrumentImpl* impl_from_IDirectMusicDownloadedInstrument(IDirectMusicDownloadedInstrument *iface)

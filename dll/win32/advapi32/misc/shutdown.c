@@ -8,6 +8,9 @@
  */
 
 #include <advapi32.h>
+
+#include <ndk/exfuncs.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /**********************************************************************

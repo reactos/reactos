@@ -93,6 +93,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Shikues ngjarjesh"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Përshkrimi për ngjarjet ID ( %lu ) në burim ( %s ) nuk gjindet. Kompjuter vendas mund të mos ketë informacionin e regjistrit te nevojshem ose mesazhin për dokumentat DLL për të shfaqur nga një kompjuter në distancë."
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Paralajmërim"

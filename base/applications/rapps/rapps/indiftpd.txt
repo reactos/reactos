@@ -5,7 +5,7 @@ Name = IndiFTPD
 Version = 1.0.9 Beta
 Licence = GPL
 Description = IndiFTPD is a standalone FTP server that functions as a single executable. It is designed for situations when a user does not want to install/configure a server on the system (or does not have permission to do so) and wants to quickly get a server running.
-Size = 556kB
+Size = 556 kB
 Category = 5
 URLSite = http://www.dftpd.com/products.php#indiftpd
 URLDownload = http://www.dftpd.com/files/IndiFTPD/1.0.9_beta/Windows/Intel/indiftpd.exe
@@ -16,6 +16,10 @@ Description = IndiFTPD ist ein eigenständiger FTP Server in einer einzigen Anwe
 
 [Section.0410]
 Description = IndiFTPD è un server FTP autonomo che funziona come un unico eseguibile. È stato progettato per le situazioni quando un utente non vuole installare / configurare un server sul sistema (o non ha il permesso di farlo), e vuole ottenere rapidamente un server che esegue.
+
+[Section.0418]
+Description = IndiFTPD este un server FTP de sine stătător, într-un singur executabil. A fost gândit pentru situațiile în care un utilizator nu dorește instalarea/configurarea unui server în sistem (sau nu deține privelegiile necesare) însă dorește obținerea rapidă a unui server funcțional.
+Size = 556 ko
 
 [Section.041f]
 Description = IndiFTPD, bağımsız (bir tek çalıştırılabilir kütükten oluşan) bir FTP sunucusudur. Bu yazılım, çabucak çalışan bir sunucuya iye olmak isteyen, ancak dizgesinde bir sunucu kurmak/ayarlamak istemeyen veyâ dizgesine bir sunucu kuramayan/ayarlayamayan kullanıcılar için tasarlanmıştır.

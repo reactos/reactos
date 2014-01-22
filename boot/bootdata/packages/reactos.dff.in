@@ -31,6 +31,7 @@ Signature = "$ReactOS$"
 15 = Resources
 16 = Resources\Themes
 17 = system32\wbem
+18 = Resources\Themes\Lautus
 
 .InfEnd
 

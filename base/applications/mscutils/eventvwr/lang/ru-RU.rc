@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Просмотр событий"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера."
     IDS_EVENTLOG_ERROR_TYPE "Ошибка"
     IDS_EVENTLOG_WARNING_TYPE "Предупреждение"

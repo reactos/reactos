@@ -1351,7 +1351,7 @@ MUI_ERROR itITErrorEntries[] =
         "\n"
         "Il creare o cancellare partizioni pu• distruggere la tabella delle partizioni.\n"
         "\n"
-        "  \x07  Premere F3 per uscire dal Setup."
+        "  \x07  Premere F3 per uscire dal Setup.\n"
         "  \x07  Premere INVIO per continuare.",
         "F3= Uscire  INVIO = Continuare"
     },

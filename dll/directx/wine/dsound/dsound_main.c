@@ -32,42 +32,10 @@
  *      Remove DS_HEL_FRAGS and use mixer fragment length for it
  */
 
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-#include <windef.h>
-#include <winbase.h>
-//#include "winuser.h"
-#include <winnls.h>
-#include <winreg.h>
-//#include "mmsystem.h"
-#include <winternl.h>
-#include <mmddk.h>
-#include <wine/debug.h>
-#include <dsound.h>
-#include <dsconf.h>
-//#include "ks.h"
-#include <rpcproxy.h>
-//#include "rpc.h"
-//#include "rpcndr.h"
-//#include "unknwn.h"
-//#include "oleidl.h"
-//#include "shobjidl.h"
-
-#include <initguid.h>
-//#include "ksmedia.h"
-//#include "propkey.h"
-#include <devpkey.h>
-
 #include "dsound_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(dsound);
+#include <winreg.h>
+#include <rpcproxy.h>
 
 struct list DSOUND_renderers = LIST_INIT(DSOUND_renderers);
 CRITICAL_SECTION DSOUND_renderers_lock;

@@ -23,10 +23,10 @@ RichEditOnLink(HWND hwnd, ENLINK *Link)
         {
             if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
 
-            pLink = (PWSTR) HeapAlloc(GetProcessHeap(),
-                                      0,
-                                      (max(Link->chrg.cpMin, Link->chrg.cpMax) -
-                                       min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
+            pLink = HeapAlloc(GetProcessHeap(),
+                              0,
+                              (max(Link->chrg.cpMin, Link->chrg.cpMax) -
+                               min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
             if (!pLink)
             {
                 /* TODO: Error message */
@@ -36,7 +36,7 @@ RichEditOnLink(HWND hwnd, ENLINK *Link)
             SendMessageW(hRichEdit, EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
             SendMessageW(hRichEdit, EM_GETSELTEXT, 0, (LPARAM)pLink);
 
-            ShowPopupMenu(hwnd, IDR_LINKMENU);
+            ShowPopupMenu(hwnd, IDR_LINKMENU, -1);
         }
         break;
     }

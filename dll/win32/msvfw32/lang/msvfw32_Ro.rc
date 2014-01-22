@@ -2,6 +2,7 @@
  * Copyright 2005 Dmitry Timoshkov
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
+ *           2011 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,26 +30,26 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Compresie video"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON "OK",IDOK,140,2,51,14
-    PUSHBUTTON "Renunță",IDCANCEL,140,18,51,14
+    DEFPUSHBUTTON  "Con&firmă",               IDOK,140,2,51,14
+    PUSHBUTTON     "A&nulează",               IDCANCEL,140,18,51,14
 
-    LTEXT "&Compresor:",-1,9,6,105,8
-    COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+    LTEXT          "Co&mpresor:",             -1,9,6,105,8
+    COMBOBOX                                  880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "Con&figurare...",882,140,36,51,14
-    PUSHBUTTON "&Despre...",883,140,52,51,14
+    PUSHBUTTON     "&Configurare…",           882,140,36,51,14
+    PUSHBUTTON     "&Despre…",                883,140,52,51,14
 
-    SCROLLBAR 884,9,44,111,9,WS_TABSTOP
+    SCROLLBAR                                 884,9,44,111,9,WS_TABSTOP
 
-    LTEXT "Ca&litatea compresiei:",886,9,34,80,8
+    LTEXT          "C&alitatea compresiei:",  886,9,34,80,8
 
-    CONTROL "Cadru c&heie la fiecare",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,82,12
-    EDITTEXT 888,93,60,22,12
-    LTEXT "cadre",889,118,62,22,10
+    CONTROL        "Cadru c&heie la fiecare", 887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,82,12
+    EDITTEXT                                  888,93,60,22,12
+    LTEXT          "cadre",                   889,118,62,22,10
 
-    CONTROL "Rata de &date",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,70,12
-    EDITTEXT 895,93,76,22,12
-    LTEXT "KO/sec",896,118,78,22,10
+    CONTROL        "&Rata de date",           894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,70,12
+    EDITTEXT                                  895,93,76,22,12
+    LTEXT          "ko/s",                    896,118,78,22,10
 }
 
 STRINGTABLE

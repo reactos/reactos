@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Visualizzatore eventi"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "La descrizione per l'ID evento ( %lu ) proveniente da ( %s ) non può essere trovata. Il computer locale potrebbe non avere le informazioni sul registry necessarie o i file DLL con i messaggi necessari per la visualizzazione da un computer remoto."
     IDS_EVENTLOG_ERROR_TYPE "Errore"
     IDS_EVENTLOG_WARNING_TYPE "Avviso"

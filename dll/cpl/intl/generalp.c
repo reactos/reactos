@@ -27,6 +27,8 @@
 
 #include "intl.h"
 
+#include <debug.h>
+
 #define SAMPLE_NUMBER   _T("123456789")
 #define NO_FLAG         0
 

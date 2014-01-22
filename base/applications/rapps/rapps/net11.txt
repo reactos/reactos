@@ -5,7 +5,7 @@ Name = Microsoft .NET Framework Version 1.1 Redistributable Package
 Version = 1.1
 Licence = Unknown
 Description = Microsoft .NET Framework Version 1.1 - Redistributable Package.
-Size = 23.14MB
+Size = 23.14 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/a/a/c/aac39226-8825-44ce-90e3-bf8203e74006/dotnetfx.exe

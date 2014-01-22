@@ -62,7 +62,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     reactos/registry.c
     reactos/arcname.c
     reactos/archwsup.c
-    reactos/binhive.c
     ui/directui.c
     ui/gui.c
     ui/minitui.c

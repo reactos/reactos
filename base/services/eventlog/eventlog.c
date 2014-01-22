@@ -11,6 +11,9 @@
 
 #include "eventlog.h"
 
+#include <stdio.h>
+#include <netevent.h>
+
 #define NDEBUG
 #include <debug.h>
 

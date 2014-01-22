@@ -21,8 +21,6 @@
  * CHANGE LOG:       2011-11-09  initial translation
  */
 
-#include "inetcpl.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* "General" propsheet */

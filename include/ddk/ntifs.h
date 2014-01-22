@@ -11416,19 +11416,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
 
-typedef struct _MBCB {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeIsInZone;
-    ULONG           PagesToWrite;
-    ULONG           DirtyPages;
-    ULONG           Reserved;
-    LIST_ENTRY      BitmapRanges;
-    LONGLONG        ResumeWritePage;
-    BITMAP_RANGE    BitmapRange1;
-    BITMAP_RANGE    BitmapRange2;
-    BITMAP_RANGE    BitmapRange3;
-} MBCB, *PMBCB;
-
 typedef struct _MOVEFILE_DESCRIPTOR {
      HANDLE         FileHandle;
      ULONG          Reserved;

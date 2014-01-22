@@ -55,11 +55,13 @@ static const WCHAR szWindowClass[]          = L"EVENTVWR"; /* the main window cl
 #define MAX_LOADSTRING 255
 
 /* Globals */
-HINSTANCE hInst;                /* current instance */
-WCHAR szTitle[MAX_LOADSTRING];  /* The title bar text */
-HWND hwndMainWindow;            /* Main window */
-HWND hwndListView;              /* ListView control */
-HWND hwndStatus;                /* Status bar */
+HINSTANCE hInst;                            /* current instance */
+WCHAR szTitle[MAX_LOADSTRING];              /* The title bar text */
+WCHAR szTitleTemplate[MAX_LOADSTRING];      /* The logged-on title bar text */
+HWND hwndMainWindow;                        /* Main window */
+HWND hwndListView;                          /* ListView control */
+HWND hwndStatus;                            /* Status bar */
+WCHAR szStatusBarTemplate[MAX_LOADSTRING];  /* The status bar text */
 PEVENTLOGRECORD *g_RecordPtrs = NULL;
 DWORD g_TotalRecords = 0;
 
@@ -97,6 +99,8 @@ wWinMain(HINSTANCE hInstance,
 
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_APP_TITLE_EX, szTitleTemplate, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_STATUS_MSG, szStatusBarTemplate, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     /* Perform application initialization: */
@@ -687,7 +691,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     EndDialog(hwndDlg, 0);
 
 
-    i = swprintf(szWindowTitle, L"%s - %s Log on \\\\", szTitle, lpLogName); /* i = number of characters written */
+    i = swprintf(szWindowTitle, szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
     /* lpComputerName can be NULL here if no records was read */
     dwMaxLength = sizeof(szWindowTitle) / sizeof(WCHAR) - i;
     if(!lpComputerName)
@@ -695,7 +699,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     else
         _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
 
-    swprintf(szStatusText, L"%s has %lu event(s)", lpLogName, dwTotalRecords);
+    swprintf(szStatusText, szStatusBarTemplate, lpLogName, dwTotalRecords);
 
     // Update the status bar
     SendMessageW(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);

@@ -13,6 +13,7 @@ list(APPEND SOURCE
     surface.c
     swapchain.c
     utils.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/dxgi.def)
 
 add_library(dxgi SHARED ${SOURCE} version.rc)

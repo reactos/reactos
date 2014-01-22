@@ -9,31 +9,14 @@
  * daniel@veillard.com
  */
 
-#define IN_LIBXSLT
-#include "libxslt.h"
+#include "precomp.h"
 
-#include <string.h>
-#include <limits.h>
-
-#include <libxml/xmlmemory.h>
-#include <libxml/tree.h>
-#include <libxml/hash.h>
-#include <libxml/xmlerror.h>
-#include <libxml/parserInternals.h>
-#include <libxml/xpathInternals.h>
 #ifdef WITH_MODULES
 #include <libxml/xmlmodule.h>
 #endif
 #include <libxml/list.h>
-#include <libxml/xmlIO.h>
-#include "xslt.h"
-#include "xsltInternals.h"
-#include "xsltutils.h"
-#include "imports.h"
-#include "extensions.h"
 
 #ifdef _WIN32
-#include <stdlib.h>             /* for _MAX_PATH */
 #ifndef PATH_MAX
 #define PATH_MAX _MAX_PATH
 #endif

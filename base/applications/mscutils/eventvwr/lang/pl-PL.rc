@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Podgląd zdarzeń"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID: ( %lu ) nie został odnaleziony w źródle: ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego."
     IDS_EVENTLOG_ERROR_TYPE "Błąd"
     IDS_EVENTLOG_WARNING_TYPE "Ostrzeżenie"

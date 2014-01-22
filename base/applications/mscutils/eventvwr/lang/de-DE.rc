@@ -87,6 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Ereignisanzeige"
+    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
+    IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt."
     IDS_EVENTLOG_ERROR_TYPE "Fehler"
     IDS_EVENTLOG_WARNING_TYPE "Warnung"

@@ -1,6 +1,7 @@
 /*
  * Copyright 2007 Robert Shearman (for CodeWeavers)
  * Copyright 2009 Michael Stefaniuc
+ *           2011 Fulea Ștefan
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,26 +29,26 @@ STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "IDS_TITLEFORMAT"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
-                    0,213,37
-    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "Nume &utilizator:",-1,8,62,72,12,SS_CENTERIMAGE
-    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
-                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "&Parolă:",-1,8,80,72,12,SS_CENTERIMAGE
-    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "Ține minte pa&rola",IDC_SAVE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
-    DEFPUSHBUTTON   "OK",IDOK,97,128,50,14
-    PUSHBUTTON      "Renunță",IDCANCEL,156,128,50,14
+    CONTROL                                IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                                           0,213,37
+    LTEXT           "IDS_MESSAGEFORMAT",   IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "N&ume utilizator:",   -1,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",                    IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                                           CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "&Parolă:",            -1,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT                               IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Ține minte pa&rola",  IDC_SAVE,"Button",
+                                           BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "Con&firmă",           IDOK,97,128,50,14
+    PUSHBUTTON      "A&nulează",           IDCANCEL,156,128,50,14
 END
 
 STRINGTABLE
 {
-    IDS_TITLEFORMAT     "Conectare la %s"
-    IDS_MESSAGEFORMAT   "Conectez la %s"
+    IDS_TITLEFORMAT             "Conectare la „%s”"
+    IDS_MESSAGEFORMAT           "Conectarea la „%s”"
     IDS_INCORRECTPASSWORDTITLE  "Autentificare eșuată"
-    IDS_INCORRECTPASSWORD       "Verificați numele de utilizator și parola."
-    IDS_CAPSLOCKONTITLE "Tasta Caps Lock este activată"
-    IDS_CAPSLOCKON      "Cu tasta Caps Lock activată este foarte probabil că veți introduce parola greșit.\n\nInainte de a introduce parola apăsați tasta Caps Lock pentru a dezactiva scrierea cu majuscule."
+    IDS_INCORRECTPASSWORD       "Verificați corectitudinea numelui\nși a parolei de utilizator."
+    IDS_CAPSLOCKONTITLE         "Modul «Caps Lock» este activ"
+    IDS_CAPSLOCKON              "Din cauza modului «Caps Lock» activ, riscați introducerea incorectă a parolei.\n\nInainte de a introduce parola, apăsați «Caps Lock» pentru a dezactiva scrierea cu majuscule."
 }
