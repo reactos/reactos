@@ -8,6 +8,9 @@
 
 #include "lsasrv.h"
 
+#include <ndk/lpcfuncs.h>
+#include <ndk/psfuncs.h>
+
 static LIST_ENTRY LsapLogonContextList;
 
 static HANDLE PortThreadHandle = NULL;
