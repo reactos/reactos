@@ -20,6 +20,8 @@
 
 #include "hhctrl.h"
 
+#include <mshtmhst.h>
+
 typedef struct IOleClientSiteImpl
 {
     IOleClientSite IOleClientSite_iface;

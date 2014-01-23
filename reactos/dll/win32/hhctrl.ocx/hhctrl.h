@@ -26,19 +26,16 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
-#define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <winnls.h>
 #include <htmlhelp.h>
 #include <ole2.h>
 #include <exdisp.h>
-#include <mshtmhst.h>
 #include <commctrl.h>
 
 #include <wine/itss.h>
@@ -48,6 +45,7 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
+#include "resource.h"
 #include "stream.h"
 
 #define WB_GOBACK     0
@@ -326,4 +324,4 @@ static inline LPSTR strdupWtoA(LPCWSTR str)
 extern HINSTANCE hhctrl_hinstance DECLSPEC_HIDDEN;
 extern BOOL hh_process DECLSPEC_HIDDEN;
 
-#endif
+#endif /* HHCTRL_H */

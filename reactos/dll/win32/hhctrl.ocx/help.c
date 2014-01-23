@@ -25,8 +25,6 @@
 #include <wingdi.h>
 #include <wininet.h>
 
-#include "resource.h"
-
 static LRESULT Help_OnSize(HWND hWnd);
 static void ExpandContract(HHInfo *pHHInfo);
 
