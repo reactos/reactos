@@ -22,7 +22,6 @@
 #include "precomp.h"
 
 #include "netspi.h"
-#include "mprres.h"
 
 /***********************************************************************
  *         NPS_ProxyPasswordDialog

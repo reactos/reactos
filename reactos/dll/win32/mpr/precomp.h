@@ -13,6 +13,9 @@
 #include <winnetwk.h>
 
 #include <wine/debug.h>
+
+#include "mprres.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 #endif /* _MPR_PCH_ */
