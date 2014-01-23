@@ -33,7 +33,6 @@
 #include <winreg.h>
 #include <objbase.h>
 #include <cor.h>
-#include <corhdr.h>
 #include <cordebug.h>
 #include <metahost.h>
 
