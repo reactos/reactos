@@ -20,7 +20,7 @@
 
 #include <wine/list.h>
 
-#include <ole2.h>
+#include <oleauto.h>
 #include <initguid.h>
 #define _WINDOWS_H
 #include <dshow.h>
