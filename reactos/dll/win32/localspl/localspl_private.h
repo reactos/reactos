@@ -44,8 +44,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(localspl);
 
-#include "resource.h"
-
 /* ## DLL-wide Globals ## */
 extern HINSTANCE LOCALSPL_hInstance DECLSPEC_HIDDEN;
 void setup_provider(void) DECLSPEC_HIDDEN;
@@ -87,6 +85,5 @@ static inline BOOL heap_free( void *mem )
 {
     return HeapFree( GetProcessHeap(), 0, mem );
 }
-
 
 #endif /* __WINE_LOCALSPL_PRIVATE__ */
