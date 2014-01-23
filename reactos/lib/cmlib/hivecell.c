@@ -120,6 +120,7 @@ HvMarkCellDirty(
 
    RtlSetBits(&RegistryHive->DirtyVector,
               CellBlock, CellLastBlock - CellBlock);
+   RegistryHive->DirtyCount++;
    return TRUE;
 }
 

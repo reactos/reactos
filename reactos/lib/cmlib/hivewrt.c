@@ -265,6 +265,7 @@ HvSyncHive(
 
    /* Clear dirty bitmap. */
    RtlClearAllBits(&RegistryHive->DirtyVector);
+   RegistryHive->DirtyCount = 0;
 
    return TRUE;
 }
