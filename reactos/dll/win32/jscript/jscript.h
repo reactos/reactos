@@ -20,9 +20,7 @@
 #include <wine/port.h>
 
 #include <assert.h>
-#include <math.h>
 #include <stdarg.h>
-#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -32,15 +30,16 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
-#include <ole2.h>
+#include <objbase.h>
+#include <oleauto.h>
 #include <dispex.h>
 #include <activscp.h>
-
-#include <wine/unicode.h>
-#include <wine/list.h>
+#include <objsafe.h>
 
 #include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 #include "resource.h"

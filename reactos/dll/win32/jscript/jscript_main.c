@@ -18,13 +18,11 @@
 
 #include "jscript.h"
 
-#include <initguid.h>
 #include <rpcproxy.h>
+#include <initguid.h>
 #include <jscript_classes.h>
 
 LONG module_ref = 0;
-
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 HINSTANCE jscript_hinstance;
 
