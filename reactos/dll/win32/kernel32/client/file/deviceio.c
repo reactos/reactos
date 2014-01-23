@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+
+#include <ntddbeep.h>
+
 #define NDEBUG
 #include <debug.h>
 
