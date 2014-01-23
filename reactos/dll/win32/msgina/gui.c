@@ -639,10 +639,18 @@ DoUnlock(
         else
         {
             /* Wrong user name */
-            LoadStringW(pgContext->hDllInstance, IDS_LOCKEDWRONGUSER, Buffer1, 256);
-            wsprintfW(Buffer2, Buffer1, pgContext->Domain, pgContext->UserName);
-            LoadStringW(pgContext->hDllInstance, IDS_COMPUTERLOCKED, Buffer1, 256);
-            MessageBoxW(hwndDlg, Buffer2, Buffer1, MB_OK | MB_ICONERROR);
+            if (DoAdminUnlock(UserName, NULL, Password))
+            {
+                *Action = WLX_SAS_ACTION_UNLOCK_WKSTA;
+                res = TRUE;
+            }
+            else
+            {
+                LoadStringW(pgContext->hDllInstance, IDS_LOCKEDWRONGUSER, Buffer1, 256);
+                wsprintfW(Buffer2, Buffer1, pgContext->Domain, pgContext->UserName);
+                LoadStringW(pgContext->hDllInstance, IDS_COMPUTERLOCKED, Buffer1, 256);
+                MessageBoxW(hwndDlg, Buffer2, Buffer1, MB_OK | MB_ICONERROR);
+            }
         }
     }
 
