@@ -10,6 +10,10 @@
 
 #include "precomp.h"
 
+#include <winreg.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/obfuncs.h>
+
 static BOOLEAN FmIfsInitialized = FALSE;
 LIST_ENTRY ProviderListHead;
 
