@@ -39,6 +39,7 @@
 
 #include "private_mciavi.h"
 
+#include <mciavi.h>
 #include <wine/unicode.h>
 
 static DWORD MCIAVI_mciStop(UINT, DWORD, LPMCI_GENERIC_PARMS);
