@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+
 #include <msafd.h>
 
 INT
