@@ -20,6 +20,7 @@
 #include "gdiplus_private.h"
 
 #include <assert.h>
+#include <ole2.h>
 #include <olectl.h>
 
 #define PIXELFORMATBPP(x) ((x) ? ((x) >> 8) & 255 : 24)

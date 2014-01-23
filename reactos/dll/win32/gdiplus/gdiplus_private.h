@@ -29,12 +29,10 @@
 #define NONAMELESSUNION
 #define COBJMACROS
 
-#define INITGUID
-
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-#include <ole2.h>
+#include <objbase.h>
 #include <wincodecsdk.h>
 #include <gdiplus.h>
 
@@ -457,4 +455,4 @@ GpStatus gdip_format_string(HDC hdc,
 
 void get_log_fontW(const GpFont *, GpGraphics *, LOGFONTW *) DECLSPEC_HIDDEN;
 
-#endif
+#endif /* __WINE_GP_PRIVATE_H_ */
