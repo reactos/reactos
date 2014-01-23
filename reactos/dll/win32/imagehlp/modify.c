@@ -22,7 +22,6 @@
 
 static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
 
-
 /***********************************************************************
  *		BindImage (IMAGEHLP.@)
  */
