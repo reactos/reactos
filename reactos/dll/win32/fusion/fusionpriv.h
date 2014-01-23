@@ -31,13 +31,12 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#define INITGUID
-
 #include <windef.h>
 #include <winbase.h>
 #include <winver.h>
-#include <ole2.h>
+#include <objbase.h>
 #include <fusion.h>
+#include <corerror.h>
 
 #include <wine/unicode.h>
 

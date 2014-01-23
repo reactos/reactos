@@ -20,8 +20,6 @@
 
 #include "fusionpriv.h"
 
-#include <corerror.h>
-
 static const WCHAR cache_mutex_nameW[] =
     {'_','_','W','I','N','E','_','F','U','S','I','O','N','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};
 

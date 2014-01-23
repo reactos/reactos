@@ -21,7 +21,7 @@
 #include "fusionpriv.h"
 
 #include <assert.h>
-#include <corerror.h>
+#include <winuser.h>
 
 typedef struct {
     IAssemblyName IAssemblyName_iface;
