@@ -22,9 +22,7 @@
 #include "precomp.h"
 
 #include <stdio.h>
-
 #include <winternl.h>
-#include <shlwapi.h>
 #include <xcmc.h>
 #include <msi.h>
 

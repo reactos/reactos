@@ -1,7 +1,7 @@
 #ifndef _MAPI32_PCH_
 #define _MAPI32_PCH_
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 
@@ -16,14 +16,15 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <mapi.h>
 #include <mapival.h>
-#include <mapiutil.h>
-
-#include <wine/unicode.h>
+#include <shlwapi.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(mapi);
+#include <wine/unicode.h>
 
 #include "util.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
 #endif /* _MAPI32_PCH_ */

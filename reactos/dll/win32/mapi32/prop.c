@@ -20,7 +20,6 @@
 
 #include "precomp.h"
 
-#include <shlwapi.h>
 #include <wine/list.h>
 
 BOOL WINAPI FBadRglpszA(LPSTR*,ULONG);
