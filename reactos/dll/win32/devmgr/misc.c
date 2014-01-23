@@ -24,13 +24,13 @@
  * UPDATE HISTORY:
  *      2005/11/24  Created
  */
+
 #include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
 
 HINSTANCE hDllInstance = NULL;
-
 
 INT
 LengthOfStrResource(IN HINSTANCE hInst,

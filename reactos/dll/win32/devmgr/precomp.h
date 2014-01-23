@@ -1,14 +1,18 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <wchar.h>
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
-#include <newdev.h>
 #include <dll/devmgr/devmgr.h>
 
 #include "resource.h"
@@ -221,5 +225,3 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                   OUT PSP_DRVINFO_DATA DriverInfoData);
 
 #endif /* __DEVMGR_H */
-
-/* EOF */
