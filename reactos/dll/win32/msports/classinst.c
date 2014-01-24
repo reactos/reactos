@@ -8,6 +8,11 @@
 
 #include "precomp.h"
 
+#include <wchar.h>
+
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h>
+
 typedef enum _PORT_TYPE
 {
     UnknownPort,
