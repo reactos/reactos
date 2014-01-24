@@ -25,6 +25,7 @@
 #include <winuser.h>
 
 #include <vddsvc.h>
+// #include "registers.h"
 
 #include <debug.h>
 

@@ -14,7 +14,6 @@
 #include "vddsup.h"
 
 #include "bop.h"
-#include "registers.h"
 
 #include <isvbop.h>
 

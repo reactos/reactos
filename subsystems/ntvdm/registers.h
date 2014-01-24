@@ -13,6 +13,7 @@
 
 VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 
+#if 0   // Those function prototypes are already included via ddk/vddsvc.h
 
 PVOID  WINAPI getIntelRegistersPointer(VOID);
 
@@ -114,6 +115,8 @@ VOID   WINAPI setEFLAGS(ULONG);
 
 USHORT WINAPI getMSW(VOID);
 VOID   WINAPI setMSW(USHORT);
+
+#endif
 
 #endif // _REGISTERS_H_
 

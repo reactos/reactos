@@ -11,7 +11,6 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "registers.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
