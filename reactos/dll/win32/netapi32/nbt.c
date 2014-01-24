@@ -65,22 +65,10 @@
  * See also other FIXMEs in the code.
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "netapi32.h"
 
-#include <config.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
 #include <winsock2.h>
-#include <wine/debug.h>
 #include <winreg.h>
-#include <iphlpapi.h>
-
-#include "netbios.h"
-#include "nbnamecache.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 

@@ -20,6 +20,9 @@
 
 #include "netapi32.h"
 
+#include <dsrole.h>
+#include <dsgetdc.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(ds);
 
 DWORD WINAPI DsGetDcNameW(LPCWSTR ComputerName, LPCWSTR AvoidDCName,

@@ -29,8 +29,10 @@
 
 #include "netapi32.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 typedef struct _ENUM_CONTEXT
 {

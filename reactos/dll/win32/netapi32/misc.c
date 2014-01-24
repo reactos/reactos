@@ -11,14 +11,11 @@
 
 #include "netapi32.h"
 
-
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
-
 
 /* GLOBALS *******************************************************************/
 
 static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-
 
 /* FUNCTIONS *****************************************************************/
 

@@ -22,7 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
-
 /************************************************************
  *                ACCESS_QueryAdminDisplayInformation
  *
