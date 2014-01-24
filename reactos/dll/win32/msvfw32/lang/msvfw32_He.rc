@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msvideo_private.h"
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 ICM_CHOOSE_COMPRESSOR DIALOG  36, 24, 187, 95
