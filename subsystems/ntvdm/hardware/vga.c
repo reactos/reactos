@@ -617,6 +617,7 @@ static VOID VgaLeaveGraphicsMode(VOID)
     /* Cleanup the video data */
     CloseHandle(ConsoleMutex);
     ConsoleMutex = NULL;
+    ConsoleFramebuffer = NULL;
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
     DoubleVision = FALSE;
