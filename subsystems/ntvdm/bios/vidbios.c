@@ -618,9 +618,10 @@ static VOID VidBiosReadWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
         for (j = Rectangle.Left; j <= Rectangle.Right; j++)
         {
             /* Read from video memory */
-            VgaReadMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                          (LPVOID)&Character,
-                          sizeof(WORD));
+            EmulatorReadMemory(&EmulatorContext,
+                               VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                               (LPVOID)&Character,
+                               sizeof(WORD));
 
             /* Write the data to the buffer in row order */
             Buffer[Counter++] = Character;
@@ -642,9 +643,10 @@ static VOID VidBiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
             Character = Buffer[Counter++];
 
             /* Write to video memory */
-            VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                           (LPVOID)&Character,
-                           sizeof(WORD));
+            EmulatorWriteMemory(&EmulatorContext,
+                                VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                (LPVOID)&Character,
+                                sizeof(WORD));
         }
     }
 }
@@ -775,9 +777,10 @@ static VOID VidBiosCopyTextConsoleToVgaMemory(HANDLE ConsoleOutput, PCOORD Conso
             ++Counter;
 
             /* Write to video memory */
-            VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                           (LPVOID)&Character,
-                           sizeof(WORD));
+            EmulatorWriteMemory(&EmulatorContext,
+                                VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                (LPVOID)&Character,
+                                sizeof(WORD));
         }
     }
 
@@ -1044,6 +1047,109 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
+VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+{
+    WORD CharData = MAKEWORD(Character, Attribute);
+    BYTE Row, Column;
+
+    /* Make sure the page exists */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Get the cursor location */
+    VidBiosGetCursorPosition(&Row, &Column, Page);
+
+    if (Character == '\a')
+    {
+        /* Bell control character */
+        // NOTE: We may use what the terminal emulator offers to us...
+        Beep(800, 200);
+        return;
+    }
+    else if (Character == '\b')
+    {
+        /* Backspace control character */
+        if (Column > 0)
+        {
+            Column--;
+        }
+        else if (Row > 0)
+        {
+            Column = Bda->ScreenColumns - 1;
+            Row--;
+        }
+
+        /* Erase the existing character */
+        CharData = MAKEWORD(' ', Attribute);
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
+    }
+    else if (Character == '\t')
+    {
+        /* Horizontal Tabulation control character */
+        do
+        {
+            // Taken from DOSBox
+            VidBiosPrintCharacter(' ', Attribute, Page);
+            VidBiosGetCursorPosition(&Row, &Column, Page);
+        } while (Column % 8);
+    }
+    else if (Character == '\n')
+    {
+        /* Line Feed control character */
+        Row++;
+    }
+    else if (Character == '\r')
+    {
+        /* Carriage Return control character */
+        Column = 0;
+    }
+    else
+    {
+        /* Default character */
+
+        /* Write the character */
+        EmulatorWriteMemory(&EmulatorContext,
+                            TO_LINEAR(TEXT_VIDEO_SEG,
+                                Page * Bda->VideoPageSize +
+                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                            (LPVOID)&CharData,
+                            sizeof(WORD));
+
+        /* Advance the cursor */
+        Column++;
+    }
+
+    /* Check if it passed the end of the row */
+    if (Column >= Bda->ScreenColumns)
+    {
+        /* Return to the first column and go to the next line */
+        Column = 0;
+        Row++;
+    }
+
+    /* Scroll the screen up if needed */
+    if (Row > Bda->ScreenRows)
+    {
+        /* The screen must be scrolled up */
+        SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
+
+        VidBiosScrollWindow(SCROLL_DIRECTION_UP,
+                            1,
+                            Rectangle,
+                            Page,
+                            DEFAULT_ATTRIBUTE);
+
+        Row--;
+    }
+
+    /* Set the cursor position */
+    VidBiosSetCursorPosition(Row, Column, Page);
+}
+
 static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 {
     switch (getAH())
@@ -1146,9 +1252,10 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
             if (getAH() == 0x08)
             {
                 /* Read from the video memory */
-                VgaReadMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
-                              (LPVOID)&CharacterData,
-                              sizeof(WORD));
+                EmulatorReadMemory(&EmulatorContext,
+                                   TO_LINEAR(TEXT_VIDEO_SEG, Offset),
+                                   (LPVOID)&CharacterData,
+                                   sizeof(WORD));
 
                 /* Return the character in AX */
                 setAX(CharacterData);
@@ -1156,9 +1263,10 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
             else
             {
                 /* Write to video memory */
-                VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
-                               (LPVOID)&CharacterData,
-                               (getBH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
+                EmulatorWriteMemory(&EmulatorContext,
+                                    TO_LINEAR(TEXT_VIDEO_SEG, Offset),
+                                    (LPVOID)&CharacterData,
+                                    (getBH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
             }
 
             break;
@@ -1427,124 +1535,16 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
-{
-    WORD CharData = MAKEWORD(Character, Attribute);
-    BYTE Row, Column;
-
-    /* Make sure the page exists */
-    if (Page >= BIOS_MAX_PAGES) return;
-
-    /* Get the cursor location */
-    VidBiosGetCursorPosition(&Row, &Column, Page);
-
-    if (Character == '\a')
-    {
-        /* Bell control character */
-        // NOTE: We may use what the terminal emulator offers to us...
-        Beep(800, 200);
-        return;
-    }
-    else if (Character == '\b')
-    {
-        /* Backspace control character */
-        if (Column > 0)
-        {
-            Column--;
-        }
-        else if (Row > 0)
-        {
-            Column = Bda->ScreenColumns - 1;
-            Row--;
-        }
-
-        /* Erase the existing character */
-        CharData = MAKEWORD(' ', Attribute);
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
-    }
-    else if (Character == '\t')
-    {
-        /* Horizontal Tabulation control character */
-        do
-        {
-            // Taken from DOSBox
-            VidBiosPrintCharacter(' ', Attribute, Page);
-            VidBiosGetCursorPosition(&Row, &Column, Page);
-        } while (Column % 8);
-    }
-    else if (Character == '\n')
-    {
-        /* Line Feed control character */
-        Row++;
-    }
-    else if (Character == '\r')
-    {
-        /* Carriage Return control character */
-        Column = 0;
-    }
-    else
-    {
-        /* Default character */
-
-        /* Write the character */
-        EmulatorWriteMemory(&EmulatorContext,
-                            TO_LINEAR(TEXT_VIDEO_SEG,
-                                Page * Bda->VideoPageSize +
-                                (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                            (LPVOID)&CharData,
-                            sizeof(WORD));
-
-        /* Advance the cursor */
-        Column++;
-    }
-
-    /* Check if it passed the end of the row */
-    if (Column >= Bda->ScreenColumns)
-    {
-        /* Return to the first column and go to the next line */
-        Column = 0;
-        Row++;
-    }
-
-    /* Scroll the screen up if needed */
-    if (Row > Bda->ScreenRows)
-    {
-        /* The screen must be scrolled up */
-        SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
-
-        VidBiosScrollWindow(SCROLL_DIRECTION_UP,
-                         1,
-                         Rectangle,
-                         Page,
-                         DEFAULT_ATTRIBUTE);
-
-        Row--;
-    }
-
-    /* Set the cursor position */
-    VidBiosSetCursorPosition(Row, Column, Page);
-}
-
 BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
 {
     CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 
     /* Some interrupts are in fact addresses to tables */
     ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x1E] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
-
-    ((PDWORD)BaseAddress)[0x41] = (DWORD)NULL;
+    // ((PDWORD)BaseAddress)[0x42] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x46] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
 
     /* Save the default BIOS console output handle for cleanup */
     if (ConsoleOutput == INVALID_HANDLE_VALUE) return FALSE;
