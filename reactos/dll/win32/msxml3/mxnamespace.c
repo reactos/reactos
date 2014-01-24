@@ -20,8 +20,6 @@
 
 #include "precomp.h"
 
-#include <wine/list.h>
-
 struct ns
 {
     BSTR prefix;

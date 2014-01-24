@@ -22,12 +22,9 @@
 #include "precomp.h"
 
 #include <wingdi.h>
-#include <wininet.h>
 #include <mshtml.h>
 #include <objsafe.h>
 #include <docobj.h>
-
-#include <wine/list.h>
 
 #ifdef HAVE_LIBXML2
 

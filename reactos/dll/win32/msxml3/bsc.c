@@ -18,10 +18,6 @@
 
 #include "precomp.h"
 
-#include <wininet.h>
-#include <winreg.h>
-#include <shlwapi.h>
-
 struct bsc_t {
     IBindStatusCallback IBindStatusCallback_iface;
 

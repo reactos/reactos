@@ -25,8 +25,6 @@
 # include <libxml/parserInternals.h>
 #endif
 
-#include <wine/list.h>
-
 #ifdef HAVE_LIBXML2
 
 typedef enum

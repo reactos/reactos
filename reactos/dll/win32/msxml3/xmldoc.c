@@ -20,10 +20,6 @@
 
 #include "precomp.h"
 
-#include <wininet.h>
-#include <winreg.h>
-#include <shlwapi.h>
-
 #ifdef HAVE_LIBXML2
 
 /* FIXME: IXMLDocument needs to implement
