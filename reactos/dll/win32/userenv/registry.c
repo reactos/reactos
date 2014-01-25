@@ -29,7 +29,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* FUNCTIONS ***************************************************************/
 
 static

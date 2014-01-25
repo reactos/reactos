@@ -29,6 +29,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "resources.h"
 
 typedef struct _FOLDERDATA
 {

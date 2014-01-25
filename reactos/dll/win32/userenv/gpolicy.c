@@ -29,7 +29,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 typedef struct _GP_NOTIFY
 {
     struct _GP_NOTIFY *Next;

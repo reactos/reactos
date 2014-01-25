@@ -26,9 +26,10 @@
 
 #include "precomp.h"
 
+#include <shlobj.h>
+
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS ***************************************************************/
 
