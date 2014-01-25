@@ -33,7 +33,8 @@
  * will fill a supplied 16-byte array with the digest.
  */
 
-#include <advapi32.h>
+#include "md4.h"
+#include "util.h"
 
 static void MD4Transform( unsigned int buf[4], unsigned int const in[16] );
 
@@ -41,7 +42,7 @@ static void MD4Transform( unsigned int buf[4], unsigned int const in[16] );
  * Start MD4 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-VOID WINAPI MD4Init( MD4_CTX *ctx )
+VOID NTAPI MD4Init( MD4_CTX *ctx )
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -55,7 +56,7 @@ VOID WINAPI MD4Init( MD4_CTX *ctx )
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len )
+VOID NTAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len )
 {
     register unsigned int t;
 
@@ -106,10 +107,10 @@ VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len 
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-VOID WINAPI MD4Final( MD4_CTX *ctx )
+VOID NTAPI MD4Final( MD4_CTX *ctx )
 {
     unsigned int count;
     unsigned char *p;
@@ -243,58 +244,3 @@ static void MD4Transform( unsigned int buf[4], const unsigned int in[16] )
     buf[3] += d;
 }
 
-#ifndef __REACTOS__
-/******************************************************************************
- * SystemFunction007  [ADVAPI32.@]
- *
- * MD4 hash a unicode string
- *
- * PARAMS
- *   string  [I] the string to hash
- *   output  [O] the md4 hash of the string (16 bytes)
- *
- * RETURNS
- *  Success: STATUS_SUCCESS
- *  Failure: STATUS_UNSUCCESSFUL
- *
- */
-NTSTATUS WINAPI SystemFunction007(const UNICODE_STRING *string, LPBYTE hash)
-{
-    MD4_CTX ctx;
-
-    MD4Init( &ctx );
-    MD4Update( &ctx, (const BYTE *)string->Buffer, string->Length );
-    MD4Final( &ctx );
-    memcpy( hash, ctx.digest, 0x10 );
-
-    return STATUS_SUCCESS;
-}
-
-/******************************************************************************
- * SystemFunction010  [ADVAPI32.@]
- * SystemFunction011  [ADVAPI32.@]
- *
- * MD4 hashes 16 bytes of data
- *
- * PARAMS
- *   unknown []  seems to have no effect on the output
- *   data    [I] pointer to data to hash (16 bytes)
- *   output  [O] the md4 hash of the data (16 bytes)
- *
- * RETURNS
- *  Success: STATUS_SUCCESS
- *  Failure: STATUS_UNSUCCESSFUL
- *
- */
-NTSTATUS WINAPI SystemFunction010(LPVOID unknown, const BYTE *data, LPBYTE hash)
-{
-    MD4_CTX ctx;
-
-    MD4Init( &ctx );
-    MD4Update( &ctx, data, 0x10 );
-    MD4Final( &ctx );
-    memcpy( hash, ctx.digest, 0x10 );
-
-    return STATUS_SUCCESS;
-}
-#endif /* !__REACTOS__ */

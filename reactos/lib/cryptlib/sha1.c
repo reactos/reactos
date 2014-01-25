@@ -17,16 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <advapi32.h>
-
-/* SHA Context Structure Declaration */
-
-typedef struct {
-   ULONG Unknown[6];
-   ULONG State[5];
-   ULONG Count[2];
-   UCHAR Buffer[64];
-} SHA_CTX, *PSHA_CTX;
+#include "sha1.h"
 
 /* SHA1 Helper Macros */
 
@@ -107,7 +98,7 @@ static void SHA1Transform(ULONG State[5], UCHAR Buffer[64])
  * RETURNS
  *  Nothing
  */
-VOID WINAPI
+VOID NTAPI
 A_SHAInit(PSHA_CTX Context)
 {
    /* SHA1 initialization constants */
@@ -133,8 +124,8 @@ A_SHAInit(PSHA_CTX Context)
  * RETURNS
  *  Nothing
  */
-VOID WINAPI
-A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, UINT BufferSize)
+VOID NTAPI
+A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, ULONG BufferSize)
 {
    ULONG BufferContentSize;
 
@@ -146,21 +137,21 @@ A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, UINT BufferSize)
 
    if (BufferContentSize + BufferSize < 64)
    {
-      RtlCopyMemory(&Context->Buffer[BufferContentSize], Buffer,
+      memcpy(&Context->Buffer[BufferContentSize], Buffer,
                     BufferSize);
    }
    else
    {
       while (BufferContentSize + BufferSize >= 64)
       {
-         RtlCopyMemory(Context->Buffer + BufferContentSize, Buffer,
+         memcpy(Context->Buffer + BufferContentSize, Buffer,
                        64 - BufferContentSize);
          Buffer += 64 - BufferContentSize;
          BufferSize -= 64 - BufferContentSize;
          SHA1Transform(Context->State, Context->Buffer);
          BufferContentSize = 0;
       }
-      RtlCopyMemory(Context->Buffer + BufferContentSize, Buffer, BufferSize);
+      memcpy(Context->Buffer + BufferContentSize, Buffer, BufferSize);
    }
 }
 
@@ -176,7 +167,7 @@ A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, UINT BufferSize)
  * RETURNS
  *  Nothing
  */
-VOID WINAPI
+VOID NTAPI
 A_SHAFinal(PSHA_CTX Context, PULONG Result)
 {
    INT Pad, Index;
@@ -193,7 +184,7 @@ A_SHAFinal(PSHA_CTX Context, PULONG Result)
    LengthHi = (Context->Count[0] << 3) | (Context->Count[1] >> (32 - 3));
    LengthLo = (Context->Count[1] << 3);
 
-   RtlZeroMemory(Buffer + 1, Pad - 1);
+   memset(Buffer + 1, 0, Pad - 1);
    Buffer[0] = 0x80;
    Count = (ULONG*)(Buffer + Pad);
    Count[0] = DWORD2BE(LengthHi);

@@ -12,6 +12,9 @@
  */
 
 #include <advapi32.h>
+#include <md4.h>
+#include <md5.h>
+#include <rc4.h>
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
@@ -502,10 +505,10 @@ WINAPI SystemFunction030(LPCVOID b1, LPCVOID b2)
 NTSTATUS
 WINAPI SystemFunction032(struct ustring *data, const struct ustring *key)
 {
-    arc4_info a4i;
+    RC4_CONTEXT a4i;
 
-    arc4_init(&a4i, key->Buffer, key->Length);
-    arc4_ProcessString(&a4i, data->Buffer, data->Length);
+    rc4_init(&a4i, key->Buffer, key->Length);
+    rc4_crypt(&a4i, data->Buffer, data->Length);
 
     return STATUS_SUCCESS;
 }
@@ -626,10 +629,10 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
  *  memory [I/O] Pointer to memory to encrypt.
  *  length [I] Length of region to encrypt in bytes.
  *  flags  [I] Control whether other processes are able to decrypt the memory.
- *    RTL_ENCRYPT_OPTION_SAME_PROCESS 
- *    RTL_ENCRYPT_OPTION_CROSS_PROCESS 
+ *    RTL_ENCRYPT_OPTION_SAME_PROCESS
+ *    RTL_ENCRYPT_OPTION_CROSS_PROCESS
  *    RTL_ENCRYPT_OPTION_SAME_LOGON
- *    
+ *
  * RETURNS
  *  Success: STATUS_SUCCESS
  *  Failure: NTSTATUS error code

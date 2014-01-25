@@ -91,30 +91,12 @@ extern unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *ke
 extern unsigned char *CRYPT_DESunhash( unsigned char *dst, const unsigned char *key,
                                        const unsigned char *src ) DECLSPEC_HIDDEN;
 
-void byteReverse(unsigned char *buf, unsigned longs);
 struct ustring {
     DWORD Length;
     DWORD MaximumLength;
     unsigned char *Buffer;
 };
 
-typedef struct {
-    unsigned int buf[4];
-    unsigned int i[2];
-    unsigned char in[64];
-    unsigned char digest[16];
-} MD4_CTX;
-
-typedef struct tag_arc4_info {
-    unsigned char state[256];
-    unsigned char x, y;
-} arc4_info;
-
-VOID WINAPI MD4Init( MD4_CTX *ctx );
-VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len );
-VOID WINAPI MD4Final(MD4_CTX *ctx);
-void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen);
-void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length);
 NTSTATUS WINAPI SystemFunction032(struct ustring *data, const struct ustring *key);
 
 #endif /* __WINE_CRYPT_H_ */

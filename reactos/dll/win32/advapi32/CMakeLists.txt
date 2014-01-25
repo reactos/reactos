@@ -8,6 +8,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/lib/cryptlib
     ${CMAKE_CURRENT_BINARY_DIR})
 
 add_rpc_files(client
@@ -17,12 +18,8 @@ add_rpc_files(client
 
 list(APPEND SOURCE
     crypt/crypt.c
-    crypt/crypt_arc4.c
     crypt/crypt_des.c
     crypt/crypt_lmhash.c
-    crypt/crypt_md4.c
-    crypt/crypt_md5.c
-    crypt/crypt_sha.c
     misc/dllmain.c
     misc/efs.c
     misc/hwprofiles.c
@@ -56,7 +53,7 @@ list(APPEND SOURCE
 
 add_library(advapi32 SHARED ${SOURCE})
 set_module_type(advapi32 win32dll UNICODE)
-target_link_libraries(advapi32 wine ${PSEH_LIB})
+target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})
 add_delay_importlibs(advapi32 rpcrt4)
 add_importlibs(advapi32 secur32 msvcrt kernel32 ntdll)
 
