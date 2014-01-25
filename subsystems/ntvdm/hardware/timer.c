@@ -245,19 +245,32 @@ static VOID PitWriteData(BYTE Channel, BYTE Value)
     {
         /* Write LSB */
         *ReadWriteMode &= ~1;
-
-        PitChannels[Channel].ReloadValue &= 0xFF00;
-        PitChannels[Channel].ReloadValue |= Value;
-        return;
+        PitChannels[Channel].CountRegister &= 0xFF00;
+        PitChannels[Channel].CountRegister |= Value;
     }
     else if (*ReadWriteMode & 2)
     {
         /* Write MSB */
         *ReadWriteMode &= ~2;
+        PitChannels[Channel].CountRegister &= 0x00FF;
+        PitChannels[Channel].CountRegister |= Value << 8;
+    }
 
-        PitChannels[Channel].ReloadValue &= 0x00FF;
-        PitChannels[Channel].ReloadValue |= Value << 8;
-        return;
+    /* ReadWriteMode went to zero: we are going to load the new count */
+    if (*ReadWriteMode == 0x00)
+    {
+        if (PitChannels[Channel].CountRegister == 0x0000)
+        {
+            if (PitChannels[Channel].Bcd)
+                PitChannels[Channel].CountRegister = 9999;
+            else
+                PitChannels[Channel].CountRegister = 0xFFFF; // 0x10000; // 65536
+        }
+
+        /* Convert the current value from BCD if needed */
+        PitChannels[Channel].CountRegister = WRITE_PIT_VALUE(PitChannels[Channel],
+                                                             PitChannels[Channel].CountRegister);
+        PitChannels[Channel].ReloadValue = PitChannels[Channel].CountRegister;
     }
 }
 
@@ -296,152 +309,160 @@ static VOID WINAPI PitWritePort(ULONG Port, BYTE Data)
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID PitDecrementCount(DWORD Count)
+static VOID PitDecrementCount(PPIT_CHANNEL Channel, DWORD Count)
 {
-    INT i;
-
-    for (i = 0; i < PIT_CHANNELS; i++)
+    switch (Channel->Mode)
     {
-        switch (PitChannels[i].Mode)
+        case PIT_MODE_INT_ON_TERMINAL_COUNT:
         {
-            case PIT_MODE_INT_ON_TERMINAL_COUNT:
+            /* Decrement the value */
+            if (Count > Channel->CurrentValue)
             {
-                /* Decrement the value */
-                if (Count > PitChannels[i].CurrentValue)
-                {
-                    /* The value does not reload in this case */
-                    PitChannels[i].CurrentValue = 0;
-                }
-                else PitChannels[i].CurrentValue -= Count;
-
-                /* Did it fall to the terminal count? */
-                if (PitChannels[i].CurrentValue == 0 && !PitChannels[i].Pulsed)
-                {
-                    /* Yes, raise the output line */
-                    if (i == 0) PicInterruptRequest(0);
-                    PitChannels[i].Pulsed = TRUE;
-                }
-                break;
+                /* The value does not reload in this case */
+                Channel->CurrentValue = 0;
             }
+            else Channel->CurrentValue -= Count;
 
-            case PIT_MODE_RATE_GENERATOR:
+            /* Did it fall to the terminal count? */
+            if (Channel->CurrentValue == 0 && !Channel->Pulsed)
             {
-                BOOLEAN Reloaded = FALSE;
+                /* Yes, raise the output line */
+                if (Channel == &PitChannels[0]) PicInterruptRequest(0);
+                Channel->Pulsed = TRUE;
+            }
+            break;
+        }
 
-                while (Count)
+        case PIT_MODE_RATE_GENERATOR:
+        {
+            BOOLEAN Reloaded = FALSE;
+
+            while (Count)
+            {
+                if ((Count > Channel->CurrentValue)
+                    && (Channel->CurrentValue != 0))
                 {
-                    if ((Count > PitChannels[i].CurrentValue)
-                        && (PitChannels[i].CurrentValue != 0))
+                    /* Decrease the count */
+                    Count -= Channel->CurrentValue;
+
+                    /* Reload the value */
+                    Channel->CurrentValue = Channel->ReloadValue;
+
+                    /* Set the flag */
+                    Reloaded = TRUE;
+                }
+                else
+                {
+                    /* Decrease the value */
+                    Channel->CurrentValue -= Count;
+
+                    /* Clear the count */
+                    Count = 0;
+
+                    /* Did it fall to zero? */
+                    if (Channel->CurrentValue == 0)
                     {
-                        /* Decrease the count */
-                        Count -= PitChannels[i].CurrentValue;
-
-                        /* Reload the value */
-                        PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
-
-                        /* Set the flag */
+                        Channel->CurrentValue = Channel->ReloadValue;
                         Reloaded = TRUE;
                     }
-                    else
-                    {
-                        /* Decrease the value */
-                        PitChannels[i].CurrentValue -= Count;
-
-                        /* Clear the count */
-                        Count = 0;
-
-                        /* Did it fall to zero? */
-                        if (PitChannels[i].CurrentValue == 0)
-                        {
-                            PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
-                            Reloaded = TRUE;
-                        }
-                    }
                 }
-
-                /* If there was a reload on channel 0, raise IRQ 0 */
-                if ((i == 0) && Reloaded) PicInterruptRequest(0);
-
-                break;
             }
 
-            case PIT_MODE_SQUARE_WAVE:
+            /* If there was a reload on channel 0, raise IRQ 0 */
+            if ((Channel == &PitChannels[0]) && Reloaded) PicInterruptRequest(0);
+
+            break;
+        }
+
+        case PIT_MODE_SQUARE_WAVE:
+        {
+            INT ReloadCount = 0;
+            WORD ReloadValue = Channel->ReloadValue;
+
+            /* The reload value must be even */
+            ReloadValue &= ~1;
+
+            while (Count)
             {
-                INT ReloadCount = 0;
-                WORD ReloadValue = PitChannels[i].ReloadValue;
-
-                /* The reload value must be even */
-                ReloadValue &= ~1;
-
-                while (Count)
+                if (((Count * 2) > Channel->CurrentValue)
+                    && (Channel->CurrentValue != 0))
                 {
-                    if (((Count * 2) > PitChannels[i].CurrentValue)
-                        && (PitChannels[i].CurrentValue != 0))
-                    {
-                        /* Decrease the count */
-                        Count -= PitChannels[i].CurrentValue / 2;
+                    /* Decrease the count */
+                    Count -= Channel->CurrentValue / 2;
 
+                    /* Reload the value */
+                    Channel->CurrentValue = ReloadValue;
+
+                    /* Increment the reload count */
+                    ReloadCount++;
+                }
+                else
+                {
+                    /* Decrease the value */
+                    Channel->CurrentValue -= Count * 2;
+
+                    /* Clear the count */
+                    Count = 0;
+
+                    /* Did it fall to zero? */
+                    if (Channel->CurrentValue == 0)
+                    {
                         /* Reload the value */
-                        PitChannels[i].CurrentValue = ReloadValue;
+                        Channel->CurrentValue = ReloadValue;
 
                         /* Increment the reload count */
                         ReloadCount++;
                     }
-                    else
-                    {
-                        /* Decrease the value */
-                        PitChannels[i].CurrentValue -= Count * 2;
-
-                        /* Clear the count */
-                        Count = 0;
-
-                        /* Did it fall to zero? */
-                        if (PitChannels[i].CurrentValue == 0)
-                        {
-                            /* Reload the value */
-                            PitChannels[i].CurrentValue = ReloadValue;
-
-                            /* Increment the reload count */
-                            ReloadCount++;
-                        }
-                    }
                 }
-
-                if (ReloadCount == 0) break;
-
-                /* Toggle the flip-flop if the number of reloads was odd */
-                if (ReloadCount & 1)
-                {
-                    PitChannels[i].Out = !PitChannels[i].Out;
-                }
-
-                /* Was there any rising edge on channel 0 ? */
-                if (((PitChannels[i].Out && (ReloadCount == 1))
-                    || (ReloadCount > 1))
-                    && (i == 0))
-                {
-                    /* Yes, IRQ 0 */
-                    PicInterruptRequest(0);
-                }
-
-                break;
             }
 
-            case PIT_MODE_SOFTWARE_STROBE:
+            if (ReloadCount == 0) break;
+
+            /* Toggle the flip-flop if the number of reloads was odd */
+            if (ReloadCount & 1)
             {
-                // TODO: NOT IMPLEMENTED
-                break;
+                Channel->Out = !Channel->Out;
             }
 
-            case PIT_MODE_HARDWARE_ONE_SHOT:
-            case PIT_MODE_HARDWARE_STROBE:
+            /* Was there any rising edge on channel 0 ? */
+            if (((Channel->Out && (ReloadCount == 1))
+                || (ReloadCount > 1))
+                && (Channel == &PitChannels[0]))
             {
-                /* These modes do not work on x86 PCs */
-                break;
+                /* Yes, IRQ 0 */
+                PicInterruptRequest(0);
             }
+
+            break;
         }
+
+        case PIT_MODE_SOFTWARE_STROBE:
+        {
+            // TODO: NOT IMPLEMENTED
+            break;
+        }
+
+        case PIT_MODE_HARDWARE_ONE_SHOT:
+        case PIT_MODE_HARDWARE_STROBE:
+        {
+            /* These modes do not work on x86 PCs */
+            break;
+        }
+    }
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID PitClock(DWORD Count)
+{
+    UINT i;
+
+    if (Count == 0) return;
+
+    for (i = 0; i < PIT_CHANNELS; i++)
+    {
+        // if (!PitChannels[i].Couting) continue;
+        PitDecrementCount(&PitChannels[i], Count);
     }
 }
 

@@ -72,7 +72,7 @@ extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker
 
 /* FUNCTIONS ******************************************************************/
 
-VOID PitDecrementCount(DWORD Count);
+VOID PitClock(DWORD Count);
 DWORD PitGetResolution(VOID);
 
 VOID PitInitialize(VOID);
