@@ -21,6 +21,7 @@
 #include <winver.h>
 #include <olectl.h>
 #include <ntsecapi.h>
+#include <wine/unicode.h>
 
 struct folder {
     IFolder IFolder_iface;
