@@ -49,6 +49,22 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* Wait */
+        case 0x86:
+        {
+            /*
+             * Interval in microseconds CX:DX
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
+             * for more information.
+             */
+            Sleep(MAKELONG(getDX(), getCX()));
+
+            /* Clear CF */
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+
+            break;
+        }
+
         /* Copy Extended Memory */
         case 0x87:
         {
