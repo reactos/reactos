@@ -22,6 +22,7 @@
 
 #include "urlmon_main.h"
 
+#include <shellapi.h>
 #include <hlink.h>
 
 typedef struct {
