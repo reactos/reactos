@@ -24,8 +24,6 @@
 
 #include "precomp.h"
 
-#include <wine/list.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /***********************************************************************
