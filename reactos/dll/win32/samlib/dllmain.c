@@ -24,7 +24,7 @@
  * PROGRAMER:         Eric Kohl
  */
 
-#include "precomp.h"
+#include <windef.h>
 
 /* FUNCTIONS *****************************************************************/
 

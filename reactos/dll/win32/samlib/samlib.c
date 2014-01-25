@@ -26,6 +26,15 @@
 
 #include "precomp.h"
 
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+#include <ntsam.h>
+#include <sam_c.h>
+
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(samlib);
+
 NTSTATUS
 WINAPI
 SystemFunction006(LPCSTR password,
