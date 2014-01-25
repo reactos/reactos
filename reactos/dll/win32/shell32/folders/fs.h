@@ -126,4 +126,4 @@ struct _DoDropData {
     DWORD pdwEffect;
 };
 
-#endif // _CFSFOLDER_H_
+#endif /* _CFSFOLDER_H_ */

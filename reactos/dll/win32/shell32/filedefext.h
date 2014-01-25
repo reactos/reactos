@@ -116,4 +116,4 @@ BEGIN_COM_MAP(CFileDefExt)
 END_COM_MAP()
 };
 
-#endif // _FILE_DEF_EXT_H_
+#endif /* _FILE_DEF_EXT_H_ */

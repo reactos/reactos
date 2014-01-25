@@ -75,4 +75,4 @@ static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
 
-#endif // _SHFLDR_H_
+#endif /* _SHFLDR_H_ */

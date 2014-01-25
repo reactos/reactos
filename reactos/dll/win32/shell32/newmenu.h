@@ -99,4 +99,4 @@ BEGIN_COM_MAP(CNewMenu)
 END_COM_MAP()
 };
 
-#endif // _SHV_ITEM_NEW_H_
+#endif /* _SHV_ITEM_NEW_H_ */

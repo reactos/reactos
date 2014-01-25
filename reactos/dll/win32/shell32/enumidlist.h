@@ -13,6 +13,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef __ENUMIDLIST_H__
 #define __ENUMIDLIST_H__
 
@@ -49,4 +50,4 @@ BEGIN_COM_MAP(IEnumIDListImpl)
 END_COM_MAP()
 };
 
-#endif /* ndef __ENUMIDLIST_H__ */
+#endif /* __ENUMIDLIST_H__ */

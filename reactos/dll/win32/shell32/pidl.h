@@ -302,4 +302,4 @@ LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida);
 
 BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type);
 
-#endif
+#endif /* __WINE_PIDL_H */

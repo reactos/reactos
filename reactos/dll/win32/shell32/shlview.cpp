@@ -50,6 +50,8 @@ TODO:
 
 #include "precomp.h"
 
+#include <atlwin.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #undef SV_CLASS_NAME

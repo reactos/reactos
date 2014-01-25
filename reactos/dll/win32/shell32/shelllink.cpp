@@ -36,6 +36,8 @@
 
 #include "precomp.h"
 
+#include <appmgmt.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHLINK_LOCAL  0

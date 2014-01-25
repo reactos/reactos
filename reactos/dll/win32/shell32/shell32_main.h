@@ -22,9 +22,6 @@
 #ifndef __WINE_SHELL_MAIN_H
 #define __WINE_SHELL_MAIN_H
 
-#include <wine/unicode.h>
-
-
 /*******************************************
 *  global SHELL32.DLL variables
 */
@@ -205,4 +202,4 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
 EXTERN_C HRESULT WINAPI DoRegisterServer(void);
 EXTERN_C HRESULT WINAPI DoUnregisterServer(void);
 
-#endif
+#endif /* __WINE_SHELL_MAIN_H */
