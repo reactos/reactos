@@ -18,7 +18,6 @@
 #include "hardware/vga.h"
 
 #include "int32.h"
-#include "registers.h"
 
 /* MACROS *********************************************************************/
 
@@ -31,8 +30,6 @@
 #define VGA_CRTC_DATA       Bda->CrtBasePort + 1    // VGA_CRTC_DATA_MONO    or VGA_CRTC_DATA_COLOR
 
 /* PRIVATE VARIABLES **********************************************************/
-
-static HANDLE VidBiosConsoleOutput = INVALID_HANDLE_VALUE;
 
 /*
  * VGA Register Configurations for BIOS Video Modes
@@ -1537,8 +1534,6 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
 BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
 {
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-
     /* Some interrupts are in fact addresses to tables */
     ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
@@ -1546,25 +1541,24 @@ BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
     ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
     ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
 
-    /* Save the default BIOS console output handle for cleanup */
-    if (ConsoleOutput == INVALID_HANDLE_VALUE) return FALSE;
-    VidBiosConsoleOutput = ConsoleOutput;
-
-    /* Initialize VGA */
-    if (!VgaInitialize(ConsoleOutput)) return FALSE;
-
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
 
-    GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo);
+    /* Set some screen properties if the console output handle is valid */
+    if (ConsoleOutput != INVALID_HANDLE_VALUE)
+    {
+        CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 
-    /* Copy console data into VGA memory */
-    VidBiosCopyTextConsoleToVgaMemory(ConsoleOutput, &ConsoleInfo.dwSize);
+        GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo);
 
-    /* Update the cursor position for the current page */
-    VidBiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
-                             ConsoleInfo.dwCursorPosition.X,
-                             Bda->VideoPage);
+        /* Copy console data into VGA memory */
+        VidBiosCopyTextConsoleToVgaMemory(ConsoleOutput, &ConsoleInfo.dwSize);
+
+        /* Update the cursor position for the current page */
+        VidBiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
+                                 ConsoleInfo.dwCursorPosition.X,
+                                 Bda->VideoPage);
+    }
 
     /* Register the BIOS 32-bit Interrupts */
     RegisterInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);
@@ -1574,8 +1568,6 @@ BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
 
 VOID VidBiosCleanup(VOID)
 {
-    /* Restore the old screen buffer */
-    SetConsoleActiveScreenBuffer(VidBiosConsoleOutput);
 }
 
 /* EOF */

@@ -105,7 +105,9 @@ UCHAR WINAPI EmulatorIntAcknowledge
     PFAST486_STATE State
 );
 
-BOOLEAN EmulatorInitialize(VOID);
+VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
+
+BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
 VOID EmulatorInterruptSignal(VOID);

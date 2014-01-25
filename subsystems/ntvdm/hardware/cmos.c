@@ -12,8 +12,8 @@
 
 #include "emulator.h"
 #include "cmos.h"
+
 #include "io.h"
-#include "bios/bios.h"
 #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -137,18 +137,6 @@ BYTE CmosReadData(VOID)
             /* Return the old value */
             return Value;
         }
-
-        case CMOS_REG_BASE_MEMORY_LOW:
-            return Bda->MemorySize & 0xFF;
-
-        case CMOS_REG_BASE_MEMORY_HIGH:
-            return Bda->MemorySize >> 8;
-
-        case CMOS_REG_EXT_MEMORY_LOW:
-            return ((MAX_ADDRESS - 0x100000) / 1024) & 0xFF;
-
-        case CMOS_REG_EXT_MEMORY_HIGH:
-            return ((MAX_ADDRESS - 0x100000) / 1024) >> 8;
 
         case CMOS_REG_STATUS_A:
         case CMOS_REG_STATUS_B:
@@ -295,6 +283,26 @@ VOID CmosWriteData(BYTE Value)
             // Status registers C and D are read-only
             break;
 
+        /* Is the following correct? */
+        case CMOS_REG_EXT_MEMORY_LOW:
+        case CMOS_REG_ACTUAL_EXT_MEMORY_LOW:
+        {
+            /* Sync EMS and UMS */
+            CmosMemory.Regs[CMOS_REG_EXT_MEMORY_LOW]        =
+            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW] = Value;
+            break;
+        }
+
+        /* Is the following correct? */
+        case CMOS_REG_EXT_MEMORY_HIGH:
+        case CMOS_REG_ACTUAL_EXT_MEMORY_HIGH:
+        {
+            /* Sync EMS and UMS */
+            CmosMemory.Regs[CMOS_REG_EXT_MEMORY_HIGH]        =
+            CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = Value;
+            break;
+        }
+
         default:
         {
             CmosMemory.Regs[SelectedRegister] = Value;
@@ -309,6 +317,7 @@ VOID CmosWriteData(BYTE Value)
 
 BYTE WINAPI CmosReadPort(ULONG Port)
 {
+    ASSERT(Port == CMOS_DATA_PORT);
     return CmosReadData();
 }
 
@@ -429,6 +438,23 @@ VOID CmosInitialize(VOID)
     CmosMemory.StatusRegD     = CMOS_BATTERY_OK; // Our CMOS battery works perfectly forever.
     CmosMemory.Diagnostics    = 0x00;            // Diagnostics must not find any errors.
     CmosMemory.ShutdownStatus = 0x00;
+
+    /* Memory settings */
+
+    /*
+     * Conventional memory size is 640 kB,
+     * see: http://webpages.charter.net/danrollins/techhelp/0184.HTM
+     * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
+     * for more information.
+     */
+    CmosMemory.Regs[CMOS_REG_BASE_MEMORY_LOW ] = LOBYTE(0x0280);
+    CmosMemory.Regs[CMOS_REG_BASE_MEMORY_HIGH] = HIBYTE(0x0280);
+
+    CmosMemory.Regs[CMOS_REG_EXT_MEMORY_LOW]         =
+    CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_LOW]  = LOBYTE((MAX_ADDRESS - 0x100000) / 1024);
+
+    CmosMemory.Regs[CMOS_REG_EXT_MEMORY_HIGH]        =
+    CmosMemory.Regs[CMOS_REG_ACTUAL_EXT_MEMORY_HIGH] = HIBYTE((MAX_ADDRESS - 0x100000) / 1024);
 
     /* Register the I/O Ports */
     RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);

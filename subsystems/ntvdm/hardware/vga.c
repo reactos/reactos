@@ -14,7 +14,6 @@
 #include "vga.h"
 
 #include "io.h"
-#include "bios/bios.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

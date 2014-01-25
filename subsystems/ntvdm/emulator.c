@@ -15,6 +15,7 @@
 #include "bios/bios.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
+#include "hardware/ps2.h"
 #include "hardware/speaker.h"
 #include "hardware/timer.h"
 #include "hardware/vga.h"
@@ -22,7 +23,6 @@
 #include "bop.h"
 #include "vddsup.h"
 #include "io.h"
-#include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -31,6 +31,18 @@ LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
 static BOOLEAN A20Line = FALSE;
+
+LPCWSTR ExceptionName[] =
+{
+    L"Division By Zero",
+    L"Debug",
+    L"Unexpected Error",
+    L"Breakpoint",
+    L"Integer Overflow",
+    L"Bound Range Exceeded",
+    L"Invalid Opcode",
+    L"FPU Not Available"
+};
 
 /* BOP Identifiers */
 #define BOP_DEBUGGER    0x56    // Break into the debugger from a 16-bit app
@@ -115,7 +127,7 @@ VOID WINAPI EmulatorDebugBreak(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN EmulatorInitialize(VOID)
+BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Allocate memory for the 16-bit address space */
     BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
@@ -148,6 +160,16 @@ BOOLEAN EmulatorInitialize(VOID)
     CmosInitialize();
     SpeakerInitialize();
 
+    /* Initialize the PS2 port */
+    PS2Initialize(ConsoleInput);
+
+    /* Set the console input mode */
+    // SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+
+    /* Initialize the VGA */
+    // if (!VgaInitialize(ConsoleOutput)) return FALSE;
+    VgaInitialize(ConsoleOutput);
+
     /* Register the DebugBreak BOP */
     RegisterBop(BOP_DEBUGGER, EmulatorDebugBreak);
 
@@ -159,6 +181,9 @@ BOOLEAN EmulatorInitialize(VOID)
 
 VOID EmulatorCleanup(VOID)
 {
+    // VgaCleanup();
+    PS2Cleanup();
+
     SpeakerCleanup();
     CmosCleanup();
     // PitCleanup();
@@ -168,6 +193,40 @@ VOID EmulatorCleanup(VOID)
 
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
+}
+
+VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
+{
+    WORD CodeSegment, InstructionPointer;
+    PBYTE Opcode;
+
+    ASSERT(ExceptionNumber < 8);
+
+    /* Get the CS:IP */
+    InstructionPointer = Stack[STACK_IP];
+    CodeSegment = Stack[STACK_CS];
+    Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
+
+    /* Display a message to the user */
+    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
+                   L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+                   ExceptionName[ExceptionNumber],
+                   CodeSegment,
+                   InstructionPointer,
+                   Opcode[0],
+                   Opcode[1],
+                   Opcode[2],
+                   Opcode[3],
+                   Opcode[4],
+                   Opcode[5],
+                   Opcode[6],
+                   Opcode[7],
+                   Opcode[8],
+                   Opcode[9]);
+
+    /* Stop the VDM */
+    VdmRunning = FALSE;
+    return;
 }
 
 // FIXME: This function assumes 16-bit mode!!!

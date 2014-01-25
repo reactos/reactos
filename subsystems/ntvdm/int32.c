@@ -15,22 +15,8 @@
 #include "int32.h"
 
 #include "bop.h"
-#include "bios/bios.h"
-#include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
-
-LPCWSTR ExceptionName[] =
-{
-    L"Division By Zero",
-    L"Debug",
-    L"Unexpected Error",
-    L"Breakpoint",
-    L"Integer Overflow",
-    L"Bound Range Exceeded",
-    L"Invalid Opcode",
-    L"FPU Not Available"
-};
 
 /*
  * This is the list of registered 32-bit Interrupt handlers.
@@ -46,86 +32,10 @@ EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID WINAPI Exception(BYTE ExceptionNumber, LPWORD Stack)
-{
-    WORD CodeSegment, InstructionPointer;
-    PBYTE Opcode;
-
-    ASSERT(ExceptionNumber < 8);
-
-    /* Get the CS:IP */
-    InstructionPointer = Stack[STACK_IP];
-    CodeSegment = Stack[STACK_CS];
-    Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
-
-    /* Display a message to the user */
-    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
-                   L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-                   ExceptionName[ExceptionNumber],
-                   CodeSegment,
-                   InstructionPointer,
-                   Opcode[0],
-                   Opcode[1],
-                   Opcode[2],
-                   Opcode[3],
-                   Opcode[4],
-                   Opcode[5],
-                   Opcode[6],
-                   Opcode[7],
-                   Opcode[8],
-                   Opcode[9]);
-
-    /* Stop the VDM */
-    VdmRunning = FALSE;
-    return;
-}
-
-#if 0
-VOID WINAPI IrqDispatch(BYTE IrqNumber, LPWORD Stack)
-{
-    /* Check if this was an PIC IRQ */
-    if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
-    {
-        /* It was an IRQ from the master PIC */
-        BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT, Stack);
-    }
-    else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
-    {
-        /* It was an IRQ from the slave PIC */
-        BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8, Stack);
-    }
-
-    return;
-}
-#endif
-
 VOID WINAPI Int32Dispatch(LPWORD Stack)
 {
-    BYTE IntNum;
-
     /* Get the interrupt number */
-    IntNum = LOBYTE(Stack[STACK_INT_NUM]);
-
-    /* Check if this was an exception */
-    if (IntNum < 8)
-    {
-        Exception(IntNum, Stack);
-        return;
-    }
-
-    /* Check if this was an PIC IRQ */
-    if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
-    {
-        /* It was an IRQ from the master PIC */
-        BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT, Stack);
-        return;
-    }
-    else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
-    {
-        /* It was an IRQ from the slave PIC */
-        BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8, Stack);
-        return;
-    }
+    BYTE IntNum = LOBYTE(Stack[STACK_INT_NUM]);
 
     /* Call the 32-bit Interrupt handler */
     if (Int32Proc[IntNum] != NULL)

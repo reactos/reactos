@@ -55,7 +55,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         case CTRL_C_EVENT:
         case CTRL_BREAK_EVENT:
         {
-            /* Perform interrupt 0x23 */
+            /* Call INT 23h */
             EmulatorInterrupt(0x23);
             break;
         }
@@ -202,7 +202,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the emulator */
-    if (!EmulatorInitialize())
+    if (!EmulatorInitialize(ConsoleInput, ConsoleOutput))
     {
         wprintf(L"FATAL: Failed to initialize the emulator\n");
         goto Cleanup;

@@ -12,6 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
+#include "kbdbios.h"
 #include "vidbios.h"
 
 /* DEFINES ********************************************************************/
@@ -28,29 +29,10 @@
 #define BIOS_EQUIPMENT_INTERRUPT    0x11
 #define BIOS_MEMORY_SIZE            0x12
 #define BIOS_MISC_INTERRUPT         0x15
-#define BIOS_KBD_INTERRUPT          0x16
 #define BIOS_TIME_INTERRUPT         0x1A
 #define BIOS_SYS_TIMER_INTERRUPT    0x1C
 
-#define BIOS_KBD_BUFFER_SIZE 16
-#define BIOS_EQUIPMENT_LIST 0x2C // HACK: Disable FPU for now
-
-#define BDA_KBDFLAG_RSHIFT      (1 << 0)
-#define BDA_KBDFLAG_LSHIFT      (1 << 1)
-#define BDA_KBDFLAG_CTRL        (1 << 2)
-#define BDA_KBDFLAG_ALT         (1 << 3)
-#define BDA_KBDFLAG_SCROLL_ON   (1 << 4)
-#define BDA_KBDFLAG_NUMLOCK_ON  (1 << 5)
-#define BDA_KBDFLAG_CAPSLOCK_ON (1 << 6)
-#define BDA_KBDFLAG_INSERT_ON   (1 << 7)
-#define BDA_KBDFLAG_RALT        (1 << 8)
-#define BDA_KBDFLAG_LALT        (1 << 9)
-#define BDA_KBDFLAG_SYSRQ       (1 << 10)
-#define BDA_KBDFLAG_PAUSE       (1 << 11)
-#define BDA_KBDFLAG_SCROLL      (1 << 12)
-#define BDA_KBDFLAG_NUMLOCK     (1 << 13)
-#define BDA_KBDFLAG_CAPSLOCK    (1 << 14)
-#define BDA_KBDFLAG_INSERT      (1 << 15)
+#define BIOS_EQUIPMENT_LIST     0x2C // HACK: Disable FPU for now
 
 /*
  * BIOS Data Area at 0040:XXXX
@@ -134,12 +116,13 @@ C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
 
 extern PBIOS_DATA_AREA Bda;
 
-WORD BiosPeekCharacter(VOID);
-WORD BiosGetCharacter(VOID);
+/**HACK!!**/typedef VOID (WINAPI *EMULATOR_INT32_PROC)(LPWORD Stack);/**HACK!!**/
+
+VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func);
+VOID PicIRQComplete(LPWORD Stack);
 
 BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID BiosCleanup(VOID);
-VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
 
 #endif // _BIOS_H_
 
