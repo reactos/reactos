@@ -20,6 +20,10 @@
 
 #include "newdev_private.h"
 
+#include <wincon.h>
+#include <cfgmgr32.h>
+#include <shlobj.h>
+
 HANDLE hThread;
 
 static VOID
