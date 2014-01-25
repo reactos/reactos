@@ -74,8 +74,14 @@ VOID InitializeInt32(WORD BiosSegment)
         BiosCode[Offset++] = 0x6A; // push i
         BiosCode[Offset++] = (UCHAR)i;
 
+        /* The counter variable (initialized to 0) */
         BiosCode[Offset++] = 0x6A; // push 0
         BiosCode[Offset++] = 0x00;
+
+        /* Stack variables */
+        BiosCode[Offset++] = 0x83; // sub sp, 4
+        BiosCode[Offset++] = 0xEC;
+        BiosCode[Offset++] = 0x04;
 
         BopSeqOffset = COMMON_STUB_OFFSET - (Offset + 3);
 
@@ -107,9 +113,9 @@ VOID InitializeInt32(WORD BiosSegment)
     BiosCode[Offset++] = 0xF5;
 
 // EXIT:
-    BiosCode[Offset++] = 0x83; // add sp, 4
+    BiosCode[Offset++] = 0x83; // add sp, 8
     BiosCode[Offset++] = 0xC4;
-    BiosCode[Offset++] = 0x04;
+    BiosCode[Offset++] = 0x08;
 
     BiosCode[Offset++] = 0xCF; // iret
 

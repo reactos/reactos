@@ -34,11 +34,13 @@
 #define EMULATOR_FLAG_VIP (1 << 20)
 #define EMULATOR_FLAG_ID (1 << 21)
 
-#define STACK_COUNTER   0
-#define STACK_INT_NUM   1
-#define STACK_IP        2
-#define STACK_CS        3
-#define STACK_FLAGS     4
+#define STACK_VAR_B     0
+#define STACK_VAR_A     1
+#define STACK_COUNTER   2
+#define STACK_INT_NUM   3
+#define STACK_IP        4
+#define STACK_CS        5
+#define STACK_FLAGS     6
 
 
 /* Basic Memory Management */

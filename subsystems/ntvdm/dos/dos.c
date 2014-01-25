@@ -2675,15 +2675,31 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
      * See Ralf Brown: http://www.ctyme.com/intr/rb-4124.htm
      * for more information.
      */
-    UNREFERENCED_PARAMETER(Stack);
 
-    /*
-     * The default handler under DOS 2.x and 3.x simply calls INT 10/AH=0Eh.
-     * Do better and call directly VidBiosPrintCharacter: it's what INT 10/AH=0Eh
-     * does. Otherwise we would have to set BL to DOS_CHAR_ATTRIBUTE and
-     * BH to Bda->VideoPage.
-     */
-    VidBiosPrintCharacter(getAL(), DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+    if (Stack[STACK_COUNTER] == 0)
+    {
+        Stack[STACK_COUNTER]++;
+
+        /* Save AX and BX */
+        Stack[STACK_VAR_A] = getAX();
+        Stack[STACK_VAR_B] = getBX();
+
+        /* Rewind the BOP manually, we can't use CF because the interrupt could modify it */
+        EmulatorExecute(getCS(), getIP() - 4);
+
+        /* Call INT 0x10, AH = 0x0E */
+        setAH(0x0E);
+        setBL(DOS_CHAR_ATTRIBUTE);
+        setBH(Bda->VideoPage);
+
+        EmulatorInterrupt(0x10);
+    }
+    else
+    {
+        /* Restore AX and BX */
+        setAX(Stack[STACK_VAR_A]);
+        setBX(Stack[STACK_VAR_B]);
+    }
 }
 
 VOID WINAPI DosInt2Fh(LPWORD Stack)
