@@ -46,7 +46,7 @@ BEGIN
     PUSHBUTTON "Заключване на компютъра", IDC_LOCK, 25, 154, 99, 14
     PUSHBUTTON "Изход", IDC_LOGOFF, 90, 135, 75, 14
     PUSHBUTTON "Изключване", IDC_SHUTDOWN, 170, 135, 75, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Задачен управител", IDC_TASKMGR, 10, 135, 75, 14
     PUSHBUTTON "Отказ", IDCANCEL, 130, 154, 99, 14
 END

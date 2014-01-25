@@ -46,7 +46,7 @@ BEGIN
     PUSHBUTTON "Computer sperren", IDC_LOCK, 10, 135, 76, 14
     PUSHBUTTON "Abmelden...", IDC_LOGOFF, 100, 135, 75, 14
     PUSHBUTTON "Herunterfahren", IDC_SHUTDOWN, 189, 135, 76, 14
-    PUSHBUTTON "Password ändern", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Password ändern", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Task-Manager", IDC_TASKMGR, 100, 154, 75, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 189, 154, 76, 14
 END

@@ -54,7 +54,7 @@ BEGIN
     PUSHBUTTON "Блокування", IDC_LOCK, 6, 135, 70, 14
     PUSHBUTTON "Вихід із системи...", IDC_LOGOFF, 80, 135, 80, 14
     PUSHBUTTON "Завершення роботи...", IDC_SHUTDOWN, 165, 135, 86, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Диспетчер завдань", IDC_TASKMGR, 80, 154, 80, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 165, 154, 86, 14
 END

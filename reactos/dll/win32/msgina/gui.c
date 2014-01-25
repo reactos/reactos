@@ -220,6 +220,14 @@ GetTextboxText(
 }
 
 
+static
+BOOL
+DoChangePassword(HWND hwndDlg)
+{
+    return FALSE;
+}
+
+
 static INT_PTR CALLBACK
 ChangePasswordDialogProc(
     IN HWND hwndDlg,
@@ -227,17 +235,36 @@ ChangePasswordDialogProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PGINA_CONTEXT pgContext;
+
+    pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            FIXME("ChangePasswordDialogProc: WM_INITDLG\n");
+            pgContext = (PGINA_CONTEXT)lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
+            SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_USERNAME, pgContext->UserName);
+            SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
+            SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_SETCURSEL, 0, 0);
+            SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
             return TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwndDlg, TRUE);
+                    if (DoChangePassword(hwndDlg))
+                    {
+                        EndDialog(hwndDlg, TRUE);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NULL);
+                        SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NULL);
+                        SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
+                    }
                     return TRUE;
 
                 case IDCANCEL:
