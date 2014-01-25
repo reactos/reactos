@@ -1,8 +1,7 @@
 
 #pragma once
 
-
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#if defined(_MSC_VER) || (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define byteReverse(buf, long)((void)(buf, long))
 #else
 void

@@ -1,6 +1,6 @@
 
 
-#if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#if !defined(_MSC_VER) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 #include <stdlib.h>
 #include <intrin.h>
 
@@ -22,5 +22,5 @@ byteReverse(unsigned char *buf, unsigned longs)
     } while (--longs);
 }
 
-#endif // (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#endif // !defined(_MSC_VER) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 
