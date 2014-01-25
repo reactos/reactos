@@ -28,7 +28,14 @@
 
 #include "precomp.h"
 
+#include <tchar.h>
+#include <wincon.h>
+#include <winsvc.h>
+#include <userenv.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <rpcproxy.h>
+#include <ndk/cmfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
