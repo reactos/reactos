@@ -1,10 +1,3 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Ancillary Function Driver DLL
- * FILE:        include/msafd.h
- * PURPOSE:     Ancillary Function Driver DLL header
- */
-
 #define _WIN32_WINNT 0x502
 #define _CRT_SECURE_NO_DEPRECATE
 #define WIN32_NO_STATUS
@@ -16,18 +9,9 @@
 /* PSDK Headers */
 #include <windef.h>
 #include <winbase.h>
-#include <winnls.h>
 #include <winsock2.h>
-//#include <wsipx.h>
 #include <wsnetbs.h>
 #include <wininet.h>
-
-/* NDK */
-#include <iofuncs.h>
-#include <rtltypes.h>
-
-/* Shared GUIDs */
-#include <nsp_dns.h>
 
 /* These should go in rasadhlp.h */
 #define FILE_DEVICE_ACD                         0x000000F1
