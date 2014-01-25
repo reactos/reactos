@@ -19,6 +19,8 @@
 
 #include "samsrv.h"
 
+#include <samsrv/samsrv.h>
+
 /* GLOBALS *******************************************************************/
 
 ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;

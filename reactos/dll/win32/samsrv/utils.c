@@ -9,6 +9,8 @@
 
 #include "samsrv.h"
 
+#include <winuser.h>
+
 /* FUNCTIONS ***************************************************************/
 
 INT

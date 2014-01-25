@@ -9,6 +9,10 @@
 
 #include "samsrv.h"
 
+#include <ntsecapi.h>
+
+#include "resources.h"
+
 /* GLOBALS *****************************************************************/
 
 #define TICKS_PER_SECOND 10000000LL

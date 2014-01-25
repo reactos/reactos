@@ -9,6 +9,9 @@
 
 #include "samsrv.h"
 
+#include <ndk/cmfuncs.h>
+#include <ndk/obfuncs.h>
+
 /* FUNCTIONS ***************************************************************/
 
 static
