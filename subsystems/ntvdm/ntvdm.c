@@ -169,8 +169,10 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD StartTickCount, CurrentTickCount;
     DWORD LastClockUpdate;
     DWORD LastVerticalRefresh;
+#if 0
     DWORD LastCyclePrintout;
     DWORD Cycles = 0;
+#endif
     INT KeyboardIntCounter = 0;
 
 #ifndef TESTING
@@ -241,7 +243,7 @@ INT wmain(INT argc, WCHAR *argv[])
     QueryPerformanceCounter(&StartPerfCount);
 
     /* Set the different last counts to the starting count */
-    LastClockUpdate = LastVerticalRefresh = LastCyclePrintout = StartTickCount;
+    LastClockUpdate = LastVerticalRefresh = /*LastCyclePrintout =*/ StartTickCount;
 
     /* Set the last timer ticks to the current time */
     LastTimerTick = LastRtcTick = StartPerfCount;
@@ -275,7 +277,7 @@ INT wmain(INT argc, WCHAR *argv[])
         /* Update the PIT */
         if (TimerTicks > 0)
         {
-            PitDecrementCount(TimerTicks);
+            PitClock(TimerTicks);
             LastTimerTick = Counter;
         }
 
@@ -315,15 +317,19 @@ INT wmain(INT argc, WCHAR *argv[])
         for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
         {
             EmulatorStep();
+#if 0
             Cycles++;
+#endif
         }
 
+#if 0
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
             DPRINT1("NTVDM: %lu Instructions Per Second\n", Cycles);
             LastCyclePrintout = CurrentTickCount;
             Cycles = 0;
         }
+#endif
     }
 
     /* Perform another screen refresh */

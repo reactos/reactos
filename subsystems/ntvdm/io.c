@@ -9,7 +9,7 @@
 
 /* INCLUDES *******************************************************************/
 
-// #define NDEBUG
+#define NDEBUG
 
 #include "emulator.h"
 #include "io.h"
