@@ -1,10 +1,14 @@
-#include <stdio.h>
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <winnls.h>
 #include <windowsx.h>
 #include <undocuser.h>
 #include <uxtheme.h>
