@@ -2,8 +2,10 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            timer.h
- * PURPOSE:         Programmable Interval Timer emulation
+ * PURPOSE:         Programmable Interval Timer emulation -
+ *                  i82C54/8254 compatible
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #ifndef _TIMER_H_
@@ -20,7 +22,13 @@
 #define PIT_DATA_PORT(x) (0x40 + (x))
 #define PIT_COMMAND_PORT 0x43
 
-enum
+#define WRITE_PIT_VALUE(PitChannel, Value)    \
+    (PitChannel).Bcd ? BCD_TO_BINARY(Value) : (Value)
+
+#define READ_PIT_VALUE(PitChannel, Value)     \
+    (PitChannel).Bcd ? BINARY_TO_BCD(Value) : (Value)
+
+typedef enum _PIT_MODE
 {
     PIT_MODE_INT_ON_TERMINAL_COUNT,
     PIT_MODE_HARDWARE_ONE_SHOT,
@@ -28,19 +36,36 @@ enum
     PIT_MODE_SQUARE_WAVE,
     PIT_MODE_SOFTWARE_STROBE,
     PIT_MODE_HARDWARE_STROBE
-};
+} PIT_MODE, *PPIT_MODE;
 
 typedef struct _PIT_CHANNEL
 {
-    WORD ReloadValue;
-    WORD CurrentValue;
-    WORD LatchedValue;
-    INT Mode;
     BOOLEAN Pulsed;
-    BOOLEAN LatchSet;
-    BOOLEAN InputFlipFlop;
-    BOOLEAN OutputFlipFlop;
-    BYTE AccessMode;
+
+
+    /* PIT Status members */
+    PIT_MODE Mode;
+    BOOLEAN  Bcd;
+    BYTE     ReadWriteMode; // 0 --> Counter Latch ; 1 --> LSB R/W ; 2 --> MSB R/W ; 3 --> LSB then MSB R/W
+
+    /* Reading the PIT status byte */
+    BOOLEAN LatchStatusSet;
+    BYTE    StatusLatch;
+
+    /* For interleaving reading and writing in 2-byte RW mode */
+    BYTE    ReadStatus;     // Same convention as ReadWriteMode
+    BYTE    WriteStatus;    // Same convention as ReadWriteMode
+
+    /**/WORD    CountRegister;/**/  // Our ReloadValue ???
+    WORD OutputLatch;
+    /*******************************/
+
+    WORD    ReloadValue;    // Max value of the counter
+    WORD    CurrentValue;   // Real value of the counter
+
+    /* PIT Output */
+    BOOLEAN Out;    // 0: Low ; 1: High
+
 } PIT_CHANNEL, *PPIT_CHANNEL;
 
 extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker

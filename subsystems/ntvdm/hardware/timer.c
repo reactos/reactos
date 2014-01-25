@@ -2,8 +2,10 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            timer.c
- * PURPOSE:         Programmable Interval Timer emulation
+ * PURPOSE:         Programmable Interval Timer emulation -
+ *                  i82C54/8254 compatible
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -22,25 +24,139 @@ PPIT_CHANNEL PitChannel2 = &PitChannels[2];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static VOID PitLatchChannelStatus(BYTE Channel)
+{
+    if (Channel >= PIT_CHANNELS) return;
+
+    /*
+     * A given counter can be latched only one time until it gets unlatched.
+     * If the counter is latched and then is latched again later before the
+     * value is read, then this last latch command is ignored and the value
+     * will be the value at the time the first command was issued.
+     */
+    if (PitChannels[Channel].LatchStatusSet == FALSE)
+    {
+        BYTE StatusLatch = 0;
+        /* HACK!! */BYTE NullCount = 0;/* HACK!! */
+
+        StatusLatch = PitChannels[Channel].Out << 7 | NullCount << 6;
+        StatusLatch |= (PitChannels[Channel].ReadWriteMode & 0x03) << 4;
+        StatusLatch |= (PitChannels[Channel].Mode & 0x07) << 1;
+        StatusLatch |= (PitChannels[Channel].Bcd  & 0x01);
+
+        PitChannels[Channel].LatchStatusSet = TRUE;
+        PitChannels[Channel].StatusLatch    = StatusLatch;
+    }
+}
+
+static VOID PitLatchChannelCount(BYTE Channel)
+{
+    if (Channel >= PIT_CHANNELS) return;
+
+    /*
+     * A given counter can be latched only one time until it gets unlatched.
+     * If the counter is latched and then is latched again later before the
+     * value is read, then this last latch command is ignored and the value
+     * will be the value at the time the first command was issued.
+     */
+    if (PitChannels[Channel].ReadStatus == 0x00)
+    {
+        PitChannels[Channel].ReadStatus  = PitChannels[Channel].ReadWriteMode;
+
+        /* Convert the current value to BCD if needed */
+        PitChannels[Channel].OutputLatch = READ_PIT_VALUE(PitChannels[Channel],
+                                                          PitChannels[Channel].CurrentValue);
+    }
+}
+
+static VOID PitSetOut(PPIT_CHANNEL Channel, BOOLEAN State)
+{
+    if (State == Channel->Out) return;
+
+    /* Set the new state of the OUT pin */
+    Channel->Out = State;
+
+    // /* Call the callback */
+    // if (Channel->OutFunction) Channel->OutFunction(Channel->OutParam, State);
+}
+
+static VOID PitInitCounter(PPIT_CHANNEL Channel)
+{
+    switch (Channel->Mode)
+    {
+        case PIT_MODE_INT_ON_TERMINAL_COUNT:
+            PitSetOut(Channel, FALSE);
+            break;
+
+        case PIT_MODE_HARDWARE_ONE_SHOT:
+        case PIT_MODE_RATE_GENERATOR:
+        case PIT_MODE_SQUARE_WAVE:
+        case PIT_MODE_SOFTWARE_STROBE:
+        case PIT_MODE_HARDWARE_STROBE:
+            PitSetOut(Channel, TRUE);
+            break;
+    }
+}
+
 static VOID PitWriteCommand(BYTE Value)
 {
-    BYTE Channel = Value >> 6;
-    BYTE Mode = (Value >> 1) & 0x07;
+    BYTE Channel       = (Value >> 6) & 0x03;
+    BYTE ReadWriteMode = (Value >> 4) & 0x03;
+    BYTE Mode     = (Value >> 1) & 0x07;
+    BOOLEAN IsBcd = Value & 0x01;
 
-    /* Check if this is a counter latch command */
-    if (((Value >> 4) & 3) == 0)
+    /*
+     * Check for valid PIT channel - Possible values: 0, 1, 2.
+     * A value of 3 is for Read-Back Command.
+     */
+    if (Channel > PIT_CHANNELS) return;
+
+    /* Read-Back Command */
+    if (Channel == PIT_CHANNELS)
     {
-        PitChannels[Channel].LatchSet = TRUE;
-        PitChannels[Channel].LatchedValue = PitChannels[Channel].CurrentValue;
+        if ((Value & 0x20) == 0) // Bit 5 (Count) == 0: We latch multiple counters' counts
+        {
+            if (Value & 0x02) PitLatchChannelCount(0);
+            if (Value & 0x04) PitLatchChannelCount(1);
+            if (Value & 0x08) PitLatchChannelCount(2);
+        }
+        if ((Value & 0x10) == 0) // Bit 4 (Status) == 0: We latch multiple counters' statuses
+        {
+            if (Value & 0x02) PitLatchChannelStatus(0);
+            if (Value & 0x04) PitLatchChannelStatus(1);
+            if (Value & 0x08) PitLatchChannelStatus(2);
+        }
         return;
     }
 
-    /* Set the access mode and reset flip-flops */
-    PitChannels[Channel].AccessMode = (Value >> 4) & 3;
+    /* Check if this is a counter latch command... */
+    if (ReadWriteMode == 0)
+    {
+        PitLatchChannelCount(Channel);
+        return;
+    }
+
+    /* ... otherwise, set the modes and reset flip-flops */
+    PitChannels[Channel].ReadWriteMode = ReadWriteMode;
+
+    PitChannels[Channel].LatchStatusSet = FALSE;
+    PitChannels[Channel].StatusLatch    = 0x00;
+
+    PitChannels[Channel].ReadStatus  = 0x00;
+    PitChannels[Channel].WriteStatus = 0x00;
+
+    PitChannels[Channel].CountRegister = 0x00;
+    PitChannels[Channel].OutputLatch   = 0x00;
+
     PitChannels[Channel].Pulsed = FALSE;
-    PitChannels[Channel].LatchSet = FALSE;
-    PitChannels[Channel].InputFlipFlop = FALSE;
-    PitChannels[Channel].OutputFlipFlop = FALSE;
+
+
+    // PitChannels[Channel].Out = FALSE; // <-- unneeded, see the PitInitCounter call below.
+
+    /* Fix the current value if we switch to BCD counting */
+    PitChannels[Channel].Bcd = IsBcd;
+    if (IsBcd && PitChannels[Channel].CurrentValue > 9999)
+        PitChannels[Channel].CurrentValue = 9999;
 
     switch (Mode)
     {
@@ -56,96 +172,92 @@ static VOID PitWriteCommand(BYTE Value)
         }
 
         case 6:
-        {
-            PitChannels[Channel].Mode = PIT_MODE_RATE_GENERATOR;
-            break;
-        }
-
         case 7:
         {
-            PitChannels[Channel].Mode = PIT_MODE_SQUARE_WAVE;
+            /*
+             * Modes 6 and 7 become PIT_MODE_RATE_GENERATOR
+             * and PIT_MODE_SQUARE_WAVE respectively.
+             */
+            PitChannels[Channel].Mode = Mode - 4;
             break;
         }
     }
+
+    PitInitCounter(&PitChannels[Channel]);
 }
 
 static BYTE PitReadData(BYTE Channel)
 {
-    WORD CurrentValue = PitChannels[Channel].CurrentValue;
-    BYTE AccessMode = PitChannels[Channel].AccessMode;
+    LPBYTE ReadWriteMode = NULL;
+    LPWORD CurrentValue  = NULL;
 
-    /* Check if the value was latched */
-    if (PitChannels[Channel].LatchSet)
+    /*
+     * If the status was latched, the first read operation
+     * will return the latched status, whichever the count
+     * value or the status was latched first.
+     */
+    if (PitChannels[Channel].LatchStatusSet)
     {
-        CurrentValue = PitChannels[Channel].LatchedValue;
-
-        if (AccessMode == 1 || AccessMode == 2)
-        {
-            /* The latched value was read as one byte */
-            PitChannels[Channel].LatchSet = FALSE;
-        }
+        PitChannels[Channel].LatchStatusSet = FALSE;
+        return PitChannels[Channel].StatusLatch;
     }
 
-    /* Use the flip-flop for access mode 3 */
-    if (AccessMode == 3)
-    {
-        AccessMode = PitChannels[Channel].InputFlipFlop ? 1 : 2;
-        PitChannels[Channel].InputFlipFlop = !PitChannels[Channel].InputFlipFlop;
+    /* To be able to read the count asynchronously, latch it first if needed */
+    if (PitChannels[Channel].ReadStatus == 0) PitLatchChannelCount(Channel);
 
-        /* Check if this was the last read for the latched value */
-        if (!PitChannels[Channel].InputFlipFlop)
-        {
-            /* Yes, the latch value was read as two bytes */
-            PitChannels[Channel].LatchSet = FALSE;
-        }
+    /* The count is now latched */
+    ASSERT(PitChannels[Channel].ReadStatus != 0);
+
+    ReadWriteMode = &PitChannels[Channel].ReadStatus ;
+    CurrentValue  = &PitChannels[Channel].OutputLatch;
+
+    if (*ReadWriteMode & 1)
+    {
+        /* Read LSB */
+        *ReadWriteMode &= ~1;
+        return LOBYTE(*CurrentValue);
     }
 
-    switch (AccessMode)
+    if (*ReadWriteMode & 2)
     {
-        case 1:
-        {
-            /* Low byte */
-            return CurrentValue & 0x00FF;
-        }
-
-        case 2:
-        {
-            /* High byte */
-            return CurrentValue >> 8;
-        }
+        /* Read MSB */
+        *ReadWriteMode &= ~2;
+        return HIBYTE(*CurrentValue);
     }
 
     /* Shouldn't get here */
+    ASSERT(FALSE);
     return 0;
 }
 
 static VOID PitWriteData(BYTE Channel, BYTE Value)
 {
-    BYTE AccessMode = PitChannels[Channel].AccessMode;
+    LPBYTE ReadWriteMode = NULL;
 
-    /* Use the flip-flop for access mode 3 */
-    if (PitChannels[Channel].AccessMode == 3)
+    if (PitChannels[Channel].WriteStatus == 0x00)
     {
-        AccessMode = PitChannels[Channel].InputFlipFlop ? 1 : 2;
-        PitChannels[Channel].InputFlipFlop = !PitChannels[Channel].InputFlipFlop;
+        PitChannels[Channel].WriteStatus = PitChannels[Channel].ReadWriteMode;
     }
 
-    switch (AccessMode)
-    {
-        case 1:
-        {
-            /* Low byte */
-            PitChannels[Channel].ReloadValue &= 0xFF00;
-            PitChannels[Channel].ReloadValue |= Value;
-            break;
-        }
+    ReadWriteMode = &PitChannels[Channel].WriteStatus;
 
-        case 2:
-        {
-            /* High byte */
-            PitChannels[Channel].ReloadValue &= 0x00FF;
-            PitChannels[Channel].ReloadValue |= Value << 8;
-        }
+    if (*ReadWriteMode & 1)
+    {
+        /* Write LSB */
+        *ReadWriteMode &= ~1;
+
+        PitChannels[Channel].ReloadValue &= 0xFF00;
+        PitChannels[Channel].ReloadValue |= Value;
+        return;
+    }
+    else if (*ReadWriteMode & 2)
+    {
+        /* Write MSB */
+        *ReadWriteMode &= ~2;
+
+        PitChannels[Channel].ReloadValue &= 0x00FF;
+        PitChannels[Channel].ReloadValue |= Value << 8;
+        return;
     }
 }
 
@@ -302,11 +414,11 @@ VOID PitDecrementCount(DWORD Count)
                 /* Toggle the flip-flop if the number of reloads was odd */
                 if (ReloadCount & 1)
                 {
-                    PitChannels[i].OutputFlipFlop = !PitChannels[i].OutputFlipFlop;
+                    PitChannels[i].Out = !PitChannels[i].Out;
                 }
 
                 /* Was there any rising edge on channel 0 ? */
-                if (((PitChannels[i].OutputFlipFlop && (ReloadCount == 1))
+                if (((PitChannels[i].Out && (ReloadCount == 1))
                     || (ReloadCount > 1))
                     && (i == 0))
                 {
