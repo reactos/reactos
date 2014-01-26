@@ -19,9 +19,6 @@
 
 #include "wincodecs_private.h"
 
-#include <ole2.h>
-#include <wine/unicode.h>
-
 typedef struct PropertyBag {
     IPropertyBag2 IPropertyBag2_iface;
     LONG ref;

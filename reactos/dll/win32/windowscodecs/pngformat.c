@@ -22,10 +22,6 @@
 #include <png.h>
 #endif
 
-#include <wincodecsdk.h>
-
-#include <wine/library.h>
-
 static HRESULT read_png_chunk(IStream *stream, BYTE *type, BYTE **data, ULONG *data_size)
 {
     BYTE header[8];

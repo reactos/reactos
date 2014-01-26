@@ -34,10 +34,16 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
 #include <objbase.h>
-#include <wincodec.h>
+#include <oleauto.h>
+#include <wincodecsdk.h>
 
 #include <wine/debug.h>
+#include <wine/library.h>
+#include <wine/unicode.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 DEFINE_GUID(CLSID_WineTgaDecoder, 0xb11fc79a,0x67cc,0x43e6,0xa9,0xce,0xe3,0xd5,0x49,0x45,0xd3,0x04);

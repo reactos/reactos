@@ -19,9 +19,6 @@
 
 #include "wincodecs_private.h"
 
-#include <wingdi.h>
-#include <wincodecsdk.h>
-
 typedef struct {
     IWICComponentFactory IWICComponentFactory_iface;
     LONG ref;

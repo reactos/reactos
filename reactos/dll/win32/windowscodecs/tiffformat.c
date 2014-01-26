@@ -25,11 +25,6 @@
 #include <tiffio.h>
 #endif
 
-#include <oleauto.h>
-#include <wincodecsdk.h>
-
-#include <wine/library.h>
-
 #ifdef SONAME_LIBTIFF
 
 /* Workaround for broken libtiff 4.x headers on some 64-bit hosts which

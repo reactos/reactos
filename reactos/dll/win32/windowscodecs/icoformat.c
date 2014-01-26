@@ -18,8 +18,6 @@
 
 #include "wincodecs_private.h"
 
-#include <wingdi.h>
-
 #include <pshpack1.h>
 
 typedef struct {

@@ -19,7 +19,6 @@
 #include "wincodecs_private.h"
 
 #include <assert.h>
-#include <wingdi.h>
 
 typedef struct {
     DWORD bc2Size;
