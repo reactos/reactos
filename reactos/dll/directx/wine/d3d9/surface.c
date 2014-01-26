@@ -290,8 +290,11 @@ static HRESULT WINAPI d3d9_surface_LockRect(IDirect3DSurface9 *iface,
     hr = wined3d_surface_map(surface->wined3d_surface, &map_desc, rect, flags);
     wined3d_mutex_unlock();
 
-    locked_rect->Pitch = map_desc.row_pitch;
-    locked_rect->pBits = map_desc.data;
+    if (SUCCEEDED(hr))
+    {
+        locked_rect->Pitch = map_desc.row_pitch;
+        locked_rect->pBits = map_desc.data;
+    }
 
     return hr;
 }
@@ -387,16 +390,16 @@ static const struct wined3d_parent_ops d3d9_surface_wined3d_parent_ops =
     surface_wined3d_object_destroyed,
 };
 
-HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
-        D3DFORMAT format, DWORD flags, DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type,
-        DWORD multisample_quality)
+void surface_init(struct d3d9_surface *surface, struct wined3d_surface *wined3d_surface,
+        struct d3d9_device *device, const struct wined3d_parent_ops **parent_ops)
 {
-    HRESULT hr;
+    struct wined3d_resource_desc desc;
 
     surface->IDirect3DSurface9_iface.lpVtbl = &d3d9_surface_vtbl;
     surface->refcount = 1;
 
-    switch (format)
+    wined3d_resource_get_desc(wined3d_surface_get_resource(wined3d_surface), &desc);
+    switch (d3dformat_from_wined3dformat(desc.format))
     {
         case D3DFMT_A8R8G8B8:
         case D3DFMT_X8R8G8B8:
@@ -412,28 +415,12 @@ HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, U
             break;
     }
 
-    /* FIXME: Check MAX bounds of MultisampleQuality. */
-    if (multisample_quality > 0)
-    {
-        FIXME("Multisample quality set to %u, substituting 0.\n", multisample_quality);
-        multisample_quality = 0;
-    }
-
-    wined3d_mutex_lock();
-    hr = wined3d_surface_create(device->wined3d_device, width, height, wined3dformat_from_d3dformat(format),
-            usage & WINED3DUSAGE_MASK, (enum wined3d_pool)pool, multisample_type, multisample_quality,
-            flags, surface, &d3d9_surface_wined3d_parent_ops, &surface->wined3d_surface);
-    wined3d_mutex_unlock();
-    if (FAILED(hr))
-    {
-        WARN("Failed to create wined3d surface, hr %#x.\n", hr);
-        return hr;
-    }
-
+    wined3d_surface_incref(wined3d_surface);
+    surface->wined3d_surface = wined3d_surface;
     surface->parent_device = &device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9Ex_AddRef(surface->parent_device);
 
-    return D3D_OK;
+    *parent_ops = &d3d9_surface_wined3d_parent_ops;
 }
 
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface)

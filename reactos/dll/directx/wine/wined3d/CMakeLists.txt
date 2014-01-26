@@ -9,10 +9,11 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(wined3d.dll wined3d.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    ati_fragment_shader.c
     arb_program_shader.c
+    ati_fragment_shader.c
     buffer.c
     context.c
+    cs.c
     device.c
     directx.c
     drawprim.c

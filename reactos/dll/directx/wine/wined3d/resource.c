@@ -68,7 +68,8 @@ static void resource_check_usage(DWORD usage)
             | WINED3DUSAGE_DYNAMIC
             | WINED3DUSAGE_AUTOGENMIPMAP
             | WINED3DUSAGE_STATICDECL
-            | WINED3DUSAGE_OVERLAY;
+            | WINED3DUSAGE_OVERLAY
+            | WINED3DUSAGE_TEXTURE;
 
     if (usage & ~handled)
         FIXME("Unhandled usage flags %#x.\n", usage & ~handled);
@@ -82,6 +83,17 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         const struct wined3d_resource_ops *resource_ops)
 {
     const struct wined3d *d3d = device->wined3d;
+
+    resource_check_usage(usage);
+    if (pool != WINED3D_POOL_SCRATCH)
+    {
+        if ((usage & WINED3DUSAGE_RENDERTARGET) && !(format->flags & WINED3DFMT_FLAG_RENDERTARGET))
+            return WINED3DERR_INVALIDCALL;
+        if ((usage & WINED3DUSAGE_DEPTHSTENCIL) && !(format->flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
+            return WINED3DERR_INVALIDCALL;
+        if ((usage & WINED3DUSAGE_TEXTURE) && !(format->flags & WINED3DFMT_FLAG_TEXTURE))
+            return WINED3DERR_INVALIDCALL;
+    }
 
     resource->ref = 1;
     resource->device = device;
@@ -104,22 +116,18 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
     resource->resource_ops = resource_ops;
     list_init(&resource->privateData);
 
-    resource_check_usage(usage);
-
     if (size)
     {
-        resource->heap_memory = wined3d_resource_allocate_sysmem(size);
-        if (!resource->heap_memory)
+        if (!wined3d_resource_allocate_sysmem(resource))
         {
-            ERR("Out of memory!\n");
-            return WINED3DERR_OUTOFVIDEOMEMORY;
+            ERR("Failed to allocate system memory.\n");
+            return E_OUTOFMEMORY;
         }
     }
     else
     {
         resource->heap_memory = NULL;
     }
-    resource->allocatedMemory = resource->heap_memory;
 
     /* Check that we have enough video ram left */
     if (pool == WINED3D_POOL_DEFAULT && d3d->flags & WINED3D_VIDMEM_ACCOUNTING)
@@ -127,7 +135,7 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
         if (size > wined3d_device_get_available_texture_mem(device))
         {
             ERR("Out of adapter memory\n");
-            wined3d_resource_free_sysmem(resource->heap_memory);
+            wined3d_resource_free_sysmem(resource);
             return WINED3DERR_OUTOFVIDEOMEMORY;
         }
         adapter_adjust_memory(device->adapter, size);
@@ -161,9 +169,7 @@ void resource_cleanup(struct wined3d_resource *resource)
             ERR("Failed to free private data when destroying resource %p, hr = %#x.\n", resource, hr);
     }
 
-    wined3d_resource_free_sysmem(resource->heap_memory);
-    resource->allocatedMemory = NULL;
-    resource->heap_memory = NULL;
+    wined3d_resource_free_sysmem(resource);
 
     device_resource_released(resource->device, resource);
 }
@@ -318,6 +324,11 @@ void * CDECL wined3d_resource_get_parent(const struct wined3d_resource *resource
     return resource->parent;
 }
 
+void CDECL wined3d_resource_set_parent(struct wined3d_resource *resource, void *parent)
+{
+    resource->parent = parent;
+}
+
 void CDECL wined3d_resource_get_desc(const struct wined3d_resource *resource, struct wined3d_resource_desc *desc)
 {
     desc->resource_type = resource->type;
@@ -332,29 +343,32 @@ void CDECL wined3d_resource_get_desc(const struct wined3d_resource *resource, st
     desc->size = resource->size;
 }
 
-void *wined3d_resource_allocate_sysmem(SIZE_T size)
+BOOL wined3d_resource_allocate_sysmem(struct wined3d_resource *resource)
 {
     void **p;
     SIZE_T align = RESOURCE_ALIGNMENT - 1 + sizeof(*p);
     void *mem;
 
-    if (!(mem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + align)))
-        return NULL;
+    if (!(mem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, resource->size + align)))
+        return FALSE;
 
     p = (void **)(((ULONG_PTR)mem + align) & ~(RESOURCE_ALIGNMENT - 1)) - 1;
     *p = mem;
 
-    return ++p;
+    resource->heap_memory = ++p;
+
+    return TRUE;
 }
 
-void wined3d_resource_free_sysmem(void *mem)
+void wined3d_resource_free_sysmem(struct wined3d_resource *resource)
 {
-    void **p = mem;
+    void **p = resource->heap_memory;
 
-    if (!mem)
+    if (!p)
         return;
 
     HeapFree(GetProcessHeap(), 0, *(--p));
+    resource->heap_memory = NULL;
 }
 
 DWORD wined3d_resource_sanitize_map_flags(const struct wined3d_resource *resource, DWORD flags)
@@ -405,4 +419,13 @@ GLbitfield wined3d_resource_gl_map_flags(DWORD d3d_flags)
         ret |= GL_MAP_UNSYNCHRONIZED_BIT;
 
     return ret;
+}
+
+GLenum wined3d_resource_gl_legacy_map_flags(DWORD d3d_flags)
+{
+    if (d3d_flags & WINED3D_MAP_READONLY)
+        return GL_READ_ONLY_ARB;
+    if (d3d_flags & (WINED3D_MAP_DISCARD | WINED3D_MAP_NOOVERWRITE))
+        return GL_WRITE_ONLY_ARB;
+    return GL_READ_WRITE_ARB;
 }

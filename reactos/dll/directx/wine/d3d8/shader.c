@@ -92,7 +92,7 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
 
             if (reg == D3DVSDE_NORMAL && type != D3DVSDT_FLOAT3 && !byte_code)
             {
-                WARN("Attempt to use a non-FLOAT3 normal with the fixed function function\n");
+                WARN("Attempt to use a non-FLOAT3 normal with the fixed-function function\n");
                 return D3DERR_INVALIDCALL;
             }
         }

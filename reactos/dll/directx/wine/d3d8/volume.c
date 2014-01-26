@@ -280,21 +280,13 @@ static const struct wined3d_parent_ops d3d8_volume_wined3d_parent_ops =
     volume_wined3d_object_destroyed,
 };
 
-HRESULT volume_init(struct d3d8_volume *volume, struct d3d8_device *device, UINT width, UINT height,
-        UINT depth, UINT level, DWORD usage, enum wined3d_format_id format, enum wined3d_pool pool)
+void volume_init(struct d3d8_volume *volume, struct wined3d_volume *wined3d_volume,
+        const struct wined3d_parent_ops **parent_ops)
 {
-    HRESULT hr;
-
     volume->IDirect3DVolume8_iface.lpVtbl = &d3d8_volume_vtbl;
     volume->refcount = 1;
+    wined3d_volume_incref(wined3d_volume);
+    volume->wined3d_volume = wined3d_volume;
 
-    hr = wined3d_volume_create(device->wined3d_device, width, height, depth, level, usage,
-            format, pool, volume, &d3d8_volume_wined3d_parent_ops, &volume->wined3d_volume);
-    if (FAILED(hr))
-    {
-        WARN("Failed to create wined3d volume, hr %#x.\n", hr);
-        return hr;
-    }
-
-    return D3D_OK;
+    *parent_ops = &d3d8_volume_wined3d_parent_ops;
 }

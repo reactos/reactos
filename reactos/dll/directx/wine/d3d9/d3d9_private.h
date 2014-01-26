@@ -35,7 +35,6 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -182,13 +181,12 @@ struct d3d9_volume
     IUnknown *forwardReference;
 };
 
-HRESULT volume_init(struct d3d9_volume *volume, struct d3d9_device *device, UINT width, UINT height,
-        UINT depth, UINT level, DWORD usage, enum wined3d_format_id format,
-        enum wined3d_pool pool) DECLSPEC_HIDDEN;
+void volume_init(struct d3d9_volume *volume, struct wined3d_volume *wined3d_volume,
+        const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d9_swapchain
 {
-    IDirect3DSwapChain9 IDirect3DSwapChain9_iface;
+    IDirect3DSwapChain9Ex IDirect3DSwapChain9Ex_iface;
     LONG refcount;
     struct wined3d_swapchain *wined3d_swapchain;
     IDirect3DDevice9Ex *parent_device;
@@ -208,9 +206,8 @@ struct d3d9_surface
     BOOL getdc_supported;
 };
 
-HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
-        D3DFORMAT format, DWORD flags, DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type,
-        DWORD multisample_quality) DECLSPEC_HIDDEN;
+void surface_init(struct d3d9_surface *surface, struct wined3d_surface *wined3d_surface,
+        struct d3d9_device *device, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 
 struct d3d9_vertexbuffer
@@ -318,5 +315,10 @@ struct d3d9_query
 };
 
 HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUERYTYPE type) DECLSPEC_HIDDEN;
+
+static inline struct d3d9_device *impl_from_IDirect3DDevice9Ex(IDirect3DDevice9Ex *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3d9_device, IDirect3DDevice9Ex_iface);
+}
 
 #endif /* __WINE_D3D9_PRIVATE_H */

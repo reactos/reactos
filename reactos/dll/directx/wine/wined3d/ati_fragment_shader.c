@@ -868,7 +868,7 @@ static void set_tex_op_atifs(struct wined3d_context *context, const struct wined
      */
     for (i = 0; i < desc->num_textures_used; ++i)
     {
-        mapped_stage = device->texUnitMap[i];
+        mapped_stage = context->tex_unit_map[i];
         if (mapped_stage != WINED3D_UNMAPPED_STAGE)
         {
             context_active_texture(context, gl_info, mapped_stage);
@@ -916,7 +916,7 @@ static void set_bumpmat(struct wined3d_context *context, const struct wined3d_st
 
 static void textransform(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    if (!isStateDirty(context, STATE_PIXELSHADER))
+    if (!isStateDirty(context, STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL)))
         set_tex_op_atifs(context, state, state_id);
 }
 
@@ -1075,7 +1075,7 @@ static const struct StateEntryTemplate atifs_fragmentstate_template[] = {
     {STATE_TEXTURESTAGE(5,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(5, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), textransform      }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(6,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(6, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), textransform      }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(7,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(7, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), textransform      }, WINED3D_GL_EXT_NONE             },
-    {STATE_PIXELSHADER,                                   { STATE_PIXELSHADER,                                  atifs_apply_pixelshader }, WINED3D_GL_EXT_NONE             },
+    {STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),             { STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),            atifs_apply_pixelshader }, WINED3D_GL_EXT_NONE             },
     {0 /* Terminate */,                                   { 0,                                                  0                       }, WINED3D_GL_EXT_NONE             },
 };
 
