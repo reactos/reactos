@@ -33,3 +33,4 @@ Size = 23,84 Mo
 Name = Mikroyazılım .NET Çatısı Sürüm 2.0 Hizmet Paketi 2
 Licence = Bilinmiyor
 Description = Mikroyazılım .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2
+Size = 23,84 MB

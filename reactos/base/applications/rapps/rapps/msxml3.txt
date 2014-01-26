@@ -44,6 +44,7 @@ Size = 1,85 Mo
 [Section.041f]
 Licence = Bilinmiyor
 Description = Birtakım Mikroyazılım Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Size = 1,85 MB
 
 [Section.0422]
 Licence = Невідома

@@ -45,6 +45,7 @@ Size = 969,59 ko
 Name = Basarî Basic 5 Yürütücüsü
 Licence = Bilinmiyor
 Description = Basarî Basic 5 Yürütücüsü. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Size = 969,59 KB
 
 [Section.0422]
 Licence = Невідома

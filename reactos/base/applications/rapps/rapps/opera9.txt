@@ -41,6 +41,7 @@ Description = Популярный браузер со многими допол
 [Section.041f]
 Licence = Ücretsiz
 Description = Tutulan Opera Tarayıcı, birçok gelişmiş husûsiyetle ve kendi mail ve BitTorrent istemcileriyle birlikte gelir.
+Size = 7,21 MB
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.

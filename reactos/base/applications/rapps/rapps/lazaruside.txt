@@ -8,7 +8,7 @@ Description = A cross-platform integrated development environment (IDE) that let
 Size = 111 MB
 Category = 7
 URLSite = http://www.lazarus.freepascal.org/
-URLDownload = http://garr.dl.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.0.14/lazarus-1.0.14-fpc-2.6.2-win32.exe
+URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.0.14/lazarus-1.0.14-fpc-2.6.2-win32.exe
 CDPath = none
 
 [Section.0407]

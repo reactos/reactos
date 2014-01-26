@@ -45,6 +45,7 @@ Size = 4,8 Mo
 Name = Mikroyazılım Basarî C++ 2010 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
 Description = Basarî Stüdyo 2010 Yürütücüsü. Şunları içerir: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Size = 4,8 MB
 
 [Section.0422]
 Licence = Невідома

@@ -23,3 +23,4 @@ Size = 7,3 Mo
 
 [Section.041f]
 Description = SuperTux, ücretsiz, iki boyutlu ve açık kaynak bir platform oyunudur.
+Size = 7,3 MB

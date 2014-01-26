@@ -19,3 +19,9 @@ Description = Mozilla Fira Font Pack, Beinhaltet Mono und Sans Schriften. Bitte 
 Licence = Nespecificată
 Description = Pachetul Mozilla Fira Font, include fonturile Mono și Sans. Dezarhivați în dosarul „ReactOS”.
 Size = 543 ko
+
+[Section.041f]
+Name = Mozilla Fira Yazı Türü
+Licence = Bilinmiyor
+Description = Mozilla Fira Yazı Türü Paketi, Mono ve Sans yazı türlerini kapsar. ReactOS'un "Fonts" dizinine çıkartınız.
+Size = 543 KB

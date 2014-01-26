@@ -45,6 +45,7 @@ Size = 10,2 Mo
 Name = IrfanView Eklentileri
 Licence = Şahsî kullanımlar için ücretsiz.
 Description = Daha çok kütük türünü desteklemeye yarayan eklentiler.
+Size = 10,2 MB
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)

@@ -39,6 +39,7 @@ Size = 4,35 Mo
 Name = Ses Yakalayıcısı
 Licence = Ücretsiz
 Description = Çok iyi bir CD ripleyicisi ve ses biçimi dönüştürücüsü.
+Size = 4,35 MB
 
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.

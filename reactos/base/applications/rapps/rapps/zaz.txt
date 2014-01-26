@@ -23,3 +23,4 @@ Size = 21,0 Mo
 
 [Section.041f]
 Description = Zaz, atari salonu oyunu türünde, gelişimli bir bulmaca oyunudur. Bir nebze Donmuş Kabarcıklar'a benzemektedir.
+Size = 21,0 MB

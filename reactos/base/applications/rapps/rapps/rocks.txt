@@ -20,3 +20,4 @@ Size = 2,42 Mo
 
 [Section.041f]
 Description = UNIX, Mac OS X, Pencereler ve DOS için yapılmış, atari oyun salonu türünde bir oyun. Şu gelenekleri içerir: "Boulder Dash" (C64), "Zümrüt Mâdeni" (Amiga), "Supaplex" (Amiga ve PC), "Sokoban" (PC). Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Size = 2,42 MB

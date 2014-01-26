@@ -22,4 +22,6 @@ Description = IndiFTPD este un server FTP de sine stătător, într-un singur ex
 Size = 556 ko
 
 [Section.041f]
+Version = 1.0.9 Gelişme
 Description = IndiFTPD, bağımsız (bir tek çalıştırılabilir kütükten oluşan) bir FTP sunucusudur. Bu yazılım, çabucak çalışan bir sunucuya iye olmak isteyen, ancak dizgesinde bir sunucu kurmak/ayarlamak istemeyen veyâ dizgesine bir sunucu kuramayan/ayarlayamayan kullanıcılar için tasarlanmıştır.
+Size = 556 KB

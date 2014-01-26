@@ -21,3 +21,4 @@ Size = 4,6 Mo
 
 [Section.041f]
 Description = Bir FB2 e-Kitap ouyucusu.
+Size = 4,6 MB

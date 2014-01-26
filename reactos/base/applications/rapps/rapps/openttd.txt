@@ -36,6 +36,7 @@ Size = 6,75 Mo
 
 [Section.041f]
 Description = Transport Tycoon Deluxe oyun motorunun bir açık kaynak taklidi. Transport Tycoon'un bir sûreti gerekir.
+Size = 6,75 MB
 
 [Section.0422]
 Description = Відкритий клон двигуна гри "Transport Tycoon Deluxe". Вам потрібна копія гри Transport Tycoon.

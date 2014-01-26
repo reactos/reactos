@@ -45,6 +45,7 @@ Size = 913,73 ko
 Name = Mikroyazılım Basarî Basic 6.0 Ortak Denetimler
 Licence = Bilinmiyor
 Description = Birtakım uygulamalar için gereklidir. Şunları içerir: comctl32.ocx, mscomctl.ocx, advpack.dll.
+Size = 913,73 KB
 
 [Section.0422]
 Licence = Невідома

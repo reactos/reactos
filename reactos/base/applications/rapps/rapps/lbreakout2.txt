@@ -8,7 +8,7 @@ Description = Breakout Clone using SDL libs.
 Size = 3.03 MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LBreakout2
-URLDownload = http://garr.dl.sourceforge.net/project/lgames/binaries/lbreakout2-2.4.1-win32.exe
+URLDownload = http://download.sourceforge.net/project/lgames/binaries/lbreakout2-2.4.1-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -36,6 +36,7 @@ Size = 3,03 Mo
 
 [Section.041f]
 Description = SDL kitaplıklarını kullanan bir Breakout taklidi.
+Size = 3,03 MB
 
 [Section.0422]
 Description = Клон Breakouta/Arkanoida, що використовує бібліотеки SDL.

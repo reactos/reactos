@@ -22,3 +22,4 @@ Size = 6,2 Mo
 
 [Section.041f]
 Description = Pencereler 95 CD'sinde bulunan bir bayrak kapmaca oyunu.
+Size = 6,2 MB

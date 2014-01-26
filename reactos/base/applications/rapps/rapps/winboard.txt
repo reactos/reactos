@@ -36,6 +36,7 @@ Size = 5,93 Mo
 
 [Section.041f]
 Description = WinBoard; GNU Satranç, Crafty ve diğer satranç motorlarını örütbağ satranç sunucuları ve maille yazışmalı satranç için bir arayüz olarak sunan, Pencereler/ReactOS için bir çizgelik satranç tahtasıdır.
+Size = 5,93 MB
 
 [Section.0422]
 Description = Графічна шахматна дошка для Windows/ReactOS, що може слугувати графічним інтерфейсом для GNU Chess, Crafty, та інших шахматних двигунів, для серверів інтернет-шахмат та для шахматної переписки по е-мейл.

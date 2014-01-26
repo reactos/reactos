@@ -45,6 +45,7 @@ Size = 2,6 Mo
 Name = Mikroyazılım Basarî C++ 2005 SP1 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
 Description = Basarî Stüdyo 2005 SP1 Yürütücüsü. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Size = 2,6 MB
 
 [Section.0422]
 Licence = Невідома

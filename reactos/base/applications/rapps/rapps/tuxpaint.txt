@@ -8,7 +8,7 @@ Description = An Open Source bitmap graphics editor geared towards young childre
 Size = 10.42 MB
 Category = 3
 URLSite = http://tuxpaint.org/
-URLDownload = http://garr.dl.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21c/tuxpaint-0.9.21c-win32-installer.exe
+URLDownload = http://download.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21c/tuxpaint-0.9.21c-win32-installer.exe
 CDPath = none
 
 [Section.0405]
@@ -39,6 +39,7 @@ Size = 10,42 Mo
 
 [Section.041f]
 Description = Çocuklar için açık kaynak ikil eşlem çizge düzenleyicisi.
+Size = 10,42 MB
 
 [Section.0422]
 Description = Відкритий графічний редактор для малих дітей.

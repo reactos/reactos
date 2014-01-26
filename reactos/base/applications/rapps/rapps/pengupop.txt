@@ -22,3 +22,4 @@ Size = 384 ko
 
 [Section.041f]
 Description = Oyunun amacı, oyun alanınızda üç ya da daha çok takımdan oluşan renkli küreleri vurmaktır.
+Size = 384 KB

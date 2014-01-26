@@ -36,6 +36,7 @@ Size = 9,4 Mo
 
 [Section.041f]
 Description = Bir kelime işlemci.
+Size = 9,4 MB
 
 [Section.0422]
 Description = Текстовий процесор.

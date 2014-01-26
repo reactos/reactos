@@ -39,6 +39,7 @@ URLSite = http://store.steampowered.com/?l=romanian
 [Section.041f]
 Licence = Ücretsiz
 Description = Bu günlerde STEAM oyun platformu, birçok oyun tarafından kullanılmaktadır.
+Size = 1,59 MB
 
 [Section.0422]
 Description = Ігрова платформа, що використовується багатьма іграми.

@@ -23,3 +23,4 @@ Size = 13,5 Mo
 
 [Section.041f]
 Description = Globulation 2, gerçek zamanlı bir izlem oyunudur. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikroyönetimini en aza indirir.
+Size = 13,5 MB

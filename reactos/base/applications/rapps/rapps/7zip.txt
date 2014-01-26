@@ -36,6 +36,7 @@ Size = 1,1 Mo
 
 [Section.041f]
 Description = 7z, zip, tar, rar ve diğer birçok sıkıştırma biçimini destekleyen bir araç.
+Size = 1,1 MB
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.

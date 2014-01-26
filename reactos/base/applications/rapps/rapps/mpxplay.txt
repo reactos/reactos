@@ -8,7 +8,7 @@ Description = Mpxplay is a 32-bit console audio player for Windows. You need 7-Z
 Size = 520 kB
 Category = 1
 URLSite = http://mpxplay.sourceforge.net/
-URLDownload = http://garr.dl.sourceforge.net/project/mpxplay/Mpxplay/Mpxplay%20v1.60%20final/mpxp160w.zip
+URLDownload = http://download.sourceforge.net/project/mpxplay/Mpxplay/Mpxplay%20v1.60%20final/mpxp160w.zip
 CDPath = none
 
 [Section.0407]
@@ -20,3 +20,7 @@ Size = 520 ko
 
 [Section.0419]
 Description = Mpxplay - 32-разрядный консольный аудиоплеер для Windows. Вам нужен 7-Zip или подобная утилита для его распаковки.
+
+[Section.041f]
+Description = Mpxplay, Pencereler için 32 ikillik, konsolluk bir ses oynatıcısıdır. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Size = 520 KB

@@ -8,7 +8,7 @@ Description = Allows you to build the ReactOS Source. For more instructions see 
 Size = 31.6 MB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
-URLDownload = http://heanet.dl.sourceforge.net/project/reactos/RosBE-Windows/i386/2.1/RosBE-2.1.exe
+URLDownload = http://download.sourceforge.net/project/reactos/RosBE-Windows/i386/2.1/RosBE-2.1.exe
 CDPath = none
 
 [Section.0405]
@@ -40,6 +40,7 @@ Size = 31,6 Mo
 [Section.041f]
 Name = ReactOS Derleme Ortamı
 Description = ReactOS Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+Size = 31,6 MB
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.

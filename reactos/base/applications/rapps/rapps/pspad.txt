@@ -44,6 +44,7 @@ Description = Textový editor.
 [Section.041f]
 Licence = Ücretsiz
 Description = Bir metin düzenleyicisi.
+Size = 4,46 MB
 
 [Section.0422]
 Description = Текстовый редактор.

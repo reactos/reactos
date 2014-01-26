@@ -24,3 +24,4 @@ Size = 62,3 Mo
 [Section.041f]
 Name = Bos Savaşları
 Description = Bos Savaşları, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Mikroyazılım Basarî C++ 2008 Yürütücüsü'nü kurunuz.
+Size = 62,3 MB

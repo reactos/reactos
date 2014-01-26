@@ -37,6 +37,7 @@ Size = 1,89 Mo
 [Section.041f]
 Name = Tilki Ses Oynatıcısı
 Description = Bayağı ve yeğni bir ses oynatıcısı.
+Size = 1,89 MB
 
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.

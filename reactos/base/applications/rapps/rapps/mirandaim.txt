@@ -36,6 +36,7 @@ Size = 2,82 Mo
 
 [Section.041f]
 Description = Bir açık kaynak, çoklu iletişim kurallı ve evgin iletileşme yazılımı. Eksiksiz olarak çalışmayabilir.
+Size = 2,82 MB
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

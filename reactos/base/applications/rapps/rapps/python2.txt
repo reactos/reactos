@@ -37,6 +37,7 @@ Size = 15,48 Mo
 [Section.041f]
 Name = Piton 2
 Description = İlgi çekici, güçlü ve devingen bir çizeylemleme dili.
+Size = 15,48 MB
 
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.

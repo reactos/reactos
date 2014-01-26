@@ -20,3 +20,8 @@ Size = 16,0 Mo
 
 [Section.0419]
 Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
+
+[Section.041f]
+Name = Qt Tabanlı Çokluortam Oynatıcısı
+Description = Qmmp, Qt kitaplığının yardımıyla yazılan bir ses oynatıcısıdır. Kullanıcı arayüzüsü WinAMP'ınkine ve XMMS'ninkine benzer. Ayrıca değişik kullanıcı arayüzleri de vardır.
+Size = 16,0 MB

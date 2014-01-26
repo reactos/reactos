@@ -23,3 +23,4 @@ Size = 632 ko
 Name = Karıncalar
 Licence = Ücretsiz
 Description = Bir kartlarla izlem oyunu. Kalenizi bitirmeye veyâ rakip kaleyi yıkmaya çalışın. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Size = 632 KB

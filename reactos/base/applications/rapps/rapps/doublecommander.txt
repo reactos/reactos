@@ -8,7 +8,7 @@ Description = Double Commander is an open source file manager with two panels si
 Size = 7.5 MB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
-URLDownload = http://freefr.dl.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.5.8%20beta/doublecmd-0.5.8.i386-win32.exe
+URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.5.8%20beta/doublecmd-0.5.8.i386-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -32,7 +32,9 @@ Description = Double Commander - это открытый двухпанельн�
 
 [Section.041f]
 Name = İkili Komutan
+Version = 0.5.8 Gelişme
 Description = İkili Komutan, yan yana duran iki bölmenin bulunduğu bir açık kaynak kütük yöneticisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Size = 7,5 MB
 
 [Section.0422]
 Description = Double Commander - це відкритий двопанельний файловий менеджер. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.

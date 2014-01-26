@@ -23,3 +23,4 @@ Size = 2,53 Mo
 
 [Section.041f]
 Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük türleri için DirectShow süzgeçleri.
+Size = 2,53 MB
