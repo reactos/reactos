@@ -27,16 +27,16 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <ole2.h>
+#include <objbase.h>
+#include <oleauto.h>
 #include <objsafe.h>
 #include <dispex.h>
 #include <activscp.h>
-#include <mshtmhst.h>
 
+#include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/unicode.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 typedef struct {
