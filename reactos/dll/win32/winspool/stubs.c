@@ -7,12 +7,9 @@
  * REVISIONS:
  */
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
+#include "precomp.h"
+
 #include <winuser.h>
-#include <wingdi.h>
-#include <winspool.h>
 
 /*
  * @unimplemented
