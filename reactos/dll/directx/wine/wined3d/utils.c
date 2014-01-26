@@ -25,6 +25,7 @@
  */
 
 #include "wined3d_private.h"
+#include <wine/port.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
