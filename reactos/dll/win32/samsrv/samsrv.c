@@ -143,6 +143,14 @@ SampInitializeRegistry(VOID)
 
 VOID
 NTAPI
+SamIFreeVoid(PVOID Ptr)
+{
+    MIDL_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 {
     ULONG i;
