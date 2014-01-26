@@ -209,7 +209,8 @@ ThreadFunc(LPVOID Context)
     WCHAR path[MAX_PATH];
     LPWSTR p;
     HWND Dlg = (HWND) Context;
-    DWORD len, dwContentLen, dwBytesWritten, dwBytesRead, dwCurrentBytesRead;
+    DWORD len, dwContentLen, dwBytesWritten, dwBytesRead;
+    DWORD dwCurrentBytesRead = 0;
     DWORD dwBufLen = sizeof(dwContentLen);
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
