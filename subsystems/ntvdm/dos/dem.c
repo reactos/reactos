@@ -19,33 +19,27 @@
 /* Extra PSDK/NDK Headers */
 #include <ndk/obtypes.h>
 
-/* PRIVATE VARIABLES **********************************************************/
-
-#pragma pack(push, 1)
-
-typedef struct _VDM_FIND_FILE_BLOCK
-{
-    CHAR DriveLetter;
-    CHAR Pattern[11];
-    UCHAR AttribMask;
-    DWORD Unused;
-    HANDLE SearchHandle;
-
-    /* The following part of the structure is documented */
-    UCHAR Attributes;
-    WORD FileTime;
-    WORD FileDate;
-    DWORD FileSize;
-    CHAR FileName[13];
-} VDM_FIND_FILE_BLOCK, *PVDM_FIND_FILE_BLOCK;
-
-#pragma pack(pop)
-
-extern BYTE CurrentDrive;
-
-/* PRIVATE FUNCTIONS **********************************************************/
+/**/extern BYTE CurrentDrive;/**/
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames)
+{
+    if (DosKernelFileNames)
+    {
+        DisplayMessage(L"NTVDM: Loading DOS kernel from external files is currently unsupported");
+        return FALSE;
+    }
+    else
+    {
+        BOOLEAN Result;
+
+        Result  = DosBIOSInitialize();
+        Result &= DosKRNLInitialize();
+
+        return Result;
+    }
+}
 
 /* PUBLIC EXPORTED APIS *******************************************************/
 
@@ -86,7 +80,7 @@ demFileFindFirst(OUT PVOID  lpFindFileData,
 {
     BOOLEAN Success = TRUE;
     WIN32_FIND_DATAA FindData;
-    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)lpFindFileData;
+    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)lpFindFileData;
 
     /* Fill the block */
     FindFileBlock->DriveLetter  = CurrentDrive + 'A';
@@ -125,7 +119,7 @@ WINAPI
 demFileFindNext(OUT PVOID lpFindFileData)
 {
     WIN32_FIND_DATAA FindData;
-    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)lpFindFileData;
+    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)lpFindFileData;
 
     do
     {

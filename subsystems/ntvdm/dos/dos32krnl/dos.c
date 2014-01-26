@@ -15,7 +15,6 @@
 #include "dos/dem.h"
 
 #include "bios/bios.h"
-#include "bop.h"
 #include "int32.h"
 #include "registers.h"
 
@@ -33,12 +32,11 @@ static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 static WORD DosErrorLevel = 0x0000;
 
-/* BOP Identifiers */
-#define BOP_DOS 0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
-#define BOP_CMD 0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/*
+ * Memory management functions
+ */
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
     PDOS_MCB CurrentMcb = SEGMENT_TO_MCB(StartBlock), NextMcb;
@@ -316,29 +314,73 @@ static BOOLEAN DosFreeMemory(WORD BlockData)
     return TRUE;
 }
 
-/* Taken from base/shell/cmd/console.c */
-static BOOL IsConsoleHandle(HANDLE hHandle)
+static BOOLEAN DosLinkUmb(VOID)
 {
-    DWORD dwMode;
+    DWORD Segment = FIRST_MCB_SEGMENT;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
 
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & FILE_TYPE_CHAR) == 0) return FALSE;
+    DPRINT("Linking UMB\n");
 
-    /*
-     * It may be. Perform another test... The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
+    /* Check if UMBs are already linked */
+    if (DosUmbLinked) return FALSE;
+
+    /* Find the last block */
+    while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
+    {
+        Segment += Mcb->Size + 1;
+        Mcb = SEGMENT_TO_MCB(Segment);
+    }
+
+    /* Make sure it's valid */
+    if (Mcb->BlockType != 'Z') return FALSE;
+
+    /* Connect the MCB with the UMB chain */
+    Mcb->BlockType = 'M';
+
+    DosUmbLinked = TRUE;
+    return TRUE;
 }
+
+static BOOLEAN DosUnlinkUmb(VOID)
+{
+    DWORD Segment = FIRST_MCB_SEGMENT;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+
+    DPRINT("Unlinking UMB\n");
+
+    /* Check if UMBs are already unlinked */
+    if (!DosUmbLinked) return FALSE;
+
+    /* Find the block preceding the MCB that links it with the UMB chain */
+    while (Segment <= 0xFFFF)
+    {
+        if ((Segment + Mcb->Size) == (FIRST_MCB_SEGMENT + USER_MEMORY_SIZE))
+        {
+            /* This is the last non-UMB segment */
+            break;
+        }
+
+        /* Advance to the next MCB */
+        Segment += Mcb->Size + 1;
+        Mcb = SEGMENT_TO_MCB(Segment);
+    }
+
+    /* Mark the MCB as the last MCB */
+    Mcb->BlockType = 'Z';
+
+    DosUmbLinked = FALSE;
+    return TRUE;
+}
+
+static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
+{
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
+
+    /* Just set the owner */
+    Mcb->OwnerPsp = NewOwner;
+}
+
+
 
 static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
 {
@@ -388,12 +430,28 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
     return DestSegment;
 }
 
-static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
+/* Taken from base/shell/cmd/console.c */
+BOOL IsConsoleHandle(HANDLE hHandle)
 {
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
+    DWORD dwMode;
 
-    /* Just set the owner */
-    Mcb->OwnerPsp = NewOwner;
+    /* Check whether the handle may be that of a console... */
+    if ((GetFileType(hHandle) & FILE_TYPE_CHAR) == 0) return FALSE;
+
+    /*
+     * It may be. Perform another test... The idea comes from the
+     * MSDN description of the WriteConsole API:
+     *
+     * "WriteConsole fails if it is used with a standard handle
+     *  that is redirected to a file. If an application processes
+     *  multilingual output that can be redirected, determine whether
+     *  the output handle is a console handle (one method is to call
+     *  the GetConsoleMode function and check whether it succeeds).
+     *  If the handle is a console handle, call WriteConsole. If the
+     *  handle is not a console handle, the output is redirected and
+     *  you should call WriteFile to perform the I/O."
+     */
+    return GetConsoleMode(hHandle, &dwMode);
 }
 
 static WORD DosOpenHandle(HANDLE Handle)
@@ -456,7 +514,7 @@ static WORD DosOpenHandle(HANDLE Handle)
     return INVALID_DOS_HANDLE;
 }
 
-static HANDLE DosGetRealHandle(WORD DosHandle)
+HANDLE DosGetRealHandle(WORD DosHandle)
 {
     PDOS_PSP PspBlock;
     LPBYTE HandleTable;
@@ -591,64 +649,6 @@ static BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
     return TRUE;
 }
 
-static BOOLEAN DosLinkUmb(VOID)
-{
-    DWORD Segment = FIRST_MCB_SEGMENT;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
-
-    DPRINT("Linking UMB\n");
-
-    /* Check if UMBs are already linked */
-    if (DosUmbLinked) return FALSE;
-
-    /* Find the last block */
-    while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
-    {
-        Segment += Mcb->Size + 1;
-        Mcb = SEGMENT_TO_MCB(Segment);
-    }
-
-    /* Make sure it's valid */
-    if (Mcb->BlockType != 'Z') return FALSE;
-
-    /* Connect the MCB with the UMB chain */
-    Mcb->BlockType = 'M';
-
-    DosUmbLinked = TRUE;
-    return TRUE;
-}
-
-static BOOLEAN DosUnlinkUmb(VOID)
-{
-    DWORD Segment = FIRST_MCB_SEGMENT;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
-
-    DPRINT("Unlinking UMB\n");
-
-    /* Check if UMBs are already unlinked */
-    if (!DosUmbLinked) return FALSE;
-
-    /* Find the block preceding the MCB that links it with the UMB chain */
-    while (Segment <= 0xFFFF)
-    {
-        if ((Segment + Mcb->Size) == (FIRST_MCB_SEGMENT + USER_MEMORY_SIZE))
-        {
-            /* This is the last non-UMB segment */
-            break;
-        }
-
-        /* Advance to the next MCB */
-        Segment += Mcb->Size + 1;
-        Mcb = SEGMENT_TO_MCB(Segment);
-    }
-
-    /* Mark the MCB as the last MCB */
-    Mcb->BlockType = 'Z';
-
-    DosUmbLinked = FALSE;
-    return TRUE;
-}
-
 static WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
 {
     HANDLE FileHandle;
@@ -763,7 +763,7 @@ static WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
     return ERROR_SUCCESS;
 }
 
-static WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
+WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesRead32 = 0;
@@ -788,7 +788,7 @@ static WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD Bytes
     return Result;
 }
 
-static WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
+WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesWritten32 = 0;
@@ -1032,7 +1032,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     LPSTR ProgramFilePath, Parameters[256];
     CHAR CommandLineCopy[DOS_CMDLINE_LENGTH];
     CHAR ParamString[DOS_CMDLINE_LENGTH];
-    INT ParamCount = 0;
+    DWORD ParamCount = 0;
     WORD Segment = 0;
     WORD MaxAllocSize;
     DWORD i, FileSize, ExeSize;
@@ -1313,53 +1313,6 @@ Done:
                     LOWORD(PspBlock->TerminateAddress));
 }
 
-CHAR DosReadCharacter(VOID)
-{
-    CHAR Character = '\0';
-    WORD BytesRead;
-
-    if (IsConsoleHandle(DosGetRealHandle(DOS_INPUT_HANDLE)))
-    {
-        /* Call the BIOS */
-        Character = LOBYTE(BiosGetCharacter());
-    }
-    else
-    {
-        /* Use the file reading function */
-        DosReadFile(DOS_INPUT_HANDLE, &Character, sizeof(CHAR), &BytesRead);
-    }
-
-    return Character;
-}
-
-BOOLEAN DosCheckInput(VOID)
-{
-    HANDLE Handle = DosGetRealHandle(DOS_INPUT_HANDLE);
-
-    if (IsConsoleHandle(Handle))
-    {
-        /* Call the BIOS */
-        return (BiosPeekCharacter() != 0xFFFF);
-    }
-    else
-    {
-        DWORD FileSizeHigh;
-        DWORD FileSize = GetFileSize(Handle, &FileSizeHigh);
-        LONG LocationHigh = 0;
-        DWORD Location = SetFilePointer(Handle, 0, &LocationHigh, FILE_CURRENT);
-
-        return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
-    }
-}
-
-VOID DosPrintCharacter(CHAR Character)
-{
-    WORD BytesWritten;
-
-    /* Use the file writing function */
-    DosWriteFile(DOS_OUTPUT_HANDLE, &Character, sizeof(CHAR), &BytesWritten);
-}
-
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 {
     HANDLE Handle = DosGetRealHandle(FileHandle);
@@ -1409,94 +1362,6 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 
             DosLastError = ERROR_INVALID_PARAMETER;
             return FALSE;
-        }
-    }
-}
-
-VOID WINAPI DosSystemBop(LPWORD Stack)
-{
-    /* Get the Function Number and skip it */
-    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
-    setIP(getIP() + 1);
-
-    DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
-}
-
-VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
-{
-    /* Get the Function Number and skip it */
-    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
-    setIP(getIP() + 1);
-
-    switch (FuncNum)
-    {
-        case 0x08: // Launch external command
-        {
-#define CMDLINE_LENGTH  1024
-
-            BOOL Result;
-            DWORD dwExitCode;
-
-            LPSTR Command = (LPSTR)SEG_OFF_TO_PTR(getDS(), getSI());
-            CHAR CommandLine[CMDLINE_LENGTH] = "";
-            STARTUPINFOA StartupInfo;
-            PROCESS_INFORMATION ProcessInformation;
-            DPRINT1("CMD Run Command '%s'\n", Command);
-
-            Command[strlen(Command)-1] = 0;
-            
-            strcpy(CommandLine, "cmd.exe /c ");
-            strcat(CommandLine, Command);
-
-            ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-            ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
-
-            StartupInfo.cb = sizeof(StartupInfo);
-
-            DosPrintCharacter('\n');
-
-            Result = CreateProcessA(NULL,
-                                    CommandLine,
-                                    NULL,
-                                    NULL,
-                                    TRUE,
-                                    0,
-                                    NULL,
-                                    NULL,
-                                    &StartupInfo,
-                                    &ProcessInformation);
-            if (Result)
-            {
-                DPRINT1("Command '%s' launched successfully\n");
-
-                /* Wait for process termination */
-                WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-
-                /* Get the exit code */
-                GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
-
-                /* Close handles */
-                CloseHandle(ProcessInformation.hThread);
-                CloseHandle(ProcessInformation.hProcess);
-            }
-            else
-            {
-                DPRINT1("Failed when launched command '%s'\n");
-                dwExitCode = GetLastError();
-            }
-            
-            DosPrintCharacter('\n');
-
-            setAL((UCHAR)dwExitCode);
-
-            break;
-        }
-
-        default:
-        {
-            DPRINT1("Unknown DOS CMD Interpreter BOP Function: 0x%02X\n", FuncNum);
-            // setCF(1); // Disable, otherwise we enter an infinite loop
-            break;
         }
     }
 }
@@ -2648,87 +2513,18 @@ VOID WINAPI DosInt2Fh(LPWORD Stack)
     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
-BOOLEAN DosInitialize(VOID)
+BOOLEAN DosKRNLInitialize(VOID)
 {
-    BYTE i;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
-    FILE *Stream;
-    WCHAR Buffer[256];
-    LPWSTR SourcePtr, Environment;
-    LPSTR AsciiString;
-    LPSTR DestPtr = (LPSTR)SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
-    DWORD AsciiSize;
+
+#if 1
+
+    UCHAR i;
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
     LPSTR Path;
 
-    /* Initialize the MCB */
-    Mcb->BlockType = 'Z';
-    Mcb->Size = USER_MEMORY_SIZE;
-    Mcb->OwnerPsp = 0;
-
-    /* Initialize the link MCB to the UMB area */
-    Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT + USER_MEMORY_SIZE + 1);
-    Mcb->BlockType = 'M';
-    Mcb->Size = UMB_START_SEGMENT - FIRST_MCB_SEGMENT - USER_MEMORY_SIZE - 2;
-    Mcb->OwnerPsp = SYSTEM_PSP;
-
-    /* Initialize the UMB area */
-    Mcb = SEGMENT_TO_MCB(UMB_START_SEGMENT);
-    Mcb->BlockType = 'Z';
-    Mcb->Size = UMB_END_SEGMENT - UMB_START_SEGMENT;
-    Mcb->OwnerPsp = 0;
-
-    /* Get the environment strings */
-    SourcePtr = Environment = GetEnvironmentStringsW();
-    if (Environment == NULL) return FALSE;
-
-    /* Fill the DOS system environment block */
-    while (*SourcePtr)
-    {
-        /* Get the size of the ASCII string */
-        AsciiSize = WideCharToMultiByte(CP_ACP,
-                                        0,
-                                        SourcePtr,
-                                        -1,
-                                        NULL,
-                                        0,
-                                        NULL,
-                                        NULL);
-
-        /* Allocate memory for the ASCII string */
-        AsciiString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, AsciiSize);
-        if (AsciiString == NULL)
-        {
-            FreeEnvironmentStringsW(Environment);
-            return FALSE;
-        }
-
-        /* Convert to ASCII */
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            SourcePtr,
-                            -1,
-                            AsciiString,
-                            AsciiSize,
-                            NULL,
-                            NULL);
-
-        /* Copy the string into DOS memory */
-        strcpy(DestPtr, AsciiString);
-
-        /* Move to the next string */
-        SourcePtr += wcslen(SourcePtr) + 1;
-        DestPtr += strlen(AsciiString);
-        *(DestPtr++) = 0;
-
-        /* Free the memory */
-        HeapFree(GetProcessHeap(), 0, AsciiString);
-    }
-    *DestPtr = 0;
-
-    /* Free the memory allocated for environment strings */
-    FreeEnvironmentStringsW(Environment);
+    FILE *Stream;
+    WCHAR Buffer[256];
 
     /* Clear the current directory buffer */
     ZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
@@ -2787,9 +2583,8 @@ BOOLEAN DosInitialize(VOID)
     DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
     DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
 
-    /* Register the DOS BOPs */
-    RegisterBop(BOP_DOS, DosSystemBop        );
-    RegisterBop(BOP_CMD, DosCmdInterpreterBop);
+#endif
+
 
     /* Register the DOS 32-bit Interrupts */
     RegisterInt32(0x20, DosInt20h        );

@@ -16,8 +16,11 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
+#include "dos32krnl/dos.h"
 
 /* FUNCTIONS ******************************************************************/
+
+BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames);
 
 DWORD
 WINAPI

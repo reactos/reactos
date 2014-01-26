@@ -118,15 +118,49 @@ typedef struct _DOS_DRIVER_HEADER
     CHAR DeviceName[8];
 } DOS_DRIVER_HEADER, *PDOS_DRIVER_HEADER;
 
+typedef struct _DOS_FIND_FILE_BLOCK
+{
+    CHAR DriveLetter;
+    CHAR Pattern[11];
+    UCHAR AttribMask;
+    DWORD Unused;
+    HANDLE SearchHandle;
+
+    /* The following part of the structure is documented */
+    UCHAR Attributes;
+    WORD FileTime;
+    WORD FileDate;
+    DWORD FileSize;
+    CHAR FileName[13];
+} DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
+
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+ * DOS BIOS Functions
+ * See bios.c
+ */
+CHAR DosReadCharacter(VOID);
+BOOLEAN DosCheckInput(VOID);
+VOID DosPrintCharacter(CHAR Character);
+
+BOOLEAN DosBIOSInitialize(VOID);
+
+
+/*
+ * DOS Kernel Functions
+ * See dos.c
+ */
+BOOL IsConsoleHandle(HANDLE hHandle);
+HANDLE DosGetRealHandle(WORD DosHandle);
+WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
+WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
+
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
-CHAR DosReadCharacter(VOID);
-VOID DosPrintCharacter(CHAR Character);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 
 VOID WINAPI DosInt20h(LPWORD Stack);
@@ -134,7 +168,7 @@ VOID WINAPI DosInt21h(LPWORD Stack);
 VOID WINAPI DosBreakInterrupt(LPWORD Stack);
 VOID WINAPI DosInt2Fh(LPWORD Stack);
 
-BOOLEAN DosInitialize(VOID);
+BOOLEAN DosKRNLInitialize(VOID);
 
 #endif // _DOS_H_
 

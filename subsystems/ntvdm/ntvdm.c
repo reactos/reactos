@@ -14,11 +14,11 @@
 #include "emulator.h"
 
 #include "bios/bios.h"
+#include "dos/dem.h"
 #include "hardware/cmos.h"
 #include "hardware/ps2.h"
 #include "hardware/timer.h"
 #include "hardware/vga.h"
-#include "dos/dos32/dos.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:
@@ -225,7 +225,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the VDM DOS kernel */
-    if (!DosInitialize())
+    if (!DosInitialize(NULL))
     {
         wprintf(L"FATAL: Failed to initialize the VDM DOS kernel.\n");
         goto Cleanup;
