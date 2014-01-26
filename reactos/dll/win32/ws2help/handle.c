@@ -9,6 +9,10 @@
 
 #include "precomp.h"
 
+#include <ndk/iofuncs.h>
+
+#include "wshdrv.h"
+
 /* DATA **********************************************************************/
 
 typedef struct _WSH_HELPER_CONTEXT
