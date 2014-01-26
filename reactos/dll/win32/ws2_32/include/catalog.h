@@ -4,6 +4,7 @@
  * FILE:        include/catalog.h
  * PURPOSE:     Service Provider Catalog definitions
  */
+
 #ifndef __CATALOG_H
 #define __CATALOG_H
 
@@ -54,5 +55,3 @@ VOID CreateCatalog(VOID);
 VOID DestroyCatalog(VOID);
 
 #endif /* __CATALOG_H */
-
-/* EOF */
