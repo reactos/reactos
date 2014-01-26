@@ -1,26 +1,18 @@
-#include "ntddk.h"
-#include "ntifs.h"
-#include "arc/arc.h"
-#include "halfuncs.h"
-#include "drivers/bootvid/bootvid.h"
-#include "ioaccess.h"
+#include <wdm.h>
+#include <drivers/bootvid/bootvid.h>
 
 /* Define if FontData has upside down characters */
 #undef CHAR_GEN_UPSIDE_DOWN
 
 #define BOOTCHAR_HEIGHT             13
 
-//
-// Command Stream Definitions
-//
+/* Command Stream Definitions */
 #define CMD_STREAM_WRITE            0x0
 #define CMD_STREAM_WRITE_ARRAY      0x2
 #define CMD_STREAM_USHORT           0x4
 #define CMD_STREAM_READ             0x8
 
-//
-// Bitmap Header
-//
+/* Bitmap Header */
 typedef struct tagBITMAPINFOHEADER
 {
     ULONG biSize;
@@ -42,9 +34,7 @@ InitializePalette(
     VOID
 );
 
-//
-// Globals
-//
+/* Globals */
 extern USHORT AT_Initialization[];
 extern ULONG curr_x;
 extern ULONG curr_y;
