@@ -53,7 +53,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         case 0x86:
         {
             /*
-             * Interval in microseconds CX:DX
+             * Interval in microseconds in CX:DX
              * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
              * for more information.
              */

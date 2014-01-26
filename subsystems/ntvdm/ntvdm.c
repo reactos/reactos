@@ -18,7 +18,7 @@
 #include "hardware/ps2.h"
 #include "hardware/timer.h"
 #include "hardware/vga.h"
-#include "dos/dos.h"
+#include "dos/dos32/dos.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:

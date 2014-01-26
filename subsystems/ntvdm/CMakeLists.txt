@@ -15,7 +15,8 @@ list(APPEND SOURCE
     hardware/speaker.c
     hardware/timer.c
     hardware/vga.c
-    dos/dos.c
+    dos/dos32/dos.c
+    dos/dem.c
     bop.c
     emulator.c
     int32.c

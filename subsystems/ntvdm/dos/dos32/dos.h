@@ -118,36 +118,10 @@ typedef struct _DOS_DRIVER_HEADER
     CHAR DeviceName[8];
 } DOS_DRIVER_HEADER, *PDOS_DRIVER_HEADER;
 
-typedef struct _VDM_FIND_FILE_BLOCK
-{
-    CHAR DriveLetter;
-    CHAR Pattern[11];
-    UCHAR AttribMask;
-    DWORD Unused;
-    HANDLE SearchHandle;
-
-    /* The following part of the structure is documented */
-    UCHAR Attributes;
-    WORD FileTime;
-    WORD FileDate;
-    DWORD FileSize;
-    CHAR FileName[13];
-} VDM_FIND_FILE_BLOCK, *PVDM_FIND_FILE_BLOCK;
-
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
-WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable);
-BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable);
-BOOLEAN DosFreeMemory(WORD BlockData);
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes);
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode);
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
-WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);
-BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle);
-BOOLEAN DosCloseHandle(WORD DosHandle);
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);

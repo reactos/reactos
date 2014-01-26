@@ -12,6 +12,7 @@
 
 #include "emulator.h"
 #include "dos.h"
+#include "dos/dem.h"
 
 #include "bios/bios.h"
 #include "bop.h"
@@ -23,7 +24,7 @@
 static WORD CurrentPsp = SYSTEM_PSP;
 static WORD DosLastError = 0;
 static DWORD DiskTransferArea;
-static BYTE CurrentDrive;
+/*static*/ BYTE CurrentDrive;
 static CHAR LastDrive = 'E';
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
 static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
@@ -37,30 +38,6 @@ static WORD DosErrorLevel = 0x0000;
 #define BOP_CMD 0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-/* Taken from base/shell/cmd/console.c */
-static BOOL IsConsoleHandle(HANDLE hHandle)
-{
-    DWORD dwMode;
-
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & FILE_TYPE_CHAR) == 0) return FALSE;
-
-    /*
-     * It may be. Perform another test... The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
-}
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
@@ -88,6 +65,279 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
             break;
         }
     }
+}
+
+static WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
+{
+    WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
+    PDOS_MCB CurrentMcb, NextMcb;
+    BOOLEAN SearchUmb = FALSE;
+
+    DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
+
+    if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
+    {
+        /* Search UMB first */
+        Segment = UMB_START_SEGMENT;
+        SearchUmb = TRUE;
+    }
+
+    while (TRUE)
+    {
+        /* Get a pointer to the MCB */
+        CurrentMcb = SEGMENT_TO_MCB(Segment);
+
+        /* Make sure it's valid */
+        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
+        {
+            DPRINT("The DOS memory arena is corrupted!\n");
+            DosLastError = ERROR_ARENA_TRASHED;
+            return 0;
+        }
+
+        /* Only check free blocks */
+        if (CurrentMcb->OwnerPsp != 0) goto Next;
+
+        /* Combine this free block with adjoining free blocks */
+        DosCombineFreeBlocks(Segment);
+
+        /* Update the maximum block size */
+        if (CurrentMcb->Size > MaxSize) MaxSize = CurrentMcb->Size;
+
+        /* Check if this block is big enough */
+        if (CurrentMcb->Size < Size) goto Next;
+
+        switch (DosAllocStrategy & 0x3F)
+        {
+            case DOS_ALLOC_FIRST_FIT:
+            {
+                /* For first fit, stop immediately */
+                Result = Segment;
+                goto Done;
+            }
+
+            case DOS_ALLOC_BEST_FIT:
+            {
+                /* For best fit, update the smallest block found so far */
+                if ((Result == 0) || (CurrentMcb->Size < SEGMENT_TO_MCB(Result)->Size))
+                {
+                    Result = Segment;
+                }
+
+                break;
+            }
+
+            case DOS_ALLOC_LAST_FIT:
+            {
+                /* For last fit, make the current block the result, but keep searching */
+                Result = Segment;
+                break;
+            }
+        }
+
+Next:
+        /* If this was the last MCB in the chain, quit */
+        if (CurrentMcb->BlockType == 'Z')
+        {
+            /* Check if nothing was found while searching through UMBs */
+            if ((Result == 0) && SearchUmb && (DosAllocStrategy & DOS_ALLOC_HIGH_LOW))
+            {
+                /* Search low memory */
+                Segment = FIRST_MCB_SEGMENT;
+                continue;
+            }
+
+            break;
+        }
+
+        /* Otherwise, update the segment and continue */
+        Segment += CurrentMcb->Size + 1;
+    }
+
+Done:
+
+    /* If we didn't find a free block, return 0 */
+    if (Result == 0)
+    {
+        DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+        if (MaxAvailable) *MaxAvailable = MaxSize;
+        return 0;
+    }
+
+    /* Get a pointer to the MCB */
+    CurrentMcb = SEGMENT_TO_MCB(Result);
+
+    /* Check if the block is larger than requested */
+    if (CurrentMcb->Size > Size)
+    {
+        /* It is, split it into two blocks */
+        NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
+
+        /* Initialize the new MCB structure */
+        NextMcb->BlockType = CurrentMcb->BlockType;
+        NextMcb->Size = CurrentMcb->Size - Size - 1;
+        NextMcb->OwnerPsp = 0;
+
+        /* Update the current block */
+        CurrentMcb->BlockType = 'M';
+        CurrentMcb->Size = Size;
+    }
+
+    /* Take ownership of the block */
+    CurrentMcb->OwnerPsp = CurrentPsp;
+
+    /* Return the segment of the data portion of the block */
+    return Result + 1;
+}
+
+static BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
+{
+    BOOLEAN Success = TRUE;
+    WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
+
+    DPRINT("DosResizeMemory: BlockData 0x%04X, NewSize 0x%04X\n",
+           BlockData,
+           NewSize);
+
+    /* Make sure this is a valid, allocated block */
+    if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
+    {
+        Success = FALSE;
+        DosLastError = ERROR_INVALID_HANDLE;
+        goto Done;
+    }
+
+    ReturnSize = Mcb->Size;
+
+    /* Check if we need to expand or contract the block */
+    if (NewSize > Mcb->Size)
+    {
+        /* We can't expand the last block */
+        if (Mcb->BlockType != 'M')
+        {
+            Success = FALSE;
+            goto Done;
+        }
+
+        /* Get the pointer and segment of the next MCB */
+        NextSegment = Segment + Mcb->Size + 1;
+        NextMcb = SEGMENT_TO_MCB(NextSegment);
+
+        /* Make sure the next segment is free */
+        if (NextMcb->OwnerPsp != 0)
+        {
+            DPRINT("Cannot expand memory block: next segment is not free!\n");
+            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+            Success = FALSE;
+            goto Done;
+        }
+
+        /* Combine this free block with adjoining free blocks */
+        DosCombineFreeBlocks(NextSegment);
+
+        /* Set the maximum possible size of the block */
+        ReturnSize += NextMcb->Size + 1;
+
+        /* Maximize the current block */
+        Mcb->Size = ReturnSize;
+        Mcb->BlockType = NextMcb->BlockType;
+
+        /* Invalidate the next block */
+        NextMcb->BlockType = 'I';
+
+        /* Check if the block is larger than requested */
+        if (Mcb->Size > NewSize)
+        {
+            DPRINT("Block too large, reducing size from 0x%04X to 0x%04X\n",
+                   Mcb->Size,
+                   NewSize);
+
+            /* It is, split it into two blocks */
+            NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
+    
+            /* Initialize the new MCB structure */
+            NextMcb->BlockType = Mcb->BlockType;
+            NextMcb->Size = Mcb->Size - NewSize - 1;
+            NextMcb->OwnerPsp = 0;
+
+            /* Update the current block */
+            Mcb->BlockType = 'M';
+            Mcb->Size = NewSize;
+        }
+    }
+    else if (NewSize < Mcb->Size)
+    {
+        DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
+                Mcb->Size,
+                NewSize);
+
+        /* Just split the block */
+        NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
+        NextMcb->BlockType = Mcb->BlockType;
+        NextMcb->Size = Mcb->Size - NewSize - 1;
+        NextMcb->OwnerPsp = 0;
+
+        /* Update the MCB */
+        Mcb->BlockType = 'M';
+        Mcb->Size = NewSize;
+    }
+
+Done:
+    /* Check if the operation failed */
+    if (!Success)
+    {
+        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n",
+               ReturnSize);
+
+        /* Return the maximum possible size */
+        if (MaxAvailable) *MaxAvailable = ReturnSize;
+    }
+    
+    return Success;
+}
+
+static BOOLEAN DosFreeMemory(WORD BlockData)
+{
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
+
+    DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
+
+    /* Make sure the MCB is valid */
+    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
+    {
+        DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
+        return FALSE;
+    }
+
+    /* Mark the block as free */
+    Mcb->OwnerPsp = 0;
+
+    return TRUE;
+}
+
+/* Taken from base/shell/cmd/console.c */
+static BOOL IsConsoleHandle(HANDLE hHandle)
+{
+    DWORD dwMode;
+
+    /* Check whether the handle may be that of a console... */
+    if ((GetFileType(hHandle) & FILE_TYPE_CHAR) == 0) return FALSE;
+
+    /*
+     * It may be. Perform another test... The idea comes from the
+     * MSDN description of the WriteConsole API:
+     *
+     * "WriteConsole fails if it is used with a standard handle
+     *  that is redirected to a file. If an application processes
+     *  multilingual output that can be redirected, determine whether
+     *  the output handle is a console handle (one method is to call
+     *  the GetConsoleMode function and check whether it succeeds).
+     *  If the handle is a console handle, call WriteConsole. If the
+     *  handle is not a console handle, the output is redirected and
+     *  you should call WriteFile to perform the I/O."
+     */
+    return GetConsoleMode(hHandle, &dwMode);
 }
 
 static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
@@ -265,258 +515,83 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
+static BOOLEAN DosCloseHandle(WORD DosHandle)
 {
-    WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
-    PDOS_MCB CurrentMcb, NextMcb;
-    BOOLEAN SearchUmb = FALSE;
+    BYTE SftIndex;
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
 
-    DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
+    DPRINT("DosCloseHandle: DosHandle 0x%04X\n", DosHandle);
 
-    if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the handle is open */
+    if (HandleTable[DosHandle] == 0xFF) return FALSE;
+
+    /* Decrement the reference count of the SFT entry */
+    SftIndex = HandleTable[DosHandle];
+    DosSftRefCount[SftIndex]--;
+
+    /* Check if the reference count fell to zero */
+    if (!DosSftRefCount[SftIndex])
     {
-        /* Search UMB first */
-        Segment = UMB_START_SEGMENT;
-        SearchUmb = TRUE;
+        /* Close the file, it's no longer needed */
+        CloseHandle(DosSystemFileTable[SftIndex]);
+
+        /* Clear the handle */
+        DosSystemFileTable[SftIndex] = INVALID_HANDLE_VALUE;
     }
 
-    while (TRUE)
-    {
-        /* Get a pointer to the MCB */
-        CurrentMcb = SEGMENT_TO_MCB(Segment);
-
-        /* Make sure it's valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
-        {
-            DPRINT("The DOS memory arena is corrupted!\n");
-            DosLastError = ERROR_ARENA_TRASHED;
-            return 0;
-        }
-
-        /* Only check free blocks */
-        if (CurrentMcb->OwnerPsp != 0) goto Next;
-
-        /* Combine this free block with adjoining free blocks */
-        DosCombineFreeBlocks(Segment);
-
-        /* Update the maximum block size */
-        if (CurrentMcb->Size > MaxSize) MaxSize = CurrentMcb->Size;
-
-        /* Check if this block is big enough */
-        if (CurrentMcb->Size < Size) goto Next;
-
-        switch (DosAllocStrategy & 0x3F)
-        {
-            case DOS_ALLOC_FIRST_FIT:
-            {
-                /* For first fit, stop immediately */
-                Result = Segment;
-                goto Done;
-            }
-
-            case DOS_ALLOC_BEST_FIT:
-            {
-                /* For best fit, update the smallest block found so far */
-                if ((Result == 0) || (CurrentMcb->Size < SEGMENT_TO_MCB(Result)->Size))
-                {
-                    Result = Segment;
-                }
-
-                break;
-            }
-
-            case DOS_ALLOC_LAST_FIT:
-            {
-                /* For last fit, make the current block the result, but keep searching */
-                Result = Segment;
-                break;
-            }
-        }
-
-Next:
-        /* If this was the last MCB in the chain, quit */
-        if (CurrentMcb->BlockType == 'Z')
-        {
-            /* Check if nothing was found while searching through UMBs */
-            if ((Result == 0) && SearchUmb && (DosAllocStrategy & DOS_ALLOC_HIGH_LOW))
-            {
-                /* Search low memory */
-                Segment = FIRST_MCB_SEGMENT;
-                continue;
-            }
-
-            break;
-        }
-
-        /* Otherwise, update the segment and continue */
-        Segment += CurrentMcb->Size + 1;
-    }
-
-Done:
-
-    /* If we didn't find a free block, return 0 */
-    if (Result == 0)
-    {
-        DosLastError = ERROR_NOT_ENOUGH_MEMORY;
-        if (MaxAvailable) *MaxAvailable = MaxSize;
-        return 0;
-    }
-
-    /* Get a pointer to the MCB */
-    CurrentMcb = SEGMENT_TO_MCB(Result);
-
-    /* Check if the block is larger than requested */
-    if (CurrentMcb->Size > Size)
-    {
-        /* It is, split it into two blocks */
-        NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
-
-        /* Initialize the new MCB structure */
-        NextMcb->BlockType = CurrentMcb->BlockType;
-        NextMcb->Size = CurrentMcb->Size - Size - 1;
-        NextMcb->OwnerPsp = 0;
-
-        /* Update the current block */
-        CurrentMcb->BlockType = 'M';
-        CurrentMcb->Size = Size;
-    }
-
-    /* Take ownership of the block */
-    CurrentMcb->OwnerPsp = CurrentPsp;
-
-    /* Return the segment of the data portion of the block */
-    return Result + 1;
-}
-
-BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
-{
-    BOOLEAN Success = TRUE;
-    WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
-
-    DPRINT("DosResizeMemory: BlockData 0x%04X, NewSize 0x%04X\n",
-           BlockData,
-           NewSize);
-
-    /* Make sure this is a valid, allocated block */
-    if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
-    {
-        Success = FALSE;
-        DosLastError = ERROR_INVALID_HANDLE;
-        goto Done;
-    }
-
-    ReturnSize = Mcb->Size;
-
-    /* Check if we need to expand or contract the block */
-    if (NewSize > Mcb->Size)
-    {
-        /* We can't expand the last block */
-        if (Mcb->BlockType != 'M')
-        {
-            Success = FALSE;
-            goto Done;
-        }
-
-        /* Get the pointer and segment of the next MCB */
-        NextSegment = Segment + Mcb->Size + 1;
-        NextMcb = SEGMENT_TO_MCB(NextSegment);
-
-        /* Make sure the next segment is free */
-        if (NextMcb->OwnerPsp != 0)
-        {
-            DPRINT("Cannot expand memory block: next segment is not free!\n");
-            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
-            Success = FALSE;
-            goto Done;
-        }
-
-        /* Combine this free block with adjoining free blocks */
-        DosCombineFreeBlocks(NextSegment);
-
-        /* Set the maximum possible size of the block */
-        ReturnSize += NextMcb->Size + 1;
-
-        /* Maximize the current block */
-        Mcb->Size = ReturnSize;
-        Mcb->BlockType = NextMcb->BlockType;
-
-        /* Invalidate the next block */
-        NextMcb->BlockType = 'I';
-
-        /* Check if the block is larger than requested */
-        if (Mcb->Size > NewSize)
-        {
-            DPRINT("Block too large, reducing size from 0x%04X to 0x%04X\n",
-                   Mcb->Size,
-                   NewSize);
-
-            /* It is, split it into two blocks */
-            NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-    
-            /* Initialize the new MCB structure */
-            NextMcb->BlockType = Mcb->BlockType;
-            NextMcb->Size = Mcb->Size - NewSize - 1;
-            NextMcb->OwnerPsp = 0;
-
-            /* Update the current block */
-            Mcb->BlockType = 'M';
-            Mcb->Size = NewSize;
-        }
-    }
-    else if (NewSize < Mcb->Size)
-    {
-        DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
-                Mcb->Size,
-                NewSize);
-
-        /* Just split the block */
-        NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-        NextMcb->BlockType = Mcb->BlockType;
-        NextMcb->Size = Mcb->Size - NewSize - 1;
-        NextMcb->OwnerPsp = 0;
-
-        /* Update the MCB */
-        Mcb->BlockType = 'M';
-        Mcb->Size = NewSize;
-    }
-
-Done:
-    /* Check if the operation failed */
-    if (!Success)
-    {
-        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n",
-               ReturnSize);
-
-        /* Return the maximum possible size */
-        if (MaxAvailable) *MaxAvailable = ReturnSize;
-    }
-    
-    return Success;
-}
-
-BOOLEAN DosFreeMemory(WORD BlockData)
-{
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
-
-    DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
-
-    /* Make sure the MCB is valid */
-    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
-    {
-        DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
-        return FALSE;
-    }
-
-    /* Mark the block as free */
-    Mcb->OwnerPsp = 0;
+    /* Clear the entry in the JFT */
+    HandleTable[DosHandle] = 0xFF;
 
     return TRUE;
 }
 
-BOOLEAN DosLinkUmb(VOID)
+static BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
+{
+    BYTE SftIndex;
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    DPRINT("DosDuplicateHandle: OldHandle 0x%04X, NewHandle 0x%04X\n",
+           OldHandle,
+           NewHandle);
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the old handle is open */
+    if (HandleTable[OldHandle] == 0xFF) return FALSE;
+
+    /* Check if the new handle is open */
+    if (HandleTable[NewHandle] != 0xFF)
+    {
+        /* Close it */
+        DosCloseHandle(NewHandle);
+    }
+
+    /* Increment the reference count of the SFT entry */
+    SftIndex = HandleTable[OldHandle];
+    DosSftRefCount[SftIndex]++;
+
+    /* Make the new handle point to that SFT entry */
+    HandleTable[NewHandle] = SftIndex;
+
+    /* Return success */
+    return TRUE;
+}
+
+static BOOLEAN DosLinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
@@ -543,7 +618,7 @@ BOOLEAN DosLinkUmb(VOID)
     return TRUE;
 }
 
-BOOLEAN DosUnlinkUmb(VOID)
+static BOOLEAN DosUnlinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
@@ -574,7 +649,7 @@ BOOLEAN DosUnlinkUmb(VOID)
     return TRUE;
 }
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
+static WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
 {
     HANDLE FileHandle;
     WORD DosHandle;
@@ -615,7 +690,7 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
     return ERROR_SUCCESS;
 }
 
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
+static WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
 {
     HANDLE FileHandle;
     ACCESS_MASK Access = 0;
@@ -688,7 +763,7 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
     return ERROR_SUCCESS;
 }
 
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
+static WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesRead32 = 0;
@@ -713,7 +788,7 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     return Result;
 }
 
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
+static WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesWritten32 = 0;
@@ -753,7 +828,7 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     return Result;
 }
 
-WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
+static WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD FilePointer;
@@ -796,7 +871,7 @@ WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
     return ERROR_SUCCESS;
 }
 
-BOOLEAN DosFlushFileBuffers(WORD FileHandle)
+static BOOLEAN DosFlushFileBuffers(WORD FileHandle)
 {
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
@@ -814,146 +889,7 @@ BOOLEAN DosFlushFileBuffers(WORD FileHandle)
     return (BOOLEAN)FlushFileBuffers(Handle);
 }
 
-BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
-{
-    BYTE SftIndex;
-    PDOS_PSP PspBlock;
-    LPBYTE HandleTable;
-
-    DPRINT("DosDuplicateHandle: OldHandle 0x%04X, NewHandle 0x%04X\n",
-           OldHandle,
-           NewHandle);
-
-    /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return FALSE;
-
-    /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
-    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
-
-    /* Make sure the old handle is open */
-    if (HandleTable[OldHandle] == 0xFF) return FALSE;
-
-    /* Check if the new handle is open */
-    if (HandleTable[NewHandle] != 0xFF)
-    {
-        /* Close it */
-        DosCloseHandle(NewHandle);
-    }
-
-    /* Increment the reference count of the SFT entry */
-    SftIndex = HandleTable[OldHandle];
-    DosSftRefCount[SftIndex]++;
-
-    /* Make the new handle point to that SFT entry */
-    HandleTable[NewHandle] = SftIndex;
-
-    /* Return success */
-    return TRUE;
-}
-
-BOOLEAN DosCloseHandle(WORD DosHandle)
-{
-    BYTE SftIndex;
-    PDOS_PSP PspBlock;
-    LPBYTE HandleTable;
-
-    DPRINT("DosCloseHandle: DosHandle 0x%04X\n", DosHandle);
-
-    /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return FALSE;
-
-    /* Get a pointer to the handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
-    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
-
-    /* Make sure the handle is open */
-    if (HandleTable[DosHandle] == 0xFF) return FALSE;
-
-    /* Decrement the reference count of the SFT entry */
-    SftIndex = HandleTable[DosHandle];
-    DosSftRefCount[SftIndex]--;
-
-    /* Check if the reference count fell to zero */
-    if (!DosSftRefCount[SftIndex])
-    {
-        /* Close the file, it's no longer needed */
-        CloseHandle(DosSystemFileTable[SftIndex]);
-
-        /* Clear the handle */
-        DosSystemFileTable[SftIndex] = INVALID_HANDLE_VALUE;
-    }
-
-    /* Clear the entry in the JFT */
-    HandleTable[DosHandle] = 0xFF;
-
-    return TRUE;
-}
-
-WORD DosFindFirstFile(LPSTR FileSpec, WORD AttribMask)
-{
-    BOOLEAN Success = TRUE;
-    WIN32_FIND_DATAA FindData;
-    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)FAR_POINTER(DiskTransferArea);
-
-    /* Fill the block */
-    FindFileBlock->DriveLetter = CurrentDrive + 'A';
-    FindFileBlock->AttribMask = AttribMask;
-    FindFileBlock->SearchHandle = FindFirstFileA(FileSpec, &FindData);
-    if (FindFileBlock->SearchHandle == INVALID_HANDLE_VALUE) return GetLastError();
-
-    do
-    {
-        /* Check the attributes */
-        if (!((FindData.dwFileAttributes
-            & (FILE_ATTRIBUTE_HIDDEN
-            | FILE_ATTRIBUTE_SYSTEM
-            | FILE_ATTRIBUTE_DIRECTORY))
-            & ~AttribMask)) break;
-    }
-    while ((Success = FindNextFileA(FindFileBlock->SearchHandle, &FindData)));
-
-    if (!Success) return GetLastError();
-
-    FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
-    FileTimeToDosDateTime(&FindData.ftLastWriteTime,
-                          &FindFileBlock->FileDate,
-                          &FindFileBlock->FileTime);
-    FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
-                                                     : FindData.nFileSizeLow;
-    strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
-
-    return ERROR_SUCCESS;
-}
-
-WORD DosFindNextFile(VOID)
-{
-    WIN32_FIND_DATAA FindData;
-    PVDM_FIND_FILE_BLOCK FindFileBlock = (PVDM_FIND_FILE_BLOCK)FAR_POINTER(DiskTransferArea);
-
-    do
-    {
-        if (!FindNextFileA(FindFileBlock->SearchHandle, &FindData)) return GetLastError();
-
-        /* Update the block */
-        FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
-        FileTimeToDosDateTime(&FindData.ftLastWriteTime,
-                              &FindFileBlock->FileDate,
-                              &FindFileBlock->FileTime);
-        FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
-                                                         : FindData.nFileSizeLow;
-        strcpy(FindFileBlock->FileName, FindData.cAlternateFileName);
-    }
-    while((FindData.dwFileAttributes
-          & (FILE_ATTRIBUTE_HIDDEN
-          | FILE_ATTRIBUTE_SYSTEM
-          | FILE_ATTRIBUTE_DIRECTORY))
-          & ~FindFileBlock->AttribMask);
-
-    return ERROR_SUCCESS;
-}
-
-BOOLEAN DosChangeDrive(BYTE Drive)
+static BOOLEAN DosChangeDrive(BYTE Drive)
 {
     WCHAR DirectoryPath[DOS_CMDLINE_LENGTH];
 
@@ -973,7 +909,7 @@ BOOLEAN DosChangeDrive(BYTE Drive)
     return TRUE;
 }
 
-BOOLEAN DosChangeDirectory(LPSTR Directory)
+static BOOLEAN DosChangeDirectory(LPSTR Directory)
 {
     BYTE DriveNumber;
     DWORD Attributes;
@@ -1039,6 +975,8 @@ BOOLEAN DosChangeDirectory(LPSTR Directory)
     /* Return success */
     return TRUE;
 }
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment)
 {
@@ -2279,8 +2217,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             LPSTR FileName = (LPSTR)SEG_OFF_TO_PTR(getDS(), getDX());
 
-            /* Call the API function */
-            if (DeleteFileA(FileName))
+            if (demFileDelete(FileName) == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 /*
@@ -2548,7 +2485,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Find First File */
         case 0x4E:
         {
-            WORD Result = DosFindFirstFile(SEG_OFF_TO_PTR(getDS(), getDX()), getCX());
+            WORD Result = (WORD)demFileFindFirst(FAR_POINTER(DiskTransferArea),
+                                                 SEG_OFF_TO_PTR(getDS(), getDX()),
+                                                 getCX());
 
             setAX(Result);
             if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
@@ -2560,7 +2499,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Find Next File */
         case 0x4F:
         {
-            WORD Result = DosFindNextFile();
+            WORD Result = (WORD)demFileFindNext(FAR_POINTER(DiskTransferArea));
 
             setAX(Result);
             if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
