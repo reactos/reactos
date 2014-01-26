@@ -30,7 +30,6 @@
 #ifdef HAVE_SYS_FILIO_H
 # include <sys/filio.h>
 #endif
-#include <time.h>
 #ifdef HAVE_NETINET_TCP_H
 # include <netinet/tcp.h>
 #endif

@@ -26,7 +26,6 @@
 #include <wine/config.h>
 
 #include <assert.h>
-#include <stdarg.h>
 #include <stdio.h>
 
 #define _INC_WINDOWS
@@ -45,10 +44,9 @@
 #define NO_SHLWAPI_GDI
 #include <shlwapi.h>
 
-#include <wine/unicode.h>
 #include <wine/list.h>
-
-#include <time.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
@@ -85,10 +83,9 @@
 
 #include <winineti.h>
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(wininet);
-
 #include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 extern HMODULE WININET_hModule DECLSPEC_HIDDEN;
 
