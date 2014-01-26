@@ -60,7 +60,7 @@ KsecQueryVolumeInformation(
     PFILE_FS_DEVICE_INFORMATION DeviceInformation;
 
     /* Only FileFsDeviceInformation is supported */
-    if (FsInformationClass == FileFsDeviceInformation)
+    if (FsInformationClass != FileFsDeviceInformation)
     {
         return STATUS_INVALID_INFO_CLASS;
     }
