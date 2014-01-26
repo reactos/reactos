@@ -6,6 +6,7 @@ list(APPEND SOURCE
     config.c
     debug_ros.c
     isinf.c
+    isfinite.c
     isnan.c
     loader.c
     ${REACTOS_SOURCE_DIR}/lib/sdk/crt/string/wctype.c

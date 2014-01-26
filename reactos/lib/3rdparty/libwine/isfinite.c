@@ -1,7 +1,7 @@
 /*
- * isnan function
+ * isfinite function
  *
- * Copyright 2008 Jacek Caban for CodeWeavers
+ * Copyright 2013 Francois Gouget
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,26 +21,26 @@
 #include "config.h"
 #include "wine/port.h"
 
-#if !defined(HAVE_ISNAN) && !defined(isnan)
+#if !defined(HAVE_ISFINITE) && !defined(isfinite)
 
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>
 
-int isnan(double x)
+int isfinite(double x)
 {
-  return isnand(x);
+  return finite(x);
 }
 
-#elif defined(HAVE_FLOAT_H) && defined(HAVE__ISNAN)
+#elif defined(HAVE_FLOAT_H) && defined(HAVE__FINITE)
 #include <float.h>
 
-int isnan(double x)
+int isfinite(double x)
 {
-  return _isnan(x);
+  return _finite(x);
 }
 
 #else
-#error No isnan() implementation available.
+#error No isfinite() implementation available.
 #endif
 
-#endif /* !defined(HAVE_ISNAN) && !defined(isnan) */
+#endif /* !defined(HAVE_ISFINITE) && !defined(isfinite) */

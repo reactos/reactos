@@ -25,7 +25,10 @@
  */
 
 #include "wined3d_private.h"
-#include <wine/port.h>
+
+#ifdef _MSC_VER
+#define copysignf(x, y) ((x) < 0.0f ? -fabsf(y) : fabsf(y))
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
