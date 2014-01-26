@@ -292,7 +292,7 @@ ThreadFunc(LPVOID Context)
     /* run it */
     if (!bCab)
     {
-        ShellExecute( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );
+        ShellExecuteW( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );
     }
 end:
     CloseHandle(hOut);
