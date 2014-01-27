@@ -6,15 +6,9 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
  */
 
-#pragma once
-
 #define NOEXTAPI
 #include <ntifs.h>
-#include <arc/arc.h>
-#include <halfuncs.h>
 #include <windbgkd.h>
-#include <wdbgexts.h>
-#include <ioaccess.h> /* port intrinsics */
 
 //#define KDDEBUG /* uncomment to enable debugging this dll */
 

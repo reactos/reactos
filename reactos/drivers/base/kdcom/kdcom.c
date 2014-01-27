@@ -7,8 +7,11 @@
  */
 
 #include "kddll.h"
+
 #include <cportlib/cportlib.h>
+#include <arc/arc.h>
 #include <stdlib.h>
+#include <ndk/halfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
