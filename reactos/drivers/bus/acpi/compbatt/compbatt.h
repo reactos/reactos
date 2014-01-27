@@ -6,11 +6,8 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#include <ntddk.h>
-#include <initguid.h>
+#include <wdm.h>
 #include <batclass.h>
-#include <debug.h>
-#include <wdmguid.h>
 
 #define COMPBATT_BATTERY_INFORMATION_PRESENT    0x04
 #define COMPBATT_TAG_ASSIGNED                   0x80
