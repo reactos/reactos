@@ -10,6 +10,9 @@
 
 #include "cmbatt.h"
 
+#include <acpiioct.h>
+#include <debug.h>
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS

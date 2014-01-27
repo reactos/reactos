@@ -4,6 +4,7 @@ list(APPEND SOURCE
     cmexec.c
     cmbpnp.c
     cmbwmi.c
+    guid.c
     cmbatt.rc)
 
 add_library(cmbatt SHARED ${SOURCE})
