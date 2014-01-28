@@ -15,9 +15,9 @@
 
 /* DEFINES ********************************************************************/
 
-#define SPEAKER_CONTROL_PORT 0x61
-
 /* FUNCTIONS ******************************************************************/
+
+VOID SpeakerPool(VOID);
 
 VOID SpeakerInitialize(VOID);
 VOID SpeakerCleanup(VOID);

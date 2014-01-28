@@ -25,37 +25,19 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static BYTE Port61hState = 0x00;
-HANDLE hBeep = NULL;
+static HANDLE hBeep = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BYTE SpeakerReadStatus(VOID)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID SpeakerPool(VOID)
 {
-    return Port61hState;
-}
+    BYTE    Port61hState = IOReadB(CONTROL_SYSTEM_PORT61H);
+    BOOLEAN IsConnectedToPITChannel2 = !!(Port61hState & 0x01);
+    BOOLEAN SpeakerDataOn = !!(Port61hState & 0x02);
 
-static VOID SpeakerWriteCommand(BYTE Value)
-{
-    BOOLEAN IsConnectedToPITChannel2;
-    UCHAR   SpeakerData;
-
-    Port61hState = Value;
-    IsConnectedToPITChannel2 = ((Port61hState & 0x01) != 0);
-    SpeakerData = (Port61hState & 0x02);
-
-    if (PitChannel2 && IsConnectedToPITChannel2)
-    {
-        /* Set bit 5 of Port 61h */
-        Port61hState |= 1 << 5;
-    }
-    else
-    {
-        /* Clear bit 5 of Port 61h */
-        Port61hState &= ~(1 << 5);
-    }
-
-    if (PitChannel2 && IsConnectedToPITChannel2 && (SpeakerData != 0))
+    if (PitChannel2 && IsConnectedToPITChannel2 && SpeakerDataOn)
     {
         /* Start beeping - Adapted from kernel32:Beep() */
         NTSTATUS Status;
@@ -121,18 +103,6 @@ static VOID SpeakerWriteCommand(BYTE Value)
     }
 }
 
-static BYTE WINAPI SpeakerReadPort(ULONG Port)
-{
-    return SpeakerReadStatus();
-}
-
-static VOID WINAPI SpeakerWritePort(ULONG Port, BYTE Data)
-{
-    SpeakerWriteCommand(Data);
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
 VOID SpeakerInitialize(VOID)
 {
     NTSTATUS Status;
@@ -165,9 +135,6 @@ VOID SpeakerInitialize(VOID)
     {
         DPRINT1("Failed to open Beep driver, Status 0x%08lx\n", Status);
     }
-
-    /* Register the I/O Ports */
-    RegisterIoPort(SPEAKER_CONTROL_PORT, SpeakerReadPort, SpeakerWritePort);
 }
 
 VOID SpeakerCleanup(VOID)

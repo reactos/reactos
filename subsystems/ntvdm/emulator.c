@@ -31,6 +31,7 @@ LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
 static BOOLEAN A20Line = FALSE;
+static BYTE Port61hState = 0x00;
 
 LPCWSTR ExceptionName[] =
 {
@@ -125,6 +126,79 @@ VOID WINAPI EmulatorDebugBreak(LPWORD Stack)
     DebugBreak();
 }
 
+
+static BYTE WINAPI Port61hRead(ULONG Port)
+{
+    return Port61hState;
+}
+
+static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
+{
+    BYTE OldPort61hState = Port61hState;
+
+    /* Only the four lowest bytes can be written */
+    Port61hState = (Port61hState & 0xF0) | (Data & 0x0F);
+
+    if ((OldPort61hState ^ Port61hState) & 0x01)
+    {
+        DPRINT1("PIT 2 Gate %s\n", Port61hState & 0x01 ? "on" : "off");
+    }
+
+    PitSetGate(2, !!(Port61hState & 0x01));
+
+    if ((OldPort61hState ^ Port61hState) & 0x02)
+    {
+        /* There were some change for the speaker... */
+        DPRINT1("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
+    }
+}
+
+static VOID WINAPI PitChan0Out(LPVOID Param, BOOLEAN State)
+{
+    if (State)
+    {
+        DPRINT("PicInterruptRequest\n");
+        PicInterruptRequest(0); // Raise IRQ 0
+    }
+    // else < Lower IRQ 0 >
+}
+
+static VOID WINAPI PitChan1Out(LPVOID Param, BOOLEAN State)
+{
+#if 0
+    if (State)
+    {
+        /* Set bit 4 of Port 61h */
+        Port61hState |= 1 << 4;
+    }
+    else
+    {
+        /* Clear bit 4 of Port 61h */
+        Port61hState &= ~(1 << 4);
+    }
+#else
+    Port61hState = (Port61hState & 0xEF) | (State << 4);
+#endif
+}
+
+static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
+{
+#if 0
+    if (State)
+    {
+        /* Set bit 5 of Port 61h */
+        Port61hState |= 1 << 5;
+    }
+    else
+    {
+        /* Clear bit 5 of Port 61h */
+        Port61hState &= ~(1 << 5);
+    }
+#else
+    Port61hState = (Port61hState & 0xDF) | (State << 5);
+#endif
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
@@ -159,6 +233,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     PitInitialize();
     CmosInitialize();
     SpeakerInitialize();
+
+    /* Set output functions */
+    PitSetOutFunction(0, NULL, PitChan0Out);
+    PitSetOutFunction(1, NULL, PitChan1Out);
+    PitSetOutFunction(2, NULL, PitChan2Out);
+
+    /* Register the I/O Ports */
+    RegisterIoPort(CONTROL_SYSTEM_PORT61H, Port61hRead, Port61hWrite);
 
     /* Initialize the PS2 port */
     PS2Initialize(ConsoleInput);

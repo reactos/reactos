@@ -61,6 +61,10 @@
 #define BCD_TO_BINARY(x) (((x) >> 12) * 1000 + ((x) >> 8) * 100 + ((x) >> 4) * 10 + ((x) & 0x0F))
 
 
+/* System I/O ports */
+#define CONTROL_SYSTEM_PORT61H  0x61
+
+
 enum
 {
     EMULATOR_EXCEPTION_DIVISION_BY_ZERO,
