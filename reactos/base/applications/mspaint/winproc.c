@@ -208,10 +208,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             HDROP drophandle;
             TCHAR droppedfile[MAX_PATH];
+            HBITMAP bmNew = NULL;
             drophandle = (HDROP)wParam;
             DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile));
             DragFinish(drophandle);
-            HBITMAP bmNew = NULL;
             LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
             if (bmNew != NULL)
             {
