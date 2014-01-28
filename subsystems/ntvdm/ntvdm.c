@@ -26,6 +26,8 @@
  */
 #define TESTING
 
+#define IPS_DISPLAY
+
 /* PUBLIC VARIABLES ***********************************************************/
 
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
@@ -169,7 +171,7 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD StartTickCount, CurrentTickCount;
     DWORD LastClockUpdate;
     DWORD LastVerticalRefresh;
-#if 0
+#ifdef IPS_DISPLAY
     DWORD LastCyclePrintout;
     DWORD Cycles = 0;
 #endif
@@ -243,7 +245,11 @@ INT wmain(INT argc, WCHAR *argv[])
     QueryPerformanceCounter(&StartPerfCount);
 
     /* Set the different last counts to the starting count */
-    LastClockUpdate = LastVerticalRefresh = /*LastCyclePrintout =*/ StartTickCount;
+    LastClockUpdate = LastVerticalRefresh =
+#ifdef IPS_DISPLAY
+    LastCyclePrintout =
+#endif
+    StartTickCount;
 
     /* Set the last timer ticks to the current time */
     LastTimerTick = LastRtcTick = StartPerfCount;
@@ -317,12 +323,12 @@ INT wmain(INT argc, WCHAR *argv[])
         for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
         {
             EmulatorStep();
-#if 0
+#ifdef IPS_DISPLAY
             Cycles++;
 #endif
         }
 
-#if 0
+#ifdef IPS_DISPLAY
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
             DPRINT1("NTVDM: %lu Instructions Per Second\n", Cycles);
