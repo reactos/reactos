@@ -23,8 +23,6 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "mntmgr.h"
 
 #define MAX_DEVICES 0x3E8 /* Matches 1000 devices */
