@@ -211,7 +211,7 @@ CheckSectionValid(
      * Field[3] Minor version
      * Field[4] Product type
      * Field[5] Suite mask
-     * Remark: lastests fields may be NULL if the information is not provided
+     * Remark: these fields may be NULL if the information is not provided
      */
     Fields[0] = Section;
     if (Fields[0] == NULL)

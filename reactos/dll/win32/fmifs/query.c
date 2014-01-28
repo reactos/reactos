@@ -15,12 +15,12 @@ QueryAvailableFileSystemFormat(
 	IN OUT PWCHAR FileSystem, /* FIXME: Probably one minimal size is mandatory, but which one? */
 	OUT UCHAR* Major,
 	OUT UCHAR* Minor,
-	OUT BOOLEAN* LastestVersion)
+	OUT BOOLEAN* LatestVersion)
 {
 	PLIST_ENTRY ListEntry;
 	PIFS_PROVIDER Provider;
 
-	if (!FileSystem || !Major ||!Minor ||!LastestVersion)
+	if (!FileSystem || !Major ||!Minor ||!LatestVersion)
 		return FALSE;
 
 	ListEntry = ProviderListHead.Flink;
@@ -38,7 +38,7 @@ QueryAvailableFileSystemFormat(
 	wcscpy(FileSystem, Provider->Name);
 	*Major = 0; /* FIXME */
 	*Minor = 0; /* FIXME */
-	*LastestVersion = TRUE; /* FIXME */
+	*LatestVersion = TRUE; /* FIXME */
 
 	return TRUE;
 }
