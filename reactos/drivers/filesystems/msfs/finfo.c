@@ -18,7 +18,6 @@
 #define MAILSLOT_NO_MESSAGE   MAXULONG
 #define MAILSLOT_WAIT_FOREVER MAXULONG
 
-
 /* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
