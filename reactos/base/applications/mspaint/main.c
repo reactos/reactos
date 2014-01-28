@@ -409,6 +409,10 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
             clearHistory();
             isAFile = TRUE;
         }
+        else
+        {
+            exit(0);
+        }
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
@@ -488,6 +492,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);
+
+    /* inform the system, that the main window accepts dropped files */
+    DragAcceptFiles(hwnd, TRUE);
 
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
