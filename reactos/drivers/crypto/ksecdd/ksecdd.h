@@ -10,10 +10,6 @@
 #include <ntifs.h>
 #include <ndk/extypes.h>
 
-// 0x390004
-#define IOCTL_KSEC_GEN_RANDOM \
-    CTL_CODE(FILE_DEVICE_KSEC, 0x01, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
 #if defined(_M_IX86) || defined(_M_AMD64)
 typedef struct _KSEC_MACHINE_SPECIFIC_COUNTERS
 {

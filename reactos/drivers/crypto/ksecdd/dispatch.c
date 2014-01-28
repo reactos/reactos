@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ksecdd.h"
+#include <ksecioctl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -96,7 +97,12 @@ KsecDeviceControl(
     /* Check ioctl code */
     switch (IoControlCode)
     {
-        case IOCTL_KSEC_GEN_RANDOM:
+        case IOCTL_KSEC_REGISTER_LSA_PROCESS:
+
+            Status = STATUS_SUCCESS;
+            break;
+
+        case IOCTL_KSEC_RANDOM_FILL_BUFFER:
 
             Status = KsecGenRandom(Buffer, *OutputLength);
             break;
