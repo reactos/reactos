@@ -289,19 +289,16 @@ static VOID BiosHwSetup(VOID)
     IOWriteB(PIT_COMMAND_PORT, 0x34);
     IOWriteB(PIT_DATA_PORT(0), 0x00);
     IOWriteB(PIT_DATA_PORT(0), 0x00);
-    // PitSetGate(0, TRUE);
 
     /* Initialize PIT Counter 1 */
     IOWriteB(PIT_COMMAND_PORT, 0x74);
     IOWriteB(PIT_DATA_PORT(1), 0x00);
     IOWriteB(PIT_DATA_PORT(1), 0x00);
-    // PitSetGate(1, TRUE);
 
     /* Initialize PIT Counter 2 */
     IOWriteB(PIT_COMMAND_PORT, 0xB4);
     IOWriteB(PIT_DATA_PORT(2), 0x00);
     IOWriteB(PIT_DATA_PORT(2), 0x00);
-    // PitSetGate(2, FALSE); // PitSetGate(2, TRUE);
 
     EnableHwIRQ(0, BiosTimerIrq);
 }
