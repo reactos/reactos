@@ -17,6 +17,6 @@ list(APPEND SOURCE
 add_library(msgina SHARED ${SOURCE})
 set_module_type(msgina win32dll)
 target_link_libraries(msgina wine)
-add_importlibs(msgina advapi32 user32 gdi32 userenv msvcrt kernel32 ntdll)
+add_importlibs(msgina advapi32 user32 gdi32 secur32 userenv msvcrt kernel32 ntdll)
 add_pch(msgina msgina.h)
 add_cd_file(TARGET msgina DESTINATION reactos/system32 FOR all)

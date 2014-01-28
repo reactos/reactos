@@ -15,8 +15,11 @@
 #include <winuser.h>
 #include <userenv.h>
 #include <winwlx.h>
+#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/sefuncs.h>
+#include <ntlsa.h>
+#include <ntsecapi.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);

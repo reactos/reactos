@@ -125,4 +125,7 @@ BEGIN
     IDS_COMPUTERLOCKED "Computer locked"
     IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
     IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
+    IDS_CHANGEPWDTITLE "Change Password"
+    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
+    IDS_PASSWORDCHANGED "Your password has been changed."
 END

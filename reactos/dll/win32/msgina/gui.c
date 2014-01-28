@@ -221,10 +221,193 @@ GetTextboxText(
 
 
 static
-BOOL
-DoChangePassword(HWND hwndDlg)
+INT
+ResourceMessageBox(
+    IN PGINA_CONTEXT pgContext,
+    IN HWND hwnd,
+    IN UINT uType,
+    IN UINT uCaption,
+    IN UINT uText)
 {
-    return FALSE;
+    WCHAR szCaption[256];
+    WCHAR szText[256];
+
+    LoadStringW(pgContext->hDllInstance, uCaption, szCaption, 256);
+    LoadStringW(pgContext->hDllInstance, uText, szText, 256);
+
+    return pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
+                                               hwnd,
+                                               szText,
+                                               szCaption,
+                                               uType);
+}
+
+
+static
+BOOL
+DoChangePassword(
+    IN PGINA_CONTEXT pgContext,
+    IN HWND hwndDlg)
+{
+    WCHAR UserName[256];
+    WCHAR DomainName[256];
+    WCHAR OldPassword[256];
+    WCHAR NewPassword1[256];
+    WCHAR NewPassword2[256];
+    PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer = NULL;
+    PMSV1_0_CHANGEPASSWORD_RESPONSE ResponseBuffer = NULL;
+    ULONG RequestBufferSize;
+    ULONG ResponseBufferSize = 0;
+    LPWSTR Ptr;
+    LSA_STRING PackageName;
+    HANDLE LsaHandle = NULL;
+    ULONG AuthenticationPackage = 0;
+    BOOL res = FALSE;
+    NTSTATUS ProtocolStatus;
+    NTSTATUS Status;
+
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_USERNAME, UserName, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_DOMAIN, DomainName, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_OLDPWD, OldPassword, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NewPassword1, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NewPassword2, 256);
+
+    /* Compare the two passwords and fail if they do not match */
+    if (wcscmp(NewPassword1, NewPassword2) != 0)
+    {
+        ResourceMessageBox(pgContext,
+                           hwndDlg,
+                           MB_OK | MB_ICONEXCLAMATION,
+                           IDS_CHANGEPWDTITLE,
+                           IDS_NONMATCHINGPASSWORDS);
+        return FALSE;
+    }
+
+    /* Calculate the request buffer size */
+    RequestBufferSize = sizeof(MSV1_0_CHANGEPASSWORD_REQUEST) +
+                        ((wcslen(DomainName) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(UserName) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(OldPassword) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(NewPassword1) + 1) * sizeof(WCHAR));
+
+    /* Allocate the request buffer */
+    RequestBuffer = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              RequestBufferSize);
+    if (RequestBuffer == NULL)
+    {
+        ERR("HeapAlloc failed\n");
+        return FALSE;
+    }
+
+    /* Initialize the request buffer */
+    RequestBuffer->MessageType = MsV1_0ChangePassword;
+    RequestBuffer->Impersonating = TRUE;
+
+    Ptr = (LPWSTR)((ULONG_PTR)RequestBuffer + sizeof(MSV1_0_CHANGEPASSWORD_REQUEST));
+
+    /* Pack the domain name */
+    RequestBuffer->DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    RequestBuffer->DomainName.MaximumLength = RequestBuffer->DomainName.Length + sizeof(WCHAR);
+    RequestBuffer->DomainName.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->DomainName.Buffer,
+                  DomainName,
+                  RequestBuffer->DomainName.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->DomainName.MaximumLength);
+
+    /* Pack the user name */
+    RequestBuffer->AccountName.Length = wcslen(UserName) * sizeof(WCHAR);
+    RequestBuffer->AccountName.MaximumLength = RequestBuffer->AccountName.Length + sizeof(WCHAR);
+    RequestBuffer->AccountName.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->AccountName.Buffer,
+                  UserName,
+                  RequestBuffer->AccountName.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->AccountName.MaximumLength);
+
+    /* Pack the old password */
+    RequestBuffer->OldPassword.Length = wcslen(OldPassword) * sizeof(WCHAR);
+    RequestBuffer->OldPassword.MaximumLength = RequestBuffer->OldPassword.Length + sizeof(WCHAR);
+    RequestBuffer->OldPassword.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->OldPassword.Buffer,
+                  OldPassword,
+                  RequestBuffer->OldPassword.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->OldPassword.MaximumLength);
+
+    /* Pack the new password */
+    RequestBuffer->NewPassword.Length = wcslen(NewPassword1) * sizeof(WCHAR);
+    RequestBuffer->NewPassword.MaximumLength = RequestBuffer->NewPassword.Length + sizeof(WCHAR);
+    RequestBuffer->NewPassword.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->NewPassword.Buffer,
+                  NewPassword1,
+                  RequestBuffer->NewPassword.MaximumLength);
+
+    /* Connect to the LSA server */
+    Status = LsaConnectUntrusted(&LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaConnectUntrusted failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get the authentication package */
+    RtlInitAnsiString((PANSI_STRING)&PackageName,
+                      MSV1_0_PACKAGE_NAME);
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &AuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Call the authentication package */
+    Status = LsaCallAuthenticationPackage(LsaHandle,
+                                          AuthenticationPackage,
+                                          RequestBuffer,
+                                          RequestBufferSize,
+                                          (PVOID*)&ResponseBuffer,
+                                          &ResponseBufferSize,
+                                          &ProtocolStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaCallAuthenticationPackage failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (!NT_SUCCESS(ProtocolStatus))
+    {
+        TRACE("LsaCallAuthenticationPackage failed (ProtocolStatus 0x%08lx)\n", ProtocolStatus);
+        goto done;
+    }
+
+    res = TRUE;
+
+    ResourceMessageBox(pgContext,
+                       hwndDlg,
+                       MB_OK | MB_ICONINFORMATION,
+                       IDS_CHANGEPWDTITLE,
+                       IDS_PASSWORDCHANGED);
+
+done:
+    if (RequestBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, RequestBuffer);
+
+    if (ResponseBuffer != NULL)
+        LsaFreeReturnBuffer(ResponseBuffer);
+
+    if (LsaHandle != NULL)
+        NtClose(LsaHandle);
+
+    return res;
 }
 
 
@@ -255,7 +438,7 @@ ChangePasswordDialogProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (DoChangePassword(hwndDlg))
+                    if (DoChangePassword(pgContext, hwndDlg))
                     {
                         EndDialog(hwndDlg, TRUE);
                     }
@@ -322,7 +505,7 @@ OnChangePassword(
 {
     INT res;
 
-    FIXME("OnChangePassword()\n");
+    TRACE("OnChangePassword()\n");
 
     res = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
@@ -332,7 +515,7 @@ OnChangePassword(
         ChangePasswordDialogProc,
         (LPARAM)pgContext);
 
-    FIXME("Result: %x\n", res);
+    TRACE("Result: %x\n", res);
 
     return FALSE;
 }

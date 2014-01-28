@@ -46,7 +46,7 @@ BEGIN
     PUSHBUTTON "Computer sperren", IDC_LOCK, 10, 135, 76, 14
     PUSHBUTTON "Abmelden...", IDC_LOGOFF, 100, 135, 75, 14
     PUSHBUTTON "Herunterfahren", IDC_SHUTDOWN, 189, 135, 76, 14
-    PUSHBUTTON "Password ändern", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Passwort ändern", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Task-Manager", IDC_TASKMGR, 100, 154, 75, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 189, 154, 76, 14
 END
@@ -123,6 +123,9 @@ BEGIN
     IDS_LOGONMSG "Sie sind angemeldet als %s."
     IDS_LOGONDATE "Anmeldedatum: %s %s"
     IDS_COMPUTERLOCKED "Computer ist gesperrt"
-    IDS_LOCKEDWRONGPASSWORD "Das Kennwort ist falsch.  Bitte geben Sie das Kennwort erneut ein.  Bei Buchstaben des Kennworts wird Groß- und Kleinschreibung unterschieden."
+    IDS_LOCKEDWRONGPASSWORD "Das Passwort ist falsch.  Bitte geben Sie das Passwort erneut ein.  Bei Buchstaben des Passworts wird Groß- und Kleinschreibung unterschieden."
     IDS_LOCKEDWRONGUSER "Der Computer ist gesperrt.  Nur %s\\%s oder ein Administrator kann den Computer entsperren."
+    IDS_CHANGEPWDTITLE "Passwort ändern"
+    IDS_NONMATCHINGPASSWORDS "Die eingegebenen Passworte stimmen nicht überein. Geben Sie das neue Passwort in beide Textfelder ein."
+    IDS_PASSWORDCHANGED "Ihr Passwort wurde geändert."
 END
