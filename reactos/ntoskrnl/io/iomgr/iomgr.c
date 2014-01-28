@@ -110,7 +110,7 @@ IopInitLookasideLists(VOID)
                                     IOC_TAG1,
                                     32,
                                     &ExSystemLookasideListHead);
-    
+
     /* Initialize the Lookaside List for Large IRPs */
     ExInitializeSystemLookasideList(&IoLargeIrpLookaside,
                                     NonPagedPool,
@@ -137,11 +137,11 @@ IopInitLookasideLists(VOID)
                                     &ExSystemLookasideListHead);
 
     /* Allocate the global lookaside list buffer */
-    CurrentList = ExAllocatePoolWithTag(NonPagedPool, 
+    CurrentList = ExAllocatePoolWithTag(NonPagedPool,
                                         4 * KeNumberProcessors *
                                         sizeof(GENERAL_LOOKASIDE),
                                         TAG_IO);
-    
+
     /* Loop all processors */
     for (i = 0; i < KeNumberProcessors; i++)
     {
@@ -165,13 +165,13 @@ IopInitLookasideLists(VOID)
                                             &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideCompletionList].P = CurrentList;
             CurrentList++;
-            
+
         }
         else
         {
             Prcb->PPLookasideList[LookasideCompletionList].P = &IoCompletionPacketLookaside;
         }
-        
+
         /* Set the Large IRP List */
         Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside;
         if (CurrentList)
@@ -185,7 +185,7 @@ IopInitLookasideLists(VOID)
                                             &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideLargeIrpList].P = CurrentList;
             CurrentList++;
-            
+
         }
         else
         {
@@ -205,7 +205,7 @@ IopInitLookasideLists(VOID)
                                             &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideSmallIrpList].P = CurrentList;
             CurrentList++;
-            
+
         }
         else
         {
@@ -223,10 +223,10 @@ IopInitLookasideLists(VOID)
                                             TAG_MDL,
                                             128,
                                             &ExSystemLookasideListHead);
-            
+
             Prcb->PPLookasideList[LookasideMdlList].P = CurrentList;
             CurrentList++;
-            
+
         }
         else
         {
@@ -332,6 +332,7 @@ IopCreateRootDirectories()
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DirName;
     HANDLE Handle;
+    NTSTATUS Status;
 
     /* Create the '\Driver' object directory */
     RtlInitUnicodeString(&DirName, L"\\Driver");
@@ -340,9 +341,14 @@ IopCreateRootDirectories()
                                OBJ_PERMANENT,
                                NULL,
                                NULL);
-    if (!NT_SUCCESS(NtCreateDirectoryObject(&Handle,
-                                            DIRECTORY_ALL_ACCESS,
-                                            &ObjectAttributes))) return FALSE;
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create \\Driver directory: 0x%lx\n", Status);
+        return FALSE;
+    }
     NtClose(Handle);
 
     /* Create the '\FileSystem' object directory */
@@ -352,9 +358,31 @@ IopCreateRootDirectories()
                                OBJ_PERMANENT,
                                NULL,
                                NULL);
-    if (!NT_SUCCESS(NtCreateDirectoryObject(&Handle,
-                                            DIRECTORY_ALL_ACCESS,
-                                            &ObjectAttributes))) return FALSE;
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create \\FileSystem directory: 0x%lx\n", Status);
+        return FALSE;
+    }
+    NtClose(Handle);
+
+    /* Create the '\FileSystem' object directory */
+    RtlInitUnicodeString(&DirName, L"\\FileSystem\\Filters");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DirName,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create \\FileSystem\\Filters directory: 0x%lx\n", Status);
+        return FALSE;
+    }
     NtClose(Handle);
 
     /* Return success */

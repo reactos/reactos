@@ -1654,7 +1654,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
     /* Check who is calling */
     if (PreviousMode != KernelMode)
     {
-        static const UNICODE_STRING Win32kName = 
+        static const UNICODE_STRING Win32kName =
             RTL_CONSTANT_STRING(L"\\SystemRoot\\System32\\win32k.sys");
 
         /* Make sure we can load drivers */
@@ -1663,7 +1663,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
             /* FIXME: We can't, fail */
             return STATUS_PRIVILEGE_NOT_HELD;
         }
-        
+
         _SEH2_TRY
         {
             /* Probe and copy the unicode string */
@@ -1684,7 +1684,7 @@ SSI_DEF(SystemExtendServiceTableInformation)
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
+
         /* Recursively call the function, so that we are from kernel mode */
         return ZwSetSystemInformation(SystemExtendServiceTableInformation,
                                       (PVOID)&Win32kName,
@@ -1956,51 +1956,51 @@ CallQS [] =
     SI_QX(SystemPerformanceInformation),
     SI_QX(SystemTimeOfDayInformation),
     SI_QX(SystemPathInformation), /* should be SI_XX */
-    SI_QX(SystemProcessInformation),
-    SI_QX(SystemCallCountInformation),
-    SI_QX(SystemDeviceInformation),
-    SI_QX(SystemProcessorPerformanceInformation),
-    SI_QS(SystemFlagsInformation),
+    SI_QX(SystemProcessInformation),  // aka SystemProcessesAndThreadsInformation
+    SI_QX(SystemCallCountInformation), // aka SystemCallCounts
+    SI_QX(SystemDeviceInformation), // aka SystemConfigurationInformation
+    SI_QX(SystemProcessorPerformanceInformation), // aka SystemProcessorTimes
+    SI_QS(SystemFlagsInformation), // aka SystemGlobalFlag
     SI_QX(SystemCallTimeInformation), /* should be SI_XX */
     SI_QX(SystemModuleInformation),
-    SI_QX(SystemLocksInformation),
+    SI_QX(SystemLocksInformation), // aka SystemLockInformation
     SI_QX(SystemStackTraceInformation), /* should be SI_XX */
     SI_QX(SystemPagedPoolInformation), /* should be SI_XX */
     SI_QX(SystemNonPagedPoolInformation), /* should be SI_XX */
     SI_QX(SystemHandleInformation),
     SI_QX(SystemObjectInformation),
-    SI_QX(SystemPageFileInformation),
-    SI_QX(SystemVdmInstemulInformation),
+    SI_QX(SystemPageFileInformation), // aka SystemPagefileInformation
+    SI_QX(SystemVdmInstemulInformation), // aka SystemInstructionEmulationCounts
     SI_QX(SystemVdmBopInformation), /* it should be SI_XX */
-    SI_QS(SystemFileCacheInformation),
+    SI_QS(SystemFileCacheInformation), // aka SystemCacheInformation
     SI_QX(SystemPoolTagInformation),
-    SI_QX(SystemInterruptInformation),
-    SI_QS(SystemDpcBehaviourInformation),
+    SI_QX(SystemInterruptInformation), // aka SystemProcessorStatistics
+    SI_QS(SystemDpcBehaviourInformation), // aka SystemDpcInformation
     SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
-    SI_XS(SystemLoadGdiDriverInformation),
-    SI_XS(SystemUnloadGdiDriverInformation),
-    SI_QS(SystemTimeAdjustmentInformation),
+    SI_XS(SystemLoadGdiDriverInformation), // correct: SystemLoadImage
+    SI_XS(SystemUnloadGdiDriverInformation), // correct: SystemUnloadImage
+    SI_QS(SystemTimeAdjustmentInformation), // aka SystemTimeAdjustment
     SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
     SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
-    SI_QX(SystemEventIdsInformation), /* it should be SI_XX */
+    SI_QX(SystemEventIdsInformation), /* it should be SI_XX */ // SystemPerformanceTraceInformation
     SI_QX(SystemCrashDumpInformation),
     SI_QX(SystemExceptionInformation),
     SI_QX(SystemCrashDumpStateInformation),
     SI_QX(SystemKernelDebuggerInformation),
     SI_QX(SystemContextSwitchInformation),
     SI_QS(SystemRegistryQuotaInformation),
-    SI_XS(SystemExtendServiceTableInformation),
+    SI_XS(SystemExtendServiceTableInformation), // correct: SystemLoadAndCallImage
     SI_XS(SystemPrioritySeperation),
     SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
     SI_QX(SystemDockInformation), /* it should be SI_XX */
-    SI_QX(SystemPowerInformation), /* it should be SI_XX */
+    SI_QX(SystemPowerInformation), /* it should be SI_XX */ // SystemPowerInformationNative? SystemInvalidInfoClass2
     SI_QX(SystemProcessorSpeedInformation), /* it should be SI_XX */
-    SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */
+    SI_QS(SystemCurrentTimeZoneInformation), /* it should be SI_QX */ // aka SystemTimeZoneInformation
     SI_QX(SystemLookasideInformation),
     SI_XS(SystemSetTimeSlipEvent),
     SI_XS(SystemCreateSession),
     SI_XS(SystemDeleteSession),
-    SI_QX(SystemInvalidInfoClass4), /* it should be SI_XX */
+    SI_QX(SystemInvalidInfoClass4), /* it should be SI_XX */ // SystemSessionInformation?
     SI_QX(SystemRangeStartInformation),
     SI_QS(SystemVerifierInformation),
     SI_XS(SystemAddVerifier),
@@ -2021,7 +2021,7 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                          OUT PULONG UnsafeResultLength)
 {
     KPROCESSOR_MODE PreviousMode;
-    ULONG ResultLength;
+    ULONG ResultLength = 0;
     NTSTATUS FStatus = STATUS_NOT_IMPLEMENTED;
 
     PAGED_CODE();
@@ -2038,8 +2038,11 @@ NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
                 ProbeForWriteUlong(UnsafeResultLength);
         }
 
+        if (UnsafeResultLength)
+            *UnsafeResultLength = 0;
+
         /*
-         * Check the request is valid.
+         * Check if the request is valid.
          */
         if (SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
         {
