@@ -331,7 +331,7 @@ INT wmain(INT argc, WCHAR *argv[])
 #ifdef IPS_DISPLAY
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
-            DPRINT1("NTVDM: %lu Instructions Per Second\n", Cycles);
+            DPRINT1("NTVDM: %lu Instructions Per Second; TimerTicks = %lu\n", Cycles, TimerTicks);
             LastCyclePrintout = CurrentTickCount;
             Cycles = 0;
         }
