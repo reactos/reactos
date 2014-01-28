@@ -27,12 +27,7 @@
   * Copyright (C)2009  Samuel Serapion 
   */
 
-#include <ntddk.h>
-
-#include <acpi.h>
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-#include <glue.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>

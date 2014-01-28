@@ -1,12 +1,4 @@
-#include <ntddk.h>
-
-#include <acpi.h>
-#include <acpisys.h>
-#include <wdmguid.h>
-#include <stdio.h>
-
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
+#include "precomp.h"
 
 #include <initguid.h>
 #include <poclass.h>

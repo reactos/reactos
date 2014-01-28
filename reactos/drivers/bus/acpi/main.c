@@ -1,12 +1,5 @@
-#include <ntddk.h>
+#include "precomp.h"
 
-#include <acpi.h>
-#include <acpisys.h>
-
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-
-#include <acpiioct.h>
 #include <poclass.h>
 
 #define NDEBUG

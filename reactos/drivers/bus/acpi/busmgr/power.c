@@ -40,15 +40,10 @@
  * Copyright (C)2009  Samuel Serapion 
  */
 
-#include <ntddk.h>
-#include <acpi.h>
-#include <acpi_bus.h>
-#include <acpi_drivers.h>
-#include <glue.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 #define _COMPONENT		ACPI_POWER_COMPONENT
 ACPI_MODULE_NAME		("acpi_power")
