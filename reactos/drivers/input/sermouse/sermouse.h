@@ -1,8 +1,6 @@
-#include <ntifs.h>
-#include <kbdmou.h>
+#include <ntddk.h>
 #include <ntddser.h>
-#include <ntddmou.h>
-#include <debug.h>
+#include <kbdmou.h>
 
 #define SERMOUSE_TAG 'uoMS'
 

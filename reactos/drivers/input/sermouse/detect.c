@@ -10,6 +10,9 @@
 
 #include "sermouse.h"
 
+#include <ntifs.h>
+#include <debug.h>
+
 /* Most of this file is ripped from reactos/drivers/bus/serenum/detect.c */
 
 static NTSTATUS

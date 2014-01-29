@@ -6,8 +6,9 @@
  * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define INITGUID
 #include "sermouse.h"
+
+#include <debug.h>
 
 static DRIVER_UNLOAD DriverUnload;
 static DRIVER_DISPATCH IrpStub;
