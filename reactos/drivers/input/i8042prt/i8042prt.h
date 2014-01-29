@@ -4,10 +4,6 @@
 #include <ntifs.h>
 #include <kbdmou.h>
 #include <ntdd8042.h>
-#include <ntddkbd.h>
-#include <bugcodes.h>
-#include <poclass.h>
-#include <kdfuncs.h>
 
 /*-----------------------------------------------------
  * Structures
