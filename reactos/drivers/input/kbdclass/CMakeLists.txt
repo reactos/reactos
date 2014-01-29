@@ -2,6 +2,7 @@
 add_library(kbdclass SHARED
     kbdclass.c
     misc.c
+    guid.c
     kbdclass.rc)
 
 set_module_type(kbdclass kernelmodedriver)
