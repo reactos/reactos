@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID SpeakerPool(VOID);
+VOID SpeakerChange(VOID);
 
 VOID SpeakerInitialize(VOID);
 VOID SpeakerCleanup(VOID);

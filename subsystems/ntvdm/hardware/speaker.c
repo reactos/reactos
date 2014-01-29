@@ -31,7 +31,7 @@ static HANDLE hBeep = NULL;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID SpeakerPool(VOID)
+VOID SpeakerChange(VOID)
 {
     BYTE    Port61hState = IOReadB(CONTROL_SYSTEM_PORT61H);
     BOOLEAN IsConnectedToPITChannel2 = !!(Port61hState & 0x01);

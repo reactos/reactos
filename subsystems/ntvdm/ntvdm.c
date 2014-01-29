@@ -26,7 +26,17 @@
  */
 #define TESTING
 
-#define IPS_DISPLAY
+/*
+ * Activate IPS_DISPLAY if you want to display the
+ * number of instructions per second, as well as
+ * the computed number of ticks for the PIT.
+ */
+// #define IPS_DISPLAY
+
+/*
+ * Activate WORKING_TIMER when the PIT timing problem is fixed.
+ */
+// #define WORKING_TIMER
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -257,12 +267,15 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Main loop */
     while (VdmRunning)
     {
+#ifdef WORKING_TIMER
         DWORD PitResolution = PitGetResolution();
+#endif
         DWORD RtcFrequency = RtcGetTicksPerSecond();
 
         /* Get the current number of ticks */
         CurrentTickCount = GetTickCount();
 
+#ifdef WORKING_TIMER
         if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
         {
             /* Calculate the approximate performance counter value instead */
@@ -271,6 +284,7 @@ INT wmain(INT argc, WCHAR *argv[])
                                * (Frequency.QuadPart / 1000);
         }
         else
+#endif
         {
             /* Get the current performance counter value */
             QueryPerformanceCounter(&Counter);
@@ -331,7 +345,7 @@ INT wmain(INT argc, WCHAR *argv[])
 #ifdef IPS_DISPLAY
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
-            DPRINT1("NTVDM: %lu Instructions Per Second; TimerTicks = %lu\n", Cycles, TimerTicks);
+            DPRINT1("NTVDM: %lu Instructions Per Second; TimerTicks = %I64d\n", Cycles, TimerTicks);
             LastCyclePrintout = CurrentTickCount;
             Cycles = 0;
         }
