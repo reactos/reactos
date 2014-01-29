@@ -817,18 +817,15 @@ int CDECL _close(int fd)
   LOCK_FILES();
   hand = fdtoh(fd);
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  if (!is_valid_fd(fd)) {
     ret = -1;
-  else if (!CloseHandle(hand))
-  {
-    WARN(":failed-last error (%d)\n",GetLastError());
-    _dosmaperr(GetLastError());
-    ret = -1;
-  }
-  else
-  {
+  } else {
     free_fd(fd);
-    ret = 0;
+    ret = CloseHandle(hand) ? 0 : -1;
+    if (ret) {
+      WARN(":failed-last error (%d)\n",GetLastError());
+      _dosmaperr(GetLastError());
+    }
   }
   UNLOCK_FILES();
   TRACE(":ok\n");
@@ -1718,7 +1715,9 @@ int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmod
   }
 
   *fd = alloc_fd(hand, wxflag);
-
+  if (*fd == -1)
+      return *_errno();
+      
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
 }
@@ -1783,12 +1782,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
   TRACE("fd*: %p :file (%s) oflags: 0x%04x shflags: 0x%04x pmode: 0x%04x\n",
         fd, debugstr_w(path), oflags, shflags, pmode);
 
-  if (!fd)
-  {
-    MSVCRT_INVALID_PMT("null out fd pointer");
-    *_errno() = EINVAL;
-    return EINVAL;
-  }
+  if (!MSVCRT_CHECK_PMT( fd != NULL )) return EINVAL;
 
   *fd = -1;
   wxflag = split_oflags(oflags);
@@ -1868,7 +1862,6 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
   }
   
   hand = CreateFileW(path, access, sharing, &sa, creation, attrib, 0);
-
   if (hand == INVALID_HANDLE_VALUE)  {
     WARN(":failed-last error (%d)\n",GetLastError());
     _dosmaperr(GetLastError());
@@ -1891,7 +1884,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
               if (written != sizeof(utf8_bom)) {
                   WARN("error writing BOM\n");
                   CloseHandle(hand);
-                  *_errno() = GetLastError();
+                  _dosmaperr(GetLastError());
                   return *_errno();
               }
           }
@@ -1906,7 +1899,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
               {
                   WARN("error writing BOM\n");
                   CloseHandle(hand);
-                  *_errno() = GetLastError();
+                  _dosmaperr(GetLastError());
                   return *_errno();
               }
           }
