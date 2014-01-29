@@ -20,7 +20,7 @@ BOOL NTAPI DRIVEROBJ_Cleanup(PVOID pObject);
 
 FORCEINLINE
 PEDRIVEROBJ
-DRIVEROBJ_LockObject(HDRVOBJ hdo)
+DRIVEROBJ_TryLockObject(HDRVOBJ hdo)
 {
-    return GDIOBJ_LockObject(hdo, GDIObjType_DRVOBJ_TYPE);
+    return GDIOBJ_TryLockObject(hdo, GDIObjType_DRVOBJ_TYPE);
 }

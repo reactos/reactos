@@ -113,6 +113,14 @@ ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 }
 
 FORCEINLINE
+BOOLEAN
+ExTryAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    /* Try acquiring the lock */
+    return !InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V);
+}
+
+FORCEINLINE
 VOID
 ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
