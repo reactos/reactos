@@ -4,8 +4,6 @@
 #include <wdm.h>
 #include <hidpddi.h>
 #include <stdio.h>
-
-#include <initguid.h>
 #include <hidport.h>
 
 #define HIDCLASS_TAG 'CdiH'
