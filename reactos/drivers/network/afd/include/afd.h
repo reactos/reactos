@@ -11,16 +11,9 @@
 #ifndef _AFD_H
 #define _AFD_H
 
-#include <ntddk.h>
 #include <ntifs.h>
 #include <ndk/obtypes.h>
-#include <ndk/obfuncs.h>
-#include <ndk/mmtypes.h>
-#include <ndk/mmfuncs.h>
 #include <tdi.h>
-#include <tdikrnl.h>
-#include <tdiinfo.h>
-#include <string.h>
 #define _WINBASE_
 #define _WINDOWS_H
 #define _INC_WINDOWS
@@ -434,4 +427,4 @@ NTSTATUS NTAPI
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp);
 
-#endif/*_AFD_H*/
+#endif /* _AFD_H */
