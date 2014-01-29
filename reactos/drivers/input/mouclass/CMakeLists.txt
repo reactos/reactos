@@ -2,6 +2,7 @@
 add_library(mouclass SHARED
     misc.c
     mouclass.c
+    guid.c
     mouclass.rc)
 
 set_module_type(mouclass kernelmodedriver)
