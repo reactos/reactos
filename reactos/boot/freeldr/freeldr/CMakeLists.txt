@@ -129,6 +129,8 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/int386.S
         arch/amd64/pnpbios.S)
     list(APPEND FREELDR_COMMON_SOURCE
+        arch/i386/custom.c
+        arch/i386/drivemap.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c

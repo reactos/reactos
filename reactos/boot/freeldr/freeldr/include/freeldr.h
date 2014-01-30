@@ -99,10 +99,10 @@
 #include <arch/pc/machpc.h>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pxe.h>
-#endif
-#if defined(_M_IX86)
 #include <arch/i386/custom.h>
 #include <arch/i386/drivemap.h>
+#endif
+#if defined(_M_IX86)
 #include <arch/i386/i386.h>
 #include <arch/i386/machxbox.h>
 #include <arch/i386/miscboot.h>
