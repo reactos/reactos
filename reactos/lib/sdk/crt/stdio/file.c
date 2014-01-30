@@ -89,25 +89,15 @@ int *__p___mb_cur_max(void);
 #define WX_APPEND         0x20
 #define WX_TEXT           0x80
 
-/* values for exflag - it's used differently in msvcr90.dll*/
-#define EF_UTF8           0x01
-#define EF_UTF16          0x02
-#define EF_CRIT_INIT      0x04
-#define EF_UNK_UNICODE    0x08
-
-static char utf8_bom[3] = { 0xef, 0xbb, 0xbf };
-static char utf16_bom[2] = { 0xff, 0xfe };
-
 /* FIXME: this should be allocated dynamically */
 #define MAX_FILES 2048
 #define FD_BLOCK_SIZE 64
 
-/* ioinfo structure size is different in msvcrXX.dll's */
 typedef struct {
     HANDLE              handle;
     unsigned char       wxflag;
     char                unk1;
-    int                 exflag;
+    BOOL                crit_init;
     CRITICAL_SECTION    crit;
 } ioinfo;
 
@@ -744,8 +734,10 @@ int CDECL _wunlink(const wchar_t *path)
 /* _flushall calls fflush which calls _flushall */
 int CDECL fflush(FILE* file);
 
-/* INTERNAL: Flush all stream buffer */
-static int flush_all_buffers(int mask)
+/*********************************************************************
+ *		_flushall (MSVCRT.@)
+ */
+int CDECL _flushall(void)
 {
   int i, num_flushed = 0;
   FILE *file;
@@ -756,8 +748,8 @@ static int flush_all_buffers(int mask)
 
     if (file->_flag)
     {
-      if(file->_flag & mask) {
-        fflush(file);
+      if(file->_flag & _IOWRT) {
+	fflush(file);
         num_flushed++;
       }
     }
@@ -769,40 +761,21 @@ static int flush_all_buffers(int mask)
 }
 
 /*********************************************************************
- *		_flushall (MSVCRT.@)
- */
-int CDECL _flushall(void)
-{
-    return flush_all_buffers(_IOWRT | _IOREAD);
-}
-
-/*********************************************************************
  *		fflush (MSVCRT.@)
  */
 int CDECL fflush(FILE* file)
 {
     if(!file) {
-        flush_all_buffers(_IOWRT);
+        _flushall();
     } else if(file->_flag & _IOWRT) {
         int res;
 
         _lock_file(file);
         res = flush_buffer(file);
-        /* FIXME
-        if(!res && (file->_flag & _IOCOMMIT))
-            res = _commit(file->_file) ? EOF : 0;
-        */
         _unlock_file(file);
 
         return res;
-    } else if(file->_flag & _IOREAD) {
-        _lock_file(file);
-        file->_cnt = 0;
-        file->_ptr = file->_base;
-        _unlock_file(file);
-
-        return 0;
-    }    
+    }
     return 0;
 }
 
@@ -817,15 +790,18 @@ int CDECL _close(int fd)
   LOCK_FILES();
   hand = fdtoh(fd);
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (!is_valid_fd(fd)) {
+  if (hand == INVALID_HANDLE_VALUE)
     ret = -1;
-  } else {
+  else if (!CloseHandle(hand))
+  {
+    WARN(":failed-last error (%d)\n",GetLastError());
+    _dosmaperr(GetLastError());
+    ret = -1;
+  }
+  else
+  {
     free_fd(fd);
-    ret = CloseHandle(hand) ? 0 : -1;
-    if (ret) {
-      WARN(":failed-last error (%d)\n",GetLastError());
-      _dosmaperr(GetLastError());
-    }
+    ret = 0;
   }
   UNLOCK_FILES();
   TRACE(":ok\n");
@@ -1244,9 +1220,7 @@ void CDECL rewind(FILE* file)
 static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
 {
   int plus = strchrW(mode, '+') != NULL;
-  
-  while(*mode == ' ') mode++;
-  
+
   switch(*mode++)
   {
   case 'R': case 'r':
@@ -1267,10 +1241,7 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
     return -1;
   }
 
-  /* FIXME */
-  /* *stream_flags |= MSVCRT__commode; */
-  
-  while (*mode && *mode!=',')
+  while (*mode)
     switch (*mode++)
     {
     case 'B': case 'b':
@@ -1281,83 +1252,12 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
       *open_flags |=  _O_TEXT;
       *open_flags &= ~_O_BINARY;
       break;
-    case 'D':
-      *open_flags |= _O_TEMPORARY;
-      break;
-    case 'T':
-      *open_flags |= _O_SHORT_LIVED;
-      break;
-      /* FIXME 
-   case 'c':
-      *stream_flags |= _IOCOMMIT;
-      break;
-    case 'n':
-      *stream_flags &= ~_IOCOMMIT;
-      break;      
-      */
-    case 'N':
-      *open_flags |= _O_NOINHERIT;
-      break;
     case '+':
     case ' ':
-    case 'a':
-    case 'w':
-      break;
-    case 'S':
-    case 'R':
-      FIXME("ignoring cache optimization flag: %c\n", mode[-1]);
       break;
     default:
-      ERR("incorrect mode flag: %c\n", mode[-1]);
-      break;
+      FIXME(":unknown flag %c not supported\n",mode[-1]);
     }
-
-  if(*mode == ',')
-  {
-    static const WCHAR ccs[] = {'c','c','s'};
-    static const WCHAR utf8[] = {'u','t','f','-','8'};
-    static const WCHAR utf16le[] = {'u','t','f','-','1','6','l','e'};
-    static const WCHAR unicode[] = {'u','n','i','c','o','d','e'};
-
-    mode++;
-    while(*mode == ' ') mode++;
-    if(!MSVCRT_CHECK_PMT(!strncmpW(ccs, mode, sizeof(ccs)/sizeof(ccs[0]))))
-      return -1;
-    mode += sizeof(ccs)/sizeof(ccs[0]);
-    while(*mode == ' ') mode++;
-    if(!MSVCRT_CHECK_PMT(*mode == '='))
-        return -1;
-    mode++;
-    while(*mode == ' ') mode++;
-
-    if(!strncmpiW(utf8, mode, sizeof(utf8)/sizeof(utf8[0])))
-    {
-      *open_flags |= _O_U8TEXT;
-      mode += sizeof(utf8)/sizeof(utf8[0]);
-    }
-    else if(!strncmpiW(utf16le, mode, sizeof(utf16le)/sizeof(utf16le[0])))
-    {
-      *open_flags |= _O_U16TEXT;
-      mode += sizeof(utf16le)/sizeof(utf16le[0]);
-    }
-    else if(!strncmpiW(unicode, mode, sizeof(unicode)/sizeof(unicode[0])))
-    {
-      *open_flags |= _O_WTEXT;
-      mode += sizeof(unicode)/sizeof(unicode[0]);
-    }
-    else
-    {
-      _invalid_parameter(NULL, NULL, NULL, 0, 0);
-      *_errno() = EINVAL;
-      return -1;
-    }
-
-    while(*mode == ' ') mode++;
-  }
-
- if(!MSVCRT_CHECK_PMT(*mode == 0))
-    return -1;
-  
   return 0;
 }
 
@@ -1546,23 +1446,19 @@ wchar_t * CDECL _wmktemp(wchar_t *pattern)
     int         wxflags = 0;
     unsigned unsupp; /* until we support everything */
 
-    if (oflags & _O_APPEND)                     wxflags |= WX_APPEND;
-    if (oflags & _O_BINARY)                     {/* Nothing to do */}
-    else if (oflags & _O_TEXT)                  wxflags |= WX_TEXT;
-    else if (oflags & _O_WTEXT)                 wxflags |= WX_TEXT;
-    else if (oflags & _O_U16TEXT)               wxflags |= WX_TEXT;
-    else if (oflags & _O_U8TEXT)                wxflags |= WX_TEXT;    
-    else if (*__p__fmode() & _O_BINARY)         {/* Nothing to do */}
+    if (oflags & _O_APPEND)              wxflags |= WX_APPEND;
+    if (oflags & _O_BINARY)              {/* Nothing to do */}
+    else if (oflags & _O_TEXT)           wxflags |= WX_TEXT;
+    else if (*__p__fmode() & _O_BINARY)  {/* Nothing to do */}
     else                                        wxflags |= WX_TEXT; /* default to TEXT*/
-    if (oflags & _O_NOINHERIT)                  wxflags |= WX_DONTINHERIT;
+    if (oflags & _O_NOINHERIT)           wxflags |= WX_DONTINHERIT;
 
     if ((unsupp = oflags & ~(
                     _O_BINARY|_O_TEXT|_O_APPEND|
                     _O_TRUNC|_O_EXCL|_O_CREAT|
                     _O_RDWR|_O_WRONLY|_O_TEMPORARY|
                     _O_NOINHERIT|
-                    _O_SEQUENTIAL|_O_RANDOM|_O_SHORT_LIVED|
-                    _O_WTEXT|_O_U16TEXT|_O_U8TEXT
+                    _O_SEQUENTIAL|_O_RANDOM|_O_SHORT_LIVED
                     )))
         ERR(":unsupported oflags 0x%04x\n",unsupp);
 
@@ -1715,9 +1611,7 @@ int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmod
   }
 
   *fd = alloc_fd(hand, wxflag);
-  if (*fd == -1)
-      return *_errno();
-      
+
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
 }
@@ -1745,29 +1639,6 @@ int CDECL _sopen( const char *path, int oflags, int shflags, ... )
   return fd;
 }
 
-static int check_bom(HANDLE h, int oflags, BOOL seek)
-{
-    char bom[sizeof(utf8_bom)];
-    DWORD r;
-
-    oflags &= ~(_O_WTEXT|_O_U16TEXT|_O_U8TEXT);
-
-    if (!ReadFile(h, bom, sizeof(utf8_bom), &r, NULL))
-        return oflags;
-
-    if (r==sizeof(utf8_bom) && !memcmp(bom, utf8_bom, sizeof(utf8_bom))) {
-        oflags |= _O_U8TEXT;
-    }else if (r>=sizeof(utf16_bom) && !memcmp(bom, utf16_bom, sizeof(utf16_bom))) {
-        if (seek && r>2)
-            SetFilePointer(h, 2, NULL, FILE_BEGIN);
-        oflags |= _O_U16TEXT;
-    }else if (seek) {
-        SetFilePointer(h, 0, NULL, FILE_BEGIN);
-    }
-
-    return oflags;
-}
-
 /*********************************************************************
  *              _wsopen_s (MSVCRT.@)
  */
@@ -1782,7 +1653,12 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
   TRACE("fd*: %p :file (%s) oflags: 0x%04x shflags: 0x%04x pmode: 0x%04x\n",
         fd, debugstr_w(path), oflags, shflags, pmode);
 
-  if (!MSVCRT_CHECK_PMT( fd != NULL )) return EINVAL;
+  if (!fd)
+  {
+    MSVCRT_INVALID_PMT("null out fd pointer");
+    *_errno() = EINVAL;
+    return EINVAL;
+  }
 
   *fd = -1;
   wxflag = split_oflags(oflags);
@@ -1846,78 +1722,15 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle       = (oflags & _O_NOINHERIT) ? FALSE : TRUE;
 
-   if ((oflags&(_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
-          && (creation==OPEN_ALWAYS || creation==OPEN_EXISTING)
-          && !(access&GENERIC_READ))
-  {
-      hand = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
-              &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-      if (hand != INVALID_HANDLE_VALUE)
-      {
-          oflags = check_bom(hand, oflags, FALSE);
-          CloseHandle(hand);
-      }
-      else
-          oflags &= ~(_O_WTEXT|_O_U16TEXT|_O_U8TEXT);
-  }
-  
   hand = CreateFileW(path, access, sharing, &sa, creation, attrib, 0);
+
   if (hand == INVALID_HANDLE_VALUE)  {
     WARN(":failed-last error (%d)\n",GetLastError());
     _dosmaperr(GetLastError());
     return *_errno();
   }
 
-   if (oflags & (_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
-  {
-      if ((access & GENERIC_WRITE) && (creation==CREATE_NEW
-                  || creation==CREATE_ALWAYS || creation==TRUNCATE_EXISTING
-                  || (creation==OPEN_ALWAYS && GetLastError()==ERROR_ALREADY_EXISTS)))
-      {
-          if (oflags & _O_U8TEXT)
-          {
-              DWORD written = 0, tmp;
-
-              while(written!=sizeof(utf8_bom) && WriteFile(hand, (char*)utf8_bom+written,
-                          sizeof(utf8_bom)-written, &tmp, NULL))
-                  written += tmp;
-              if (written != sizeof(utf8_bom)) {
-                  WARN("error writing BOM\n");
-                  CloseHandle(hand);
-                  _dosmaperr(GetLastError());
-                  return *_errno();
-              }
-          }
-          else
-          {
-              DWORD written = 0, tmp;
-
-              while(written!=sizeof(utf16_bom) && WriteFile(hand, (char*)utf16_bom+written,
-                          sizeof(utf16_bom)-written, &tmp, NULL))
-                  written += tmp;
-              if (written != sizeof(utf16_bom))
-              {
-                  WARN("error writing BOM\n");
-                  CloseHandle(hand);
-                  _dosmaperr(GetLastError());
-                  return *_errno();
-              }
-          }
-      }
-      else if (access & GENERIC_READ)
-          oflags = check_bom(hand, oflags, TRUE);
-  }
-  
   *fd = alloc_fd(hand, wxflag);
-  if (*fd == -1)
-      return *_errno();
-
-  if (oflags & _O_WTEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
-  else if (oflags & _O_U16TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16;
-  else if (oflags & _O_U8TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF8;
 
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
