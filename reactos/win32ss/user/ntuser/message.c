@@ -331,7 +331,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
 
         MsgMemoryEntry = FindMsgMemory(Msg);
 
-        if ((!MsgMemoryEntry) || (MsgMemoryEntry->Size < 0))
+        if (!MsgMemoryEntry)
         {
             /* Keep previous behavior */
             return STATUS_SUCCESS;
@@ -390,11 +390,6 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
         PMSGMEMORY MsgMemoryEntry;
         MsgMemoryEntry = FindMsgMemory(Msg);
         ASSERT(MsgMemoryEntry);
-        if (MsgMemoryEntry->Size < 0)
-        {
-            /* Keep previous behavior */
-            return STATUS_INVALID_PARAMETER;
-        }
 
         if (MsgMemoryEntry->Flags == MMS_FLAG_READWRITE)
         {
