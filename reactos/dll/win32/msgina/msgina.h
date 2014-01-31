@@ -38,8 +38,6 @@ typedef struct
     PWLX_DISPATCH_VERSION_1_3 pWlxFuncs;
     HANDLE hDllInstance;
     HWND hStatusWindow;
-    HANDLE LsaHandle;
-    ULONG AuthenticationPackage;
     DWORD AutoLogonState;
     BOOL bDisableCAD;
     BOOL bAutoAdminLogon;

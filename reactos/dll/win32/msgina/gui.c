@@ -259,6 +259,9 @@ DoChangePassword(
     ULONG RequestBufferSize;
     ULONG ResponseBufferSize = 0;
     LPWSTR Ptr;
+    LSA_STRING PackageName;
+    HANDLE LsaHandle = NULL;
+    ULONG AuthenticationPackage = 0;
     BOOL res = FALSE;
     NTSTATUS ProtocolStatus;
     NTSTATUS Status;
@@ -345,9 +348,30 @@ DoChangePassword(
                   NewPassword1,
                   RequestBuffer->NewPassword.MaximumLength);
 
+    /* Connect to the LSA server */
+    Status = LsaConnectUntrusted(&LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaConnectUntrusted failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get the authentication package */
+    RtlInitAnsiString((PANSI_STRING)&PackageName,
+                      MSV1_0_PACKAGE_NAME);
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &AuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
     /* Call the authentication package */
-    Status = LsaCallAuthenticationPackage(pgContext->LsaHandle,
-                                          pgContext->AuthenticationPackage,
+    Status = LsaCallAuthenticationPackage(LsaHandle,
+                                          AuthenticationPackage,
                                           RequestBuffer,
                                           RequestBufferSize,
                                           (PVOID*)&ResponseBuffer,
@@ -379,6 +403,9 @@ done:
 
     if (ResponseBuffer != NULL)
         LsaFreeReturnBuffer(ResponseBuffer);
+
+    if (LsaHandle != NULL)
+        NtClose(LsaHandle);
 
     return res;
 }
