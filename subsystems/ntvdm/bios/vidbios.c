@@ -980,7 +980,8 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
      * See Ralf Brown: http://www.ctyme.com/intr/rb-0069.htm
      * for more information.
      */
-    if ((ModeNumber & 0x08) == 0) VgaClearMemory();
+    // if ((ModeNumber & 0x08) == 0) VgaClearMemory();
+    VgaClearMemory();
 
     // Bda->CrtModeControl;
     // Bda->CrtColorPaletteMask;
