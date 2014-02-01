@@ -89,10 +89,9 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
                    IN ULONG IndexInfo,
                    IN ULONG BinaryType)
 {
-#if 0 // Unimplemented in BASESRV
     NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_UPDATE_VDM_ENTRY UpdateVdmEntry = &ApiMessage.Data.UpdateVdmEntry;
+    PBASE_UPDATE_VDM_ENTRY UpdateVdmEntry = &ApiMessage.Data.UpdateVDMEntryRequest;
 
     /* Check what update is being sent */
     switch (UpdateIndex)
@@ -155,7 +154,7 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
         /* Return it to the caller */
         *WaitHandle = UpdateVdmEntry->WaitObjectForParent;
     }
-#endif
+
     /* We made it */
     return TRUE;
 }
@@ -165,11 +164,10 @@ WINAPI
 BaseCheckForVDM(IN HANDLE ProcessHandle,
                 OUT LPDWORD ExitCode)
 {
-#if 0 // Unimplemented in BASESRV
     NTSTATUS Status;
     EVENT_BASIC_INFORMATION EventBasicInfo;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_GET_VDM_EXIT_CODE GetVdmExitCode = &ApiMessage.Data.GetVdmExitCode;
+    PBASE_GET_VDM_EXIT_CODE GetVdmExitCode = &ApiMessage.Data.GetVDMExitCodeRequest;
 
     /* It's VDM if the process is actually a wait handle (an event) */
     Status = NtQueryEvent(ProcessHandle,
@@ -192,7 +190,6 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
 
     /* Get the exit code from the reply */
     *ExitCode = GetVdmExitCode->ExitCode;
-#endif
     return TRUE;
 }
 
@@ -755,17 +752,31 @@ CmdBatNotification (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD
+VOID
 WINAPI
-ExitVDM (
-    DWORD   Unknown0,
-    DWORD   Unknown1
-    )
+ExitVDM(BOOL IsWow, ULONG iWowTask)
 {
-    STUB;
-    return 0;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_EXIT_VDM ExitVdm = &ApiMessage.Data.ExitVDMRequest;
+
+    /* Setup the input parameters */
+    ExitVdm->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ExitVdm->iWowTask = IsWow ? iWowTask : 0; /* Always zero for DOS tasks */
+    ExitVdm->WaitObjectForVDM = NULL;
+
+    /* Call CSRSS */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitVDM),
+                        sizeof(BASE_EXIT_VDM));
+
+    /* Close the returned wait object handle, if any */
+    if (NT_SUCCESS(ApiMessage.Status) && (ExitVdm->WaitObjectForVDM != NULL))
+    {
+        CloseHandle(ExitVdm->WaitObjectForVDM);
+    }
 }
 
 
