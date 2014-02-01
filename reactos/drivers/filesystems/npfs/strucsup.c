@@ -15,8 +15,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define UNIMPLEMENTED
-
 PWCHAR NpRootDCBName = L"\\";
 PNP_VCB NpVcb;
 
