@@ -25,3 +25,6 @@ IDI_APPICON ICON "res/ntvdm.ico"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
