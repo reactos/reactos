@@ -3198,7 +3198,7 @@ StartScan:
                     /* Pick which kind of WOW mode we want to run in */
                     VdmBinaryType = (dwCreationFlags &
                                      CREATE_SEPARATE_WOW_VDM) ?
-                                     BINARY_TYPE_WOW : BINARY_TYPE_SEPARATE_WOW;
+                                     BINARY_TYPE_SEPARATE_WOW : BINARY_TYPE_WOW;
 
                     /* Get all the VDM settings and current status */
                     Status = BaseCheckVDM(VdmBinaryType,
