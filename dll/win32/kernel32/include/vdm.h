@@ -119,7 +119,7 @@ BaseCheckForVDM(
     OUT LPDWORD ExitCode
 );
 
-BOOL
+NTSTATUS
 WINAPI
 BaseCheckVDM(
     IN ULONG BinaryType,

@@ -64,7 +64,7 @@ BaseIsDosApplication(IN PUNICODE_STRING PathName,
     return 0;
 }
 
-BOOL
+NTSTATUS
 WINAPI
 BaseCheckVDM(IN ULONG BinaryType,
              IN PCWCH ApplicationName,
@@ -79,7 +79,7 @@ BaseCheckVDM(IN ULONG BinaryType,
 {
     /* This is not supported */
     UNIMPLEMENTED;
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOL
