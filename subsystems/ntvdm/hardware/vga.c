@@ -1320,8 +1320,8 @@ VOID VgaRefreshDisplay(VOID)
     InVerticalRetrace = TRUE;
 
     /* If nothing has changed, just return */
-    if (!ModeChanged && !CursorMoved && !PaletteChanged && !NeedsUpdate)
-        return;
+    // if (!ModeChanged && !CursorMoved && !PaletteChanged && !NeedsUpdate)
+        // return;
 
     /* Change the display mode */
     if (ModeChanged) VgaChangeMode();
