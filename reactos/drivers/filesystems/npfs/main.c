@@ -20,6 +20,14 @@ PVOID NpAliases;
 PNPFS_ALIAS NpAliasList;
 PNPFS_ALIAS NpAliasListByLength[MAX_INDEXED_LENGTH + 1 - MIN_INDEXED_LENGTH];
 
+FAST_IO_DISPATCH NpFastIoDispatch =
+{
+    sizeof(FAST_IO_DISPATCH),
+    NULL,
+    NpFastRead,
+    NpFastWrite,
+};
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -311,6 +319,7 @@ NpFsdDirectoryControl(IN PDEVICE_OBJECT DeviceObject,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
@@ -321,7 +330,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    DPRINT1("Next-Generation NPFS-Lite\n");
+    DPRINT1("Next-Generation NPFS-Advanced\n");
 
     Status = NpInitializeAliases();
     if (!NT_SUCCESS(Status))
@@ -346,6 +355,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = NpFsdSetSecurityInfo;
 
     DriverObject->DriverUnload = NULL;
+
+    DriverObject->FastIoDispatch = &NpFastIoDispatch;
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
     Status = IoCreateDevice(DriverObject,

@@ -16,6 +16,8 @@
 /* GLOBALS ********************************************************************/
 
 LONG NpSlowWriteCalls;
+ULONG NpFastWriteTrue;
+ULONG NpFastWriteFalse;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -23,10 +25,10 @@ BOOLEAN
 NTAPI
 NpCommonWrite(IN PFILE_OBJECT FileObject,
               IN PVOID Buffer,
-              IN ULONG DataSize, 
-              IN PETHREAD Thread, 
-              IN PIO_STATUS_BLOCK IoStatus, 
-              IN PIRP Irp, 
+              IN ULONG DataSize,
+              IN PETHREAD Thread,
+              IN PIO_STATUS_BLOCK IoStatus,
+              IN PIRP Irp,
               IN PLIST_ENTRY List)
 {
     NODE_TYPE_CODE NodeType;
@@ -205,6 +207,49 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
     }
 
     return IoStatus.Status;
+}
+
+
+_Function_class_(FAST_IO_WRITE)
+_IRQL_requires_same_
+BOOLEAN
+NTAPI
+NpFastWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    LIST_ENTRY DeferredList;
+    BOOLEAN Result;
+    PAGED_CODE();
+
+    InitializeListHead(&DeferredList);
+
+    FsRtlEnterFileSystem();
+    NpAcquireSharedVcb();
+
+    Result = NpCommonWrite(FileObject,
+                           Buffer,
+                           Length,
+                           PsGetCurrentThread(),
+                           IoStatus,
+                           NULL,
+                           &DeferredList);
+    if (Result)
+        ++NpFastWriteTrue;
+    else
+        ++NpFastWriteFalse;
+
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
+    FsRtlExitFileSystem();
+
+    return Result;
 }
 
 /* EOF */

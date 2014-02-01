@@ -360,6 +360,18 @@ typedef struct _NPFS_QUERY_VALUE_CONTEXT
 extern PNPFS_ALIAS NpAliasList;
 extern PNPFS_ALIAS NpAliasListByLength[MAX_INDEXED_LENGTH + 1 - MIN_INDEXED_LENGTH];
 
+//
+// This structure is actually a user-mode structure and should go into a share header
+//
+typedef struct _NP_CLIENT_PROCESS
+{
+    PVOID Unknown;
+    PVOID Process;
+    USHORT DataLength;
+    WCHAR Buffer[17];
+} NP_CLIENT_PROCESS, *PNP_CLIENT_PROCESS;
+
+
 /* FUNCTIONS ******************************************************************/
 
 //
@@ -673,6 +685,34 @@ NTSTATUS
 NTAPI
 NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp);
+
+_Function_class_(FAST_IO_READ)
+_IRQL_requires_same_
+BOOLEAN
+NTAPI
+NpFastRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject);
+
+_Function_class_(FAST_IO_WRITE)
+_IRQL_requires_same_
+BOOLEAN
+NTAPI
+NpFastWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 
 NTSTATUS
