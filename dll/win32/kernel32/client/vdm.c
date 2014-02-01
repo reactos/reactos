@@ -774,9 +774,7 @@ ExitVDM (
  */
 DWORD
 WINAPI
-GetNextVDMCommand (
-    DWORD   Unknown0
-    )
+GetNextVDMCommand(PGET_NEXT_VDM_COMMAND_DATA CommandData)
 {
     STUB;
     return 0;
