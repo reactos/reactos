@@ -1,3 +1,4 @@
+#pragma once
 
 class CMenuDeskBar:
     public CComCoClass<CMenuDeskBar, &CLSID_MenuDeskBar>,

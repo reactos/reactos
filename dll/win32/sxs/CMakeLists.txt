@@ -7,6 +7,7 @@ list(APPEND SOURCE
     cache.c
     name.c
     sxs.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)
 

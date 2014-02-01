@@ -43,6 +43,7 @@ Size = 305,12 ko
 Name = Mikroyazılım Tahoma Yazı Türü
 Licence = Bilinmiyor
 Description = Tahoma Yazı Türleri. Steam gibi birtakım yazılımlar için gereklidir. Şunları içerir: Tahoma.ttf, Tahomabd.ttf.
+Size = 305,12 KB
 
 [Section.0422]
 Licence = Невідома

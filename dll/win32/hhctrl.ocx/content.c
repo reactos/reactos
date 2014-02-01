@@ -19,8 +19,6 @@
 
 #include "hhctrl.h"
 
-#include "resource.h"
-
 typedef enum {
     INSERT_NEXT,
     INSERT_CHILD

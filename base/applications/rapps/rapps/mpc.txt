@@ -8,7 +8,7 @@ Description = A media player.
 Size = 9.8 MB
 Category = 2
 URLSite = http://mpc-hc.org/
-URLDownload = http://garr.dl.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.1_x86/MPC-HC.1.7.1.x86.exe
+URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.1_x86/MPC-HC.1.7.1.x86.exe
 CDPath = none
 
 [Section.0407]
@@ -42,6 +42,7 @@ Description = Multimediálny prehrávač.
 
 [Section.041f]
 Description = Bir ortam oynatıcısı.
+Size = 9,8 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.

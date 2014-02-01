@@ -6,13 +6,10 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#include <ntddk.h>
-#include <initguid.h>
+#include <wdm.h>
 #include <batclass.h>
-#include <acpiioct.h>
 #include <wmilib.h>
 #include <wdmguid.h>
-#include <debug.h>
 
 #define IOCTL_BATTERY_QUERY_UNIQUE_ID  \
     CTL_CODE(FILE_DEVICE_BATTERY, 0x101, METHOD_BUFFERED, FILE_READ_ACCESS) // 0x294404 

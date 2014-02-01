@@ -16,7 +16,7 @@
 @ stub SamIFloatingSingleMasterOpEx
 @ stub SamIFreeSidAndAttributesList
 @ stub SamIFreeSidArray
-@ stub SamIFreeVoid
+@ stdcall SamIFreeVoid(ptr)
 @ stub SamIFree_SAMPR_ALIAS_INFO_BUFFER
 @ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
 @ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER

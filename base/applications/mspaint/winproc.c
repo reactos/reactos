@@ -11,8 +11,6 @@
 
 #include "precomp.h"
 
-#include <shellapi.h>
-
 #include "dialogs.h"
 #include "registry.h"
 
@@ -162,6 +160,43 @@ saveImage(BOOL overwrite)
     }
 }
 
+void
+UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname)
+{
+    TCHAR tempstr[1000];
+    TCHAR resstr[100];
+    insertReversible(bitmap);
+    updateCanvasAndScrollbars();
+    CopyMemory(filename, newfilename, sizeof(filename));
+    CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
+    LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+    _stprintf(tempstr, resstr, filename);
+    SetWindowText(hMainWnd, tempstr);
+    clearHistory();
+    isAFile = TRUE;
+}
+
+void
+InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
+{
+    HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
+    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
+    SendMessage(window, WM_COMMAND, ID_RECTSEL, 0);
+
+    DeleteObject(SelectObject(hSelDC, hSelBm = CopyImage(bitmap,
+                                                         IMAGE_BITMAP, 0, 0,
+                                                         LR_COPYRETURNORG)));
+    newReversible();
+    rectSel_src[0] = rectSel_src[1] = rectSel_src[2] = rectSel_src[3] = 0;
+    rectSel_dest[0] = rectSel_dest[1] = 0;
+    rectSel_dest[2] = GetDIBWidth(hSelBm);
+    rectSel_dest[3] = GetDIBHeight(hSelBm);
+    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
+           hSelDC, 0, 0, SRCCOPY);
+    placeSelWin();
+    ShowWindow(hSelection, SW_SHOW);
+}
+
 BOOL drawing;
 
 LRESULT CALLBACK
@@ -169,6 +204,25 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)            /* handle the messages */
     {
+        case WM_DROPFILES:
+        {
+            HDROP drophandle;
+            TCHAR droppedfile[MAX_PATH];
+            HBITMAP bmNew = NULL;
+            drophandle = (HDROP)wParam;
+            DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
+            DragFinish(drophandle);
+            LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                TCHAR *pathend;
+                pathend = _tcsrchr(droppedfile, '\\');
+                pathend++;
+                UpdateApplicationProperties(bmNew, pathend, pathend);
+            }
+            break;
+        }
+
         case WM_CREATE:
             ptStack = NULL;
             ptSP = 0;
@@ -785,27 +839,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
                         if (bmNew != NULL)
                         {
-                            TCHAR tempstr[1000];
-                            TCHAR resstr[100];
-                            insertReversible(bmNew);
-                            updateCanvasAndScrollbars();
-                            CopyMemory(filename, ofn.lpstrFileTitle, sizeof(filename));
-                            CopyMemory(filepathname, ofn.lpstrFileTitle, sizeof(filepathname));
-                            LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-                            _stprintf(tempstr, resstr, filename);
-                            SetWindowText(hMainWnd, tempstr);
-                            clearHistory();
-                            isAFile = TRUE;
-                        }
-                        else
-                        {
-                            TCHAR programname[20];
-                            TCHAR loaderrortext[100];
-                            TCHAR temptext[500];
-                            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-                            LoadString(hProgInstance, IDS_LOADERRORTEXT, loaderrortext, SIZEOF(loaderrortext));
-                            _stprintf(temptext, loaderrortext, ofn.lpstrFile);
-                            MessageBox(hwnd, temptext, programname, MB_OK | MB_ICONEXCLAMATION);
+                            UpdateApplicationProperties(bmNew, ofn.lpstrFileTitle, ofn.lpstrFileTitle);
                         }
                     }
                     break;
@@ -848,22 +882,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     OpenClipboard(hMainWnd);
                     if (GetClipboardData(CF_BITMAP) != NULL)
                     {
-                        HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
-                        SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
-                        SendMessage(hwnd, WM_COMMAND, ID_RECTSEL, 0);
-
-                        DeleteObject(SelectObject(hSelDC, hSelBm = CopyImage(GetClipboardData(CF_BITMAP),
-                                                                             IMAGE_BITMAP, 0, 0,
-                                                                             LR_COPYRETURNORG)));
-                        newReversible();
-                        rectSel_src[0] = rectSel_src[1] = rectSel_src[2] = rectSel_src[3] = 0;
-                        rectSel_dest[0] = rectSel_dest[1] = 0;
-                        rectSel_dest[2] = GetDIBWidth(hSelBm);
-                        rectSel_dest[3] = GetDIBHeight(hSelBm);
-                        BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
-                               hSelDC, 0, 0, SRCCOPY);
-                        placeSelWin();
-                        ShowWindow(hSelection, SW_SHOW);
+                        InsertSelectionFromHBITMAP(GetClipboardData(CF_BITMAP), hwnd);
                     }
                     CloseClipboard();
                     break;
@@ -898,6 +917,18 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_EDITCOPYTO:
                     if (GetSaveFileName(&ofn) != 0)
                         SaveDIBToFile(hSelBm, ofn.lpstrFile, hDrawingDC, NULL, NULL, fileHPPM, fileVPPM);
+                    break;
+                case IDM_EDITPASTEFROM:
+                    if (GetOpenFileName(&ofn) != 0)
+                    {
+                        HBITMAP bmNew = NULL;
+                        LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+                        if (bmNew != NULL)
+                        {
+                            InsertSelectionFromHBITMAP(bmNew, hwnd);
+                            DeleteObject(bmNew);
+                        }
+                    }
                     break;
                 case IDM_COLORSEDITPALETTE:
                     if (ChooseColor(&choosecolor))

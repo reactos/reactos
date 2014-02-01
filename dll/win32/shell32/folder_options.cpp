@@ -20,8 +20,8 @@
 
 #include "precomp.h"
 
-
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
+
 #define MAX_PROPERTY_SHEET_PAGE (32)
 
 /// Folder Options:

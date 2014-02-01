@@ -709,7 +709,7 @@ RtlFindNextForwardRunSet(
     *StartingRunIndex = FromIndex + Length;
 
     /* Now return the length of the run */
-    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXINDEX);
+    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex + Length, MAXINDEX);
 }
 
 BITMAP_INDEX
@@ -728,8 +728,62 @@ RtlFindLastBackwardRunClear(
     _In_ BITMAP_INDEX FromIndex,
     _Out_ PBITMAP_INDEX StartingRunIndex)
 {
-    UNIMPLEMENTED;
-    return 0;
+    BITMAP_INDEX Value, InvValue, BitPos;
+    PBITMAP_BUFFER Buffer;
+
+    /* Make sure we don't go past the end */
+    FromIndex = min(FromIndex, BitMapHeader->SizeOfBitMap - 1);
+
+    /* Calculate positions */
+    Buffer = BitMapHeader->Buffer + FromIndex / _BITCOUNT;
+    BitPos = (_BITCOUNT - 1) - (FromIndex & (_BITCOUNT - 1));
+
+    /* Get the inversed value, clear bits that don't belong to the run */
+    InvValue = ~(*Buffer--) << BitPos >> BitPos;
+
+    /* Skip all set ULONGs */
+    while (InvValue == 0)
+    {
+        /* Did we already reach past the first ULONG? */
+        if (Buffer < BitMapHeader->Buffer)
+        {
+            /* Yes, nothing found */
+            return 0;
+        }
+
+        InvValue = ~(*Buffer--);
+    }
+
+    /* We hit a clear bit, check how many set bits are left */
+    BitScanReverse(&BitPos, InvValue);
+
+    /* Calculate last bit position */
+    FromIndex = (Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos;
+
+    Value = ~InvValue << ((_BITCOUNT - 1) - BitPos) >> ((_BITCOUNT - 1) - BitPos);
+
+    /* Skip all clear ULONGs */
+    while (Value == 0 && Buffer >= BitMapHeader->Buffer)
+    {
+        Value = *Buffer--;
+    }
+
+    if (Value != 0)
+    {
+        /* We hit a set bit, check how many clear bits are left */
+        BitScanReverse(&BitPos, Value);
+
+        /* Calculate Starting Index */
+        *StartingRunIndex = (Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos + 1;
+    }
+    else
+    {
+        /* We reached the start of the bitmap */
+        *StartingRunIndex = 0;
+    }
+
+    /* Return length of the run */
+    return FromIndex - *StartingRunIndex;
 }
 
 

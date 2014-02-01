@@ -33,18 +33,18 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <ole2.h>
+#include <objbase.h>
+#include <oleauto.h>
 #include <urlmon.h>
 #include <wininet.h>
-#include <shellapi.h>
 #include <advpub.h>
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 
+#include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/unicode.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;

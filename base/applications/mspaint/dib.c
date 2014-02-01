@@ -95,6 +95,17 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int 
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 
+void ShowFileLoadError(LPTSTR name)
+{
+    TCHAR programname[20];
+    TCHAR loaderrortext[100];
+    TCHAR temptext[500];
+    LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
+    LoadString(hProgInstance, IDS_LOADERRORTEXT, loaderrortext, SIZEOF(loaderrortext));
+    _stprintf(temptext, loaderrortext, name);
+    MessageBox(hMainWnd, temptext, programname, MB_OK | MB_ICONEXCLAMATION);
+}
+
 void
 LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes)
 {
@@ -105,18 +116,25 @@ LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, in
     HANDLE hFile;
 
     if (!hBitmap)
+    {
+        ShowFileLoadError(name);
         return;
+    }
 
     hFile =
         CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowFileLoadError(name);
         return;
+    }
 
     /* read header and check for 'BM' magic */
     ReadFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwBytesRead, NULL);
     if (bfh.bfType != 0x4d42)
     {
         CloseHandle(hFile);
+        ShowFileLoadError(name);
         return;
     }
 
@@ -133,6 +151,7 @@ LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, in
     if (!bi)
     {
         CloseHandle(hFile);
+        ShowFileLoadError(name);
         return;
     }
 

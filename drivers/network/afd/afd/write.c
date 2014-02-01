@@ -7,6 +7,7 @@
  * UPDATE HISTORY:
  * 20040708 Created
  */
+
 #include "afd.h"
 
 static IO_COMPLETION_ROUTINE SendComplete;
@@ -661,4 +662,3 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     }
 }
-

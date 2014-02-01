@@ -179,4 +179,4 @@ BEGIN_COM_MAP(CShellLink)
 END_COM_MAP()
 };
 
-#endif // _SHELLLINK_H_
+#endif /* _SHELLLINK_H_ */

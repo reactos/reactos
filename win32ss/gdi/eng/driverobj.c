@@ -80,7 +80,7 @@ EngDeleteDriverObj(
     PEDRIVEROBJ pedo;
 
     /* Lock the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
     if (!pedo)
     {
         return FALSE;
@@ -100,10 +100,11 @@ EngDeleteDriverObj(
     /* Prevent cleanup callback from being called again */
     pedo->drvobj.pFreeProc = NULL;
 
-    /* NOTE: We don't care about the bLocked param, as our handle manager
-       allows freeing the object, while we hold any number of locks. */
+    /* Unlock if the caller indicates it is locked */
+    if (bLocked)
+        DRIVEROBJ_UnlockObject(pedo);
 
-    /* Delete the object */
+    /* Now delete the object */
     GDIOBJ_vDeleteObject(&pedo->baseobj);
     return TRUE;
 }
@@ -117,7 +118,7 @@ EngLockDriverObj(
     PEDRIVEROBJ pedo;
 
     /* Lock the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
 
     /* Return pointer to the DRIVEROBJ structure */
     return &pedo->drvobj;
@@ -133,7 +134,7 @@ EngUnlockDriverObj(
     ULONG cLocks;
 
     /* First lock to get a pointer to the object */
-    pedo = DRIVEROBJ_LockObject(hdo);
+    pedo = DRIVEROBJ_TryLockObject(hdo);
     if(!pedo)
     {
         /* Object could not be locked, fail. */

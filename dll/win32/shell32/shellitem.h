@@ -60,4 +60,4 @@ BEGIN_COM_MAP(CShellItem)
 END_COM_MAP()
 };
 
-#endif // _SHELLITEM_H_
+#endif /* _SHELLITEM_H_ */

@@ -36,6 +36,7 @@ Size = 91,93 Mo
 Name = Mono .NET Geliştirme Çatısı
 Licence = Bilinmiyor
 Description = Bir açık kaynak .NET çatısı.
+Size = 91,93 MB
 
 [Section.0422]
 Description = Відкритий .net Фреймворк.

@@ -26,6 +26,8 @@
  */
 
 #include "rapps.h"
+#include <wininet.h>
+#include <shellapi.h>
 
 static PAPPLICATION_INFO AppInfo;
 static HICON hIcon = NULL;
@@ -206,13 +208,18 @@ ThreadFunc(LPVOID Context)
     IBindStatusCallback *dl;
     WCHAR path[MAX_PATH];
     LPWSTR p;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
     HWND Dlg = (HWND) Context;
-    DWORD r, len;
+    DWORD len, dwContentLen, dwBytesWritten, dwBytesRead;
+    DWORD dwCurrentBytesRead = 0;
+    DWORD dwBufLen = sizeof(dwContentLen);
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
     BOOL bCab = FALSE;
+    HINTERNET hOpen = NULL;
+    HINTERNET hFile = NULL;
+    HANDLE hOut = NULL;
+    unsigned char lpBuffer[4096];
+    const LPWSTR lpszAgent = L"RApps/1.0";
 
     /* built the path for the download */
     p = wcsrchr(AppInfo->szUrlDownload, L'/');
@@ -255,24 +262,43 @@ ThreadFunc(LPVOID Context)
     /* download it */
     bTempfile = TRUE;
     dl = CreateDl(Context, &bCancelled);
-    r = URLDownloadToFileW(NULL, AppInfo->szUrlDownload, path, 0, dl);
+
+    hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hOpen) goto end;
+
+    hFile = InternetOpenUrlW(hOpen, AppInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE|INTERNET_FLAG_KEEP_CONNECTION, 0);
+    if(!hFile) goto end;
+
+    hOut = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
+    if (hOut == INVALID_HANDLE_VALUE) goto end;
+
+    HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwBufLen, 0);
+
+    do
+    {
+        if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead)) goto end;
+        if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL)) goto end;
+        dwCurrentBytesRead += dwBytesRead;
+        IBindStatusCallback_OnProgress(dl, dwCurrentBytesRead, dwContentLen, 0, AppInfo->szUrlDownload);
+    }
+    while (dwBytesRead);
+    
+    CloseHandle(hOut);
     if (dl) IBindStatusCallback_Release(dl);
-    if (S_OK != r) goto end;
-    else if (bCancelled) goto end;
+    if (bCancelled) goto end;
 
     ShowWindow(Dlg, SW_HIDE);
 
     /* run it */
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    r = CreateProcessW(path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi);
-    if (0 == r) goto end;
-
-    CloseHandle(pi.hThread);
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-
+    if (!bCab)
+    {
+        ShellExecuteW( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );
+    }
 end:
+    CloseHandle(hOut);
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hOpen);
+
     if (bTempfile)
     {
         if (bCancelled || (SettingsInfo.bDelInstaller && !bCab))

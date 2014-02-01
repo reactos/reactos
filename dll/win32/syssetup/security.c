@@ -10,9 +10,13 @@
 
 #include "precomp.h"
 
+#include <ntlsa.h>
+#include <ntsecapi.h>
+#include <ntsam.h>
+#include <sddl.h>
+
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS ****************************************************************/
 

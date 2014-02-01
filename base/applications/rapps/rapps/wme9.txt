@@ -41,6 +41,7 @@ Description = Neznáma
 Name = Pencereler Ortam Düzgüleyicisi 9
 Licence = Bilinmiyor
 Description = Pencereler Ortam Düzgüleyicisi 9
+Size = 9,46 MB
 
 [Section.0422]
 Licence = Невідома

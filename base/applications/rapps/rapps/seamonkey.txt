@@ -52,7 +52,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.23/win
 
 [Section.041f]
 Description = Bu; yalnızca Tarayıcı, Mail, Söyleşi ve Yazar'dan oluşan, hiç gereksinim duymayacağınız bir bohçadır.
-Size = 23.83 MB
+Size = 23,83 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.23/win32/tr/SeaMonkey%20Setup%202.23.exe
 
 [Section.0422]

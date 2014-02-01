@@ -1,34 +1,32 @@
-
 #ifndef __WINE_NETAPI32_H__
 #define __WINE_NETAPI32_H__
 
+#include <wine/config.h>
+
 #include <stdarg.h>
 
-//#include "ntstatus.h"
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
-//#include "winerror.h"
-//#include "lmcons.h"
 #include <lmaccess.h>
 #include <lmapibuf.h>
-#include <lmbrowsr.h>
 #include <lmerr.h>
-//#include "lmshare.h"
-//#include "lmuse.h"
 #include <ntsecapi.h>
-#include <dsrole.h>
-#include <dsgetdc.h>
+#include <nb30.h>
+#include <iphlpapi.h>
+
 #include <wine/debug.h>
-//#include "wine/unicode.h"
-#include <wine/list.h>
 
 #define NTOS_MODE_USER
-#include <ndk/kefuncs.h>
-#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
+
 #include <ntsam.h>
 
+#include "nbnamecache.h"
+#include "netbios.h"
 
 NET_API_STATUS
 WINAPI
@@ -64,4 +62,4 @@ BuildSidFromSidAndRid(IN PSID SrcSid,
 BOOL
 NETAPI_IsLocalComputer(LMCSTR ServerName);
 
-#endif
+#endif /* __WINE_NETAPI32_H__ */

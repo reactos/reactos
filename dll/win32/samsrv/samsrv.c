@@ -19,6 +19,8 @@
 
 #include "samsrv.h"
 
+#include <samsrv/samsrv.h>
+
 /* GLOBALS *******************************************************************/
 
 ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
@@ -136,6 +138,14 @@ SampInitializeRegistry(VOID)
     SampInitializeSAM();
 
     return STATUS_SUCCESS;
+}
+
+
+VOID
+NTAPI
+SamIFreeVoid(PVOID Ptr)
+{
+    MIDL_user_free(Ptr);
 }
 
 

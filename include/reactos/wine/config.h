@@ -296,6 +296,9 @@
 /* Define to 1 if you have the <io.h> header file. */
 #define HAVE_IO_H 1
 
+/* Define to 1 if you have the `isfinite' function. */
+/* #undef HAVE_ISFINITE */
+
 /* Define to 1 if you have the `isinf' function. */
 /* #undef HAVE_ISINF */
 

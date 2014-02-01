@@ -20,8 +20,6 @@
 
 #include "wincodecs_private.h"
 
-#include <wincodecsdk.h>
-
 HRESULT WINAPI IWICBitmapClipper_Initialize_Proxy_W(IWICBitmapClipper *iface,
     IWICBitmapSource *pISource, const WICRect *prc)
 {

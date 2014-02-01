@@ -276,7 +276,7 @@ static VOID Usage( LPTSTR ProgramName )
 	WCHAR szFormatW[MAX_PATH];
 	DWORD Index = 0;
 	BYTE dummy;
-	BOOLEAN lastestVersion;
+	BOOLEAN latestVersion;
 
 	LoadStringAndOem( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	if (!LoadFMIFSEntryPoints())
@@ -286,9 +286,9 @@ static VOID Usage( LPTSTR ProgramName )
 	}
 
 	szFormats[0] = 0;
-	while (QueryAvailableFileSystemFormat(Index++, szFormatW, &dummy, &dummy, &lastestVersion))
+	while (QueryAvailableFileSystemFormat(Index++, szFormatW, &dummy, &dummy, &latestVersion))
 	{
-		if (!lastestVersion)
+		if (!latestVersion)
 			continue;
 		if (szFormats[0])
 			_tcscat(szFormats, _T(", "));

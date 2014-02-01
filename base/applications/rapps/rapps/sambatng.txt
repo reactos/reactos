@@ -36,6 +36,7 @@ Size = 2,13 Mo
 
 [Section.041f]
 Description = Bu araç, ReactOS'ta Pencereler'in paylaşılan yazıcılarıyla paylaşılan dizinlerine erişimi sağlar.
+Size = 2,13 MB
 
 [Section.0422]
 Description = Цей інструмент дозволяє отримати доступ до спільних тек/принтерів Windows з ReactOSа.

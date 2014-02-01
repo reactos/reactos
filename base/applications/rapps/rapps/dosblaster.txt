@@ -8,7 +8,7 @@ Description = DosBlaster is a Shell extension which makes it possible to open an
 Size = 2.05 MB
 Category = 15
 URLSite = http://dosblaster.sourceforge.net/
-URLDownload = http://surfnet.dl.sourceforge.net/project/dosblaster/DosBlaster%202.5%20%28x86%29/Downloads/DosbasterSetup_2_5.exe
+URLDownload = http://download.sourceforge.net/project/dosblaster/DosBlaster%202.5%20%28x86%29/Downloads/DosbasterSetup_2_5.exe
 CDPath = none
 
 [Section.0407]
@@ -36,6 +36,7 @@ Size = 2,05 Mo
 
 [Section.041f]
 Description = DosBlaster, bir DOS uygulamasını sağ tıklamayla DOSBox'ta çalıştırabilmesini sağlayan bir kabuk uzantısıdır. Bu sürüm, DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak bunu kolayca yükseltebilirsiniz.
+Size = 2,05 MB
 
 [Section.0422]
 Description = DosBlaster це розширення оболонки, яке дозволяє запустити будь-який виконавчий файл DOS в DOSBox через правий клік. Ця версія містить DOSBox 0.70, але може бути оновлена встановленням новішої версії DOSBox в теки DosBlaster.

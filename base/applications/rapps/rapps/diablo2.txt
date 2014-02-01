@@ -39,6 +39,7 @@ Size = 131,9 Mo
 Name = Şeytan II
 Licence = Kısıtlı
 Description = Şeytan 2'nin kısıtlısı. Çalıştırmak için zeckensack'ın glide çeviricisi gereklidir.
+Size = 131,9 MB
 
 [Section.0422]
 Description = Diablo 2 Shareware. Для запуску потрібен zeckensack's glide wrapper.

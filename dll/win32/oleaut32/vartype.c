@@ -20,8 +20,6 @@
 
 #include "precomp.h"
 
-#include "resource.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
 extern HMODULE hProxyDll DECLSPEC_HIDDEN;

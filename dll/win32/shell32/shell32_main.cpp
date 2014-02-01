@@ -20,6 +20,7 @@
  */
 
 #include "precomp.h"
+
 #include "shell32_version.h"
 #include <reactos/version.h>
 

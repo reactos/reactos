@@ -19,11 +19,7 @@
  */
 
 #ifndef _MAPI_UTIL_H
-
 #define _MAPI_UTIL_H
-
-#include <mapi.h>
-//#include <mapix.h>
 
 extern void load_mapi_providers(void) DECLSPEC_HIDDEN;
 extern void unload_mapi_providers(void) DECLSPEC_HIDDEN;
@@ -65,4 +61,4 @@ typedef struct MAPI_FUNCTIONS {
 extern MAPI_FUNCTIONS mapiFunctions DECLSPEC_HIDDEN;
 extern HINSTANCE hInstMAPI32 DECLSPEC_HIDDEN;
 
-#endif
+#endif /* _MAPI_UTIL_H */

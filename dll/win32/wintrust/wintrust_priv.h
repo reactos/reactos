@@ -15,12 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
 #ifndef __WINTRUST_PRIV_H__
 #define __WINTRUST_PRIV_H__
 
-#include <config.h>
+#include <wine/config.h>
 
-#include <stdarg.h>
 #include <stdio.h>
 
 #define _INC_WINDOWS
@@ -33,10 +33,8 @@
 #include <winuser.h>
 #include <winreg.h>
 #include <winternl.h>
-#include <wintrust.h>
 #include <softpub.h>
 #include <mscat.h>
-#include <mssip.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -51,4 +49,4 @@ BOOL WINAPI WINTRUST_AddCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
 BOOL WINAPI WINTRUST_AddPrivData(CRYPT_PROVIDER_DATA *data,
  CRYPT_PROVIDER_PRIVDATA *pPrivData2Add) DECLSPEC_HIDDEN;
 
-#endif /* ndef __WINTRUST_PRIV_H__ */
+#endif /* __WINTRUST_PRIV_H__ */

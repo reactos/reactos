@@ -1,7 +1,7 @@
 #ifndef _ITSS_PCH_
 #define _ITSS_PCH_
 
-#include <config.h>
+#include <wine/config.h>
 #include <wine/port.h>
 
 #include <stdarg.h>
@@ -14,7 +14,7 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <ole2.h>
+#include <objbase.h>
 
 #include <wine/itss.h>
 #include <wine/unicode.h>

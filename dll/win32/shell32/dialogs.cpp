@@ -20,7 +20,6 @@
 
 #include "precomp.h"
 
-
 typedef struct
 {
     HWND hwndOwner ;

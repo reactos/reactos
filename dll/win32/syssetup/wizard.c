@@ -11,6 +11,11 @@
 
 #include "precomp.h"
 
+#include <stdlib.h>
+#include <time.h>
+#include <winnls.h>
+#include <windowsx.h>
+
 #define NDEBUG
 #include <debug.h>
 

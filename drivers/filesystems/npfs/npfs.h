@@ -14,8 +14,12 @@
 #include <ntifs.h>
 #include <ntndk.h>
 #include <pseh/pseh2.h>
-#define UNIMPLEMENTED
-#define DPRINT1 DbgPrint
+//#define UNIMPLEMENTED
+//#define DPRINT1 DbgPrint
+
+#define NDEBUG
+#include <debug.h>
+#define TRACE(...) /* DPRINT1("%s: ", __FUNCTION__); DbgPrint(__VA_ARGS__) */
 
 //
 // Allow Microsoft Extensions
@@ -25,6 +29,9 @@
 #pragma warning(disable:4214)
 #pragma warning(disable:4100)
 #endif
+
+#define MIN_INDEXED_LENGTH 5
+#define MAX_INDEXED_LENGTH 9
 
 
 /* TYPEDEFS & DEFINES *********************************************************/
@@ -326,6 +333,44 @@ typedef struct _NP_VCB
 
 extern PNP_VCB NpVcb;
 
+//
+// Defines an alias
+//
+typedef struct _NPFS_ALIAS
+{
+    struct _NPFS_ALIAS *Next;
+    PUNICODE_STRING TargetName;
+    UNICODE_STRING Name;
+} NPFS_ALIAS, *PNPFS_ALIAS;
+
+//
+// Private structure used to enumerate the alias values
+//
+typedef struct _NPFS_QUERY_VALUE_CONTEXT
+{
+    BOOLEAN SizeOnly;
+    SIZE_T FullSize;
+    ULONG NumberOfAliases;
+    ULONG NumberOfEntries;
+    PNPFS_ALIAS CurrentAlias;
+    PUNICODE_STRING CurrentTargetName;
+    PWCHAR CurrentStringPointer;
+} NPFS_QUERY_VALUE_CONTEXT, *PNPFS_QUERY_VALUE_CONTEXT;
+
+extern PNPFS_ALIAS NpAliasList;
+extern PNPFS_ALIAS NpAliasListByLength[MAX_INDEXED_LENGTH + 1 - MIN_INDEXED_LENGTH];
+
+//
+// This structure is actually a user-mode structure and should go into a share header
+//
+typedef struct _NP_CLIENT_PROCESS
+{
+    PVOID Unknown;
+    PVOID Process;
+    USHORT DataLength;
+    WCHAR Buffer[17];
+} NP_CLIENT_PROCESS, *PNP_CLIENT_PROCESS;
+
 
 /* FUNCTIONS ******************************************************************/
 
@@ -385,6 +430,12 @@ NpCompleteDeferredIrps(IN PLIST_ENTRY DeferredList)
     }
 }
 
+LONG
+NTAPI
+NpCompareAliasNames(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2);
+
 BOOLEAN
 NTAPI
 NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
@@ -415,7 +466,7 @@ NTAPI
 NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                     IN PNP_CCB Ccb,
                     IN PNP_DATA_QUEUE DataQueue,
-                    IN ULONG Who, 
+                    IN ULONG Who,
                     IN ULONG Type,
                     IN ULONG DataSize,
                     IN PIRP Irp,
@@ -510,20 +561,20 @@ NpSetConnectedPipeState(IN PNP_CCB Ccb,
 NTSTATUS
 NTAPI
 NpSetListeningPipeState(IN PNP_CCB Ccb,
-                        IN PIRP Irp, 
+                        IN PIRP Irp,
                         IN PLIST_ENTRY List);
 
 
 NTSTATUS
 NTAPI
-NpSetDisconnectedPipeState(IN PNP_CCB Ccb, 
+NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
                            IN PLIST_ENTRY List);
 
 NTSTATUS
 NTAPI
 NpSetClosingPipeState(IN PNP_CCB Ccb,
-                      IN PIRP Irp, 
-                      IN ULONG NamedPipeEnd, 
+                      IN PIRP Irp,
+                      IN ULONG NamedPipeEnd,
                       IN PLIST_ENTRY List);
 
 VOID
@@ -594,7 +645,7 @@ NTSTATUS
 NTAPI
 NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
             IN LARGE_INTEGER WaitTime,
-            IN PIRP Irp, 
+            IN PIRP Irp,
             IN PUNICODE_STRING AliasName);
 
 NTSTATUS
@@ -607,33 +658,61 @@ NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
 IO_STATUS_BLOCK
 NTAPI
-NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue, 
+NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                 IN BOOLEAN Peek,
                 IN BOOLEAN ReadOverflowOperation,
                 IN PVOID Buffer,
-                IN ULONG BufferSize, 
-                IN ULONG Mode, 
+                IN ULONG BufferSize,
+                IN ULONG Mode,
                 IN PNP_CCB Ccb,
                 IN PLIST_ENTRY List);
 
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
-                 IN ULONG Mode, 
-                 IN PVOID OutBuffer, 
-                 IN ULONG OutBufferSize, 
-                 IN ULONG PipeType, 
-                 OUT PULONG BytesWritten, 
-                 IN PNP_CCB Ccb, 
-                 IN ULONG NamedPipeEnd, 
-                 IN PETHREAD Thread, 
+                 IN ULONG Mode,
+                 IN PVOID OutBuffer,
+                 IN ULONG OutBufferSize,
+                 IN ULONG PipeType,
+                 OUT PULONG BytesWritten,
+                 IN PNP_CCB Ccb,
+                 IN ULONG NamedPipeEnd,
+                 IN PETHREAD Thread,
                  IN PLIST_ENTRY List);
 
 NTSTATUS
 NTAPI
 NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp);
+
+_Function_class_(FAST_IO_READ)
+_IRQL_requires_same_
+BOOLEAN
+NTAPI
+NpFastRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject);
+
+_Function_class_(FAST_IO_WRITE)
+_IRQL_requires_same_
+BOOLEAN
+NTAPI
+NpFastWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 
 NTSTATUS

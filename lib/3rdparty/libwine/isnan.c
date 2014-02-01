@@ -21,7 +21,7 @@
 #include "config.h"
 #include "wine/port.h"
 
-#if !defined(HAVE_ISNAN) && !defined(_ISNAN) && !defined(isnan)
+#if !defined(HAVE_ISNAN) && !defined(isnan)
 
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>
@@ -43,4 +43,4 @@ int isnan(double x)
 #error No isnan() implementation available.
 #endif
 
-#endif /* !defined(HAVE_ISNAN) && !defined(_ISNAN) && !defined(isnan) */
+#endif /* !defined(HAVE_ISNAN) && !defined(isnan) */

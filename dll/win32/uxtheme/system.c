@@ -20,6 +20,7 @@
 
 #include "uxthemep.h"
 
+#include <stdio.h>
 #include <winreg.h>
 #include <uxundoc.h>
 

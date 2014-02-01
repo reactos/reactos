@@ -1,6 +1,7 @@
 #include "precomp.h"
+
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 #define LCDTIMING0_PPL(x) 		((((x) / 16 - 1) & 0x3f) << 2)
 #define LCDTIMING1_LPP(x) 		(((x) & 0x3ff) - 1)

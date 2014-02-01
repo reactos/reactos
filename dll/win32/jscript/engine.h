@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 typedef struct _source_elements_t source_elements_t;
 typedef struct _expression_t expression_t;
 typedef struct _statement_t statement_t;

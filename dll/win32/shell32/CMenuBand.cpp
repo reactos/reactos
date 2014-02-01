@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+
 #include <windowsx.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);

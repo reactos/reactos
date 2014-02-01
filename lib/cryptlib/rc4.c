@@ -20,9 +20,9 @@
 
 /* http://cryptopp.sourceforge.net/docs/ref521/arc4_8cpp-source.html */
 
-#include <advapi32.h>
+#include "rc4.h"
 
-void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen)
+void rc4_init(RC4_CONTEXT *a4i, const unsigned char *key, unsigned int keyLen)
 {
     unsigned int keyIndex = 0, stateIndex = 0;
     unsigned int i, a;
@@ -44,9 +44,9 @@ void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen)
     }
 }
 
-void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length)
+void rc4_crypt(RC4_CONTEXT *a4i, unsigned char *inoutString, unsigned int length)
 {
-    BYTE *const s=a4i->state;
+    unsigned char *const s=a4i->state;
     unsigned int x = a4i->x;
     unsigned int y = a4i->y;
     unsigned int a, b;
@@ -65,31 +65,3 @@ void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length)
     a4i->x = x;
     a4i->y = y;
 }
-
-#ifndef __REACTOS__
-/******************************************************************************
- * SystemFunction032  [ADVAPI32.@]
- *
- * Encrypts a string data using ARC4
- *
- * PARAMS
- *   data    [I/O] data to encrypt
- *   key     [I] key data
- *
- * RETURNS
- *  Success: STATUS_SUCCESS
- *  Failure: STATUS_UNSUCCESSFUL
- *
- * NOTES
- *  see http://web.it.kth.se/~rom/ntsec.html#crypto-strongavail
- */
-NTSTATUS WINAPI SystemFunction032(struct ustring *data, const struct ustring *key)
-{
-    arc4_info a4i;
-
-    arc4_init(&a4i, key->Buffer, key->Length);
-    arc4_ProcessString(&a4i, data->Buffer, data->Length);
-
-    return STATUS_SUCCESS;
-}
-#endif

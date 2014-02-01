@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
 #include <precomp.h>
+
+#include <ntquery.h>
+
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 WINE_DEFAULT_DEBUG_CHANNEL(CRecycleBin);
 

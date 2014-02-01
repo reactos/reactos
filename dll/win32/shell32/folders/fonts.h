@@ -92,4 +92,4 @@ class CFontsFolder :
         END_COM_MAP()
 };
 
-#endif // _SHFLDR_FONTS_H_
+#endif /* _SHFLDR_FONTS_H_ */

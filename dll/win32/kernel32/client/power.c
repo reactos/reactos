@@ -12,6 +12,8 @@
 
 #include <k32.h>
 
+#include <ndk/pofuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

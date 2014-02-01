@@ -11,7 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /*
  * @unimplemented
  */

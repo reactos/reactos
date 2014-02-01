@@ -19,7 +19,7 @@
 #ifndef _SCRRUN_PRIVATE_H_
 #define _SCRRUN_PRIVATE_H_
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 
@@ -31,12 +31,11 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <objbase.h>
 #include <oleauto.h>
 #include <dispex.h>
 #include <scrrun.h>
-
-#include <wine/unicode.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(scrrun);

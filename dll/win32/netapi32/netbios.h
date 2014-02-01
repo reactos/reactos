@@ -17,12 +17,6 @@
 #ifndef __WINE_NETBIOS_H__
 #define __WINE_NETBIOS_H__
 
-//#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <lm.h>
-#include <nb30.h>
-
 /* This file describes the interface WINE's NetBIOS implementation uses to
  * interact with a transport implementation (where a transport might be
  * NetBIOS-over-TCP/IP (aka NetBT, NBT), NetBIOS-over-IPX, etc.)

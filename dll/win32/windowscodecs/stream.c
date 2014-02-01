@@ -18,7 +18,6 @@
 
 #include "wincodecs_private.h"
 
-#include <winreg.h>
 #include <shlwapi.h>
 
 /******************************************

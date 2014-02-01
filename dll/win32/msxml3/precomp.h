@@ -15,12 +15,17 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <ole2.h>
 #include <msxml6.h>
+#include <wininet.h>
+#include <shlwapi.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+#include <wine/list.h>
 
 #include "msxml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #endif /* _MSXML3_PCH_ */

@@ -3,6 +3,7 @@ list(APPEND SOURCE
     compbatt.c
     compmisc.c
     comppnp.c
+    guid.c
     compbatt.rc)
 
 add_library(compbatt SHARED ${SOURCE})

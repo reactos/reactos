@@ -18,8 +18,6 @@
 
 #include "jscript.h"
 
-#include <objsafe.h>
-
 #ifdef _WIN64
 
 #define CTXARG_T DWORDLONG

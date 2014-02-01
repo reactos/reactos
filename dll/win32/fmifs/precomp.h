@@ -20,16 +20,10 @@
 /* PSDK/NDK Headers */
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 
 /* FMIFS Public Header */
 #include <fmifs/fmifs.h>
-
-/* VFATLIB Public Header */
-//#include <fslib/vfatlib.h>
 
 extern LIST_ENTRY ProviderListHead;
 

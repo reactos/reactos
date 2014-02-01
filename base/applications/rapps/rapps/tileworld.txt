@@ -37,6 +37,7 @@ Size = 1,16 Mo
 [Section.041f]
 Name = Karolu Dünyâ
 Description = Başlangıçta Atari Lynx için yapılan Çip'in Düellosu adlı oyunun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni de kapsadığından bunun ruhsatlı özgününe gerek yoktur.
+Size = 1,16 MB
 
 [Section.0422]
 Description = Чудовий клон гри Chip's Challenge для Atari Lynx. Включено безплатний графічний пакет CCLP2, тому вам не потрібен оригінальний.

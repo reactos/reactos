@@ -30,3 +30,4 @@ Size = 1,07 Mo
 [Section.041f]
 Licence = Ticârî olmayan kullanımlarda ücretsiz.
 Description = Özgün BitTorrent istemcisi.
+Size = 1,07 MB

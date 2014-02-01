@@ -19,9 +19,7 @@
 
 #include "wincodecs_private.h"
 
-#include <winnls.h>
 #include <ole2.h>
-#include <wincodecsdk.h>
 
 #include "ungif.h"
 

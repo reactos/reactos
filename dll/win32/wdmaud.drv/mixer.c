@@ -9,6 +9,9 @@
 
 #include "wdmaud.h"
 
+#include <samplerate.h>
+#include <float_cast.h>
+
 #define NDEBUG
 #include <debug.h>
 

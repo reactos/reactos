@@ -25,3 +25,4 @@ Size = 13,8 Mo
 Name = Kyodai Çin Dominosu
 Licence = Kısıtlı
 Description = Çin dominosu türündeki solitaire oyunları arasında en iyisi.
+Size = 13,8 MB

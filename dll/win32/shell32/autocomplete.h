@@ -63,4 +63,4 @@ BEGIN_COM_MAP(CAutoComplete)
 END_COM_MAP()
 };
 
-#endif // _AUTOCOMPLETE_H_
+#endif /* _AUTOCOMPLETE_H_ */

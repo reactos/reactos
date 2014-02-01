@@ -4,17 +4,18 @@
  * FILE:        include/msafd.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */
+
 #ifndef __MSAFD_H
 #define __MSAFD_H
+
+#include <stdarg.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
@@ -507,5 +508,3 @@ MsafdReturnWithErrno(NTSTATUS Status,
 }
 
 #endif /* __MSAFD_H */
-
-/* EOF */

@@ -132,6 +132,9 @@ typedef struct IDirect3DVolume9 *LPDIRECT3DVOLUME9, *PDIRECT3DVOLUME9;
 DEFINE_GUID(IID_IDirect3DSwapChain9,          0x794950f2, 0xadfc, 0x458a, 0x90, 0x5e, 0x10, 0xa1, 0xb, 0xb, 0x50, 0x3b);
 typedef struct IDirect3DSwapChain9 *LPDIRECT3DSWAPCHAIN9, *PDIRECT3DSWAPCHAIN9;
 
+DEFINE_GUID(IID_IDirect3DSwapChain9Ex, 0x91886caf, 0x1c3d, 0x4d2e, 0xa0, 0xab, 0x3e, 0x4c, 0x7d, 0x8d, 0x33, 0x3);
+typedef struct IDirect3DSwapChain9Ex *LPDIRECT3DSWAPCHAIN9EX, *PDIRECT3DSWAPCHAIN9EX;
+
 DEFINE_GUID(IID_IDirect3DSurface9,            0xcfbaf3a, 0x9ff6, 0x429a, 0x99, 0xb3, 0xa2, 0x79, 0x6a, 0xf8, 0xb8, 0x9b);
 typedef struct IDirect3DSurface9 *LPDIRECT3DSURFACE9, *PDIRECT3DSURFACE9;
 
@@ -421,6 +424,68 @@ DECLARE_INTERFACE_(IDirect3DSwapChain9,IUnknown)
 #define IDirect3DSwapChain9_GetDisplayMode(p,a)          (p)->GetDisplayMode(a)
 #define IDirect3DSwapChain9_GetDevice(p,a)               (p)->GetDevice(a)
 #define IDirect3DSwapChain9_GetPresentParameters(p,a)    (p)->GetPresentParameters(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DSwapChain9Ex interface
+ */
+#define INTERFACE IDirect3DSwapChain9Ex
+DECLARE_INTERFACE_(IDirect3DSwapChain9Ex,IDirect3DSwapChain9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DSwapChain9 methods ***/
+    STDMETHOD(Present)(THIS_ const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
+            const RGNDATA *dirty_region, DWORD flags) PURE;
+    STDMETHOD(GetFrontBufferData)(THIS_ struct IDirect3DSurface9 *pDestSurface) PURE;
+    STDMETHOD(GetBackBuffer)(THIS_ UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, struct IDirect3DSurface9 **ppBackBuffer) PURE;
+    STDMETHOD(GetRasterStatus)(THIS_ D3DRASTER_STATUS *pRasterStatus) PURE;
+    STDMETHOD(GetDisplayMode)(THIS_ D3DDISPLAYMODE *pMode) PURE;
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9 **ppDevice) PURE;
+    STDMETHOD(GetPresentParameters)(THIS_ D3DPRESENT_PARAMETERS *pPresentationParameters) PURE;
+    /*** IDirect3DSwapChain9Ex methods ***/
+    STDMETHOD(GetLastPresentCount)(THIS_ UINT *pLastPresentCount) PURE;
+    STDMETHOD(GetPresentStats)(THIS_ D3DPRESENTSTATS *pPresentationStatistics) PURE;
+    STDMETHOD(GetDisplayModeEx)(THIS_ D3DDISPLAYMODEEX *pMode, D3DDISPLAYROTATION *pRotation) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain9Ex_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DSwapChain9Ex_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define IDirect3DSwapChain9Ex_Release(p)                 (p)->lpVtbl->Release(p)
+/*** IDirect3DSwapChain9 methods ***/
+#define IDirect3DSwapChain9Ex_Present(p,a,b,c,d,e)       (p)->lpVtbl->Present(p,a,b,c,d,e)
+#define IDirect3DSwapChain9Ex_GetFrontBufferData(p,a)    (p)->lpVtbl->GetFrontBufferData(p,a)
+#define IDirect3DSwapChain9EX_GetBackBuffer(p,a,b,c)     (p)->lpVtbl->GetBackBuffer(p,a,b,c)
+#define IDirect3DSwapChain9EX_GetRasterStatus(p,a)       (p)->lpVtbl->GetRasterStatus(p,a)
+#define IDirect3DSwapChain9Ex_GetDisplayMode(p,a)        (p)->lpVtbl->GetDisplayMode(p,a)
+#define IDirect3DSwapChain9Ex_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DSwapChain9Ex_GetPresentParameters(p,a)  (p)->lpVtbl->GetPresentParameters(p,a)
+/*** IDirect3DSwapChain9Ex methods ***/
+#define IDirect3DSwapChain9Ex_GetLastPresentCount(p,a)   (p)->lpVtbl->GetLastPresentCount(p,a)
+#define IDirect3DSwapChain9Ex_GetPresentStats(p,a)       (p)->lpVtbl->GetPresentStats(p,a)
+#define IDirect3DSwapChain9Ex_GetDisplayModeEx(p,a,b)    (p)->lpVtbl->GetDisplayModeEx(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain9Ex_QueryInterface(p,a,b)      (p)->QueryInterface(a,b)
+#define IDirect3DSwapChain9Ex_AddRef(p)                  (p)->AddRef()
+#define IDirect3DSwapChain9Ex_Release(p)                 (p)->Release()
+/*** IDirect3DSwapChain9 methods ***/
+#define IDirect3DSwapChain9Ex_Present(p,a,b,c,d,e)       (p)->Present(a,b,c,d,e)
+#define IDirect3DSwapChain9Ex_GetFrontBufferData(p,a)    (p)->GetFrontBufferData(a)
+#define IDirect3DSwapChain9Ex_GetBackBuffer(p,a,b,c)     (p)->GetBackBuffer(a,b,c)
+#define IDirect3DSwapChain9Ex_GetRasterStatus(p,a)       (p)->GetRasterStatus(a)
+#define IDirect3DSwapChain9Ex_GetDisplayMode(p,a)        (p)->GetDisplayMode(a)
+#define IDirect3DSwapChain9Ex_GetDevice(p,a)             (p)->GetDevice(a)
+#define IDirect3DSwapChain9Ex_GetPresentParameters(p,a)  (p)->GetPresentParameters(a)
+/*** IDirect3DSwapChain9Ex methods ***/
+#define IDirect3DSwapChain9Ex_GetLastPresentCount(p,a)   (p)->GetLastPresentCount(a)
+#define IDirect3DSwapChain9Ex_GetPresentStats(p,a)       (p)->GetPresentStats(a)
+#define IDirect3DSwapChain9Ex_GetDisplayModeEx(p,a,b)    (p)->GetDisplayModeEx(a,b)
 #endif
 
 /*****************************************************************************

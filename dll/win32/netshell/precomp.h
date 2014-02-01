@@ -1,26 +1,23 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
+#include <stdio.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdio.h>
 #include <windef.h>
-#include <winreg.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <winnls.h>
-#include <winsock2.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shellapi.h>
-#include <olectl.h>
 #include <iphlpapi.h>
 #include <setupapi.h>
 #include <devguid.h>
 #include <netcon.h>
-#include <netcfgx.h>
-#include <netcfgn.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -60,7 +57,6 @@ extern HINSTANCE netshell_hInstance;
 extern const GUID CLSID_NetworkConnections;
 extern const GUID CLSID_LANConnectUI;
 extern const GUID CLSID_LanConnectStatusUI;
-extern const GUID GUID_DEVCLASS_NET;
 
 /* shfldr_netconnect.c */
 HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);
@@ -91,4 +87,4 @@ HRESULT WINAPI LanConnectStatusUI_Constructor(IUnknown *pUnkOuter, REFIID riid, 
 
 #include "enumlist.h"
 
-#endif
+#endif /* _PRECOMP_H__ */

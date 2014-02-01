@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 #include <winternl.h>
-#include <wincodecsdk.h>
 
 typedef struct MetadataHandler {
     IWICMetadataWriter IWICMetadataWriter_iface;

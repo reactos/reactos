@@ -1587,6 +1587,16 @@ typedef enum _D3DCOMPOSERECTSOP{
     D3DCOMPOSERECTS_NEG,
     D3DCOMPOSERECTS_FORCE_DWORD = 0x7fffffff
 } D3DCOMPOSERECTSOP;
+
+typedef struct _D3DPRESENTSTATS
+{
+    UINT          PresentCount;
+    UINT          PresentRefreshCount;
+    UINT          SyncRefreshCount;
+    LARGE_INTEGER SyncQPCTime;
+    LARGE_INTEGER SyncGPUTime;
+} D3DPRESENTSTATS;
+
 #endif /* D3D_DISABLE_9EX */
 
 typedef enum _D3DSHADER_COMPARISON

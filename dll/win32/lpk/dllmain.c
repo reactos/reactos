@@ -45,4 +45,3 @@ LpkDllInitialize (
 
     return TRUE;
 }
-

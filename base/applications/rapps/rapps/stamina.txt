@@ -18,3 +18,4 @@ Size = 4,7 Mo
 
 [Section.041f]
 Description = Ücretsiz bir düğme takımında yazma öğreticisi.
+Size = 4,7 MB

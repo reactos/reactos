@@ -36,6 +36,7 @@ Size = 205,9 Mo
 
 [Section.041f]
 Description = OpenOffice gibi bir açık kaynak büro takımı.
+Size = 205,9 MB
 
 [Section.0422]
 Description = Відкритий офісний пакет.

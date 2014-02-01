@@ -22,6 +22,8 @@
  */
 
 #include "wined3d_private.h"
+#include <winternl.h>
+#include <winnls.h>
 
 #include <wine/unicode.h>
 
@@ -130,6 +132,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_texture_env_dot3",             ARB_TEXTURE_ENV_DOT3          },
     {"GL_ARB_texture_float",                ARB_TEXTURE_FLOAT             },
     {"GL_ARB_texture_mirrored_repeat",      ARB_TEXTURE_MIRRORED_REPEAT   },
+    {"GL_ARB_texture_mirror_clamp_to_edge", ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE},
     {"GL_ARB_texture_non_power_of_two",     ARB_TEXTURE_NON_POWER_OF_TWO  },
     {"GL_ARB_texture_rectangle",            ARB_TEXTURE_RECTANGLE         },
     {"GL_ARB_texture_rg",                   ARB_TEXTURE_RG                },
@@ -174,6 +177,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_texture_env_dot3",             EXT_TEXTURE_ENV_DOT3          },
     {"GL_EXT_texture_filter_anisotropic",   EXT_TEXTURE_FILTER_ANISOTROPIC},
     {"GL_EXT_texture_lod_bias",             EXT_TEXTURE_LOD_BIAS          },
+    {"GL_EXT_texture_mirror_clamp",         EXT_TEXTURE_MIRROR_CLAMP      },
     {"GL_EXT_texture_sRGB",                 EXT_TEXTURE_SRGB              },
     {"GL_EXT_texture_sRGB_decode",          EXT_TEXTURE_SRGB_DECODE       },
     {"GL_EXT_vertex_array_bgra",            EXT_VERTEX_ARRAY_BGRA         },
@@ -251,7 +255,7 @@ const GLenum magLookup_noFilter[] =
     GL_NEAREST, GL_NEAREST, GL_NEAREST,
 };
 
-struct wined3d_fake_gl_ctx
+struct wined3d_caps_gl_ctx
 {
     HDC dc;
     HWND wnd;
@@ -260,12 +264,12 @@ struct wined3d_fake_gl_ctx
     HGLRC restore_gl_ctx;
 };
 
-static void WineD3D_ReleaseFakeGLContext(const struct wined3d_fake_gl_ctx *ctx)
+static void wined3d_caps_gl_ctx_destroy(const struct wined3d_caps_gl_ctx *ctx)
 {
-    TRACE("Destroying fake GL context.\n");
+    TRACE("Destroying caps GL context.\n");
 
     if (!wglMakeCurrent(NULL, NULL))
-        ERR("Failed to disable fake GL context.\n");
+        ERR("Failed to disable caps GL context.\n");
 
     if (!wglDeleteContext(ctx->gl_ctx))
     {
@@ -273,14 +277,14 @@ static void WineD3D_ReleaseFakeGLContext(const struct wined3d_fake_gl_ctx *ctx)
         ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx->gl_ctx, err);
     }
 
-    ReleaseDC(ctx->wnd, ctx->dc);
+    wined3d_release_dc(ctx->wnd, ctx->dc);
     DestroyWindow(ctx->wnd);
 
     if (ctx->restore_gl_ctx && !wglMakeCurrent(ctx->restore_dc, ctx->restore_gl_ctx))
         ERR("Failed to restore previous GL context.\n");
 }
 
-static void wined3d_create_fake_gl_context_attribs(struct wined3d_fake_gl_ctx *fake_gl_ctx,
+static void wined3d_caps_gl_ctx_create_attribs(struct wined3d_caps_gl_ctx *caps_gl_ctx,
         struct wined3d_gl_info *gl_info, const GLint *ctx_attribs)
 {
     HGLRC new_ctx;
@@ -288,14 +292,14 @@ static void wined3d_create_fake_gl_context_attribs(struct wined3d_fake_gl_ctx *f
     if (!(gl_info->p_wglCreateContextAttribsARB = (void *)wglGetProcAddress("wglCreateContextAttribsARB")))
         return;
 
-    if (!(new_ctx = gl_info->p_wglCreateContextAttribsARB(fake_gl_ctx->dc, NULL, ctx_attribs)))
+    if (!(new_ctx = gl_info->p_wglCreateContextAttribsARB(caps_gl_ctx->dc, NULL, ctx_attribs)))
     {
         ERR("Failed to create a context using wglCreateContextAttribsARB(), last error %#x.\n", GetLastError());
         gl_info->p_wglCreateContextAttribsARB = NULL;
         return;
     }
 
-    if (!wglMakeCurrent(fake_gl_ctx->dc, new_ctx))
+    if (!wglMakeCurrent(caps_gl_ctx->dc, new_ctx))
     {
         ERR("Failed to make new context current, last error %#x.\n", GetLastError());
         if (!wglDeleteContext(new_ctx))
@@ -304,13 +308,12 @@ static void wined3d_create_fake_gl_context_attribs(struct wined3d_fake_gl_ctx *f
         return;
     }
 
-    if (!wglDeleteContext(fake_gl_ctx->gl_ctx))
+    if (!wglDeleteContext(caps_gl_ctx->gl_ctx))
         ERR("Failed to delete old context, last error %#x.\n", GetLastError());
-    fake_gl_ctx->gl_ctx = new_ctx;
+    caps_gl_ctx->gl_ctx = new_ctx;
 }
 
-/* Do not call while under the GL lock. */
-static BOOL WineD3D_CreateFakeGLContext(struct wined3d_fake_gl_ctx *ctx)
+static BOOL wined3d_caps_gl_ctx_create(struct wined3d_caps_gl_ctx *ctx)
 {
     PIXELFORMATDESCRIPTOR pfd;
     int iPixelFormat;
@@ -364,7 +367,7 @@ static BOOL WineD3D_CreateFakeGLContext(struct wined3d_fake_gl_ctx *ctx)
     /* Make it the current GL context. */
     if (!wglMakeCurrent(ctx->dc, ctx->gl_ctx))
     {
-        ERR("Failed to make fake GL context current.\n");
+        ERR("Failed to make caps GL context current.\n");
         goto fail;
     }
 
@@ -1248,10 +1251,12 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX650,     "NVIDIA GeForce GTX 650",           DRIVER_NVIDIA_GEFORCE6,  1024},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX650TI,   "NVIDIA GeForce GTX 650 Ti",        DRIVER_NVIDIA_GEFORCE6,  1024},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX660,     "NVIDIA GeForce GTX 660",           DRIVER_NVIDIA_GEFORCE6,  2048},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX660M,    "NVIDIA GeForce GTX 660M",          DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX660TI,   "NVIDIA GeForce GTX 660 Ti",        DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX670,     "NVIDIA GeForce GTX 670",           DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX670MX,   "NVIDIA GeForce GTX 670MX",         DRIVER_NVIDIA_GEFORCE6,  3072},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX680,     "NVIDIA GeForce GTX 680",           DRIVER_NVIDIA_GEFORCE6,  2048},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX765M,    "NVIDIA GeForce GTX 765M",          DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770M,    "NVIDIA GeForce GTX 770M",          DRIVER_NVIDIA_GEFORCE6,  3072},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770,     "NVIDIA GeForce GTX 770",           DRIVER_NVIDIA_GEFORCE6,  2048},
 
@@ -1324,6 +1329,7 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_INTEL,      CARD_INTEL_IVBD,                "Intel(R) Ivybridge Desktop",                                DRIVER_INTEL_GMA3000, 1024},
     {HW_VENDOR_INTEL,      CARD_INTEL_IVBM,                "Intel(R) Ivybridge Mobile",                                 DRIVER_INTEL_GMA3000, 1024},
     {HW_VENDOR_INTEL,      CARD_INTEL_IVBS,                "Intel(R) Ivybridge Server",                                 DRIVER_INTEL_GMA3000, 1024},
+    {HW_VENDOR_INTEL,      CARD_INTEL_HWM,                 "Intel(R) Haswell Mobile",                                   DRIVER_INTEL_GMA3000, 1024},
 };
 
 static const struct driver_version_information *get_driver_version_info(enum wined3d_display_driver driver,
@@ -1658,10 +1664,12 @@ static enum wined3d_pci_device select_card_nvidia_binary(const struct wined3d_gl
         {
             {"GTX 770M",    CARD_NVIDIA_GEFORCE_GTX770M},   /* Geforce 700 - midend high mobile */
             {"GTX 770",     CARD_NVIDIA_GEFORCE_GTX770},    /* Geforce 700 - highend */
+            {"GTX 765M",    CARD_NVIDIA_GEFORCE_GTX765M},   /* Geforce 700 - midend high mobile */
             {"GTX 680",     CARD_NVIDIA_GEFORCE_GTX680},    /* Geforce 600 - highend */
             {"GTX 670MX",   CARD_NVIDIA_GEFORCE_GTX670MX},  /* Geforce 600 - highend */
             {"GTX 670",     CARD_NVIDIA_GEFORCE_GTX670},    /* Geforce 600 - midend high */
             {"GTX 660 Ti",  CARD_NVIDIA_GEFORCE_GTX660TI},  /* Geforce 600 - midend high */
+            {"GTX 660M",    CARD_NVIDIA_GEFORCE_GTX660M},   /* Geforce 600 - midend high mobile */
             {"GTX 660",     CARD_NVIDIA_GEFORCE_GTX660},    /* Geforce 600 - midend high */
             {"GTX 650 Ti",  CARD_NVIDIA_GEFORCE_GTX650TI},  /* Geforce 600 - lowend */
             {"GTX 650",     CARD_NVIDIA_GEFORCE_GTX650},    /* Geforce 600 - lowend */
@@ -1984,6 +1992,8 @@ static enum wined3d_pci_device select_card_intel(const struct wined3d_gl_info *g
     }
     cards[] =
     {
+        /* Haswell */
+        {"Haswell Mobile",              CARD_INTEL_HWM},
         /* Ivybridge */
         {"Ivybridge Server",            CARD_INTEL_IVBS},
         {"Ivybridge Mobile",            CARD_INTEL_IVBM},
@@ -2371,7 +2381,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct wined3d_gl_info *
      * size of the database can be made quite small because when you know what
      * type of 3d functionality a card has, you know to which GPU family the
      * GPU must belong. Because of this you only have to check a small part of
-     * the renderer string to distinguishes between different models from that
+     * the renderer string to distinguish between different models from that
      * family.
      *
      * The code also selects a default amount of video memory which we will
@@ -2927,6 +2937,16 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter)
         if (!counter_bits)
             gl_info->supported[ARB_OCCLUSION_QUERY] = FALSE;
     }
+    if (!gl_info->supported[ATI_TEXTURE_MIRROR_ONCE] && gl_info->supported[EXT_TEXTURE_MIRROR_CLAMP])
+    {
+        TRACE(" IMPLIED: ATI_texture_mirror_once support (by EXT_texture_mirror_clamp).\n");
+        gl_info->supported[ATI_TEXTURE_MIRROR_ONCE] = TRUE;
+    }
+    if (!gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE] && gl_info->supported[ATI_TEXTURE_MIRROR_ONCE])
+    {
+        TRACE(" IMPLIED: ARB_texture_mirror_clamp_to_edge support (by ATI_texture_mirror_once).\n");
+        gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE] = TRUE;
+    }
 
     wined3d_adapter_init_limits(gl_info);
 
@@ -3044,7 +3064,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter)
     gl_info->wrap_lookup[WINED3D_TADDRESS_BORDER - WINED3D_TADDRESS_WRAP] =
             gl_info->supported[ARB_TEXTURE_BORDER_CLAMP] ? GL_CLAMP_TO_BORDER_ARB : GL_REPEAT;
     gl_info->wrap_lookup[WINED3D_TADDRESS_MIRROR_ONCE - WINED3D_TADDRESS_WRAP] =
-            gl_info->supported[ATI_TEXTURE_MIRROR_ONCE] ? GL_MIRROR_CLAMP_TO_EDGE_ATI : GL_REPEAT;
+            gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE] ? GL_MIRROR_CLAMP_TO_EDGE : GL_REPEAT;
 
     adapter->d3d_info.valid_rt_mask = 0;
     for (i = 0; i < gl_info->limits.buffers; ++i)
@@ -3871,18 +3891,6 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                 return WINED3DERR_NOTAVAILABLE;
             }
 
-            /* Filter formats that need conversion; For one part, this
-             * conversion is unimplemented, and volume textures are huge, so
-             * it would be a big performance hit. Unless we hit an application
-             * needing one of those formats, don't advertize them to avoid
-             * leading applications into temptation. The windows drivers don't
-             * support most of those formats on volumes anyway. */
-            if (format->convert)
-            {
-                TRACE("[FAILED] - No converted formats on volumes.\n");
-                return WINED3DERR_NOTAVAILABLE;
-            }
-
             /* The GL_EXT_texture_compression_s3tc spec requires that loading
              * an s3tc compressed texture results in an error. While the D3D
              * refrast does support s3tc volumes, at least the nvidia Windows
@@ -4095,7 +4103,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     struct shader_caps shader_caps;
     struct fragment_caps fragment_caps;
     struct wined3d_vertex_caps vertex_caps;
-    DWORD ckey_caps, blit_caps, fx_caps, pal_caps;
+    DWORD ckey_caps, blit_caps, fx_caps;
 
     TRACE("wined3d %p, adapter_idx %u, device_type %s, caps %p.\n",
             wined3d, adapter_idx, debug_d3ddevicetype(device_type), caps);
@@ -4356,7 +4364,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     {
         caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRROR;
     }
-    if (gl_info->supported[ATI_TEXTURE_MIRROR_ONCE])
+    if (gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE])
     {
         caps->TextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRRORONCE;
     }
@@ -4374,7 +4382,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
         {
             caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRROR;
         }
-        if (gl_info->supported[ATI_TEXTURE_MIRROR_ONCE])
+        if (gl_info->supported[ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE])
         {
             caps->VolumeTextureAddressCaps |= WINED3DPTADDRESSCAPS_MIRRORONCE;
         }
@@ -4619,8 +4627,6 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                         WINEDDCAPS_COLORKEY                 |
                                         WINEDDCAPS_COLORKEYHWASSIST         |
                                         WINEDDCAPS_ALIGNBOUNDARYSRC;
-    pal_caps =                          WINEDDPCAPS_8BIT                    |
-                                        WINEDDPCAPS_PRIMARYSURFACE;
 
     /* Fill the ddraw caps structure */
     caps->ddraw_caps.caps =             WINEDDCAPS_GDI                      |
@@ -4633,7 +4639,6 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                         WINEDDCAPS2_CANRENDERWINDOWED;
     caps->ddraw_caps.color_key_caps = ckey_caps;
     caps->ddraw_caps.fx_caps = fx_caps;
-    caps->ddraw_caps.pal_caps = pal_caps;
     caps->ddraw_caps.svb_caps = blit_caps;
     caps->ddraw_caps.svb_color_key_caps = ckey_caps;
     caps->ddraw_caps.svb_fx_caps = fx_caps;
@@ -5027,11 +5032,10 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
     }
 }
 
-/* Do not call while under the GL lock. */
 static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
 {
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
-    struct wined3d_fake_gl_ctx fake_gl_ctx = {0};
+    struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
     unsigned int ctx_attrib_idx = 0;
     DISPLAY_DEVICEW display_device;
     GLint ctx_attribs[3];
@@ -5074,7 +5078,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
     TRACE("Allocated LUID %08x:%08x for adapter %p.\n",
             adapter->luid.HighPart, adapter->luid.LowPart, adapter);
 
-    if (!WineD3D_CreateFakeGLContext(&fake_gl_ctx))
+    if (!wined3d_caps_gl_ctx_create(&caps_gl_ctx))
     {
         ERR("Failed to get a GL context for adapter %p.\n", adapter);
         return FALSE;
@@ -5086,22 +5090,22 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
         ctx_attribs[ctx_attrib_idx++] = WGL_CONTEXT_DEBUG_BIT_ARB;
     }
     ctx_attribs[ctx_attrib_idx] = 0;
-    wined3d_create_fake_gl_context_attribs(&fake_gl_ctx, gl_info, ctx_attribs);
+    wined3d_caps_gl_ctx_create_attribs(&caps_gl_ctx, gl_info, ctx_attribs);
 
     if (!wined3d_adapter_init_gl_caps(adapter))
     {
         ERR("Failed to initialize GL caps for adapter %p.\n", adapter);
-        WineD3D_ReleaseFakeGLContext(&fake_gl_ctx);
+        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         return FALSE;
     }
 
-    wined3d_adapter_init_fb_cfgs(adapter, fake_gl_ctx.dc);
+    wined3d_adapter_init_fb_cfgs(adapter, caps_gl_ctx.dc);
     /* We haven't found any suitable formats. This should only happen in
      * case of GDI software rendering, which is pretty useless anyway. */
     if (!adapter->cfg_count)
     {
         WARN("No suitable pixel formats found.\n");
-        WineD3D_ReleaseFakeGLContext(&fake_gl_ctx);
+        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         HeapFree(GetProcessHeap(), 0, adapter->cfgs);
         return FALSE;
     }
@@ -5109,7 +5113,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
     if (!wined3d_adapter_init_format_info(adapter))
     {
         ERR("Failed to initialize GL format info.\n");
-        WineD3D_ReleaseFakeGLContext(&fake_gl_ctx);
+        wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         HeapFree(GetProcessHeap(), 0, adapter->cfgs);
         return FALSE;
     }
@@ -5123,7 +5127,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
     TRACE("DeviceName: %s\n", debugstr_w(display_device.DeviceName));
     strcpyW(adapter->DeviceName, display_device.DeviceName);
 
-    WineD3D_ReleaseFakeGLContext(&fake_gl_ctx);
+    wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
 
     wined3d_adapter_init_ffp_attrib_ops(adapter);
 
@@ -5166,7 +5170,6 @@ const struct wined3d_parent_ops wined3d_null_parent_ops =
     wined3d_null_wined3d_object_destroyed,
 };
 
-/* Do not call while under the GL lock. */
 HRESULT wined3d_init(struct wined3d *wined3d, UINT version, DWORD flags)
 {
     wined3d->dxVersion = version;

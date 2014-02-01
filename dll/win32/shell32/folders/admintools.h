@@ -84,4 +84,4 @@ class CAdminToolsFolder :
         END_COM_MAP()
 };
 
-#endif // _SHFLDR_ADMINTOOLS_H_
+#endif /* _SHFLDR_ADMINTOOLS_H_ */

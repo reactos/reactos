@@ -10,6 +10,8 @@
 
 #include "ws2_32.h"
 
+#include <ws2tcpip.h>
+
 /*
  * @implemented
  */

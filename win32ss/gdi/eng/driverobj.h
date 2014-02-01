@@ -14,13 +14,13 @@ typedef DRIVEROBJ *PDRIVEROBJ;
 BOOL NTAPI DRIVEROBJ_Cleanup(PVOID pObject);
 
 
-#define DRIVEROBJ_AllocObjectWithHandle()  ((PEDRIVEROBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DRIVEROBJ, sizeof(DRIVEROBJ)))
+#define DRIVEROBJ_AllocObjectWithHandle()  ((PEDRIVEROBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DRIVEROBJ, sizeof(EDRIVEROBJ)))
 #define DRIVEROBJ_FreeObjectByHandle(hdo) GDIOBJ_FreeObjByHandle((HGDIOBJ)hdo, GDI_OBJECT_TYPE_DRIVEROBJ)
 #define DRIVEROBJ_UnlockObject(pdo) GDIOBJ_vUnlockObject((POBJ)pdo)
 
 FORCEINLINE
 PEDRIVEROBJ
-DRIVEROBJ_LockObject(HDRVOBJ hdo)
+DRIVEROBJ_TryLockObject(HDRVOBJ hdo)
 {
-    return GDIOBJ_LockObject(hdo, GDIObjType_DRVOBJ_TYPE);
+    return GDIOBJ_TryLockObject(hdo, GDIObjType_DRVOBJ_TYPE);
 }

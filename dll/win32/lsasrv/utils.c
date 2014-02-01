@@ -9,6 +9,8 @@
 
 #include "lsasrv.h"
 
+#include <winuser.h>
+
 /* FUNCTIONS ***************************************************************/
 
 INT

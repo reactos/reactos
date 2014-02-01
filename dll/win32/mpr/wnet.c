@@ -28,8 +28,6 @@
 #include <ddk/mountmgr.h>
 #include <wine/unicode.h>
 
-#include "mprres.h"
-
 /* Data structures representing network service providers.  Assumes only one
  * thread creates them, and that they are constant for the life of the process
  * (and therefore doesn't synchronize access).

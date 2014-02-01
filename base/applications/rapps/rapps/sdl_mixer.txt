@@ -40,6 +40,7 @@ Size = 548,02 ko
 [Section.041f]
 Name = Bayağı Doğrudan Ortam Katmanı (SDL) Karıştırıcısı
 Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Size = 548,02 KB
 
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.

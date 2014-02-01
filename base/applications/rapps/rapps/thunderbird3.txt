@@ -7,54 +7,73 @@ Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Mail Clients out there.
 Size = 9.06 MB
 Category = 5
-URLSite = http://www.mozilla.org/en/thunderbird/
-URLDownload = http://svn.reactos.org/packages/Thunderbird%20Setup%203.1.20.exe
+URLSite = http://www.mozilla.org/en-US/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/en-US/Thunderbird%20Setup%203.1.20.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Mail-Clients.
-URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
+Size = 8.91 MB
+URLSite = https://www.mozilla.org/de/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/de/Thunderbird%20Setup%203.1.20.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores clientes mail que hay.
-URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
+Size = 8.88 MB
+URLSite = https://www.mozilla.org/es-ES/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/es-ES/Thunderbird%20Setup%203.1.20.exe
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
-Size = 9,06 Mo
-URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
+Size = 9,13 Mo
+URLSite = https://www.mozilla.org/fr/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/fr/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0410]
 Description = Il più popolare e il migliore Clients mail gratuito.
-URLSite = http://www.mozilla-europe.org/it/products/thunderbird/
+Size = 8.88 MB
+URLSite = https://www.mozilla.org/it/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/it/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
-URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+Size = 9.71 MB
+URLSite = https://www.mozilla.org/nl/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/nl/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
-URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
+Size = 9.73 MB
+URLSite = https://www.mozilla.org/pl/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/pl/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
-Size = 9,06 Mo
-URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
+Size = 9,31 Mo
+URLSite = https://www.mozilla.org/ro/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ro/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
-URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
+Size = 9.29 MB
+URLSite = https://www.mozilla.org/ru/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ru/Thunderbird%20Setup%203.1.20.exe
 
 [Section.041f]
 Name = Mozilla Yıldırımkuşu
 Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
-URLSite = https://www.mozilla.org/tr/products/thunderbird/
+Size = 8,91 MB
+URLSite = https://www.mozilla.org/tr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/tr/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
-URLSite = http://www.mozillamessaging.com/uk/thunderbird/
+Size = 9.29 MB
+URLSite = https://www.mozilla.org/uk/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/uk/Thunderbird%20Setup%203.1.20.exe
 
 [Section.0813]
 Description = De meest populaire en een van de beste gratis e-mail-programma's.
-URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+Size = 9.71 MB
+URLSite = https://www.mozilla.org/nl/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/nl/Thunderbird%20Setup%203.1.20.exe

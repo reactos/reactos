@@ -28,6 +28,8 @@
 
 #include "precomp.h"
 
+#include <winbase.h>
+
 #define NDEBUG
 #include <debug.h>
 

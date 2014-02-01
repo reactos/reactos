@@ -1248,7 +1248,7 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
       *open_flags |=  _O_BINARY;
       *open_flags &= ~_O_TEXT;
       break;
-    case 'T': case 't':
+    case 't':
       *open_flags |=  _O_TEXT;
       *open_flags &= ~_O_BINARY;
       break;

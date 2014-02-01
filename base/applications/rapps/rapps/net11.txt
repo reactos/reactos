@@ -36,3 +36,4 @@ Size = 23,14 Mo
 Name = Mikroyazılım .NET Çatısı Sürüm 1.1 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
 Description = Mikroyazılım .NET Çatısı Sürüm 1.1 - Yeniden Dağıtılabilir Paket
+Size = 23,14 MB

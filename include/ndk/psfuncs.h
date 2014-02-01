@@ -284,6 +284,28 @@ PsReturnProcessPagedPoolQuota(
     _In_ SIZE_T    Amount
 );
 
+NTKERNELAPI
+PVOID
+NTAPI
+PsGetProcessSecurityPort(
+    _In_ PEPROCESS Process
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetProcessSecurityPort(
+    _Inout_ PEPROCESS Process,
+    _In_ PVOID SecurityPort
+);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetCurrentThreadProcessId(
+    VOID
+);
+
 #endif
 
 //

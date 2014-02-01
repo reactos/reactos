@@ -26,6 +26,8 @@
 
 #include "precomp.h"
 
+#include <sddl.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*

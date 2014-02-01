@@ -105,4 +105,3 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp,
                                    (ULONG_PTR)FCB->AddressFile.Handle );
 }
-

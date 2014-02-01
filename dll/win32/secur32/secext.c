@@ -18,11 +18,13 @@
 
 #include "precomp.h"
 
+#include <winnls.h>
+#include <lsass/lsass.h>
+
 #define NDEBUG
 #include <debug.h>
 
 #define UNLEN 256
-
 
 /***********************************************************************
  *		GetComputerObjectNameA (SECUR32.@) Wine 1.1.14

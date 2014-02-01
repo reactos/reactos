@@ -23,8 +23,6 @@
 
 #include "precomp.h"
 
-#include <ole2.h>
-
 #include "typelib.h"
 
 #include <wine/exception.h>

@@ -7,8 +7,12 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define INITGUID
 #include "mouclass.h"
+
+#include <stdio.h>
+#include <kbdmou.h>
+#include <pseh/pseh2.h>
+#include <debug.h>
 
 static DRIVER_UNLOAD DriverUnload;
 static DRIVER_DISPATCH ClassCreate;

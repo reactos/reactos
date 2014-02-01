@@ -85,4 +85,4 @@ class CPrinterFolder :
         END_COM_MAP()
 };
 
-#endif // _SHFLDR_PRINTERS_H_
+#endif /* _SHFLDR_PRINTERS_H_ */

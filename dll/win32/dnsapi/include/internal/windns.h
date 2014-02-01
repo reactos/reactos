@@ -11,4 +11,4 @@ typedef struct
 DNS_STATUS DnsIntTranslateAdnsToDNS_STATUS(int Status);
 void DnsIntFreeRecordList(PDNS_RECORD ToFree);
 
-#endif//WINDNS_INTERNAL_H
+#endif /* WINDNS_INTERNAL_H */

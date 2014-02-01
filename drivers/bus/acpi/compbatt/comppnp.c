@@ -10,6 +10,8 @@
 
 #include "compbatt.h"
 
+#include <wdmguid.h>
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS

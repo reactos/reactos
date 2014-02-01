@@ -33,8 +33,6 @@
 #include <olectl.h>
 #include <objsafe.h>
 
-#include <wine/list.h>
-
 #ifdef HAVE_LIBXML2
 
 /* not defined in older versions */

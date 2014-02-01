@@ -23,7 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-
 /*
 This folder should not exist. It is just a file system folder...
 */

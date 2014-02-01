@@ -50,6 +50,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_WRITE] = KsecDdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = KsecDdDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = KsecDdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = KsecDdDispatch;
 
     return STATUS_SUCCESS;
 }

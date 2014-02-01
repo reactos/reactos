@@ -9,6 +9,8 @@
 
 #include "lsasrv.h"
 
+#include "resources.h"
+
 /* GLOBALS *****************************************************************/
 
 typedef wchar_t *PSAMPR_SERVER_NAME;

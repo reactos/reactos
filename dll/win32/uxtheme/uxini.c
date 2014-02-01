@@ -19,7 +19,7 @@
  */
 
 #include "uxthemep.h"
-#include <winnls.h>
+
 /***********************************************************************
  * Defines and global variables
  */

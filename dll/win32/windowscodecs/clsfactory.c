@@ -18,9 +18,6 @@
 
 #include "wincodecs_private.h"
 
-#include <initguid.h>
-#include <wincodecsdk.h>
-
 extern HRESULT WINAPI WIC_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 
 typedef struct {

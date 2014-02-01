@@ -8,6 +8,8 @@
 
 #include "sermouse.h"
 
+#include <debug.h>
+
 NTSTATUS NTAPI
 SermouseInternalDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,

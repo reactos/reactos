@@ -32,6 +32,7 @@ Size = 3,3 Mo
 Name = Eksiksiz Komutan
 Licence = Kısıtlı
 Description = Eksiksiz Komutan, yan yana iki bölmenin bulunduğu bir kütük yöneticisidir.
+Size = 3,3 MB
 
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.

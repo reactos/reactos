@@ -1,4 +1,5 @@
 #include "precomp.h"
+
 #include <debug.h>
 
 DNS_STATUS WINAPI

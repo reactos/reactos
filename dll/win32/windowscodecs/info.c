@@ -19,10 +19,6 @@
 
 #include "wincodecs_private.h"
 
-#include <winreg.h>
-#include <wincodecsdk.h>
-
-#include <wine/unicode.h>
 #include <wine/list.h>
 
 static const WCHAR mimetypes_valuename[] = {'M','i','m','e','T','y','p','e','s',0};

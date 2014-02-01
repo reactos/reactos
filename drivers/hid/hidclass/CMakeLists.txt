@@ -6,6 +6,7 @@ list(APPEND SOURCE
     hidclass.c
     hidclass.rc
     pdo.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/hidclass.def)
 
 add_library(hidclass SHARED ${SOURCE})

@@ -82,4 +82,4 @@ class CNetFolder :
         END_COM_MAP()
 };
 
-#endif // _SHFLDR_NETPLACES_H_
+#endif /* _SHFLDR_NETPLACES_H_ */

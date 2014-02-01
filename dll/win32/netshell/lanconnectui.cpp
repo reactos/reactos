@@ -1,5 +1,8 @@
 #include "precomp.h"
 
+#include <netcfgx.h>
+#include <netcfgn.h>
+
 /// CLASSID
 /// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
 /// open network properties and wlan properties

@@ -1802,7 +1802,7 @@ FsRtlAcquireFileForModWriteEx(IN PFILE_OBJECT FileObject,
         Exclusive = TRUE;
         ResourceToAcquire = FcbHeader->Resource;
     }
-    else if (!FcbHeader->PagingIoResource || 
+    else if (!FcbHeader->PagingIoResource ||
              (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH))
     {
         /* Acquire main resource shared if flag is specified or
@@ -1942,9 +1942,35 @@ FsRtlReleaseFileForModWrite(IN PFILE_OBJECT FileObject,
  *--*/
 NTSTATUS
 NTAPI
-FsRtlRegisterFileSystemFilterCallbacks(IN PDRIVER_OBJECT FilterDriverObject,
-                                       IN PFS_FILTER_CALLBACKS Callbacks)
+FsRtlRegisterFileSystemFilterCallbacks(
+    PDRIVER_OBJECT FilterDriverObject,
+    PFS_FILTER_CALLBACKS Callbacks)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PFS_FILTER_CALLBACKS NewCallbacks;
+    PEXTENDED_DRIVER_EXTENSION DriverExtension;
+    PAGED_CODE();
+
+    /* Verify parameters */
+    if ((FilterDriverObject == NULL) || (Callbacks == NULL))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Allocate a buffer for a copy of the callbacks */
+    NewCallbacks = ExAllocatePoolWithTag(NonPagedPool,
+                                         Callbacks->SizeOfFsFilterCallbacks,
+                                         'gmSF');
+    if (NewCallbacks == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Copy the callbacks */
+    RtlCopyMemory(NewCallbacks, Callbacks, Callbacks->SizeOfFsFilterCallbacks);
+
+    /* Set the callbacks in the driver extension */
+    DriverExtension = (PEXTENDED_DRIVER_EXTENSION)FilterDriverObject->DriverExtension;
+    DriverExtension->FsFilterCallbacks = NewCallbacks;
+
+    return STATUS_SUCCESS;
 }

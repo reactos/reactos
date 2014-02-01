@@ -30,3 +30,4 @@ URLSite = http://dwn.alter.org.ua/ru/
 Name = DVD Şimdi Yaz
 Licence = Ücretsiz
 Description =  Ücretsiz bir doğrudan CD/DVD kaydedicisi. Kurulur kurulmaz CD/DVD RW'leri çıkartılabilir disk olarak kullanabilirsiniz. Bununla birlikte CD/DVD RW'leri UDF kütük dizgesiyle kaydedebilirsiniz. Ayrıca, Mikroyazılım DVD−ROM'ları, Ahead InCD ile kaydedilen RW diskleri gibi diğer yazılımlarla oluşturulan UDF diskleri okutabilirsiniz. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Size = 1,2 MB

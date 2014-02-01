@@ -55,6 +55,8 @@
 
 #include <rosdhcp.h>
 
+#include <winsvc.h>
+
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)
 #define	bslashchar(c) ((c) == 0x5c)

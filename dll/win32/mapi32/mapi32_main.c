@@ -20,8 +20,6 @@
 
 #include "precomp.h"
 
-#include <mapix.h>
-
 DECLSPEC_HIDDEN LONG MAPI_ObjectCount = 0;
 DECLSPEC_HIDDEN HINSTANCE hInstMAPI32;
 

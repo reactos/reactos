@@ -220,6 +220,7 @@ static ULONG WINAPI d3d_device_inner_Release(IUnknown *iface)
 {
     struct d3d_device *This = impl_from_IUnknown(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
+    IUnknown *rt_iface;
 
     TRACE("%p decreasing refcount to %u.\n", This, ref);
 
@@ -241,10 +242,7 @@ static ULONG WINAPI d3d_device_inner_Release(IUnknown *iface)
         if (This->vertex_buffer)
             wined3d_buffer_decref(This->vertex_buffer);
 
-        /* Set the device up to render to the front buffer since the back
-         * buffer will vanish soon. */
-        wined3d_device_set_render_target(This->wined3d_device, 0,
-                This->ddraw->wined3d_frontbuffer, TRUE);
+        wined3d_device_set_render_target(This->wined3d_device, 0, NULL, FALSE);
 
         /* Release the wined3d device. This won't destroy it. */
         if (!wined3d_device_decref(This->wined3d_device))
@@ -307,11 +305,12 @@ static ULONG WINAPI d3d_device_inner_Release(IUnknown *iface)
             IDirect3DDevice3_DeleteViewport(&This->IDirect3DDevice3_iface, &vp->IDirect3DViewport3_iface);
         }
 
-        TRACE("Releasing target %p.\n", This->target);
-        /* Release the render target. */
+        TRACE("Releasing render target %p.\n", This->rt_iface);
+        rt_iface = This->rt_iface;
+        This->rt_iface = NULL;
         if (This->version != 1)
-            IDirectDrawSurface7_Release(&This->target->IDirectDrawSurface7_iface);
-        TRACE("Target release done\n");
+            IUnknown_Release(rt_iface);
+        TRACE("Render target release done.\n");
 
         This->ddraw->d3ddevice = NULL;
 
@@ -389,37 +388,20 @@ static HRESULT WINAPI d3d_device1_Initialize(IDirect3DDevice *iface,
     return D3D_OK;
 }
 
-/*****************************************************************************
- * IDirect3DDevice7::GetCaps
- *
- * Retrieves the device's capabilities
- *
- * This implementation is used for Version 7 only, the older versions have
- * their own implementation.
- *
- * Parameters:
- *  Desc: Pointer to a D3DDEVICEDESC7 structure to fill
- *
- * Returns:
- *  D3D_OK on success
- *  D3DERR_* if a problem occurs. See WineD3D
- *
- *****************************************************************************/
-static HRESULT d3d_device7_GetCaps(IDirect3DDevice7 *iface, D3DDEVICEDESC7 *Desc)
+static HRESULT d3d_device7_GetCaps(IDirect3DDevice7 *iface, D3DDEVICEDESC7 *device_desc)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
-    D3DDEVICEDESC OldDesc;
 
-    TRACE("iface %p, device_desc %p.\n", iface, Desc);
+    TRACE("iface %p, device_desc %p.\n", iface, device_desc);
 
-    if (!Desc)
+    if (!device_desc)
     {
-        WARN("Desc is NULL, returning DDERR_INVALIDPARAMS.\n");
+        WARN("device_desc is NULL, returning DDERR_INVALIDPARAMS.\n");
         return DDERR_INVALIDPARAMS;
     }
 
     /* Call the same function used by IDirect3D, this saves code */
-    return IDirect3DImpl_GetCaps(device->ddraw->wined3d, &OldDesc, Desc);
+    return ddraw_get_d3dcaps(device->ddraw, device_desc);
 }
 
 static HRESULT WINAPI d3d_device7_GetCaps_FPUSetup(IDirect3DDevice7 *iface, D3DDEVICEDESC7 *desc)
@@ -481,8 +463,8 @@ static HRESULT WINAPI d3d_device3_GetCaps(IDirect3DDevice3 *iface,
         D3DDEVICEDESC *HWDesc, D3DDEVICEDESC *HelDesc)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
-    D3DDEVICEDESC oldDesc;
-    D3DDEVICEDESC7 newDesc;
+    D3DDEVICEDESC7 desc7;
+    D3DDEVICEDESC desc1;
     HRESULT hr;
 
     TRACE("iface %p, hw_desc %p, hel_desc %p.\n", iface, HWDesc, HelDesc);
@@ -508,12 +490,12 @@ static HRESULT WINAPI d3d_device3_GetCaps(IDirect3DDevice3 *iface,
         return DDERR_INVALIDPARAMS;
     }
 
-    hr = IDirect3DImpl_GetCaps(device->ddraw->wined3d, &oldDesc, &newDesc);
-    if (hr != D3D_OK)
+    if (FAILED(hr = ddraw_get_d3dcaps(device->ddraw, &desc7)))
         return hr;
 
-    DD_STRUCT_COPY_BYSIZE(HWDesc, &oldDesc);
-    DD_STRUCT_COPY_BYSIZE(HelDesc, &oldDesc);
+    ddraw_d3dcaps1_from_7(&desc1, &desc7);
+    DD_STRUCT_COPY_BYSIZE(HWDesc, &desc1);
+    DD_STRUCT_COPY_BYSIZE(HelDesc, &desc1);
     return D3D_OK;
 }
 
@@ -1069,7 +1051,9 @@ static HRESULT d3d_device7_EnumTextureFormats(IDirect3DDevice7 *iface,
         WINED3DFMT_P8_UINT,
         /* FOURCC codes */
         WINED3DFMT_DXT1,
+        WINED3DFMT_DXT2,
         WINED3DFMT_DXT3,
+        WINED3DFMT_DXT4,
         WINED3DFMT_DXT5,
     };
 
@@ -1808,62 +1792,88 @@ static HRESULT WINAPI d3d_device2_GetCurrentViewport(IDirect3DDevice2 *iface, ID
             (IDirect3DViewport3 **)viewport);
 }
 
-/*****************************************************************************
- * IDirect3DDevice7::SetRenderTarget
- *
- * Sets the render target for the Direct3DDevice.
- * For the thunks note that IDirectDrawSurface7 == IDirectDrawSurface4 and
- * IDirectDrawSurface3 == IDirectDrawSurface
- *
- * Version 2, 3 and 7
- *
- * Params:
- *  NewTarget: Pointer to an IDirectDrawSurface7 interface to set as the new
- *             render target
- *  Flags: Some flags
- *
- * Returns:
- *  D3D_OK on success, for details see IWineD3DDevice::SetRenderTarget
- *
- *****************************************************************************/
-static HRESULT d3d_device_set_render_target(struct d3d_device *device, struct ddraw_surface *target)
+static BOOL validate_surface_palette(struct ddraw_surface *surface)
+{
+    return !(surface->surface_desc.u4.ddpfPixelFormat.dwFlags
+            & (DDPF_PALETTEINDEXED1 | DDPF_PALETTEINDEXED2
+            | DDPF_PALETTEINDEXED4 | DDPF_PALETTEINDEXED8
+            | DDPF_PALETTEINDEXEDTO8))
+            || wined3d_surface_get_palette(surface->wined3d_surface);
+}
+
+static HRESULT d3d_device_set_render_target(struct d3d_device *device,
+        struct ddraw_surface *target, IUnknown *rt_iface)
 {
     HRESULT hr;
 
-    wined3d_mutex_lock();
-
-    if (device->target == target)
+    if (device->rt_iface == rt_iface)
     {
         TRACE("No-op SetRenderTarget operation, not doing anything\n");
-        wined3d_mutex_unlock();
         return D3D_OK;
     }
-    device->target = target;
-    hr = wined3d_device_set_render_target(device->wined3d_device, 0,
-            target ? target->wined3d_surface : NULL, FALSE);
-    if(hr != D3D_OK)
+    if (!target)
     {
-        wined3d_mutex_unlock();
-        return hr;
+        WARN("Trying to set render target to NULL.\n");
+        return DDERR_INVALIDPARAMS;
     }
-    d3d_device_update_depth_stencil(device);
 
-    wined3d_mutex_unlock();
+    if (FAILED(hr = wined3d_device_set_render_target(device->wined3d_device,
+            0, target->wined3d_surface, FALSE)))
+        return hr;
+
+    IUnknown_AddRef(rt_iface);
+    IUnknown_Release(device->rt_iface);
+    device->rt_iface = rt_iface;
+    d3d_device_update_depth_stencil(device);
 
     return D3D_OK;
 }
 
 static HRESULT d3d_device7_SetRenderTarget(IDirect3DDevice7 *iface,
-        IDirectDrawSurface7 *NewTarget, DWORD flags)
+        IDirectDrawSurface7 *target, DWORD flags)
 {
+    struct ddraw_surface *target_impl = unsafe_impl_from_IDirectDrawSurface7(target);
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
-    struct ddraw_surface *target = unsafe_impl_from_IDirectDrawSurface7(NewTarget);
+    HRESULT hr;
 
-    TRACE("iface %p, target %p, flags %#x.\n", iface, NewTarget, flags);
+    TRACE("iface %p, target %p, flags %#x.\n", iface, target, flags);
 
-    IDirectDrawSurface7_AddRef(NewTarget);
-    IDirectDrawSurface7_Release(&device->target->IDirectDrawSurface7_iface);
-    return d3d_device_set_render_target(device, target);
+    wined3d_mutex_lock();
+
+    if (!validate_surface_palette(target_impl))
+    {
+        WARN("Surface %p has an indexed pixel format, but no palette.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_3DDEVICE))
+    {
+        WARN("Surface %p is not a render target.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Surface %p is not in video memory.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDPARAMS;
+    }
+
+    if (target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+    {
+        WARN("Surface %p is a depth buffer.\n", target_impl);
+        IDirectDrawSurface7_AddRef(target);
+        IUnknown_Release(device->rt_iface);
+        device->rt_iface = (IUnknown *)target;
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDPIXELFORMAT;
+    }
+
+    hr = d3d_device_set_render_target(device, target_impl, (IUnknown *)target);
+    wined3d_mutex_unlock();
+    return hr;
 }
 
 static HRESULT WINAPI d3d_device7_SetRenderTarget_FPUSetup(IDirect3DDevice7 *iface,
@@ -1886,29 +1896,102 @@ static HRESULT WINAPI d3d_device7_SetRenderTarget_FPUPreserve(IDirect3DDevice7 *
 }
 
 static HRESULT WINAPI d3d_device3_SetRenderTarget(IDirect3DDevice3 *iface,
-        IDirectDrawSurface4 *NewRenderTarget, DWORD flags)
+        IDirectDrawSurface4 *target, DWORD flags)
 {
+    struct ddraw_surface *target_impl = unsafe_impl_from_IDirectDrawSurface4(target);
     struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
-    struct ddraw_surface *target = unsafe_impl_from_IDirectDrawSurface4(NewRenderTarget);
+    HRESULT hr;
 
-    TRACE("iface %p, target %p, flags %#x.\n", iface, NewRenderTarget, flags);
+    TRACE("iface %p, target %p, flags %#x.\n", iface, target, flags);
 
-    IDirectDrawSurface4_AddRef(NewRenderTarget);
-    IDirectDrawSurface4_Release(&device->target->IDirectDrawSurface4_iface);
-    return d3d_device_set_render_target(device, target);
+    wined3d_mutex_lock();
+
+    if (!validate_surface_palette(target_impl))
+    {
+        WARN("Surface %p has an indexed pixel format, but no palette.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_3DDEVICE))
+    {
+        WARN("Surface %p is not a render target.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+    {
+        WARN("Surface %p is a depth buffer.\n", target_impl);
+        IDirectDrawSurface4_AddRef(target);
+        IUnknown_Release(device->rt_iface);
+        device->rt_iface = (IUnknown *)target;
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDPIXELFORMAT;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Surface %p is not in video memory.\n", target_impl);
+        IDirectDrawSurface4_AddRef(target);
+        IUnknown_Release(device->rt_iface);
+        device->rt_iface = (IUnknown *)target;
+        wined3d_mutex_unlock();
+        return D3D_OK;
+    }
+
+    hr = d3d_device_set_render_target(device, target_impl, (IUnknown *)target);
+    wined3d_mutex_unlock();
+    return hr;
 }
 
 static HRESULT WINAPI d3d_device2_SetRenderTarget(IDirect3DDevice2 *iface,
-        IDirectDrawSurface *NewRenderTarget, DWORD flags)
+        IDirectDrawSurface *target, DWORD flags)
 {
+    struct ddraw_surface *target_impl = unsafe_impl_from_IDirectDrawSurface(target);
     struct d3d_device *device = impl_from_IDirect3DDevice2(iface);
-    struct ddraw_surface *target = unsafe_impl_from_IDirectDrawSurface(NewRenderTarget);
+    HRESULT hr;
 
-    TRACE("iface %p, target %p, flags %#x.\n", iface, NewRenderTarget, flags);
+    TRACE("iface %p, target %p, flags %#x.\n", iface, target, flags);
 
-    IDirectDrawSurface_AddRef(NewRenderTarget);
-    IDirectDrawSurface_Release(&device->target->IDirectDrawSurface_iface);
-    return d3d_device_set_render_target(device, target);
+    wined3d_mutex_lock();
+
+    if (!validate_surface_palette(target_impl))
+    {
+        WARN("Surface %p has an indexed pixel format, but no palette.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_3DDEVICE))
+    {
+        WARN("Surface %p is not a render target.\n", target_impl);
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+    {
+        WARN("Surface %p is a depth buffer.\n", target_impl);
+        IUnknown_Release(device->rt_iface);
+        device->rt_iface = (IUnknown *)target;
+        wined3d_mutex_unlock();
+        return DDERR_INVALIDPIXELFORMAT;
+    }
+
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Surface %p is not in video memory.\n", target_impl);
+        IDirectDrawSurface_AddRef(target);
+        IUnknown_Release(device->rt_iface);
+        device->rt_iface = (IUnknown *)target;
+        wined3d_mutex_unlock();
+        return D3D_OK;
+    }
+
+    hr = d3d_device_set_render_target(device, target_impl, (IUnknown *)target);
+    wined3d_mutex_unlock();
+    return hr;
 }
 
 /*****************************************************************************
@@ -1931,6 +2014,7 @@ static HRESULT WINAPI d3d_device2_SetRenderTarget(IDirect3DDevice2 *iface,
 static HRESULT WINAPI d3d_device7_GetRenderTarget(IDirect3DDevice7 *iface, IDirectDrawSurface7 **RenderTarget)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    HRESULT hr;
 
     TRACE("iface %p, target %p.\n", iface, RenderTarget);
 
@@ -1938,11 +2022,10 @@ static HRESULT WINAPI d3d_device7_GetRenderTarget(IDirect3DDevice7 *iface, IDire
         return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
-    *RenderTarget = &device->target->IDirectDrawSurface7_iface;
-    IDirectDrawSurface7_AddRef(*RenderTarget);
+    hr = IUnknown_QueryInterface(device->rt_iface, &IID_IDirectDrawSurface7, (void **)RenderTarget);
     wined3d_mutex_unlock();
 
-    return D3D_OK;
+    return hr;
 }
 
 static HRESULT WINAPI d3d_device3_GetRenderTarget(IDirect3DDevice3 *iface, IDirectDrawSurface4 **RenderTarget)
@@ -2367,9 +2450,9 @@ static HRESULT WINAPI d3d_device3_GetRenderState(IDirect3DDevice3 *iface,
             {
                 /* The parent of the texture is the IDirectDrawSurface7
                  * interface of the ddraw surface. */
-                struct ddraw_surface *parent = wined3d_texture_get_parent(tex);
+                struct ddraw_texture *parent = wined3d_texture_get_parent(tex);
                 if (parent)
-                    *value = parent->Handle;
+                    *value = parent->root->Handle;
             }
             wined3d_mutex_unlock();
 
@@ -4499,7 +4582,7 @@ static HRESULT d3d_device7_GetTexture(IDirect3DDevice7 *iface,
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
     struct wined3d_texture *wined3d_texture;
-    struct ddraw_surface *surface;
+    struct ddraw_texture *ddraw_texture;
 
     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
 
@@ -4514,8 +4597,8 @@ static HRESULT d3d_device7_GetTexture(IDirect3DDevice7 *iface,
         return D3D_OK;
     }
 
-    surface = wined3d_texture_get_parent(wined3d_texture);
-    *texture = &surface->IDirectDrawSurface7_iface;
+    ddraw_texture = wined3d_texture_get_parent(wined3d_texture);
+    *texture = &ddraw_texture->root->IDirectDrawSurface7_iface;
     IDirectDrawSurface7_AddRef(*texture);
     wined3d_mutex_unlock();
 
@@ -4581,14 +4664,16 @@ static HRESULT d3d_device7_SetTexture(IDirect3DDevice7 *iface,
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
     struct ddraw_surface *surf = unsafe_impl_from_IDirectDrawSurface7(texture);
+    struct wined3d_texture *wined3d_texture = NULL;
     HRESULT hr;
 
     TRACE("iface %p, stage %u, texture %p.\n", iface, stage, texture);
 
-    /* Texture may be NULL here */
+    if (surf && (surf->surface_desc.ddsCaps.dwCaps & DDSCAPS_TEXTURE))
+        wined3d_texture = surf->wined3d_texture;
+
     wined3d_mutex_lock();
-    hr = wined3d_device_set_texture(device->wined3d_device,
-            stage, surf ? surf->wined3d_texture : NULL);
+    hr = wined3d_device_set_texture(device->wined3d_device, stage, wined3d_texture);
     wined3d_mutex_unlock();
 
     return hr;
@@ -6667,10 +6752,16 @@ struct d3d_device *unsafe_impl_from_IDirect3DDevice(IDirect3DDevice *iface)
 enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device *device)
 {
     IDirectDrawSurface7 *depthStencil = NULL;
+    IDirectDrawSurface7 *render_target;
     static DDSCAPS2 depthcaps = { DDSCAPS_ZBUFFER, 0, 0, {0} };
     struct ddraw_surface *dsi;
 
-    IDirectDrawSurface7_GetAttachedSurface(&device->target->IDirectDrawSurface7_iface, &depthcaps, &depthStencil);
+    if (device->rt_iface && SUCCEEDED(IUnknown_QueryInterface(device->rt_iface,
+            &IID_IDirectDrawSurface7, (void **)&render_target)))
+    {
+        IDirectDrawSurface7_GetAttachedSurface(render_target, &depthcaps, &depthStencil);
+        IDirectDrawSurface7_Release(render_target);
+    }
     if (!depthStencil)
     {
         TRACE("Setting wined3d depth stencil to NULL\n");
@@ -6687,7 +6778,7 @@ enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device
 }
 
 static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
-        struct ddraw_surface *target, UINT version, IUnknown *outer_unknown)
+        struct ddraw_surface *target, IUnknown *rt_iface, UINT version, IUnknown *outer_unknown)
 {
     static const D3DMATRIX ident =
     {
@@ -6716,7 +6807,6 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
         device->outer_unknown = &device->IUnknown_inner;
 
     device->ddraw = ddraw;
-    device->target = target;
     list_init(&device->viewport_list);
 
     if (!ddraw_handle_table_init(&device->handle_table, 64))
@@ -6742,17 +6832,9 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
         return hr;
     }
 
-    /* FIXME: This is broken. The target AddRef() makes some sense, because
-     * we store a pointer during initialization, but then that's also where
-     * the AddRef() should be. We don't store ddraw->d3d_target anywhere. */
-    /* AddRef the render target. Also AddRef the render target from ddraw,
-     * because if it is released before the app releases the D3D device, the
-     * D3D capabilities of wined3d will be uninitialized, which has bad effects.
-     *
-     * In most cases, those surfaces are the same anyway, but this will simply
-     * add another ref which is released when the device is destroyed. */
+    device->rt_iface = rt_iface;
     if (version != 1)
-        IDirectDrawSurface7_AddRef(&target->IDirectDrawSurface7_iface);
+        IUnknown_AddRef(device->rt_iface);
 
     ddraw->d3ddevice = device;
 
@@ -6766,7 +6848,7 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
     return D3D_OK;
 }
 
-HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target,
+HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target, IUnknown *rt_iface,
         UINT version, struct d3d_device **device, IUnknown *outer_unknown)
 {
     struct d3d_device *object;
@@ -6774,6 +6856,25 @@ HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target,
 
     TRACE("ddraw %p, target %p, version %u, device %p, outer_unknown %p.\n",
             ddraw, target, version, device, outer_unknown);
+
+    if (!(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
+            || (target->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER))
+    {
+        WARN("Surface %p is not a render target.\n", target);
+        return DDERR_INVALIDCAPS;
+    }
+
+    if (!validate_surface_palette(target))
+    {
+        WARN("Surface %p has an indexed pixel format, but no palette.\n", target);
+        return DDERR_NOPALETTEATTACHED;
+    }
+
+    if (!(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Surface %p is not in video memory.\n", target);
+        return D3DERR_SURFACENOTINVIDMEM;
+    }
 
     if (ddraw->flags & DDRAW_NO3D)
     {
@@ -6796,8 +6897,7 @@ HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target,
         return DDERR_OUTOFMEMORY;
     }
 
-    hr = d3d_device_init(object, ddraw, target, version, outer_unknown);
-    if (FAILED(hr))
+    if (FAILED(hr = d3d_device_init(object, ddraw, target, rt_iface, version, outer_unknown)))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);

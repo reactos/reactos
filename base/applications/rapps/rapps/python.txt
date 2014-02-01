@@ -37,6 +37,7 @@ Size = 19,6 Mo
 [Section.041f]
 Name = Piton 3
 Description = İlgi çekici, güçlü ve devingen bir çizeylemleme dili.
+Size = 19,6 MB
 
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.

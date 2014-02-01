@@ -20,6 +20,8 @@
 
 #include "localspl_private.h"
 
+#include "resource.h"
+
 /*****************************************************/
 
 static CRITICAL_SECTION port_handles_cs;

@@ -33,6 +33,9 @@
  *
  * In the future more layouts and transformations may be added.
  */
+
+#pragma once
+
 struct _jsstr_t {
     unsigned length_flags;
     unsigned ref;

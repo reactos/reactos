@@ -33,15 +33,8 @@
  * will fill a supplied 16-byte array with the digest.
  */
 
-#include <advapi32.h>
-
-typedef struct
-{
-    unsigned int i[2];
-    unsigned int buf[4];
-    unsigned char in[64];
-    unsigned char digest[16];
-} MD5_CTX;
+#include "md5.h"
+#include "util.h"
 
 static void MD5Transform( unsigned int buf[4], const unsigned int in[16] );
 
@@ -49,7 +42,7 @@ static void MD5Transform( unsigned int buf[4], const unsigned int in[16] );
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-VOID WINAPI MD5Init( MD5_CTX *ctx )
+VOID NTAPI MD5Init( MD5_CTX *ctx )
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -63,7 +56,7 @@ VOID WINAPI MD5Init( MD5_CTX *ctx )
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-VOID WINAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len )
+VOID NTAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len )
 {
     register unsigned int t;
 
@@ -114,10 +107,10 @@ VOID WINAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len 
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-VOID WINAPI MD5Final( MD5_CTX *ctx )
+VOID NTAPI MD5Final( MD5_CTX *ctx )
 {
     unsigned int count;
     unsigned char *p;
@@ -260,3 +253,4 @@ static void MD5Transform( unsigned int buf[4], const unsigned int in[16] )
     buf[2] += c;
     buf[3] += d;
 }
+

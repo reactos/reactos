@@ -52,11 +52,10 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
 }
 
 /* At process attach */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
 {
-    TRACE("fdwReason=%d\n", fdwReason);
-    if (fdwReason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(hInstDLL);
+    if (reason == DLL_PROCESS_ATTACH)
+        DisableThreadLibraryCalls(inst);
 
     return TRUE;
 }

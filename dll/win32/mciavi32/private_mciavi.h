@@ -21,18 +21,18 @@
 #ifndef __WINE_PRIVATE_MCIAVI_H
 #define __WINE_PRIVATE_MCIAVI_H
 
+#include <stdarg.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
 #include <windef.h>
 #include <wingdi.h>
 #include <mmddk.h>
 #include <digitalv.h>
 #include <vfw.h>
 #include <wownt32.h>
-#include <mciavi.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(mciavi);

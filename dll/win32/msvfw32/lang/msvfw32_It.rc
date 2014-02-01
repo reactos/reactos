@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msvideo_private.h"
-
-/*UTF-8*/
+/* UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL

@@ -768,15 +768,19 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
+        TRACE("DLL_PROCESS_ATTACH\n");
         instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
         /* Increase refcount on dsound by 1 */
         GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)hInstDLL, &hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
-        if (lpvReserved) break;
+        TRACE("DLL_PROCESS_DETACH\n");
         DeleteCriticalSection(&DSOUND_renderers_lock);
         DeleteCriticalSection(&DSOUND_capturers_lock);
+        break;
+    default:
+        TRACE("UNKNOWN REASON\n");
         break;
     }
     return TRUE;

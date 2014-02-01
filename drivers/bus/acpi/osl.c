@@ -3,11 +3,11 @@
 * ACPI Component Architecture Operating System Layer (OSL) for ReactOS         *
 *                                                                              *
 *******************************************************************************/
-#include <ntddk.h>
 
-#include <acpi.h>
+#include "precomp.h"
 
 #include <pseh/pseh2.h>
+
 #define NDEBUG
 #include <debug.h>
 

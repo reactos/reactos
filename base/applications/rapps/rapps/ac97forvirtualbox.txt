@@ -61,6 +61,7 @@ Description = Pазархивируйте содержимое в папку "Re
 Name = VirtualBox için AC97 Sürücüsü
 Licence = Bilinmiyor
 Description = Bunu ReactOS'un dizinine çıkartıp bilgisayarı iki kez yeniden başlatınız.
+Size = 185,5 KB
 
 [Section.0422]
 Name = Драйвер AC97 для VirtualBox

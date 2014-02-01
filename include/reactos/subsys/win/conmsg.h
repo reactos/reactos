@@ -191,7 +191,9 @@ typedef struct _CONSRV_API_CONNECTINFO
     CONSOLE_START_INFO ConsoleStartInfo;
 } CONSRV_API_CONNECTINFO, *PCONSRV_API_CONNECTINFO;
 
+#if defined(_M_IX86)
 C_ASSERT(sizeof(CONSRV_API_CONNECTINFO) == 0x638);
+#endif
 
 typedef struct
 {

@@ -8,7 +8,7 @@ Description = SciTE is a SCIntilla based Text Editor. Originally built to demons
 Size = 722 kB
 Category = 7
 URLSite = http://www.scintilla.org/
-URLDownload = http://heanet.dl.sourceforge.net/project/scintilla/SciTE/3.3.7/Sc337.exe
+URLDownload = http://download.sourceforge.net/project/scintilla/SciTE/3.3.7/Sc337.exe
 CDPath = none
 
 [Section.0407]
@@ -38,6 +38,7 @@ Size = 722 ko
 [Section.041f]
 Licence = Ücretsiz
 Description = SciTE, Scintilla tabanlı bir metin düzenleyicisidir. Başlangıçta, Scintilla'yı göstermek için yapılmıştır ancak umûmiyetle çizeylemleri yapmak ve çalıştırmak yetenekleriyle birlikte kullanışlı bir düzenleyici olarak geliştirilmiştir.
+Size = 722 KB
 
 [Section.0422]
 Description = Текстовий редактор на основі SCIntilla. Був зібраний як презентація Scintilla, але виріс до редактора загального користування з засобами збирання та запуску програм.

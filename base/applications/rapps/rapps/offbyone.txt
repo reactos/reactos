@@ -42,6 +42,7 @@ Size = 1010,89 ko
 Name = Off By One Tarayıcısı
 Licence = Ücretsiz
 Description = Off By One Tarayıcısı, HTML 3.2 desteğiyle çok küçük ve hızlı bir tarayıcıdır.
+Size = 1010,89 KB
 
 [Section.0422]
 Description = Дуже малий та швидкий веб-браузер з повною підтримкою HTML 3.2.

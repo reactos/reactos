@@ -428,6 +428,15 @@ MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer;
     ULONG_PTR PtrOffset;
 
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_HANDLE UserHandle = NULL;
+    PRPC_SID DomainSid = NULL;
+    RPC_UNICODE_STRING Names[1];
+    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    NTSTATUS Status;
+
     TRACE("()\n");
 
     RequestBuffer = (PMSV1_0_CHANGEPASSWORD_REQUEST)ProtocolSubmitBuffer;
@@ -445,8 +454,113 @@ MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     TRACE("Old Password: %S\n", RequestBuffer->OldPassword.Buffer);
     TRACE("New Password: %S\n", RequestBuffer->NewPassword.Buffer);
 
+    /* Connect to the SAM server */
+    Status = SamIConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                         TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamIConnect() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
-    return STATUS_SUCCESS;
+    /* Get the domain SID */
+    Status = SamrLookupDomainInSamServer(ServerHandle,
+                                         (PRPC_UNICODE_STRING)&RequestBuffer->DomainName,
+                                         &DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrLookupDomainInSamServer failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    /* Open the domain */
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            DomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Names[0].Length = RequestBuffer->AccountName.Length;
+    Names[0].MaximumLength = RequestBuffer->AccountName.MaximumLength;
+    Names[0].Buffer = RequestBuffer->AccountName.Buffer;
+
+    /* Try to get the RID for the user name */
+    Status = SamrLookupNamesInDomain(DomainHandle,
+                                     1,
+                                     Names,
+                                     &RelativeIds,
+                                     &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
+        Status = STATUS_NO_SUCH_USER;
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use.Element[0] != SidTypeUser)
+    {
+        TRACE("Account is not a user account!\n");
+        Status = STATUS_NO_SUCH_USER;
+        goto done;
+    }
+
+    /* Open the user object */
+    Status = SamrOpenUser(DomainHandle,
+                          USER_CHANGE_PASSWORD,
+                          RelativeIds.Element[0],
+                          &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenUser failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+
+
+#if 0
+    /* Change the password */
+    Status = SamrChangePasswordUser(UserHandle,
+                                    IN unsigned char LmPresent,
+                                    IN PENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm,
+                                    IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm,
+                                    IN unsigned char NtPresent,
+                                    IN PENCRYPTED_NT_OWF_PASSWORD OldNtEncryptedWithNewNt,
+                                    IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithOldNt,
+                                    IN unsigned char NtCrossEncryptionPresent,
+                                    IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithNewLm,
+                                    IN unsigned char LmCrossEncryptionPresent,
+                                    IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithNewNt)
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrChangePasswordUser failed (Status %08lx)\n", Status);
+        goto done;
+    }
+#endif
+
+done:
+    if (UserHandle != NULL)
+        SamrCloseHandle(&UserHandle);
+
+    SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
+    SamIFree_SAMPR_ULONG_ARRAY(&Use);
+
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (DomainSid != NULL)
+        SamIFreeVoid(DomainSid);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
 }
 
 

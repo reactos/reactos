@@ -8,7 +8,7 @@ Description = Sam and Max, Day of the Tentacle, etc on ReactOS.
 Size = 6.28 MB
 Category = 4
 URLSite = http://scummvm.org/
-URLDownload = http://heanet.dl.sourceforge.net/project/scummvm/scummvm/1.6.0/scummvm-1.6.0-win32.exe
+URLDownload = http://download.sourceforge.net/project/scummvm/scummvm/1.6.0/scummvm-1.6.0-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -36,6 +36,7 @@ Size = 6,28 Mo
 
 [Section.041f]
 Description = ReactOS üzerinde Sam ve Max, Dokunaç Günü vb.
+Size = 6,28 MB
 
 [Section.0422]
 Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.

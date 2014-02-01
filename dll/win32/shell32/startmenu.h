@@ -152,4 +152,4 @@ BEGIN_COM_MAP(CMenuBandSite)
 END_COM_MAP()
 };
 
-#endif // _STARTMENU_H_
+#endif /* _STARTMENU_H_ */

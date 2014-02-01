@@ -8,7 +8,7 @@ Description = ReMooD is a source port of Doom Legacy. It aims to provide the cla
 Size = 1.15 MB
 Category = 4
 URLSite = http://remood.sourceforge.net/
-URLDownload = http://garr.dl.sourceforge.net/project/remood/ReMooD/0.8a/remoodsetup-win32_08a.exe
+URLDownload = http://download.sourceforge.net/project/remood/ReMooD/0.8a/remoodsetup-win32_08a.exe
 CDPath = none
 
 [Section.0407]
@@ -36,6 +36,7 @@ Size = 1,15 Mo
 
 [Section.041f]
 Description = ReMooD, Doom Legacy'in kaynak düzgülerinin bir uyarlamasıdır. Bilindik Legacy deneyimiyle yeni husûsiyetler ve daha fazla kararlılık sağlamayı amaçlar.
+Size = 1,15 MB
 
 [Section.0422]
 Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy.

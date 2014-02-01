@@ -7,6 +7,7 @@
  * UPDATE HISTORY:
  * 20040708 Created
  */
+
 #include "afd.h"
 
 PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)

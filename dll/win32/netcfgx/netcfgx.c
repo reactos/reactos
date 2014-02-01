@@ -9,6 +9,12 @@
 
 #include "precomp.h"
 
+#include <olectl.h>
+
+#define NTOS_MODE_USER
+#include <ndk/iofuncs.h>
+#include <ndk/rtlfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

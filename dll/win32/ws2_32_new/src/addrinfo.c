@@ -7,7 +7,10 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
+
+#include <ws2tcpip.h>
 
 //#define NDEBUG
 #include <debug.h>

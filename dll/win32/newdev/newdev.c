@@ -22,6 +22,9 @@
 
 #include "newdev_private.h"
 
+#include <stdio.h>
+#include <winnls.h>
+
 /* Global variables */
 HINSTANCE hDllInstance;
 

@@ -82,4 +82,4 @@ class CDrivesFolder :
         END_COM_MAP()
 };
 
-#endif // _CDRIVESFOLDER_H_
+#endif /* _CDRIVESFOLDER_H_ */

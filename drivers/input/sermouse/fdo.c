@@ -8,6 +8,8 @@
 
 #include "sermouse.h"
 
+#include <debug.h>
+
 NTSTATUS NTAPI
 SermouseAddDevice(
 	IN PDRIVER_OBJECT DriverObject,

@@ -12,6 +12,8 @@
 
 #include <msafd.h>
 
+#include <winuser.h>
+
 #if DBG
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
 DWORD DebugTraceLevel = 0;

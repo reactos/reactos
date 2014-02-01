@@ -53,10 +53,86 @@ NpInternalWrite(IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 NTAPI
 NpQueryClientProcess(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
+                   IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    PNP_CLIENT_PROCESS ClientSession, QueryBuffer;
+    ULONG Length;
+    PAGED_CODE();
+
+    /* Get the current stack location */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Decode the file object and check the node type */
+    NodeTypeCode = NpDecodeFileObject(IoStackLocation->FileObject, 0, &Ccb, 0);
+    if (NodeTypeCode != NPFS_NTC_CCB)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    /* Get the length of the query buffer */
+    Length = IoStackLocation->Parameters.QueryFile.Length;
+    if (Length < 8)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    QueryBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+    /* Lock the Ccb */
+    ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+    /* Get the CCBs client session and check if it's set */
+    ClientSession = Ccb->ClientSession;
+    if (ClientSession != NULL)
+    {
+        /* Copy first 2 fields */
+        QueryBuffer->Unknown = ClientSession->Unknown;
+        QueryBuffer->Process = ClientSession->Process;
+    }
+    else
+    {
+        /* Copy the process from the CCB */
+        QueryBuffer->Unknown = NULL;
+        QueryBuffer->Process = Ccb->Process;
+    }
+
+    /* Does the caller provide a large enough buffer for the full data? */
+    if (Length >= sizeof(NP_CLIENT_PROCESS))
+    {
+        Irp->IoStatus.Information = sizeof(NP_CLIENT_PROCESS);
+
+        /* Do we have a ClientSession structure? */
+        if (ClientSession != NULL)
+        {
+            /* Copy length and the data */
+            QueryBuffer->DataLength = ClientSession->DataLength;
+            RtlCopyMemory(QueryBuffer->Buffer,
+                          ClientSession->Buffer,
+                          ClientSession->DataLength);
+
+            /* NULL terminate the buffer */
+            NT_ASSERT(QueryBuffer->DataLength <= 30);
+            QueryBuffer->Buffer[QueryBuffer->DataLength / sizeof(WCHAR)] = 0;
+        }
+        else
+        {
+            /* No data */
+            QueryBuffer->DataLength = 0;
+            QueryBuffer->Buffer[0] = 0;
+        }
+    }
+    else
+    {
+        Irp->IoStatus.Information = FIELD_OFFSET(NP_CLIENT_PROCESS, DataLength);
+    }
+
+    /* Unlock the Ccb */
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -64,8 +140,72 @@ NTAPI
 NpSetClientProcess(IN PDEVICE_OBJECT DeviceObject,
                    IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    ULONG Length;
+    PNP_CLIENT_PROCESS InputBuffer, ClientSession, OldClientSession;
+    PAGED_CODE();
+
+    /* Get the current stack location */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Only kernel calls are allowed! */
+    if (IoStackLocation->MinorFunction != IRP_MN_KERNEL_CALL)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Decode the file object and check the node type */
+    NodeTypeCode = NpDecodeFileObject(IoStackLocation->FileObject, 0, &Ccb, 0);
+    if (NodeTypeCode != NPFS_NTC_CCB)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    /* Get the length of the query buffer and check if it's valid */
+    Length = IoStackLocation->Parameters.QueryFile.Length;
+    if (Length != sizeof(NP_CLIENT_PROCESS))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the buffer and check if the data Length is valid */
+    InputBuffer = Irp->AssociatedIrp.SystemBuffer;
+    if (InputBuffer->DataLength > 30)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Allocate a new structure */
+    ClientSession = ExAllocatePoolWithQuotaTag(PagedPool,
+                                               sizeof(NP_CLIENT_PROCESS),
+                                               'iFpN');
+
+    /* Copy the full input buffer */
+    RtlCopyMemory(ClientSession, InputBuffer, sizeof(NP_CLIENT_PROCESS));
+
+    /* Lock the Ccb */
+    ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+    /* Get the old ClientSession and set the new */
+    OldClientSession = Ccb->ClientSession;
+    Ccb->ClientSession = ClientSession;
+
+    /* Copy the process to the CCB */
+    Ccb->Process = ClientSession->Process;
+
+    /* Unlock the Ccb */
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+
+    /* Check if there was already a ClientSession */
+    if (OldClientSession != NULL)
+    {
+        /* Free it */
+        ExFreePoolWithTag(OldClientSession, 'iFpN');
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -201,7 +341,7 @@ NpListen(IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 NTAPI
 NpPeek(IN PDEVICE_OBJECT DeviceObject,
-       IN PIRP Irp, 
+       IN PIRP Irp,
        IN PLIST_ENTRY List)
 {
     PIO_STACK_LOCATION IoStack;
@@ -490,7 +630,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
     }
 
     if (!NT_SUCCESS(Status)) goto Quickie;
- 
+
     if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
     ASSERT(ReadQueue->QueueState == Empty);
     Status = NpAddDataQueueEntry(NamedPipeEnd,
@@ -648,7 +788,7 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
             NpAcquireSharedVcb();
             Status = NpInternalTransceive(DeviceObject, Irp, &DeferredList);
             break;
- 
+
         case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
             Overflow = TRUE;
             // on purpose

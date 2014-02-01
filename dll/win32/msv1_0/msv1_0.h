@@ -173,6 +173,10 @@ SamIConnect(IN PSAMPR_SERVER_NAME ServerName,
 
 VOID
 NTAPI
+SamIFreeVoid(PVOID Ptr);
+
+VOID
+NTAPI
 SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr);
 
 VOID
@@ -183,6 +187,12 @@ SamIFree_SAMPR_USER_INFO_BUFFER(PSAMPR_USER_INFO_BUFFER Ptr,
 NTSTATUS
 NTAPI
 SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+NTAPI
+SamrLookupDomainInSamServer(IN SAMPR_HANDLE ServerHandle,
+                            IN PRPC_UNICODE_STRING Name,
+                            OUT PRPC_SID *DomainId);
 
 NTSTATUS
 NTAPI

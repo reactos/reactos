@@ -46,7 +46,7 @@ BEGIN
     PUSHBUTTON "コンピュータのロック", IDC_LOCK, 10, 135, 70, 14
     PUSHBUTTON "ログオフ", IDC_LOGOFF, 90, 135, 70, 14
     PUSHBUTTON "シャットダウン", IDC_SHUTDOWN, 170, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "タスク マネージャ", IDC_TASKMGR, 90, 154, 70, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 170, 154, 70, 14
 END
@@ -125,4 +125,7 @@ BEGIN
     IDS_COMPUTERLOCKED "Computer locked"
     IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
     IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
+    IDS_CHANGEPWDTITLE "Change Password"
+    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
+    IDS_PASSWORDCHANGED "Your password has been changed."
 END

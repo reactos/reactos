@@ -111,5 +111,3 @@ VOID
 UninitializeGPNotifications(VOID);
 
 #endif /* _INTERNAL_H */
-
-/* EOF */

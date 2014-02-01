@@ -42,7 +42,6 @@
 # include <unistd.h>
 #endif
 
-#include <ole2.h>
 #include <initguid.h>
 #include <wincodec.h>
 

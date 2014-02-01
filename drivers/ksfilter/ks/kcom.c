@@ -7,7 +7,7 @@
                     Andrew Greenwood
  */
 
-#include "priv.h"
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

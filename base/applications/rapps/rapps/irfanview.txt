@@ -44,6 +44,7 @@ Size = 1,8 Mo
 [Section.041f]
 Licence = Şahsî kullanımlar için ücretsiz.
 Description = Çizge, ses ve vidyo kütükleri görüntüleyicisi.
+Size = 1,8 MB
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)

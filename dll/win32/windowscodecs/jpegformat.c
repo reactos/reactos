@@ -22,9 +22,6 @@
 # include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <setjmp.h>
-
 #ifdef SONAME_LIBJPEG
 /* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
 #define XMD_H
@@ -39,8 +36,6 @@
 #undef UINT16
 #undef boolean
 #endif
-
-#include <wine/library.h>
 
 #ifdef SONAME_LIBJPEG
 WINE_DECLARE_DEBUG_CHANNEL(jpeg);

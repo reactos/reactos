@@ -11,6 +11,7 @@ spec2def(sti.dll sti.spec)
 list(APPEND SOURCE
     sti.c
     sti_main.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti_wia_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti.def)

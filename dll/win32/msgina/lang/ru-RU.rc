@@ -48,7 +48,7 @@ BEGIN
     PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 135, 86, 14
     PUSHBUTTON "Завершение сеанса", IDC_LOGOFF, 102, 135, 86, 14
     PUSHBUTTON "Выключение", IDC_SHUTDOWN, 198, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14, WS_DISABLED
+    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 102, 154, 86, 14
     PUSHBUTTON "Отмена", IDCANCEL, 198, 154, 70, 14
 END
@@ -127,4 +127,7 @@ BEGIN
     IDS_COMPUTERLOCKED "Computer locked"
     IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
     IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
+    IDS_CHANGEPWDTITLE "Change Password"
+    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
+    IDS_PASSWORDCHANGED "Your password has been changed."
 END

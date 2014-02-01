@@ -9,7 +9,10 @@
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
  */
+
 #include <msafd.h>
+
+#include <winreg.h>
 
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;

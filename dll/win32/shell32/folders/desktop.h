@@ -105,4 +105,4 @@ class CDesktopFolder :
         END_COM_MAP()
 };
 
-#endif // _CDESKTOPFOLDER_H_
+#endif /* _CDESKTOPFOLDER_H_ */

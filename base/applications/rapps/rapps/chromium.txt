@@ -23,3 +23,4 @@ Size = 2,3 Mo
 
 [Section.041f]
 Description = Chromium B.S.U., atari salonu oyunu türünde, üst kaydırmalı bir uzay nişancısıdır.
+Size = 2,3 MB

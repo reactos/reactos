@@ -6,7 +6,7 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
 
 #include <bdamedia.h>
 

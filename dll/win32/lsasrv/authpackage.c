@@ -8,6 +8,10 @@
 
 #include "lsasrv.h"
 
+#include <ndk/mmfuncs.h>
+#include <ndk/sefuncs.h>
+#include <ndk/umfuncs.h>
+
 typedef enum _LSA_TOKEN_INFORMATION_TYPE
 {
     LsaTokenInformationNull,

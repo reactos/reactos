@@ -52,6 +52,7 @@ Description = Маленький и быстрый клиент BitTorrent.
 [Section.041f]
 Licence = Ticârî olmayan kullanımlarda ücretsiz.
 Description = Küçük ve hızlı bir BitTorrent istemcisi.
+Size = 1020,58 KB
 
 [Section.0422]
 Licence = Безплатна для некомерційного використання

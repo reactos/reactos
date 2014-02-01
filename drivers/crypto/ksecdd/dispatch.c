@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ksecdd.h"
+#include <ksecioctl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -60,7 +61,7 @@ KsecQueryVolumeInformation(
     PFILE_FS_DEVICE_INFORMATION DeviceInformation;
 
     /* Only FileFsDeviceInformation is supported */
-    if (FsInformationClass == FileFsDeviceInformation)
+    if (FsInformationClass != FileFsDeviceInformation)
     {
         return STATUS_INVALID_INFO_CLASS;
     }
@@ -81,6 +82,40 @@ KsecQueryVolumeInformation(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+KsecDeviceControl(
+    ULONG IoControlCode,
+    PVOID Buffer,
+    SIZE_T InputLength,
+    PSIZE_T OutputLength)
+{
+    NTSTATUS Status;
+
+    Status = STATUS_SUCCESS;
+
+    /* Check ioctl code */
+    switch (IoControlCode)
+    {
+        case IOCTL_KSEC_REGISTER_LSA_PROCESS:
+
+            Status = STATUS_SUCCESS;
+            break;
+
+        case IOCTL_KSEC_RANDOM_FILL_BUFFER:
+
+            Status = KsecGenRandom(Buffer, *OutputLength);
+            break;
+
+        default:
+            DPRINT1("Unhandled control code 0x%lx\n", IoControlCode);
+            __debugbreak();
+            return STATUS_INVALID_PARAMETER;
+    }
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 KsecDdDispatch(
@@ -91,9 +126,10 @@ KsecDdDispatch(
     ULONG_PTR Information;
     NTSTATUS Status;
     PVOID Buffer;
-    SIZE_T OutputLength;
+    SIZE_T InputLength, OutputLength;
     FILE_INFORMATION_CLASS FileInfoClass;
     FS_INFORMATION_CLASS FsInfoClass;
+    ULONG IoControlCode;
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
@@ -146,6 +182,22 @@ KsecDdDispatch(
             Status = KsecQueryVolumeInformation(Buffer,
                                                 FsInfoClass,
                                                 &OutputLength);
+            Information = OutputLength;
+            break;
+
+        case IRP_MJ_DEVICE_CONTROL:
+
+            /* Extract the parameters */
+            Buffer = Irp->AssociatedIrp.SystemBuffer;
+            InputLength = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
+            OutputLength = IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength;
+            IoControlCode = IoStackLocation->Parameters.DeviceIoControl.IoControlCode;
+
+            /* Call the internal function */
+            Status = KsecDeviceControl(IoControlCode,
+                                       Buffer,
+                                       InputLength,
+                                       &OutputLength);
             Information = OutputLength;
             break;
 

@@ -38,6 +38,7 @@ Size = 1,85 Mo
 [Section.041f]
 Licence = Kısıtlı
 Description = Örütbağ Eşzamanlı Söyleşi (IRC) istemcileri arasında en tutulanı.
+Size = 1,85 MB
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).

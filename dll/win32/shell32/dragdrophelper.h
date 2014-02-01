@@ -50,4 +50,4 @@ BEGIN_COM_MAP(CDropTargetHelper)
 END_COM_MAP()
 };
 
-#endif // _DRAGDROPHELPER_H_
+#endif /* _DRAGDROPHELPER_H_ */

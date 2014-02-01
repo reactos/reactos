@@ -1,6 +1,6 @@
 #define _KSDDK_
 
-#include <ntifs.h>
+#include <ntddk.h>
 #include <portcls.h>
 #include <kcom.h>
 #include <pseh/pseh2.h>

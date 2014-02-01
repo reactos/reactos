@@ -10,6 +10,8 @@
 
 #include "cmbatt.h"
 
+#include <debug.h>
+
 /* GLOBALS ********************************************************************/
 
 WMIGUIDREGINFO CmBattWmiGuidList[1] =

@@ -4,10 +4,9 @@
  * FILE:        include/handle.h
  * PURPOSE:     Provider handle definitions
  */
+
 #ifndef __HANDLE_H
 #define __HANDLE_H
-
-//#include <catalog.h>
 
 typedef struct _PROVIDER_HANDLE
 {
@@ -44,5 +43,3 @@ VOID
 FreeProviderHandleTable(VOID);
 
 #endif /* __HANDLE_H */
-
-/* EOF */

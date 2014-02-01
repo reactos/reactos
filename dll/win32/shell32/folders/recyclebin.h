@@ -110,4 +110,4 @@ class CRecycleBin :
         END_COM_MAP()
 };
 
-#endif // _SHFLDR_RECYCLEBIN_H_
+#endif /* _SHFLDR_RECYCLEBIN_H_ */

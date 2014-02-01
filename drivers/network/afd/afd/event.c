@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+
 #include <afd.h>
 
 NTSTATUS AfdEventError(
@@ -306,6 +307,5 @@ NTSTATUS AfdDeregisterEventHandlers(
     }
     return STATUS_SUCCESS;
 }
-
 
 /* EOF */

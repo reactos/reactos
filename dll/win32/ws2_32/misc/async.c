@@ -39,15 +39,12 @@
 #define COM_NO_WINDOWS_H
 
 #include <wine/config.h>
-//#include "wine/port.h"
 
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-//#include "wingdi.h"
 #include <winuser.h>
 #include <winsock2.h>
-//#include "ws2spi.h"
 
 #include <wine/debug.h>
 

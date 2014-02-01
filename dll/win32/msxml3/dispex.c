@@ -18,8 +18,6 @@
 
 #include "precomp.h"
 
-#include <wine/list.h>
-
 static CRITICAL_SECTION cs_dispex_static_data;
 static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
 {

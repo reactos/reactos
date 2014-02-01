@@ -19,6 +19,7 @@
 #include "vbscript.h"
 
 #include <math.h>
+#include <mshtmhst.h>
 
 #define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
 

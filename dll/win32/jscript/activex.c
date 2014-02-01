@@ -18,7 +18,6 @@
 
 #include "jscript.h"
 
-#include <objsafe.h>
 #include <mshtmhst.h>
 
 /* Defined as extern in urlmon.idl, but not exported by uuid.lib */

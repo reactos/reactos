@@ -22,3 +22,4 @@ Size = 4,99 Mo
 [Section.041f]
 Licence = Ücretsiz
 Description = Bu sürüm, katmanlarla gelmektedir ancak Stüdyo X sürümünden daha kısıtlıdır. PhotoFiltre Stüdyo, eksiksiz bir resim düzeltme yazılımıdır.
+Size = 4,99 MB

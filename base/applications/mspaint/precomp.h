@@ -9,6 +9,7 @@
 #include <commctrl.h>
 #include <tchar.h>
 #include <stdlib.h>
+#include <shellapi.h>
 
 #include "definitions.h"
 #include "drawing.h"

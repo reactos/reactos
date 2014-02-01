@@ -54,8 +54,6 @@
 
 #include "typelib.h"
 
-#include <wine/list.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(typelib);
 

@@ -22,7 +22,7 @@
 #ifndef __WINE_SHDOCVW_H
 #define __WINE_SHDOCVW_H
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 
@@ -34,10 +34,9 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winreg.h>
 #include <shlobj.h>
-
-#include <wine/unicode.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);

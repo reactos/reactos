@@ -18,12 +18,6 @@
 
 #include "wincodecs_private.h"
 
-#include <winreg.h>
-#include <objbase.h>
-#include <wincodecsdk.h>
-
-#include <wine/unicode.h>
-
 /***********************************************************************
  *		interface for self-registering
  */

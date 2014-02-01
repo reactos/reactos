@@ -27,8 +27,6 @@
 
 #include "precomp.h"
 
-#include "resource.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
 const char * const wine_vtypes[VT_CLSID+1] =

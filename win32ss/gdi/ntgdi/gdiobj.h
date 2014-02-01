@@ -141,6 +141,12 @@ GDIOBJ_LockObject(
     HGDIOBJ hobj,
     UCHAR objt);
 
+PGDIOBJ
+NTAPI
+GDIOBJ_TryLockObject(
+    HGDIOBJ hobj,
+    UCHAR objt);
+
 VOID
 NTAPI
 GDIOBJ_vUnlockObject(

@@ -43,6 +43,7 @@ Description = Multimediálny prehrávač.
 [Section.041f]
 Name = VLC Ortam Oynatıcısı
 Description = Bir ortam oynatıcısı.
+Size = 23,0 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.

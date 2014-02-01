@@ -12,33 +12,23 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <wingdi.h>
 #include <winreg.h>
 #include <winuser.h>
 #include <wincon.h>
-#include <shellapi.h>
 #include <commdlg.h>
 #include <ddeml.h>
-#include <mmsystem.h>
-#include <winspool.h>
 #include <shlguid_undoc.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
 #include <shlwapi_undoc.h>
-#include <appmgmt.h>
-#include <ntquery.h>
 #include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
-#include <sddl.h>
-#include <commoncontrols.h>
-
 #include <tchar.h>
 #include <strsafe.h>
 #include <atlbase.h>
 #include <atlcom.h>
-#include <atlwin.h>
 
 //#include "base/shell/explorer-new/todo.h"
 //#include "dlgs.h"
@@ -51,8 +41,6 @@
 #include "enumidlist.h"
 #include "shfldr.h"
 #include "shellfolder.h"
-#include "xdg.h"
-
 #include "shellitem.h"
 #include "shelllink.h"
 #include "dragdrophelper.h"
@@ -76,6 +64,7 @@
 #include "CMenuDeskBar.h"
 
 #include <wine/debug.h>
+#include <wine/unicode.h>
 
 extern const GUID CLSID_AdminFolderShortcut;
 extern const GUID CLSID_FontsFolderShortcut;
@@ -87,4 +76,4 @@ extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
 
-#endif
+#endif /* _PRECOMP_H__ */

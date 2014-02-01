@@ -21,8 +21,6 @@
 
 #include "precomp.h"
 
-#include <ole2.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 #define ALIGNED_LENGTH(_Len, _Align) (((_Len)+(_Align))&~(_Align))

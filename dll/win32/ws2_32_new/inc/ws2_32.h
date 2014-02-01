@@ -23,11 +23,8 @@
 #include <winreg.h>
 #include <winnls.h>
 #include <winuser.h>
-#include <ws2tcpip.h>
 #include <ws2spi.h>
-//#include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
-//#include <svcguid.h>
 
 /* Winsock Helper Header */
 #include <ws2help.h>

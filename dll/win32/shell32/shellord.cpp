@@ -22,6 +22,9 @@
 
 #include "precomp.h"
 
+#include <mmsystem.h>
+#include <commoncontrols.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 WINE_DECLARE_DEBUG_CHANNEL(pidl);
 

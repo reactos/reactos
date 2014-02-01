@@ -68,4 +68,4 @@ class COpenWithMenu :
         END_COM_MAP()
 };
 
-#endif // _SHE_OCMENU_H_
+#endif /* _SHE_OCMENU_H_ */

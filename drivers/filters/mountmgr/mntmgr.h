@@ -2,14 +2,11 @@
 #define _MNTMGR_H_
 
 #include <ntifs.h>
-#include <ntddk.h>
 #include <mountdev.h>
 #include <ntddvol.h>
 #include <wdmguid.h>
-#include <ioevent.h>
-#include <psfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ntdddisk.h>
-#include <ntddvol.h>
 
 /* Enter FIXME */
 #ifdef IsEqualGUID

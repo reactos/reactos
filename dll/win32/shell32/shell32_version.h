@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 #define WINE_FILEVERSION_MAJOR         5
 #define WINE_FILEVERSION_MINOR         0
 #define WINE_FILEVERSION_BUILD      3900

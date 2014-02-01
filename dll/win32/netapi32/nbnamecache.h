@@ -17,16 +17,6 @@
 #ifndef __WINE_NBNAMECACHE_H
 #define __WINE_NBNAMECACHE_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <nb30.h>
-
 struct NBNameCache;
 
 /* Represents an entry in the name cache.  If the NetBIOS name is known, it's

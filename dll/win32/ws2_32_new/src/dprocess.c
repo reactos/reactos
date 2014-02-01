@@ -7,9 +7,11 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <ws2_32.h>
 
 /* DATA **********************************************************************/
+
 PWSPROCESS CurrentWsProcess;
 
 #define WsProcLock()      EnterCriticalSection((LPCRITICAL_SECTION)&Process->ThreadLock);

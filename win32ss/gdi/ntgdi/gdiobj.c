@@ -52,11 +52,14 @@
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt) \
     ASSERT((objt) == GDIObjType_DC_TYPE || \
            (objt) == GDIObjType_RGN_TYPE)
+#define ASSERT_TRYLOCK_OBJECT_TYPE(objt) \
+    ASSERT((objt) == GDIObjType_DRVOBJ_TYPE)
 #else
 #define DBG_INCREASE_LOCK_COUNT(ppi, hobj)
 #define DBG_DECREASE_LOCK_COUNT(x, y)
 #define ASSERT_SHARED_OBJECT_TYPE(objt)
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt)
+#define ASSERT_TRYLOCK_OBJECT_TYPE(objt)
 #endif
 
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -619,6 +622,72 @@ GDIOBJ_vReferenceObjectByPointer(POBJ pobj)
     }
 
     DBG_LOGEVENT(&pobj->slhLog, EVENT_REFERENCE, cRefs);
+}
+
+PGDIOBJ
+NTAPI
+GDIOBJ_TryLockObject(
+    HGDIOBJ hobj,
+    UCHAR objt)
+{
+    PENTRY pentry;
+    POBJ pobj;
+    DWORD dwThreadId;
+
+    /* Check if the handle type matches */
+    ASSERT_TRYLOCK_OBJECT_TYPE(objt);
+    if ((((ULONG_PTR)hobj >> 16) & 0x1f) != objt)
+    {
+        DPRINT("Wrong object type: hobj=0x%p, objt=0x%x\n", hobj, objt);
+        return NULL;
+    }
+
+    /* Reference the handle entry */
+    pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
+    if (!pentry)
+    {
+        DPRINT("GDIOBJ: Requested handle 0x%p is not valid.\n", hobj);
+        return NULL;
+    }
+
+    /* Get the pointer to the BASEOBJECT */
+    pobj = pentry->einfo.pobj;
+
+    /* Check if we already own the lock */
+    dwThreadId = PtrToUlong(PsGetCurrentThreadId());
+    if (pobj->dwThreadId != dwThreadId)
+    {
+        /* Disable APCs and try acquiring the push lock */
+        KeEnterCriticalRegion();
+        if(!ExTryAcquirePushLockExclusive(&pobj->pushlock))
+        {
+            ULONG cRefs, ulIndex;
+            /* Already owned. Clean up and leave. */
+            KeLeaveCriticalRegion();
+
+            /* Calculate the index */
+            ulIndex = GDI_HANDLE_GET_INDEX(pobj->hHmgr);
+
+            /* Decrement reference count */
+            ASSERT((gpaulRefCount[ulIndex] & REF_MASK_COUNT) > 0);
+            cRefs = InterlockedDecrement((LONG*)&gpaulRefCount[ulIndex]);
+            ASSERT(cRefs & REF_MASK_VALID);
+
+            return NULL;
+        }
+
+        /* Set us as lock owner */
+        ASSERT(pobj->dwThreadId == 0);
+        pobj->dwThreadId = dwThreadId;
+    }
+
+    /* Increase lock count */
+    pobj->cExclusiveLock++;
+    DBG_INCREASE_LOCK_COUNT(PsGetCurrentProcessWin32Process(), hobj);
+    DBG_LOGEVENT(&pobj->slhLog, EVENT_LOCK, 0);
+
+    /* Return the object */
+    return pobj;
 }
 
 PGDIOBJ

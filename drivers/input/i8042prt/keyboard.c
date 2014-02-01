@@ -13,6 +13,9 @@
 
 #include "i8042prt.h"
 
+#include <poclass.h>
+#include <ndk/kdfuncs.h>
+
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
