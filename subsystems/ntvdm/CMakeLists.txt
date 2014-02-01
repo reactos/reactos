@@ -19,6 +19,7 @@ list(APPEND SOURCE
     dos/dos32krnl/dos.c
     dos/dem.c
     bop.c
+    clock.c
     emulator.c
     int32.c
     io.c

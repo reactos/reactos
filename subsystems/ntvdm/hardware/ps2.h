@@ -24,6 +24,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID PS2Dispatch(PINPUT_RECORD InputRecord);
 VOID GenerateKeyboardInterrupts(VOID);
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput);

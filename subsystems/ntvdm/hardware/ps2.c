@@ -25,7 +25,6 @@ static BYTE KeyboardData = 0, KeyboardResponse = 0;
 static BOOLEAN KeyboardReadResponse = FALSE, KeyboardWriteResponse = FALSE;
 static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
 static HANDLE QueueMutex = NULL;
-static HANDLE InputThread = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -281,82 +280,53 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
     }
 }
 
-static DWORD WINAPI InputThreadProc(LPVOID Parameter)
-{
-    INT i;
-    HANDLE ConsoleInput = (HANDLE)Parameter;
-    INPUT_RECORD InputRecord;
-    DWORD Count;
-
-    while (VdmRunning)
-    {
-        /* Wait for an input record */
-        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
-        {
-            DWORD LastError = GetLastError();
-            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
-            return LastError;
-        }
-
-        ASSERT(Count != 0);
-
-        /* Check the event type */
-        switch (InputRecord.EventType)
-        {
-            case KEY_EVENT:
-            {
-                BYTE ScanCode = (BYTE)InputRecord.Event.KeyEvent.wVirtualScanCode;
-
-                /* If this is a key release, set the highest bit in the scan code */
-                if (!InputRecord.Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
-
-                /* Push the scan code onto the keyboard queue */
-                for (i = 0; i < InputRecord.Event.KeyEvent.wRepeatCount; i++)
-                {
-                    KeyboardQueuePush(ScanCode);
-                }
-
-                break;
-            }
-
-            case MOUSE_EVENT:
-            {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-                break;
-            }
-
-            default:
-            {
-                /* Ignored */
-                break;
-            }
-        }
-    }
-
-    return 0;
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID PS2Dispatch(PINPUT_RECORD InputRecord)
+{
+    /* Check the event type */
+    switch (InputRecord->EventType)
+    {
+        case KEY_EVENT:
+        {
+            WORD i;
+            BYTE ScanCode = (BYTE)InputRecord->Event.KeyEvent.wVirtualScanCode;
+
+            /* If this is a key release, set the highest bit in the scan code */
+            if (!InputRecord->Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
+
+            /* Push the scan code onto the keyboard queue */
+            for (i = 0; i < InputRecord->Event.KeyEvent.wRepeatCount; i++)
+            {
+                KeyboardQueuePush(ScanCode);
+            }
+
+            break;
+        }
+
+        case MOUSE_EVENT:
+        {
+            // TODO: NOT IMPLEMENTED
+            UNIMPLEMENTED;
+            break;
+        }
+
+        /* We ignore all the rest */
+        default:
+            break;
+    }
+}
 
 VOID GenerateKeyboardInterrupts(VOID)
 {
-    if (KeyboardQueuePop(&KeyboardData))
-    {
-        /* IRQ 1 */
-        PicInterruptRequest(1);
-    }
+    /* Generate an IRQ 1 if there is a key ready in the queue */
+    if (KeyboardQueuePop(&KeyboardData)) PicInterruptRequest(1);
 }
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput)
 {
     /* Create the mutex */
     QueueMutex = CreateMutex(NULL, FALSE, NULL);
-
-    /* Start the input thread */
-    InputThread = CreateThread(NULL, 0, &InputThreadProc, ConsoleInput, 0, NULL);
-
-    // if (InputThread == NULL) return FALSE;
 
     /* Register the I/O Ports */
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
@@ -367,10 +337,6 @@ BOOLEAN PS2Initialize(HANDLE ConsoleInput)
 
 VOID PS2Cleanup(VOID)
 {
-    /* Close the input thread handle */
-    if (InputThread != NULL) CloseHandle(InputThread);
-    InputThread = NULL;
-
     CloseHandle(QueueMutex);
 }
 

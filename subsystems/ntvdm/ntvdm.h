@@ -25,15 +25,10 @@
 #include <winuser.h>
 
 #include <vddsvc.h>
-// #include "registers.h"
 
 #include <debug.h>
 
 /* DEFINES ********************************************************************/
-
-/* Processor speed */
-#define STEPS_PER_CYCLE 256
-#define KBD_INT_CYCLES 16
 
 /* FUNCTIONS ******************************************************************/
 

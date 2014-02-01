@@ -1,3 +1,7 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM Registers exports ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 @ stdcall getAF()
 @ stdcall getAH()
 @ stdcall getAL()
@@ -89,6 +93,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; NTVDM CCPU MIPS exports ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 @ stdcall c_getAF()  getAF
 @ stdcall c_getAH()  getAH
 @ stdcall c_getAL()  getAL
@@ -174,6 +179,9 @@
 @ stdcall c_setZF(long)  setZF
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM DOS-32 Emulation exports ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall demClientErrorEx(long long long)
 @ stdcall demFileDelete(ptr)
@@ -192,6 +200,9 @@
 ;@ stdcall demWOWLFNInit
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM Miscellaneous exports ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall MGetVdmPointer(long long long)
 @ stdcall Sim32pGetVDMPointer(long long)
@@ -204,4 +215,6 @@
 @ stdcall VDDInstallIOHook(long long ptr ptr)
 @ stdcall VDDDeInstallIOHook(long long ptr)
 
+@ stdcall VDDSimulate16()
+@ stdcall host_simulate()   VDDSimulate16
 @ stdcall VDDTerminateVDM()

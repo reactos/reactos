@@ -13,12 +13,13 @@
 #include "ntvdm.h"
 #include "emulator.h"
 
+#include "clock.h"
+#include "hardware/ps2.h"
+#include "hardware/vga.h"
 #include "bios/bios.h"
 #include "dos/dem.h"
-#include "hardware/cmos.h"
-#include "hardware/ps2.h"
-#include "hardware/timer.h"
-#include "hardware/vga.h"
+
+#include "resource.h"
 
 /*
  * Activate this line if you want to be able to test NTVDM with:
@@ -26,25 +27,141 @@
  */
 #define TESTING
 
-/*
- * Activate IPS_DISPLAY if you want to display the
- * number of instructions per second, as well as
- * the computed number of ticks for the PIT.
- */
-// #define IPS_DISPLAY
-
-/*
- * Activate WORKING_TIMER when the PIT timing problem is fixed.
- */
-// #define WORKING_TIMER
-
-/* PUBLIC VARIABLES ***********************************************************/
+/* VARIABLES ******************************************************************/
 
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
 static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
+
+static HMENU hConsoleMenu  = NULL;
+static INT   VdmMenuPos    = -1;
+static BOOLEAN ShowPointer = FALSE;
+
+/*
+ * Those menu helpers were taken from the GUI frontend in winsrv.dll
+ */
+typedef struct _VDM_MENUITEM
+{
+    UINT uID;
+    const struct _VDM_MENUITEM *SubMenu;
+    WORD wCmdID;
+} VDM_MENUITEM, *PVDM_MENUITEM;
+
+static const VDM_MENUITEM VdmMenuItems[] =
+{
+    { IDS_VDM_QUIT, NULL, ID_VDM_QUIT },
+
+    { 0, NULL, 0 }      /* End of list */
+};
+
+static const VDM_MENUITEM VdmMainMenuItems[] =
+{
+    { -1, NULL, 0 },    /* Separator */
+    { IDS_HIDE_MOUSE,   NULL, ID_SHOWHIDE_MOUSE },  /* Hide mouse; can be renamed to Show mouse */
+    { IDS_VDM_MENU  ,   VdmMenuItems,         0 },  /* ReactOS VDM Menu */
+
+    { 0, NULL, 0 }      /* End of list */
+};
+
+static VOID
+AppendMenuItems(HMENU hMenu,
+                const VDM_MENUITEM *Items)
+{
+    UINT i = 0;
+    WCHAR szMenuString[255];
+    HMENU hSubMenu;
+
+    do
+    {
+        if (Items[i].uID != (UINT)-1)
+        {
+            if (LoadStringW(GetModuleHandle(NULL),
+                            Items[i].uID,
+                            szMenuString,
+                            sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+            {
+                if (Items[i].SubMenu != NULL)
+                {
+                    hSubMenu = CreatePopupMenu();
+                    if (hSubMenu != NULL)
+                    {
+                        AppendMenuItems(hSubMenu, Items[i].SubMenu);
+
+                        if (!AppendMenuW(hMenu,
+                                         MF_STRING | MF_POPUP,
+                                         (UINT_PTR)hSubMenu,
+                                         szMenuString))
+                        {
+                            DestroyMenu(hSubMenu);
+                        }
+                    }
+                }
+                else
+                {
+                    AppendMenuW(hMenu,
+                                MF_STRING,
+                                Items[i].wCmdID,
+                                szMenuString);
+                }
+            }
+        }
+        else
+        {
+            AppendMenuW(hMenu,
+                        MF_SEPARATOR,
+                        0,
+                        NULL);
+        }
+        i++;
+    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
+}
+
+static VOID
+CreateVdmMenu(HANDLE ConOutHandle)
+{
+    hConsoleMenu = ConsoleMenuControl(ConsoleOutput,
+                                      ID_SHOWHIDE_MOUSE,
+                                      ID_VDM_QUIT);
+    if (hConsoleMenu != NULL)
+    {
+        VdmMenuPos = GetMenuItemCount(hConsoleMenu);
+        AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
+        DrawMenuBar(GetConsoleWindow());
+    }
+}
+
+static VOID
+DestroyVdmMenu(VOID)
+{
+    UINT i = 0;
+    const VDM_MENUITEM *Items = VdmMainMenuItems;
+
+    do
+    {
+        DeleteMenu(hConsoleMenu, VdmMenuPos, MF_BYPOSITION);
+        i++;
+    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
+
+    DrawMenuBar(GetConsoleWindow());
+}
+
+static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
+{
+    WCHAR szMenuString[255] = L"";
+
+    ShowConsoleCursor(ConOutHandle, ShowPtr);
+
+    if (LoadStringW(GetModuleHandle(NULL),
+                    (!ShowPtr ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
+                    szMenuString,
+                    sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+    {
+        ModifyMenu(hConsoleMenu, ID_SHOWHIDE_MOUSE,
+                   MF_BYCOMMAND, ID_SHOWHIDE_MOUSE, szMenuString);
+    }
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -78,6 +195,74 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         }
     }
     return TRUE;
+}
+
+VOID ConsoleInitUI(VOID)
+{
+    CreateVdmMenu(ConsoleOutput);
+}
+
+VOID ConsoleCleanupUI(VOID)
+{
+    /* Display again properly the mouse pointer */
+    if (ShowPointer) ShowHideMousePointer(ConsoleOutput, ShowPointer);
+
+    DestroyVdmMenu();
+}
+
+DWORD WINAPI PumpConsoleInput(LPVOID Parameter)
+{
+    HANDLE ConsoleInput = (HANDLE)Parameter;
+    INPUT_RECORD InputRecord;
+    DWORD Count;
+
+    while (VdmRunning)
+    {
+        /* Wait for an input record */
+        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
+        {
+            DWORD LastError = GetLastError();
+            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
+            return LastError;
+        }
+
+        ASSERT(Count != 0);
+
+        /* Check the event type */
+        switch (InputRecord.EventType)
+        {
+            case KEY_EVENT:
+            case MOUSE_EVENT:
+                /* Send it to the PS/2 controller */
+                PS2Dispatch(&InputRecord);
+                break;
+
+            case MENU_EVENT:
+            {
+                switch (InputRecord.Event.MenuEvent.dwCommandId)
+                {
+                    case ID_SHOWHIDE_MOUSE:
+                        ShowHideMousePointer(ConsoleOutput, ShowPointer);
+                        ShowPointer = !ShowPointer;
+                        break;
+
+                    case ID_VDM_QUIT:
+                        VdmRunning = FALSE;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    return 0;
 }
 
 BOOL ConsoleInit(VOID)
@@ -134,6 +319,9 @@ BOOL ConsoleInit(VOID)
         return FALSE;
     }
 
+    /* Initialize the UI */
+    ConsoleInitUI();
+
     return TRUE;
 }
 
@@ -166,6 +354,9 @@ VOID ConsoleCleanup(VOID)
     SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
     SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
 
+    /* Cleanup the UI */
+    ConsoleCleanupUI();
+
     /* Close the console handles */
     if (ConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleOutput);
     if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
@@ -173,19 +364,7 @@ VOID ConsoleCleanup(VOID)
 
 INT wmain(INT argc, WCHAR *argv[])
 {
-    INT i;
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
-    LARGE_INTEGER StartPerfCount;
-    LARGE_INTEGER Frequency, LastTimerTick, LastRtcTick, Counter;
-    LONGLONG TimerTicks;
-    DWORD StartTickCount, CurrentTickCount;
-    DWORD LastClockUpdate;
-    DWORD LastVerticalRefresh;
-#ifdef IPS_DISPLAY
-    DWORD LastCyclePrintout;
-    DWORD Cycles = 0;
-#endif
-    INT KeyboardIntCounter = 0;
 
 #ifndef TESTING
     UNREFERENCED_PARAMETER(argc);
@@ -222,13 +401,6 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Initialize the performance counter (needed for hardware timers) */
-    if (!QueryPerformanceFrequency(&Frequency))
-    {
-        wprintf(L"FATAL: Performance counter not available\n");
-        goto Cleanup;
-    }
-
     /* Initialize the system BIOS */
     if (!BiosInitialize(ConsoleInput, ConsoleOutput))
     {
@@ -250,107 +422,8 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Find the starting performance and tick count */
-    StartTickCount = GetTickCount();
-    QueryPerformanceCounter(&StartPerfCount);
-
-    /* Set the different last counts to the starting count */
-    LastClockUpdate = LastVerticalRefresh =
-#ifdef IPS_DISPLAY
-    LastCyclePrintout =
-#endif
-    StartTickCount;
-
-    /* Set the last timer ticks to the current time */
-    LastTimerTick = LastRtcTick = StartPerfCount;
-
     /* Main loop */
-    while (VdmRunning)
-    {
-#ifdef WORKING_TIMER
-        DWORD PitResolution = PitGetResolution();
-#endif
-        DWORD RtcFrequency = RtcGetTicksPerSecond();
-
-        /* Get the current number of ticks */
-        CurrentTickCount = GetTickCount();
-
-#ifdef WORKING_TIMER
-        if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
-        {
-            /* Calculate the approximate performance counter value instead */
-            Counter.QuadPart = StartPerfCount.QuadPart
-                               + (CurrentTickCount - StartTickCount)
-                               * (Frequency.QuadPart / 1000);
-        }
-        else
-#endif
-        {
-            /* Get the current performance counter value */
-            QueryPerformanceCounter(&Counter);
-        }
-
-        /* Get the number of PIT ticks that have passed */
-        TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
-                     * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
-
-        /* Update the PIT */
-        if (TimerTicks > 0)
-        {
-            PitClock(TimerTicks);
-            LastTimerTick = Counter;
-        }
-
-        /* Check for RTC update */
-        if ((CurrentTickCount - LastClockUpdate) >= 1000)
-        {
-            RtcTimeUpdate();
-            LastClockUpdate = CurrentTickCount;
-        }
-
-        /* Check for RTC periodic tick */
-        if ((Counter.QuadPart - LastRtcTick.QuadPart)
-            >= (Frequency.QuadPart / (LONGLONG)RtcFrequency))
-        {
-            RtcPeriodicTick();
-            LastRtcTick = Counter;
-        }
-
-        /* Check for vertical retrace */
-        if ((CurrentTickCount - LastVerticalRefresh) >= 15)
-        {
-            VgaRefreshDisplay();
-            LastVerticalRefresh = CurrentTickCount;
-        }
-
-        KeyboardIntCounter++;
-        if (KeyboardIntCounter == KBD_INT_CYCLES)
-        {
-            GenerateKeyboardInterrupts();
-            KeyboardIntCounter = 0;
-        }
-
-        /* Horizontal retrace occurs as fast as possible */
-        VgaHorizontalRetrace();
-
-        /* Continue CPU emulation */
-        for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
-        {
-            EmulatorStep();
-#ifdef IPS_DISPLAY
-            Cycles++;
-#endif
-        }
-
-#ifdef IPS_DISPLAY
-        if ((CurrentTickCount - LastCyclePrintout) >= 1000)
-        {
-            DPRINT1("NTVDM: %lu Instructions Per Second; TimerTicks = %I64d\n", Cycles, TimerTicks);
-            LastCyclePrintout = CurrentTickCount;
-            Cycles = 0;
-        }
-#endif
-    }
+    while (VdmRunning) ClockUpdate();
 
     /* Perform another screen refresh */
     VgaRefreshDisplay();

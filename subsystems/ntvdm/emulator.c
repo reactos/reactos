@@ -12,6 +12,7 @@
 
 #include "emulator.h"
 
+#include "clock.h"
 #include "bios/bios.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
@@ -24,14 +25,18 @@
 #include "vddsup.h"
 #include "io.h"
 
+#include <isvbop.h>
+
 /* PRIVATE VARIABLES **********************************************************/
 
 FAST486_STATE EmulatorContext;
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
-static BOOLEAN A20Line = FALSE;
+static BOOLEAN A20Line   = FALSE;
 static BYTE Port61hState = 0x00;
+
+static HANDLE InputThread = NULL;
 
 LPCWSTR ExceptionName[] =
 {
@@ -120,12 +125,93 @@ UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
     return PicGetInterrupt();
 }
 
-VOID WINAPI EmulatorDebugBreak(LPWORD Stack)
+VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
+{
+    WORD CodeSegment, InstructionPointer;
+    PBYTE Opcode;
+
+    ASSERT(ExceptionNumber < 8);
+
+    /* Get the CS:IP */
+    InstructionPointer = Stack[STACK_IP];
+    CodeSegment = Stack[STACK_CS];
+    Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
+
+    /* Display a message to the user */
+    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
+                   L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+                   ExceptionName[ExceptionNumber],
+                   CodeSegment,
+                   InstructionPointer,
+                   Opcode[0],
+                   Opcode[1],
+                   Opcode[2],
+                   Opcode[3],
+                   Opcode[4],
+                   Opcode[5],
+                   Opcode[6],
+                   Opcode[7],
+                   Opcode[8],
+                   Opcode[9]);
+
+    /* Stop the VDM */
+    VdmRunning = FALSE;
+    return;
+}
+
+// FIXME: This function assumes 16-bit mode!!!
+VOID EmulatorExecute(WORD Segment, WORD Offset)
+{
+    /* Tell Fast486 to move the instruction pointer */
+    Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
+}
+
+VOID EmulatorStep(VOID)
+{
+    /* Dump the state for debugging purposes */
+    // Fast486DumpState(&EmulatorContext);
+
+    /* Execute the next instruction */
+    Fast486StepInto(&EmulatorContext);
+}
+
+VOID EmulatorSimulate(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+VOID EmulatorUnsimulate(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+VOID EmulatorInterrupt(BYTE Number)
+{
+    /* Call the Fast486 API */
+    Fast486Interrupt(&EmulatorContext, Number);
+}
+
+VOID EmulatorInterruptSignal(VOID)
+{
+    /* Call the Fast486 API */
+    Fast486InterruptSignal(&EmulatorContext);
+}
+
+VOID EmulatorSetA20(BOOLEAN Enabled)
+{
+    A20Line = Enabled;
+}
+
+VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
 {
     DPRINT1("NTVDM: BOP_DEBUGGER\n");
     DebugBreak();
 }
 
+VOID WINAPI EmulatorUnsimulateBop(LPWORD Stack)
+{
+    EmulatorUnsimulate();
+}
 
 static BYTE WINAPI Port61hRead(ULONG Port)
 {
@@ -211,6 +297,8 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+DWORD WINAPI PumpConsoleInput(LPVOID Parameter);
+
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Allocate memory for the 16-bit address space */
@@ -223,6 +311,13 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
     /* Initialize I/O ports */
     /* Initialize RAM */
+
+    /* Initialize the internal clock */
+    if (!ClockInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the clock\n");
+        return FALSE;
+    }
 
     /* Initialize the CPU */
     Fast486Initialize(&EmulatorContext,
@@ -237,6 +332,8 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
     /* Enable interrupts */
     setIF(1);
+
+    /* Initialize DMA */
 
     /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
     PicInitialize();
@@ -258,12 +355,17 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Set the console input mode */
     // SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
+    /* Start the input thread */
+    InputThread = CreateThread(NULL, 0, &PumpConsoleInput, ConsoleInput, 0, NULL);
+    // if (InputThread == NULL) return FALSE;
+
     /* Initialize the VGA */
     // if (!VgaInitialize(ConsoleOutput)) return FALSE;
     VgaInitialize(ConsoleOutput);
 
-    /* Register the DebugBreak BOP */
-    RegisterBop(BOP_DEBUGGER, EmulatorDebugBreak);
+    /* Register the emulator BOPs */
+    RegisterBop(BOP_DEBUGGER  , EmulatorDebugBreakBop);
+    RegisterBop(BOP_UNSIMULATE, EmulatorUnsimulateBop);
 
     /* Initialize VDD support */
     VDDSupInitialize();
@@ -274,6 +376,11 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 VOID EmulatorCleanup(VOID)
 {
     // VgaCleanup();
+
+    /* Close the input thread handle */
+    if (InputThread != NULL) CloseHandle(InputThread);
+    InputThread = NULL;
+
     PS2Cleanup();
 
     SpeakerCleanup();
@@ -287,74 +394,14 @@ VOID EmulatorCleanup(VOID)
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
 
-VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
+
+
+VOID
+WINAPI
+VDDSimulate16(VOID)
 {
-    WORD CodeSegment, InstructionPointer;
-    PBYTE Opcode;
-
-    ASSERT(ExceptionNumber < 8);
-
-    /* Get the CS:IP */
-    InstructionPointer = Stack[STACK_IP];
-    CodeSegment = Stack[STACK_CS];
-    Opcode = (PBYTE)SEG_OFF_TO_PTR(CodeSegment, InstructionPointer);
-
-    /* Display a message to the user */
-    DisplayMessage(L"Exception: %s occured at %04X:%04X\n"
-                   L"Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-                   ExceptionName[ExceptionNumber],
-                   CodeSegment,
-                   InstructionPointer,
-                   Opcode[0],
-                   Opcode[1],
-                   Opcode[2],
-                   Opcode[3],
-                   Opcode[4],
-                   Opcode[5],
-                   Opcode[6],
-                   Opcode[7],
-                   Opcode[8],
-                   Opcode[9]);
-
-    /* Stop the VDM */
-    VdmRunning = FALSE;
-    return;
+    EmulatorSimulate();
 }
-
-// FIXME: This function assumes 16-bit mode!!!
-VOID EmulatorExecute(WORD Segment, WORD Offset)
-{
-    /* Tell Fast486 to move the instruction pointer */
-    Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
-}
-
-VOID EmulatorInterrupt(BYTE Number)
-{
-    /* Call the Fast486 API */
-    Fast486Interrupt(&EmulatorContext, Number);
-}
-
-VOID EmulatorInterruptSignal(VOID)
-{
-    /* Call the Fast486 API */
-    Fast486InterruptSignal(&EmulatorContext);
-}
-
-VOID EmulatorStep(VOID)
-{
-    /* Dump the state for debugging purposes */
-    // Fast486DumpState(&EmulatorContext);
-
-    /* Execute the next instruction */
-    Fast486StepInto(&EmulatorContext);
-}
-
-VOID EmulatorSetA20(BOOLEAN Enabled)
-{
-    A20Line = Enabled;
-}
-
-
 
 VOID
 WINAPI

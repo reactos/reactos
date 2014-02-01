@@ -34,6 +34,10 @@ extern "C" {
 
 VOID
 WINAPI
+VDDSimulate16(VOID);
+
+VOID
+WINAPI
 VDDTerminateVDM(VOID);
 
 

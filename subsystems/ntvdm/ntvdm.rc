@@ -1,5 +1,6 @@
 #include <windef.h>
 #include <winuser.h>
+// #include <commctrl.h>
 
 #include "resource.h"
 
@@ -14,3 +15,10 @@ IDI_APPICON ICON "res/ntvdm.ico"
 
 /* UTF-8 */
 #pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
