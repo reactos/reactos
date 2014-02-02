@@ -295,7 +295,7 @@ HvpCreateHiveFreeCellList(
       Hive->Storage[Stable].FreeDisplay[Index] = HCELL_NIL;
       Hive->Storage[Volatile].FreeDisplay[Index] = HCELL_NIL;
    }
-//__debugbreak();
+
    BlockOffset = 0;
    BlockIndex = 0;
    while (BlockIndex < Hive->Storage[Stable].Length)

@@ -115,7 +115,7 @@ HvpWriteLog(
       DPRINT("FileFlush failed\n");
    }
 
-   /* Update first and second update counter and CheckSum. */
+   /* Update second update counter and CheckSum. */
    RegistryHive->BaseBlock->Sequence2++;
    RegistryHive->BaseBlock->CheckSum =
       HvpHiveHeaderChecksum(RegistryHive->BaseBlock);

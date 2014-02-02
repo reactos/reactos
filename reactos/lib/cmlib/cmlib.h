@@ -238,7 +238,7 @@ extern ULONG CmlibTraceLevel;
  */
 NTSTATUS CMAPI
 HvInitialize(
-             PHHIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG Operation,
    ULONG HiveType,
    ULONG HiveFlags,
@@ -250,7 +250,7 @@ HvInitialize(
    PFILE_READ_ROUTINE FileRead,
    PFILE_FLUSH_ROUTINE FileFlush,
    ULONG Cluster OPTIONAL,
-   PUNICODE_STRING FileName);
+   PCUNICODE_STRING FileName OPTIONAL);
 
 VOID CMAPI
 HvFree(

@@ -144,8 +144,9 @@ typedef struct _HBASE_BLOCK
    /* (1?) */
    ULONG Cluster;
 
-   /* Name of hive file */
-   CHAR FileName[64];
+   /* Last 31 UNICODE characters, plus terminating NULL character,
+      of the full name of the hive file */
+   WCHAR FileName[32];
 
    ULONG Reserved1[99];
 
