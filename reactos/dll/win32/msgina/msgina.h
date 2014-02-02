@@ -90,10 +90,20 @@ BOOL
 ConnectToLsa(
     PGINA_CONTEXT pgContext);
 
+BOOL
+MyLogonUser(
+    HANDLE LsaHandle,
+    ULONG AuthenticationPackage,
+    LPWSTR lpszUsername,
+    LPWSTR lpszDomain,
+    LPWSTR lpszPassword,
+    PHANDLE phToken);
+
 /* msgina.c */
 
 BOOL
 DoAdminUnlock(
+    IN PGINA_CONTEXT pgContext,
     IN PWSTR UserName,
     IN PWSTR Domain,
     IN PWSTR Password);

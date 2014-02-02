@@ -829,7 +829,7 @@ DoUnlock(
         else
         {
             /* Wrong user name */
-            if (DoAdminUnlock(UserName, NULL, Password))
+            if (DoAdminUnlock(pgContext, UserName, NULL, Password))
             {
                 *Action = WLX_SAS_ACTION_UNLOCK_WKSTA;
                 res = TRUE;
