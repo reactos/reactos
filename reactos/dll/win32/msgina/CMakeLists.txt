@@ -7,6 +7,7 @@ spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE
     gui.c
+    lsa.c
     msgina.c
     stubs.c
     tui.c

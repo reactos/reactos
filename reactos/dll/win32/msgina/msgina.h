@@ -38,6 +38,8 @@ typedef struct
     PWLX_DISPATCH_VERSION_1_3 pWlxFuncs;
     HANDLE hDllInstance;
     HWND hStatusWindow;
+    HANDLE LsaHandle;
+    ULONG AuthenticationPackage;
     DWORD AutoLogonState;
     BOOL bDisableCAD;
     BOOL bAutoAdminLogon;
@@ -81,6 +83,12 @@ typedef struct _GINA_UI
     PFGINA_LOCKEDSAS LockedSAS;
     PFGINA_DISPLAYLOCKEDNOTICE DisplayLockedNotice;
 } GINA_UI, *PGINA_UI;
+
+/* lsa.c */
+
+BOOL
+ConnectToLsa(
+    PGINA_CONTEXT pgContext);
 
 /* msgina.c */
 
