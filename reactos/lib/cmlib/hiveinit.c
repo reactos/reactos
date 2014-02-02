@@ -118,7 +118,7 @@ HvpCreateHive(
    /* Copy the 31 last characters of the hive file name if any */
    if (FileName)
    {
-      if (FileName->Length / sizeof(WCHAR) <= 31)
+      if (FileName->Length / sizeof(WCHAR) <= HIVE_FILENAME_MAXLEN)
       {
          RtlCopyMemory(BaseBlock->FileName,
                        FileName->Buffer,
@@ -127,12 +127,13 @@ HvpCreateHive(
       else
       {
          RtlCopyMemory(BaseBlock->FileName,
-                       FileName->Buffer + FileName->Length / sizeof(WCHAR) - 31,
-                       31 * sizeof(WCHAR));
+                       FileName->Buffer +
+                       FileName->Length / sizeof(WCHAR) - HIVE_FILENAME_MAXLEN,
+                       HIVE_FILENAME_MAXLEN * sizeof(WCHAR));
       }
 
       /* NULL-terminate */
-      BaseBlock->FileName[31] = L'\0';
+      BaseBlock->FileName[HIVE_FILENAME_MAXLEN] = L'\0';
    }
 
    BaseBlock->CheckSum = HvpHiveHeaderChecksum(BaseBlock);
