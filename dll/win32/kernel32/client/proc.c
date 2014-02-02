@@ -2378,7 +2378,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     ANSI_STRING VdmAnsiEnv;
     UNICODE_STRING VdmString, VdmUnicodeEnv;
     BOOLEAN IsWowApp;
-    PBASE_CHECK_VDM VdmMsg;
+    PBASE_CHECK_VDM CheckVdmMsg;
 
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
@@ -2433,7 +2433,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
 
     /* Set message structures */
     CreateProcessMsg = &CsrMsg.Data.CreateProcessRequest;
-    VdmMsg = &CsrMsg.Data.CheckVDMRequest;
+    CheckVdmMsg = &CsrMsg.Data.CheckVDMRequest;
 
     /* Clear the more complex structures by zeroing out their entire memory */
     RtlZeroMemory(&Context, sizeof(Context));
@@ -3206,7 +3206,7 @@ StartScan:
                                           lpCommandLine,
                                           lpCurrentDirectory,
                                           &VdmAnsiEnv,
-                                          (PCSR_API_MESSAGE)VdmMsg,
+                                          &CsrMsg,
                                           &VdmTask,
                                           dwCreationFlags,
                                           &StartupInfo,
@@ -3232,9 +3232,9 @@ StartScan:
                 }
 
                 /* Check which VDM state we're currently in */
-                switch (VdmMsg->VDMState & (VDM_NOT_LOADED |
-                                            VDM_NOT_READY |
-                                            VDM_READY))
+                switch (CheckVdmMsg->VDMState & (VDM_NOT_LOADED |
+                                                 VDM_NOT_READY |
+                                                 VDM_READY))
                 {
                     case VDM_NOT_LOADED:
                         /* VDM is not fully loaded, so not that much to undo */
@@ -3274,7 +3274,7 @@ StartScan:
                         VdmUndoLevel = VDM_UNDO_REUSE;
 
                         /* Check if CSRSS wants us to wait on VDM */
-                        VdmWaitObject = VdmMsg->WaitObjectForParent;
+                        VdmWaitObject = CheckVdmMsg->WaitObjectForParent;
                         break;
 
                     case VDM_NOT_READY:
@@ -3343,7 +3343,7 @@ StartScan:
                                       lpCommandLine,
                                       lpCurrentDirectory,
                                       &VdmAnsiEnv,
-                                      (PCSR_API_MESSAGE)VdmMsg,
+                                      &CsrMsg,
                                       &VdmTask,
                                       dwCreationFlags,
                                       &StartupInfo,
@@ -3358,9 +3358,9 @@ StartScan:
                 };
 
                 /* Handle possible VDM states */
-                switch (VdmMsg->VDMState & (VDM_NOT_LOADED |
-                                            VDM_NOT_READY |
-                                            VDM_READY))
+                switch (CheckVdmMsg->VDMState & (VDM_NOT_LOADED |
+                                                 VDM_NOT_READY |
+                                                 VDM_READY))
                 {
                     case VDM_NOT_LOADED:
                         /* If VDM is not loaded, we'll do a partial undo */
@@ -3397,7 +3397,7 @@ StartScan:
                         VdmUndoLevel = VDM_UNDO_REUSE;
 
                         /* Check if CSRSS wants us to wait on VDM */
-                        VdmWaitObject = VdmMsg->WaitObjectForParent;
+                        VdmWaitObject = CheckVdmMsg->WaitObjectForParent;
                         break;
 
                     case VDM_NOT_READY:
@@ -4254,7 +4254,7 @@ StartScan:
     {
         /* IA32, IA64 and AMD64 are supported in Server 2003 */
         case IMAGE_FILE_MACHINE_I386:
-         CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
+            CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
             break;
         case IMAGE_FILE_MACHINE_IA64:
             CreateProcessMsg->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_IA64;
