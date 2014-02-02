@@ -95,7 +95,7 @@ BaseCheckVDM(
     IN PCWCH CommandLine,
     IN PCWCH CurrentDirectory,
     IN PANSI_STRING AnsiEnvironment,
-    IN PCSR_API_MESSAGE ApiMessage,
+    IN PBASE_API_MESSAGE ApiMessage,
     IN OUT PULONG iTask,
     IN DWORD CreationFlags,
     IN LPSTARTUPINFOW StartupInfo,
