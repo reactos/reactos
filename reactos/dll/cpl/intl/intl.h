@@ -57,6 +57,7 @@ extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;
 
 /* intl.c */
+VOID PrintErrorMsgBox(UINT msg);
 
 /* languages.c */
 INT_PTR CALLBACK

@@ -104,9 +104,7 @@ SetShortDateSep(HWND hwndDlg, LCID lcid)
     {
         if (_istalnum(szShortDateSep[nSepCount]) || (szShortDateSep[nSepCount] == _T('\'')))
         {
-            MessageBox(NULL,
-                       _T("Entered short date separator contain incorrect symbol"),
-                       _T("Error"), MB_OK | MB_ICONERROR);
+            PrintErrorMsgBox(IDS_ERROR_SYMBOL_SEPARATE);
             return FALSE;
         }
     }
@@ -156,9 +154,7 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
             !isDateCompAl(szShortDateFmt[nDateCompCount]) &&
             !OpenApostFlg)
         {
-            MessageBox(NULL,
-                       _T("Entered short date format contain incorrect symbol"),
-                       _T("Error"), MB_OK | MB_ICONERROR);
+            PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_SHORT);
             return FALSE;
         }
 
@@ -166,9 +162,7 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
 
     if (OpenApostFlg)
     {
-        MessageBoxW(NULL,
-                    _T("Entered short date format contain incorrect symbol"),
-                    _T("Error"), MB_OK | MB_ICONERROR);
+        PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_SHORT);
         return FALSE;
     }
 
@@ -214,9 +208,7 @@ SetLongDateFormat(HWND hwndDlg, LCID lcid)
             !isDateCompAl(szLongDateFmt[nDateCompCount]) &&
             !OpenApostFlg)
         {
-            MessageBox(NULL,
-                       _T("Entered long date format contain incorrect symbol"),
-                       _T("Error"), MB_OK | MB_ICONERROR);
+            PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_LONG);
             return FALSE;
         }
 
@@ -224,9 +216,7 @@ SetLongDateFormat(HWND hwndDlg, LCID lcid)
 
     if (OpenApostFlg)
     {
-        MessageBoxW(NULL,
-                    _T("Entered long date format contain incorrect symbol"),
-                    _T("Error"), MB_OK | MB_ICONERROR);
+        PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_LONG);
         return FALSE;
     }
 
@@ -575,9 +565,9 @@ DatePageProc(HWND hwndDlg,
             }
             case IDC_SCR_MAX_YEAR:
             {
-				/* Set "Apply" button enabled */
-				/* FIXME */
-				//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                /* Set "Apply" button enabled */
+                /* FIXME */
+                //PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
             break;
             case IDC_CALTYPE_COMBO:
