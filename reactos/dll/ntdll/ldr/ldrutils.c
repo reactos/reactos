@@ -1320,7 +1320,7 @@ SkipCheck:
         ImageBase = (ULONG_PTR)NtHeaders->OptionalHeader.ImageBase;
         ImageEnd = ImageBase + ViewSize;
 
-        DPRINT1("LDR: LdrpMapDll Relocating Image Name %ws (%lu -> %p)\n", DllName, ImageBase, ViewBase);
+        DPRINT1("LDR: LdrpMapDll Relocating Image Name %ws (%p -> %p)\n", DllName, (PVOID)ImageBase, ViewBase);
 
         /* Scan all the modules */
         ListHead = &Peb->Ldr->InLoadOrderModuleList;
