@@ -194,15 +194,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
-    IDS_ERROR_SYMBOL_SEPARATE "Entered short date separator contain incorrect symbol"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "Entered short date format contain incorrect symbol"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "Entered long date format contain incorrect symbol"
-    IDS_ERROR_OEM_CODE_PAGE "Problem reading OEM code page"
-    IDS_ERROR_ANSI_CODE_PAGE "Problem reading ANSI code page"
-    IDS_ERROR_INT_KEY_REG "Problem opening HKCU\\Control Panel\\International key"
-    IDS_ERROR_DEF_INT_KEY_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_NLS_KEY_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_NLS_CODE_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_INPUT_DLL "Can't start input.dll"
+    IDS_ERROR "Fehler"
+    IDS_ERROR_SYMBOL_SEPARATE "Das eingegebene kurze Datumstrennzeichen enthält falsche Symbole"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Das eingegebene kurze Datumsformat enthält falsche Symbole"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Das eingegebene lange Datumsformat enthält falsche Symbole"
+    IDS_ERROR_OEM_CODE_PAGE "OEM-Codepage konnte nicht gelesen werden"
+    IDS_ERROR_ANSI_CODE_PAGE "ANSI-Codepage konnte nicht gelesen werden"
+    IDS_ERROR_INT_KEY_REG "Der Schlüssel HKCU\\Control Panel\\International konnte nicht geöffnet werden"
+    IDS_ERROR_DEF_INT_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
+    IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
+    IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
+    IDS_ERROR_INPUT_DLL "input.dll konnte nicht geladen werden"
 END
