@@ -26,6 +26,7 @@ list(APPEND SOURCE
     retry.c
     utils.c
     xferpkt.c
+    guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
 add_library(classpnp SHARED

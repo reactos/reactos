@@ -21,9 +21,7 @@ Revision History:
 
 --*/
 
-
 #include "classp.h"
-#include "debug.h"
 
 #if DBG
 

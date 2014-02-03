@@ -24,7 +24,6 @@ Revision History:
 --*/
 
 #include "classp.h"
-#include "debug.h"
 
 PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List);
 VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List);

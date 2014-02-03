@@ -21,9 +21,7 @@ Revision History:
 
 --*/
 
-#define CLASS_INIT_GUID 0
 #include "classp.h"
-#include "debug.h"
 
 ULONG BreakOnClose = 0;
 
