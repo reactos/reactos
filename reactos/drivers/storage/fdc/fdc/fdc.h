@@ -7,9 +7,6 @@
  */
 
 #include <ntifs.h>
-#include <ntddk.h>
-#include <stdio.h>
-#include <debug.h>
 
 #define MAX_DEVICE_NAME 255
 #define MAX_ARC_PATH_LEN 255
@@ -124,5 +121,3 @@ NTAPI
 FdcPdoPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
-
-/* EOF */
