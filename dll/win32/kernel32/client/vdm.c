@@ -77,9 +77,354 @@ BaseCheckVDM(IN ULONG BinaryType,
              IN LPSTARTUPINFOW StartupInfo,
              IN HANDLE hUserToken OPTIONAL)
 {
-    /* This is not supported */
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_CHECK_VDM CheckVdm = &ApiMessage->Data.CheckVDMRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    PWCHAR CurrentDir = NULL;
+    PWCHAR ShortAppName = NULL;
+    PWCHAR ShortCurrentDir = NULL;
+    ULONG Length;
+    PCHAR AnsiCmdLine = NULL;
+    PCHAR AnsiAppName = NULL;
+    PCHAR AnsiCurDirectory = NULL;
+    PCHAR AnsiDesktop = NULL;
+    PCHAR AnsiTitle = NULL;
+    PCHAR AnsiReserved = NULL;
+    STARTUPINFOA AnsiStartupInfo;
+    ULONG NumStrings = 5;
+
+    if (CurrentDirectory == NULL)
+    {
+        /* Allocate memory for the current directory path */
+        Length = GetCurrentDirectoryW(0, NULL);
+        CurrentDir = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             Length * sizeof(WCHAR));
+        if (CurrentDir == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Cleanup;
+        }
+
+        /* Get the current directory */
+        GetCurrentDirectoryW(Length, CurrentDir);
+        CurrentDirectory = CurrentDir;
+    }
+
+    /* Calculate the size of the short application name */
+    Length = GetShortPathNameW(ApplicationName, NULL, 0);
+
+    /* Allocate memory for the short application name */
+    ShortAppName = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           Length * sizeof(WCHAR));
+    if (!ShortAppName)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Get the short application name */
+    if (!GetShortPathNameW(ApplicationName, ShortAppName, Length))
+    {
+        /* Try to determine which error occurred */
+        switch (GetLastError())
+        {
+            case ERROR_NOT_ENOUGH_MEMORY:
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+
+            case ERROR_INVALID_PARAMETER:
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            default:
+            {
+                Status = STATUS_OBJECT_PATH_INVALID;
+            }
+        }
+
+        goto Cleanup;
+    }
+
+    /* Calculate the size of the short current directory path */
+    Length = GetShortPathNameW(CurrentDirectory, NULL, 0);
+
+    /* Allocate memory for the short current directory path */
+    ShortCurrentDir = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              Length * sizeof(WCHAR));
+    if (!ShortCurrentDir)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Get the short current directory path */
+    if (!GetShortPathNameW(CurrentDirectory, ShortCurrentDir, Length))
+    {
+        /* Try to determine which error occurred */
+        switch (GetLastError())
+        {
+            case ERROR_NOT_ENOUGH_MEMORY:
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+
+            case ERROR_INVALID_PARAMETER:
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            default:
+            {
+                Status = STATUS_OBJECT_PATH_INVALID;
+            }
+        }
+        goto Cleanup;
+    }
+
+    /* Setup the input parameters */
+    CheckVdm->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    CheckVdm->BinaryType = BinaryType;
+    CheckVdm->CodePage = CP_ACP;
+    CheckVdm->dwCreationFlags = CreationFlags;
+    CheckVdm->CurDrive = CurrentDirectory[0] - L'A';
+    CheckVdm->CmdLen = wcslen(CommandLine) + 1;
+    CheckVdm->AppLen = wcslen(ShortAppName) + 1;
+    CheckVdm->PifLen = 0; // TODO: PIF file support!
+    CheckVdm->CurDirectoryLen = wcslen(ShortCurrentDir) + 1;
+    CheckVdm->EnvLen = AnsiEnvironment->Length;
+    CheckVdm->DesktopLen = (StartupInfo->lpDesktop != NULL) ? (wcslen(StartupInfo->lpDesktop) + 1) : 0;
+    CheckVdm->TitleLen = (StartupInfo->lpTitle != NULL) ? (wcslen(StartupInfo->lpTitle) + 1) : 0;
+    CheckVdm->ReservedLen = (StartupInfo->lpReserved != NULL) ? (wcslen(StartupInfo->lpReserved) + 1) : 0;
+
+    if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
+    {
+        /* Set the standard handles */
+        CheckVdm->StdIn = StartupInfo->hStdInput;
+        CheckVdm->StdOut = StartupInfo->hStdOutput;
+        CheckVdm->StdErr = StartupInfo->hStdError;
+    }
+
+    /* Allocate memory for the ANSI strings */
+    AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen);
+    AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
+    AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
+    if (StartupInfo->lpDesktop) AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                     HEAP_ZERO_MEMORY,
+                                                                     CheckVdm->DesktopLen);
+    if (StartupInfo->lpTitle) AnsiTitle = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 CheckVdm->TitleLen);
+    if (StartupInfo->lpReserved) AnsiReserved = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                       HEAP_ZERO_MEMORY,
+                                                                       CheckVdm->ReservedLen);
+
+    if (!AnsiCmdLine
+        || !AnsiAppName
+        || !AnsiCurDirectory
+        || (StartupInfo->lpDesktop && !AnsiDesktop)
+        || (StartupInfo->lpTitle && !AnsiTitle)
+        || (StartupInfo->lpReserved && !AnsiReserved))
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Convert the command line into an ANSI string */
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        CommandLine,
+                        CheckVdm->CmdLen,
+                        AnsiCmdLine,
+                        CheckVdm->CmdLen,
+                        NULL,
+                        NULL);
+
+    /* Convert the short application name into an ANSI string */
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        ShortAppName,
+                        CheckVdm->AppLen,
+                        AnsiAppName,
+                        CheckVdm->AppLen,
+                        NULL,
+                        NULL);
+
+    /* Convert the short current directory path into an ANSI string */
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        ShortCurrentDir,
+                        CheckVdm->CurDirectoryLen,
+                        AnsiCurDirectory,
+                        CheckVdm->CurDirectoryLen,
+                        NULL,
+                        NULL);
+
+    if (StartupInfo->lpDesktop)
+    {
+        /* Convert the desktop name into an ANSI string */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            StartupInfo->lpDesktop,
+                            CheckVdm->DesktopLen,
+                            AnsiDesktop,
+                            CheckVdm->DesktopLen,
+                            NULL,
+                            NULL);
+        NumStrings++;
+    }
+
+    if (StartupInfo->lpTitle)
+    {
+        /* Convert the title into an ANSI string */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            StartupInfo->lpTitle,
+                            CheckVdm->TitleLen,
+                            AnsiTitle,
+                            CheckVdm->TitleLen,
+                            NULL,
+                            NULL);
+        NumStrings++;
+    }
+
+    if (StartupInfo->lpReserved)
+    {
+        /* Convert the reserved value into an ANSI string */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            StartupInfo->lpReserved,
+                            CheckVdm->ReservedLen,
+                            AnsiReserved,
+                            CheckVdm->ReservedLen,
+                            NULL,
+                            NULL);
+        NumStrings++;
+    }
+
+    /* Fill the ANSI startup info structure */
+    RtlCopyMemory(&AnsiStartupInfo, StartupInfo, sizeof(STARTUPINFO));
+    AnsiStartupInfo.lpReserved = AnsiReserved;
+    AnsiStartupInfo.lpDesktop = AnsiDesktop;
+    AnsiStartupInfo.lpTitle = AnsiTitle;
+
+    /* Allocate the capture buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(NumStrings,
+                                             CheckVdm->CmdLen
+                                             + CheckVdm->AppLen
+                                             + CheckVdm->PifLen
+                                             + CheckVdm->CurDirectoryLen
+                                             + CheckVdm->DesktopLen
+                                             + CheckVdm->TitleLen
+                                             + CheckVdm->ReservedLen
+                                             + CheckVdm->EnvLen
+                                             + sizeof(STARTUPINFOA));
+    if (CaptureBuffer == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Capture the command line */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            AnsiCmdLine,
+                            CheckVdm->CmdLen,
+                            (PVOID*)&CheckVdm->CmdLine);
+
+    /* Capture the application name */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            AnsiAppName,
+                            CheckVdm->AppLen,
+                            (PVOID*)&CheckVdm->AppName);
+
+    CheckVdm->PifFile = NULL; // TODO: PIF file support!
+
+    /* Capture the current directory */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            AnsiCurDirectory,
+                            CheckVdm->CurDirectoryLen,
+                            (PVOID*)&CheckVdm->CurDirectory);
+
+    /* Capture the environment */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            AnsiEnvironment->Buffer,
+                            CheckVdm->EnvLen,
+                            (PVOID*)&CheckVdm->Env);
+
+    /* Capture the startup info structure */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            &AnsiStartupInfo,
+                            sizeof(STARTUPINFOA),
+                            (PVOID*)&CheckVdm->StartupInfo);
+
+    if (StartupInfo->lpDesktop)
+    {
+        /* Capture the desktop name */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                AnsiDesktop,
+                                CheckVdm->DesktopLen,
+                                (PVOID*)&CheckVdm->Desktop);
+    }
+    else CheckVdm->Desktop = NULL;
+
+    if (StartupInfo->lpTitle)
+    {
+        /* Capture the title */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                AnsiTitle,
+                                CheckVdm->TitleLen,
+                                (PVOID*)&CheckVdm->Title);
+    }
+    else CheckVdm->Title = NULL;
+
+    if (StartupInfo->lpReserved)
+    {
+        /* Capture the reserved parameter */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                AnsiReserved,
+                                CheckVdm->ReservedLen,
+                                (PVOID*)&CheckVdm->Reserved);
+    }
+    else CheckVdm->Reserved = NULL;
+
+    /* Send the message to CSRSS */
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCheckVDM),
+                                 sizeof(BASE_CHECK_VDM));
+
+    /* Write back the task ID */
+    *iTask = CheckVdm->iTask;
+
+Cleanup:
+
+    /* Free the ANSI strings */
+    if (AnsiCmdLine) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiCmdLine);
+    if (AnsiAppName) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiAppName);
+    if (AnsiCurDirectory) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiCurDirectory);
+    if (AnsiDesktop) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiDesktop);
+    if (AnsiTitle) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiTitle);
+    if (AnsiReserved) RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiReserved);
+
+    /* Free the capture buffer */
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Free the short paths */
+    if (ShortAppName) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortAppName);
+    if (ShortCurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortCurrentDir);
+
+    /* Free the current directory, if it was allocated here */
+    if (CurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDir);
+
+    return Status;
 }
 
 BOOL
