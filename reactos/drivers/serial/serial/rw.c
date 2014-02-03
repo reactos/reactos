@@ -9,6 +9,8 @@
 
 #include "serial.h"
 
+#include <debug.h>
+
 static IO_WORKITEM_ROUTINE SerialReadWorkItem;
 
 static PVOID

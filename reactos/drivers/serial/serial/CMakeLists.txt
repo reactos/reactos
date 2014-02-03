@@ -12,6 +12,7 @@ add_library(serial SHARED
     power.c
     rw.c
     serial.c
+    guid.c
     serial.rc)
 
 add_pch(serial serial.h)

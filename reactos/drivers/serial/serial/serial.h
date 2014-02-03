@@ -8,10 +8,7 @@
  */
 
 #include <ntddk.h>
-#include <ndk/haltypes.h>
 #include <ntddser.h>
-#include <stdio.h>
-#include <debug.h>
 
 /* See winbase.h */
 #define PST_RS232 1
