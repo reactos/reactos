@@ -8,11 +8,7 @@
  */
 
 #include <ntifs.h>
-#include <ntddk.h>
 #include <ntddser.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <debug.h>
 
 typedef enum
 {

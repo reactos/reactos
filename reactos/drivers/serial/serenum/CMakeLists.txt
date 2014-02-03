@@ -5,6 +5,7 @@ add_library(serenum SHARED
     misc.c
     pdo.c
     serenum.c
+    guid.c
     serenum.rc)
 
 add_pch(serenum serenum.h)
