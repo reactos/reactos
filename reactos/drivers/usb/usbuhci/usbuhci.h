@@ -47,4 +47,4 @@ NTSTATUS NTAPI CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 //
 NTSTATUS NTAPI InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
 
-#endif
+#endif /* USBUHCI_H__ */
