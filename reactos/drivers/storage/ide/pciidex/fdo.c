@@ -11,6 +11,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <initguid.h>
+#include <wdmguid.h>
+
 static NTSTATUS
 GetBusInterface(
 	IN PFDO_DEVICE_EXTENSION DeviceExtension)

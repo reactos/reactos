@@ -1,8 +1,5 @@
 #include <ntifs.h>
-#include <ntddk.h>
 #include <ide.h>
-#include <wdmguid.h>
-#include <stdio.h>
 
 typedef struct _PCIIDEX_DRIVER_EXTENSION
 {
