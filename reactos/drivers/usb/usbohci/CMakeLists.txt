@@ -18,6 +18,7 @@ add_library(usbohci SHARED
     usbohci.rc)
 
 target_link_libraries(usbohci
+    uuid
     libusb
     libcntpr
     ${PSEH_LIB})
