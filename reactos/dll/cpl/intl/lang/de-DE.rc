@@ -202,7 +202,7 @@ BEGIN
     IDS_ERROR_ANSI_CODE_PAGE "ANSI-Codepage konnte nicht gelesen werden"
     IDS_ERROR_INT_KEY_REG "Der Schlüssel HKCU\\Control Panel\\International konnte nicht geöffnet werden"
     IDS_ERROR_DEF_INT_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
-    IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
-    IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
+    IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language konnte nicht geöffnet werden"
+    IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage konnte nicht geöffnet werden"
     IDS_ERROR_INPUT_DLL "input.dll konnte nicht geladen werden"
 END
