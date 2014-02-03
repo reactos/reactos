@@ -1,4 +1,5 @@
-include_directories(..)
+
+include_directories(${REACTOS_SOURCE_DIR}/drivers/storage/class)
 
 list(APPEND SOURCE
     cdrom.c
