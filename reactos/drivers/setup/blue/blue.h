@@ -6,9 +6,7 @@
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
 
-/* DEFINITIONS ***************************************************************/
-
-#include <ntddk.h>
+#include <wdm.h>
 
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 
