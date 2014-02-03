@@ -36,4 +36,5 @@ BEGIN
     IDS_APPTITLE "Ortam Oynatıcısı"
     IDS_PLAY "Çal"
     IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

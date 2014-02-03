@@ -40,4 +40,5 @@ BEGIN
     IDS_APPTITLE "Lector multimedia"
     IDS_PLAY "Lecturare"
     IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare"
+	IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

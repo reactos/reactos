@@ -34,4 +34,5 @@ BEGIN
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Abspielen"
     IDS_DEFAULTMCIERRMSG "Für diesen Fehler steht keine Beschreibung zur Verfügung"
+    IDS_UNKNOWNFILEEXT "Kann keinen Gerätetyp aus der angegebenen Dateinamenerweiterung ermitteln."
 END

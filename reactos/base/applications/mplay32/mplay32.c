@@ -216,7 +216,7 @@ CloseMciDevice(VOID)
 
     DisableMenuItems();
 
-    return TRUE;
+    return 0;
 }
 
 static DWORD
@@ -241,7 +241,6 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     dwError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
     if (dwError != 0)
     {
-        ShowMCIError(hwnd, dwError);
         return dwError;
     }
 
@@ -250,7 +249,6 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     dwError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
     if (dwError != 0)
     {
-        ShowMCIError(hwnd, dwError);
         return dwError;
     }
 
@@ -287,7 +285,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     EnableMenuItems();
 
-    return TRUE;
+    return 0;
 }
 
 static VOID
@@ -415,7 +413,7 @@ ShowDeviceProperties(HWND hwnd)
     dwError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
     if (dwError != 0)
     {
-        MessageBox(0, _T("Can't display the device properties!"), NULL, MB_OK);
+        ShowMCIError(hwnd, dwError);
     }
 }
 
@@ -448,7 +446,6 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
     TCHAR szLocalFileName[MAX_PATH];
     TCHAR szDeviceName[MAX_PATH];
     DWORD dwSize;
-    BOOL IsSupported;
     MCIERROR mciError;
 
     if (lpFileName == NULL)
@@ -470,11 +467,21 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
 
     dwSize = sizeof(szDeviceName) - 2;
     _tcsnset(szDeviceName, _T('\0'), dwSize / sizeof(TCHAR));
-    IsSupported = IsSupportedFileExtension(szLocalFileName, szDeviceName, &dwSize);
 
-    if (IsSupported == TRUE)
+    if (!IsSupportedFileExtension(szLocalFileName, szDeviceName, &dwSize))
     {
-        OpenMciDevice(hwnd, szDeviceName, szLocalFileName);
+        TCHAR szErrorMessage[256];
+
+        LoadString(hInstance, IDS_UNKNOWNFILEEXT, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR));
+        MessageBox(hwnd, szErrorMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    mciError = OpenMciDevice(hwnd, szDeviceName, szLocalFileName);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+        return;
     }
 
     SetTimer(hwnd, IDT_PLAYTIMER, 100, (TIMERPROC) PlayTimerProc);
@@ -540,7 +547,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             TCHAR droppedfile[MAX_PATH];
             
             drophandle = (HDROP)wParam;
-            DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile));
+            DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile) / sizeof(TCHAR));
             DragFinish(drophandle);
             PlayFile(hwnd, droppedfile);
             break;
