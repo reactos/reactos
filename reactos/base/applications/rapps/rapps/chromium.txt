@@ -8,7 +8,7 @@ Description = Chromium B.S.U. is an arcade-style, top-scrolling space shooter.
 Size = 2.3 MB
 Category = 4
 URLSite = http://chromium-bsu.sourceforge.net
-URLDownload = http://files1.freesoft.ru/rep/701665/chromium-0.9.13.2.exe
+URLDownload = http://download.sourceforge.net/project/chromium-bsu/Chromium%20B.S.U.%20Win32%20binary/chromium-0.9.13.2.exe
 CDPath = none
 
 [Section.0407]

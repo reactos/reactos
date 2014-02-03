@@ -4,7 +4,7 @@
 Name = 7-Zip
 Version = 9.32a
 Licence = LGPL
-Description = Utility to create and open 7zip, zip, tar, rar and other archive files.
+Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
 Size = 1.1 MB
 Category = 12
 URLSite = http://www.7-zip.org/
@@ -12,34 +12,34 @@ URLDownload = http://dl.7-zip.org/7z932.exe
 CDPath = none
 
 [Section.0407]
-Description = Tool zum Erstellen und Öffnen von 7zip, zip, tar, rar und andrern Archiven.
+Description = Ein Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
 
 [Section.040a]
-Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
+Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos. (FIXME)
 
 [Section.040c]
-Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et autres archives.
+Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et autres archives. (FIXME)
 Size = 1,1 Mo
 
 [Section.0410]
-Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
+Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio. (FIXME)
 
 [Section.0413]
-Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden.
+Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden. (FIXME)
 
 [Section.0415]
-Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych.
+Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych. (FIXME)
 
 [Section.0418]
-Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele.
+Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele. (FIXME)
 Size = 1,1 Mo
 
 [Section.041f]
-Description = 7z, zip, tar, rar ve diğer birçok sıkıştırma biçimini destekleyen bir araç.
+Description = 7zip, zip, tar, rar ve diğer birçok türdeki belgelikleri destekleyen bir belgelikleme aracıdır.
 Size = 1,1 MB
 
 [Section.0422]
-Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.
+Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів. (FIXME)
 
 [Section.0813]
-Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden.
+Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden. (FIXME)
