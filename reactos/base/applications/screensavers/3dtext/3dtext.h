@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef _3DTEXT_H_
+#define _3DTEXT_H_
+
 #include <tchar.h>
 #include <windef.h>
 
@@ -25,3 +28,5 @@ extern TCHAR m_Text[MAX_PATH];
 
 VOID LoadSettings(VOID);
 VOID SaveSettings(VOID);
+
+#endif /* _3DTEXT_H_ */

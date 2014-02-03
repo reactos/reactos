@@ -8,7 +8,8 @@
  */
 
 #include "net.h"
-#include "stdlib.h"
+
+#include <stdlib.h>
 
 INT cmdHelpMsg(INT argc, WCHAR **argv)
 {

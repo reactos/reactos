@@ -20,6 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _WINHELP_H_
+#define _WINHELP_H_
+
 #define MAX_LANGUAGE_NUMBER     255
 #define MAX_STRING_LEN          255
 
@@ -203,3 +206,5 @@ extern const char STRING_DIALOG_TEST[];
 
 /* Buttons */
 #define WH_FIRST_BUTTON     500
+
+#endif /* _WINHELP_H_ */

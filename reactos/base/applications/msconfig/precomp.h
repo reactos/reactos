@@ -1,3 +1,6 @@
+#ifndef _MSCONFIG_PCH_
+#define _MSCONFIG_PCH_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -18,3 +21,5 @@
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
+
+#endif /* _MSCONFIG_PCH_ */

@@ -1,3 +1,6 @@
+#ifndef _RAPPS_H
+#define _RAPPS_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -195,3 +198,5 @@ VOID ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt);
 extern HWND hTreeView;
 BOOL CreateTreeView(HWND hwnd);
 HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
+
+#endif /* _RAPPS_H */
