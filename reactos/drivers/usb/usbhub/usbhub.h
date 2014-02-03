@@ -1,11 +1,9 @@
 #pragma once
 
-#include <ntddk.h>
+#include <wdm.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
-
-//BROKEN: #include <usbprotocoldefs.h>
 
 #define USB_HUB_TAG 'hbsu'
 #define USB_MAXCHILDREN 127
