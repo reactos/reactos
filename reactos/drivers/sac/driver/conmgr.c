@@ -10,6 +10,8 @@
 
 #include "sacdrv.h"
 
+#include <initguid.h>
+
 /* GLOBALS ********************************************************************/
 
 DEFINE_GUID(PRIMARY_SAC_CHANNEL_APPLICATION_GUID,
@@ -890,4 +892,3 @@ ConMgrHandleEvent(IN ULONG EventCode,
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
-

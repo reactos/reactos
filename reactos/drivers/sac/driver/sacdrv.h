@@ -9,14 +9,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
-#include <intrin.h>
-#include <wchar.h>
 #include <stdio.h>
-#include <ndk/obtypes.h>
-#include <ndk/exfuncs.h>
-#include <ndk/rtlfuncs.h>
-#include <../../../ntoskrnl/include/internal/hdl.h>
-#include <initguid.h>
+#include <ntoskrnl/include/internal/hdl.h>
 #include <sacmsg.h>
 
 /* DEFINES ********************************************************************/
