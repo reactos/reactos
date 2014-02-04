@@ -7,6 +7,7 @@
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:
  */
+
 #pragma once
 
 /* Built-in class descriptor */
