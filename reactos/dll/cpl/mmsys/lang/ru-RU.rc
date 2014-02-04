@@ -1,4 +1,4 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -170,7 +170,7 @@ BEGIN
     LTEXT "Этот компьютер не может воспроизводить звук пока служба звука ReactOS не включена.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Включить Звук ReactOS", 10253, 60, 68, 150, 9
     LTEXT "Примечания", 10246, 58, 87, 150, 9
-    LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
+    LTEXT "1. Вы должны быть администратором, чтобы включить эту службу. Если вы не вошли в систему в качестве администратора, вам будет предложено ввести имя и пароль администратора.", 10247, 60, 100, 150, 40
     LTEXT "2. После того, как вы включите Звук ReactOS, вы должны перезагрузить компьютер.", 10248, 60, 140, 150, 40
 END
 
@@ -223,9 +223,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Звук ReactOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "The ReactOS Audio service is now enabled. However, audio may not function properly until you restart ReactOS. If you want to restart now, first save your work and close all programs.", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS сервис Audio включен. Однако, звук может не функционировать должным образом, пока вы не перезагрузите ReactOS. Если вы хотите перезагрузить компьютер сейчас, сначала сохраните данные и закройте все программы.", 10261, 60, 25, 150, 50
     LTEXT "Для перезагрузки ReactOS нажмите ""OK"".", 10262, 60, 75, 150, 20
-    LTEXT "If you Cancel, you will need to restart later for ReactOS Audio to function properly.", 10263, 60, 100, 150, 40
+    LTEXT "Нажмите Отмена, чтобы перезапустить ReactOS позже.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Russian resources for the Internet control panel applet
  *
  * Copyright 2011 Alexander Lakhin
@@ -104,13 +104,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
+    IDS_CPL_NAME        "Интернет-Настройки"
+    IDS_CPL_INFO        "Настроить Wine Интернет-Браузер и настройки, связанные с"
+    IDS_SEC_SETTINGS    "Параметры безопасности этой зоны: "
+    IDS_SEC_LEVEL0      "Пользовательские"
+    IDS_SEC_LEVEL1      "Очень Низкая"
+    IDS_SEC_LEVEL2      "Низкая"
+    IDS_SEC_LEVEL3      "Средняя"
+    IDS_SEC_LEVEL4      "Увеличенная"
+    IDS_SEC_LEVEL5      "Высокая"
 END
