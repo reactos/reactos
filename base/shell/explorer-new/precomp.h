@@ -167,6 +167,15 @@ GetExplorerRegValueSet(IN HKEY hKey,
                        IN LPCTSTR lpValue);
 
 /*
+ *  rshell.c
+ */
+
+HRESULT
+CStartMenu_Constructor(
+    REFIID riid,
+    void **ppv);
+
+/*
  * traywnd.c
  */
 

@@ -848,11 +848,15 @@ CreateStartMenu(IN ITrayWindow *Tray,
     if (pSms == NULL)
         return NULL;
 
+#if 0
     hr = CoCreateInstance(&CLSID_StartMenu,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           &IID_IMenuPopup,
                           (PVOID *)&pMp);
+#else
+    hr = CStartMenu_Constructor(&IID_IMenuPopup,(PVOID *)&pMp);
+#endif
     if (FAILED(hr))
     {
         DbgPrint("CoCreateInstance failed: %x\n", hr);

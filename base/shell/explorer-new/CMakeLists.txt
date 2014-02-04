@@ -1,10 +1,13 @@
 
+PROJECT(SHELL)
+
 add_definitions(-DWIN32)
 
 list(APPEND SOURCE
     desktop.c
     dragdrop.c
     explorer.c
+    rshell.c
     settings.c
     startmnu.c
     startup.c
