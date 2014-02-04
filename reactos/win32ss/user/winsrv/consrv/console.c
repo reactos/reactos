@@ -11,28 +11,17 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "handle.h"
-#include "procinit.h"
-#include "alias.h"
-#include "coninput.h"
-#include "conoutput.h"
-#include "lineinput.h"
-#include "include/settings.h"
 
-#include "frontends/gui/guiterm.h"
+#include <ndk/psfuncs.h>
+
+#include "procinit.h"
+
 #ifdef TUITERM_COMPILE
 #include "frontends/tui/tuiterm.h"
 #endif
 
-#include "include/console.h"
-#include "console.h"
-#include "resource.h"
-
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 

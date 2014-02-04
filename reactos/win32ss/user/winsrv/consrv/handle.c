@@ -11,16 +11,11 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "handle.h"
-#include "include/console.h"
-#include "console.h"
-#include "conoutput.h"
+
+#include <win/console.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 

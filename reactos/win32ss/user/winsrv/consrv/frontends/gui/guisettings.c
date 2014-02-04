@@ -9,14 +9,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "consrv.h"
-#include "include/conio.h"
-#include "include/settings.h"
-#include "guisettings.h"
+#include <consrv.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 VOID GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 VOID SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);

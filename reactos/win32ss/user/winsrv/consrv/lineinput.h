@@ -10,5 +10,3 @@
 
 VOID FASTCALL HistoryDeleteBuffers(PCONSOLE Console);
 VOID FASTCALL LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
-
-/* EOF */

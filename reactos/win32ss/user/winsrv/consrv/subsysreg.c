@@ -13,7 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* PUBLIC SERVER APIS *********************************************************/
 
 /*

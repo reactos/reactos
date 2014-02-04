@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "include/settings.h"
-#include "guisettings.h"
+#include <include/settings.h>
 
-/* EOF */
+#include "guisettings.h"

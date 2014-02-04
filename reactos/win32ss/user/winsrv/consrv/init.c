@@ -9,11 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+
 #include "api.h"
 #include "procinit.h"
-#include "include/conio.h"
-#include "include/console.h"
-#include "console.h"
 
 #define NDEBUG
 #include <debug.h>
