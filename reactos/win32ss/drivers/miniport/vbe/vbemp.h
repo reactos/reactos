@@ -20,12 +20,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "ntdef.h"
-#include "dderror.h"
-#include "devioctl.h"
-#include "miniport.h"
-#include "ntddvdeo.h"
-#include "video.h"
+#include <ntdef.h>
+#include <dderror.h>
+#include <miniport.h>
+#include <video.h>
 
 #define TAG_VBE ' EBV'
 
