@@ -896,4 +896,3 @@ Return Value:
     VgaInterpretCmdStream(HwDeviceExtension, DisableA000Color);
 
 }
-

@@ -7,12 +7,11 @@
  *                  ReactOS Portable Systems Group
  */
 
-#include "ntdef.h"
-#include "dderror.h"
-#include "devioctl.h"
-#include "miniport.h"
-#include "ntddvdeo.h"
-#include "video.h"
+#include <ntdef.h>
+#include <dderror.h>
+#include <miniport.h>
+#include <video.h>
+
 #include "cmdcnst.h"
 
 //
