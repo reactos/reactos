@@ -1,6 +1,12 @@
+#include <stdio.h>
+
+#define COBJMACROS
+
 #include "recyclebin.h"
-#include "sddl.h"
+#include "recyclebin_v5.h"
+
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
 /* Defines */
 

@@ -6,10 +6,7 @@
  * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define COBJMACROS
-#include "recyclebin_v5.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+#include "recyclebin_private.h"
 
 struct RecycleBin5File
 {
