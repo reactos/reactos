@@ -35,7 +35,7 @@
  * SUCH DAMAGE.
  */
 
-#include <ntddk.h>
+#include <ntdef.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
 
