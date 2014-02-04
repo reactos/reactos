@@ -1,3 +1,4 @@
+#pragma once
 
 #define VGA_NORMAL 0
 #define VGA_AND    8
