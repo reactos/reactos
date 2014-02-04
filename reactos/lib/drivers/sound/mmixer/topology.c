@@ -6,7 +6,7 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
 
 #define YDEBUG
 #include <debug.h>
@@ -1289,8 +1289,3 @@ MMixerCreateTopology(
     /* done */
     return MM_STATUS_SUCCESS;
 }
-
-
-
-
-

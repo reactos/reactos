@@ -6,7 +6,7 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "priv.h"
+#include "precomp.h"
 
 #define YDEBUG
 #include <debug.h>
@@ -865,4 +865,3 @@ MMixerInitializePinConnect(
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = 1;
 }
-

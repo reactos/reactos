@@ -1,4 +1,4 @@
-#include <ntddk.h>
+#include <wdm.h>
 #include <windef.h>
 #define NOBITMAP
 #include <mmreg.h>
