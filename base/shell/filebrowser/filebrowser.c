@@ -20,9 +20,9 @@
 
 #include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
-#include <ShObjIdl.h>
-#include <ShlObj.h>
+#include <windows.h>
+#include <shobjidl.h>
+#include <shlobj.h>
 
 typedef HRESULT (WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
 
