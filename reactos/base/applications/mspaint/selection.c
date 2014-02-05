@@ -119,8 +119,9 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         rectSel_dest[3] -= yDelta;
                         break;
                     case 3:
-                        rectSel_dest[2] += xDelta;
                         rectSel_dest[1] += yDelta;
+                        rectSel_dest[2] += xDelta;
+                        rectSel_dest[3] -= yDelta;
                         break;
                     case 4:
                         rectSel_dest[0] += xDelta;

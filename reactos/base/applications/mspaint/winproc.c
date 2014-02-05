@@ -179,6 +179,9 @@ UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepa
 void
 InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
+    HDC hTempDC;
+    HBITMAP hTempMask;
+
     HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
     SendMessage(window, WM_COMMAND, ID_RECTSEL, 0);
@@ -191,10 +194,21 @@ InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     rectSel_dest[0] = rectSel_dest[1] = 0;
     rectSel_dest[2] = GetDIBWidth(hSelBm);
     rectSel_dest[3] = GetDIBHeight(hSelBm);
-    BitBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
-           hSelDC, 0, 0, SRCCOPY);
+
+    hTempDC = CreateCompatibleDC(hSelDC);
+    hTempMask = CreateBitmap(rectSel_dest[2], rectSel_dest[3], 1, 1, NULL);
+    SelectObject(hTempDC, hTempMask);
+    Rect(hTempDC, 0, 0, rectSel_dest[2], rectSel_dest[3], 0x00ffffff, 0x00ffffff, 1, 1);
+    DeleteObject(hSelMask);
+    hSelMask = hTempMask;
+    DeleteDC(hTempDC);
+
     placeSelWin();
     ShowWindow(hSelection, SW_SHOW);
+    /* force refresh of selection contents */
+    SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+    SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+    SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
 }
 
 BOOL drawing;
@@ -973,10 +987,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 SelectObject(hSelDC, hSelBm);
                                 StretchBlt(hSelDC, rectSel_dest[2] - 1, 0, -rectSel_dest[2], rectSel_dest[3], hSelDC,
                                            0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                /* force refresh of selection contents, used also in case 2 and case 4 */
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                                /* force refresh of selection contents */
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
                             }
                             else
                             {
@@ -995,9 +1009,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 SelectObject(hSelDC, hSelBm);
                                 StretchBlt(hSelDC, 0, rectSel_dest[3] - 1, rectSel_dest[2], -rectSel_dest[3], hSelDC,
                                            0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                                /* force refresh of selection contents */
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
                             }
                             else
                             {
@@ -1018,9 +1033,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 SelectObject(hSelDC, hSelBm);
                                 StretchBlt(hSelDC, rectSel_dest[2] - 1, rectSel_dest[3] - 1, -rectSel_dest[2], -rectSel_dest[3], hSelDC,
                                            0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                                /* force refresh of selection contents */
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
                             }
                             else
                             {
