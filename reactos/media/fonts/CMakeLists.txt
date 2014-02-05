@@ -50,6 +50,7 @@ list(APPEND FONT_FILES
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
+    UniVGA16.ttf
 )
 
 foreach(item ${FONT_FILES})
