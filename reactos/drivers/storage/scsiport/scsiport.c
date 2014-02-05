@@ -3286,7 +3286,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
             break;
 
         ScatterGatherList->Length = Srb->DataTransferLength - TotalLength;
-        ScatterGatherList->PhysicalAddress = IoMapTransfer(NULL,
+        ScatterGatherList->PhysicalAddress = IoMapTransfer(DeviceExtension->AdapterObject,
                                                            Irp->MdlAddress,
                                                            MapRegisterBase,
                                                            DataVA + TotalLength,
