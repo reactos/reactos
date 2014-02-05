@@ -16,22 +16,17 @@
 /* DDK/NDK/SDK headers */
 #undef NTDDI_VERSION
 #define NTDDI_VERSION NTDDI_WS03SP1
-#include <ntddk.h>
-#include <ntddmou.h>
-#include <ntddvdeo.h>
 #include <ntifs.h>
-#include <tvout.h>
+#include <ntddmou.h>
 #include <ndk/exfuncs.h>
 #include <ndk/kdfuncs.h>
 #include <ndk/kefuncs.h>
-#include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
 #include <ntddkbd.h>
-#include <bugcodes.h>
 
 /* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -61,20 +56,12 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <winuser.h>
-#include <windowsx.h>
 #include <prntfont.h>
-#include <dde.h>
-#include <wincon.h>
-#include <winnls.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
-
-/* CSRSS Header */
-#include <csr/csr.h>
-#include <win/winmsg.h>
 
 /* Public Win32K headers */
 #include <include/callback.h>
@@ -87,20 +74,10 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Undocumented user definitions */
 #include <undocuser.h>
-#include <winlogon.h>
 
 /* Freetype headers */
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_TYPE1_TABLES_H
-#include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-#include <freetype/ftbitmap.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
-#include <freetype/freetype.h>
 
 /* Internal Win32K header */
 #include "win32kp.h"
