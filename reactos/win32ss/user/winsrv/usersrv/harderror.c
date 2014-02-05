@@ -11,10 +11,12 @@
 
 #include "usersrv.h"
 
+#include <ndk/mmfuncs.h>
+#include <pseh/pseh2.h>
+#include <strsafe.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#include <strsafe.h>
 
 #define IDTRYAGAIN 10
 #define IDCONTINUE 11
