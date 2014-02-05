@@ -1,3 +1,6 @@
+#ifndef _DESK_H
+#define _DESK_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -126,3 +129,4 @@ RegLoadMUIStringW(IN HKEY hKey,
                   IN DWORD Flags,
                   IN LPCWSTR pszDirectory  OPTIONAL);
 
+#endif /* _DESK_H */
