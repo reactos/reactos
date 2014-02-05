@@ -66,12 +66,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pilihan Startup", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Normal Startup - mengambil semua device drivers dan layanan", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
-    CONTROL "&Diagnostik Startup - mengambil hanya devices dan layanan dasar", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
-    CONTROL "S&elektif Startup", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
-    AUTOCHECKBOX "P&roses File SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
-    AUTOCHECKBOX "&Ambil Layanan Sistem", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
-    AUTOCHECKBOX "Amb&il Item Startup", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+    CONTROL "&Normal Startup - mengambil semua device drivers dan layanan", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "&Diagnostik Startup - mengambil hanya devices dan layanan dasar", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "S&elektif Startup", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "P&roses File SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "&Ambil Layanan Sistem", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Amb&il Item Startup", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

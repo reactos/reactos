@@ -66,12 +66,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Systemstartauswahl", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Normaler Systemstart - Alle Gerätetreiber und Dienste laden", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 210, 10
-    CONTROL "&Diagnosesystemstart - Nur grundlegende Geräte und Dienste laden", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 230, 10
-    CONTROL "B&enutzerdefinierter Systemstart", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 120, 10
-    AUTOCHECKBOX "D&atei SYSTEM.INI verarbeiten", IDC_CBX_SYSTEM_INI, 30, 80, 110, 10
-    AUTOCHECKBOX "&Systemdienste laden", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
-    AUTOCHECKBOX "S&ystemstartelemente laden", IDC_CBX_STARTUP_ITEM, 30, 110, 110, 10
+    CONTROL "&Normaler Systemstart - Alle Gerätetreiber und Dienste laden", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "&Diagnosesystemstart - Nur grundlegende Geräte und Dienste laden", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "B&enutzerdefinierter Systemstart", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "D&atei SYSTEM.INI verarbeiten", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "&Systemdienste laden", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "S&ystemstartelemente laden", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

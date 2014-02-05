@@ -70,12 +70,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Výber spustenia", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Normálne spustenie - načítať všetky ovládače zariadení a služby", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 225, 10
-    CONTROL "&Diagnostické spustenie - načítať iba základné zariadenia a služby", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 225, 10
-    CONTROL "Sele&ktívne spustenie", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 85, 10
-    AUTOCHECKBOX "&Spracovať súbor SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 110, 10
-    AUTOCHECKBOX "Načítať systé&mové služby", IDC_CBX_SYSTEM_SERVICE, 30, 95, 100, 10
-    AUTOCHECKBOX "N&ačítať položky Po spustení", IDC_CBX_STARTUP_ITEM, 30, 110, 100, 10
+    CONTROL "&Normálne spustenie - načítať všetky ovládače zariadení a služby", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "&Diagnostické spustenie - načítať iba základné zariadenia a služby", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "Sele&ktívne spustenie", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "&Spracovať súbor SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "Načítať systé&mové služby", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "N&ačítať položky Po spustení", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

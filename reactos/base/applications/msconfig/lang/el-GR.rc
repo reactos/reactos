@@ -66,12 +66,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Επιλογή εκκίνησης", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Normal Startup - load all device drivers and services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
-    CONTROL "&Diagnostic Startup - load basic devices and services only", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
-    CONTROL "S&elective Startup", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
-    AUTOCHECKBOX "P&rocess SYSTEM.INI File", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
-    AUTOCHECKBOX "&Φόρτωση υπηρεσιών συστήματων", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
-    AUTOCHECKBOX "Φό&ρτωση Startup αντικειμένων", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+    CONTROL "&Normal Startup - load all device drivers and services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "&Diagnostic Startup - load basic devices and services only", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "S&elective Startup", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "P&rocess SYSTEM.INI File", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "&Φόρτωση υπηρεσιών συστήματων", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Φό&ρτωση Startup αντικειμένων", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175
