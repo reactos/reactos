@@ -223,7 +223,7 @@ static VOID WINAPI BiosHandleMasterPicIRQ(LPWORD Stack)
     IOWriteB(PIC_MASTER_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_MASTER_CMD);
 
-    DPRINT1("Master - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Master - IrqNumber = 0x%x\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
@@ -235,7 +235,7 @@ static VOID WINAPI BiosHandleSlavePicIRQ(LPWORD Stack)
     IOWriteB(PIC_SLAVE_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_SLAVE_CMD);
 
-    DPRINT1("Slave - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Slave - IrqNumber = 0x%x\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
