@@ -7,6 +7,9 @@
  *                   Eric Kohl
  */
 
+#ifndef _FS_REC_H
+#define _FS_REC_H
+
 #include <ntifs.h>
 
 /* Tag for memory allocations */
@@ -255,3 +258,5 @@ FsRecLoadFileSystem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PWCHAR DriverServiceName
 );
+
+#endif /* _FS_REC_H */

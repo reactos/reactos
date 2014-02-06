@@ -25,6 +25,9 @@ Revision History:
 
 --*/
 
+#ifndef _CLASSPNP_PCH_
+#define _CLASSPNP_PCH_
+
 #include <ntddk.h>
 #include <classpnp.h>
 #include <ioevent.h>
@@ -865,3 +868,5 @@ NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo);
 VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo);
 
 #include "debug.h"
+
+#endif /* _CLASSPNP_PCH_ */

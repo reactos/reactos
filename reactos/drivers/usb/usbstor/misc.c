@@ -517,4 +517,3 @@ USBSTOR_IsFloppy(
     //
     return FALSE;
 }
-

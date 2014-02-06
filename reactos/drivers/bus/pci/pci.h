@@ -1,3 +1,6 @@
+#ifndef _PCI_PCH_
+#define _PCI_PCH_
+
 #include <ntifs.h>
 
 #define TAG_PCI '0ICP'
@@ -174,3 +177,5 @@ NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath);
+
+#endif /* _PCI_PCH_ */

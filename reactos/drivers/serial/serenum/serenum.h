@@ -7,6 +7,9 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
+#ifndef _SERENUM_PCH_
+#define _SERENUM_PCH_
+
 #include <ntifs.h>
 #include <ntddser.h>
 
@@ -124,3 +127,5 @@ NTSTATUS NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegPath);
+
+#endif /* _SERENUM_PCH_ */

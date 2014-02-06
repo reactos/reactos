@@ -1,3 +1,6 @@
+#ifndef _SERMOUSE_PCH_
+#define _SERMOUSE_PCH_
+
 #include <ntddk.h>
 #include <ntddser.h>
 #include <kbdmou.h>
@@ -110,3 +113,5 @@ ForwardIrpAndForget(
 VOID NTAPI
 SermouseDeviceWorker(
 	PVOID Context);
+
+#endif /* _SERMOUSE_PCH_ */

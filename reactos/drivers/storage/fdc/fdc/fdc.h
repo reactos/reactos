@@ -6,6 +6,9 @@
  * PROGRAMMERS:    Eric Kohl
  */
 
+#ifndef _FDC_PCH_
+#define _FDC_PCH_
+
 #include <ntifs.h>
 
 #define MAX_DEVICE_NAME 255
@@ -121,3 +124,5 @@ NTAPI
 FdcPdoPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+#endif /* _FDC_PCH_ */

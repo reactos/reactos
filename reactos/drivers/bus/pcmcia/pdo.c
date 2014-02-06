@@ -35,4 +35,3 @@ PcmciaPdoSetPowerState(PPCMCIA_PDO_EXTENSION PdoExt)
 
     return STATUS_SUCCESS;
 }
-

@@ -1,3 +1,6 @@
+#ifndef _KBDCLASS_PCH_
+#define _KBDCLASS_PCH_
+
 #include <ntifs.h>
 #include <ntddkbd.h>
 
@@ -76,3 +79,5 @@ DuplicateUnicodeString(
 	IN ULONG Flags,
 	IN PCUNICODE_STRING SourceString,
 	OUT PUNICODE_STRING DestinationString);
+
+#endif /* _KBDCLASS_PCH_ */

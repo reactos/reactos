@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _USBHUB_H_
+#define _USBHUB_H_
 
 #include <wdm.h>
 #include <hubbusif.h>
@@ -185,3 +186,5 @@ NTSTATUS
 USBHUB_ParentFDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+#endif /* _USBHUB_H_ */

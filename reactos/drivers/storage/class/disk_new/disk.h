@@ -20,6 +20,9 @@ Revision History:
 
 --*/
 
+#ifndef _DISK_NEW_H_
+#define _DISK_NEW_H_
+
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
 #define NTDDI_VERSION NTDDI_WINXP
@@ -975,3 +978,5 @@ DiskReadSignature(
 
 
 #define DiskHashGuid(Guid) (((PULONG) &Guid)[0] ^ ((PULONG) &Guid)[0] ^ ((PULONG) &Guid)[0] ^ ((PULONG) &Guid)[0])
+
+#endif /* _DISK_NEW_H_ */

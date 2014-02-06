@@ -6,6 +6,9 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#ifndef _COMPBATT_PCH_
+#define _COMPBATT_PCH_
+
 #include <wdm.h>
 #include <batclass.h>
 
@@ -149,7 +152,7 @@ BatteryIoctl(
     IN ULONG OutputBufferLength,
     IN BOOLEAN InternalDeviceIoControl
 );
-                               
+
 extern ULONG CompBattDebug;
 
-/* EOF */
+#endif /* _COMPBATT_PCH_ */

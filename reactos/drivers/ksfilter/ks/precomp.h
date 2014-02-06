@@ -1,3 +1,6 @@
+#ifndef _KS_PCH_
+#define _KS_PCH_
+
 #define _KSDDK_
 
 #include <ntddk.h>
@@ -45,3 +48,5 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_STREAM_MASTERCLOCK(PropMasterClock, PropMasterClock),\
     DEFINE_KSPROPERTY_ITEM_STREAM_PIPE_ID(PropPipeId, PropPipeId)\
 }
+
+#endif /* _KS_PCH_ */

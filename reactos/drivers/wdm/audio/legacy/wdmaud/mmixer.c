@@ -804,4 +804,3 @@ WdmAudControlOpenMidi(
     else
         return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, sizeof(WDMAUD_DEVICE_INFO));
 }
-

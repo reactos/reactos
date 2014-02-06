@@ -6,6 +6,9 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#ifndef _PCIX_PCH_
+#define _PCIX_PCH_
+
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <wchar.h>
@@ -1822,4 +1825,4 @@ extern BOOLEAN PciRunningDatacenter;
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;
 
-/* EOF */
+#endif /* _PCIX_PCH_ */

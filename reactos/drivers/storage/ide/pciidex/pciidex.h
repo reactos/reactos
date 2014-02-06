@@ -1,3 +1,6 @@
+#ifndef _PCIIDEX_PCH_
+#define _PCIIDEX_PCH_
+
 #include <ntifs.h>
 #include <ide.h>
 
@@ -79,3 +82,5 @@ NTSTATUS NTAPI
 PciIdeXPdoPnpDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+#endif /* _PCIIDEX_PCH_ */
