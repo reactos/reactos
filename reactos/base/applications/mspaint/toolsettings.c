@@ -184,10 +184,13 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         transpBg = (y - 2) / 31;
                         InvalidateRect(hwnd, NULL, TRUE);
 
-                        /* force refresh of selection contents */
-                        SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-                        SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-                        SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+                        if (IsWindowVisible(hSelection))
+                        {
+                            /* force refresh of selection contents */
+                            SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+                            SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+                            SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+                        }
                     }
                     break;
                 case TOOL_RUBBER:
