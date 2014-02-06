@@ -552,7 +552,15 @@ IStartMenuSiteImpl_AppendMenu(IN OUT ITrayPriv *iface,
                                           TEXT("Advanced"),
                                           TEXT("StartMenuLogoff")));
 
-    /* FIXME: Favorites */
+    /* Favorites */
+    if (!GetExplorerRegValueSet(HKEY_CURRENT_USER,
+                                TEXT("Advanced"),
+                                TEXT("StartMenuFavorites")))
+    {
+        DeleteMenu(hMenu,
+                   IDM_FAVORITES,
+                   MF_BYCOMMAND);
+    }
 
     /* Documents */
     if (SHRestricted(REST_NORECENTDOCSMENU))

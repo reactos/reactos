@@ -1632,6 +1632,9 @@ TaskSwitchWnd_HandleShellHookMsg(IN OUT PTASK_SWITCH_WND This,
             break;
 
         case HSHELL_TASKMAN:
+            PostMessage(ITrayWindow_GetHWND(This->Tray), TWM_OPENSTARTMENU,0, 0);
+            break;
+
         case HSHELL_LANGUAGE:
         case HSHELL_SYSMENU:
         case HSHELL_ENDTASK:
@@ -2122,6 +2125,24 @@ ForwardContextMenuMsg:
                 }
                 break;
 #endif
+
+            case WM_KLUDGEMINRECT:
+            {
+                PTASK_ITEM TaskItem = TaskSwitchWnd_FindTaskItem(This, (HWND)wParam);
+                if (TaskItem)
+                {
+                    RECT* prcMinRect = (RECT*)lParam;
+                    RECT rcItem, rcToolbar;
+                    SendMessageW(This->hWndToolbar,TB_GETITEMRECT, TaskItem->Index, (LPARAM)&rcItem);
+                    GetWindowRect(This->hWndToolbar, &rcToolbar);
+
+                    OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
+
+                    *prcMinRect = rcItem;
+                    return TRUE;
+                }
+                return FALSE;
+            }
 
             default:
 /* HandleDefaultMessage: */

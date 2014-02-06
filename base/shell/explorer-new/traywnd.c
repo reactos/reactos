@@ -2550,9 +2550,19 @@ HandleTrayContextMenu:
                 break;
 
             case TWM_OPENSTARTMENU:
-                SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
-                break;
+            {
+                HWND hwndStartMenu;
+                HRESULT hr = IUnknown_GetWindow((IUnknown*)This->StartMenuPopup, &hwndStartMenu);
+                if (FAILED(hr))
+                    break;
 
+                if (IsWindowVisible(hwndStartMenu))
+                    SetWindowPos(hwndStartMenu, 0,0,0,0,0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+                else
+                    SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
+
+                break;
+            }
             case WM_COMMAND:
                 if ((HWND)lParam == This->hwndStart)
                 {
@@ -2603,6 +2613,10 @@ HandleTrayContextMenu:
                     {
                         /* FIXME: Handle these commands as well */
                         case IDM_TASKBARANDSTARTMENU:
+
+                            ITrayWindowImpl_DisplayProperties(ITrayWindow_from_impl(This));
+                            break;
+
                         case IDM_SEARCH:
                         case IDM_HELPANDSUPPORT:
                             break;

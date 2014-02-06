@@ -23,6 +23,7 @@
 #include <shlguid_undoc.h>
 #include <uxtheme.h>
 #include <strsafe.h>
+#include <undocuser.h>
 
 #include "tmschema.h"
 #include "resource.h"
