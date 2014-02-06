@@ -360,6 +360,9 @@ GetDriveTypeA(IN LPCSTR lpRootPathName)
 {
    PWCHAR RootPathNameW;
 
+   if (!lpRootPathName)
+       return GetDriveTypeW(NULL);
+
    if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
       return DRIVE_UNKNOWN;
 
@@ -373,13 +376,31 @@ UINT
 WINAPI
 GetDriveTypeW(IN LPCWSTR lpRootPathName)
 {
-	FILE_FS_DEVICE_INFORMATION FileFsDevice;
-	IO_STATUS_BLOCK IoStatusBlock;
+    FILE_FS_DEVICE_INFORMATION FileFsDevice;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+    NTSTATUS errCode;
 
-	HANDLE hFile;
-	NTSTATUS errCode;
+    if (!lpRootPathName)
+    {
+        /* If NULL is passed, use current directory path */
+        DWORD BufferSize = GetCurrentDirectoryW(0, NULL);
+        LPWSTR CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
+        if (!CurrentDir)
+            return DRIVE_UNKNOWN;
+        if (!GetCurrentDirectoryW(BufferSize, CurrentDir))
+        {
+            HeapFree(GetProcessHeap(), 0, CurrentDir);
+            return DRIVE_UNKNOWN;
+        }
+        hFile = InternalOpenDirW(CurrentDir, FALSE);
+        HeapFree(GetProcessHeap(), 0, CurrentDir);
+    }
+    else
+    {
+        hFile = InternalOpenDirW(lpRootPathName, FALSE);
+    }
 
-	hFile = InternalOpenDirW(lpRootPathName, FALSE);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 	    return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
