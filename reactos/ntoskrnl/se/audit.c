@@ -310,6 +310,8 @@ SepAccessCheckAndAuditAlarmWorker(
         AccessStatusList[i] = STATUS_SUCCESS;
     }
 
+    *GenerateOnClose = FALSE;
+
     return STATUS_SUCCESS;
 }
 
@@ -341,7 +343,7 @@ SepAccessCheckAndAuditAlarm(
     PTOKEN SubjectContextToken, ClientToken;
     BOOLEAN AllocatedResultLists;
     BOOLEAN HaveAuditPrivilege;
-    PISECURITY_DESCRIPTOR CapturedSecurityDescriptor;
+    PSECURITY_DESCRIPTOR CapturedSecurityDescriptor;
     UNICODE_STRING CapturedSubsystemName, CapturedObjectTypeName, CapturedObjectName;
     ACCESS_MASK GrantedAccess, *SafeGrantedAccessList;
     NTSTATUS AccessStatus, *SafeAccessStatusList;
@@ -606,6 +608,7 @@ SepAccessCheckAndAuditAlarm(
         Status = _SEH2_GetExceptionCode();
         DPRINT1("Exception while copying back data: 0x%lx\n", Status);
     }
+    _SEH2_END;
 
 Cleanup:
 
