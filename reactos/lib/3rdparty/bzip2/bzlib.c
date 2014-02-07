@@ -32,7 +32,7 @@
 #ifndef __NTDRIVER__
   #define __NTDRIVER__
 #endif
-#include <ntddk.h>
+#include <wdm.h>
 #include <debug.h>
 #endif
 #include "bzlib_private.h"
