@@ -211,6 +211,15 @@ DisplayClassInstaller(
         DPRINT("SetupInstallFromInfSection() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
+    /* Add Device Description string */
+    rc = RegSetValueEx(hDeviceSubKey, _T("Device Description"), 0,
+        REG_SZ, (const BYTE*)DriverInfoData.Description,
+        (_tcslen(DriverInfoData.Description) + 1) * sizeof(TCHAR));
+    if (rc != ERROR_SUCCESS)
+    {
+        DPRINT("RegSetValueEx() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
 
     /* FIXME: install OpenGLSoftwareSettings section */
 
