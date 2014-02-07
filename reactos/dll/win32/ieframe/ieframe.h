@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _IEFRAME_H_
+#define _IEFRAME_H_
+
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
@@ -400,3 +403,5 @@ static inline LPSTR co_strdupWtoA(LPCWSTR str)
         WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, 0, 0);
     return ret;
 }
+
+#endif /* _IEFRAME_H_ */

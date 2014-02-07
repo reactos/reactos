@@ -10,10 +10,11 @@
  */
 
 #include "mmdrv.h"
-#include "wave.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#include "wave.h"
 
 // MIDI device instance information
 //

@@ -172,4 +172,4 @@ BOOL WINAPI
 GetComputerNameExA(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
 #endif
 
-#endif/*IPPRIVATE_H*/
+#endif /* IPPRIVATE_H */

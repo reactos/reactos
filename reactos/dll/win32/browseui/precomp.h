@@ -1,3 +1,6 @@
+#ifndef _BROWSEUI_PCH_
+#define _BROWSEUI_PCH_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -37,3 +40,5 @@
 #include "regtreeoptions.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
+
+#endif /* _BROWSEUI_PCH_ */

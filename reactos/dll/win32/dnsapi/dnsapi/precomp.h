@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _DNSAPI_H
+#define _DNSAPI_H
+
 /* INCLUDES ******************************************************************/
 
 #include <stdarg.h>
@@ -127,3 +130,5 @@ static inline LPSTR dns_strdup_ua( const char *src )
     }
     return dst;
 }
+
+#endif /* _DNSAPI_H */

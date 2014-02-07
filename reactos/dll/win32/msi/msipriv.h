@@ -22,10 +22,10 @@
 #ifndef __WINE_MSI_PRIVATE__
 #define __WINE_MSI_PRIVATE__
 
-#include <config.h>
+#include <wine/config.h>
 
-#include <stdarg.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -48,8 +48,8 @@
 #include <sddl.h>
 #include <msidefs.h>
 
-#include <wine/list.h>
 #include <wine/debug.h>
+#include <wine/list.h>
 #include <wine/unicode.h>
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);

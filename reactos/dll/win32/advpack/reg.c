@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
 #include "advpack_private.h"
 
 static const WCHAR REGINST[] = {'R','E','G','I','N','S','T',0};

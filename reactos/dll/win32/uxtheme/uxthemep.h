@@ -1,3 +1,6 @@
+#ifndef _UXTHEME_PCH_
+#define _UXTHEME_PCH_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -230,3 +233,5 @@ BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg);
 #define ALPHABLEND_BINARY           1
 /* Full alpha blending */
 #define ALPHABLEND_FULL             2
+
+#endif /* _UXTHEME_PCH_ */
