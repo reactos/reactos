@@ -7,6 +7,9 @@
 
 #include "msgina.h"
 
+#include <wingdi.h>
+#include <winnls.h>
+
 typedef struct _DISPLAYSTATUSMSG
 {
     PGINA_CONTEXT Context;

@@ -7,6 +7,8 @@
 
 #include "msgina.h"
 
+#include <wincon.h>
+
 static BOOL
 TUIInitialize(
     IN OUT PGINA_CONTEXT pgContext)

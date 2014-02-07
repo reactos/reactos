@@ -1,24 +1,17 @@
 #ifndef _MSGINA_H
 #define _MSGINA_H
 
-#define WIN32_NO_STATUS
-
 #include <stdarg.h>
-#include <stdlib.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
-#include <wincon.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <winsvc.h>
 #include <winuser.h>
-#include <userenv.h>
 #include <winwlx.h>
-#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/sefuncs.h>
-#include <ntlsa.h>
 #include <ntsecapi.h>
 
 #include <wine/debug.h>
@@ -116,5 +109,3 @@ DoLoginTasks(
     IN PWSTR Password);
 
 #endif /* _MSGINA_H */
-
-/* EOF */

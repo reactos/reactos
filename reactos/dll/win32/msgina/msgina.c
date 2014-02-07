@@ -26,6 +26,11 @@
 
 #include "msgina.h"
 
+#include <winreg.h>
+#include <winsvc.h>
+#include <userenv.h>
+#include <ndk/sefuncs.h>
+
 HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;
