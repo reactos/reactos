@@ -18,6 +18,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _VBEMP_PCH_
+#define _VBEMP_PCH_
+
 /* INCLUDES *******************************************************************/
 
 #include <ntdef.h>
@@ -300,3 +303,5 @@ VBESetColorRegisters(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,
    PSTATUS_BLOCK StatusBlock);
+
+#endif /* _VBEMP_PCH_ */

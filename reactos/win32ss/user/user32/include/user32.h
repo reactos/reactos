@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _USER32_PCH_
+#define _USER32_PCH_
+
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
@@ -54,3 +57,5 @@
 
 /* User macros */
 #include "user_x.h"
+
+#endif /* _USER32_PCH_ */

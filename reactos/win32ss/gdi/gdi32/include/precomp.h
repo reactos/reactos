@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _GDI32_PCH_
+#define _GDI32_PCH_
+
 /* INCLUDES ******************************************************************/
 
 /* Definitions */
@@ -43,4 +46,4 @@
 /* Deprecated NTGDI calls which shouldn't exist */
 #include <ntgdibad.h>
 
-/* EOF */
+#endif /* _GDI32_PCH_ */

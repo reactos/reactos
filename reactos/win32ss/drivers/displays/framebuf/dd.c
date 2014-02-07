@@ -22,7 +22,6 @@
 
 #include "framebuf.h"
 
-
 DWORD CALLBACK
 DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 {
@@ -113,4 +112,3 @@ DdCreateSurface(PDD_CREATESURFACEDATA pcsd)
 	pcsd->ddRVal = DD_OK;
     return DDHAL_DRIVER_HANDLED;
 }
-
