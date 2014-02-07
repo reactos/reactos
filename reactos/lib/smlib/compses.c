@@ -4,6 +4,7 @@
  * FILE:            lib/smlib/compses.c
  * PURPOSE:         Call SM API SM_API_COMPLETE_SESSION
  */
+
 #include "precomp.h"
 
 #define NDEBUG

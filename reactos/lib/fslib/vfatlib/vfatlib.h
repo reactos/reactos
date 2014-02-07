@@ -4,6 +4,9 @@
  * FILE:        vfatlib.h
  */
 
+#ifndef _VFATLIB_H_
+#define _VFATLIB_H_
+
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
@@ -144,5 +147,7 @@ UpdateProgress(PFORMAT_CONTEXT Context,
 
 VOID
 VfatPrint(PCHAR Format, ...);
+
+#endif /* _VFATLIB_H_ */
 
 /* EOF */

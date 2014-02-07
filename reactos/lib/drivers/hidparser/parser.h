@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _HIDPARSER_H_
+#define _HIDPARSER_H_
 
 #include <wdm.h>
 #include <pshpack1.h>
@@ -393,3 +394,5 @@ PHID_REPORT
 HidParser_GetReportInCollection(
     IN PVOID Context,
     IN UCHAR ReportType);
+
+#endif /* _HIDPARSER_H_ */

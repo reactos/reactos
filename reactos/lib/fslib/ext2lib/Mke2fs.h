@@ -5,6 +5,9 @@
  * HOMEPAGE:         http://ext2.yeah.net
  */
 
+#ifndef _MKE2FS_H_
+#define _MKE2FS_H_
+
 /* INCLUDES **************************************************************/
 
 #define NTOS_MODE_USER
@@ -393,3 +396,5 @@ ULONG ext2_unix_time (LONGLONG n_time);
  */
 
 void uuid_generate(__u8 * uuid);
+
+#endif /* _MKE2FS_H_ */

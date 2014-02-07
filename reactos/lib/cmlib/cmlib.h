@@ -5,6 +5,9 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
+#ifndef _CMLIB_H_
+#define _CMLIB_H_
+
 //
 // Debug support switch
 //
@@ -406,3 +409,5 @@ HvpCreateHiveFreeCellList(
 ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
+
+#endif /* _CMLIB_H_ */

@@ -1,3 +1,6 @@
+#ifndef _MMIXER_PCH_
+#define _MMIXER_PCH_
+
 #include <wdm.h>
 #include <windef.h>
 #define NOBITMAP
@@ -518,3 +521,5 @@ MMixerGetConnectedFromLogicalTopologyPins(
 
 VOID
 MMixerPrintTopology();
+
+#endif /* _MMIXER_PCH_ */

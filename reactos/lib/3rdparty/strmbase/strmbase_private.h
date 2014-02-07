@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _STRMBASE_PCH_
+#define _STRMBASE_PCH_
+
 #include <wine/config.h>
 
 #include <assert.h>
@@ -73,3 +76,5 @@ HRESULT QualityControlRender_WaitFor(QualityControlImpl *This, IMediaSample *sam
 void QualityControlRender_DoQOS(QualityControlImpl *priv);
 void QualityControlRender_BeginRender(QualityControlImpl *This);
 void QualityControlRender_EndRender(QualityControlImpl *This);
+
+#endif /* _STRMBASE_PCH_ */
