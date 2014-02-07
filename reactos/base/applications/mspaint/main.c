@@ -46,12 +46,17 @@ int airBrushWidth = 5;
 int rubberRadius = 4;
 int transpBg = 0;
 int zoom = 1000;
-int rectSel_src[4];
-int rectSel_dest[4];
+RECT rectSel_src;
+RECT rectSel_dest;
 HWND hSelection;
 HWND hImageArea;
 HBITMAP hSelBm;
 HBITMAP hSelMask;
+LOGFONT lfTextFont;
+HFONT hfontTextFont;
+/* TODO: add dialog to edit the currently hard-coded text */
+LPTSTR textToolText = _T("Abc\n1234567890");
+int textToolTextMaxLen = SIZEOF(textToolText);
 
 /* array holding palette colors; may be changed by the user during execution */
 int palColors[28];
@@ -160,6 +165,23 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
+
+    /* init font for text tool */
+    lfTextFont.lfHeight = 0;
+    lfTextFont.lfWidth = 0;
+    lfTextFont.lfEscapement = 0;
+    lfTextFont.lfOrientation = 0;
+    lfTextFont.lfWeight = FW_NORMAL;
+    lfTextFont.lfItalic = FALSE;
+    lfTextFont.lfUnderline = FALSE;
+    lfTextFont.lfStrikeOut = FALSE;
+    lfTextFont.lfCharSet = DEFAULT_CHARSET;
+    lfTextFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+    lfTextFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lfTextFont.lfQuality = DEFAULT_QUALITY;
+    lfTextFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+    lstrcpy(lfTextFont.lfFaceName, _T(""));
+    hfontTextFont = CreateFontIndirect(&lfTextFont);
 
     /* init palette */
     selectedPalette = 1;

@@ -20,5 +20,6 @@
 #include "globalvar.h"
 #include "history.h"
 #include "mouse.h"
+#include "selection.h"
 
 #endif /* _MSPAINT_H */

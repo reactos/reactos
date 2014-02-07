@@ -18,10 +18,50 @@ LPCTSTR cursors[9] = { IDC_SIZEALL, IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
 
 BOOL moving = FALSE;
 int action = 0;
-short xPos;
-short yPos;
-short xFrac;
-short yFrac;
+POINTS pos;
+POINTS frac;
+
+BOOL
+ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor)
+{
+    HDC hTempDC;
+    HDC hTempDC2;
+    HBITMAP hTempBm;
+    HBRUSH hTempBrush;
+    HBITMAP hTempMask;
+    
+    hTempDC = CreateCompatibleDC(hdcSrc);
+    hTempDC2 = CreateCompatibleDC(hdcSrc);
+    hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
+    SelectObject(hTempDC, hTempBm);
+    hTempBrush = CreateSolidBrush(keyColor);
+    SelectObject(hTempDC, hTempBrush);
+    BitBlt(hTempDC, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
+    PatBlt(hTempDC, 0, 0, nWidth, nHeight, PATINVERT);
+    hTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    SelectObject(hTempDC2, hTempMask);
+    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, 0, 0, SRCCOPY);
+    SelectObject(hTempDC, hbmMask);
+    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, xMask, yMask, SRCAND);
+    MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, hTempMask, xMask, yMask, dwRop);
+    DeleteDC(hTempDC);
+    DeleteDC(hTempDC2);
+    DeleteObject(hTempBm);
+    DeleteObject(hTempBrush);
+    DeleteObject(hTempMask);
+    return TRUE;
+}
+
+void
+ForceRefreshSelectionContents()
+{
+    if (IsWindowVisible(hSelection))
+    {
+        SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
+        SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
+        SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+    }
+}
 
 int
 identifyCorner(short x, short y, short w, short h)
@@ -65,15 +105,15 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 HDC hDC = GetDC(hwnd);
                 DefWindowProc(hwnd, message, wParam, lParam);
-                SelectionFrame(hDC, 1, 1, rectSel_dest[2] * zoom / 1000 + 5,
-                               rectSel_dest[3] * zoom / 1000 + 5);
+                SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * zoom / 1000 + 5,
+                               RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5);
                 ReleaseDC(hwnd, hDC);
             }
             break;
         }
         case WM_LBUTTONDOWN:
-            xPos = GET_X_LPARAM(lParam);
-            yPos = GET_Y_LPARAM(lParam);
+            pos.x = GET_X_LPARAM(lParam);
+            pos.y = GET_Y_LPARAM(lParam);
             SetCapture(hwnd);
             if (action != 0)
                 SetCursor(LoadCursor(NULL, cursors[action]));
@@ -83,107 +123,94 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (moving)
             {
                 TCHAR sizeStr[100];
-                int xDelta;
-                int yDelta;
+                POINT delta;
                 resetToU1();
-                xFrac += GET_X_LPARAM(lParam) - xPos;
-                yFrac += GET_Y_LPARAM(lParam) - yPos;
+                frac.x += GET_X_LPARAM(lParam) - pos.x;
+                frac.y += GET_Y_LPARAM(lParam) - pos.y;
                 if (zoom < 1000)
                 {
-                    xDelta = xFrac * 1000 / zoom;
-                    xFrac = 0;
-                    yDelta = yFrac * 1000 / zoom;
-                    yFrac = 0;
+                    delta.x = frac.x * 1000 / zoom;
+                    frac.x = 0;
+                    delta.y = frac.y * 1000 / zoom;
+                    frac.y = 0;
                 }
                 else
                 {
-                    xDelta = xFrac * 1000 / zoom;
-                    xFrac -= (xFrac * 1000 / zoom) * zoom / 1000;
-                    yDelta = yFrac * 1000 / zoom;
-                    yFrac -= (yFrac * 1000 / zoom) * zoom / 1000;
+                    delta.x = frac.x * 1000 / zoom;
+                    frac.x -= (frac.x * 1000 / zoom) * zoom / 1000;
+                    delta.y = frac.y * 1000 / zoom;
+                    frac.y -= (frac.y * 1000 / zoom) * zoom / 1000;
                 }
                 switch (action)
                 {
-                    case 0:
-                        rectSel_dest[0] += xDelta;
-                        rectSel_dest[1] += yDelta;
+                    /* TODO: make sure that the selection is at least 1 pixel wide and high */
+                    case 0: /* move selection */
+                        OffsetRect(&rectSel_dest, delta.x, delta.y);
                         break;
-                    case 1:
-                        rectSel_dest[0] += xDelta;
-                        rectSel_dest[1] += yDelta;
-                        rectSel_dest[2] -= xDelta;
-                        rectSel_dest[3] -= yDelta;
+                    case 1: /* resize at upper left corner */
+                        rectSel_dest.left += delta.x;
+                        rectSel_dest.top  += delta.y;
                         break;
-                    case 2:
-                        rectSel_dest[1] += yDelta;
-                        rectSel_dest[3] -= yDelta;
+                    case 2: /* resize at top edge */
+                        rectSel_dest.top += delta.y;
                         break;
-                    case 3:
-                        rectSel_dest[1] += yDelta;
-                        rectSel_dest[2] += xDelta;
-                        rectSel_dest[3] -= yDelta;
+                    case 3: /* resize at upper right corner */
+                        rectSel_dest.top   += delta.y;
+                        rectSel_dest.right += delta.x;
                         break;
-                    case 4:
-                        rectSel_dest[0] += xDelta;
-                        rectSel_dest[2] -= xDelta;
+                    case 4: /* resize at left edge */
+                        rectSel_dest.left += delta.x;
                         break;
-                    case 5:
-                        rectSel_dest[2] += xDelta;
+                    case 5: /* resize at right edge */
+                        rectSel_dest.right += delta.x;
                         break;
-                    case 6:
-                        rectSel_dest[0] += xDelta;
-                        rectSel_dest[2] -= xDelta;
-                        rectSel_dest[3] += yDelta;
+                    case 6: /* resize at lower left corner */
+                        rectSel_dest.left   += delta.x;
+                        rectSel_dest.bottom += delta.y;
                         break;
-                    case 7:
-                        rectSel_dest[3] += yDelta;
+                    case 7: /* resize at bottom edge */
+                        rectSel_dest.bottom += delta.y;
                         break;
-                    case 8:
-                        rectSel_dest[2] += xDelta;
-                        rectSel_dest[3] += yDelta;
+                    case 8: /* resize at lower right corner */
+                        rectSel_dest.right  += delta.x;
+                        rectSel_dest.bottom += delta.y;
                         break;
                 }
 
-                _stprintf(sizeStr, _T("%d x %d"), rectSel_dest[2], rectSel_dest[3]);
+                _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
 
-                if (action != 0)
-                    StretchBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
-                else
-                if (transpBg == 0)
-                    MaskBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
-                            hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
+                if (activeTool == 10) /* text tool */
+                {
+                    Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, fgColor, bgColor, textToolText, hfontTextFont, transpBg);
+                }
                 else
                 {
-                    HBITMAP tempMask;
-                    HBRUSH oldBrush;
-                    HDC tempDC;
-                    tempMask = CreateBitmap(rectSel_dest[2], rectSel_dest[3], 1, 1, NULL);
-                    oldBrush = SelectObject(hSelDC, CreateSolidBrush(bgColor));
-                    tempDC = CreateCompatibleDC(hSelDC);
-                    SelectObject(tempDC, tempMask);
-                    MaskBlt(tempDC, 0, 0, rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, hSelMask, 0, 0,
-                            MAKEROP4(NOTSRCCOPY, BLACKNESS));
-                    DeleteDC(tempDC);
-                    DeleteObject(SelectObject(hSelDC, oldBrush));
-
-                    MaskBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3],
-                            hSelDC, 0, 0, tempMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
-                    DeleteObject(tempMask);
+                    if (action != 0)
+                        StretchBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
+                    else
+                    if (transpBg == 0)
+                        MaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
+                                hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
+                    else
+                    {
+                        ColorKeyedMaskBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest),
+                                          hSelDC, 0, 0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND), bgColor);
+                    }
                 }
                 InvalidateRect(hImageArea, NULL, FALSE);
-                xPos = GET_X_LPARAM(lParam);
-                yPos = GET_Y_LPARAM(lParam);
+                pos.x = GET_X_LPARAM(lParam);
+                pos.y = GET_Y_LPARAM(lParam);
                 //SendMessage(hwnd, WM_PAINT, 0, 0);
             }
             else
             {
-                int w = rectSel_dest[2] * zoom / 1000 + 6;
-                int h = rectSel_dest[3] * zoom / 1000 + 6;
-                xPos = GET_X_LPARAM(lParam);
-                yPos = GET_Y_LPARAM(lParam);
+                int w = RECT_WIDTH(rectSel_dest) * zoom / 1000 + 6;
+                int h = RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 6;
+                pos.x = GET_X_LPARAM(lParam);
+                pos.y = GET_Y_LPARAM(lParam);
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
-                action = identifyCorner(xPos, yPos, w, h);
+                action = identifyCorner(pos.x, pos.y, w, h);
                 if (action != 0)
                     SetCursor(LoadCursor(NULL, cursors[action]));
             }
@@ -195,25 +222,32 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 ReleaseCapture();
                 if (action != 0)
                 {
-                    HDC hTempDC;
-                    HBITMAP hTempBm;
-                    hTempDC = CreateCompatibleDC(hSelDC);
-                    hTempBm = CreateDIBWithProperties(rectSel_dest[2], rectSel_dest[3]);
-                    SelectObject(hTempDC, hTempBm);
-                    SelectObject(hSelDC, hSelBm);
-                    StretchBlt(hTempDC, 0, 0, rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0,
-                               GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
-                    DeleteObject(hSelBm);
-                    hSelBm = hTempBm;
-                    hTempBm = CreateBitmap(rectSel_dest[2], rectSel_dest[3], 1, 1, NULL);
-                    SelectObject(hTempDC, hTempBm);
-                    SelectObject(hSelDC, hSelMask);
-                    StretchBlt(hTempDC, 0, 0, rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0,
-                               GetDIBWidth(hSelMask), GetDIBHeight(hSelMask), SRCCOPY);
-                    DeleteObject(hSelMask);
-                    hSelMask = hTempBm;
-                    SelectObject(hSelDC, hSelBm);
-                    DeleteDC(hTempDC);
+                    if (activeTool == 10) /* text tool */
+                    {
+                        
+                    }
+                    else
+                    {
+                        HDC hTempDC;
+                        HBITMAP hTempBm;
+                        hTempDC = CreateCompatibleDC(hSelDC);
+                        hTempBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
+                        SelectObject(hTempDC, hTempBm);
+                        SelectObject(hSelDC, hSelBm);
+                        StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
+                                   GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
+                        DeleteObject(hSelBm);
+                        hSelBm = hTempBm;
+                        hTempBm = CreateBitmap(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), 1, 1, NULL);
+                        SelectObject(hTempDC, hTempBm);
+                        SelectObject(hSelDC, hSelMask);
+                        StretchBlt(hTempDC, 0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0,
+                                   GetDIBWidth(hSelMask), GetDIBHeight(hSelMask), SRCCOPY);
+                        DeleteObject(hSelMask);
+                        hSelMask = hTempBm;
+                        SelectObject(hSelDC, hSelBm);
+                        DeleteDC(hTempDC);
+                    }
                 }
                 placeSelWin();
                 ShowWindow(hSelection, SW_HIDE);

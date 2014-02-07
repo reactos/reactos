@@ -44,15 +44,15 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     int tbPos = 0;
     int tempZoom = newZoom;
 
-    long clientRectScrollbox[4];
-    long clientRectImageArea[4];
+    RECT clientRectScrollbox;
+    RECT clientRectImageArea;
     int x, y, w, h;
-    GetClientRect(hScrollbox, (LPRECT) &clientRectScrollbox);
-    GetClientRect(hImageArea, (LPRECT) &clientRectImageArea);
-    w = clientRectImageArea[2] * clientRectScrollbox[2] / (clientRectImageArea[2] * newZoom / zoom);
-    h = clientRectImageArea[3] * clientRectScrollbox[3] / (clientRectImageArea[3] * newZoom / zoom);
-    x = max(0, min(clientRectImageArea[2] - w, mouseX - w / 2)) * newZoom / zoom;
-    y = max(0, min(clientRectImageArea[3] - h, mouseY - h / 2)) * newZoom / zoom;
+    GetClientRect(hScrollbox, &clientRectScrollbox);
+    GetClientRect(hImageArea, &clientRectImageArea);
+    w = clientRectImageArea.right * clientRectScrollbox.right / (clientRectImageArea.right * newZoom / zoom);
+    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / (clientRectImageArea.bottom * newZoom / zoom);
+    x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2)) * newZoom / zoom;
+    y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2)) * newZoom / zoom;
 
     zoom = newZoom;
 
@@ -81,15 +81,15 @@ drawZoomFrame(int mouseX, int mouseY)
     LOGBRUSH logbrush;
     int rop;
 
-    long clientRectScrollbox[4];
-    long clientRectImageArea[4];
+    RECT clientRectScrollbox;
+    RECT clientRectImageArea;
     int x, y, w, h;
-    GetClientRect(hScrollbox, (LPRECT) &clientRectScrollbox);
-    GetClientRect(hImageArea, (LPRECT) &clientRectImageArea);
-    w = clientRectImageArea[2] * clientRectScrollbox[2] / (clientRectImageArea[2] * 2);
-    h = clientRectImageArea[3] * clientRectScrollbox[3] / (clientRectImageArea[3] * 2);
-    x = max(0, min(clientRectImageArea[2] - w, mouseX - w / 2));
-    y = max(0, min(clientRectImageArea[3] - h, mouseY - h / 2));
+    GetClientRect(hScrollbox, &clientRectScrollbox);
+    GetClientRect(hImageArea, &clientRectImageArea);
+    w = clientRectImageArea.right * clientRectScrollbox.right / (clientRectImageArea.right * 2);
+    h = clientRectImageArea.bottom * clientRectScrollbox.bottom / (clientRectImageArea.bottom * 2);
+    x = max(0, min(clientRectImageArea.right - w, mouseX - w / 2));
+    y = max(0, min(clientRectImageArea.bottom - h, mouseY - h / 2));
 
     hdc = GetDC(hImageArea);
     oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 0, 0));
@@ -190,25 +190,22 @@ InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
                                                          IMAGE_BITMAP, 0, 0,
                                                          LR_COPYRETURNORG)));
     newReversible();
-    rectSel_src[0] = rectSel_src[1] = rectSel_src[2] = rectSel_src[3] = 0;
-    rectSel_dest[0] = rectSel_dest[1] = 0;
-    rectSel_dest[2] = GetDIBWidth(hSelBm);
-    rectSel_dest[3] = GetDIBHeight(hSelBm);
+    SetRectEmpty(&rectSel_src);
+    rectSel_dest.left = rectSel_dest.top = 0;
+    rectSel_dest.right = rectSel_dest.left + GetDIBWidth(hSelBm);
+    rectSel_dest.bottom = rectSel_dest.top + GetDIBHeight(hSelBm);
 
     hTempDC = CreateCompatibleDC(hSelDC);
-    hTempMask = CreateBitmap(rectSel_dest[2], rectSel_dest[3], 1, 1, NULL);
+    hTempMask = CreateBitmap(RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), 1, 1, NULL);
     SelectObject(hTempDC, hTempMask);
-    Rect(hTempDC, 0, 0, rectSel_dest[2], rectSel_dest[3], 0x00ffffff, 0x00ffffff, 1, 1);
+    Rect(hTempDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, 0x00ffffff, 0x00ffffff, 1, 1);
     DeleteObject(hSelMask);
     hSelMask = hTempMask;
     DeleteDC(hTempDC);
 
     placeSelWin();
     ShowWindow(hSelection, SW_SHOW);
-    /* force refresh of selection contents */
-    SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-    SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-    SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+    ForceRefreshSelectionContents();
 }
 
 BOOL drawing;
@@ -280,100 +277,52 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_INITMENUPOPUP:
+        {
+            HMENU menu = GetMenu(hMainWnd);
+            BOOL trueSelection = (IsWindowVisible(hSelection) && ((activeTool == 1) || (activeTool == 2)));
             switch (lParam)
             {
-                case 0:
-                    if (isAFile)
-                    {
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERPLANE,
-                                       MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERCENTERED,
-                                       MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERSTRETCHED,
-                                       MF_ENABLED | MF_BYCOMMAND);
-                    }
-                    else
-                    {
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERPLANE,
-                                       MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERCENTERED,
-                                       MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERSTRETCHED,
-                                       MF_GRAYED | MF_BYCOMMAND);
-                    }
+                case 0: /* File menu */
+                    EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile));
+                    EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile));
+                    EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile));
                     break;
-                case 1:
-                    EnableMenuItem(GetMenu(hMainWnd), IDM_EDITUNDO,
-                                   (undoSteps > 0) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND));
-                    EnableMenuItem(GetMenu(hMainWnd), IDM_EDITREDO,
-                                   (redoSteps > 0) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND));
-                    if (IsWindowVisible(hSelection))
-                    {
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCUT, MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCOPY, MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITDELETESELECTION, MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITINVERTSELECTION, MF_ENABLED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCOPYTO, MF_ENABLED | MF_BYCOMMAND);
-                    }
-                    else
-                    {
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCUT, MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCOPY, MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITDELETESELECTION, MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITINVERTSELECTION, MF_GRAYED | MF_BYCOMMAND);
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCOPYTO, MF_GRAYED | MF_BYCOMMAND);
-                    }
+                case 1: /* Edit menu */
+                    EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(undoSteps > 0));
+                    EnableMenuItem(menu, IDM_EDITREDO, ENABLED_IF(redoSteps > 0));
+                    EnableMenuItem(menu, IDM_EDITCUT,  ENABLED_IF(trueSelection));
+                    EnableMenuItem(menu, IDM_EDITCOPY, ENABLED_IF(trueSelection));
+                    EnableMenuItem(menu, IDM_EDITDELETESELECTION, ENABLED_IF(trueSelection));
+                    EnableMenuItem(menu, IDM_EDITINVERTSELECTION, ENABLED_IF(trueSelection));
+                    EnableMenuItem(menu, IDM_EDITCOPYTO, ENABLED_IF(trueSelection));
                     OpenClipboard(hMainWnd);
-                    if (GetClipboardData(CF_BITMAP) != NULL)
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITPASTE, MF_ENABLED | MF_BYCOMMAND);
-                    else
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITPASTE, MF_GRAYED | MF_BYCOMMAND);
+                    EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(GetClipboardData(CF_BITMAP) != NULL));
                     CloseClipboard();
                     break;
-                case 3:
-                    if (IsWindowVisible(hSelection))
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_IMAGECROP, MF_ENABLED | MF_BYCOMMAND);
-                    else
-                        EnableMenuItem(GetMenu(hMainWnd), IDM_IMAGECROP, MF_GRAYED | MF_BYCOMMAND);
-                    CheckMenuItem(GetMenu(hMainWnd), IDM_IMAGEDRAWOPAQUE, (transpBg == 0) ?
-                                  (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+                case 3: /* Image menu */
+                    EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(IsWindowVisible(hSelection)));
+                    CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(transpBg == 0));
                     break;
             }
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWTOOLBOX,
-                          IsWindowVisible(hToolBoxContainer) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWCOLORPALETTE,
-                          IsWindowVisible(hPalWin) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSTATUSBAR,
-                          IsWindowVisible(hStatusBar) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(IsWindowVisible(hToolBoxContainer)));
+            CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(IsWindowVisible(hPalWin)));
+            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(IsWindowVisible(hStatusBar)));
 
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWGRID,
-                          showGrid ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWMINIATURE,
-                          showMiniature ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
+            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
 
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM125,
-                          (zoom == 125) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM25,
-                          (zoom == 250) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM50,
-                          (zoom == 500) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM100,
-                          (zoom == 1000) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM200,
-                          (zoom == 2000) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM400,
-                          (zoom == 4000) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM800,
-                          (zoom == 8000) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            CheckMenuItem(menu, IDM_VIEWZOOM125, CHECKED_IF(zoom == 125));
+            CheckMenuItem(menu, IDM_VIEWZOOM25,  CHECKED_IF(zoom == 250));
+            CheckMenuItem(menu, IDM_VIEWZOOM50,  CHECKED_IF(zoom == 500));
+            CheckMenuItem(menu, IDM_VIEWZOOM100, CHECKED_IF(zoom == 1000));
+            CheckMenuItem(menu, IDM_VIEWZOOM200, CHECKED_IF(zoom == 2000));
+            CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(zoom == 4000));
+            CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(zoom == 8000));
 
-            CheckMenuItem(GetMenu(hMainWnd), IDM_COLORSMODERNPALETTE,
-                          (selectedPalette == 1) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_COLORSOLDPALETTE,
-                          (selectedPalette == 2) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(selectedPalette == 1));
+            CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(selectedPalette == 2));
             break;
+        }
 
         case WM_SIZE:
             if (hwnd == hMainWnd)
@@ -413,25 +362,25 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             if ((hwnd == hImageArea) || (hwnd == hScrollbox))
             {
-                long clientRectScrollbox[4];
-                long clientRectImageArea[4];
+                RECT clientRectScrollbox;
+                RECT clientRectImageArea;
                 SCROLLINFO si;
-                GetClientRect(hScrollbox, (LPRECT) &clientRectScrollbox);
-                GetClientRect(hImageArea, (LPRECT) &clientRectImageArea);
+                GetClientRect(hScrollbox, &clientRectScrollbox);
+                GetClientRect(hImageArea, &clientRectImageArea);
                 si.cbSize = sizeof(SCROLLINFO);
                 si.fMask  = SIF_PAGE | SIF_RANGE;
-                si.nMax   = clientRectImageArea[2] + 6 - 1;
+                si.nMax   = clientRectImageArea.right + 6 - 1;
                 si.nMin   = 0;
-                si.nPage  = clientRectScrollbox[2];
+                si.nPage  = clientRectScrollbox.right;
                 SetScrollInfo(hScrollbox, SB_HORZ, &si, TRUE);
-                GetClientRect(hScrollbox, (LPRECT) clientRectScrollbox);
-                si.nMax   = clientRectImageArea[3] + 6 - 1;
-                si.nPage  = clientRectScrollbox[3];
+                GetClientRect(hScrollbox, &clientRectScrollbox);
+                si.nMax   = clientRectImageArea.bottom + 6 - 1;
+                si.nPage  = clientRectScrollbox.bottom;
                 SetScrollInfo(hScrollbox, SB_VERT, &si, TRUE);
                 MoveWindow(hScrlClient,
                            -GetScrollPos(hScrollbox, SB_HORZ), -GetScrollPos(hScrollbox, SB_VERT),
-                           max(clientRectImageArea[2] + 6, clientRectScrollbox[2]),
-                           max(clientRectImageArea[3] + 6, clientRectScrollbox[3]), TRUE);
+                           max(clientRectImageArea.right + 6, clientRectScrollbox.right),
+                           max(clientRectImageArea.bottom + 6, clientRectScrollbox.bottom), TRUE);
             }
             break;
 
@@ -908,8 +857,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (activeTool == TOOL_RECTSEL)
                     {
                         newReversible();
-                        Rect(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2] + rectSel_dest[0],
-                             rectSel_dest[3] + rectSel_dest[1], bgColor, bgColor, 0, TRUE);
+                        Rect(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right,
+                             rectSel_dest.bottom, bgColor, bgColor, 0, TRUE);
                     }
                     if (activeTool == TOOL_FREESEL)
                     {
@@ -982,15 +931,12 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             if (IsWindowVisible(hSelection))
                             {
                                 SelectObject(hSelDC, hSelMask);
-                                StretchBlt(hSelDC, rectSel_dest[2] - 1, 0, -rectSel_dest[2], rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, 0, -RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
                                 SelectObject(hSelDC, hSelBm);
-                                StretchBlt(hSelDC, rectSel_dest[2] - 1, 0, -rectSel_dest[2], rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                /* force refresh of selection contents */
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+                                StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, 0, -RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                                ForceRefreshSelectionContents();
                             }
                             else
                             {
@@ -1004,15 +950,12 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             if (IsWindowVisible(hSelection))
                             {
                                 SelectObject(hSelDC, hSelMask);
-                                StretchBlt(hSelDC, 0, rectSel_dest[3] - 1, rectSel_dest[2], -rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                StretchBlt(hSelDC, 0, RECT_HEIGHT(rectSel_dest) - 1, RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
                                 SelectObject(hSelDC, hSelBm);
-                                StretchBlt(hSelDC, 0, rectSel_dest[3] - 1, rectSel_dest[2], -rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                /* force refresh of selection contents */
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+                                StretchBlt(hSelDC, 0, RECT_HEIGHT(rectSel_dest) - 1, RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                                ForceRefreshSelectionContents();
                             }
                             else
                             {
@@ -1028,15 +971,12 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             if (IsWindowVisible(hSelection))
                             {
                                 SelectObject(hSelDC, hSelMask);
-                                StretchBlt(hSelDC, rectSel_dest[2] - 1, rectSel_dest[3] - 1, -rectSel_dest[2], -rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, RECT_HEIGHT(rectSel_dest) - 1, -RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
                                 SelectObject(hSelDC, hSelBm);
-                                StretchBlt(hSelDC, rectSel_dest[2] - 1, rectSel_dest[3] - 1, -rectSel_dest[2], -rectSel_dest[3], hSelDC,
-                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
-                                /* force refresh of selection contents */
-                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-                                SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+                                StretchBlt(hSelDC, RECT_WIDTH(rectSel_dest) - 1, RECT_HEIGHT(rectSel_dest) - 1, -RECT_WIDTH(rectSel_dest), -RECT_HEIGHT(rectSel_dest), hSelDC,
+                                           0, 0, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), SRCCOPY);
+                                ForceRefreshSelectionContents();
                             }
                             else
                             {
