@@ -1,0 +1,35 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  06-02-2014
+*/
+
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH "%SistemDrive%\\Dokumente dhe Cilësime"
+    IDS_APPDATA "Aplikation Data"
+    IDS_DESKTOP "Desktop"
+    IDS_FAVORITES "Preferuara"
+    IDS_STARTMENU "Fillo Menu"
+    IDS_PROGRAMS "Fillo Menu\\Programe"
+    IDS_ADMINTOOLS "Fillo Menu\\Programe\\Vegla Administrative"
+    IDS_STARTUP "Fillo Menu\\Programe\\Fillimi"
+    IDS_MYDOCUMENTS "Dokumentet e'mi"
+    IDS_MYPICTURES "Dokumentet e'mi\\Fotot e'mia"
+    IDS_MYMUSIC "Dokumentet e'mi\\Muzika Ime"
+    IDS_MYVIDEOS "Dokumentet e'mi\\Vidoe e'mi"
+    IDS_TEMPLATES "Shabllone"
+    IDS_RECENT "Fundit"
+    IDS_SENDTO "DërguarTe"
+    IDS_PRINTHOOD "PrintoKapuç"
+    IDS_NETHOOD "NetKapuç"
+    IDS_LOCALSETTINGS "Cilësimet lokale"
+    IDS_LOCALAPPDATA "Cilësimet lokale\\Aplikacion Data"
+    IDS_TEMP "Cilësimet lokale\\Përk"
+    IDS_CACHE "Cilësimet lokale\\Dokumente Interneti Përkohshëm"
+    IDS_HISTORY "Cilësimet lokale\\Historia"
+    IDS_COOKIES "Biskota"
+    IDS_PROGRAMFILES "%SystemDrive%\\Dokumente Programi"
+    IDS_COMMONFILES "Dokumente Zakonshëm"
+END

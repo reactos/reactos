@@ -92,6 +92,9 @@
 #ifdef LANGUAGE_SL_SI
     #include "lang/spl_Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/spl_Sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/spl_Uk.rc"
 #endif

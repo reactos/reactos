@@ -1,0 +1,617 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  23-01-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDM_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Dublikatë...", 0
+        MENUITEM "Hiq", 1
+        MENUITEM "&Shiko shënimet", 2
+        MENUITEM SEPARATOR
+        MENUITEM "Karakteristika", 3
+        MENUITEM "K&opjo karakteristika", 4
+        MENUITEM "A&pliko Karakteristika", 5
+    END
+END
+
+IDD_ADVANCED DIALOGEX 17, 12, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Avancuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Cilësime Shtesë", 1018, 6, 6, 225, 70
+    LTEXT "Komanda Inicializimi Shtesë:", 1011, 16, 20, 143, 8
+    EDITTEXT 1016, 16, 31, 205, 13, ES_AUTOHSCROLL
+    LTEXT "Prisni për tingullin e kartes së kreditit:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
+    EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
+    CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
+    LTEXT "sekonda", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
+    GROUPBOX "&Shteti/Zgjidh Rajonin", 1012, 6, 80, 225, 75
+    COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+    PUSHBUTTON "&Cilësime Avancuara Porti...", 1100, 107, 170, 125, 14
+    DEFPUSHBUTTON "Ndrysho Preferencat &Parazgjedhore...", 3, 107, 188, 125, 14
+END
+
+IDD_GENERAL DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Porti:", 1018, 9, 8, 32, 10
+    LTEXT "Com porti", 1095, 48, 8, 181, 10
+    GROUPBOX "&Volumi Boxave", 1029, 10, 21, 218, 48
+    CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
+    RTEXT "Fike", 1045, 56, 40, 22, 8
+    LTEXT "Lart", 1001, 155, 40, 25, 11
+    GROUPBOX "&Shpejtësia Maksimale Portit", 1031, 10, 78, 218, 46
+    COMBOBOX 1036, 18, 100, 202, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Kontrolli Formimit", 1060, 10, 133, 218, 51
+    AUTOCHECKBOX "&Prisni për tingullin e formimit para telefonates", 1003, 27, 157, 174, 10
+END
+
+IDD_DISTINCTIVE_RING DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Zile Dalluese"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", 1068, 10, 7, 218, 145
+    AUTOCHECKBOX "Kjo linjë telefonike ka shërbim dallues zileje", 1069, 20, 7, 184, 10
+    CTEXT "Strukturë Zileje", -1, 84, 21, 70, 8
+    CTEXT "Lloji i telefonates", -1, 159, 21, 63, 8
+    LTEXT "Adresa &Primare:", 1070, 20, 41, 62, 8
+    COMBOBOX 1073, 84, 37, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1082, 160, 37, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Adresa &1:", 1071, 20, 59, 62, 8
+    COMBOBOX 1074, 84, 55, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1083, 160, 55, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Adresa &2:", 1072, 20, 77, 62, 8
+    COMBOBOX 1075, 84, 73, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1084, 160, 73, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Adresa &3:", 1076, 20, 95, 62, 8
+    COMBOBOX 1077, 84, 91, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1085, 160, 91, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Prioriti &telefonuesit:", 1078, 20, 112, 62, 8
+    COMBOBOX 1079, 84, 109, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1086, 160, 109, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Thirr m&brapa:", 1080, 20, 131, 62, 8
+    COMBOBOX 1081, 84, 127, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 1087, 160, 127, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DISTINCTIVE_RING_2 DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Zile Dalluese"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", 1068, 10, 7, 218, 87
+    AUTOCHECKBOX "Kjo linjë telefonike ka shërbim dallues zileje", 1069, 19, 7, 177, 10
+    CTEXT "Strukturë Zileje", -1, 20, 21, 74, 8
+    CTEXT "Lloji i telefonates", -1, 96, 21, 65, 8
+    LTEXT "Zile Teke:", 1088, 20, 37, 53, 8
+    COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Zile dyshe:", 1089, 20, 57, 53, 8
+    COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Zile treshe:", 1090, 20, 76, 53, 8
+    COMBOBOX 1093, 96, 73, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DIAGNOSTICS DIALOGEX 0, 0, 238, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Diagnozë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
+    CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
+    PUSHBUTTON "Pyet Modemin", 1096, 138, 149, 75, 14
+    AUTOCHECKBOX "Regjistro një shënim", 1020, 18, 187, 98, 10
+    PUSHBUTTON "&Shiko shënimet", 1094, 138, 184, 75, 14, WS_DISABLED
+    GROUPBOX "Informacionet e Modemit", 1047, 10, 6, 217, 164
+    GROUPBOX "Shënimet", -1, 10, 173, 217, 32
+END
+
+IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Ju lutem prisni..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 5100, -1, 9, 7, 20, 20
+    LTEXT "komunikimi me Modemin. Kjo mund të marrë disa sekonda.", -1, 42, 7, 146, 28
+    DEFPUSHBUTTON "Anulo", 2, 72, 52, 50, 14
+END
+
+IDD_GENERAL_2 DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Cilësime"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "&Ndihmës operatori (manuale) bjeri", 1002, 19, 22, 150, 10
+    AUTOCHECKBOX "Shkëput një telefonatë nëse pa-punë për më shumë se", 1042, 19, 38, 143, 10
+    EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "Anulo thirrjen nëse jo e lidhur brenda", -1, 19, 56, 147, 10
+    EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT "Shpejtësia &Portit:", 1034, 16, 102, 93, 8
+    COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "D&ata Protokoll:", 1032, 16, 122, 93, 8
+    COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "Ngjeshje:", 1035, 16, 139, 93, 8
+    COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "Kontrolli i rrjedhjes:", 1027, 16, 157, 93, 8
+    COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Preferencat telefonates", 1060, 11, 7, 217, 66
+    LTEXT "mins", 1044, 195, 38, 22, 8
+    LTEXT "secs", 1041, 194, 56, 22, 8
+    GROUPBOX "Preferenca Lidhjes të dhënave", -1, 11, 82, 217, 94
+END
+
+IDD_ADVANCED_2 DIALOGEX 17, 12, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Avancuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "Sjellë terminali e dritares para formimit të numrit", 1000, 20, 21, 200, 10
+    AUTOCHECKBOX "Sjellë terminali e dritares pas formimit të numrit", 1001, 20, 38, 200, 10
+    RTEXT "&Data bits:", 1024, 18, 79, 93, 8
+    COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "Barazi:", 1026, 18, 97, 93, 8
+    COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "Pjesë Ndaluse:", 1029, 18, 115, 93, 8
+    COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    RTEXT "&Rregullim:", 1045, 18, 133, 93, 8
+    COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "Dritare Terminali", 1004, 10, 7, 217, 49
+    GROUPBOX "Cilësime Pjesësh Elektronike", 1005, 10, 64, 217, 89
+END
+
+IDD_ISDN DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Switch &Tipi", -1, 11, 6, 217, 39
+    COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    GROUPBOX "&Numri Parë", -1, 11, 50, 217, 50
+    EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
+    EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX "&Numri Dztë", -1, 11, 105, 217, 49
+    EDITTEXT 1018, 33, 114, 189, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "SPI&D/EAZ:", 1028, 35, 135, 68, 8
+    EDITTEXT 1108, 105, 132, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+END
+
+IDD_PLEASE_WAIT_2 DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Ju lutëm prisni"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 5100, -1, 9, 7, 20, 20
+    LTEXT "Shteti dërgues/Informacioni rajonit për modem.", -1, 42, 7, 146, 28
+END
+
+IDD_WARNING DIALOGEX 0, 0, 360, 105
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Paralajmërim"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTOCHECKBOX "Mos e tregoni këtë mesazh përsëri", 1109, 17, 73, 118, 10
+    DEFPUSHBUTTON "OK", 1, 302, 84, 50, 14
+    LTEXT "Disa modeme nuk mbajnë vargjet e inicializimit të këtij gjatësi.", -1, 50, 27, 304, 8
+    LTEXT "Informacion në lidhje me këtë kufizim mund të merret nga prodhuesi i modemit tuaj.", -1, 50, 41, 304, 8
+    ICON 5100, -1, 15, 14, 20, 20
+    LTEXT "Ju keni hyrë në një varg modemi inicializues më të madh se 57 karaktere të gjatë.", -1, 50, 14, 304, 8
+END
+
+IDD_MODEMS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modemi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 5100, 1057, 6, 7, 20, 20
+    LTEXT "&Modemet në vazhdim janë të instaluar:", -1, 44, 12, 203, 9
+    CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Shto...", 110, 56, 198, 60, 14
+    PUSHBUTTON "&Hiq", 112, 121, 198, 60, 14
+    PUSHBUTTON "&Cilësime", 109, 185, 198, 60, 14
+END
+
+IDD_PLEASE_WAIT_3 DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Ju Lutem Prisni..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&Ndalo", 2, 74, 53, 50, 14
+    ICON 5100, -1, 9, 7, 20, 20
+    LTEXT "Hiq", -1, 40, 8, 151, 8
+    LTEXT "Modem", 1005, 40, 16, 151, 25
+END
+
+STRINGTABLE
+BEGIN
+    180 "RS-232 Serial Port"
+    181 "Modem Jashtëm "
+    182 "Modem Brendhsëm"
+    183 "PCMCIA Modem"
+    184 "Paralel Modem"
+    185 "Paralel Port"
+    200 "110"
+    201 "1200"
+    202 "2400"
+    203 "4800"
+    204 "9600"
+    206 "19200"
+    207 "38400"
+    210 "115200"
+    211 "57600"
+    216 "300"
+    220 "230400"
+    221 "460800"
+    222 "921600"
+    240 "4"
+    241 "5"
+    242 "6"
+    243 "7"
+    244 "8"
+    250 "Qift"
+    251 "Tek"
+    252 "Asnjë"
+    253 "Mark"
+    254 "Hapësire"
+    255 "1"
+    256 "1.5"
+    257 "2"
+    260 "Xon / Xoff"
+    261 "Pjesë Elektronike"
+    262 "Asnjë"
+    263 "Ndezur"
+    264 "Ulët"
+    265 "V.23 (Minitel)"
+    266 "Standard"
+    267 "Jo-standard (Bell, HST)"
+    270 "Shtoj tek &Shënime"
+    300 "Paspecifikuara"
+    301 "Data"
+    302 "Fax"
+    303 "Yëri"
+    304 "Asnjë"
+    320 "Shteti/Vendodhaj Rajonale Azhornua"
+    340 "Modem"
+    341 "Cilësime Modem"
+    342 "Adresa Modem"
+    400 "Shteti/Vendodhaj Rajonale su Azhornua"
+    401 "Disa modems nuk e pranojnë përdorues inicializimi komandash më të mëdha se 57 karaktere.\n\nInformacioni në lidhje me këtë kufizim mund të merret nga prodhuesi juaj i modemit"
+    402 "Paralajmerim"
+    460 "Nuk ka memorie të mjaftueshme për të parë kutinë e Përgjithshme e dialogut.\nMbyll disa dokumente ose programe, dhe pastaj provoni përsëri."
+    461 "Nuk ka memorie të mjaftueshme për të parë kutinë e Cilësimeve të Modemit dialog.\nMbyll disa dokumente ose programe, dhe pastaj provoni përsëri."
+    463 "Çdo adresë thirrëse duhet të jetë vendosur për 'Automatik', ose në një model unik unazë.\n\nNdysho modelin e dublikuar unaza për një tjetër."
+    465 "Standard EC"
+    466 "Detzruar EC"
+    467 "Celulare"
+    468 "Gjymtuar"
+    469 "Mundësuar"
+    470 "Gjymtuar"
+    480 "AUTO  (1 Ch.)"
+    481 "AUTO  (2 Ch.)"
+    482 "PPP   (56K)"
+    483 "PPP   (64K)"
+    484 "PPP   (112K)"
+    485 "PPP   (112K,PAP)"
+    486 "PPP   (112K,CHAP)"
+    487 "PPP   (112K,MSCHAP)"
+    488 "PPP   (128K)"
+    489 "PPP   (128K,PAP)"
+    490 "PPP   (128K,CHAP)"
+    491 "PPP   (128K,MSCHAP)"
+    500 "V.120 (64K)"
+    501 "V.120 (56K)"
+    502 "V.120 (112K)"
+    503 "V.120 (128K)"
+    504 "X.75  (64K)"
+    505 "X.75  (128K)"
+    506 "X.75  (T.70)"
+    507 "X.75  (BTX)"
+    508 "V.110 (1.2K)"
+    509 "V.110 (2.4K)"
+    510 "V.110 (4.8K)"
+    511 "V.110 (9.6K)"
+    512 "V.110 (12.0K)"
+    513 "V.110 (14.4K)"
+    514 "V.110 (19.2K)"
+    515 "V.110 (28.8K)"
+    516 "V.110 (38.4K)"
+    517 "V.110 (57.6K)"
+    518 "Analog (V.34/V.90)"
+    550 "ESS5 (AT&T) (Amerika Veriore)"
+    551 "AT&T Pikë në ShumPikë"
+    552 "Nacionale ISDN 1 (NI-1)"
+    553 "Telekomi Versior DMS 100 (NT1)"
+    554 "NTT INS64 (Japan)"
+    555 "Europiane ISDN (DSS1)"
+    556 "Gjermane Nacionale (1TR6) (përdorur rrallë)"
+    557 "Franceze Nacionale (VN3) (përdorur rrallë)"
+    558 "Belge Nacionale (përdorur rrallë)"
+    559 "Australiane Nacionale (përdorur rrallë)"
+    560 "Kalim panjohur"
+    570 "ISDN Konfigurimi për këtë modem\nështë jo i plotë.\n\nJu lutem plotësoni informacionet në\nISDN Tabele para se të përdorni këtë modem."
+    600 "PPP   (56K,GSM)"
+    601 "PPP   (64K,GSM)"
+    602 "V.120 (64K,GSM)"
+    604 "V.110 (1.2K,GSM)"
+    605 "V.110 (2.4K,GSM)"
+    606 "V.110 (4.8K,GSM)"
+    607 "V.110 (9.6K,GSM)"
+    608 "V.110 (12.0K,GSM)"
+    609 "V.110 (14.4K,GSM)"
+    610 "V.110 (19.2K,GSM)"
+    611 "V.110 (28.8K,GSM)"
+    612 "V.110 (38.4K,GSM)"
+    613 "V.110 (57.6K,GSM)"
+    614 "Analog RLP"
+    615 "Analog NRLP"
+    616 "GPRS"
+    617 "PIAFS - hyres"
+    618 "PIAFS - dales"
+    700 "Përdor vendnodhjen TAPI aktuale"
+    2006 "Ngjit tek"
+    2007 "Nuk është e pranishme"
+    2008 "Jo funksionale"
+    2009 "Duhet Rifilluar"
+    2010 "#Për të përfunduar cilësimet e modemin tuaj, ju duhet të rinisni kompjuterin tuaj.\n\nA doni të rinisni kompjuterin tuaj tani?"
+    2011 "Modem jo i instaluar plotësisht"
+    2012 "Port panjohur"
+    3000 "Cilesimet Modemit"
+    3018 "Modemi"
+    3019 "Instalon një modem të re dhe ndryshon cilësimet modemit."
+    3053 "Karakteristikat e modemit nuk mund të shfaqen, sepse modemi nuk është në dispozicion.\n\nRifilloni sistemin dhe provoni përsëri."
+    3054 "Karakteristikat për Modemin"
+    3060 "Jeni te sigurte qe doni te hiqni modem e zgjedhu(r) nga sistemi juaj?"
+    3061 "ReactOS nuk ishte në gjendje për të hequr modem '%1' nga %2."
+    3062 "Modemi"
+    3069 "Nuk ka memorie të mjaftueshme për të hapur panelin e kontrollit të modemit.\n\nMbylle disa programe dhe provoni përsëri."
+    3073 "Ju duhet të jeni një Administrator i Sistemit për të instaluar një modem."
+    3074 "Nuk ka modem të instaluar. Ju duhet të jeni një Administrator i Sistemit për të instaluar një modem."
+    3076 "Ju duhet të mbyllni dhe të rinisni kompjuterin tuaj para se parametrat e reja do të hyjnë në fuqi.\n\nA doni të rinisni kompjuterin tuaj tani?"
+    3077 "Ndryshimet e Cilësimeve të Rrjesit"
+    3200 "300 Baud"
+    3201 "1200 Baud"
+    3202 "2400 Baud"
+    3203 "9600 Baud"
+    3204 "19.2K Baud"
+    3205 "38.4K Baud"
+    3206 "57.6K Baud"
+    3207 "Ska përgjigje"
+    3212 "Komandë"
+    3213 "Pergjigje"
+    3214 "Porti ku modemi është i bashkangjitur nuk mund të hapet. Kjo mund të jetë rezultat i një konflikti pjese elektronike. Kontrolloni menaxherin e pajisjeve për të verifikuar të gjitha pajisjet janë funksionale."
+    3215 "Porti që modemi është duke përdorur aktualisht është i hapur nga një tjetër program. Dil nga programi që aktualisht mund të jetë duke përdorur portin."
+    3218 "OpenComm"
+    3221 "115K Baud"
+    3222 "Azhorno"
+    3223 "Gabim"
+    3233 "Sukses"
+    3236 "Modem nuk arriti të përgjigjet. Sigurohuni që ajo është e lidhur si duhet dhe ndezur. Në qoftë se kjo është një modem i brendshëm apo është e lidhur, të verifikohet se interrupt për portin është vendosur si duhet."
+    3237 "KOMANDA NUK MBESHTETET"
+    3238 "Fushë"
+    3239 "Vlerë"
+    3240 "Preferenca Parazgjedhore"
+    3241 "Preferenca Lidhjeve"
+    6144 "Japoni"
+    6145 "Shqipëria"
+    6146 "Algjeria"
+    6147 "Amerika Samoa"
+    6148 "Gjermania (Shteti/Kodi rajonit 04)"
+    6149 "Anguilla"
+    6150 "Antigua dhe Barbuda"
+    6151 "Argjentina"
+    6152 "Ascension Island"
+    6153 "Australia"
+    6154 "Austria"
+    6155 "Bahamas"
+    6156 "Bahrain"
+    6157 "Bangladesh"
+    6158 "Barbados"
+    6159 "Belgjika"
+    6160 "Belize"
+    6161 "Benin"
+    6162 "Bermuda"
+    6163 "Bhutan"
+    6164 "Bolivia"
+    6165 "Botswana"
+    6166 "Brazil"
+    6167 "Shteti/kodi rajonit (23)"
+    6168 "Teritori Eqeanik Indian Britanik"
+    6169 "Ishujt Virgin Britanik"
+    6170 "Brunei"
+    6171 "Bulgaria"
+    6172 "Myanmar"
+    6173 "Burundi"
+    6174 "Bjellorusia"
+    6175 "Kameroon"
+    6176 "Kanada"
+    6177 "Kape Verde"
+    6178 "Ishulli Cayman"
+    6179 "Republika e Afrikës Qendrore"
+    6180 "Chad"
+    6181 "Qili"
+    6182 "Kina"
+    6183 "Kolombia"
+    6184 "Komoros"
+    6185 "Kongo"
+    6186 "Ishulli Cook"
+    6187 "Kosta Rica"
+    6188 "Kuba"
+    6189 "Qipro"
+    6190 "Republika Çeke"
+    6191 "Kambodia"
+    6192 "Korea Veriut"
+    6193 "Danimark"
+    6194 "Djibouti"
+    6195 "Republika Dominikane"
+    6196 "Dominica"
+    6197 "Ekuador"
+    6198 "Egjypt"
+    6199 "El Salvador"
+    6200 "Guinea Ekuadorial"
+    6201 "Ethiopia"
+    6202 "Ishujt Falkland (Islas Malvinas)"
+    6203 "Ishujt Fiji"
+    6204 "Finland"
+    6205 "France"
+    6206 "French Polynesia"
+    6207 "Shteti/Kodi rajonal (63)"
+    6208 "Gabon"
+    6209 "Gambia"
+    6210 "Germany (Shteti/Kodi rajonal 66)"
+    6211 "Angola"
+    6212 "Ghana"
+    6213 "Gibraltar"
+    6214 "Greqia"
+    6215 "Grenada"
+    6216 "Guam"
+    6217 "Guatemala"
+    6218 "Guernsey"
+    6219 "Guinea"
+    6220 "Guinea-Bissau"
+    6221 "Guyana"
+    6222 "Haiti"
+    6223 "Honduras"
+    6224 "Hong Kong SAR"
+    6225 "Hungaria"
+    6226 "Islandë"
+    6227 "India"
+    6228 "Indonezia"
+    6229 "Irani"
+    6230 "Irak"
+    6231 "Ireland"
+    6232 "Izrael"
+    6233 "Itali"
+    6234 "Cote d'Ivoire"
+    6235 "Xhamaika"
+    6236 "Afghanistan"
+    6237 "Jersey"
+    6238 "Jordani"
+    6239 "Kenya"
+    6240 "Kiribati"
+    6241 "Korea"
+    6242 "Kuwait"
+    6243 "Laos"
+    6244 "Lebanon"
+    6245 "Lesotho"
+    6246 "Liberia"
+    6247 "Libia"
+    6248 "Lihtenshtajn"
+    6249 "Luksemburg"
+    6250 "Macau SAR"
+    6251 "Madagaskar"
+    6252 "Malaysia"
+    6253 "Malawi"
+    6254 "Maldives"
+    6255 "Mali"
+    6256 "Malta"
+    6257 "Mauritania"
+    6258 "Mauritius"
+    6259 "Mexike"
+    6260 "Monako"
+    6261 "Mongolia"
+    6262 "Montserrat"
+    6263 "Moroko"
+    6264 "Mozambique"
+    6265 "Nauru"
+    6266 "Nepal"
+    6267 "Holandë"
+    6268 "Holandë Antilles"
+    6269 "Kaledonia e Re"
+    6270 "Zelanda e Re"
+    6271 "Nikaragua"
+    6272 "Niger"
+    6273 "Nigeria"
+    6274 "Norvegjia"
+    6275 "Oman"
+    6276 "Pakistan"
+    6277 "Panama"
+    6278 "Papua New Guinea"
+    6279 "Paraguay"
+    6280 "Peru"
+    6281 "Philippines"
+    6282 "Polonia"
+    6283 "Portugalia"
+    6284 "Puerto Rico"
+    6285 "Qatar"
+    6286 "Romania"
+    6287 "Rwanda"
+    6288 "St. Kitts and Nevis"
+    6289 "Shteti/Kodi rajonal (145)"
+    6290 "St. Helena"
+    6291 "St. Lucia"
+    6292 "San Marino"
+    6293 "Shteti/Kodi rajonal (148)"
+    6294 "Sao Tome dhe Principe"
+    6295 "Shën Vincenti dhe Grenadinet"
+    6296 "Arabia Saudite"
+    6297 "Senegal"
+    6298 "Seychelles"
+    6299 "Sierra Leone"
+    6300 "Singapori"
+    6301 "Ishujt Solomon"
+    6302 "Somalia"
+    6303 "Afrika e Jugut"
+    6304 "Spanjë"
+    6305 "Sri Lanka"
+    6306 "Sudan"
+    6307 "Suriname"
+    6308 "Swaziland"
+    6309 "Suedi"
+    6310 "Zvicer"
+    6311 "Siria"
+    6312 "Tanzania"
+    6313 "Tailand"
+    6314 "Togo"
+    6315 "Tonga"
+    6316 "Trinidad dhe Tobago"
+    6317 "Tuniyia"
+    6318 "Turkia"
+    6319 "Turks dhe Ishujt Caicos"
+    6320 "Tuvalu"
+    6321 "Uganda"
+    6322 "Ukraina"
+    6323 "Emiratet e Bashkuara Arabe"
+    6324 "Britania e Madhe"
+    6325 "Shtetet e Bashkuara"
+    6326 "Burkina Faso"
+    6327 "Uruguai"
+    6328 "Shteti/Kodi rajonal (184)"
+    6329 "Vanuatu"
+    6330 "Qzteti Vatikanit"
+    6331 "Venezuela"
+    6332 "Vietnam"
+    6333 "Wallis dhe Futuna"
+    6334 "Samoa"
+    6335 "Yemen"
+    6336 "Yemen"
+    6337 "Shteti/Kodi rajonal (193)"
+    6338 "Kongo (DRC)"
+    6339 "Zambia"
+    6340 "Zimbabwe"
+    6501 "Moldova"
+    6502 "Estonia"
+    6503 "Lituania"
+    6504 "Armenia"
+    6505 "Gjeorgia"
+    6506 "Azerbaigjan"
+    6507 "Turkmenistan"
+    6508 "Uzbekistan"
+    6509 "Kazakhstan"
+    6510 "Tajikistan"
+    6511 "Kyrgyzstan"
+    6512 "Latvia"
+    6513 "Russia"
+    6600 "Kroatia"
+    6601 "Slovenia"
+    6602 "Macedonia, FYRO"
+    6603 "Bosnia dhe Herzegovina"
+    6604 "Yugoslavia"
+    20013 "Hardware ID"
+END

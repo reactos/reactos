@@ -89,6 +89,9 @@
 #ifdef LANGUAGE_SL_SI
     #include "lang/Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/Sq.rc"
+#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/Tr.rc"
 #endif

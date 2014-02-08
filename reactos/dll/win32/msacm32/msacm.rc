@@ -94,6 +94,9 @@
 #ifdef LANGUAGE_SL_SI
     #include "lang/msacm_Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/msacm_Sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/msacm_Uk.rc"
 #endif

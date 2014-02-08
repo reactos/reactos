@@ -64,6 +64,9 @@ IDB_ROT2ICON BITMAP "res/rot2.bmp"
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif

@@ -98,6 +98,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
