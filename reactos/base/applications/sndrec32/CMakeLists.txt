@@ -4,8 +4,8 @@ set_cpp(WITH_RUNTIME)
 add_executable(sndrec32
     audio_format.cpp
     audio_membuffer.cpp
-    audio_producer.cpp
-    audio_receiver.cpp
+    #audio_producer.cpp
+    #audio_receiver.cpp
     audio_resampler_acm.cpp
     audio_wavein.cpp
     audio_waveout.cpp
