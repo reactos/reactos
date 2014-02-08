@@ -673,9 +673,8 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
     if (lpEnvironment)
     {
         /* Find the environment size */
-        while ((ScanChar[0]) || (ScanChar[1])) ++ScanChar;
-        ScanChar += (2 * sizeof(UNICODE_NULL));
-        EnviroSize = (ULONG_PTR)ScanChar - (ULONG_PTR)lpEnvironment;
+        while (*ScanChar++) while (*ScanChar++);
+        EnviroSize = (ULONG)((ULONG_PTR)ScanChar - (ULONG_PTR)lpEnvironment);
 
         /* Allocate and Initialize new Environment Block */
         Size = EnviroSize;
