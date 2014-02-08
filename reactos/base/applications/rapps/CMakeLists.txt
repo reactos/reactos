@@ -17,10 +17,6 @@ list(APPEND SOURCE
     winmain.c
     rapps.rc)
 
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${REACTOS_BINARY_DIR}/include/reactos)
-
 add_executable(rapps ${SOURCE})
 add_pch(rapps rapps.h)
 set_module_type(rapps win32gui UNICODE)
