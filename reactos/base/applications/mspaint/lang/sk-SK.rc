@@ -187,7 +187,7 @@ BEGIN
     IDS_PROGRAMNAME "Skicár"
     IDS_WINDOWTITLE "%s - Skicár"
     IDS_INFOTITLE "Skicár systému ReactOS"
-    IDS_INFOTEXT "Skicár systému ReactOS je dostupný za podmienok GNU Lesser General Public License (LGPL) verzia 3 (viď www.gnu.org)"
+    IDS_INFOTEXT "Skicár systému ReactOS je dostupný za podmienok GNU Lesser General Public License (LGPL, viď www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložiť vykonané zmeny do %s?"
     IDS_DEFAULTFILENAME "Bez názvu.bmp"
     IDS_MINIATURETITLE "Miniature"

@@ -186,7 +186,7 @@ BEGIN
     IDS_PROGRAMNAME "画图"
     IDS_WINDOWTITLE "%s - 画图"
     IDS_INFOTITLE "ReactOS 画图"
-    IDS_INFOTEXT "ReactOS 画图是在 GNU LGPL 协议版本 3 下发布的 (详见 www.gnu.org)"
+    IDS_INFOTEXT "ReactOS 画图是在 GNU LGPL 下发布的 (详见 www.gnu.org)"
     IDS_SAVEPROMPTTEXT "您想把改变保存到 %s 吗？"
     IDS_DEFAULTFILENAME "未命名.bmp"
     IDS_MINIATURETITLE "缩略图"
