@@ -262,6 +262,7 @@ list(APPEND SOURCE
     rtl/libsupp.c
     rtl/misc.c
     se/access.c
+    se/accesschk.c
     se/acl.c
     se/audit.c
     se/lsa.c
