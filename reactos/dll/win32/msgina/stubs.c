@@ -16,12 +16,12 @@
  */
 DWORD WINAPI
 ShellShutdownDialog(
-    HWND  hParent,
-    DWORD Unknown,
-    BOOL  bHideLogoff)
+    HWND   hParent,
+    LPWSTR lpUsername,
+    BOOL   bHideLogoff)
 {
     UNREFERENCED_PARAMETER(hParent);
-    UNREFERENCED_PARAMETER(Unknown);
+    UNREFERENCED_PARAMETER(lpUsername);
     UNREFERENCED_PARAMETER(bHideLogoff);
 
     /* Return values:

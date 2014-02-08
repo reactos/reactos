@@ -175,11 +175,34 @@ EmptyWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(hwndDlg);
-    UNREFERENCED_PARAMETER(uMsg);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(lParam);
+    PGINA_CONTEXT pgContext;
+    
+    pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
 
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+        }
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc;
+            if (pgContext->hBitmap)
+            {
+                hdc = BeginPaint(hwndDlg, &ps);
+                DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                EndPaint(hwndDlg, &ps);
+            }
+            return TRUE;
+        }
+        case WM_DESTROY:
+        {
+            DeleteObject(pgContext->hBitmap);
+            return TRUE;
+        }
+    }
     return FALSE;
 }
 
