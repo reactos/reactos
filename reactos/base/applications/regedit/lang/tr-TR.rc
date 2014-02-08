@@ -284,7 +284,7 @@ BEGIN
     ID_EDIT_NEW_KEY "Yeni bir dizin oluşturur."
     ID_EDIT_NEW_STRINGVALUE "Yeni bir dizgi değeri oluşturur."
     ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer oluşturur."
-    ID_EDIT_NEW_DWORDVALUE "Yeni bir 32 ikillik değer oluşturur."
+    ID_EDIT_NEW_DWORDVALUE "Yeni bir 32 bitlik değer oluşturur."
     ID_REGISTRY_IMPORTREGISTRYFILE "Uygun bir kütükten bilgiler alır."
     ID_REGISTRY_EXPORTREGISTRYFILE "Değer Defteri'nin tümünü ya da bir bölümünü bir kütüğe kaydeder."
     ID_REGISTRY_LOADHIVE "Değer Defteri'ne bir yığın yükler."
@@ -347,7 +347,7 @@ BEGIN
     IDS_EXPORT_REG_FILE "Değer Kütüğüne Ver"
     IDS_LOAD_HIVE "Yığın Yükle"
     IDS_UNLOAD_HIVE "Yığını Kaldır"
-    IDS_INVALID_DWORD "(Bu 32 ikillik değer geçersizdir.)"
+    IDS_INVALID_DWORD "(Bu 32 bitlik değer geçersizdir.)"
 END
 
 STRINGTABLE

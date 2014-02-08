@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -47,7 +47,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
 CAPTION "Yükleniyor"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CTEXT "Olaylar yükleniyor, lütfen bekleyiniz.", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
+    CTEXT "Olaylar yükleniyor, bekleyiniz.", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
@@ -87,8 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Olay Görüntüleyicisi"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_APP_TITLE_EX "%s - %s Oturum Aç \\\\"
+    IDS_STATUS_MSG "%s'nin %lu olayı vardır."
     IDS_EVENTSTRINGIDNOTFOUND "Kaynaktaki olay kimliği (%lu) için açıklama (%s) bulunamadı. Yerli bilgisayarda, uzaktaki bilgisayardan ileti görüntülemesi için gerekli, değer bilgileri veyâ kitaplıklar olmayabilir."
     IDS_EVENTLOG_ERROR_TYPE "Yanlışlık"
     IDS_EVENTLOG_WARNING_TYPE "Uyarı"

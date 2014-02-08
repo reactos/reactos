@@ -1,10 +1,10 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 80
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Lütfen Bekleyiniz..."
+CAPTION "Bekleyiniz..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -42,8 +42,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     GROUPBOX "Oturum Açma Bilgisi", IDC_STATIC, 7, 61, 261, 52
-    LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
-    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
+    LTEXT "<İleti>", IDC_LOGONMSG, 15, 73, 245, 18
+    LTEXT "<Oturum Açma Zamânı>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Ne yapmak istersiniz?", IDC_STATIC, 10, 119, 255, 8
     PUSHBUTTON "Bilgisayarı Kilitle", IDC_LOCK, 10, 135, 76, 14
     PUSHBUTTON "Oturumu Kapat", IDC_LOGOFF, 100, 135, 75, 14
@@ -61,7 +61,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
     LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "Message", IDC_LOCKMSG, 37, 75, 231, 26
+    LTEXT "İleti", IDC_LOCKMSG, 37, 75, 231, 26
     LTEXT "Bu bilgisayarın kilidini açmak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız.", IDC_STATIC, 36, 106, 232, 8
 END
 
@@ -73,7 +73,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
     LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "Message", IDC_LOCKMSG, 36, 75, 232, 26
+    LTEXT "İleti", IDC_LOCKMSG, 36, 75, 232, 26
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Şifre:", IDC_STATIC, 36, 125, 42, 8
@@ -104,13 +104,13 @@ END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Oturumu Kapatma"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "No", IDNO, 95, 39, 50, 14
+    LTEXT "Oturumu kapatmayı onaylıyor musunuz?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Evet", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Hayır", IDNO, 95, 39, 50, 14
 END
 
 STRINGTABLE
@@ -124,10 +124,10 @@ BEGIN
     IDS_LOCKMSG "Yalnızca %s ve bir yönetici bu bilgisayarı kilitleyebilir."
     IDS_LOGONMSG "%s olarak oturum açtınız."
     IDS_LOGONDATE "Oturum Açma Zamânı: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
+    IDS_COMPUTERLOCKED "Bilgisayar kilitlendi."
+    IDS_LOCKEDWRONGPASSWORD "Şifre yanlıştır. Şifrenizi yine giriniz. Şifredeki hârfler doğru büyük-küçük ayrımıyla yazılmalıdır."
+    IDS_LOCKEDWRONGUSER "Bu bilgisayar kilitli. Bu bilgisayarın kilidini yalnızca %s\\%s veyâ bir yönetici açabilir."
+    IDS_CHANGEPWDTITLE "Şifre Değştirme"
+    IDS_NONMATCHINGPASSWORDS "Yazıdığınız bu şifreler birbiriyle uyuşmuyor. Her iki metin kutusuna da aynı şifreyi yazınız."
+    IDS_PASSWORDCHANGED "Şifreniz değiştirildi."
 END
