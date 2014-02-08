@@ -1,0 +1,11 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  18-01-2014
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Opsionet e Telefonit dhe Modemit"
+    IDS_CPLSYSTEMDESCRIPTION "Konfiguro rregullat tuaja për të formuar numrin në telefon dhe cilësimet e modemit."
+END
