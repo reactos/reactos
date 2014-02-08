@@ -22,9 +22,10 @@ See http://www.reactos.org/forum/viewtopic.php?f=2&t=12930#p105065
 and http://www.reactos.org/forum/viewtopic.php?f=2&t=12930&start=15#p105307
 for more information.
 
-Unicode VGA font - Medium size (UniVGA16.ttf)
-=============================================
+Unicode VGA font - Medium size 16px (UniVGA16.ttf)
+==================================================
 Author : Roy Tam
 Credits: Dmitry Bolkhovityanov
 
-http://roy.dnsd.me/u_vga_ttf.7z
+http://rtoss.googlecode.com/svn/UniVGA16/
+https://code.google.com/p/rtoss/source/browse/UniVGA16
