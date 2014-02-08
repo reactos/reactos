@@ -391,6 +391,9 @@ typedef struct _MMPFN
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
 #endif
+
+    // HACK until WS lists are supported
+    MMWSLE Wsle;
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
