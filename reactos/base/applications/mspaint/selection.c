@@ -10,14 +10,30 @@
 
 #include "precomp.h"
 
+/* DEFINES **********************************************************/
+
+#define ACTION_MOVE                 0
+#define ACTION_RESIZE_TOP_LEFT      1
+#define ACTION_RESIZE_TOP           2
+#define ACTION_RESIZE_TOP_RIGHT     3
+#define ACTION_RESIZE_LEFT          4
+#define ACTION_RESIZE_RIGHT         5
+#define ACTION_RESIZE_BOTTOM_LEFT   6
+#define ACTION_RESIZE_BOTTOM        7
+#define ACTION_RESIZE_BOTTOM_RIGHT  8
+
 /* FUNCTIONS ********************************************************/
 
-LPCTSTR cursors[9] = { IDC_SIZEALL, IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
-    IDC_SIZEWE, IDC_SIZEWE, IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE
+LPCTSTR cursors[9] = { /* action to mouse cursor lookup table */
+    IDC_SIZEALL, 
+    
+    IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
+    IDC_SIZEWE,               IDC_SIZEWE,
+    IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE
 };
 
 BOOL moving = FALSE;
-int action = 0;
+int action = ACTION_MOVE;
 POINTS pos;
 POINTS frac;
 POINT delta;
@@ -70,27 +86,27 @@ identifyCorner(short x, short y, short w, short h)
     if (y < 3)
     {
         if (x < 3)
-            return 1;
+            return ACTION_RESIZE_TOP_LEFT;
         if ((x < w / 2 + 2) && (x >= w / 2 - 1))
-            return 2;
+            return ACTION_RESIZE_TOP;
         if (x >= w - 3)
-            return 3;
+            return ACTION_RESIZE_TOP_RIGHT;
     }
     if ((y < h / 2 + 2) && (y >= h / 2 - 1))
     {
         if (x < 3)
-            return 4;
+            return ACTION_RESIZE_LEFT;
         if (x >= w - 3)
-            return 5;
+            return ACTION_RESIZE_RIGHT;
     }
     if (y >= h - 3)
     {
         if (x < 3)
-            return 6;
+            return ACTION_RESIZE_BOTTOM_LEFT;
         if ((x < w / 2 + 2) && (x >= w / 2 - 1))
-            return 7;
+            return ACTION_RESIZE_BOTTOM;
         if (x >= w - 3)
-            return 8;
+            return ACTION_RESIZE_BOTTOM_RIGHT;
     }
     return 0;
 }
@@ -118,9 +134,10 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             delta.x = 0;
             delta.y = 0;
             SetCapture(hwnd);
-            if (action != 0)
+            if (action != ACTION_MOVE)
                 SetCursor(LoadCursor(NULL, cursors[action]));
             moving = TRUE;
+            InvalidateRect(hScrlClient, NULL, TRUE);
             break;
         case WM_MOUSEMOVE:
             if (moving)
@@ -144,50 +161,50 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 switch (action)
                 {
-                    case 0: /* move selection */
+                    case ACTION_MOVE:                /* move selection */
                         deltaUsed.x = delta.x;
                         deltaUsed.y = delta.y;
                         OffsetRect(&rectSel_dest, deltaUsed.x, deltaUsed.y);
                         break;
-                    case 1: /* resize at upper left corner */
+                    case ACTION_RESIZE_TOP_LEFT:     /* resize at upper left corner */
                         deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
                         deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
                         rectSel_dest.left += deltaUsed.x;
                         rectSel_dest.top  += deltaUsed.y;
                         break;
-                    case 2: /* resize at top edge */
+                    case ACTION_RESIZE_TOP:          /* resize at top edge */
                         deltaUsed.x = delta.x;
                         deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
                         rectSel_dest.top += deltaUsed.y;
                         break;
-                    case 3: /* resize at upper right corner */
+                    case ACTION_RESIZE_TOP_RIGHT:    /* resize at upper right corner */
                         deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
                         deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
                         rectSel_dest.top   += deltaUsed.y;
                         rectSel_dest.right += deltaUsed.x;
                         break;
-                    case 4: /* resize at left edge */
+                    case ACTION_RESIZE_LEFT:         /* resize at left edge */
                         deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
                         deltaUsed.y = delta.y;
                         rectSel_dest.left += deltaUsed.x;
                         break;
-                    case 5: /* resize at right edge */
+                    case ACTION_RESIZE_RIGHT:        /* resize at right edge */
                         deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
                         deltaUsed.y = delta.y;
                         rectSel_dest.right += deltaUsed.x;
                         break;
-                    case 6: /* resize at lower left corner */
+                    case ACTION_RESIZE_BOTTOM_LEFT:  /* resize at lower left corner */
                         deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
                         deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
                         rectSel_dest.left   += deltaUsed.x;
                         rectSel_dest.bottom += deltaUsed.y;
                         break;
-                    case 7: /* resize at bottom edge */
+                    case ACTION_RESIZE_BOTTOM:       /* resize at bottom edge */
                         deltaUsed.x = delta.x;
                         deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
                         rectSel_dest.bottom += deltaUsed.y;
                         break;
-                    case 8: /* resize at lower right corner */
+                    case ACTION_RESIZE_BOTTOM_RIGHT: /* resize at lower right corner */
                         deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
                         deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
                         rectSel_dest.right  += deltaUsed.x;
@@ -200,13 +217,13 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
 
-                if (activeTool == 10) /* text tool */
+                if (activeTool == TOOL_TEXT)
                 {
                     Text(hDrawingDC, rectSel_dest.left, rectSel_dest.top, rectSel_dest.right, rectSel_dest.bottom, fgColor, bgColor, textToolText, hfontTextFont, transpBg);
                 }
                 else
                 {
-                    if (action != 0)
+                    if (action != ACTION_MOVE)
                         StretchBlt(hDrawingDC, rectSel_dest.left, rectSel_dest.top, RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest), hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
                     else
                     if (transpBg == 0)
@@ -221,7 +238,6 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hImageArea, NULL, FALSE);
                 pos.x = GET_X_LPARAM(lParam);
                 pos.y = GET_Y_LPARAM(lParam);
-                //SendMessage(hwnd, WM_PAINT, 0, 0);
             }
             else
             {
@@ -231,7 +247,7 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 pos.y = GET_Y_LPARAM(lParam);
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
                 action = identifyCorner(pos.x, pos.y, w, h);
-                if (action != 0)
+                if (action != ACTION_MOVE)
                     SetCursor(LoadCursor(NULL, cursors[action]));
             }
             break;
@@ -240,9 +256,9 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 moving = FALSE;
                 ReleaseCapture();
-                if (action != 0)
+                if (action != ACTION_MOVE)
                 {
-                    if (activeTool == 10) /* text tool */
+                    if (activeTool == TOOL_TEXT)
                     {
                         
                     }

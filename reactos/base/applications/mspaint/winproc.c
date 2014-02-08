@@ -23,7 +23,7 @@ selectTool(int tool)
     activeTool = tool;
     pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
     InvalidateRect(hToolSettings, NULL, TRUE);
-    ShowWindow(hTrackbarZoom, (tool == 6) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hTrackbarZoom, (tool == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
 }
 
 void
@@ -279,7 +279,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_INITMENUPOPUP:
         {
             HMENU menu = GetMenu(hMainWnd);
-            BOOL trueSelection = (IsWindowVisible(hSelection) && ((activeTool == 1) || (activeTool == 2)));
+            BOOL trueSelection = (IsWindowVisible(hSelection) && ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL)));
             switch (lParam)
             {
                 case 0: /* File menu */
