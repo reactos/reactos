@@ -380,6 +380,16 @@ SepPrivilegeCheck(
     KPROCESSOR_MODE PreviousMode
 );
 
+NTSTATUS
+NTAPI
+SePrivilegePolicyCheck(
+    _Inout_ PACCESS_MASK DesiredAccess,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PTOKEN Token,
+    _Out_opt_ PPRIVILEGE_SET *OutPrivilegeSet,
+    _In_ KPROCESSOR_MODE PreviousMode);
+
 BOOLEAN
 NTAPI
 SeCheckPrivilegedObject(

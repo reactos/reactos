@@ -31,7 +31,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                OUT PACCESS_MASK GrantedAccess,
                OUT PNTSTATUS AccessStatus)
 {
-    LUID_AND_ATTRIBUTES Privilege;
 #ifdef OLD_ACCESS_CHECK
     ACCESS_MASK CurrentAccess, AccessMask;
 #endif
@@ -72,43 +71,31 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (PreviouslyGrantedAccess)
         RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
-#ifdef OLD_ACCESS_CHECK
-    CurrentAccess = PreviouslyGrantedAccess;
-#endif
     /* Initialize remaining access rights */
     RemainingAccess = DesiredAccess;
 
     Token = SubjectSecurityContext->ClientToken ?
-    SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+        SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
 
-    /* Check for system security access */
-    if (RemainingAccess & ACCESS_SYSTEM_SECURITY)
+    /* Check for ACCESS_SYSTEM_SECURITY and WRITE_OWNER access */
+    Status = SePrivilegePolicyCheck(&RemainingAccess,
+                                    &PreviouslyGrantedAccess,
+                                    NULL,
+                                    Token,
+                                    NULL,
+                                    UserMode);
+    if (!NT_SUCCESS(Status))
     {
-        Privilege.Luid = SeSecurityPrivilege;
-        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+        *AccessStatus = Status;
+        return FALSE;
+    }
 
-        /* Fail if we do not the SeSecurityPrivilege */
-        if (!SepPrivilegeCheck(Token,
-                               &Privilege,
-                               1,
-                               PRIVILEGE_SET_ALL_NECESSARY,
-                               AccessMode))
-        {
-            *AccessStatus = STATUS_PRIVILEGE_NOT_HELD;
-            return FALSE;
-        }
-
-        /* Adjust access rights */
-        RemainingAccess &= ~ACCESS_SYSTEM_SECURITY;
-        PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
-
-        /* Succeed if there are no more rights to grant */
-        if (RemainingAccess == 0)
-        {
-            *GrantedAccess = PreviouslyGrantedAccess;
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
-        }
+    /* Succeed if there are no more rights to grant */
+    if (RemainingAccess == 0)
+    {
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
     }
 
     /* Get the DACL */
@@ -142,35 +129,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 #ifdef OLD_ACCESS_CHECK
     CurrentAccess = PreviouslyGrantedAccess;
 #endif
-
-    /* RULE 2: Check token for 'take ownership' privilege */
-    if (DesiredAccess & WRITE_OWNER)
-    {
-        Privilege.Luid = SeTakeOwnershipPrivilege;
-        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
-
-        if (SepPrivilegeCheck(Token,
-                              &Privilege,
-                              1,
-                              PRIVILEGE_SET_ALL_NECESSARY,
-                              AccessMode))
-        {
-            /* Adjust access rights */
-            RemainingAccess &= ~WRITE_OWNER;
-            PreviouslyGrantedAccess |= WRITE_OWNER;
-#ifdef OLD_ACCESS_CHECK
-            CurrentAccess |= WRITE_OWNER;
-#endif
-
-            /* Succeed if there are no more rights to grant */
-            if (RemainingAccess == 0)
-            {
-                *GrantedAccess = PreviouslyGrantedAccess;
-                *AccessStatus = STATUS_SUCCESS;
-                return TRUE;
-            }
-        }
-    }
 
     /* Deny access if the DACL is empty */
     if (Dacl->AceCount == 0)

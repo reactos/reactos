@@ -89,6 +89,9 @@ SepPrivilegeCheck(PTOKEN Token,
     /* Get the number of privileges that are required to match */
     Required = (PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) ? PrivilegeCount : 1;
 
+    /* Acquire a shared token lock */
+    SepAcquireTokenLockShared(Token);
+
     /* Loop all requested privileges until we found the required ones */
     for (i = 0; i < PrivilegeCount; i++)
     {
@@ -96,8 +99,7 @@ SepPrivilegeCheck(PTOKEN Token,
         for (j = 0; j < Token->PrivilegeCount; j++)
         {
             /* Check if the LUIDs match */
-            if (Token->Privileges[j].Luid.LowPart == Privileges[i].Luid.LowPart &&
-                Token->Privileges[j].Luid.HighPart == Privileges[i].Luid.HighPart)
+            if (RtlEqualLuid(&Token->Privileges[j].Luid, &Privileges[i].Luid))
             {
                 DPRINT("Found privilege. Attributes: %lx\n",
                        Token->Privileges[j].Attributes);
@@ -112,6 +114,7 @@ SepPrivilegeCheck(PTOKEN Token,
                     if (Required == 0)
                     {
                         /* We're done! */
+                        SepReleaseTokenLock(Token);
                         return TRUE;
                     }
                 }
@@ -122,9 +125,131 @@ SepPrivilegeCheck(PTOKEN Token,
         }
     }
 
+    /* Release the token lock */
+    SepReleaseTokenLock(Token);
+
     /* When we reached this point, we did not find all privileges */
     NT_ASSERT(Required > 0);
     return FALSE;
+}
+
+NTSTATUS
+NTAPI
+SepSinglePrivilegeCheck(
+    LUID PrivilegeValue,
+    PTOKEN Token,
+    KPROCESSOR_MODE PreviousMode)
+{
+    LUID_AND_ATTRIBUTES Privilege;
+    PAGED_CODE();
+    ASSERT(!RtlEqualLuid(&PrivilegeValue, &SeTcbPrivilege));
+
+    Privilege.Luid = PrivilegeValue;
+    Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+    return SepPrivilegeCheck(Token,
+                             &Privilege,
+                             1,
+                             PRIVILEGE_SET_ALL_NECESSARY,
+                             PreviousMode);
+}
+
+NTSTATUS
+NTAPI
+SePrivilegePolicyCheck(
+    _Inout_ PACCESS_MASK DesiredAccess,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PTOKEN Token,
+    _Out_opt_ PPRIVILEGE_SET *OutPrivilegeSet,
+    _In_ KPROCESSOR_MODE PreviousMode)
+{
+    SIZE_T PrivilegeSize;
+    PPRIVILEGE_SET PrivilegeSet;
+    ULONG PrivilegeCount = 0, Index = 0;
+    ACCESS_MASK AccessMask = 0;
+    PAGED_CODE();
+
+    /* Check if we have a security subject context */
+    if (SubjectContext != NULL)
+    {
+        /* Check if there is a client impersonation token */
+        if (SubjectContext->ClientToken != NULL)
+            Token = SubjectContext->ClientToken;
+        else
+            Token = SubjectContext->PrimaryToken;
+    }
+
+    /* Check if the caller wants ACCESS_SYSTEM_SECURITY access */
+    if (*DesiredAccess & ACCESS_SYSTEM_SECURITY)
+    {
+        /* Do the privilege check */
+        if (SepSinglePrivilegeCheck(SeSecurityPrivilege, Token, PreviousMode))
+        {
+            /* Remember this access flag */
+            AccessMask |= ACCESS_SYSTEM_SECURITY;
+            PrivilegeCount++;
+        }
+        else
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+
+    /* Check if the caller wants WRITE_OWNER access */
+    if (*DesiredAccess & WRITE_OWNER)
+    {
+        /* Do the privilege check */
+        if (SepSinglePrivilegeCheck(SeTakeOwnershipPrivilege, Token, PreviousMode))
+        {
+            /* Remember this access flag */
+            AccessMask |= WRITE_OWNER;
+            PrivilegeCount++;
+        }
+    }
+
+    /* Update the access masks */
+    *GrantedAccess |= AccessMask;
+    *DesiredAccess &= ~AccessMask;
+
+    /* Does the caller want a privilege set? */
+    if (OutPrivilegeSet != NULL)
+    {
+        /* Do we have any privileges to report? */
+        if (PrivilegeCount > 0)
+        {
+            /* Calculate size and allocate the structure */
+            PrivilegeSize = FIELD_OFFSET(PRIVILEGE_SET, Privilege[PrivilegeCount]);
+            PrivilegeSet = ExAllocatePoolWithTag(PagedPool, PrivilegeSize, 'rPeS');
+            *OutPrivilegeSet = PrivilegeSet;
+            if (PrivilegeSet == NULL)
+            {
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            PrivilegeSet->PrivilegeCount = PrivilegeCount;
+            PrivilegeSet->Control = 0;
+
+            if (AccessMask & WRITE_OWNER)
+            {
+                PrivilegeSet->Privilege[Index].Luid = SeTakeOwnershipPrivilege;
+                PrivilegeSet->Privilege[Index].Attributes = SE_PRIVILEGE_USED_FOR_ACCESS;
+                Index++;
+            }
+
+            if (AccessMask & ACCESS_SYSTEM_SECURITY)
+            {
+                PrivilegeSet->Privilege[Index].Luid = SeSecurityPrivilege;
+                PrivilegeSet->Privilege[Index].Attributes = SE_PRIVILEGE_USED_FOR_ACCESS;
+            }
+        }
+        else
+        {
+            /* No privileges, no structure */
+            *OutPrivilegeSet = NULL;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
