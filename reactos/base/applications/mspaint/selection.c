@@ -20,6 +20,7 @@ BOOL moving = FALSE;
 int action = 0;
 POINTS pos;
 POINTS frac;
+POINT delta;
 
 BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor)
@@ -114,6 +115,8 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
             pos.x = GET_X_LPARAM(lParam);
             pos.y = GET_Y_LPARAM(lParam);
+            delta.x = 0;
+            delta.y = 0;
             SetCapture(hwnd);
             if (action != 0)
                 SetCursor(LoadCursor(NULL, cursors[action]));
@@ -123,59 +126,76 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (moving)
             {
                 TCHAR sizeStr[100];
-                POINT delta;
+                POINT deltaUsed;
                 resetToU1();
                 frac.x += GET_X_LPARAM(lParam) - pos.x;
                 frac.y += GET_Y_LPARAM(lParam) - pos.y;
+                delta.x += frac.x * 1000 / zoom;
+                delta.y += frac.y * 1000 / zoom;
                 if (zoom < 1000)
                 {
-                    delta.x = frac.x * 1000 / zoom;
                     frac.x = 0;
-                    delta.y = frac.y * 1000 / zoom;
                     frac.y = 0;
                 }
                 else
                 {
-                    delta.x = frac.x * 1000 / zoom;
                     frac.x -= (frac.x * 1000 / zoom) * zoom / 1000;
-                    delta.y = frac.y * 1000 / zoom;
                     frac.y -= (frac.y * 1000 / zoom) * zoom / 1000;
                 }
                 switch (action)
                 {
-                    /* TODO: make sure that the selection is at least 1 pixel wide and high */
                     case 0: /* move selection */
-                        OffsetRect(&rectSel_dest, delta.x, delta.y);
+                        deltaUsed.x = delta.x;
+                        deltaUsed.y = delta.y;
+                        OffsetRect(&rectSel_dest, deltaUsed.x, deltaUsed.y);
                         break;
                     case 1: /* resize at upper left corner */
-                        rectSel_dest.left += delta.x;
-                        rectSel_dest.top  += delta.y;
+                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                        rectSel_dest.left += deltaUsed.x;
+                        rectSel_dest.top  += deltaUsed.y;
                         break;
                     case 2: /* resize at top edge */
-                        rectSel_dest.top += delta.y;
+                        deltaUsed.x = delta.x;
+                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                        rectSel_dest.top += deltaUsed.y;
                         break;
                     case 3: /* resize at upper right corner */
-                        rectSel_dest.top   += delta.y;
-                        rectSel_dest.right += delta.x;
+                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                        deltaUsed.y = min(delta.y, RECT_HEIGHT(rectSel_dest) - 1);
+                        rectSel_dest.top   += deltaUsed.y;
+                        rectSel_dest.right += deltaUsed.x;
                         break;
                     case 4: /* resize at left edge */
-                        rectSel_dest.left += delta.x;
+                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                        deltaUsed.y = delta.y;
+                        rectSel_dest.left += deltaUsed.x;
                         break;
                     case 5: /* resize at right edge */
-                        rectSel_dest.right += delta.x;
+                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                        deltaUsed.y = delta.y;
+                        rectSel_dest.right += deltaUsed.x;
                         break;
                     case 6: /* resize at lower left corner */
-                        rectSel_dest.left   += delta.x;
-                        rectSel_dest.bottom += delta.y;
+                        deltaUsed.x = min(delta.x, RECT_WIDTH(rectSel_dest) - 1);
+                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                        rectSel_dest.left   += deltaUsed.x;
+                        rectSel_dest.bottom += deltaUsed.y;
                         break;
                     case 7: /* resize at bottom edge */
-                        rectSel_dest.bottom += delta.y;
+                        deltaUsed.x = delta.x;
+                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                        rectSel_dest.bottom += deltaUsed.y;
                         break;
                     case 8: /* resize at lower right corner */
-                        rectSel_dest.right  += delta.x;
-                        rectSel_dest.bottom += delta.y;
+                        deltaUsed.x = max(delta.x, -(RECT_WIDTH(rectSel_dest) - 1));
+                        deltaUsed.y = max(delta.y, -(RECT_HEIGHT(rectSel_dest) - 1));
+                        rectSel_dest.right  += deltaUsed.x;
+                        rectSel_dest.bottom += deltaUsed.y;
                         break;
                 }
+                delta.x -= deltaUsed.x;
+                delta.y -= deltaUsed.y;
 
                 _stprintf(sizeStr, _T("%d x %d"), RECT_WIDTH(rectSel_dest), RECT_HEIGHT(rectSel_dest));
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
