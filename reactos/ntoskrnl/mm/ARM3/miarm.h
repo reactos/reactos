@@ -1121,23 +1121,7 @@ MiIsRosSectionObject(IN PVOID Section)
     return FALSE;
 }
 
-#ifdef _WIN64
-// HACK ON TOP OF HACK ALERT!!!
-#define MI_GET_ROS_DATA(x) \
-    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
-                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
-#else
-#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
-#endif
-#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
-#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
-typedef struct _MMROSPFN
-{
-    PMM_RMAP_ENTRY RmapListHead;
-    SWAPENTRY SwapEntry;
-} MMROSPFN, *PMMROSPFN;
-
-#define RosMmData            AweReferenceCount
+#define MI_IS_ROS_PFN(x)     ((x)->u4.AweAllocation == TRUE)
 
 VOID
 NTAPI
