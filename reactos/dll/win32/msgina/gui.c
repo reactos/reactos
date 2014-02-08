@@ -707,6 +707,9 @@ LoggedOutWindowProc(
             if (pgContext->bShutdownWithoutLogon == FALSE)
                 EnableWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN), FALSE);
 
+            SendDlgItemMessageW(hwndDlg, IDC_LOGON_TO, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
+            SendDlgItemMessageW(hwndDlg, IDC_LOGON_TO, CB_SETCURSEL, 0, 0);
+
             SetFocus(GetDlgItem(hwndDlg, pgContext->bDontDisplayLastUserName ? IDC_USERNAME : IDC_PASSWORD));
 
             pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
@@ -735,13 +738,15 @@ LoggedOutWindowProc(
             {
                 case IDOK:
                 {
-                    LPWSTR UserName = NULL, Password = NULL;
+                    LPWSTR UserName = NULL, Password = NULL, Domain = NULL;
                     INT result = WLX_SAS_ACTION_NONE;
 
                     if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
                         break;
+                    if (GetTextboxText(hwndDlg, IDC_LOGON_TO, &Domain) && *Domain == '\0')
+                        break;
                     if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
-                        DoLoginTasks(pgContext, UserName, NULL, Password))
+                        DoLoginTasks(pgContext, UserName, Domain, Password))
                     {
                         pgContext->Password = HeapAlloc(GetProcessHeap(),
                                                         HEAP_ZERO_MEMORY,
@@ -753,6 +758,7 @@ LoggedOutWindowProc(
                     }
                     HeapFree(GetProcessHeap(), 0, UserName);
                     HeapFree(GetProcessHeap(), 0, Password);
+                    HeapFree(GetProcessHeap(), 0, Domain);
                     EndDialog(hwndDlg, result);
                     return TRUE;
                 }

@@ -237,7 +237,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
 
     dwSize = 256 * sizeof(WCHAR);
     rc = RegQueryValueExW(hKey,
-                          L"DefaultDomainName",
+                          L"DefaultDomain",
                           NULL,
                           NULL,
                           (LPBYTE)&pgContext->Domain,
@@ -801,7 +801,7 @@ DoAutoLogon(
     LPWSTR AutoCount = NULL;
     LPWSTR IgnoreShiftOverride = NULL;
     LPWSTR UserName = NULL;
-    LPWSTR DomainName = NULL;
+    LPWSTR Domain = NULL;
     LPWSTR Password = NULL;
     BOOL result = FALSE;
     LONG rc;
@@ -860,14 +860,14 @@ DoAutoLogon(
         rc = ReadRegSzKey(WinLogonKey, L"DefaultUserName", &UserName);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
-        rc = ReadRegSzKey(WinLogonKey, L"DefaultDomainName", &DomainName);
+        rc = ReadRegSzKey(WinLogonKey, L"DefaultDomain", &Domain);
         if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
             goto cleanup;
         rc = ReadRegSzKey(WinLogonKey, L"DefaultPassword", &Password);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
 
-        result = DoLoginTasks(pgContext, UserName, DomainName, Password);
+        result = DoLoginTasks(pgContext, UserName, Domain, Password);
 
         if (result == TRUE)
         {
@@ -888,7 +888,7 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, AutoCount);
     HeapFree(GetProcessHeap(), 0, IgnoreShiftOverride);
     HeapFree(GetProcessHeap(), 0, UserName);
-    HeapFree(GetProcessHeap(), 0, DomainName);
+    HeapFree(GetProcessHeap(), 0, Domain);
     HeapFree(GetProcessHeap(), 0, Password);
     TRACE("DoAutoLogon(): AutoLogonState = %lu, returning %d\n",
         pgContext->AutoLogonState, result);
