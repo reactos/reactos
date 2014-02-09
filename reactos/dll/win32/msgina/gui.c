@@ -110,7 +110,13 @@ GUIDisplayStatusMessage(
 
     if (!pgContext->hStatusWindow)
     {
-        msg = (PDISPLAYSTATUSMSG)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DISPLAYSTATUSMSG));
+        /*
+         * If everything goes correctly, 'msg' is freed
+         * by the 'StartupWindowThread' thread.
+         */
+        msg = (PDISPLAYSTATUSMSG)HeapAlloc(GetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(DISPLAYSTATUSMSG));
         if(!msg)
             return FALSE;
 
@@ -120,22 +126,23 @@ GUIDisplayStatusMessage(
         msg->pMessage = pMessage;
         msg->hDesktop = hDesktop;
 
-        msg->StartupEvent = CreateEventW(
-            NULL,
-            TRUE,
-            FALSE,
-            NULL);
+        msg->StartupEvent = CreateEventW(NULL,
+                                         TRUE,
+                                         FALSE,
+                                         NULL);
 
         if (!msg->StartupEvent)
+        {
+            HeapFree(GetProcessHeap(), 0, msg);
             return FALSE;
+        }
 
-        Thread = CreateThread(
-            NULL,
-            0,
-            StartupWindowThread,
-            (PVOID)msg,
-            0,
-            &ThreadId);
+        Thread = CreateThread(NULL,
+                              0,
+                              StartupWindowThread,
+                              (PVOID)msg,
+                              0,
+                              &ThreadId);
         if (Thread)
         {
             CloseHandle(Thread);
@@ -375,7 +382,7 @@ DoChangePassword(
     if (!ConnectToLsa(pgContext))
     {
         ERR("ConnectToLsa() failed\n");
-        return FALSE;
+        goto done;
     }
 
     /* Call the authentication package */
