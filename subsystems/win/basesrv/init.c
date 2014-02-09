@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "basesrv.h"
+#include "vdm.h"
 
 #include <winreg.h>
 
@@ -590,6 +591,9 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
 
     /* Initialize DOS devices management */
     BaseInitDefineDosDevice();
+
+    /* Initialize VDM support */
+    BaseInitializeVDM();
 
     /* All done */
     return STATUS_SUCCESS;
