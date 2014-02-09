@@ -18,7 +18,7 @@ DBG_DEFAULT_CHANNEL(EngLDev);
 /** Globals *******************************************************************/
 
 static HSEMAPHORE ghsemLDEVList;
-static LDEVOBJ *gpldevHead = NULL;
+static LIST_ENTRY gleLdevListHead;
 static LDEVOBJ *gpldevWin32k = NULL;
 
 
@@ -30,6 +30,9 @@ NTAPI
 InitLDEVImpl(VOID)
 {
     ULONG cbSize;
+
+    /* Initialize the LDEV list head */
+    InitializeListHead(&gleLdevListHead);
 
     /* Initialize the loader lock */
     ghsemLDEVList = EngCreateSemaphore();
@@ -50,8 +53,8 @@ InitLDEVImpl(VOID)
     }
 
     /* Initialize the LDEVOBJ for win32k */
-    gpldevWin32k->pldevNext = NULL;
-    gpldevWin32k->pldevPrev = NULL;
+    gpldevWin32k->leLink.Flink = NULL;
+    gpldevWin32k->leLink.Blink = NULL;
     gpldevWin32k->ldevtype = LDEV_DEVICE_DISPLAY;
     gpldevWin32k->cRefs = 1;
     gpldevWin32k->ulDriverVersion = GDI_ENGINE_VERSION;
@@ -320,6 +323,7 @@ EngLoadImageEx(
     _In_ ULONG ldevtype)
 {
     WCHAR acwBuffer[MAX_PATH];
+    PLIST_ENTRY pleLink;
     PLDEVOBJ pldev;
     UNICODE_STRING strDriverName;
     SIZE_T cwcLength;
@@ -368,13 +372,15 @@ EngLoadImageEx(
     EngAcquireSemaphore(ghsemLDEVList);
 
     /* Search the List of LDEVS for the driver name */
-    for (pldev = gpldevHead; pldev != NULL; pldev = pldev->pldevNext)
+    for (pleLink = gleLdevListHead.Flink;
+         pleLink != &gleLdevListHead;
+         pleLink = pleLink->Flink)
     {
+        pldev = CONTAINING_RECORD(pleLink, LDEVOBJ, leLink);
+
         /* Check if the ldev is associated with a file */
         if (pldev->pGdiDriverInfo)
         {
-            ERR("Driver Name 1 %wZ\n", &strDriverName);
-            ERR("Driver Name 2 %wZ\n", &pldev->pGdiDriverInfo->DriverName);
             /* Check for match (case insensative) */
             if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, 1))
             {
@@ -385,7 +391,7 @@ EngLoadImageEx(
     }
 
     /* Did we find one? */
-    if (!pldev)
+    if (pleLink == &gleLdevListHead)
     {
         /* No, allocate a new LDEVOBJ */
         pldev = LDEVOBJ_AllocLDEV(ldevtype);
@@ -421,11 +427,7 @@ EngLoadImageEx(
         }
 
         /* Insert the LDEV into the global list */
-        pldev->pldevPrev = NULL;
-        pldev->pldevNext = gpldevHead;
-        if (gpldevHead)
-            gpldevHead->pldevPrev = pldev;
-        gpldevHead = pldev;
+        InsertHeadList(&gleLdevListHead, &pldev->leLink);
     }
 
     /* Increase ref count */
@@ -459,7 +461,7 @@ EngUnloadImage(
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 
     /* Make sure the LDEV is in the list */
-    ASSERT(pldev->pldevPrev || pldev->pldevNext);
+    ASSERT((pldev->leLink.Flink != NULL) &&  (pldev->leLink.Blink != NULL));
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemLDEVList);
@@ -471,10 +473,7 @@ EngUnloadImage(
     if (pldev->cRefs == 0)
     {
         /* Remove ldev from the list */
-        if (pldev->pldevPrev)
-            pldev->pldevPrev->pldevNext = pldev->pldevNext;
-        if (pldev->pldevNext)
-            pldev->pldevNext->pldevPrev = pldev->pldevPrev;
+        RemoveEntryList(&pldev->leLink);
 
         /* Unload the image and free the LDEV */
         LDEVOBJ_vUnloadImage(pldev);

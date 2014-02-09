@@ -15,8 +15,7 @@ typedef enum
 
 typedef struct _LDEVOBJ
 {
-    struct _LDEVOBJ *pldevNext;
-    struct _LDEVOBJ *pldevPrev;
+    LIST_ENTRY leLink;
     SYSTEM_GDI_DRIVER_INFORMATION *pGdiDriverInfo;
     LDEVTYPE ldevtype;
     ULONG cRefs;
