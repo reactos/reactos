@@ -15,6 +15,8 @@ typedef struct _VDM_CONSOLE_RECORD
 {
     LIST_ENTRY Entry;
     HANDLE ConsoleHandle;
+    PCHAR CurrentDirs;
+    ULONG CurDirsLength;
     LIST_ENTRY DosListHead;
     // TODO: Structure incomplete!!!
 } VDM_CONSOLE_RECORD, *PVDM_CONSOLE_RECORD;

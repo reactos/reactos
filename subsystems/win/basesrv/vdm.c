@@ -115,7 +115,7 @@ CSR_API(BaseSrvIsFirstVDM)
 
     /* Return the result */
     IsFirstVDMRequest->FirstVDM = FirstVDM;
-    
+
     /* Clear the first VDM flag */
     FirstVDM = FALSE;
 
@@ -142,8 +142,43 @@ CSR_API(BaseSrvSetVDMCurDirs)
 
 CSR_API(BaseSrvGetVDMCurDirs)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_GETSET_VDM_CURDIRS VDMCurrentDirsRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.VDMCurrentDirsRequest;
+    PVDM_CONSOLE_RECORD ConsoleRecord;
+
+    /* Validate the output buffer */
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&VDMCurrentDirsRequest->lpszzCurDirs,
+                                  VDMCurrentDirsRequest->cchCurDirs,
+                                  sizeof(*VDMCurrentDirsRequest->lpszzCurDirs)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(&DosCriticalSection);
+
+    /* Find the console record */
+    Status = BaseSrvGetConsoleRecord(VDMCurrentDirsRequest->ConsoleHandle, &ConsoleRecord);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    /* Check if the buffer is large enough */
+    if (VDMCurrentDirsRequest->cchCurDirs < ConsoleRecord->CurDirsLength)
+    {
+        Status = STATUS_BUFFER_TOO_SMALL;
+        goto Cleanup;
+    }
+
+    /* Copy the data */
+    RtlMoveMemory(VDMCurrentDirsRequest->lpszzCurDirs,
+                  ConsoleRecord->CurrentDirs,
+                  ConsoleRecord->CurDirsLength);
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(&DosCriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvBatNotification)
