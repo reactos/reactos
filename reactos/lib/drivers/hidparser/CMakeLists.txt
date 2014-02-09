@@ -5,8 +5,9 @@ list(APPEND SOURCE
     context.c
     hidparser.c
     parser.c
-    api.c)
+    api.c
+    parser.h)
 
 add_library(hidparser ${SOURCE})
 add_dependencies(hidparser bugcodes)
-
+add_pch(hidparser parser.h SOURCE)
