@@ -21,22 +21,25 @@
 #define OLD_ACCESS_CHECK
 
 BOOLEAN NTAPI
-SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
                IN ACCESS_MASK DesiredAccess,
+               IN POBJECT_TYPE_LIST ObjectTypeList,
+               IN ULONG ObjectTypeListLength,
                IN ACCESS_MASK PreviouslyGrantedAccess,
                OUT PPRIVILEGE_SET* Privileges,
                IN PGENERIC_MAPPING GenericMapping,
                IN KPROCESSOR_MODE AccessMode,
-               OUT PACCESS_MASK GrantedAccess,
-               OUT PNTSTATUS AccessStatus)
+               OUT PACCESS_MASK GrantedAccessList,
+               OUT PNTSTATUS AccessStatusList,
+               IN BOOLEAN UseResultList)
 {
     ACCESS_MASK RemainingAccess;
     ACCESS_MASK TempAccess;
     ACCESS_MASK TempGrantedAccess = 0;
     ACCESS_MASK TempDeniedAccess = 0;
     PACCESS_TOKEN Token;
-    ULONG i;
+    ULONG i, ResultListLength;
     PACL Dacl;
     BOOLEAN Present;
     BOOLEAN Defaulted;
@@ -52,15 +55,14 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         if (!PreviouslyGrantedAccess)
         {
             /* Then there's nothing to give */
-            *AccessStatus = STATUS_ACCESS_DENIED;
-            return FALSE;
+            Status = STATUS_ACCESS_DENIED;
+            goto ReturnCommonStatus;
         }
 
         /* Return the previous access only */
-        *GrantedAccess = PreviouslyGrantedAccess;
-        *AccessStatus = STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         *Privileges = NULL;
-        return TRUE;
+        goto ReturnCommonStatus;
     }
 
     /* Map given accesses */
@@ -83,16 +85,14 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                     UserMode);
     if (!NT_SUCCESS(Status))
     {
-        *AccessStatus = Status;
-        return FALSE;
+        goto ReturnCommonStatus;
     }
 
     /* Succeed if there are no more rights to grant */
     if (RemainingAccess == 0)
     {
-        *GrantedAccess = PreviouslyGrantedAccess;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        Status = STATUS_SUCCESS;
+        goto ReturnCommonStatus;
     }
 
     /* Get the DACL */
@@ -102,25 +102,21 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                           &Defaulted);
     if (!NT_SUCCESS(Status))
     {
-        *AccessStatus = Status;
-        return FALSE;
+        goto ReturnCommonStatus;
     }
 
     /* RULE 1: Grant desired access if the object is unprotected */
     if (Present == FALSE || Dacl == NULL)
     {
-        if (DesiredAccess & MAXIMUM_ALLOWED)
+        PreviouslyGrantedAccess |= RemainingAccess;
+        if (RemainingAccess & MAXIMUM_ALLOWED)
         {
-            *GrantedAccess = GenericMapping->GenericAll;
-            *GrantedAccess |= (DesiredAccess | PreviouslyGrantedAccess) & ~MAXIMUM_ALLOWED;
-        }
-        else
-        {
-            *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+            PreviouslyGrantedAccess &= ~MAXIMUM_ALLOWED;
+            PreviouslyGrantedAccess |= GenericMapping->GenericAll;
         }
 
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        Status = STATUS_SUCCESS;
+        goto ReturnCommonStatus;
     }
 
     /* Deny access if the DACL is empty */
@@ -128,24 +124,14 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     {
         if (RemainingAccess == MAXIMUM_ALLOWED && PreviouslyGrantedAccess != 0)
         {
-            *GrantedAccess = PreviouslyGrantedAccess;
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
+            Status = STATUS_SUCCESS;
         }
         else
         {
-            *GrantedAccess = 0;
-            *AccessStatus = STATUS_ACCESS_DENIED;
-            return FALSE;
+            PreviouslyGrantedAccess = 0;
+            Status = STATUS_ACCESS_DENIED;
         }
-    }
-
-    /* Fail if DACL is absent */
-    if (Present == FALSE)
-    {
-        *GrantedAccess = 0;
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
+        goto ReturnCommonStatus;
     }
 
     /* Determine the MAXIMUM_ALLOWED access rights according to the DACL */
@@ -195,23 +181,22 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         RemainingAccess &= ~(MAXIMUM_ALLOWED | TempGrantedAccess);
         if (RemainingAccess != 0)
         {
-            *GrantedAccess = 0;
-            *AccessStatus = STATUS_ACCESS_DENIED;
-            return FALSE;
+            PreviouslyGrantedAccess = 0;
+            Status = STATUS_ACCESS_DENIED;
+            goto ReturnCommonStatus;
         }
 
         /* Set granted access right and access status */
-        *GrantedAccess = TempGrantedAccess | PreviouslyGrantedAccess;
-        if (*GrantedAccess != 0)
+        PreviouslyGrantedAccess |= TempGrantedAccess;
+        if (PreviouslyGrantedAccess != 0)
         {
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
+            Status = STATUS_SUCCESS;
         }
         else
         {
-            *AccessStatus = STATUS_ACCESS_DENIED;
-            return FALSE;
+            Status = STATUS_ACCESS_DENIED;
         }
+        goto ReturnCommonStatus;
     }
 
     /* RULE 4: Grant rights according to the DACL */
@@ -226,9 +211,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 if (SepSidInToken(Token, Sid))
                 {
 #ifdef OLD_ACCESS_CHECK
-                    *GrantedAccess = 0;
-                    *AccessStatus = STATUS_ACCESS_DENIED;
-                    return FALSE;
+                    PreviouslyGrantedAccess = 0;
+                    Status = STATUS_ACCESS_DENIED;
+                    goto ReturnCommonStatus;
 #else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
@@ -272,23 +257,23 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     DPRINT("PreviouslyGrantedAccess %08lx\n DesiredAccess %08lx\n",
            PreviouslyGrantedAccess, DesiredAccess);
 
-    *GrantedAccess = PreviouslyGrantedAccess & DesiredAccess;
+    PreviouslyGrantedAccess &= DesiredAccess;
 
-    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) ==
+    if ((PreviouslyGrantedAccess & ~VALID_INHERIT_FLAGS) ==
         (DesiredAccess & ~VALID_INHERIT_FLAGS))
     {
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        Status = STATUS_SUCCESS;
+        goto ReturnCommonStatus;
     }
     else
     {
         DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
-                *GrantedAccess, DesiredAccess, GenericMapping);
+                PreviouslyGrantedAccess, DesiredAccess, GenericMapping);
         //*AccessStatus = STATUS_ACCESS_DENIED;
         //return FALSE;
-        *GrantedAccess = DesiredAccess;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        PreviouslyGrantedAccess = DesiredAccess;
+        Status = STATUS_SUCCESS;
+        goto ReturnCommonStatus;
     }
 #else
     DPRINT("DesiredAccess %08lx\nPreviouslyGrantedAccess %08lx\nRemainingAccess %08lx\n",
@@ -298,25 +283,61 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (RemainingAccess != 0)
     {
         *GrantedAccess = 0;
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
+        Status = STATUS_ACCESS_DENIED;
+        goto ReturnCommonStatus;
     }
 
     /* Set granted access rights */
-    *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+    PreviouslyGrantedAccess |= DesiredAccess;
 
     DPRINT("GrantedAccess %08lx\n", *GrantedAccess);
 
     /* Fail if no rights have been granted */
-    if (*GrantedAccess == 0)
+    if (PreviouslyGrantedAccess == 0)
     {
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
+        Status = STATUS_ACCESS_DENIED;
+        goto ReturnCommonStatus;
     }
 
-    *AccessStatus = STATUS_SUCCESS;
-    return TRUE;
+    Status = STATUS_SUCCESS;
+    goto ReturnCommonStatus;
 #endif
+
+ReturnCommonStatus:
+
+    ResultListLength = UseResultList ? ObjectTypeListLength : 1;
+    for (i = 0; i < ResultListLength; i++)
+    {
+        GrantedAccessList[i] = PreviouslyGrantedAccess;
+        AccessStatusList[i] = Status;
+    }
+
+    return NT_SUCCESS(Status);
+}
+
+BOOLEAN NTAPI
+SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+               IN ACCESS_MASK DesiredAccess,
+               IN ACCESS_MASK PreviouslyGrantedAccess,
+               OUT PPRIVILEGE_SET* Privileges,
+               IN PGENERIC_MAPPING GenericMapping,
+               IN KPROCESSOR_MODE AccessMode,
+               OUT PACCESS_MASK GrantedAccess,
+               OUT PNTSTATUS AccessStatus)
+{
+    return SepAccessCheckEx(SecurityDescriptor,
+                            SubjectSecurityContext,
+                            DesiredAccess,
+                            NULL,
+                            0,
+                            PreviouslyGrantedAccess,
+                            Privileges,
+                            GenericMapping,
+                            AccessMode,
+                            GrantedAccess,
+                            AccessStatus,
+                            FALSE);
 }
 
 static PSID
