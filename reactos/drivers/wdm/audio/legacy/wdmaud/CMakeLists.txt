@@ -17,8 +17,7 @@ set_module_type(wdmaud kernelmodedriver)
 
 target_link_libraries(wdmaud
     mmixer
-    libcntpr
-    ${PSEH_LIB})
+    libcntpr)
 
 add_pch(wdmaud wdmaud.h)
 add_importlibs(wdmaud ntoskrnl ks hal)
