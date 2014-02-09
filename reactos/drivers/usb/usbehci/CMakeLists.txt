@@ -11,10 +11,11 @@ list(APPEND SOURCE
     usb_request.cpp
     usb_queue.cpp
     hardware.cpp
-    guid.cpp)
+    usbehci.h)
 
 add_library(usbehci SHARED
     ${SOURCE}
+    guid.cpp
     usbehci.rc)
 
 target_link_libraries(usbehci
@@ -25,5 +26,5 @@ target_link_libraries(usbehci
 
 set_module_type(usbehci kernelmodedriver)
 add_importlibs(usbehci ntoskrnl hal usbd)
-
+add_pch(usbehci usbehci.h SOURCE)
 add_cd_file(TARGET usbehci DESTINATION reactos/system32/drivers NO_CAB FOR all)

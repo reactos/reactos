@@ -15,13 +15,13 @@ list(APPEND SOURCE
     ntfs.c
     rw.c
     volinfo.c
-    ntfs.rc)
+    ntfs.h)
 
-add_library(ntfs SHARED ${SOURCE})
+add_library(ntfs SHARED ${SOURCE} ntfs.rc)
 
 set_module_type(ntfs kernelmodedriver)
 add_importlibs(ntfs ntoskrnl hal)
 
-add_pch(ntfs ntfs.h)
+add_pch(ntfs ntfs.h SOURCE)
 
 add_cd_file(TARGET ntfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

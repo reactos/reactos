@@ -6,7 +6,8 @@ list(APPEND SOURCE
     data.c
     ioctl.c
     mmc.c
-    sec.c)
+    sec.c
+    cdrom.h)
 
 add_library(cdrom_new SHARED ${SOURCE})
 
@@ -22,3 +23,4 @@ endif()
 
 set_module_type(cdrom_new kernelmodedriver)
 add_importlibs(cdrom_new classpnp ntoskrnl hal)
+add_pch(cdrom_new cdrom.h SOURCE)

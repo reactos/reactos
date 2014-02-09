@@ -15,7 +15,8 @@ list(APPEND SOURCE
     id_probe.cpp
     id_queue.cpp
     id_sata.cpp
-    ros_glue/ros_glue.cpp)
+    ros_glue/ros_glue.cpp
+    stdafx.h)
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
@@ -26,7 +27,7 @@ if(NOT MSVC)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error -Wno-unused-but-set-variable -Wno-narrowing")
 endif()
 
-add_pch(uniata stdafx.h)
+add_pch(uniata stdafx.h SOURCE)
 set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)
 add_cd_file(TARGET uniata DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -5,13 +5,13 @@ list(APPEND SOURCE
     fsctrl.c
     msfs.c
     rw.c
-    msfs.rc)
+    msfs.h)
 
-add_library(msfs SHARED ${SOURCE})
+add_library(msfs SHARED ${SOURCE} msfs.rc)
 
 set_module_type(msfs kernelmodedriver)
 add_importlibs(msfs ntoskrnl hal)
 
-add_pch(msfs msfs.h)
+add_pch(msfs msfs.h SOURCE)
 
 add_cd_file(TARGET msfs DESTINATION reactos/system32/drivers FOR all)
