@@ -11,10 +11,12 @@ list(APPEND SOURCE
     font.c
     layout.c
     colors.c
+    console.h)
+
+add_library(console SHARED
+    ${SOURCE}
     console.rc
     ${CMAKE_CURRENT_BINARY_DIR}/console.def)
-
-add_library(console SHARED ${SOURCE})
 
 set_module_type(console win32dll UNICODE)
 
@@ -26,5 +28,5 @@ add_importlibs(console
     kernel32
     ntdll)
 
-add_pch(console console.h)
+add_pch(console console.h SOURCE)
 add_cd_file(TARGET console DESTINATION reactos/system32 FOR all)
