@@ -31,9 +31,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                OUT PACCESS_MASK GrantedAccess,
                OUT PNTSTATUS AccessStatus)
 {
-#ifdef OLD_ACCESS_CHECK
-    ACCESS_MASK CurrentAccess, AccessMask;
-#endif
     ACCESS_MASK RemainingAccess;
     ACCESS_MASK TempAccess;
     ACCESS_MASK TempGrantedAccess = 0;
@@ -115,7 +112,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         if (DesiredAccess & MAXIMUM_ALLOWED)
         {
             *GrantedAccess = GenericMapping->GenericAll;
-            *GrantedAccess |= (DesiredAccess & ~MAXIMUM_ALLOWED);
+            *GrantedAccess |= (DesiredAccess | PreviouslyGrantedAccess) & ~MAXIMUM_ALLOWED;
         }
         else
         {
@@ -125,10 +122,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
-
-#ifdef OLD_ACCESS_CHECK
-    CurrentAccess = PreviouslyGrantedAccess;
-#endif
 
     /* Deny access if the DACL is empty */
     if (Dacl->AceCount == 0)
@@ -252,9 +245,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 if (SepSidInToken(Token, Sid))
                 {
 #ifdef OLD_ACCESS_CHECK
-                    AccessMask = CurrentAce->AccessMask;
-                    RtlMapGenericMask(&AccessMask, GenericMapping);
-                    CurrentAccess |= AccessMask;
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
+                    PreviouslyGrantedAccess |= TempAccess;
 #else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
@@ -276,10 +269,10 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 
 #ifdef OLD_ACCESS_CHECK
-    DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
-           CurrentAccess, DesiredAccess);
+    DPRINT("PreviouslyGrantedAccess %08lx\n DesiredAccess %08lx\n",
+           PreviouslyGrantedAccess, DesiredAccess);
 
-    *GrantedAccess = CurrentAccess & DesiredAccess;
+    *GrantedAccess = PreviouslyGrantedAccess & DesiredAccess;
 
     if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) ==
         (DesiredAccess & ~VALID_INHERIT_FLAGS))
