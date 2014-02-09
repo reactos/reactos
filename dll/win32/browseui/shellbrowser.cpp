@@ -1971,6 +1971,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryService(REFGUID guidService, REFII
         return this->QueryInterface(riid, ppvObject);
     if (IsEqualIID(guidService, SID_IExplorerToolbar))
         return fClientBars[BIInternetToolbar].clientBar->QueryInterface(riid, ppvObject);
+    if (IsEqualIID(riid, IID_IShellBrowser))
+        return this->QueryInterface(riid, ppvObject);
     return E_NOINTERFACE;
 }
 
