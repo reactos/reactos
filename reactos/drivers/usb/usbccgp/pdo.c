@@ -757,7 +757,6 @@ USBCCGP_PDOSelectConfiguration(
             // invalid parameter
             //
             DPRINT1("InterfaceInformation InterfaceNumber %x Alternative %x NumberOfPipes %x not found\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
-            ASSERT(FALSE);
             return STATUS_INVALID_PARAMETER;
         }
 
