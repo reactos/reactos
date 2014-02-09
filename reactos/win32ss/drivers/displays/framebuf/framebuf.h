@@ -18,9 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _FRAMEBUF_PCH_
+#define _FRAMEBUF_PCH_
+
 #include <stdarg.h>
 #include <windef.h>
-#include <guiddef.h>
 #include <wingdi.h>
 #include <winddi.h>
 #include <winioctl.h>
@@ -157,3 +159,5 @@ IntSetPalette(
    IN PPALETTEENTRY ppalent,
    IN ULONG iStart,
    IN ULONG cColors);
+
+#endif /* _FRAMEBUF_PCH_ */
