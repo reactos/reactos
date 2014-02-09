@@ -434,4 +434,10 @@ WINAPI
 SystemFunction007(PUNICODE_STRING string,
                   LPBYTE hash);
 
+NTSTATUS
+WINAPI
+SystemFunction013(const BYTE *in,
+                  const BYTE *key,
+                  LPBYTE out);
+
 #endif /* _SAMSRV_PCH_ */
