@@ -7,5 +7,3 @@
 #include <reactos/version.rc>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "filebrowser.exe.manifest"
