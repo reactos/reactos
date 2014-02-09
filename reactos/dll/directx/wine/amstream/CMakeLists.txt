@@ -12,10 +12,15 @@ list(APPEND SOURCE
     main.c
     mediastream.c
     mediastreamfilter.c
+    amstream_private.h)
+
+add_library(amstream SHARED
+    ${SOURCE}
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/amstream.def)
 
-add_library(amstream SHARED ${SOURCE} version.rc)
 set_module_type(amstream win32dll)
 target_link_libraries(amstream strmbase strmiids uuid wine)
 add_importlibs(amstream ole32 msvcrt kernel32 ntdll)
+add_pch(amstream amstream_private.h SOURCE)
 add_cd_file(TARGET amstream DESTINATION reactos/system32 FOR all)
