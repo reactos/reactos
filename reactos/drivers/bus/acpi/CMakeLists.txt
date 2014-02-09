@@ -40,7 +40,7 @@ add_library(acpica
     acpica/executer/exconvrt.c
     acpica/executer/excreate.c
     acpica/executer/exdebug.c
-    acpica/executer/exdump.c
+    #acpica/executer/exdump.c
     acpica/executer/exfield.c
     acpica/executer/exfldio.c
     acpica/executer/exmisc.c
@@ -70,8 +70,8 @@ add_library(acpica
     acpica/hardware/hwxface.c
     acpica/namespace/nsaccess.c
     acpica/namespace/nsalloc.c
-    acpica/namespace/nsdump.c
-    acpica/namespace/nsdumpdv.c
+    #acpica/namespace/nsdump.c
+    #acpica/namespace/nsdumpdv.c
     acpica/namespace/nseval.c
     acpica/namespace/nsinit.c
     acpica/namespace/nsload.c
@@ -99,7 +99,7 @@ add_library(acpica
     acpica/resources/rsaddr.c
     acpica/resources/rscalc.c
     acpica/resources/rscreate.c
-    acpica/resources/rsdump.c
+    #acpica/resources/rsdump.c
     acpica/resources/rsinfo.c
     acpica/resources/rsio.c
     acpica/resources/rsirq.c
