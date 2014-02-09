@@ -259,13 +259,13 @@ RegpFindSubkeyInIndex(
     return NULL;
 }
 
-// FIXME: optionally return the subkey node/handle as optimization
 LONG
 RegEnumKey(
     _In_ FRLDRHKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR Name,
-    _Inout_ ULONG* NameSize)
+    _Inout_ ULONG* NameSize,
+    _Out_opt_ FRLDRHKEY *SubKey)
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode, SubKeyNode;
@@ -304,6 +304,11 @@ RegEnumKey(
     }
 
     *NameSize = CmCopyKeyName(SubKeyNode, Name, *NameSize);
+
+    if (SubKey != NULL)
+    {
+        *SubKey = (FRLDRHKEY)SubKeyNode;
+    }
 
     TRACE("RegEnumKey done -> %u, '%.*s'\n", *NameSize, *NameSize, Name);
     return STATUS_SUCCESS;
