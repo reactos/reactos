@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _NTOSKRNL_PCH
+#define _NTOSKRNL_PCH
+
 /* INCLUDES ******************************************************************/
 
 /* ARM Bringup Hack */
@@ -69,9 +72,6 @@
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* ReactOS Headers */
-#include <reactos/bugcodes.h>
-
 /* SetupLDR Support */
 #include <arc/setupblk.h>
 
@@ -125,3 +125,4 @@ extern UCHAR _KeNumberProcessors;
 #include "internal/probe.h"
 #include "resource.h"
 
+#endif /* _NTOSKRNL_PCH */
