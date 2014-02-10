@@ -35,7 +35,7 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
 
    ppi = PsGetCurrentProcessWin32Process();
 
-   ERR("IntLoadHookModule. Client PID: %p\n", PsGetProcessId(ppi->peProcess));
+   TRACE("IntLoadHookModule. Client PID: %p\n", PsGetProcessId(ppi->peProcess));
 
     /* Check if this is the api hook */
     if(iHookID == WH_APIHOOK)
@@ -155,7 +155,7 @@ UserRegisterUserApiHook(
         return FALSE;
     }
 
-    ERR("UserRegisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
+    TRACE("UserRegisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
 
     /* Register the api hook */
     gpsi->dwSRVIFlags |= SRVINFO_APIHOOK;
