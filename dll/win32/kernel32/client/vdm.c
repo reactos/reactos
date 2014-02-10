@@ -1239,17 +1239,44 @@ RegisterWowExec (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-SetVDMCurrentDirectories (
-    DWORD   Unknown0,
-    DWORD   Unknown1
-    )
+SetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
 {
-    STUB;
-    return FALSE;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GETSET_VDM_CURDIRS VDMCurrentDirsRequest = &ApiMessage.Data.VDMCurrentDirsRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    /* Allocate the capture buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, cchCurDirs);
+    if (CaptureBuffer == NULL)
+    {
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return FALSE;
+    }
+
+    /* Setup the input parameters */
+    VDMCurrentDirsRequest->cchCurDirs = cchCurDirs;
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            lpszzCurDirs,
+                            cchCurDirs,
+                            (PVOID*)&VDMCurrentDirsRequest->lpszzCurDirs);
+
+    /* Call CSRSS */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMCurDirs),
+                        sizeof(BASE_GETSET_VDM_CURDIRS));
+
+    /* Free the capture buffer */
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Set the last error */
+    BaseSetLastNTError(ApiMessage.Status);
+
+    return NT_SUCCESS(ApiMessage.Status) ? TRUE : FALSE;
 }
 
 /*
