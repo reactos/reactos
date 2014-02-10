@@ -4,10 +4,13 @@ spec2def(deskmon.dll deskmon.spec)
 list(APPEND SOURCE
     deskmon.c
     shxiface.c
+    precomp.h)
+
+add_library(deskmon SHARED
+    ${SOURCE}
     deskmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)
 
-add_library(deskmon SHARED ${SOURCE})
 set_module_type(deskmon win32dll UNICODE)
 target_link_libraries(deskmon uuid)
 
@@ -20,5 +23,5 @@ add_importlibs(deskmon
     kernel32
     ntdll)
 
-add_pch(deskmon precomp.h)
+add_pch(deskmon precomp.h SOURCE)
 add_cd_file(TARGET deskmon DESTINATION reactos/system32 FOR all)
