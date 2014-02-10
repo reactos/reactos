@@ -136,8 +136,64 @@ CSR_API(BaseSrvSetReenterCount)
 
 CSR_API(BaseSrvSetVDMCurDirs)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_GETSET_VDM_CURDIRS VDMCurrentDirsRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.VDMCurrentDirsRequest;
+    PVDM_CONSOLE_RECORD ConsoleRecord;
+    PCHAR Buffer = NULL;
+
+    /* Validate the input buffer */
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&VDMCurrentDirsRequest->lpszzCurDirs,
+                                  VDMCurrentDirsRequest->cchCurDirs,
+                                  sizeof(*VDMCurrentDirsRequest->lpszzCurDirs)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(&DosCriticalSection);
+
+    /* Find the console record */
+    Status = BaseSrvGetConsoleRecord(VDMCurrentDirsRequest->ConsoleHandle, &ConsoleRecord);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    if (ConsoleRecord->CurrentDirs == NULL)
+    {
+        /* Allocate memory for the current directory information */
+        Buffer = RtlAllocateHeap(BaseSrvHeap,
+                                 HEAP_ZERO_MEMORY,
+                                 VDMCurrentDirsRequest->cchCurDirs);
+    }
+    else
+    {
+        /* Resize the amount of allocated memory */
+        Buffer = RtlReAllocateHeap(BaseSrvHeap,
+                                   HEAP_ZERO_MEMORY,
+                                   ConsoleRecord->CurrentDirs,
+                                   VDMCurrentDirsRequest->cchCurDirs);
+    }
+
+    if (Buffer == NULL)
+    {
+        /* Allocation failed */
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Update the console record */
+    ConsoleRecord->CurrentDirs = Buffer;
+    ConsoleRecord->CurDirsLength = VDMCurrentDirsRequest->cchCurDirs;
+
+    /* Copy the data */
+    RtlMoveMemory(ConsoleRecord->CurrentDirs,
+                  VDMCurrentDirsRequest->lpszzCurDirs,
+                  VDMCurrentDirsRequest->cchCurDirs);
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(&DosCriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvGetVDMCurDirs)
