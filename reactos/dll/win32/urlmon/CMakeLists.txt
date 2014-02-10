@@ -7,9 +7,6 @@ add_definitions(
     -DWINE_REGISTER_DLL
     -DPROXY_CLSID_IS="{0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}")
 
-#remove_definitions(-D_WIN32_WINNT=0x502)
-#add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
 add_rpcproxy_files(urlmon_urlmon.idl)
