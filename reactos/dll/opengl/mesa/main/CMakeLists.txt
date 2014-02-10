@@ -35,7 +35,7 @@ list(APPEND SOURCE
     getstring.c
     hash.c
     hint.c
-    histogram.c
+    #histogram.c
     image.c
     imports.c
     light.c
@@ -62,7 +62,7 @@ list(APPEND SOURCE
     texgetimage.c
     teximage.c
     texobj.c
-    texpal.c
+    #texpal.c
     texparam.c
     texstate.c
     texstorage.c
