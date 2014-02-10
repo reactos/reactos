@@ -1267,7 +1267,7 @@ SetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
     /* Call CSRSS */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         CaptureBuffer,
-                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMCurDirs),
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetVDMCurDirs),
                         sizeof(BASE_GETSET_VDM_CURDIRS));
 
     /* Free the capture buffer */
