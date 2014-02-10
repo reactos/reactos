@@ -17,6 +17,18 @@
 #pragma alloc_text(INIT, SepInitializeTokenImplementation)
 #endif
 
+#include <ntlsa.h>
+
+typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
+{
+    ULONG PolicyCount;
+    struct
+    {
+        ULONG Category;
+        UCHAR Value;
+    } Policies[1];
+} TOKEN_AUDIT_POLICY_INFORMATION, *PTOKEN_AUDIT_POLICY_INFORMATION;
+
 /* GLOBALS ********************************************************************/
 
 POBJECT_TYPE SeTokenObjectType = NULL;
@@ -39,11 +51,11 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     ICI_SQ_SAME( 0, 0, 0),
 
     /* TokenUser */
-    ICI_SQ_SAME( sizeof(TOKEN_USER),                   sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_USER),                   sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE ),
     /* TokenGroups */
-    ICI_SQ_SAME( sizeof(TOKEN_GROUPS),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_GROUPS),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE ),
     /* TokenPrivileges */
-    ICI_SQ_SAME( sizeof(TOKEN_PRIVILEGES),             sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_PRIVILEGES),             sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE ),
     /* TokenOwner */
     ICI_SQ_SAME( sizeof(TOKEN_OWNER),                  sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
     /* TokenPrimaryGroup */
@@ -51,13 +63,13 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     /* TokenDefaultDacl */
     ICI_SQ_SAME( sizeof(TOKEN_DEFAULT_DACL),           sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
     /* TokenSource */
-    ICI_SQ_SAME( sizeof(TOKEN_SOURCE),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_SOURCE),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE ),
     /* TokenType */
     ICI_SQ_SAME( sizeof(TOKEN_TYPE),                   sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenImpersonationLevel */
     ICI_SQ_SAME( sizeof(SECURITY_IMPERSONATION_LEVEL), sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenStatistics */
-    ICI_SQ_SAME( sizeof(TOKEN_STATISTICS),             sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_STATISTICS),             sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE ),
     /* TokenRestrictedSids */
     ICI_SQ_SAME( sizeof(TOKEN_GROUPS),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenSessionId */
@@ -69,9 +81,9 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     /* TokenSandBoxInert */
     ICI_SQ_SAME( sizeof(ULONG),                        sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenAuditPolicy */
-    ICI_SQ_SAME( /* FIXME */0,                         sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
+    ICI_SQ_SAME( /* FIXME */0,                         sizeof(ULONG), ICIF_QUERY | ICIF_SET | ICIF_QUERY_SIZE_VARIABLE ),
     /* TokenOrigin */
-    ICI_SQ_SAME( sizeof(TOKEN_ORIGIN),                 sizeof(ULONG), ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE ),
+    ICI_SQ_SAME( sizeof(TOKEN_ORIGIN),                 sizeof(ULONG), ICIF_QUERY | ICIF_SET | ICIF_QUERY_SIZE_VARIABLE ),
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -1945,11 +1957,106 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
             }
 
-            default:
+
+            case TokenAuditPolicy:
+            {
+                PTOKEN_AUDIT_POLICY_INFORMATION PolicyInformation =
+                    (PTOKEN_AUDIT_POLICY_INFORMATION)TokenInformation;
+                SEP_AUDIT_POLICY AuditPolicy;
+                ULONG i;
+
+                _SEH2_TRY
+                {
+                    ProbeForRead(PolicyInformation,
+                                 FIELD_OFFSET(TOKEN_AUDIT_POLICY_INFORMATION,
+                                              Policies[PolicyInformation->PolicyCount]),
+                                 sizeof(ULONG));
+
+                    /* Loop all policies in the structure */
+                    for (i = 0; i < PolicyInformation->PolicyCount; i++)
+                    {
+                        /* Set the corresponding bits in the packed structure */
+                        switch (PolicyInformation->Policies[i].Category)
+                        {
+                            case AuditCategorySystem:
+                                AuditPolicy.PolicyElements.System = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryLogon:
+                                AuditPolicy.PolicyElements.Logon = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryObjectAccess:
+                                AuditPolicy.PolicyElements.ObjectAccess = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryPrivilegeUse:
+                                AuditPolicy.PolicyElements.PrivilegeUse = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryDetailedTracking:
+                                AuditPolicy.PolicyElements.DetailedTracking = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryPolicyChange:
+                                AuditPolicy.PolicyElements.PolicyChange = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryAccountManagement:
+                                AuditPolicy.PolicyElements.AccountManagement = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryDirectoryServiceAccess:
+                                AuditPolicy.PolicyElements.DirectoryServiceAccess = PolicyInformation->Policies[i].Value;
+                                break;
+
+                            case AuditCategoryAccountLogon:
+                                AuditPolicy.PolicyElements.AccountLogon = PolicyInformation->Policies[i].Value;
+                                break;
+                        }
+                    }
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                    goto Cleanup;
+                }
+                _SEH2_END;
+
+                if (!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                                            PreviousMode))
+                {
+                    Status = STATUS_PRIVILEGE_NOT_HELD;
+                    break;
+                }
+
+                /* Lock the token */
+                SepAcquireTokenLockExclusive(Token);
+
+                /* Set the new audit policy */
+                Token->AuditPolicy = AuditPolicy;
+
+                /* Unlock the token */
+                SepReleaseTokenLock(Token);
+
+                break;
+            }
+
+
+
+            case TokenOrigin:
             {
                 DPRINT1("Unhandled TokenInformationClass: 0x%lx\n",
                         TokenInformationClass);
                 Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            default:
+            {
+                DPRINT1("Invalid TokenInformationClass: 0x%lx\n",
+                        TokenInformationClass);
+                Status = STATUS_INVALID_INFO_CLASS;
                 break;
             }
         }
