@@ -24,6 +24,7 @@ ERESOURCE SepTokenLock;
 
 TOKEN_SOURCE SeSystemTokenSource = {"*SYSTEM*", {0}};
 LUID SeSystemAuthenticationId = SYSTEM_LUID;
+LUID SeAnonymousAuthenticationId = ANONYMOUS_LOGON_LUID;
 
 static GENERIC_MAPPING SepTokenMapping = {
     TOKEN_READ,
