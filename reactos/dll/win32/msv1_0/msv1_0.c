@@ -437,6 +437,22 @@ MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     SAMPR_ULONG_ARRAY Use = {0, NULL};
     NTSTATUS Status;
 
+    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
+    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
+    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
+    BOOLEAN OldLmPasswordPresent = FALSE;
+    BOOLEAN NewLmPasswordPresent = FALSE;
+
+    ENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm;
+    ENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm;
+    ENCRYPTED_LM_OWF_PASSWORD OldNtEncryptedWithNewNt;
+    ENCRYPTED_LM_OWF_PASSWORD NewNtEncryptedWithOldNt;
+    PENCRYPTED_LM_OWF_PASSWORD pOldLmEncryptedWithNewLm = NULL;
+    PENCRYPTED_LM_OWF_PASSWORD pNewLmEncryptedWithOldLm = NULL;
+
     TRACE("()\n");
 
     RequestBuffer = (PMSV1_0_CHANGEPASSWORD_REQUEST)ProtocolSubmitBuffer;
@@ -523,26 +539,128 @@ MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
 
+    /* Calculate the NT hash for the old password */
+    Status = SystemFunction007(&RequestBuffer->OldPassword,
+                               (LPBYTE)&OldNtPassword);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
-#if 0
+    /* Calculate the NT hash for the new password */
+    Status = SystemFunction007(&RequestBuffer->NewPassword,
+                               (LPBYTE)&NewNtPassword);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Calculate the LM password and hash for the old password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               &RequestBuffer->OldPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&OldLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            OldLmPasswordPresent = TRUE;
+        }
+    }
+
+    /* Calculate the LM password and hash for the new password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               &RequestBuffer->NewPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&NewLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            NewLmPasswordPresent = TRUE;
+        }
+    }
+
+    /* Encrypt the old and new LM passwords, if they exist */
+    if (OldLmPasswordPresent && NewLmPasswordPresent)
+    {
+        /* Encrypt the old LM password */
+        Status = SystemFunction012((const BYTE *)&OldLmPassword,
+                                   (const BYTE *)&NewLmPassword,
+                                   (LPBYTE)&OldLmEncryptedWithNewLm);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        /* Encrypt the new LM password */
+        Status = SystemFunction012((const BYTE *)&NewLmPassword,
+                                   (const BYTE *)&OldLmPassword,
+                                   (LPBYTE)&NewLmEncryptedWithOldLm);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        pOldLmEncryptedWithNewLm = &OldLmEncryptedWithNewLm;
+        pNewLmEncryptedWithOldLm = &NewLmEncryptedWithOldLm;
+    }
+
+    /* Encrypt the old NT password */
+    Status = SystemFunction012((const BYTE *)&OldNtPassword,
+                               (const BYTE *)&NewNtPassword,
+                               (LPBYTE)&OldNtEncryptedWithNewNt);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Encrypt the new NT password */
+    Status = SystemFunction012((const BYTE *)&NewNtPassword,
+                               (const BYTE *)&OldNtPassword,
+                               (LPBYTE)&NewNtEncryptedWithOldNt);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
     /* Change the password */
     Status = SamrChangePasswordUser(UserHandle,
-                                    IN unsigned char LmPresent,
-                                    IN PENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm,
-                                    IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm,
-                                    IN unsigned char NtPresent,
-                                    IN PENCRYPTED_NT_OWF_PASSWORD OldNtEncryptedWithNewNt,
-                                    IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithOldNt,
-                                    IN unsigned char NtCrossEncryptionPresent,
-                                    IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithNewLm,
-                                    IN unsigned char LmCrossEncryptionPresent,
-                                    IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithNewNt)
+                                    OldLmPasswordPresent && NewLmPasswordPresent,
+                                    pOldLmEncryptedWithNewLm,
+                                    pNewLmEncryptedWithOldLm,
+                                    TRUE,
+                                    &OldNtEncryptedWithNewNt,
+                                    &NewNtEncryptedWithOldNt,
+                                    FALSE,
+                                    NULL,
+                                    FALSE,
+                                    NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("SamrChangePasswordUser failed (Status %08lx)\n", Status);
         goto done;
     }
-#endif
 
 done:
     if (UserHandle != NULL)

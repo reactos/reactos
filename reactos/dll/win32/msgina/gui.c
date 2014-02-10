@@ -283,7 +283,7 @@ DoChangePassword(
     IN HWND hwndDlg)
 {
     WCHAR UserName[256];
-    WCHAR DomainName[256];
+    WCHAR Domain[256];
     WCHAR OldPassword[256];
     WCHAR NewPassword1[256];
     WCHAR NewPassword2[256];
@@ -297,7 +297,7 @@ DoChangePassword(
     NTSTATUS Status;
 
     GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_USERNAME, UserName, 256);
-    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_DOMAIN, DomainName, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_DOMAIN, Domain, 256);
     GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_OLDPWD, OldPassword, 256);
     GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NewPassword1, 256);
     GetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NewPassword2, 256);
@@ -315,7 +315,7 @@ DoChangePassword(
 
     /* Calculate the request buffer size */
     RequestBufferSize = sizeof(MSV1_0_CHANGEPASSWORD_REQUEST) +
-                        ((wcslen(DomainName) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(Domain) + 1) * sizeof(WCHAR)) +
                         ((wcslen(UserName) + 1) * sizeof(WCHAR)) +
                         ((wcslen(OldPassword) + 1) * sizeof(WCHAR)) +
                         ((wcslen(NewPassword1) + 1) * sizeof(WCHAR));
@@ -337,12 +337,12 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)RequestBuffer + sizeof(MSV1_0_CHANGEPASSWORD_REQUEST));
 
     /* Pack the domain name */
-    RequestBuffer->DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    RequestBuffer->DomainName.Length = wcslen(Domain) * sizeof(WCHAR);
     RequestBuffer->DomainName.MaximumLength = RequestBuffer->DomainName.Length + sizeof(WCHAR);
     RequestBuffer->DomainName.Buffer = Ptr;
 
     RtlCopyMemory(RequestBuffer->DomainName.Buffer,
-                  DomainName,
+                  Domain,
                   RequestBuffer->DomainName.MaximumLength);
 
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->DomainName.MaximumLength);
@@ -412,6 +412,14 @@ DoChangePassword(
                        MB_OK | MB_ICONINFORMATION,
                        IDS_CHANGEPWDTITLE,
                        IDS_PASSWORDCHANGED);
+
+    if ((wcscmp(UserName, pgContext->UserName) == 0) &&
+        (wcscmp(Domain, pgContext->Domain) == 0) &&
+        (wcscmp(OldPassword, pgContext->Password) == 0))
+    {
+        ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
+        wcscpy(pgContext->Password, NewPassword1);
+    }
 
 done:
     if (RequestBuffer != NULL)
@@ -755,11 +763,8 @@ LoggedOutWindowProc(
                     if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
                         DoLoginTasks(pgContext, UserName, Domain, Password))
                     {
-                        pgContext->Password = HeapAlloc(GetProcessHeap(),
-                                                        HEAP_ZERO_MEMORY,
-                                                        (wcslen(Password) + 1) * sizeof(WCHAR));
-                        if (pgContext->Password != NULL)
-                            wcscpy(pgContext->Password, Password);
+                        ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
+                        wcscpy(pgContext->Password, Password);
 
                         result = WLX_SAS_ACTION_LOGON;
                     }

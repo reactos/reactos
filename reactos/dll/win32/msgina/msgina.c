@@ -871,11 +871,8 @@ DoAutoLogon(
 
         if (result == TRUE)
         {
-            pgContext->Password = HeapAlloc(GetProcessHeap(),
-                                            HEAP_ZERO_MEMORY,
-                                            (wcslen(Password) + 1) * sizeof(WCHAR));
-            if (pgContext->Password != NULL)
-                wcscpy(pgContext->Password, Password);
+            ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
+            wcscpy(pgContext->Password, Password);
 
             NotifyBootConfigStatus(TRUE);
         }
