@@ -8,12 +8,15 @@ list(APPEND SOURCE
     logfile.c
     security.c
     wizard.c
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c)
+
+add_library(syssetup SHARED
+    ${SOURCE}
     syssetup.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
 
-add_library(syssetup SHARED ${SOURCE})
-add_pch(syssetup precomp.h)
+add_pch(syssetup precomp.h SOURCE)
 set_module_type(syssetup win32dll UNICODE)
 target_link_libraries(syssetup uuid wine ${PSEH_LIB})
 

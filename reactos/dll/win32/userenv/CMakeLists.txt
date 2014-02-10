@@ -11,13 +11,16 @@ list(APPEND SOURCE
     registry.c
     setup.c
     userenv.c
+    precomp.h)
+
+add_library(userenv SHARED
+    ${SOURCE}
     userenv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/userenv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/userenv.def)
 
-add_library(userenv SHARED ${SOURCE})
 set_module_type(userenv win32dll)
 target_link_libraries(userenv uuid)
 add_importlibs(userenv advapi32 user32 msvcrt kernel32 ntdll)
-add_pch(userenv precomp.h)
+add_pch(userenv precomp.h SOURCE)
 add_cd_file(TARGET userenv DESTINATION reactos/system32 FOR all)

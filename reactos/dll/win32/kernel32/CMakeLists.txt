@@ -80,8 +80,7 @@ list(APPEND SOURCE
     winnls/string/lstring.c
     winnls/string/nls.c
     winnls/string/sortkey.c
-    kernel32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
+    k32.h)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -94,7 +93,11 @@ elseif(ARCH STREQUAL "amd64")
 endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
-add_library(kernel32 SHARED ${SOURCE} ${kernel32_asm})
+add_library(kernel32 SHARED
+    ${SOURCE}
+    ${kernel32_asm}
+    kernel32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 #############################################
@@ -105,6 +108,6 @@ set_subsystem(kernel32 console)
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
-add_pch(kernel32 k32.h)
+add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)

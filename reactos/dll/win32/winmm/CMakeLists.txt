@@ -14,15 +14,17 @@ list(APPEND SOURCE
     registry.c
     time.c
     winmm.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winmm_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
+    winemm.h
+    ${CMAKE_CURRENT_BINARY_DIR}/winmm_stubs.c)
 
 add_library(winmm SHARED
     ${SOURCE}
-    winmm_res.rc)
+    winmm_res.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
 
 set_module_type(winmm win32dll)
 target_link_libraries(winmm wine ${PSEH_LIB})
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
+add_pch(winmm winemm.h SOURCE)
 add_subdirectory(midimap)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)

@@ -20,15 +20,18 @@ list(APPEND SOURCE
     security.c
     session.c
     utils.c
-    lsasrv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def
-    ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c)
+    lsasrv.h
+    ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c
+    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c)
 
-add_library(lsasrv SHARED ${SOURCE})
+add_library(lsasrv SHARED
+    ${SOURCE}
+    lsasrv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def)
+
 set_module_type(lsasrv win32dll UNICODE)
 target_link_libraries(lsasrv wine ${PSEH_LIB})
 add_importlibs(lsasrv samsrv rpcrt4 msvcrt kernel32 advapi32 ntdll)
-add_pch(lsasrv lsasrv.h)
+add_pch(lsasrv lsasrv.h SOURCE)
 add_dependencies(lsasrv psdk)
 add_cd_file(TARGET lsasrv DESTINATION reactos/system32 FOR all)

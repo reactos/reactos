@@ -44,12 +44,15 @@ list(APPEND SOURCE
     src/sputil.c
     src/startup.c
     src/wsautil.c
+    inc/ws2_32.h)
+
+add_library(ws2_32_new SHARED
+    ${SOURCE}
     ws2_32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def)
 
-add_library(ws2_32_new SHARED ${SOURCE})
 set_module_type(ws2_32_new win32dll)
 add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
-add_pch(ws2_32_new inc/ws2_32.h)
+add_pch(ws2_32_new inc/ws2_32.h SOURCE)
 target_link_libraries(ws2_32_new wine)
 add_cd_file(TARGET ws2_32_new DESTINATION reactos/system32 FOR all)

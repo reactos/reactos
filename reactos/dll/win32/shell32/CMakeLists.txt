@@ -72,12 +72,13 @@ list(APPEND SOURCE
     folder_options.cpp
     filedefext.cpp
     drvdefext.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
+    precomp.h)
 
 add_library(shell32 SHARED
     ${SOURCE}
-    shell32.rc)
+    shell32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 set_module_type(shell32 win32dll UNICODE)
 
@@ -106,5 +107,5 @@ add_importlibs(shell32
     ntdll)
 
 add_dependencies(shell32 shdocvw_v1)
-add_pch(shell32 precomp.h)
+add_pch(shell32 precomp.h SOURCE)
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

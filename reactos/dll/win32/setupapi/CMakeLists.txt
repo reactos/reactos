@@ -29,12 +29,15 @@ list(APPEND SOURCE
     stringtable.c
     stubs.c
     rpc.c
-    setupapi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def
+    setupapi_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/pnp_c.c)
 
-add_library(setupapi SHARED ${SOURCE})
+add_library(setupapi SHARED
+    ${SOURCE}
+    setupapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
+
 set_module_type(setupapi win32dll UNICODE)
 target_link_libraries(setupapi uuid wine ${PSEH_LIB})
 add_delay_importlibs(setupapi shell32)
@@ -50,5 +53,5 @@ add_importlibs(setupapi
     kernel32
     ntdll)
 
-add_pch(setupapi setupapi_private.h)
+add_pch(setupapi setupapi_private.h SOURCE)
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)

@@ -14,11 +14,15 @@ list(APPEND SOURCE
     atl.c
     atl_ax.c
     registrar.c
-    ${CMAKE_CURRENT_BINARY_DIR}/atl100_stubs.c
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/atl100_stubs.c)
+
+add_library(atl100 SHARED
+    ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/atl100.def)
 
-add_library(atl100 SHARED ${SOURCE})
 set_module_type(atl100 win32dll)
 target_link_libraries(atl100 uuid wine)
 add_importlibs(atl100 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_pch(atl100 precomp.h SOURCE)
 add_cd_file(TARGET atl100 DESTINATION reactos/system32 FOR all)

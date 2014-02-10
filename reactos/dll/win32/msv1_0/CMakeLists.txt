@@ -1,7 +1,4 @@
 
-#include_directories(
-#    ${CMAKE_CURRENT_BINARY_DIR})
-
 spec2def(msv1_0.dll msv1_0.spec)
 
 list(APPEND SOURCE
