@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _HAL_PCH_
+#define _HAL_PCH_
+
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
@@ -60,4 +63,4 @@
 #include "mps.h"
 #include "halacpi.h"
 
-/* EOF */
+#endif /* _HAL_PCH_ */
