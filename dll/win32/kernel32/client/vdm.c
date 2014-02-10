@@ -1138,17 +1138,51 @@ GetNextVDMCommand(PGET_NEXT_VDM_COMMAND_DATA CommandData)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
-GetVDMCurrentDirectories (
-    DWORD   Unknown0,
-    DWORD   Unknown1
-    )
+GetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
 {
-    STUB;
-    return 0;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GETSET_VDM_CURDIRS VDMCurrentDirsRequest = &ApiMessage.Data.VDMCurrentDirsRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    /* Allocate the capture buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, cchCurDirs);
+    if (CaptureBuffer == NULL)
+    {
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return 0;
+    }
+
+    /* Setup the input parameters */
+    VDMCurrentDirsRequest->cchCurDirs = cchCurDirs;
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              cchCurDirs,
+                              (PVOID*)&VDMCurrentDirsRequest->lpszzCurDirs);
+
+    /* Call CSRSS */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMCurDirs),
+                        sizeof(BASE_GETSET_VDM_CURDIRS));
+
+    /* Set the last error */
+    BaseSetLastNTError(ApiMessage.Status);
+
+    if (NT_SUCCESS(ApiMessage.Status))
+    {
+        /* Copy the result */
+        RtlMoveMemory(lpszzCurDirs, VDMCurrentDirsRequest->lpszzCurDirs, cchCurDirs);
+    }
+
+    /* Free the capture buffer */
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Return the size if it was successful, or if the buffer was too small */
+    return (NT_SUCCESS(ApiMessage.Status) || (ApiMessage.Status == STATUS_BUFFER_TOO_SMALL))
+           ? VDMCurrentDirsRequest->cchCurDirs : 0;
 }
 
 

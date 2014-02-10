@@ -218,6 +218,9 @@ CSR_API(BaseSrvGetVDMCurDirs)
     Status = BaseSrvGetConsoleRecord(VDMCurrentDirsRequest->ConsoleHandle, &ConsoleRecord);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
+    /* Return the actual size of the current directory information */
+    VDMCurrentDirsRequest->cchCurDirs = ConsoleRecord->CurDirsLength;
+
     /* Check if the buffer is large enough */
     if (VDMCurrentDirsRequest->cchCurDirs < ConsoleRecord->CurDirsLength)
     {
