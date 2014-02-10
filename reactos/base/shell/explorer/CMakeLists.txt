@@ -45,7 +45,7 @@ list(APPEND SOURCE
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE
         i386-stub-win32.c)
 endif()
