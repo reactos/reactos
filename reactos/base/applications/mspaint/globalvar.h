@@ -54,6 +54,8 @@ extern HWND hSelection;
 extern HWND hImageArea;
 extern HBITMAP hSelBm;
 extern HBITMAP hSelMask;
+extern HWND hwndTextEdit;
+extern HWND hwndEditCtl;
 extern LOGFONT lfTextFont;
 extern HFONT hfontTextFont;
 extern LPTSTR textToolText;

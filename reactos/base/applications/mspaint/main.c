@@ -15,6 +15,7 @@
 #include "toolsettings.h"
 #include "selection.h"
 #include "sizebox.h"
+#include "textedit.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -54,9 +55,10 @@ HBITMAP hSelBm;
 HBITMAP hSelMask;
 LOGFONT lfTextFont;
 HFONT hfontTextFont;
-/* TODO: add dialog to edit the currently hard-coded text */
-LPTSTR textToolText = _T("Abc\n1234567890");
-int textToolTextMaxLen = SIZEOF(textToolText);
+HWND hwndTextEdit;
+HWND hwndEditCtl;
+LPTSTR textToolText = NULL;
+int textToolTextMaxLen = 0;
 
 /* array holding palette colors; may be changed by the user during execution */
 int palColors[28];
@@ -142,6 +144,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     WNDCLASSEX wclPal;
     WNDCLASSEX wclSettings;
     WNDCLASSEX wclSelection;
+    WNDCLASSEX wclTextEdit;
     
     TCHAR progtitle[1000];
     TCHAR resstr[100];
@@ -281,6 +284,21 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     wclSettings.cbWndExtra      = 0;
     wclSettings.hbrBackground   = GetSysColorBrush(COLOR_HIGHLIGHT);
     RegisterClassEx (&wclSettings);
+
+    /* initializing and registering the window class used for the text editor */
+    wclTextEdit.hInstance         = hThisInstance;
+    wclTextEdit.lpszClassName     = _T("TextEdit");
+    wclTextEdit.lpfnWndProc       = TextEditWinProc;
+    wclTextEdit.style             = CS_DBLCLKS;
+    wclTextEdit.cbSize            = sizeof(WNDCLASSEX);
+    wclTextEdit.hIcon             = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclTextEdit.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclTextEdit.hCursor           = LoadCursor(NULL, IDC_ARROW);
+    wclTextEdit.lpszMenuName      = NULL;
+    wclTextEdit.cbClsExtra        = 0;
+    wclTextEdit.cbWndExtra        = 0;
+    wclTextEdit.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclTextEdit);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
@@ -511,6 +529,16 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* by moving the window, the things in WM_SIZE are done */
     MoveWindow(hwnd, 100, 100, 600, 450, TRUE);
+
+    /* creating the text editor window for the text tool */
+    hwndTextEdit =
+        CreateWindowEx(0, _T("TextEdit"), _T(""), WS_OVERLAPPEDWINDOW, 300, 0, 300,
+                       200, hwnd, NULL, hThisInstance, NULL);
+    /* creating the edit control within the editor window */
+    hwndEditCtl =
+        CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""),
+                       WS_CHILD | WS_VISIBLE | WS_BORDER | WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+                       0, 0, 100, 100, hwndTextEdit, NULL, hThisInstance, NULL);
 
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);

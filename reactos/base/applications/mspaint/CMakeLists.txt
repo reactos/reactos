@@ -10,6 +10,7 @@ list(APPEND SOURCE
     registry.c
     selection.c
     sizebox.c
+    textedit.c
     toolsettings.c
     winproc.c
     precomp.h)

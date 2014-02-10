@@ -24,6 +24,7 @@ selectTool(int tool)
     pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
     InvalidateRect(hToolSettings, NULL, TRUE);
     ShowWindow(hTrackbarZoom, (tool == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hwndTextEdit, (tool == TOOL_TEXT) ? SW_SHOW : SW_HIDE);
 }
 
 void
@@ -299,17 +300,21 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     EnableMenuItem(menu, IDM_EDITPASTE, ENABLED_IF(GetClipboardData(CF_BITMAP) != NULL));
                     CloseClipboard();
                     break;
+                case 2: /* View menu */
+                        CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(IsWindowVisible(hToolBoxContainer)));
+                        CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(IsWindowVisible(hPalWin)));
+                        CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(IsWindowVisible(hStatusBar)));
+                        CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(IsWindowVisible(hwndTextEdit)));
+                        EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(activeTool == TOOL_TEXT));
+
+                        CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
+                        CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
+                    break;
                 case 3: /* Image menu */
                     EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(IsWindowVisible(hSelection)));
                     CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(transpBg == 0));
                     break;
             }
-            CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(IsWindowVisible(hToolBoxContainer)));
-            CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(IsWindowVisible(hPalWin)));
-            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(IsWindowVisible(hStatusBar)));
-
-            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
-            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
 
             CheckMenuItem(menu, IDM_VIEWZOOM125, CHECKED_IF(zoom == 125));
             CheckMenuItem(menu, IDM_VIEWZOOM25,  CHECKED_IF(zoom == 250));
@@ -1031,6 +1036,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     ShowWindow(hStatusBar, IsWindowVisible(hStatusBar) ? SW_HIDE : SW_SHOW);
                     alignChildrenToMainWindow();
                     break;
+                case IDM_FORMATICONBAR:
+                    ShowWindow(hwndTextEdit, IsWindowVisible(hwndTextEdit) ? SW_HIDE : SW_SHOW);
 
                 case IDM_VIEWSHOWGRID:
                     showGrid = !showGrid;
