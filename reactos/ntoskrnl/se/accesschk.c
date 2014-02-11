@@ -602,6 +602,9 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         ProbeForWrite(PrivilegeSet, *PrivilegeSetLength, sizeof(ULONG));
         ProbeForWrite(GrantedAccess, sizeof(ACCESS_MASK), sizeof(ULONG));
         ProbeForWrite(AccessStatus, sizeof(NTSTATUS), sizeof(ULONG));
+
+        /* Initialize the privilege set */
+        PrivilegeSet->PrivilegeCount = 0;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

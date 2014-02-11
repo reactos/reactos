@@ -900,23 +900,267 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
-NTSTATUS NTAPI
-NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                       IN PVOID HandleId,
-                       IN PUNICODE_STRING ObjectTypeName,
-                       IN PUNICODE_STRING ObjectName,
-                       IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                       IN HANDLE ClientToken,
-                       IN ULONG DesiredAccess,
-                       IN ULONG GrantedAccess,
-                       IN PPRIVILEGE_SET Privileges,
-                       IN BOOLEAN ObjectCreation,
-                       IN BOOLEAN AccessGranted,
-                       OUT PBOOLEAN GenerateOnClose)
+VOID
+NTAPI
+SepOpenObjectAuditAlarm(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_opt_ PVOID HandleId,
+    _In_ PUNICODE_STRING ObjectTypeName,
+    _In_ PUNICODE_STRING ObjectName,
+    _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PTOKEN ClientToken,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_opt_ PPRIVILEGE_SET Privileges,
+    _In_ BOOLEAN ObjectCreation,
+    _In_ BOOLEAN AccessGranted,
+    _Out_ PBOOLEAN GenerateOnClose)
 {
+    DBG_UNREFERENCED_PARAMETER(SubjectContext);
+    DBG_UNREFERENCED_PARAMETER(SubsystemName);
+    DBG_UNREFERENCED_PARAMETER(HandleId);
+    DBG_UNREFERENCED_PARAMETER(ObjectTypeName);
+    DBG_UNREFERENCED_PARAMETER(ObjectName);
+    DBG_UNREFERENCED_PARAMETER(SecurityDescriptor);
+    DBG_UNREFERENCED_PARAMETER(ClientToken);
+    DBG_UNREFERENCED_PARAMETER(DesiredAccess);
+    DBG_UNREFERENCED_PARAMETER(GrantedAccess);
+    DBG_UNREFERENCED_PARAMETER(Privileges);
+    DBG_UNREFERENCED_PARAMETER(ObjectCreation);
+    DBG_UNREFERENCED_PARAMETER(AccessGranted);
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *GenerateOnClose = FALSE;
+}
+
+__kernel_entry
+NTSTATUS
+NTAPI
+NtOpenObjectAuditAlarm(
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_opt_ PVOID HandleId,
+    _In_ PUNICODE_STRING ObjectTypeName,
+    _In_ PUNICODE_STRING ObjectName,
+    _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ HANDLE ClientTokenHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_opt_ PPRIVILEGE_SET PrivilegeSet,
+    _In_ BOOLEAN ObjectCreation,
+    _In_ BOOLEAN AccessGranted,
+    _Out_ PBOOLEAN GenerateOnClose)
+{
+    PTOKEN ClientToken;
+    PSECURITY_DESCRIPTOR CapturedSecurityDescriptor;
+    UNICODE_STRING CapturedSubsystemName, CapturedObjectTypeName, CapturedObjectName;
+    ULONG PrivilegeCount, PrivilegeSetSize;
+    volatile PPRIVILEGE_SET CapturedPrivilegeSet;
+    BOOLEAN LocalGenerateOnClose;
+    PVOID CapturedHandleId;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Only user mode is supported! */
+    ASSERT(ExGetPreviousMode() != KernelMode);
+
+    /* Start clean */
+    ClientToken = NULL;
+    CapturedSecurityDescriptor = NULL;
+    CapturedPrivilegeSet = NULL;
+    CapturedSubsystemName.Buffer = NULL;
+    CapturedObjectTypeName.Buffer = NULL;
+    CapturedObjectName.Buffer = NULL;
+
+    /* Reference the client token */
+    Status = ObReferenceObjectByHandle(ClientTokenHandle,
+                                       TOKEN_QUERY,
+                                       SeTokenObjectType,
+                                       UserMode,
+                                       (PVOID*)&ClientToken,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference token handle %p: %lx\n",
+                ClientTokenHandle, Status);
+        return Status;
+    }
+
+    /* Validate the token's impersonation level */
+    if ((ClientToken->TokenType == TokenImpersonation) &&
+        (ClientToken->ImpersonationLevel < SecurityIdentification))
+    {
+        DPRINT1("Invalid impersonation level (%u)\n", ClientToken->ImpersonationLevel);
+        Status = STATUS_BAD_IMPERSONATION_LEVEL;
+        goto Cleanup;
+    }
+
+    /* Check for audit privilege */
+    if (!SeSinglePrivilegeCheck(SeAuditPrivilege, UserMode))
+    {
+        DPRINT1("Caller does not have SeAuditPrivilege\n");
+        Status = STATUS_PRIVILEGE_NOT_HELD;
+        goto Cleanup;
+    }
+
+    /* Check for NULL SecurityDescriptor */
+    if (SecurityDescriptor == NULL)
+    {
+        /* Nothing to do */
+        Status = STATUS_SUCCESS;
+        goto Cleanup;
+    }
+
+    /* Capture the security descriptor */
+    Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
+                                         UserMode,
+                                         PagedPool,
+                                         FALSE,
+                                         &CapturedSecurityDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture security descriptor!\n");
+        goto Cleanup;
+    }
+
+    _SEH2_TRY
+    {
+        /* Check if we have a privilege set */
+        if (PrivilegeSet != NULL)
+        {
+            /* Probe the basic privilege set structure */
+            ProbeForRead(PrivilegeSet, sizeof(PRIVILEGE_SET), sizeof(ULONG));
+
+            /* Validate privilege count */
+            PrivilegeCount = PrivilegeSet->PrivilegeCount;
+            if (PrivilegeCount > SEP_PRIVILEGE_SET_MAX_COUNT)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Cleanup;
+            }
+
+            /* Calculate the size of the PrivilegeSet structure */
+            PrivilegeSetSize = FIELD_OFFSET(PRIVILEGE_SET, Privilege[PrivilegeCount]);
+
+            /* Probe the whole structure */
+            ProbeForRead(PrivilegeSet, PrivilegeSetSize, sizeof(ULONG));
+
+            /* Allocate a temp buffer */
+            CapturedPrivilegeSet = ExAllocatePoolWithTag(PagedPool,
+                                                         PrivilegeSetSize,
+                                                         'rPeS');
+            if (CapturedPrivilegeSet == NULL)
+            {
+                DPRINT1("Failed to allocate %u bytes\n", PrivilegeSetSize);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Cleanup;
+            }
+
+            /* Copy the privileges */
+            RtlCopyMemory(CapturedPrivilegeSet, PrivilegeSet, PrivilegeSetSize);
+        }
+
+        if (HandleId != NULL)
+        {
+            ProbeForRead(HandleId, sizeof(PVOID), sizeof(PVOID));
+            CapturedHandleId = *(PVOID*)HandleId;
+        }
+
+        ProbeForWrite(GenerateOnClose, sizeof(BOOLEAN), sizeof(BOOLEAN));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Exception while probing parameters: 0x%lx\n", Status);
+        goto Cleanup;
+    }
+    _SEH2_END;
+
+    /* Probe and capture the subsystem name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedSubsystemName,
+                                          UserMode,
+                                          SubsystemName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture subsystem name!\n");
+        goto Cleanup;
+    }
+
+    /* Probe and capture the object type name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedObjectTypeName,
+                                          UserMode,
+                                          ObjectTypeName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture object type name!\n");
+        goto Cleanup;
+    }
+
+    /* Probe and capture the object name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedObjectName,
+                                          UserMode,
+                                          ObjectName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to capture object name!\n");
+        goto Cleanup;
+    }
+
+    /* Capture the security subject context */
+    SeCaptureSubjectContext(&SubjectContext);
+
+    /* Call the internal function */
+    SepOpenObjectAuditAlarm(&SubjectContext,
+                            &CapturedSubsystemName,
+                            CapturedHandleId,
+                            &CapturedObjectTypeName,
+                            &CapturedObjectName,
+                            CapturedSecurityDescriptor,
+                            ClientToken,
+                            DesiredAccess,
+                            GrantedAccess,
+                            CapturedPrivilegeSet,
+                            ObjectCreation,
+                            AccessGranted,
+                            &LocalGenerateOnClose);
+
+    /* Release the security subject context */
+    SeReleaseSubjectContext(&SubjectContext);
+
+    Status = STATUS_SUCCESS;
+
+    /* Enter SEH to copy the data back to user mode */
+    _SEH2_TRY
+    {
+        *GenerateOnClose = LocalGenerateOnClose;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Exception while copying back data: 0x%lx\n", Status);
+    }
+    _SEH2_END;
+
+Cleanup:
+
+    if (CapturedObjectName.Buffer != NULL)
+        ReleaseCapturedUnicodeString(&CapturedObjectName, UserMode);
+
+    if (CapturedObjectTypeName.Buffer != NULL)
+        ReleaseCapturedUnicodeString(&CapturedObjectTypeName, UserMode);
+
+    if (CapturedSubsystemName.Buffer != NULL)
+        ReleaseCapturedUnicodeString(&CapturedSubsystemName, UserMode);
+
+    if (CapturedSecurityDescriptor != NULL)
+        SeReleaseSecurityDescriptor(CapturedSecurityDescriptor, UserMode, FALSE);
+
+    if (CapturedPrivilegeSet != NULL)
+        ExFreePoolWithTag(CapturedPrivilegeSet, 'rPeS');
+
+    ObDereferenceObject(ClientToken);
+
+    return Status;
 }
 
 
@@ -926,12 +1170,12 @@ NTAPI
 NtPrivilegedServiceAuditAlarm(
     _In_opt_ PUNICODE_STRING SubsystemName,
     _In_opt_ PUNICODE_STRING ServiceName,
-    _In_ HANDLE ClientToken,
+    _In_ HANDLE ClientTokenHandle,
     _In_ PPRIVILEGE_SET Privileges,
     _In_ BOOLEAN AccessGranted )
 {
     KPROCESSOR_MODE PreviousMode;
-    PTOKEN Token;
+    PTOKEN ClientToken;
     volatile PPRIVILEGE_SET CapturedPrivileges = NULL;
     UNICODE_STRING CapturedSubsystemName;
     UNICODE_STRING CapturedServiceName;
@@ -948,11 +1192,11 @@ NtPrivilegedServiceAuditAlarm(
     CapturedServiceName.Buffer = NULL;
 
     /* Reference the client token */
-    Status = ObReferenceObjectByHandle(ClientToken,
+    Status = ObReferenceObjectByHandle(ClientTokenHandle,
                                        TOKEN_QUERY,
                                        SeTokenObjectType,
                                        PreviousMode,
-                                       (PVOID*)&Token,
+                                       (PVOID*)&ClientToken,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -961,11 +1205,11 @@ NtPrivilegedServiceAuditAlarm(
     }
 
     /* Validate the token's impersonation level */
-    if ((Token->TokenType == TokenImpersonation) &&
-        (Token->ImpersonationLevel < SecurityIdentification))
+    if ((ClientToken->TokenType == TokenImpersonation) &&
+        (ClientToken->ImpersonationLevel < SecurityIdentification))
     {
-        DPRINT1("Invalid impersonation level (%u)\n", Token->ImpersonationLevel);
-        ObfDereferenceObject(Token);
+        DPRINT1("Invalid impersonation level (%u)\n", ClientToken->ImpersonationLevel);
+        ObDereferenceObject(ClientToken);
         return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
@@ -973,7 +1217,7 @@ NtPrivilegedServiceAuditAlarm(
     if (!SeSinglePrivilegeCheck(SeAuditPrivilege, PreviousMode))
     {
         DPRINT1("Caller does not have SeAuditPrivilege\n");
-        ObfDereferenceObject(Token);
+        ObDereferenceObject(ClientToken);
         return STATUS_PRIVILEGE_NOT_HELD;
     }
 
@@ -1053,7 +1297,7 @@ NtPrivilegedServiceAuditAlarm(
     SepAdtPrivilegedServiceAuditAlarm(&SubjectContext,
                                       SubsystemName ? &CapturedSubsystemName : NULL,
                                       ServiceName ? &CapturedServiceName : NULL,
-                                      Token,
+                                      ClientToken,
                                       SubjectContext.PrimaryToken,
                                       CapturedPrivileges,
                                       AccessGranted);
@@ -1067,11 +1311,14 @@ Cleanup:
     /* Cleanup resources */
     if (CapturedSubsystemName.Buffer != NULL)
         ReleaseCapturedUnicodeString(&CapturedSubsystemName, PreviousMode);
+
     if (CapturedServiceName.Buffer != NULL)
         ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
+
     if (CapturedPrivileges != NULL)
-        ExFreePoolWithTag(CapturedPrivileges, 0);
-    ObDereferenceObject(Token);
+        ExFreePoolWithTag(CapturedPrivileges, 'rPeS');
+
+    ObDereferenceObject(ClientToken);
 
     return Status;
 }
