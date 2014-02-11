@@ -13,7 +13,7 @@ add_definitions(
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
 
-add_library(libmpg123
+list(APPEND SOURCE
     compat.c
     dct64.c
     dct64_i386.c
@@ -38,7 +38,10 @@ add_library(libmpg123
     synth_8bit.c
     synth_real.c
     synth_s32.c
-    tabinit.c)
+    tabinit.c
+    precomp.h)
 
+add_library(libmpg123 ${SOURCE})
 add_dependencies(libmpg123 psdk)
+add_pch(libmpg123 precomp.h SOURCE)
 allow_warnings(libmpg123)
