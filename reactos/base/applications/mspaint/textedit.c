@@ -9,8 +9,29 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include "textedit.h"
 
 /* FUNCTIONS ********************************************************/
+
+void
+RegisterWclTextEdit()
+{
+    WNDCLASSEX wclTextEdit;
+    /* initializing and registering the window class used for the text editor */
+    wclTextEdit.hInstance         = hProgInstance;
+    wclTextEdit.lpszClassName     = _T("TextEdit");
+    wclTextEdit.lpfnWndProc       = TextEditWinProc;
+    wclTextEdit.style             = CS_DBLCLKS;
+    wclTextEdit.cbSize            = sizeof(WNDCLASSEX);
+    wclTextEdit.hIcon             = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclTextEdit.hIconSm           = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclTextEdit.hCursor           = LoadCursor(NULL, IDC_ARROW);
+    wclTextEdit.lpszMenuName      = NULL;
+    wclTextEdit.cbClsExtra        = 0;
+    wclTextEdit.cbWndExtra        = 0;
+    wclTextEdit.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclTextEdit);
+}
 
 LRESULT CALLBACK
 TextEditWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

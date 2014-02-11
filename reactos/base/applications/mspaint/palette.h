@@ -6,4 +6,6 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+void RegisterWclPal();
+
 LRESULT CALLBACK PalWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

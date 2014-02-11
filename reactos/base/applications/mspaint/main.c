@@ -11,6 +11,7 @@
 #include "precomp.h"
 
 #include "winproc.h"
+#include "scrollbox.h"
 #include "palette.h"
 #include "toolsettings.h"
 #include "selection.h"
@@ -139,13 +140,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
     
-    WNDCLASSEX wclScroll;
-    WNDCLASSEX wincl;
-    WNDCLASSEX wclPal;
-    WNDCLASSEX wclSettings;
-    WNDCLASSEX wclSelection;
-    WNDCLASSEX wclTextEdit;
-    
     TCHAR progtitle[1000];
     TCHAR resstr[100];
     HMENU menu;
@@ -192,113 +186,17 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     hProgInstance = hThisInstance;
 
-    /* Necessary */
+    /* initialize common controls library */
     InitCommonControls();
 
-    /* initializing and registering the window class used for the main window */
-    wincl.hInstance         = hThisInstance;
-    wincl.lpszClassName     = _T("WindowsApp");
-    wincl.lpfnWndProc       = WindowProcedure;
-    wincl.style             = CS_DBLCLKS;
-    wincl.cbSize            = sizeof(WNDCLASSEX);
-    wincl.hIcon             = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
-    wincl.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
-    wincl.hCursor           = LoadCursor(NULL, IDC_ARROW);
-    wincl.lpszMenuName      = NULL;
-    wincl.cbClsExtra        = 0;
-    wincl.cbWndExtra        = 0;
-    wincl.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx (&wincl);
-
-    /* initializing and registering the window class used for the scroll box */
-    wclScroll.hInstance     = hThisInstance;
-    wclScroll.lpszClassName = _T("Scrollbox");
-    wclScroll.lpfnWndProc   = WindowProcedure;
-    wclScroll.style         = 0;
-    wclScroll.cbSize        = sizeof(WNDCLASSEX);
-    wclScroll.hIcon         = NULL;
-    wclScroll.hIconSm       = NULL;
-    wclScroll.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wclScroll.lpszMenuName  = NULL;
-    wclScroll.cbClsExtra    = 0;
-    wclScroll.cbWndExtra    = 0;
-    wclScroll.hbrBackground = GetSysColorBrush(COLOR_APPWORKSPACE);
-    RegisterClassEx (&wclScroll);
-
-    /* initializing and registering the window class used for the palette window */
-    wclPal.hInstance        = hThisInstance;
-    wclPal.lpszClassName    = _T("Palette");
-    wclPal.lpfnWndProc      = PalWinProc;
-    wclPal.style            = CS_DBLCLKS;
-    wclPal.cbSize           = sizeof(WNDCLASSEX);
-    wclPal.hIcon            = NULL;
-    wclPal.hIconSm          = NULL;
-    wclPal.hCursor          = LoadCursor(NULL, IDC_ARROW);
-    wclPal.lpszMenuName     = NULL;
-    wclPal.cbClsExtra       = 0;
-    wclPal.cbWndExtra       = 0;
-    wclPal.hbrBackground    = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx (&wclPal);
-
-    /* initializing and registering the window class for the settings window */
-    wclSettings.hInstance       = hThisInstance;
-    wclSettings.lpszClassName   = _T("ToolSettings");
-    wclSettings.lpfnWndProc     = SettingsWinProc;
-    wclSettings.style           = CS_DBLCLKS;
-    wclSettings.cbSize          = sizeof(WNDCLASSEX);
-    wclSettings.hIcon           = NULL;
-    wclSettings.hIconSm         = NULL;
-    wclSettings.hCursor         = LoadCursor(NULL, IDC_ARROW);
-    wclSettings.lpszMenuName    = NULL;
-    wclSettings.cbClsExtra      = 0;
-    wclSettings.cbWndExtra      = 0;
-    wclSettings.hbrBackground   = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx (&wclSettings);
-
-    /* initializing and registering the window class for the selection frame */
-    wclSelection.hInstance      = hThisInstance;
-    wclSelection.lpszClassName  = _T("Selection");
-    wclSelection.lpfnWndProc    = SelectionWinProc;
-    wclSelection.style          = CS_DBLCLKS;
-    wclSelection.cbSize         = sizeof(WNDCLASSEX);
-    wclSelection.hIcon          = NULL;
-    wclSelection.hIconSm        = NULL;
-    wclSelection.hCursor        = LoadCursor(NULL, IDC_SIZEALL);
-    wclSelection.lpszMenuName   = NULL;
-    wclSelection.cbClsExtra     = 0;
-    wclSelection.cbWndExtra     = 0;
-    wclSelection.hbrBackground  = NULL;
-    RegisterClassEx (&wclSelection);
-
-    /* initializing and registering the window class for the size boxes */
-    wclSettings.hInstance       = hThisInstance;
-    wclSettings.lpszClassName   = _T("Sizebox");
-    wclSettings.lpfnWndProc     = SizeboxWinProc;
-    wclSettings.style           = CS_DBLCLKS;
-    wclSettings.cbSize          = sizeof(WNDCLASSEX);
-    wclSettings.hIcon           = NULL;
-    wclSettings.hIconSm         = NULL;
-    wclSettings.hCursor         = LoadCursor(NULL, IDC_ARROW);
-    wclSettings.lpszMenuName    = NULL;
-    wclSettings.cbClsExtra      = 0;
-    wclSettings.cbWndExtra      = 0;
-    wclSettings.hbrBackground   = GetSysColorBrush(COLOR_HIGHLIGHT);
-    RegisterClassEx (&wclSettings);
-
-    /* initializing and registering the window class used for the text editor */
-    wclTextEdit.hInstance         = hThisInstance;
-    wclTextEdit.lpszClassName     = _T("TextEdit");
-    wclTextEdit.lpfnWndProc       = TextEditWinProc;
-    wclTextEdit.style             = CS_DBLCLKS;
-    wclTextEdit.cbSize            = sizeof(WNDCLASSEX);
-    wclTextEdit.hIcon             = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
-    wclTextEdit.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
-    wclTextEdit.hCursor           = LoadCursor(NULL, IDC_ARROW);
-    wclTextEdit.lpszMenuName      = NULL;
-    wclTextEdit.cbClsExtra        = 0;
-    wclTextEdit.cbWndExtra        = 0;
-    wclTextEdit.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
-    RegisterClassEx (&wclTextEdit);
+    /* register application defined window classes */
+    RegisterWclMain();
+    RegisterWclScrollbox();
+    RegisterWclPal();
+    RegisterWclSettings();
+    RegisterWclSelection();
+    RegisterWclSizebox();
+    RegisterWclTextEdit();
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
@@ -307,12 +205,12 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     
     /* create main window */
     hwnd =
-        CreateWindowEx(0, _T("WindowsApp"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544,
+        CreateWindowEx(0, _T("MainWindow"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544,
                        375, HWND_DESKTOP, NULL, hThisInstance, NULL);
     hMainWnd = hwnd;
 
     hwndMiniature =
-        CreateWindowEx(WS_EX_PALETTEWINDOW, _T("WindowsApp"), miniaturetitle,
+        CreateWindowEx(WS_EX_PALETTEWINDOW, _T("MainWindow"), miniaturetitle,
                        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 180, 200, 120, 100, hwnd,
                        NULL, hThisInstance, NULL);
 
@@ -337,7 +235,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
                    hThisInstance, NULL);
 
     hToolBoxContainer =
-        CreateWindowEx(0, _T("WindowsApp"), _T(""), WS_CHILD | WS_VISIBLE, 2, 2, 52, 350, hwnd, NULL,
+        CreateWindowEx(0, _T("MainWindow"), _T(""), WS_CHILD | WS_VISIBLE, 2, 2, 52, 350, hwnd, NULL,
                        hThisInstance, NULL);
     /* creating the 16 bitmap radio buttons and setting the bitmap */
 
@@ -417,7 +315,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
     hImageArea =
-        CreateWindowEx(0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient,
+        CreateWindowEx(0, _T("MainWindow"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient,
                        NULL, hThisInstance, NULL);
 
     hDC = GetDC(hImageArea);

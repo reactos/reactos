@@ -9,8 +9,29 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include "palette.h"
 
 /* FUNCTIONS ********************************************************/
+
+void
+RegisterWclPal()
+{
+    WNDCLASSEX wclPal;
+    /* initializing and registering the window class used for the palette window */
+    wclPal.hInstance        = hProgInstance;
+    wclPal.lpszClassName    = _T("Palette");
+    wclPal.lpfnWndProc      = PalWinProc;
+    wclPal.style            = CS_DBLCLKS;
+    wclPal.cbSize           = sizeof(WNDCLASSEX);
+    wclPal.hIcon            = NULL;
+    wclPal.hIconSm          = NULL;
+    wclPal.hCursor          = LoadCursor(NULL, IDC_ARROW);
+    wclPal.lpszMenuName     = NULL;
+    wclPal.cbClsExtra       = 0;
+    wclPal.cbWndExtra       = 0;
+    wclPal.hbrBackground    = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclPal);
+}
 
 LRESULT CALLBACK
 PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

@@ -8,6 +8,7 @@ list(APPEND SOURCE
     mouse.c
     palette.c
     registry.c
+    scrollbox.c
     selection.c
     sizebox.c
     textedit.c

@@ -6,4 +6,6 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+void RegisterWclTextEdit();
+
 LRESULT CALLBACK TextEditWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

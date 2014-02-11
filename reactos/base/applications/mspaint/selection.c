@@ -38,6 +38,26 @@ POINTS pos;
 POINTS frac;
 POINT delta;
 
+void
+RegisterWclSelection()
+{
+    WNDCLASSEX wclSelection;
+    /* initializing and registering the window class for the selection frame */
+    wclSelection.hInstance      = hProgInstance;
+    wclSelection.lpszClassName  = _T("Selection");
+    wclSelection.lpfnWndProc    = SelectionWinProc;
+    wclSelection.style          = CS_DBLCLKS;
+    wclSelection.cbSize         = sizeof(WNDCLASSEX);
+    wclSelection.hIcon          = NULL;
+    wclSelection.hIconSm        = NULL;
+    wclSelection.hCursor        = LoadCursor(NULL, IDC_SIZEALL);
+    wclSelection.lpszMenuName   = NULL;
+    wclSelection.cbClsExtra     = 0;
+    wclSelection.cbWndExtra     = 0;
+    wclSelection.hbrBackground  = NULL;
+    RegisterClassEx (&wclSelection);
+}
+
 BOOL
 ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor)
 {

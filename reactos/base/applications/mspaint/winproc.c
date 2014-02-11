@@ -11,10 +11,32 @@
 
 #include "precomp.h"
 
+#include "winproc.h"
 #include "dialogs.h"
 #include "registry.h"
+#include "scrollbox.h"
 
 /* FUNCTIONS ********************************************************/
+
+void
+RegisterWclMain()
+{
+    WNDCLASSEX wclMain;
+    /* initializing and registering the window class used for the main window */
+    wclMain.hInstance         = hProgInstance;
+    wclMain.lpszClassName     = _T("MainWindow");
+    wclMain.lpfnWndProc       = MainWindowProcedure;
+    wclMain.style             = CS_DBLCLKS;
+    wclMain.cbSize            = sizeof(WNDCLASSEX);
+    wclMain.hIcon             = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclMain.hIconSm           = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wclMain.hCursor           = LoadCursor(NULL, IDC_ARROW);
+    wclMain.lpszMenuName      = NULL;
+    wclMain.cbClsExtra        = 0;
+    wclMain.cbWndExtra        = 0;
+    wclMain.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclMain);
+}
 
 void
 selectTool(int tool)
@@ -212,7 +234,7 @@ InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 BOOL drawing;
 
 LRESULT CALLBACK
-WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)            /* handle the messages */
     {
@@ -365,93 +387,9 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                            imgXRes * zoom / 1000 + 3,
                            imgYRes * zoom / 1000 + 3, 3, 3, TRUE);
             }
-            if ((hwnd == hImageArea) || (hwnd == hScrollbox))
+            if (hwnd == hImageArea)
             {
-                RECT clientRectScrollbox;
-                RECT clientRectImageArea;
-                SCROLLINFO si;
-                GetClientRect(hScrollbox, &clientRectScrollbox);
-                GetClientRect(hImageArea, &clientRectImageArea);
-                si.cbSize = sizeof(SCROLLINFO);
-                si.fMask  = SIF_PAGE | SIF_RANGE;
-                si.nMax   = clientRectImageArea.right + 6 - 1;
-                si.nMin   = 0;
-                si.nPage  = clientRectScrollbox.right;
-                SetScrollInfo(hScrollbox, SB_HORZ, &si, TRUE);
-                GetClientRect(hScrollbox, &clientRectScrollbox);
-                si.nMax   = clientRectImageArea.bottom + 6 - 1;
-                si.nPage  = clientRectScrollbox.bottom;
-                SetScrollInfo(hScrollbox, SB_VERT, &si, TRUE);
-                MoveWindow(hScrlClient,
-                           -GetScrollPos(hScrollbox, SB_HORZ), -GetScrollPos(hScrollbox, SB_VERT),
-                           max(clientRectImageArea.right + 6, clientRectScrollbox.right),
-                           max(clientRectImageArea.bottom + 6, clientRectScrollbox.bottom), TRUE);
-            }
-            break;
-
-        case WM_HSCROLL:
-            if (hwnd == hScrollbox)
-            {
-                SCROLLINFO si;
-                si.cbSize = sizeof(SCROLLINFO);
-                si.fMask = SIF_ALL;
-                GetScrollInfo(hScrollbox, SB_HORZ, &si);
-                switch (LOWORD(wParam))
-                {
-                    case SB_THUMBTRACK:
-                    case SB_THUMBPOSITION:
-                        si.nPos = HIWORD(wParam);
-                        break;
-                    case SB_LINELEFT:
-                        si.nPos -= 5;
-                        break;
-                    case SB_LINERIGHT:
-                        si.nPos += 5;
-                        break;
-                    case SB_PAGELEFT:
-                        si.nPos -= si.nPage;
-                        break;
-                    case SB_PAGERIGHT:
-                        si.nPos += si.nPage;
-                        break;
-                }
-                SetScrollInfo(hScrollbox, SB_HORZ, &si, TRUE);
-                MoveWindow(hScrlClient, -GetScrollPos(hScrollbox, SB_HORZ),
-                           -GetScrollPos(hScrollbox, SB_VERT), imgXRes * zoom / 1000 + 6,
-                           imgYRes * zoom / 1000 + 6, TRUE);
-            }
-            break;
-
-        case WM_VSCROLL:
-            if (hwnd == hScrollbox)
-            {
-                SCROLLINFO si;
-                si.cbSize = sizeof(SCROLLINFO);
-                si.fMask = SIF_ALL;
-                GetScrollInfo(hScrollbox, SB_VERT, &si);
-                switch (LOWORD(wParam))
-                {
-                    case SB_THUMBTRACK:
-                    case SB_THUMBPOSITION:
-                        si.nPos = HIWORD(wParam);
-                        break;
-                    case SB_LINEUP:
-                        si.nPos -= 5;
-                        break;
-                    case SB_LINEDOWN:
-                        si.nPos += 5;
-                        break;
-                    case SB_PAGEUP:
-                        si.nPos -= si.nPage;
-                        break;
-                    case SB_PAGEDOWN:
-                        si.nPos += si.nPage;
-                        break;
-                }
-                SetScrollInfo(hScrollbox, SB_VERT, &si, TRUE);
-                MoveWindow(hScrlClient, -GetScrollPos(hScrollbox, SB_HORZ),
-                           -GetScrollPos(hScrollbox, SB_VERT), imgXRes * zoom / 1000 + 6,
-                           imgYRes * zoom / 1000 + 6, TRUE);
+                UpdateScrollbox();
             }
             break;
 
