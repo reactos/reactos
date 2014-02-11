@@ -269,19 +269,9 @@ typedef HRESULT (WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC,
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    /* 
-     * We should use IShellWindows interface here in order to attempt to 
-     * find an open shell window that shows the requested pidl and activate it
-     */
+    /* FIXME: Implement executing filebrowser.exe and somehow pass the pidl to it */
 
-#if 0
-    HMODULE hBrowseui = LoadLibraryW(L"browseui.dll");
-    if (hBrowseui)
-    {
-        SH_OPEN_NEW_FRAME SHOpenNewFrame = (SH_OPEN_NEW_FRAME)GetProcAddress(hBrowseui, (LPCSTR)103);
-        return SHOpenNewFrame((LPITEMIDLIST)pidl, NULL, 0, 0);
-    }
-#endif
+    /* Returning failure here will make windows 7 and 8 to use the default file browser */
     return E_FAIL;
 }
 

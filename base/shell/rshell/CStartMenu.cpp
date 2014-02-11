@@ -300,6 +300,9 @@ CStartMenu_Constructor(
     if (FAILED(hr))
         return NULL;
 
+    /* FIXME: Use CLSID_MergedFolder class and IID_IAugmentedShellFolder2 interface here */
+    /* CLSID_MergedFolder 26fdc864-be88-46e7-9235-032d8ea5162e */
+    /* IID_IAugmentedShellFolder2 8db3b3f4-6cfe-11d1-8ae9-00c04fd918d0 */
     hr = SHGetFolderLocation(NULL, CSIDL_STARTMENU, 0, 0, &pidlStartMenu);
     hr = SHGetDesktopFolder(&shellFolder);
     hr = shellFolder->BindToObject(pidlStartMenu, NULL, IID_IShellFolder, (void**)&psfStartMenu);

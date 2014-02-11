@@ -37,7 +37,8 @@ int _tmain(int argc, _TCHAR* argv[])
         SHOpenNewFrame((LPITEMIDLIST)pidlDrives, NULL, 0, 0);
     }
 
-    Sleep(3000);
+    /* FIXME: we should wait a bit here and see if a window was created. If not we should exit this process */
+    ExitThread(0);
 
     return 0;
 }
