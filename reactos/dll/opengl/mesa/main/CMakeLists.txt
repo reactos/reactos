@@ -72,9 +72,10 @@ list(APPEND SOURCE
     version.c
     viewport.c
     vtxfmt.c
-)
+    precomp.h)
 
 add_library(mesa_main STATIC ${SOURCE})
+add_pch(mesa_main precomp.h SOURCE)
 if(NOT MSVC)
     allow_warnings(mesa_main)
 endif()

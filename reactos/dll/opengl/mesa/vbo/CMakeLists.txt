@@ -15,6 +15,7 @@ list(APPEND SOURCE
     vbo_save_api.c
     vbo_save_draw.c
     vbo_save_loopback.c
-)
+    precomp.h)
 
 add_library(mesa_vbo STATIC ${SOURCE})
+add_pch(mesa_vbo precomp.h SOURCE)

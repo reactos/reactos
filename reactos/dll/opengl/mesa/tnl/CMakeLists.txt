@@ -15,6 +15,7 @@ list(APPEND SOURCE
     t_vertex.c
     t_vertex_generic.c
     t_vertex_sse.c
-)
+    precomp.h)
 
 add_library(mesa_tnl STATIC ${SOURCE})
+add_pch(mesa_tnl precomp.h SOURCE)
