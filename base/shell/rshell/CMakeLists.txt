@@ -12,6 +12,7 @@ list(APPEND SOURCE
     CMenuSite.cpp
     CStartMenu.cpp
     misc.cpp
+    wraplog.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
 add_library(rshell SHARED ${SOURCE})

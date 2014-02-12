@@ -18,6 +18,7 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 #include "precomp.h"
+#include "wraplog.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
@@ -272,118 +273,6 @@ HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 
 
 #if WRAP_LOG
-#include <stdio.h>
-
-static UINT openCount = 0;
-static UINT callLevel;
-static FILE*log;
-
-static UINT nTemps;
-static CHAR strTemp[10][256];
-
-static void WrapLogOpen()
-{
-    if (openCount == 0)
-    {
-        log = fopen("G:\\CMenuBand.log", "w");
-        nTemps = 0;
-        callLevel = 0;
-    }
-    openCount++;
-}
-
-static void WrapLogClose()
-{
-    openCount--;
-    if (openCount == 0)
-    {
-        fclose(log);
-        log = NULL;
-    }
-}
-
-static void __cdecl WrapLogMsg(_Printf_format_string_ const char* msg, ...)
-{
-    va_list args;
-    for (int i = 0; i < callLevel; i++)
-        fputs("  ", log);
-    fputs("-- ", log);
-    va_start(args, msg);
-    vfprintf(log, msg, args);
-    va_end(args);
-    fflush(log);
-    nTemps = 0;
-}
-
-static void __cdecl WrapLogEnter(_Printf_format_string_ const char* msg, ...)
-{
-    va_list args;
-    for (int i = 0; i < callLevel; i++)
-        fputs("  ", log);
-    fputs("ENTER >> ", log);
-    va_start(args, msg);
-    vfprintf(log, msg, args);
-    va_end(args);
-    fflush(log);
-    callLevel++;
-    nTemps = 0;
-}
-
-static void __cdecl WrapLogExit(_Printf_format_string_ const char* msg, ...)
-{
-    va_list args;
-    callLevel--;
-    for (int i = 0; i < callLevel; i++)
-        fputs("  ", log);
-    fputs("EXIT <<< ", log);
-    va_start(args, msg);
-    vfprintf(log, msg, args);
-    va_end(args);
-    fflush(log);
-    nTemps = 0;
-}
-
-template <class T>
-static LPSTR Wrap(const T& value);
-
-template <>
-static LPSTR Wrap<GUID>(REFGUID guid)
-{
-    LPSTR cGuid = strTemp[nTemps++];
-    sprintf(cGuid, "{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
-        guid.Data1, guid.Data2, guid.Data3,
-        guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
-        guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-    return cGuid;
-}
-
-template <>
-static LPSTR Wrap<RECT>(const RECT& rect)
-{
-    LPSTR cGuid = strTemp[nTemps++];
-    sprintf(cGuid, "{L: %d, T: %d, R: %d, B: %d}",
-        rect.left, rect.top, rect.right, rect.bottom);
-    return cGuid;
-}
-
-template <>
-static LPSTR Wrap<OLECMD>(const OLECMD& cmd)
-{
-    LPSTR cGuid = strTemp[nTemps++];
-    sprintf(cGuid, "{ID: %d, F: %d}",
-        cmd.cmdID, cmd.cmdf);
-    return cGuid;
-}
-
-template <>
-static LPSTR Wrap<MSG>(const MSG& msg)
-{
-    LPSTR cGuid = strTemp[nTemps++];
-    sprintf(cGuid, "{HWND: %d, Code: %d, W: %p, L: %p, T: %d, P.X: %d, P.Y: %d}",
-        msg.hwnd, msg.message, msg.wParam, msg.lParam, msg.time, msg.pt.x, msg.pt.y);
-    return cGuid;
-}
-
 CMenuBand::CMenuBand()
 {
     HRESULT hr;
