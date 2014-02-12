@@ -1717,6 +1717,8 @@ TrayNotifyWndProc(IN HWND hwnd,
                 TrayNotifyWnd_UpdateTheme(This);
                 return 0;
             case WM_ERASEBKGND:
+                if (!This->TrayTheme)
+                    goto HandleDefaultMessage;
                 return TrayNotifyWnd_DrawBackground(hwnd,
                                                     uMsg,
                                                     wParam,

@@ -2072,6 +2072,42 @@ ITrayWindowImpl_DisplayRunFileDlg(IN ITrayWindowImpl *This)
     CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
 }
 
+static void PopupStartMenu(IN ITrayWindowImpl *This)
+{
+    if (This->StartMenuPopup != NULL)
+    {
+        POINTL pt;
+        RECTL rcExclude;
+        DWORD dwFlags = 0;
+
+        if (GetWindowRect(This->hwndStart,
+            (RECT*) &rcExclude))
+        {
+            if (ITrayWindowImpl_IsPosHorizontal(This))
+            {
+                pt.x = rcExclude.left;
+                pt.y = rcExclude.top;
+                dwFlags |= MPPF_BOTTOM;
+            }
+            else
+            {
+                if (This->Position == ABE_LEFT)
+                    pt.x = rcExclude.left;
+                else
+                    pt.x = rcExclude.right;
+
+                pt.y = rcExclude.bottom;
+                dwFlags |= MPPF_BOTTOM;
+            }
+
+            IMenuPopup_Popup(This->StartMenuPopup,
+                &pt,
+                &rcExclude,
+                dwFlags);
+        }
+    }
+}
+
 static LRESULT CALLBACK
 TrayWndProc(IN HWND hwnd,
             IN UINT uMsg,
@@ -2566,38 +2602,7 @@ HandleTrayContextMenu:
             case WM_COMMAND:
                 if ((HWND)lParam == This->hwndStart)
                 {
-                    if (This->StartMenuPopup != NULL)
-                    {
-                        POINTL pt;
-                        RECTL rcExclude;
-                        DWORD dwFlags = 0;
-
-                        if (GetWindowRect(This->hwndStart,
-                                          (RECT*)&rcExclude))
-                        {
-                            if (ITrayWindowImpl_IsPosHorizontal(This))
-                            {
-                                pt.x = rcExclude.left;
-                                pt.y = rcExclude.top;
-                                dwFlags |= MPPF_BOTTOM;
-                            }
-                            else
-                            {
-                                if (This->Position == ABE_LEFT)
-                                    pt.x = rcExclude.left;
-                                else
-                                    pt.x = rcExclude.right;
-
-                                pt.y = rcExclude.bottom;
-                                dwFlags |= MPPF_BOTTOM;
-                            }
-
-                            IMenuPopup_Popup(This->StartMenuPopup,
-                                             &pt,
-                                             &rcExclude,
-                                             dwFlags);
-                        }
-                    }
+                    PopupStartMenu(This);
                     break;
                 }
 
