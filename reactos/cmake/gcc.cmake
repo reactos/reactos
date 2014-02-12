@@ -329,7 +329,7 @@ if(PCH)
         endforeach()
     endmacro()
 else()
-    macro(add_pch _target_name _FILE)
+    macro(add_pch _target _pch _sources)
     endmacro()
 endif()
 
