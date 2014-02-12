@@ -1451,7 +1451,7 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
     else
     {
         InitFormatEtc (formatetc, CF_HDROP, TYMED_HGLOBAL);
-        if SUCCEEDED(pDataObject->QueryGetData(&formatetc));
+        if (SUCCEEDED(pDataObject->QueryGetData(&formatetc)))
         {
             passthroughtofs = TRUE;
         }

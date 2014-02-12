@@ -28,6 +28,7 @@ target_link_libraries(rshell
 add_importlibs(rshell
     shlwapi
     shell32
+    gdi32
     ole32
     user32
     msvcrt
