@@ -122,4 +122,4 @@ VOID BootMain(LPSTR CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
 VOID RunLoader(VOID);
 
-#endif  // defined __FREELDR_H
+#endif  /* __FREELDR_H */
