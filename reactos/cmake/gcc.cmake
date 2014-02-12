@@ -1,6 +1,6 @@
 
 # Show a note about ccache build
-if(CCACHE STREQUAL "ccache")
+if(ENABLE_CCACHE)
     message("-- Enabling ccache build - done")
 endif()
 
