@@ -1072,12 +1072,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup initial system settings */
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
-    /* Load static defaults for Service Pack 1 and add our SVN revision */
+    /* Load static defaults for Service Pack 2 and add our SVN revision */
     /* Format of CSD : SPMajor - SPMinor */
-    CmNtCSDVersion = 0x100 | (KERNEL_VERSION_BUILD_HEX << 16);
+    CmNtCSDVersion = 0x200 | (KERNEL_VERSION_BUILD_HEX << 16);
     CmNtCSDReleaseType = 0;
 
-    /* Set Service Pack data for Service Pack 1 */
+    /* Set Service Pack data for Service Pack 2 */
     CmNtSpBuildNumber = VER_PRODUCTBUILD_QFE;
     if (!(CmNtCSDVersion & 0xFFFF0000))
     {
