@@ -29,3 +29,5 @@
 #define shell32_hInstance 0
 #define SMC_EXEC 4
 extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
+
+extern "C" HRESULT CMenuSite_Constructor(REFIID riid, LPVOID *ppv);

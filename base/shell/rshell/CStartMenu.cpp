@@ -266,7 +266,7 @@ CStartMenu_Constructor(
     if (FAILED(hr))
         return NULL;
 
-#if 1
+#if 0
     hr = CoCreateInstance(CLSID_MenuBandSite,
                           NULL,
                           CLSCTX_INPROC_SERVER,
