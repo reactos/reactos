@@ -8,8 +8,9 @@ spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     CDesktopBrowser.cpp
-    CStartMenu.cpp
+    CMenuBand.cpp
     CMenuSite.cpp
+    CStartMenu.cpp
     misc.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
@@ -30,3 +31,9 @@ add_importlibs(rshell
     msvcrt
     kernel32
     ntdll)
+
+add_custom_command(TARGET rshell POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:rshell>"
+     "G:/reactos/vs12/reactos/base/shell/explorer-new/$<CONFIGURATION>/$<TARGET_FILE_NAME:rshell>" 
+  COMMENT "Copying to output directory")

@@ -259,14 +259,18 @@ CStartMenu_Constructor(
     IShellFolder *shellFolder;
     IShellFolder *psfStartMenu;
 
+#if 0
     hr = CoCreateInstance(CLSID_MenuBand,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           IID_PPV_ARG(IShellMenu, &pShellMenu));
+#else
+    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
+#endif
     if (FAILED(hr))
         return NULL;
 
-#if 0
+#if 1
     hr = CoCreateInstance(CLSID_MenuBandSite,
                           NULL,
                           CLSCTX_INPROC_SERVER,

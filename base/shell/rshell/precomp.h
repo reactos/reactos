@@ -31,3 +31,4 @@
 extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
 
 extern "C" HRESULT CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
+extern "C" HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv);

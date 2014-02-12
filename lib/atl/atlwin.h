@@ -164,7 +164,7 @@ public:
 
     ~CWndProcThunk()
     {
-        VirtualFree(m_pthunk, sizeof(thunkCode), MEM_RELEASE);
+        VirtualFree(m_pthunk, 0, MEM_RELEASE);
     }
 
 	BOOL Init(WNDPROC proc, void *pThis)
