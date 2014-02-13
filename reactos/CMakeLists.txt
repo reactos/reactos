@@ -134,6 +134,12 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
+    if(CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS")
+        set(PCH 1)
+    else()
+        set(PCH 0)
+    endif()
+
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600
