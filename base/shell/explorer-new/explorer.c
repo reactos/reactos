@@ -407,7 +407,7 @@ _tWinMain(IN HINSTANCE hInstance,
 
     ProcessStartupItems();
 
-    //if (GetShellWindow() == NULL)
+    if (GetShellWindow() == NULL)
         CreateShellDesktop = TRUE;
 
     /* FIXME - initialize SSO Thread */
@@ -415,7 +415,7 @@ _tWinMain(IN HINSTANCE hInstance,
     if (CreateShellDesktop)
     {
         /* Initialize shell dde support */
-        //ShellDDEInit(TRUE);
+        ShellDDEInit(TRUE);
 
         /* Initialize shell icons */
         FileIconInit(TRUE);
@@ -430,15 +430,15 @@ _tWinMain(IN HINSTANCE hInstance,
                left screen corner, but is also needed in order to receive
                HSHELL_* notification messages (which are required for taskbar
                buttons to work right) */
-            /*HideMinimizedWindows(TRUE);
+            HideMinimizedWindows(TRUE);
 
             if (Tray != NULL)
-                hShellDesktop = DesktopCreateWindow(Tray);*/
+                hShellDesktop = DesktopCreateWindow(Tray);
         }
 
-        ///* WinXP: Notify msgina to hide the welcome screen */
-        //if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
-        //    SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+        /* WinXP: Notify msgina to hide the welcome screen */
+        if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
+            SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
     }
     else
     {

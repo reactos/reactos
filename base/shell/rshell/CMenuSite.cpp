@@ -73,23 +73,39 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
     END_COM_MAP()
 
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+    // IBandSite
     virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown * punk);
     virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD* pdwBandID);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
     virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv);
+
+    // IDeskBarClient
+    virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
     virtual HRESULT STDMETHODCALLTYPE GetSize(DWORD dwWhich, LPRECT prc);
+    virtual HRESULT STDMETHODCALLTYPE UIActivateDBC(DWORD dwState);
+
+    // IOleWindow
     virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
+
+    // IOleCommandTarget
+    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText);
+    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+
+    // IInputObject
+    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
+    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
+    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+
+    // IInputObjectSite
+    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
+
+    // IWinEventHandler
     virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
     virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
+
+    // IServiceProvider
     virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
-    virtual HRESULT STDMETHODCALLTYPE UIActivateDBC(DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
+
 
     // Using custom message map instead 
     virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD mapId = 0);
@@ -260,6 +276,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::GetSize(DWORD dwWhich, LPRECT prc)
         return S_OK;
 
     DESKBANDINFO info = { 0 };
+    info.dwMask = DBIM_MAXSIZE;
 
     m_DeskBand->GetBandInfo(0, 0, &info);
 

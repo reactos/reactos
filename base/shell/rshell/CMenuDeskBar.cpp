@@ -20,6 +20,7 @@
 #include "precomp.h"
 #include "wraplog.h"
 #include <atlwin.h>
+#include <shlwapi_undoc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
@@ -143,15 +144,15 @@ public:
 
     BEGIN_MSG_MAP(CMenuDeskBar)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        /*MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
-        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged) */
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
-/*        MESSAGE_HANDLER(WM_PAINT, OnPaint) */
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CMenuDeskBar)
@@ -166,6 +167,8 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IBanneredBar, IBanneredBar)
         COM_INTERFACE_ENTRY_IID(IID_IInitializeObject, IInitializeObject)
     END_COM_MAP()
+
+    HRESULT _CreateDeskBarWindow();
 };
 
 extern "C"
@@ -447,6 +450,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 #else
 
 CMenuDeskBar::CMenuDeskBar() :
+    m_Client(NULL),
     m_ClientWindow(NULL),
     m_Vertical(true),
     m_Visible(false),
@@ -457,6 +461,40 @@ CMenuDeskBar::CMenuDeskBar() :
 
 CMenuDeskBar::~CMenuDeskBar()
 {
+}
+
+HRESULT CMenuDeskBar::_CreateDeskBarWindow()
+{
+    HRESULT hr;
+    HWND ownerWindow = NULL;
+
+    if (m_Site)
+    {
+        CComPtr<IOleWindow> oleWindow;
+
+        hr = m_Site->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+        if (FAILED(hr))
+            return hr;
+        
+        hr = oleWindow->GetWindow(&ownerWindow);
+        if (FAILED(hr))
+            return hr;
+
+        if (!::IsWindow(ownerWindow))
+            return E_FAIL;
+    }
+
+    // FIXME
+    if (m_hWnd)
+    {
+        SetWindowLongPtr(m_hWnd, GWLP_HWNDPARENT, (LONG_PTR)ownerWindow);
+    }
+    else
+    {
+        Create(ownerWindow);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetWindow(HWND *lphwnd)
@@ -545,53 +583,36 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
     CComPtr<IDeskBarClient>                 pDeskBandClient;
     HRESULT                                 hResult;
 
-    if (m_hWnd == NULL)
-    {
-        HWND ownerWindow = NULL;
-        if (m_Site)
-        {
-            IOleWindow * oleWindow;
-
-            hResult = m_Site->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-            if (SUCCEEDED(hResult))
-                hResult = oleWindow->GetWindow(&ownerWindow);
-
-            if (!::IsWindow(ownerWindow))
-                return E_FAIL;
-        }
-
-        Create(ownerWindow);
-    }
+    m_Client.Release();
 
     if (punkClient == NULL)
-        m_Client.Release();
-    else
+        return S_OK;
+
+    if (m_hWnd == NULL)
     {
-        hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&m_Client));
-        if (FAILED(hResult))
-            return hResult;
-
-        hResult = m_Client->QueryInterface(IID_IDeskBarClient, (VOID**) &pDeskBandClient);
-        if (FAILED(hResult))
-            return hResult;
-
-        hResult = pDeskBandClient->SetDeskBarSite(static_cast<IDeskBar*>(this));
-        if (FAILED(hResult))
-            return hResult;
-
+        _CreateDeskBarWindow();
     }
 
-    return S_OK;
+    hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&m_Client));
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = m_Client->QueryInterface(IID_IDeskBarClient, (VOID**) &pDeskBandClient);
+    if (FAILED(hResult))
+        return hResult;
+
+    return pDeskBandClient->SetDeskBarSite(static_cast<IDeskBar*>(this));
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetClient(IUnknown **ppunkClient)
 {
     if (ppunkClient == NULL)
         return E_POINTER;
-    *ppunkClient = m_Client;
-    if (m_Client.p != NULL)
-        m_Client.p->AddRef();
-    return S_OK;
+
+    if (!m_Client)
+        return E_FAIL;
+
+    return m_Client->QueryInterface(IID_PPV_ARG(IUnknown, ppunkClient));
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
@@ -603,52 +624,38 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
 {
-    return S_OK;
-    CComPtr<IServiceProvider>               serviceProvider;
-    CComPtr<IProfferService>                profferService;
-    HRESULT                                 hResult;
-    CComPtr<IOleWindow>                     oleWindow;
-    HWND                                    ownerWindow;
+    HRESULT hr;
+    CComPtr<IOleWindow> oleWindow;
+    HWND ownerWindow = NULL;
 
+    if (m_Site)
+    {
+        if (m_hWnd != NULL)
+        {
+            DestroyWindow();
+        }
+        m_Site.Release();
+    }
 
-    m_Site.Release();
     if (pUnkSite == NULL)
     {
         return S_OK;
     }
 
-    if (m_hWnd == NULL)
-    {
-        // get window handle of parent
-        hResult = pUnkSite->QueryInterface(IID_ITrayPriv, reinterpret_cast<void **>(&m_Site));
-        if (FAILED(hResult))
-            return hResult;
+    // get window handle of parent
+    hr = pUnkSite->QueryInterface(IID_ITrayPriv, reinterpret_cast<void **>(&m_Site));
+    if (FAILED(hr))
+        return hr;
 
-        hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-        if (SUCCEEDED(hResult))
-            hResult = oleWindow->GetWindow(&ownerWindow);
-
-        if (!::IsWindow(ownerWindow))
-            return E_FAIL;
-
-        Create(ownerWindow);
-    }
-    else
-    {
-        //Set Owner ?
-    }
-
-    return S_OK;
+    return _CreateDeskBarWindow();
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
 {
-    if (ppvSite == NULL)
-        return E_POINTER;
-    *ppvSite = m_Site;
-    if (m_Site.p != NULL)
-        m_Site.p->AddRef();
-    return S_OK;
+    if (m_Site == NULL)
+        return E_FAIL;
+
+    return m_Site->QueryInterface(riid, ppvSite);
 }
 
 LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -674,9 +681,9 @@ LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
         if (m_Banner != NULL)
         {
-            SIZE sz;
-            ::GetBitmapDimensionEx(m_Banner, &sz);
-            rc.left += sz.cx;
+            BITMAP bm;
+            ::GetObject(m_Banner, sizeof(bm), &bm);
+            rc.left += bm.bmWidth;
         }
         
         ::SetWindowPos(clientWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
@@ -773,9 +780,21 @@ LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
         ::GetObject(m_Banner, sizeof(bm), &bm);
 
+        RECT rc;
+        if (!GetClientRect(&rc))
+            WARN("GetClientRect failed\n");
+
+        const int bx = bm.bmWidth;
+        const int by = bm.bmHeight;
+        const int cx = rc.right;
+        const int cy = rc.bottom;
+
         TRACE("Painting banner: %d by %d\n", bm.bmWidth, bm.bmHeight);
 
-        if (!::BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY))
+        if (!::StretchBlt(hdc, 0, 0, bx, cy-by, hdcMem, 0, 0, bx, 1, SRCCOPY))
+            WARN("StretchBlt failed\n");
+
+        if (!::BitBlt(hdc, 0, cy-by, bx, by, hdcMem, 0, 0, SRCCOPY))
             WARN("BitBlt failed\n");
 
         ::SelectObject(hdcMem, hbmOld);
@@ -789,100 +808,82 @@ LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
 {
-    //ENTER >> CMenuDeskBar<03901CC0>::Popup(POINTL *ppt=00B3F428, RECTL *prcExclude=00B3F418, MP_POPUPFLAGS dwFlags=80000000)
-    //  ENTER >> CMenuBand<00D2CCF8>::QueryService
-
-    //  ENTER >> CMenuBand<00D2CCF8>::ShowDW(BOOL fShow=1)
-    //    ENTER >> CMenuDeskBar<03901CC0>::GetSite(REFIID riid={4622AD10-FF23-11D0-8D34-00A0C90F2719}, PVOID *ppvSite=03901D4C)
-    //      -- *ppvSite=00BDEA90
-    //    EXIT <<< CMenuDeskBar::GetSite() = 00000000
-    //    ENTER >> CMenuBand<00D2CCF8>::SetMenu(HMENU hmenu=593F0A07, HWND hwnd=00000000, DWORD dwFlags=20000000)
-    //    EXIT <<< CMenuBand::SetMenu() = 00000000
-    //  EXIT <<< CMenuBand::ShowDW() = 00000000
-    //  ENTER >> CMenuBand<00D2CCF8>::GetBandInfo(DWORD dwBandID=0, DWORD dwViewMode=0, DESKBANDINFO *pdbi=00B3F0F0)
-    //  EXIT <<< CMenuBand::GetBandInfo() = 00000000
-    //  ENTER >> CMenuBand<00D2CCF8>::QueryService(REFGUID guidService={ED9CC020-08B9-11D1-9823-00C04FD91972}, REFIID riid={B722BCCB-4E68-101B-A2BC-00AA00404770}, void **ppvObject=00B3F304)
-    //    -- SID is SID_SMenuBandChild. Using QueryInterface of self instead of wrapped object.
-    //    -- *ppvObject=00D2CD08
-    //  EXIT <<< CMenuBand::QueryService() = 00000000
-    //  ENTER >> CMenuBand<00D2CCF8>::Exec(const GUID *pguidCmdGroup=76BAE1FC, DWORD nCmdID=19, DWORD nCmdexecopt=0, VARIANT *pvaIn=00000000, VARIANT *pvaOut=00000000)
-    //    -- *pguidCmdGroup={5B4DAE26-B807-11D0-9815-00C04FD91972}
-    //  EXIT <<< CMenuBand::Exec() = 00000001
-    //  ENTER >> CMenuBand<00D2CCF8>::OnPosRectChangeDB(RECT *prc=00B3E630)
-    //    -- *prc={L: 0, T: 0, R: 218, B: 305}
-    //  EXIT <<< CMenuBand::OnPosRectChangeDB() = 00000000
-    //  ENTER >> CMenuBand<00D2CCF8>::UIActivateIO(BOOL fActivate=1, LPMSG lpMsg=00000000)
-    //  EXIT <<< CMenuBand::UIActivateIO() = 00000001
-    //EXIT <<< CMenuDeskBar::Popup() = 00000000
     HRESULT hr;
-    IServiceProvider * sp;
-    IOleCommandTarget * oct;
-    IInputObject * io;
+    CComPtr<IOleCommandTarget> oct;
+    CComPtr<IInputObject> io;
+    CComPtr<IDeskBand> band;
+    CComPtr<IDeskBarClient> dbc;
 
-    hr = m_Client->QueryInterface(IID_PPV_ARG(IServiceProvider, &sp));
+    if (m_hWnd == NULL)
+        return E_FAIL;
+
+    hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IOleCommandTarget, &oct));
     if (FAILED(hr))
         return hr;
 
-    hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
+    hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
     if (FAILED(hr))
         return hr;
 
-    hr = sp->QueryService(SID_SMenuBandChild, IID_PPV_ARG(IOleCommandTarget, &oct));
+    // No clue about the arg, using anything != 0
+    hr = dbc->UIActivateDBC(TRUE);
     if (FAILED(hr))
-    {
-        sp->Release();
         return hr;
-    }
+
+    RECT rc = { 0 };
+    hr = dbc->GetSize(0, &rc);
+    if (FAILED(hr))
+        return hr;
 
     // Unknown meaning
     const int CMD = 19;
     const int CMD_EXEC_OPT = 0;
 
-    hr = oct->Exec(&CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
+    hr = IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
+    if (FAILED(hr))
+        return hr;
+    
+    ::AdjustWindowRect(&rc, WS_DLGFRAME, FALSE);
+    rc.right -= rc.left;
+    rc.bottom -= rc.top;
 
-    oct->Release();
-    sp->Release();
-    return hr;
+    int x = ppt->x;
+    int y = ppt->y - rc.bottom;
+    int cx = rc.right;
+    int cy = rc.bottom;
 
-    // FIXME: everything!
-    const int hackWidth = 200;
-    const int hackHeight = 400;
-    RECT r = { ppt->x, ppt->y - hackHeight, ppt->x + hackWidth, ppt->y };
-    if (this->m_hWnd == NULL)
-    {
-        this->Create(NULL, &r);
-    }
-    this->SetWindowPos(NULL, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_SHOWWINDOW);
+    this->SetWindowPos(NULL, x, y, cx, cy, SWP_SHOWWINDOW);
+
+    // HACK: The bar needs to be notified of the size AFTER it is shown.
+    // Quick & dirty way of getting it done.
+    BOOL bHandled;
+    OnSize(WM_SIZE, 0, 0, bHandled);
+
+    hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
+    if (FAILED(hr))
+        return hr;
+
+    io->UIActivateIO(TRUE, NULL);
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetIconSize(THIS_ DWORD iIcon)
 {
     HRESULT hr;
-    IServiceProvider * sp;
-    IOleCommandTarget * oct;
-
     m_IconSize = iIcon;
 
-    hr = m_Client->QueryInterface(IID_PPV_ARG(IServiceProvider, &sp));
-    if (FAILED(hr))
-        return hr;
-
-    hr = sp->QueryService(SID_SMenuBandChild, IID_PPV_ARG(IOleCommandTarget, &oct));
-    if (FAILED(hr))
-    {
-        sp->Release();
-        return hr;
-    }
-
-    // Unknown meaning
+    // Unknown meaning (set flags? set icon size?)
     const int CMD = 16;
-    const int CMD_EXEC_OPT = 2;
+    const int CMD_EXEC_OPT = iIcon ? 0 : 2; // seems to work
 
-    hr = oct->Exec(&CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
+    hr = IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
+    if (FAILED(hr))
+        return hr;
 
-    oct->Release();
-    sp->Release();
+    BOOL bHandled;
+    OnSize(WM_SIZE, 0, 0, bHandled);
+
     return hr;
 }
 
@@ -896,6 +897,10 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetIconSize(THIS_ DWORD* piIcon)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(THIS_ HBITMAP hBitmap)
 {
     m_Banner = hBitmap;
+    
+    BOOL bHandled;
+    OnSize(WM_SIZE, 0, 0, bHandled);
+
     return S_OK;
 }
 

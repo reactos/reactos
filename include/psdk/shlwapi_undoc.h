@@ -58,6 +58,7 @@ HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg);
 HRESULT WINAPI IUnknown_SetSite(IUnknown *obj, IUnknown *site);
 HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *lpClassId);
 HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID riid, LPVOID *lppOut);
+HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *lpUnknown, REFIID service, const GUID *group, DWORD cmdId, DWORD cmdOpt, VARIANT *pIn, VARIANT *pOut);
 HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg);
 BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName);
 void WINAPI SHPropagateMessage(HWND hWnd, UINT uiMsgId, WPARAM wParam, LPARAM lParam, BOOL bSend);
