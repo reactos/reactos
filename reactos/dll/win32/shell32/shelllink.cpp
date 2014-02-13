@@ -76,6 +76,43 @@ struct volume_info
 
 #include "poppack.h"
 
+/**************************************************************************
+* SH_GetTargetTypeByPath
+*
+* Function to get target type by passing full path to it
+*/
+LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
+{
+    LPCWSTR pwszExt;
+    static WCHAR wszBuf[MAX_PATH];
+
+    /* Get file information */
+    SHFILEINFO fi;
+    if (!SHGetFileInfoW(lpcwFullPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES ))
+    {
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", lpcwFullPath, GetLastError());
+        fi.szTypeName[0] = L'\0';
+        fi.hIcon = NULL;
+    }
+
+    pwszExt = PathFindExtensionW(lpcwFullPath);
+    if (pwszExt[0])
+    {
+        if (!fi.szTypeName[0])
+        {
+            /* The file type is unknown, so default to string "FileExtension File" */
+            size_t cchRemaining = 0;
+            LPWSTR pwszEnd = NULL;
+
+            StringCchPrintfExW(wszBuf, _countof(wszBuf), &pwszEnd, &cchRemaining, 0, L"%s ", pwszExt + 1);
+        }
+        else
+            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt); /* Update file type */
+    }
+
+    return wszBuf;
+}
+
 /* IShellLink Implementation */
 
 static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath);
@@ -1948,6 +1985,10 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)fi.hIcon, 0);
             else
                 ERR("ExtractIconW failed %ls %u\n", pThis->sIcoPath, pThis->iIcoNdx);
+
+            /* target type */
+            if (pThis->sPath)
+                SetDlgItemTextW(hwndDlg, 14005, SH_GetTargetTypeByPath(pThis->sPath));
 
             /* target location */
             if (pThis->sWorkDir)
