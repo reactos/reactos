@@ -50,7 +50,7 @@ MouseKeysDlgProc(HWND hwndDlg,
             /* Set the thumb */
             SendDlgItemMessage(hwndDlg, IDC_MOUSEKEYS_SPEED_TRACK, TBM_SETPOS, TRUE, i);
 
-            /* Set the number of ticks for the accelleration trackbar */
+            /* Set the number of ticks for the acceleration trackbar */
             SendDlgItemMessage(hwndDlg, IDC_MOUSEKEYS_ACCEL_TRACK, TBM_SETRANGE,
                                TRUE, MAKELONG(0, ACCELTICKS - 1));
 
