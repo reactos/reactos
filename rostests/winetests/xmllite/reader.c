@@ -112,7 +112,7 @@ static void ok_pos_(IXmlReader *reader, int line, int pos, int line_broken,
                               (pos_broken == -1 ? pos : pos_broken) == p);
 
     if (todo)
-        todo_wine
+        todo_ros
         ok_(__FILE__, _line_)((l == line && pos == p) || broken_state,
                             "Expected (%d,%d), got (%d,%d)\n", line, pos, l, p);
     else
@@ -761,7 +761,7 @@ static void test_read_xmldeclaration(void)
     hr = IXmlReader_Read(reader, &type);
     /* newer versions return syntax error here cause document is incomplete,
        it makes more sense than invalid char error */
-todo_wine {
+todo_ros {
     ok(hr == WC_E_SYNTAX || broken(hr == WC_E_XMLCHARACTER), "got 0x%08x\n", hr);
     ok(type == XmlNodeType_None, "got %d\n", type);
 }
@@ -1405,7 +1405,7 @@ static void test_read_cdata(void)
             str_exp = a2w(test->value);
             if (test->todo)
             {
-            todo_wine {
+            todo_ros {
                 ok(len == strlen(test->value), "got %u\n", len);
                 ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
             }
@@ -1643,7 +1643,7 @@ static void test_read_attribute(void)
             str = NULL;
             hr = IXmlReader_GetQualifiedName(reader, &str, &len);
             ok(hr == S_OK, "got 0x%08x\n", hr);
-        todo_wine {
+        todo_ros {
             ok(len == strlen(test->name), "got %u\n", len);
             str_exp = a2w(test->name);
             ok(!lstrcmpW(str, str_exp), "got %s\n", wine_dbgstr_w(str));
