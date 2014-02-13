@@ -24,7 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-#define WRAP_LOG 1
+#define WRAP_LOG 0
 
 typedef CWinTraits<
     WS_POPUP | WS_DLGFRAME | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -643,7 +643,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
     }
 
     // get window handle of parent
-    hr = pUnkSite->QueryInterface(IID_ITrayPriv, reinterpret_cast<void **>(&m_Site));
+    hr = pUnkSite->QueryInterface(IID_PPV_ARG(IUnknown, &m_Site));
     if (FAILED(hr))
         return hr;
 
@@ -846,6 +846,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     ::AdjustWindowRect(&rc, WS_DLGFRAME, FALSE);
     rc.right -= rc.left;
     rc.bottom -= rc.top;
+
+    if (m_Banner != NULL)
+    {
+        BITMAP bm;
+        ::GetObject(m_Banner, sizeof(bm), &bm);
+        rc.right += bm.bmWidth;
+    }
 
     int x = ppt->x;
     int y = ppt->y - rc.bottom;

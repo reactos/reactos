@@ -22,7 +22,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
-#define WRAP_LOG 1
+#define WRAP_LOG 0
 
 extern "C" BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
