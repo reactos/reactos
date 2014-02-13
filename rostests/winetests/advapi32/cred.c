@@ -245,9 +245,9 @@ static void check_blob(int line, DWORD cred_type, PCREDENTIALA cred)
 {
     if (cred_type == CRED_TYPE_DOMAIN_PASSWORD)
     {
-        todo_wine
+        todo_ros
         ok_(__FILE__, line)(cred->CredentialBlobSize == 0, "expected CredentialBlobSize of 0 but got %d\n", cred->CredentialBlobSize);
-        todo_wine
+        todo_ros
         ok_(__FILE__, line)(!cred->CredentialBlob, "expected NULL credentials but got %p\n", cred->CredentialBlob);
     }
     else
