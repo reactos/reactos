@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     base64.c
