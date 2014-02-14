@@ -1,4 +1,5 @@
 
+add_definitions(-DUSE_WINE_TODOS)
 add_executable(mpr_winetest mpr.c testlist.c)
 set_module_type(mpr_winetest win32cui)
 add_importlibs(mpr_winetest mpr msvcrt kernel32)
