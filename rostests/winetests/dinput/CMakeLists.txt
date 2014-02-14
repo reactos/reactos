@@ -1,4 +1,6 @@
 
+add_definitions(-DUSE_WINE_TODOS)
+
 add_executable(dinput_winetest
     device.c
     dinput.c
