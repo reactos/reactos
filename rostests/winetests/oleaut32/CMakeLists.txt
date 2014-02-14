@@ -1,4 +1,5 @@
 
+add_definitions(-DUSE_WINE_TODOS)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_typelib(test_reg.idl test_tlb.idl tmarshal.idl)
 add_idl_Headers(oleaut32_idlheaders test_reg.idl tmarshal.idl)
