@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-DUSE_WINE_TODOS)
 
 add_executable(lz32_winetest lzexpand_main.c testlist.c)
 target_link_libraries(lz32_winetest wine)
