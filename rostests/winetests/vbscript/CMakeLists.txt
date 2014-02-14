@@ -1,4 +1,5 @@
 
+add_definitions(-DUSE_WINE_TODOS)
 add_idl_headers(vbscript_wine_test_idlheader vbsregexp55.idl)
 
 list(APPEND SOURCE
