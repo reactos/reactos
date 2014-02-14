@@ -1,4 +1,6 @@
 
+add_definitions(-DUSE_WINE_TODOS)
+
 add_idl_Headers(test_tlb_header test_tlb.idl)
 add_typelib(test_tlb.idl)
 
