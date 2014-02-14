@@ -1,4 +1,6 @@
 
+add_definitions(-DUSE_WINE_TODOS)
+
 list(APPEND SOURCE
     domdoc.c
     httpreq.c
