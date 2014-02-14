@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-DUSE_WINE_TODOS)
 
 add_executable(mscoree_winetest
     debugging.c
