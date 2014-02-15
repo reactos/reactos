@@ -1565,10 +1565,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (pwndMsg != MessageQueue->spwndActive)
         {
             PWND pwndTop = pwndMsg;
-            while (pwndTop && ((pwndTop->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
-            {
-                pwndTop = pwndTop->spwndParent;
-            }
+            pwndTop = IntGetNonChildAncestor(pwndTop);
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
