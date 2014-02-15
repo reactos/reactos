@@ -15,7 +15,7 @@ list(APPEND SOURCE
     tooldock.c
     imagesoft.rc)
 
-add_pch(imagesoft precomp.h)
+add_pch(imagesoft precomp.h SOURCE)
 add_executable(imagesoft ${SOURCE})
 set_module_type(imagesoft win32gui UNICODE)
 add_importlibs(imagesoft gdi32 user32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
