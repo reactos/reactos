@@ -1775,6 +1775,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
         CurrentEntry = CurrentMessage->ListEntry.Flink;
+        if (!CurrentEntry) break; //// Fix CORE-6734 reported crash.
 /*
  MSDN:
  1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.
