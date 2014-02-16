@@ -1,9 +1,9 @@
 set(baseaddress_ntdll                0x7c920000) # should be above 0x7c920000
-set(baseaddress_kernel32             0x7c800000) # matches w2k3 FRE/CHK @ 0x7c800000
-set(baseaddress_user32               0x77e20000) # not relocatable, avoid conflicts with win
-set(baseaddress_gdi32                0x77d80000)
-set(baseaddress_advapi32             0x77c80000)
-set(baseaddress_msvcrt               0x77b80000)
+set(baseaddress_kernel32             0x77d80000)
+set(baseaddress_msvcrt               0x77cd0000)
+set(baseaddress_advapi32             0x77c20000)
+set(baseaddress_gdi32                0x77bb0000)
+set(baseaddress_user32               0x77a20000)
 set(baseaddress_dhcpcsvc             0x779d0000)
 set(baseaddress_dnsapi               0x77980000)
 set(baseaddress_icmp                 0x77950000)
