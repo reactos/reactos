@@ -30,7 +30,7 @@ FdcAddDevice(
     PDEVICE_OBJECT Fdo = NULL;
     NTSTATUS Status;
 
-    DPRINT1("FdcAddDevice()\n");
+    DPRINT("FdcAddDevice()\n");
 
     ASSERT(DriverObject);
     ASSERT(Pdo);
@@ -87,7 +87,7 @@ NTAPI
 FdcCreate(IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp)
 {
-    DPRINT1("FdcCreate()\n");
+    DPRINT("FdcCreate()\n");
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = FILE_OPENED;
@@ -104,7 +104,7 @@ NTAPI
 FdcClose(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
-    DPRINT1("FdcClose()\n");
+    DPRINT("FdcClose()\n");
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -123,7 +123,7 @@ FdcPnp(IN PDEVICE_OBJECT DeviceObject,
 {
     PCOMMON_DEVICE_EXTENSION Common = DeviceObject->DeviceExtension;
 
-    DPRINT1("FdcPnP()\n");
+    DPRINT("FdcPnP()\n");
     if (Common->IsFDO)
     {
         return FdcFdoPnp(DeviceObject,
@@ -143,7 +143,7 @@ NTAPI
 FdcPower(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
-    DPRINT1("FdcPower()\n");
+    DPRINT("FdcPower()\n");
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -153,7 +153,7 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    DPRINT1("FDC: DriverEntry()\n");
+    DPRINT("FDC: DriverEntry()\n");
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = FdcCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = FdcClose;
