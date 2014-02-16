@@ -160,7 +160,7 @@ WSAStartup(IN WORD wVersionRequested,
             break;
     }
 
-    /* Return the Version Requsted, unless error */
+    /* Return the Version Requested, unless error */
     lpWSAData->wVersion = VersionReturned;
 
     /* We support Winsock 2.2 */
