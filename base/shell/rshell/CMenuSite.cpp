@@ -48,11 +48,11 @@ class CMenuSite :
     public IWinEventHandler,
     public IServiceProvider
 {
-    IUnknown *          m_DeskBarSite;
-    IUnknown *          m_BandObject;
-    IDeskBand *         m_DeskBand;
-    IWinEventHandler *  m_WinEventHandler;
-    HWND                m_hWndBand;
+    CComPtr<IUnknown>         m_DeskBarSite;
+    CComPtr<IUnknown>         m_BandObject;
+    CComPtr<IDeskBand>        m_DeskBand;
+    CComPtr<IWinEventHandler> m_WinEventHandler;
+    HWND                      m_hWndBand;
 
 public:
     CMenuSite();
@@ -119,7 +119,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetModeDBC(DWORD dwMode);
 
 private:
-    BOOL CreateSiteWindow(HWND hWndParent);
+    IUnknown * ToIUnknown() { return (IDeskBarClient*)this; }
 };
 
 extern "C"
@@ -201,26 +201,11 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 
     IUnknown_SetSite(m_BandObject, NULL);
 
-    if (m_BandObject)
-    {
-        m_BandObject->Release();
-        m_BandObject = NULL;
-    }
-
-    if (m_DeskBand)
-    {
-        m_DeskBand->Release();
-        m_DeskBand = NULL;
-    }
-
-    if (m_WinEventHandler)
-    {
-        m_WinEventHandler->Release();
-        m_WinEventHandler = NULL;
-    }
-
     BOOL result = m_hWndBand != NULL;
 
+    m_BandObject = NULL;
+    m_DeskBand = NULL;
+    m_WinEventHandler = NULL;
     m_hWndBand = NULL;
 
     if (!punk)
@@ -229,7 +214,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
     DBGASSERT(SUCCEEDED(punk->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand))));
     DBGASSERT(SUCCEEDED(punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler))));
 
-    IUnknown_SetSite(punk, (IDeskBarClient*)this);
+    IUnknown_SetSite(punk, this->ToIUnknown());
     IUnknown_GetWindow(punk, &m_hWndBand);
 
     m_BandObject = punk;
@@ -363,81 +348,51 @@ HRESULT STDMETHODCALLTYPE CMenuSite::QueryStatus(const GUID * pguidCmdGroup, ULO
 
 HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
 {
-    HWND hWndSite;
+    HRESULT hr;
 
-    ((IDeskBarClient*)this)->AddRef();
+    CComPtr<IUnknown> protectThis(this->ToIUnknown());
 
     if (punkSite)
     {
-        if (m_DeskBarSite)
-        {
-            m_DeskBarSite->Release();
-            m_DeskBarSite = NULL;
-        }
-
-        IUnknown_GetWindow(punkSite, &hWndSite);
-
-        if (hWndSite)
-        {
-            CreateSiteWindow(hWndSite);
-
-            m_DeskBarSite = punkSite;
-
-            punkSite->AddRef();
-        }
-    }
-    else
-    {
-        if (m_DeskBand)
-        {
-            m_DeskBand->CloseDW(0);
-        }
-
-        IUnknown_SetSite(m_BandObject, NULL);
-
-        if (m_BandObject)
-        {
-            m_BandObject->Release();
-            m_BandObject = NULL;
-        }
-
-        if (m_DeskBand)
-        {
-            m_DeskBand->Release();
-            m_DeskBand = NULL;
-        }
-
-        if (m_WinEventHandler)
-        {
-            m_WinEventHandler->Release();
-            m_WinEventHandler = NULL;
-        }
-
-        m_hWndBand = NULL;
-
-        if (m_hWnd)
-        {
-            DestroyWindow();
-            m_hWnd = NULL;
-        }
-
-        if (m_DeskBarSite)
-            m_DeskBarSite->Release();
+        HWND hWndSite;
 
         m_DeskBarSite = NULL;
+
+        hr = IUnknown_GetWindow(punkSite, &hWndSite);
+
+        if (FAILED(hr) || !hWndSite)
+            return E_FAIL;
+
+        if (!m_hWnd)
+        {
+            Create(hWndSite, NULL, L"MenuSite");
+        }
+
+        m_DeskBarSite = punkSite;
+
+        return S_OK;
     }
 
-    ((IDeskBarClient*)this)->Release();
+    if (m_DeskBand)
+    {
+        m_DeskBand->CloseDW(0);
+    }
 
-    if (!m_hWnd)
-        return E_FAIL;
+    IUnknown_SetSite(m_BandObject, NULL);
+
+    m_BandObject = NULL;
+    m_DeskBand = NULL;
+    m_WinEventHandler = NULL;
+    m_hWndBand = NULL;
+    m_hWnd = NULL;
+    m_DeskBarSite = NULL;
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuSite::UIActivateDBC(DWORD dwState)
 {
-    if (!DBGASSERT(m_DeskBand))
+    if (!m_DeskBand)
         return S_OK;
 
     return m_DeskBand->ShowDW(dwState != 0);
@@ -445,71 +400,49 @@ HRESULT STDMETHODCALLTYPE CMenuSite::UIActivateDBC(DWORD dwState)
 
 HRESULT STDMETHODCALLTYPE CMenuSite::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    if (lpMsg && DBGASSERT(IsBadWritePtr(lpMsg, sizeof(*lpMsg))))
+    if (lpMsg)
         return E_FAIL;
 
     return IUnknown_UIActivateIO(m_BandObject, fActivate, lpMsg);
 }
 
-BOOL CMenuSite::CreateSiteWindow(HWND hWndParent)
-{
-    if (m_hWnd)
-    {
-        return DBGASSERT(IsWindow());
-    }
-
-    Create(hWndParent, NULL, L"MenuSite");
-
-    return m_hWnd != NULL;
-}
-
 BOOL CMenuSite::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD mapId)
 {
-    HWND hWndToCall;
-    IMenuPopup * pMenuPopup;
-
-    ((IDeskBarClient*)this)->AddRef();
+    HWND hWndTarget = NULL;
+    CComPtr<IUnknown> protectThis(this->ToIUnknown());
 
     switch (uMsg)
     {
     case WM_SIZE:
         if (m_BandObject)
         {
+            CComPtr<IMenuPopup> pMenuPopup;
             if (SUCCEEDED(m_BandObject->QueryInterface(IID_PPV_ARG(IMenuPopup, &pMenuPopup))))
             {
                 RECT Rect = { 0 };
                 GetClientRect(&Rect);
                 pMenuPopup->OnPosRectChangeDB(&Rect);
-                pMenuPopup->Release();
             }
         }
-        hWndToCall = hWnd;
+        hWndTarget = hWnd;
         lResult = 1;
         break;
     case WM_NOTIFY:
-        hWndToCall = *(HWND *) lParam;
+        hWndTarget = ((NMHDR *)lParam)->hwndFrom;
         break;
     case WM_COMMAND:
-        hWndToCall = (HWND) lParam;
+        hWndTarget = (HWND) lParam;
         break;
     default:
-        ((IDeskBarClient*)this)->Release();
         return FALSE;
     }
 
-    if (hWndToCall)
+    if (hWndTarget && m_WinEventHandler &&
+        m_WinEventHandler->IsWindowOwner(hWndTarget) == S_OK)
     {
-        if (m_WinEventHandler)
-        {
-            if (m_WinEventHandler->IsWindowOwner(hWndToCall) == S_OK)
-            {
-                HRESULT hr = m_WinEventHandler->OnWinEvent(hWndToCall, uMsg, wParam, lParam, &lResult);
-                ((IDeskBarClient*)this)->Release();
-                return hr == S_OK;
-            }
-        }
+        if (SUCCEEDED(m_WinEventHandler->OnWinEvent(hWndTarget, uMsg, wParam, lParam, &lResult)))
+            return TRUE;
     }
 
-    ((IDeskBarClient*)this)->Release();
     return FALSE;
 }
