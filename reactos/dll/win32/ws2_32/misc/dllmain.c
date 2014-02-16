@@ -103,12 +103,23 @@ WSAStartup(IN  WORD wVersionRequested,
 
     lpWSAData->wVersion     = wVersionRequested;
     lpWSAData->wHighVersion = MAKEWORD(2,2);
-    lstrcpyA(lpWSAData->szDescription, "WinSock 2.2");
+    lstrcpyA(lpWSAData->szDescription, "WinSock 2.0");
     lstrcpyA(lpWSAData->szSystemStatus, "Running");
     lpWSAData->iMaxSockets  = 0;
     lpWSAData->iMaxUdpDg    = 0;
     lpWSAData->lpVendorInfo = NULL;
 
+    if (LOBYTE(wVersionRequested) == 1)
+    {
+        lpWSAData->iMaxSockets = 32767;
+        lpWSAData->iMaxUdpDg = 65467;
+    } 
+    else
+    {
+        lpWSAData->iMaxSockets = 0;
+        lpWSAData->iMaxUdpDg = 0;
+    }
+    
     /*FIXME: increment internal counter */
 
     WSASETINITIALIZED;
