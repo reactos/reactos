@@ -823,9 +823,9 @@ HRESULT CMenuToolbarBase::Close()
 HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 {
     LONG tbStyles = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_CUSTOMERASE |
+        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
         CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
-    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER;
+    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_DRAWDDARROWS;
 
     if (dwFlags & SMINIT_VERTICAL)
     {
@@ -949,7 +949,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
         MENUITEMINFOW info;
         TBBUTTON tbb = { 0 };
         tbb.fsState = TBSTATE_ENABLED;
-        tbb.fsStyle = BTNS_AUTOSIZE;
+        tbb.fsStyle = 0;
 
         info.cbSize = sizeof(info);
         info.fMask = MIIM_FTYPE | MIIM_ID;
@@ -1002,7 +1002,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
     PWSTR MenuString;
 
     tbb.fsState = TBSTATE_ENABLED;
-    tbb.fsStyle = BTNS_DROPDOWN | BTNS_AUTOSIZE;
+    tbb.fsStyle = 0;
 
     IEnumIDList * eidl;
     m_shellFolder->EnumObjects(m_hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &eidl);
@@ -1283,18 +1283,28 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 
     int sy = max(prc->bottom - prc->top, sizeStaticY.cy + sizeShlFldY.cy);
 
-    if (hwndShlFld) SetWindowPos(hwndShlFld, NULL,
-        prc->left,
-        prc->top,
-        prc->right - prc->left,
-        sizeShlFldY.cy,
-        0);
-    if (hwndStatic) SetWindowPos(hwndStatic, hwndShlFld,
-        prc->left,
-        prc->top + sizeShlFldY.cy,
-        prc->right - prc->left,
-        sy - sizeShlFldY.cy,
-        0);
+    if (hwndShlFld)
+    {
+        SetWindowPos(hwndShlFld, NULL,
+            prc->left,
+            prc->top,
+            prc->right - prc->left,
+            sizeShlFldY.cy,
+            0);
+        DWORD btnSize = SendMessage(hwndShlFld, TB_GETBUTTONSIZE, 0, 0);
+        SendMessage(hwndShlFld, TB_SETBUTTONSIZE, 0, MAKELPARAM(prc->right - prc->left, HIWORD(btnSize)));
+    }
+    if (hwndStatic)
+    {
+        SetWindowPos(hwndStatic, hwndShlFld,
+            prc->left,
+            prc->top + sizeShlFldY.cy,
+            prc->right - prc->left,
+            sy - sizeShlFldY.cy,
+            0);
+        DWORD btnSize = SendMessage(hwndStatic, TB_GETBUTTONSIZE, 0, 0);
+        SendMessage(hwndStatic, TB_SETBUTTONSIZE, 0, MAKELPARAM(prc->right - prc->left, HIWORD(btnSize)));
+    }
 
     return S_OK;
 }
@@ -1604,14 +1614,81 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlag
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    *theResult = 0;
+    if (uMsg == WM_NOTIFY)
+    {
+        NMHDR * hdr = (LPNMHDR) lParam;
+        NMTBCUSTOMDRAW * cdraw;
+        switch (hdr->code)
+        {
+        case NM_CUSTOMDRAW:
+            cdraw = (LPNMTBCUSTOMDRAW) hdr;
+            switch (cdraw->nmcd.dwDrawStage)
+            {
+            case CDDS_PREPAINT:
+                *theResult = CDRF_NOTIFYITEMDRAW;
+                return S_OK;
+
+            case CDDS_ITEMPREPAINT:
+
+                cdraw->clrBtnFace = GetSysColor(COLOR_MENU);
+                cdraw->clrBtnHighlight = GetSysColor(COLOR_MENUHILIGHT);
+
+                cdraw->clrText = GetSysColor(COLOR_MENUTEXT);
+                cdraw->clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
+                cdraw->clrHighlightHotTrack = GetSysColor(COLOR_HIGHLIGHTTEXT);
+
+                RECT rc = cdraw->nmcd.rc;
+                HDC hdc = cdraw->nmcd.hdc;
+
+                HBRUSH bgBrush = GetSysColorBrush(COLOR_MENU);
+                HBRUSH hotBrush = GetSysColorBrush(COLOR_MENUHILIGHT);
+
+                switch (cdraw->nmcd.uItemState)
+                {
+                case CDIS_HOT:
+                case CDIS_FOCUS:
+                    FillRect(hdc, &rc, hotBrush);
+                    break;
+                default:
+                    FillRect(hdc, &rc, bgBrush);
+                    break;
+                }
+
+                *theResult = TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOETCHEDEFFECT | TBCDRF_HILITEHOTTRACK;
+                return S_OK;
+            }
+            return S_OK;
+        }
+        return S_OK;
+       
+    }
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::IsWindowOwner(HWND hWnd)
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    HWND hwndStatic = NULL;
+    HWND hwndShlFld = NULL;
+    HRESULT hr;
+
+    if (m_staticToolbar != NULL)
+        hr = m_staticToolbar->GetWindow(&hwndStatic);
+    if (FAILED(hr))
+        return hr;
+
+    if (hWnd == hwndStatic)
+        return S_OK;
+
+    if (m_SFToolbar != NULL)
+        hr = m_SFToolbar->GetWindow(&hwndShlFld);
+    if (FAILED(hr))
+        return hr;
+
+    if (hWnd == hwndShlFld)
+        return S_OK;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetSubMenu(THIS)
