@@ -391,21 +391,6 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     return TRUE;
 }
 
-
-LONG
-CALLBACK
-NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
-{
-    WCHAR szFile[MAX_PATH];
-
-    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR) lParam1, -1, szFile, MAX_PATH))
-    {
-        return ShowCreateShortcutWizard(hwndCPl, szFile);
-    }
-    return -1;
-}
-
-
 LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
