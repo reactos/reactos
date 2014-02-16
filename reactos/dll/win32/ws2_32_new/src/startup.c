@@ -165,7 +165,7 @@ WSAStartup(IN WORD wVersionRequested,
 
     /* We support Winsock 2.2 */
     lpWSAData->wHighVersion = MAKEWORD(2,2);
-    lstrcpy(lpWSAData->szDescription, "WinSock 2.2");
+    lstrcpy(lpWSAData->szDescription, "WinSock 2.0");
     lstrcpy(lpWSAData->szSystemStatus, "Running");
 
     /* 
@@ -183,7 +183,7 @@ WSAStartup(IN WORD wVersionRequested,
         lpWSAData->iMaxUdpDg = 0;
     }
 
-    /* Enter the startup syncronization lock */
+    /* Enter the startup synchronization lock */
     WsStartupLock();
 
     /* Now setup all our objects */
