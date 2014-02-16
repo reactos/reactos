@@ -311,4 +311,86 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
+NTSTATUS
+NTAPI
+SeReportSecurityEvent(
+    _In_ ULONG Flags,
+    _In_ PUNICODE_STRING SourceName,
+    _In_opt_ PSID UserSid,
+    _In_ PSE_ADT_PARAMETER_ARRAY AuditParameters)
+{
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    PTOKEN EffectiveToken;
+    PISID Sid;
+    NTSTATUS Status;
+
+    /* Validate parameters */
+    if ((Flags != 0) ||
+        (SourceName == NULL) ||
+        (SourceName->Buffer == NULL) ||
+        (SourceName->Length == 0) ||
+        (AuditParameters == NULL) ||
+        (AuditParameters->ParameterCount > SE_MAX_AUDIT_PARAMETERS - 4))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validate the source name */
+    Status = RtlValidateUnicodeString(0, SourceName);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Check if we have a user SID */
+    if (UserSid != NULL)
+    {
+        /* Validate it */
+        if (!RtlValidSid(UserSid))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Use the user SID */
+        Sid = UserSid;
+    }
+    else
+    {
+        /* No user SID, capture the security subject context */
+        SeCaptureSubjectContext(&SubjectContext);
+
+        /* Extract the effective token */
+        EffectiveToken = SubjectContext.ClientToken ?
+            SubjectContext.ClientToken : SubjectContext.PrimaryToken;
+
+        /* Use the user-and-groups SID */
+        Sid = EffectiveToken->UserAndGroups->Sid;
+    }
+
+    UNIMPLEMENTED;
+
+    /* Check if we captured the subject context */
+    if (Sid != UserSid)
+    {
+        /* Release it */
+        SeReleaseSubjectContext(&SubjectContext);
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
+_Const_
+NTSTATUS
+NTAPI
+SeSetAuditParameter(
+    _Inout_ PSE_ADT_PARAMETER_ARRAY AuditParameters,
+    _In_ SE_ADT_PARAMETER_TYPE Type,
+    _In_range_(<, SE_MAX_AUDIT_PARAMETERS) ULONG Index,
+    _In_reads_(_Inexpressible_("depends on SE_ADT_PARAMETER_TYPE")) PVOID Data)
+{
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
