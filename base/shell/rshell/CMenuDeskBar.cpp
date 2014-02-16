@@ -160,8 +160,6 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IBanneredBar, IBanneredBar)
         COM_INTERFACE_ENTRY_IID(IID_IInitializeObject, IInitializeObject)
     END_COM_MAP()
-
-    HRESULT _CreateDeskBarWindow();
 };
 
 extern "C"
@@ -456,40 +454,6 @@ CMenuDeskBar::~CMenuDeskBar()
 {
 }
 
-HRESULT CMenuDeskBar::_CreateDeskBarWindow()
-{
-    HRESULT hr;
-    HWND ownerWindow = NULL;
-
-    if (m_Site)
-    {
-        CComPtr<IOleWindow> oleWindow;
-
-        hr = m_Site->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-        if (FAILED(hr))
-            return hr;
-        
-        hr = oleWindow->GetWindow(&ownerWindow);
-        if (FAILED(hr))
-            return hr;
-
-        if (!::IsWindow(ownerWindow))
-            return E_FAIL;
-    }
-
-    // FIXME
-    if (m_hWnd)
-    {
-        SetWindowLongPtr(m_hWnd, GWLP_HWNDPARENT, (LONG_PTR)ownerWindow);
-    }
-    else
-    {
-        Create(ownerWindow);
-    }
-
-    return S_OK;
-}
-
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetWindow(HWND *lphwnd)
 {
     if (lphwnd == NULL)
@@ -547,6 +511,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
     if (m_Site == NULL)
         return E_FAIL;
 
+    if (IsEqualGUID(guidService,SID_SMenuPopup))
+    {
+        return this->QueryInterface(riid, ppvObject);
+    }
+
     return IUnknown_QueryService(m_Site, guidService, riid, ppvObject);
 }
 
@@ -589,7 +558,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
 
     if (m_hWnd == NULL)
     {
-        _CreateDeskBarWindow();
+        Create(NULL);
     }
 
     hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&m_Client));
@@ -623,30 +592,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
 {
-    HRESULT hr;
-    CComPtr<IOleWindow> oleWindow;
-    HWND ownerWindow = NULL;
+    m_Site = pUnkSite;
 
-    if (m_Site)
-    {
-        if (m_hWnd != NULL)
-        {
-            DestroyWindow();
-        }
-        m_Site.Release();
-    }
-
-    if (pUnkSite == NULL)
-    {
-        return S_OK;
-    }
-
-    // get window handle of parent
-    hr = pUnkSite->QueryInterface(IID_PPV_ARG(IUnknown, &m_Site));
-    if (FAILED(hr))
-        return hr;
-
-    return _CreateDeskBarWindow();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
@@ -822,7 +770,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     int cx = rc.right;
     int cy = rc.bottom;
 
-    this->SetWindowPos(NULL, x, y, cx, cy, SWP_SHOWWINDOW);
+    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 
     // HACK: The bar needs to be notified of the size AFTER it is shown.
     // Quick & dirty way of getting it done.

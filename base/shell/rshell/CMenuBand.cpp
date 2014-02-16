@@ -940,14 +940,14 @@ HRESULT  CMenuStaticToolbar::SetMenu(
 HRESULT CMenuStaticToolbar::FillToolbar()
 {
     int i;
-    PWSTR MenuString;
-
     int ic = GetMenuItemCount(m_hmenu);
 
     for (i = 0; i < ic; i++)
     {
         MENUITEMINFOW info;
         TBBUTTON tbb = { 0 };
+        PWSTR MenuString = NULL;
+
         tbb.fsState = TBSTATE_ENABLED;
         tbb.fsStyle = 0;
 
@@ -961,24 +961,24 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             if (!AllocAndGetMenuString(m_hmenu, i, &MenuString))
                 return E_OUTOFMEMORY;
             tbb.fsStyle |= BTNS_DROPDOWN;
+            tbb.iString = (INT_PTR) MenuString;        
+            tbb.idCommand = info.wID;
+        
+            SMINFO sminfo;
+            if (info.wID >= 0 && SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, (LPARAM) &sminfo)))
+            {
+                tbb.iBitmap = sminfo.iIcon;
+            }
         }
         else
         {
-            MenuString = L"";
             tbb.fsStyle |= BTNS_SEP;
         }
 
-        tbb.idCommand = info.wID;
-        tbb.iString = (INT_PTR) MenuString;
-
-        SMINFO sminfo;
-        if (info.wID >= 0 && SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, (LPARAM) &sminfo)))
-        {
-            tbb.iBitmap = sminfo.iIcon;
-        }
-
         SendMessageW(m_hwnd, TB_ADDBUTTONS, 1, (LPARAM) (LPTBBUTTON) &tbb);
-        HeapFree(GetProcessHeap(), 0, MenuString);
+
+        if (MenuString)
+            HeapFree(GetProcessHeap(), 0, MenuString);
     }
 
     return S_OK;
