@@ -90,6 +90,49 @@ LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
     if (!LockHeld) KeReleaseGuardedMutex(&LpcpLock);
 }
 
+PLPCP_MESSAGE
+NTAPI
+LpcpFindDataInfoMessage(
+    IN PLPCP_PORT_OBJECT Port,
+    IN ULONG MessageId,
+    IN LPC_CLIENT_ID ClientId)
+{
+    PLPCP_MESSAGE Message;
+    PLIST_ENTRY ListEntry;
+    PAGED_CODE();
+
+    /* Check if the port we want is the connection port */
+    if ((Port->Flags & LPCP_PORT_TYPE_MASK) > LPCP_UNCONNECTED_PORT)
+    {
+        /* Use it */
+        Port = Port->ConnectionPort;
+        if (!Port)
+        {
+            /* Return NULL */
+            return NULL;
+        }
+    }
+
+    /* Loop all entries in the list */
+    for (ListEntry = Port->LpcDataInfoChainHead.Flink;
+         ListEntry != &Port->LpcDataInfoChainHead;
+         ListEntry = ListEntry->Flink)
+    {
+        Message = CONTAINING_RECORD(ListEntry, LPCP_MESSAGE, Entry);
+
+        /* Check if this is the desired message */
+        if ((Message->Request.MessageId == MessageId) &&
+            (Message->Request.ClientId.UniqueProcess == ClientId.UniqueProcess) &&
+            (Message->Request.ClientId.UniqueThread == ClientId.UniqueThread))
+        {
+            /* It is, return it */
+            return Message;
+        }
+    }
+
+    return NULL;
+}
+
 VOID
 NTAPI
 LpcpMoveMessage(IN PPORT_MESSAGE Destination,
@@ -132,7 +175,7 @@ LpcpMoveMessage(IN PPORT_MESSAGE Destination,
     /* Copy the Message Data */
     RtlCopyMemory(Destination + 1,
                   Data,
-                  ((Destination->u1.Length & 0xFFFF) + 3) &~3);
+                  ALIGN_UP_BY(Destination->u1.s1.DataLength, sizeof(ULONG)));
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -710,6 +753,199 @@ NtReplyWaitReplyPort(IN HANDLE PortHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+LpcpCopyRequestData(
+    IN BOOLEAN Write,
+    IN HANDLE PortHandle,
+    IN PPORT_MESSAGE Message,
+    IN ULONG Index,
+    IN PVOID Buffer,
+    IN ULONG BufferLength,
+    OUT PULONG Returnlength)
+{
+    KPROCESSOR_MODE PreviousMode;
+    PORT_MESSAGE CapturedMessage;
+    PLPCP_PORT_OBJECT Port = NULL;
+    PETHREAD ClientThread = NULL;
+    ULONG LocalReturnlength;
+    PLPCP_MESSAGE InfoMessage;
+    PLPCP_DATA_INFO DataInfo;
+    PVOID DataInfoBaseAddress;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Check the previous mode */
+    PreviousMode = ExGetPreviousMode();
+    if (PreviousMode == KernelMode)
+    {
+        CapturedMessage = *Message;
+    }
+    else
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Message, sizeof(*Message), sizeof(PVOID));
+            CapturedMessage = *Message;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DPRINT1("Got exception!\n");
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    /* Make sure there is any data to copy */
+    if (CapturedMessage.u2.s2.DataInfoOffset == 0)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Reference the port handle */
+    Status = ObReferenceObjectByHandle(PortHandle,
+                                       PORT_ALL_ACCESS,
+                                       LpcPortObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Port,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference port handle: 0x%ls\n", Status);
+        return Status;
+    }
+
+    /* Look up the client thread */
+    Status = PsLookupProcessThreadByCid(&CapturedMessage.ClientId,
+                                        NULL,
+                                        &ClientThread);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to lookup client thread for [0x%lx:0x%lx]: 0x%ls\n",
+                CapturedMessage.ClientId.UniqueProcess,
+                CapturedMessage.ClientId.UniqueThread, Status);
+        goto Cleanup;
+    }
+
+    /* Acquire the global LPC lock */
+    KeAcquireGuardedMutex(&LpcpLock);
+
+    /* Check for message id mismatch */
+    if ((ClientThread->LpcReplyMessageId != CapturedMessage.MessageId) ||
+        (CapturedMessage.MessageId == 0))
+    {
+        DPRINT1("LpcReplyMessageId mismatch: 0x%lx/0x%lx.\n",
+                ClientThread->LpcReplyMessageId, CapturedMessage.MessageId);
+        Status = STATUS_REPLY_MESSAGE_MISMATCH;
+        goto CleanupWithLock;
+    }
+
+    /* Validate the port */
+    if (!LpcpValidateClientPort(ClientThread, Port))
+    {
+        DPRINT1("LpcpValidateClientPort failed\n");
+        Status = STATUS_REPLY_MESSAGE_MISMATCH;
+        goto CleanupWithLock;
+    }
+
+    /* Find the message with the data */
+    InfoMessage = LpcpFindDataInfoMessage(Port,
+                                          CapturedMessage.MessageId,
+                                          CapturedMessage.ClientId);
+    if (InfoMessage == NULL)
+    {
+        DPRINT1("LpcpFindDataInfoMessage failed\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto CleanupWithLock;
+    }
+
+    /* Get the data info */
+    DataInfo = LpcpGetDataInfoFromMessage(&InfoMessage->Request);
+
+    /* Check if the index is within bounds */
+    if (Index >= DataInfo->NumberOfEntries)
+    {
+        DPRINT1("Message data index %lu out of bounds (%lu in msg)\n",
+                Index, DataInfo->NumberOfEntries);
+        Status = STATUS_INVALID_PARAMETER;
+        goto CleanupWithLock;
+    }
+
+    /* Check if the caller wants to read/write more data than expected */
+    if (BufferLength > DataInfo->Entries[Index].DataLength)
+    {
+        DPRINT1("Trying to read more data (%lu) than available (%lu)\n",
+                BufferLength, DataInfo->Entries[Index].DataLength);
+        Status = STATUS_INVALID_PARAMETER;
+        goto CleanupWithLock;
+    }
+
+    /* Get the data pointer */
+    DataInfoBaseAddress = DataInfo->Entries[Index].BaseAddress;
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&LpcpLock);
+
+    if (Write)
+    {
+        /* Copy data from the caller to the message sender */
+        Status = MmCopyVirtualMemory(PsGetCurrentProcess(),
+                                     Buffer,
+                                     ClientThread->ThreadsProcess,
+                                     DataInfoBaseAddress,
+                                     BufferLength,
+                                     PreviousMode,
+                                     &LocalReturnlength);
+    }
+    else
+    {
+        /* Copy data from the message sender to the caller */
+        Status = MmCopyVirtualMemory(ClientThread->ThreadsProcess,
+                                     DataInfoBaseAddress,
+                                     PsGetCurrentProcess(),
+                                     Buffer,
+                                     BufferLength,
+                                     PreviousMode,
+                                     &LocalReturnlength);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmCopyVirtualMemory failed: 0x%ls\n", Status);
+        goto Cleanup;
+    }
+
+    /* Check if the caller asked to return the copied length */
+    if (Returnlength != NULL)
+    {
+        _SEH2_TRY
+        {
+            *Returnlength = LocalReturnlength;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignore */
+            DPRINT1("Exception writing Returnlength, ignoring\n");
+        }
+        _SEH2_END;
+    }
+
+Cleanup:
+
+    if (ClientThread != NULL)
+        ObDereferenceObject(ClientThread);
+
+    ObDereferenceObject(Port);
+
+    return Status;
+
+CleanupWithLock:
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&LpcpLock);
+    goto Cleanup;
+}
+
 /*
  * @unimplemented
  */
@@ -720,10 +956,16 @@ NtReadRequestData(IN HANDLE PortHandle,
                   IN ULONG Index,
                   IN PVOID Buffer,
                   IN ULONG BufferLength,
-                  OUT PULONG Returnlength)
+                  OUT PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Call the internal function */
+    return LpcpCopyRequestData(FALSE,
+                               PortHandle,
+                               Message,
+                               Index,
+                               Buffer,
+                               BufferLength,
+                               ReturnLength);
 }
 
 /*
@@ -738,8 +980,14 @@ NtWriteRequestData(IN HANDLE PortHandle,
                    IN ULONG BufferLength,
                    OUT PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Call the internal function */
+    return LpcpCopyRequestData(TRUE,
+                               PortHandle,
+                               Message,
+                               Index,
+                               Buffer,
+                               BufferLength,
+                               ReturnLength);
 }
 
 /* EOF */
