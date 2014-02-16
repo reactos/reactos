@@ -698,25 +698,7 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
 
     /* Check if we don't have impersonation info */
     Process = Thread->ThreadsProcess;
-    if (!Thread->ActiveImpersonationInfo)
-    {
-        /* Fast Reference the Token */
-        Token = ObFastReferenceObject(&Process->Token);
-
-        /* Check if we got the Token or if we got locked */
-        if (!Token)
-        {
-            /* Lock the Process */
-            PspLockProcessSecurityShared(Process);
-
-            /* Do a Locked Fast Reference */
-            Token = ObFastReferenceObjectLocked(&Process->Token);
-
-            /* Unlock the Process */
-            PspUnlockProcessSecurityShared(Process);
-        }
-    }
-    else
+    if (Thread->ActiveImpersonationInfo)
     {
         /* Lock the Process */
         PspLockProcessSecurityShared(Process);
@@ -737,6 +719,22 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
             PspUnlockProcessSecurityShared(Process);
             return Token;
         }
+
+        /* Unlock the Process */
+        PspUnlockProcessSecurityShared(Process);
+    }
+
+    /* Fast Reference the Token */
+    Token = ObFastReferenceObject(&Process->Token);
+
+    /* Check if we got the Token or if we got locked */
+    if (!Token)
+    {
+        /* Lock the Process */
+        PspLockProcessSecurityShared(Process);
+
+        /* Do a Locked Fast Reference */
+        Token = ObFastReferenceObjectLocked(&Process->Token);
 
         /* Unlock the Process */
         PspUnlockProcessSecurityShared(Process);
