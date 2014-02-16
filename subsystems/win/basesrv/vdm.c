@@ -20,6 +20,7 @@
 BOOLEAN FirstVDM = TRUE;
 LIST_ENTRY VDMConsoleListHead;
 RTL_CRITICAL_SECTION DosCriticalSection;
+RTL_CRITICAL_SECTION WowCriticalSection;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -39,6 +40,35 @@ NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
+ULONG NTAPI GetNextDosSesId(VOID)
+{
+    ULONG SessionId;
+    PLIST_ENTRY i;
+    PVDM_CONSOLE_RECORD CurrentRecord = NULL;
+    BOOLEAN Found;
+
+    /* Search for an available session ID */
+    for (SessionId = 1; SessionId != 0; SessionId++)
+    {
+        Found = FALSE;
+
+        /* Check if the ID is already in use */
+        for (i = VDMConsoleListHead.Flink; i != &VDMConsoleListHead; i = i->Flink)
+        {
+            CurrentRecord = CONTAINING_RECORD(i, VDM_CONSOLE_RECORD, Entry);
+            if (CurrentRecord->SessionId == SessionId) Found = TRUE;
+        }
+
+        /* If not, we found one */
+        if (!Found) break;
+    }
+
+    ASSERT(SessionId != 0);
+
+    /* Return the session ID */
+    return SessionId;
+}
+
 VOID NTAPI BaseInitializeVDM(VOID)
 {
     /* Initialize the list head */
@@ -46,13 +76,17 @@ VOID NTAPI BaseInitializeVDM(VOID)
 
     /* Initialize the critical section */
     RtlInitializeCriticalSection(&DosCriticalSection);
+    RtlInitializeCriticalSection(&WowCriticalSection);
 }
 
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(BaseSrvCheckVDM)
 {
+    NTSTATUS Status;
     PBASE_CHECK_VDM CheckVdmRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CheckVDMRequest;
+    PRTL_CRITICAL_SECTION CriticalSection = NULL;
+    PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
 
     /* Validate the message buffers */
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -87,8 +121,59 @@ CSR_API(BaseSrvCheckVDM)
         return STATUS_INVALID_PARAMETER;
     }
 
-    // TODO: NOT IMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    CriticalSection = (CheckVdmRequest->BinaryType != BINARY_TYPE_SEPARATE_WOW)
+                      ? &DosCriticalSection
+                      : &WowCriticalSection;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(CriticalSection);
+
+    /* Check if this is a DOS or WOW VDM */
+    if (CheckVdmRequest->BinaryType != BINARY_TYPE_SEPARATE_WOW)
+    {
+        /* Get the console record */
+        Status = BaseSrvGetConsoleRecord(CheckVdmRequest->ConsoleHandle,
+                                         &ConsoleRecord);
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Allocate a new console record */
+            ConsoleRecord = (PVDM_CONSOLE_RECORD)RtlAllocateHeap(BaseSrvHeap,
+                                                                 HEAP_ZERO_MEMORY,
+                                                                 sizeof(VDM_CONSOLE_RECORD));
+            if (ConsoleRecord == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto Cleanup;
+            }
+
+            /* Initialize the console record */
+            ConsoleRecord->ConsoleHandle = CheckVdmRequest->ConsoleHandle;
+            ConsoleRecord->CurrentDirs = NULL;
+            ConsoleRecord->CurDirsLength = 0;
+            ConsoleRecord->SessionId = GetNextDosSesId();
+            InitializeListHead(&ConsoleRecord->DosListHead);
+
+            /* Add the console record */
+            InsertTailList(&VDMConsoleListHead, &ConsoleRecord->Entry);
+        }
+
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(CriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvUpdateVDMEntry)

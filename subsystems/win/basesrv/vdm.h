@@ -9,6 +9,8 @@
 #ifndef __VDM_H__
 #define __VDM_H__
 
+#include <win/vdm.h>
+
 /* DEFINITIONS ****************************************************************/
 
 typedef struct _VDM_CONSOLE_RECORD
@@ -17,6 +19,7 @@ typedef struct _VDM_CONSOLE_RECORD
     HANDLE ConsoleHandle;
     PCHAR CurrentDirs;
     ULONG CurDirsLength;
+    ULONG SessionId;
     LIST_ENTRY DosListHead;
     // TODO: Structure incomplete!!!
 } VDM_CONSOLE_RECORD, *PVDM_CONSOLE_RECORD;
