@@ -123,37 +123,30 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown **ppunkClient);
     virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(LPRECT prc);
 
-    // message handlers
-    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-
     DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 #if !WRAP_LOG
     DECLARE_WND_CLASS_EX(_T("BaseBar"), 0, COLOR_3DFACE)
-#endif
 
     BEGIN_MSG_MAP(CMenuDeskBar)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        /*MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
-        MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
-        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged) */
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
+
+    // message handlers
+    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+#endif
 
     BEGIN_COM_MAP(CMenuDeskBar)
         COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
@@ -512,8 +505,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
 {
-    // forward to owner
-    return E_NOTIMPL;
+    CComPtr<IInputObjectSite> ios;
+
+    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObjectSite, &ios));
+    if (FAILED(hr))
+        return hr;
+
+    return ios->OnFocusChangeIS(punkObj, fSetFocus);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
@@ -546,42 +544,43 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
-    HRESULT                                 hResult;
-
     if (m_Site == NULL)
         return E_FAIL;
-    hResult = m_Site->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
-    // called for SID_IWebBrowserApp, IID_IConnectionPointContainer
-    // connection point called for DIID_DWebBrowserEvents2 to establish connection
-    return serviceProvider->QueryService(guidService, riid, ppvObject);
+
+    return IUnknown_QueryService(m_Site, guidService, riid, ppvObject);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    // forward to contained bar
-    return S_OK;
+    return IUnknown_UIActivateIO(m_Client, fActivate, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::HasFocusIO()
 {
-    // forward to contained bar
-    return S_OK;
+    CComPtr<IInputObject> io;
+
+    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
+    if (FAILED(hr))
+        return hr;
+
+    return io->HasFocusIO();
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    // forward to contained bar
-    return S_OK;
+    CComPtr<IInputObject> io;
+
+    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
+    if (FAILED(hr))
+        return hr;
+
+    return io->TranslateAcceleratorIO(lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
 {
-    CComPtr<IDeskBarClient>                 pDeskBandClient;
-    HRESULT                                 hResult;
+    CComPtr<IDeskBarClient> pDeskBandClient;
+    HRESULT hResult;
 
     m_Client.Release();
 
@@ -708,43 +707,7 @@ LRESULT CMenuDeskBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return result;
 }
 
-LRESULT CMenuDeskBar::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    SetCapture();
-    m_Tracking = true;
-    m_LastLocation.x = LOWORD(lParam);
-    m_LastLocation.y = HIWORD(lParam);
-    return 0;
-}
-
-LRESULT CMenuDeskBar::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    ReleaseCapture();
-    m_Tracking = false;
-    return 0;
-}
-
-LRESULT CMenuDeskBar::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    POINT                                   newLocation;
-    //int                                     delta;
-
-    if (m_Tracking)
-    {
-        newLocation.x = (short) LOWORD(lParam);
-        newLocation.y = (short) HIWORD(lParam);
-        m_LastLocation = newLocation;
-    }
-    return 0;
-}
-
 LRESULT CMenuDeskBar::OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    m_Tracking = false;
-    return 0;
-}
-
-LRESULT CMenuDeskBar::OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     m_Tracking = false;
     return 0;
