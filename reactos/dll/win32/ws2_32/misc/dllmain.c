@@ -116,7 +116,6 @@ WSAStartup(IN  WORD wVersionRequested,
     lpWSAData->wHighVersion = MAKEWORD(2,2);
     lstrcpyA(lpWSAData->szDescription, "WinSock 2.0");
     lstrcpyA(lpWSAData->szSystemStatus, "Running");
-    lpWSAData->lpVendorInfo = NULL;
 
     if (LOBYTE(wVersionRequested) == 1)
     {
@@ -131,7 +130,8 @@ WSAStartup(IN  WORD wVersionRequested,
     
     /*FIXME: increment internal counter */
 
-    WSASETINITIALIZED;
+    if (ErrorCode == ERROR_SUCCESS)
+        WSASETINITIALIZED;
 
     return ErrorCode;
 }
