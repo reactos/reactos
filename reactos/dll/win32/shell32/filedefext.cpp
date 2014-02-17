@@ -95,7 +95,7 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
 
     return pwszResult;
 }
-        
+
 VS_FIXEDFILEINFO *CFileVersionInfo::GetFixedInfo()
 {
     if (!m_pInfo)
@@ -532,15 +532,15 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
     {
         /* For directories files have to be counted */
 
-        _CountFolderAndFilesData *data = reinterpret_cast<_CountFolderAndFilesData*> (HeapAlloc(GetProcessHeap(), 0, sizeof(_CountFolderAndFilesData)));
+        _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_CountFolderAndFilesData)));
         data->This = this;
-        data->pwszBuf = reinterpret_cast<LPWSTR> (HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * MAX_PATH));
+        data->pwszBuf = static_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * MAX_PATH));
         data->cchBufMax = MAX_PATH;
         data->hwndDlg = hwndDlg;
         this->AddRef();
         StringCchCopyW(data->pwszBuf, MAX_PATH, m_wszPath);
-        
-        SHCreateThread(reinterpret_cast<LPTHREAD_START_ROUTINE> (CFileDefExt::_CountFolderAndFilesThreadProc), reinterpret_cast<LPVOID> (data), NULL, NULL); 
+
+        SHCreateThread(CFileDefExt::_CountFolderAndFilesThreadProc, data, NULL, NULL);
 
         /* Update size field */
         if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
@@ -683,7 +683,7 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (!MoveFileW(pFileDefExt->m_wszPath, wszBuf))
                         ERR("MoveFileW failed\n");
                 }
-                    
+
                 SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
@@ -866,7 +866,7 @@ CFileDefExt::CFileDefExt():
 
 CFileDefExt::~CFileDefExt()
 {
-    
+
 }
 
 HRESULT WINAPI
@@ -976,7 +976,7 @@ CFileDefExt::GetSite(REFIID iid, void **ppvSite)
     return E_NOTIMPL;
 }
 
-DWORD 
+DWORD WINAPI
 CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 {
     _CountFolderAndFilesData *data = reinterpret_cast<_CountFolderAndFilesData*>(lpParameter);

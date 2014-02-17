@@ -83,7 +83,7 @@ private:
     DWORD m_cFolders;
     ULARGE_INTEGER m_DirSize;
 
-    static DWORD _CountFolderAndFilesThreadProc(LPVOID lpParameter);
+    static DWORD WINAPI _CountFolderAndFilesThreadProc(LPVOID lpParameter);
 
 public:
 	CFileDefExt();
