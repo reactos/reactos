@@ -127,7 +127,7 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 #if !WRAP_LOG
-    DECLARE_WND_CLASS_EX(_T("BaseBar"), 0, COLOR_3DFACE)
+    DECLARE_WND_CLASS_EX(_T("BaseBar"), CS_SAVEBITS | CS_DROPSHADOW, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CMenuDeskBar)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -777,11 +777,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     BOOL bHandled;
     OnSize(WM_SIZE, 0, 0, bHandled);
 
-    hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED(hr))
-        return hr;
-
-    io->UIActivateIO(TRUE, NULL);
+    UIActivateIO(TRUE, NULL);
 
     return S_OK;
 }
@@ -832,6 +828,23 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(THIS_ HBITMAP* phBitmap)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     DWORD dwSelectType)
 {
+    if (dwSelectType == MPOS_FULLCANCEL)
+    {
+        CComPtr<IDeskBarClient> dbc;
+
+        HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
+        if (FAILED(hr))
+            return hr;
+
+        hr = dbc->UIActivateDBC(FALSE);
+        if (FAILED(hr))
+            return hr;
+
+        SetWindowPos(m_hWnd, 0,0,0,0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+
+        UIActivateIO(FALSE, NULL);
+    }
+
     return S_OK;
 }
 
