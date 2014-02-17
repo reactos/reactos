@@ -40,6 +40,7 @@ public:
     HRESULT Close();
 
     virtual HRESULT FillToolbar() = 0;
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult) = 0;
 
 protected:
 
@@ -60,7 +61,7 @@ public:
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
     virtual HRESULT FillToolbar();
-
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 private:
     HMENU m_hmenu;
 };
@@ -75,6 +76,8 @@ public:
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
     virtual HRESULT FillToolbar();
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+
 
 private:
 
@@ -825,7 +828,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     LONG tbStyles = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
         TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
         CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
-    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_DRAWDDARROWS;
+    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER;
 
     if (dwFlags & SMINIT_VERTICAL)
     {
@@ -960,7 +963,8 @@ HRESULT CMenuStaticToolbar::FillToolbar()
         {
             if (!AllocAndGetMenuString(m_hmenu, i, &MenuString))
                 return E_OUTOFMEMORY;
-            tbb.fsStyle |= BTNS_DROPDOWN;
+            if (::GetSubMenu(m_hmenu, i) != NULL)
+                tbb.fsStyle |= BTNS_DROPDOWN;
             tbb.iString = (INT_PTR) MenuString;        
             tbb.idCommand = info.wID;
         
@@ -1074,6 +1078,16 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
     }
 
     return hr;
+}
+
+HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    return m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
+}
+HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+//    return m_menuBand->CallCBWithPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
+    return S_OK;
 }
 
 CMenuBand::CMenuBand() :
@@ -1614,9 +1628,37 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlag
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
+    HWND hwndStatic = NULL;
+    HWND hwndShlFld = NULL;
+    HRESULT hr;
+
     *theResult = 0;
-    if (uMsg == WM_NOTIFY)
+    switch (uMsg)
     {
+    case WM_COMMAND:
+
+        if (m_staticToolbar != NULL)
+            hr = m_staticToolbar->GetWindow(&hwndStatic);
+        if (FAILED(hr))
+            return hr;
+
+        if (hWnd == hwndStatic)
+        {
+            return m_staticToolbar->OnCommand(wParam, lParam, theResult);
+        }
+
+        if (m_SFToolbar != NULL)
+            hr = m_SFToolbar->GetWindow(&hwndShlFld);
+        if (FAILED(hr))
+            return hr;
+
+        if (hWnd == hwndShlFld)
+        {
+            return m_SFToolbar->OnCommand(wParam, lParam, theResult);
+        }
+
+        return S_OK;
+    case WM_NOTIFY:
         NMHDR * hdr = (LPNMHDR) lParam;
         NMTBCUSTOMDRAW * cdraw;
         switch (hdr->code)
@@ -1661,8 +1703,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
             return S_OK;
         }
         return S_OK;
-       
     }
+
     return S_FALSE;
 }
 
