@@ -446,7 +446,8 @@ CMenuDeskBar::CMenuDeskBar() :
     m_Vertical(true),
     m_Visible(false),
     m_NeededSize(200),
-    m_Tracking(false)
+    m_Tracking(false),
+    m_Banner(NULL)
 {
 }
 

@@ -125,10 +125,14 @@ private:
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
         }
 
+#if 0
         hr = CoCreateInstance(CLSID_MenuBand,
-                                NULL,
-                                CLSCTX_INPROC_SERVER,
-                                IID_PPV_ARG(IShellMenu,&pShellMenu));
+            NULL,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARG(IShellMenu, &pShellMenu));
+#else
+        hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
+#endif
 
         hr = pShellMenu->Initialize(this, 0, ANCESTORDEFAULT, SMINIT_VERTICAL);
 
@@ -252,7 +256,6 @@ CStartMenu_Constructor(
     IShellMenu* pShellMenu;
     IBandSite* pBandSite;
     IDeskBar* pDeskBar;
-    IShellMenuCallback* callback;
     LPITEMIDLIST pidlStartMenu;
 
     HRESULT hr;
@@ -268,7 +271,7 @@ CStartMenu_Constructor(
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
     if (FAILED(hr))
-        return NULL;
+        return hr;
 
 #if 0
     hr = CoCreateInstance(CLSID_MenuBandSite,
@@ -279,7 +282,7 @@ CStartMenu_Constructor(
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
 #endif
     if (FAILED(hr))
-        return NULL;
+        return hr;
 
 #if 0
     hr = CoCreateInstance(CLSID_MenuDeskBar,
@@ -290,23 +293,18 @@ CStartMenu_Constructor(
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
     if (FAILED(hr))
-        return NULL;
+        return hr;
     
     CComObject<CShellMenuCallback> *pCallback;
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
     if (FAILED(hr))
-        return FALSE;
+        return hr;
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
-    callback = pCallback;
-
-    hr = CShellMenuCallback::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellMenuCallback, &callback)); 
-    if (FAILED(hr))
-        return NULL;
 
     pShellMenu->Initialize(pCallback, -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED(hr))
-        return NULL;
+        return hr;
 
     /* FIXME: Use CLSID_MergedFolder class and IID_IAugmentedShellFolder2 interface here */
     /* CLSID_MergedFolder 26fdc864-be88-46e7-9235-032d8ea5162e */
@@ -319,11 +317,53 @@ CStartMenu_Constructor(
     
     hr =  pDeskBar->SetClient(pBandSite);
     if (FAILED(hr))
-        return NULL;
+        return hr;
 
     hr =  pBandSite->AddBand(pShellMenu);
     if (FAILED(hr))
-        return NULL;
+        return hr;
+
+    return pDeskBar->QueryInterface(riid, ppv);
+}
+
+extern "C"
+HRESULT
+CSubMenu_Constructor(IShellMenu * pShellMenu, REFIID riid, void **ppv)
+{
+    IBandSite* pBandSite;
+    IDeskBar* pDeskBar;
+
+    HRESULT hr;
+
+#if 0
+    hr = CoCreateInstance(CLSID_MenuBandSite,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IBandSite, &pBandSite));
+#else
+    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
+#endif
+    if (FAILED(hr))
+        return hr;
+
+#if 0
+    hr = CoCreateInstance(CLSID_MenuDeskBar,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IDeskBar, &pDeskBar));
+#else
+    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
+#endif
+    if (FAILED(hr))
+        return hr;
+
+    hr = pDeskBar->SetClient(pBandSite);
+    if (FAILED(hr))
+        return hr;
+
+    hr = pBandSite->AddBand(pShellMenu);
+    if (FAILED(hr))
+        return hr;
 
     return pDeskBar->QueryInterface(riid, ppv);
 }

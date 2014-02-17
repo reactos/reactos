@@ -2,11 +2,11 @@
 #include "wraplog.h"
 #include <stdio.h>
 
-static UINT openCount = 0;
-static UINT callLevel;
+static INT openCount = 0;
+static INT callLevel;
 static FILE*log;
 
-static UINT nTemps;
+static INT nTemps;
 static CHAR strTemp[10][256];
 
 void WrapLogOpen()

@@ -44,7 +44,7 @@ public:
     HRESULT GetWindow(HWND *phwnd);
     HRESULT ShowWindow(BOOL fShow);
     HRESULT Close();
-        
+
     BOOL IsWindowOwner(HWND hwnd) { return m_hwnd && m_hwnd == hwnd; }
 
     virtual HRESULT FillToolbar() = 0;
@@ -897,7 +897,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     }
 
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
-    m_SubclassOld = (WNDPROC)SetWindowLongPtr(m_hwnd, GWLP_WNDPROC, (LONG_PTR)CMenuToolbarBase::s_SubclassProc);
+    m_SubclassOld = (WNDPROC) SetWindowLongPtr(m_hwnd, GWLP_WNDPROC, (LONG_PTR) CMenuToolbarBase::s_SubclassProc);
 
     return S_OK;
 }
@@ -1030,7 +1030,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
                 tbb.fsStyle |= BTNS_WHOLEDROPDOWN;
             tbb.iString = (INT_PTR) MenuString;
             tbb.idCommand = info.wID;
-        
+
             SMINFO sminfo;
             if (info.wID >= 0 && SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, (LPARAM) &sminfo)))
             {
@@ -1067,10 +1067,27 @@ HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
         return E_FAIL;
     if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, (LPARAM) &rc))
         return E_FAIL;
-    int px = rc.right;
-    int py = rc.bottom;
 
-    // TODO: Create popup CMenuDeskBar
+    POINT a = { rc.left, rc.top };
+    POINT b = { rc.right, rc.bottom };
+
+    ClientToScreen(m_hwnd, &a);
+    ClientToScreen(m_hwnd, &b);
+
+    POINTL pt = { b.x, b.y };
+    RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
+
+    CComPtr<IShellMenu> shellMenu;
+    HRESULT hr = m_menuBand->CallCBWithId(uItem, SMC_GETOBJECT, (WPARAM) &IID_IShellMenu, (LPARAM) &shellMenu);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IMenuPopup> popup;
+    hr = CSubMenu_Constructor(shellMenu, IID_PPV_ARG(IMenuPopup, &popup));
+    if (FAILED(hr))
+        return hr;
+
+    popup->Popup(&pt, &rcl, MPPF_TOP | MPPF_RIGHT);
 
     return S_OK;
 }
@@ -1179,7 +1196,7 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
 }
 HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-//    return m_menuBand->CallCBWithPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
+    // TODO: return m_menuBand->CallCBWithPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
     return S_OK;
 }
 
@@ -1951,5 +1968,4 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         smData.psf->Release();
     return hr;
 }
-
 #endif
