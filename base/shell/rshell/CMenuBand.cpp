@@ -19,10 +19,16 @@
 */
 #include "precomp.h"
 #include "wraplog.h"
+#include <windowsx.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 #define WRAP_LOG 0
+
+#define TBSTYLE_EX_VERTICAL 4
+
+#define TIMERID_HOTTRACK 1
+#define SUBCLASS_ID_MENUBAND 1
 
 extern "C" BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
@@ -38,17 +44,28 @@ public:
     HRESULT GetWindow(HWND *phwnd);
     HRESULT ShowWindow(BOOL fShow);
     HRESULT Close();
+        
+    BOOL IsWindowOwner(HWND hwnd) { return m_hwnd && m_hwnd == hwnd; }
 
     virtual HRESULT FillToolbar() = 0;
+    virtual HRESULT PopupItem(UINT uItem) = 0;
+    virtual HRESULT HasSubMenu(UINT uItem) = 0;
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult) = 0;
 
+    HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
+
+    static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 protected:
 
     static const UINT WM_USER_SHOWPOPUPMENU = WM_USER + 1;
 
+    LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
     CMenuBand *m_menuBand;
     HWND m_hwnd;
     DWORD m_dwMenuFlags;
+    UINT m_hotItem;
+    WNDPROC m_SubclassOld;
 };
 
 class CMenuStaticToolbar : public CMenuToolbarBase
@@ -61,6 +78,8 @@ public:
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
     virtual HRESULT FillToolbar();
+    virtual HRESULT PopupItem(UINT uItem);
+    virtual HRESULT HasSubMenu(UINT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 private:
     HMENU m_hmenu;
@@ -76,6 +95,8 @@ public:
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
     virtual HRESULT FillToolbar();
+    virtual HRESULT PopupItem(UINT uItem);
+    virtual HRESULT HasSubMenu(UINT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
 
@@ -786,10 +807,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlag
 }
 #else
 
-#include <windowsx.h>
-
-#define TBSTYLE_EX_VERTICAL 4
-
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand) :
     m_menuBand(menuBand),
     m_hwnd(NULL),
@@ -879,6 +896,9 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, (LPARAM) ilSmall);
     }
 
+    SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
+    m_SubclassOld = (WNDPROC)SetWindowLongPtr(m_hwnd, GWLP_WNDPROC, (LONG_PTR)CMenuToolbarBase::s_SubclassProc);
+
     return S_OK;
 }
 
@@ -888,6 +908,49 @@ HRESULT CMenuToolbarBase::GetWindow(HWND *phwnd)
         return E_FAIL;
 
     *phwnd = m_hwnd;
+
+    return S_OK;
+}
+
+LRESULT CALLBACK CMenuToolbarBase::s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CMenuToolbarBase * pthis = (CMenuToolbarBase *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    return pthis->SubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_TIMER:
+        if (wParam == TIMERID_HOTTRACK)
+        {
+            PopupItem(m_hotItem);
+            KillTimer(hWnd, TIMERID_HOTTRACK);
+        }
+    }
+
+    return m_SubclassOld(hWnd, uMsg, wParam, lParam);
+}
+
+HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
+{
+    if (hot->dwFlags & HICF_LEAVING)
+    {
+        KillTimer(m_hwnd, TIMERID_HOTTRACK);
+    }
+    else if (m_hotItem != hot->idNew)
+    {
+        if (HasSubMenu(hot->idNew) == S_OK)
+        {
+            DWORD elapsed;
+            SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
+
+            m_hotItem = hot->idNew;
+
+            SetTimer(m_hwnd, TIMERID_HOTTRACK, elapsed, NULL);
+        }
+    }
 
     return S_OK;
 }
@@ -964,8 +1027,8 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             if (!AllocAndGetMenuString(m_hmenu, i, &MenuString))
                 return E_OUTOFMEMORY;
             if (::GetSubMenu(m_hmenu, i) != NULL)
-                tbb.fsStyle |= BTNS_DROPDOWN;
-            tbb.iString = (INT_PTR) MenuString;        
+                tbb.fsStyle |= BTNS_WHOLEDROPDOWN;
+            tbb.iString = (INT_PTR) MenuString;
             tbb.idCommand = info.wID;
         
             SMINFO sminfo;
@@ -986,6 +1049,41 @@ HRESULT CMenuStaticToolbar::FillToolbar()
     }
 
     return S_OK;
+}
+
+HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    return m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
+}
+
+HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
+{
+    RECT rc;
+    TBBUTTONINFO info = { 0 };
+    info.cbSize = sizeof(TBBUTTONINFO);
+    info.dwMask = 0;
+    int index = SendMessage(m_hwnd, TB_GETBUTTONINFO, uItem, (LPARAM) &info);
+    if (index < 0)
+        return E_FAIL;
+    if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, (LPARAM) &rc))
+        return E_FAIL;
+    int px = rc.right;
+    int py = rc.bottom;
+
+    // TODO: Create popup CMenuDeskBar
+
+    return S_OK;
+}
+
+HRESULT CMenuStaticToolbar::HasSubMenu(UINT uItem)
+{
+    TBBUTTONINFO info = { 0 };
+    info.cbSize = sizeof(TBBUTTONINFO);
+    info.dwMask = 0;
+    int index = SendMessage(m_hwnd, TB_GETBUTTONINFO, uItem, (LPARAM) &info);
+    if (index < 0)
+        return E_FAIL;
+    return ::GetSubMenu(m_hmenu, index) ? S_OK : S_FALSE;
 }
 
 CMenuSFToolbar::CMenuSFToolbar(CMenuBand * menuBand) :
@@ -1079,15 +1177,20 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
 
     return hr;
 }
-
-HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-{
-    return m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
-}
 HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
 //    return m_menuBand->CallCBWithPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
     return S_OK;
+}
+
+HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
+{
+    return S_OK;
+}
+
+HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
+{
+    return S_FALSE; // GetSubMenu(m_hmenu, uItem) ? S_OK : S_FALSE;
 }
 
 CMenuBand::CMenuBand() :
@@ -1370,7 +1473,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETMAXSIZE, 0, (LPARAM) &sizeStatic);
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETMAXSIZE, 0, (LPARAM) &sizeShlFld);
 
-        pdbi->ptMaxSize.x = sizeStatic.cx + sizeShlFld.cx; // ignored
+        pdbi->ptMaxSize.x = max(sizeStatic.cx, sizeShlFld.cx); // ignored
         pdbi->ptMaxSize.y = sizeStatic.cy + sizeShlFld.cy;
     }
     if (pdbi->dwMask & DBIM_INTEGRAL)
@@ -1385,7 +1488,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
 
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, FALSE, (LPARAM) &sizeStatic);
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, FALSE, (LPARAM) &sizeShlFld);
-        pdbi->ptActual.x = sizeStatic.cx + sizeShlFld.cx;
+        pdbi->ptActual.x = max(sizeStatic.cx, sizeShlFld.cx);
 
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, TRUE, (LPARAM) &sizeStatic);
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, TRUE, (LPARAM) &sizeShlFld);
@@ -1628,41 +1731,44 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlag
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    HWND hwndStatic = NULL;
-    HWND hwndShlFld = NULL;
-    HRESULT hr;
-
     *theResult = 0;
     switch (uMsg)
     {
     case WM_COMMAND:
 
-        if (m_staticToolbar != NULL)
-            hr = m_staticToolbar->GetWindow(&hwndStatic);
-        if (FAILED(hr))
-            return hr;
-
-        if (hWnd == hwndStatic)
+        if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
         {
             return m_staticToolbar->OnCommand(wParam, lParam, theResult);
         }
 
-        if (m_SFToolbar != NULL)
-            hr = m_SFToolbar->GetWindow(&hwndShlFld);
-        if (FAILED(hr))
-            return hr;
-
-        if (hWnd == hwndShlFld)
+        if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
         {
             return m_SFToolbar->OnCommand(wParam, lParam, theResult);
         }
 
         return S_OK;
+
     case WM_NOTIFY:
         NMHDR * hdr = (LPNMHDR) lParam;
         NMTBCUSTOMDRAW * cdraw;
+        NMTBHOTITEM * hot;
         switch (hdr->code)
         {
+        case TBN_HOTITEMCHANGE:
+            hot = (NMTBHOTITEM*) hdr;
+
+            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
+            {
+                return m_staticToolbar->OnHotItemChange(hot);
+            }
+
+            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
+            {
+                return m_SFToolbar->OnHotItemChange(hot);
+            }
+
+            return S_OK;
+
         case NM_CUSTOMDRAW:
             cdraw = (LPNMTBCUSTOMDRAW) hdr;
             switch (cdraw->nmcd.dwDrawStage)
@@ -1697,7 +1803,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
                     break;
                 }
 
-                *theResult = TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOETCHEDEFFECT | TBCDRF_HILITEHOTTRACK;
+                *theResult = TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOETCHEDEFFECT | TBCDRF_HILITEHOTTRACK | TBCDRF_NOOFFSET;
                 return S_OK;
             }
             return S_OK;
@@ -1710,24 +1816,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 
 HRESULT STDMETHODCALLTYPE CMenuBand::IsWindowOwner(HWND hWnd)
 {
-    HWND hwndStatic = NULL;
-    HWND hwndShlFld = NULL;
-    HRESULT hr;
-
-    if (m_staticToolbar != NULL)
-        hr = m_staticToolbar->GetWindow(&hwndStatic);
-    if (FAILED(hr))
-        return hr;
-
-    if (hWnd == hwndStatic)
+    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
         return S_OK;
 
-    if (m_SFToolbar != NULL)
-        hr = m_SFToolbar->GetWindow(&hwndShlFld);
-    if (FAILED(hr))
-        return hr;
-
-    if (hWnd == hwndShlFld)
+    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
         return S_OK;
 
     return S_FALSE;

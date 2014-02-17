@@ -754,7 +754,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     if (FAILED(hr))
         return hr;
     
-    ::AdjustWindowRect(&rc, WS_DLGFRAME, FALSE);
+    ::AdjustWindowRect(&rc, ::GetWindowLong(m_hWnd, GWL_STYLE), FALSE);
     rc.right -= rc.left;
     rc.bottom -= rc.top;
 
