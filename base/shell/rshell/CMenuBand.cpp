@@ -54,6 +54,8 @@ public:
 
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
 
+    HRESULT PopupSubMenu(UINT uItem, IShellMenu* childShellMenu);
+
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 protected:
 
@@ -955,6 +957,72 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
     return S_OK;
 }
 
+HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, IShellMenu* childShellMenu)
+{
+    RECT rc;
+    TBBUTTONINFO info = { 0 };
+    info.cbSize = sizeof(TBBUTTONINFO);
+    info.dwMask = 0;
+    int index = SendMessage(m_hwnd, TB_GETBUTTONINFO, uItem, (LPARAM) &info);
+    if (index < 0)
+        return E_FAIL;
+    if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, (LPARAM) &rc))
+        return E_FAIL;
+
+    POINT a = { rc.left, rc.top };
+    POINT b = { rc.right, rc.bottom };
+
+    ClientToScreen(m_hwnd, &a);
+    ClientToScreen(m_hwnd, &b);
+
+    POINTL pt = { b.x, b.y };
+    RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
+
+    IBandSite* pBandSite;
+    IDeskBar* pDeskBar;
+
+    HRESULT hr;
+
+#ifndef USE_BUILTIN_MENUSITE
+    hr = CoCreateInstance(CLSID_MenuBandSite,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IBandSite, &pBandSite));
+#else
+    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
+#endif
+    if (FAILED(hr))
+        return hr;
+
+#ifndef USE_BUILTIN_MENUDESKBAR
+    hr = CoCreateInstance(CLSID_MenuDeskBar,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IDeskBar, &pDeskBar));
+#else
+    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
+#endif
+    if (FAILED(hr))
+        return hr;
+
+    hr = pDeskBar->SetClient(pBandSite);
+    if (FAILED(hr))
+        return hr;
+
+    hr = pBandSite->AddBand(childShellMenu);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IMenuPopup> popup;
+    hr = pDeskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &popup));
+    if (FAILED(hr))
+        return hr;
+
+    popup->Popup(&pt, &rcl, MPPF_TOP | MPPF_RIGHT);
+
+    return S_OK;
+}
+
 BOOL
 AllocAndGetMenuString(HMENU hMenu, UINT ItemIDByPosition, WCHAR** String)
 {
@@ -1058,38 +1126,12 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
 
 HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
 {
-    RECT rc;
-    TBBUTTONINFO info = { 0 };
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = 0;
-    int index = SendMessage(m_hwnd, TB_GETBUTTONINFO, uItem, (LPARAM) &info);
-    if (index < 0)
-        return E_FAIL;
-    if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, (LPARAM) &rc))
-        return E_FAIL;
-
-    POINT a = { rc.left, rc.top };
-    POINT b = { rc.right, rc.bottom };
-
-    ClientToScreen(m_hwnd, &a);
-    ClientToScreen(m_hwnd, &b);
-
-    POINTL pt = { b.x, b.y };
-    RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
-
     CComPtr<IShellMenu> shellMenu;
     HRESULT hr = m_menuBand->CallCBWithId(uItem, SMC_GETOBJECT, (WPARAM) &IID_IShellMenu, (LPARAM) &shellMenu);
     if (FAILED(hr))
         return hr;
 
-    CComPtr<IMenuPopup> popup;
-    hr = CSubMenu_Constructor(shellMenu, IID_PPV_ARG(IMenuPopup, &popup));
-    if (FAILED(hr))
-        return hr;
-
-    popup->Popup(&pt, &rcl, MPPF_TOP | MPPF_RIGHT);
-
-    return S_OK;
+    return PopupSubMenu(uItem, shellMenu);
 }
 
 HRESULT CMenuStaticToolbar::HasSubMenu(UINT uItem)

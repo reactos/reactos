@@ -125,7 +125,7 @@ private:
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
         }
 
-#if 0
+#ifndef USE_BUILTIN_MENUBAND
         hr = CoCreateInstance(CLSID_MenuBand,
             NULL,
             CLSCTX_INPROC_SERVER,
@@ -262,7 +262,7 @@ CStartMenu_Constructor(
     IShellFolder *shellFolder;
     IShellFolder *psfStartMenu;
 
-#if 0
+#ifndef USE_BUILTIN_MENUBAND
     hr = CoCreateInstance(CLSID_MenuBand,
                           NULL,
                           CLSCTX_INPROC_SERVER,
@@ -273,7 +273,7 @@ CStartMenu_Constructor(
     if (FAILED(hr))
         return hr;
 
-#if 0
+#ifndef USE_BUILTIN_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
                           NULL,
                           CLSCTX_INPROC_SERVER,
@@ -284,7 +284,7 @@ CStartMenu_Constructor(
     if (FAILED(hr))
         return hr;
 
-#if 0
+#ifndef USE_BUILTIN_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
                           NULL,
                           CLSCTX_INPROC_SERVER,
@@ -320,48 +320,6 @@ CStartMenu_Constructor(
         return hr;
 
     hr =  pBandSite->AddBand(pShellMenu);
-    if (FAILED(hr))
-        return hr;
-
-    return pDeskBar->QueryInterface(riid, ppv);
-}
-
-extern "C"
-HRESULT
-CSubMenu_Constructor(IShellMenu * pShellMenu, REFIID riid, void **ppv)
-{
-    IBandSite* pBandSite;
-    IDeskBar* pDeskBar;
-
-    HRESULT hr;
-
-#if 0
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
-    if (FAILED(hr))
-        return hr;
-
-#if 0
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
-    if (FAILED(hr))
-        return hr;
-
-    hr = pDeskBar->SetClient(pBandSite);
-    if (FAILED(hr))
-        return hr;
-
-    hr = pBandSite->AddBand(pShellMenu);
     if (FAILED(hr))
         return hr;
 

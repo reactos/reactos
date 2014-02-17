@@ -1,4 +1,8 @@
 
+#define USE_BUILTIN_MENUDESKBAR
+#define USE_BUILTIN_MENUSITE
+#define USE_BUILTIN_MENUBAND
+
 #include <stdio.h>
 #include <tchar.h>
 
@@ -33,4 +37,3 @@ extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT
 extern "C" HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
-extern "C" HRESULT CSubMenu_Constructor(IShellMenu * pShellMenu, REFIID riid, void **ppv);
