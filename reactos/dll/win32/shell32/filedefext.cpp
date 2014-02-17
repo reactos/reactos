@@ -979,7 +979,7 @@ CFileDefExt::GetSite(REFIID iid, void **ppvSite)
 DWORD WINAPI
 CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 {
-    _CountFolderAndFilesData *data = reinterpret_cast<_CountFolderAndFilesData*>(lpParameter);
+    _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(lpParameter);
     DWORD ticks = 0;
     data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, data->cchBufMax, &ticks);
 

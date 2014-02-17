@@ -600,7 +600,7 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
          case CREATE_ALWAYS:
              if (SUCCEEDED(hres))
              {
-                 reinterpret_cast<IPropertyStorage*>(*ppstg)->Release();
+                 (*ppstg)->Release();
                  hres = psstg->Delete(fmtid);
                  if(FAILED(hres))
                      return hres;
@@ -620,7 +620,7 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
              {
                  prop.ulKind = PRSPEC_PROPID;
                  prop.propid = PID_CODEPAGE;
-                 hres = reinterpret_cast<IPropertyStorage*>(*ppstg)->ReadMultiple(1, &prop, &ret);
+                 hres = (*ppstg)->ReadMultiple(1, &prop, &ret);
                  if (FAILED(hres) || ret.vt!=VT_I2)
                      *puCodePage = 0;
                  else
