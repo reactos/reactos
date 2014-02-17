@@ -247,5 +247,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Атрибути"
     IDS_COL_SEC             "Безпека"
 
-    IDS_FREE_SPACE_FMT      "%s з %s вільно"
+    IDS_FREE_SPACE_FMT      "%1 з %2 вільно"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }

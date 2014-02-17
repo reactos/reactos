@@ -244,5 +244,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Požymiai"
     IDS_COL_SEC             "Saugumas"
 
-    IDS_FREE_SPACE_FMT      "%s iš %s laisva"
+    IDS_FREE_SPACE_FMT      "%1 iš %2 laisva"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }

@@ -241,5 +241,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Atributos"
     IDS_COL_SEC             "Seguridad"
 
-    IDS_FREE_SPACE_FMT      "%s de %s libre"
+    IDS_FREE_SPACE_FMT      "%1 de %2 libre"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }

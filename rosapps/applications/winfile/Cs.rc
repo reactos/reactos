@@ -194,5 +194,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Atributy"
     IDS_COL_SEC             "Zabezpeèení"
 
-    IDS_FREE_SPACE_FMT      "%s z %s volného"
+    IDS_FREE_SPACE_FMT      "%1 z %2 volného"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }

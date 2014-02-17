@@ -241,5 +241,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Özellikler"
     IDS_COL_SEC             "Güvenlik"
 
-    IDS_FREE_SPACE_FMT      "%s / %s boþ"
+    IDS_FREE_SPACE_FMT      "%1 / %2 boþ"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }

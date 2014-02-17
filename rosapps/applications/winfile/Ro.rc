@@ -52,11 +52,7 @@ IDM_WINEFILE MENU
         MENUITEM "Că&utare...",                         104
         MENUITEM "&Selectare fișiere...",               116
         MENUITEM SEPARATOR
-#ifndef _NO_EXTENSIONS
-        MENUITEM "Înc&hide\Alt+X",                      ID_FILE_EXIT
-#else
         MENUITEM "Înc&hide",                            ID_FILE_EXIT
-#endif
     }
 
     POPUP "&Disc"  {
@@ -245,5 +241,8 @@ STRINGTABLE
     IDS_COL_ATTR            "Atribute"
     IDS_COL_SEC             "Securitate"
 
-    IDS_FREE_SPACE_FMT      "%s din %s liber"
+    IDS_FREE_SPACE_FMT      "%1 din %2 liber"
+    IDS_UNIT_KB             "ko"
+    IDS_UNIT_MB             "Mo"
+    IDS_UNIT_GB             "Go"
 }
