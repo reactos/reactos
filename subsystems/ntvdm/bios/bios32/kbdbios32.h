@@ -1,13 +1,13 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            kbdbios.h
- * PURPOSE:         VDM Keyboard BIOS
+ * FILE:            kbdbios32.h
+ * PURPOSE:         VDM Keyboard 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#ifndef _KBDBIOS_H_
-#define _KBDBIOS_H_
+#ifndef _KBDBIOS32_H_
+#define _KBDBIOS32_H_
 
 /* INCLUDES *******************************************************************/
 
@@ -41,9 +41,9 @@
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
 
-BOOLEAN KbdBiosInitialize(HANDLE ConsoleInput);
-VOID KbdBiosCleanup(VOID);
+BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput);
+VOID KbdBios32Cleanup(VOID);
 
-#endif // _KBDBIOS_H_
+#endif // _KBDBIOS32_H_
 
 /* EOF */

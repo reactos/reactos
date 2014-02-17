@@ -22,10 +22,10 @@
 #include "resource.h"
 
 /*
- * Activate this line if you want to be able to test NTVDM with:
+ * Activate this line if you want to run NTVDM in standalone mode with:
  * ntvdm.exe <program>
  */
-#define TESTING
+#define STANDALONE
 
 /* VARIABLES ******************************************************************/
 
@@ -364,15 +364,14 @@ VOID ConsoleCleanup(VOID)
 
 INT wmain(INT argc, WCHAR *argv[])
 {
+#ifndef STANDALONE
+    wprintf(L"\nReactOS Virtual DOS Machine\n\n"
+            L"OS integration (BaseVDM) unimplemented\n");
+    return 0;
+#else
+
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
 
-#ifndef TESTING
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    /* The DOS command line must be ASCII */
-    WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, sizeof(CommandLine), NULL, NULL);
-#else
     if (argc == 2 && argv[1] != NULL)
     {
         WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
@@ -383,7 +382,6 @@ INT wmain(INT argc, WCHAR *argv[])
                 L"Usage: NTVDM <executable>\n");
         return 0;
     }
-#endif
 
     DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
 
@@ -402,7 +400,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the system BIOS */
-    if (!BiosInitialize(ConsoleInput, ConsoleOutput))
+    if (!BiosInitialize(NULL, ConsoleInput, ConsoleOutput))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;
@@ -436,6 +434,8 @@ Cleanup:
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
 
     return 0;
+
+#endif
 }
 
 /* EOF */

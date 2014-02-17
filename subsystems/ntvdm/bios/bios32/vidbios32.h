@@ -1,13 +1,13 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            vidbios.h
- * PURPOSE:         VDM Video BIOS
+ * FILE:            vidbios32.h
+ * PURPOSE:         VDM Video 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#ifndef _VIDBIOS_H_
-#define _VIDBIOS_H_
+#ifndef _VIDBIOS32_H_
+#define _VIDBIOS32_H_
 
 /* INCLUDES *******************************************************************/
 
@@ -38,9 +38,9 @@ enum
 
 VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page);
 
-BOOLEAN VidBiosInitialize(HANDLE BiosConsoleOutput);
-VOID VidBiosCleanup(VOID);
+BOOLEAN VidBios32Initialize(HANDLE BiosConsoleOutput);
+VOID VidBios32Cleanup(VOID);
 
-#endif // _VIDBIOS_H_
+#endif // _VIDBIOS32_H_
 
 /* EOF */

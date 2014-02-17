@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            vidbios.c
- * PURPOSE:         VDM Video BIOS
+ * FILE:            vidbios32.c
+ * PURPOSE:         VDM Video 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -11,8 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-// #include "vidbios.h"
-#include "bios.h"
+// #include "vidbios32.h"
+#include "bios32.h"
 
 #include "io.h"
 #include "hardware/vga.h"
@@ -1533,7 +1533,7 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
+BOOLEAN VidBios32Initialize(HANDLE ConsoleOutput)
 {
     /* Some interrupts are in fact addresses to tables */
     ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
@@ -1567,7 +1567,7 @@ BOOLEAN VidBiosInitialize(HANDLE ConsoleOutput)
     return TRUE;
 }
 
-VOID VidBiosCleanup(VOID)
+VOID VidBios32Cleanup(VOID)
 {
 }
 

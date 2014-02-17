@@ -416,7 +416,7 @@ VOID CmosInitialize(VOID)
 
     if (hCmosRam != INVALID_HANDLE_VALUE)
     {
-        BOOL Success = FALSE;
+        BOOL Success;
 
         /* Attempt to fill the CMOS memory with the RAM file */
         SetLastError(0); // For debugging purposes

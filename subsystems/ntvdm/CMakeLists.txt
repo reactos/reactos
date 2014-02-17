@@ -6,9 +6,10 @@ include_directories(
 spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE
+    bios/bios32/bios32.c
+    bios/bios32/kbdbios32.c
+    bios/bios32/vidbios32.c
     bios/bios.c
-    bios/kbdbios.c
-    bios/vidbios.c
     hardware/cmos.c
     hardware/pic.c
     hardware/ps2.c

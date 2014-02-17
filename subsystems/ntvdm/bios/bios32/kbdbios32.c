@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            kbdbios.c
- * PURPOSE:         VDM Keyboard BIOS
+ * FILE:            kbdbios32.c
+ * PURPOSE:         VDM Keyboard 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -11,8 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-// #include "kbdbios.h"
-#include "bios.h"
+// #include "kbdbios32.h"
+#include "bios32.h"
 
 #include "io.h"
 #include "hardware/ps2.h"
@@ -261,7 +261,7 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN KbdBiosInitialize(HANDLE ConsoleInput)
+BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput)
 {
     /* Initialize the BDA */
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
@@ -283,7 +283,7 @@ BOOLEAN KbdBiosInitialize(HANDLE ConsoleInput)
     return TRUE;
 }
 
-VOID KbdBiosCleanup(VOID)
+VOID KbdBios32Cleanup(VOID)
 {
 }
 
