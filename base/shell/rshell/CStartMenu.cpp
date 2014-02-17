@@ -20,7 +20,7 @@
 
 #include "precomp.h"
 
-/* NOTE: The following constants may *NOT* be changed because
+/* NOTE: The following constants *MUST NOT* be changed because
          they're hardcoded and need to be the exact values
          in order to get the start menu to work! */
 #define IDM_PROGRAMS                504
