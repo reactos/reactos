@@ -2042,13 +2042,44 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 break;
             }
 
-
-
             case TokenOrigin:
             {
-                DPRINT1("Unhandled TokenInformationClass: 0x%lx\n",
-                        TokenInformationClass);
-                Status = STATUS_NOT_IMPLEMENTED;
+                TOKEN_ORIGIN TokenOrigin;
+
+                _SEH2_TRY
+                {
+                    /* Copy the token origin */
+                    TokenOrigin = *(PTOKEN_ORIGIN)TokenInformation;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                    goto Cleanup;
+                }
+                _SEH2_END;
+
+                /* Check for TCB privilege */
+                if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+                {
+                    Status = STATUS_PRIVILEGE_NOT_HELD;
+                    break;
+                }
+
+                /* Lock the token */
+                SepAcquireTokenLockExclusive(Token);
+
+                /* Check if there is no token origin set yet */
+                if ((Token->OriginatingLogonSession.LowPart == 0) &&
+                    (Token->OriginatingLogonSession.HighPart == 0))
+                {
+                    /* Set the token origin */
+                    Token->OriginatingLogonSession =
+                        TokenOrigin.OriginatingLogonSession;
+                }
+
+                /* Unlock the token */
+                SepReleaseTokenLock(Token);
+
                 break;
             }
 
@@ -2062,6 +2093,11 @@ NtSetInformationToken(IN HANDLE TokenHandle,
         }
 Cleanup:
         ObDereferenceObject(Token);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetInformationToken failed with Status 0x%lx\n", Status);
     }
 
     return Status;
