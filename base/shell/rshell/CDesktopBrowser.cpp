@@ -26,9 +26,9 @@ BOOL WINAPI SetShellWindowEx(HWND, HWND);
 
 #define SHDESK_TAG 0x4b534544
 
-static const WCHAR szProgmanClassName[] = {'P','r','o','g','m','a','n'};
-static const WCHAR szProgmanWindowName[] = {
-    'P','r','o','g','r','a','m',' ','M','a','n','a','g','e','r'
+static const WCHAR szProgmanClassName [] = { 'P', 'r', 'o', 'g', 'm', 'a', 'n' };
+static const WCHAR szProgmanWindowName [] = {
+    'P', 'r', 'o', 'g', 'r', 'a', 'm', ' ', 'M', 'a', 'n', 'a', 'g', 'e', 'r'
 };
 
 class CDesktopBrowser :
@@ -52,7 +52,7 @@ public:
     CDesktopBrowser();
     ~CDesktopBrowser();
     HRESULT Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx);
-    HWND FindDesktopListView ();
+    HWND FindDesktopListView();
     BOOL CreateDeskWnd();
     HWND DesktopGetWindowControl(IN UINT id);
     static LRESULT CALLBACK ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam);
@@ -78,19 +78,19 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags);
 
     // *** ICommDlgBrowser methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand (struct IShellView *ppshv);
-    virtual HRESULT STDMETHODCALLTYPE OnStateChange (struct IShellView *ppshv, ULONG uChange);
-    virtual HRESULT STDMETHODCALLTYPE IncludeObject (struct IShellView *ppshv, LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand(struct IShellView *ppshv);
+    virtual HRESULT STDMETHODCALLTYPE OnStateChange(struct IShellView *ppshv, ULONG uChange);
+    virtual HRESULT STDMETHODCALLTYPE IncludeObject(struct IShellView *ppshv, LPCITEMIDLIST pidl);
 
     // *** IServiceProvider methods ***
     virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
 
-BEGIN_COM_MAP(CDesktopBrowser)
-    COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
-    COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
-    COM_INTERFACE_ENTRY_IID(IID_ICommDlgBrowser, ICommDlgBrowser)
-    COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-END_COM_MAP()
+    BEGIN_COM_MAP(CDesktopBrowser)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+        COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
+        COM_INTERFACE_ENTRY_IID(IID_ICommDlgBrowser, ICommDlgBrowser)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+    END_COM_MAP()
 };
 
 CDesktopBrowser::CDesktopBrowser()
@@ -163,7 +163,7 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     CComObject<CDesktopBrowser>        *pThis;
     HRESULT                    hRet;
 
-    ShellDesk = (IShellDesktopTray *)lpCreateStruct->lpCreateParams;
+    ShellDesk = static_cast<IShellDesktopTray *>(lpCreateStruct->lpCreateParams);
     if (ShellDesk == NULL)
     {
         WARN("No IShellDesk interface provided!");
@@ -185,7 +185,7 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     return pThis;
 }
 
-HWND CDesktopBrowser::FindDesktopListView ()
+HWND CDesktopBrowser::FindDesktopListView()
 {
     return FindWindowExW(hWndShellView, NULL, WC_LISTVIEW, NULL);
 }
@@ -202,8 +202,8 @@ BOOL CDesktopBrowser::CreateDeskWnd()
     }
 
     fs.ViewMode = FVM_ICON;
-    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE  | FWF_NOSCROLL | FWF_TRANSPARENT;
-    hRet = DesktopView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcClient, &hWndShellView);
+    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT;
+    hRet = DesktopView->CreateViewWindow(NULL, &fs, static_cast<IShellBrowser *>(this), &rcClient, &hWndShellView);
     if (!SUCCEEDED(hRet))
         return FALSE;
 
@@ -265,7 +265,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::TranslateAcceleratorSB(LPMSG lpmsg, W
     return S_FALSE;
 }
 
-typedef HRESULT (WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
+typedef HRESULT(WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
@@ -284,14 +284,14 @@ HWND CDesktopBrowser::DesktopGetWindowControl(IN UINT id)
 {
     switch (id)
     {
-        case FCW_TOOLBAR:
-        case FCW_STATUS:
-        case FCW_TREE:
-        case FCW_PROGRESS:
-            return NULL;
+    case FCW_TOOLBAR:
+    case FCW_STATUS:
+    case FCW_TREE:
+    case FCW_PROGRESS:
+        return NULL;
 
-        default:
-            return NULL;
+    default:
+        return NULL;
     }
 
 }
@@ -321,10 +321,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::SendControlMsg(UINT id, UINT uMsg, WP
     hWnd = DesktopGetWindowControl(id);
     if (hWnd != NULL)
     {
-        *pret = SendMessageW(hWnd,
-                             uMsg,
-                             wParam,
-                             lParam);
+        *pret = SendMessageW(hWnd, uMsg, wParam, lParam);
         return S_OK;
     }
 
@@ -395,8 +392,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
     if (uMsg != WM_NCCREATE)
     {
-        pThis = (CDesktopBrowser*)GetWindowLongPtrW(hwnd,
-                                          0);
+        pThis = reinterpret_cast<CDesktopBrowser*>(GetWindowLongPtrW(hwnd, 0));
         if (pThis == NULL)
             goto DefMsgHandler;
     }
@@ -405,86 +401,86 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
     {
         switch (uMsg)
         {
-            case WM_ERASEBKGND:
-                return (LRESULT)PaintDesktop((HDC)wParam);
+        case WM_ERASEBKGND:
+            return (LRESULT) PaintDesktop((HDC) wParam);
 
-            case WM_GETISHELLBROWSER:
-                Ret = (LRESULT)((IShellBrowser *)pThis);
-                break;
+        case WM_GETISHELLBROWSER:
+            Ret = reinterpret_cast<LRESULT>(static_cast<IShellBrowser *>(pThis));
+            break;
 
-            case WM_SIZE:
-                if (wParam == SIZE_MINIMIZED)
-                {
-                    /* Hey, we're the desktop!!! */
-                    ShowWindow(hwnd,
-                               SW_RESTORE);
-                }
-                else
-                {
-                    RECT rcDesktop;
-
-                    rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-                    rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-                    rcDesktop.right = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-                    rcDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-                    /* FIXME: Update work area */
-                }
-                break;
-
-            case WM_SYSCOLORCHANGE:
-            case WM_SETTINGCHANGE:
+        case WM_SIZE:
+            if (wParam == SIZE_MINIMIZED)
             {
-                if (uMsg == WM_SYSCOLORCHANGE || wParam == SPI_SETDESKWALLPAPER || wParam == 0)
+                /* Hey, we're the desktop!!! */
+                ShowWindow(hwnd,
+                    SW_RESTORE);
+            }
+            else
+            {
+                RECT rcDesktop;
+
+                rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+                rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
+                rcDesktop.right = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+                rcDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+                /* FIXME: Update work area */
+            }
+            break;
+
+        case WM_SYSCOLORCHANGE:
+        case WM_SETTINGCHANGE:
+        {
+            if (uMsg == WM_SYSCOLORCHANGE || wParam == SPI_SETDESKWALLPAPER || wParam == 0)
+            {
+                if (pThis->hWndShellView != NULL)
                 {
-                    if (pThis->hWndShellView != NULL)
-                    {
-                        /* Forward the message */
-                        SendMessageW(pThis->hWndShellView,
-                                     uMsg,
-                                     wParam,
-                                     lParam);
-                    }
+                    /* Forward the message */
+                    SendMessageW(pThis->hWndShellView,
+                        uMsg,
+                        wParam,
+                        lParam);
                 }
+            }
+            break;
+        }
+
+        case WM_CREATE:
+        {
+            pThis->ShellDesk->RegisterDesktopWindow(pThis->hWnd);
+
+            if (!pThis->CreateDeskWnd())
+                WARN("Could not create the desktop view control!\n");
+            break;
+        }
+
+        case WM_NCCREATE:
+        {
+            LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT) lParam;
+            pThis = SHDESK_Create(hwnd, CreateStruct);
+            if (pThis == NULL)
+            {
+                WARN("Failed to create desktop structure\n");
                 break;
             }
 
-            case WM_CREATE:
-            {
-                pThis->ShellDesk->RegisterDesktopWindow(pThis->hWnd);
+            SetWindowLongPtrW(hwnd,
+                0,
+                (LONG_PTR) pThis);
+            Ret = TRUE;
+            break;
+        }
 
-                if (!pThis->CreateDeskWnd())
-                    WARN("Could not create the desktop view control!\n");
-                break;
-            }
+        case WM_NCDESTROY:
+        {
+            pThis->Release();
+            break;
+        }
 
-            case WM_NCCREATE:
-            {
-                LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
-                pThis = SHDESK_Create(hwnd, CreateStruct);
-                if (pThis == NULL)
-                {
-                    WARN("Failed to create desktop structure\n");
-                    break;
-                }
-
-                SetWindowLongPtrW(hwnd,
-                                  0,
-                                  (LONG_PTR)pThis);
-                Ret = TRUE;
-                break;
-            }
-
-            case WM_NCDESTROY:
-            {
-                pThis->Release();
-                break;
-            }
-
-            default:
-DefMsgHandler:
-                Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
-                break;
+        default:
+        DefMsgHandler :
+            Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
+                      break;
         }
     }
 
@@ -503,7 +499,7 @@ RegisterProgmanWindowClass(VOID)
     wcProgman.hInstance = shell32_hInstance;
     wcProgman.hIcon = NULL;
     wcProgman.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    wcProgman.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
+    wcProgman.hbrBackground = (HBRUSH) (COLOR_BACKGROUND + 1);
     wcProgman.lpszMenuName = NULL;
     wcProgman.lpszClassName = szProgmanClassName;
 
@@ -547,9 +543,9 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
     hWndDesk = CreateWindowExW(0, szProgmanClassName, szProgmanWindowName,
         WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
-        NULL, NULL, shell32_hInstance, (LPVOID)ShellDesk);
+        NULL, NULL, shell32_hInstance, (LPVOID) ShellDesk);
     if (hWndDesk != NULL)
-        return (HANDLE)GetWindowLongPtrW(hWndDesk, 0);
+        return (HANDLE) GetWindowLongPtrW(hWndDesk, 0);
 
     return NULL;
 }
@@ -560,7 +556,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
  */
 BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 {
-    CDesktopBrowser *Desk = (CDesktopBrowser *)hDesktop;
+    CDesktopBrowser *Desk = reinterpret_cast<CDesktopBrowser *>(hDesktop);
 
     if (Desk == NULL || Desk->Tag != SHDESK_TAG)
     {

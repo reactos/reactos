@@ -58,7 +58,7 @@ public:
     CMenuSite();
     ~CMenuSite() {}
 
-    DECLARE_WND_CLASS_EX(_T("MenuSite"), 0, COLOR_WINDOW)
+    DECLARE_WND_CLASS_EX(_T("MenuSite"), 0, COLOR_MENU)
 
     DECLARE_NOT_AGGREGATABLE(CMenuSite)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -88,7 +88,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *phwnd);
 
     // IOleCommandTarget
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText);
+    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
     virtual HRESULT STDMETHODCALLTYPE Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
     // IInputObject
@@ -119,7 +119,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetModeDBC(DWORD dwMode);
 
 private:
-    IUnknown * ToIUnknown() { return (IDeskBarClient*)this; }
+    IUnknown * ToIUnknown() { return static_cast<IDeskBarClient*>(this); }
 };
 
 extern "C"
@@ -421,6 +421,7 @@ BOOL CMenuSite::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             {
                 RECT Rect = { 0 };
                 GetClientRect(&Rect);
+                Rect.right = Rect.right;
                 pMenuPopup->OnPosRectChangeDB(&Rect);
             }
         }
@@ -428,7 +429,7 @@ BOOL CMenuSite::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         lResult = 1;
         break;
     case WM_NOTIFY:
-        hWndTarget = ((NMHDR *)lParam)->hwndFrom;
+        hWndTarget = reinterpret_cast<LPNMHDR>(lParam)->hwndFrom;
         break;
     case WM_COMMAND:
         hWndTarget = (HWND) lParam;

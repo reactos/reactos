@@ -52,12 +52,12 @@
  * 4. showing the programs start menu is SLOW compared to windows. this needs some investigation
  */
 
-class CShellMenuCallback : 
+class CShellMenuCallback :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellMenuCallback 
+    public IShellMenuCallback
 {
 private:
-    
+
     HWND m_hwndTray;
     CComPtr<IShellMenu> m_pShellMenu;
     CComPtr<IBandSite> m_pBandSite;
@@ -87,7 +87,7 @@ private:
     HRESULT OnGetInfo(LPSMDATA psmd, SMINFO *psminfo)
     {
         int iconIndex = 0;
-                
+
         switch (psmd->uId)
         {
         case IDM_PROGRAMS:  iconIndex = -20; break;
@@ -114,7 +114,7 @@ private:
         if (iconIndex)
         {
             if ((psminfo->dwMask & SMIM_ICON) != 0)
-                psminfo->iIcon = Shell_GetCachedImageIndex(L"shell32.dll", iconIndex, FALSE); 
+                psminfo->iIcon = Shell_GetCachedImageIndex(L"shell32.dll", iconIndex, FALSE);
 #ifdef TEST_TRACKPOPUPMENU_SUBMENUS
             if ((psminfo->dwMask & SMIM_FLAGS) != 0)
                 psminfo->dwFlags |= SMIF_TRACKPOPUP;
@@ -128,7 +128,7 @@ private:
         HRESULT hr;
         int csidl = 0;
         IShellMenu *pShellMenu;
-        
+
         switch (psmd->uId)
         {
         case IDM_PROGRAMS:  csidl = CSIDL_PROGRAMS; break;
@@ -163,7 +163,7 @@ private:
             MENUITEMINFO mii;
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_SUBMENU;
-            if (GetMenuItemInfoW( psmd->hmenu, psmd->uId, FALSE, &mii))
+            if (GetMenuItemInfoW(psmd->hmenu, psmd->uId, FALSE, &mii))
             {
                 hr = pShellMenu->SetMenu(mii.hSubMenu, NULL, SMSET_BOTTOM);
             }
@@ -174,7 +174,7 @@ private:
     HRESULT OnGetContextMenu(LPSMDATA psmd, REFIID iid, void ** pv)
     {
         if (psmd->uId == IDM_PROGRAMS ||
-            psmd->uId == IDM_CONTROLPANEL || 
+            psmd->uId == IDM_CONTROLPANEL ||
             psmd->uId == IDM_NETWORKCONNECTIONS ||
             psmd->uId == IDM_PRINTERSANDFAXES)
         {
@@ -186,9 +186,9 @@ private:
 
     HRESULT OnGetObject(LPSMDATA psmd, REFIID iid, void ** pv)
     {
-        if (IsEqualIID(iid , IID_IShellMenu))
+        if (IsEqualIID(iid, IID_IShellMenu))
             return OnGetSubMenu(psmd, iid, pv);
-        else if (IsEqualIID( iid, IID_IContextMenu))
+        else if (IsEqualIID(iid, IID_IContextMenu))
             return OnGetContextMenu(psmd, iid, pv);
 
         return S_FALSE;
@@ -196,14 +196,14 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
-        if(psmd->uId == IDM_CONTROLPANEL)
-            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL,NULL, 1);
-        else if(psmd->uId == IDM_NETWORKCONNECTIONS)
-            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL,NULL, 1);
-        else if(psmd->uId == IDM_PRINTERSANDFAXES)
-            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL,NULL, 1);
+        if (psmd->uId == IDM_CONTROLPANEL)
+            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL, NULL, 1);
+        else if (psmd->uId == IDM_NETWORKCONNECTIONS)
+            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, NULL, 1);
+        else if (psmd->uId == IDM_PRINTERSANDFAXES)
+            ShellExecuteW(NULL, L"open", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, NULL, 1);
         else
-            PostMessageW( m_hwndTray, WM_COMMAND, psmd->uId, 0);
+            PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
 
         return S_OK;
     }
@@ -216,7 +216,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellMenuCallback, IShellMenuCallback)
     END_COM_MAP()
 
-    void Initialize(    
+    void Initialize(
         IShellMenu* pShellMenu,
         IBandSite* pBandSite,
         IDeskBar* pDeskBar)
@@ -242,27 +242,25 @@ public:
         switch (uMsg)
         {
         case SMC_INITMENU:
-                return OnInitMenu();
+            return OnInitMenu();
         case SMC_GETINFO:
-                return OnGetInfo(psmd, reinterpret_cast<SMINFO*>(lParam));
+            return OnGetInfo(psmd, reinterpret_cast<SMINFO*>(lParam));
         case SMC_GETOBJECT:
-                return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
+            return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
         case SMC_EXEC:
-                return OnExec(psmd);
+            return OnExec(psmd);
         case SMC_SFEXEC:
-                m_pTrayPriv->Execute(psmd->psf, psmd->pidlItem);
-                break;
+            m_pTrayPriv->Execute(psmd->psf, psmd->pidlItem);
+            break;
         }
 
-    return S_FALSE;
+        return S_FALSE;
     }
 };
 
-extern "C" 
+extern "C"
 HRESULT
-CStartMenu_Constructor(
-    REFIID riid,
-    void **ppv)
+CStartMenu_Constructor(REFIID riid, void **ppv)
 {
     IShellMenu* pShellMenu;
     IBandSite* pBandSite;
@@ -305,7 +303,7 @@ CStartMenu_Constructor(
 #endif
     if (FAILED(hr))
         return hr;
-    
+
     CComObject<CShellMenuCallback> *pCallback;
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
     if (FAILED(hr))
@@ -322,15 +320,15 @@ CStartMenu_Constructor(
     /* IID_IAugmentedShellFolder2 8db3b3f4-6cfe-11d1-8ae9-00c04fd918d0 */
     hr = SHGetFolderLocation(NULL, CSIDL_STARTMENU, 0, 0, &pidlStartMenu);
     hr = SHGetDesktopFolder(&shellFolder);
-    hr = shellFolder->BindToObject(pidlStartMenu, NULL, IID_IShellFolder, (void**)&psfStartMenu);
+    hr = shellFolder->BindToObject(pidlStartMenu, NULL, IID_IShellFolder, (void**) &psfStartMenu);
 
     hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
-    
-    hr =  pDeskBar->SetClient(pBandSite);
+
+    hr = pDeskBar->SetClient(pBandSite);
     if (FAILED(hr))
         return hr;
 
-    hr =  pBandSite->AddBand(pShellMenu);
+    hr = pBandSite->AddBand(pShellMenu);
     if (FAILED(hr))
         return hr;
 

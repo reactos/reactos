@@ -56,6 +56,7 @@ public:
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
 
     HRESULT PopupSubMenu(UINT index, IShellMenu* childShellMenu);
+    HRESULT DoContextMenu(IContextMenu* contextMenu);
 
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 protected:
@@ -281,7 +282,7 @@ public:
     END_COM_MAP()
 
 private:
-    HRESULT _CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT _CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id = 0, LPITEMIDLIST pidl = NULL);
 };
 
 extern "C"
@@ -850,14 +851,14 @@ HRESULT CMenuToolbarBase::Close()
 HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 {
     LONG tbStyles = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
+        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_CUSTOMERASE |
         CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
     LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER;
 
     if (dwFlags & SMINIT_VERTICAL)
     {
         tbStyles |= CCS_VERT;
-        tbExStyles |= TBSTYLE_EX_VERTICAL;
+        tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
     }
 
     RECT rc;
@@ -921,7 +922,7 @@ HRESULT CMenuToolbarBase::GetWindow(HWND *phwnd)
 
 LRESULT CALLBACK CMenuToolbarBase::s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CMenuToolbarBase * pthis = (CMenuToolbarBase *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    CMenuToolbarBase * pthis = reinterpret_cast<CMenuToolbarBase *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
     return pthis->SubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -1023,6 +1024,36 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
     return S_OK;
 }
 
+HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
+{
+    HRESULT hr;
+    HMENU hPopup = CreatePopupMenu();
+
+    if (hPopup == NULL)
+        return E_FAIL;
+
+    hr = contextMenu->QueryContextMenu(hPopup, 0, 0, UINT_MAX, CMF_NORMAL);
+    if (FAILED(hr))
+    {
+        DestroyMenu(hPopup);
+        return hr;
+    }
+
+    DWORD dwPos = GetMessagePos();
+    UINT uCommand = ::TrackPopupMenu(hPopup, TPM_RETURNCMD, GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos), 0, m_hwnd, NULL);
+    if (uCommand == 0)
+        return S_FALSE;
+
+    CMINVOKECOMMANDINFO cmi = { 0 };
+    cmi.cbSize = sizeof(cmi);
+    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
+    cmi.hwnd = m_hwnd;
+    hr = contextMenu->InvokeCommand(&cmi);
+
+    DestroyMenu(hPopup);
+    return hr;
+}
+
 BOOL
 AllocAndGetMenuString(HMENU hMenu, UINT ItemIDByPosition, WCHAR** String)
 {
@@ -1095,7 +1126,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             if (!AllocAndGetMenuString(m_hmenu, i, &MenuString))
                 return E_OUTOFMEMORY;
             if (::GetSubMenu(m_hmenu, i) != NULL)
-                tbb.fsStyle |= BTNS_WHOLEDROPDOWN;
+                tbb.fsStyle |= BTNS_DROPDOWN;
             tbb.iString = (INT_PTR) MenuString;
             tbb.idCommand = info.wID;
 
@@ -1126,47 +1157,7 @@ HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
     if (hr != S_OK)
         return hr;
 
-    HMENU hPopup = CreatePopupMenu();
-
-    if (hPopup == NULL)
-        return E_FAIL;
-
-    int ID_SHELL_CMD_FIRST = 0xF;
-    int ID_SHELL_CMD_LAST = 0x7fef;
-    hr = contextMenu->QueryContextMenu(hPopup, 0, ID_SHELL_CMD_FIRST, ID_SHELL_CMD_LAST, CMF_VERBSONLY);
-    if (FAILED(hr))
-    {
-        DestroyMenu(hPopup);
-        return hr;
-    }
-
-    POINT pt = rclick->pt;
-    if (!ClientToScreen(m_hwnd, &pt))
-    {
-        DestroyMenu(hPopup);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-    CComPtr<IOleWindow> site;
-    hr = m_menuBand->GetSite(IID_PPV_ARG(IOleWindow, &site));
-    if (FAILED(hr))
-    {
-        DestroyMenu(hPopup);
-        return hr;
-    }
-
-    HWND hwndSite;
-    hr = site->GetWindow(&hwndSite);
-    if (FAILED(hr))
-    {
-        DestroyMenu(hPopup);
-        return hr;
-    }
-
-    ::TrackPopupMenu(hPopup, 0, pt.x, pt.y, 0, hwndSite, NULL);
-
-    DestroyMenu(hPopup);
-    return S_OK;
+    return DoContextMenu(contextMenu);
 }
 
 HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
@@ -1246,7 +1237,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
 
         if (attrs != 0)
         {
-            tbb.fsStyle |= BTNS_WHOLEDROPDOWN;
+            tbb.fsStyle |= BTNS_DROPDOWN;
         }
 
         tbb.idCommand = i++;
@@ -1319,59 +1310,20 @@ LPITEMIDLIST CMenuSFToolbar::GetPidlFromId(UINT uItem, INT* pIndex)
     if (!SendMessage(m_hwnd, TB_GETBUTTON, index, (LPARAM) &btn))
         return NULL;
 
-    return (LPITEMIDLIST)btn.dwData;
+    return (LPITEMIDLIST) btn.dwData;
 }
 
 HRESULT CMenuSFToolbar::OnContextMenu(NMMOUSE * rclick)
 {
     HRESULT hr;
-    CComPtr<IOleWindow> site;
     CComPtr<IContextMenu> contextMenu;
+    LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(rclick->dwItemData);
 
-    hr = m_menuBand->GetSite(IID_PPV_ARG(IOleWindow, &site));
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    HWND hwndSite;
-    hr = site->GetWindow(&hwndSite);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    LPITEMIDLIST pidl = GetPidlFromId(rclick->dwItemData, NULL);
-
-    hr = m_shellFolder->GetUIObjectOf(hwndSite, 1, (LPCITEMIDLIST *) &pidl, IID_IContextMenu, NULL, (PVOID *) &contextMenu);
+    hr = m_shellFolder->GetUIObjectOf(m_hwnd, 1, &pidl, IID_IContextMenu, NULL, reinterpret_cast<VOID **>(&contextMenu));
     if (hr != S_OK)
         return hr;
 
-    HMENU hPopup = CreatePopupMenu();
-
-    if (hPopup == NULL)
-        return E_FAIL;
-
-    int ID_SHELL_CMD_FIRST = 0xF;
-    int ID_SHELL_CMD_LAST = 0x7fef;
-    hr = contextMenu->QueryContextMenu(hPopup, 0, ID_SHELL_CMD_FIRST, ID_SHELL_CMD_LAST, CMF_VERBSONLY);
-    if (FAILED(hr))
-    {
-        DestroyMenu(hPopup);
-        return hr;
-    }
-
-    POINT pt = rclick->pt;
-    if (!ClientToScreen(m_hwnd, &pt))
-    {
-        DestroyMenu(hPopup);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-    ::TrackPopupMenu(hPopup, 0, pt.x, pt.y, 0, hwndSite, NULL);
-
-    DestroyMenu(hPopup);
-    return S_OK;
+    return DoContextMenu(contextMenu);
 }
 
 HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
@@ -1381,7 +1333,7 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
 
 HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
 {
-    int index; 
+    int index;
     CComPtr<IShellMenu> shellMenu;
     HRESULT hr = m_menuBand->CallCBWithPidl(GetPidlFromId(uItem, &index), SMC_GETOBJECT, (WPARAM) &IID_IShellMenu, (LPARAM) &shellMenu);
     if (FAILED(hr))
@@ -1581,8 +1533,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetWindow(
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 {
-    SIZE sizeStaticX = { 0 };
-    SIZE sizeShlFldX = { 0 };
     SIZE sizeStaticY = { 0 };
     SIZE sizeShlFldY = { 0 };
     HWND hwndStatic = NULL;
@@ -1604,8 +1554,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 
     if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, TRUE, (LPARAM) &sizeStaticY);
     if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, TRUE, (LPARAM) &sizeShlFldY);
-    if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, FALSE, (LPARAM) &sizeStaticX);
-    if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, FALSE, (LPARAM) &sizeShlFldX);
 
     int sy = max(prc->bottom - prc->top, sizeStaticY.cy + sizeShlFldY.cy);
 
@@ -1958,14 +1906,14 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         return S_OK;
 
     case WM_NOTIFY:
-        NMHDR * hdr = (LPNMHDR) lParam;
+        NMHDR * hdr = reinterpret_cast<LPNMHDR>(lParam);
         NMTBCUSTOMDRAW * cdraw;
         NMTBHOTITEM * hot;
         NMMOUSE * rclick;
         switch (hdr->code)
         {
         case TBN_HOTITEMCHANGE:
-            hot = (NMTBHOTITEM*) hdr;
+            hot = reinterpret_cast<LPNMTBHOTITEM>(hdr);
 
             if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
             {
@@ -1980,7 +1928,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
             return S_OK;
 
         case NM_RCLICK:
-            rclick = (LPNMMOUSE) hdr;
+            rclick = reinterpret_cast<LPNMMOUSE>(hdr);
 
             if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
             {
@@ -1994,7 +1942,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 
             return S_OK;
         case NM_CUSTOMDRAW:
-            cdraw = (LPNMTBCUSTOMDRAW) hdr;
+            cdraw = reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr);
             switch (cdraw->nmcd.dwDrawStage)
             {
             case CDDS_PREPAINT:
@@ -2121,63 +2069,17 @@ HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
     return S_OK;
 }
 
-HRESULT CMenuBand::CallCBWithId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CMenuBand::CallCBWithId(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!m_psmc)
-        return S_FALSE;
-
-    HWND hwnd;
-    GetWindow(&hwnd);
-
-    SMDATA smData = { 0 };
-    smData.punk = (IShellMenu2*)this;
-    smData.uId = Id;
-    smData.uIdParent = m_uId;
-    smData.uIdAncestor = m_uIdAncestor;
-    smData.hwnd = hwnd;
-    if (m_staticToolbar)
-    {
-        smData.hmenu = m_hmenu;
-    }
-    smData.pvUserData = NULL;
-    if (m_SFToolbar)
-        m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
-    HRESULT hr = m_psmc->CallbackSM(&smData, uMsg, wParam, lParam);
-    ILFree(smData.pidlFolder);
-    if (smData.psf)
-        smData.psf->Release();
-    return hr;
+    return _CallCB(uMsg, wParam, lParam, id);
 }
 
 HRESULT CMenuBand::CallCBWithPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!m_psmc)
-        return S_FALSE;
-
-    HWND hwnd;
-    GetWindow(&hwnd);
-
-    SMDATA smData = { 0 };
-    smData.punk = (IShellMenu2*)this;
-    smData.uIdParent = m_uId;
-    smData.uIdAncestor = m_uIdAncestor;
-    smData.hwnd = hwnd;
-    smData.pidlItem = pidl;
-    if (m_staticToolbar)
-    {
-        smData.hmenu = m_hmenu;
-    }
-    smData.pvUserData = NULL;
-    if (m_SFToolbar)
-        m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
-    HRESULT hr = m_psmc->CallbackSM(&smData, uMsg, wParam, lParam);
-    ILFree(smData.pidlFolder);
-    if (smData.psf)
-        smData.psf->Release();
-    return hr;
+    return _CallCB(uMsg, wParam, lParam, 0, pidl);
 }
 
-HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPITEMIDLIST pidl)
 {
     if (!m_psmc)
         return S_FALSE;
@@ -2186,10 +2088,12 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
     GetWindow(&hwnd);
 
     SMDATA smData = { 0 };
-    smData.punk = (IShellMenu2*)this;
+    smData.punk = static_cast<IShellMenu2*>(this);
+    smData.uId = id;
     smData.uIdParent = m_uId;
     smData.uIdAncestor = m_uIdAncestor;
     smData.hwnd = hwnd;
+    smData.pidlItem = pidl;
     if (m_staticToolbar)
     {
         smData.hmenu = m_hmenu;

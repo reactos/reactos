@@ -480,7 +480,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(IUnknown *punkObj, BOOL 
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
-    OLECMD prgCmds[], OLECMDTEXT *pCmdText)
+    OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
     return E_NOTIMPL;
 }
@@ -512,7 +512,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
     if (m_Site == NULL)
         return E_FAIL;
 
-    if (IsEqualGUID(guidService,SID_SMenuPopup))
+    if (IsEqualGUID(guidService, SID_SMenuPopup))
     {
         return this->QueryInterface(riid, ppvObject);
     }
@@ -633,7 +633,7 @@ LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
             ::GetObject(m_Banner, sizeof(bm), &bm);
             rc.left += bm.bmWidth;
         }
-        
+
         ::SetWindowPos(clientWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
     }
 
@@ -703,10 +703,10 @@ LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
         TRACE("Painting banner: %d by %d\n", bm.bmWidth, bm.bmHeight);
 
-        if (!::StretchBlt(hdc, 0, 0, bx, cy-by, hdcMem, 0, 0, bx, 1, SRCCOPY))
+        if (!::StretchBlt(hdc, 0, 0, bx, cy - by, hdcMem, 0, 0, bx, 1, SRCCOPY))
             WARN("StretchBlt failed\n");
 
-        if (!::BitBlt(hdc, 0, cy-by, bx, by, hdcMem, 0, 0, SRCCOPY))
+        if (!::BitBlt(hdc, 0, cy - by, bx, by, hdcMem, 0, 0, SRCCOPY))
             WARN("BitBlt failed\n");
 
         ::SelectObject(hdcMem, hbmOld);
@@ -754,7 +754,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     hr = IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
     if (FAILED(hr))
         return hr;
-    
+
     ::AdjustWindowRect(&rc, ::GetWindowLong(m_hWnd, GWL_STYLE), FALSE);
     rc.right -= rc.left;
     rc.bottom -= rc.top;
@@ -812,7 +812,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetIconSize(THIS_ DWORD* piIcon)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(THIS_ HBITMAP hBitmap)
 {
     m_Banner = hBitmap;
-    
+
     BOOL bHandled;
     OnSize(WM_SIZE, 0, 0, bHandled);
 
@@ -841,7 +841,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
         if (FAILED(hr))
             return hr;
 
-        SetWindowPos(m_hWnd, 0,0,0,0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
         UIActivateIO(FALSE, NULL);
     }
