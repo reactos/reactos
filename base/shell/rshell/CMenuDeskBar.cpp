@@ -24,7 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-#define WRAP_LOG 1
+#define WRAP_LOG 0
 
 typedef CWinTraits<
     WS_POPUP | WS_DLGFRAME | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -680,7 +680,7 @@ LRESULT CMenuDeskBar::OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam
 
 LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("OnPaint\n");
+    bHandled = FALSE;
 
     if (m_Banner && !m_IconSize)
     {
@@ -716,7 +716,7 @@ LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
         EndPaint(&ps);
     }
 
-    return 0;
+    return TRUE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
@@ -849,7 +849,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     case MPOS_EXECUTE:
         bubbleUp = true;
         cancel = true;
-        // fall through
+        break;
     case MPOS_CANCELLEVEL:
         cancel = true;
         break;
@@ -857,9 +857,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     case MPOS_SELECTRIGHT:
         // if unhandled, spread upwards?
         bubbleUp = true;
-        return S_OK;
+        break;
     case MPOS_CHILDTRACKING:
-        return S_OK;
+        break;
     }
 
     if (cancel)

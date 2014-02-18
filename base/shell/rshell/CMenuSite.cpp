@@ -24,6 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 
+#if 0
 bool _assert(bool cond, LPCSTR expr, LPCSTR file, DWORD line, LPCSTR func)
 {
 #if DBG
@@ -36,6 +37,9 @@ bool _assert(bool cond, LPCSTR expr, LPCSTR file, DWORD line, LPCSTR func)
     return cond;
 }
 #define DBGASSERT(x) _assert(!!(x), #x, __FILE__, __LINE__, __FUNCSIG__)
+#else
+#define DBGASSERT(x) (!!(x))
+#endif
 
 class CMenuSite :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

@@ -402,7 +402,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
         switch (uMsg)
         {
         case WM_ERASEBKGND:
-            return (LRESULT) PaintDesktop((HDC) wParam);
+            return (LRESULT) PaintDesktop(reinterpret_cast<HDC>(wParam));
 
         case WM_GETISHELLBROWSER:
             Ret = reinterpret_cast<LRESULT>(static_cast<IShellBrowser *>(pThis));
@@ -456,7 +456,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
         case WM_NCCREATE:
         {
-            LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT) lParam;
+            LPCREATESTRUCT CreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
             pThis = SHDESK_Create(hwnd, CreateStruct);
             if (pThis == NULL)
             {
@@ -466,7 +466,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
             SetWindowLongPtrW(hwnd,
                 0,
-                (LONG_PTR) pThis);
+                reinterpret_cast<LONG_PTR>(pThis));
             Ret = TRUE;
             break;
         }
@@ -543,7 +543,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
     hWndDesk = CreateWindowExW(0, szProgmanClassName, szProgmanWindowName,
         WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
-        NULL, NULL, shell32_hInstance, (LPVOID) ShellDesk);
+        NULL, NULL, shell32_hInstance, reinterpret_cast<LPVOID>(ShellDesk));
     if (hWndDesk != NULL)
         return (HANDLE) GetWindowLongPtrW(hWndDesk, 0);
 
