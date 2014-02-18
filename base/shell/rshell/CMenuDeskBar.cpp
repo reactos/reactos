@@ -134,7 +134,6 @@ public:
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
         MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
-        MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
 
@@ -143,7 +142,6 @@ public:
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 #endif
@@ -667,16 +665,6 @@ LRESULT CMenuDeskBar::OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam
     return 0;
 }
 
-LRESULT CMenuDeskBar::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    if (LOWORD(wParam) == WA_INACTIVE)
-    {
-        //DestroyWindow();
-        //ShowWindow(SW_HIDE);
-    }
-    return 0;
-}
-
 LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("OnPaint\n");
@@ -770,6 +758,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     int y = ppt->y - rc.bottom;
     int cx = rc.right;
     int cy = rc.bottom;
+
+    if (y < 0)
+    {
+        y = 0;
+    }
+
+    // if (y+cy > work area height) cy = work area height - y
 
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 

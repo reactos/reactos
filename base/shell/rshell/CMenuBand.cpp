@@ -1130,7 +1130,8 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             tbb.iString = (INT_PTR) MenuString;
             tbb.idCommand = info.wID;
 
-            SMINFO sminfo;
+            SMINFO sminfo = { 0 };
+            sminfo.dwMask = SMIM_ICON;
             if (info.wID >= 0 && SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, (LPARAM) &sminfo)))
             {
                 tbb.iBitmap = sminfo.iIcon;
