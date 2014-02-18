@@ -24,7 +24,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-#define WRAP_LOG 0
+#define WRAP_LOG 1
 
 typedef CWinTraits<
     WS_POPUP | WS_DLGFRAME | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -65,19 +65,13 @@ private:
     IInitializeObject * m_IInitializeObject;
 #else
 
-    CComPtr<IUnknown>                       m_Site;
-    CComPtr<IUnknown>                       m_Client;
-    HWND                                    m_ClientWindow;
-    bool                                    m_Vertical;
-    bool                                    m_Visible;
-    int                                     m_NeededSize;        // width or height
+    CComPtr<IUnknown>   m_Site;
+    CComPtr<IUnknown>   m_Client;
+    CComPtr<IMenuPopup> m_SubMenuParent;
 
     DWORD m_IconSize;
     HBITMAP m_Banner;
 
-    // used by resize tracking loop
-    bool                                    m_Tracking;
-    POINT                                   m_LastLocation;
 #endif
 
 public:
@@ -132,7 +126,6 @@ public:
     BEGIN_MSG_MAP(CMenuDeskBar)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
         MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
@@ -140,7 +133,6 @@ public:
     // message handlers
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
@@ -333,19 +325,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, U
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    //bool b;
-
     WrapLogEnter("CMenuDeskBar<%p>::Exec(const GUID *pguidCmdGroup=%p, DWORD nCmdID=%d, DWORD nCmdexecopt=%d, VARIANT *pvaIn=%p, VARIANT *pvaOut=%p)\n", this, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-
-    //if (pguidCmdGroup && IsEqualGUID(*pguidCmdGroup, CLSID_MenuBand))
-    //{
-    //    if (nCmdID == 19) // popup
-    //    {
-    //        b = true;
-    //    }
-    //}
-
-
     if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
     HRESULT hr = m_IOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
     WrapLogExit("CMenuDeskBar::Exec() = %08x\n", hr);
@@ -357,17 +337,54 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
 {
     WrapLogEnter("CMenuDeskBar<%p>::QueryService(REFGUID guidService=%s, REFIID riid=%s, void **ppvObject=%p)\n", this, Wrap(guidService), Wrap(riid), ppvObject);
 
-    //if (IsEqualIID(guidService, SID_SMenuBandChild))
-    //{
-    //    WrapLogMsg("SID is SID_SMenuBandChild. Using QueryInterface of self instead of wrapped object.\n");
-    //    HRESULT hr = this->QueryInterface(riid, ppvObject);
-    //    if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-    //    WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
-    //    return hr;
-    //}
-    //else
+    if (IsEqualIID(guidService, SID_SMenuPopup))
     {
-        WrapLogMsg("SID not identified.\n");
+        WrapLogMsg("SID is SID_SMenuPopup. Using QueryInterface of self instead of wrapped object.\n");
+        HRESULT hr = this->QueryInterface(riid, ppvObject);
+        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
+    }
+    else if (IsEqualIID(guidService, SID_SMenuBandParent))
+    {
+        WrapLogMsg("SID is SID_SMenuBandParent. Using QueryInterface of self instead of wrapped object.\n");
+        HRESULT hr = this->QueryInterface(riid, ppvObject);
+        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
+    }
+    else if (IsEqualIID(guidService, SID_STopLevelBrowser))
+    {
+        WrapLogMsg("SID is SID_STopLevelBrowser. Using QueryInterface of self instead of wrapped object.\n");
+        HRESULT hr = this->QueryInterface(riid, ppvObject);
+        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
+    }
+    else
+    {
+        WrapLogMsg("SID not identified. Calling wrapped object's QueryService.\n");
     }
     HRESULT hr = m_IServiceProvider->QueryService(guidService, riid, ppvObject);
     if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
@@ -416,6 +433,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
     WrapLogEnter("CMenuDeskBar<%p>::SetClient(IUnknown *punkClient=%p)\n", this, punkClient);
     HRESULT hr = m_IDeskBar->SetClient(punkClient);
     WrapLogExit("CMenuDeskBar::SetClient() = %08x\n", hr);
+
+    CComPtr<IDeskBarClient> dbc;
+    punkClient->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
+    dbc->SetDeskBarSite(static_cast<IDeskBar*>(this));
+
     return hr;
 }
 
@@ -440,11 +462,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
-    m_ClientWindow(NULL),
-    m_Vertical(true),
-    m_Visible(false),
-    m_NeededSize(200),
-    m_Tracking(false),
     m_Banner(NULL)
 {
 }
@@ -510,7 +527,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
     if (m_Site == NULL)
         return E_FAIL;
 
-    if (IsEqualGUID(guidService, SID_SMenuPopup))
+    if (IsEqualGUID(guidService, SID_SMenuPopup) ||
+        IsEqualGUID(guidService, SID_SMenuBandParent) ||
+        IsEqualGUID(guidService, SID_STopLevelBrowser))
     {
         return this->QueryInterface(riid, ppvObject);
     }
@@ -652,12 +671,6 @@ LRESULT CMenuDeskBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
             hResult = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
     }
     return result;
-}
-
-LRESULT CMenuDeskBar::OnCancelMode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    m_Tracking = false;
-    return 0;
 }
 
 LRESULT CMenuDeskBar::OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -824,11 +837,34 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(THIS_ HBITMAP* phBitmap)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     DWORD dwSelectType)
 {
-    if (dwSelectType == MPOS_FULLCANCEL)
-    {
-        CComPtr<IDeskBarClient> dbc;
+    CComPtr<IDeskBarClient> dbc;
+    HRESULT hr;
+    
+    bool bubbleUp = false;
+    bool cancel = false;
 
-        HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
+    switch (dwSelectType)
+    {
+    case MPOS_FULLCANCEL:
+    case MPOS_EXECUTE:
+        bubbleUp = true;
+        cancel = true;
+        // fall through
+    case MPOS_CANCELLEVEL:
+        cancel = true;
+        break;
+    case MPOS_SELECTLEFT:
+    case MPOS_SELECTRIGHT:
+        // if unhandled, spread upwards?
+        bubbleUp = true;
+        return S_OK;
+    case MPOS_CHILDTRACKING:
+        return S_OK;
+    }
+
+    if (cancel)
+    {
+        hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
         if (FAILED(hr))
             return hr;
 
@@ -841,6 +877,15 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
         UIActivateIO(FALSE, NULL);
     }
 
+    //if (bubbleUp && m_Site)
+    //{
+    //    CComPtr<IMenuPopup> pmp;
+    //    HRESULT hr = IUnknown_QueryService(m_Site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
+    //    if (FAILED(hr))
+    //        return hr;
+    //    pmp->OnSelect(dwSelectType);
+    //}
+
     return S_OK;
 }
 
@@ -848,8 +893,23 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(
     IMenuPopup *pmp,
     BOOL fSet)
 {
+    if (fSet)
+    {
+        m_SubMenuParent = pmp;
+    }
+    else
+    {
+        if (m_SubMenuParent)
+        {
+            if (SHIsSameObject(pmp, m_SubMenuParent))
+            {
+                m_SubMenuParent = NULL;
+            }
+        }
+    }
     return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
 {

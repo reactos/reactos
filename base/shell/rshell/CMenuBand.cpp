@@ -23,7 +23,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
-#define WRAP_LOG 0
+#define WRAP_LOG 1
 
 #define TBSTYLE_EX_VERTICAL 4
 
@@ -50,7 +50,7 @@ public:
     virtual HRESULT FillToolbar() = 0;
     virtual HRESULT PopupItem(UINT uItem) = 0;
     virtual HRESULT HasSubMenu(UINT uItem) = 0;
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult) = 0;
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
 
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
@@ -646,8 +646,45 @@ HRESULT STDMETHODCALLTYPE CMenuBand::QueryService(REFGUID guidService, REFIID ri
         WrapLogMsg("SID is SID_SMenuBandChild. Using QueryInterface of self instead of wrapped object.\n");
         HRESULT hr = this->QueryInterface(riid, ppvObject);
         if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
-        return hr;
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
+    }
+    else if (IsEqualIID(guidService, SID_SMenuBandBottom))
+    {
+        WrapLogMsg("SID is SID_SMenuBandBottom. Using QueryInterface of self instead of wrapped object.\n");
+        HRESULT hr = this->QueryInterface(riid, ppvObject);
+        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
+    }
+    else if (IsEqualIID(guidService, SID_SMenuBandBottomSelected))
+    {
+        WrapLogMsg("SID is SID_SMenuBandBottomSelected. Using QueryInterface of self instead of wrapped object.\n");
+        HRESULT hr = this->QueryInterface(riid, ppvObject);
+        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
+        if (SUCCEEDED(hr))
+        {
+            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
+            return hr;
+        }
+        else
+        {
+            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+        }
     }
     else
     {
@@ -960,6 +997,7 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
         }
     }
 
+    m_menuBand->OnSelect(MPOS_CHILDTRACKING);
     return S_OK;
 }
 
@@ -1052,6 +1090,12 @@ HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
 
     DestroyMenu(hPopup);
     return hr;
+}
+
+HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    m_menuBand->OnSelect(MPOS_EXECUTE);
+    return S_OK;
 }
 
 BOOL
@@ -1163,7 +1207,11 @@ HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
 
 HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    return m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
+    HRESULT hr = m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
+    if (FAILED(hr))
+        return hr;
+
+    return CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
 }
 
 HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
@@ -1817,7 +1865,9 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
 
 HRESULT STDMETHODCALLTYPE CMenuBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    if (IsEqualIID(guidService, SID_SMenuBandChild))
+    if (IsEqualIID(guidService, SID_SMenuBandChild) ||
+        IsEqualIID(guidService, SID_SMenuBandBottom) || 
+        IsEqualIID(guidService, SID_SMenuBandBottomSelected))
         return this->QueryInterface(riid, ppvObject);
     WARN("Unknown service requested %s\n", wine_dbgstr_guid(&guidService));
     return E_NOINTERFACE;
@@ -1831,7 +1881,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Popup(POINTL *ppt, RECTL *prcExclude, MP_PO
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
 {
-    UNIMPLEMENTED;
+    CComPtr<IMenuPopup> pmp;
+    HRESULT hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
+    if (FAILED(hr))
+        return hr;
+    pmp->OnSelect(dwSelectType);
     return S_OK;
 }
 
