@@ -74,10 +74,15 @@ SepInitExports(VOID)
     SepExports.SeAuthenticatedUsersSid = SeAuthenticatedUsersSid;
     SepExports.SeRestrictedSid = SeRestrictedSid;
     SepExports.SeAnonymousLogonSid = SeAnonymousLogonSid;
+    SepExports.SeLocalServiceSid = SeLocalServiceSid;
+    SepExports.SeNetworkServiceSid = SeNetworkServiceSid;
 
     SepExports.SeUndockPrivilege = SeUndockPrivilege;
     SepExports.SeSyncAgentPrivilege = SeSyncAgentPrivilege;
     SepExports.SeEnableDelegationPrivilege = SeEnableDelegationPrivilege;
+    SepExports.SeManageVolumePrivilege = SeManageVolumePrivilege;
+    SepExports.SeImpersonatePrivilege = SeImpersonatePrivilege;
+    SepExports.SeCreateGlobalPrivilege = SeCreateGlobalPrivilege;
 
     SeExports = &SepExports;
     return TRUE;

@@ -16,6 +16,8 @@
 
 #define SEP_PRIVILEGE_SET_MAX_COUNT 60
 
+UNICODE_STRING SeSubsystemName = RTL_CONSTANT_STRING(L"Security");
+
 /* PRIVATE FUNCTIONS***********************************************************/
 
 BOOLEAN
@@ -202,10 +204,58 @@ SepAdtPrivilegedServiceAuditAlarm(
     _In_ PTOKEN Token,
     _In_ PTOKEN PrimaryToken,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted )
+    _In_ BOOLEAN AccessGranted)
 {
     UNIMPLEMENTED;
 }
+
+VOID
+NTAPI
+SePrivilegedServiceAuditAlarm(
+    _In_opt_ PUNICODE_STRING ServiceName,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _In_ BOOLEAN AccessGranted)
+{
+    PTOKEN EffectiveToken;
+    PSID UserSid;
+    PAGED_CODE();
+
+    /* Get the effective token */
+    if (SubjectContext->ClientToken != NULL)
+        EffectiveToken = SubjectContext->ClientToken;
+    else
+        EffectiveToken = SubjectContext->PrimaryToken;
+
+    /* Get the user SID */
+    UserSid = EffectiveToken->UserAndGroups->Sid;
+
+    /* Check if this is the local system SID */
+    if (RtlEqualSid(UserSid, SeLocalSystemSid))
+    {
+        /* Nothing to do */
+        return;
+    }
+
+    /* Check if this is the network service or local service SID */
+    if (RtlEqualSid(UserSid, SeExports->SeNetworkServiceSid) ||
+        RtlEqualSid(UserSid, SeExports->SeLocalServiceSid))
+    {
+        // FIXME: should continue for a certain set of privileges
+        return;
+    }
+
+    /* Call the worker function */
+    SepAdtPrivilegedServiceAuditAlarm(SubjectContext,
+                                      &SeSubsystemName,
+                                      ServiceName,
+                                      SubjectContext->ClientToken,
+                                      SubjectContext->PrimaryToken,
+                                      PrivilegeSet,
+                                      AccessGranted);
+
+}
+
 
 static
 NTSTATUS
@@ -477,7 +527,7 @@ SepAccessCheckAndAuditAlarm(
     }
 
     /* Check for audit privilege */
-    HaveAuditPrivilege = SeSinglePrivilegeCheck(SeAuditPrivilege, UserMode);
+    HaveAuditPrivilege = SeCheckAuditPrivilege(&SubjectContext, UserMode);
     if (!HaveAuditPrivilege && !(Flags & AUDIT_ALLOW_NO_PRIVILEGE))
     {
         DPRINT1("Caller does not have SeAuditPrivilege\n");
@@ -811,6 +861,7 @@ NtCloseObjectAuditAlarm(
     PVOID HandleId,
     BOOLEAN GenerateOnClose)
 {
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
     UNICODE_STRING CapturedSubsystemName;
     KPROCESSOR_MODE PreviousMode;
     BOOLEAN UseImpersonationToken;
@@ -832,11 +883,15 @@ NtCloseObjectAuditAlarm(
         return STATUS_SUCCESS;
     }
 
-    /* Validate privilege */
-    if (!SeSinglePrivilegeCheck(SeAuditPrivilege, PreviousMode))
+    /* Capture the security subject context */
+    SeCaptureSubjectContext(&SubjectContext);
+
+    /* Check for audit privilege */
+    if (!SeCheckAuditPrivilege(&SubjectContext, PreviousMode))
     {
         DPRINT1("Caller does not have SeAuditPrivilege\n");
-        return STATUS_PRIVILEGE_NOT_HELD;
+        Status = STATUS_PRIVILEGE_NOT_HELD;
+        goto Cleanup;
     }
 
     /* Probe and capture the subsystem name */
@@ -846,7 +901,7 @@ NtCloseObjectAuditAlarm(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to capture subsystem name!\n");
-        return Status;
+        goto Cleanup;
     }
 
     /* Get the current thread and check if it's impersonating */
@@ -887,7 +942,14 @@ NtCloseObjectAuditAlarm(
         PsDereferencePrimaryToken(Token);
     }
 
-    return STATUS_SUCCESS;
+    Status = STATUS_SUCCESS;
+
+Cleanup:
+
+    /* Release the security subject context */
+    SeReleaseSubjectContext(&SubjectContext);
+
+    return Status;
 }
 
 
@@ -986,6 +1048,9 @@ NtOpenObjectAuditAlarm(
         return Status;
     }
 
+    /* Capture the security subject context */
+    SeCaptureSubjectContext(&SubjectContext);
+
     /* Validate the token's impersonation level */
     if ((ClientToken->TokenType == TokenImpersonation) &&
         (ClientToken->ImpersonationLevel < SecurityIdentification))
@@ -996,7 +1061,7 @@ NtOpenObjectAuditAlarm(
     }
 
     /* Check for audit privilege */
-    if (!SeSinglePrivilegeCheck(SeAuditPrivilege, UserMode))
+    if (!SeCheckAuditPrivilege(&SubjectContext, UserMode))
     {
         DPRINT1("Caller does not have SeAuditPrivilege\n");
         Status = STATUS_PRIVILEGE_NOT_HELD;
@@ -1106,9 +1171,6 @@ NtOpenObjectAuditAlarm(
         goto Cleanup;
     }
 
-    /* Capture the security subject context */
-    SeCaptureSubjectContext(&SubjectContext);
-
     /* Call the internal function */
     SepOpenObjectAuditAlarm(&SubjectContext,
                             &CapturedSubsystemName,
@@ -1123,9 +1185,6 @@ NtOpenObjectAuditAlarm(
                             ObjectCreation,
                             AccessGranted,
                             &LocalGenerateOnClose);
-
-    /* Release the security subject context */
-    SeReleaseSubjectContext(&SubjectContext);
 
     Status = STATUS_SUCCESS;
 
@@ -1157,6 +1216,9 @@ Cleanup:
 
     if (CapturedPrivilegeSet != NULL)
         ExFreePoolWithTag(CapturedPrivilegeSet, 'rPeS');
+
+    /* Release the security subject context */
+    SeReleaseSubjectContext(&SubjectContext);
 
     ObDereferenceObject(ClientToken);
 
@@ -1213,12 +1275,15 @@ NtPrivilegedServiceAuditAlarm(
         return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
-    /* Validate privilege */
-    if (!SeSinglePrivilegeCheck(SeAuditPrivilege, PreviousMode))
+    /* Capture the security subject context */
+    SeCaptureSubjectContext(&SubjectContext);
+
+    /* Check for audit privilege */
+    if (!SeCheckAuditPrivilege(&SubjectContext, PreviousMode))
     {
         DPRINT1("Caller does not have SeAuditPrivilege\n");
-        ObDereferenceObject(ClientToken);
-        return STATUS_PRIVILEGE_NOT_HELD;
+        Status = STATUS_PRIVILEGE_NOT_HELD;
+        goto Cleanup;
     }
 
     /* Do we have a subsystem name? */
@@ -1290,9 +1355,6 @@ NtPrivilegedServiceAuditAlarm(
     }
     _SEH2_END;
 
-    /* Capture the security subject context */
-    SeCaptureSubjectContext(&SubjectContext);
-
     /* Call the internal function */
     SepAdtPrivilegedServiceAuditAlarm(&SubjectContext,
                                       SubsystemName ? &CapturedSubsystemName : NULL,
@@ -1301,9 +1363,6 @@ NtPrivilegedServiceAuditAlarm(
                                       SubjectContext.PrimaryToken,
                                       CapturedPrivileges,
                                       AccessGranted);
-
-    /* Release the security subject context */
-    SeReleaseSubjectContext(&SubjectContext);
 
     Status = STATUS_SUCCESS;
 
@@ -1317,6 +1376,9 @@ Cleanup:
 
     if (CapturedPrivileges != NULL)
         ExFreePoolWithTag(CapturedPrivileges, 'rPeS');
+
+    /* Release the security subject context */
+    SeReleaseSubjectContext(&SubjectContext);
 
     ObDereferenceObject(ClientToken);
 

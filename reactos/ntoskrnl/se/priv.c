@@ -252,6 +252,40 @@ SePrivilegePolicyCheck(
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+NTAPI
+SeCheckAuditPrivilege(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ KPROCESSOR_MODE PreviousMode)
+{
+    PRIVILEGE_SET PrivilegeSet;
+    BOOLEAN Result;
+    PAGED_CODE();
+
+    /* Initialize the privilege set with the single privilege */
+    PrivilegeSet.PrivilegeCount = 1;
+    PrivilegeSet.Control = PRIVILEGE_SET_ALL_NECESSARY;
+    PrivilegeSet.Privilege[0].Luid = SeAuditPrivilege;
+    PrivilegeSet.Privilege[0].Attributes = 0;
+
+    /* Check against the primary token! */
+    Result = SepPrivilegeCheck(SubjectContext->PrimaryToken,
+                               &PrivilegeSet.Privilege[0],
+                               1,
+                               PRIVILEGE_SET_ALL_NECESSARY,
+                               PreviousMode);
+
+    if (PreviousMode != KernelMode)
+    {
+        SePrivilegedServiceAuditAlarm(NULL,
+                                      SubjectContext,
+                                      &PrivilegeSet,
+                                      Result);
+    }
+
+    return Result;
+}
+
 NTSTATUS
 NTAPI
 SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
@@ -506,11 +540,11 @@ SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
 
     if (PreviousMode != KernelMode)
     {
-#if 0
-        SePrivilegedServiceAuditAlarm(0,
+        SePrivilegedServiceAuditAlarm(NULL,
                                       &SubjectContext,
-                                      &PrivilegeValue);
-#endif
+                                      &Priv,
+                                      Result);
+
     }
 
     SeReleaseSubjectContext(&SubjectContext);
