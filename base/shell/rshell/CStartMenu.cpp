@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define TEST_TRACKPOPUPMENU_SUBMENUS
+
 #include "precomp.h"
 
 /* NOTE: The following constants *MUST NOT* be changed because
@@ -47,6 +49,7 @@
  * 1. append the start menu contents from all users
  * 2. implement the context menu for start menu entries (programs, control panel, network connetions, printers)
  * 3. filter out programs folder from the shell folder part of the start menu
+ * 4. showing the programs start menu is SLOW compared to windows. this needs some investigation
  */
 
 class CShellMenuCallback : 
@@ -72,7 +75,11 @@ private:
         hr = IUnknown_GetSite(m_pDeskBar, IID_PPV_ARG(ITrayPriv, &m_pTrayPriv));
         hr = IUnknown_GetWindow(m_pTrayPriv, &m_hwndTray);
         hr = m_pTrayPriv->AppendMenuW(&hmenu);
+#ifndef TEST_TRACKPOPUPMENU_SUBMENUS
         hr = m_pShellMenu->SetMenu(hmenu, NULL, SMSET_BOTTOM);
+#else
+        hr = m_pShellMenu->SetMenu(hmenu, m_hwndTray, SMSET_BOTTOM);
+#endif
 
         return hr;
     }
@@ -106,8 +113,12 @@ private:
 
         if (iconIndex)
         {
-            psminfo->dwMask = SMIM_ICON;
-            psminfo->iIcon = Shell_GetCachedImageIndex(L"shell32.dll", iconIndex, FALSE); 
+            if ((psminfo->dwMask & SMIM_ICON) != 0)
+                psminfo->iIcon = Shell_GetCachedImageIndex(L"shell32.dll", iconIndex, FALSE); 
+#ifdef TEST_TRACKPOPUPMENU_SUBMENUS
+            if ((psminfo->dwMask & SMIM_FLAGS) != 0)
+                psminfo->dwFlags |= SMIF_TRACKPOPUP;
+#endif
         }
         return S_OK;
     }
