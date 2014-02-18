@@ -27,6 +27,9 @@ typedef struct _VDM_CONSOLE_RECORD
 typedef struct _VDM_DOS_RECORD
 {
     LIST_ENTRY Entry;
+    USHORT State;
+    ULONG ExitCode;
+    HANDLE ParentProcess;
     // TODO: Structure incomplete!!!
 } VDM_DOS_RECORD, *PVDM_DOS_RECORD;
 

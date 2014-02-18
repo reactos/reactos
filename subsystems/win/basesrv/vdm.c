@@ -209,8 +209,52 @@ CSR_API(BaseSrvIsFirstVDM)
 
 CSR_API(BaseSrvGetVDMExitCode)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_GET_VDM_EXIT_CODE GetVDMExitCodeRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetVDMExitCodeRequest;
+    PLIST_ENTRY i = NULL;
+    PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+    PVDM_DOS_RECORD DosRecord = NULL;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(&DosCriticalSection);
+
+    /* Get the console record */
+    Status = BaseSrvGetConsoleRecord(GetVDMExitCodeRequest->ConsoleHandle, &ConsoleRecord);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    /* Search for a DOS record that has the same parent process handle */
+    for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
+    {
+        DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
+        if (DosRecord->ParentProcess == GetVDMExitCodeRequest->hParent) break;
+    }
+
+    /* Check if no DOS record was found */
+    if (i == &ConsoleRecord->DosListHead)
+    {
+        Status = STATUS_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    /* Check if this task is still running */
+    if (DosRecord->State == VDM_READY)
+    {
+        GetVDMExitCodeRequest->ExitCode = STATUS_PENDING;
+        goto Cleanup;
+    }
+
+    /* Return the exit code */
+    GetVDMExitCodeRequest->ExitCode = DosRecord->ExitCode;
+
+    /* Since this is a zombie task record, remove it */
+    RemoveEntryList(&DosRecord->Entry);
+    RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(&DosCriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvSetReenterCount)
