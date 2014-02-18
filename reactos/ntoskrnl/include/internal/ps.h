@@ -300,6 +300,15 @@ PspDestroyQuotaBlock(
     IN PEPROCESS Process
 );
 
+NTSTATUS
+NTAPI
+PspSetQuotaLimits(
+    _In_ HANDLE ProcessHandle,
+    _In_ ULONG Unused,
+    _In_ PVOID QuotaLimits,
+    _In_ ULONG QuotaLimitsLength,
+    _In_ KPROCESSOR_MODE PreviousMode);
+
 #if defined(_X86_)
 //
 // VDM and LDT Support

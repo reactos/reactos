@@ -1767,6 +1767,17 @@ ExpCheckPoolAllocation(
     ULONG Tag);
 
 
+/* mmsup.c *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmAdjustWorkingSetSize(
+    IN SIZE_T WorkingSetMinimumInBytes,
+    IN SIZE_T WorkingSetMaximumInBytes,
+    IN ULONG SystemCache,
+    IN BOOLEAN IncreaseOkay);
+
+
 /* session.c *****************************************************************/
 
 _IRQL_requires_max_(APC_LEVEL)
