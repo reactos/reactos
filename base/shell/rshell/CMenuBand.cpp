@@ -1333,9 +1333,43 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
 
 HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
 {
+    HRESULT hr;
+    UINT uId;
+    UINT uIdAncestor;
+    DWORD flags;
     int index;
+    CComPtr<IShellMenuCallback> psmc;
     CComPtr<IShellMenu> shellMenu;
-    HRESULT hr = m_menuBand->CallCBWithPidl(GetPidlFromId(uItem, &index), SMC_GETOBJECT, (WPARAM) &IID_IShellMenu, (LPARAM) &shellMenu);
+    
+    LPITEMIDLIST pidl = GetPidlFromId(uItem, &index);
+
+    if (!pidl)
+        return E_FAIL;
+
+#ifndef USE_BUILTIN_MENUBAND
+    hr = CoCreateInstance(CLSID_MenuBand,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IShellMenu, &pShellMenu));
+#else
+    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
+#endif
+    if (FAILED(hr))
+        return hr;
+
+    m_menuBand->GetMenuInfo(&psmc, &uId, &uIdAncestor, &flags);
+
+    // FIXME: not sure waht to use as uId/uIdAncestor here
+    hr = shellMenu->Initialize(psmc, 0, uId, SMINIT_VERTICAL);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IShellFolder> childFolder;
+    hr = m_shellFolder->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &childFolder));
+    if (FAILED(hr))
+        return hr;
+
+    hr = shellMenu->SetShellFolder(childFolder, NULL, NULL, 0);
     if (FAILED(hr))
         return hr;
 
