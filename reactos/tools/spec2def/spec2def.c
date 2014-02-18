@@ -51,6 +51,7 @@ enum
     FL_PRIVATE = 1,
     FL_STUB = 2,
     FL_NONAME = 4,
+    FL_ORDINAL = 8,
 };
 
 enum
@@ -476,7 +477,7 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     else
         OutputLine_def_GCC(fileDest, pexp);
 
-    if (pexp->nOrdinal != -1)
+    if (pexp->uFlags & FL_ORDINAL)
     {
         fprintf(fileDest, " @%d", pexp->nOrdinal);
     }
@@ -541,8 +542,13 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         //        nLine, TokenLength(pc), pc);
 
         /* Now we should get either an ordinal or @ */
-        if (*pc == '@') exp.nOrdinal = -1;
-        else exp.nOrdinal = atol(pc);
+        if (*pc == '@')
+            exp.nOrdinal = -1;
+        else
+        {
+            exp.nOrdinal = atol(pc);
+            exp.uFlags |= FL_ORDINAL;
+        }
 
         /* Go to next token (type) */
         if (!(pc = NextToken(pc)))
@@ -627,10 +633,13 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             {
                 exp.uFlags |= FL_PRIVATE;
             }
-            else if (CompareToken(pc, "-noname") ||
-                     CompareToken(pc, "-ordinal"))
+            else if (CompareToken(pc, "-noname"))
             {
-                exp.uFlags |= FL_NONAME;
+                exp.uFlags |= FL_ORDINAL | FL_NONAME;
+            }
+            else if (CompareToken(pc, "-ordinal"))
+            {
+                exp.uFlags |= FL_ORDINAL;
             }
             else if (CompareToken(pc, "-stub"))
             {
@@ -667,7 +676,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             sprintf(namebuffer, "ordinal%d", exp.nOrdinal);
             exp.strName.len = strlen(namebuffer);
             exp.strName.buf = namebuffer;
-            exp.uFlags |= FL_NONAME;
+            exp.uFlags |= FL_ORDINAL | FL_NONAME;
         }
 
         /* Handle parameters */
@@ -804,9 +813,10 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
 
         /* Check for no-name without ordinal */
-        if ((exp.uFlags & FL_NONAME) && (exp.nOrdinal == -1))
+        if ((exp.uFlags & FL_ORDINAL) && (exp.nOrdinal == -1))
         {
-            fprintf(stderr, "error: line %d, noname export without ordinal!\n", nLine);
+            fprintf(stderr, "error: line %d, ordinal export without ordinal!\n", nLine);
+            return -1;
         }
 
         OutputLine(fileDest, &exp);
