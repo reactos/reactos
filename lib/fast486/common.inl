@@ -281,7 +281,7 @@ Fast486StackPush(PFAST486_STATE State,
         }
 
         /* Subtract ESP by 4 */
-        State->GeneralRegs[FAST486_REG_ESP].Long -= 4;
+        State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(ULONG);
 
         /* Store the value in SS:ESP */
         return Fast486WriteMemory(State,
@@ -303,7 +303,7 @@ Fast486StackPush(PFAST486_STATE State,
         }
 
         /* Subtract SP by 2 */
-        State->GeneralRegs[FAST486_REG_ESP].LowWord -= 2;
+        State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(USHORT);
 
         /* Store the value in SS:SP */
         return Fast486WriteMemory(State,
@@ -319,8 +319,6 @@ BOOLEAN
 Fast486StackPop(PFAST486_STATE State,
                 PULONG Value)
 {
-    ULONG LongValue;
-    USHORT ShortValue;
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* The OPSIZE prefix toggles the size */
@@ -329,6 +327,7 @@ Fast486StackPop(PFAST486_STATE State,
     if (Size)
     {
         /* 32-bit size */
+        ULONG LongValue;
 
         /* Check if ESP is 0xFFFFFFFF */
         if (State->GeneralRegs[FAST486_REG_ESP].Long == 0xFFFFFFFF)
@@ -350,7 +349,7 @@ Fast486StackPop(PFAST486_STATE State,
         }
 
         /* Increment ESP by 4 */
-        State->GeneralRegs[FAST486_REG_ESP].Long += 4;
+        State->GeneralRegs[FAST486_REG_ESP].Long += sizeof(ULONG);
 
         /* Store the value in the result */
         *Value = LongValue;
@@ -358,6 +357,7 @@ Fast486StackPop(PFAST486_STATE State,
     else
     {
         /* 16-bit size */
+        USHORT ShortValue;
 
         /* Check if SP is 0xFFFF */
         if (State->GeneralRegs[FAST486_REG_ESP].LowWord == 0xFFFF)
@@ -379,7 +379,7 @@ Fast486StackPop(PFAST486_STATE State,
         }
 
         /* Increment SP by 2 */
-        State->GeneralRegs[FAST486_REG_ESP].LowWord += 2;
+        State->GeneralRegs[FAST486_REG_ESP].LowWord += sizeof(USHORT);
 
         /* Store the value in the result */
         *Value = ShortValue;
