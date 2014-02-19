@@ -1,7 +1,11 @@
 
-#define USE_BUILTIN_MENUDESKBAR
-#define USE_BUILTIN_MENUSITE
-#define USE_BUILTIN_MENUBAND
+#define USE_SYSTEM_MENUDESKBAR 0
+#define USE_SYSTEM_MENUSITE 0
+#define USE_SYSTEM_MENUBAND 0
+
+// if not using system above
+#define WRAP_MENUDESKBAR 0
+#define WRAP_MENUBAND 0
 
 #include <stdio.h>
 #include <tchar.h>
@@ -34,6 +38,8 @@
 #define SMC_EXEC 4
 extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
 
-extern "C" HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
+extern "C" HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
+extern "C" HRESULT CMenuBand_Wrapper(REFIID riid, LPVOID *ppv);
+extern "C" HRESULT CMenuDeskBar_Wrapper(REFIID riid, LPVOID *ppv);

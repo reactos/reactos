@@ -18,13 +18,10 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 #include "precomp.h"
-#include "wraplog.h"
 #include <atlwin.h>
 #include <shlwapi_undoc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
-
-#define WRAP_LOG 0
 
 typedef CWinTraits<
     WS_POPUP | WS_DLGFRAME | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
@@ -32,9 +29,7 @@ typedef CWinTraits<
 > CMenuWinTraits;
 
 class CMenuDeskBar :
-#if !WRAP_LOG
     public CWindowImpl<CMenuDeskBar, CWindow, CMenuWinTraits>,
-#endif
     public CComCoClass<CMenuDeskBar>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IOleCommandTarget,
@@ -51,28 +46,12 @@ public:
     ~CMenuDeskBar();
 
 private:
-#if WRAP_LOG
-    IUnknown * m_IUnknown;
-    IMenuPopup * m_IMenuPopup;
-    IOleCommandTarget * m_IOleCommandTarget;
-    IServiceProvider * m_IServiceProvider;
-    IDeskBar * m_IDeskBar;
-    IOleWindow * m_IOleWindow;
-    IInputObjectSite * m_IInputObjectSite;
-    IInputObject * m_IInputObject;
-    IObjectWithSite * m_IObjectWithSite;
-    IBanneredBar * m_IBanneredBar;
-    IInitializeObject * m_IInitializeObject;
-#else
-
     CComPtr<IUnknown>   m_Site;
     CComPtr<IUnknown>   m_Client;
     CComPtr<IMenuPopup> m_SubMenuParent;
 
     DWORD m_IconSize;
     HBITMAP m_Banner;
-
-#endif
 
 public:
     // *** IMenuPopup methods ***
@@ -120,7 +99,6 @@ public:
     DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-#if !WRAP_LOG
     DECLARE_WND_CLASS_EX(_T("BaseBar"), CS_SAVEBITS | CS_DROPSHADOW, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CMenuDeskBar)
@@ -129,14 +107,6 @@ public:
         MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
-
-    // message handlers
-    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-
-#endif
 
     BEGIN_COM_MAP(CMenuDeskBar)
         COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
@@ -150,6 +120,14 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IBanneredBar, IBanneredBar)
         COM_INTERFACE_ENTRY_IID(IID_IInitializeObject, IInitializeObject)
     END_COM_MAP()
+
+private:
+
+    // message handlers
+    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 
 extern "C"
@@ -169,296 +147,6 @@ HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 
     return hr;
 }
-
-#if WRAP_LOG
-CMenuDeskBar::CMenuDeskBar()
-{
-    HRESULT hr;
-    WrapLogOpen();
-
-    hr = CoCreateInstance(CLSID_MenuDeskBar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    hr = m_IMenuPopup->QueryInterface(IID_PPV_ARG(IUnknown, &m_IUnknown));
-
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObjectSite, &m_IInputObjectSite));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IBanneredBar, &m_IBanneredBar));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IInitializeObject, &m_IInitializeObject));
-}
-
-CMenuDeskBar::~CMenuDeskBar()
-{
-    m_IUnknown->Release();
-    m_IMenuPopup->Release();
-    m_IOleCommandTarget->Release();
-    m_IServiceProvider->Release();
-    m_IDeskBar->Release();
-    m_IOleWindow->Release();
-    m_IInputObjectSite->Release();
-    m_IInputObject->Release();
-    m_IObjectWithSite->Release();
-    m_IBanneredBar->Release();
-    m_IInitializeObject->Release();
-
-    WrapLogClose();
-}
-
-// *** IMenuPopup methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::Popup(POINTL *ppt=%p, RECTL *prcExclude=%p, MP_POPUPFLAGS dwFlags=%08x)\n", this, ppt, prcExclude, dwFlags);
-    HRESULT hr = m_IMenuPopup->Popup(ppt, prcExclude, dwFlags);
-    WrapLogExit("CMenuDeskBar::Popup() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::OnSelect(DWORD dwSelectType=%08x)\n", this, dwSelectType);
-    HRESULT hr = m_IMenuPopup->OnSelect(dwSelectType);
-    WrapLogExit("CMenuDeskBar::OnSelect() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::SetSubMenu(IMenuPopup *pmp=%p, BOOL fSet=%d)\n", this, pmp, fSet);
-    HRESULT hr = m_IMenuPopup->SetSubMenu(pmp, fSet);
-    WrapLogExit("CMenuDeskBar::SetSubMenu() = %08x\n", hr);
-    return hr;
-}
-
-// *** IOleWindow methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetWindow(HWND *phwnd)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::GetWindow(HWND *phwnd=%p)\n", this, phwnd);
-    HRESULT hr = m_IOleWindow->GetWindow(phwnd);
-    if (phwnd) WrapLogMsg("*phwnd=%p\n", *phwnd);
-    WrapLogExit("CMenuDeskBar::GetWindow() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::ContextSensitiveHelp(BOOL fEnterMode=%d)\n", this, fEnterMode);
-    HRESULT hr = m_IOleWindow->ContextSensitiveHelp(fEnterMode);
-    WrapLogExit("CMenuDeskBar::ContextSensitiveHelp() = %08x\n", hr);
-    return hr;
-}
-
-// *** IObjectWithSite methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::SetSite(IUnknown *pUnkSite=%p)\n", this, pUnkSite);
-    HRESULT hr = m_IObjectWithSite->SetSite(pUnkSite);
-    WrapLogExit("CMenuDeskBar::SetSite() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, PVOID *ppvSite)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::GetSite(REFIID riid=%s, PVOID *ppvSite=%p)\n", this, Wrap(riid), ppvSite);
-    HRESULT hr = m_IObjectWithSite->GetSite(riid, ppvSite);
-    if (ppvSite) WrapLogMsg("*ppvSite=%p\n", *ppvSite);
-    WrapLogExit("CMenuDeskBar::GetSite() = %08x\n", hr);
-    return hr;
-}
-
-// *** IBanneredBar methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetIconSize(DWORD iIcon)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::SetIconSize(DWORD iIcon=%d)\n", this, iIcon);
-    HRESULT hr = m_IBanneredBar->SetIconSize(iIcon);
-    WrapLogExit("CMenuDeskBar::SetIconSize() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetIconSize(DWORD* piIcon)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::GetIconSize(DWORD* piIcon=%p)\n", this, piIcon);
-    HRESULT hr = m_IBanneredBar->GetIconSize(piIcon);
-    if (piIcon) WrapLogMsg("*piIcon=%d\n", *piIcon);
-    WrapLogExit("CMenuDeskBar::GetIconSize() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(HBITMAP hBitmap)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::SetBitmap(HBITMAP hBitmap=%p)\n", this, hBitmap);
-    HRESULT hr = m_IBanneredBar->SetBitmap(hBitmap);
-    WrapLogExit("CMenuDeskBar::SetBitmap() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(HBITMAP* phBitmap)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::GetBitmap(HBITMAP* phBitmap=%p)\n", this, phBitmap);
-    HRESULT hr = m_IBanneredBar->GetBitmap(phBitmap);
-    if (phBitmap) WrapLogMsg("*phBitmap=%p\n", *phBitmap);
-    WrapLogExit("CMenuDeskBar::GetBitmap() = %08x\n", hr);
-    return hr;
-}
-
-
-// *** IInitializeObject methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::Initialize()\n", this);
-    HRESULT hr = m_IInitializeObject->Initialize();
-    WrapLogExit("CMenuDeskBar::Initialize() = %08x\n", hr);
-    return hr;
-}
-
-// *** IOleCommandTarget methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::QueryStatus(const GUID *pguidCmdGroup=%p, ULONG cCmds=%u, prgCmds=%p, pCmdText=%p)\n", this, pguidCmdGroup, cCmds, prgCmds, pCmdText);
-    HRESULT hr = m_IOleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
-    WrapLogExit("CMenuDeskBar::QueryStatus() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::Exec(const GUID *pguidCmdGroup=%p, DWORD nCmdID=%d, DWORD nCmdexecopt=%d, VARIANT *pvaIn=%p, VARIANT *pvaOut=%p)\n", this, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
-    HRESULT hr = m_IOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    WrapLogExit("CMenuDeskBar::Exec() = %08x\n", hr);
-    return hr;
-}
-
-// *** IServiceProvider methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::QueryService(REFGUID guidService=%s, REFIID riid=%s, void **ppvObject=%p)\n", this, Wrap(guidService), Wrap(riid), ppvObject);
-
-    if (IsEqualIID(guidService, SID_SMenuPopup))
-    {
-        WrapLogMsg("SID is SID_SMenuPopup. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else if (IsEqualIID(guidService, SID_SMenuBandParent))
-    {
-        WrapLogMsg("SID is SID_SMenuBandParent. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else if (IsEqualIID(guidService, SID_STopLevelBrowser))
-    {
-        WrapLogMsg("SID is SID_STopLevelBrowser. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else
-    {
-        WrapLogMsg("SID not identified. Calling wrapped object's QueryService.\n");
-    }
-    HRESULT hr = m_IServiceProvider->QueryService(guidService, riid, ppvObject);
-    if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-    WrapLogExit("CMenuDeskBar::QueryService() = %08x\n", hr);
-    return hr;
-}
-
-// *** IInputObjectSite methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(LPUNKNOWN lpUnknown, BOOL bFocus)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::OnFocusChangeIS(LPUNKNOWN lpUnknown=%p, BOOL bFocus=%d)\n", this, lpUnknown, bFocus);
-    HRESULT hr = m_IInputObjectSite->OnFocusChangeIS(lpUnknown, bFocus);
-    WrapLogExit("CMenuDeskBar::OnFocusChangeIS() = %08x\n", hr);
-    return hr;
-}
-
-// *** IInputObject methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::UIActivateIO(BOOL bActivating, LPMSG lpMsg)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::UIActivateIO(BOOL bActivating=%d, LPMSG lpMsg=%p)\n", this, bActivating, lpMsg);
-    HRESULT hr = m_IInputObject->UIActivateIO(bActivating, lpMsg);
-    WrapLogExit("CMenuDeskBar::UIActivateIO() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::HasFocusIO(THIS)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::HasFocusIO()\n", this);
-    HRESULT hr = m_IInputObject->HasFocusIO();
-    WrapLogExit("CMenuDeskBar::HasFocusIO() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::TranslateAcceleratorIO(LPMSG lpMsg=%p)\n", this, lpMsg);
-    if (lpMsg) WrapLogMsg("*lpMsg=%s\n", Wrap(*lpMsg));
-    HRESULT hr = m_IInputObject->TranslateAcceleratorIO(lpMsg);
-    WrapLogExit("CMenuDeskBar::TranslateAcceleratorIO() = %08x\n", hr);
-    return hr;
-}
-
-// *** IDeskBar methods ***
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::SetClient(IUnknown *punkClient=%p)\n", this, punkClient);
-    HRESULT hr = m_IDeskBar->SetClient(punkClient);
-    WrapLogExit("CMenuDeskBar::SetClient() = %08x\n", hr);
-
-    CComPtr<IDeskBarClient> dbc;
-    punkClient->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
-    dbc->SetDeskBarSite(static_cast<IDeskBar*>(this));
-
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetClient(IUnknown **ppunkClient)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::GetClient(IUnknown **ppunkClient=%p)\n", this, ppunkClient);
-    HRESULT hr = m_IDeskBar->GetClient(ppunkClient);
-    if (ppunkClient) WrapLogMsg("*ppunkClient=%p\n", *ppunkClient);
-    WrapLogExit("CMenuDeskBar::GetClient() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
-{
-    WrapLogEnter("CMenuDeskBar<%p>::OnPosRectChangeDB(RECT *prc=%p)\n", this, prc);
-    HRESULT hr = m_IDeskBar->OnPosRectChangeDB(prc);
-    if (prc) WrapLogMsg("*prc=%s\n", Wrap(*prc));
-    WrapLogExit("CMenuDeskBar::OnPosRectChangeDB() = %08x\n", hr);
-    return hr;
-}
-#else
 
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
@@ -699,7 +387,6 @@ LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
         const int bx = bm.bmWidth;
         const int by = bm.bmHeight;
-        const int cx = rc.right;
         const int cy = rc.bottom;
 
         TRACE("Painting banner: %d by %d\n", bm.bmWidth, bm.bmHeight);
@@ -915,5 +602,3 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
 {
     return S_OK;
 }
-
-#endif

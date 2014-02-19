@@ -18,12 +18,9 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 #include "precomp.h"
-#include "wraplog.h"
 #include <windowsx.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
-
-#define WRAP_LOG 0
 
 #define TBSTYLE_EX_VERTICAL 4
 
@@ -135,25 +132,6 @@ public:
     ~CMenuBand();
 
 private:
-#if WRAP_LOG
-    IUnknown          * m_IUnknown;
-    IDeskBand         * m_IDeskBand;
-    IDockingWindow    * m_IDockingWindow;
-    IOleWindow        * m_IOleWindow;
-    IObjectWithSite   * m_IObjectWithSite;
-    IInputObject      * m_IInputObject;
-    IPersistStream    * m_IPersistStream;
-    IPersist          * m_IPersist;
-    IOleCommandTarget * m_IOleCommandTarget;
-    IServiceProvider  * m_IServiceProvider;
-    IMenuPopup        * m_IMenuPopup;
-    IDeskBar          * m_IDeskBar;
-    IMenuBand         * m_IMenuBand;
-    IShellMenu2       * m_IShellMenu2;
-    IShellMenu        * m_IShellMenu;
-    IWinEventHandler  * m_IWinEventHandler;
-    IShellMenuAcc     * m_IShellMenuAcc;
-#else
     IOleWindow *m_site;
     IShellMenuCallback *m_psmc;
 
@@ -166,7 +144,6 @@ private:
     PVOID m_UserData;
     HMENU m_hmenu;
     HWND m_menuOwner;
-#endif
 
     BOOL m_useBigIcons;
 
@@ -256,7 +233,7 @@ public:
 
     HRESULT CallCBWithId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT CallCBWithPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT TrackPopup(HMENU popup, INT x, INT y, RECT& rc);
+    HRESULT TrackPopup(HMENU popup, INT x, INT y);
 
     BOOL UseBigIcons() {
         return m_useBigIcons;
@@ -305,555 +282,6 @@ HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 
     return hr;
 }
-
-
-#if WRAP_LOG
-CMenuBand::CMenuBand()
-{
-    HRESULT hr;
-    WrapLogOpen();
-
-    hr = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellMenu, &m_IShellMenu));
-    hr = m_IShellMenu->QueryInterface(IID_PPV_ARG(IUnknown, &m_IUnknown));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBand, &m_IDeskBand));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IDockingWindow, &m_IDockingWindow));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IPersistStream, &m_IPersistStream));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IPersist, &m_IPersist));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IMenuBand, &m_IMenuBand));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IShellMenu2, &m_IShellMenu2));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_IWinEventHandler));
-    hr = m_IUnknown->QueryInterface(IID_PPV_ARG(IShellMenuAcc, &m_IShellMenuAcc));
-}
-
-CMenuBand::~CMenuBand()
-{
-    m_IUnknown->Release();
-    m_IDeskBand->Release();
-    m_IDockingWindow->Release();
-    m_IOleWindow->Release();
-    m_IObjectWithSite->Release();
-    m_IInputObject->Release();
-    m_IPersistStream->Release();
-    m_IPersist->Release();
-    m_IOleCommandTarget->Release();
-    m_IServiceProvider->Release();
-    m_IMenuPopup->Release();
-    m_IDeskBar->Release();
-    m_IMenuBand->Release();
-    m_IShellMenu2->Release();
-    m_IShellMenu->Release();
-    m_IWinEventHandler->Release();
-    m_IShellMenuAcc->Release();
-    WrapLogClose();
-}
-
-
-// *** IShellMenu2 methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::GetSubMenu(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetSubMenu()\n", this);
-    HRESULT hr = m_IShellMenu2->GetSubMenu();
-    WrapLogExit("CMenuBand::GetSubMenu() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetToolbar(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::SetToolbar()\n", this);
-    HRESULT hr = m_IShellMenu2->SetToolbar();
-    WrapLogExit("CMenuBand::SetToolbar() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetMinWidth(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::SetMinWidth()\n", this);
-    HRESULT hr = m_IShellMenu2->SetMinWidth();
-    WrapLogExit("CMenuBand::SetMinWidth() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetNoBorder(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::SetNoBorder()\n", this);
-    HRESULT hr = m_IShellMenu2->SetNoBorder();
-    WrapLogExit("CMenuBand::SetNoBorder() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetTheme(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::SetTheme()\n", this);
-    HRESULT hr = m_IShellMenu2->SetTheme();
-    WrapLogExit("CMenuBand::SetTheme() = %08x\n", hr);
-    return hr;
-}
-
-
-// *** IShellMenuAcc methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::GetTop(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetTop()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetTop();
-    WrapLogExit("CMenuBand::GetTop() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetBottom(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetTracked(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetParentSite(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetState(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::DoDefaultAction(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBottom()\n", this);
-    HRESULT hr = m_IShellMenuAcc->GetBottom();
-    WrapLogExit("CMenuBand::GetBottom() = %08x\n", hr);
-    return hr;
-}
-
-// *** IDeskBand methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi)
-{
-    WrapLogEnter("CMenuBand<%p>::GetBandInfo(DWORD dwBandID=%d, DWORD dwViewMode=%d, DESKBANDINFO *pdbi=%p)\n", this, dwBandID, dwViewMode, pdbi);
-    HRESULT hr = m_IDeskBand->GetBandInfo(dwBandID, dwViewMode, pdbi);
-    WrapLogExit("CMenuBand::GetBandInfo() = %08x\n", hr);
-    return hr;
-}
-
-// *** IDockingWindow methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::ShowDW(BOOL fShow)
-{
-    WrapLogEnter("CMenuBand<%p>::ShowDW(BOOL fShow=%d)\n", this, fShow);
-    HRESULT hr = m_IDockingWindow->ShowDW(fShow);
-    WrapLogExit("CMenuBand::ShowDW() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
-{
-    WrapLogEnter("CMenuBand<%p>::CloseDW(DWORD dwReserved=%d)\n", this, dwReserved);
-    HRESULT hr = m_IDockingWindow->CloseDW(dwReserved);
-    WrapLogExit("CMenuBand::CloseDW() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
-{
-    WrapLogEnter("CMenuBand<%p>::ResizeBorderDW(LPCRECT prcBorder=%p, IUnknown *punkToolbarSite=%p, BOOL fReserved=%d)\n", this, prcBorder, punkToolbarSite, fReserved);
-    if (prcBorder) WrapLogMsg("*prcBorder=%s\n", Wrap(*prcBorder));
-    HRESULT hr = m_IDockingWindow->ResizeBorderDW(prcBorder, punkToolbarSite, fReserved);
-    if (prcBorder) WrapLogMsg("*prcBorder=%s\n", Wrap(*prcBorder));
-    WrapLogExit("CMenuBand::ResizeBorderDW() = %08x\n", hr);
-    return hr;
-}
-
-// *** IOleWindow methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::GetWindow(HWND *phwnd)
-{
-    WrapLogEnter("CMenuBand<%p>::GetWindow(HWND *phwnd=%p)\n", this, phwnd);
-    HRESULT hr = m_IOleWindow->GetWindow(phwnd);
-    if (phwnd) WrapLogMsg("*phwnd=%p\n", *phwnd);
-    WrapLogExit("CMenuBand::GetWindow() = %08x\n", hr);
-    return hr;
-}
-HRESULT STDMETHODCALLTYPE CMenuBand::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    WrapLogEnter("CMenuBand<%p>::ContextSensitiveHelp(BOOL fEnterMode=%d)\n", this, fEnterMode);
-    HRESULT hr = m_IOleWindow->ContextSensitiveHelp(fEnterMode);
-    WrapLogExit("CMenuBand::ContextSensitiveHelp() = %08x\n", hr);
-    return hr;
-}
-
-// *** IWinEventHandler methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-{
-    //WrapLogEnter("CMenuBand<%p>::OnWinEvent(HWND hWnd=%p, UINT uMsg=%u, WPARAM wParam=%08x, LPARAM lParam=%08x, LRESULT *theResult=%p)\n", this, hWnd, uMsg, wParam, lParam, theResult);
-    HRESULT hr = m_IWinEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
-    //WrapLogExit("CMenuBand::OnWinEvent() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::IsWindowOwner(HWND hWnd)
-{
-    //WrapLogEnter("CMenuBand<%p>::IsWindowOwner(HWND hWnd=%08x)\n", this, hWnd);
-    HRESULT hr = m_IWinEventHandler->IsWindowOwner(hWnd);
-    //WrapLogExit("CMenuBand::IsWindowOwner() = %08x\n", hr);
-    return hr;
-}
-
-// *** IObjectWithSite methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::SetSite(IUnknown *pUnkSite)
-{
-    WrapLogEnter("CMenuBand<%p>::SetSite(IUnknown *pUnkSite=%p)\n", this, pUnkSite);
-    HRESULT hr = m_IObjectWithSite->SetSite(pUnkSite);
-    WrapLogExit("CMenuBand::SetSite() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetSite(REFIID riid, PVOID *ppvSite)
-{
-    WrapLogEnter("CMenuBand<%p>::GetSite(REFIID riid=%s, PVOID *ppvSite=%p)\n", this, Wrap(riid), ppvSite);
-    HRESULT hr = m_IObjectWithSite->GetSite(riid, ppvSite);
-    if (ppvSite) WrapLogMsg("*ppvSite=%p\n", *ppvSite);
-    WrapLogExit("CMenuBand::GetSite() = %08x\n", hr);
-    return hr;
-}
-
-// *** IInputObject methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
-{
-    WrapLogEnter("CMenuBand<%p>::UIActivateIO(BOOL fActivate=%d, LPMSG lpMsg=%p)\n", this, fActivate, lpMsg);
-    HRESULT hr = m_IInputObject->UIActivateIO(fActivate, lpMsg);
-    WrapLogExit("CMenuBand::UIActivateIO() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()
-{
-    WrapLogEnter("CMenuBand<%p>::HasFocusIO()\n", this);
-    HRESULT hr = m_IInputObject->HasFocusIO();
-    WrapLogExit("CMenuBand::HasFocusIO() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
-{
-    WrapLogEnter("CMenuBand<%p>::TranslateAcceleratorIO(LPMSG lpMsg=%p)\n", this, lpMsg);
-    if (lpMsg) WrapLogMsg("*lpMsg=%s\n", Wrap(*lpMsg));
-    HRESULT hr = m_IInputObject->TranslateAcceleratorIO(lpMsg);
-    WrapLogExit("CMenuBand::TranslateAcceleratorIO() = %08x\n", hr);
-    return hr;
-}
-
-// *** IPersistStream methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::IsDirty()
-{
-    WrapLogEnter("CMenuBand<%p>::IsDirty()\n", this);
-    HRESULT hr = m_IPersistStream->IsDirty();
-    WrapLogExit("CMenuBand::IsDirty() = %08x\n", hr);
-    return hr;
-}
-HRESULT STDMETHODCALLTYPE CMenuBand::Load(IStream *pStm)
-{
-    WrapLogEnter("CMenuBand<%p>::Load(IStream *pStm=%p)\n", this, pStm);
-    HRESULT hr = m_IPersistStream->Load(pStm);
-    WrapLogExit("CMenuBand::Load() = %08x\n", hr);
-    return hr;
-}
-HRESULT STDMETHODCALLTYPE CMenuBand::Save(IStream *pStm, BOOL fClearDirty)
-{
-    WrapLogEnter("CMenuBand<%p>::Save(IStream *pStm=%p, BOOL fClearDirty=%d)\n", this, pStm, fClearDirty);
-    HRESULT hr = m_IPersistStream->Save(pStm, fClearDirty);
-    WrapLogExit("CMenuBand::Save() = %08x\n", hr);
-    return hr;
-}
-HRESULT STDMETHODCALLTYPE CMenuBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
-{
-    WrapLogEnter("CMenuBand<%p>::GetSizeMax(ULARGE_INTEGER *pcbSize=%p)\n", this, pcbSize);
-    HRESULT hr = m_IPersistStream->GetSizeMax(pcbSize);
-    WrapLogExit("CMenuBand::GetSizeMax() = %08x\n", hr);
-    return hr;
-}
-
-// *** IPersist methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::GetClassID(CLSID *pClassID)
-{
-    WrapLogEnter("CMenuBand<%p>::GetClassID(CLSID *pClassID=%p)\n", this, pClassID);
-    HRESULT hr = m_IPersist->GetClassID(pClassID);
-    if (pClassID) WrapLogMsg("*pClassID=%s\n", Wrap(*pClassID));
-    WrapLogExit("CMenuBand::GetClassID() = %08x\n", hr);
-    return hr;
-}
-
-// *** IOleCommandTarget methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-{
-    WrapLogEnter("CMenuBand<%p>::QueryStatus(const GUID *pguidCmdGroup=%p, ULONG cCmds=%u, prgCmds=%p, pCmdText=%p)\n", this, pguidCmdGroup, cCmds, prgCmds, pCmdText);
-    HRESULT hr = m_IOleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
-    WrapLogExit("CMenuBand::QueryStatus() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-{
-    bool b;
-
-    WrapLogEnter("CMenuBand<%p>::Exec(const GUID *pguidCmdGroup=%p, DWORD nCmdID=%d, DWORD nCmdexecopt=%d, VARIANT *pvaIn=%p, VARIANT *pvaOut=%p)\n", this, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-
-    if (pguidCmdGroup && IsEqualGUID(*pguidCmdGroup, CLSID_MenuBand))
-    {
-        if (nCmdID == 19) // popup
-        {
-            b = true;
-        }
-    }
-
-
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
-    HRESULT hr = m_IOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    WrapLogExit("CMenuBand::Exec() = %08x\n", hr);
-    return hr;
-}
-
-// *** IServiceProvider methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
-{
-    WrapLogEnter("CMenuBand<%p>::QueryService(REFGUID guidService=%s, REFIID riid=%s, void **ppvObject=%p)\n", this, Wrap(guidService), Wrap(riid), ppvObject);
-
-    if (IsEqualIID(guidService, SID_SMenuBandChild))
-    {
-        WrapLogMsg("SID is SID_SMenuBandChild. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else if (IsEqualIID(guidService, SID_SMenuBandBottom))
-    {
-        WrapLogMsg("SID is SID_SMenuBandBottom. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else if (IsEqualIID(guidService, SID_SMenuBandBottomSelected))
-    {
-        WrapLogMsg("SID is SID_SMenuBandBottomSelected. Using QueryInterface of self instead of wrapped object.\n");
-        HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-        if (SUCCEEDED(hr))
-        {
-            WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
-            return hr;
-        }
-        else
-        {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
-        }
-    }
-    else
-    {
-        WrapLogMsg("SID not identified.\n");
-    }
-    HRESULT hr = m_IServiceProvider->QueryService(guidService, riid, ppvObject);
-    if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-    WrapLogExit("CMenuBand::QueryService() = %08x\n", hr);
-    return hr;
-}
-
-
-// *** IMenuPopup methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::Popup(POINTL *ppt=%p, RECTL *prcExclude=%p, MP_POPUPFLAGS dwFlags=%08x)\n", this, ppt, prcExclude, dwFlags);
-    HRESULT hr = m_IMenuPopup->Popup(ppt, prcExclude, dwFlags);
-    WrapLogExit("CMenuBand::Popup() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
-{
-    WrapLogEnter("CMenuBand<%p>::OnSelect(DWORD dwSelectType=%08x)\n", this, dwSelectType);
-    HRESULT hr = m_IMenuPopup->OnSelect(dwSelectType);
-    WrapLogExit("CMenuBand::OnSelect() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
-{
-    WrapLogEnter("CMenuBand<%p>::SetSubMenu(IMenuPopup *pmp=%p, BOOL fSet=%d)\n", this, pmp, fSet);
-    HRESULT hr = m_IMenuPopup->SetSubMenu(pmp, fSet);
-    WrapLogExit("CMenuBand::SetSubMenu() = %08x\n", hr);
-    return hr;
-}
-
-
-// *** IDeskBar methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
-{
-    WrapLogEnter("CMenuBand<%p>::SetClient(IUnknown *punkClient=%p)\n", this, punkClient);
-    HRESULT hr = m_IDeskBar->SetClient(punkClient);
-    WrapLogExit("CMenuBand::SetClient() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
-{
-    WrapLogEnter("CMenuBand<%p>::GetClient(IUnknown **ppunkClient=%p)\n", this, ppunkClient);
-    HRESULT hr = m_IDeskBar->GetClient(ppunkClient);
-    if (ppunkClient) WrapLogMsg("*ppunkClient=%p\n", *ppunkClient);
-    WrapLogExit("CMenuBand::GetClient() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
-{
-    WrapLogEnter("CMenuBand<%p>::OnPosRectChangeDB(RECT *prc=%p)\n", this, prc);
-    HRESULT hr = m_IDeskBar->OnPosRectChangeDB(prc);
-    if (prc) WrapLogMsg("*prc=%s\n", Wrap(*prc));
-    WrapLogExit("CMenuBand::OnPosRectChangeDB() = %08x\n", hr);
-    return hr;
-}
-
-
-// *** IMenuBand methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::IsMenuMessage(MSG *pmsg)
-{
-    //WrapLogEnter("CMenuBand<%p>::IsMenuMessage(MSG *pmsg=%p)\n", this, pmsg);
-    HRESULT hr = m_IMenuBand->IsMenuMessage(pmsg);
-    //WrapLogExit("CMenuBand::IsMenuMessage() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::TranslateMenuMessage(MSG *pmsg, LRESULT *plRet)
-{
-    //WrapLogEnter("CMenuBand<%p>::TranslateMenuMessage(MSG *pmsg=%p, LRESULT *plRet=%p)\n", this, pmsg, plRet);
-    HRESULT hr = m_IMenuBand->TranslateMenuMessage(pmsg, plRet);
-    //WrapLogExit("CMenuBand::TranslateMenuMessage(*plRet=%d) = %08x\n", *plRet, hr);
-    return hr;
-}
-
-// *** IShellMenu methods ***
-HRESULT STDMETHODCALLTYPE CMenuBand::Initialize(IShellMenuCallback *psmc, UINT uId, UINT uIdAncestor, DWORD dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::Initialize(IShellMenuCallback *psmc=%p, UINT uId=%u, UINT uIdAncestor=%u, DWORD dwFlags=%08x)\n", this, psmc, uId, uIdAncestor, dwFlags);
-    HRESULT hr = m_IShellMenu->Initialize(psmc, uId, uIdAncestor, dwFlags);
-    WrapLogExit("CMenuBand::Initialize() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetMenuInfo(IShellMenuCallback **ppsmc, UINT *puId, UINT *puIdAncestor, DWORD *pdwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::GetMenuInfo(IShellMenuCallback **ppsmc=%p, UINT *puId=%p, UINT *puIdAncestor=%p, DWORD *pdwFlags=%p)\n", this, ppsmc, puId, puIdAncestor, pdwFlags);
-    HRESULT hr = m_IShellMenu->GetMenuInfo(ppsmc, puId, puIdAncestor, pdwFlags);
-    if (ppsmc) WrapLogMsg("*ppsmc=%p\n", *ppsmc);
-    if (puId) WrapLogMsg("*puId=%u\n", *puId);
-    if (puIdAncestor) WrapLogMsg("*puIdAncestor=%u\n", *puIdAncestor);
-    if (pdwFlags) WrapLogMsg("*pdwFlags=%08x\n", *pdwFlags);
-    WrapLogExit("CMenuBand::GetMenuInfo() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::SetShellFolder(IShellFolder *psf=%p, LPCITEMIDLIST pidlFolder=%p, HKEY hKey=%p, DWORD dwFlags=%08x)\n", this, psf, pidlFolder, hKey, dwFlags);
-    HRESULT hr = m_IShellMenu->SetShellFolder(psf, pidlFolder, hKey, dwFlags);
-    WrapLogExit("CMenuBand::SetShellFolder() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv)
-{
-    WrapLogEnter("CMenuBand<%p>::GetShellFolder(DWORD *pdwFlags=%p, LPITEMIDLIST *ppidl=%p, REFIID riid=%s, void **ppv=%p)\n", this, pdwFlags, ppidl, Wrap(riid), ppv);
-    HRESULT hr = m_IShellMenu->GetShellFolder(pdwFlags, ppidl, riid, ppv);
-    if (pdwFlags) WrapLogMsg("*pdwFlags=%08x\n", *pdwFlags);
-    if (ppidl) WrapLogMsg("*ppidl=%p\n", *ppidl);
-    if (ppv) WrapLogMsg("*ppv=%p\n", *ppv);
-    WrapLogExit("CMenuBand::GetShellFolder() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::SetMenu(HMENU hmenu=%p, HWND hwnd=%p, DWORD dwFlags=%08x)\n", this, hmenu, hwnd, dwFlags);
-    HRESULT hr = m_IShellMenu->SetMenu(hmenu, hwnd, dwFlags);
-    WrapLogExit("CMenuBand::SetMenu() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::GetMenu(HMENU *phmenu=%p, HWND *phwnd=%p, DWORD *pdwFlags=%p)\n", this, phmenu, phwnd, pdwFlags);
-    HRESULT hr = m_IShellMenu->GetMenu(phmenu, phwnd, pdwFlags);
-    if (phmenu) WrapLogMsg("*phmenu=%p\n", *phmenu);
-    if (phwnd) WrapLogMsg("*phwnd=%p\n", *phwnd);
-    if (pdwFlags) WrapLogMsg("*pdwFlags=%08x\n", *pdwFlags);
-    WrapLogExit("CMenuBand::GetMenu() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::InvalidateItem(LPSMDATA psmd=%p, DWORD dwFlags=%08x)\n", this, psmd, dwFlags);
-    HRESULT hr = m_IShellMenu->InvalidateItem(psmd, dwFlags);
-    WrapLogExit("CMenuBand::InvalidateItem() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetState(LPSMDATA psmd)
-{
-    WrapLogEnter("CMenuBand<%p>::GetState(LPSMDATA psmd=%p)\n", this, psmd);
-    HRESULT hr = m_IShellMenu->GetState(psmd);
-    WrapLogExit("CMenuBand::GetState() = %08x\n", hr);
-    return hr;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlags)
-{
-    WrapLogEnter("CMenuBand<%p>::SetMenuToolbar(IUnknown *punk=%p, DWORD dwFlags=%08x)\n", this, punk, dwFlags);
-    HRESULT hr = m_IShellMenu->SetMenuToolbar(punk, dwFlags);
-    WrapLogExit("CMenuBand::SetMenuToolbar() = %08x\n", hr);
-    return hr;
-}
-#else
 
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand) :
     m_menuBand(menuBand),
@@ -991,7 +419,7 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
     {
         if (HasSubMenu(hot->idNew) == S_OK)
         {
-            DWORD elapsed;
+            DWORD elapsed = 0;
             SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
 
             m_hotItem = hot->idNew;
@@ -1009,9 +437,9 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
     IBandSite* pBandSite;
     IDeskBar* pDeskBar;
 
-    HRESULT hr;
+    HRESULT hr = 0;
+    RECT rc = { 0 };
 
-    RECT rc;
     if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&rc)))
         return E_FAIL;
 
@@ -1025,7 +453,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
     RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
 
 
-#ifndef USE_BUILTIN_MENUSITE
+#if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
         NULL,
         CLSCTX_INPROC_SERVER,
@@ -1036,11 +464,13 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
     if (FAILED(hr))
         return hr;
 
-#ifndef USE_BUILTIN_MENUDESKBAR
+#if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
         NULL,
         CLSCTX_INPROC_SERVER,
         IID_PPV_ARG(IDeskBar, &pDeskBar));
+#elif WRAP_MENUDESKBAR
+    hr = CMenuDeskBar_Wrapper(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
@@ -1067,21 +497,18 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
 
 HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, HMENU menu)
 {
-    RECT rc;
+    RECT rc = { 0 };
+
     if (!SendMessage(m_hwnd, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&rc)))
         return E_FAIL;
 
-    POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
-    ClientToScreen(m_hwnd, &a);
     ClientToScreen(m_hwnd, &b);
-
-    SetRect(&rc, a.x, a.y, b.x, b.y); // maybe-TODO: fetch client area of deskbar?
 
     HMENU popup = GetSubMenu(menu, index);
 
-    m_menuBand->TrackPopup(popup, rc.right, rc.bottom, rc);
+    m_menuBand->TrackPopup(popup, b.x, b.y);
 
     return S_OK;
 }
@@ -1200,7 +627,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
 
             SMINFO * sminfo = new SMINFO();
             sminfo->dwMask = SMIM_ICON | SMIM_FLAGS;
-            if (info.wID >= 0 && SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo))))
+            if (SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo))))
             {
                 tbb.iBitmap = sminfo->iIcon;
                 tbb.dwData = reinterpret_cast<DWORD_PTR>(sminfo);
@@ -1253,6 +680,9 @@ HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
     SendMessage(m_hwnd, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
 
     SMINFO * nfo = reinterpret_cast<SMINFO*>(btn.dwData);
+    if (!nfo)
+        return E_FAIL;
+
     if (nfo->dwFlags&SMIF_TRACKPOPUP)
     {
         return PopupSubMenu(index, m_hmenu);
@@ -1433,11 +863,13 @@ HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
     if (!pidl)
         return E_FAIL;
 
-#ifndef USE_BUILTIN_MENUBAND
+#if USE_SYSTEM_MENUBAND
     hr = CoCreateInstance(CLSID_MenuBand,
         NULL,
         CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IShellMenu, &pShellMenu));
+        IID_PPV_ARG(IShellMenu, &shellMenu));
+#elif WRAP_MENUBAND
+    hr = CMenuBand_Wrapper(IID_PPV_ARG(IShellMenu, &shellMenu));
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
 #endif
@@ -1471,6 +903,8 @@ HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
 
     SFGAOF attrs;
     hr = psi->GetAttributes(SFGAO_FOLDER, &attrs);
+    if (FAILED(hr))
+        return hr;
 
     return (attrs != 0) ? S_OK : S_FALSE;
 }
@@ -2236,9 +1670,8 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     return hr;
 }
 
-HRESULT CMenuBand::TrackPopup(HMENU popup, INT x, INT y, RECT& rc)
+HRESULT CMenuBand::TrackPopup(HMENU popup, INT x, INT y)
 {
-    ::TrackPopupMenu(popup, 0, x, y, 0, m_menuOwner, &rc);
+    ::TrackPopupMenu(popup, 0, x, y, 0, m_menuOwner, NULL);
     return S_OK;
 }
-#endif

@@ -14,6 +14,8 @@ list(APPEND SOURCE
     CStartMenu.cpp
     misc.cpp
     wraplog.cpp
+    logging/CMenuBandWrap.cpp
+    logging/CMenuDeskBarWrap.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
 add_library(rshell SHARED ${SOURCE})

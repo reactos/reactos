@@ -17,10 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include "precomp.h"
 
 //#define TEST_TRACKPOPUPMENU_SUBMENUS
 
-#include "precomp.h"
 
 /* NOTE: The following constants *MUST NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -136,7 +136,7 @@ private:
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
         }
 
-#ifndef USE_BUILTIN_MENUBAND
+#if USE_SYSTEM_MENUBAND
         hr = CoCreateInstance(CLSID_MenuBand,
             NULL,
             CLSCTX_INPROC_SERVER,
@@ -271,18 +271,20 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     IShellFolder *shellFolder;
     IShellFolder *psfStartMenu;
 
-#ifndef USE_BUILTIN_MENUBAND
+#if USE_SYSTEM_MENUBAND
     hr = CoCreateInstance(CLSID_MenuBand,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           IID_PPV_ARG(IShellMenu, &pShellMenu));
+#elif WRAP_MENUBAND
+    hr = CMenuBand_Wrapper(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
     if (FAILED(hr))
         return hr;
 
-#ifndef USE_BUILTIN_MENUSITE
+#if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
                           NULL,
                           CLSCTX_INPROC_SERVER,
@@ -293,11 +295,13 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     if (FAILED(hr))
         return hr;
 
-#ifndef USE_BUILTIN_MENUDESKBAR
+#if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           IID_PPV_ARG(IDeskBar, &pDeskBar));
+#elif WRAP_MENUDESKBAR
+    hr = CMenuDeskBar_Wrapper(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
@@ -311,7 +315,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
-    pShellMenu->Initialize(pCallback, -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
+    pShellMenu->Initialize(pCallback, (UINT)-1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED(hr))
         return hr;
 
