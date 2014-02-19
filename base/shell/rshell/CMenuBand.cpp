@@ -1289,8 +1289,28 @@ HRESULT STDMETHODCALLTYPE CMenuBand::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    HRESULT hr;
+
+    CComPtr<IMenuPopup> pmp;
+
+    hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
+    if (FAILED(hr))
+        return hr;
+
+    hr = pmp->SetSubMenu(this, TRUE);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IOleWindow> pTopLevelWindow;
+    hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
+    if (FAILED(hr))
+        return hr;
+
+    hr = pTopLevelWindow->GetWindow(&m_topLevelWindow);
+    if (FAILED(hr))
+        return hr;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()

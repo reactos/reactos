@@ -23,6 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
+const static GUID CGID_MenuDeskBar = { 0x5C9F0A12, 0x959E, 0x11D0, { 0xA3, 0xA4, 0x00, 0xA0, 0xC9, 0x08, 0x26, 0x36 } };
+
 typedef CWinTraits<
     WS_POPUP | WS_DLGFRAME | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
     WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_PALETTEWINDOW
@@ -193,6 +195,18 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, U
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
     DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
+    if (IsEqualIID(*pguidCmdGroup, CGID_MenuDeskBar))
+    {
+        switch (nCmdID)
+        {
+        case 2: // refresh
+            return S_OK;
+        case 3: // load complete
+            return S_OK;
+        case 4: // set font metrics
+            return S_OK;
+        }
+    }
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
     {
     }
