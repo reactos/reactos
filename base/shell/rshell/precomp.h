@@ -3,9 +3,9 @@
 #define USE_SYSTEM_MENUSITE 0
 #define USE_SYSTEM_MENUBAND 0
 
-#define WRAP_MENUDESKBAR 1
-#define WRAP_MENUSITE 1
-#define WRAP_MENUBAND 1
+#define WRAP_MENUDESKBAR 0
+#define WRAP_MENUSITE 0
+#define WRAP_MENUBAND 0
 
 #include <stdio.h>
 #include <tchar.h>

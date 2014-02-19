@@ -31,6 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 extern "C" BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 class CMenuBand;
+class CMenuFocusManager;
 
 class CMenuToolbarBase
 {
@@ -149,6 +150,8 @@ private:
     BOOL m_useBigIcons;
 
     HWND m_topLevelWindow;
+    
+    CMenuFocusManager * m_focusManager;
 
 public:
 
@@ -237,6 +240,7 @@ public:
     HRESULT CallCBWithId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT CallCBWithPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT TrackPopup(HMENU popup, INT x, INT y);
+    HRESULT GetTopLevelWindow(HWND*topLevel);
 
     BOOL UseBigIcons() {
         return m_useBigIcons;
@@ -267,6 +271,261 @@ public:
 private:
     HRESULT _CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id = 0, LPITEMIDLIST pidl = NULL);
 };
+
+class CMenuFocusManager :
+    public CComCoClass<CMenuFocusManager>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>
+{
+private:
+    static DWORD TlsIndex;
+
+    static CMenuFocusManager * GetManager()
+    {
+        return reinterpret_cast<CMenuFocusManager *>(TlsGetValue(TlsIndex));
+    }
+
+public:
+    static CMenuFocusManager * AcquireManager()
+    {
+        CMenuFocusManager * obj = NULL;
+
+        if (!TlsIndex)
+        {
+            if ((TlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+                return NULL;
+        }
+
+        obj = GetManager();
+
+        if (!obj)
+        {
+            obj = new CComObject<CMenuFocusManager>();
+            TlsSetValue(TlsIndex, obj);
+        }
+
+        obj->AddRef();
+
+        return obj;
+    }
+
+    static void ReleaseManager(CMenuFocusManager * obj)
+    {
+        if (!obj->Release())
+        {
+            TlsSetValue(TlsIndex, NULL);
+        }
+    }
+
+private:
+    static LRESULT CALLBACK s_GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
+    {
+        return GetManager()->GetMsgHook(nCode, wParam, lParam);
+    }
+
+private:
+    // TODO: make dynamic
+#define MAX_RECURSE 100
+    CMenuBand* m_bandStack[MAX_RECURSE];
+    int m_bandCount;
+
+    HRESULT PushToArray(CMenuBand * item)
+    {
+        if (m_bandCount >= MAX_RECURSE)
+            return E_OUTOFMEMORY;
+
+        m_bandStack[m_bandCount++] = item;
+        return S_OK;
+    }
+
+    HRESULT PopFromArray(CMenuBand ** pItem)
+    {
+        if (pItem)
+            *pItem = NULL;
+
+        if (m_bandCount <= 0)
+            return E_FAIL;
+
+        m_bandCount--;
+
+        if (pItem)
+            *pItem = m_bandStack[m_bandCount];
+
+        return S_OK;
+    }
+
+    HRESULT PeekArray(CMenuBand ** pItem)
+    {
+        if (!pItem)
+            return E_FAIL;
+
+        *pItem = NULL;
+
+        if (m_bandCount <= 0)
+            return E_FAIL;
+
+        *pItem = m_bandStack[m_bandCount - 1];
+
+        return S_OK;
+    }
+
+protected:
+    CMenuFocusManager() :
+        m_currentBand(NULL),
+        m_currentFocus(NULL),
+        m_bandCount(0)
+    {
+        m_threadId = GetCurrentThreadId();
+    }
+
+    ~CMenuFocusManager()
+    {
+    }
+
+public:
+
+    DECLARE_NOT_AGGREGATABLE(CMenuFocusManager)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CMenuFocusManager)
+    END_COM_MAP()
+
+private:
+    CMenuBand * m_currentBand;
+    HWND m_currentFocus;
+    HHOOK m_hHook;
+    DWORD m_threadId;
+
+    LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
+    {
+        if (nCode < 0)
+            return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+
+        BOOL callNext = TRUE;
+        BOOL fRemoved = wParam;
+        MSG* msg = reinterpret_cast<MSG*>(lParam);
+
+        if (nCode == HC_ACTION)
+        {
+            // Do whatever is necessary here
+
+            switch (msg->message)
+            {
+            case WM_CLOSE:
+                break;
+            case WM_SYSKEYDOWN:
+            case WM_KEYDOWN:
+                switch (msg->wParam)
+                {
+                case VK_MENU:
+                case VK_LMENU:
+                case VK_RMENU:
+                    m_currentBand->OnSelect(MPOS_FULLCANCEL);
+                    break;
+                case VK_LEFT:
+                    m_currentBand->OnSelect(MPOS_SELECTLEFT);
+                    break;
+                case VK_RIGHT:
+                    m_currentBand->OnSelect(MPOS_SELECTRIGHT);
+                    break;
+                case VK_UP:
+                    //m_currentBand->ChildTrack(VK_UP);
+                    break;
+                case VK_DOWN:
+                    //m_currentBand->ChildTrack(VK_DOWN);
+                    break;
+                }
+                break;
+            case WM_CHAR:
+                //if (msg->wParam >= 'a' && msg->wParam <= 'z')
+                //{
+                //    callNext = FALSE;
+                //    PostMessage(m_currentFocus, WM_SYSCHAR, wParam, lParam);
+                //}
+                break;
+            case WM_ACTIVATE:
+                break;
+
+            }
+
+            if (!callNext)
+                return 0;
+        }
+
+        return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+    }
+
+    HRESULT PlaceHooks(HWND window)
+    {
+        //SetCapture(window);
+        m_hHook = SetWindowsHookEx(WH_GETMESSAGE, s_GetMsgHook, NULL, m_threadId);
+        return S_OK;
+    }
+
+    HRESULT RemoveHooks(HWND window)
+    {
+        UnhookWindowsHookEx(m_hHook);
+        //ReleaseCapture();
+        return S_OK;
+    }
+
+    HRESULT UpdateFocus(CMenuBand * newBand)
+    {
+        HRESULT hr;
+
+        hr = RemoveHooks(m_currentFocus);
+
+        if (FAILED(hr) || !newBand)
+        {
+            m_currentFocus = NULL;
+            m_currentBand = NULL;
+            return S_OK;
+        }
+
+        HWND newFocus;
+        hr = newBand->GetTopLevelWindow(&newFocus);
+        if (FAILED(hr))
+            return hr;
+
+        hr = PlaceHooks(m_currentFocus);
+        if (FAILED(hr))
+            return hr;
+
+        m_currentFocus = newFocus;
+        m_currentBand = newBand;
+
+        return S_OK;
+    }
+
+public:
+    HRESULT PushMenu(CMenuBand * mb)
+    {
+        HRESULT hr;
+
+        hr = PushToArray(mb);
+        if (FAILED(hr))
+            return hr;
+
+        return UpdateFocus(mb);
+    }
+
+    HRESULT PopMenu(CMenuBand * mb)
+    {
+        CMenuBand * mbc;
+        HRESULT hr;
+
+        hr = PopFromArray(&mbc);
+        if (FAILED(hr))
+            return hr;
+
+        if (mb != mbc)
+            return E_FAIL;
+
+        hr = PeekArray(&mbc);
+
+        return UpdateFocus(mbc);
+    }
+};
+
+DWORD CMenuFocusManager::TlsIndex = 0;
 
 extern "C"
 HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
@@ -930,10 +1189,13 @@ CMenuBand::CMenuBand() :
     m_SFToolbar(NULL),
     m_useBigIcons(FALSE)
 {
+    m_focusManager = CMenuFocusManager::AcquireManager();
 }
 
 CMenuBand::~CMenuBand()
 {
+    CMenuFocusManager::ReleaseManager(m_focusManager);
+
     if (m_site)
         m_site->Release();
 
@@ -1258,9 +1520,18 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
         return hr;
 
     if (fShow)
-        return _CallCB(SMC_INITMENU, 0, 0);
+    {
+        hr = _CallCB(SMC_INITMENU, 0, 0);
+        if (FAILED(hr))
+            return hr;
+    }
 
-    return S_OK;
+    if (fShow)
+        hr = m_focusManager->PushMenu(this);
+    else
+        hr = m_focusManager->PopMenu(this);
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
@@ -1720,5 +1991,11 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
 HRESULT CMenuBand::TrackPopup(HMENU popup, INT x, INT y)
 {
     ::TrackPopupMenu(popup, 0, x, y, 0, m_menuOwner, NULL);
+    return S_OK;
+}
+
+HRESULT CMenuBand::GetTopLevelWindow(HWND*topLevel)
+{
+    *topLevel = m_topLevelWindow;
     return S_OK;
 }

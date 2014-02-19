@@ -576,14 +576,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
         UIActivateIO(FALSE, NULL);
     }
 
-    //if (bubbleUp && m_Site)
-    //{
-    //    CComPtr<IMenuPopup> pmp;
-    //    HRESULT hr = IUnknown_QueryService(m_Site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
-    //    if (FAILED(hr))
-    //        return hr;
-    //    pmp->OnSelect(dwSelectType);
-    //}
+    if (bubbleUp && m_SubMenuParent)
+    {
+        hr = m_SubMenuParent->OnSelect(MPOS_CANCELLEVEL); // why??
+        return hr;
+    }
 
     return S_OK;
 }
