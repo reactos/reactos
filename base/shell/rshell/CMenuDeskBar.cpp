@@ -50,6 +50,8 @@ private:
     CComPtr<IUnknown>   m_Client;
     CComPtr<IMenuPopup> m_SubMenuParent;
 
+    HWND m_ClientWindow;
+
     DWORD m_IconSize;
     HBITMAP m_Banner;
 
@@ -255,7 +257,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
 {
     CComPtr<IDeskBarClient> pDeskBandClient;
-    HRESULT hResult;
+    HRESULT hr;
 
     m_Client.Release();
 
@@ -267,15 +269,19 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
         Create(NULL);
     }
 
-    hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&m_Client));
-    if (FAILED(hResult))
-        return hResult;
+    hr = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &m_Client));
+    if (FAILED(hr))
+        return hr;
 
-    hResult = m_Client->QueryInterface(IID_IDeskBarClient, (VOID**) &pDeskBandClient);
-    if (FAILED(hResult))
-        return hResult;
+    hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDeskBandClient));
+    if (FAILED(hr))
+        return hr;
 
-    return pDeskBandClient->SetDeskBarSite(static_cast<IDeskBar*>(this));
+    hr = pDeskBandClient->SetDeskBarSite(static_cast<IDeskBar*>(this));
+    if (FAILED(hr))
+        return hr;
+
+    return IUnknown_GetWindow(m_Client, &m_ClientWindow);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetClient(IUnknown **ppunkClient)
@@ -317,17 +323,6 @@ LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
     if (m_Client)
     {
-        CComPtr<IOleWindow> pOw;
-        hr = m_Client->QueryInterface(IID_PPV_ARG(IOleWindow, &pOw));
-        if (FAILED(hr))
-        {
-            ERR("IUnknown_QueryInterface pBs failed: %x\n", hr);
-            return 0;
-        }
-
-        HWND clientWnd;
-        pOw->GetWindow(&clientWnd);
-
         RECT rc;
 
         GetClientRect(&rc);
@@ -339,7 +334,7 @@ LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
             rc.left += bm.bmWidth;
         }
 
-        ::SetWindowPos(clientWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
+        ::SetWindowPos(m_ClientWindow, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
     }
 
     return 0;
@@ -349,14 +344,14 @@ LRESULT CMenuDeskBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 {
     CComPtr<IWinEventHandler>               winEventHandler;
     LRESULT                                 result;
-    HRESULT                                 hResult;
+    HRESULT                                 hr;
 
     result = 0;
     if (m_Client.p != NULL)
     {
-        hResult = m_Client->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
-        if (SUCCEEDED(hResult) && winEventHandler.p != NULL)
-            hResult = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
+        hr = m_Client->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
+        if (SUCCEEDED(hr) && winEventHandler.p != NULL)
+            hr = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
     }
     return result;
 }
@@ -424,6 +419,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
     if (FAILED(hr))
         return hr;
+
+    hr = dbc->SetModeDBC(1);
+    // Allow it to fail with E_NOTIMPL.
 
     // No clue about the arg, using anything != 0
     hr = dbc->UIActivateDBC(TRUE);

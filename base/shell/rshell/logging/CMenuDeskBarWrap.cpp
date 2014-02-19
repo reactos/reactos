@@ -33,21 +33,22 @@ class CMenuDeskBarWrap :
     public IInitializeObject
 {
 public:
-    CMenuDeskBarWrap();
+    CMenuDeskBarWrap() {}
     ~CMenuDeskBarWrap();
 
+    HRESULT InitWrap(IDeskBar * shellMenu);
+
 private:
-    IUnknown * m_IUnknown;
-    IMenuPopup * m_IMenuPopup;
-    IOleCommandTarget * m_IOleCommandTarget;
-    IServiceProvider * m_IServiceProvider;
-    IDeskBar * m_IDeskBar;
-    IOleWindow * m_IOleWindow;
-    IInputObjectSite * m_IInputObjectSite;
-    IInputObject * m_IInputObject;
-    IObjectWithSite * m_IObjectWithSite;
-    IBanneredBar * m_IBanneredBar;
-    IInitializeObject * m_IInitializeObject;
+    CComPtr<IMenuPopup        > m_IMenuPopup;
+    CComPtr<IOleCommandTarget > m_IOleCommandTarget;
+    CComPtr<IServiceProvider  > m_IServiceProvider;
+    CComPtr<IDeskBar          > m_IDeskBar;
+    CComPtr<IOleWindow        > m_IOleWindow;
+    CComPtr<IInputObjectSite  > m_IInputObjectSite;
+    CComPtr<IInputObject      > m_IInputObject;
+    CComPtr<IObjectWithSite   > m_IObjectWithSite;
+    CComPtr<IBanneredBar      > m_IBanneredBar;
+    CComPtr<IInitializeObject > m_IInitializeObject;
 
 public:
     // *** IMenuPopup methods ***
@@ -110,54 +111,61 @@ public:
 };
 
 extern "C"
-HRESULT CMenuDeskBar_Wrapper(REFIID riid, LPVOID *ppv)
+HRESULT CMenuDeskBar_Wrapper(IDeskBar * deskBar, REFIID riid, LPVOID *ppv)
 {
+    HRESULT hr;
+
     *ppv = NULL;
 
-    CMenuDeskBarWrap * deskbar = new CComObject<CMenuDeskBarWrap>();
-
-    if (!deskbar)
+    CMenuDeskBarWrap * bar = new CComObject<CMenuDeskBarWrap>();
+    if (!bar)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = deskbar->QueryInterface(riid, ppv);
+    hr = bar->InitWrap(deskBar);
+    if (FAILED(hr))
+    {
+        bar->Release();
+        return hr;
+    }
+
+    hr = bar->QueryInterface(riid, ppv);
 
     if (FAILED(hr))
-        deskbar->Release();
+        bar->Release();
 
     return hr;
 }
 
-CMenuDeskBarWrap::CMenuDeskBarWrap()
+HRESULT CMenuDeskBarWrap::InitWrap(IDeskBar * deskBar)
 {
+    HRESULT hr;
+
     WrapLogOpen();
 
-    CoCreateInstance(CLSID_MenuDeskBar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    m_IMenuPopup->QueryInterface(IID_PPV_ARG(IUnknown, &m_IUnknown));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObjectSite, &m_IInputObjectSite));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IBanneredBar, &m_IBanneredBar));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IInitializeObject, &m_IInitializeObject));
+    m_IDeskBar = deskBar;
+
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IInputObjectSite, &m_IInputObjectSite));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IBanneredBar, &m_IBanneredBar));
+    if (FAILED(hr)) return hr;
+    hr = deskBar->QueryInterface(IID_PPV_ARG(IInitializeObject, &m_IInitializeObject));
+    return hr;
 }
 
 CMenuDeskBarWrap::~CMenuDeskBarWrap()
 {
-    m_IUnknown->Release();
-    m_IMenuPopup->Release();
-    m_IOleCommandTarget->Release();
-    m_IServiceProvider->Release();
-    m_IDeskBar->Release();
-    m_IOleWindow->Release();
-    m_IInputObjectSite->Release();
-    m_IInputObject->Release();
-    m_IObjectWithSite->Release();
-    m_IBanneredBar->Release();
-    m_IInitializeObject->Release();
-
     WrapLogClose();
 }
 

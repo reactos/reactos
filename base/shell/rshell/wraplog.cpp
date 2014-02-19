@@ -77,41 +77,51 @@ LPSTR Wrap(const T& value);
 template <>
 LPSTR Wrap<GUID>(REFGUID guid)
 {
-    LPSTR cGuid = strTemp[nTemps++];
-    StringCchPrintfA(cGuid, _countof(strTemp[0]),
+    LPSTR cStr = strTemp[nTemps++];
+    StringCchPrintfA(cStr, _countof(strTemp[0]),
         "{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
         guid.Data1, guid.Data2, guid.Data3,
         guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
         guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-    return cGuid;
+    return cStr;
 }
 
 template <>
 LPSTR Wrap<RECT>(const RECT& rect)
 {
-    LPSTR cGuid = strTemp[nTemps++];
-    StringCchPrintfA(cGuid, _countof(strTemp[0]),
+    LPSTR cStr = strTemp[nTemps++];
+    StringCchPrintfA(cStr, _countof(strTemp[0]),
         "{L: %d, T: %d, R: %d, B: %d}",
         rect.left, rect.top, rect.right, rect.bottom);
-    return cGuid;
+    return cStr;
 }
 
 template <>
 LPSTR Wrap<OLECMD>(const OLECMD& cmd)
 {
-    LPSTR cGuid = strTemp[nTemps++];
-    StringCchPrintfA(cGuid, _countof(strTemp[0]),
+    LPSTR cStr = strTemp[nTemps++];
+    StringCchPrintfA(cStr, _countof(strTemp[0]),
         "{ID: %d, F: %d}",
         cmd.cmdID, cmd.cmdf);
-    return cGuid;
+    return cStr;
 }
 
 template <>
 LPSTR Wrap<MSG>(const MSG& msg)
 {
-    LPSTR cGuid = strTemp[nTemps++];
-    StringCchPrintfA(cGuid, _countof(strTemp[0]),
+    LPSTR cStr = strTemp[nTemps++];
+    StringCchPrintfA(cStr, _countof(strTemp[0]),
         "{HWND: %d, Code: %d, W: %p, L: %p, T: %d, P.X: %d, P.Y: %d}",
         msg.hwnd, msg.message, msg.wParam, msg.lParam, msg.time, msg.pt.x, msg.pt.y);
-    return cGuid;
+    return cStr;
+}
+
+template <>
+LPSTR Wrap<BANDSITEINFO>(const BANDSITEINFO& bsi)
+{
+    LPSTR cStr = strTemp[nTemps++];
+    StringCchPrintfA(cStr, _countof(strTemp[0]),
+        "{dwMask: %08x, dwState: %08x, dwStyle: %08x}",
+        bsi.dwMask, bsi.dwState, bsi.dwStyle);
+    return cStr;
 }

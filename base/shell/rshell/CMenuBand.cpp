@@ -19,6 +19,7 @@
 */
 #include "precomp.h"
 #include <windowsx.h>
+#include <shlwapi_undoc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
@@ -146,6 +147,8 @@ private:
     HWND m_menuOwner;
 
     BOOL m_useBigIcons;
+
+    HWND m_topLevelWindow;
 
 public:
 
@@ -463,19 +466,27 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
 #endif
     if (FAILED(hr))
         return hr;
+#if WRAP_MENUSITE
+    hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
+    if (FAILED(hr))
+        return hr;
+#endif
 
 #if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
         NULL,
         CLSCTX_INPROC_SERVER,
         IID_PPV_ARG(IDeskBar, &pDeskBar));
-#elif WRAP_MENUDESKBAR
-    hr = CMenuDeskBar_Wrapper(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
     if (FAILED(hr))
         return hr;
+#if WRAP_MENUDESKBAR
+    hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
+    if (FAILED(hr))
+        return hr;
+#endif
 
     hr = pDeskBar->SetClient(pBandSite);
     if (FAILED(hr))
@@ -868,13 +879,16 @@ HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
         NULL,
         CLSCTX_INPROC_SERVER,
         IID_PPV_ARG(IShellMenu, &shellMenu));
-#elif WRAP_MENUBAND
-    hr = CMenuBand_Wrapper(IID_PPV_ARG(IShellMenu, &shellMenu));
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
 #endif
     if (FAILED(hr))
         return hr;
+#if WRAP_MENUBAND
+    hr = CMenuBand_Wrapper(shellMenu, IID_PPV_ARG(IShellMenu, &shellMenu));
+    if (FAILED(hr))
+        return hr;
+#endif
 
     m_menuBand->GetMenuInfo(&psmc, &uId, &uIdAncestor, &flags);
 
@@ -992,26 +1006,26 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     m_hmenu = hmenu;
     m_menuOwner;
 
-    HRESULT hResult = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
-    if (FAILED(hResult))
-        return hResult;
+    HRESULT hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
+    if (FAILED(hr))
+        return hr;
 
     if (m_site)
     {
         HWND hwndParent;
 
-        hResult = m_site->GetWindow(&hwndParent);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_site->GetWindow(&hwndParent);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_staticToolbar->FillToolbar();
+        hr = m_staticToolbar->FillToolbar();
     }
 
-    return hResult;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::GetMenu(
@@ -1027,8 +1041,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetMenu(
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
 {
-    HWND                    hwndParent;
-    HRESULT                 hResult;
+    HWND    hwndParent;
+    HRESULT hr;
 
     if (m_site != NULL)
         m_site->Release();
@@ -1037,34 +1051,47 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
         return S_OK;
 
     hwndParent = NULL;
-    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
-    if (SUCCEEDED(hResult))
+    hr = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
+    if (SUCCEEDED(hr))
     {
-        m_site->GetWindow(&hwndParent);
         m_site->Release();
+
+        hr = m_site->GetWindow(&hwndParent);
+        if (FAILED(hr))
+            return hr;
     }
+
     if (!::IsWindow(hwndParent))
         return E_FAIL;
 
     if (m_staticToolbar != NULL)
     {
-        hResult = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_staticToolbar->FillToolbar();
+        hr = m_staticToolbar->FillToolbar();
+        if (FAILED(hr))
+            return hr;
     }
 
     if (m_SFToolbar != NULL)
     {
-        hResult = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_SFToolbar->FillToolbar();
+        hr = m_SFToolbar->FillToolbar();
+        if (FAILED(hr))
+            return hr;
     }
 
-    return S_OK;
+    CComPtr<IOleWindow> pTopLevelWindow;
+    hr = IUnknown_QueryService(m_site, SID_STopLevelBrowser, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
+    if (FAILED(hr))
+        return hr;
+
+    return pTopLevelWindow->GetWindow(&m_topLevelWindow);
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::GetSite(REFIID riid, PVOID *ppvSite)
@@ -1093,17 +1120,17 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
     SIZE sizeShlFldY = { 0 };
     HWND hwndStatic = NULL;
     HWND hwndShlFld = NULL;
-    HRESULT hResult = S_OK;
+    HRESULT hr = S_OK;
 
     if (m_staticToolbar != NULL)
-        hResult = m_staticToolbar->GetWindow(&hwndStatic);
-    if (FAILED(hResult))
-        return hResult;
+        hr = m_staticToolbar->GetWindow(&hwndStatic);
+    if (FAILED(hr))
+        return hr;
 
     if (m_SFToolbar != NULL)
-        hResult = m_SFToolbar->GetWindow(&hwndShlFld);
-    if (FAILED(hResult))
-        return hResult;
+        hr = m_SFToolbar->GetWindow(&hwndShlFld);
+    if (FAILED(hr))
+        return hr;
 
     if (hwndStatic == NULL && hwndShlFld == NULL)
         return E_FAIL;
@@ -1146,17 +1173,17 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
 {
     HWND hwndStatic = NULL;
     HWND hwndShlFld = NULL;
-    HRESULT hResult = S_OK;
+    HRESULT hr = S_OK;
 
     if (m_staticToolbar != NULL)
-        hResult = m_staticToolbar->GetWindow(&hwndStatic);
-    if (FAILED(hResult))
-        return hResult;
+        hr = m_staticToolbar->GetWindow(&hwndStatic);
+    if (FAILED(hr))
+        return hr;
 
     if (m_SFToolbar != NULL)
-        hResult = m_SFToolbar->GetWindow(&hwndShlFld);
-    if (FAILED(hResult))
-        return hResult;
+        hr = m_SFToolbar->GetWindow(&hwndShlFld);
+    if (FAILED(hr))
+        return hr;
 
     if (hwndStatic == NULL && hwndShlFld == NULL)
         return E_FAIL;
@@ -1401,26 +1428,26 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMID
         m_SFToolbar = new CMenuSFToolbar(this);
     }
 
-    HRESULT hResult = m_SFToolbar->SetShellFolder(psf, pidlFolder, hKey, dwFlags);
-    if (FAILED(hResult))
-        return hResult;
+    HRESULT hr = m_SFToolbar->SetShellFolder(psf, pidlFolder, hKey, dwFlags);
+    if (FAILED(hr))
+        return hr;
 
     if (m_site)
     {
         HWND hwndParent;
 
-        hResult = m_site->GetWindow(&hwndParent);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_site->GetWindow(&hwndParent);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hResult))
-            return hResult;
+        hr = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
+        if (FAILED(hr))
+            return hr;
 
-        hResult = m_SFToolbar->FillToolbar();
+        hr = m_SFToolbar->FillToolbar();
     }
 
-    return hResult;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv)

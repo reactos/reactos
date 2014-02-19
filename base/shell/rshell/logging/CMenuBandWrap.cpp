@@ -38,30 +38,29 @@ class CMenuBandWrap :
     public IShellMenuAcc
 {
 public:
-    CMenuBandWrap();
+    CMenuBandWrap() {}
     ~CMenuBandWrap();
 
+    HRESULT InitWrap(IShellMenu * shellMenu);
+
 private:
-    IUnknown          * m_IUnknown;
-    IDeskBand         * m_IDeskBand;
-    IDockingWindow    * m_IDockingWindow;
-    IOleWindow        * m_IOleWindow;
-    IObjectWithSite   * m_IObjectWithSite;
-    IInputObject      * m_IInputObject;
-    IPersistStream    * m_IPersistStream;
-    IPersist          * m_IPersist;
-    IOleCommandTarget * m_IOleCommandTarget;
-    IServiceProvider  * m_IServiceProvider;
-    IMenuPopup        * m_IMenuPopup;
-    IDeskBar          * m_IDeskBar;
-    IMenuBand         * m_IMenuBand;
-    IShellMenu2       * m_IShellMenu2;
-    IShellMenu        * m_IShellMenu;
-    IWinEventHandler  * m_IWinEventHandler;
-    IShellMenuAcc     * m_IShellMenuAcc;
-
-    BOOL m_useBigIcons;
-
+    CComPtr<IDeskBand         > m_IDeskBand;
+    CComPtr<IDockingWindow    > m_IDockingWindow;
+    CComPtr<IOleWindow        > m_IOleWindow;
+    CComPtr<IObjectWithSite   > m_IObjectWithSite;
+    CComPtr<IInputObject      > m_IInputObject;
+    CComPtr<IPersistStream    > m_IPersistStream;
+    CComPtr<IPersist          > m_IPersist;
+    CComPtr<IOleCommandTarget > m_IOleCommandTarget;
+    CComPtr<IServiceProvider  > m_IServiceProvider;
+    CComPtr<IMenuPopup        > m_IMenuPopup;
+    CComPtr<IDeskBar          > m_IDeskBar;
+    CComPtr<IMenuBand         > m_IMenuBand;
+    CComPtr<IShellMenu2       > m_IShellMenu2;
+    CComPtr<IShellMenu        > m_IShellMenu;
+    CComPtr<IWinEventHandler  > m_IWinEventHandler;
+    CComPtr<IShellMenuAcc     > m_IShellMenuAcc;
+    
 public:
 
     // *** IDeskBand methods ***
@@ -170,8 +169,10 @@ public:
 };
 
 extern "C"
-HRESULT CMenuBand_Wrapper(REFIID riid, LPVOID *ppv)
+HRESULT CMenuBand_Wrapper(IShellMenu * shellMenu, REFIID riid, LPVOID *ppv)
 {
+    HRESULT hr;
+
     *ppv = NULL;
 
     CMenuBandWrap * site = new CComObject<CMenuBandWrap>();
@@ -179,7 +180,14 @@ HRESULT CMenuBand_Wrapper(REFIID riid, LPVOID *ppv)
     if (!site)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = site->QueryInterface(riid, ppv);
+    hr = site->InitWrap(shellMenu);
+    if (FAILED(hr))
+    {
+        site->Release();
+        return hr;
+    }
+
+    hr = site->QueryInterface(riid, ppv);
 
     if (FAILED(hr))
         site->Release();
@@ -187,48 +195,49 @@ HRESULT CMenuBand_Wrapper(REFIID riid, LPVOID *ppv)
     return hr;
 }
 
-CMenuBandWrap::CMenuBandWrap()
+HRESULT CMenuBandWrap::InitWrap(IShellMenu * shellMenu)
 {
+    HRESULT hr;
+
     WrapLogOpen();
 
-    CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellMenu, &m_IShellMenu));
-    m_IShellMenu->QueryInterface(IID_PPV_ARG(IUnknown, &m_IUnknown));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBand, &m_IDeskBand));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IDockingWindow, &m_IDockingWindow));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IPersistStream, &m_IPersistStream));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IPersist, &m_IPersist));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IMenuBand, &m_IMenuBand));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IShellMenu2, &m_IShellMenu2));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_IWinEventHandler));
-    m_IUnknown->QueryInterface(IID_PPV_ARG(IShellMenuAcc, &m_IShellMenuAcc));
+    m_IShellMenu = shellMenu;
+
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBand, &m_IDeskBand));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IDockingWindow, &m_IDockingWindow));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IPersistStream, &m_IPersistStream));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IPersist, &m_IPersist));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IMenuBand, &m_IMenuBand));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IShellMenu2, &m_IShellMenu2));
+    if (FAILED(hr)) return hr;
+    hr = shellMenu->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_IWinEventHandler));
+    if (FAILED(hr)) return hr;
+    //hr = shellMenu->QueryInterface(IID_PPV_ARG(IShellMenuAcc, &m_IShellMenuAcc));
+    m_IShellMenuAcc = NULL;
+    return hr;
 }
 
 CMenuBandWrap::~CMenuBandWrap()
 {
-    m_IUnknown->Release();
-    m_IDeskBand->Release();
-    m_IDockingWindow->Release();
-    m_IOleWindow->Release();
-    m_IObjectWithSite->Release();
-    m_IInputObject->Release();
-    m_IPersistStream->Release();
-    m_IPersist->Release();
-    m_IOleCommandTarget->Release();
-    m_IServiceProvider->Release();
-    m_IMenuPopup->Release();
-    m_IDeskBar->Release();
-    m_IMenuBand->Release();
-    m_IShellMenu2->Release();
-    m_IShellMenu->Release();
-    m_IWinEventHandler->Release();
-    m_IShellMenuAcc->Release();
     WrapLogClose();
 }
 
