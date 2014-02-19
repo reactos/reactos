@@ -46,7 +46,7 @@ static
 inline
 VOID
 NTAPI
-Fast486ExecutionControl(PFAST486_STATE State, INT Command)
+Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {
     UCHAR Opcode;
     INT ProcedureCallCount = 0;
