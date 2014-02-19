@@ -1632,6 +1632,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
         {
             /* Set the IP to the address */
             State->InstPtr.LowWord = Value;
+
+            /* Clear the top half of EIP */
+            State->InstPtr.Long &= 0xFFFF;
         }
         else if (ModRegRm.Register == 5)
         {

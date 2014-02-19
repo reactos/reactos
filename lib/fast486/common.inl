@@ -296,7 +296,7 @@ Fast486StackPush(PFAST486_STATE State,
         USHORT ShortValue = LOWORD(Value);
 
         /* Check if SP is 1 */
-        if (State->GeneralRegs[FAST486_REG_ESP].Long == 1)
+        if (State->GeneralRegs[FAST486_REG_ESP].LowWord == 1)
         {
             Fast486Exception(State, FAST486_EXCEPTION_SS);
             return FALSE;
