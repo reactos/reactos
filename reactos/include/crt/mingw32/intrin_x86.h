@@ -1032,7 +1032,7 @@ __INTRIN_INLINE unsigned char _bittest(const long * const a, const long b)
 	if(__builtin_constant_p(b))
 		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 32))), [b] "Ir" (b % 32));
 	else
-		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "m" (*a), [b] "r" (b));
 
 	return retval;
 }
@@ -1045,7 +1045,7 @@ __INTRIN_INLINE unsigned char _bittest64(const __int64 * const a, const __int64 
 	if(__builtin_constant_p(b))
 		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 64))), [b] "Ir" (b % 64));
 	else
-		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "m" (*a), [b] "r" (b));
 
 	return retval;
 }
@@ -1058,7 +1058,7 @@ __INTRIN_INLINE unsigned char _bittestandcomplement(long * const a, const long b
 	if(__builtin_constant_p(b))
 		__asm__("btc %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("btc %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
+		__asm__("btc %[b], %[a]; setb %b[retval]" : [a] "+m" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }
@@ -1070,7 +1070,7 @@ __INTRIN_INLINE unsigned char _bittestandreset(long * const a, const long b)
 	if(__builtin_constant_p(b))
 		__asm__("btr %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("btr %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
+		__asm__("btr %[b], %[a]; setb %b[retval]" : [a] "+m" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }
@@ -1082,7 +1082,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * const a, const long b)
 	if(__builtin_constant_p(b))
 		__asm__("bts %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("bts %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
+		__asm__("bts %[b], %[a]; setb %b[retval]" : [a] "+m" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }
