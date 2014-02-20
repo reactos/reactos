@@ -77,7 +77,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
-    HANDLE UserHandle;
+    HANDLE UserHandle = NULL;
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -101,7 +101,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (NT_SUCCESS(Status))
     {
-        UserHandle = NULL;
         Status = ObOpenObjectByPointer(FCB->AddressFile.Object,
                                        0,
                                        NULL,
