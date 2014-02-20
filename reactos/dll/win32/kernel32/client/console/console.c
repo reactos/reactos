@@ -796,7 +796,6 @@ VerifyConsoleIoHandle(HANDLE Handle)
                                  sizeof(CONSOLE_VERIFYHANDLE));
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError(Status);
         return FALSE;
     }
 
