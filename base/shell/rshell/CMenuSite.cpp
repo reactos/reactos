@@ -24,23 +24,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 
-#if 0
-bool _assert(bool cond, LPCSTR expr, LPCSTR file, DWORD line, LPCSTR func)
-{
-#if DBG
-    if (!cond)
-    {
-        wine_dbg_printf("%s(%d): Assertion failed '%s', at %s", file, line, expr, func);
-        DebugBreak();
-    }
-#endif
-    return cond;
-}
-#define DBGASSERT(x) _assert(!!(x), #x, __FILE__, __LINE__, __FUNCSIG__)
-#else
-#define DBGASSERT(x) (!!(x))
-#endif
-
 class CMenuSite :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl<CMenuSite, CWindow, CControlWinTraits>,
@@ -52,6 +35,7 @@ class CMenuSite :
     public IWinEventHandler,
     public IServiceProvider
 {
+private:
     CComPtr<IUnknown>         m_DeskBarSite;
     CComPtr<IUnknown>         m_BandObject;
     CComPtr<IDeskBand>        m_DeskBand;
@@ -200,12 +184,19 @@ HRESULT STDMETHODCALLTYPE CMenuSite::OnFocusChangeIS(IUnknown *punkObj, BOOL fSe
 
 HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 {
+    HRESULT hr;
+
+#define TO_HRESULT(x) ((HRESULT)(S_OK+(x)))
+
     if (SHIsSameObject(punk, m_BandObject))
-        return S_OK + 0;
+        return TO_HRESULT(0);
 
-    IUnknown_SetSite(m_BandObject, NULL);
-
-    BOOL result = m_hWndBand != NULL;
+    if (m_BandObject)
+    {
+        hr = IUnknown_SetSite(m_BandObject, NULL);
+        if (FAILED(hr))
+            return hr;
+    }
 
     m_BandObject = NULL;
     m_DeskBand = NULL;
@@ -213,19 +204,29 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
     m_hWndBand = NULL;
 
     if (!punk)
-        return result ? S_OK + 0 : E_FAIL;
+        return TO_HRESULT(0);
 
-    DBGASSERT(SUCCEEDED(punk->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand))));
-    DBGASSERT(SUCCEEDED(punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler))));
+    hr = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand));
+    if (FAILED(hr))
+        return hr;
 
-    IUnknown_SetSite(punk, this->ToIUnknown());
-    IUnknown_GetWindow(punk, &m_hWndBand);
+    hr = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler));
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_SetSite(punk, this->ToIUnknown());
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_GetWindow(punk, &m_hWndBand);
+    if (FAILED(hr))
+        return hr;
 
     m_BandObject = punk;
 
     punk->AddRef();
 
-    return S_OK + 0;
+    return TO_HRESULT(0);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuSite::EnumBands(UINT uBand, DWORD* pdwBandID)
@@ -245,7 +246,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::Exec(const GUID * pguidCmdGroup, DWORD nCmd
 
 HRESULT STDMETHODCALLTYPE CMenuSite::GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv)
 {
-    if (!DBGASSERT(dwBandID == 0) || m_BandObject == NULL)
+    if (dwBandID != 0 || m_BandObject == NULL)
     {
         *ppv = NULL;
         return E_NOINTERFACE;
@@ -277,7 +278,8 @@ HRESULT STDMETHODCALLTYPE CMenuSite::GetSize(DWORD dwWhich, LPRECT prc)
 
 HRESULT STDMETHODCALLTYPE CMenuSite::GetWindow(HWND *phwnd)
 {
-    DBGASSERT(IsWindow());
+    if (!IsWindow())
+        return E_FAIL;
 
     *phwnd = m_hWnd;
 
@@ -305,8 +307,8 @@ HRESULT STDMETHODCALLTYPE CMenuSite::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 
 HRESULT STDMETHODCALLTYPE CMenuSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
 {
-    DBGASSERT(dwBandID == 0);
-    DBGASSERT(!IsBadWritePtr(ppstb, sizeof(*ppstb)));
+    if (dwBandID != 0)
+        return E_FAIL;
 
     if (!m_BandObject)
     {
@@ -338,15 +340,17 @@ HRESULT STDMETHODCALLTYPE CMenuSite::QueryService(REFGUID guidService, REFIID ri
         return IUnknown_QueryService(m_BandObject, guidService, riid, ppvObject);
     }
 
-    DBGASSERT(m_DeskBarSite);
+    if (!m_DeskBarSite)
+        return E_FAIL;
 
     return IUnknown_QueryService(m_DeskBarSite, guidService, riid, ppvObject);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuSite::QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
-    if (!DBGASSERT(m_DeskBarSite))
+    if (!m_DeskBarSite)
         return E_FAIL;
+
     return IUnknown_QueryStatus(m_DeskBarSite, *pguidCmdGroup, cCmds, prgCmds, pCmdText);
 }
 
@@ -382,7 +386,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
         m_DeskBand->CloseDW(0);
     }
 
-    IUnknown_SetSite(m_BandObject, NULL);
+    hr = IUnknown_SetSite(m_BandObject, NULL);
 
     m_BandObject = NULL;
     m_DeskBand = NULL;

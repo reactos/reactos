@@ -21,9 +21,9 @@
 #include <windowsx.h>
 #include <shlwapi_undoc.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
-
 #define TBSTYLE_EX_VERTICAL 4
+
+WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
@@ -35,47 +35,49 @@ class CMenuFocusManager;
 
 class CMenuToolbarBase
 {
+protected:
+    CMenuBand * m_menuBand;
+    HWND        m_hwnd;
+    DWORD       m_dwMenuFlags;
+    INT         m_hotItem;
+    WNDPROC     m_SubclassOld;
+
+private:
+    static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 public:
     CMenuToolbarBase(CMenuBand *menuBand);
     virtual ~CMenuToolbarBase() {}
 
+    HRESULT IsWindowOwner(HWND hwnd);
     HRESULT CreateToolbar(HWND hwndParent, DWORD dwFlags);
     HRESULT GetWindow(HWND *phwnd);
     HRESULT ShowWindow(BOOL fShow);
     HRESULT Close();
 
-    BOOL IsWindowOwner(HWND hwnd) { return m_hwnd && m_hwnd == hwnd; }
-
     virtual HRESULT FillToolbar() = 0;
     virtual HRESULT PopupItem(UINT uItem) = 0;
     virtual HRESULT HasSubMenu(UINT uItem) = 0;
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
-
-    HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
     HRESULT PopupSubMenu(UINT index, IShellMenu* childShellMenu);
     HRESULT PopupSubMenu(UINT index, HMENU menu);
     HRESULT DoContextMenu(IContextMenu* contextMenu);
 
-    HRESULT ChildTrack(DWORD dwSelectType);
+    HRESULT ChangeHotItem(DWORD changeType);
+    HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
 
-    static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 protected:
-
-    static const UINT WM_USER_SHOWPOPUPMENU = WM_USER + 1;
-
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    CMenuBand *m_menuBand;
-    HWND m_hwnd;
-    DWORD m_dwMenuFlags;
-    INT m_hotItem;
-    WNDPROC m_SubclassOld;
 };
 
-class CMenuStaticToolbar : public CMenuToolbarBase
+class CMenuStaticToolbar :
+    public CMenuToolbarBase
 {
+private:
+    HMENU m_hmenu;
+
 public:
     CMenuStaticToolbar(CMenuBand *menuBand);
     virtual ~CMenuStaticToolbar() {}
@@ -89,12 +91,16 @@ public:
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
-private:
-    HMENU m_hmenu;
 };
 
-class CMenuSFToolbar : public CMenuToolbarBase
+class CMenuSFToolbar :
+    public CMenuToolbarBase
 {
+private:
+    IShellFolder * m_shellFolder;
+    LPCITEMIDLIST  m_idList;
+    HKEY           m_hKey;
+
 public:
     CMenuSFToolbar(CMenuBand *menuBand);
     virtual ~CMenuSFToolbar();
@@ -109,11 +115,7 @@ public:
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 private:
-    LPITEMIDLIST GetPidlFromId(UINT uItem, INT* pIndex);
-
-    IShellFolder * m_shellFolder;
-    LPCITEMIDLIST m_idList;
-    HKEY m_hKey;
+    LPITEMIDLIST GetPidlFromId(UINT uItem, INT* pIndex = NULL);
 };
 
 class CMenuBand :
@@ -131,34 +133,53 @@ class CMenuBand :
     public IWinEventHandler,
     public IShellMenuAcc
 {
+private:
+    CMenuFocusManager  * m_focusManager;
+    CMenuStaticToolbar * m_staticToolbar;
+    CMenuSFToolbar     * m_SFToolbar;
+
+    CComPtr<IOleWindow>         m_site;
+    CComPtr<IShellMenuCallback> m_psmc;
+    CComPtr<IMenuPopup>         m_childMenu;
+
+    UINT  m_uId;
+    UINT  m_uIdAncestor;
+    DWORD m_dwFlags;
+    PVOID m_UserData;
+    HMENU m_hmenu;
+    HWND  m_menuOwner;
+
+    BOOL m_useBigIcons;
+    HWND m_topLevelWindow;
+
+    CMenuToolbarBase * m_hotBar;
+    INT                m_hotItem;
+
 public:
     CMenuBand();
     ~CMenuBand();
 
-private:
-    IOleWindow *m_site;
-    IShellMenuCallback *m_psmc;
+    DECLARE_NOT_AGGREGATABLE(CMenuBand)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-    CMenuStaticToolbar *m_staticToolbar;
-    CMenuSFToolbar *m_SFToolbar;
-
-    UINT m_uId;
-    UINT m_uIdAncestor;
-    DWORD m_dwFlags;
-    PVOID m_UserData;
-    HMENU m_hmenu;
-    HWND m_menuOwner;
-
-    BOOL m_useBigIcons;
-
-    HWND m_topLevelWindow;
-    
-    CMenuFocusManager * m_focusManager;
-
-    CMenuToolbarBase * m_hotBar;
-    INT m_hotItem;
-
-public:
+    BEGIN_COM_MAP(CMenuBand)
+        COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IShellMenu, IShellMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IDeskBand)
+        COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
+        COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+        COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
+        COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
+        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersistStream)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+        COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IMenuBand, IMenuBand)
+        COM_INTERFACE_ENTRY_IID(IID_IShellMenu2, IShellMenu2)
+        COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
+        COM_INTERFACE_ENTRY_IID(IID_IShellMenuAcc, IShellMenuAcc)
+    END_COM_MAP()
 
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi);
@@ -242,38 +263,18 @@ public:
     virtual HRESULT STDMETHODCALLTYPE DoDefaultAction(THIS);
     virtual HRESULT STDMETHODCALLTYPE IsEmpty(THIS);
 
-    HRESULT CallCBWithId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT CallCBWithPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT TrackPopup(HMENU popup, INT x, INT y);
-    HRESULT GetTopLevelWindow(HWND*topLevel);
-    HRESULT OnHotItemChanged(CMenuToolbarBase * tb, INT id);
-    HRESULT ChildTrack(DWORD reason);
+    HRESULT _CallCBWithItemId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT _CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT _TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y);
+    HRESULT _GetTopLevelWindow(HWND*topLevel);
+    HRESULT _OnHotItemChanged(CMenuToolbarBase * tb, INT id);
+    HRESULT _MenuItemHotTrack(DWORD changeType);
+    HRESULT _OnPopupSubMenu(IMenuPopup * popup);
 
-    BOOL UseBigIcons() {
+    BOOL UseBigIcons()
+    {
         return m_useBigIcons;
     }
-
-    DECLARE_NOT_AGGREGATABLE(CMenuBand)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CMenuBand)
-        COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IMenuPopup)
-        COM_INTERFACE_ENTRY_IID(IID_IShellMenu, IShellMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IDeskBand)
-        COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
-        COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
-        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-        COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
-        COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersistStream)
-        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-        COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
-        COM_INTERFACE_ENTRY_IID(IID_IMenuBand, IMenuBand)
-        COM_INTERFACE_ENTRY_IID(IID_IShellMenu2, IShellMenu2)
-        COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
-        COM_INTERFACE_ENTRY_IID(IID_IShellMenuAcc, IShellMenuAcc)
-    END_COM_MAP()
 
 private:
     HRESULT _CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id = 0, LPITEMIDLIST pidl = NULL);
@@ -425,19 +426,19 @@ private:
                 case VK_MENU:
                 case VK_LMENU:
                 case VK_RMENU:
-                    m_currentBand->ChildTrack(MPOS_FULLCANCEL);
+                    m_currentBand->_MenuItemHotTrack(MPOS_FULLCANCEL);
                     break;
                 case VK_LEFT:
-                    m_currentBand->ChildTrack(MPOS_SELECTLEFT);
+                    m_currentBand->_MenuItemHotTrack(MPOS_SELECTLEFT);
                     break;
                 case VK_RIGHT:
-                    m_currentBand->ChildTrack(MPOS_SELECTRIGHT);
+                    m_currentBand->_MenuItemHotTrack(MPOS_SELECTRIGHT);
                     break;
                 case VK_UP:
-                    m_currentBand->ChildTrack(VK_UP);
+                    m_currentBand->_MenuItemHotTrack(VK_UP);
                     break;
                 case VK_DOWN:
-                    m_currentBand->ChildTrack(VK_DOWN);
+                    m_currentBand->_MenuItemHotTrack(VK_DOWN);
                     break;
                 }
                 break;
@@ -488,7 +489,7 @@ private:
         }
 
         HWND newFocus;
-        hr = newBand->GetTopLevelWindow(&newFocus);
+        hr = newBand->_GetTopLevelWindow(&newFocus);
         if (FAILED(hr))
             return hr;
 
@@ -557,6 +558,11 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand) :
     m_hwnd(NULL),
     m_dwMenuFlags(0)
 {
+}
+
+HRESULT CMenuToolbarBase::IsWindowOwner(HWND hwnd)
+{
+    return (m_hwnd && m_hwnd == hwnd) ? S_OK : S_FALSE;
 }
 
 HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
@@ -670,6 +676,7 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_TIMER:
         if (wParam == TIMERID_HOTTRACK)
         {
+            m_menuBand->_OnPopupSubMenu(NULL);
             PopupItem(m_hotItem);
             KillTimer(hWnd, TIMERID_HOTTRACK);
         }
@@ -684,8 +691,8 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
     {
         KillTimer(m_hwnd, TIMERID_HOTTRACK);
         m_hotItem = -1;
-        m_menuBand->OnHotItemChanged(NULL, -1);
-        m_menuBand->ChildTrack(MPOS_CHILDTRACKING);
+        m_menuBand->_OnHotItemChanged(NULL, -1);
+        m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
     }
     else if (m_hotItem != hot->idNew)
     {
@@ -693,14 +700,12 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
         {
             DWORD elapsed = 0;
             SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
-
-
             SetTimer(m_hwnd, TIMERID_HOTTRACK, elapsed, NULL);
         }
 
         m_hotItem = hot->idNew;
-        m_menuBand->OnHotItemChanged(this, m_hotItem);
-        m_menuBand->ChildTrack(MPOS_CHILDTRACKING);
+        m_menuBand->_OnHotItemChanged(this, m_hotItem);
+        m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
     }
     return S_OK;
 }
@@ -773,6 +778,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
 
     popup->Popup(&pt, &rcl, MPPF_TOP | MPPF_RIGHT);
 
+    m_menuBand->_OnPopupSubMenu(popup);
+
     return S_OK;
 }
 
@@ -789,7 +796,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, HMENU menu)
 
     HMENU popup = GetSubMenu(menu, index);
 
-    m_menuBand->TrackPopup(popup, b.x, b.y);
+    m_menuBand->_TrackSubMenuUsingTrackPopupMenu(popup, b.x, b.y);
 
     return S_OK;
 }
@@ -826,12 +833,12 @@ HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
 
 HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    m_menuBand->OnSelect(MPOS_EXECUTE);
-    return S_OK;
+    theResult = 0;
+    return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
 }
 
 
-HRESULT CMenuToolbarBase::ChildTrack(DWORD dwSelectType)
+HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
 {
     int prev = SendMessage(m_hwnd, TB_GETHOTITEM, 0, 0);
     int index = -1;
@@ -894,7 +901,7 @@ HRESULT CMenuToolbarBase::ChildTrack(DWORD dwSelectType)
                 if (prev != index)
                 {
                     SendMessage(m_hwnd, TB_SETHOTITEM, index, 0);
-                    return m_menuBand->OnHotItemChanged(this, m_hotItem);
+                    return m_menuBand->_OnHotItemChanged(this, m_hotItem);
                 }
                 return S_OK;
             }
@@ -914,7 +921,7 @@ HRESULT CMenuToolbarBase::ChildTrack(DWORD dwSelectType)
     if (prev != index)
     {
         SendMessage(m_hwnd, TB_SETHOTITEM, -1, 0);
-        m_menuBand->OnHotItemChanged(NULL, -1);
+        m_menuBand->_OnHotItemChanged(NULL, -1);
     }
     return S_FALSE;
 }
@@ -997,7 +1004,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
 
             SMINFO * sminfo = new SMINFO();
             sminfo->dwMask = SMIM_ICON | SMIM_FLAGS;
-            if (SUCCEEDED(m_menuBand->CallCBWithId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo))))
+            if (SUCCEEDED(m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo))))
             {
                 tbb.iBitmap = sminfo->iIcon;
                 tbb.dwData = reinterpret_cast<DWORD_PTR>(sminfo);
@@ -1021,7 +1028,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
 HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
 {
     CComPtr<IContextMenu> contextMenu;
-    HRESULT hr = m_menuBand->CallCBWithId(rclick->dwItemSpec, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
+    HRESULT hr = m_menuBand->_CallCBWithItemId(rclick->dwItemSpec, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
     if (hr != S_OK)
         return hr;
 
@@ -1030,7 +1037,7 @@ HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
 
 HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    HRESULT hr = m_menuBand->CallCBWithId(wParam, SMC_EXEC, 0, 0);
+    HRESULT hr = m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
     if (FAILED(hr))
         return hr;
 
@@ -1045,7 +1052,7 @@ HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
     int index = SendMessage(m_hwnd, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
     if (index < 0)
         return E_FAIL;
-    
+
     TBBUTTON btn = { 0 };
     SendMessage(m_hwnd, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
 
@@ -1060,7 +1067,7 @@ HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
     else
     {
         CComPtr<IShellMenu> shellMenu;
-        HRESULT hr = m_menuBand->CallCBWithId(uItem, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IShellMenu), reinterpret_cast<LPARAM>(&shellMenu));
+        HRESULT hr = m_menuBand->_CallCBWithItemId(uItem, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IShellMenu), reinterpret_cast<LPARAM>(&shellMenu));
         if (FAILED(hr))
             return hr;
 
@@ -1215,7 +1222,9 @@ HRESULT CMenuSFToolbar::OnContextMenu(NMMOUSE * rclick)
 
 HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    return m_menuBand->CallCBWithPidl(GetPidlFromId(wParam, NULL), SMC_SFEXEC, 0, 0);
+    HRESULT hr = m_menuBand->_CallCBWithItemPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
+
+    return CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
 }
 
 HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
@@ -1227,7 +1236,7 @@ HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
     int index;
     CComPtr<IShellMenuCallback> psmc;
     CComPtr<IShellMenu> shellMenu;
-    
+
     LPITEMIDLIST pidl = GetPidlFromId(uItem, &index);
 
     if (!pidl)
@@ -1272,7 +1281,7 @@ HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
 {
     HRESULT hr;
     CComPtr<IShellItem> psi;
-    SHCreateShellItem(NULL, m_shellFolder, GetPidlFromId(uItem, NULL), &psi);
+    SHCreateShellItem(NULL, m_shellFolder, GetPidlFromId(uItem), &psi);
 
     SFGAOF attrs;
     hr = psi->GetAttributes(SFGAO_FOLDER, &attrs);
@@ -1289,7 +1298,8 @@ CMenuBand::CMenuBand() :
     m_SFToolbar(NULL),
     m_useBigIcons(FALSE),
     m_hotBar(NULL),
-    m_hotItem(-1)
+    m_hotItem(-1),
+    m_childMenu(NULL)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -1297,12 +1307,6 @@ CMenuBand::CMenuBand() :
 CMenuBand::~CMenuBand()
 {
     CMenuFocusManager::ReleaseManager(m_focusManager);
-
-    if (m_site)
-        m_site->Release();
-
-    if (m_psmc)
-        m_psmc->Release();
 
     if (m_staticToolbar)
         delete m_staticToolbar;
@@ -1317,9 +1321,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::Initialize(
     UINT uIdAncestor,
     DWORD dwFlags)
 {
-    if (m_psmc)
-        m_psmc->Release();
-
     m_psmc = psmc;
     m_uId = uId;
     m_uIdAncestor = uIdAncestor;
@@ -1327,8 +1328,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::Initialize(
 
     if (m_psmc)
     {
-        m_psmc->AddRef();
-
         _CallCB(SMC_CREATE, 0, reinterpret_cast<LPARAM>(&m_UserData));
     }
 
@@ -1408,22 +1407,19 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
     HWND    hwndParent;
     HRESULT hr;
 
-    if (m_site != NULL)
-        m_site->Release();
+    m_site = NULL;
 
     if (pUnkSite == NULL)
         return S_OK;
 
     hwndParent = NULL;
     hr = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
-    if (SUCCEEDED(hr))
-    {
-        m_site->Release();
+    if (FAILED(hr))
+        return hr;
 
-        hr = m_site->GetWindow(&hwndParent);
-        if (FAILED(hr))
-            return hr;
-    }
+    hr = m_site->GetWindow(&hwndParent);
+    if (FAILED(hr))
+        return hr;
 
     if (!::IsWindow(hwndParent))
         return E_FAIL;
@@ -1765,7 +1761,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
 HRESULT STDMETHODCALLTYPE CMenuBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
     if (IsEqualIID(guidService, SID_SMenuBandChild) ||
-        IsEqualIID(guidService, SID_SMenuBandBottom) || 
+        IsEqualIID(guidService, SID_SMenuBandBottom) ||
         IsEqualIID(guidService, SID_SMenuBandBottomSelected))
         return this->QueryInterface(riid, ppvObject);
     WARN("Unknown service requested %s\n", wine_dbgstr_guid(&guidService));
@@ -1780,7 +1776,19 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Popup(POINTL *ppt, RECTL *prcExclude, MP_PO
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
 {
-    return S_OK;
+    if (dwSelectType != MPOS_CANCELLEVEL)
+    {
+        if (dwSelectType == MPOS_SELECTLEFT)
+        {
+            dwSelectType = MPOS_CANCELLEVEL;
+        }
+        CComPtr<IMenuPopup> pmp;
+        HRESULT hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
+        if (FAILED(hr))
+            return hr;
+        return pmp->OnSelect(dwSelectType);
+    }
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
@@ -1876,12 +1884,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
     {
     case WM_COMMAND:
 
-        if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
+        if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
         {
             return m_staticToolbar->OnCommand(wParam, lParam, theResult);
         }
 
-        if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
+        if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
         {
             return m_SFToolbar->OnCommand(wParam, lParam, theResult);
         }
@@ -1898,12 +1906,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         case TBN_HOTITEMCHANGE:
             hot = reinterpret_cast<LPNMTBHOTITEM>(hdr);
 
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
+            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
             {
                 return m_staticToolbar->OnHotItemChange(hot);
             }
 
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
+            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
             {
                 return m_SFToolbar->OnHotItemChange(hot);
             }
@@ -1913,12 +1921,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         case NM_RCLICK:
             rclick = reinterpret_cast<LPNMMOUSE>(hdr);
 
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
+            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
             {
                 return m_staticToolbar->OnContextMenu(rclick);
             }
 
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
+            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
             {
                 return m_SFToolbar->OnContextMenu(rclick);
             }
@@ -1971,10 +1979,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 
 HRESULT STDMETHODCALLTYPE CMenuBand::IsWindowOwner(HWND hWnd)
 {
-    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd))
+    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
         return S_OK;
 
-    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd))
+    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
         return S_OK;
 
     return S_FALSE;
@@ -2052,12 +2060,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
     return S_OK;
 }
 
-HRESULT CMenuBand::CallCBWithId(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CMenuBand::_CallCBWithItemId(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return _CallCB(uMsg, wParam, lParam, id);
 }
 
-HRESULT CMenuBand::CallCBWithPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CMenuBand::_CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return _CallCB(uMsg, wParam, lParam, 0, pidl);
 }
@@ -2091,80 +2099,81 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     return hr;
 }
 
-HRESULT CMenuBand::TrackPopup(HMENU popup, INT x, INT y)
+HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y)
 {
     ::TrackPopupMenu(popup, 0, x, y, 0, m_menuOwner, NULL);
     return S_OK;
 }
 
-HRESULT CMenuBand::GetTopLevelWindow(HWND*topLevel)
+HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
 {
     *topLevel = m_topLevelWindow;
     return S_OK;
 }
 
-HRESULT CMenuBand::OnHotItemChanged(CMenuToolbarBase * tb, INT id)
+HRESULT CMenuBand::_OnHotItemChanged(CMenuToolbarBase * tb, INT id)
 {
     if (m_hotBar && m_hotBar != tb)
-        m_hotBar->ChildTrack(-1);
+        m_hotBar->ChangeHotItem(-1);
     m_hotBar = tb;
     m_hotItem = id;
     return S_OK;
 }
 
-HRESULT CMenuBand::ChildTrack(DWORD dwSelectType)
+HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 {
     HRESULT hr;
-    if (dwSelectType == VK_DOWN)
+
+    if (changeType == VK_DOWN)
     {
         if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
         {
-            hr = m_SFToolbar->ChildTrack(dwSelectType);
+            hr = m_SFToolbar->ChangeHotItem(VK_DOWN);
             if (hr == S_FALSE)
             {
                 if (m_staticToolbar)
-                    return m_staticToolbar->ChildTrack(VK_HOME);
+                    return m_staticToolbar->ChangeHotItem(VK_HOME);
                 else
-                    return m_SFToolbar->ChildTrack(VK_HOME);
+                    return m_SFToolbar->ChangeHotItem(VK_HOME);
             }
             return hr;
         }
         else if (m_staticToolbar && m_hotBar == m_staticToolbar)
         {
-            hr = m_staticToolbar->ChildTrack(dwSelectType);
+            hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
             if (hr == S_FALSE)
             {
                 if (m_SFToolbar)
-                    return m_SFToolbar->ChildTrack(VK_HOME);
+                    return m_SFToolbar->ChangeHotItem(VK_HOME);
                 else
-                    return m_staticToolbar->ChildTrack(VK_HOME);
+                    return m_staticToolbar->ChangeHotItem(VK_HOME);
             }
             return hr;
         }
     }
-    else if (dwSelectType == VK_UP)
+    else if (changeType == VK_UP)
     {
         if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
         {
-            hr = m_staticToolbar->ChildTrack(dwSelectType);
+            hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
             if (hr == S_FALSE)
             {
                 if (m_SFToolbar)
-                    return m_SFToolbar->ChildTrack(VK_END);
+                    return m_SFToolbar->ChangeHotItem(VK_END);
                 else
-                    return m_staticToolbar->ChildTrack(VK_END);
+                    return m_staticToolbar->ChangeHotItem(VK_END);
             }
             return hr;
         }
         else if (m_SFToolbar && m_hotBar == m_SFToolbar)
         {
-            hr = m_SFToolbar->ChildTrack(dwSelectType);
+            hr = m_SFToolbar->ChangeHotItem(VK_UP);
             if (hr == S_FALSE)
             {
                 if (m_staticToolbar)
-                    return m_staticToolbar->ChildTrack(VK_END);
+                    return m_staticToolbar->ChangeHotItem(VK_END);
                 else
-                    return m_SFToolbar->ChildTrack(VK_END);
+                    return m_SFToolbar->ChangeHotItem(VK_END);
             }
             return hr;
         }
@@ -2175,7 +2184,24 @@ HRESULT CMenuBand::ChildTrack(DWORD dwSelectType)
         hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &pmp));
         if (FAILED(hr))
             return hr;
-        pmp->OnSelect(dwSelectType);
+        pmp->OnSelect(changeType);
+    }
+    return S_OK;
+}
+
+
+HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup)
+{
+    if (m_childMenu)
+    {
+        HRESULT hr = m_childMenu->OnSelect(MPOS_CANCELLEVEL);
+        if (FAILED(hr))
+            return hr;
+    }
+    m_childMenu = popup;
+    if (m_childMenu)
+    {
+        return m_childMenu->SetSubMenu(this, TRUE);
     }
     return S_OK;
 }

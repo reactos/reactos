@@ -43,10 +43,6 @@ class CMenuDeskBar :
     public IBanneredBar,
     public IInitializeObject
 {
-public:
-    CMenuDeskBar();
-    ~CMenuDeskBar();
-
 private:
     CComPtr<IUnknown>   m_Site;
     CComPtr<IUnknown>   m_Client;
@@ -58,6 +54,34 @@ private:
     HBITMAP m_Banner;
 
 public:
+    CMenuDeskBar();
+    ~CMenuDeskBar();
+
+    DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+    DECLARE_WND_CLASS_EX(_T("BaseBar"), CS_SAVEBITS | CS_DROPSHADOW, COLOR_3DFACE)
+
+    BEGIN_MSG_MAP(CMenuDeskBar)
+        MESSAGE_HANDLER(WM_SIZE, _OnSize)
+        MESSAGE_HANDLER(WM_NOTIFY, _OnNotify)
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, _OnWindowPosChanged)
+        MESSAGE_HANDLER(WM_PAINT, _OnPaint)
+    END_MSG_MAP()
+
+    BEGIN_COM_MAP(CMenuDeskBar)
+        COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+        COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
+        COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
+        COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+        COM_INTERFACE_ENTRY_IID(IID_IBanneredBar, IBanneredBar)
+        COM_INTERFACE_ENTRY_IID(IID_IInitializeObject, IInitializeObject)
+    END_COM_MAP()
+
     // *** IMenuPopup methods ***
     virtual HRESULT STDMETHODCALLTYPE Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags);
     virtual HRESULT STDMETHODCALLTYPE OnSelect(DWORD dwSelectType);
@@ -100,38 +124,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown **ppunkClient);
     virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(LPRECT prc);
 
-    DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    DECLARE_WND_CLASS_EX(_T("BaseBar"), CS_SAVEBITS | CS_DROPSHADOW, COLOR_3DFACE)
-
-    BEGIN_MSG_MAP(CMenuDeskBar)
-        MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
-        MESSAGE_HANDLER(WM_PAINT, OnPaint)
-    END_MSG_MAP()
-
-    BEGIN_COM_MAP(CMenuDeskBar)
-        COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
-        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-        COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
-        COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
-        COM_INTERFACE_ENTRY_IID(IID_IDeskBar, IMenuPopup)
-        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IMenuPopup)
-        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-        COM_INTERFACE_ENTRY_IID(IID_IBanneredBar, IBanneredBar)
-        COM_INTERFACE_ENTRY_IID(IID_IInitializeObject, IInitializeObject)
-    END_COM_MAP()
-
 private:
-
     // message handlers
-    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 
 extern "C"
@@ -331,7 +329,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
     return m_Site->QueryInterface(riid, ppvSite);
 }
 
-LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CMenuDeskBar::_OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (m_Client)
     {
@@ -352,7 +350,7 @@ LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     return 0;
 }
 
-LRESULT CMenuDeskBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CMenuDeskBar::_OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     CComPtr<IWinEventHandler>               winEventHandler;
     LRESULT                                 result;
@@ -368,12 +366,12 @@ LRESULT CMenuDeskBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return result;
 }
 
-LRESULT CMenuDeskBar::OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CMenuDeskBar::_OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     return 0;
 }
 
-LRESULT CMenuDeskBar::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CMenuDeskBar::_OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     bHandled = FALSE;
 
@@ -432,6 +430,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     if (FAILED(hr))
         return hr;
 
+    // Windows calls this, but it appears to be unimplemented?
     hr = dbc->SetModeDBC(1);
     // Allow it to fail with E_NOTIMPL.
 
@@ -481,7 +480,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     // HACK: The bar needs to be notified of the size AFTER it is shown.
     // Quick & dirty way of getting it done.
     BOOL bHandled;
-    OnSize(WM_SIZE, 0, 0, bHandled);
+    _OnSize(WM_SIZE, 0, 0, bHandled);
 
     UIActivateIO(TRUE, NULL);
 
@@ -502,7 +501,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetIconSize(THIS_ DWORD iIcon)
         return hr;
 
     BOOL bHandled;
-    OnSize(WM_SIZE, 0, 0, bHandled);
+    _OnSize(WM_SIZE, 0, 0, bHandled);
 
     return hr;
 }
@@ -519,7 +518,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(THIS_ HBITMAP hBitmap)
     m_Banner = hBitmap;
 
     BOOL bHandled;
-    OnSize(WM_SIZE, 0, 0, bHandled);
+    _OnSize(WM_SIZE, 0, 0, bHandled);
 
     return S_OK;
 }
@@ -534,6 +533,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(THIS_ HBITMAP* phBitmap)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     DWORD dwSelectType)
 {
+    CComPtr<IMenuPopup> pmp;
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
 
@@ -542,6 +542,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     case MPOS_EXECUTE:
     case MPOS_FULLCANCEL:
     case MPOS_CANCELLEVEL:
+        hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IMenuPopup, &pmp));
+        if (FAILED(hr))
+            return hr;
+
+        hr = pmp->OnSelect(MPOS_CANCELLEVEL);
+        if (FAILED(hr))
+            return hr;
 
         hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
         if (FAILED(hr))
@@ -558,7 +565,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
         if (dwSelectType == MPOS_CANCELLEVEL)
             break;
 
-        dwSelectType = MPOS_CANCELLEVEL;
     case MPOS_SELECTLEFT:
     case MPOS_SELECTRIGHT:
         /*CComPtr<IMenuPopup> pmp;
