@@ -77,6 +77,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
+    HANDLE UserHandle;
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
@@ -99,9 +100,20 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
     if (NT_SUCCESS(Status))
-        FCB->State = SOCKET_STATE_BOUND;
+    {
+        UserHandle = NULL;
+        Status = ObOpenObjectByPointer(FCB->AddressFile.Object,
+                                       0,
+                                       NULL,
+                                       MAXIMUM_ALLOWED,
+                                       IoFileObjectType,
+                                       Irp->RequestorMode,
+                                       &UserHandle);
+        if (NT_SUCCESS(Status))
+            FCB->State = SOCKET_STATE_BOUND;
+    }
 
     /* MSAFD relies on us returning the address file handle in the IOSB */
     return UnlockAndMaybeComplete( FCB, Status, Irp,
-                                   (ULONG_PTR)FCB->AddressFile.Handle );
+                                   (ULONG_PTR)UserHandle);
 }
