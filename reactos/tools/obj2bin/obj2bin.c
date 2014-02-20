@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <typedefs.h>
-#include "../pecoff.h"
+#include <pecoff.h>
 
 static
 void

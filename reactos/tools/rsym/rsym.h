@@ -2,7 +2,7 @@
 
 #pragma once
 #include <typedefs.h>
-#include "../pecoff.h"
+#include <pecoff.h>
 
 typedef struct {
   USHORT f_magic;         /* magic number             */
