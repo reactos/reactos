@@ -21,7 +21,7 @@ KMT_TESTFUNC Test_RtlUnicodeString;
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
 {
-    { "Example",            Test_Example },
+    { "-Example",           Test_Example },
     { "FindFile",           Test_FindFile },
     { "IoDeviceObject",     Test_IoDeviceObject },
     { "RtlAvlTree",         Test_RtlAvlTree },
