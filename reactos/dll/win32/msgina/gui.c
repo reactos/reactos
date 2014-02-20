@@ -592,6 +592,219 @@ OnLogOff(
 }
 
 
+static
+VOID
+UpdateShutdownDesc(
+    IN HWND hwnd)
+{
+    WCHAR szBuffer[256];
+    UINT shutdownDescId = 0;
+    int shutdownCode = 0;
+
+    shutdownCode = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_GETCURSEL, 0, 0);
+
+    switch (shutdownCode)
+    {
+        case 0: /* Log off */
+            shutdownDescId = IDS_SHUTDOWN_LOGOFF_DESC;
+            break;
+
+        case 1: /* Shut down */
+            shutdownDescId = IDS_SHUTDOWN_SHUTDOWN_DESC;
+            break;
+
+        case 2: /* Restart */
+            shutdownDescId = IDS_SHUTDOWN_RESTART_DESC;
+            break;
+
+        case 3: /* Sleep */
+            shutdownDescId = IDS_SHUTDOWN_SLEEP_DESC;
+            break;
+
+        case 4: /* Hibernate */
+            shutdownDescId = IDS_SHUTDOWN_HIBERNATE_DESC;
+            break;
+
+        default:
+            break;
+    }
+
+    LoadStringW(hDllInstance, shutdownDescId, szBuffer, sizeof(szBuffer));
+    SetDlgItemTextW(hwnd, IDC_SHUTDOWN_DESCRIPTION, szBuffer);
+}
+
+
+static
+VOID
+ShutDownOnInit(
+    IN HWND hwndDlg,
+    IN PGINA_CONTEXT pgContext)
+{
+    WCHAR szBuffer[256];
+    HWND hwndList;
+    INT idx, count, i;
+
+    hwndList = GetDlgItem(hwndDlg, IDC_SHUTDOWN_LIST);
+
+    /* Clears the content before it's used */
+    SendMessageW(hwndList, CB_RESETCONTENT, 0, 0);
+
+    /* Log off */
+    LoadStringW(hDllInstance, IDS_SHUTDOWN_LOGOFF, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    if (idx != CB_ERR)
+        SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_LOGOFF);
+
+    /* Shut down */
+    LoadStringW(hDllInstance, IDS_SHUTDOWN_SHUTDOWN, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    if (idx != CB_ERR)
+        SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+
+    /* Restart */
+    LoadStringW(hDllInstance, IDS_SHUTDOWN_RESTART, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    if (idx != CB_ERR)
+        SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+
+    /* Sleep */
+#if 0
+    LoadStringW(hDllInstance, IDS_SHUTDOWN_SLEEP, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    if (idx != CB_ERR)
+        SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_SLEEP);
+#endif
+
+    /* Hibernate */
+#if 0
+    LoadStringW(hDllInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    if (idx != CB_ERR)
+        SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_HIBERNATE);
+#endif
+
+    /* Sets the default shut down selection */
+    count = SendMessageW(hwndList, CB_GETCOUNT, 0, 0);
+    for (i = 0; i < count; i++)
+    {
+        if (pgContext->nShutdownAction == SendMessageW(hwndList, CB_GETITEMDATA, i, 0))
+        {
+            SendMessageW(hwndList, CB_SETCURSEL, i, 0);
+            break;
+        }
+    }
+
+    /* Updates the choice description based on the current selection */
+    UpdateShutdownDesc(hwndDlg);
+}
+
+
+static
+VOID
+ShutDownOnOk(
+    IN HWND hwndDlg,
+    IN PGINA_CONTEXT pgContext)
+{
+    INT idx;
+
+    idx = SendDlgItemMessageW(hwndDlg,
+                              IDC_SHUTDOWN_LIST,
+                              CB_GETCURSEL,
+                              0,
+                              0);
+    if (idx != CB_ERR)
+    {
+        pgContext->nShutdownAction = SendDlgItemMessageW(hwndDlg,
+                                                         IDC_SHUTDOWN_LIST,
+                                                         CB_GETITEMDATA,
+                                                         idx,
+                                                         0);
+    }
+}
+
+
+BOOL
+CALLBACK
+ShutDownDialogProc(
+    HWND hwnd,
+    UINT Message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    PGINA_CONTEXT pgContext;
+
+    pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwnd, GWL_USERDATA);
+
+    switch (Message)
+    {
+        case WM_INITDIALOG:
+            pgContext = (PGINA_CONTEXT)lParam;
+            SetWindowLongPtr(hwnd, GWL_USERDATA, (INT_PTR)pgContext);
+
+            ShutDownOnInit(hwnd, pgContext);
+
+            /* Draw the logo graphic */
+            pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            return TRUE;
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc;
+            if (pgContext->hBitmap)
+            {
+                hdc = BeginPaint(hwnd, &ps);
+                DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                EndPaint(hwnd, &ps);
+            }
+            return TRUE;
+        }
+
+        case WM_DESTROY:
+            DeleteObject(pgContext->hBitmap);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    ShutDownOnOk(hwnd, pgContext);
+                    EndDialog(hwnd, IDOK);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+
+                case IDC_SHUTDOWN_LIST:
+                    UpdateShutdownDesc(hwnd);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+
+static
+INT
+OnShutDown(
+    IN HWND hwndDlg,
+    IN PGINA_CONTEXT pgContext)
+{
+    return pgContext->pWlxFuncs->WlxDialogBoxParam(
+        pgContext->hWlx,
+        pgContext->hDllInstance,
+        MAKEINTRESOURCEW(IDD_SHUTDOWN_DLG),
+        hwndDlg,
+        ShutDownDialogProc,
+        (LPARAM)pgContext);
+}
+
+
 static INT_PTR CALLBACK
 LoggedOnWindowProc(
     IN HWND hwndDlg,
@@ -627,7 +840,8 @@ LoggedOnWindowProc(
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     return TRUE;
                 case IDC_SHUTDOWN:
-                    EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+                    if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                        EndDialog(hwndDlg, pgContext->nShutdownAction);
                     return TRUE;
                 case IDC_CHANGEPWD:
                     if (OnChangePassword(hwndDlg, pgContext))

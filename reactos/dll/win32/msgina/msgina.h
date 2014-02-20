@@ -39,6 +39,8 @@ typedef struct
     BOOL bDontDisplayLastUserName;
     BOOL bShutdownWithoutLogon;
 
+    INT nShutdownAction;
+
     /* Information to be filled during logon */
     WCHAR UserName[256];
     WCHAR Domain[256];

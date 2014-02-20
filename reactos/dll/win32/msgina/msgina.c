@@ -313,6 +313,8 @@ WlxInitialize(
     /* Check autologon settings the first time */
     pgContext->AutoLogonState = AUTOLOGON_CHECK_REGISTRY;
 
+    pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+
     ChooseGinaUI();
     return pGinaUI->Initialize(pgContext);
 }
