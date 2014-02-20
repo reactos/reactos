@@ -228,15 +228,15 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    if (m_Site == NULL)
-        return E_FAIL;
-
     if (IsEqualGUID(guidService, SID_SMenuPopup) ||
         IsEqualGUID(guidService, SID_SMenuBandParent) ||
         IsEqualGUID(guidService, SID_STopLevelBrowser))
     {
         return this->QueryInterface(riid, ppvObject);
     }
+
+    if (m_Site == NULL)
+        return E_NOINTERFACE;
 
     return IUnknown_QueryService(m_Site, guidService, riid, ppvObject);
 }
@@ -333,8 +333,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
 
 LRESULT CMenuDeskBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    HRESULT hr;
-
     if (m_Client)
     {
         RECT rc;
@@ -538,31 +536,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
 {
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
-    
-    bool bubbleUp = false;
-    bool cancel = false;
 
     switch (dwSelectType)
     {
-    case MPOS_FULLCANCEL:
     case MPOS_EXECUTE:
-        bubbleUp = true;
-        cancel = true;
-        break;
+    case MPOS_FULLCANCEL:
     case MPOS_CANCELLEVEL:
-        cancel = true;
-        break;
-    case MPOS_SELECTLEFT:
-    case MPOS_SELECTRIGHT:
-        // if unhandled, spread upwards?
-        bubbleUp = true;
-        break;
-    case MPOS_CHILDTRACKING:
-        break;
-    }
 
-    if (cancel)
-    {
         hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
         if (FAILED(hr))
             return hr;
@@ -574,12 +554,23 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
         SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
         UIActivateIO(FALSE, NULL);
-    }
 
-    if (bubbleUp && m_SubMenuParent)
-    {
-        hr = m_SubMenuParent->OnSelect(MPOS_CANCELLEVEL); // why??
-        return hr;
+        if (dwSelectType == MPOS_CANCELLEVEL)
+            break;
+
+        dwSelectType = MPOS_CANCELLEVEL;
+    case MPOS_SELECTLEFT:
+    case MPOS_SELECTRIGHT:
+        /*CComPtr<IMenuPopup> pmp;
+        hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IMenuPopup, &pmp));
+        if (FAILED(hr))
+        return hr;*/
+
+        hr = m_SubMenuParent->OnSelect(dwSelectType);
+        if (FAILED(hr))
+            return hr;
+    case MPOS_CHILDTRACKING:
+        break;
     }
 
     return S_OK;

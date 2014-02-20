@@ -174,7 +174,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::Popup(POINTL *ppt, RECTL *prcExclude
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::Popup(POINTL *ppt=%p, RECTL *prcExclude=%p, MP_POPUPFLAGS dwFlags=%08x)\n", this, ppt, prcExclude, dwFlags);
     HRESULT hr = m_IMenuPopup->Popup(ppt, prcExclude, dwFlags);
-    WrapLogExit("CMenuDeskBarWrap::Popup() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::Popup()", hr);
     return hr;
 }
 
@@ -182,7 +182,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::OnSelect(DWORD dwSelectType)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::OnSelect(DWORD dwSelectType=%08x)\n", this, dwSelectType);
     HRESULT hr = m_IMenuPopup->OnSelect(dwSelectType);
-    WrapLogExit("CMenuDeskBarWrap::OnSelect() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::OnSelect()", hr);
     return hr;
 }
 
@@ -190,7 +190,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetSubMenu(IMenuPopup *pmp, BOOL fSe
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetSubMenu(IMenuPopup *pmp=%p, BOOL fSet=%d)\n", this, pmp, fSet);
     HRESULT hr = m_IMenuPopup->SetSubMenu(pmp, fSet);
-    WrapLogExit("CMenuDeskBarWrap::SetSubMenu() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::SetSubMenu()", hr);
     return hr;
 }
 
@@ -199,8 +199,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::GetWindow(HWND *phwnd)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::GetWindow(HWND *phwnd=%p)\n", this, phwnd);
     HRESULT hr = m_IOleWindow->GetWindow(phwnd);
-    if (phwnd) WrapLogMsg("*phwnd=%p\n", *phwnd);
-    WrapLogExit("CMenuDeskBarWrap::GetWindow() = %08x\n", hr);
+    if (phwnd) WrapLogPost("*phwnd=%p\n", *phwnd);
+    WrapLogExit("CMenuDeskBarWrap::GetWindow()", hr);
     return hr;
 }
 
@@ -208,7 +208,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::ContextSensitiveHelp(BOOL fEnterMode
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::ContextSensitiveHelp(BOOL fEnterMode=%d)\n", this, fEnterMode);
     HRESULT hr = m_IOleWindow->ContextSensitiveHelp(fEnterMode);
-    WrapLogExit("CMenuDeskBarWrap::ContextSensitiveHelp() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::ContextSensitiveHelp()", hr);
     return hr;
 }
 
@@ -217,7 +217,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetSite(IUnknown *pUnkSite)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetSite(IUnknown *pUnkSite=%p)\n", this, pUnkSite);
     HRESULT hr = m_IObjectWithSite->SetSite(pUnkSite);
-    WrapLogExit("CMenuDeskBarWrap::SetSite() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::SetSite()", hr);
     return hr;
 }
 
@@ -225,8 +225,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::GetSite(REFIID riid, PVOID *ppvSite)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::GetSite(REFIID riid=%s, PVOID *ppvSite=%p)\n", this, Wrap(riid), ppvSite);
     HRESULT hr = m_IObjectWithSite->GetSite(riid, ppvSite);
-    if (ppvSite) WrapLogMsg("*ppvSite=%p\n", *ppvSite);
-    WrapLogExit("CMenuDeskBarWrap::GetSite() = %08x\n", hr);
+    if (ppvSite) WrapLogPost("*ppvSite=%p\n", *ppvSite);
+    WrapLogExit("CMenuDeskBarWrap::GetSite()", hr);
     return hr;
 }
 
@@ -235,7 +235,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetIconSize(DWORD iIcon)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetIconSize(DWORD iIcon=%d)\n", this, iIcon);
     HRESULT hr = m_IBanneredBar->SetIconSize(iIcon);
-    WrapLogExit("CMenuDeskBarWrap::SetIconSize() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::SetIconSize()", hr);
     return hr;
 }
 
@@ -243,8 +243,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::GetIconSize(DWORD* piIcon)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::GetIconSize(DWORD* piIcon=%p)\n", this, piIcon);
     HRESULT hr = m_IBanneredBar->GetIconSize(piIcon);
-    if (piIcon) WrapLogMsg("*piIcon=%d\n", *piIcon);
-    WrapLogExit("CMenuDeskBarWrap::GetIconSize() = %08x\n", hr);
+    if (piIcon) WrapLogPost("*piIcon=%d\n", *piIcon);
+    WrapLogExit("CMenuDeskBarWrap::GetIconSize()", hr);
     return hr;
 }
 
@@ -252,7 +252,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetBitmap(HBITMAP hBitmap)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetBitmap(HBITMAP hBitmap=%p)\n", this, hBitmap);
     HRESULT hr = m_IBanneredBar->SetBitmap(hBitmap);
-    WrapLogExit("CMenuDeskBarWrap::SetBitmap() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::SetBitmap()", hr);
     return hr;
 }
 
@@ -260,8 +260,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::GetBitmap(HBITMAP* phBitmap)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::GetBitmap(HBITMAP* phBitmap=%p)\n", this, phBitmap);
     HRESULT hr = m_IBanneredBar->GetBitmap(phBitmap);
-    if (phBitmap) WrapLogMsg("*phBitmap=%p\n", *phBitmap);
-    WrapLogExit("CMenuDeskBarWrap::GetBitmap() = %08x\n", hr);
+    if (phBitmap) WrapLogPost("*phBitmap=%p\n", *phBitmap);
+    WrapLogExit("CMenuDeskBarWrap::GetBitmap()", hr);
     return hr;
 }
 
@@ -271,7 +271,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::Initialize(THIS)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::Initialize()\n", this);
     HRESULT hr = m_IInitializeObject->Initialize();
-    WrapLogExit("CMenuDeskBarWrap::Initialize() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::Initialize()", hr);
     return hr;
 }
 
@@ -280,17 +280,17 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::QueryStatus(const GUID *pguidCmdGrou
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::QueryStatus(const GUID *pguidCmdGroup=%p, ULONG cCmds=%u, prgCmds=%p, pCmdText=%p)\n", this, pguidCmdGroup, cCmds, prgCmds, pCmdText);
     HRESULT hr = m_IOleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
-    WrapLogExit("CMenuDeskBarWrap::QueryStatus() = %08x\n", hr);
+    if (pguidCmdGroup) WrapLogPost("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
+    WrapLogExit("CMenuDeskBarWrap::QueryStatus()", hr);
     return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::Exec(const GUID *pguidCmdGroup=%p, DWORD nCmdID=%d, DWORD nCmdexecopt=%d, VARIANT *pvaIn=%p, VARIANT *pvaOut=%p)\n", this, pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    if (pguidCmdGroup) WrapLogMsg("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
+    if (pguidCmdGroup) WrapLogPost("*pguidCmdGroup=%s\n", Wrap(*pguidCmdGroup));
     HRESULT hr = m_IOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    WrapLogExit("CMenuDeskBarWrap::Exec() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::Exec()", hr);
     return hr;
 }
 
@@ -301,56 +301,56 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::QueryService(REFGUID guidService, RE
 
     if (IsEqualIID(guidService, SID_SMenuPopup))
     {
-        WrapLogMsg("SID is SID_SMenuPopup. Using QueryInterface of self instead of wrapped object.\n");
+        WrapLogPre("SID is SID_SMenuPopup. Using QueryInterface of self instead of wrapped object.\n");
         HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
         if (SUCCEEDED(hr))
         {
-            WrapLogExit("CMenuDeskBarWrap::QueryService() = %08x\n", hr);
+            if (ppvObject) WrapLogPost("*ppvObject=%p\n", *ppvObject);
+            WrapLogExit("CMenuDeskBarWrap::QueryService()", hr);
             return hr;
         }
         else
         {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+            WrapLogPre("QueryInterface on wrapper failed. Handing over to innter object.\n");
         }
     }
     else if (IsEqualIID(guidService, SID_SMenuBandParent))
     {
-        WrapLogMsg("SID is SID_SMenuBandParent. Using QueryInterface of self instead of wrapped object.\n");
+        WrapLogPre("SID is SID_SMenuBandParent. Using QueryInterface of self instead of wrapped object.\n");
         HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
         if (SUCCEEDED(hr))
         {
-            WrapLogExit("CMenuDeskBarWrap::QueryService() = %08x\n", hr);
+            if (ppvObject) WrapLogPost("*ppvObject=%p\n", *ppvObject);
+            WrapLogExit("CMenuDeskBarWrap::QueryService()", hr);
             return hr;
         }
         else
         {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+            WrapLogPre("QueryInterface on wrapper failed. Handing over to innter object.\n");
         }
     }
     else if (IsEqualIID(guidService, SID_STopLevelBrowser))
     {
-        WrapLogMsg("SID is SID_STopLevelBrowser. Using QueryInterface of self instead of wrapped object.\n");
+        WrapLogPre("SID is SID_STopLevelBrowser. Using QueryInterface of self instead of wrapped object.\n");
         HRESULT hr = this->QueryInterface(riid, ppvObject);
-        if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
         if (SUCCEEDED(hr))
         {
-            WrapLogExit("CMenuDeskBarWrap::QueryService() = %08x\n", hr);
+            if (ppvObject) WrapLogPost("*ppvObject=%p\n", *ppvObject);
+            WrapLogExit("CMenuDeskBarWrap::QueryService()", hr);
             return hr;
         }
         else
         {
-            WrapLogMsg("QueryInterface on wrapper failed. Handing over to innter object.\n");
+            WrapLogPre("QueryInterface on wrapper failed. Handing over to innter object.\n");
         }
     }
     else
     {
-        WrapLogMsg("SID not identified. Calling wrapped object's QueryService.\n");
+        WrapLogPre("SID not identified. Calling wrapped object's QueryService.\n");
     }
     HRESULT hr = m_IServiceProvider->QueryService(guidService, riid, ppvObject);
-    if (ppvObject) WrapLogMsg("*ppvObject=%p\n", *ppvObject);
-    WrapLogExit("CMenuDeskBarWrap::QueryService() = %08x\n", hr);
+    if (ppvObject) WrapLogPost("*ppvObject=%p\n", *ppvObject);
+    WrapLogExit("CMenuDeskBarWrap::QueryService()", hr);
     return hr;
 }
 
@@ -359,7 +359,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::OnFocusChangeIS(LPUNKNOWN lpUnknown,
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::OnFocusChangeIS(LPUNKNOWN lpUnknown=%p, BOOL bFocus=%d)\n", this, lpUnknown, bFocus);
     HRESULT hr = m_IInputObjectSite->OnFocusChangeIS(lpUnknown, bFocus);
-    WrapLogExit("CMenuDeskBarWrap::OnFocusChangeIS() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::OnFocusChangeIS()", hr);
     return hr;
 }
 
@@ -368,7 +368,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::UIActivateIO(BOOL bActivating, LPMSG
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::UIActivateIO(BOOL bActivating=%d, LPMSG lpMsg=%p)\n", this, bActivating, lpMsg);
     HRESULT hr = m_IInputObject->UIActivateIO(bActivating, lpMsg);
-    WrapLogExit("CMenuDeskBarWrap::UIActivateIO() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::UIActivateIO()", hr);
     return hr;
 }
 
@@ -376,16 +376,16 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::HasFocusIO(THIS)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::HasFocusIO()\n", this);
     HRESULT hr = m_IInputObject->HasFocusIO();
-    WrapLogExit("CMenuDeskBarWrap::HasFocusIO() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::HasFocusIO()", hr);
     return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::TranslateAcceleratorIO(LPMSG lpMsg=%p)\n", this, lpMsg);
-    if (lpMsg) WrapLogMsg("*lpMsg=%s\n", Wrap(*lpMsg));
+    if (lpMsg) WrapLogPre("*lpMsg=%s\n", Wrap(*lpMsg));
     HRESULT hr = m_IInputObject->TranslateAcceleratorIO(lpMsg);
-    WrapLogExit("CMenuDeskBarWrap::TranslateAcceleratorIO() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::TranslateAcceleratorIO()", hr);
     return hr;
 }
 
@@ -394,7 +394,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetClient(IUnknown *punkClient)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetClient(IUnknown *punkClient=%p)\n", this, punkClient);
     HRESULT hr = m_IDeskBar->SetClient(punkClient);
-    WrapLogExit("CMenuDeskBarWrap::SetClient() = %08x\n", hr);
+    WrapLogExit("CMenuDeskBarWrap::SetClient()", hr);
 
     CComPtr<IDeskBarClient> dbc;
     punkClient->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
@@ -407,8 +407,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::GetClient(IUnknown **ppunkClient)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::GetClient(IUnknown **ppunkClient=%p)\n", this, ppunkClient);
     HRESULT hr = m_IDeskBar->GetClient(ppunkClient);
-    if (ppunkClient) WrapLogMsg("*ppunkClient=%p\n", *ppunkClient);
-    WrapLogExit("CMenuDeskBarWrap::GetClient() = %08x\n", hr);
+    if (ppunkClient) WrapLogPost("*ppunkClient=%p\n", *ppunkClient);
+    WrapLogExit("CMenuDeskBarWrap::GetClient()", hr);
     return hr;
 }
 
@@ -416,7 +416,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::OnPosRectChangeDB(LPRECT prc)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::OnPosRectChangeDB(RECT *prc=%p)\n", this, prc);
     HRESULT hr = m_IDeskBar->OnPosRectChangeDB(prc);
-    if (prc) WrapLogMsg("*prc=%s\n", Wrap(*prc));
-    WrapLogExit("CMenuDeskBarWrap::OnPosRectChangeDB() = %08x\n", hr);
+    if (prc) WrapLogPost("*prc=%s\n", Wrap(*prc));
+    WrapLogExit("CMenuDeskBarWrap::OnPosRectChangeDB()", hr);
     return hr;
 }

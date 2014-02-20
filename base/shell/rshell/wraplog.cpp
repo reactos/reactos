@@ -30,12 +30,37 @@ void WrapLogClose()
     }
 }
 
-void __cdecl WrapLogMsg(_Printf_format_string_ const char* msg, ...)
+void __cdecl WrapLogPrint(_Printf_format_string_ const char* msg, ...)
 {
     va_list args;
     for (int i = 0; i < callLevel; i++)
         fputs("  ", log);
-    fputs("-- ", log);
+    va_start(args, msg);
+    vfprintf(log, msg, args);
+    va_end(args);
+    fflush(log);
+    nTemps = 0;
+}
+
+void __cdecl WrapLogPre(_Printf_format_string_ const char* msg, ...)
+{
+    va_list args;
+    for (int i = 0; i < callLevel; i++)
+        fputs("  ", log);
+    fputs("pre: ", log);
+    va_start(args, msg);
+    vfprintf(log, msg, args);
+    va_end(args);
+    fflush(log);
+    nTemps = 0;
+}
+
+void __cdecl WrapLogPost(_Printf_format_string_ const char* msg, ...)
+{
+    va_list args;
+    for (int i = 0; i < callLevel; i++)
+        fputs("  ", log);
+    fputs("post: ", log);
     va_start(args, msg);
     vfprintf(log, msg, args);
     va_end(args);
@@ -48,7 +73,7 @@ void __cdecl WrapLogEnter(_Printf_format_string_ const char* msg, ...)
     va_list args;
     for (int i = 0; i < callLevel; i++)
         fputs("  ", log);
-    fputs("ENTER >> ", log);
+    fputs("CALL ", log);
     va_start(args, msg);
     vfprintf(log, msg, args);
     va_end(args);
@@ -57,18 +82,25 @@ void __cdecl WrapLogEnter(_Printf_format_string_ const char* msg, ...)
     nTemps = 0;
 }
 
-void __cdecl WrapLogExit(_Printf_format_string_ const char* msg, ...)
+void __cdecl WrapLogExit(const char* msg, HRESULT code)
 {
-    va_list args;
+    //if (FAILED(code))
+    //    WrapLogPrint("RETURN %s = %08x\n", msg, code);
+    //else if (code == S_OK)
+    //    WrapLogPrint("RETURN %s = S_OK\n", msg);
+    //else if (code == S_FALSE)
+    //    WrapLogPrint("RETURN %s = S_FALSE\n", msg);
+    //else
+    //    WrapLogPrint("RETURN %s = %d\n", msg, code);
+    if (FAILED(code))
+        WrapLogPrint("RETURN %08x\n", code);
+    else if (code == S_OK)
+        WrapLogPrint("RETURN S_OK\n");
+    else if (code == S_FALSE)
+        WrapLogPrint("RETURN S_FALSE\n");
+    else
+        WrapLogPrint("RETURN %d\n", code);
     callLevel--;
-    for (int i = 0; i < callLevel; i++)
-        fputs("  ", log);
-    fputs("EXIT <<< ", log);
-    va_start(args, msg);
-    vfprintf(log, msg, args);
-    va_end(args);
-    fflush(log);
-    nTemps = 0;
 }
 
 template <class T>
