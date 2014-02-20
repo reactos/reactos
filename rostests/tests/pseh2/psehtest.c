@@ -2439,6 +2439,54 @@ DEFINE_TEST(test_unvolatile_2)
     return (val == 3) || (val == 4) || (val == 5);
 }
 
+DEFINE_TEST(test_unvolatile_3)
+{
+    int register val1 = 0, val2 = 0;
+
+    _SEH2_TRY
+    {
+        val1 = 1;
+
+        _SEH2_TRY
+        {
+            val2 = 1;
+            *((char*)0xc0000000) = 0;
+            val2 = 2;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            val2 |= 4;
+        }
+        _SEH2_END;
+
+        val1 = 2;
+        *((int*)0xc0000000) = 1;
+        val1 = 3;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val1 = val1 * val2;
+    }
+    _SEH2_END;
+
+    /* The expected case */
+    if ((val1 == 10) && (val2 == 5))
+        return TRUE;
+
+    /* The compiler can optimize away "val1 = 1" and "val1 = 2" and
+       only use the last "val1 = 3", in this case val1 is still 0
+       when the outer exception handler kicks in */
+    if ((val1 == 0) && (val2 == 5))
+        return TRUE;
+
+    /* Same as above, but this time val2 optimized away */
+    if (((val1 == 8) && (val2 == 4)) ||
+        ((val1 == 0) && (val2 == 4)))
+        return TRUE;
+
+    return FALSE;
+}
+
 DEFINE_TEST(test_finally_goto)
 {
     volatile int val = 0;
@@ -2765,6 +2813,7 @@ void testsuite_syntax(void)
 
 		USE_TEST(test_unvolatile),
 		USE_TEST(test_unvolatile_2),
+		USE_TEST(test_unvolatile_3),
 		USE_TEST(test_finally_goto),
 		USE_TEST(test_nested_exception),
 		USE_TEST(test_PSEH3_bug),
