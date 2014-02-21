@@ -127,7 +127,6 @@ VOID ClockUpdate(VOID)
     VgaHorizontalRetrace();
 
     /* Continue CPU emulation */
-    // EmulatorSimulate();
     for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
     {
         EmulatorStep();

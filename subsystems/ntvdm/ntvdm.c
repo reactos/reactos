@@ -420,8 +420,8 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Main loop */
-    while (VdmRunning) ClockUpdate();
+    /* Start simulation */
+    EmulatorSimulate();
 
     /* Perform another screen refresh */
     VgaRefreshDisplay();

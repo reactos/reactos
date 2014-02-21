@@ -177,12 +177,18 @@ VOID EmulatorStep(VOID)
 
 VOID EmulatorSimulate(VOID)
 {
-    UNIMPLEMENTED;
+    // FIXME: Do not mix VdmRunning (i.e. ntvdm running) and CpuSimulate!!
+    while (VdmRunning) ClockUpdate();
+
+    /* This takes into account for reentrance */
+    VdmRunning = TRUE;
 }
 
 VOID EmulatorUnsimulate(VOID)
 {
-    UNIMPLEMENTED;
+    /* Stop simulation */
+    // FIXME: Do not mix VdmRunning (i.e. ntvdm running) and CpuSimulate!!
+    VdmRunning = FALSE;
 }
 
 VOID EmulatorInterrupt(BYTE Number)

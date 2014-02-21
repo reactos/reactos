@@ -118,6 +118,8 @@ VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
 VOID EmulatorInterruptSignal(VOID);
 VOID EmulatorStep(VOID);
+VOID EmulatorSimulate(VOID);
+VOID EmulatorUnsimulate(VOID);
 VOID EmulatorCleanup(VOID);
 VOID EmulatorSetA20(BOOLEAN Enabled);
 
