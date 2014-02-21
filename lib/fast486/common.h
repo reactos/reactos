@@ -55,6 +55,15 @@ if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 
 #define SWAP(x, y) { (x) ^= (y); (y) ^= (x); (x) ^= (y); }
 
+#define ALIGNMENT_CHECK(x, a) if (State->Flags.Ac \
+                                  && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_AM)\
+                                  && (State->Cpl == 3)\
+                                  && (((x) % (a)) != 0))\
+{\
+    Fast486Exception(State, FAST486_EXCEPTION_AC);\
+    return FALSE;\
+}
+
 #define PAGE_ALIGN(x)   ((x) & 0xFFFFF000)
 #define PAGE_OFFSET(x)  ((x) & 0x00000FFF)
 #define GET_ADDR_PDE(x) ((x) >> 22)
