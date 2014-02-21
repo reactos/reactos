@@ -47,11 +47,14 @@ private:
     CComPtr<IUnknown>   m_Site;
     CComPtr<IUnknown>   m_Client;
     CComPtr<IMenuPopup> m_SubMenuParent;
+    CComPtr<IMenuPopup> m_SubMenuChild;
 
     HWND m_ClientWindow;
 
     DWORD m_IconSize;
     HBITMAP m_Banner;
+
+    INT m_Level;
 
 public:
     CMenuDeskBar();
@@ -130,6 +133,8 @@ private:
     LRESULT _OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+    HRESULT _CloseBar();
 };
 
 extern "C"
@@ -150,14 +155,18 @@ HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
     return hr;
 }
 
+INT deskBarCount=0;
+
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
-    m_Banner(NULL)
+    m_Banner(NULL),
+    m_Level(deskBarCount++)
 {
 }
 
 CMenuDeskBar::~CMenuDeskBar()
 {
+    deskBarCount--;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetWindow(HWND *lphwnd)
@@ -316,7 +325,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
 {
+    // Windows closes the bar if this is called when the bar is shown
+
     m_Site = pUnkSite;
+
+    IUnknown_QueryService(m_Site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_SubMenuParent));
 
     return S_OK;
 }
@@ -468,12 +481,24 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     int cx = rc.right;
     int cy = rc.bottom;
 
-    if (y < 0)
+    RECT rcWorkArea;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+
+    int waHeight = rcWorkArea.bottom - rcWorkArea.top;
+
+    if (y < rcWorkArea.top)
     {
-        y = 0;
+        y = rcWorkArea.top;
     }
 
-    // if (y+cy > work area height) cy = work area height - y
+    if (cy > waHeight)
+    {
+        cy = waHeight;
+    }
+    else if (y + cy > rcWorkArea.bottom)
+    {
+        y = rcWorkArea.bottom - cy;
+    }
 
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 
@@ -533,70 +558,87 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(THIS_ HBITMAP* phBitmap)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
     DWORD dwSelectType)
 {
-    CComPtr<IMenuPopup> pmp;
-    CComPtr<IDeskBarClient> dbc;
-    HRESULT hr;
+    /* As far as I can tell, the submenu hierarchy looks like this:
+
+    The DeskBar's Child is the Band it contains.
+    The DeskBar's Parent is the SID_SMenuPopup of the Site.
+
+    The Band's Child is the IMenuPopup of the child submenu.
+    The Band's Parent is the SID_SMenuPopup of the Site (the DeskBar).
+
+    When the DeskBar receives a selection event:
+        If it requires closing the window, it will notify the Child (Band) using CancelLevel.
+        If it has to spread upwards (everything but CancelLevel), it will notify the Parent.
+
+    When the Band receives a selection event, this is where it gets fuzzy:
+        In which cases does it call the Parent? Probably not CancelLevel.
+        In which cases does it call the Child?
+        How does it react to calls?
+
+    */
 
     switch (dwSelectType)
     {
     case MPOS_EXECUTE:
     case MPOS_FULLCANCEL:
     case MPOS_CANCELLEVEL:
-        hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IMenuPopup, &pmp));
-        if (FAILED(hr))
-            return hr;
 
-        hr = pmp->OnSelect(MPOS_CANCELLEVEL);
-        if (FAILED(hr))
-            return hr;
-
-        hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
-        if (FAILED(hr))
-            return hr;
-
-        hr = dbc->UIActivateDBC(FALSE);
-        if (FAILED(hr))
-            return hr;
-
-        SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-
-        UIActivateIO(FALSE, NULL);
+        _CloseBar();
 
         if (dwSelectType == MPOS_CANCELLEVEL)
-            break;
+            return S_OK;
 
     case MPOS_SELECTLEFT:
     case MPOS_SELECTRIGHT:
-        /*CComPtr<IMenuPopup> pmp;
-        hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IMenuPopup, &pmp));
-        if (FAILED(hr))
-        return hr;*/
-
-        hr = m_SubMenuParent->OnSelect(dwSelectType);
-        if (FAILED(hr))
-            return hr;
     case MPOS_CHILDTRACKING:
+        if (m_SubMenuParent)
+            return m_SubMenuParent->OnSelect(dwSelectType);
         break;
     }
 
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(
-    IMenuPopup *pmp,
-    BOOL fSet)
+HRESULT CMenuDeskBar::_CloseBar()
 {
+    CComPtr<IDeskBarClient> dbc;
+    HRESULT hr;
+
+    if (m_SubMenuChild)
+    {
+        hr = m_SubMenuChild->OnSelect(MPOS_CANCELLEVEL);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
+    if (FAILED(hr))
+        return hr;
+
+    hr = dbc->UIActivateDBC(FALSE);
+    if (FAILED(hr))
+        return hr;
+
+    SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+
+    return UIActivateIO(FALSE, NULL);
+}
+
+HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
+{
+    // Called by the CHILD to notify the parent of the submenu object
+
     if (fSet)
     {
-        m_SubMenuParent = pmp;
+        m_SubMenuChild = pmp;
     }
     else
     {
-        if (m_SubMenuParent)
+        if (m_SubMenuChild)
         {
-            if (SHIsSameObject(pmp, m_SubMenuParent))
+            if (SHIsSameObject(pmp, m_SubMenuChild))
             {
-                m_SubMenuParent = NULL;
+                m_SubMenuChild = NULL;
             }
         }
     }

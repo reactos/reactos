@@ -180,7 +180,7 @@ HRESULT STDMETHODCALLTYPE CMenuSiteWrap::EnumBands(UINT uBand, DWORD* pdwBandID)
 
 HRESULT STDMETHODCALLTYPE CMenuSiteWrap::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
 {
-    WrapLogEnter("CMenuSiteWrap<%p>::QueryBand(DWORD dwBandID=%d, IDeskBand **ppstb=%p, DWORD *pdwState=%p, LPWSTR pszName=%p, int cchName=%p)\n", this, dwBandID, ppstb, pdwState, pszName, cchName);
+    WrapLogEnter("CMenuSiteWrap<%p>::QueryBand(DWORD dwBandID=%d, IDeskBand **ppstb=%p, DWORD *pdwState=%p, LPWSTR pszName=%p, int cchName=%d)\n", this, dwBandID, ppstb, pdwState, pszName, cchName);
     HRESULT hr = m_IBandSite->QueryBand(dwBandID, ppstb, pdwState, pszName, cchName);
     if (ppstb) WrapLogPost("*ppstb=%p\n", *ppstb);
     if (pdwState) WrapLogPost("*pdwState=%d\n", *pdwState);
@@ -190,7 +190,7 @@ HRESULT STDMETHODCALLTYPE CMenuSiteWrap::QueryBand(DWORD dwBandID, IDeskBand **p
 
 HRESULT STDMETHODCALLTYPE CMenuSiteWrap::GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv)
 {
-    WrapLogEnter("CMenuSiteWrap<%p>::GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv)\n", this, dwBandID, riid, ppv);
+    WrapLogEnter("CMenuSiteWrap<%p>::GetBandObject(DWORD dwBandID=%d, REFIID riid=%s, VOID **ppv=%p)\n", this, dwBandID, Wrap(riid), ppv);
     HRESULT hr = m_IBandSite->GetBandObject(dwBandID, riid, ppv);
     if (ppv) WrapLogPost("*ppv=%p\n", *ppv);
     WrapLogExit("CMenuSiteWrap::GetBandObject()", hr);
@@ -201,7 +201,7 @@ HRESULT STDMETHODCALLTYPE CMenuSiteWrap::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
 {
     WrapLogEnter("CMenuSiteWrap<%p>::GetBandSiteInfo(BANDSITEINFO *pbsinfo=%p)\n", this, pbsinfo);
     HRESULT hr = m_IBandSite->GetBandSiteInfo(pbsinfo);
-    if (pbsinfo) WrapLogPost("*pbsinfo=%p\n", *pbsinfo);
+    if (pbsinfo) WrapLogPost("*pbsinfo=%s\n", Wrap(*pbsinfo));
     WrapLogExit("CMenuSiteWrap::GetBandSiteInfo()", hr);
     return hr;
 }
@@ -236,7 +236,6 @@ HRESULT STDMETHODCALLTYPE CMenuSiteWrap::SetDeskBarSite(IUnknown *punkSite)
 {
     WrapLogEnter("CMenuSiteWrap<%p>::SetDeskBarSite(IUnknown *punkSite=%p)\n", this, punkSite);
     HRESULT hr = m_IDeskBarClient->SetDeskBarSite(punkSite);
-    if (punkSite) WrapLogPost("*punkSite=%p\n", *punkSite);
     WrapLogExit("CMenuSiteWrap::SetDeskBarSite()", hr);
     return hr;
 }
