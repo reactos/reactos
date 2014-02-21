@@ -4284,6 +4284,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     State->Flags.Df = NewFlags.Df;
     State->Flags.Of = NewFlags.Of;
     State->Flags.Nt = NewFlags.Nt;
+    State->Flags.Ac = NewFlags.Ac;
 
     if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
     if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
