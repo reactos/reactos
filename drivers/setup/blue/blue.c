@@ -10,7 +10,6 @@
 
 /* INCLUDES ******************************************************************/
 
-//#include <intrin.h>
 #include "blue.h"
 
 #define NDEBUG

@@ -8047,10 +8047,10 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
 {
     ENCRYPTED_LM_OWF_PASSWORD StoredLmPassword;
     ENCRYPTED_NT_OWF_PASSWORD StoredNtPassword;
-    PENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
-    PENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
-    PENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
-    PENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
+    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
+    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
     BOOLEAN StoredLmPresent = FALSE;
     BOOLEAN StoredNtPresent = FALSE;
     BOOLEAN StoredLmEmpty = TRUE;
@@ -8153,21 +8153,62 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         if (!NT_SUCCESS(Status))
         {
             TRACE("SampGetObjectAttribute failed to retrieve the fixed domain data (Status 0x%08lx)\n", Status);
-            return Status;
+            goto done;
         }
 
         if (DomainFixedData.MinPasswordAge.QuadPart > 0)
         {
             if (SystemTime.QuadPart < (UserFixedData.PasswordLastSet.QuadPart + DomainFixedData.MinPasswordAge.QuadPart))
-                return STATUS_ACCOUNT_RESTRICTION;
+            {
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
         }
     }
 
-    /* FIXME: Decrypt passwords */
-    OldLmPassword = OldLmEncryptedWithNewLm;
-    NewLmPassword = NewLmEncryptedWithOldLm;
-    OldNtPassword = OldNtEncryptedWithNewNt;
-    NewNtPassword = NewNtEncryptedWithOldNt;
+    /* Decrypt the LM passwords, if present */
+    if (LmPresent)
+    {
+        Status = SystemFunction013((const BYTE *)NewLmEncryptedWithOldLm,
+                                   (const BYTE *)&StoredLmPassword,
+                                   (LPBYTE)&NewLmPassword);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction013 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        Status = SystemFunction013((const BYTE *)OldLmEncryptedWithNewLm,
+                                   (const BYTE *)&NewLmPassword,
+                                   (LPBYTE)&OldLmPassword);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction013 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    /* Decrypt the NT passwords, if present */
+    if (NtPresent)
+    {
+        Status = SystemFunction013((const BYTE *)NewNtEncryptedWithOldNt,
+                                   (const BYTE *)&StoredNtPassword,
+                                   (LPBYTE)&NewNtPassword);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction013 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        Status = SystemFunction013((const BYTE *)OldNtEncryptedWithNewNt,
+                                   (const BYTE *)&NewNtPassword,
+                                   (LPBYTE)&OldNtPassword);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction013 failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
 
     /* Check if the old passwords match the stored ones */
     if (NtPresent)
@@ -8175,7 +8216,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         if (LmPresent)
         {
             if (!RtlEqualMemory(&StoredLmPassword,
-                                OldLmPassword,
+                                &OldLmPassword,
                                 sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
             {
                 TRACE("Old LM Password does not match!\n");
@@ -8184,7 +8225,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
             else
             {
                 if (!RtlEqualMemory(&StoredNtPassword,
-                                    OldNtPassword,
+                                    &OldNtPassword,
                                     sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
                 {
                     TRACE("Old NT Password does not match!\n");
@@ -8195,7 +8236,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         else
         {
             if (!RtlEqualMemory(&StoredNtPassword,
-                                OldNtPassword,
+                                &OldNtPassword,
                                 sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
             {
                 TRACE("Old NT Password does not match!\n");
@@ -8208,7 +8249,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         if (LmPresent)
         {
             if (!RtlEqualMemory(&StoredLmPassword,
-                                OldLmPassword,
+                                &OldLmPassword,
                                 sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
             {
                 TRACE("Old LM Password does not match!\n");
@@ -8225,9 +8266,9 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     if (NT_SUCCESS(Status))
     {
         Status = SampSetUserPassword(UserObject,
-                                     NewNtPassword,
+                                     &NewNtPassword,
                                      NtPresent,
-                                     NewLmPassword,
+                                     &NewLmPassword,
                                      LmPresent);
         if (NT_SUCCESS(Status))
         {

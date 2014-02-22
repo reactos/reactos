@@ -841,4 +841,3 @@ vfatGetFCBForFile(
 
     return STATUS_SUCCESS;
 }
-

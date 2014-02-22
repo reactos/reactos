@@ -2118,12 +2118,14 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
                    IN PCONTROL_AREA ControlArea,
                    IN PMMSUPPORT Ws)
 {
-    PMMPTE PointerPte;//, FirstPte;
+    PMMPTE PointerPte, ProtoPte;//, FirstPte;
     PMMPDE PointerPde, SystemMapPde;
     PMMPFN Pfn1, Pfn2;
     MMPTE PteContents;
     KIRQL OldIrql;
     DPRINT("Removing mapped view at: 0x%p\n", BaseAddress);
+
+    ASSERT(Ws == NULL);
 
     /* Get the PTE and loop each one */
     PointerPte = MiAddressToPte(BaseAddress);
@@ -2175,8 +2177,15 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             /* Windows ASSERT */
             ASSERT((PteContents.u.Long == 0) || (PteContents.u.Soft.Prototype == 1));
 
-            /* But not handled in ARM3 */
-            ASSERT(PteContents.u.Soft.Prototype == 0);
+            /* Check if this is a prototype pointer PTE */
+            if (PteContents.u.Soft.Prototype == 1)
+            {
+                /* Get the prototype PTE */
+                ProtoPte = MiProtoPteToPte(&PteContents);
+
+                /* We don't support anything else atm */
+                ASSERT(ProtoPte->u.Long == 0);
+            }
         }
 
         /* Make the PTE into a zero PTE */

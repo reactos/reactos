@@ -17,11 +17,16 @@ list(APPEND SOURCE
     msctf.c
     range.c
     threadmgr.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c
+    msctf_internal.h
+    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
+
+add_library(msctf SHARED
+    ${SOURCE}
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
 
-add_library(msctf SHARED ${SOURCE} version.rc)
 set_module_type(msctf win32dll)
 target_link_libraries(msctf uuid wine)
 add_importlibs(msctf ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
+add_pch(msctf msctf_internal.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)

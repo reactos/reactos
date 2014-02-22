@@ -12,17 +12,16 @@ list(APPEND SOURCE
     hlpfile.c
     macro.c
     macro.lex.yy.c
-    string.c
-    winhelp.c)
+    winhelp.c
+    winhelp.h)
 
-add_executable(winhlp32 ${SOURCE} rsrc.rc)
+add_executable(winhlp32
+    ${SOURCE}
+    string.c
+    rsrc.rc)
+
 set_module_type(winhlp32 win32gui)
 target_link_libraries(winhlp32 wine)
 add_importlibs(winhlp32 user32 gdi32 shell32 comctl32 comdlg32 msvcrt kernel32 ntdll)
+add_pch(winhlp32 winhelp.h SOURCE)
 add_cd_file(TARGET winhlp32 DESTINATION reactos FOR all)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(winhlp32)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()

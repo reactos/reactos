@@ -23,5 +23,3 @@ NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                    BOOL LockConsole);
 VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* /* PCONSOLE */ Console,
                                    BOOL WasConsoleLocked);
-
-/* EOF */

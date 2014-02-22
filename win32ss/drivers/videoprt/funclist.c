@@ -19,8 +19,10 @@
  *
  */
 
-
 #include "videoprt.h"
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _VIDEO_PORT_FUNCTION_TABLE {
     PVOID Address;

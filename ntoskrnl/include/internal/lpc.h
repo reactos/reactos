@@ -63,6 +63,18 @@
 #define LPCP_LOCK_HELD      1
 #define LPCP_LOCK_RELEASE   2
 
+
+typedef struct _LPCP_DATA_INFO
+{
+    ULONG NumberOfEntries;
+    struct
+    {
+        PVOID BaseAddress;
+        ULONG DataLength;
+    } Entries[1];
+} LPCP_DATA_INFO, *PLPCP_DATA_INFO;
+
+
 //
 // Internal Port Management
 //
@@ -130,6 +142,13 @@ NTAPI
 LpcInitSystem(
     VOID
 );
+
+BOOLEAN
+NTAPI
+LpcpValidateClientPort(
+    PETHREAD ClientThread,
+    PLPCP_PORT_OBJECT Port);
+
 
 //
 // Global data inside the Process Manager

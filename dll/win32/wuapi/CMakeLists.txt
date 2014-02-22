@@ -14,13 +14,19 @@ list(APPEND SOURCE
     session.c
     systeminfo.c
     updates.c
-    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
+    wuapi_private.h)
 
 add_typelib(wuapi_tlb.idl)
 set_source_files_properties(wuapi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/wuapi_tlb.tlb)
-add_library(wuapi SHARED ${SOURCE} wuapi.rc)
+
+add_library(wuapi SHARED
+    ${SOURCE}
+    wuapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
+
 set_module_type(wuapi win32dll)
 target_link_libraries(wuapi uuid wine wuguid)
 add_importlibs(wuapi msvcrt kernel32 ntdll)
 add_dependencies(wuapi stdole2) # wuapi_tlb.tlb needs stdole2.tlb
+add_pch(wuapi wuapi_private.h SOURCE)
 add_cd_file(TARGET wuapi DESTINATION reactos/system32 FOR all)

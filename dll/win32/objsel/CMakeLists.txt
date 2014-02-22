@@ -11,10 +11,12 @@ spec2def(objsel.dll objsel.spec)
 list(APPEND SOURCE
     factory.c
     objsel.c
+    objsel_private.h)
+
+add_library(objsel SHARED
+    ${SOURCE}
     objsel.rc
     ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
-
-add_library(objsel SHARED ${SOURCE})
 
 set_module_type(objsel win32dll)
 
@@ -27,5 +29,5 @@ add_importlibs(objsel
     kernel32
     ntdll)
 
-add_pch(objsel objsel_private.h)
+add_pch(objsel objsel_private.h SOURCE)
 add_cd_file(TARGET objsel DESTINATION reactos/system32 FOR all)

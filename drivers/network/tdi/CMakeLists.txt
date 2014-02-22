@@ -15,15 +15,18 @@ list(APPEND SOURCE
     cte/string.c
     cte/timer.c
     misc/main.c
-    misc/tdi.rc
     tdi/dereg.c
     tdi/handler.c
     tdi/obsolete.c
     tdi/stubs.c
+    precomp.h)
+
+add_library(tdi SHARED
+    ${SOURCE}
+    misc/tdi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tdi.def)
 
-add_library(tdi SHARED ${SOURCE})
-add_pch(tdi precomp.h)
+add_pch(tdi precomp.h SOURCE)
 set_module_type(tdi kernelmodedriver)
 add_importlibs(tdi ntoskrnl hal)
 add_cd_file(TARGET tdi DESTINATION reactos/system32/drivers FOR all)

@@ -2,6 +2,9 @@
  * services.h
  */
 
+#ifndef _SERVICES_H
+#define _SERVICES_H
+
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
@@ -192,4 +195,4 @@ VOID ScmLogError(DWORD dwEventId,
                  LPCWSTR *lpStrings);
 VOID ScmWaitForLsa(VOID);
 
-/* EOF */
+#endif /* _SERVICES_H */

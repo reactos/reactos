@@ -65,11 +65,11 @@ list(APPEND SOURCE
     vol.c
     where.c
     window.c
-    cmd.rc)
+    precomp.h)
 
-add_executable(cmd ${SOURCE})
+add_executable(cmd ${SOURCE} cmd.rc)
 target_link_libraries(cmd wine)
 set_module_type(cmd win32cui UNICODE)
 add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)
-add_pch(cmd precomp.h)
+add_pch(cmd precomp.h SOURCE)
 add_cd_file(TARGET cmd DESTINATION reactos/system32 FOR all)

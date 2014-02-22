@@ -19,6 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _DSOUND_PRIVATE_H_
+#define _DSOUND_PRIVATE_H_
+
 #include <wine/config.h>
 
 #include <assert.h>
@@ -290,3 +293,5 @@ BOOL DSOUND_check_supported(IAudioClient *client, DWORD rate,
 UINT DSOUND_create_timer(LPTIMECALLBACK cb, DWORD_PTR user) DECLSPEC_HIDDEN;
 HRESULT enumerate_mmdevices(EDataFlow flow, GUID *guids,
         LPDSENUMCALLBACKW cb, void *user) DECLSPEC_HIDDEN;
+
+#endif /* _DSOUND_PRIVATE_H_ */

@@ -1,3 +1,6 @@
+#ifndef _KMIXER_PCH_
+#define _KMIXER_PCH_
+
 #include <portcls.h>
 #include <float_cast.h>
 
@@ -29,3 +32,5 @@ CreatePin(
 #define KeSaveFloatingPointState(x) ((void)(x), STATUS_SUCCESS)
 #define KeRestoreFloatingPointState(x) ((void)0)
 #endif
+
+#endif /* _KMIXER_PCH_ */

@@ -21,6 +21,12 @@
 
 #include "videoprt.h"
 
+#include <ndk/inbvfuncs.h>
+#include <ndk/psfuncs.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBAL VARIABLES ***********************************************************/
 
 PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;

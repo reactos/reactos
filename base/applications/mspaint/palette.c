@@ -9,8 +9,29 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include "palette.h"
 
 /* FUNCTIONS ********************************************************/
+
+void
+RegisterWclPal()
+{
+    WNDCLASSEX wclPal;
+    /* initializing and registering the window class used for the palette window */
+    wclPal.hInstance        = hProgInstance;
+    wclPal.lpszClassName    = _T("Palette");
+    wclPal.lpfnWndProc      = PalWinProc;
+    wclPal.style            = CS_DBLCLKS;
+    wclPal.cbSize           = sizeof(WNDCLASSEX);
+    wclPal.hIcon            = NULL;
+    wclPal.hIconSm          = NULL;
+    wclPal.hCursor          = LoadCursor(NULL, IDC_ARROW);
+    wclPal.lpszMenuName     = NULL;
+    wclPal.cbClsExtra       = 0;
+    wclPal.cbWndExtra       = 0;
+    wclPal.hbrBackground    = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclPal);
+}
 
 LRESULT CALLBACK
 PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -67,6 +88,8 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 fgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
                 InvalidateRect(hwnd, NULL, FALSE);
+                if (activeTool == 10)
+                    ForceRefreshSelectionContents();
             }
             break;
         case WM_RBUTTONDOWN:
@@ -74,6 +97,8 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 bgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
                 InvalidateRect(hwnd, NULL, FALSE);
+                if (activeTool == 10)
+                    ForceRefreshSelectionContents();
             }
             break;
         case WM_LBUTTONDBLCLK:
@@ -84,6 +109,8 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         choosecolor.rgbResult;
                     fgColor = choosecolor.rgbResult;
                     InvalidateRect(hwnd, NULL, FALSE);
+                    if (activeTool == 10)
+                        ForceRefreshSelectionContents();
                 }
             break;
         case WM_RBUTTONDBLCLK:
@@ -94,6 +121,8 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         choosecolor.rgbResult;
                     bgColor = choosecolor.rgbResult;
                     InvalidateRect(hwnd, NULL, FALSE);
+                    if (activeTool == 10)
+                        ForceRefreshSelectionContents();
                 }
             break;
 

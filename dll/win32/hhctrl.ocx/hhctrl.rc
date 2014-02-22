@@ -95,6 +95,9 @@
 #ifdef LANGUAGE_SL_SI
     #include "lang/Si.rc"
 #endif
+#ifdef LANGAUGE_SQ_AL
+    #include "lang/Sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"
 #endif

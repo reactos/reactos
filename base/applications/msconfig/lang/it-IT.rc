@@ -66,12 +66,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Selezione avvio", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
-    CONTROL "Avvio &normale: carica tutti i driver di periferica e i servizi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 205, 10
-    CONTROL "Avvio &diagnostico: carica soltanto le periferiche e i servizi di base", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 230, 10
-    CONTROL "Avvio &selettivo", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
-    AUTOCHECKBOX "&Elabora il file SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
-    AUTOCHECKBOX "&Carica servizi di sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
-    AUTOCHECKBOX "Carica elemen&ti di avvio", IDC_CBX_STARTUP_ITEM, 30, 110, 95, 10
+    CONTROL "Avvio &normale: carica tutti i driver di periferica e i servizi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "Avvio &diagnostico: carica soltanto le periferiche e i servizi di base", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "Avvio &selettivo", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "&Elabora il file SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "&Carica servizi di sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Carica elemen&ti di avvio", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

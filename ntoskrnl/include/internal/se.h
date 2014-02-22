@@ -143,6 +143,8 @@ extern PSID SeAliasBackupOpsSid;
 extern PSID SeAuthenticatedUsersSid;
 extern PSID SeRestrictedSid;
 extern PSID SeAnonymousLogonSid;
+extern PSID SeLocalServiceSid;
+extern PSID SeNetworkServiceSid;
 
 /* Privileges */
 extern const LUID SeCreateTokenPrivilege;
@@ -244,10 +246,6 @@ SepSidInTokenEx(
 BOOLEAN
 NTAPI
 SeInitSystem(VOID);
-
-BOOLEAN
-NTAPI
-SeInitSRM(VOID);
 
 VOID
 NTAPI
@@ -383,6 +381,16 @@ SepPrivilegeCheck(
     ULONG PrivilegeControl,
     KPROCESSOR_MODE PreviousMode
 );
+
+NTSTATUS
+NTAPI
+SePrivilegePolicyCheck(
+    _Inout_ PACCESS_MASK DesiredAccess,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PTOKEN Token,
+    _Out_opt_ PPRIVILEGE_SET *OutPrivilegeSet,
+    _In_ KPROCESSOR_MODE PreviousMode);
 
 BOOLEAN
 NTAPI
@@ -524,6 +532,20 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     IN PACCESS_STATE AccessState,
                     IN ACCESS_MASK DesiredAccess,
                     IN KPROCESSOR_MODE AccessMode);
+
+BOOLEAN
+NTAPI
+SeCheckAuditPrivilege(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ KPROCESSOR_MODE PreviousMode);
+
+VOID
+NTAPI
+SePrivilegedServiceAuditAlarm(
+    _In_opt_ PUNICODE_STRING ServiceName,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _In_ BOOLEAN AccessGranted);
 
 #endif
 

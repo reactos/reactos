@@ -258,3 +258,24 @@ SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
 }
+
+void
+Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
+{
+    HFONT oldFont;
+    RECT rect = {x1, y1, x2, y2};
+    COLORREF oldColor;
+    COLORREF oldBkColor;
+    int oldBkMode;
+    oldFont = SelectObject(hdc, font);
+    oldColor = SetTextColor(hdc, fg);
+    oldBkColor = SetBkColor(hdc, bg);
+    oldBkMode = SetBkMode(hdc, TRANSPARENT);
+    if (style == 0)
+        Rect(hdc, x1, y1, x2, y2, bg, bg, 1, 2);
+    DrawText(hdc, lpchText, -1, &rect, DT_EDITCONTROL);
+    SelectObject(hdc, oldFont);
+    SetTextColor(hdc, oldColor);
+    SetBkColor(hdc, oldBkColor);
+    SetBkMode(hdc, oldBkMode);
+}

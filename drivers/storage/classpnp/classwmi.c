@@ -23,6 +23,8 @@ Revision History:
 
 #include "classp.h"
 
+#include <wmistr.h>
+
 NTSTATUS
 NTAPI
 ClassSystemControl(

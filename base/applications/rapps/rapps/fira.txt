@@ -23,5 +23,5 @@ Size = 543 ko
 [Section.041f]
 Name = Mozilla Fira Yazı Türü
 Licence = Bilinmiyor
-Description = Mozilla Fira Yazı Türü Paketi, Mono ve Sans yazı türlerini kapsar. ReactOS'un "Fonts" dizinine çıkartınız.
+Description = Mozilla Fira Yazı Türü Paketi, Mono ve Sans yazı türlerini kapsar. ReactOS dizinine çıkartınız.
 Size = 543 KB

@@ -35,11 +35,16 @@ list(APPEND SOURCE
     sip.c
     store.c
     str.c
+    crypt32_private.h)
+
+add_library(crypt32 SHARED
+    ${SOURCE}
+    crypt32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
-add_library(crypt32 SHARED ${SOURCE} crypt32.rc)
 set_module_type(crypt32 win32dll)
 target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
+add_pch(crypt32 crypt32_private.h SOURCE)
 add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)

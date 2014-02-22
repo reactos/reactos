@@ -10,6 +10,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <win32k.h>
+
+#include <ntddvdeo.h>
+
 #define NDEBUG
 #include <debug.h>
 

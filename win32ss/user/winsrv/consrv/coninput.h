@@ -19,5 +19,3 @@ ConDrvProcessKey(IN PCONSOLE Console,
                  IN WCHAR UnicodeChar,
                  IN ULONG ShiftState,
                  IN BYTE KeyStateCtrl);
-
-/* EOF */

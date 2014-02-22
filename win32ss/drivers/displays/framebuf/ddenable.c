@@ -257,4 +257,3 @@ DrvGetDirectDrawInfo(
 
 	return TRUE;
 }
-

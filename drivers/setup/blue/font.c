@@ -10,8 +10,9 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ntddk.h>
 #include "blue.h"
+
+#include <ntddk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -256,4 +257,3 @@ LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield)
         }
     }
 }
-

@@ -23,7 +23,7 @@ CAPTION "Gelişmiş Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Dizge Yapılandırması", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Gelişmiş Metin Hizmetlerini Kapat", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    AUTOCHECKBOX "&Gelişmiş Metin Hizmetlerini Kapat", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
     LTEXT "Tüm çizeylemlerdeki gelişmiş metin hizmetlerini kapatmak için bu kutucuğu seçiniz.\nBu ayar, dil çubuğunuu kapatacağından Doğu Asya kulanıcıları için önerilmez.", -1, 14, 40, 230, 35
 END
 

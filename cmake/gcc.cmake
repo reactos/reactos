@@ -1,6 +1,6 @@
 
 # Show a note about ccache build
-if(CCACHE STREQUAL "ccache")
+if(ENABLE_CCACHE)
     message("-- Enabling ccache build - done")
 endif()
 
@@ -297,70 +297,39 @@ set(PSEH_LIB "pseh")
 
 # Macros
 if(PCH)
-    macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
-        # Add the precompiled header to the build
-        get_filename_component(_FILE ${_header_filename} NAME)
-        set(_gch_filename "${_FILE}.gch")
-        list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
-
-        # This gets us our includes
-        get_directory_property(DIRINC INCLUDE_DIRECTORIES)
-        foreach(item ${DIRINC})
-            list(APPEND ${_out_compile_flags} -I${item})
-        endforeach()
-
-        # This our definitions
-        get_directory_property(_compiler_flags DEFINITIONS)
-        list(APPEND ${_out_compile_flags} ${_compiler_flags})
-
-        # This gets any specific definitions that were added with set-target-property
-        get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
-        if(_target_defs)
-            foreach(item ${_target_defs})
-                list(APPEND ${_out_compile_flags} -D${item})
-            endforeach()
-        endif()
+    macro(add_pch _target _pch _sources)
+        # When including x.h GCC looks for x.h.gch first
+        set(_pch_final_name "${_target}_pch.h")
+        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}.gch)
 
         if(IS_CPP)
-            list(APPEND ${_out_compile_flags} ${CMAKE_CXX_FLAGS})
+            set(_pch_language CXX)
         else()
-            list(APPEND ${_out_compile_flags} ${CMAKE_C_FLAGS})
+            set(_pch_language C)
         endif()
 
-        separate_arguments(${_out_compile_flags})
-    endmacro()
+        # Build the precompiled header
+        # HEADER_FILE_ONLY FALSE: force compiling the header
+        # EXTERNAL_SOURCE TRUE: don't use the .gch file when linking
+        set_source_files_properties(${_pch} PROPERTIES
+            HEADER_FILE_ONLY FALSE
+            LANGUAGE ${_pch_language}
+            EXTERNAL_SOURCE TRUE
+            OBJECT_LOCATION ${_gch})
 
-    macro(add_pch _target_name _FILE)
-        set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
-        get_filename_component(_basename ${_FILE} NAME)
-        set(_gch_filename ${_basename}.gch)
-        _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
-
-        if(IS_CPP)
-            set(__lang CXX)
-            set(__compiler ${CCACHE} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1})
-        else()
-            set(__lang C)
-            set(__compiler ${CCACHE} ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
+        if(ENABLE_CCACHE)
+            set(_ccache_flag "-fpch-preprocess")
         endif()
 
-        add_custom_command(OUTPUT ${_gch_filename}
-            COMMAND ${__compiler} ${_args}
-            IMPLICIT_DEPENDS ${__lang} ${_header_filename}
-            DEPENDS ${_header_filename} ${ARGN})
-        get_target_property(_src_files ${_target_name} SOURCES)
-        add_target_compile_flags(${_target_name} "-fpch-preprocess -Winvalid-pch -Wno-error=invalid-pch")
-        foreach(_item in ${_src_files})
-            get_source_file_property(__src_lang ${_item} LANGUAGE)
-            if(__src_lang STREQUAL __lang)
-                set_source_files_properties(${_item} PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
-            endif()
+        # Include the gch in the specified source files, skipping the pch file itself
+        list(REMOVE_ITEM ${_sources} ${_pch})
+        foreach(_src ${${_sources}})
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -Winvalid-pch -Werror=invalid-pch -include ${_pch_final_name}")
+            set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
         endforeach()
-        #set dependency checking : depends on precompiled header only which already depends on deeper header
-        set_target_properties(${_target_name} PROPERTIES IMPLICIT_DEPENDS_INCLUDE_TRANSFORM "\"${_basename}\"=;<${_basename}>=")
     endmacro()
 else()
-    macro(add_pch _target_name _FILE)
+    macro(add_pch _target _pch _sources)
     endmacro()
 endif()
 

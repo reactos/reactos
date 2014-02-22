@@ -9,15 +9,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "handle.h"
-#include "lineinput.h"
+#include <consrv.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 

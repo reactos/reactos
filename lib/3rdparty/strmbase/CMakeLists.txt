@@ -17,7 +17,9 @@ list(APPEND SOURCE
     seeking.c
     transform.c
     video.c
-    window.c)
+    window.c
+    strmbase_private.h)
 
 add_library(strmbase ${SOURCE})
+add_pch(strmbase strmbase_private.h SOURCE)
 add_dependencies(strmbase psdk dxsdk)

@@ -200,4 +200,3 @@ NdisUpcaseUnicodeString(
 }
 
 /* EOF */
-

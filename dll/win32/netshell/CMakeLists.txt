@@ -17,15 +17,18 @@ list(APPEND SOURCE
     netshell.cpp
     shfldr_netconnect.cpp
     enumlist.cpp
-    netshell.rc
     classfactory.cpp
     connectmanager.cpp
     lanconnectui.cpp
     lanstatusui.cpp
+    precomp.h)
+
+add_library(netshell SHARED
+    ${SOURCE}
+    netshell.rc
     ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
-add_library(netshell SHARED ${SOURCE})
 set_module_type(netshell win32dll)
 target_link_libraries(netshell uuid wine)
 
@@ -44,5 +47,5 @@ add_importlibs(netshell
     kernel32
     ntdll)
 
-add_pch(netshell precomp.h)
+add_pch(netshell precomp.h SOURCE)
 add_cd_file(TARGET netshell DESTINATION reactos/system32 FOR all)

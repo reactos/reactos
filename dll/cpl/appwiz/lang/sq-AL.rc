@@ -1,0 +1,73 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  04-12-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Krijo link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Krijo link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Krijo Shortcut"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Ky magjistar ju ndihmon për të krijuar shkurtesat për të lokale ose\nprograme networku, dokumenta, dosje, kompjutra, ose adresa\nInterneti.", -1, 120, 15, 200, 30
+    LTEXT "Shkruaj vendndodhjen e sendit:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Shfleto...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Klikoni Next për të vazhduar.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Zgjidh një titull për Programin"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Shkruaj nje emer per kete shortcut:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Kliko Finish per te krijuar një shortcut.", -1, 118, 97, 178, 17
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Shto/Hiq Programe"
+    IDS_CPLSYSTEMDESCRIPTION "Ndërton programe dhe krijon shortcute."
+    IDS_CREATE_SHORTCUT "Krijo Shortcut"
+    IDS_ERROR_NOT_FOUND "Dokumenti %s nuk u gjend."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING     "Shkarkim..."
+    IDS_INSTALLING      "Instalim..."
+    IDS_INVALID_SHA     "Kontroll i papritur ne shkarkimin e skedarit. Duke lënë instalimin e dokumentave të korruptuar."
+END
+
+ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instaluesi Wine Gecko"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS nuk mund të gjej një paketë Wine Gecko e cila është e nevojshme për aplikimet e ngulura HTML të funksionoj në rregull. ReactOS mund ta shkarkoje automatikisht dhe ta instalojë për ju.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Instalo", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END

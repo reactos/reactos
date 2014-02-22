@@ -12,9 +12,10 @@ list(APPEND SOURCE
     mixer.c
     sup.c
     wave.c
-    topology.c)
+    topology.c
+    precomp.h)
 
 add_library(mmixer ${SOURCE})
-add_pch(mmixer priv.h)
+add_pch(mmixer precomp.h SOURCE)
 add_dependencies(mmixer bugcodes)
 

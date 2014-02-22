@@ -6,6 +6,9 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#ifndef _CMBATT_PCH_
+#define _CMBATT_PCH_
+
 #include <wdm.h>
 #include <batclass.h>
 #include <wmilib.h>
@@ -276,4 +279,4 @@ CmBattQueryTag(
 extern PDEVICE_OBJECT AcAdapterPdo;
 extern ULONG CmBattDebug;
 
-/* EOF */
+#endif /* _CMBATT_PCH_ */

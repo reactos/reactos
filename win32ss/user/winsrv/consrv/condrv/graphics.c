@@ -11,15 +11,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "conoutput.h"
-#include "handle.h"
+#include <consrv.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

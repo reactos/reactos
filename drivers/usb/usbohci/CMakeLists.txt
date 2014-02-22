@@ -11,18 +11,20 @@ list(APPEND SOURCE
     usb_request.cpp
     usb_queue.cpp
     hardware.cpp
-    guid.cpp)
+    usbohci.h)
 
 add_library(usbohci SHARED
     ${SOURCE}
+    guid.cpp
     usbohci.rc)
 
 target_link_libraries(usbohci
+    uuid
     libusb
     libcntpr
     ${PSEH_LIB})
 
 set_module_type(usbohci kernelmodedriver)
 add_importlibs(usbohci ntoskrnl hal usbd)
-
+add_pch(usbohci usbohci.h SOURCE)
 add_cd_file(TARGET usbohci DESTINATION reactos/system32/drivers NO_CAB FOR all)

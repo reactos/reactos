@@ -10,6 +10,9 @@
 
 #include "fdc.h"
 
+#include <stdio.h>
+#include <debug.h>
+
 /* FUNCTIONS ******************************************************************/
 
 static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;

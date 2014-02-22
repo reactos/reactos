@@ -24,18 +24,7 @@ Revision History:
 
 --*/
 
-#include "stddef.h"
-#include "string.h"
-
-#include "ntddk.h"
-
-#include "ntddcdvd.h"
-#include "classpnp.h"
-
-#include "initguid.h"
-#include "ntddstor.h"
 #include "cdrom.h"
-
 
 #if DBG
     PUCHAR READ_DVD_STRUCTURE_FORMAT_STRINGS[DvdMaxDescriptor+1] = {

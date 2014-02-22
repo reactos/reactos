@@ -39,4 +39,5 @@ BEGIN
     IDS_APPTITLE "Multimediálny prehrávač systému ReactOS"
     IDS_PLAY "Prehrať"
     IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

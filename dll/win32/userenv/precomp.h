@@ -1,3 +1,6 @@
+#ifndef _USERENV_PCH_
+#define _USERENV_PCH_
+
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
@@ -14,3 +17,5 @@
 #include <userenv.h>
 
 #include "internal.h"
+
+#endif /* _USERENV_PCH_ */

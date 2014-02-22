@@ -10,20 +10,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "handle.h"
-#include "procinit.h"
-#include "alias.h"
-#include "coninput.h"
-#include "conoutput.h"
-#include "lineinput.h"
-#include "include/settings.h"
+#include <consrv.h>
 
-#include "include/console.h"
-#include "console.h"
-#include "resource.h"
+#include <alias.h>
+#include <coninput.h>
 
 #define NDEBUG
 #include <debug.h>

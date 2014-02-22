@@ -260,6 +260,3 @@ WdmAudOpenSysaudio(
     /* done */
     return STATUS_SUCCESS;
 }
-
-
-

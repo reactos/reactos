@@ -9,8 +9,6 @@
 #ifndef __CONSRV_H__
 #define __CONSRV_H__
 
-#pragma once
-
 /* PSDK/NDK Headers */
 #include <stdarg.h>
 #define WIN32_NO_STATUS
@@ -18,18 +16,14 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
-#include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
-#include <ndk/iofuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
-#include <ndk/psfuncs.h>
-#include <ndk/setypes.h>
 #include <ndk/rtlfuncs.h>
 
 /* Public Win32K Headers */
@@ -42,9 +36,7 @@
 #include <csr/csrsrv.h>
 
 /* CONSOLE Headers */
-#include <win/console.h>
 #include <win/conmsg.h>
-
 
 /* Heap Helpers */
 #include "heap.h"
@@ -74,6 +66,14 @@ typedef struct _CONSOLE_PROCESS_DATA
     LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
-#endif // __CONSRV_H__
+#include "include/conio.h"
+#include "console.h"
+#include "conoutput.h"
+#include "handle.h"
+#include "lineinput.h"
+#include "frontends/gui/guisettings.h"
+#include "include/console.h"
+#include "include/settings.h"
+#include "include/term.h"
 
-/* EOF */
+#endif /* __CONSRV_H__ */

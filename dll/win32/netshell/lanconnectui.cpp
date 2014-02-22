@@ -2,6 +2,7 @@
 
 #include <netcfgx.h>
 #include <netcfgn.h>
+#include <strsafe.h>
 
 /// CLASSID
 /// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
@@ -53,6 +54,7 @@ class CNetConnectionPropertyUi final :
         VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
+        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         INetConnection * pCon;
@@ -426,8 +428,72 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 This->ShowNetworkComponentProperties(hwndDlg);
                 return FALSE;
             }
+            else if (LOWORD(wParam) == IDC_CONFIGURE)
+            {
+                LPOLESTR DeviceInstanceID;
+                This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+                if (This->GetDeviceInstanceID(&DeviceInstanceID))
+                {
+                    WCHAR wszCmd[2*MAX_PATH];
+                    StringCbPrintfW(wszCmd, sizeof(wszCmd), L"rundll32.exe devmgr.dll,DeviceProperties_RunDLL /DeviceID %s", DeviceInstanceID);
+                    CoTaskMemFree(DeviceInstanceID);
+
+                    STARTUPINFOW si;
+                    PROCESS_INFORMATION pi;
+                    ZeroMemory(&si, sizeof(si));
+                    si.cb = sizeof(si);
+                    if (!CreateProcessW(NULL, wszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                        break;
+
+                   CloseHandle(pi.hProcess);
+                   CloseHandle(pi.hThread);
+                }
+            }
             break;
     }
+    return FALSE;
+}
+
+BOOL
+CNetConnectionPropertyUi::GetDeviceInstanceID(
+    OUT LPOLESTR *DeviceInstanceID)
+{
+    LPOLESTR pStr, pResult;
+    HKEY hKey;
+    DWORD dwInstanceID;
+    WCHAR szKeyName[2*MAX_PATH];
+    WCHAR szInstanceID[2*MAX_PATH];
+
+    if (StringFromCLSID(pProperties->guidId, &pStr) != ERROR_SUCCESS)
+    {
+        // failed to convert guid to string
+        return FALSE;
+    }
+
+    StringCbPrintfW(szKeyName, sizeof(szKeyName), L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
+    CoTaskMemFree(pStr);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+    {
+        // failed to open key
+        return FALSE;
+    }
+    
+    dwInstanceID = sizeof(szInstanceID);
+    if (RegGetValueW(hKey, NULL, L"PnpInstanceId", RRF_RT_REG_SZ, NULL, (PVOID)szInstanceID, &dwInstanceID) == ERROR_SUCCESS)
+    {
+        szInstanceID[MAX_PATH-1] = L'\0';
+        pResult = (LPOLESTR)CoTaskMemAlloc((wcslen(szInstanceID) + 1) * sizeof(WCHAR));
+        if (pResult != 0)
+        {
+            wcscpy(pResult, szInstanceID);
+            *DeviceInstanceID = pResult;
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+    }
+    RegCloseKey(hKey);
     return FALSE;
 }
 
@@ -568,6 +634,7 @@ CNetConnectionPropertyUi::SetConnection(INetConnection* pCon)
         return E_POINTER;
 
     this->pCon = pCon;
+	
     pCon->AddRef();
     return S_OK;
 }

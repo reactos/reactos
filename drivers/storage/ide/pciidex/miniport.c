@@ -6,7 +6,6 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define INITGUID
 #include "pciidex.h"
 
 #define NDEBUG

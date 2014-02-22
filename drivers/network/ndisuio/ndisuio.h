@@ -4,10 +4,10 @@
  * FILE:        ndisuio.h
  * PURPOSE:     NDISUIO definitions
  */
+
 #ifndef __NDISUIO_H
 #define __NDISUIO_H
 
-#include <wdm.h>
 #include <ndis.h>
 #include <nuiouser.h>
 
@@ -207,4 +207,5 @@ NTSTATUS
 NTAPI
 NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);
+
 #endif /* __NDISUIO_H */

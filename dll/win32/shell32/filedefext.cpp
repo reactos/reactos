@@ -95,7 +95,7 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
 
     return pwszResult;
 }
-        
+
 VS_FIXEDFILEINFO *CFileVersionInfo::GetFixedInfo()
 {
     if (!m_pInfo)
@@ -531,10 +531,18 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
     if (m_bDir)
     {
         /* For directories files have to be counted */
-        StringCchCopyW(wszBuf, _countof(wszBuf), m_wszPath);
-        CountFolderAndFiles(wszBuf, _countof(wszBuf));
 
-        /* Update size filed */
+        _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_CountFolderAndFilesData)));
+        data->This = this;
+        data->pwszBuf = static_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * MAX_PATH));
+        data->cchBufMax = MAX_PATH;
+        data->hwndDlg = hwndDlg;
+        this->AddRef();
+        StringCchCopyW(data->pwszBuf, MAX_PATH, m_wszPath);
+
+        SHCreateThread(CFileDefExt::_CountFolderAndFilesThreadProc, data, NULL, NULL);
+
+        /* Update size field */
         if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14011, wszBuf);
 
@@ -635,7 +643,7 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             else if (LOWORD(wParam) == 14021 || LOWORD(wParam) == 14022 || LOWORD(wParam) == 14023) /* checkboxes */
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-           else if (LOWORD(wParam) == 14001) /* Name */
+            else if (LOWORD(wParam) == 14001) /* Name */
             {
                 if (HIWORD(wParam) == EN_CHANGE)
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -675,7 +683,7 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (!MoveFileW(pFileDefExt->m_wszPath, wszBuf))
                         ERR("MoveFileW failed\n");
                 }
-                    
+
                 SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
@@ -858,7 +866,7 @@ CFileDefExt::CFileDefExt():
 
 CFileDefExt::~CFileDefExt()
 {
-    
+
 }
 
 HRESULT WINAPI
@@ -968,8 +976,23 @@ CFileDefExt::GetSite(REFIID iid, void **ppvSite)
     return E_NOTIMPL;
 }
 
+DWORD WINAPI
+CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
+{
+    _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(lpParameter);
+    DWORD ticks = 0;
+    data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, data->cchBufMax, &ticks);
+
+    //Release the CFileDefExt and data object holds in the copying thread.
+    data->This->Release();
+    HeapFree(GetProcessHeap(), 0, data->pwszBuf);
+    HeapFree(GetProcessHeap(), 0, data);
+
+    return 0;
+}
+
 BOOL
-CFileDefExt::CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax)
+CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, DWORD *ticks)
 {
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
@@ -991,6 +1014,12 @@ CFileDefExt::CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax)
         return FALSE;
     }
 
+    BOOL root = FALSE;
+    if (*ticks == 0) {
+        *ticks = GetTickCount();
+        root = TRUE;
+    }
+
     do
     {
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -1002,7 +1031,7 @@ CFileDefExt::CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax)
             ++m_cFolders;
 
             StringCchCopyW(pwszFilename, cchFilenameMax, wfd.cFileName);
-            CountFolderAndFiles(pwszBuf, cchBufMax);
+            CountFolderAndFiles(hwndDlg, pwszBuf, cchBufMax, ticks);
         }
         else
         {
@@ -1013,7 +1042,41 @@ CFileDefExt::CountFolderAndFiles(LPWSTR pwszBuf, UINT cchBufMax)
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
         }
+        if (GetTickCount() - *ticks > (DWORD) 300)
+        {
+            /* FIXME Using IsWindow is generally ill advised */
+            if (IsWindow(hwndDlg))
+            {
+                WCHAR wszBuf[MAX_PATH];
+
+                if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
+                    SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+
+                /* Display files and folders count */
+                WCHAR wszFormat[256];
+                LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
+                StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
+                SetDlgItemTextW(hwndDlg, 14027, wszBuf);
+                *ticks = GetTickCount();
+            }
+            else
+                break;
+        }
     } while(FindNextFileW(hFind, &wfd));
+
+    if (root && IsWindow(hwndDlg))
+    {
+        WCHAR wszBuf[MAX_PATH];
+
+        if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+
+        /* Display files and folders count */
+        WCHAR wszFormat[256];
+        LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
+        StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
+        SetDlgItemTextW(hwndDlg, 14027, wszBuf);
+    }
 
     FindClose(hFind);
     return TRUE;

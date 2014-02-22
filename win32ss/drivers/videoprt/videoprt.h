@@ -22,16 +22,7 @@
 #ifndef VIDEOPRT_H
 #define VIDEOPRT_H
 
-#include <stdio.h>
-
 #include <ntifs.h>
-#include <ndk/exfuncs.h>
-#include <ndk/halfuncs.h>
-#include <ndk/inbvfuncs.h>
-#include <ndk/kefuncs.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/psfuncs.h>
 
 #define __BROKEN__
 #include <miniport.h>
@@ -39,10 +30,7 @@
 #include <ntagp.h>
 #include <dderror.h>
 #include <windef.h>
-#include <initguid.h>
 #include <wdmguid.h>
-
-#include <debug.h>
 
 #define TAG_VIDEO_PORT  'PDIV'
 #define TAG_VIDEO_PORT_BUFFER  '\0mpV'

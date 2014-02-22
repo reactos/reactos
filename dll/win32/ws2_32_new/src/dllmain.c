@@ -44,13 +44,13 @@ DllMain(HANDLE hModule,
 
             /* TLS Allocation */
             if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
-			{
-				GlobalTlsIndex = TlsAlloc();
-				if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
-				{
-					return FALSE;
-				}
-			}
+            {
+                GlobalTlsIndex = TlsAlloc();
+                if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
+                {
+                    return FALSE;
+                }
+            }
 
             /* Initialize some critical sections */
             WsCreateStartupSynchronization();

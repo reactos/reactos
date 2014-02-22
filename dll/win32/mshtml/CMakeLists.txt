@@ -85,16 +85,19 @@ list(APPEND SOURCE
     task.c
     txtrange.c
     view.c
-    guid.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
+    mshtml_private.h)
 
 if(MSVC)
     add_asm_files(mshtml_asm msvc.S)
 endif()
 
-add_library(mshtml SHARED ${SOURCE} ${mshtml_asm})
+add_library(mshtml SHARED
+    ${SOURCE}
+    ${mshtml_asm}
+    guid.c
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm
@@ -108,4 +111,5 @@ target_link_libraries(mshtml uuid wine strmiids oldnames)
 add_delay_importlibs(mshtml wininet)
 add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(mshtml mshtml_nsiface_header)
+add_pch(mshtml mshtml_private.h SOURCE)
 add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)

@@ -9,6 +9,8 @@
 
 #include "serial.h"
 
+#include <debug.h>
+
 NTSTATUS NTAPI
 SerialQueryInformation(
 	IN PDEVICE_OBJECT DeviceObject,

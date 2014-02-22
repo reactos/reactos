@@ -1373,9 +1373,9 @@
 @ stdcall SeRegisterLogonSessionTerminatedRoutine(ptr)
 @ stdcall SeReleaseSecurityDescriptor(ptr long long)
 @ stdcall SeReleaseSubjectContext(ptr)
-;@ cdecl -arch=x86_64 SeReportSecurityEvent
+@ stdcall SeReportSecurityEvent(long ptr ptr ptr)
 @ stdcall SeSetAccessStateGenericMapping(ptr ptr)
-;SeSetAuditParameter
+@ stdcall SeSetAuditParameter(ptr long long ptr)
 @ stdcall SeSetSecurityDescriptorInfo(ptr ptr ptr ptr long ptr)
 @ stdcall SeSetSecurityDescriptorInfoEx(ptr ptr ptr ptr long long ptr)
 @ stdcall SeSinglePrivilegeCheck(long long long)

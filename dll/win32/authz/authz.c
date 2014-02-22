@@ -33,7 +33,6 @@
 
 HINSTANCE hDllInstance;
 
-
 /*
  * @unimplemented
  */

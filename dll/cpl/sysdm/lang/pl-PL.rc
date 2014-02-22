@@ -75,7 +75,7 @@ CAPTION "Ustawienia systemowe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informowanie o wersji", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Zgłaszaj jako stację roboczą", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 110, 10
+    CONTROL "Zgłaszaj jako stację roboczą", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS jest zbudowany w oparciu o wersję serwerową. Zaznacz pole, aby ReactOS zgłaszał się aplikacjom jako stacja robocza.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END

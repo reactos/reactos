@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _WBEMPROX_PRIVATE_H_
+#define _WBEMPROX_PRIVATE_H_
+
 #include <config.h>
 
 #include <stdarg.h>
@@ -331,3 +334,5 @@ static const WCHAR param_typesW[] = {'T','y','p','e','s',0};
 static const WCHAR param_userW[] = {'U','s','e','r',0};
 static const WCHAR param_valueW[] = {'s','V','a','l','u','e',0};
 static const WCHAR param_valuenameW[] = {'s','V','a','l','u','e','N','a','m','e',0};
+
+#endif /* _WBEMPROX_PRIVATE_H_ */

@@ -1,4 +1,4 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -196,15 +196,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
-    IDS_ERROR_SYMBOL_SEPARATE "Entered short date separator contain incorrect symbol"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "Entered short date format contain incorrect symbol"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "Entered long date format contain incorrect symbol"
-    IDS_ERROR_OEM_CODE_PAGE "Problem reading OEM code page"
-    IDS_ERROR_ANSI_CODE_PAGE "Problem reading ANSI code page"
-    IDS_ERROR_INT_KEY_REG "Problem opening HKCU\\Control Panel\\International key"
-    IDS_ERROR_DEF_INT_KEY_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_NLS_KEY_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_NLS_CODE_REG "Problem opening HKU\\.DEFAULT\\Control Panel\\International key"
-    IDS_ERROR_INPUT_DLL "Can't start input.dll"
+    IDS_ERROR "Ошибка"
+    IDS_ERROR_SYMBOL_SEPARATE "Короткий разделитель компонентов даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Короткий формат даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Длинный формат даты содержит неверный символ(ы)"
+    IDS_ERROR_OEM_CODE_PAGE "Возникла проблема при чтении кодовой страницы OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Возникла проблема при чтении кодовой страницы ANSI"
+    IDS_ERROR_INT_KEY_REG "Проблема открытия ключа: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Проблема открытия ключа: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Не удается запустить input.dll"
 END
+

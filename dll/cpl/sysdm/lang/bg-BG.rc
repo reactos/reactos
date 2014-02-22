@@ -66,7 +66,7 @@ CAPTION "Настройки на уредбата"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Сведения за версията", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Докладване като работна установка", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
+    CONTROL "Докладване като работна установка", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "РеактОС е сглобен като сървърна РУ и се докладва като такава. Отметнете това поле, за да го промените само за това приложение.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "Добре", IDOK, 166, 83, 50, 14
 END

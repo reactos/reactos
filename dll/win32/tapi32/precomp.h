@@ -1,7 +1,7 @@
 #ifndef _TAPI32_PCH_
 #define _TAPI32_PCH_
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <stdarg.h>
 

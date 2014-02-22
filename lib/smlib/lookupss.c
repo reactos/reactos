@@ -3,6 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/smlib/lookupss.c
  */
+
 #include "precomp.h"
 
 #define NDEBUG

@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef _MAGNIFIER_H_
+#define _MAGNIFIER_H_
+
 #include <stdarg.h>
 #include <windef.h>
 
@@ -35,3 +38,5 @@ extern BOOL bShowMagnifier;
 
 void LoadSettings(void);
 void SaveSettings(void);
+
+#endif /* _MAGNIFIER_H_ */

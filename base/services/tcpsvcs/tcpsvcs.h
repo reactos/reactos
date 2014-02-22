@@ -1,3 +1,6 @@
+#ifndef _TCPSVCS_H
+#define _TCPSVCS_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -53,3 +56,5 @@ DWORD WINAPI DaytimeHandler(VOID* sock_);
 DWORD WINAPI EchoHandler(VOID* sock_);
 DWORD WINAPI DiscardHandler(VOID* sock_);
 DWORD WINAPI QotdHandler(VOID* sock_);
+
+#endif /* _TCPSVCS_H */

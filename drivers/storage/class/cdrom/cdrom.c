@@ -8,6 +8,13 @@
 
 #include "precomp.h"
 
+#include <ntddk.h>
+#include <scsi.h>
+#include <ntdddisk.h>
+#include <ntddcdrm.h>
+#include <include/class2.h>
+#include <stdio.h>
+
 //#define NDEBUG
 #include <debug.h>
 

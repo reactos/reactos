@@ -19,6 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _WINEMM_H_
+#define _WINEMM_H_
+
 #include <wine/config.h>
 
 #include <assert.h>
@@ -199,3 +202,5 @@ extern HANDLE psStopEvent;
     "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers"
 
 INT LoadRegistryMMEDrivers(char* key);
+
+#endif /* _WINEMM_H_ */

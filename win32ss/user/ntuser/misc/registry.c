@@ -58,7 +58,7 @@ RegQueryValue(
     ULONG cbInfoSize, cbDataSize;
 
     /* Check if the local buffer is sufficient */
-    cbInfoSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + *pcbValue;
+    cbInfoSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[*pcbValue]);
     if (cbInfoSize <= sizeof(ajBuffer))
     {
         pInfo = (PVOID)ajBuffer;
@@ -82,7 +82,7 @@ RegQueryValue(
                              cbInfoSize,
                              &cbInfoSize);
 
-    cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    cbDataSize = pInfo->DataLength;
 
     /* Note: STATUS_BUFFER_OVERFLOW is not a success */
     if (NT_SUCCESS(Status))

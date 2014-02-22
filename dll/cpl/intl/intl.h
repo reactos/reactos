@@ -1,3 +1,6 @@
+#ifndef _INTL_H
+#define _INTL_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -114,4 +117,4 @@ SetupApplet(HWND hwndDlg, LCID lcid);
 /* kblayouts.c */
 VOID AddNewKbLayoutsByLcid(LCID Lcid);
 
-/* EOF */
+#endif /* _INTL_H */

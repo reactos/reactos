@@ -1,7 +1,12 @@
 
-include_directories(..)
+include_directories(${REACTOS_SOURCE_DIR}/drivers/storage/class)
 
-add_library(cdrom SHARED cdrom.c findscsi.c cdrom.rc)
+list(APPEND SOURCE
+    cdrom.c
+    findscsi.c
+    precomp.h)
+
+add_library(cdrom SHARED ${SOURCE} cdrom.rc)
 
 set_module_type(cdrom kernelmodedriver)
 add_importlibs(cdrom
@@ -10,5 +15,5 @@ add_importlibs(cdrom
     ntoskrnl
     hal)
 
-add_pch(cdrom precomp.h)
+add_pch(cdrom precomp.h SOURCE)
 add_cd_file(TARGET cdrom DESTINATION reactos/system32/drivers NO_CAB FOR all)

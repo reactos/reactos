@@ -3,8 +3,6 @@
  * Copyright (C) 2006 Hervé Poussineau <hpoussin@reactos.org>
  */
 
-#include "recyclebin_private.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

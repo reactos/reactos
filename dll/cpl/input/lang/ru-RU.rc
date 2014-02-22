@@ -1,4 +1,4 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -17,12 +17,12 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Дополнительные параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "Конфигурация Системы", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Выключить дополнительные текстовые службы", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Установите этот флажок, чтобы выключить дополнительные текстовые службы во всех программах.\nЭто не рекомендуется для Восточно-азиатских пользователей, потому что это закрывает языковую панель.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

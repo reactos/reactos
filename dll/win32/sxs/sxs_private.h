@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _SXS_PRIVATE_H_
+#define _SXS_PRIVATE_H_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -54,3 +57,5 @@ static inline WCHAR *strdupW( const WCHAR *src )
     if (dst) strcpyW( dst, src );
     return dst;
 }
+
+#endif /* _SXS_PRIVATE_H_ */

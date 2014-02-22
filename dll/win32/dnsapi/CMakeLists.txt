@@ -16,15 +16,17 @@ list(APPEND SOURCE
     dnsapi/query.c
     dnsapi/record.c
     dnsapi/stubs.c
+    dnsapi/precomp.h)
+
+add_library(dnsapi SHARED
+    ${SOURCE}
     dnsapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def)
-
-add_library(dnsapi SHARED ${SOURCE})
 
 set_module_type(dnsapi win32dll)
 target_link_libraries(dnsapi adns)
 add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
-add_pch(dnsapi dnsapi/precomp.h)
+add_pch(dnsapi dnsapi/precomp.h SOURCE)
 add_dependencies(dnsapi psdk)
 add_cd_file(TARGET dnsapi DESTINATION reactos/system32 FOR all)
 

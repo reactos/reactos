@@ -31,3 +31,5 @@ void Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG sty
 void RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);
 
 void SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2);
+
+void Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style);

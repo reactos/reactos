@@ -175,4 +175,3 @@ VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     /* This removes all of them */
     RemoveEntityByContext(Interface);
 }
-

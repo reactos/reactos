@@ -734,14 +734,13 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
    if (bFocus && !(ThreadQueue->QF_flags & QF_FOCUSNULLSINCEACTIVE))
    {
       /* Do not change focus if the window is no longer active */
-      if (ThreadQueue->spwndActive == Wnd)
+      if (pti->MessageQueue->spwndActive != IntGetNonChildAncestor(pti->MessageQueue->spwndFocus))
       {
-         if (!ThreadQueue->spwndFocus ||
-             !Wnd ||
-              UserGetAncestor(ThreadQueue->spwndFocus, GA_ROOT) != Wnd)
-         {
-            co_UserSetFocus(Wnd);
-         }
+         PWND pWndSend = pti->MessageQueue->spwndActive;
+         // Clear focus if the active window is minimized.
+         if (pWndSend && pti->MessageQueue->spwndActive->style & WS_MINIMIZE) pWndSend = NULL;
+         // Send focus messages and if so, set the focus.
+         IntSendFocusMessages( pti, pWndSend);
       }
    }
 
@@ -815,12 +814,13 @@ co_UserSetFocus(PWND Window)
       }
 
       /* Check if we can set the focus to this window */
-      for (pwndTop = Window; pwndTop != NULL; pwndTop = pwndTop->spwndParent)
+      //// Fixes wine win test_SetParent both "todo" line 3710 and 3720...
+      for (pwndTop = Window; pwndTop; pwndTop = pwndTop->spwndParent)
       {
          if (pwndTop->style & (WS_MINIMIZED|WS_DISABLED)) return 0;
          if ((pwndTop->style & (WS_POPUP|WS_CHILD)) != WS_CHILD) break;
       }
-
+      ////
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))
       {
          ERR("SetFocus 1 WH_CBT Call Hook return!\n");

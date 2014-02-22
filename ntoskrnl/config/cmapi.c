@@ -1896,8 +1896,7 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     if (KeyBody)
     {
         /* Fail */
-        DPRINT1("Trusted classes not yet supported\n");
-        return STATUS_NOT_IMPLEMENTED;
+        DPRINT("Trusted classes not yet supported\n");
     }
 
     /* Build a service QoS for a security context */

@@ -9,9 +9,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "consrv.h"
-#include "include/conio.h"
-
+#include <consrv.h>
 
 /* DUMMY FRONTEND INTERFACE ***************************************************/
 

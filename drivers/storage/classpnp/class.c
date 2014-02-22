@@ -21,9 +21,12 @@ Revision History:
 
 --*/
 
-#define CLASS_INIT_GUID 1
 #include "classp.h"
-#include "debug.h"
+
+#include <stddef.h>
+
+#include <initguid.h>
+#include <mountdev.h>
 
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(INIT, DriverEntry)

@@ -2,6 +2,7 @@
 
 [Section]
 Name = AlReader
+Version = 110502
 Description = A FB2 eBook Reader.
 URLSite = http://www.alreader.com
 Size = 4.6 MB

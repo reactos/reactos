@@ -7,6 +7,9 @@
  */
 
 #include <win32k.h>
+
+#include <windowsx.h>
+
 DBG_DEFAULT_CHANNEL(UserDefwnd);
 
 // Client Shutdown messages

@@ -1,9 +1,13 @@
 
 spec2def(fontext.dll fontext.spec)
 
-add_library(fontext SHARED
+list(APPEND SOURCE
     fontext.c
     regsvr.c
+    fontext.h)
+
+add_library(fontext SHARED
+    ${SOURCE}
     fontext.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
@@ -22,5 +26,5 @@ add_importlibs(fontext
     kernel32
     ntdll)
 
-add_pch(fontext fontext.h)
+add_pch(fontext fontext.h SOURCE)
 add_cd_file(TARGET fontext DESTINATION reactos/system32 FOR all)

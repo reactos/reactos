@@ -197,7 +197,7 @@ GuiConsoleGetDefaultSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
     // TermInfo->FontSize = MAKELONG(16, 16); // font is 16x16
     // TermInfo->FontWeight = FW_NORMAL;
 
-    wcsncpy(TermInfo->FaceName, L"Fixedsys", LF_FACESIZE); // HACK: !!
+    wcsncpy(TermInfo->FaceName, L"VGA", LF_FACESIZE); // HACK: !!
     // TermInfo->FaceName[0] = L'\0';
     TermInfo->FontFamily = FF_DONTCARE;
     TermInfo->FontSize   = 0;

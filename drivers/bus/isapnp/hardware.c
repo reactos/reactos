@@ -4,6 +4,7 @@
  * PURPOSE:         Hardware support code
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
  */
+
 #include <isapnp.h>
 #include <isapnphw.h>
 

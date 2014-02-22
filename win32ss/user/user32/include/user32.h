@@ -6,12 +6,13 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef _USER32_PCH_
+#define _USER32_PCH_
+
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
-#include <assert.h>
 #include <stdio.h>
-#include <math.h>
 
 /* SDK/NDK Headers */
 #define _USER32_
@@ -22,7 +23,6 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
-#include <wincon.h>
 #include <wingdi.h>
 #include <winreg.h>
 #include <winuser.h>
@@ -30,13 +30,9 @@
 #include <ddeml.h>
 #include <dde.h>
 #include <windowsx.h>
-#include <winnls32.h>
-#include <strsafe.h>
-#include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/umfuncs.h>
 
 /* CSRSS Header */
 #include <csr/csr.h>
@@ -61,3 +57,5 @@
 
 /* User macros */
 #include "user_x.h"
+
+#endif /* _USER32_PCH_ */

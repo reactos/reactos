@@ -466,7 +466,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
         goto cleanup;
     }
 
-    /* Enumerate subkeys (ie the different device objets) */
+    /* Enumerate subkeys (i.e. the different device objects) */
     while (TRUE)
     {
         Status = ZwEnumerateKey(
@@ -729,14 +729,17 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 Status = STATUS_UNSUCCESSFUL;
                 goto cleanup;
             }
-            KeyName.Length = KeyName.MaximumLength = (USHORT)bip->DataLength - 4 * sizeof(WCHAR);
-            KeyName.Buffer = &((PWSTR)bip->Data)[4];
+            KeyName.Length = KeyName.MaximumLength = (USHORT)bip->DataLength;
+            KeyName.Buffer = (PWSTR)bip->Data;
+
+            /* Fixup the prefix (from "\\?\") */
+            RtlCopyMemory(KeyName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
 
             /* Add new symbolic link to symbolic link list */
             if (ReturnBuffer.Length + KeyName.Length + sizeof(WCHAR) > ReturnBuffer.MaximumLength)
             {
                 PWSTR NewBuffer;
-                ReturnBuffer.MaximumLength = (USHORT)max(ReturnBuffer.MaximumLength * 2,
+                ReturnBuffer.MaximumLength = (USHORT)max(ReturnBuffer.MaximumLength * sizeof(WCHAR),
                                                          (USHORT)(ReturnBuffer.Length +
                                                          KeyName.Length +
                                                          2 * sizeof(WCHAR)));

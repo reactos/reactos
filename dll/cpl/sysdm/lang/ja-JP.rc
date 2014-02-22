@@ -66,7 +66,7 @@ CAPTION "システムの設定"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     GROUPBOX "バージョン情報", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "ワークステーションとしてふるまう", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
+    CONTROL "ワークステーションとしてふるまう", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS はサーバ OS としてビルドされているため、サーバとしてふるまいます。これを変更するにはこのボックスにチェックしてください。ただしアプリケーションに対してのみ有効です。", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END

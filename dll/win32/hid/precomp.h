@@ -1,3 +1,6 @@
+#ifndef _HID_PCH_
+#define _HID_PCH_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -18,4 +21,4 @@ typedef VOID
 extern HINSTANCE hDllInstance;
 extern const GUID HidClassGuid;
 
-/* EOF */
+#endif /* _HID_PCH_ */

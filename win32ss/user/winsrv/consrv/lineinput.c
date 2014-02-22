@@ -11,9 +11,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "console.h"
-#include "include/conio.h"
-#include "include/term.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -68,7 +68,7 @@ CAPTION "Opțiuni de sistem"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informații versiune", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Solicit &autoraportarea sistemului ca stație de lucru", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 170, 10
+    CONTROL "Solicit &autoraportarea sistemului ca stație de lucru", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS este construit ca sistem server și se raportează ca atare. Bifați această căsuță pentru a dedica sistemul exclusiv aplicațiilor.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "Î&nchide", IDOK, 166, 83, 50, 14
 END

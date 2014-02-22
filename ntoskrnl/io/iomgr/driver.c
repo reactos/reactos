@@ -340,7 +340,8 @@ IopLoadServiceModule(
        Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
        if (!NT_SUCCESS(Status))
        {
-           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+                   &CCSName, Status);
            return Status;
        }
 
@@ -348,7 +349,8 @@ IopLoadServiceModule(
        Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
        if (!NT_SUCCESS(Status))
        {
-           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+                   ServiceName, Status);
            ZwClose(CCSKey);
            return Status;
        }

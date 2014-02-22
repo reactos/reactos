@@ -1,12 +1,16 @@
 
 spec2def(mmsys.cpl mmsys.spec)
 
-add_library(mmsys SHARED
+list(APPEND SOURCE
     mmsys.c
     sounds.c
     volume.c
     audio.c
     voice.c
+    mmsys.h)
+
+add_library(mmsys SHARED
+    ${SOURCE}
     mmsys.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
 
@@ -27,5 +31,5 @@ add_importlibs(mmsys
     kernel32
     comdlg32)
 
-add_pch(mmsys mmsys.h)
+add_pch(mmsys mmsys.h SOURCE)
 add_cd_file(TARGET mmsys DESTINATION reactos/system32 FOR all)

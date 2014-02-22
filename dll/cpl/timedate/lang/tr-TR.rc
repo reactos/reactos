@@ -54,6 +54,6 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Bilinmeyen"
     IDS_INETTIMESUCSYNC "Zaman, %s.%s:%s ile başarıyla eşlendi."
     IDS_INETTIMENEXTSYNC "Bir Dahaki Eşleme: %s.%s"
-    IDS_INETTIMESYNCING "ReactOS, zamânı %s ile eşlerken lütfen bekleyiniz."
+    IDS_INETTIMESYNCING "ReactOS, zamânı %s ile eşlerken bekleyiniz."
     IDS_INETTIMEERROR "ReactOS, zamânı %s ile eşlerken bir yanlışlık oldu."
 END

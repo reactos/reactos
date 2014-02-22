@@ -96,6 +96,9 @@
 #ifdef LANGUAGE_SL_SI
     #include "lang/oleaut32_Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/oleaut32_Sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/oleaut32_Uk.rc"
 #endif

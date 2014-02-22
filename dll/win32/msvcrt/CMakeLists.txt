@@ -31,5 +31,4 @@ if(MSVC)
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)
-add_pch(msvcrt precomp.h)
 add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)

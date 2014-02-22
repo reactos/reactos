@@ -23,8 +23,6 @@
  *
  */
 
-#define _STLP_EXPOSE_GLOBALS_IMPLEMENTATION
-
 #include "stlport_prefix.h"
 
 #if !defined (_STLP_DEBUG) && ! defined (_STLP_ASSERTIONS)

@@ -21,7 +21,7 @@ CAPTION "Paramètres avancés"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configuration du système", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "Arrêter les services de texte a&vancés", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    AUTOCHECKBOX "Arrêter les services de texte a&vancés", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
     LTEXT "Sélectionnez cette case à cocher pour désactiver les services de texte avancés dans tous les programmes.\nCeci n'est pas recommandé aux utilisateurs d'Asie de l'Est, car cette opération ferme la Barre de langue.", -1, 14, 40, 230, 35
 END
 

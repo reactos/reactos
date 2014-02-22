@@ -68,7 +68,7 @@ CAPTION "הגדרות מערכת"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "מידע גרסה", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "דווח כתחנת עבודה", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
+    CONTROL "דווח כתחנת עבודה", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "אישור", IDOK, 166, 83, 50, 14
 END

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -121,7 +121,7 @@ BEGIN
     IDS_PowerActionHibernate "Anıkta Beklet"
     IDS_PowerActionShutdown "Kapat"
     IDS_PowerActionRestart "Yeniden Başlat"
-    IDS_PowerActionShutdownOff "Kapat ve Turn the Power Off"
+    IDS_PowerActionShutdownOff "Kapat ve Gücü Kes"
     IDS_PowerActionWarmEject "Ne Yapılacağını Sor"
     IDS_PowerActionNone2 "Yok"
     IDS_TIMEOUT1 "1 Dakîka Sonra"

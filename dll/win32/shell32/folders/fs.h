@@ -46,7 +46,7 @@ class CFSFolder :
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         void SF_RegisterClipFmt();
         BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
-        static DWORD _DoDropThreadProc(LPVOID lpParameter);
+        static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
         virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
 
     public:

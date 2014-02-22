@@ -180,6 +180,62 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
     return Status;
 }
 
+VOID
+NTAPI
+ExUnlockUserBuffer(PMDL Mdl)
+{
+    MmUnlockPages(Mdl);
+    ExFreePoolWithTag(Mdl, TAG_MDL);
+}
+
+NTSTATUS
+NTAPI
+ExLockUserBuffer(
+    PVOID BaseAddress,
+    ULONG Length,
+    KPROCESSOR_MODE AccessMode,
+    LOCK_OPERATION Operation,
+    PVOID *MappedSystemVa,
+    PMDL *OutMdl)
+{
+    PMDL Mdl;
+    PAGED_CODE();
+
+    *MappedSystemVa = NULL;
+    *OutMdl = NULL;
+
+    /* Allocate an MDL for the buffer */
+    Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, TRUE, NULL);
+    if (Mdl == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Enter SEH for probing */
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Mdl, AccessMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(Mdl, TAG_MDL);
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Return the safe kernel mode buffer */
+    *MappedSystemVa = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+    if (*MappedSystemVa == NULL)
+    {
+        ExUnlockUserBuffer(Mdl);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Return the MDL */
+    *OutMdl = Mdl;
+    return STATUS_SUCCESS;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -1799,13 +1855,151 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
     return ExpSetTimeZoneInformation((PTIME_ZONE_INFORMATION)Buffer);
 }
 
+static
+VOID
+ExpCopyLookasideInformation(
+    PSYSTEM_LOOKASIDE_INFORMATION *InfoPointer,
+    PULONG RemainingPointer,
+    PLIST_ENTRY ListHead,
+    BOOLEAN ListUsesMisses)
+
+{
+    PSYSTEM_LOOKASIDE_INFORMATION Info;
+    PGENERAL_LOOKASIDE LookasideList;
+    PLIST_ENTRY ListEntry;
+    ULONG Remaining;
+
+    /* Get info pointer and remaining count of free array element */
+    Info = *InfoPointer;
+    Remaining = *RemainingPointer;
+
+    /* Loop as long as we have lookaside lists and free array elements */
+    for (ListEntry = ListHead->Flink;
+         (ListEntry != ListHead) && (Remaining > 0);
+         ListEntry = ListEntry->Flink, Remaining--)
+    {
+        LookasideList = CONTAINING_RECORD(ListEntry, GENERAL_LOOKASIDE, ListEntry);
+
+        /* Fill the next array element */
+        Info->CurrentDepth = LookasideList->Depth;
+        Info->MaximumDepth = LookasideList->MaximumDepth;
+        Info->TotalAllocates = LookasideList->TotalAllocates;
+        Info->TotalFrees = LookasideList->TotalFrees;
+        Info->Type = LookasideList->Type;
+        Info->Tag = LookasideList->Tag;
+        Info->Size = LookasideList->Size;
+
+        /* Check how the lists track misses/hits */
+        if (ListUsesMisses)
+        {
+            /* Copy misses */
+            Info->AllocateMisses = LookasideList->AllocateMisses;
+            Info->FreeMisses = LookasideList->FreeMisses;
+        }
+        else
+        {
+            /* Calculate misses */
+            Info->AllocateMisses = LookasideList->TotalAllocates
+                                   - LookasideList->AllocateHits;
+            Info->FreeMisses = LookasideList->TotalFrees
+                               - LookasideList->FreeHits;
+        }
+    }
+
+    /* Return the updated pointer and remaining count */
+    *InfoPointer = Info;
+    *RemainingPointer = Remaining;
+}
 
 /* Class 45 - Lookaside Information */
 QSI_DEF(SystemLookasideInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemLookasideInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+    PSYSTEM_LOOKASIDE_INFORMATION Info;
+    PMDL Mdl;
+    ULONG MaxCount, Remaining;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+
+    /* First we need to lock down the memory, since we are going to access it
+       at high IRQL */
+    PreviousMode = ExGetPreviousMode();
+    Status = ExLockUserBuffer(Buffer,
+                              Size,
+                              PreviousMode,
+                              IoWriteAccess,
+                              (PVOID*)&Info,
+                              &Mdl);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Calculate how many items we can store */
+    Remaining = MaxCount = Size / sizeof(SYSTEM_LOOKASIDE_INFORMATION);
+    if (Remaining == 0)
+    {
+        goto Leave;
+    }
+
+    /* Copy info from pool lookaside lists */
+    ExpCopyLookasideInformation(&Info,
+                                &Remaining,
+                                &ExPoolLookasideListHead,
+                                FALSE);
+    if (Remaining == 0)
+    {
+        goto Leave;
+    }
+
+    /* Copy info from system lookaside lists */
+    ExpCopyLookasideInformation(&Info,
+                                &Remaining,
+                                &ExSystemLookasideListHead,
+                                TRUE);
+    if (Remaining == 0)
+    {
+        goto Leave;
+    }
+
+    /* Acquire spinlock for ExpNonPagedLookasideListHead */
+    OldIrql = KfAcquireSpinLock(&ExpNonPagedLookasideListLock);
+
+    /* Copy info from non-paged lookaside lists */
+    ExpCopyLookasideInformation(&Info,
+                                &Remaining,
+                                &ExpNonPagedLookasideListHead,
+                                TRUE);
+
+    /* Release spinlock for ExpNonPagedLookasideListHead */
+    KfReleaseSpinLock(&ExpNonPagedLookasideListLock, OldIrql);
+
+    if (Remaining == 0)
+    {
+        goto Leave;
+    }
+
+    /* Acquire spinlock for ExpPagedLookasideListHead */
+    OldIrql = KfAcquireSpinLock(&ExpPagedLookasideListLock);
+
+    /* Copy info from paged lookaside lists */
+    ExpCopyLookasideInformation(&Info,
+                                &Remaining,
+                                &ExpPagedLookasideListHead,
+                                TRUE);
+
+    /* Release spinlock for ExpPagedLookasideListHead */
+    KfReleaseSpinLock(&ExpPagedLookasideListLock, OldIrql);
+
+Leave:
+
+    /* Release the locked user buffer */
+    ExUnlockUserBuffer(Mdl);
+
+    /* Return the size of the actually written data */
+    *ReqSize = (MaxCount - Remaining) * sizeof(SYSTEM_LOOKASIDE_INFORMATION);
+    return STATUS_SUCCESS;
 }
 
 

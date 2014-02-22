@@ -43,10 +43,12 @@ list(APPEND SOURCE
     objects/text.c
     objects/utils.c
     objects/path.c
+    include/precomp.h)
+
+add_library(gdi32 SHARED
+    ${SOURCE}
     gdi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
-
-add_library(gdi32 SHARED ${SOURCE})
 
 set_module_type(gdi32
     win32dll
@@ -59,6 +61,6 @@ target_link_libraries(gdi32
     ${PSEH_LIB})
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
-add_pch(gdi32 include/precomp.h)
+add_pch(gdi32 include/precomp.h SOURCE)
 add_cd_file(TARGET gdi32 DESTINATION reactos/system32 FOR all)
 

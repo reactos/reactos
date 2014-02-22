@@ -6,6 +6,9 @@
  *
  */
 
+#ifndef _LPK_H
+#define _LPK_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -64,3 +67,5 @@ DWORD WINAPI LpkGetTextExtentExPoint(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x
 DWORD WINAPI LpkPSMTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
 DWORD WINAPI LpkUseGDIWidthCache(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 DWORD WINAPI ftsWordBreak(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
+
+#endif /* _LPK_H */

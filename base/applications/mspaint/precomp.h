@@ -1,3 +1,6 @@
+#ifndef _MSPAINT_H
+#define _MSPAINT_H
+
 #include <stdarg.h>
 
 #include <windef.h>
@@ -17,3 +20,6 @@
 #include "globalvar.h"
 #include "history.h"
 #include "mouse.h"
+#include "selection.h"
+
+#endif /* _MSPAINT_H */

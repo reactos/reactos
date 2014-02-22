@@ -12,13 +12,15 @@ list(APPEND SOURCE
     adapter.cpp
     common.cpp
     mintopo.cpp
-    minwave.cpp)
+    minwave.cpp
+    precomp.h)
 
 add_library(cmipci SHARED
     ${SOURCE}
+    guid.cpp
     cmipci.rc)
 
-target_link_libraries(cmipci stdunk libcntpr)
+target_link_libraries(cmipci stdunk libcntpr uuid)
 
 set_module_type(cmipci wdmdriver UNICODE)
 
@@ -31,6 +33,7 @@ if(NOT MSVC)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch -Wno-error")
 endif()
 
+add_pch(cmipci precomp.h SOURCE)
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
 if(ARCH STREQUAL "i386")
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/CM8738-x32.inf" DESTINATION reactos/inf FOR all)

@@ -14,6 +14,17 @@
 #define SIZEOF(a)  (sizeof(a) / sizeof((a)[0]))
 /* sizeof for string constants; equals max. number of characters */
 
+#define RECT_WIDTH(a)  ((a).right - (a).left)
+/* width of the rectangle defined by a RECT structure */
+
+#define RECT_HEIGHT(a)  ((a).bottom - (a).top)
+/* height of the rectangle defined by a RECT structure */
+
+#define CHECKED_IF(a) ((a) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND))
+/* simplifies checking and unchecking menu items */
+#define ENABLED_IF(a) ((a) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND))
+/* simplifies enabling or graying menu items */
+
 #define IDI_APPICON 500
 
 #define IDB_TOOLBARICONS 510

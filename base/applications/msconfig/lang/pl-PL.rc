@@ -74,12 +74,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Wybór uruchamiania", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "Uruchamianie &normalne - załaduj wszystkie sterowniki urządzeń i usługi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 238, 10
-    CONTROL "Uruchamianie &diagnostyczne - załaduj tylko podstawowe urządzenia i usługi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 253, 10
-    CONTROL "Uruchamianie &selektywne", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 95, 10
-    AUTOCHECKBOX "&Przetwarzaj plik SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 102, 10
-    AUTOCHECKBOX "Załaduj &usługi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 95, 10
-    AUTOCHECKBOX "Załaduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 98, 10
+    CONTROL "Uruchamianie &normalne - załaduj wszystkie sterowniki urządzeń i usługi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "Uruchamianie &diagnostyczne - załaduj tylko podstawowe urządzenia i usługi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "Uruchamianie &selektywne", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "&Przetwarzaj plik SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "Załaduj &usługi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Załaduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

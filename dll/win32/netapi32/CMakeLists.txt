@@ -20,10 +20,12 @@ list(APPEND SOURCE
     share.c
     user.c
     wksta.c
+    netapi32.h)
+
+add_library(netapi32 SHARED
+    ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
-
-add_library(netapi32 SHARED ${SOURCE})
 
 set_module_type(netapi32 win32dll)
 
@@ -32,6 +34,6 @@ target_link_libraries(netapi32 wine)
 add_importlibs(netapi32 iphlpapi ws2_32 advapi32 msvcrt kernel32 ntdll)
 
 add_delay_importlibs(netapi32 samlib secur32)
-
+add_pch(netapi32 netapi32.h SOURCE)
 add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
 

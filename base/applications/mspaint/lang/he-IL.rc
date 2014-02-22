@@ -178,7 +178,7 @@ BEGIN
     IDS_PROGRAMNAME "צייר"
     IDS_WINDOWTITLE "%s - צייר"
     IDS_INFOTITLE "צייר עבור ReactOS"
-    IDS_INFOTEXT "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_INFOTEXT "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
     IDS_DEFAULTFILENAME "ללא שם.bmp"
     IDS_MINIATURETITLE "ממוזער"

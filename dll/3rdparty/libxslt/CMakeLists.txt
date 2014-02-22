@@ -13,7 +13,7 @@ add_definitions(
     -D_WINSOCKAPI_
     -DLIBXML_STATIC)
 
-add_library(libxslt SHARED
+list(APPEND SOURCE
     attributes.c
     attrvt.c
     documents.c
@@ -32,18 +32,19 @@ add_library(libxslt SHARED
     variables.c
     xslt.c
     xsltlocale.c
-    xsltutils.c)
+    xsltutils.c
+    precomp.h)
 
+add_library(libxslt SHARED ${SOURCE})
 set_module_type(libxslt win32dll)
 target_link_libraries(libxslt libxml2)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
-
 if(MSVC)
     add_importlibs(libxslt ntdll)
 endif()
 
 add_dependencies(libxslt psdk)
-add_pch(libxslt libxslt.h)
+add_pch(libxslt precomp.h SOURCE)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)

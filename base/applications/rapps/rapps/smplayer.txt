@@ -16,8 +16,8 @@ Description = Grafische Oberfläche für MPlayer.
 URLSite = http://smplayer.sourceforge.net/de/info
 
 [Section.040a]
-URLSite = http://smplayer.sourceforge.net/es/info
 Description = Interfaz gráfico para Mplayer (reproductor multimedia).
+URLSite = http://smplayer.sourceforge.net/es/info
 
 [Section.040c]
 Size = 16,98 Mo
@@ -30,8 +30,8 @@ URLSite = http://smplayer.sourceforge.net/it/info
 Description = Mediaspeler, grafische interface voor MPlayer.
 
 [Section.0415]
-URLSite = http://smplayer.sourceforge.net/pl/info
 Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
+URLSite = http://smplayer.sourceforge.net/pl/info
 
 [Section.0418]
 Description = Lector multimedia (interfață pentru MPlayer).
@@ -43,8 +43,8 @@ Size = 16,98 MB
 URLSite = http://smplayer.sourceforge.net/tr/info
 
 [Section.0422]
-URLSite = http://smplayer.sourceforge.net/uk/info
 Description = Графічний інтерфейс для MPlayer (мультимедійний плеєр).
+URLSite = http://smplayer.sourceforge.net/uk/info
 
 [Section.0813]
 Description = Mediaspeler, grafische interface voor MPlayer.

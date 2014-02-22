@@ -341,7 +341,7 @@ BEGIN
     ID_HELP_TOPICS "Görev Yöneticisi ile ilgili yardım konularını görüntüler."
     ID_HELP_ABOUT "Görev Yöneticisi ile ilgili bilgi görüntüler."
     ID_FILE_EXIT "Görev Yöneticisi'nden çıkar."
-    ID_OPTIONS_SHOW16BITTASKS "Farazî DOS makinesi (ntvdm.exe) altında çalışan 16 ikillik uygulamaları da görüntüler."
+    ID_OPTIONS_SHOW16BITTASKS "Farazî DOS makinesi (ntvdm.exe) altında çalışan 16 bitlik uygulamaları da görüntüler."
     ID_VIEW_SELECTCOLUMNS """İşlemler"" sekmesinde hangi dikeçlerin görüntülenip görüntülenmeyeceğini belirler."
     ID_VIEW_SHOWKERNELTIMES "İşlemci çizgelerinde çekirdek zamanlarını gösterir."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Toplam CPU kullanımını tek çizgede gösterir."

@@ -186,7 +186,7 @@ BEGIN
     IDS_PROGRAMNAME "Pictare"
     IDS_WINDOWTITLE "%s - Pictare"
     IDS_INFOTITLE "Pictare pentru ReactOS"
-    IDS_INFOTEXT "Pictare pentru ReactOS este disponibilă sub licența GNU Lesser General Public versiunea 3 (vedeți www.gnu.org)"
+    IDS_INFOTEXT "Pictare pentru ReactOS este disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
     IDS_DEFAULTFILENAME "FărăNume.bmp"
     IDS_MINIATURETITLE "Miniatură"

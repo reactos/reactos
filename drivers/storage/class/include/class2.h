@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ntddscsi.h"
-#include "srb.h"
+#include <ntddscsi.h>
+#include <srb.h>
 
 #define MAXIMUM_RETRIES    15
 #define RETRY_WAIT         2000000 /* 200 ms in units of 100 ns */

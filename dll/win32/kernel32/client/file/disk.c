@@ -35,32 +35,32 @@ WINAPI
 GetLogicalDriveStringsA(IN DWORD nBufferLength,
                         IN LPSTR lpBuffer)
 {
-   DWORD drive, count;
-   DWORD dwDriveMap;
-   LPSTR p;
+    DWORD drive, count;
+    DWORD dwDriveMap;
+    LPSTR p;
 
-   dwDriveMap = GetLogicalDrives();
+    dwDriveMap = GetLogicalDrives();
 
-   for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
-     {
-	if (dwDriveMap & (1<<drive))
-	   count++;
-     }
+    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+    {
+        if (dwDriveMap & (1<<drive))
+            count++;
+    }
 
 
-   if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
+    if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
 
-	p = lpBuffer;
+    p = lpBuffer;
 
-	for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-	  if (dwDriveMap & (1<<drive))
-	  {
-	     *p++ = 'A' + (UCHAR)drive;
-	     *p++ = ':';
-	     *p++ = '\\';
-	     *p++ = '\0';
-	  }
-	*p = '\0';
+    for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (dwDriveMap & (1<<drive))
+        {
+            *p++ = 'A' + (UCHAR)drive;
+            *p++ = ':';
+            *p++ = '\\';
+            *p++ = '\0';
+        }
+    *p = '\0';
 
     return (count * 4);
 }
@@ -74,17 +74,17 @@ WINAPI
 GetLogicalDriveStringsW(IN DWORD nBufferLength,
                         IN LPWSTR lpBuffer)
 {
-   DWORD drive, count;
-   DWORD dwDriveMap;
-   LPWSTR p;
+    DWORD drive, count;
+    DWORD dwDriveMap;
+    LPWSTR p;
 
-   dwDriveMap = GetLogicalDrives();
+    dwDriveMap = GetLogicalDrives();
 
-   for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
-     {
-	if (dwDriveMap & (1<<drive))
-	   count++;
-     }
+    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+    {
+        if (dwDriveMap & (1<<drive))
+            count++;
+    }
 
     if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
 
@@ -110,24 +110,24 @@ DWORD
 WINAPI
 GetLogicalDrives(VOID)
 {
-	NTSTATUS Status;
-	PROCESS_DEVICEMAP_INFORMATION ProcessDeviceMapInfo;
+    NTSTATUS Status;
+    PROCESS_DEVICEMAP_INFORMATION ProcessDeviceMapInfo;
 
-	/* Get the Device Map for this Process */
-	Status = NtQueryInformationProcess(NtCurrentProcess(),
-					   ProcessDeviceMap,
-					   &ProcessDeviceMapInfo,
-					   sizeof(ProcessDeviceMapInfo),
-					   NULL);
+    /* Get the Device Map for this Process */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       &ProcessDeviceMapInfo,
+                                       sizeof(ProcessDeviceMapInfo),
+                                       NULL);
 
-	/* Return the Drive Map */
-	if (!NT_SUCCESS(Status))
-	{
-		BaseSetLastNTError(Status);
-		return 0;
-	}
+    /* Return the Drive Map */
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
 
-        return ProcessDeviceMapInfo.Query.DriveMap;
+    return ProcessDeviceMapInfo.Query.DriveMap;
 }
 
 /*
@@ -141,19 +141,19 @@ GetDiskFreeSpaceA(IN LPCSTR lpRootPathName,
                   OUT LPDWORD lpNumberOfFreeClusters,
                   OUT LPDWORD lpTotalNumberOfClusters)
 {
-   PWCHAR RootPathNameW=NULL;
+    PWCHAR RootPathNameW=NULL;
 
-   if (lpRootPathName)
-   {
-      if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-         return FALSE;
-   }
+    if (lpRootPathName)
+    {
+        if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+            return FALSE;
+    }
 
-	return GetDiskFreeSpaceW (RootPathNameW,
-	                            lpSectorsPerCluster,
-	                            lpBytesPerSector,
-	                            lpNumberOfFreeClusters,
-	                            lpTotalNumberOfClusters);
+    return GetDiskFreeSpaceW (RootPathNameW,
+                              lpSectorsPerCluster,
+                              lpBytesPerSector,
+                              lpNumberOfFreeClusters,
+                              lpTotalNumberOfClusters);
 }
 
 /*
@@ -183,11 +183,11 @@ GetDiskFreeSpaceW(IN LPCWSTR lpRootPathName,
     }
     RootPathName[3] = 0;
 
-  hFile = InternalOpenDirW(RootPathName, FALSE);
-  if (INVALID_HANDLE_VALUE == hFile)
+    hFile = InternalOpenDirW(RootPathName, FALSE);
+    if (INVALID_HANDLE_VALUE == hFile)
     {
-      SetLastError(ERROR_PATH_NOT_FOUND);
-      return FALSE;
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
     }
 
     errCode = NtQueryVolumeInformationFile(hFile,
@@ -225,18 +225,18 @@ GetDiskFreeSpaceExA(IN LPCSTR lpDirectoryName OPTIONAL,
                     OUT PULARGE_INTEGER lpTotalNumberOfBytes,
                     OUT PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
-   PWCHAR DirectoryNameW=NULL;
+    PWCHAR DirectoryNameW=NULL;
 
-	if (lpDirectoryName)
-	{
-      if (!(DirectoryNameW = FilenameA2W(lpDirectoryName, FALSE)))
-         return FALSE;
-	}
+    if (lpDirectoryName)
+    {
+        if (!(DirectoryNameW = FilenameA2W(lpDirectoryName, FALSE)))
+            return FALSE;
+    }
 
-   return GetDiskFreeSpaceExW (DirectoryNameW ,
-	                              lpFreeBytesAvailableToCaller,
-	                              lpTotalNumberOfBytes,
-	                              lpTotalNumberOfFreeBytes);
+    return GetDiskFreeSpaceExW (DirectoryNameW ,
+                                lpFreeBytesAvailableToCaller,
+                                lpTotalNumberOfBytes,
+                                lpTotalNumberOfFreeBytes);
 }
 
 /*
@@ -358,12 +358,15 @@ UINT
 WINAPI
 GetDriveTypeA(IN LPCSTR lpRootPathName)
 {
-   PWCHAR RootPathNameW;
+    PWCHAR RootPathNameW;
 
-   if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-      return DRIVE_UNKNOWN;
+    if (!lpRootPathName)
+        return GetDriveTypeW(NULL);
 
-   return GetDriveTypeW(RootPathNameW);
+    if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
+        return DRIVE_UNKNOWN;
+
+    return GetDriveTypeW(RootPathNameW);
 }
 
 /*
@@ -373,52 +376,70 @@ UINT
 WINAPI
 GetDriveTypeW(IN LPCWSTR lpRootPathName)
 {
-	FILE_FS_DEVICE_INFORMATION FileFsDevice;
-	IO_STATUS_BLOCK IoStatusBlock;
+    FILE_FS_DEVICE_INFORMATION FileFsDevice;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+    NTSTATUS errCode;
 
-	HANDLE hFile;
-	NTSTATUS errCode;
-
-	hFile = InternalOpenDirW(lpRootPathName, FALSE);
-	if (hFile == INVALID_HANDLE_VALUE)
-	{
-	    return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
-	}
-
-	errCode = NtQueryVolumeInformationFile (hFile,
-	                                        &IoStatusBlock,
-	                                        &FileFsDevice,
-	                                        sizeof(FILE_FS_DEVICE_INFORMATION),
-	                                        FileFsDeviceInformation);
-	if (!NT_SUCCESS(errCode))
-	{
-		CloseHandle(hFile);
-		BaseSetLastNTError (errCode);
-		return 0;
-	}
-	CloseHandle(hFile);
-
-        switch (FileFsDevice.DeviceType)
+    if (!lpRootPathName)
+    {
+        /* If NULL is passed, use current directory path */
+        DWORD BufferSize = GetCurrentDirectoryW(0, NULL);
+        LPWSTR CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
+        if (!CurrentDir)
+            return DRIVE_UNKNOWN;
+        if (!GetCurrentDirectoryW(BufferSize, CurrentDir))
         {
-		case FILE_DEVICE_CD_ROM:
-		case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
-			return DRIVE_CDROM;
-	        case FILE_DEVICE_VIRTUAL_DISK:
-	        	return DRIVE_RAMDISK;
-	        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
-	        	return DRIVE_REMOTE;
-	        case FILE_DEVICE_DISK:
-	        case FILE_DEVICE_DISK_FILE_SYSTEM:
-			if (FileFsDevice.Characteristics & FILE_REMOTE_DEVICE)
-				return DRIVE_REMOTE;
-			if (FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA)
-				return DRIVE_REMOVABLE;
-			return DRIVE_FIXED;
+            HeapFree(GetProcessHeap(), 0, CurrentDir);
+            return DRIVE_UNKNOWN;
         }
+        hFile = InternalOpenDirW(CurrentDir, FALSE);
+        HeapFree(GetProcessHeap(), 0, CurrentDir);
+    }
+    else
+    {
+        hFile = InternalOpenDirW(lpRootPathName, FALSE);
+    }
 
-        ERR("Returning DRIVE_UNKNOWN for device type %lu\n", FileFsDevice.DeviceType);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
+    }
 
-	return DRIVE_UNKNOWN;
+    errCode = NtQueryVolumeInformationFile (hFile,
+                                            &IoStatusBlock,
+                                            &FileFsDevice,
+                                            sizeof(FILE_FS_DEVICE_INFORMATION),
+                                            FileFsDeviceInformation);
+    if (!NT_SUCCESS(errCode))
+    {
+        CloseHandle(hFile);
+        BaseSetLastNTError (errCode);
+        return 0;
+    }
+    CloseHandle(hFile);
+
+    switch (FileFsDevice.DeviceType)
+    {
+    case FILE_DEVICE_CD_ROM:
+    case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+        return DRIVE_CDROM;
+    case FILE_DEVICE_VIRTUAL_DISK:
+        return DRIVE_RAMDISK;
+    case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+        return DRIVE_REMOTE;
+    case FILE_DEVICE_DISK:
+    case FILE_DEVICE_DISK_FILE_SYSTEM:
+        if (FileFsDevice.Characteristics & FILE_REMOTE_DEVICE)
+            return DRIVE_REMOTE;
+        if (FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA)
+            return DRIVE_REMOVABLE;
+        return DRIVE_FIXED;
+    }
+
+    ERR("Returning DRIVE_UNKNOWN for device type %lu\n", FileFsDevice.DeviceType);
+
+    return DRIVE_UNKNOWN;
 }
 
 /* EOF */

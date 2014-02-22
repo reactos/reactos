@@ -1,3 +1,6 @@
+#ifndef _TELNET_PCH_
+#define _TELNET_PCH_
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -27,3 +30,5 @@
 #include "src/tnclass.h"
 #include "src/tnmisc.h"
 #include "src/tncon.h"
+
+#endif /* _TELNET_PCH_ */

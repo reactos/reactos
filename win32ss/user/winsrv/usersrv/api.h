@@ -28,5 +28,3 @@ CSR_API(SrvExitWindowsEx);
 CSR_API(SrvEndTask);
 CSR_API(SrvLogon);
 CSR_API(SrvRecordShutdownReason);
-
-/* EOF */
