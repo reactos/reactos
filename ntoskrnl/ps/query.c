@@ -1917,9 +1917,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
              break;
 
         case ProcessQuotaLimits:
-            DPRINT1("Quota Limits not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+
+            return PspSetQuotaLimits(ProcessHandle,
+                                     1,
+                                     ProcessInformation,
+                                     ProcessInformationLength,
+                                     PreviousMode);
 
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");

@@ -115,7 +115,7 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
                               DWORD flags, struct format_args *args,
                               LPWSTR *result )
 {
-    static const WCHAR fmt_lu[] = {'%','l','u',0};
+    static const WCHAR fmt_u[] = {'%','u',0};
     WCHAR *wstring = NULL, *p, fmt[256];
     ULONG_PTR arg;
     int size;
@@ -155,7 +155,7 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
     {
         if (*format == '*')
         {
-            p += sprintfW( p, fmt_lu, get_arg( insert, flags, args ));
+            p += sprintfW( p, fmt_u, get_arg( insert, flags, args ));
             insert = -1;
             format++;
         }
@@ -168,7 +168,7 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
         *p++ = *format++;
         if (*format == '*')
         {
-            p += sprintfW( p, fmt_lu, get_arg( insert, flags, args ));
+            p += sprintfW( p, fmt_u, get_arg( insert, flags, args ));
             insert = -1;
             format++;
         }
@@ -198,7 +198,7 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
              (unicode_caller && format[0] == 'C') ||
              (!unicode_caller && format[0] == 'c'))
     {
-        char ch = (char)arg;
+        char ch = arg;
         wstring = HeapAlloc( GetProcessHeap(), 0, 2 * sizeof(WCHAR) );
         MultiByteToWideChar( CP_ACP, 0, &ch, 1, wstring, 1 );
         wstring[1] = 0;
@@ -249,31 +249,85 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
     return format;
 }
 
+struct _format_message_data
+{
+    LPWSTR formatted;
+    DWORD size;
+    LPWSTR t;
+    LPWSTR space;
+    BOOL inspace;
+    DWORD width, w;
+};
+
+static void format_add_char(struct _format_message_data *fmd, WCHAR c)
+{
+    *fmd->t++ = c;
+    if (fmd->width && fmd->width != FORMAT_MESSAGE_MAX_WIDTH_MASK)
+    {
+        switch (c) {
+        case '\r':
+        case '\n':
+            fmd->space = NULL;
+            fmd->inspace = FALSE;
+            fmd->w = 0;
+            break;
+        case ' ':
+            if (!fmd->inspace)
+                fmd->space = fmd->t - 1;
+            fmd->inspace = TRUE;
+            fmd->w++;
+            break;
+        default:
+            fmd->inspace = FALSE;
+            fmd->w++;
+        }
+        if (fmd->w == fmd->width) {
+            LPWSTR notspace;
+            if (fmd->space) {
+                notspace = fmd->space;
+                while (*notspace == ' ' && notspace != fmd->t)
+                    notspace++;
+            } else
+                notspace = fmd->space = fmd->t;
+            fmd->w = fmd->t - notspace;
+            memmove(fmd->space+2, notspace, fmd->w * sizeof(*fmd->t));
+            *fmd->space++ = '\r';
+            *fmd->space++ = '\n';
+            fmd->t = fmd->space + fmd->w;
+            fmd->space = NULL;
+            fmd->inspace = FALSE;
+        }
+    }
+    if ((DWORD)(fmd->t - fmd->formatted) == fmd->size) {
+        DWORD_PTR ispace = fmd->space - fmd->formatted;
+        /* Allocate two extra characters so we can insert a '\r\n' in
+         * the middle of a word.
+         */
+        fmd->formatted = HeapReAlloc(GetProcessHeap(), 0, fmd->formatted, (fmd->size * 2 + 2) * sizeof(WCHAR));
+        fmd->t = fmd->formatted + fmd->size;
+        if (fmd->space)
+            fmd->space = fmd->formatted + ispace;
+        fmd->size *= 2;
+    }
+}
+
 /**********************************************************************
  *	format_message    (internal)
  */
 static LPWSTR format_message( BOOL unicode_caller, DWORD dwFlags, LPCWSTR fmtstr,
                               struct format_args *format_args )
 {
-    LPWSTR target,t;
-    DWORD talloced;
+    struct _format_message_data fmd;
     LPCWSTR f;
-    DWORD width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
     BOOL eos = FALSE;
-    WCHAR ch;
 
-    target = t = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 100 * sizeof(WCHAR) );
-    talloced = 100;
+    fmd.size = 100;
+    fmd.formatted = fmd.t = HeapAlloc( GetProcessHeap(), 0, (fmd.size + 2) * sizeof(WCHAR) );
 
-#define ADD_TO_T(c)  do {\
-    *t++=c;\
-    if ((DWORD)(t-target) == talloced) {\
-        target = HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,target,talloced*2*sizeof(WCHAR));\
-        t = target+talloced;\
-        talloced*=2;\
-    } \
-} while (0)
-
+    fmd.width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
+    fmd.w = 0;
+    fmd.inspace = FALSE;
+    fmd.space = NULL;
     f = fmtstr;
     while (*f && !eos) {
         if (*f=='%') {
@@ -290,7 +344,7 @@ static LPWSTR format_message( BOOL unicode_caller, DWORD dwFlags, LPCWSTR fmtstr
                         (!(dwFlags & FORMAT_MESSAGE_ARGUMENT_ARRAY) && !format_args->list))
                 {
                     SetLastError(ERROR_INVALID_PARAMETER);
-                    HeapFree(GetProcessHeap(), 0, target);
+                    HeapFree(GetProcessHeap(), 0, fmd.formatted);
                     return NULL;
                 }
                 insertnr = *f-'0';
@@ -307,20 +361,20 @@ static LPWSTR format_message( BOOL unicode_caller, DWORD dwFlags, LPCWSTR fmtstr
                     break;
                 }
                 f = format_insert( unicode_caller, insertnr, f, dwFlags, format_args, &str );
-                for (x = str; *x; x++) ADD_TO_T(*x);
+                for (x = str; *x; x++) format_add_char(&fmd, *x);
                 HeapFree( GetProcessHeap(), 0, str );
                 break;
             case 'n':
-                ADD_TO_T('\r');
-                ADD_TO_T('\n');
+                format_add_char(&fmd, '\r');
+                format_add_char(&fmd, '\n');
                 f++;
                 break;
             case 'r':
-                ADD_TO_T('\r');
+                format_add_char(&fmd, '\r');
                 f++;
                 break;
             case 't':
-                ADD_TO_T('\t');
+                format_add_char(&fmd, '\t');
                 f++;
                 break;
             case '0':
@@ -329,53 +383,51 @@ static LPWSTR format_message( BOOL unicode_caller, DWORD dwFlags, LPCWSTR fmtstr
                 break;
             case '\0':
                 SetLastError(ERROR_INVALID_PARAMETER);
-                HeapFree(GetProcessHeap(), 0, target);
+                HeapFree(GetProcessHeap(), 0, fmd.formatted);
                 return NULL;
             ignore_inserts:
             default:
                 if (dwFlags & FORMAT_MESSAGE_IGNORE_INSERTS)
-                    ADD_TO_T('%');
-                ADD_TO_T(*f++);
+                    format_add_char(&fmd, '%');
+                format_add_char(&fmd, *f++);
                 break;
             }
         } else {
-            ch = *f;
+            WCHAR ch = *f;
             f++;
             if (ch == '\r') {
                 if (*f == '\n')
                     f++;
-                if(width)
-                    ADD_TO_T(' ');
+                if(fmd.width)
+                    format_add_char(&fmd, ' ');
                 else
                 {
-                    ADD_TO_T('\r');
-                    ADD_TO_T('\n');
+                    format_add_char(&fmd, '\r');
+                    format_add_char(&fmd, '\n');
                 }
             } else {
                 if (ch == '\n')
                 {
-                    if(width)
-                        ADD_TO_T(' ');
+                    if(fmd.width)
+                        format_add_char(&fmd, ' ');
                     else
                     {
-                        ADD_TO_T('\r');
-                        ADD_TO_T('\n');
+                        format_add_char(&fmd, '\r');
+                        format_add_char(&fmd, '\n');
                     }
                 }
                 else
-                    ADD_TO_T(ch);
+                    format_add_char(&fmd, ch);
             }
         }
     }
-    *t = '\0';
+    *fmd.t = '\0';
 
-    return target;
+    return fmd.formatted;
 }
-#undef ADD_TO_T
 
 /***********************************************************************
  *           FormatMessageA   (KERNEL32.@)
- * FIXME: missing wrap,
  */
 DWORD WINAPI FormatMessageA(
 	DWORD	dwFlags,
@@ -391,7 +443,6 @@ DWORD WINAPI FormatMessageA(
     LPWSTR	target;
     DWORD	destlength;
     LPWSTR	from;
-    DWORD	width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
     TRACE("(0x%x,%p,%d,0x%x,%p,%d,%p)\n",
           dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
@@ -420,8 +471,6 @@ DWORD WINAPI FormatMessageA(
         format_args.last = 0;
     }
 
-    if (width && width != FORMAT_MESSAGE_MAX_WIDTH_MASK)
-        FIXME("line wrapping (%u) not supported.\n", width);
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING)
     {
@@ -432,9 +481,9 @@ DWORD WINAPI FormatMessageA(
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
         if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, (WORD)dwLanguageId );
+            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
         if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, (WORD)dwLanguageId );
+            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
         if (!from) return 0;
     }
     else
@@ -497,7 +546,6 @@ DWORD WINAPI FormatMessageW(
     LPWSTR target;
     DWORD talloced;
     LPWSTR from;
-    DWORD width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
     TRACE("(0x%x,%p,%d,0x%x,%p,%d,%p)\n",
           dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);
@@ -524,8 +572,6 @@ DWORD WINAPI FormatMessageW(
         format_args.last = 0;
     }
 
-    if (width && width != FORMAT_MESSAGE_MAX_WIDTH_MASK)
-        FIXME("line wrapping not supported.\n");
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING) {
         from = HeapAlloc( GetProcessHeap(), 0, (strlenW(lpSource) + 1) *
@@ -535,9 +581,9 @@ DWORD WINAPI FormatMessageW(
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
         if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, (WORD)dwLanguageId );
+            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
         if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, (WORD)dwLanguageId );
+            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
         if (!from) return 0;
     }
     else

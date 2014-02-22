@@ -8,7 +8,7 @@ Description = Zaz is a free software arcade action puzzle computer game, a littl
 Size = 21.0 MB
 Category = 4
 URLSite = http://zaz.sourceforge.net
-URLDownload = http://files1.freesoft.ru/rep/704321/Zaz-1.0.0-Setup.exe
+URLDownload = http://download.sourceforge.net/project/zaz/Zaz-1.0.0-Setup.exe
 CDPath = none
 
 [Section.0407]

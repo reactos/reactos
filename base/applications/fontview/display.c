@@ -113,7 +113,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
-	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%^&*')");
+	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%%^&*')");
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 

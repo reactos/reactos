@@ -7,4 +7,6 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+void RegisterWclMain();
+
+LRESULT CALLBACK MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

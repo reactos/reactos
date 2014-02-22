@@ -111,7 +111,7 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     /* Adapted for holding GUI terminal information */
     pConInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
     GuiInfo = pConInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pConInfo + 1);
-    wcsncpy(GuiInfo->FaceName, L"Fixedsys", LF_FACESIZE); // HACK: !!
+    wcsncpy(GuiInfo->FaceName, L"VGA", LF_FACESIZE); // HACK: !!
     // GuiInfo->FaceName[0] = L'\0';
     GuiInfo->FontFamily = FF_DONTCARE;
     GuiInfo->FontSize = 0;

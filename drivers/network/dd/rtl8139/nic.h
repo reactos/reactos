@@ -5,8 +5,12 @@
  * PURPOSE:     RTL8139 driver definitions
  */
 
+#ifndef _RTL8139_PCH_
+#define _RTL8139_PCH_
+
 #include <ndis.h>
-#include <rtlhw.h>
+
+#include "rtlhw.h"
 
 #define ADAPTER_TAG 'Altr'
 #define RESOURCE_LIST_TAG 'Rltr'
@@ -202,4 +206,4 @@ MiniportHandleInterrupt (
     IN NDIS_HANDLE MiniportAdapterContext
     );
 
-/* EOF */
+#endif /* _RTL8139_PCH_ */

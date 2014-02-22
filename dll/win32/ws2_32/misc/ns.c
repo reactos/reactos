@@ -861,7 +861,7 @@ gethostbyname(IN  CONST CHAR FAR* name)
 
     p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if (!p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1130,7 +1130,7 @@ getservbyname(IN  CONST CHAR FAR* name,
     DWORD ReadSize = 0;
     PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if (!p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1314,7 +1314,7 @@ getservbyport(IN  INT port,
     DWORD ReadSize = 0, ValidData = 0;
     PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
-    if( !p )
+    if( !p || !WSAINITIALIZED)
     {
         WSASetLastError( WSANOTINITIALISED );
         return NULL;
@@ -1496,7 +1496,7 @@ inet_addr(IN  CONST CHAR FAR* cp)
 
     p = (PCHAR)cp;
 
-    if (!p)
+    if (!p || !WSAINITIALIZED)
     {
         WSASetLastError(WSAEFAULT);
         return INADDR_NONE;

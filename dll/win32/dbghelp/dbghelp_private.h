@@ -21,6 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _DBGHELP_PRIVATE_H_
+#define _DBGHELP_PRIVATE_H_
+
 #include <config.h>
 
 #include <assert.h>
@@ -842,3 +845,5 @@ extern struct symt_typedef*
                                      const char* name) DECLSPEC_HIDDEN;
 
 #include "image_private.h"
+
+#endif /* _DBGHELP_PRIVATE_H_ */

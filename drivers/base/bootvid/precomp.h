@@ -1,3 +1,6 @@
+#ifndef _BOOTVID_PCH_
+#define _BOOTVID_PCH_
+
 #include <wdm.h>
 #include <drivers/bootvid/bootvid.h>
 
@@ -41,3 +44,5 @@ extern ULONG curr_y;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
 extern UCHAR FontData[256 * BOOTCHAR_HEIGHT];
+
+#endif /* _BOOTVID_PCH_ */

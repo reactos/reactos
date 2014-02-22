@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -11,11 +11,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
-    POPUP "&Device"
+    POPUP "&Aygıt"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Husûsiyetler", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&Ses Düzeyi Denetleyicisi", IDM_VOLUMECTL
     END
     POPUP "&Yardım"
     BEGIN
@@ -35,5 +35,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Bir Sonraki"
     IDS_APPTITLE "Ortam Oynatıcısı"
     IDS_PLAY "Çal"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
+    IDS_UNKNOWNFILEEXT "Verilen kütük türünden aygıt türü belirlenemiyor."
 END

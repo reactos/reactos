@@ -1,0 +1,148 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  18-01-2014
+*/
+
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Skema e Energjisë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    LTEXT "Zgjidhni skemën energjisë me parametrat më të përshtatshme për këtë kompjuter. Vini re se ndryshimet e parametrave te më poshtëm do të ndryshojë skemën e zgjedhur.", -1, 37, 6, 209, 36
+    GROUPBOX "Skema e Energjisë", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "&Ruaj Si...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Fshi", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "i panjohur", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "Kur kompjuteri është i:", IDC_SAT, 12, 109, 60, 12
+    LTEXT "Hyrese në", IDC_SAC, 123, 110, 45, 15
+    ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+    LTEXT "Punon në bateri", IDC_SDC, 195, 110, 45, 15
+    ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+    LTEXT "Fik &monitorin:", IDC_MONITOR, 13, 148, 84, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Fik hard d&iskun:", IDC_DISK, 13, 171, 84, 10
+    COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Sistemi gatishmërisë:", IDC_STANDBY, 13, 191, 84, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Sistemi &hibernates:", IDC_HYBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Alarm të ulët bateri", -1, 6, 7, 239, 104
+    CONTROL "Aktivizo alarmin e ulët baterie kur niveli i energjisë arrin:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT "i panjohur", IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT "0%", -1, 28, 43, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON "Veprim Alar&mi...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "Njoftim:", -1, 95, 71, 57, 10
+    LTEXT "i panjohur", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "Veprim:", -1, 95, 83, 55, 10
+    LTEXT "i panjohur", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "Run Program:", -1, 95, 95, 55, 10
+    LTEXT "i panjohur", IDC_ALARMPROG1, 154, 95, 84, 10
+    GROUPBOX "Alarm Kritik baterie", -1, 6, 120, 239, 106
+    CONTROL "Aktivizo alarmin kritik baterie kur niveli i energjisë arrin:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT "i panjohur", IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT "0%", -1, 28, 154, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT "100%", -1, 214, 154, 25, 10
+    PUSHBUTTON "Veprim Alar&mi...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "Njoftim:", -1, 95, 185, 50, 10
+    LTEXT "i panjohur", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "Veprim:", -1, 95, 198, 45, 10
+    LTEXT "i panjohur", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "Ekzekuto Programin:", -1, 95, 211, 50, 10
+    LTEXT "i panjohur", IDC_ALARMPROG2, 154, 211, 84, 10
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advancuar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    LTEXT "Zgjidhni cilësimet e ruaj-energjinë që ju doni të përdorni.", -1, 37, 6, 207, 20
+    GROUPBOX "Alternativa", -1, 6, 30, 240, 65
+    CONTROL "Gjithmonë shfaq ikonën në taskbar", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "Shfaq për fjalëkalimin kur kompjuteri rifillon nga gatishmëria", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
+    CONTROL "&Dim ekranin kur punon në bateri", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX "Butonat e Energjise", -1, 6, 101, 240, 127
+    LTEXT "&Kur e mbyllni kapakun e kompjuterit tim portativ:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kur unë shtypni butonin e energjise në kompjuterin tim:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kur unë shtypni butonin flej në kompjuterin tim:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hibernate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT "Kur kompjuteri juaj hibernates, ajo ruan çdo gjë që ajo ka në kujtesën e në diskun tuaj të vështirë dhe pastaj mbyllet. Kur kompjuteri juaj vjen nga letargjia, ajo kthehet në gjendjen e mëparshme. ", -1, 37, 6, 210, 35
+    GROUPBOX "Hibernate", -1, 6, 41, 240, 32
+    CONTROL "Mundëso &hibernation", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX "Hapësirë ​​në disk për letargji", -1, 6, 80, 240, 76
+    LTEXT "Hapsira Lirë n'disk:", -1, 15, 95, 140, 10
+    LTEXT "i panjohur", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "Hapësirë ​​në disk të nevojshme për hibernate:", -1, 15, 115, 140, 10
+    LTEXT "i panjohur", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "Ju duhet të lironi një hapësirë ​​në disk para se kompjuteri juaj mund të hibernate. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME_1 "Opsionet e energjisë"
+    IDS_CPLDESCRIPTION_1 "Konfiguro parametrat e kursimit të energjisë për kompjuterin tuaj."
+    IDS_PROCENT "%i%%"
+    IDS_SOUND "Zëri"
+    IDS_TEXT "Teksti"
+    IDS_CONFIG1 "Konfigurimet për %1 skema energjise"
+    IDS_CONFIG2 "Konfigurimet Avancuara për %1"
+    IDS_SIZEBYTS "%i bytes"
+    IDS_SIZEMB "%i MB"
+    IDS_NOACTION "Mos bëj gjë"
+    IDS_PowerActionNone1 "Asnjë veprim"
+    IDS_PowerActionUnknown "i panjohur"
+    IDS_PowerActionSleep "Në pritje"
+    IDS_PowerActionHibernate "Hibernate"
+    IDS_PowerActionShutdown "Fik"
+    IDS_PowerActionRestart "Rifillo"
+    IDS_PowerActionShutdownOff "Fik dhe hiq energjine"
+    IDS_PowerActionWarmEject "Me pyet çfare te bej"
+    IDS_PowerActionNone2 "Asnje"
+    IDS_TIMEOUT1 "Pas 1 min"
+    IDS_TIMEOUT2 "Pas 2 mins"
+    IDS_TIMEOUT3 "Pas 3 mins"
+    IDS_TIMEOUT4 "Pas 5 mins"
+    IDS_TIMEOUT5 "Pas 10 mins"
+    IDS_TIMEOUT6 "Pas 15 mins"
+    IDS_TIMEOUT7 "Pas 20 mins"
+    IDS_TIMEOUT8 "Pas 25 mins"
+    IDS_TIMEOUT9 "Pas 30 mins"
+    IDS_TIMEOUT10 "Pas 45 mins"
+    IDS_TIMEOUT11 "Pas 1 hour"
+    IDS_TIMEOUT12 "Pas 2 hours"
+    IDS_TIMEOUT13 "Pas 3 hours"
+    IDS_TIMEOUT14 "Pas 4 hours"
+    IDS_TIMEOUT15 "Pas 5 hours"
+    IDS_TIMEOUT16 "Kurrë"
+    IDS_DEL_SCHEME "Jeni te sigurte qe doni te fshini skemën energjise?"
+    IDS_DEL_SCHEME_TITLE "Fshij Skemen"
+END

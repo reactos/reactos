@@ -6,11 +6,9 @@
  * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define COBJMACROS
-#include "recyclebin_v5.h"
-#include <stdio.h>
+#include "recyclebin_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+#include "sddl.h"
 
 static BOOL
 IntDeleteRecursive(

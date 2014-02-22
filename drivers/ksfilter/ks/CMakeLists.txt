@@ -28,14 +28,17 @@ list(APPEND SOURCE
     worker.c
     kcom.c
     swenum.c
-    ks.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
+    precomp.h)
 
 if(MSVC)
     add_asm_files(ks_asm msvc.S)
 endif()
 
-add_library(ks SHARED ${SOURCE} ${ks_asm})
+add_library(ks SHARED
+    ${SOURCE}
+    ${ks_asm}
+    ks.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
 
 set_target_properties(ks PROPERTIES SUFFIX ".sys")
 
@@ -44,7 +47,7 @@ set_subsystem(ks native)
 set_image_base(ks 0x00010000)
 
 target_link_libraries(ks ${PSEH_LIB})
-add_pch(ks priv.h)
+add_pch(ks precomp.h SOURCE)
 add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 add_cd_file(TARGET ks DESTINATION reactos/system32/drivers FOR all)

@@ -68,12 +68,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Seleção de inicialização", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Inicialização normal - carregar todos os drivers de dispositivo e serviços", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
-    CONTROL "I&nicialização de diagnóstico - carregar apenas dispositivos e serviços básicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
-    CONTROL "Ini&cialização seletiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
-    AUTOCHECKBOX "&Processar o arquivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
-    AUTOCHECKBOX "Carr&egar serviços do sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
-    AUTOCHECKBOX "Carregar i&tens de inicialização", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+    CONTROL "&Inicialização normal - carregar todos os drivers de dispositivo e serviços", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "I&nicialização de diagnóstico - carregar apenas dispositivos e serviços básicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "Ini&cialização seletiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "&Processar o arquivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "Carr&egar serviços do sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Carregar i&tens de inicialização", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

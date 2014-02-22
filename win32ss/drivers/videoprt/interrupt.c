@@ -21,6 +21,11 @@
 
 #include "videoprt.h"
 
+#include <ndk/halfuncs.h>
+
+#define NDEBUG
+#include <debug.h>
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 BOOLEAN NTAPI

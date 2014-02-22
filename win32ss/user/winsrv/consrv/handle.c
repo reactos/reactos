@@ -11,16 +11,11 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "handle.h"
-#include "include/console.h"
-#include "console.h"
-#include "conoutput.h"
+
+#include <win/console.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 
@@ -440,8 +435,8 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
          /*(Type != 0 && ObjectEntry->Type != Type)*/
          (Type != 0 && (ObjectEntry->Type & Type) == 0) )
     {
-        DPRINT1("ConSrvGetObject -- Invalid handle 0x%x of type %lu with access %lu ; retrieved object 0x%x (handle 0x%x) of type %lu with access %lu\n",
-                Handle, Type, Access, ObjectEntry, HandleEntry, (ObjectEntry ? ObjectEntry->Type : 0), (HandleEntry ? HandleEntry->Access : 0));
+        DPRINT("ConSrvGetObject -- Invalid handle 0x%x of type %lu with access %lu ; retrieved object 0x%x (handle 0x%x) of type %lu with access %lu\n",
+               Handle, Type, Access, ObjectEntry, HandleEntry, (ObjectEntry ? ObjectEntry->Type : 0), (HandleEntry ? HandleEntry->Access : 0));
 
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;

@@ -26,7 +26,7 @@
 26 stub -noname stub26
 27 stub -noname stub27
 28 stub -noname stub28
-@ stdcall ShellShutdownDialog(ptr long long)
+@ stdcall ShellShutdownDialog(ptr wstr long)
 @ stdcall WlxActivateUserShell(ptr wstr wstr ptr)
 @ stdcall WlxDisconnectNotify(ptr)
 @ stdcall WlxDisplayLockedNotice(ptr)

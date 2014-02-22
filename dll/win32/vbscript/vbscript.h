@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _VBSCRIPT_H
+#define _VBSCRIPT_H
+
 #include <assert.h>
 #include <stdarg.h>
 
@@ -418,3 +421,5 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
 #include "parse.h"
 #include "regexp.h"
 #include "vbscript_defs.h"
+
+#endif /* _VBSCRIPT_H */

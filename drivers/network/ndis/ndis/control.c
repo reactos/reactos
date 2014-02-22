@@ -310,4 +310,3 @@ NdisWaitEvent(
 }
 
 /* EOF */
-

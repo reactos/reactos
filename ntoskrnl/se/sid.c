@@ -55,6 +55,8 @@ PSID SeAliasBackupOpsSid = NULL;
 PSID SeAuthenticatedUsersSid = NULL;
 PSID SeRestrictedSid = NULL;
 PSID SeAnonymousLogonSid = NULL;
+PSID SeLocalServiceSid = NULL;
+PSID SeNetworkServiceSid = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -135,6 +137,8 @@ SepInitSecurityIDs(VOID)
     SeAuthenticatedUsersSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
     SeRestrictedSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
     SeAnonymousLogonSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
+    SeLocalServiceSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
+    SeNetworkServiceSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
 
     if (SeNullSid == NULL || SeWorldSid == NULL ||
         SeLocalSid == NULL || SeCreatorOwnerSid == NULL ||
@@ -149,7 +153,8 @@ SepInitSecurityIDs(VOID)
         SeAliasAccountOpsSid == NULL || SeAliasSystemOpsSid == NULL ||
         SeAliasPrintOpsSid == NULL || SeAliasBackupOpsSid == NULL ||
         SeAuthenticatedUsersSid == NULL || SeRestrictedSid == NULL ||
-        SeAnonymousLogonSid == NULL)
+        SeAnonymousLogonSid == NULL || SeLocalServiceSid == NULL ||
+        SeNetworkServiceSid == NULL)
     {
         FreeInitializedSids();
         return FALSE;
@@ -183,6 +188,8 @@ SepInitSecurityIDs(VOID)
     RtlInitializeSid(SeAuthenticatedUsersSid, &SeNtSidAuthority, 1);
     RtlInitializeSid(SeRestrictedSid, &SeNtSidAuthority, 1);
     RtlInitializeSid(SeAnonymousLogonSid, &SeNtSidAuthority, 1);
+    RtlInitializeSid(SeLocalServiceSid, &SeNtSidAuthority, 1);
+    RtlInitializeSid(SeNetworkServiceSid, &SeNtSidAuthority, 1);
 
     SubAuthority = RtlSubAuthoritySid(SeNullSid, 0);
     *SubAuthority = SECURITY_NULL_RID;
@@ -254,6 +261,10 @@ SepInitSecurityIDs(VOID)
     *SubAuthority = SECURITY_RESTRICTED_CODE_RID;
     SubAuthority = RtlSubAuthoritySid(SeAnonymousLogonSid, 0);
     *SubAuthority = SECURITY_ANONYMOUS_LOGON_RID;
+    SubAuthority = RtlSubAuthoritySid(SeLocalServiceSid, 0);
+    *SubAuthority = SECURITY_LOCAL_SERVICE_RID;
+    SubAuthority = RtlSubAuthoritySid(SeNetworkServiceSid, 0);
+    *SubAuthority = SECURITY_NETWORK_SERVICE_RID;
 
     return TRUE;
 }

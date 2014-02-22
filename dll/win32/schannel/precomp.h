@@ -3,10 +3,11 @@
 
 #include <stdarg.h>
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <sspi.h>

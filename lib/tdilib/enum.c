@@ -5,7 +5,8 @@
  * PURPOSE:     TDI entity enumeration
  */
 
-#include "iphlpapi_private.h"
+#include "precomp.h"
+
 #include "tdilib.h"
 
 /* A generic thing-getting function which interacts in the right way with

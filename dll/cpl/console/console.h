@@ -1,9 +1,10 @@
 #ifndef CONSOLE_H__
 #define CONSOLE_H__
 
-#define WIN32_NO_STATUS
 #include <limits.h> // just for UINT_MAX in layout.c
 #include <tchar.h>
+
+#define WIN32_NO_STATUS
 
 #include <windef.h>
 #include <winbase.h>

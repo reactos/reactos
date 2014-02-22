@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -192,4 +192,19 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Bölgelik Ayarlar"
     IDS_CPLDESCRIPTION "Dilleri ve sayı, para birimi, saat ve târih biçimlerini seçer."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Yanlışlık"
+    IDS_ERROR_SYMBOL_SEPARATE "Girilen kısa târih ayıracı yanlış simge(ler) içeriyor."
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Girilen kısa târih biçimi yanlış simge(ler) içeriyor."
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Girilen uzun târih biçimi yanlış simge(ler) içeriyor."
+    IDS_ERROR_OEM_CODE_PAGE "OEM düzgü sayfasının okunmasında sorun var."
+    IDS_ERROR_ANSI_CODE_PAGE "ANSI düzgü sayfasının okunmasında sorun var."
+    IDS_ERROR_INT_KEY_REG "HKCU\\Control Panel\\International dizininin açılmasında sorun var."
+    IDS_ERROR_DEF_INT_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizininin açılmasında sorun var."
+    IDS_ERROR_NLS_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizininin açılmasında sorun var."
+    IDS_ERROR_NLS_CODE_REG "HKU\\.DEFAULT\\Control Panel\\International dizininin açılmasında sorun var."
+    IDS_ERROR_INPUT_DLL "input.dll başlatılamıyor."
 END

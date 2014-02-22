@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ip.h>
-
 #define IFENT_SOFTWARE_LOOPBACK 24 /* This is an SNMP constant from rfc1213 */
 
 NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,

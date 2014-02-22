@@ -339,10 +339,13 @@ typedef struct _MMPFN
     union
     {
         PFN_NUMBER Flink;
-        ULONG WsIndex;                       // SavedSwapEntry
+        ULONG WsIndex;
         PKEVENT Event;
         NTSTATUS ReadStatus;
         SINGLE_LIST_ENTRY NextStackPfn;
+
+        // HACK for ROSPFN
+        SWAPENTRY SwapEntry;
     } u1;
     PMMPTE PteAddress;
     union
@@ -354,7 +357,7 @@ typedef struct _MMPFN
     {
         struct
         {
-            USHORT ReferenceCount;           // ReferenceCount
+            USHORT ReferenceCount;
             MMPFNENTRY e1;
         };
         struct
@@ -366,7 +369,10 @@ typedef struct _MMPFN
     union
     {
         MMPTE OriginalPte;
-        LONG AweReferenceCount;              // RmapListHead
+        LONG AweReferenceCount;
+
+        // HACK for ROSPFN
+        PMM_RMAP_ENTRY RmapListHead;
     };
     union
     {
@@ -385,6 +391,9 @@ typedef struct _MMPFN
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
 #endif
+
+    // HACK until WS lists are supported
+    MMWSLE Wsle;
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
@@ -1758,6 +1767,17 @@ ExpCheckPoolAllocation(
     ULONG Tag);
 
 
+/* mmsup.c *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmAdjustWorkingSetSize(
+    IN SIZE_T WorkingSetMinimumInBytes,
+    IN SIZE_T WorkingSetMaximumInBytes,
+    IN ULONG SystemCache,
+    IN BOOLEAN IncreaseOkay);
+
+
 /* session.c *****************************************************************/
 
 _IRQL_requires_max_(APC_LEVEL)
@@ -1789,3 +1809,17 @@ VOID
 NTAPI
 MmSetSessionLocaleId(
     _In_ LCID LocaleId);
+
+
+/* virtual.c *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmCopyVirtualMemory(IN PEPROCESS SourceProcess,
+                    IN PVOID SourceAddress,
+                    IN PEPROCESS TargetProcess,
+                    OUT PVOID TargetAddress,
+                    IN SIZE_T BufferSize,
+                    IN KPROCESSOR_MODE PreviousMode,
+                    OUT PSIZE_T ReturnSize);
+

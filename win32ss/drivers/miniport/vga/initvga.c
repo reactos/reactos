@@ -1,5 +1,7 @@
 #include "vgamp.h"
 
+#include "vgavideo.h"
+
 static VGA_REGISTERS Mode12Regs =
 {
    /* CRT Controller Registers */

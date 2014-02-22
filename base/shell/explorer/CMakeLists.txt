@@ -7,7 +7,6 @@ add_definitions(
     -DWIN32
     -D__WINDRES__)
 
-#add_pch(explorer precomp.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SOURCE
@@ -31,9 +30,6 @@ list(APPEND SOURCE
     taskbar/desktopbar.cpp
     taskbar/startmenu.cpp
     taskbar/traynotify.cpp
-    precomp.cpp
-    explorer.rc
-    services/startup.c
     services/shellservices.cpp
     desktop/desktop.cpp
     explorer.cpp
@@ -43,18 +39,24 @@ list(APPEND SOURCE
     utility/utility.cpp
     utility/xmlstorage.cpp
     utility/window.cpp
-    utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
+    utility/shellbrowserimpl.cpp
+    precomp.h) #    utility/shelltests.cpp
 
-if(ARCH MATCHES i386)
-    list(APPEND SOURCE
-        i386-stub-win32.c)
+if(ARCH STREQUAL "i386")
+    list(APPEND I386_SOURCE i386-stub-win32.c)
 endif()
 
-add_executable(explorer ${SOURCE})
+add_executable(explorer
+    ${SOURCE}
+    ${I386_SOURCE}
+    services/startup.c
+    explorer.rc)
+
 target_link_libraries(explorer comsupp wine uuid)
 set_module_type(explorer win32gui UNICODE)
 
 add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
+add_pch(explorer precomp.h SOURCE)
 add_dependencies(explorer psdk)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)

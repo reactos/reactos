@@ -25,23 +25,13 @@ Revision History:
 
 --*/
 
-#include <stddef.h>
-#include <stdarg.h>
+#ifndef _CLASSPNP_PCH_
+#define _CLASSPNP_PCH_
+
 #include <ntddk.h>
-
-#include <scsi.h>
-#include <wmidata.h>
 #include <classpnp.h>
-
-#if CLASS_INIT_GUID
-#include <initguid.h>
-#endif
-
-#include <mountdev.h>
 #include <ioevent.h>
 #include <pseh/pseh2.h>
-
-#include "wmistr.h"
 
 extern CLASSPNP_SCAN_FOR_SPECIAL_INFO ClassBadItems[];
 
@@ -876,3 +866,7 @@ PMDL NTAPI BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen);
 VOID NTAPI FreeDeviceInputMdl(PMDL Mdl);
 NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo);
 VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo);
+
+#include "debug.h"
+
+#endif /* _CLASSPNP_PCH_ */

@@ -10,18 +10,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "console.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "conoutput.h"
-#include "handle.h"
 
 #define NDEBUG
 #include <debug.h>
-
-
-/* PRIVATE FUNCTIONS **********************************************************/
-
 
 /* PUBLIC SERVER APIS *********************************************************/
 

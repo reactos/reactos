@@ -1885,6 +1885,7 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.RelativeY",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.ToDesktop",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.PrimaryDevice",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Device Description",0x00020000,"Generic VESA Adapter"
 
 ; This is not true but it allows to use 3rd party drivers while having the VBE driver installed
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","VgaCompatible",0x00010001,1

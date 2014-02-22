@@ -10,6 +10,8 @@
 
 #include "sacdrv.h"
 
+#include <ndk/rtlfuncs.h>
+
 /* GLOBALS ********************************************************************/
 
 PCHAR Utf8ConversionBuffer;

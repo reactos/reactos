@@ -1,3 +1,6 @@
+#ifndef _PCMCIA_PCH_
+#define _PCMCIA_PCH_
+
 #include <wdm.h>
 
 typedef enum
@@ -48,3 +51,4 @@ NTAPI
 PcmciaFdoPlugPlay(PPCMCIA_FDO_EXTENSION FdoExt,
                   PIRP Irp);
 
+#endif /* _PCMCIA_PCH_ */

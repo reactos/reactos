@@ -1354,6 +1354,19 @@ SendPacket:
                 KdpNotSupported(&ManipulateState);
                 break;
 
+            case 0x315f: // This one is unknown, but used by WinDbg, keep silent!
+
+                /* Setup an empty message, with failure */
+                Data.Length = 0;
+                ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
+
+                /* Send it */
+                KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                             &Header,
+                             &Data,
+                             &KdpContext);
+                break;
+
             /* Unsupported Message */
             default:
 
@@ -1739,7 +1752,7 @@ KdExitDebugger(IN BOOLEAN Enable)
     {
         /* Queue a DPC for the time slip */
         InterlockedIncrement(&KdpTimeSlipPending);
-        KeInsertQueueDpc(&KdpTimeSlipDpc, NULL, NULL);
+        KeInsertQueueDpc(&KdpTimeSlipDpc, NULL, NULL); // FIXME: this can trigger context switches!
     }
 }
 

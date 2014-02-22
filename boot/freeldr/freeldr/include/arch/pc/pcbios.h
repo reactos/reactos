@@ -1,3 +1,6 @@
+#ifndef _PCBIOS_H_
+#define _PCBIOS_H_
+
 #ifndef __ASM__
 
 typedef enum
@@ -139,3 +142,4 @@ VOID    DetectHardware(VOID);        // Implemented in hardware.c
 #define REGS_EFLAGS 36
 #define REGS_SIZE 40
 
+#endif /* _PCBIOS_H_ */

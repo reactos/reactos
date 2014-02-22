@@ -6,6 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#pragma once
 
 #define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))
 #define HIWORD(l)	((USHORT)(((ULONG_PTR)(l)>>16)&0xFFFF))

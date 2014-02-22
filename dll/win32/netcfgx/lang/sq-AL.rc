@@ -1,0 +1,233 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
+ * DATE OF TRANSLATION:  23-01-2014
+*/
+
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Përgjithshëm"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju mund të merrni cilësimet e IP've të caktuara automatikisht në qoftë se rrjeti juaj mbështet këtë aftësi. Përndryshe, ju duhet të pyesni administratorin e rrjetit tuaj për cilësimet e duhura të IP've.", -1, 9, 9, 228, 27
+    CONTROL "Marrë adresë IP'sh automatikisht", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Përdor adresën e mëposhtme IP'së:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    LTEXT "Adresa IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
+    LTEXT "Subnet mask:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 90 - 2, 80, 12
+    LTEXT "Gateway parazgjedhur:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
+    CONTROL "Merr adresën e serverit DNS automatikisht", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Përdorni adresen DNS të server-it të mëposhtme", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    LTEXT "DNS'ja serverit e preferuar:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
+    LTEXT "Alterno DNS'në e server-it:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 186 - 2, 80, 12
+    PUSHBUTTON "&Përparuar", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alterno Konfigurimin"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Në qoftë se ky kompjuter është përdorur në më shumë se një rrjet, futni cilësimet alternative IP poshtë", -1, 9, 9, 220, 20
+    CONTROL "Adresë IP private auto%matike", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
+    CONTROL "Përdorue&si konfiguruar", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    LTEXT "Adresa &IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75, 80, 12
+    LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 150, 95, 80, 12
+    LTEXT "Gateway Parazgjedhur:", -1, 14, 115, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 115, 80, 12
+    LTEXT "DNS'ja serverit e &preferuar:", -1, 14, 150, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 150, 80, 12
+    LTEXT "&Alterno DNS'në e server-it:", -1, 14, 165, 180, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 150, 165, 80, 12
+END
+
+IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Cilësimet IP've"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Adresat IP've", -1, 5, 5, 240, 90
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    PUSHBUTTON "Shto...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Modifiko...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
+    GROUPBOX "Gateway Parazgjedhur:", -1, 5, 100, 240, 90
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    PUSHBUTTON "Shto...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Modifiko...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 5, 200, 240, 30
+    CHECKBOX "Automatik metrik", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Ndërfaqe metrike:", -1, 15, 215, 90, 12
+    EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
+END
+
+IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 270
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "DNS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
+    LTEXT "Adresa D&NS server, në rend përdorimi:", -1, 5, 5, 180, 12
+    PUSHBUTTON "Lart", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Poshtë", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Shto...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Modifiko...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    LTEXT "Tre cilësimet e mëposhtme zbatohen për të gjitha lidhjeve me TCP/IP të aktivizuara. Për zgjidhjen e emrave të pakualifikuar:", -1, 5, 90, 220, 24
+    CONTROL "Shto lidhjen primare dhe specifike suffixes për DNS'në", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
+    CHECKBOX "Shto prindin prapashtesë të primarit DNS", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Shto këto DNS suffixes(në rend):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
+    PUSHBUTTON "Lart", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Poshtë", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Shto...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Modifiko...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
+    LTEXT "Prapashtesa DNS'së për këtë lidhje:", -1, 5, 225, 110, 14
+    EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
+    CHECKBOX "&Regjistrohu adresat e kësaj lidhje në DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Përdor lidhje prapashtesë të DNS'së në regjistrimin e DNS'së", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alternativë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_OPTLIST, 5, 30, 230, 70
+    LTEXT "Cilësime alternative", -1, 5, 15, 130, 12
+    PUSHBUTTON "&Karakteristika", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    GROUPBOX "Përshkrimi:", -1, 5, 120, 240, 70
+    LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
+END
+
+IDD_TCPIPADDIP_DLG DIALOGEX 0, 0, 200, 70
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Adresa TCP/IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
+    LTEXT "Adresa IP:", -1, 5, 15, 70, 12
+    LTEXT "Subnet mask:", -1, 5, 30, 70, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
+    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPGW_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TCP/IP Gateway Adresë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 100, 15, 80, 12
+    LTEXT "Gateway:", -1, 5, 15, 70, 12
+    CHECKBOX "Automatik metrik", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&Metrik:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
+    PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TCP/IP DNS Server"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 80, 12
+    LTEXT "DNS server:", -1, 5, 10, 120, 12
+    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPSUFFIX_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TCP/IP Domain Prapashtesë"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
+    LTEXT "Prapashtesë Domain:", -1, 5, 10, 120, 12
+    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TCP/IP Filtrim"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CHECKBOX "Mundëso TCP/IP-Filtrim (Të gjith përshtatësit)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    GROUPBOX "", -1, 5, 30, 90, 150
+    CONTROL "Lejo të Gjithë", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "Lejo Vetëm", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
+    PUSHBUTTON "Shto", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 105, 30, 90, 150
+    CONTROL "Lejo të Gjithë", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Lejo Vetëm", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
+    PUSHBUTTON "Shto", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 205, 30, 90, 150
+    CONTROL "Lejo të Gjithë", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "Lejo Vetëm", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
+    PUSHBUTTON "Shto", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Heq", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "OK", IDC_OK, 150, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shto Filter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
+    LTEXT "", IDC_PORT_DESC, 5, 15, 40, 12
+    PUSHBUTTON "OK", IDC_OK, 120, 15, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 120, 30, 50, 14, WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NET_CONNECT "Lidhje rrjeti"
+    IDS_NO_IPADDR_SET "Përshtatësi kërkon të paktën një adresë IP. Ju lutemi shkruani një."
+    IDS_NO_SUBMASK_SET "Ju keni futur në një adresë që mungon maskën e subnet-it të vet. Ju lutem shtoni një maskë subnet."
+    IDS_TCPFILTERDESC "TCP/IP filtrim ju lejon kontrollin e llojit të TCP/IP të rrjetit të trafikut që arrin kompjuteri juaj."
+    IDS_TCPFILTER "TCP/IP Filtrim"
+    IDS_IPADDR "Adresa IP"
+    IDS_SUBMASK "Subnet maskë"
+    IDS_GATEWAY "Gateway"
+    IDS_METRIC "Metrik"
+    IDS_DHCPACTIVE "Mundëso DHCP"
+    IDS_AUTOMATIC "Automatike"
+    IDS_NOITEMSEL "Ju nuk keni zgjedhur një objekt. Zgjidhni një të parë."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Stho"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "Porte TCP"
+    IDS_UDP_PORTS "Porte UDP"
+    IDS_IP_PROTO "Protokolle IP"
+    IDS_PORT_RANGE "Numri porteve duhet të jetë më i madh se 0 dhe më pak se 65536. Ju lutem shkruani një numër në këtë varg."
+    IDS_PROT_RANGE "Numrat protokolleve duhen të jenë më të mëdhenj se 0 dhe më pak se 256. Ju lutem shkruani një numër në këtë varg."
+    IDS_DUP_NUMBER "Numri që jeni duke u përpjekur për të shtuar është tashmë në listë. Ju lutem, jepni një numër të ndryshëm."
+    IDS_DISABLE_FILTER "Çaktivizimi i këtij cilësimi global TCP/IP'je do të ndikojë në të gjithë përshtatësit."
+    IDS_NO_SUFFIX "Përcaktimi i cilësimit të metodës kërkuese kërkon të paktën një prapashtesë DNS. Ju lutem shkruani një ose ndryshoni vendosjen."
+    IDS_DOMAIN_SUFFIX "Domain suffix is not a valid suffix."
+    IDS_DNS_SUFFIX "Emri i domainit DNS ""%s"" nuk është emer DNS i vlefshëm."
+    IDS_DUP_SUFFIX "Prapashtesë DNS[së është tashmë në listë."
+    IDS_DUP_IPADDR "Adresa IP është tashmë në listë."
+    IDS_DUP_GW "Gateway parazgjedhjes është tashmë në listë."
+END

@@ -1565,10 +1565,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (pwndMsg != MessageQueue->spwndActive)
         {
             PWND pwndTop = pwndMsg;
-            while (pwndTop && ((pwndTop->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
-            {
-                pwndTop = pwndTop->spwndParent;
-            }
+            pwndTop = IntGetNonChildAncestor(pwndTop);
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
@@ -1778,6 +1775,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
         CurrentEntry = CurrentMessage->ListEntry.Flink;
+        if (!CurrentEntry) break; //// Fix CORE-6734 reported crash.
 /*
  MSDN:
  1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.

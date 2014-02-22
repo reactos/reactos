@@ -1,3 +1,6 @@
+#ifndef _INTL_H
+#define _INTL_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -57,6 +60,7 @@ extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;
 
 /* intl.c */
+VOID PrintErrorMsgBox(UINT msg);
 
 /* languages.c */
 INT_PTR CALLBACK
@@ -113,4 +117,4 @@ SetupApplet(HWND hwndDlg, LCID lcid);
 /* kblayouts.c */
 VOID AddNewKbLayoutsByLcid(LCID Lcid);
 
-/* EOF */
+#endif /* _INTL_H */

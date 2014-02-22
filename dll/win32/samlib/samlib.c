@@ -45,6 +45,12 @@ WINAPI
 SystemFunction007(PUNICODE_STRING string,
                   LPBYTE hash);
 
+NTSTATUS
+WINAPI
+SystemFunction012(const BYTE *in,
+                  const BYTE *key,
+                  LPBYTE out);
+
 /* GLOBALS *******************************************************************/
 
 
@@ -254,6 +260,13 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
     BOOLEAN NewLmPasswordPresent = FALSE;
     NTSTATUS Status;
 
+    ENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm;
+    ENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm;
+    ENCRYPTED_LM_OWF_PASSWORD OldNtEncryptedWithNewNt;
+    ENCRYPTED_LM_OWF_PASSWORD NewNtEncryptedWithOldNt;
+    PENCRYPTED_LM_OWF_PASSWORD pOldLmEncryptedWithNewLm = NULL;
+    PENCRYPTED_LM_OWF_PASSWORD pNewLmEncryptedWithOldLm = NULL;
+
     /* Calculate the NT hash for the old password */
     Status = SystemFunction007(OldPassword,
                                (LPBYTE)&OldNtPassword);
@@ -312,15 +325,57 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         }
     }
 
+    if (OldLmPasswordPresent && NewLmPasswordPresent)
+    {
+        Status = SystemFunction012((const BYTE *)&OldLmPassword,
+                                   (const BYTE *)&NewLmPassword,
+                                   (LPBYTE)&OldLmEncryptedWithNewLm);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        Status = SystemFunction012((const BYTE *)&NewLmPassword,
+                                   (const BYTE *)&OldLmPassword,
+                                   (LPBYTE)&NewLmEncryptedWithOldLm);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        pOldLmEncryptedWithNewLm = &OldLmEncryptedWithNewLm;
+        pNewLmEncryptedWithOldLm = &NewLmEncryptedWithOldLm;
+    }
+
+    Status = SystemFunction012((const BYTE *)&OldNtPassword,
+                               (const BYTE *)&NewNtPassword,
+                               (LPBYTE)&OldNtEncryptedWithNewNt);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = SystemFunction012((const BYTE *)&NewNtPassword,
+                               (const BYTE *)&OldNtPassword,
+                               (LPBYTE)&NewNtEncryptedWithOldNt);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     RpcTryExcept
     {
         Status = SamrChangePasswordUser((SAMPR_HANDLE)UserHandle,
                                         OldLmPasswordPresent && NewLmPasswordPresent,
-                                        &OldLmPassword,
-                                        &NewLmPassword,
+                                        pOldLmEncryptedWithNewLm,
+                                        pNewLmEncryptedWithOldLm,
                                         TRUE,
-                                        &OldNtPassword,
-                                        &NewNtPassword,
+                                        &OldNtEncryptedWithNewNt,
+                                        &NewNtEncryptedWithOldNt,
                                         FALSE,
                                         NULL,
                                         FALSE,

@@ -59,7 +59,7 @@ DxDxgGenericThunk(ULONG_PTR ulIndex,
 * @name DxDdIoctl
 * @implemented
 *
-* The function DxDdIoctl is the ioctl call to diffent DirectX functions 
+* The function DxDdIoctl is the ioctl call to different DirectX functions 
 *
 * @param ULONG ulIoctl
 * The ioctl code that we want call to

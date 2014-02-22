@@ -30,8 +30,9 @@ list(APPEND SOURCE
     transport/tcp/event.c
     transport/tcp/if.c
     transport/tcp/tcp.c
-    transport/udp/udp.c)
+    transport/udp/udp.c
+    precomp.h)
 
 add_library(ip ${SOURCE} ${ip_asm})
-add_pch(ip precomp.h)
+add_pch(ip precomp.h SOURCE)
 add_dependencies(ip bugcodes)

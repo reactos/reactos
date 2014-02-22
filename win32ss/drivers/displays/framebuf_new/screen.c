@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  *                  ReactOS Portable Systems Group
  */
+
 #include "driver.h"
 
 #define SYSTM_LOGFONT {16,7,0,0,700,0,0,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,VARIABLE_PITCH | FF_DONTCARE,L"System"}

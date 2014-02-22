@@ -16,6 +16,7 @@ list(APPEND SOURCE
     dllmain.c
     stubs.c
     msvcrt.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
 add_library(msvcrt SHARED ${SOURCE})
@@ -30,5 +31,4 @@ if(MSVC)
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)
-add_pch(msvcrt precomp.h)
 add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)

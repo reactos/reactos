@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _WINE_JSCRIPT_H
+#define _WINE_JSCRIPT_H
+
 #include <wine/config.h>
 #include <wine/port.h>
 
@@ -555,3 +558,5 @@ static inline void unlock_module(void)
 
 #include "engine.h"
 #include "regexp.h"
+
+#endif /* _WINE_JSCRIPT_H */

@@ -23,6 +23,7 @@
  * PROGRAMMER:      Emanuele Aliberti <ea@reactos.com>
  *                  Samuel Serapi?n
  */
+
 #include "winsta.h"
 
 HINSTANCE hDllInstance;

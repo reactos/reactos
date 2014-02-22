@@ -70,8 +70,14 @@
 #ifdef LANGUAGE_RO_RO
     #include "lang/crypt32_Ro.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/crypt32_Sq.rc"
+#endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/crypt32_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/crypt32_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/crypt32_Uk.rc"

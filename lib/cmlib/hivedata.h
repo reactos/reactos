@@ -107,6 +107,8 @@ typedef enum
  * On-disk header for registry hive file.
  */
 
+#define HIVE_FILENAME_MAXLEN           31
+
 typedef struct _HBASE_BLOCK
 {
    /* Hive identifier "regf" (0x66676572) */
@@ -144,8 +146,9 @@ typedef struct _HBASE_BLOCK
    /* (1?) */
    ULONG Cluster;
 
-   /* Name of hive file */
-   CHAR FileName[64];
+   /* Last 31 UNICODE characters, plus terminating NULL character,
+      of the full name of the hive file */
+   WCHAR FileName[HIVE_FILENAME_MAXLEN + 1];
 
    ULONG Reserved1[99];
 

@@ -10,5 +10,3 @@
 #pragma once
 
 VOID IntDeleteAllAliases(PCONSOLE Console);
-
-/* EOF */

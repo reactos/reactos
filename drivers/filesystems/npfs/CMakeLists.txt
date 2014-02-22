@@ -19,11 +19,12 @@ list(APPEND SOURCE
     volinfo.c
     waitsup.c
     write.c
-    writesup.c)
+    writesup.c
+    npfs.h)
 
 add_library(npfs SHARED ${SOURCE})
 set_module_type(npfs kernelmodedriver)
 target_link_libraries(npfs ${PSEH_LIB})
 add_importlibs(npfs ntoskrnl hal)
-add_pch(npfs npfs.h)
+add_pch(npfs npfs.h SOURCE)
 add_cd_file(TARGET npfs DESTINATION reactos/system32/drivers FOR all)

@@ -7,6 +7,9 @@
  */
 
 #include <win32k.h>
+
+#include <winlogon.h>
+
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* registered Logon process */

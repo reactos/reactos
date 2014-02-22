@@ -13,12 +13,17 @@ list(APPEND SOURCE
     surface.c
     swapchain.c
     utils.c
+    dxgi_private.h)
+
+add_library(dxgi SHARED
+    ${SOURCE}
     guid.c
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dxgi.def)
 
-add_library(dxgi SHARED ${SOURCE} version.rc)
 set_module_type(dxgi win32dll)
 target_link_libraries(dxgi uuid dxgi_uuids wine)
 add_importlibs(dxgi wined3d msvcrt kernel32 ntdll)
 add_dependencies(dxgi wineheaders)
+add_pch(dxgi dxgi_private.h SOURCE)
 add_cd_file(TARGET dxgi DESTINATION reactos/system32 FOR all)

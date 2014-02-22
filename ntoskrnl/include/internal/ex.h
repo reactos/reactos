@@ -27,6 +27,11 @@ extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
 extern LIST_ENTRY ExSystemLookasideListHead;
 extern PCALLBACK_OBJECT PowerStateCallback;
+extern LIST_ENTRY ExPoolLookasideListHead;
+extern LIST_ENTRY ExpNonPagedLookasideListHead;
+extern LIST_ENTRY ExpPagedLookasideListHead;
+extern KSPIN_LOCK ExpNonPagedLookasideListLock;
+extern KSPIN_LOCK ExpPagedLookasideListLock;
 
 typedef struct _EXHANDLE
 {

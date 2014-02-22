@@ -65,7 +65,8 @@ list(APPEND SOURCE
     vectoreh.c
     version.c
     wait.c
-    workitem.c)
+    workitem.c
+    rtl.h)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -108,5 +109,5 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
-add_pch(rtl rtl.h)
+add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)

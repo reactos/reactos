@@ -22,6 +22,7 @@ Revision History:
 
 --*/
 
+#pragma once
 
 VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...);
 
@@ -144,5 +145,3 @@ VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...
     #define DBGGETSRBSTATUSSTR(_pSrb)
     
 #endif
-
-

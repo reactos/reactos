@@ -186,6 +186,20 @@ SamIFree_SAMPR_USER_INFO_BUFFER(PSAMPR_USER_INFO_BUFFER Ptr,
 
 NTSTATUS
 NTAPI
+SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
+                       IN unsigned char LmPresent,
+                       IN PENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm,
+                       IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm,
+                       IN unsigned char NtPresent,
+                       IN PENCRYPTED_NT_OWF_PASSWORD OldNtEncryptedWithNewNt,
+                       IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithOldNt,
+                       IN unsigned char NtCrossEncryptionPresent,
+                       IN PENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithNewLm,
+                       IN unsigned char LmCrossEncryptionPresent,
+                       IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithNewNt);
+
+NTSTATUS
+NTAPI
 SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle);
 
 NTSTATUS
@@ -316,5 +330,11 @@ NTSTATUS
 WINAPI
 SystemFunction007(PUNICODE_STRING string,
                   LPBYTE hash);
+
+NTSTATUS
+WINAPI
+SystemFunction012(const BYTE *in,
+                  const BYTE *key,
+                  LPBYTE out);
 
 /* EOF */

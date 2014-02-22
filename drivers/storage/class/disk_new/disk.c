@@ -26,9 +26,8 @@ Revision History:
 // Now instantiate the GUIDs
 //
 
-#include "initguid.h"
-#include "ntddstor.h"
-#include "ioevent.h"
+#include <initguid.h>
+#include <ioevent.h>
 
 NTSTATUS
 NTAPI

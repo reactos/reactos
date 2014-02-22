@@ -9,9 +9,10 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
-#include "sm/smmsg.h" // To go in precomp.h after
+#include <sm/smmsg.h> // To go in precomp.h after
+
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* FUNCTIONS ******************************************************************/
 

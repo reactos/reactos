@@ -30,5 +30,3 @@ NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
                                   CONSOLE_IO_OBJECT_TYPE Type);
 VOID FASTCALL ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
                                   BOOL IsConsoleLocked);
-
-/* EOF */

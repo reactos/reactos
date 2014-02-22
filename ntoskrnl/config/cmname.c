@@ -65,7 +65,7 @@ CmpCopyCompressedName(IN PWCHAR Destination,
     for (i = 0; i < Length; i++)
     {
         /* Copy each character */
-        Destination[i] = (WCHAR)((PCHAR)Source)[i];
+        Destination[i] = (WCHAR)((PUCHAR)Source)[i];
     }
 }
 
@@ -76,7 +76,7 @@ CmpNameSize(IN PHHIVE Hive,
 {
     ULONG i;
 
-    /* For old hives, just retun the length */
+    /* For old hives, just return the length */
     if (Hive->Version == 1) return Name->Length;
 
     /* For new versions, check for compressed name */
@@ -111,27 +111,27 @@ CmpCompareCompressedName(IN PCUNICODE_STRING SearchName,
                          IN ULONG NameLength)
 {
     WCHAR *p;
-    CHAR *pp;
-    WCHAR p1, p2;
+    UCHAR *pp;
+    WCHAR chr1, chr2;
     USHORT SearchLength;
     LONG Result;
 
     /* Set the pointers and length and then loop */
     p = SearchName->Buffer;
-    pp = (PCHAR)CompressedName;
+    pp = (PUCHAR)CompressedName;
     SearchLength = (SearchName->Length / sizeof(WCHAR));
     while ((SearchLength) && (NameLength))
     {
         /* Get the characters */
-        p1 = *p++;
-        p2 = (WCHAR)(*pp++);
+        chr1 = *p++;
+        chr2 = (WCHAR)(*pp++);
 
         /* Check if we have a direct match */
-        if (p1 != p2)
+        if (chr1 != chr2)
         {
             /* See if they match and return result if they don't */
-            Result = (LONG)RtlUpcaseUnicodeChar(p1) -
-                     (LONG)RtlUpcaseUnicodeChar(p2);
+            Result = (LONG)RtlUpcaseUnicodeChar(chr1) -
+                     (LONG)RtlUpcaseUnicodeChar(chr2);
             if (Result) return Result;
         }
 

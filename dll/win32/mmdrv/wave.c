@@ -17,7 +17,6 @@
 
 #define MAX_WAVE_BUFFER_SIZE    65536
 
-
 MMRESULT
 QueueWaveBuffer(
     SessionInfo* session_info,

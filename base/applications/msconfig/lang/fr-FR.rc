@@ -66,12 +66,12 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sélection du mode de démarrage ", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "Démarrage &normal - charge tous les pilotes et tous les services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 185, 10
+    CONTROL "Démarrage &normal - charge tous les pilotes et tous les services", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
     CONTROL "Démarrage en mode &diagnostic - charge les périphériques de base et les services seulement", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
-    CONTROL "Démarrage &sélectif", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 75, 10
-    AUTOCHECKBOX "T&raiter le fichier System.ini", IDC_CBX_SYSTEM_INI, 30, 80, 100, 10
-    AUTOCHECKBOX "&Charger les Services Système", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
-    AUTOCHECKBOX "Charger les éléments de démarrage", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+    CONTROL "Démarrage &sélectif", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    AUTOCHECKBOX "T&raiter le fichier System.ini", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "&Charger les Services Système", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Charger les éléments de démarrage", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175

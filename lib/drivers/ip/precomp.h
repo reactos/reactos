@@ -1,3 +1,6 @@
+#ifndef _IP_PCH_
+#define _IP_PCH_
+
 #include <tags.h>
 #include <tcpip.h>
 #include <loopback.h>
@@ -17,3 +20,5 @@
 #include <interface.h>
 #include <ports.h>
 #include <chew/chew.h>
+
+#endif /* _IP_PCH_ */

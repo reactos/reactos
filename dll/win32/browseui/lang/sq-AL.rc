@@ -1,0 +1,257 @@
+/*
+ * Copyright 2009 Andrew Hill
+ * Translator: Ardit Dani : 2013 
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Butona Standart", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Bari i Adreses", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Linqe", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Kyq Tool&barin", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Rregulloje...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Etiketa", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Go Button", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&File", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Mbyll", IDM_FILE_CLOSE
+    END
+    POPUP "&Edit", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&Modifiko", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Toolbari", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Statusi &Bar", IDM_VIEW_STATUSBAR
+        POPUP "&Explorer Bar", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "&Kerko\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Te'pre&feruara\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Histori\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "D&osje", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "Shko tek", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Mbrapa\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "&Para\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "Lart nje nivel", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Faqja e pare\tAlt+Home", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Rifresko", IDM_VIEW_REFRESH
+    END
+    POPUP "Te'pre&feruara", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "Shto te preferuar...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizo te preferuara...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Bosh)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "Vegla&t", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Mapo Driverin e rrejetit...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "Shkeput Driverin e rrjetit...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Sinkronizo...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Dosja &Opsione...", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&Ndihmë", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "A eshte kjo kopje e ReactOS e &ligjshme?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&Rreth ReactOS", IDM_HELP_ABOUT
+    END
+END
+
+/* Dialogs */
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Opsionet e Te&xtit:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Opsionet e Iko&nave:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    800 "Permban komanda per te manipuluar sendet e perzgjedhura."
+END
+
+STRINGTABLE
+BEGIN
+    864 "Permban komanda konfigurimi."
+END
+
+STRINGTABLE
+BEGIN
+    928 "Permban komanda per te manipuluar veshgimin."
+END
+
+STRINGTABLE
+BEGIN
+    992 "Permban komanda te veglave."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Permban komanda per ndihmen."
+END
+
+STRINGTABLE
+BEGIN
+    9025 "Mbyll dritaren."
+    9026 "Shkon lart nje nivel."
+END
+
+STRINGTABLE
+BEGIN
+    9121 "Lidhet me driverin e rrjetit."
+    9122 "Shkeputet nga driveri i rrjetit."
+END
+
+STRINGTABLE
+BEGIN
+    9250 "Shfaq informacionet e programit, numrin e versionit, dhe te drejtat."
+    9252 "Shfaq informacionet e debugging."
+END
+
+STRINGTABLE
+BEGIN
+    9281 "Shko tek faqja e meparshme."
+    9282 "Sko tek faqja pasardhese."
+    9283 "Lejon ndryshimet e konfigurimeve."
+    9285 "Shko tek faqja kryesore."
+END
+
+STRINGTABLE
+BEGIN
+    9362 "Hap dosjen e te preferuarave."
+    9363 "Shton faqen aktuale te lista e te preferuarave."
+END
+
+STRINGTABLE
+BEGIN
+    9505 "Shfaq ose fsheh toolbarin."
+    9506 "Shfaq ose fsheh barin e statusit."
+    9508 "Shfaq Butonat Standard te toolbarit."
+    9509 "Shfaq Adresen e barit."
+    9510 "Shfaq barin e shpejte te Linqeve."
+    9516 "Kyq masen dhe pozicionin e toolbarit."
+END
+
+STRINGTABLE
+BEGIN
+    9533 "Modifiko toolbarin."
+END
+
+STRINGTABLE
+BEGIN
+    9552 "Shfaq ose fsheh nje Explorer bar."
+    9553 "Shfaq barin e kerkimit."
+    9554 "Shfaq barin e te preferuarave."
+    9555 "Shfaq barin e historise."
+    9557 "Shfaq barin e dosjeve."
+    9559 "Shfaq barin e Media."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "Ikona te vogla"
+    IDS_LARGEICONS "Ikona te medha"
+    IDS_SHOWTEXTLABELS "Shfaq tekstin e etiketes"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "Ska tekst etikete"
+    IDS_SELECTIVETEXTONRIGHT "Perzgjedh tekstin ne te djathte"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|Shko||"
+    IDS_GOBUTTONTIPTEMPLATE "Shko tek ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "Kerko"
+    IDS_ADDRESSBANDLABEL "A&dresa"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "Dosje"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "&Histori\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "Lart"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Mrapa"
+    IDS_FORWARD "Perpara"
+END

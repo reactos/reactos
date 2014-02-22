@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _HLINK_PRIVATE_H
+#define _HLINK_PRIVATE_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -82,3 +85,5 @@ static inline LPWSTR hlink_co_strdupW(LPCWSTR str)
 
     return ret;
 }
+
+#endif /* _HLINK_PRIVATE_H */

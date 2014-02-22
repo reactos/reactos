@@ -1896,8 +1896,8 @@ MiBuildImportsForBootDrivers(VOID)
         }
         else
         {
-            /* No referencing needed */
-            LdrEntry->LoadCount = 0;
+            /* Add a reference for all other modules as well */
+            LdrEntry->LoadCount = 1;
         }
 
         /* Remember this came from the loader */

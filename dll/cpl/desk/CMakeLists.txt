@@ -1,9 +1,8 @@
 
 add_definitions(-D_WIN32)
-
 spec2def(desk.cpl desk.spec)
 
-add_library(desk SHARED
+list(APPEND SOURCE
     advmon.c
     appearance.c
     background.c
@@ -19,10 +18,14 @@ add_library(desk SHARED
     settings.c
     monslctl.c
     general.c
-    desk.rc
     draw.c
     theme.c
     muireg.c
+    desk.h)
+
+add_library(desk SHARED
+    ${SOURCE}
+    desk.rc
     ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 
 set_module_type(desk cpl UNICODE)
@@ -43,5 +46,5 @@ add_importlibs(desk
     kernel32
     ntdll)
 
-add_pch(desk desk.h)
+add_pch(desk desk.h SOURCE)
 add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

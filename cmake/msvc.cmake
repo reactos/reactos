@@ -54,7 +54,8 @@ add_compile_flags("/wd4290")
 # - TODO: C4133: incompatible types
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
-add_compile_flags("/we4013 /we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700")
+# - C4603: macro is not defined or definition is different after precompiled header use
+add_compile_flags("/we4013 /we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700 /we4603")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
@@ -83,13 +84,19 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 
+if(CMAKE_DISABLE_NINJA_DEPSLOG)
+    set(cl_includes_flag "")
+else()
+    set(cl_includes_flag "/showIncludes")
+endif()
+
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
     # for VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
     set(CMAKE_ASM_COMPILE_OBJECT
-        "cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+        "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
 endif()
 
@@ -112,8 +119,47 @@ set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
-macro(add_pch _target_name _FILE)
-endmacro()
+if(PCH)
+    macro(add_pch _target _pch _sources)
+        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
+
+        if(IS_CPP)
+            set(_pch_language CXX)
+            set(_cl_lang_flag "/TP")
+        else()
+            set(_pch_language C)
+            set(_cl_lang_flag "/TC")
+        endif()
+
+        if(MSVC_IDE)
+            set(_pch_path_name_flag "/Fp${_gch}")
+        endif()
+
+        # Build the precompiled header
+        # HEADER_FILE_ONLY FALSE: force compiling the header
+        set_source_files_properties(${_pch} PROPERTIES
+            HEADER_FILE_ONLY FALSE
+            LANGUAGE ${_pch_language}
+            COMPILE_FLAGS "${_cl_lang_flag} /Yc /Fp${_gch}"
+            OBJECT_OUTPUTS ${_gch})
+
+        # Prevent a race condition related to writing to the PDB files between the PCH and the excluded list of source files
+        get_target_property(_target_sources ${_target} SOURCES)
+        list(REMOVE_ITEM _target_sources ${_pch})
+        foreach(_target_src ${_target_sources})
+            set_property(SOURCE ${_target_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
+        endforeach()
+
+        # Use the precompiled header with the specified source files, skipping the pch itself
+        list(REMOVE_ITEM ${_sources} ${_pch})
+        foreach(_src ${${_sources}})
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " /FI${_gch} /Yu${_gch} ${_pch_path_name_flag}")
+        endforeach()
+    endmacro()
+else()
+    macro(add_pch _target _pch _sources)
+    endmacro()
+endif()
 
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")

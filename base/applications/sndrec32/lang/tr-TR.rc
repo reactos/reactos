@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -27,35 +27,35 @@ BEGIN
         MENUITEM "&Aç...", ID_FILE_OPEN
         MENUITEM "&Kaydet", ID_FILE_SAVE, GRAYED
         MENUITEM "Ay&rı Kaydet...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "&Çoğalt", ID_EDIT_COPY
+        MENUITEM "&Ekleyerek Yapıştır", ID_EDIT_PASTE, GRAYED
+        MENUITEM "&Karıştırarak Yapıştır", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "K&ütük Ekle...", ID_EDIT_INSERTFILE
+        MENUITEM "Kü&tükle Karıştır...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "&Şimdiki Konumun Öncesini Sil",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Ş&imdiki Konumun Sonrasını Sil",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "&Ses Husûsîyetleri", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "&Etkiler"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "&Sesi %25 Arttır", ID_EFFECTS_INCVOL
+        MENUITEM "S&esi Düşür", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "&Hızı %100 Arttır", ID_EFFECTS_INCSPD
+        MENUITEM "H&ızı Düşür", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "&Yankı Ekle", ID_EFFECTS_ECHO
+        MENUITEM "&Tersine Çevir", ID_EFFECTS_REVERSE
     END
     POPUP "&Yardım"
     BEGIN
@@ -74,7 +74,7 @@ BEGIN
     IDS_STRPOS "Konum: %.2f s"
     IDS_STRDUR "Uzunluk: %.2f s"
     IDS_STRBUF "Ara Bellek: %.2f KB"
-    IDS_STRFMT "%.1f kHz, %u ikillik"
+    IDS_STRFMT "%.1f kHz, %u bitlik"
     IDS_STRMONO "Tek Yollu"
     IDS_STRSTEREO "Çift Yollu"
     IDS_STRCHAN "%s"

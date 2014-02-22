@@ -13,8 +13,6 @@
 #define IP_ROUTE_TYPE_ADD 3
 #define IP_ROUTE_TYPE_DEL 2
 
-
-
 /* Get IPRouteEntry s for each of the routes in the system */
 TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     TDI_STATUS Status;
@@ -214,4 +212,3 @@ TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
 
      return TDI_INVALID_REQUEST;
 }
-

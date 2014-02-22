@@ -11,10 +11,19 @@
 /* INCLUDES **************************************************************/
 
 #include <ntoskrnl.h>
+#include <ntintsafe.h>
 #define NDEBUG
 #include <debug.h>
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+static LIST_ENTRY PspQuotaBlockList = {&PspQuotaBlockList, &PspQuotaBlockList};
+static KSPIN_LOCK PspQuotaLock;
+
+#define TAG_QUOTA_BLOCK 'bQsP'
+#define VALID_QUOTA_FLAGS (QUOTA_LIMITS_HARDWS_MIN_ENABLE | \
+                           QUOTA_LIMITS_HARDWS_MIN_DISABLE | \
+                           QUOTA_LIMITS_HARDWS_MAX_ENABLE | \
+                           QUOTA_LIMITS_HARDWS_MAX_DISABLE)
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
@@ -118,13 +127,29 @@ PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess)
 
 VOID
 NTAPI
+PspInsertQuotaBlock(
+    PEPROCESS_QUOTA_BLOCK QuotaBlock)
+{
+    KIRQL OldIrql;
+
+    OldIrql = KfAcquireSpinLock(&PspQuotaLock);
+    InsertTailList(&PspQuotaBlockList, &QuotaBlock->QuotaList);
+    KfReleaseSpinLock(&PspQuotaLock, OldIrql);
+}
+
+VOID
+NTAPI
 PspDestroyQuotaBlock(PEPROCESS Process)
 {
     PEPROCESS_QUOTA_BLOCK QuotaBlock = Process->QuotaBlock;
+    KIRQL OldIrql;
 
     if (QuotaBlock != &PspDefaultQuotaBlock &&
         InterlockedDecrementUL(&QuotaBlock->ReferenceCount) == 0)
     {
+        OldIrql = KfAcquireSpinLock(&PspQuotaLock);
+        RemoveEntryList(&QuotaBlock->QuotaList);
+        KfReleaseSpinLock(&PspQuotaLock, OldIrql);
         ExFreePool(QuotaBlock);
     }
 }
@@ -263,5 +288,182 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
     PspReturnProcessQuotaSpecifiedPool(Process, 2, Amount);
     return STATUS_SUCCESS;
 }
+
+NTSTATUS
+NTAPI
+PspSetQuotaLimits(
+    _In_ HANDLE ProcessHandle,
+    _In_ ULONG Unused,
+    _In_ PVOID QuotaLimits,
+    _In_ ULONG QuotaLimitsLength,
+    _In_ KPROCESSOR_MODE PreviousMode)
+{
+    QUOTA_LIMITS_EX CapturedQuotaLimits;
+    PEPROCESS Process;
+    PEPROCESS_QUOTA_BLOCK QuotaBlock, OldQuotaBlock;
+    BOOLEAN IncreaseOkay;
+    KAPC_STATE SavedApcState;
+    NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(Unused);
+
+    _SEH2_TRY
+    {
+        ProbeForRead(QuotaLimits, QuotaLimitsLength, sizeof(ULONG));
+
+        /* Check if we have the basic or extended structure */
+        if (QuotaLimitsLength == sizeof(QUOTA_LIMITS))
+        {
+            /* Copy the basic structure, zero init the remaining fields */
+            RtlCopyMemory(&CapturedQuotaLimits, QuotaLimits, sizeof(QUOTA_LIMITS));
+            CapturedQuotaLimits.WorkingSetLimit = 0;
+            CapturedQuotaLimits.Reserved2 = 0;
+            CapturedQuotaLimits.Reserved3 = 0;
+            CapturedQuotaLimits.Reserved4 = 0;
+            CapturedQuotaLimits.CpuRateLimit.RateData = 0;
+            CapturedQuotaLimits.Flags = 0;
+        }
+        else if (QuotaLimitsLength == sizeof(QUOTA_LIMITS_EX))
+        {
+            /* Copy the full structure */
+            RtlCopyMemory(&CapturedQuotaLimits, QuotaLimits, sizeof(QUOTA_LIMITS_EX));
+
+            /* Verify that the caller passed valid flags */
+            if ((CapturedQuotaLimits.Flags & ~VALID_QUOTA_FLAGS) ||
+                ((CapturedQuotaLimits.Flags & QUOTA_LIMITS_HARDWS_MIN_ENABLE) &&
+                 (CapturedQuotaLimits.Flags & QUOTA_LIMITS_HARDWS_MIN_DISABLE)) ||
+                ((CapturedQuotaLimits.Flags & QUOTA_LIMITS_HARDWS_MAX_ENABLE) &&
+                 (CapturedQuotaLimits.Flags & QUOTA_LIMITS_HARDWS_MAX_DISABLE)))
+            {
+                DPRINT1("Invalid quota flags: 0x%lx\n", CapturedQuotaLimits.Flags);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Verify that the caller didn't pass reserved values */
+            if ((CapturedQuotaLimits.WorkingSetLimit != 0) ||
+                (CapturedQuotaLimits.Reserved2 != 0) ||
+                (CapturedQuotaLimits.Reserved3 != 0) ||
+                (CapturedQuotaLimits.Reserved4 != 0) ||
+                (CapturedQuotaLimits.CpuRateLimit.RateData != 0))
+            {
+                DPRINT1("Invalid value: (%lx,%lx,%lx,%lx,%lx)\n",
+                        CapturedQuotaLimits.WorkingSetLimit,
+                        CapturedQuotaLimits.Reserved2,
+                        CapturedQuotaLimits.Reserved3,
+                        CapturedQuotaLimits.Reserved4,
+                        CapturedQuotaLimits.CpuRateLimit.RateData);
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            DPRINT1("Invalid quota size: 0x%lx\n", QuotaLimitsLength);
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception while copying data\n");
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Reference the process */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_SET_QUOTA,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference process handle: 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Check the caller changes the working set size limits */
+    if ((CapturedQuotaLimits.MinimumWorkingSetSize != 0) &&
+        (CapturedQuotaLimits.MaximumWorkingSetSize != 0))
+    {
+        /* Check for special case: trimming the WS */
+        if ((CapturedQuotaLimits.MinimumWorkingSetSize == SIZE_T_MAX) &&
+            (CapturedQuotaLimits.MaximumWorkingSetSize == SIZE_T_MAX))
+        {
+            /* No increase allowed */
+            IncreaseOkay = FALSE;
+        }
+        else
+        {
+            /* Check if the caller has the required privilege */
+            IncreaseOkay = SeSinglePrivilegeCheck(SeIncreaseQuotaPrivilege,
+                                                  PreviousMode);
+        }
+
+        /* Attach to the target process and disable APCs */
+        KeStackAttachProcess(&Process->Pcb, &SavedApcState);
+        KeEnterGuardedRegion();
+
+        /* Call Mm to adjust the process' working set size */
+        Status = MmAdjustWorkingSetSize(CapturedQuotaLimits.MinimumWorkingSetSize,
+                                        CapturedQuotaLimits.MaximumWorkingSetSize,
+                                        0,
+                                        IncreaseOkay);
+
+        /* Bring back APCs and detach from the process */
+        KeLeaveGuardedRegion();
+        KeUnstackDetachProcess(&SavedApcState);
+    }
+    else if (Process->QuotaBlock == &PspDefaultQuotaBlock)
+    {
+        /* Check if the caller has the required privilege */
+        if (!SeSinglePrivilegeCheck(SeIncreaseQuotaPrivilege, PreviousMode))
+        {
+            ObDereferenceObject(Process);
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+
+        /* Allocate a new quota block */
+        QuotaBlock = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(EPROCESS_QUOTA_BLOCK),
+                                           TAG_QUOTA_BLOCK);
+        if (QuotaBlock == NULL)
+        {
+            ObDereferenceObject(Process);
+            return STATUS_NO_MEMORY;
+        }
+
+        /* Initialize the quota block */
+        QuotaBlock->ReferenceCount = 1;
+        QuotaBlock->ProcessCount = 1;
+        QuotaBlock->QuotaEntry[0].Peak = Process->QuotaPeak[0];
+        QuotaBlock->QuotaEntry[1].Peak = Process->QuotaPeak[1];
+        QuotaBlock->QuotaEntry[2].Peak = Process->QuotaPeak[2];
+        QuotaBlock->QuotaEntry[0].Limit = PspDefaultQuotaBlock.QuotaEntry[0].Limit;
+        QuotaBlock->QuotaEntry[1].Limit = PspDefaultQuotaBlock.QuotaEntry[1].Limit;
+        QuotaBlock->QuotaEntry[2].Limit = PspDefaultQuotaBlock.QuotaEntry[2].Limit;
+
+        /* Try to exchange the quota block, if that failed, just drop it */
+        OldQuotaBlock = InterlockedCompareExchangePointer(&Process->QuotaBlock,
+                                                          QuotaBlock,
+                                                          &PspDefaultQuotaBlock);
+        if (OldQuotaBlock == &PspDefaultQuotaBlock)
+        {
+            /* Success, insert the new quota block */
+            PspInsertQuotaBlock(QuotaBlock);
+        }
+        else
+        {
+            /* Failed, free the quota block and ignore it */
+            ExFreePoolWithTag(QuotaBlock, TAG_QUOTA_BLOCK);
+        }
+
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Dereference the process and return the status */
+    ObDereferenceObject(Process);
+    return Status;
+}
+
 
 /* EOF */

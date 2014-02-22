@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 extern HINSTANCE hwldap32 DECLSPEC_HIDDEN;
 
 ULONG map_error( int ) DECLSPEC_HIDDEN;

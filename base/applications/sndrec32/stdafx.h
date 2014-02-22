@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _SNDREC32_PCH_
+#define _SNDREC32_PCH_
 
 //#include "targetver.h"
 
@@ -16,3 +17,5 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+
+#endif /* _SNDREC32_PCH_ */

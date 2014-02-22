@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef _EXPLORER_H
+#define _EXPLORER_H
 
  //
  // Explorer clone - precompiled header support
@@ -51,3 +53,5 @@
 #include "externals.h"
 
 #include "resource.h"
+
+#endif /* _EXPLORER_H */

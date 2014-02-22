@@ -34,9 +34,9 @@
 #include <winternl.h>
 #include <advpub.h>
 
+#include <wine/debug.h>
 #include <wine/unicode.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
 
 HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg, const WCHAR *flags, const WCHAR *param) DECLSPEC_HIDDEN;

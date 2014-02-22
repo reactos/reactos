@@ -5,12 +5,16 @@
  * PURPOSE:     NE2000 driver definitions
  */
 
+#ifndef _NE2000_PCH_
+#define _NE2000_PCH_
+
 #define NDIS_MINIPORT_DRIVER 1
 #define NDIS_LEGACY_MINIPORT 1
 #define NDIS51_MINIPORT 1
 #include <ndis.h>
 #include <8390.h>
-#include <debug.h>
+
+#include "debug.h"
 
 /* Define NOCARD to test NDIS without a card */
 //#define NOCARD
@@ -244,4 +248,4 @@ VOID NICWriteData(
 VOID NICTransmit(
     PNIC_ADAPTER Adapter);
 
-/* EOF */
+#endif /* _NE2000_PCH_ */

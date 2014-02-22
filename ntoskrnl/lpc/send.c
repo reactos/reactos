@@ -207,34 +207,34 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
     {
         /* No type */
         case 0:
-            
+
             /* Assume LPC request */
             MessageType = LPC_REQUEST;
             break;
-        
+
         /* LPC request callback */
         case LPC_REQUEST:
-            
+
             /* This is a callback */
             Callback = TRUE;
             break;
-        
+
         /* Anything else */
         case LPC_CLIENT_DIED:
         case LPC_PORT_CLOSED:
         case LPC_EXCEPTION:
         case LPC_DEBUG_EVENT:
         case LPC_ERROR_EVENT:
-            
+
             /* Nothing to do */
             break;
-            
+
         default:
-            
+
             /* Invalid message type */
             return STATUS_INVALID_PARAMETER;
     }
-    
+
     /* Set the request type */
     LpcRequest->u2.s2.Type = MessageType;
 
@@ -401,10 +401,10 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
                             (&Message->Request) + 1,
                             0,
                             NULL);
-            
+
             /* Acquire the lock */
             KeAcquireGuardedMutex(&LpcpLock);
-            
+
             /* Check if we replied to a thread */
             if (Message->RepliedToThread)
             {
@@ -633,6 +633,47 @@ NtRequestPort(IN HANDLE PortHandle,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+LpcpVerifyMessageDataInfo(
+    _In_ PPORT_MESSAGE Message,
+    _Out_ PULONG NumberOfDataEntries)
+{
+    PLPCP_DATA_INFO DataInfo;
+    PUCHAR EndOfEntries;
+
+    /* Check if we have no data info at all */
+    if (Message->u2.s2.DataInfoOffset == 0)
+    {
+        *NumberOfDataEntries = 0;
+        return STATUS_SUCCESS;
+    }
+
+    /* Make sure the data info structure is within the message */
+    if (((ULONG)Message->u1.s1.TotalLength <
+            sizeof(PORT_MESSAGE) + sizeof(LPCP_DATA_INFO)) ||
+        ((ULONG)Message->u2.s2.DataInfoOffset < sizeof(PORT_MESSAGE)) ||
+        ((ULONG)Message->u2.s2.DataInfoOffset >
+            ((ULONG)Message->u1.s1.TotalLength - sizeof(LPCP_DATA_INFO))))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get a pointer to the data info */
+    DataInfo = LpcpGetDataInfoFromMessage(Message);
+
+    /* Make sure the full data info with all entries is within the message */
+    EndOfEntries = (PUCHAR)&DataInfo->Entries[DataInfo->NumberOfEntries];
+    if ((EndOfEntries > ((PUCHAR)Message + (ULONG)Message->u1.s1.TotalLength)) ||
+        (EndOfEntries < (PUCHAR)Message))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *NumberOfDataEntries = DataInfo->NumberOfEntries;
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
@@ -642,6 +683,8 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                        IN PPORT_MESSAGE LpcRequest,
                        IN OUT PPORT_MESSAGE LpcReply)
 {
+    PORT_MESSAGE LocalLpcRequest;
+    ULONG NumberOfDataEntries;
     PLPCP_PORT_OBJECT Port, QueuePort, ReplyPort, ConnectionPort = NULL;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
@@ -650,6 +693,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     BOOLEAN Callback;
     PKSEMAPHORE Semaphore;
     ULONG MessageType;
+    PLPCP_DATA_INFO DataInfo;
     PAGED_CODE();
     LPCTRACE(LPC_SEND_DEBUG,
              "Handle: %p. Messages: %p/%p. Type: %lx\n",
@@ -661,32 +705,78 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     /* Check if the thread is dying */
     if (Thread->LpcExitThreadCalled) return STATUS_THREAD_IS_TERMINATING;
 
+    /* Check for user mode access */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the full request message and copy the base structure */
+            ProbeForRead(LpcRequest, sizeof(*LpcRequest), sizeof(ULONG));
+            ProbeForRead(LpcRequest, LpcRequest->u1.s1.TotalLength, sizeof(ULONG));
+            LocalLpcRequest = *LpcRequest;
+
+            /* Probe the reply message for write */
+            ProbeForWrite(LpcReply, sizeof(*LpcReply), sizeof(ULONG));
+
+            /* Make sure the data entries in the request message are valid */
+            Status = LpcpVerifyMessageDataInfo(LpcRequest, &NumberOfDataEntries);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("LpcpVerifyMessageDataInfo failed\n");
+                return Status;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DPRINT1("Got exception\n");
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        LocalLpcRequest = *LpcRequest;
+        Status = LpcpVerifyMessageDataInfo(LpcRequest, &NumberOfDataEntries);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("LpcpVerifyMessageDataInfo failed\n");
+            return Status;
+        }
+    }
+
     /* Check if this is an LPC Request */
-    if (LpcpGetMessageType(LpcRequest) == LPC_REQUEST)
+    if (LpcpGetMessageType(&LocalLpcRequest) == LPC_REQUEST)
     {
         /* Then it's a callback */
         Callback = TRUE;
     }
-    else if (LpcpGetMessageType(LpcRequest))
+    else if (LpcpGetMessageType(&LocalLpcRequest))
     {
         /* This is a not kernel-mode message */
+        DPRINT1("Not a kernel-mode message!\n");
         return STATUS_INVALID_PARAMETER;
     }
     else
     {
         /* This is a kernel-mode message without a callback */
-        LpcRequest->u2.s2.Type |= LPC_REQUEST;
+        LocalLpcRequest.u2.s2.Type |= LPC_REQUEST;
         Callback = FALSE;
     }
 
     /* Get the message type */
-    MessageType = LpcRequest->u2.s2.Type;
+    MessageType = LocalLpcRequest.u2.s2.Type;
+
+    /* Due to the above probe, we know that TotalLength is positive */
+    NT_ASSERT(LocalLpcRequest.u1.s1.TotalLength >= 0);
 
     /* Validate the length */
-    if (((ULONG)LpcRequest->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
-         (ULONG)LpcRequest->u1.s1.TotalLength)
+    if ((((ULONG)(USHORT)LocalLpcRequest.u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
+         (ULONG)LocalLpcRequest.u1.s1.TotalLength))
     {
         /* Fail */
+        DPRINT1("Invalid message length: %u, %u\n",
+                LocalLpcRequest.u1.s1.DataLength,
+                LocalLpcRequest.u1.s1.TotalLength);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -700,10 +790,13 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate the message length */
-    if (((ULONG)LpcRequest->u1.s1.TotalLength > Port->MaxMessageLength) ||
-        ((ULONG)LpcRequest->u1.s1.TotalLength <= (ULONG)LpcRequest->u1.s1.DataLength))
+    if (((ULONG)LocalLpcRequest.u1.s1.TotalLength > Port->MaxMessageLength) ||
+        ((ULONG)LocalLpcRequest.u1.s1.TotalLength <= (ULONG)LocalLpcRequest.u1.s1.DataLength))
     {
         /* Fail */
+        DPRINT1("Invalid message length: %u, %u\n",
+                LocalLpcRequest.u1.s1.DataLength,
+                LocalLpcRequest.u1.s1.TotalLength);
         ObDereferenceObject(Port);
         return STATUS_PORT_MESSAGE_TOO_LONG;
     }
@@ -713,6 +806,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     if (!Message)
     {
         /* Fail if we couldn't allocate a message */
+        DPRINT1("Failed to allocate a message!\n");
         ObDereferenceObject(Port);
         return STATUS_NO_MEMORY;
     }
@@ -729,6 +823,22 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         /* No callback, just copy the message */
         _SEH2_TRY
         {
+            /* Check if we have data info entries */
+            if (LpcRequest->u2.s2.DataInfoOffset != 0)
+            {
+                /* Get the data info and check if the number of entries matches
+                   what we expect */
+                DataInfo = LpcpGetDataInfoFromMessage(LpcRequest);
+                if (DataInfo->NumberOfEntries != NumberOfDataEntries)
+                {
+                    LpcpFreeToPortZone(Message, 0);
+                    ObDereferenceObject(Port);
+                    DPRINT1("NumberOfEntries has changed: %u, %u\n",
+                            DataInfo->NumberOfEntries, NumberOfDataEntries);
+                    return STATUS_INVALID_PARAMETER;
+                }
+            }
+
             /* Copy it */
             LpcpMoveMessage(&Message->Request,
                             LpcRequest,
@@ -739,6 +849,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Fail */
+            DPRINT1("Got exception!\n");
             LpcpFreeToPortZone(Message, 0);
             ObDereferenceObject(Port);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -759,6 +870,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             if (!QueuePort)
             {
                 /* We have no connected port, fail */
+                DPRINT1("No connected port\n");
                 LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                 ObDereferenceObject(Port);
                 return STATUS_PORT_DISCONNECTED;
@@ -767,28 +879,21 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             /* This will be the rundown port */
             ReplyPort = QueuePort;
 
-            /* Check if this is a communication port */
+            /* Check if this is a client port */
             if ((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CLIENT_PORT)
             {
-                /* Copy the port context and use the connection port */
+                /* Copy the port context */
                 Message->PortContext = QueuePort->PortContext;
-                ConnectionPort = QueuePort = Port->ConnectionPort;
-                if (!ConnectionPort)
-                {
-                    /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
-                    ObDereferenceObject(Port);
-                    return STATUS_PORT_DISCONNECTED;
-                }
             }
-            else if ((Port->Flags & LPCP_PORT_TYPE_MASK) !=
-                      LPCP_COMMUNICATION_PORT)
+
+            if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_COMMUNICATION_PORT)
             {
                 /* Use the connection port for anything but communication ports */
                 ConnectionPort = QueuePort = Port->ConnectionPort;
                 if (!ConnectionPort)
                 {
                     /* Fail */
+                    DPRINT1("No connection port\n");
                     LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     ObDereferenceObject(Port);
                     return STATUS_PORT_DISCONNECTED;
@@ -883,6 +988,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
+                DPRINT1("Got exception!\n");
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;

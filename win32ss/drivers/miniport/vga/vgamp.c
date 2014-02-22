@@ -7,6 +7,9 @@
 
 #include "vgamp.h"
 
+#include <dderror.h>
+#include <devioctl.h>
+
 //  -------------------------------------------------------  Public Interface
 
 //    DriverEntry

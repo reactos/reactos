@@ -25,6 +25,11 @@ set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+set(CMAKE_SKIP_INSTALL_RULES ON)
+
+if(NOT CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS")
+    set(CMAKE_DISABLE_NINJA_DEPSLOG TRUE)
+endif()
 
 if(NOT ARCH)
     set(ARCH i386)
@@ -127,6 +132,12 @@ else()
 
     if(_WINKD_)
         add_definitions(-D_WINKD_=1)
+    endif()
+
+    if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS"))
+        set(PCH 1)
+    else()
+        set(PCH 0)
     endif()
 
     # Version Options

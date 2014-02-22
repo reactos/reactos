@@ -277,11 +277,8 @@ IntWinListChildren(PWND Window)
 PWND FASTCALL
 IntGetNonChildAncestor(PWND pWnd)
 {
-   if (pWnd)
-   {
-      while(pWnd && ((pWnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
-         pWnd = pWnd->spwndParent;
-   }
+   while(pWnd && (pWnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      pWnd = pWnd->spwndParent;
    return pWnd;
 }
 

@@ -6,13 +6,14 @@
  * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
+#ifndef _NPFS_PCH_
+#define _NPFS_PCH_
+
 /* INCLUDES *******************************************************************/
 
-//
-// System Headers
-//
+/* System Headers */
 #include <ntifs.h>
-#include <ntndk.h>
+#include <ndk/obfuncs.h>
 #include <pseh/pseh2.h>
 //#define UNIMPLEMENTED
 //#define DPRINT1 DbgPrint
@@ -21,9 +22,7 @@
 #include <debug.h>
 #define TRACE(...) /* DPRINT1("%s: ", __FUNCTION__); DbgPrint(__VA_ARGS__) */
 
-//
-// Allow Microsoft Extensions
-//
+/* Allow Microsoft Extensions */
 #ifdef _MSC_VER
 #pragma warning(disable:4201)
 #pragma warning(disable:4214)
@@ -32,7 +31,6 @@
 
 #define MIN_INDEXED_LENGTH 5
 #define MAX_INDEXED_LENGTH 9
-
 
 /* TYPEDEFS & DEFINES *********************************************************/
 
@@ -110,9 +108,7 @@
                  (NPFS_BUGCHECK_FILE_ID << 16) | __LINE__,  \
                  (p1), (p2), (p3))
 
-//
-// Node Type Codes for NPFS
-//
+/* Node Type Codes for NPFS */
 #define NPFS_NTC_VCB            1
 #define NPFS_NTC_ROOT_DCB       2
 #define NPFS_NTC_FCB            4
@@ -121,9 +117,7 @@
 #define NPFS_NTC_ROOT_DCB_CCB   8
 typedef USHORT NODE_TYPE_CODE, *PNODE_TYPE_CODE;
 
-//
-// Data Queue States
-//
+/* Data Queue States */
 typedef enum _NP_DATA_QUEUE_STATE
 {
     ReadEntries = 0,
@@ -131,18 +125,14 @@ typedef enum _NP_DATA_QUEUE_STATE
     Empty = 2
 } NP_DATA_QUEUE_STATE;
 
-//
-// Data Queue Entry Types
-//
+/* Data Queue Entry Types */
 typedef enum _NP_DATA_QUEUE_ENTRY_TYPE
 {
     Buffered = 0,
     Unbuffered
 } NP_DATA_QUEUE_ENTRY_TYPE;
 
-//
-// An Input or Output Data Queue. Each CCB has two of these.
-//
+/* An Input or Output Data Queue. Each CCB has two of these. */
 typedef struct _NP_DATA_QUEUE
 {
     LIST_ENTRY Queue;
@@ -154,9 +144,7 @@ typedef struct _NP_DATA_QUEUE
     ULONG Quota;
 } NP_DATA_QUEUE, *PNP_DATA_QUEUE;
 
-//
-// The Entries that go into the Queue
-//
+/* The Entries that go into the Queue */
 typedef struct _NP_DATA_QUEUE_ENTRY
 {
     LIST_ENTRY QueueEntry;
@@ -167,18 +155,14 @@ typedef struct _NP_DATA_QUEUE_ENTRY
     ULONG DataSize;
 } NP_DATA_QUEUE_ENTRY, *PNP_DATA_QUEUE_ENTRY;
 
-//
-// A Wait Queue. Only the VCB has one of these.
-//
+/* A Wait Queue. Only the VCB has one of these. */
 typedef struct _NP_WAIT_QUEUE
 {
     LIST_ENTRY WaitList;
     KSPIN_LOCK WaitLock;
 } NP_WAIT_QUEUE, *PNP_WAIT_QUEUE;
 
-//
-// The Entries in the Queue above, one for each Waiter.
-//
+/* The Entries in the Queue above, one for each Waiter. */
 typedef struct _NP_WAIT_QUEUE_ENTRY
 {
     PIRP Irp;
@@ -189,17 +173,13 @@ typedef struct _NP_WAIT_QUEUE_ENTRY
     PFILE_OBJECT FileObject;
 } NP_WAIT_QUEUE_ENTRY, *PNP_WAIT_QUEUE_ENTRY;
 
-//
-// The event buffer in the NonPaged CCB
-//
+/* The event buffer in the NonPaged CCB */
 typedef struct _NP_EVENT_BUFFER
 {
     PKEVENT Event;
 } NP_EVENT_BUFFER, *PNP_EVENT_BUFFER;
 
-//
-// The CCB for the Root DCB
-//
+/* The CCB for the Root DCB */
 typedef struct _NP_ROOT_DCB_CCB
 {
     NODE_TYPE_CODE NodeType;
@@ -207,9 +187,7 @@ typedef struct _NP_ROOT_DCB_CCB
     ULONG Unknown2;
 } NP_ROOT_DCB_CCB, *PNP_ROOT_DCB_FCB;
 
-//
-// The header that both FCB and DCB share
-//
+/* The header that both FCB and DCB share */
 typedef struct _NP_CB_HEADER
 {
     NODE_TYPE_CODE NodeType;
@@ -220,9 +198,7 @@ typedef struct _NP_CB_HEADER
     PSECURITY_DESCRIPTOR SecurityDescriptor;
 } NP_CB_HEADER, *PNP_CB_HEADER;
 
-//
-// The footer that both FCB and DCB share
-//
+/* The footer that both FCB and DCB share */
 typedef struct _NP_CB_FOOTER
 {
     UNICODE_STRING FullName;
@@ -230,19 +206,13 @@ typedef struct _NP_CB_FOOTER
     UNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry;
 } NP_CB_FOOTER;
 
-//
-// A Directory Control Block (DCB)
-//
+/* A Directory Control Block (DCB) */
 typedef struct _NP_DCB
 {
-    //
-    // Common Header
-    //
+    /* Common Header */
     NP_CB_HEADER;
 
-    //
-    // DCB-specific data
-    //
+    /* DCB-specific data */
     LIST_ENTRY NotifyList;
     LIST_ENTRY NotifyList2;
     LIST_ENTRY FcbList;
@@ -250,25 +220,17 @@ typedef struct _NP_DCB
     ULONG Pad;
 #endif
 
-    //
-    // Common Footer
-    //
+    /* Common Footer */
     NP_CB_FOOTER;
 } NP_DCB, *PNP_DCB;
 
-//
-// A File Control BLock (FCB)
-//
+/* A File Control BLock (FCB) */
 typedef struct _NP_FCB
 {
-    //
-    // Common Header
-    //
+    /* Common Header */
     NP_CB_HEADER;
 
-    //
-    // FCB-specific fields
-    //
+    /* FCB-specific fields */
     ULONG MaximumInstances;
     USHORT NamedPipeConfiguration;
     USHORT NamedPipeType;
@@ -278,17 +240,13 @@ typedef struct _NP_FCB
     PVOID Pad[2];
 #endif
 
-    //
-    // Common Footer
-    //
+    /* Common Footer */
     NP_CB_FOOTER;
 } NP_FCB, *PNP_FCB;
 
 C_ASSERT(FIELD_OFFSET(NP_FCB, PrefixTableEntry) == FIELD_OFFSET(NP_DCB, PrefixTableEntry));
 
-//
-// The nonpaged portion of the CCB
-//
+/* The nonpaged portion of the CCB */
 typedef struct _NP_NONPAGED_CCB
 {
     NODE_TYPE_CODE NodeType;
@@ -296,9 +254,7 @@ typedef struct _NP_NONPAGED_CCB
     ERESOURCE Lock;
 } NP_NONPAGED_CCB, *PNP_NONPAGED_CCB;
 
-//
-// A Client Control Block (CCB)
-//
+/* A Client Control Block (CCB) */
 typedef struct _NP_CCB
 {
     NODE_TYPE_CODE NodeType;
@@ -317,9 +273,7 @@ typedef struct _NP_CCB
     LIST_ENTRY IrpList;
 } NP_CCB, *PNP_CCB;
 
-//
-// A Volume Control Block (VCB)
-//
+/* A Volume Control Block (VCB) */
 typedef struct _NP_VCB
 {
     NODE_TYPE_CODE NodeType;
@@ -333,9 +287,7 @@ typedef struct _NP_VCB
 
 extern PNP_VCB NpVcb;
 
-//
-// Defines an alias
-//
+/* Defines an alias */
 typedef struct _NPFS_ALIAS
 {
     struct _NPFS_ALIAS *Next;
@@ -343,9 +295,7 @@ typedef struct _NPFS_ALIAS
     UNICODE_STRING Name;
 } NPFS_ALIAS, *PNPFS_ALIAS;
 
-//
-// Private structure used to enumerate the alias values
-//
+/* Private structure used to enumerate the alias values */
 typedef struct _NPFS_QUERY_VALUE_CONTEXT
 {
     BOOLEAN SizeOnly;
@@ -360,9 +310,7 @@ typedef struct _NPFS_QUERY_VALUE_CONTEXT
 extern PNPFS_ALIAS NpAliasList;
 extern PNPFS_ALIAS NpAliasListByLength[MAX_INDEXED_LENGTH + 1 - MIN_INDEXED_LENGTH];
 
-//
-// This structure is actually a user-mode structure and should go into a share header
-//
+/* This structure is actually a user-mode structure and should go into a share header */
 typedef struct _NP_CLIENT_PROCESS
 {
     PVOID Unknown;
@@ -371,12 +319,10 @@ typedef struct _NP_CLIENT_PROCESS
     WCHAR Buffer[17];
 } NP_CLIENT_PROCESS, *PNP_CLIENT_PROCESS;
 
-
 /* FUNCTIONS ******************************************************************/
 
-//
-// Functions to lock/unlock the global VCB lock
-//
+/* Functions to lock/unlock the global VCB lock */
+
 FORCEINLINE
 VOID
 NpAcquireSharedVcb(VOID)
@@ -400,8 +346,6 @@ NpReleaseVcb(VOID)
     /* Release the lock */
     ExReleaseResourceLite(&NpVcb->Lock);
 }
-
-
 
 //
 // Function to process deferred IRPs outside the VCB lock but still within the
@@ -444,7 +388,6 @@ NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
 VOID
 NTAPI
 NpInitializeWaitQueue(IN PNP_WAIT_QUEUE WaitQueue);
-
 
 NTSTATUS
 NTAPI
@@ -541,7 +484,6 @@ NTAPI
 NpFsdClose(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp);
 
-
 NTSTATUS
 NTAPI
 NpFsdCleanup(IN PDEVICE_OBJECT DeviceObject,
@@ -563,7 +505,6 @@ NTAPI
 NpSetListeningPipeState(IN PNP_CCB Ccb,
                         IN PIRP Irp,
                         IN PLIST_ENTRY List);
-
 
 NTSTATUS
 NTAPI
@@ -751,4 +692,4 @@ NTAPI
 NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
                             IN PIRP Irp);
 
-/* EOF */
+#endif /* _NPFS_PCH_ */

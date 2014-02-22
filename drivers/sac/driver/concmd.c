@@ -10,6 +10,8 @@
 
 #include "sacdrv.h"
 
+#include <ndk/exfuncs.h>
+
 /* GLOBALS ********************************************************************/
 
 PVOID GlobalBuffer;

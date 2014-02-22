@@ -29,7 +29,7 @@ CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Konfiguracja Systemu", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Wyłącz zaawansowane usługi tekstowe", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    AUTOCHECKBOX "&Wyłącz zaawansowane usługi tekstowe", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
     LTEXT "Zaznacz tą opcję by wyłączyć zaawansowane usługi tesktowe we wszystkich programach.\nNie jest to zalecane dla użytkowników z Dalekiego Wschodu, jako że zamyka to pasek języków.", -1, 14, 40, 230, 35
 END
 

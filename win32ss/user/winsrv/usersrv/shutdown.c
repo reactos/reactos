@@ -11,7 +11,14 @@
 /* INCLUDES *******************************************************************/
 
 #include "usersrv.h"
+
+#include <stdlib.h>
+#include <winreg.h>
+#include <winlogon.h>
+#include <commctrl.h>
 #include <sddl.h>
+
+#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>

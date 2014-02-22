@@ -1,16 +1,20 @@
 
 spec2def(framebuf.dll framebuf.spec)
 
-add_library(framebuf SHARED
+list(APPEND SOURCE
     enable.c
     palette.c
     pointer.c
     screen.c
     surface.c
+    framebuf.h)
+
+add_library(framebuf SHARED
+    ${SOURCE}
     framebuf.rc
     ${CMAKE_CURRENT_BINARY_DIR}/framebuf.def)
 
-add_pch(framebuf framebuf.h)
+add_pch(framebuf framebuf.h SOURCE)
 set_entrypoint(framebuf DrvEnableDriver 12)
 set_subsystem(framebuf native)
 set_image_base(framebuf 0x00010000)

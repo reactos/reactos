@@ -13,6 +13,8 @@
 
 #include "ndissys.h"
 
+#include <ndisguid.h>
+
 /*
  * Define to 1 to get a debugger breakpoint at the end of NdisInitializeWrapper
  * for each new miniport starting up
@@ -3345,4 +3347,3 @@ NdisIMGetDeviceContext(
 }
 
 /* EOF */
-

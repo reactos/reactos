@@ -23,9 +23,8 @@ list(APPEND SOURCE
     rpc_server.c
     rpc_transport.c
     unix_func.c
-    ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c
-    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -45,11 +44,14 @@ endif()
 add_library(rpcrt4 SHARED
     ${SOURCE}
     ${rpcrt4_asm}
-    rpcrt4.rc)
+    rpcrt4.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
 add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
+add_pch(rpcrt4 precomp.h SOURCE)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)

@@ -7,7 +7,7 @@ if(ARCH STREQUAL "amd64")
     add_definitions(-DWIN64)
 endif()
 
-add_library(acpica
+list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsargs.c
     acpica/dispatcher/dscontrol.c
     acpica/dispatcher/dsfield.c
@@ -40,7 +40,7 @@ add_library(acpica
     acpica/executer/exconvrt.c
     acpica/executer/excreate.c
     acpica/executer/exdebug.c
-    acpica/executer/exdump.c
+    #acpica/executer/exdump.c
     acpica/executer/exfield.c
     acpica/executer/exfldio.c
     acpica/executer/exmisc.c
@@ -70,8 +70,8 @@ add_library(acpica
     acpica/hardware/hwxface.c
     acpica/namespace/nsaccess.c
     acpica/namespace/nsalloc.c
-    acpica/namespace/nsdump.c
-    acpica/namespace/nsdumpdv.c
+    #acpica/namespace/nsdump.c
+    #acpica/namespace/nsdumpdv.c
     acpica/namespace/nseval.c
     acpica/namespace/nsinit.c
     acpica/namespace/nsload.c
@@ -99,7 +99,7 @@ add_library(acpica
     acpica/resources/rsaddr.c
     acpica/resources/rscalc.c
     acpica/resources/rscreate.c
-    acpica/resources/rsdump.c
+    #acpica/resources/rsdump.c
     acpica/resources/rsinfo.c
     acpica/resources/rsio.c
     acpica/resources/rsirq.c
@@ -122,7 +122,6 @@ add_library(acpica
     acpica/utilities/utdecode.c
     acpica/utilities/utdelete.c
     acpica/utilities/uteval.c
-    acpica/utilities/utglobal.c
     acpica/utilities/utids.c
     acpica/utilities/utinit.c
     acpica/utilities/utlock.c
@@ -135,12 +134,18 @@ add_library(acpica
     acpica/utilities/utstate.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c
-    acpica/utilities/utxferror.c)
+    acpica/utilities/utxferror.c
+    acpica/include/acpi.h)
 
+add_library(acpica
+    ${ACPICA_SOURCE}
+    acpica/utilities/utglobal.c)
+
+add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 add_dependencies(acpica bugcodes)
 
-add_library(acpi SHARED
+list(APPEND ACPI_SOURCE
     busmgr/bus.c
     busmgr/button.c
     busmgr/power.c
@@ -153,11 +158,14 @@ add_library(acpi SHARED
     pnp.c
     power.c
     buspdo.c
-    main.c)
+    main.c
+    precomp.h)
 
+add_library(acpi SHARED ${ACPI_SOURCE})
 set_module_type(acpi kernelmodedriver)
 target_link_libraries(acpi wdmguid acpica ${PSEH_LIB})
 add_importlibs(acpi ntoskrnl hal)
+add_pch(acpi precomp.h ACPI_SOURCE)
 add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
 
 add_subdirectory(cmbatt)

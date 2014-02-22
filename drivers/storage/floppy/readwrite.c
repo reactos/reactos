@@ -54,6 +54,7 @@
 
 #include "precomp.h"
 
+#include <debug.h>
 
 static IO_ALLOCATION_ACTION NTAPI
 MapRegisterCallback(PDEVICE_OBJECT DeviceObject,
@@ -759,4 +760,3 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
     StopMotor(DriveInfo->ControllerInfo);
 }
-

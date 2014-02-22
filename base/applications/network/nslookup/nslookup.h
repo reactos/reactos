@@ -1,3 +1,6 @@
+#ifndef _NSLOOKUP_H
+#define _NSLOOKUP_H
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -111,3 +114,5 @@ PCHAR   TypeIDtoTypeName( USHORT TypeID );
 USHORT  TypeNametoTypeID( PCHAR TypeName );
 PCHAR   ClassIDtoClassName( USHORT ClassID );
 USHORT  ClassNametoClassID( PCHAR ClassName );
+
+#endif /* _NSLOOKUP_H */

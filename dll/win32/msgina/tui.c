@@ -7,6 +7,8 @@
 
 #include "msgina.h"
 
+#include <wincon.h>
+
 static BOOL
 TUIInitialize(
     IN OUT PGINA_CONTEXT pgContext)
@@ -233,14 +235,20 @@ TUILockedSAS(
     if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
         return WLX_SAS_ACTION_NONE;
 
-    if (!LogonUserW(UserName, NULL, Password,
-        LOGON32_LOGON_UNLOCK,
-        LOGON32_PROVIDER_DEFAULT,
-        &hToken))
+    if (!ConnectToLsa(pgContext))
+        return WLX_SAS_ACTION_NONE;
+
+    if (!MyLogonUser(pgContext->LsaHandle,
+                     pgContext->AuthenticationPackage,
+                     UserName,
+                     NULL,
+                     Password,
+                     &hToken))
     {
-        TRACE("LogonUserW() failed\n");
+        WARN("LogonUserW() failed\n");
         return WLX_SAS_ACTION_NONE;
     }
+
     CloseHandle(hToken);
     return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }

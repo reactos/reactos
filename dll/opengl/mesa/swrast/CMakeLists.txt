@@ -25,9 +25,10 @@ list(APPEND SOURCE
     s_texture.c
     s_triangle.c
     s_zoom.c
-)
+    precomp.h)
 
 add_library(mesa_swrast STATIC ${SOURCE})
+add_pch(mesa_swrast precomp.h SOURCE)
 if(NOT MSVC)
     allow_warnings(mesa_swrast)
 endif()

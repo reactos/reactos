@@ -552,6 +552,12 @@ GetVolumePathNameW(IN LPCWSTR lpszFileName,
     DWORD ErrorCode;
     BOOL Result = FALSE;
 
+    if (!lpszFileName || !lpszVolumePathName || !cchBufferLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
     if (!(PathLength = GetFullPathNameW(lpszFileName, 0, NULL, NULL)))
     {
         return Result;
@@ -668,7 +674,7 @@ FindNextVolumeA(IN HANDLE handle,
         if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL )) ret = FALSE;
     }
 
-    HeapFree( GetProcessHeap(), 0, buffer );
+    RtlFreeHeap(RtlGetProcessHeap(), 0, buffer);
     return ret;
 }
 

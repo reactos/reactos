@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com); 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -191,7 +191,7 @@ BEGIN
     IDS_DEVICE_MANUFACTURER "Üretici Kimliği"
     IDS_DEVICE_PRODUCT "Ürün Kimliği"
     IDS_DEVICE_FORCEFEEDBACK "Güç Dönütlü Sürücüsü"
-    IDS_NOT_APPLICABLE "n/a"
+    IDS_NOT_APPLICABLE "Uygulanamaz"
     IDS_OPTION_YES "Evet"
     IDS_DIRECTPLAY_COL_NAME1 "Ad"
     IDS_DIRECTPLAY_COL_NAME2 "Değer"
@@ -216,7 +216,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Tüm görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
     IDS_DDFULLSCREEN_RESULT "Tüm görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u ikillik) (%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bitlik) (%uHz)"
     IDS_OPTION_NO "Hayır"
     IDS_D3DTEST_DESCRIPTION "React3D arayüz sınaması başlatılacak. Sürdürülsün mü?"
     IDS_D3DTEST_D3Dx "Bu sınama, donanım hızlandırmalı React3D %u arayüzünü kullanacak."

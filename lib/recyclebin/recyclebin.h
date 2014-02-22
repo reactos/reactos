@@ -8,12 +8,15 @@ extern "C" {
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
 #include <winver.h>
 #include <shellapi.h>
 #include <objbase.h>
+
 #define ANY_SIZE 1
 
 /* Structures used by the API Interface */

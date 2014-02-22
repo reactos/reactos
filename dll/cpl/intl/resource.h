@@ -76,3 +76,15 @@
 #define IDS_SPAIN           1003
 #define IDS_METRIC          1004
 #define IDS_IMPERIAL        1005
+
+#define IDS_ERROR                     1006
+#define IDS_ERROR_ANSI_CODE_PAGE      1007
+#define IDS_ERROR_INT_KEY_REG         1008
+#define IDS_ERROR_DEF_INT_KEY_REG     1009
+#define IDS_ERROR_NLS_KEY_REG         1010
+#define IDS_ERROR_NLS_CODE_REG        1011
+#define IDS_ERROR_OEM_CODE_PAGE       1012
+#define IDS_ERROR_SYMBOL_SEPARATE     1013
+#define IDS_ERROR_SYMBOL_FORMAT_SHORT 1014
+#define IDS_ERROR_SYMBOL_FORMAT_LONG  1015
+#define IDS_ERROR_INPUT_DLL           1016

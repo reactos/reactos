@@ -1,7 +1,11 @@
 /*
  * DESCRIPTION: Default TDI event handlers.
  */
+
 #include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * ClientEventChainedReceiveDatagram
@@ -23,6 +27,7 @@ TdiDefaultChainedRcvDatagramHandler (
 	IN	PVOID	TsduDescriptor
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -44,6 +49,7 @@ TdiDefaultChainedRcvExpeditedHandler (
 	IN	PVOID			TsduDescriptor
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -65,6 +71,7 @@ TdiDefaultChainedReceiveHandler (
 	IN	PVOID			TsduDescriptor
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -88,6 +95,7 @@ TdiDefaultConnectHandler (
 	OUT	PIRP			* AcceptIrp
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -109,6 +117,7 @@ TdiDefaultDisconnectHandler (
 	IN	ULONG			DisconnectFlags
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -125,6 +134,7 @@ TdiDefaultErrorHandler (
 	IN	NTSTATUS	Status
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -150,6 +160,7 @@ TdiDefaultRcvDatagramHandler (
 	OUT	PIRP	* IoRequestPacket
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -172,6 +183,7 @@ TdiDefaultRcvExpeditedHandler (
 	OUT	PIRP			* IoRequestPacket
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -194,6 +206,7 @@ TdiDefaultReceiveHandler (
 	OUT	PIRP			* IoRequestPacket
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -211,7 +224,28 @@ TdiDefaultSendPossibleHandler (
 	IN	ULONG	BytesAvailable
 	)
 {
+    UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+TdiRegisterPnPHandlers(
+    _In_ PTDI_CLIENT_INTERFACE_INFO ClientInterfaceInfo,
+    _In_ ULONG InterfaceInfoSize,
+    _Out_ HANDLE *BindingHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+TdiDeregisterPnPHandlers(
+    _In_ HANDLE BindingHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

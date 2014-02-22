@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _HIDCLASS_PCH_
+#define _HIDCLASS_PCH_
 
 #define _HIDPI_NO_FUNCTION_MACROS_
 #include <wdm.h>
@@ -212,4 +213,4 @@ HidClassPDO_GetReportDescription(
     PHIDP_DEVICE_DESC DeviceDescription,
     ULONG CollectionNumber);
 
-/* eof */
+#endif /* _HIDCLASS_PCH_ */

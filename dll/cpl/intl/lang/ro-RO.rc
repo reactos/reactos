@@ -190,6 +190,22 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Opțiuni regionale"
-    IDS_CPLDESCRIPTION "Configurarea limbii și formatarea numerelor, valutelor, datei și orei."
+    IDS_CPLNAME         "Opțiuni regionale"
+    IDS_CPLDESCRIPTION  "Configurarea limbii și formatarea numerelor, valutelor, datei și orei."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Error"
+    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
+    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
+    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
+    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+END
+

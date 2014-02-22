@@ -139,7 +139,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Donanım Ekle"
     IDS_CPLDESCRIPTION "Bilgisayara donanım ekler."
-    IDS_SEARCHTITLE "Yardımcı, donanımı ararken lütfen bekleyiniz..."
+    IDS_SEARCHTITLE "Yardımcı, donanımı ararken bekleyiniz..."
     IDS_SEARCHTEXT "Yardımcı, az önce bilgisayara bağlanan ancak daha kurulmayan donanım için arıyor."
     IDS_ISCONNECTED "Donanım bağlı mı?"
     IDS_PROBELISTTITLE "Aşağıdaki donanım, bilgisayarda önceden kurulu."

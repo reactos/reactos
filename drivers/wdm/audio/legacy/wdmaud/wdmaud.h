@@ -1,3 +1,6 @@
+#ifndef _WDMAUD_PCH_
+#define _WDMAUD_PCH_
+
 #include <portcls.h>
 #include <mmsystem.h>
 
@@ -309,3 +312,4 @@ VOID
 FreeItem(
     IN PVOID Item);
 
+#endif /* _WDMAUD_PCH_ */

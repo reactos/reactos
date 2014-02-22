@@ -1,4 +1,4 @@
-/* Russian translation by Andrey Korotaev (unC0Rr@gmail.com) */
+﻿/* Russian translation by Andrey Korotaev (unC0Rr@gmail.com) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "через 4 часа"
     IDS_TIMEOUT15 "через 5 часов"
     IDS_TIMEOUT16 "никогда"
-    IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
-    IDS_DEL_SCHEME_TITLE "Delete Scheme"
+    IDS_DEL_SCHEME "Вы уверены, что хотите удалить схему питания?"
+    IDS_DEL_SCHEME_TITLE "Удалить Схему"
 END

@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
+
 #include <ne2000.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */

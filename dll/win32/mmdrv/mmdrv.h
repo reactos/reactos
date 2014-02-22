@@ -17,7 +17,6 @@
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
-
 #include <windef.h>
 #include <winbase.h>
 #include <winioctl.h>
@@ -337,4 +336,4 @@ PerformWaveIO(SessionInfo* session_info);
 
 extern CRITICAL_SECTION critical_section;
 
-#endif
+#endif /* MMDRV_H */

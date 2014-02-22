@@ -26,7 +26,7 @@
 #ifdef WIDE_SCANF
 #define _CHAR_ wchar_t
 #define _EOF_ WEOF
-#define _EOF_RET WEOF
+#define _EOF_RET (short)WEOF
 #define _ISSPACE_(c) iswspace(c)
 #define _ISDIGIT_(c) iswdigit(c)
 #define _WIDE2SUPPORTED_(c) c /* No conversion needed (wide to wide) */
@@ -88,8 +88,11 @@ _FUNCTION_ {
 #endif /* STRING */
 #endif /* CONSOLE */
 #endif /* WIDE_SCANF */
+
     nch = _GETC_(file);
-    if (nch == _EOF_) return _EOF_RET;
+    if (nch == _EOF_) {
+        return _EOF_RET;
+    }
 
     while (*format) {
 	/* a whitespace character in the format string causes scanf to read,
@@ -131,8 +134,14 @@ _FUNCTION_ {
 	    /* read prefix (if any) */
 	    while (!prefix_finished) {
 		switch(*format) {
-		case 'h': h_prefix = 1; break;
-		case 'l': l_prefix = 1; break;
+		case 'h': h_prefix++; break;
+		case 'l':
+                    if(*(format+1) == 'l') {
+                        I64_prefix = 1;
+                        format++;
+                    }
+                    l_prefix = 1;
+                    break;
 		case 'w': w_prefix = 1; break;
 		case 'L': L_prefix = 1; break;
 		case 'I':
@@ -227,26 +236,27 @@ _FUNCTION_ {
 #define _SET_NUMBER_(type) *va_arg(ap, type*) = (type)(negative ? -cur : cur)
 			if (I64_prefix) _SET_NUMBER_(LONGLONG);
 			else if (l_prefix) _SET_NUMBER_(LONG);
-			else if (h_prefix) _SET_NUMBER_(short int);
+			else if (h_prefix == 1) _SET_NUMBER_(short int);
 			else _SET_NUMBER_(int);
 		    }
                 }
                 break;
-	    case 'e':
-	    case 'E':
-	    case 'f':
-	    case 'g':
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'g':
             case 'G': { /* read a float */
                     long double cur = 0;
 		    int negative = 0;
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
-		    /* get sign. */
+
+                    /* get sign. */
                     if (nch == '-' || nch == '+') {
-			negative = (nch=='-');
-			if (width>0) width--;
-			if (width==0) break;
+                        negative = (nch=='-');
+                        if (width>0) width--;
+                        if (width==0) break;
                         nch = _GETC_(file);
                     }
 		    /* get first digit. */
@@ -268,12 +278,12 @@ _FUNCTION_ {
                     if (width!=0 && nch == '.') {
                         long double dec = 1;
                         nch = _GETC_(file);
-			if (width>0) width--;
+                        if (width>0) width--;
                         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
                             dec /= 10;
                             cur += dec * (nch - '0');
                             nch = _GETC_(file);
-			    if (width>0) width--;
+                            if (width>0) width--;
                         }
                     }
 		    /* handle exponent */
@@ -281,19 +291,19 @@ _FUNCTION_ {
 			int exponent = 0, negexp = 0;
 			double expcnt, shift;
                         nch = _GETC_(file);
-			if (width>0) width--;
+                        if (width>0) width--;
 			/* possible sign on the exponent */
 			if (width!=0 && (nch=='+' || nch=='-')) {
 			    negexp = (nch=='-');
                             nch = _GETC_(file);
-			    if (width>0) width--;
+                            if (width>0) width--;
 			}
 			/* exponent digits */
 			while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
 			    exponent *= 10;
 			    exponent += (nch - '0');
                             nch = _GETC_(file);
-			    if (width>0) width--;
+                            if (width>0) width--;
                         }
 			/* update 'cur' with this exponent. */
 			expcnt = 10;
@@ -309,9 +319,9 @@ _FUNCTION_ {
                     st = 1;
                     if (!suppress) {
 			if (L_prefix) _SET_NUMBER_(long double);
-			else if (l_prefix) _SET_NUMBER_(double);
-			else _SET_NUMBER_(float);
-		    }
+                        else if (l_prefix) _SET_NUMBER_(double);
+                        else _SET_NUMBER_(float);
+                    }
                 }
                 break;
 		/* According to msdn,
@@ -488,9 +498,9 @@ _FUNCTION_ {
                     /* terminate */
                     if (!suppress) *sptr = 0;
 #ifdef _LIBCNT_
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Mask);
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, Mask);
 #else
-            HeapFree(GetProcessHeap(), 0, Mask);
+                    HeapFree(GetProcessHeap(), 0, Mask);
 #endif
                 }
                 break;
@@ -527,6 +537,7 @@ _FUNCTION_ {
     if (nch!=_EOF_) {
 	_UNGETC_(nch, file);
     }
+
     TRACE("returning %d\n", rd);
     return rd;
 }

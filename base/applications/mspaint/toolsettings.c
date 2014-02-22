@@ -9,10 +9,30 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include "toolsettings.h"
 
 /* FUNCTIONS ********************************************************/
 
 extern void zoomTo(int, int, int);
+
+void RegisterWclSettings()
+{
+    WNDCLASSEX wclSettings;
+    /* initializing and registering the window class for the settings window */
+    wclSettings.hInstance       = hProgInstance;
+    wclSettings.lpszClassName   = _T("ToolSettings");
+    wclSettings.lpfnWndProc     = SettingsWinProc;
+    wclSettings.style           = CS_DBLCLKS;
+    wclSettings.cbSize          = sizeof(WNDCLASSEX);
+    wclSettings.hIcon           = NULL;
+    wclSettings.hIconSm         = NULL;
+    wclSettings.hCursor         = LoadCursor(NULL, IDC_ARROW);
+    wclSettings.lpszMenuName    = NULL;
+    wclSettings.cbClsExtra      = 0;
+    wclSettings.cbWndExtra      = 0;
+    wclSettings.hbrBackground   = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx (&wclSettings);
+}
 
 LRESULT CALLBACK
 SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -183,6 +203,8 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         transpBg = (y - 2) / 31;
                         InvalidateRect(hwnd, NULL, TRUE);
+
+                        ForceRefreshSelectionContents();
                     }
                     break;
                 case TOOL_RUBBER:

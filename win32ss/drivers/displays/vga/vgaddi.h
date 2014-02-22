@@ -1,3 +1,6 @@
+#ifndef _VGADDI_PCH_
+#define _VGADDI_PCH_
+
 #define _WINBASE_
 #define _WINDOWS_H
 #include <stdarg.h>
@@ -281,3 +284,5 @@ vgaReadScan(int x, int y, int w, void *b);
 
 VOID FASTCALL
 vgaWriteScan(int x, int y, int w, void *b);
+
+#endif /* _VGADDI_PCH_ */

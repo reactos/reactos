@@ -1,4 +1,4 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -193,3 +193,19 @@ BEGIN
     IDS_CPLNAME "Язык и региональные стандарты"
     IDS_CPLDESCRIPTION "Выбор языка, формата чисел, денежных единиц, времени и даты."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Ошибка"
+    IDS_ERROR_SYMBOL_SEPARATE "Короткий разделитель компонентов даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Короткий формат даты содержит неверный символ(ы)"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Длинный формат даты содержит неверный символ(ы)"
+    IDS_ERROR_OEM_CODE_PAGE "Возникла проблема при чтении кодовой страницы OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Возникла проблема при чтении кодовой страницы ANSI"
+    IDS_ERROR_INT_KEY_REG "Проблема открытия ключа: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Проблема открытия ключа: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Проблема открытия ключа: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Не удается запустить input.dll"
+END
+

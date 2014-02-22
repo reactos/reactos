@@ -68,7 +68,7 @@ CAPTION "Ajustes del sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Información de la Versión ", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Informar como Estación de trabajo", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
+    CONTROL "Informar como Estación de trabajo", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS está diseñado como un Sistema Operativo servidor e informa como tal. Seleccione esta casilla para cambiar esto para aplicaciones.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "Aceptar", IDOK, 166, 83, 50, 14
 END

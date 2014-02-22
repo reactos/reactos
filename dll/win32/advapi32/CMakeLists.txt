@@ -44,6 +44,10 @@ list(APPEND SOURCE
     service/sctrl.c
     token/privilege.c
     token/token.c
+    advapi32.h)
+
+add_library(advapi32 SHARED
+    ${SOURCE}
     advapi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def
@@ -51,15 +55,12 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c)
 
-add_library(advapi32 SHARED ${SOURCE})
 set_module_type(advapi32 win32dll UNICODE)
 target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})
 add_delay_importlibs(advapi32 rpcrt4)
 add_importlibs(advapi32 secur32 msvcrt kernel32 ntdll)
 
-add_pch(advapi32 advapi32.h
-    ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.h
-    ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.h)
+add_pch(advapi32 advapi32.h SOURCE)
 
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
 

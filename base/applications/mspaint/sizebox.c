@@ -9,12 +9,33 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include "sizebox.h"
 
 /* FUNCTIONS ********************************************************/
 
 BOOL resizing = FALSE;
 short xOrig;
 short yOrig;
+
+void
+RegisterWclSizebox()
+{
+    WNDCLASSEX wclSizebox;
+    /* initializing and registering the window class for the size boxes */
+    wclSizebox.hInstance       = hProgInstance;
+    wclSizebox.lpszClassName   = _T("Sizebox");
+    wclSizebox.lpfnWndProc     = SizeboxWinProc;
+    wclSizebox.style           = CS_DBLCLKS;
+    wclSizebox.cbSize          = sizeof(WNDCLASSEX);
+    wclSizebox.hIcon           = NULL;
+    wclSizebox.hIconSm         = NULL;
+    wclSizebox.hCursor         = LoadCursor(NULL, IDC_ARROW);
+    wclSizebox.lpszMenuName    = NULL;
+    wclSizebox.cbClsExtra      = 0;
+    wclSizebox.cbWndExtra      = 0;
+    wclSizebox.hbrBackground   = GetSysColorBrush(COLOR_HIGHLIGHT);
+    RegisterClassEx (&wclSizebox);
+}
 
 LRESULT CALLBACK
 SizeboxWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)

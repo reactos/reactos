@@ -734,10 +734,8 @@ int CDECL _wunlink(const wchar_t *path)
 /* _flushall calls fflush which calls _flushall */
 int CDECL fflush(FILE* file);
 
-/*********************************************************************
- *		_flushall (MSVCRT.@)
- */
-int CDECL _flushall(void)
+/* INTERNAL: Flush all stream buffer */
+static int flush_all_buffers(int mask)
 {
   int i, num_flushed = 0;
   FILE *file;
@@ -748,8 +746,8 @@ int CDECL _flushall(void)
 
     if (file->_flag)
     {
-      if(file->_flag & _IOWRT) {
-	fflush(file);
+      if(file->_flag & mask) {
+        fflush(file);
         num_flushed++;
       }
     }
@@ -761,21 +759,40 @@ int CDECL _flushall(void)
 }
 
 /*********************************************************************
+ *		_flushall (MSVCRT.@)
+ */
+int CDECL _flushall(void)
+{
+    return flush_all_buffers(_IOWRT | _IOREAD);
+}
+
+/*********************************************************************
  *		fflush (MSVCRT.@)
  */
 int CDECL fflush(FILE* file)
 {
     if(!file) {
-        _flushall();
+        flush_all_buffers(_IOWRT);
     } else if(file->_flag & _IOWRT) {
         int res;
 
         _lock_file(file);
         res = flush_buffer(file);
+        /* FIXME
+        if(!res && (file->_flag & _IOCOMMIT))
+            res = _commit(file->_file) ? EOF : 0;
+        */
         _unlock_file(file);
 
         return res;
-    }
+    } else if(file->_flag & _IOREAD) {
+        _lock_file(file);
+        file->_cnt = 0;
+        file->_ptr = file->_base;
+        _unlock_file(file);
+
+        return 0;
+    }    
     return 0;
 }
 

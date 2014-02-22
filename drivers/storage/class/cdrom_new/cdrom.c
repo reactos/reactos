@@ -24,16 +24,6 @@ Revision History:
 
 --*/
 
-#include "stddef.h"
-#include "string.h"
-
-#include "ntddk.h"
-#include "initguid.h"
-
-#include "ntddcdvd.h"
-#include "classpnp.h"
-
-#include "ntddstor.h"
 #include "cdrom.h"
 
 #ifdef ALLOC_PRAGMA

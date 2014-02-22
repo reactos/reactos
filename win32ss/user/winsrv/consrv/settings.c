@@ -10,15 +10,11 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "include/conio.h"
-#include "include/term.h"
-#include "include/settings.h"
 
 #include <stdio.h> // for swprintf
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 

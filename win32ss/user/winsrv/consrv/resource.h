@@ -8,5 +8,3 @@
 #pragma once
 
 #define IDS_CONSOLE_TITLE 500
-
-/* EOF */

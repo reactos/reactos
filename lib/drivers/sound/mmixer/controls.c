@@ -6,7 +6,7 @@
  * PROGRAMMER:      Johannes Anderwald
  */
  
-#include "priv.h"
+#include "precomp.h"
 
 #define YDEBUG
 #include <debug.h>
@@ -1761,4 +1761,3 @@ MMixerAddEvent(
     InsertTailList(&MixerInfo->EventList, &EventData->Entry);
     return MM_STATUS_SUCCESS;
 }
-

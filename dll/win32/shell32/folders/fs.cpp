@@ -1427,7 +1427,7 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
     {
         if (SUCCEEDED(pAsyncOperation->GetAsyncMode(&fIsOpAsync)) && fIsOpAsync)
         {
-            _DoDropData *data = reinterpret_cast<_DoDropData*> (HeapAlloc(GetProcessHeap(), 0, sizeof(_DoDropData)));
+            _DoDropData *data = static_cast<_DoDropData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_DoDropData)));
             data->This = this;
             // Need to maintain this class in case the window is closed or the class exists temporarily (when dropping onto a folder).
             this->AddRef();
@@ -1439,7 +1439,7 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
             data->pdwEffect = *pdwEffect;
             data->pDataObject->AddRef();
             data->pAsyncOperation->StartOperation(NULL);
-            SHCreateThread(reinterpret_cast<LPTHREAD_START_ROUTINE> (CFSFolder::_DoDropThreadProc), reinterpret_cast<void *> (data), NULL, NULL);
+            SHCreateThread(CFSFolder::_DoDropThreadProc, data, NULL, NULL);
             return S_OK;
         }
         else
@@ -1737,8 +1737,8 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
     return hr;
 }
 
-DWORD CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
-    _DoDropData *data = reinterpret_cast<_DoDropData*>(lpParameter);
+DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
+    _DoDropData *data = static_cast<_DoDropData*>(lpParameter);
     HRESULT hr = data->This->_DoDrop(data->pDataObject, data->dwKeyState, data->pt, &data->pdwEffect);
     //Release the CFSFolder and data object holds in the copying thread.
     data->pAsyncOperation->EndOperation(hr, NULL, data->pdwEffect);

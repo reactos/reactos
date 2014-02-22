@@ -37,11 +37,15 @@ list(APPEND SOURCE
     view.c
     volume.c
     wined3d_main.c
+    wined3d_private.h)
+
+add_library(wined3d SHARED
+    ${SOURCE}
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
-add_library(wined3d SHARED ${SOURCE} version.rc)
 set_module_type(wined3d win32dll)
 target_link_libraries(wined3d wine)
 add_importlibs(wined3d user32 opengl32 gdi32 advapi32 msvcrt kernel32 ntdll)
-add_pch(wined3d wined3d_private.h)
+add_pch(wined3d wined3d_private.h SOURCE)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)

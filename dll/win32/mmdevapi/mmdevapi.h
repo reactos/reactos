@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _MMDEVAPI_H_
+#define _MMDEVAPI_H_
+
 #include <wine/config.h>
 #include <wine/port.h>
 
@@ -97,3 +100,5 @@ extern HRESULT AudioClient_Create(MMDevice *parent, IAudioClient **ppv) DECLSPEC
 extern HRESULT AudioEndpointVolume_Create(MMDevice *parent, IAudioEndpointVolume **ppv) DECLSPEC_HIDDEN;
 
 extern const WCHAR drv_keyW[] DECLSPEC_HIDDEN;
+
+#endif /* _MMDEVAPI_H_ */

@@ -24,5 +24,3 @@ NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console,
                                  DWORD ProcessId,
                                  LPCWSTR IconPath,
                                  INT IconIndex);
-
-/* EOF */

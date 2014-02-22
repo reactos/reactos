@@ -37,4 +37,3 @@ NdisFreeGenericObject(
 {
   ExFreePool(NdisGenericObject);
 }
-
