@@ -570,6 +570,9 @@ NET_API_STATUS NET_API_FUNCTION NetGetJoinInformation(
 {
     FIXME("Stub %s %p %p\n", wine_dbgstr_w(Server), Name, type);
 
+    if (Name == NULL || type == NULL)
+        return ERROR_INVALID_PARAMETER;
+
     *Name = NULL;
     *type = NetSetupUnknownStatus;
 
