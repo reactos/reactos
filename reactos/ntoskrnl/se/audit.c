@@ -206,7 +206,7 @@ SepAdtPrivilegedServiceAuditAlarm(
     _In_ PPRIVILEGE_SET Privileges,
     _In_ BOOLEAN AccessGranted)
 {
-    UNIMPLEMENTED;
+    DPRINT("SepAdtPrivilegedServiceAuditAlarm is unimplemented\n");
 }
 
 VOID
