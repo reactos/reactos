@@ -3,9 +3,9 @@
 #define USE_SYSTEM_MENUSITE 0
 #define USE_SYSTEM_MENUBAND 0
 
-#define WRAP_MENUDESKBAR 1
-#define WRAP_MENUSITE 1
-#define WRAP_MENUBAND 1
+#define WRAP_MENUDESKBAR 0
+#define WRAP_MENUSITE 0
+#define WRAP_MENUBAND 0
 
 #include <stdio.h>
 #include <tchar.h>
@@ -44,3 +44,39 @@ extern "C" HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuDeskBar_Wrapper(IDeskBar * db, REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuSite_Wrapper(IBandSite * bs, REFIID riid, LPVOID *ppv);
 extern "C" HRESULT CMenuBand_Wrapper(IShellMenu * sm, REFIID riid, LPVOID *ppv);
+
+static __inline ULONG
+Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
+{
+    char szMsg[512];
+    char *szMsgStart;
+    const char *fname;
+    va_list vl;
+    ULONG uRet;
+
+    fname = strrchr(filename, '\\');
+    if (fname == NULL)
+    {
+        fname = strrchr(filename, '/');
+        if (fname != NULL)
+            fname++;
+    }
+    else
+        fname++;
+
+    if (fname == NULL)
+        fname = filename;
+
+    szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
+
+    va_start(vl, lpFormat);
+    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
+    va_end(vl);
+
+    OutputDebugStringA(szMsg);
+
+    return uRet;
+}
+
+#define DbgPrint(fmt, ...) \
+    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)

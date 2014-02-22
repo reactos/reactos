@@ -56,6 +56,8 @@ private:
 
     INT m_Level;
 
+    BOOL m_Shown;
+
 public:
     CMenuDeskBar();
     ~CMenuDeskBar();
@@ -68,8 +70,9 @@ public:
     BEGIN_MSG_MAP(CMenuDeskBar)
         MESSAGE_HANDLER(WM_SIZE, _OnSize)
         MESSAGE_HANDLER(WM_NOTIFY, _OnNotify)
-        MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, _OnWindowPosChanged)
         MESSAGE_HANDLER(WM_PAINT, _OnPaint)
+        MESSAGE_HANDLER(WM_ACTIVATE, _OnActivate)
+        MESSAGE_HANDLER(WM_ACTIVATEAPP, _OnAppActivate)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CMenuDeskBar)
@@ -131,9 +134,11 @@ private:
     // message handlers
     LRESULT _OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT _OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
+    BOOL _IsSubMenuParent(HWND hwnd);
     HRESULT _CloseBar();
 };
 
@@ -160,13 +165,19 @@ INT deskBarCount=0;
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
     m_Banner(NULL),
-    m_Level(deskBarCount++)
+    m_Level(deskBarCount++),
+    m_Shown(FALSE)
 {
 }
 
 CMenuDeskBar::~CMenuDeskBar()
 {
     deskBarCount--;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
+{
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetWindow(HWND *lphwnd)
@@ -320,12 +331,16 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnPosRectChangeDB(LPRECT prc)
 {
     if (prc == NULL)
         return E_POINTER;
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
 {
     // Windows closes the bar if this is called when the bar is shown
+
+    if (m_Shown)
+        _CloseBar();
 
     m_Site = pUnkSite;
 
@@ -340,88 +355,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
         return E_FAIL;
 
     return m_Site->QueryInterface(riid, ppvSite);
-}
-
-LRESULT CMenuDeskBar::_OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    if (m_Client)
-    {
-        RECT rc;
-
-        GetClientRect(&rc);
-
-        if (m_Banner != NULL)
-        {
-            BITMAP bm;
-            ::GetObject(m_Banner, sizeof(bm), &bm);
-            rc.left += bm.bmWidth;
-        }
-
-        ::SetWindowPos(m_ClientWindow, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
-    }
-
-    return 0;
-}
-
-LRESULT CMenuDeskBar::_OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    CComPtr<IWinEventHandler>               winEventHandler;
-    LRESULT                                 result;
-    HRESULT                                 hr;
-
-    result = 0;
-    if (m_Client.p != NULL)
-    {
-        hr = m_Client->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
-        if (SUCCEEDED(hr) && winEventHandler.p != NULL)
-            hr = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
-    }
-    return result;
-}
-
-LRESULT CMenuDeskBar::_OnWindowPosChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    return 0;
-}
-
-LRESULT CMenuDeskBar::_OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    bHandled = FALSE;
-
-    if (m_Banner && !m_IconSize)
-    {
-        BITMAP bm;
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(&ps);
-
-        HDC hdcMem = ::CreateCompatibleDC(hdc);
-        HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_Banner);
-
-        ::GetObject(m_Banner, sizeof(bm), &bm);
-
-        RECT rc;
-        if (!GetClientRect(&rc))
-            WARN("GetClientRect failed\n");
-
-        const int bx = bm.bmWidth;
-        const int by = bm.bmHeight;
-        const int cy = rc.bottom;
-
-        TRACE("Painting banner: %d by %d\n", bm.bmWidth, bm.bmHeight);
-
-        if (!::StretchBlt(hdc, 0, 0, bx, cy - by, hdcMem, 0, 0, bx, 1, SRCCOPY))
-            WARN("StretchBlt failed\n");
-
-        if (!::BitBlt(hdc, 0, cy - by, bx, by, hdcMem, 0, 0, SRCCOPY))
-            WARN("BitBlt failed\n");
-
-        ::SelectObject(hdcMem, hbmOld);
-        ::DeleteDC(hdcMem);
-
-        EndPaint(&ps);
-    }
-
-    return TRUE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
@@ -502,12 +435,15 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
 
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 
+    m_Shown = true;
+
     // HACK: The bar needs to be notified of the size AFTER it is shown.
     // Quick & dirty way of getting it done.
     BOOL bHandled;
     _OnSize(WM_SIZE, 0, 0, bHandled);
 
     UIActivateIO(TRUE, NULL);
+
 
     return S_OK;
 }
@@ -555,8 +491,28 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetBitmap(THIS_ HBITMAP* phBitmap)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(
-    DWORD dwSelectType)
+HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
+{
+    // Called by the MenuBand to assign itself as the logical child of the DeskBar
+
+    if (fSet)
+    {
+        m_SubMenuChild = pmp;
+    }
+    else
+    {
+        if (m_SubMenuChild)
+        {
+            if (SHIsSameObject(pmp, m_SubMenuChild))
+            {
+                m_SubMenuChild = NULL;
+            }
+        }
+    }
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 {
     /* As far as I can tell, the submenu hierarchy looks like this:
 
@@ -604,6 +560,8 @@ HRESULT CMenuDeskBar::_CloseBar()
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
 
+    m_Shown = false;
+
     if (m_SubMenuChild)
     {
         hr = m_SubMenuChild->OnSelect(MPOS_CANCELLEVEL);
@@ -624,29 +582,150 @@ HRESULT CMenuDeskBar::_CloseBar()
     return UIActivateIO(FALSE, NULL);
 }
 
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
+BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
 {
-    // Called by the CHILD to notify the parent of the submenu object
+    CComPtr<IMenuPopup> popup = m_SubMenuParent;
 
-    if (fSet)
+    while (popup)
     {
-        m_SubMenuChild = pmp;
+        HRESULT hr;
+        CComPtr<IOleWindow> window;
+
+        hr = popup->QueryInterface(IID_PPV_ARG(IOleWindow, &window));
+        if (FAILED(hr))
+            return FALSE;
+
+        HWND parent;
+
+        hr = window->GetWindow(&parent);
+        if (SUCCEEDED(hr) && hwnd == parent)
+            return TRUE;
+
+        popup = NULL;
+        hr = IUnknown_GetSite(window, IID_PPV_ARG(IMenuPopup, &popup));
+        if (FAILED(hr))
+            return FALSE;
     }
-    else
-    {
-        if (m_SubMenuChild)
-        {
-            if (SHIsSameObject(pmp, m_SubMenuChild))
-            {
-                m_SubMenuChild = NULL;
-            }
-        }
-    }
-    return S_OK;
+
+    return FALSE;
 }
 
-
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
+LRESULT CMenuDeskBar::_OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    return S_OK;
+    if (m_Client)
+    {
+        RECT rc;
+
+        GetClientRect(&rc);
+
+        if (m_Banner != NULL)
+        {
+            BITMAP bm;
+            ::GetObject(m_Banner, sizeof(bm), &bm);
+            rc.left += bm.bmWidth;
+        }
+
+        ::SetWindowPos(m_ClientWindow, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, 0);
+    }
+
+    return 0;
+}
+
+LRESULT CMenuDeskBar::_OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (!m_Client)
+        return 0;
+
+    CComPtr<IWinEventHandler> winEventHandler;
+    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
+    if (FAILED(hr))
+        return 0;
+
+    if (winEventHandler)
+    {
+        LRESULT result;
+        hr = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
+        if (FAILED(hr))
+            return 0;
+        return result;
+    }
+
+    return 0;
+}
+
+LRESULT CMenuDeskBar::_OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+
+    if (m_Banner && !m_IconSize)
+    {
+        BITMAP bm;
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(&ps);
+
+        HDC hdcMem = ::CreateCompatibleDC(hdc);
+        HGDIOBJ hbmOld = ::SelectObject(hdcMem, m_Banner);
+
+        ::GetObject(m_Banner, sizeof(bm), &bm);
+
+        RECT rc;
+        if (!GetClientRect(&rc))
+            WARN("GetClientRect failed\n");
+
+        const int bx = bm.bmWidth;
+        const int by = bm.bmHeight;
+        const int cy = rc.bottom;
+
+        TRACE("Painting banner: %d by %d\n", bm.bmWidth, bm.bmHeight);
+
+        if (!::StretchBlt(hdc, 0, 0, bx, cy - by, hdcMem, 0, 0, bx, 1, SRCCOPY))
+            WARN("StretchBlt failed\n");
+
+        if (!::BitBlt(hdc, 0, cy - by, bx, by, hdcMem, 0, 0, SRCCOPY))
+            WARN("BitBlt failed\n");
+
+        ::SelectObject(hdcMem, hbmOld);
+        ::DeleteDC(hdcMem);
+
+        EndPaint(&ps);
+    }
+
+    return TRUE;
+}
+
+LRESULT CMenuDeskBar::_OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam != 0)
+        return 0;
+
+    // HACK! I just want it to work !!!
+    CComPtr<IDeskBar> db;
+    HRESULT hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db));
+    if (FAILED(hr))
+        return 0;
+
+    CComPtr<IUnknown> punk;
+
+    hr = db->GetClient(&punk);
+    if (FAILED(hr))
+        return 0;
+
+    if (!punk && m_Shown)
+    {
+        if (!_IsSubMenuParent(reinterpret_cast<HWND>(lParam)))
+        {
+            OnSelect(MPOS_FULLCANCEL);
+        }
+    }
+
+    return 0;
+}
+
+LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == 0)
+    {
+        OnSelect(MPOS_FULLCANCEL);
+    }
+    return 0;
 }

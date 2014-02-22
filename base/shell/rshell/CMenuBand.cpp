@@ -332,6 +332,11 @@ private:
     }
 
 private:
+    CMenuBand * m_currentBand;
+    HWND m_currentFocus;
+    HHOOK m_hHook;
+    DWORD m_threadId;
+
     // TODO: make dynamic
 #define MAX_RECURSE 20
     CMenuBand* m_bandStack[MAX_RECURSE];
@@ -399,23 +404,16 @@ public:
     BEGIN_COM_MAP(CMenuFocusManager)
     END_COM_MAP()
 
-private:
-    CMenuBand * m_currentBand;
-    HWND m_currentFocus;
-    HHOOK m_hHook;
-    DWORD m_threadId;
-
     LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
     {
         if (nCode < 0)
             return CallNextHookEx(m_hHook, nCode, wParam, lParam);
 
-        BOOL callNext = TRUE;
-        BOOL fRemoved = wParam;
-        MSG* msg = reinterpret_cast<MSG*>(lParam);
-
         if (nCode == HC_ACTION)
         {
+            BOOL callNext = TRUE;
+            MSG* msg = reinterpret_cast<MSG*>(lParam);
+
             // Do whatever is necessary here
 
             switch (msg->message)
@@ -452,9 +450,6 @@ private:
                 //    PostMessage(m_currentFocus, WM_SYSCHAR, wParam, lParam);
                 //}
                 break;
-            case WM_ACTIVATE:
-                break;
-
             }
 
             if (!callNext)
@@ -481,24 +476,26 @@ private:
     HRESULT UpdateFocus(CMenuBand * newBand)
     {
         HRESULT hr;
+        HWND newFocus;
 
-        hr = RemoveHooks(m_currentFocus);
-
-        if (FAILED(hr) || !newBand)
+        if (newBand == NULL)
         {
+            hr = RemoveHooks(m_currentFocus);
             m_currentFocus = NULL;
             m_currentBand = NULL;
             return S_OK;
         }
 
-        HWND newFocus;
         hr = newBand->_GetTopLevelWindow(&newFocus);
         if (FAILED(hr))
             return hr;
 
-        hr = PlaceHooks(m_currentFocus);
-        if (FAILED(hr))
-            return hr;
+        if (!m_currentBand)
+        {
+            hr = PlaceHooks(newFocus);
+            if (FAILED(hr))
+                return hr;
+        }
 
         m_currentFocus = newFocus;
         m_currentBand = newBand;
@@ -1146,6 +1143,22 @@ HRESULT CMenuSFToolbar::FillToolbar()
 
     }
     CoTaskMemFree(item);
+
+    // If no items were added, show the "empty" placeholder
+    if (i == 0)
+    {
+        TBBUTTON tbb = { 0 };
+        PWSTR MenuString = L"(Empty)";
+
+        tbb.fsState = 0/*TBSTATE_DISABLED*/;
+        tbb.fsStyle = 0;
+        tbb.iString = (INT_PTR) MenuString;
+        tbb.iBitmap = -1;
+
+        SendMessageW(m_hwnd, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+
+        return S_OK;
+    }
 
     return hr;
 }
@@ -1829,7 +1842,15 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 {
-    UNIMPLEMENTED;
+    // HACK, so I can test for a submenu in the DeskBar
+    //UNIMPLEMENTED;
+    if (ppunkClient)
+    {
+        if (m_subMenuChild)
+            *ppunkClient = m_subMenuChild;
+        else
+            *ppunkClient = NULL;
+    }
     return S_OK;
 }
 
@@ -2208,7 +2229,6 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     }
     return S_OK;
 }
-
 
 HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude)
 {
