@@ -22,6 +22,11 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+BOOLEAN
+NTAPI
+SeRmInitPhase1(
+    VOID);
+
 typedef struct _INIT_BUFFER
 {
     WCHAR DebugBuffer[256];
@@ -668,52 +673,52 @@ ExpInitSystemPhase1(VOID)
         DPRINT1("Executive: Event Pair initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize mutants */
     if (ExpInitializeMutantImplementation() == FALSE)
     {
         DPRINT1("Executive: Mutant initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize callbacks */
     if (ExpInitializeCallbacks() == FALSE)
     {
         DPRINT1("Executive: Callback initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize semaphores */
     if (ExpInitializeSemaphoreImplementation() == FALSE)
     {
         DPRINT1("Executive: Semaphore initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize timers */
     if (ExpInitializeTimerImplementation() == FALSE)
     {
         DPRINT1("Executive: Timer initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize profiling */
     if (ExpInitializeProfileImplementation() == FALSE)
     {
         DPRINT1("Executive: Profile initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize UUIDs */
     ExpInitUuids();
-    
+
     /* Initialize keyed events */
     if (ExpInitializeKeyedEventImplementation() == FALSE)
     {
         DPRINT1("Executive: Keyed event initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize Win32K */
     if (ExpWin32kInit() == FALSE)
     {
@@ -1948,6 +1953,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
     MmFreeLoaderBlock(LoaderBlock);
     LoaderBlock = Context = NULL;
+
+    /* Initialize the SRM in phase 1 */
+    if (!SeRmInitPhase1()) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
 
     /* Update progress bar */
     InbvUpdateProgressBar(100);
