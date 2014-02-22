@@ -24,6 +24,14 @@ WmiInitialize(
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\WMIxWDM");
     NTSTATUS Status;
 
+    /* Initialize the GUID object type */
+    Status = WmipInitializeGuidObjectType();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WmipInitializeGuidObjectType() failed: 0x%lx\n", Status);
+        return FALSE;
+    }
+
     /* Create the WMI driver */
     Status = IoCreateDriver(&DriverName, WmipDriverEntry);
     if (!NT_SUCCESS(Status))
