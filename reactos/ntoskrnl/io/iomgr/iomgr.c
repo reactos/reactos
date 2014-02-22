@@ -25,6 +25,11 @@ IopTimerDispatch(
     IN PVOID SystemArgument2
 );
 
+BOOLEAN
+NTAPI
+WmiInitialize(
+    VOID);
+
 /* DATA ********************************************************************/
 
 POBJECT_TYPE IoDeviceObjectType = NULL;
@@ -524,6 +529,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
+
+    /* Initialize WMI */
+    WmiInitialize();
 
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();

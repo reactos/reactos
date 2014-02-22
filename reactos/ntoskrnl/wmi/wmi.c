@@ -9,10 +9,31 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include "wmip.h"
+
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+WmiInitialize(
+    VOID)
+{
+    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\WMIxWDM");
+    NTSTATUS Status;
+
+    /* Create the WMI driver */
+    Status = IoCreateDriver(&DriverName, WmipDriverEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create WMI driver: 0x%lx\n", Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * @unimplemented
