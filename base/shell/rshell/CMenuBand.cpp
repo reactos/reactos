@@ -19,7 +19,16 @@
 */
 #include "precomp.h"
 #include <windowsx.h>
+#include <CommonControls.h>
 #include <shlwapi_undoc.h>
+
+extern "C"
+HRESULT WINAPI SHGetImageList(
+    _In_   int iImageList,
+    _In_   REFIID riid,
+    _Out_  void **ppv
+    );
+
 
 #define TBSTYLE_EX_VERTICAL 4
 
@@ -629,9 +638,6 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     /* Identify the version of the used Common Controls DLL by sending the size of the TBBUTTON structure */
     SendMessageW(m_hwnd, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-    HIMAGELIST ilBig, ilSmall;
-    Shell_GetImageLists(&ilBig, &ilSmall);
-
     //if (dwFlags & SMINIT_TOPLEVEL)
     //{
     //    /* Hide the placeholders for the button images */
@@ -640,11 +646,18 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     //else
     if (m_menuBand->UseBigIcons())
     {
-        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(ilBig));
+        IImageList * piml;
+        HRESULT hr = SHGetImageList(SHIL_LARGE, IID_PPV_ARG(IImageList, &piml));
+
+        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+        SendMessageW(m_hwnd, TB_SETPADDING, 0, MAKELPARAM(0, 0));
     }
     else
     {
-        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(ilSmall));
+        IImageList * piml;
+        HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+
+        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
     }
 
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -1586,8 +1599,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         pdbi->dwMask = DBIM_MINSIZE | DBIM_MAXSIZE | DBIM_INTEGRAL | DBIM_ACTUAL | DBIM_TITLE | DBIM_MODEFLAGS | DBIM_BKCOLOR;
     }
 
-#define MIN_WIDTH 220
-
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
         SIZE sizeStatic = { 0 };
@@ -1596,7 +1607,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, TRUE, reinterpret_cast<LPARAM>(&sizeStatic));
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, TRUE, reinterpret_cast<LPARAM>(&sizeShlFld));
 
-        pdbi->ptMinSize.x = MIN_WIDTH;
+        pdbi->ptMinSize.x = 0;
         pdbi->ptMinSize.y = sizeStatic.cy + sizeShlFld.cy;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -1607,7 +1618,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&sizeStatic));
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&sizeShlFld));
 
-        pdbi->ptMaxSize.x = max(MIN_WIDTH, max(sizeStatic.cx, sizeShlFld.cx)); // ignored
+        pdbi->ptMaxSize.x = max(sizeStatic.cx, sizeShlFld.cx); // ignored
         pdbi->ptMaxSize.y = sizeStatic.cy + sizeShlFld.cy;
     }
     if (pdbi->dwMask & DBIM_INTEGRAL)
@@ -1774,7 +1785,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
     {
         if (nCmdID == 16) // set (big) icon size
         {
-            this->m_useBigIcons = TRUE;
+            this->m_useBigIcons = nCmdexecopt == 2;
             return S_OK;
         }
         else if (nCmdID == 19) // popup-related
