@@ -727,7 +727,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT index, IShellMenu* childShellMenu)
     ClientToScreen(m_hwnd, &a);
     ClientToScreen(m_hwnd, &b);
 
-    POINTL pt = { b.x, b.y };
+    POINTL pt = { b.x, a.y };
     RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
 
 
@@ -1580,6 +1580,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         pdbi->dwMask = DBIM_MINSIZE | DBIM_MAXSIZE | DBIM_INTEGRAL | DBIM_ACTUAL | DBIM_TITLE | DBIM_MODEFLAGS | DBIM_BKCOLOR;
     }
 
+#define MIN_WIDTH 220
+
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
         SIZE sizeStatic = { 0 };
@@ -1588,7 +1590,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETIDEALSIZE, TRUE, reinterpret_cast<LPARAM>(&sizeStatic));
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETIDEALSIZE, TRUE, reinterpret_cast<LPARAM>(&sizeShlFld));
 
-        pdbi->ptMinSize.x = 0;
+        pdbi->ptMinSize.x = MIN_WIDTH;
         pdbi->ptMinSize.y = sizeStatic.cy + sizeShlFld.cy;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -1599,10 +1601,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
         if (hwndStatic) SendMessageW(hwndStatic, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&sizeStatic));
         if (hwndShlFld) SendMessageW(hwndShlFld, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&sizeShlFld));
 
-        sizeStatic.cx += 64;
-        sizeShlFld.cx += 64;
-
-        pdbi->ptMaxSize.x = max(sizeStatic.cx, sizeShlFld.cx); // ignored
+        pdbi->ptMaxSize.x = max(MIN_WIDTH, max(sizeStatic.cx, sizeShlFld.cx)); // ignored
         pdbi->ptMaxSize.y = sizeStatic.cy + sizeShlFld.cy;
     }
     if (pdbi->dwMask & DBIM_INTEGRAL)
@@ -2242,7 +2241,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
     if (popup)
     {
         IUnknown_SetSite(popup, m_subMenuParent);
-        popup->Popup(pAt, pExclude, MPPF_TOP | MPPF_RIGHT);
+        popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }
     return S_OK;
 }

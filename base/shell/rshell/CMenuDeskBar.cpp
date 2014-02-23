@@ -399,8 +399,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         return hr;
 
     ::AdjustWindowRect(&rc, ::GetWindowLong(m_hWnd, GWL_STYLE), FALSE);
-    rc.right -= rc.left;
-    rc.bottom -= rc.top;
 
     if (m_Banner != NULL)
     {
@@ -409,15 +407,35 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         rc.right += bm.bmWidth;
     }
 
-    int x = ppt->x;
-    int y = ppt->y - rc.bottom;
-    int cx = rc.right;
-    int cy = rc.bottom;
+    int x, y, cx, cy;
 
     RECT rcWorkArea;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
-
     int waHeight = rcWorkArea.bottom - rcWorkArea.top;
+
+    switch (dwFlags & MPPF_POS_MASK)
+    {
+    case MPPF_LEFT:
+    case MPPF_TOP:
+        x = ppt->x - rc.right;
+        cx = rc.right - rc.left;
+        break;
+    default:
+        x = ppt->x;
+        cx = rc.right - rc.left;
+        break;
+    }
+
+    if (dwFlags & MPPF_BOTTOM)
+    {
+        y = ppt->y - rc.bottom;
+        cy = rc.bottom - rc.top;
+    }
+    else
+    {
+        y = ppt->y + rc.top;
+        cy = rc.bottom - rc.top;
+    }
 
     if (y < rcWorkArea.top)
     {
