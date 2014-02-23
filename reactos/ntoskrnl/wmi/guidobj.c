@@ -10,7 +10,6 @@
 
 #include <ntoskrnl.h>
 #include <wmistr.h>
-#include <wmiguid.h>
 #include "wmip.h"
 
 #define NDEBUG
@@ -37,8 +36,43 @@ WmipSecurityMethod(
     _In_ POOL_TYPE PoolType,
     _In_ PGENERIC_MAPPING GenericMapping)
 {
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+
+    ASSERT((PoolType == PagedPool) || (PoolType == NonPagedPool));
+    ASSERT((OperationType == QuerySecurityDescriptor) ||
+           (OperationType == SetSecurityDescriptor) ||
+           (OperationType == AssignSecurityDescriptor) ||
+           (OperationType == DeleteSecurityDescriptor));
+
+    if (OperationType == QuerySecurityDescriptor)
+    {
+        return ObQuerySecurityDescriptorInfo(Object,
+                                             SecurityInformation,
+                                             SecurityDescriptor,
+                                             CapturedLength,
+                                             ObjectSecurityDescriptor);
+    }
+    else if (OperationType == SetSecurityDescriptor)
+    {
+        return ObSetSecurityDescriptorInfo(Object,
+                                             SecurityInformation,
+                                             SecurityDescriptor,
+                                             ObjectSecurityDescriptor,
+                                             PoolType,
+                                             GenericMapping);
+    }
+    else if (OperationType == AssignSecurityDescriptor)
+    {
+        ObAssignObjectSecurityDescriptor(Object, SecurityDescriptor, PoolType);
+        return STATUS_SUCCESS;
+    }
+    else if (OperationType == DeleteSecurityDescriptor)
+    {
+        return ObDeassignSecurity(ObjectSecurityDescriptor);
+    }
+
+    ASSERT(FALSE);
+    return STATUS_INVALID_PARAMETER;
 }
 
 VOID
@@ -99,6 +133,32 @@ WmipInitializeGuidObjectType(
 
 static
 NTSTATUS
+WmipGUIDFromString(
+    _In_ PUNICODE_STRING GuidString,
+    _Out_ PGUID Guid)
+{
+    WCHAR Buffer[GUID_STRING_LENGTH + 2];
+    UNICODE_STRING String;
+
+    /* Validate string length */
+    if (GuidString->Length != GUID_STRING_LENGTH * sizeof(WCHAR))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Copy the string and wrap it in {} */
+    RtlCopyMemory(&Buffer[1], GuidString->Buffer, GuidString->Length);
+    Buffer[0] = L'{';
+    Buffer[GUID_STRING_LENGTH + 1] = L'}';
+
+    String.Buffer = Buffer;
+    String.Length = String.MaximumLength = sizeof(Buffer);
+
+    return RtlGUIDFromString(&String, Guid);
+}
+
+static
+NTSTATUS
 WmipCreateGuidObject(
     _In_ PUNICODE_STRING GuidString,
     _Out_ PWMIP_GUID_OBJECT *OutGuidObject)
@@ -109,7 +169,7 @@ WmipCreateGuidObject(
     NTSTATUS Status;
 
     /* Convert the string into a GUID structure */
-    Status = RtlGUIDFromString(GuidString, &Guid);
+    Status = WmipGUIDFromString(GuidString, &Guid);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("WMI: Invalid uuid format for guid '%wZ'\n", GuidString);
@@ -163,7 +223,7 @@ WmipOpenGuidObject(
     PAGED_CODE();
 
     /* Check if we have the expected prefix */
-    if (!RtlPrefixUnicodeString(ObjectAttributes->ObjectName, &Prefix, FALSE))
+    if (!RtlPrefixUnicodeString(&Prefix, ObjectAttributes->ObjectName, FALSE))
     {
         DPRINT1("WMI: Invalid prefix for guid object '%wZ'\n",
                 ObjectAttributes->ObjectName);

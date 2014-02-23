@@ -1,6 +1,8 @@
 
 #pragma once
 
+#define GUID_STRING_LENGTH 36
+
 typedef struct _WMIP_GUID_OBJECT
 {
     GUID Guid;
