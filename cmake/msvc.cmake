@@ -121,14 +121,7 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
 if(PCH)
     macro(add_pch _target _pch _sources)
-
-        # Workaround for the MSVC toolchain (MSBUILD) /MP bug
-        set(_temp_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
-        if(MSVC_IDE)
-            file(TO_NATIVE_PATH ${_temp_gch} _gch)
-        else()
-            set(_gch ${_temp_gch})
-        endif()
+        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
 
         if(IS_CPP)
             set(_pch_language CXX)
