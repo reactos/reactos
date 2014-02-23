@@ -145,10 +145,20 @@ GUIDisplayStatusMessage(
                               &ThreadId);
         if (Thread)
         {
+            /* 'msg' will be freed by 'StartupWindowThread' */
+
             CloseHandle(Thread);
             WaitForSingleObject(msg->StartupEvent, INFINITE);
             CloseHandle(msg->StartupEvent);
             return TRUE;
+        }
+        else
+        {
+            /*
+             * The 'StartupWindowThread' thread couldn't be created,
+             * so we need to free the allocated 'msg'.
+             */
+            HeapFree(GetProcessHeap(), 0, msg);
         }
 
         return FALSE;
