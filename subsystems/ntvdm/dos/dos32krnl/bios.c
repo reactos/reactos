@@ -93,8 +93,18 @@ BOOLEAN DosCheckInput(VOID)
 
     if (IsConsoleHandle(Handle))
     {
+        /* Save AX */
+        USHORT AX = getAX();
+
         /* Call the BIOS */
-        return (BiosPeekCharacter() != 0xFFFF);
+        setAH(0x01); // or 0x11 for enhanced, but what to choose?
+        Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
+
+        /* Restore AX */
+        setAX(AX);
+
+        /* Return keyboard status */
+        return (getZF() == 0);
     }
     else
     {

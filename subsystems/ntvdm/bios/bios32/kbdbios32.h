@@ -38,7 +38,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
 
 BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput);

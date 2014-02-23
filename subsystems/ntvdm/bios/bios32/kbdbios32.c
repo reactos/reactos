@@ -81,7 +81,7 @@ static BOOLEAN BiosKbdBufferPop(VOID)
     return TRUE;
 }
 
-WORD BiosPeekCharacter(VOID)
+static WORD BiosPeekCharacter(VOID)
 {
     WORD CharacterData = 0;
 

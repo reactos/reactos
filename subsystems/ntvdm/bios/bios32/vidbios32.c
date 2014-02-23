@@ -1045,7 +1045,7 @@ static BOOLEAN VidBiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
-VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
 {
     WORD CharData = MAKEWORD(Character, Attribute);
     BYTE Row, Column;

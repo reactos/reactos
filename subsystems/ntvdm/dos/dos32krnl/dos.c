@@ -809,8 +809,23 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     {
         for (i = 0; i < Count; i++)
         {
-            /* Call the BIOS to print the character */
-            VidBiosPrintCharacter(((LPBYTE)Buffer)[i], DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+            /* Save AX and BX */
+            USHORT AX = getAX();
+            USHORT BX = getBX();
+
+            /* Set the parameters */
+            setAL(((PCHAR)Buffer)[i]);
+            setBL(DOS_CHAR_ATTRIBUTE);
+            setBH(Bda->VideoPage);
+
+            /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
+            setAH(0x0E);
+            Int32Call(&DosContext, BIOS_VIDEO_INTERRUPT);
+
+            /* Restore AX and BX */
+            setBX(BX);
+            setAX(AX);
+
             BytesWritten32++;
         }
     }
@@ -2513,14 +2528,17 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
     USHORT AX = getAX();
     USHORT BX = getBX();
 
+    /* Set the parameters (AL = character, already set) */
     setBL(DOS_CHAR_ATTRIBUTE);
     setBH(Bda->VideoPage);
+
+    /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
     setAH(0x0E);
-    Int32Call(&DosContext, 0x10);
+    Int32Call(&DosContext, BIOS_VIDEO_INTERRUPT);
 
     /* Restore AX and BX */
-    setAX(AX);
     setBX(BX);
+    setAX(AX);
 #endif
 }
 

@@ -36,8 +36,6 @@ enum
 
 /* FUNCTIONS ******************************************************************/
 
-VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page);
-
 BOOLEAN VidBios32Initialize(HANDLE BiosConsoleOutput);
 VOID VidBios32Cleanup(VOID);
 
