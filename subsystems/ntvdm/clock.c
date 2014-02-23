@@ -59,6 +59,7 @@ INT KeyboardIntCounter = 0;
 
 VOID ClockUpdate(VOID)
 {
+    extern BOOLEAN CpuSimulate;
     UINT i;
 
 #ifdef WORKING_TIMER
@@ -127,7 +128,7 @@ VOID ClockUpdate(VOID)
     VgaHorizontalRetrace();
 
     /* Continue CPU emulation */
-    for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
+    for (i = 0; VdmRunning && CpuSimulate && (i < STEPS_PER_CYCLE); i++)
     {
         EmulatorStep();
 #ifdef IPS_DISPLAY

@@ -30,6 +30,12 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 FAST486_STATE EmulatorContext;
+BOOLEAN CpuSimulate = FALSE;
+
+/* No more than 'MaxCpuCallLevel' recursive CPU calls are allowed */
+const static INT MaxCpuCallLevel = 32;
+static INT CpuCallLevel = 0;
+
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
 
@@ -177,18 +183,31 @@ VOID EmulatorStep(VOID)
 
 VOID EmulatorSimulate(VOID)
 {
-    // FIXME: Do not mix VdmRunning (i.e. ntvdm running) and CpuSimulate!!
-    while (VdmRunning) ClockUpdate();
+    if (CpuCallLevel > MaxCpuCallLevel)
+    {
+        DisplayMessage(L"Too many CPU levels of recursion (%d, expected maximum %d)",
+                       CpuCallLevel, MaxCpuCallLevel);
+
+        /* Stop the VDM */
+        VdmRunning = FALSE;
+        return;
+    }
+    CpuCallLevel++;
+
+    CpuSimulate = TRUE;
+    while (VdmRunning && CpuSimulate) ClockUpdate();
+
+    CpuCallLevel--;
+    if (CpuCallLevel < 0) CpuCallLevel = 0;
 
     /* This takes into account for reentrance */
-    VdmRunning = TRUE;
+    CpuSimulate = TRUE;
 }
 
 VOID EmulatorUnsimulate(VOID)
 {
     /* Stop simulation */
-    // FIXME: Do not mix VdmRunning (i.e. ntvdm running) and CpuSimulate!!
-    VdmRunning = FALSE;
+    CpuSimulate = FALSE;
 }
 
 VOID EmulatorInterrupt(BYTE Number)

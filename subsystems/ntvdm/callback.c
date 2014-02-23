@@ -102,7 +102,7 @@ Call16(IN USHORT Segment,
 
     DPRINT("Call16(0x%04X, 0x%04X)\n", Segment, Offset);
 
-    /* Start simulation */
+    /* Start CPU simulation */
     EmulatorSimulate();
 
     /* Restore CS:IP */
