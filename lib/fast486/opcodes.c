@@ -4268,6 +4268,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
         return FALSE;
     }
 
+    /* Check for VM86 mode when IOPL is not 3 */
     if (State->Flags.Vm && (State->Flags.Iopl != 3))
     {
         /* Call the VM86 monitor */
@@ -4305,7 +4306,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSahf)
     State->Flags.AlwaysSet = TRUE;
     State->Flags.Reserved0 = State->Flags.Reserved1 = FALSE;
 
-    return FALSE;
+    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLahf)
@@ -4316,7 +4317,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLahf)
     /* Set AH to the low-order byte of FLAGS */
     State->GeneralRegs[FAST486_REG_EAX].HighByte = LOBYTE(State->Flags.Long);
 
-    return FALSE;
+    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
