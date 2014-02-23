@@ -266,7 +266,7 @@ public:
 };
 
 extern "C"
-HRESULT
+HRESULT WINAPI
 CStartMenu_Constructor(REFIID riid, void **ppv)
 {
     IShellMenu* pShellMenu;

@@ -1118,7 +1118,9 @@ HRESULT CMenuSFToolbar::FillToolbar()
         tbb.fsStyle = 0;
 
         CComPtr<IShellItem> psi;
-        SHCreateShellItem(NULL, m_shellFolder, item, &psi);
+        hr = SHCreateShellItem(NULL, m_shellFolder, item, &psi);
+        if (FAILED(hr))
+            return hr;
 
         hr = psi->GetDisplayName(SIGDN_NORMALDISPLAY, &MenuString);
         if (FAILED(hr))
@@ -1150,7 +1152,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
     if (i == 0)
     {
         TBBUTTON tbb = { 0 };
-        PWSTR MenuString = L"(Empty)";
+        PCWSTR MenuString = L"(Empty)";
 
         tbb.fsState = 0/*TBSTATE_DISABLED*/;
         tbb.fsStyle = 0;
@@ -1301,7 +1303,9 @@ HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
 {
     HRESULT hr;
     CComPtr<IShellItem> psi;
-    SHCreateShellItem(NULL, m_shellFolder, GetPidlFromId(uItem), &psi);
+    hr = SHCreateShellItem(NULL, m_shellFolder, GetPidlFromId(uItem), &psi);
+    if (FAILED(hr))
+        return S_FALSE;
 
     SFGAOF attrs;
     hr = psi->GetAttributes(SFGAO_FOLDER, &attrs);
@@ -1312,14 +1316,14 @@ HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
 }
 
 CMenuBand::CMenuBand() :
-    m_site(NULL),
-    m_psmc(NULL),
     m_staticToolbar(NULL),
     m_SFToolbar(NULL),
+    m_site(NULL),
+    m_psmc(NULL),
+    m_subMenuChild(NULL),
     m_useBigIcons(FALSE),
     m_hotBar(NULL),
-    m_hotItem(-1),
-    m_subMenuChild(NULL)
+    m_hotItem(-1)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
