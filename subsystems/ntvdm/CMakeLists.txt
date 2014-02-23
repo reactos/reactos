@@ -22,7 +22,7 @@ list(APPEND SOURCE
     bop.c
     clock.c
     emulator.c
-    int32.c
+    callback.c
     io.c
     registers.c
     vddsup.c

@@ -15,6 +15,8 @@
 #include "kbdbios32.h"
 #include "vidbios32.h"
 
+/**/ #include "callback.h" /**/
+
 /* DEFINES ********************************************************************/
 
 #define BIOS_PIC_MASTER_INT 0x08
@@ -114,6 +116,14 @@ typedef struct
 C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
 
 /* FUNCTIONS ******************************************************************/
+
+extern CALLBACK16 BiosContext;
+#define RegisterBiosInt32(IntNumber, IntHandler) \
+do { \
+    BiosContext.NextOffset += RegisterInt32(MAKELONG(BiosContext.NextOffset,  \
+                                                     BiosContext.Segment),    \
+                                            (IntNumber), (IntHandler), NULL); \
+} while(0);
 
 extern PBIOS_DATA_AREA Bda;
 

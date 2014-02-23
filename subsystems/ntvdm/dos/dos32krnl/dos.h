@@ -13,6 +13,8 @@
 
 #include "ntvdm.h"
 
+/**/ #include "callback.h" /**/
+
 /* DEFINES ********************************************************************/
 
 //
@@ -137,6 +139,14 @@ typedef struct _DOS_FIND_FILE_BLOCK
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
+
+extern CALLBACK16 DosContext;
+#define RegisterDosInt32(IntNumber, IntHandler) \
+do { \
+    DosContext.NextOffset += RegisterInt32(MAKELONG(DosContext.NextOffset,   \
+                                                    DosContext.Segment),     \
+                                           (IntNumber), (IntHandler), NULL); \
+} while(0);
 
 /*
  * DOS BIOS Functions

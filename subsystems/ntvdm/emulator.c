@@ -388,7 +388,8 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     // if (!VgaInitialize(ConsoleOutput)) return FALSE;
     VgaInitialize(ConsoleOutput);
 
-    /* Register the emulator BOPs */
+    /* Initialize the software callback system and register the emulator BOPs */
+    InitializeCallbacks();
     RegisterBop(BOP_DEBUGGER  , EmulatorDebugBreakBop);
     RegisterBop(BOP_UNSIMULATE, EmulatorUnsimulateBop);
 

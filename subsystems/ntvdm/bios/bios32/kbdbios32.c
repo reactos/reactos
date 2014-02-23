@@ -11,13 +11,13 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "callback.h"
+
 // #include "kbdbios32.h"
 #include "bios32.h"
 
 #include "io.h"
 #include "hardware/ps2.h"
-
-#include "int32.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -271,7 +271,7 @@ BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput)
     /* Register the BIOS 32-bit Interrupts */
 
     /* Initialize software vector handlers */
-    RegisterInt32(BIOS_KBD_INTERRUPT, BiosKeyboardService);
+    RegisterBiosInt32(BIOS_KBD_INTERRUPT, BiosKeyboardService);
 
     /* Set up the HW vector interrupts */
     EnableHwIRQ(1, BiosKeyboardIrq);

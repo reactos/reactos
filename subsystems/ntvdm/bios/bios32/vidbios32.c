@@ -11,13 +11,13 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "callback.h"
+
 // #include "vidbios32.h"
 #include "bios32.h"
 
 #include "io.h"
 #include "hardware/vga.h"
-
-#include "int32.h"
 
 /* MACROS *********************************************************************/
 
@@ -1536,11 +1536,11 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 BOOLEAN VidBios32Initialize(HANDLE ConsoleOutput)
 {
     /* Some interrupts are in fact addresses to tables */
-    ((PDWORD)BaseAddress)[0x1D] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x1F] = (DWORD)NULL;
-    // ((PDWORD)BaseAddress)[0x42] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x43] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x44] = (DWORD)NULL;
+    ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x1F] = (ULONG)NULL;
+    // ((PULONG)BaseAddress)[0x42] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x43] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x44] = (ULONG)NULL;
 
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
@@ -1562,7 +1562,7 @@ BOOLEAN VidBios32Initialize(HANDLE ConsoleOutput)
     }
 
     /* Register the BIOS 32-bit Interrupts */
-    RegisterInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);
+    RegisterBiosInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);
 
     return TRUE;
 }

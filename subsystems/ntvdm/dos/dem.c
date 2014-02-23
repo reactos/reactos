@@ -14,17 +14,130 @@
 
 #define NDEBUG
 
+#include "emulator.h"
+
 #include "dem.h"
+#include "bop.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/obtypes.h>
 
+/* PRIVATE VARIABLES **********************************************************/
+
 /**/extern BYTE CurrentDrive;/**/
+
+/* DEFINES ********************************************************************/
+
+/* BOP Identifiers */
+#define BOP_DOS 0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
+#define BOP_CMD 0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID WINAPI DosSystemBop(LPWORD Stack)
+{
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
+}
+
+static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
+{
+    /* Get the Function Number and skip it */
+    BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + 1);
+
+    switch (FuncNum)
+    {
+        case 0x08: // Launch external command
+        {
+#define CMDLINE_LENGTH  1024
+
+            BOOL Result;
+            DWORD dwExitCode;
+
+            LPSTR Command = (LPSTR)SEG_OFF_TO_PTR(getDS(), getSI());
+            LPSTR CmdPtr  = Command;
+            CHAR CommandLine[CMDLINE_LENGTH] = "";
+            STARTUPINFOA StartupInfo;
+            PROCESS_INFORMATION ProcessInformation;
+
+            /* Remove return carriage character */
+            while (*CmdPtr != '\r') CmdPtr++;
+            *CmdPtr = '\0';
+
+            DPRINT1("CMD Run Command '%s'\n", Command);
+
+            /* Spawn a user-defined 32-bit command preprocessor */
+
+            /* Build the command line */
+            // FIXME: Use COMSPEC env var!!
+            strcpy(CommandLine, "cmd.exe /c ");
+            strcat(CommandLine, Command);
+
+            ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+            ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+
+            StartupInfo.cb = sizeof(StartupInfo);
+
+            DosPrintCharacter('\n');
+
+            Result = CreateProcessA(NULL,
+                                    CommandLine,
+                                    NULL,
+                                    NULL,
+                                    TRUE,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    &StartupInfo,
+                                    &ProcessInformation);
+            if (Result)
+            {
+                DPRINT1("Command '%s' launched successfully\n", Command);
+
+                /* Wait for process termination */
+                WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+
+                /* Get the exit code */
+                GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
+
+                /* Close handles */
+                CloseHandle(ProcessInformation.hThread);
+                CloseHandle(ProcessInformation.hProcess);
+            }
+            else
+            {
+                DPRINT1("Failed when launched command '%s'\n");
+                dwExitCode = GetLastError();
+            }
+            
+            DosPrintCharacter('\n');
+
+            setAL((UCHAR)dwExitCode);
+
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("Unknown DOS CMD Interpreter BOP Function: 0x%02X\n", FuncNum);
+            // setCF(1); // Disable, otherwise we enter an infinite loop
+            break;
+        }
+    }
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames)
 {
+    /* Register the DOS BOPs */
+    RegisterBop(BOP_DOS, DosSystemBop        );
+    RegisterBop(BOP_CMD, DosCmdInterpreterBop);
+
     if (DosKernelFileNames)
     {
         DisplayMessage(L"NTVDM: Loading DOS kernel from external files is currently unsupported");
@@ -35,7 +148,7 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames)
         BOOLEAN Result;
 
         Result  = DosBIOSInitialize();
-        Result &= DosKRNLInitialize();
+        // Result &= DosKRNLInitialize();
 
         return Result;
     }

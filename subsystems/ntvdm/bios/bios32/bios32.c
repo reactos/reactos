@@ -11,6 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "callback.h"
+
 #include "bios32.h"
 
 #include "io.h"
@@ -18,10 +20,9 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 
-#include "int32.h"
-
 /* PRIVATE VARIABLES **********************************************************/
 
+CALLBACK16 BiosContext;
 PBIOS_DATA_AREA Bda;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -190,7 +191,7 @@ VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func)
     else
         vector = BIOS_PIC_SLAVE_INT  + hwirq - 8;
 
-    RegisterInt32(vector, func);
+    RegisterBiosInt32(vector, func);
 }
 
 
@@ -250,7 +251,8 @@ static VOID WINAPI BiosTimerIrq(LPWORD Stack)
      * because some programs may hook only BIOS_SYS_TIMER_INTERRUPT
      * for their purpose...
      */
-    EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT);
+    /** EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT); **/
+    Int32Call(&BiosContext, BIOS_SYS_TIMER_INTERRUPT);
     PicIRQComplete(Stack);
 }
 
@@ -303,6 +305,48 @@ static VOID BiosHwSetup(VOID)
     EnableHwIRQ(0, BiosTimerIrq);
 }
 
+static VOID InitializeBiosInt32(VOID)
+{
+    USHORT i;
+    // USHORT Offset = 0;
+
+    /* Initialize the callback context */
+    InitializeContext(&BiosContext, BIOS_SEGMENT, 0x0000);
+
+    /* Register the BIOS 32-bit Interrupts */
+    for (i = 0x00; i <= 0xFF; i++)
+    {
+        // Offset += RegisterInt32(MAKELONG(Offset, BIOS_SEGMENT), i, NULL, NULL);
+        BiosContext.NextOffset += RegisterInt32(MAKELONG(BiosContext.NextOffset,
+                                                         BiosContext.Segment),
+                                                i, NULL, NULL);
+    }
+
+    /* Initialize the exception vector interrupts to a default Exception handler */
+    for (i = 0; i < 8; i++)
+        RegisterBiosInt32(i, BiosException);
+
+    /* Initialize HW vector interrupts to a default HW handler */
+    for (i = BIOS_PIC_MASTER_INT; i < BIOS_PIC_MASTER_INT + 8; i++)
+        RegisterBiosInt32(i, BiosHandleMasterPicIRQ);
+    for (i = BIOS_PIC_SLAVE_INT ; i < BIOS_PIC_SLAVE_INT  + 8; i++)
+        RegisterBiosInt32(i, BiosHandleSlavePicIRQ);
+
+    /* Initialize software vector handlers */
+    RegisterBiosInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
+    RegisterBiosInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
+    RegisterBiosInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
+    RegisterBiosInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
+    RegisterBiosInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
+
+    /* Some interrupts are in fact addresses to tables */
+    ((PULONG)BaseAddress)[0x1E] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x41] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x46] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x48] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -312,7 +356,6 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
                          IN HANDLE ConsoleOutput)
 {
     UCHAR Low, High;
-    UCHAR i;
 
     /* Initialize the BDA */
     Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
@@ -328,34 +371,8 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
     High = IOReadB(CMOS_DATA_PORT);
     Bda->MemorySize = MAKEWORD(Low, High);
 
-    /* Initialize the 32-bit Interrupt system */
-    InitializeInt32(BIOS_SEGMENT);
-
     /* Register the BIOS 32-bit Interrupts */
-
-    /* Initialize the exception vector interrupts to a default Exception handler */
-    for (i = 0; i < 8; i++)
-        RegisterInt32(i, BiosException);
-
-    /* Initialize HW vector interrupts to a default HW handler */
-    for (i = BIOS_PIC_MASTER_INT; i < BIOS_PIC_MASTER_INT + 8; i++)
-        RegisterInt32(i, BiosHandleMasterPicIRQ);
-    for (i = BIOS_PIC_SLAVE_INT ; i < BIOS_PIC_SLAVE_INT  + 8; i++)
-        RegisterInt32(i, BiosHandleSlavePicIRQ);
-
-    /* Initialize software vector handlers */
-    RegisterInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
-    RegisterInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
-    RegisterInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
-    RegisterInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
-    RegisterInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
-
-    /* Some interrupts are in fact addresses to tables */
-    ((PDWORD)BaseAddress)[0x1E] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x41] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x46] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x48] = (DWORD)NULL;
-    ((PDWORD)BaseAddress)[0x49] = (DWORD)NULL;
+    InitializeBiosInt32();
 
     /* Initialize platform hardware (PIC/PIT chips, ...) */
     BiosHwSetup();

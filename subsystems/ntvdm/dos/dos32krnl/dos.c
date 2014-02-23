@@ -11,14 +11,17 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "callback.h"
+
 #include "dos.h"
 #include "dos/dem.h"
 
 #include "bios/bios.h"
-#include "int32.h"
 #include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
+
+CALLBACK16 DosContext;
 
 static WORD CurrentPsp = SYSTEM_PSP;
 static WORD DosLastError = 0;
@@ -1669,11 +1672,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Set Interrupt Vector */
         case 0x25:
         {
-            DWORD FarPointer = MAKELONG(getDX(), getDS());
+            ULONG FarPointer = MAKELONG(getDX(), getDS());
             DPRINT1("Setting interrupt 0x%x ...\n", getAL());
 
             /* Write the new far pointer to the IDT */
-            ((PDWORD)BaseAddress)[getAL()] = FarPointer;
+            ((PULONG)BaseAddress)[getAL()] = FarPointer;
             break;
         }
 
@@ -2480,6 +2483,7 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
      * for more information.
      */
 
+#if 0
     if (Stack[STACK_COUNTER] == 0)
     {
         Stack[STACK_COUNTER]++;
@@ -2504,6 +2508,20 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
         setAX(Stack[STACK_VAR_A]);
         setBX(Stack[STACK_VAR_B]);
     }
+#else
+    /* Save AX and BX */
+    USHORT AX = getAX();
+    USHORT BX = getBX();
+
+    setBL(DOS_CHAR_ATTRIBUTE);
+    setBH(Bda->VideoPage);
+    setAH(0x0E);
+    Int32Call(&DosContext, 0x10);
+
+    /* Restore AX and BX */
+    setAX(AX);
+    setBX(BX);
+#endif
 }
 
 VOID WINAPI DosInt2Fh(LPWORD Stack)
@@ -2585,15 +2603,17 @@ BOOLEAN DosKRNLInitialize(VOID)
 
 #endif
 
+    /* Initialize the callback context */
+    InitializeContext(&DosContext, 0x0070, 0x0000);
 
     /* Register the DOS 32-bit Interrupts */
-    RegisterInt32(0x20, DosInt20h        );
-    RegisterInt32(0x21, DosInt21h        );
-//  RegisterInt32(0x22, DosInt22h        ); // Termination
-    RegisterInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
-//  RegisterInt32(0x24, DosInt24h        ); // Critical Error
-    RegisterInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
-    RegisterInt32(0x2F, DosInt2Fh        );
+    RegisterDosInt32(0x20, DosInt20h        );
+    RegisterDosInt32(0x21, DosInt21h        );
+//  RegisterDosInt32(0x22, DosInt22h        ); // Termination
+    RegisterDosInt32(0x23, DosBreakInterrupt); // Ctrl-C / Ctrl-Break
+//  RegisterDosInt32(0x24, DosInt24h        ); // Critical Error
+    RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
+    RegisterDosInt32(0x2F, DosInt2Fh        );
 
     return TRUE;
 }
