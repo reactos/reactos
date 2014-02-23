@@ -676,9 +676,14 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_TIMER:
         if (wParam == TIMERID_HOTTRACK)
         {
-            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL);
-            PopupItem(m_hotItem);
             KillTimer(hWnd, TIMERID_HOTTRACK);
+
+            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL);
+
+            if (HasSubMenu(m_hotItem) == S_OK)
+            {
+                PopupItem(m_hotItem);
+            }
         }
     }
 
@@ -696,12 +701,9 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
     }
     else if (m_hotItem != hot->idNew)
     {
-        if (HasSubMenu(hot->idNew) == S_OK)
-        {
-            DWORD elapsed = 0;
-            SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
-            SetTimer(m_hwnd, TIMERID_HOTTRACK, elapsed, NULL);
-        }
+        DWORD elapsed = 0;
+        SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
+        SetTimer(m_hwnd, TIMERID_HOTTRACK, elapsed, NULL);
 
         m_hotItem = hot->idNew;
         m_menuBand->_OnHotItemChanged(this, m_hotItem);
@@ -838,7 +840,7 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
 
 HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
 {
-    int prev = SendMessage(m_hwnd, TB_GETHOTITEM, 0, 0);
+    int prev = m_hotItem;
     int index = -1;
 
     if (dwSelectType != 0xFFFFFFFF)
@@ -896,7 +898,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
             if (btn.dwData)
             {
                 m_hotItem = btn.idCommand;
-                if (prev != index)
+                if (prev != m_hotItem)
                 {
                     SendMessage(m_hwnd, TB_SETHOTITEM, index, 0);
                     return m_menuBand->_OnHotItemChanged(this, m_hotItem);
@@ -916,7 +918,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
     }
 
     m_hotItem = -1;
-    if (prev != index)
+    if (prev != m_hotItem)
     {
         SendMessage(m_hwnd, TB_SETHOTITEM, -1, 0);
         m_menuBand->_OnHotItemChanged(NULL, -1);
