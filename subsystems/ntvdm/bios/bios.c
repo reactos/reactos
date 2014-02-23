@@ -30,6 +30,7 @@ BOOLEAN BiosInitialize(IN LPCWSTR BiosFileName,
         BOOL   Success;
         HANDLE hBiosFile;
         DWORD  BiosSize;
+        PVOID  BiosLocation;
 
         /* Open the BIOS file */
         SetLastError(0); // For debugging purposes
@@ -62,30 +63,33 @@ BOOLEAN BiosInitialize(IN LPCWSTR BiosFileName,
             return FALSE;
         }
 
+        /* BIOS location needs to be aligned on 32-bit boundary */
+        /* (PVOID)((ULONG_PTR)BaseAddress + ROM_AREA_END + 1 - BiosSize) */
+        BiosLocation = (PVOID)MEM_ALIGN_DOWN((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) + 1 - BiosSize, sizeof(ULONG));
+
         DisplayMessage(L"First bytes at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n"
                        L"3 last bytes at 0x%p: 0x%02x 0x%02x 0x%02x",
-            (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) + 1 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 1 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 2 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 3 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 4 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 5 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 6 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 7 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 8 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 9 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 0xa - BiosSize),
+            BiosLocation,
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 0),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 1),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 2),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 3),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 4),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 5),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 6),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 7),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 8),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 9),
 
-            (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) - 2),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 2),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 1),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 0));
+             (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) - 2),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 2),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 1),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 0));
 
         /* Attempt to load the BIOS file into memory */
         SetLastError(0); // For debugging purposes
         Success = ReadFile(hBiosFile,
-                           (PVOID)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 1 - BiosSize),
-                           /* (PVOID)((ULONG_PTR)BaseAddress + ROM_AREA_END + 1 - BiosSize) */
+                           REAL_TO_PHYS(BiosLocation),
                            BiosSize,
                            &BiosSize,
                            NULL);
@@ -96,22 +100,22 @@ BOOLEAN BiosInitialize(IN LPCWSTR BiosFileName,
 
         DisplayMessage(L"First bytes at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n"
                        L"3 last bytes at 0x%p: 0x%02x 0x%02x 0x%02x",
-            (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) + 1 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 1 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 2 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 3 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 4 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 5 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 6 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 7 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 8 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 9 - BiosSize),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) + 0xa - BiosSize),
+            BiosLocation,
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 0),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 1),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 2),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 3),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 4),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 5),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 6),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 7),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 8),
+            *(PCHAR)((ULONG_PTR)REAL_TO_PHYS(BiosLocation) + 9),
 
-            (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) - 2),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 2),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 1),
-           *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 0));
+             (PVOID)((ULONG_PTR)TO_LINEAR(0xF000, 0xFFFF) - 2),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 2),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 1),
+            *(PCHAR)((ULONG_PTR)SEG_OFF_TO_PTR(0xF000, 0xFFFF) - 0));
 
         DisplayMessage(L"POST at 0x%p: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
                        TO_LINEAR(getCS(), getIP()),

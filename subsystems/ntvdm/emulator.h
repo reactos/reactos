@@ -44,6 +44,9 @@
 
 
 /* Basic Memory Management */
+#define MEM_ALIGN_UP(ptr, align)    MEM_ALIGN_DOWN((ULONG_PTR)(ptr) + (align) - 1l, (align))
+#define MEM_ALIGN_DOWN(ptr, align)  ((ULONG_PTR)(ptr) & ~((align) - 1l))
+
 #define TO_LINEAR(seg, off) (((seg) << 4) + (off))
 #define MAX_SEGMENT 0xFFFF
 #define MAX_OFFSET  0xFFFF
@@ -54,6 +57,9 @@
 
 #define SEG_OFF_TO_PTR(seg, off)    \
     (PVOID)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), (off)))
+
+#define REAL_TO_PHYS(ptr)   (PVOID)((ULONG_PTR)(ptr) + (ULONG_PTR)BaseAddress)
+#define PHYS_TO_REAL(ptr)   (PVOID)((ULONG_PTR)(ptr) - (ULONG_PTR)BaseAddress)
 
 
 /* BCD-Binary conversion */

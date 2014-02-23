@@ -32,9 +32,6 @@ EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 #define BOP_CONTROL_INT32       0xFF
 
 
-// #define ALIGN(ptr) (((ULONG_PTR)(ptr) + 15) & ~15)
-#define ALIGN(ptr) (ptr)
-
 #define BOP(num)            LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), (num)
 #define UnSimulate16        MAKELONG(EMULATOR_BOP, BOP_UNSIMULATE) // BOP(BOP_UNSIMULATE)
 

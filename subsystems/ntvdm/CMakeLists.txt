@@ -20,9 +20,9 @@ list(APPEND SOURCE
     dos/dos32krnl/dos.c
     dos/dem.c
     bop.c
+    callback.c
     clock.c
     emulator.c
-    callback.c
     io.c
     registers.c
     vddsup.c
