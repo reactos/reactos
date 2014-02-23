@@ -97,6 +97,8 @@ SYSSETUP_LogItem(IN const LPSTR lpFileName,
     DWORD dwMessageSize;
     DWORD dwWritten;
     CHAR Buffer[6];
+    CHAR TimeBuffer[30];
+    SYSTEMTIME stTime;
 
     /* Get the severity code string */
     switch (dwSeverity)
@@ -147,6 +149,28 @@ SYSSETUP_LogItem(IN const LPSTR lpFileName,
                    0,
                    NULL,
                    FILE_END);
+
+    /* Write Time/Date */
+    GetLocalTime(&stTime);
+
+    snprintf(TimeBuffer, sizeof(TimeBuffer),
+             "%02d/%02d/%02d %02d:%02d:%02d.%03d",
+             stTime.wMonth,
+             stTime.wDay,
+             stTime.wYear,
+             stTime.wHour,
+             stTime.wMinute,
+             stTime.wSecond,
+             stTime.wMilliseconds);
+
+    WriteFile(hLogFile,
+              TimeBuffer,
+              strlen(TimeBuffer),
+              &dwWritten,
+              NULL);
+
+    /* Write comma */
+    WriteFile(hLogFile, ",", 1, &dwWritten, NULL);
 
     /* Write file name */
     WriteFile(hLogFile,

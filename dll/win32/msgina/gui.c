@@ -145,10 +145,20 @@ GUIDisplayStatusMessage(
                               &ThreadId);
         if (Thread)
         {
+            /* 'msg' will be freed by 'StartupWindowThread' */
+
             CloseHandle(Thread);
             WaitForSingleObject(msg->StartupEvent, INFINITE);
             CloseHandle(msg->StartupEvent);
             return TRUE;
+        }
+        else
+        {
+            /*
+             * The 'StartupWindowThread' thread couldn't be created,
+             * so we need to free the allocated 'msg'.
+             */
+            HeapFree(GetProcessHeap(), 0, msg);
         }
 
         return FALSE;
@@ -641,6 +651,7 @@ ShutDownOnInit(
     IN PGINA_CONTEXT pgContext)
 {
     WCHAR szBuffer[256];
+    WCHAR szBuffer2[256];
     HWND hwndList;
     INT idx, count, i;
 
@@ -651,7 +662,8 @@ ShutDownOnInit(
 
     /* Log off */
     LoadStringW(hDllInstance, IDS_SHUTDOWN_LOGOFF, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
-    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+    wsprintfW(szBuffer2, szBuffer, pgContext->UserName);
+    idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer2);
     if (idx != CB_ERR)
         SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_LOGOFF);
 
