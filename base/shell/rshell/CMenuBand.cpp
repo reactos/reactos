@@ -915,7 +915,7 @@ HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
 
     CMINVOKECOMMANDINFO cmi = { 0 };
     cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = reinterpret_cast<LPCSTR>(uCommand);
+    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
     cmi.hwnd = m_hwnd;
     hr = contextMenu->InvokeCommand(&cmi);
 
@@ -934,7 +934,6 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     }
     return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
 }
-
 
 HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
 {
