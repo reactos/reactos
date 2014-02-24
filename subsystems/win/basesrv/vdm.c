@@ -190,8 +190,61 @@ CSR_API(BaseSrvGetNextVDMCommand)
 
 CSR_API(BaseSrvExitVDM)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_EXIT_VDM ExitVdmRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.ExitVDMRequest;
+    PRTL_CRITICAL_SECTION CriticalSection = NULL;
+    PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+    PVDM_DOS_RECORD DosRecord;
+
+    CriticalSection = (ExitVdmRequest->iWowTask == 0)
+                      ? &DosCriticalSection
+                      : &WowCriticalSection;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(CriticalSection);
+
+    if (ExitVdmRequest->iWowTask == 0)
+    {
+        /* Get the console record */
+        Status = BaseSrvGetConsoleRecord(ExitVdmRequest->ConsoleHandle, &ConsoleRecord);
+        if (!NT_SUCCESS(Status)) goto Cleanup;
+
+        /* Cleanup the DOS records */
+        while (ConsoleRecord->DosListHead.Flink != &ConsoleRecord->DosListHead)
+        {
+            DosRecord = CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
+                                          VDM_DOS_RECORD,
+                                          Entry);
+
+            /* Remove the DOS entry */
+            RemoveEntryList(&DosRecord->Entry);
+            RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
+        }
+
+        if (ConsoleRecord->CurrentDirs != NULL)
+        {
+            /* Free the current directories */
+            RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord->CurrentDirs);
+            ConsoleRecord->CurrentDirs = NULL;
+            ConsoleRecord->CurDirsLength = 0;
+        }
+
+        /* Remove the console record */
+        RemoveEntryList(&ConsoleRecord->Entry);
+        RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+    }
+    else
+    {
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(CriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvIsFirstVDM)
