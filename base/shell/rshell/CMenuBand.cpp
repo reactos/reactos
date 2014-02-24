@@ -610,6 +610,16 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
     HDC hdc;
     HBRUSH bgBrush;
     HBRUSH hotBrush;
+    NMHDR * hdr;
+    NMTBCUSTOMDRAW * cdraw;
+    NMTBHOTITEM * hot;
+    NMMOUSE * rclick;
+    NMPGCALCSIZE* csize;
+    TBBUTTONINFO btni;
+    BOOL useFlatMenus = FALSE;
+    COLORREF clrText;
+    COLORREF clrTextHighlight;
+
 
     *theResult = 0;
     switch (uMsg)
@@ -629,12 +639,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         return S_OK;
 
     case WM_NOTIFY:
-        NMHDR * hdr = reinterpret_cast<LPNMHDR>(lParam);
-        NMTBCUSTOMDRAW * cdraw;
-        NMTBHOTITEM * hot;
-        NMMOUSE * rclick;
-        NMPGCALCSIZE* csize;
-        TBBUTTONINFO btni;
+        hdr = reinterpret_cast<LPNMHDR>(lParam);
         switch (hdr->code)
         {
         case PGN_CALCSIZE:
@@ -725,15 +730,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 
             case CDDS_ITEMPREPAINT:
 
-                cdraw->clrBtnFace = GetSysColor(COLOR_MENU);
-                cdraw->clrBtnHighlight = GetSysColor(COLOR_MENUHILIGHT);
+                SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlatMenus, 0);
 
-                cdraw->clrText = GetSysColor(COLOR_MENUTEXT);
-                cdraw->clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
-                cdraw->clrHighlightHotTrack = GetSysColor(COLOR_HIGHLIGHTTEXT);
+                clrText = GetSysColor(COLOR_MENUTEXT);
+                clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
 
                 bgBrush = GetSysColorBrush(COLOR_MENU);
-                hotBrush = GetSysColorBrush(COLOR_MENUHILIGHT);
+                hotBrush = GetSysColorBrush(useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
 
                 rc = cdraw->nmcd.rc;
                 hdc = cdraw->nmcd.hdc;
@@ -750,9 +753,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
                 case CDIS_HOT:
                 case CDIS_FOCUS:
                     FillRect(hdc, &rc, hotBrush);
+                    SetTextColor(hdc, clrTextHighlight);
+                    cdraw->clrText = clrTextHighlight;
                     break;
                 default:
                     FillRect(hdc, &rc, bgBrush);
+                    SetTextColor(hdc, clrText);
+                    cdraw->clrText = clrText;
                     break;
                 }
 
