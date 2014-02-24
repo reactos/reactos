@@ -1728,6 +1728,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 || State->Flags.Vm)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
             }
 
             return Fast486WriteModrmWordOperands(State,
@@ -1744,6 +1745,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 || State->Flags.Vm)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
             }
 
             return Fast486WriteModrmWordOperands(State,
@@ -1763,6 +1765,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 || State->Flags.Vm)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
             }
 
             /* This is a privileged instruction */
@@ -1838,6 +1841,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 || State->Flags.Vm)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
             }
 
             /* This is a privileged instruction */
@@ -1915,6 +1919,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
                 || State->Flags.Vm)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return FALSE;
             }
 
             /* This is a privileged instruction */
