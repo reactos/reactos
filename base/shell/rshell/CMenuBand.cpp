@@ -314,7 +314,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
     return S_OK;
 }
 
-/* IDockingWindow */
 HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
 {
     HRESULT hr = S_OK;
@@ -394,54 +393,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
     return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::IsDirty()
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::Load(IStream *pStm)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::Save(IStream *pStm, BOOL fClearDirty)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetClassID(CLSID *pClassID)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
 HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
     if (!pguidCmdGroup)
@@ -492,10 +443,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
             m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_SELECTRIGHT:
-        if (m_hotBar && m_hotItem >= 0)
-        {
-            // TODO: popup the current child if it has subitems, otherwise spread up.
-        }
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_EXECUTE:
     case MPOS_FULLCANCEL:
@@ -741,8 +688,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
                 rc = cdraw->nmcd.rc;
                 hdc = cdraw->nmcd.hdc;
 
-                if (cdraw->nmcd.uItemState != CDIS_DISABLED &&
-                    ((INT)cdraw->nmcd.dwItemSpec == m_hotItem ||
+                if (((INT)cdraw->nmcd.dwItemSpec == m_hotItem ||
                     (m_hotItem < 0 && (INT)cdraw->nmcd.dwItemSpec == m_popupItem)))
                 {
                     cdraw->nmcd.uItemState = CDIS_HOT;
@@ -797,78 +743,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::IsWindowOwner(HWND hWnd)
         return S_OK;
 
     return S_FALSE;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetSubMenu(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetToolbar(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetMinWidth(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetNoBorder(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetTheme(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetTop(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetBottom(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetTracked(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetParentSite(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetState(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::DoDefaultAction(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
-{
-    UNIMPLEMENTED;
-    return S_OK;
 }
 
 HRESULT CMenuBand::_CallCBWithItemId(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -968,7 +842,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
         {
-            hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
+            hr = m_staticToolbar->ChangeHotItem(VK_UP);
             if (hr == S_FALSE)
             {
                 if (m_SFToolbar)
@@ -991,9 +865,29 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
             return hr;
         }
     }
+    else if (changeType == MPOS_SELECTLEFT)
+    {
+        if (m_subMenuChild)
+            m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+        return m_subMenuParent->OnSelect(MPOS_CANCELLEVEL);
+    }
+    else if (changeType == MPOS_SELECTRIGHT)
+    {
+        if (m_hotBar && m_hotItem >= 0)
+        {
+            // TODO: popup the current child if it has subitems, otherwise spread up.
+            if (m_hotBar->HasSubMenu(m_hotItem)==S_OK)
+            {
+                LRESULT result;
+                m_hotBar->PopupItem(m_hotItem);
+                return S_FALSE;
+            }
+        }
+        return m_subMenuParent->OnSelect(changeType);
+    }
     else
     {
-        m_subMenuParent->OnSelect(changeType);
+        return m_subMenuParent->OnSelect(changeType);
     }
     return S_OK;
 }
@@ -1015,5 +909,125 @@ HRESULT CMenuBand::_OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * p
     }
     if (m_staticToolbar) m_staticToolbar->InvalidateDraw();
     if (m_SFToolbar) m_SFToolbar->InvalidateDraw();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetSubMenu(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::SetToolbar(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::SetMinWidth(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::SetNoBorder(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::SetTheme(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetTop(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetBottom(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetTracked(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetParentSite(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetState(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::DoDefaultAction(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::IsDirty()
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::Load(IStream *pStm)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::Save(IStream *pStm, BOOL fClearDirty)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetClassID(CLSID *pClassID)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
+{
+    UNIMPLEMENTED;
     return S_OK;
 }

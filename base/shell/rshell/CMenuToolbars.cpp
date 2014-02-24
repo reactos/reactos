@@ -295,7 +295,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT itemId, UINT index, IShellMenu* chil
     ClientToScreen(m_hwndToolbar, &a);
     ClientToScreen(m_hwndToolbar, &b);
 
-    POINTL pt = { b.x, a.y };
+    POINTL pt = { b.x - 4, a.y };
     RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
 
 
