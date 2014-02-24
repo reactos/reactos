@@ -10,7 +10,9 @@ list(APPEND SOURCE
     CDesktopBrowser.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
+    CMenuFocusManager.cpp
     CMenuSite.cpp
+    CMenuToolbars.cpp
     CStartMenu.cpp
     misc.cpp
     wraplog.cpp
