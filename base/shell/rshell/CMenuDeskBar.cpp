@@ -446,7 +446,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     {
         cy = waHeight;
     }
-    else if (y + cy > rcWorkArea.bottom)
+    
+    if (y + cy > rcWorkArea.bottom)
     {
         y = rcWorkArea.bottom - cy;
     }
