@@ -386,6 +386,10 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
     /* Initialize the Video BIOS */
     if (!VidBios32Initialize(ConsoleOutput)) return FALSE;
 
+    /* Enable interrupts */
+    setIF(1);
+
+    /* We are done */
     return TRUE;
 }
 

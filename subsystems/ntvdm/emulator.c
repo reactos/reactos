@@ -65,6 +65,10 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
 {
     UNREFERENCED_PARAMETER(State);
 
+    // BIG HACK!!!! To make BIOS images working correctly,
+    // until Aleksander rewrites memory management!!
+    if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
+
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
 
@@ -81,19 +85,23 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
         DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
                            - VgaAddress + 1;
-        LPBYTE DestBuffer = (LPBYTE)((ULONG_PTR)BaseAddress + VgaAddress);
+        LPBYTE DestBuffer = (LPBYTE)REAL_TO_PHYS(VgaAddress);
 
         /* Read from the VGA memory */
         VgaReadMemory(VgaAddress, DestBuffer, ActualSize);
     }
 
     /* Read the data from the virtual address space and store it in the buffer */
-    RtlCopyMemory(Buffer, (LPVOID)((ULONG_PTR)BaseAddress + Address), Size);
+    RtlCopyMemory(Buffer, REAL_TO_PHYS(Address), Size);
 }
 
 VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
+
+    // BIG HACK!!!! To make BIOS images working correctly,
+    // until Aleksander rewrites memory management!!
+    if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
 
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
@@ -105,7 +113,7 @@ VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffe
     if ((Address + Size) >= ROM_AREA_START && (Address < ROM_AREA_END)) return;
 
     /* Read the data from the buffer and store it in the virtual address space */
-    RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + Address), Buffer, Size);
+    RtlCopyMemory(REAL_TO_PHYS(Address), Buffer, Size);
 
     /*
      * Check if we modified the VGA memory.
@@ -116,7 +124,7 @@ VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffe
         DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
         DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
                            - VgaAddress + 1;
-        LPBYTE SrcBuffer = (LPBYTE)((ULONG_PTR)BaseAddress + VgaAddress);
+        LPBYTE SrcBuffer = (LPBYTE)REAL_TO_PHYS(VgaAddress);
 
         /* Write to the VGA memory */
         VgaWriteMemory(VgaAddress, SrcBuffer, ActualSize);
@@ -354,9 +362,6 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
                       EmulatorBiosOperation,
                       EmulatorIntAcknowledge,
                       NULL /* TODO: Use a TLB */);
-
-    /* Enable interrupts */
-    setIF(1);
 
     /* Initialize DMA */
 
