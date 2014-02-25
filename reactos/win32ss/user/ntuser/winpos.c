@@ -120,8 +120,6 @@ IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
        Delta.y -= ToWnd->rcClient.top;
     }
 
-    if (mirror_from) Delta.x = -Delta.x;
-
     for (i = 0; i != cPoints; i++)
     {
         lpPoints[i].x += Delta.x;

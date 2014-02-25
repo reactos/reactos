@@ -2313,6 +2313,17 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                         ParentWindow->rcClient.top);
    }
 */
+   /* correct child window coordinates if mirroring on parent is enabled */
+   if (ParentWindow != NULL)
+   {
+      if ( ((Cs->style & WS_CHILD) == WS_CHILD) && 
+          ((ParentWindow->ExStyle & WS_EX_LAYOUTRTL) ==  WS_EX_LAYOUTRTL))
+      {
+          Window->rcWindow.right = ParentWindow->rcClient.right - (Window->rcWindow.left - ParentWindow->rcClient.left);
+          Window->rcWindow.left = Window->rcWindow.right - Size.cx;
+      }
+   }
+
    Window->rcClient = Window->rcWindow;
 
    /* Link the window */
