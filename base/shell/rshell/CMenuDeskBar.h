@@ -25,9 +25,8 @@ typedef CWinTraits<
 > CMenuWinTraits;
 
 class CMenuDeskBar :
-    public CWindowImpl<CMenuDeskBar, CWindow, CMenuWinTraits>,
-    public CComCoClass<CMenuDeskBar>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl<CMenuDeskBar, CWindow, CMenuWinTraits>,
     public IOleCommandTarget,
     public IServiceProvider,
     public IInputObjectSite,

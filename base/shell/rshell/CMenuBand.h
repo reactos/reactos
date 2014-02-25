@@ -25,7 +25,6 @@ class CMenuSFToolbar;
 class CMenuFocusManager;
 
 class CMenuBand :
-    public CComCoClass<CMenuBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDeskBand,
     public IObjectWithSite,

@@ -709,6 +709,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
                     break;
                 }
 
+                cdraw->iListGap += 4;
+
                 *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
                 return S_OK;
 
@@ -903,6 +905,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * p
     if (popup)
     {
         IUnknown_SetSite(popup, m_subMenuParent);
+
         popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }
     if (m_staticToolbar) m_staticToolbar->InvalidateDraw();

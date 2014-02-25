@@ -75,11 +75,12 @@ HRESULT CMenuToolbarBase::UpdateImageLists()
     if (m_menuBand->UseBigIcons())
     {
         shiml = SHIL_LARGE;
-        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(0, 0));
+        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 0));
     }
     else
     {
         shiml = SHIL_SMALL;
+        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 4));
     }
 
     IImageList * piml;

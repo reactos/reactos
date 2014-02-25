@@ -13,6 +13,7 @@ list(APPEND SOURCE
     CMenuFocusManager.cpp
     CMenuSite.cpp
     CMenuToolbars.cpp
+    CMergedFolder.cpp
     CStartMenu.cpp
     misc.cpp
     wraplog.cpp
