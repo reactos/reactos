@@ -25,24 +25,24 @@
 /* NOTE: The following constants *MUST NOT* be changed because
          they're hardcoded and need to be the exact values
          in order to get the start menu to work! */
-#define IDM_PROGRAMS                504
-#define IDM_FAVORITES               507
-#define IDM_DOCUMENTS               501
-#define IDM_SETTINGS                508
-#define IDM_CONTROLPANEL            505
-#define IDM_SECURITY                5001
-#define IDM_NETWORKCONNECTIONS      557
-#define IDM_PRINTERSANDFAXES        510
-#define IDM_TASKBARANDSTARTMENU     413
-#define IDM_SEARCH                  520
-#define IDM_HELPANDSUPPORT          503
 #define IDM_RUN                     401
-#define IDM_SYNCHRONIZE             553
 #define IDM_LOGOFF                  402
-#define IDM_DISCONNECT              5000
 #define IDM_UNDOCKCOMPUTER          410
-#define IDM_SHUTDOWN                506
+#define IDM_TASKBARANDSTARTMENU     413
 #define IDM_LASTSTARTMENU_SEPARATOR 450
+#define IDM_DOCUMENTS               501
+#define IDM_HELPANDSUPPORT          503
+#define IDM_PROGRAMS                504
+#define IDM_CONTROLPANEL            505
+#define IDM_SHUTDOWN                506
+#define IDM_FAVORITES               507
+#define IDM_SETTINGS                508
+#define IDM_PRINTERSANDFAXES        510
+#define IDM_SEARCH                  520
+#define IDM_SYNCHRONIZE             553
+#define IDM_NETWORKCONNECTIONS      557
+#define IDM_DISCONNECT              5000
+#define IDM_SECURITY                5001
 
 /*
  * TODO:
@@ -92,15 +92,15 @@ private:
         {
             // Smaller "24x24" icons used for the start menu
             // The bitmaps are still 32x32, but the image is centered
-        case IDM_FAVORITES: iconIndex = -209; break;
-        case IDM_SEARCH: iconIndex = -210; break;
-        case IDM_HELPANDSUPPORT: iconIndex = -211; break;
-        case IDM_LOGOFF: iconIndex = -212; break;
-        case IDM_PROGRAMS:  iconIndex = -213; break;
-        case IDM_DOCUMENTS: iconIndex = -214; break;
-        case IDM_RUN: iconIndex = -215; break;
-        case IDM_SHUTDOWN: iconIndex = -216; break;
-        case IDM_SETTINGS: iconIndex = -217; break;
+        case IDM_FAVORITES: iconIndex = -322; break;
+        case IDM_SEARCH: iconIndex = -323; break;
+        case IDM_HELPANDSUPPORT: iconIndex = -324; break;
+        case IDM_LOGOFF: iconIndex = -325; break;
+        case IDM_PROGRAMS:  iconIndex = -326; break;
+        case IDM_DOCUMENTS: iconIndex = -327; break;
+        case IDM_RUN: iconIndex = -328; break;
+        case IDM_SHUTDOWN: iconIndex = -329; break;
+        case IDM_SETTINGS: iconIndex = -330; break;
 
         case IDM_CONTROLPANEL: iconIndex = -22; break;
         case IDM_NETWORKCONNECTIONS: iconIndex = -257; break;
@@ -116,12 +116,21 @@ private:
 
         if (iconIndex)
         {
+            if ((psminfo->dwMask & SMIM_TYPE) != 0)
+                psminfo->dwType = SMIT_STRING;
             if ((psminfo->dwMask & SMIM_ICON) != 0)
                 psminfo->iIcon = Shell_GetCachedImageIndex(L"shell32.dll", iconIndex, FALSE);
+            if ((psminfo->dwMask & SMIM_FLAGS) != 0)
+                psminfo->dwFlags |= SMIF_ICON;
 #ifdef TEST_TRACKPOPUPMENU_SUBMENUS
             if ((psminfo->dwMask & SMIM_FLAGS) != 0)
                 psminfo->dwFlags |= SMIF_TRACKPOPUP;
 #endif
+        }
+        else
+        {
+            if ((psminfo->dwMask & SMIM_TYPE) != 0)
+                psminfo->dwType = SMIT_SEPARATOR;
         }
         return S_OK;
     }
