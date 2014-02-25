@@ -4244,7 +4244,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
     {
         /* Call the VM86 monitor */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        return TRUE;
+        return FALSE;
     }
 
     /* Push the flags */
@@ -4273,7 +4273,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     {
         /* Call the VM86 monitor */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        return TRUE;
+        return FALSE;
     }
 
     State->Flags.Cf = NewFlags.Cf;
