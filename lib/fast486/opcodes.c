@@ -4244,7 +4244,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
     {
         /* Call the VM86 monitor */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        return FALSE;
+        return TRUE;
     }
 
     /* Push the flags */
