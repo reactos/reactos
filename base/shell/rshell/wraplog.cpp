@@ -13,7 +13,7 @@ void WrapLogOpen()
 {
     if (openCount == 0)
     {
-        log = fopen("G:\\RShellWrap.log", "w");
+        log = fopen("RShellWrap.log", "w");
         nTemps = 0;
         callLevel = 0;
     }

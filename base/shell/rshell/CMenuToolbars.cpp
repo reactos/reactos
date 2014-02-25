@@ -64,6 +64,13 @@ HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
 {
     ::ShowWindow(m_hwnd, fShow ? SW_SHOW : SW_HIDE);
 
+    UpdateImageLists();
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::UpdateImageLists()
+{
     int shiml;
     if (m_menuBand->UseBigIcons())
     {
@@ -85,7 +92,6 @@ HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
     {
         SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, 0);
     }
-
     return S_OK;
 }
 
@@ -163,30 +169,11 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     //    SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, 0);
     //}
     //else
-    int shiml;
-    if (m_menuBand->UseBigIcons())
-    {
-        shiml = SHIL_LARGE;
-        SendMessageW(hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(0, 0));
-    }
-    else
-    {
-        shiml = SHIL_SMALL;
-    }
-
-    IImageList * piml;
-    HRESULT hr = SHGetImageList(shiml, IID_PPV_ARG(IImageList, &piml));
-    if (SUCCEEDED(hr))
-    {
-        SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
-    }
-    else
-    {
-        SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, 0);
-    }
 
     SetWindowLongPtr(hwndToolbar, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
     m_SubclassOld = (WNDPROC) SetWindowLongPtr(hwndToolbar, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CMenuToolbarBase::s_SubclassProc));
+
+    UpdateImageLists();
 
     return S_OK;
 }

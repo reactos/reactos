@@ -90,23 +90,26 @@ private:
 
         switch (psmd->uId)
         {
-        case IDM_PROGRAMS:  iconIndex = -20; break;
-        case IDM_FAVORITES: iconIndex = -173; break;
-        case IDM_DOCUMENTS: iconIndex = -21; break;
-        case IDM_SETTINGS: iconIndex = -22; break;
+            // Smaller "24x24" icons used for the start menu
+            // The bitmaps are still 32x32, but the image is centered
+        case IDM_FAVORITES: iconIndex = -209; break;
+        case IDM_SEARCH: iconIndex = -210; break;
+        case IDM_HELPANDSUPPORT: iconIndex = -211; break;
+        case IDM_LOGOFF: iconIndex = -212; break;
+        case IDM_PROGRAMS:  iconIndex = -213; break;
+        case IDM_DOCUMENTS: iconIndex = -214; break;
+        case IDM_RUN: iconIndex = -215; break;
+        case IDM_SHUTDOWN: iconIndex = -216; break;
+        case IDM_SETTINGS: iconIndex = -217; break;
+
         case IDM_CONTROLPANEL: iconIndex = -22; break;
-        //case IDM_SECURITY: iconIndex = -21; break;
         case IDM_NETWORKCONNECTIONS: iconIndex = -257; break;
         case IDM_PRINTERSANDFAXES: iconIndex = -138; break;
         case IDM_TASKBARANDSTARTMENU: iconIndex = -40; break;
-        case IDM_SEARCH: iconIndex = -23; break;
-        case IDM_HELPANDSUPPORT: iconIndex = -24; break;
-        case IDM_RUN: iconIndex = -25; break;
+        //case IDM_SECURITY: iconIndex = -21; break;
         //case IDM_SYNCHRONIZE: iconIndex = -21; break;
-        case IDM_LOGOFF: iconIndex = -45; break;
         //case IDM_DISCONNECT: iconIndex = -21; break;
         //case IDM_UNDOCKCOMPUTER: iconIndex = -21; break;
-        case IDM_SHUTDOWN: iconIndex = -28; break;
         default:
             return S_FALSE;
         }

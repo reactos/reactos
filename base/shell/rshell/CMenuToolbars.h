@@ -70,6 +70,8 @@ public:
 
 protected:
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    HRESULT UpdateImageLists();
 };
 
 class CMenuStaticToolbar :

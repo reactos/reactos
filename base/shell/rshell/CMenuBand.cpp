@@ -875,10 +875,8 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_hotBar && m_hotItem >= 0)
         {
-            // TODO: popup the current child if it has subitems, otherwise spread up.
             if (m_hotBar->HasSubMenu(m_hotItem)==S_OK)
             {
-                LRESULT result;
                 m_hotBar->PopupItem(m_hotItem);
                 return S_FALSE;
             }
