@@ -20,7 +20,7 @@
 #define			EXT2_BUG_CHECK_ID				EXT2_FILE_INIT
 #define			DEBUG_LEVEL						(DEBUG_TRACE_INIT)
 
-#define			EXT2_FS_NAME					L"\\ext2"
+#define			EXT2_FS_NAME					L"\\Ext2fs" // Must match others!
 
 // global variables are declared here
 Ext2Data					Ext2GlobalData;
