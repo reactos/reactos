@@ -234,6 +234,8 @@ static void check_item_height(void)
     DestroyWindow (hLB);
 }
 
+static int got_selchange;
+
 static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -266,6 +268,10 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
 
         break;
     }
+
+    case WM_COMMAND:
+        if (HIWORD( wparam ) == LBN_SELCHANGE) got_selchange++;
+        break;
 
     default:
         break;
@@ -1588,6 +1594,29 @@ todo_wine
     DestroyWindow(parent);
 }
 
+static void test_missing_lbuttonup( void )
+{
+    HWND listbox, parent, capture;
+
+    parent = create_parent();
+    listbox = create_listbox(WS_CHILD | WS_VISIBLE, parent);
+
+    /* Send button down without a corresponding button up */
+    SendMessageA(listbox, WM_LBUTTONDOWN, 0, MAKELPARAM(10,10));
+    capture = GetCapture();
+    ok(capture == listbox, "got %p expected %p\n", capture, listbox);
+
+    /* Capture is released and LBN_SELCHANGE sent during WM_KILLFOCUS */
+    got_selchange = 0;
+    SetFocus(NULL);
+    capture = GetCapture();
+    ok(capture == NULL, "got %p\n", capture);
+    ok(got_selchange, "got %d\n", got_selchange);
+
+    DestroyWindow(listbox);
+    DestroyWindow(parent);
+}
+
 START_TEST(listbox)
 {
   const struct listbox_test SS =
@@ -1668,4 +1697,5 @@ START_TEST(listbox)
   test_listbox_dlgdir();
   test_set_count();
   test_GetListBoxInfo();
+  test_missing_lbuttonup();
 }
