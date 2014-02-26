@@ -33,9 +33,15 @@ EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 
 
 #define BOP(num)            LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), (num)
-#define UnSimulate16        MAKELONG(EMULATOR_BOP, BOP_UNSIMULATE) // BOP(BOP_UNSIMULATE)
+#define UnSimulate16(trap)           \
+do {                                 \
+    *(PUSHORT)(trap) = EMULATOR_BOP; \
+    (trap) += sizeof(USHORT);        \
+    *(trap) = BOP_UNSIMULATE;        \
+} while(0)
+// #define UnSimulate16        MAKELONG(EMULATOR_BOP, BOP_UNSIMULATE) // BOP(BOP_UNSIMULATE)
 
-#define CALL16_TRAMPOLINE_SIZE  (2 * sizeof(ULONGLONG))
+#define CALL16_TRAMPOLINE_SIZE  (1 * sizeof(ULONGLONG))
 #define  INT16_TRAMPOLINE_SIZE  (1 * sizeof(ULONGLONG))
 
 /* 16-bit generic interrupt code for calling a 32-bit interrupt handler */
@@ -97,7 +103,7 @@ Call16(IN USHORT Segment,
     setCS(Segment);
     setIP(Offset);
 
-    DPRINT("Call16(0x%04X, 0x%04X)\n", Segment, Offset);
+    DPRINT("Call16(%04X:%04X)\n", Segment, Offset);
 
     /* Start CPU simulation */
     EmulatorSimulate();
@@ -146,23 +152,21 @@ RunCallback16(IN PCALLBACK16 Context,
     UCHAR  OldTrampoline[CALL16_TRAMPOLINE_SIZE];
 
     /* Save the old trampoline */
-    // RtlCopyMemory(OldTrampoline, TrampolineBase, sizeof(OldTrampoline));
     ((PULONGLONG)&OldTrampoline)[0] = ((PULONGLONG)TrampolineBase)[0];
-    ((PULONGLONG)&OldTrampoline)[1] = ((PULONGLONG)TrampolineBase)[1];
 
-    /* Build the generic entry-point for 32-bit calls */
+    DPRINT1("RunCallback16(0x%p)\n", FarPtr);
+
+    /* Build the generic entry-point for 16-bit far calls */
     *Trampoline++ = 0x9A; // Call far seg:off
     *(PULONG)Trampoline = FarPtr;
     Trampoline += sizeof(ULONG);
-    *(PULONG)Trampoline = UnSimulate16;
+    UnSimulate16(Trampoline);
 
     /* Perform the call */
     Call16(HIWORD(Context->TrampolineFarPtr),
            LOWORD(Context->TrampolineFarPtr));
 
     /* Restore the old trampoline */
-    // RtlCopyMemory(TrampolineBase, OldTrampoline, sizeof(OldTrampoline));
-    ((PULONGLONG)TrampolineBase)[1] = ((PULONGLONG)&OldTrampoline)[1];
     ((PULONGLONG)TrampolineBase)[0] = ((PULONGLONG)&OldTrampoline)[0];
 }
 
@@ -228,10 +232,9 @@ Int32Call(IN PCALLBACK16 Context,
     DPRINT("Int32Call(0x%X)\n", IntNumber);
 
     /* Save the old trampoline */
-    // RtlCopyMemory(OldTrampoline, TrampolineBase, sizeof(OldTrampoline));
     ((PULONGLONG)&OldTrampoline)[0] = ((PULONGLONG)TrampolineBase)[0];
 
-    /* Build the generic entry-point for 32-bit calls */
+    /* Build the generic entry-point for 16-bit calls */
     if (IntNumber == 0x03)
     {
         /* We are redefining for INT 03h */
@@ -244,14 +247,13 @@ Int32Call(IN PCALLBACK16 Context,
         *Trampoline++ = 0xCD; // Call INT XXh
         *Trampoline++ = IntNumber;
     }
-    *(PULONG)Trampoline = UnSimulate16;
+    UnSimulate16(Trampoline);
 
     /* Perform the call */
     Call16(HIWORD(Context->TrampolineFarPtr),
            LOWORD(Context->TrampolineFarPtr));
 
     /* Restore the old trampoline */
-    // RtlCopyMemory(TrampolineBase, OldTrampoline, sizeof(OldTrampoline));
     ((PULONGLONG)TrampolineBase)[0] = ((PULONGLONG)&OldTrampoline)[0];
 }
 
@@ -269,7 +271,7 @@ VOID WINAPI Int32Dispatch(LPWORD Stack)
         DPRINT1("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
 }
 
-VOID WINAPI ControlBop(LPWORD Stack)
+static VOID WINAPI ControlBop(LPWORD Stack)
 {
     /* Get the Function Number and skip it */
     BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());

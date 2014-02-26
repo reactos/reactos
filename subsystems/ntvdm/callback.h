@@ -36,7 +36,26 @@ InitializeContext(IN PCALLBACK16 Context,
                   IN USHORT      Segment,
                   IN USHORT      Offset);
 
-VOID WINAPI Int32Dispatch(LPWORD Stack);
+VOID
+Call16(IN USHORT Segment,
+       IN USHORT Offset);
+
+ULONG
+RegisterCallback16(IN  ULONG   FarPtr,
+                   IN  LPBYTE  CallbackCode,
+                   IN  SIZE_T  CallbackSize,
+                   OUT PSIZE_T CodeSize OPTIONAL);
+
+VOID
+RunCallback16(IN PCALLBACK16 Context,
+              IN ULONG       FarPtr);
+
+ULONG
+RegisterInt16(IN  ULONG   FarPtr,
+              IN  BYTE    IntNumber,
+              IN  LPBYTE  CallbackCode,
+              IN  SIZE_T  CallbackSize,
+              OUT PSIZE_T CodeSize OPTIONAL);
 
 ULONG
 RegisterInt32(IN  ULONG   FarPtr,
@@ -48,6 +67,7 @@ VOID
 Int32Call(IN PCALLBACK16 Context,
           IN BYTE IntNumber);
 
+VOID WINAPI Int32Dispatch(LPWORD Stack);
 VOID InitializeCallbacks(VOID);
 
 #endif // _CALLBACK_H_
