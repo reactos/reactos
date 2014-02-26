@@ -31,11 +31,8 @@
 #define BIOS_EQUIPMENT_LIST     0x2C // HACK: Disable FPU for now
 
 
-#define ROM_AREA_START  0xE0000
-#define ROM_AREA_END    0xFFFFF
-
 #define BDA_SEGMENT     0x40
-#define BIOS_SEGMENT    0xF000
+// #define BIOS_SEGMENT    0xF000
 
 /*
  * BIOS Data Area at 0040:XXXX

@@ -16,13 +16,10 @@
 
 /* DEFINES ********************************************************************/
 
-#define ROM_AREA_START  0xE0000
-#define ROM_AREA_END    0xFFFFF
+// #define BDA_SEGMENT     0x40
+#define BIOS_SEGMENT    0xF000
 
 #if 0
-
-#define BDA_SEGMENT     0x40
-#define BIOS_SEGMENT    0xF000
 
 /*
  * BIOS Data Area at 0040:XXXX

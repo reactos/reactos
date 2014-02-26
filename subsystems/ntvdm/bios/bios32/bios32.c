@@ -13,6 +13,8 @@
 #include "emulator.h"
 #include "callback.h"
 
+#include "../rom.h"
+#include "../bios.h"
 #include "bios32.h"
 
 #include "io.h"
@@ -355,7 +357,21 @@ static VOID InitializeBiosInt32(VOID)
 BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
                          IN HANDLE ConsoleOutput)
 {
+    BOOLEAN Success;
     UCHAR Low, High;
+
+    /* Disable interrupts */
+    setIF(0);
+
+    /* Initialize the stack */
+    // That's what says IBM... (stack at 30:00FF going downwards)
+    // setSS(0x0000);
+    // setSP(0x0400);
+    setSS(0x0050);  // Stack at 50:0400, going downwards
+    setSP(0x0400);
+
+    /* Set data segment */
+    setDS(BDA_SEGMENT);
 
     /* Initialize the BDA */
     Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
@@ -388,6 +404,14 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
 
     /* Enable interrupts */
     setIF(1);
+
+    ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
+
+    /* Load some ROMs */
+    Success = LoadRom(L"boot.bin", (PVOID)0xE0000, NULL);
+    DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+
+    SearchAndInitRoms(&BiosContext);
 
     /* We are done */
     return TRUE;
