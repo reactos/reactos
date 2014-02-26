@@ -77,7 +77,7 @@ public:
                 return hr;
             if (hr == S_FALSE)
                 m_FirstDone = true;
-            if (celt < 2)
+            else if (celt < 2)
                 return hr;
         }
 
@@ -85,16 +85,19 @@ public:
         if (*pceltFetched < celt)
         {
             rgelt += *pceltFetched;
-            celt = (*pceltFetched - celt);
+            celt = (celt - *pceltFetched);
             *pceltFetched = 0;
+
+            hr = m_AllUSers->Next(celt, rgelt, pceltFetched);
+            if (FAILED(hr))
+                return hr;
+
+            *pceltFetched += offset;
+
+            return hr;
         }
 
-        hr = m_UserLocal->Next(celt, rgelt, pceltFetched);
-        if (FAILED(hr))
-            return hr;
-
-        *pceltFetched += offset;
-        return hr;
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE Skip(
@@ -227,6 +230,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
     if (SUCCEEDED(hr))
         return hr;
 
+    *rgfInOut = 0;
     hr = m_AllUSers->GetAttributesOf(cidl, apidl, rgfInOut);
 
     return hr;

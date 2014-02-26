@@ -47,7 +47,8 @@ private:
     DWORD m_IconSize;
     HBITMAP m_Banner;
 
-    BOOL m_Shown;
+    BOOL  m_Shown;
+    DWORD m_ShowFlags;
 
 public:
     CMenuDeskBar();

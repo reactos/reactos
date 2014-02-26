@@ -62,8 +62,6 @@ private:
     INT                m_hotItem;
     INT                m_popupItem;
 
-    HFONT m_marlett;
-
 public:
     CMenuBand();
     ~CMenuBand();

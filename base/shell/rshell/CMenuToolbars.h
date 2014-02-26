@@ -25,13 +25,16 @@ class CMenuFocusManager;
 class CMenuToolbarBase
 {
 private:
-    HWND        m_hwnd;        // May be the pager
+    HWND  m_hwnd;        // May be the pager
+    HFONT m_marlett;
+    BOOL  m_useFlatMenus;
 
 protected:
     CMenuBand * m_menuBand;
     HWND        m_hwndToolbar;
     DWORD       m_dwMenuFlags;
     INT         m_hotItem;
+    INT         m_popupItem;
     WNDPROC     m_SubclassOld;
     BOOL        m_hasIdealSize;
     SIZE        m_idealSize;
@@ -42,7 +45,7 @@ private:
 
 public:
     CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager);
-    virtual ~CMenuToolbarBase() {}
+    virtual ~CMenuToolbarBase();
 
     HRESULT IsWindowOwner(HWND hwnd);
     HRESULT CreateToolbar(HWND hwndParent, DWORD dwFlags);
@@ -50,11 +53,12 @@ public:
     HRESULT ShowWindow(BOOL fShow);
     HRESULT Close();
 
+    HRESULT OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+
     virtual HRESULT FillToolbar() = 0;
     virtual HRESULT PopupItem(UINT uItem) = 0;
     virtual HRESULT HasSubMenu(UINT uItem) = 0;
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
     HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu);
     HRESULT PopupSubMenu(UINT index, HMENU menu);
@@ -69,6 +73,8 @@ public:
     void InvalidateDraw();
 
 protected:
+    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     HRESULT UpdateImageLists();

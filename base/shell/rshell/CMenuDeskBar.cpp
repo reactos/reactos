@@ -280,6 +280,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         return hr;
 
     ::AdjustWindowRect(&rc, ::GetWindowLong(m_hWnd, GWL_STYLE), FALSE);
+    ::OffsetRect(&rc, -rc.left, -rc.top);
 
     if (m_Banner != NULL)
     {
@@ -287,35 +288,46 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         ::GetObject(m_Banner, sizeof(bm), &bm);
         rc.right += bm.bmWidth;
     }
-
+    
     int x, y, cx, cy;
 
     RECT rcWorkArea;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+    GetWindowRect(GetDesktopWindow(), &rcWorkArea);
     int waHeight = rcWorkArea.bottom - rcWorkArea.top;
 
-    switch (dwFlags & MPPF_POS_MASK)
+    switch (dwFlags & 0xFF000000)
     {
-    case MPPF_LEFT:
-    case MPPF_TOP:
-        x = ppt->x - rc.right;
-        cx = rc.right - rc.left;
-        break;
-    default:
+    case MPPF_BOTTOM:
         x = ppt->x;
         cx = rc.right - rc.left;
+        y = ppt->y - rc.bottom;
+        cy = rc.bottom - rc.top;
+        break;
+    case MPPF_RIGHT:
+        x = ppt->x + rc.left;
+        cx = rc.right - rc.left;
+        y = ppt->y + rc.top;
+        cy = rc.bottom - rc.top;
+        break;
+    case MPPF_TOP | MPPF_ALIGN_LEFT:
+        x = ppt->x - rc.right;
+        cx = rc.right - rc.left;
+        y = ppt->y + rc.top;
+        cy = rc.bottom - rc.top;
+        break;
+    case MPPF_TOP | MPPF_ALIGN_RIGHT:
+        x = ppt->x;
+        cx = rc.right - rc.left;
+        y = ppt->y + rc.top;
+        cy = rc.bottom - rc.top;
         break;
     }
 
-    if (dwFlags & MPPF_BOTTOM)
+    if (x + cx > rcWorkArea.right)
     {
-        y = ppt->y - rc.bottom;
-        cy = rc.bottom - rc.top;
-    }
-    else
-    {
-        y = ppt->y + rc.top;
-        cy = rc.bottom - rc.top;
+        // FIXME: Works, but it's oversimplified.
+        x = prcExclude->left - cx;
+        dwFlags = (dwFlags & (~MPPF_TOP)) | MPPF_LEFT;
     }
 
     if (y < rcWorkArea.top)
@@ -333,8 +345,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         y = rcWorkArea.bottom - cy;
     }
 
+
+
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 
+    m_ShowFlags = dwFlags;
     m_Shown = true;
 
     // HACK: The bar needs to be notified of the size AFTER it is shown.
@@ -343,7 +358,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     _OnSize(WM_SIZE, 0, 0, bHandled);
 
     UIActivateIO(TRUE, NULL);
-
 
     return S_OK;
 }

@@ -58,11 +58,6 @@ CMenuBand::CMenuBand() :
     m_popupItem(-1)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
-
-    m_marlett = CreateFont(
-        0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY, FF_DONTCARE, L"Marlett");
 }
 
 CMenuBand::~CMenuBand()
@@ -74,8 +69,6 @@ CMenuBand::~CMenuBand()
 
     if (m_SFToolbar)
         delete m_SFToolbar;
-
-    DeleteObject(m_marlett);
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::Initialize(
@@ -553,186 +546,18 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlag
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    RECT rc;
-    HDC hdc;
-    HBRUSH bgBrush;
-    HBRUSH hotBrush;
-    NMHDR * hdr;
-    NMTBCUSTOMDRAW * cdraw;
-    NMTBHOTITEM * hot;
-    NMMOUSE * rclick;
-    NMPGCALCSIZE* csize;
-    TBBUTTONINFO btni;
-    BOOL useFlatMenus = FALSE;
-    COLORREF clrText;
-    COLORREF clrTextHighlight;
-
-
     *theResult = 0;
-    switch (uMsg)
+
+    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
     {
-    case WM_COMMAND:
-
-        if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
-        {
-            return m_staticToolbar->OnCommand(wParam, lParam, theResult);
-        }
-
-        if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
-        {
-            return m_SFToolbar->OnCommand(wParam, lParam, theResult);
-        }
-
-        return S_OK;
-
-    case WM_NOTIFY:
-        hdr = reinterpret_cast<LPNMHDR>(lParam);
-        switch (hdr->code)
-        {
-        case PGN_CALCSIZE:
-            csize = reinterpret_cast<LPNMPGCALCSIZE>(hdr);
-
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                SIZE tbs;
-                m_staticToolbar->GetIdealSize(tbs);
-                if (csize->dwFlag == PGF_CALCHEIGHT)
-                {
-                    csize->iHeight = tbs.cy;
-                }
-                else if (csize->dwFlag == PGF_CALCWIDTH)
-                {
-                    csize->iHeight = tbs.cx;
-                }
-            }
-
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                SIZE tbs;
-                m_SFToolbar->GetIdealSize(tbs);
-                if (csize->dwFlag == PGF_CALCHEIGHT)
-                {
-                    csize->iHeight = tbs.cy;
-                }
-                else if (csize->dwFlag == PGF_CALCWIDTH)
-                {
-                    csize->iHeight = tbs.cx;
-                }
-            }
-            return S_OK;
-
-        case TBN_DROPDOWN:
-
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                WPARAM wp = reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem;
-                return m_staticToolbar->OnCommand(wp, 0, theResult);
-            }
-
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                WPARAM wp = reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem;
-                return m_SFToolbar->OnCommand(wp, 0, theResult);
-            }
-
-            return S_OK;
-
-        case TBN_HOTITEMCHANGE:
-            hot = reinterpret_cast<LPNMTBHOTITEM>(hdr);
-
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                return m_staticToolbar->OnHotItemChange(hot);
-            }
-
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                return m_SFToolbar->OnHotItemChange(hot);
-            }
-
-            return S_OK;
-
-        case NM_RCLICK:
-            rclick = reinterpret_cast<LPNMMOUSE>(hdr);
-
-            if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                return m_staticToolbar->OnContextMenu(rclick);
-            }
-
-            if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
-            {
-                return m_SFToolbar->OnContextMenu(rclick);
-            }
-
-            return S_OK;
-
-        case NM_CUSTOMDRAW:
-            cdraw = reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr);
-            switch (cdraw->nmcd.dwDrawStage)
-            {
-            case CDDS_PREPAINT:
-                *theResult = CDRF_NOTIFYITEMDRAW;
-                return S_OK;
-
-            case CDDS_ITEMPREPAINT:
-
-                SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlatMenus, 0);
-
-                clrText = GetSysColor(COLOR_MENUTEXT);
-                clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
-
-                bgBrush = GetSysColorBrush(COLOR_MENU);
-                hotBrush = GetSysColorBrush(useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
-
-                rc = cdraw->nmcd.rc;
-                hdc = cdraw->nmcd.hdc;
-
-                if (((INT)cdraw->nmcd.dwItemSpec == m_hotItem ||
-                    (m_hotItem < 0 && (INT)cdraw->nmcd.dwItemSpec == m_popupItem)))
-                {
-                    cdraw->nmcd.uItemState = CDIS_HOT;
-                }
-
-                switch (cdraw->nmcd.uItemState)
-                {
-                case CDIS_HOT:
-                case CDIS_FOCUS:
-                    FillRect(hdc, &rc, hotBrush);
-                    SetTextColor(hdc, clrTextHighlight);
-                    cdraw->clrText = clrTextHighlight;
-                    break;
-                default:
-                    FillRect(hdc, &rc, bgBrush);
-                    SetTextColor(hdc, clrText);
-                    cdraw->clrText = clrText;
-                    break;
-                }
-
-                cdraw->iListGap += 4;
-
-                *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
-                return S_OK;
-
-            case CDDS_ITEMPOSTPAINT:
-                btni.cbSize = sizeof(btni);
-                btni.dwMask = TBIF_STYLE;
-                SendMessage(hWnd, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
-                if (btni.fsStyle & BTNS_DROPDOWN)
-                {
-                    SelectObject(cdraw->nmcd.hdc, m_marlett);
-                    WCHAR text [] = L"8";
-                    SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
-                    DrawTextEx(cdraw->nmcd.hdc, text, 1, &cdraw->nmcd.rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
-                }
-                *theResult = TRUE;
-                return S_OK;
-            }
-            return S_OK;
-        }
-        return S_OK;
+        return m_staticToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
     }
 
+    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hWnd) == S_OK)
+    {
+        return m_SFToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+    }
+        
     return S_FALSE;
 }
 

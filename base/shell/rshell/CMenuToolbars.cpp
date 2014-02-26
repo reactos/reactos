@@ -40,13 +40,149 @@ HRESULT WINAPI SHGetImageList(
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
 
+HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    RECT rc;
+    HDC hdc;
+    HBRUSH bgBrush;
+    HBRUSH hotBrush;
+    NMHDR * hdr;
+    NMTBCUSTOMDRAW * cdraw;
+    NMTBHOTITEM * hot;
+    NMMOUSE * rclick;
+    NMPGCALCSIZE* csize;
+    TBBUTTONINFO btni;
+    COLORREF clrText;
+    COLORREF clrTextHighlight;
+    SIZE tbs;
+
+    *theResult = 0;
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+        return OnCommand(wParam, lParam, theResult);
+
+    case WM_NOTIFY:
+        hdr = reinterpret_cast<LPNMHDR>(lParam);
+        switch (hdr->code)
+        {
+        case PGN_CALCSIZE:
+            csize = reinterpret_cast<LPNMPGCALCSIZE>(hdr);
+
+            GetIdealSize(tbs);
+            if (csize->dwFlag == PGF_CALCHEIGHT)
+            {
+                csize->iHeight = tbs.cy;
+            }
+            else if (csize->dwFlag == PGF_CALCWIDTH)
+            {
+                csize->iHeight = tbs.cx;
+            }
+            return S_OK;
+
+        case TBN_DROPDOWN:
+            wParam = reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem;
+            return OnCommand(wParam, 0, theResult);
+
+        case TBN_HOTITEMCHANGE:
+            hot = reinterpret_cast<LPNMTBHOTITEM>(hdr);
+            return OnHotItemChange(hot);
+
+        case NM_RCLICK:
+            rclick = reinterpret_cast<LPNMMOUSE>(hdr);
+
+            return OnContextMenu(rclick);
+
+        case NM_CUSTOMDRAW:
+            cdraw = reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr);
+            switch (cdraw->nmcd.dwDrawStage)
+            {
+            case CDDS_PREPAINT:
+                *theResult = CDRF_NOTIFYITEMDRAW;
+                return S_OK;
+
+            case CDDS_ITEMPREPAINT:
+                
+                clrText = GetSysColor(COLOR_MENUTEXT);
+                clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
+
+                bgBrush = GetSysColorBrush(COLOR_MENU);
+                hotBrush = GetSysColorBrush(m_useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
+
+                rc = cdraw->nmcd.rc;
+                hdc = cdraw->nmcd.hdc;
+
+                if (((INT) cdraw->nmcd.dwItemSpec == m_hotItem ||
+                    (m_hotItem < 0 && (INT) cdraw->nmcd.dwItemSpec == m_popupItem)))
+                {
+                    cdraw->nmcd.uItemState = CDIS_HOT;
+                }
+
+                switch (cdraw->nmcd.uItemState)
+                {
+                case CDIS_HOT:
+                case CDIS_FOCUS:
+                    FillRect(hdc, &rc, hotBrush);
+                    SetTextColor(hdc, clrTextHighlight);
+                    cdraw->clrText = clrTextHighlight;
+                    break;
+                default:
+                    FillRect(hdc, &rc, bgBrush);
+                    SetTextColor(hdc, clrText);
+                    cdraw->clrText = clrText;
+                    break;
+                }
+
+                cdraw->iListGap += 4;
+
+                *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
+                return S_OK;
+
+            case CDDS_ITEMPOSTPAINT:
+                btni.cbSize = sizeof(btni);
+                btni.dwMask = TBIF_STYLE;
+                SendMessage(hWnd, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
+                if (btni.fsStyle & BTNS_DROPDOWN)
+                {
+                    SelectObject(cdraw->nmcd.hdc, m_marlett);
+                    WCHAR text[] = L"8";
+                    SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
+                    RECT rc = cdraw->nmcd.rc;
+                    rc.right += 1;
+                    DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
+                }
+                *theResult = TRUE;
+                return S_OK;
+            }
+            return S_OK;
+        }
+        return S_OK;
+    }
+
+    return S_FALSE;
+}
+
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_hwnd(NULL),
+    m_useFlatMenus(FALSE),
     m_menuBand(menuBand),
     m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
-    m_hasIdealSize(FALSE)
+    m_hotItem(-1),
+    m_popupItem(-1),
+    m_SubclassOld(NULL),
+    m_hasIdealSize(FALSE),
+    m_usePager(usePager)
 {
+    m_marlett = CreateFont(
+        0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, FF_DONTCARE, L"Marlett");
+}
+
+CMenuToolbarBase::~CMenuToolbarBase()
+{
+    DeleteObject(m_marlett);
 }
 
 HRESULT CMenuToolbarBase::IsWindowOwner(HWND hwnd)
@@ -65,6 +201,8 @@ HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
     ::ShowWindow(m_hwnd, fShow ? SW_SHOW : SW_HIDE);
 
     UpdateImageLists();
+
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
 
     return S_OK;
 }
@@ -283,9 +421,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT itemId, UINT index, IShellMenu* chil
     ClientToScreen(m_hwndToolbar, &a);
     ClientToScreen(m_hwndToolbar, &b);
 
-    POINTL pt = { b.x - 4, a.y };
+    POINTL pt = { b.x - 3, a.y - 3 };
     RECTL rcl = { a.x, a.y, b.x, b.y }; // maybe-TODO: fetch client area of deskbar?
-
 
 #if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
@@ -332,6 +469,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT itemId, UINT index, IShellMenu* chil
     if (FAILED(hr))
         return hr;
 
+    m_popupItem = itemId;
     m_menuBand->_OnPopupSubMenu(itemId, popup, &pt, &rcl);
 
     return S_OK;
@@ -680,21 +818,22 @@ HRESULT CMenuSFToolbar::FillToolbar()
         tbb.fsState = TBSTATE_ENABLED;
         tbb.fsStyle = 0;
 
-        CComPtr<IShellItem> psi;
-        hr = SHCreateShellItem(NULL, m_shellFolder, item, &psi);
+        STRRET sr = { STRRET_CSTR, { 0 } };
+
+        hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
         if (FAILED(hr))
             return hr;
 
-        hr = psi->GetDisplayName(SIGDN_NORMALDISPLAY, &MenuString);
-        if (FAILED(hr))
-            return hr;
+        StrRetToStr(&sr, NULL, &MenuString);
 
         index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
 
-        SFGAOF attrs;
-        hr = psi->GetAttributes(SFGAO_FOLDER, &attrs);
+        LPCITEMIDLIST itemc = item;
 
-        if (attrs != 0)
+        SFGAOF attrs = SFGAO_FOLDER;
+        hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
+
+        if (attrs & SFGAO_FOLDER)
         {
             tbb.fsStyle |= BTNS_DROPDOWN;
         }
@@ -706,7 +845,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
         // FIXME: remove before deleting the toolbar or it will leak
 
         SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
-        HeapFree(GetProcessHeap(), 0, MenuString);
+        CoTaskMemFree(MenuString);
 
     }
     CoTaskMemFree(item);
@@ -869,15 +1008,12 @@ HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
 HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
 {
     HRESULT hr;
-    CComPtr<IShellItem> psi;
-    hr = SHCreateShellItem(NULL, m_shellFolder, GetPidlFromId(uItem), &psi);
-    if (FAILED(hr))
-        return S_FALSE;
+    LPCITEMIDLIST pidl = GetPidlFromId(uItem);
 
-    SFGAOF attrs;
-    hr = psi->GetAttributes(SFGAO_FOLDER, &attrs);
+    SFGAOF attrs = SFGAO_FOLDER;
+    hr = m_shellFolder->GetAttributesOf(1, &pidl, &attrs);
     if (FAILED(hr))
         return hr;
 
-    return (attrs != 0) ? S_OK : S_FALSE;
+    return (attrs & SFGAO_FOLDER) ? S_OK : S_FALSE;
 }

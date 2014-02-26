@@ -2083,21 +2083,24 @@ static void PopupStartMenu(IN ITrayWindowImpl *This)
         if (GetWindowRect(This->hwndStart,
             (RECT*) &rcExclude))
         {
-            if (ITrayWindowImpl_IsPosHorizontal(This))
+            switch (This->Position)
             {
+            case ABE_BOTTOM:
                 pt.x = rcExclude.left;
                 pt.y = rcExclude.top;
                 dwFlags |= MPPF_BOTTOM;
-            }
-            else
-            {
-                if (This->Position == ABE_LEFT)
-                    pt.x = rcExclude.left;
-                else
-                    pt.x = rcExclude.right;
-
+                break;
+            case ABE_TOP:
+            case ABE_LEFT:
+                pt.x = rcExclude.left;
                 pt.y = rcExclude.bottom;
-                dwFlags |= MPPF_BOTTOM;
+                dwFlags |= MPPF_TOP | MPPF_ALIGN_RIGHT;
+                break;
+            case ABE_RIGHT:
+                pt.x = rcExclude.right;
+                pt.y = rcExclude.bottom;
+                dwFlags |= MPPF_TOP | MPPF_ALIGN_LEFT;
+                break;
             }
 
             IMenuPopup_Popup(This->StartMenuPopup,
