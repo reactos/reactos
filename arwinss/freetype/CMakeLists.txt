@@ -1,8 +1,6 @@
 
 spec2def(freetype.dll freetype.spec ADD_IMPORTLIB)
 
-set_rc_compiler()
-
 add_definitions(
     -DFT2_BUILD_LIBRARY)
 

@@ -39,6 +39,7 @@ list(APPEND SOURCE
     printdrv.c
     region.c
     regglue.c
+    historic.c
     gdi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)

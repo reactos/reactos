@@ -82,7 +82,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include <ndk/ntndk.h>
-#include <ddk/ntstatus.h>
+//#include <ddk/ntstatus.h>
 #include "winerror.h"
 #include "winreg.h"
 #include "wingdi.h"

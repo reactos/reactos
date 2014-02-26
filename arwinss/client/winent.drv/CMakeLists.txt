@@ -42,5 +42,5 @@ target_link_libraries(winent
     ${PSEH_LIB})
 
 add_importlibs(winent gdi32 user32 imm32 msvcrt kernel32 ntdll)
-#add_pch(winent include/precomp.h)
+#add_pch(winent include/precomp.h SOURCE)
 add_cd_file(TARGET winent DESTINATION reactos/system32 FOR all)

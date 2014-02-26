@@ -31,7 +31,7 @@
 #include "win.h"
 #include "user_private.h"
 #include "wine/debug.h"
-#include "commctrl.h"
+#include "wine/commctrl.h"
 #include "commdlg.h"
 #include "richedit.h"
 

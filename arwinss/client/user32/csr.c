@@ -24,31 +24,35 @@
 #include <windowsx.h>
 #include <winnls32.h>
 #include <ndk/ntndk.h>
-#include <ddk/ntstatus.h>
+//#include <ddk/ntstatus.h>
 
 /* CSRSS Headers */
-#include <csrss/csrss.h>
+#include <subsys/csr/csr.h>
+#include <subsys/win/winmsg.h>
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(usercsr);
+
 
 /* FUNCTIONS ******************************************************************/
 
 /***********************************************************************
  *		ExitWindowsEx (USER32.@)
  */
-BOOL WINAPI ExitWindowsEx( UINT uFlags, DWORD dwReason )
+BOOL WINAPI ExitWindowsEx( UINT uFlags, DWORD dwReserved )
 {
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
-    CsrRequest = MAKE_CSR_API(EXIT_REACTOS, CSR_GUI);
-    Request.Data.ExitReactosRequest.Flags = uFlags;
-    Request.Data.ExitReactosRequest.Reserved = dwReason;
+    ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
+    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
+                                 sizeof(USER_EXIT_REACTOS));
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -57,23 +61,23 @@ BOOL WINAPI ExitWindowsEx( UINT uFlags, DWORD dwReason )
     return TRUE;
 }
 
+
 /***********************************************************************
  *		RegisterServicesProcess (USER32.@)
  */
-BOOL WINAPI RegisterServicesProcess(DWORD ServicesProcessId)
+BOOL WINAPI
+RegisterServicesProcess(DWORD ServicesProcessId)
 {
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
-    CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
-    Request.Data.RegisterServicesProcessRequest.ProcessId = (HANDLE)ServicesProcessId;
+    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
+                                 sizeof(USER_REGISTER_SERVICES_PROCESS));
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -87,23 +91,22 @@ BOOL WINAPI RegisterServicesProcess(DWORD ServicesProcessId)
  */
 BOOL WINAPI RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest;
-    NTSTATUS Status;
+        NTSTATUS Status;
+        USER_API_MESSAGE ApiMessage;
 
-    CsrRequest = MAKE_CSR_API(REGISTER_LOGON_PROCESS, CSR_GUI);
-    Request.Data.RegisterLogonProcessRequest.ProcessId = (HANDLE)dwProcessId;
-    Request.Data.RegisterLogonProcessRequest.Register = bRegister;
+        ApiMessage.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
+        ApiMessage.Data.RegisterLogonProcessRequest.Register = bRegister;
 
-    Status = CsrClientCallServer(&Request,
-                                 NULL,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     NULL,
+                                     CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
+                                     sizeof(USER_REGISTER_LOGON_PROCESS));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to register logon process with CSRSS\n");
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
 
     return TRUE;
 }
@@ -116,6 +119,7 @@ BOOL
 WINAPI
 SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
 {
+#if 0
     /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
@@ -133,10 +137,12 @@ SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
-
+    
     return TRUE;
+#else
+    ERR("SetLogonNotifyWindow is not yet implemented in Arwinss\n");
+    return FALSE;
+#endif
 }
-
-
 
 /* EOF */

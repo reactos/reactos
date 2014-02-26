@@ -277,7 +277,7 @@
 @ stub GdiDciInitialize
 @ stub GdiDciSetClipList
 @ stub GdiDciSetDestination
-@ stub GdiDeleteLocalDC
+@ stdcall GdiDeleteLocalDC(ptr)
 @ stub GdiDeleteLocalObject
 @ stub GdiDeleteSpoolFileHandle
 @ stub GdiDescribePixelFormat
@@ -310,8 +310,8 @@
 @ stub GdiGetDC
 @ stub GdiGetDevmodeForPage
 @ stub GdiGetLocalBitmap
-@ stub GdiGetLocalBrush
-@ stub GdiGetLocalDC
+@ stdcall GdiGetLocalBrush(ptr)
+@ stdcall GdiGetLocalDC(ptr)
 @ stub GdiGetLocalFont
 @ stub GdiGetPageCount
 @ stub GdiGetPageHandle
@@ -337,7 +337,7 @@
 @ stub GdiReleaseDC
 @ stub GdiReleaseLocalDC
 @ stub GdiResetDCEMF
-@ stub GdiSetAttrs
+@ stdcall GdiSetAttrs(ptr)
 @ stdcall GdiSetBatchLimit(long)
 @ stub GdiSetLastError
 @ stub GdiSetPixelFormat

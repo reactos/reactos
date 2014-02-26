@@ -31,6 +31,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <winerror.h>
 #include <wingdi.h>
 #define NT_BUILD_ENVIRONMENT
+#define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <winuser.h>
 #include <prntfont.h>
@@ -41,9 +42,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* SEH Support with PSEH */
 #include <pseh/pseh2.h>
-
-/* CSRSS Header */
-#include <csrss/csrss.h>
 
 /* Public Win32K Headers */
 #include <include/callback.h>

@@ -57,7 +57,7 @@ Win32kProcessCallout(PEPROCESS Process,
 
         RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
-        PsSetProcessWin32Process(Process, Win32Process);
+        PsSetProcessWin32Process(Process, Win32Process, NULL);
         Win32Process->peProcess = Process;
         /* FIXME - unlock the process */
 
@@ -144,7 +144,7 @@ Win32kThreadCallout(PETHREAD Thread,
 
         RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
 
-        PsSetThreadWin32Thread(Thread, Win32Thread);
+        PsSetThreadWin32Thread(Thread, Win32Thread, NULL);
         /* FIXME - unlock the process */
     }
     if (Type == PsW32ThreadCalloutInitialize)
@@ -169,7 +169,7 @@ Win32kThreadCallout(PETHREAD Thread,
             close_thread_desktop(Win32Thread);
         UserLeave();
 
-        PsSetThreadWin32Thread(Thread, NULL);
+        PsSetThreadWin32Thread(Thread, NULL, NULL);
     }
 
     DPRINT("Leave Win32kThreadCallback\n");
@@ -341,15 +341,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     CalloutData.PowerStateCallout = Win32kPowerStateCallout;
     CalloutData.JobCallout = Win32kJobCallout;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
-    CalloutData.DesktopOpenProcedure = Win32kDesktopOpenProcedure;
-    CalloutData.DesktopOkToCloseProcedure = Win32kDesktopOkToCloseProcedure;
-    CalloutData.DesktopCloseProcedure = Win32kDesktopCloseProcedure;
-    CalloutData.DesktopDeleteProcedure = Win32kDesktopDeleteProcedure;
-    CalloutData.WindowStationOkToCloseProcedure = Win32kWindowStationOkToCloseProcedure;
-    CalloutData.WindowStationCloseProcedure = Win32kWindowStationCloseProcedure;
-    CalloutData.WindowStationDeleteProcedure = Win32kWindowStationDeleteProcedure;
-    CalloutData.WindowStationParseProcedure = Win32kWindowStationParseProcedure;
-    CalloutData.WindowStationOpenProcedure = Win32kWindowStationOpenProcedure;
+    CalloutData.DesktopOpenProcedure = (PKWIN32_SESSION_CALLOUT)Win32kDesktopOpenProcedure;
+    CalloutData.DesktopOkToCloseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kDesktopOkToCloseProcedure;
+    CalloutData.DesktopCloseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kDesktopCloseProcedure;
+    CalloutData.DesktopDeleteProcedure = (PKWIN32_SESSION_CALLOUT)Win32kDesktopDeleteProcedure;
+    CalloutData.WindowStationOkToCloseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationOkToCloseProcedure;
+    CalloutData.WindowStationCloseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationCloseProcedure;
+    CalloutData.WindowStationDeleteProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationDeleteProcedure;
+    CalloutData.WindowStationParseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationParseProcedure;
+    CalloutData.WindowStationOpenProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationOpenProcedure;
     CalloutData.Win32DataCollectionProcedure = Win32kWin32DataCollectionProcedure;
 
     /* Register them */

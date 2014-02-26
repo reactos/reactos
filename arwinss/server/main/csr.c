@@ -12,12 +12,13 @@
 //#define NDEBUG
 #include <debug.h>
 
-static HANDLE WindowsApiPort = NULL;
+//static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
 
 VOID NTAPI
 CsrInit(void)
 {
+#if 0
    NTSTATUS Status;
    UNICODE_STRING PortName;
    ULONG ConnectInfoLength;
@@ -46,9 +47,13 @@ CsrInit(void)
 
    CsrProcess = PsGetCurrentProcess();
    DPRINT("Win32k registered with CSRSS\n");
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 
+#if 0
 NTSTATUS FASTCALL
 co_CsrNotify(PCSR_API_MESSAGE Request)
 {
@@ -87,6 +92,7 @@ co_CsrNotify(PCSR_API_MESSAGE Request)
 
    return Status;
 }
+#endif
 
 
 NTSTATUS
@@ -174,6 +180,7 @@ NTSTATUS
 NTAPI
 CsrNotifyCreateDesktop(HDESK Desktop)
 {
+#if 0
     CSR_API_MESSAGE Request;
     NTSTATUS Status;
 
@@ -200,12 +207,17 @@ CsrNotifyCreateDesktop(HDESK Desktop)
     }
 
     return STATUS_SUCCESS;
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 NTSTATUS
 NTAPI
 CsrNotifyShowDesktop(HWND DesktopWindow, ULONG Width, ULONG Height)
 {
+#if 0
    CSR_API_MESSAGE Request;
 
    Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
@@ -214,6 +226,10 @@ CsrNotifyShowDesktop(HWND DesktopWindow, ULONG Width, ULONG Height)
    Request.Data.ShowDesktopRequest.Height = Height;
 
    return co_CsrNotify(&Request);
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 /* EOF */

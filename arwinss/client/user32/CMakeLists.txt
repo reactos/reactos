@@ -4,13 +4,11 @@ add_definitions(-D__WINESRC__
 spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 
 include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/arwinss/include
     ${REACTOS_SOURCE_DIR}/win32ss/include
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
     )
-
-set_rc_compiler()
 
 list(APPEND SOURCE
     atom.c
@@ -75,6 +73,6 @@ target_link_libraries(user32
 
 add_delay_importlibs(user32 imm32 usp10)
 add_importlibs(user32 gdi32 advapi32 version msvcrt kernel32 ntdll)
-add_pch(user32 include/user32.h)
+add_pch(user32 include/user32.h SOURCE)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
 
