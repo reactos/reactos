@@ -10,6 +10,7 @@ list(APPEND SOURCE
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
     bios/bios.c
+    bios/rom.c
     hardware/cmos.c
     hardware/pic.c
     hardware/ps2.c

@@ -11,9 +11,10 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "callback.h"
 
 #include "clock.h"
-#include "bios/bios.h"
+#include "bios/rom.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
 #include "hardware/ps2.h"
