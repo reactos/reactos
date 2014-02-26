@@ -3052,6 +3052,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         SEND_NOTIFICATION( descr, LBN_SETFOCUS );
         return 0;
     case WM_KILLFOCUS:
+        LISTBOX_HandleLButtonUp( descr ); /* Release capture if we have it */
         descr->in_focus = FALSE;
         descr->wheel_remain = 0;
         if ((descr->focus_item != -1) && descr->caret_on)
