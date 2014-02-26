@@ -24,7 +24,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 
 class CMenuSiteWrap :
-    public CComCoClass<CMenuSiteWrap>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBandSite,
     public IDeskBarClient,

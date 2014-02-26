@@ -21,7 +21,6 @@
 #include "wraplog.h"
 
 class CMenuDeskBarWrap :
-    public CComCoClass<CMenuDeskBarWrap>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IOleCommandTarget,
     public IServiceProvider,
@@ -216,6 +215,24 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::ContextSensitiveHelp(BOOL fEnterMode
 HRESULT STDMETHODCALLTYPE CMenuDeskBarWrap::SetSite(IUnknown *pUnkSite)
 {
     WrapLogEnter("CMenuDeskBarWrap<%p>::SetSite(IUnknown *pUnkSite=%p)\n", this, pUnkSite);
+
+#if WRAP_TRAYPRIV
+    CComPtr<ITrayPriv> inTp;
+    HRESULT hr2 = pUnkSite->QueryInterface(IID_PPV_ARG(ITrayPriv, &inTp));
+    if (SUCCEEDED(hr2))
+    {
+        ITrayPriv * outTp;
+        hr2 = CStartMenuSite_Wrapper(inTp, IID_PPV_ARG(ITrayPriv, &outTp));
+        if (SUCCEEDED(hr2))
+        {
+            pUnkSite = outTp;
+        }
+        else
+        {
+            outTp->Release();
+        }
+    }
+#endif
     HRESULT hr = m_IObjectWithSite->SetSite(pUnkSite);
     WrapLogExit("CMenuDeskBarWrap::SetSite()", hr);
     return hr;

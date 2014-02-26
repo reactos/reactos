@@ -23,7 +23,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBandWrap);
 
 class CMenuBandWrap :
-    public CComCoClass<CMenuBandWrap>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDeskBand,
     public IObjectWithSite,

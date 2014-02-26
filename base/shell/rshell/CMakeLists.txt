@@ -20,6 +20,7 @@ list(APPEND SOURCE
     logging/CMenuBandWrap.cpp
     logging/CMenuDeskBarWrap.cpp
     logging/CMenuSiteWrap.cpp
+    logging/CStartMenuSiteWrap.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
 add_library(rshell SHARED ${SOURCE})
