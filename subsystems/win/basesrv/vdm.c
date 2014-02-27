@@ -69,6 +69,103 @@ ULONG NTAPI GetNextDosSesId(VOID)
     return SessionId;
 }
 
+BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID)
+{
+    NTSTATUS Status;
+    BOOLEAN VdmAllowed = TRUE;
+    HANDLE RootKey, KeyHandle;
+    UNICODE_STRING KeyName, ValueName, MachineKeyName;
+    OBJECT_ATTRIBUTES Attributes;
+    UCHAR ValueBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
+    ULONG ActualSize;
+
+    /* Initialize the unicode strings */
+    RtlInitUnicodeString(&MachineKeyName, L"\\Registry\\Machine");
+    RtlInitUnicodeString(&KeyName, VDM_POLICY_KEY_NAME);
+    RtlInitUnicodeString(&ValueName, VDM_DISALLOWED_VALUE_NAME);
+
+    InitializeObjectAttributes(&Attributes,
+                               &MachineKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open the local machine key */
+    Status = NtOpenKey(&RootKey, KEY_READ, &Attributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    InitializeObjectAttributes(&Attributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               RootKey,
+                               NULL);
+
+    /* Open the policy key in the local machine hive, if it exists */
+    if (NT_SUCCESS(NtOpenKey(&KeyHandle, KEY_READ, &Attributes)))
+    {
+        /* Read the value, if it's set */
+        if (NT_SUCCESS(NtQueryValueKey(KeyHandle,
+                                       &ValueName,
+                                       KeyValuePartialInformation,
+                                       ValueInfo,
+                                       sizeof(ValueBuffer),
+                                       &ActualSize)))
+        {
+            if (*((PULONG)ValueInfo->Data))
+            {
+                /* The VDM has been disabled in the registry */
+                VdmAllowed = FALSE;
+            }
+        }
+
+        NtClose(KeyHandle);
+    }
+
+    /* Close the local machine key */
+    NtClose(RootKey);
+
+    /* If it's disabled system-wide, there's no need to check the user key */
+    if (!VdmAllowed) return FALSE;
+
+    /* Open the current user key of the client */
+    if (!CsrImpersonateClient(NULL)) return VdmAllowed;
+    Status = RtlOpenCurrentUser(KEY_READ, &RootKey);
+    CsrRevertToSelf();
+
+    /* If that fails, return the system-wide setting */
+    if (!NT_SUCCESS(Status)) return VdmAllowed;
+
+    InitializeObjectAttributes(&Attributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               RootKey,
+                               NULL);
+
+    /* Open the policy key in the current user hive, if it exists */
+    if (NT_SUCCESS(NtOpenKey(&KeyHandle, KEY_READ, &Attributes)))
+    {
+        /* Read the value, if it's set */
+        if (NT_SUCCESS(NtQueryValueKey(KeyHandle,
+                                       &ValueName,
+                                       KeyValuePartialInformation,
+                                       ValueInfo,
+                                       sizeof(ValueBuffer),
+                                       &ActualSize)))
+        {
+            if (*((PULONG)ValueInfo->Data))
+            {
+                /* The VDM has been disabled in the registry */
+                VdmAllowed = FALSE;
+            }
+        }
+
+        NtClose(KeyHandle);
+    }
+
+    return VdmAllowed;
+}
+
 VOID NTAPI BaseInitializeVDM(VOID)
 {
     /* Initialize the list head */
@@ -87,6 +184,9 @@ CSR_API(BaseSrvCheckVDM)
     PBASE_CHECK_VDM CheckVdmRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CheckVDMRequest;
     PRTL_CRITICAL_SECTION CriticalSection = NULL;
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+
+    /* Don't do anything if the VDM has been disabled in the registry */
+    if (!BaseSrvIsVdmAllowed()) return STATUS_ACCESS_DENIED;
 
     /* Validate the message buffers */
     if (!CsrValidateMessageBuffer(ApiMessage,

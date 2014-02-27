@@ -13,6 +13,9 @@
 
 /* DEFINITIONS ****************************************************************/
 
+#define VDM_POLICY_KEY_NAME L"Software\\Policies\\Microsoft\\Windows\\AppCompat"
+#define VDM_DISALLOWED_VALUE_NAME L"VDMDisallowed"
+
 typedef struct _VDM_CONSOLE_RECORD
 {
     LIST_ENTRY Entry;
