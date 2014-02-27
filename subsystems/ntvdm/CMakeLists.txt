@@ -26,6 +26,7 @@ list(APPEND SOURCE
     emulator.c
     io.c
     registers.c
+    utils.c
     vddsup.c
     ntvdm.c
     ntvdm.rc
