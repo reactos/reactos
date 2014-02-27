@@ -15,6 +15,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "utils.h"
 
 #include "dem.h"
 #include "bop.h"
@@ -40,7 +41,54 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
     BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
     setIP(getIP() + 1);
 
-    DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
+    switch (FuncNum)
+    {
+        case 0x11:  // Load the DOS kernel
+        {
+            BOOLEAN Success;
+            HANDLE  hDosKernel;
+            ULONG   ulDosKernelSize = 0;
+
+            DPRINT1("You are loading Windows NT DOS!\n");
+
+            /* Open the DOS kernel file */
+            hDosKernel = FileOpen("ntdos.sys", &ulDosKernelSize);
+
+            /* If we failed, bail out */
+            if (hDosKernel == NULL) goto Quit;
+
+            /*
+             * Attempt to load the DOS kernel into memory.
+             * The segment where to load the DOS kernel is defined
+             * by the DOS BIOS and is found in DI:0000 .
+             */
+            Success = FileLoadByHandle(hDosKernel,
+                                       REAL_TO_PHYS(TO_LINEAR(getDI(), 0x0000)),
+                                       ulDosKernelSize,
+                                       &ulDosKernelSize);
+            DPRINT1("DOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+
+            /* Close the DOS kernel file */
+            FileClose(hDosKernel);
+
+Quit:
+            if (!Success)
+            {
+                /* We failed everything, stop the VDM */
+                VdmRunning = FALSE;
+            }
+
+            break;
+        }
+
+        default:
+        {
+
+            DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
+            // setCF(1); // Disable, otherwise we enter an infinite loop
+            break;
+        }
+    }
 }
 
 static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
@@ -51,7 +99,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
 
     switch (FuncNum)
     {
-        case 0x08: // Launch external command
+        case 0x08:  // Launch external command
         {
 #define CMDLINE_LENGTH  1024
 
@@ -132,16 +180,42 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames)
+BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
 {
     /* Register the DOS BOPs */
     RegisterBop(BOP_DOS, DosSystemBop        );
     RegisterBop(BOP_CMD, DosCmdInterpreterBop);
 
-    if (DosKernelFileNames)
+    if (DosKernelFileName)
     {
-        DisplayMessage(L"NTVDM: Loading DOS kernel from external files is currently unsupported");
-        return FALSE;
+        BOOLEAN Success;
+        HANDLE  hDosBios;
+        ULONG   ulDosBiosSize = 0;
+
+        /* Open the DOS BIOS file */
+        hDosBios = FileOpen(DosKernelFileName, &ulDosBiosSize);
+
+        /* If we failed, bail out */
+        if (hDosBios == NULL) return FALSE;
+
+        /* Attempt to load the DOS BIOS into memory */
+        Success = FileLoadByHandle(hDosBios,
+                                   REAL_TO_PHYS(TO_LINEAR(0x0070, 0x0000)),
+                                   ulDosBiosSize,
+                                   &ulDosBiosSize);
+        DPRINT1("DOS BIOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+
+        /* Close the DOS BIOS file */
+        FileClose(hDosBios);
+
+        if (Success)
+        {
+            /* Position execution pointers and return */
+            setCS(0x0070);
+            setIP(0x0000);
+        }
+
+        return Success;
     }
     else
     {
