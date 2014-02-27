@@ -35,10 +35,11 @@
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -59,10 +60,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -83,10 +85,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -107,10 +110,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -131,10 +135,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -155,10 +160,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -179,10 +185,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
@@ -203,10 +210,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 {
-    UCHAR Function;
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
-    /* Fetch the function number */
-    if (!Fast486FetchByte(State, &Function))
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
         return FALSE;
