@@ -12,10 +12,10 @@
 
 #include "emulator.h"
 #include "callback.h"
+#include "bop.h"
 
 #include "bios.h"
 
-#include "bop.h"
 #include "rom.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -34,12 +34,12 @@ static CALLBACK16 __BiosContext;
 static VOID WINAPI BiosInitBop(LPWORD Stack)
 {
     /* Load the second part of the Windows NTVDM BIOS image */
-    LPCWSTR BiosFileName = L"bios1.rom";
+    LPCSTR BiosFileName = "bios1.rom";
     PVOID   BiosLocation = (PVOID)TO_LINEAR(BIOS_SEGMENT, 0x0000);
     DWORD   BiosSize = 0;
     BOOLEAN Success;
 
-    DPRINT1("You are loading Windows NTVDM BIOS!");
+    DPRINT1("You are loading Windows NTVDM BIOS!\n");
 
     /* Initialize a private callback context */
     InitializeContext(&__BiosContext, BIOS_SEGMENT, 0x0000);
@@ -71,13 +71,13 @@ static VOID WINAPI BiosInitBop(LPWORD Stack)
     /* Initialize IVT and hardware */
 
     /* Load VGA BIOS */
-    // Success = LoadRom(L"v7vga.rom", (PVOID)0xC0000, &BiosSize);
+    // Success = LoadRom("v7vga.rom", (PVOID)0xC0000, &BiosSize);
     // DPRINT1("VGA BIOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
     /* Load some ROMs */
-    Success = LoadRom(L"boot.bin", (PVOID)0xE0000, &BiosSize);
+    Success = LoadRom("boot.bin", (PVOID)0xE0000, &BiosSize);
     DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     SearchAndInitRoms(&__BiosContext);
@@ -85,9 +85,10 @@ static VOID WINAPI BiosInitBop(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN BiosInitialize(IN LPCWSTR BiosFileName,
-                       IN HANDLE  ConsoleInput,
-                       IN HANDLE  ConsoleOutput)
+BOOLEAN
+BiosInitialize(IN LPCSTR BiosFileName,
+               IN HANDLE ConsoleInput,
+               IN HANDLE ConsoleOutput)
 {
     /* Register the BIOS support BOPs */
     RegisterBop(BOP_BIOSINIT, BiosInitBop);
@@ -148,7 +149,8 @@ BOOLEAN BiosInitialize(IN LPCWSTR BiosFileName,
     }
 }
 
-VOID BiosCleanup(VOID)
+VOID
+BiosCleanup(VOID)
 {
     if (Bios32Loaded) Bios32Cleanup();
 }

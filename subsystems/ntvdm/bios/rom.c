@@ -12,65 +12,48 @@
 
 #include "emulator.h"
 #include "callback.h"
+#include "utils.h"
 
 #include "rom.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static HANDLE
-OpenRomFile(IN  LPCWSTR RomFileName,
-            OUT PDWORD  RomSize OPTIONAL)
+OpenRomFile(IN  PCSTR  RomFileName,
+            OUT PULONG RomSize OPTIONAL)
 {
     HANDLE hRomFile;
-    DWORD  dwRomSize;
+    ULONG  ulRomSize = 0;
 
     /* Open the ROM image file */
-    SetLastError(0); // For debugging purposes
-    hRomFile = CreateFileW(RomFileName,
-                           GENERIC_READ,
-                           FILE_SHARE_READ,
-                           NULL,
-                           OPEN_EXISTING,
-                           FILE_ATTRIBUTE_NORMAL,
-                           NULL);
-    DPRINT1("ROM opening %s ; GetLastError() = %u\n", hRomFile != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
+    hRomFile = FileOpen(RomFileName, &ulRomSize);
 
-    /* We failed, bail out */
-    if (hRomFile == INVALID_HANDLE_VALUE) return NULL;
-
-    /* OK, we have a handle to the ROM image file */
+    /* If we failed, bail out */
+    if (hRomFile == NULL) return NULL;
 
     /*
-     * Retrieve the size of the file.
-     *
      * The size of the ROM image file is at most 256kB. For instance,
      * the SeaBIOS image, which includes also expansion ROMs inside it,
      * covers the range C000:0000 to F000:FFFF .
-     *
-     * We therefore can use GetFileSize.
      */
-    dwRomSize = GetFileSize(hRomFile, NULL);
-    if ( (dwRomSize == INVALID_FILE_SIZE && GetLastError() != ERROR_SUCCESS) ||
-         (dwRomSize > 0x40000) )
+    if (ulRomSize > 0x40000)
     {
         /* We failed, bail out */
-        DPRINT1("Error when retrieving ROM size, or size too large (%d)\n", dwRomSize);
-
-        /* Close the ROM image file */
-        CloseHandle(hRomFile);
-
+        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)", ulRomSize);
+        FileClose(hRomFile);
         return NULL;
     }
 
     /* Success, return file handle and size if needed */
-    if (RomSize) *RomSize = dwRomSize;
+    if (RomSize) *RomSize = ulRomSize;
     return hRomFile;
 }
 
-static BOOL
-LoadRomFileByHandle(IN HANDLE RomFileHandle,
-                    IN PVOID  RomLocation,
-                    IN ULONG  RomSize)
+static BOOLEAN
+LoadRomFileByHandle(IN  HANDLE RomFileHandle,
+                    IN  PVOID  RomLocation,
+                    IN  ULONG  RomSize,
+                    OUT PULONG BytesRead)
 {
     /*
      * The size of the ROM image file is at most 256kB. For instance,
@@ -79,17 +62,15 @@ LoadRomFileByHandle(IN HANDLE RomFileHandle,
      */
     if (RomSize > 0x40000)
     {
-        DPRINT1("Wrong ROM image size 0x%lx, expected at most 0x40000 (256kB)", RomSize);
+        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)", RomSize);
         return FALSE;
     }
 
     /* Attempt to load the ROM image file into memory */
-    SetLastError(0); // For debugging purposes
-    return ReadFile(RomFileHandle,
-                    REAL_TO_PHYS(RomLocation),
-                    RomSize,
-                    &RomSize,
-                    NULL);
+    return FileLoadByHandle(RomFileHandle,
+                            REAL_TO_PHYS(RomLocation),
+                            RomSize,
+                            BytesRead);
 }
 
 static UCHAR
@@ -159,73 +140,82 @@ InitRomRange(IN PCALLBACK16 Context,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN LoadBios(IN  LPCWSTR BiosFileName,
-                 OUT PVOID*  BiosLocation OPTIONAL,
-                 OUT PDWORD  BiosSize     OPTIONAL)
+BOOLEAN
+LoadBios(IN  PCSTR  BiosFileName,
+         OUT PVOID* BiosLocation OPTIONAL,
+         OUT PULONG BiosSize     OPTIONAL)
 {
-    BOOL   Success;
-    HANDLE hBiosFile;
-    DWORD  dwBiosSize = 0;
-    PVOID  pBiosLocation;
+    BOOLEAN Success;
+    HANDLE  hBiosFile;
+    ULONG   ulBiosSize = 0;
+    PVOID   pBiosLocation;
 
     /* Open the BIOS image file */
-    hBiosFile = OpenRomFile(BiosFileName, &dwBiosSize);
+    hBiosFile = OpenRomFile(BiosFileName, &ulBiosSize);
 
     /* If we failed, bail out */
     if (hBiosFile == NULL) return FALSE;
 
     /* BIOS location needs to be aligned on 32-bit boundary */
-    // (PVOID)((ULONG_PTR)BaseAddress + ROM_AREA_END + 1 - dwBiosSize)
-    pBiosLocation = MEM_ALIGN_DOWN(TO_LINEAR(0xF000, 0xFFFF) + 1 - dwBiosSize, sizeof(ULONG));
+    // (PVOID)((ULONG_PTR)BaseAddress + ROM_AREA_END + 1 - ulBiosSize)
+    pBiosLocation = MEM_ALIGN_DOWN(TO_LINEAR(0xF000, 0xFFFF) + 1 - ulBiosSize, sizeof(ULONG));
 
     /* Attempt to load the BIOS image file into memory */
-    Success = LoadRomFileByHandle(hBiosFile, pBiosLocation, dwBiosSize);
+    Success = LoadRomFileByHandle(hBiosFile,
+                                  pBiosLocation,
+                                  ulBiosSize,
+                                  &ulBiosSize);
     DPRINT1("BIOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     /* Close the BIOS image file */
-    CloseHandle(hBiosFile);
+    FileClose(hBiosFile);
 
     /* In case of success, return BIOS location and size if needed */
     if (Success)
     {
         if (BiosLocation) *BiosLocation = pBiosLocation;
-        if (BiosSize)     *BiosSize     = dwBiosSize;
+        if (BiosSize)     *BiosSize     = ulBiosSize;
     }
 
-    return (BOOLEAN)Success;
+    return Success;
 }
 
-BOOLEAN LoadRom(IN  LPCWSTR RomFileName,
-                IN  PVOID   RomLocation,
-                OUT PDWORD  RomSize OPTIONAL)
+BOOLEAN
+LoadRom(IN  PCSTR  RomFileName,
+        IN  PVOID  RomLocation,
+        OUT PULONG RomSize OPTIONAL)
 {
-    BOOL   Success;
-    HANDLE hRomFile;
-    DWORD  dwRomSize = 0;
+    BOOLEAN Success;
+    HANDLE  hRomFile;
+    ULONG   ulRomSize = 0;
 
     /* Open the ROM image file */
-    hRomFile = OpenRomFile(RomFileName, &dwRomSize);
+    hRomFile = OpenRomFile(RomFileName, &ulRomSize);
 
     /* If we failed, bail out */
     if (hRomFile == NULL) return FALSE;
 
     /* Attempt to load the ROM image file into memory */
-    Success = LoadRomFileByHandle(hRomFile, RomLocation, dwRomSize);
+    Success = LoadRomFileByHandle(hRomFile,
+                                  RomLocation,
+                                  ulRomSize,
+                                  &ulRomSize);
     DPRINT1("ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     /* Close the ROM image file and return */
-    CloseHandle(hRomFile);
+    FileClose(hRomFile);
 
     /* In case of success, return ROM size if needed */
     if (Success)
     {
-        if (RomSize) *RomSize = dwRomSize;
+        if (RomSize) *RomSize = ulRomSize;
     }
 
-    return (BOOLEAN)Success;
+    return Success;
 }
 
-VOID SearchAndInitRoms(IN PCALLBACK16 Context)
+VOID
+SearchAndInitRoms(IN PCALLBACK16 Context)
 {
     /* Adapters ROMs -- Start: C8000, End: E0000, 2kB blocks */
     InitRomRange(Context, 0xC8000, 0xE0000, 0x0800);

@@ -12,6 +12,7 @@
 
 #include "emulator.h"
 #include "callback.h"
+#include "bop.h"
 
 #include "../rom.h"
 #include "../bios.h"
@@ -26,6 +27,9 @@
 
 CALLBACK16 BiosContext;
 PBIOS_DATA_AREA Bda;
+
+/* BOP Identifiers */
+#define BOP_GETMEMSIZE  0x12
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -347,6 +351,9 @@ static VOID InitializeBiosInt32(VOID)
     ((PULONG)BaseAddress)[0x46] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x48] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
+
+    /* Register the BIOS support BOPs */
+    RegisterBop(BOP_GETMEMSIZE, BiosGetMemorySize);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -408,7 +415,7 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
     /* Load some ROMs */
-    Success = LoadRom(L"boot.bin", (PVOID)0xE0000, NULL);
+    Success = LoadRom("boot.bin", (PVOID)0xE0000, NULL);
     DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     SearchAndInitRoms(&BiosContext);

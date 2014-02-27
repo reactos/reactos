@@ -22,15 +22,18 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN LoadBios(IN  LPCWSTR BiosFileName,
-                 OUT PVOID*  BiosLocation OPTIONAL,
-                 OUT PDWORD  BiosSize     OPTIONAL);
+BOOLEAN
+LoadBios(IN  PCSTR  BiosFileName,
+         OUT PVOID* BiosLocation OPTIONAL,
+         OUT PULONG BiosSize     OPTIONAL);
 
-BOOLEAN LoadRom(IN  LPCWSTR RomFileName,
-                IN  PVOID   RomLocation,
-                OUT PDWORD  RomSize OPTIONAL);
+BOOLEAN
+LoadRom(IN  PCSTR  RomFileName,
+        IN  PVOID  RomLocation,
+        OUT PULONG RomSize OPTIONAL);
 
-VOID SearchAndInitRoms(IN PCALLBACK16 Context);
+VOID
+SearchAndInitRoms(IN PCALLBACK16 Context);
 
 #endif // _ROM_H_
 
