@@ -535,7 +535,6 @@ Ext2MountVolume (
 		else
 		{
 			DebugTrace(DEBUG_TRACE_MOUNT,   "Failing mount. Partition not Ext2...", 0);
-			DbgPrint("Supper Blk Magic %x\n",SuperBlock->s_magic);
 		}
 
 		try_exit: NOTHING;
