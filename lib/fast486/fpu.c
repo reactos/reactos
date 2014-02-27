@@ -37,14 +37,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -61,14 +61,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -85,14 +85,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -109,14 +109,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -133,14 +133,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -157,14 +157,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -181,14 +181,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
@@ -205,14 +205,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 {
     UCHAR Function;
 
-    FPU_CHECK();
-
     /* Fetch the function number */
     if (!Fast486FetchByte(State, &Function))
     {
         /* Exception occurred */
         return FALSE;
     }
+
+    FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
     // TODO: NOT IMPLEMENTED
