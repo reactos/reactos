@@ -55,6 +55,7 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     COLORREF clrText;
     COLORREF clrTextHighlight;
     SIZE tbs;
+    bool isHot, isPopup;
 
     *theResult = 0;
     switch (uMsg)
@@ -112,8 +113,10 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
                 rc = cdraw->nmcd.rc;
                 hdc = cdraw->nmcd.hdc;
 
-                if (((INT) cdraw->nmcd.dwItemSpec == m_hotItem ||
-                    (m_hotItem < 0 && (INT) cdraw->nmcd.dwItemSpec == m_popupItem)))
+                isHot = m_hotBar == this && m_hotItem == (INT) cdraw->nmcd.dwItemSpec;
+                isPopup = m_popupBar == this && m_popupItem == (INT) cdraw->nmcd.dwItemSpec;
+
+                if (isHot || (m_hotItem < 0 && isPopup))
                 {
                     cdraw->nmcd.uItemState = CDIS_HOT;
                 }
@@ -168,11 +171,11 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_menuBand(menuBand),
     m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
-    m_hotItem(-1),
-    m_popupItem(-1),
     m_SubclassOld(NULL),
     m_hasIdealSize(FALSE),
-    m_usePager(usePager)
+    m_usePager(usePager),
+    m_hotItem(-1),
+    m_popupItem(-1)
 {
     m_marlett = CreateFont(
         0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
@@ -370,7 +373,7 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         {
             KillTimer(hWnd, TIMERID_HOTTRACK);
 
-            m_menuBand->_OnPopupSubMenu(-1, NULL, NULL, NULL);
+            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL, NULL, -1);
 
             if (HasSubMenu(m_hotItem) == S_OK)
             {
@@ -404,7 +407,23 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu)
+HRESULT CMenuToolbarBase::OnHotItemChanged(CMenuToolbarBase * toolbar, INT item)
+{
+    m_hotBar = toolbar;
+    m_hotItem = item;
+    InvalidateDraw();
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item)
+{
+    m_popupBar = toolbar;
+    m_popupItem = item;
+    InvalidateDraw();
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* childShellMenu)
 {
     IBandSite* pBandSite;
     IDeskBar* pDeskBar;
@@ -469,8 +488,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT itemId, UINT index, IShellMenu* chil
     if (FAILED(hr))
         return hr;
 
-    m_popupItem = itemId;
-    m_menuBand->_OnPopupSubMenu(itemId, popup, &pt, &rcl);
+    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl, this, m_popupItem);
 
     return S_OK;
 }
@@ -746,7 +764,7 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
     return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
 }
 
-HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
+HRESULT CMenuStaticToolbar::PopupItem(INT uItem)
 {
     TBBUTTONINFO info = { 0 };
     info.cbSize = sizeof(TBBUTTONINFO);
@@ -777,7 +795,7 @@ HRESULT CMenuStaticToolbar::PopupItem(UINT uItem)
     }
 }
 
-HRESULT CMenuStaticToolbar::HasSubMenu(UINT uItem)
+HRESULT CMenuStaticToolbar::HasSubMenu(INT uItem)
 {
     TBBUTTONINFO info = { 0 };
     info.cbSize = sizeof(TBBUTTONINFO);
@@ -909,7 +927,7 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
     return hr;
 }
 
-LPITEMIDLIST CMenuSFToolbar::GetPidlFromId(UINT uItem, INT* pIndex)
+LPITEMIDLIST CMenuSFToolbar::GetPidlFromId(INT uItem, INT* pIndex)
 {
     TBBUTTONINFO info = { 0 };
     info.cbSize = sizeof(TBBUTTONINFO);
@@ -955,7 +973,7 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
     return m_menuBand->_CallCBWithItemPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
 }
 
-HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
+HRESULT CMenuSFToolbar::PopupItem(INT uItem)
 {
     HRESULT hr;
     UINT uId;
@@ -1005,7 +1023,7 @@ HRESULT CMenuSFToolbar::PopupItem(UINT uItem)
     return PopupSubMenu(uItem, index, shellMenu);
 }
 
-HRESULT CMenuSFToolbar::HasSubMenu(UINT uItem)
+HRESULT CMenuSFToolbar::HasSubMenu(INT uItem)
 {
     HRESULT hr;
     LPCITEMIDLIST pidl = GetPidlFromId(uItem);

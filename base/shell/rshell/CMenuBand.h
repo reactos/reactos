@@ -60,7 +60,6 @@ private:
 
     CMenuToolbarBase * m_hotBar;
     INT                m_hotItem;
-    INT                m_popupItem;
 
 public:
     CMenuBand();
@@ -176,7 +175,7 @@ public:
     HRESULT _GetTopLevelWindow(HWND*topLevel);
     HRESULT _OnHotItemChanged(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);
-    HRESULT _OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * pAt, RECTL * pExclude);
+    HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item);
 
     BOOL UseBigIcons()
     {

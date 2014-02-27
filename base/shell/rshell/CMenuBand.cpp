@@ -54,8 +54,7 @@ CMenuBand::CMenuBand() :
     m_subMenuChild(NULL),
     m_useBigIcons(FALSE),
     m_hotBar(NULL),
-    m_hotItem(-1),
-    m_popupItem(-1)
+    m_hotItem(-1)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -625,12 +624,10 @@ HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
 
 HRESULT CMenuBand::_OnHotItemChanged(CMenuToolbarBase * tb, INT id)
 {
-    if (m_hotBar && m_hotBar != tb)
-        m_hotBar->ChangeHotItem(-1);
     m_hotBar = tb;
     m_hotItem = id;
-    if (m_staticToolbar) m_staticToolbar->InvalidateDraw();
-    if (m_SFToolbar) m_SFToolbar->InvalidateDraw();
+    if (m_staticToolbar) m_staticToolbar->OnHotItemChanged(tb, id);
+    if (m_SFToolbar) m_SFToolbar->OnHotItemChanged(tb, id);
     return S_OK;
 }
 
@@ -717,7 +714,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     return S_OK;
 }
 
-HRESULT CMenuBand::_OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * pAt, RECTL * pExclude)
+HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item)
 {
     if (m_subMenuChild)
     {
@@ -725,7 +722,8 @@ HRESULT CMenuBand::_OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * p
         if (FAILED(hr))
             return hr;
     }
-    m_popupItem = popupItem;
+    if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);
+    if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(toolbar, item);
     m_subMenuChild = popup;
     if (popup)
     {
@@ -733,8 +731,6 @@ HRESULT CMenuBand::_OnPopupSubMenu(INT popupItem, IMenuPopup * popup, POINTL * p
 
         popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }
-    if (m_staticToolbar) m_staticToolbar->InvalidateDraw();
-    if (m_SFToolbar) m_SFToolbar->InvalidateDraw();
     return S_OK;
 }
 

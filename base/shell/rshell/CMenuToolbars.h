@@ -33,12 +33,14 @@ protected:
     CMenuBand * m_menuBand;
     HWND        m_hwndToolbar;
     DWORD       m_dwMenuFlags;
-    INT         m_hotItem;
-    INT         m_popupItem;
     WNDPROC     m_SubclassOld;
     BOOL        m_hasIdealSize;
     SIZE        m_idealSize;
     BOOL        m_usePager;
+    CMenuToolbarBase * m_hotBar;
+    INT                m_hotItem;
+    CMenuToolbarBase * m_popupBar;
+    INT                m_popupItem;
 
 private:
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -55,10 +57,8 @@ public:
 
     HRESULT OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
-    virtual HRESULT FillToolbar() = 0;
-    virtual HRESULT PopupItem(UINT uItem) = 0;
-    virtual HRESULT HasSubMenu(UINT uItem) = 0;
-    virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
+    HRESULT OnHotItemChanged(CMenuToolbarBase * toolbar, INT item);
+    HRESULT OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item);
 
     HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu);
     HRESULT PopupSubMenu(UINT index, HMENU menu);
@@ -71,6 +71,11 @@ public:
     HRESULT SetPosSize(int x, int y, int cx, int cy);
 
     void InvalidateDraw();
+
+    virtual HRESULT FillToolbar() = 0;
+    virtual HRESULT PopupItem(INT uItem) = 0;
+    virtual HRESULT HasSubMenu(INT uItem) = 0;
+    virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
 
 protected:
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
@@ -94,8 +99,8 @@ public:
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
     virtual HRESULT FillToolbar();
-    virtual HRESULT PopupItem(UINT uItem);
-    virtual HRESULT HasSubMenu(UINT uItem);
+    virtual HRESULT PopupItem(INT uItem);
+    virtual HRESULT HasSubMenu(INT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
@@ -117,11 +122,11 @@ public:
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
     virtual HRESULT FillToolbar();
-    virtual HRESULT PopupItem(UINT uItem);
-    virtual HRESULT HasSubMenu(UINT uItem);
+    virtual HRESULT PopupItem(INT uItem);
+    virtual HRESULT HasSubMenu(INT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 private:
-    LPITEMIDLIST GetPidlFromId(UINT uItem, INT* pIndex = NULL);
+    LPITEMIDLIST GetPidlFromId(INT uItem, INT* pIndex = NULL);
 };
