@@ -3248,7 +3248,40 @@ CLEANUP:
    END_CLEANUP;
 }
 
+////
+//// ReactOS work around! Keep it the sames as in Combo.c and Controls.h
+////
+/* combo state struct */
+typedef struct
+{
+   HWND           self;
+   HWND           owner;
+   UINT           dwStyle;
+   HWND           hWndEdit;
+   HWND           hWndLBox;
+   UINT           wState;
+   HFONT          hFont;
+   RECT           textRect;
+   RECT           buttonRect;
+   RECT           droppedRect;
+   INT            droppedIndex;
+   INT            fixedOwnerDrawHeight;
+   INT            droppedWidth;   /* last two are not used unless set */
+   INT            editHeight;     /* explicitly */
+   LONG           UIState;
+} HEADCOMBO,*LPHEADCOMBO;
 
+// Window Extra data container.
+typedef struct _WND2CBOX
+{
+  WND;
+  LPHEADCOMBO pCBox;
+} WND2CBOX, *PWND2CBOX;
+
+#define CBF_BUTTONDOWN          0x0002
+////
+////
+////
 BOOL
 APIENTRY
 NtUserGetComboBoxInfo(
@@ -3256,6 +3289,9 @@ NtUserGetComboBoxInfo(
    PCOMBOBOXINFO pcbi)
 {
    PWND Wnd;
+   PPROCESSINFO ppi;
+   BOOL NotSameppi = FALSE;
+   BOOL Ret = TRUE;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetComboBoxInfo\n");
@@ -3281,22 +3317,95 @@ NtUserGetComboBoxInfo(
    }
    _SEH2_END;
 
+   if (pcbi->cbSize < sizeof(COMBOBOXINFO))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      RETURN(FALSE);
+   }
+
    // Pass the user pointer, it was already probed.
-   RETURN( (BOOL) co_IntSendMessage( Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+   if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_COMBOBOX]) && Wnd->fnid != FNID_COMBOBOX)
+   {
+      RETURN( (BOOL) co_IntSendMessage( Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+   }
+
+   ppi = PsGetCurrentProcessWin32Process();
+   NotSameppi = ppi != Wnd->head.pti->ppi;
+   if (NotSameppi)
+   {
+      KeAttachProcess(&Wnd->head.pti->ppi->peProcess->Pcb);
+   }
+
+   _SEH2_TRY
+   {
+      LPHEADCOMBO lphc = ((PWND2CBOX)Wnd)->pCBox;
+      pcbi->rcItem = lphc->textRect;
+      pcbi->rcButton = lphc->buttonRect;
+      pcbi->stateButton = 0;
+      if (lphc->wState & CBF_BUTTONDOWN)
+         pcbi->stateButton |= STATE_SYSTEM_PRESSED;
+      if (RECTL_bIsEmptyRect(&lphc->buttonRect))
+         pcbi->stateButton |= STATE_SYSTEM_INVISIBLE;
+      pcbi->hwndCombo = lphc->self;
+      pcbi->hwndItem = lphc->hWndEdit;
+      pcbi->hwndList = lphc->hWndLBox;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Ret = FALSE;
+      SetLastNtError(_SEH2_GetExceptionCode());
+   }
+   _SEH2_END;
+   
+   RETURN( Ret);
 
 CLEANUP:
+   if (NotSameppi) KeDetachProcess();
    TRACE("Leave NtUserGetComboBoxInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
 
+////
+//// ReactOS work around! Keep it the sames as in Listbox.c
+////
+/* Listbox structure */
+typedef struct
+{
+    HWND        self;           /* Our own window handle */
+    HWND        owner;          /* Owner window to send notifications to */
+    UINT        style;          /* Window style */
+    INT         width;          /* Window width */
+    INT         height;         /* Window height */
+    VOID       *items;          /* Array of items */
+    INT         nb_items;       /* Number of items */
+    INT         top_item;       /* Top visible item */
+    INT         selected_item;  /* Selected item */
+    INT         focus_item;     /* Item that has the focus */
+    INT         anchor_item;    /* Anchor item for extended selection */
+    INT         item_height;    /* Default item height */
+    INT         page_size;      /* Items per listbox page */
+    INT         column_width;   /* Column width for multi-column listboxes */
+} LB_DESCR;
 
+// Window Extra data container.
+typedef struct _WND2LB
+{
+  WND;
+  LB_DESCR * pLBiv;
+} WND2LB, *PWND2LB;
+////
+////
+////
 DWORD
 APIENTRY
 NtUserGetListBoxInfo(
    HWND hWnd)
 {
    PWND Wnd;
+   PPROCESSINFO ppi;
+   BOOL NotSameppi = FALSE;
+   DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
 
    TRACE("Enter NtUserGetListBoxInfo\n");
@@ -3307,9 +3416,39 @@ NtUserGetListBoxInfo(
       RETURN( 0 );
    }
 
-   RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
+   if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_LISTBOX]) && Wnd->fnid != FNID_LISTBOX)
+   {
+      RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
+   }
+
+   // wine lisbox:test_GetListBoxInfo lb_getlistboxinfo = 0, should not send a message!
+   ppi = PsGetCurrentProcessWin32Process();
+   NotSameppi = ppi != Wnd->head.pti->ppi;
+   if (NotSameppi)
+   {
+      KeAttachProcess(&Wnd->head.pti->ppi->peProcess->Pcb);
+   }
+
+   _SEH2_TRY
+   {
+      LB_DESCR *descr = ((PWND2LB)Wnd)->pLBiv;
+      // See Controls ListBox.c:LB_GETLISTBOXINFO must match...
+      if (descr->style & LBS_MULTICOLUMN) //// ReactOS
+         Ret = descr->page_size * descr->column_width;
+      else
+         Ret = descr->page_size;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Ret = 0;
+      SetLastNtError(_SEH2_GetExceptionCode());
+   }
+   _SEH2_END;
+   
+   RETURN( Ret);
 
 CLEANUP:
+   if (NotSameppi) KeDetachProcess();
    TRACE("Leave NtUserGetListBoxInfo, ret=%lu\n", _ret_);
    UserLeave();
    END_CLEANUP;
