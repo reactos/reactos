@@ -1252,7 +1252,7 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 /***********************************************************************
  *		ShowCursor (USER32.@)
  */
-INT WINAPI /*DECLSPEC_HOTPATCH*/ ShowCursor( BOOL bShow )
+INT WINAPI DECLSPEC_HOTPATCH ShowCursor( BOOL bShow )
 {
     return NtUserxShowCursor(bShow);
 }
