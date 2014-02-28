@@ -1,7 +1,13 @@
 #define __WINE_CONFIG_H
 
 /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
+#ifndef DECLSPEC_HOTPATCH
+#ifdef _MSC_VER
 #define DECLSPEC_HOTPATCH
+#else
+#define DECLSPEC_HOTPATCH __attribute__((__ms_hook_prologue__))
+#endif
+#endif /* DECLSPEC_HOTPATCH */
 
 /* Define to the file extension for executables. */
 #define EXEEXT ".exe"
