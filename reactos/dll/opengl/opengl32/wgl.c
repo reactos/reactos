@@ -871,7 +871,7 @@ BOOL WINAPI wglShareLists(HGLRC hglrcSrc, HGLRC hglrcDst)
     return sw_ShareLists(ctx_src->dhglrc, ctx_dst->dhglrc);
 }
 
-BOOL WINAPI wglSwapBuffers(HDC hdc)
+BOOL WINAPI DECLSPEC_HOTPATCH wglSwapBuffers(HDC hdc)
 {
     struct wgl_dc_data* dc_data = get_dc_data(hdc);
     

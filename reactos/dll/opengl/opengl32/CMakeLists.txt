@@ -53,7 +53,7 @@ if((ARCH STREQUAL "i386") AND (NOT MSVC))
     target_link_libraries(opengl32 mesa_x86)
 endif()
 
-set_module_type(opengl32 win32dll)
+set_module_type(opengl32 win32dll HOTPATCHABLE)
 
 add_importlibs(opengl32 gdi32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(opengl32 opengl32.h SOURCE)
