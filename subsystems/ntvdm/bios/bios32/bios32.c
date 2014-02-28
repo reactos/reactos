@@ -361,8 +361,7 @@ static VOID InitializeBiosInt32(VOID)
 /*
  * The BIOS POST (Power On-Self Test)
  */
-BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
-                         IN HANDLE ConsoleOutput)
+BOOLEAN Bios32Initialize(IN HANDLE ConsoleOutput)
 {
     BOOLEAN Success;
     UCHAR Low, High;
@@ -401,10 +400,7 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
     BiosHwSetup();
 
     /* Initialize the Keyboard BIOS */
-    if (!KbdBios32Initialize(ConsoleInput)) return FALSE;
-
-    /* Set the console input mode */
-    SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+    if (!KbdBios32Initialize()) return FALSE;
 
     /* Initialize the Video BIOS */
     if (!VidBios32Initialize(ConsoleOutput)) return FALSE;

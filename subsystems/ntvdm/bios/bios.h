@@ -107,7 +107,6 @@ extern PBIOS_DATA_AREA Bda;
 
 BOOLEAN
 BiosInitialize(IN LPCSTR BiosFileName,
-               IN HANDLE ConsoleInput,
                IN HANDLE ConsoleOutput);
 
 VOID

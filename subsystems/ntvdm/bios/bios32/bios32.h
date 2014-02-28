@@ -129,8 +129,7 @@ extern PBIOS_DATA_AREA Bda;
 VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func);
 VOID PicIRQComplete(LPWORD Stack);
 
-BOOLEAN Bios32Initialize(IN HANDLE ConsoleInput,
-                         IN HANDLE ConsoleOutput);
+BOOLEAN Bios32Initialize(IN HANDLE ConsoleOutput);
 VOID Bios32Cleanup(VOID);
 
 #endif // _BIOS32_H_

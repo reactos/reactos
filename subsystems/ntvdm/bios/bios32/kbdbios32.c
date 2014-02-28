@@ -261,7 +261,7 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput)
+BOOLEAN KbdBios32Initialize(VOID)
 {
     /* Initialize the BDA */
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
@@ -276,9 +276,6 @@ BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput)
     /* Set up the HW vector interrupts */
     EnableHwIRQ(1, BiosKeyboardIrq);
     // EnableHwIRQ(12, BiosMouseIrq);
-
-    /* Set the console input mode */
-    // SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
     return TRUE;
 }

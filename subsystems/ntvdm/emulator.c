@@ -384,7 +384,9 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     PS2Initialize(ConsoleInput);
 
     /* Set the console input mode */
-    // SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+    // FIXME: Activate ENABLE_WINDOW_INPUT when we will want to perform actions
+    // upon console window events (screen buffer resize, ...).
+    SetConsoleMode(ConsoleInput, ENABLE_PROCESSED_INPUT /* | ENABLE_WINDOW_INPUT */);
 
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &PumpConsoleInput, ConsoleInput, 0, NULL);

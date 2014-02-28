@@ -400,7 +400,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the system BIOS */
-    if (!BiosInitialize(NULL, ConsoleInput, ConsoleOutput))
+    if (!BiosInitialize(NULL, ConsoleOutput))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;

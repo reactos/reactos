@@ -325,12 +325,31 @@ VOID GenerateKeyboardInterrupts(VOID)
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput)
 {
+#if 0
+    DWORD ConInMode;
+#endif
+
     /* Create the mutex */
     QueueMutex = CreateMutex(NULL, FALSE, NULL);
 
     /* Register the I/O Ports */
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
+
+#if 0
+    if (MousePresent)
+    {
+        /* Support mouse input events if there is a mouse on the system */
+        if (GetConsoleMode(ConsoleInput, &ConInMode))
+            SetConsoleMode(ConsoleInput, ConInMode | ENABLE_MOUSE_INPUT);
+    }
+    else
+    {
+        /* Do not support mouse input events if there is no mouse on the system */
+        if (GetConsoleMode(ConsoleInput, &ConInMode))
+            SetConsoleMode(ConsoleInput, ConInMode & ~ENABLE_MOUSE_INPUT);
+    }
+#endif
 
     return TRUE;
 }

@@ -40,7 +40,7 @@
 
 WORD BiosGetCharacter(VOID);
 
-BOOLEAN KbdBios32Initialize(HANDLE ConsoleInput);
+BOOLEAN KbdBios32Initialize(VOID);
 VOID KbdBios32Cleanup(VOID);
 
 #endif // _KBDBIOS32_H_
