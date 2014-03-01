@@ -409,7 +409,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
 VOID EmulatorCleanup(VOID)
 {
-    // VgaCleanup();
+    VgaCleanup();
 
     /* Close the input thread handle */
     if (InputThread != NULL) CloseHandle(InputThread);

@@ -258,7 +258,9 @@ VOID VgaHorizontalRetrace(VOID);
 VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaClearMemory(VOID);
+
 BOOLEAN VgaInitialize(HANDLE TextHandle);
+VOID VgaCleanup(VOID);
 
 #endif // _VGA_H_
 
