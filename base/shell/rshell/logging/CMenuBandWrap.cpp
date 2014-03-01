@@ -170,7 +170,7 @@ public:
 };
 
 extern "C"
-HRESULT CMenuBand_Wrapper(IShellMenu * shellMenu, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuBand_Wrapper(IShellMenu * shellMenu, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
 

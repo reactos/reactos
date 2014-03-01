@@ -26,7 +26,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 
 extern "C"
-HRESULT CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 

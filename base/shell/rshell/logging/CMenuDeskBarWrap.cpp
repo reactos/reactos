@@ -110,7 +110,7 @@ public:
 };
 
 extern "C"
-HRESULT CMenuDeskBar_Wrapper(IDeskBar * deskBar, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuDeskBar_Wrapper(IDeskBar * deskBar, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
 

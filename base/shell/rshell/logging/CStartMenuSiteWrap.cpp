@@ -70,7 +70,7 @@ public:
 };
 
 extern "C"
-HRESULT CStartMenuSite_Wrapper(ITrayPriv * trayPriv, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CStartMenuSite_Wrapper(ITrayPriv * trayPriv, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
 

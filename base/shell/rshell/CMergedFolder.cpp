@@ -124,7 +124,7 @@ public:
 };
 
 extern "C"
-HRESULT CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* allUsers, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* allUsers, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 

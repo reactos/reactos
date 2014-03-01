@@ -39,3 +39,9 @@ add_importlibs(explorer_new
     ntdll)
 add_pch(explorer_new precomp.h SOURCE)
 add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)
+
+add_custom_command(TARGET explorer_new POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:rshell>"
+     "$<TARGET_FILE_DIR:explorer_new>/$<TARGET_FILE_NAME:rshell>" 
+  COMMENT "Copying $<TARGET_FILE_NAME:rshell> to output")

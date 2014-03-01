@@ -1,3 +1,4 @@
+PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 

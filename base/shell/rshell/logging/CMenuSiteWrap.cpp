@@ -104,7 +104,7 @@ public:
 };
 
 extern "C"
-HRESULT CMenuSite_Wrapper(IBandSite * bandSite, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuSite_Wrapper(IBandSite * bandSite, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
 

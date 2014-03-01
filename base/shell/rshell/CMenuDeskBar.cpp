@@ -28,7 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 const static GUID CGID_MenuDeskBar = { 0x5C9F0A12, 0x959E, 0x11D0, { 0xA3, 0xA4, 0x00, 0xA0, 0xC9, 0x08, 0x26, 0x36 } };
 
 extern "C"
-HRESULT CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 

@@ -29,7 +29,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 extern "C"
-HRESULT CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 
