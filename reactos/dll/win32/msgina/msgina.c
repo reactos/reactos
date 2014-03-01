@@ -612,20 +612,27 @@ DoAdminUnlock(
     ULONG Size;
     ULONG i;
     NTSTATUS Status;
+    NTSTATUS SubStatus = STATUS_SUCCESS;
 
     TRACE("(%S %S %S)\n", UserName, Domain, Password);
 
-    if (!ConnectToLsa(pgContext))
-        return FALSE;
-
-    if (!MyLogonUser(pgContext->LsaHandle,
-                     pgContext->AuthenticationPackage,
-                     UserName,
-                     Domain,
-                     Password,
-                     &pgContext->UserToken))
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
     {
-        WARN("LogonUserW() failed\n");
+        WARN("ConnectToLsa() failed\n");
+        return FALSE;
+    }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         Domain,
+                         Password,
+                         &pgContext->UserToken,
+                         &SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed\n");
         return FALSE;
     }
 
@@ -693,18 +700,26 @@ DoLoginTasks(
     DWORD cbStats, cbSize;
     DWORD dwLength;
     BOOL bResult;
+    NTSTATUS SubStatus;
+    NTSTATUS Status;
 
-    if (!ConnectToLsa(pgContext))
-        return FALSE;
-
-    if (!MyLogonUser(pgContext->LsaHandle,
-                     pgContext->AuthenticationPackage,
-                     UserName,
-                     Domain,
-                     Password,
-                     &pgContext->UserToken))
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
     {
-        WARN("LogonUserW() failed\n");
+        WARN("ConnectToLsa() failed\n");
+        return FALSE;
+    }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         Domain,
+                         Password,
+                         &pgContext->UserToken,
+                         &SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed\n");
         goto cleanup;
     }
 

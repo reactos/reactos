@@ -221,6 +221,8 @@ TUILockedSAS(
     HANDLE hToken;
     WCHAR UserName[256];
     WCHAR Password[256];
+    NTSTATUS SubStatus;
+    NTSTATUS Status;
 
     TRACE("TUILockedSAS()\n");
 
@@ -235,17 +237,23 @@ TUILockedSAS(
     if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
         return WLX_SAS_ACTION_NONE;
 
-    if (!ConnectToLsa(pgContext))
-        return WLX_SAS_ACTION_NONE;
-
-    if (!MyLogonUser(pgContext->LsaHandle,
-                     pgContext->AuthenticationPackage,
-                     UserName,
-                     NULL,
-                     Password,
-                     &hToken))
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
     {
-        WARN("LogonUserW() failed\n");
+        WARN("ConnectToLsa() failed\n");
+        return WLX_SAS_ACTION_NONE;
+    }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         NULL,
+                         Password,
+                         &hToken,
+                         &SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed\n");
         return WLX_SAS_ACTION_NONE;
     }
 

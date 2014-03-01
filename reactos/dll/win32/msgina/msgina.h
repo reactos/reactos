@@ -81,18 +81,19 @@ typedef struct _GINA_UI
 
 /* lsa.c */
 
-BOOL
+NTSTATUS
 ConnectToLsa(
     PGINA_CONTEXT pgContext);
 
-BOOL
+NTSTATUS
 MyLogonUser(
     HANDLE LsaHandle,
     ULONG AuthenticationPackage,
     LPWSTR lpszUsername,
     LPWSTR lpszDomain,
     LPWSTR lpszPassword,
-    PHANDLE phToken);
+    PHANDLE phToken,
+    PNTSTATUS SubStatus);
 
 /* msgina.c */
 

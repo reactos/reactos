@@ -7,7 +7,7 @@
 
 #include "msgina.h"
 
-BOOL
+NTSTATUS
 ConnectToLsa(
     PGINA_CONTEXT pgContext)
 {
@@ -18,7 +18,7 @@ ConnectToLsa(
 
     /* We are already connected to the LSA */
     if (pgContext->LsaHandle != NULL)
-        return TRUE;
+        return STATUS_SUCCESS;
 
     /* Connect to the LSA server */
     RtlInitAnsiString((PANSI_STRING)&LogonProcessName,
@@ -30,7 +30,7 @@ ConnectToLsa(
     if (!NT_SUCCESS(Status))
     {
         ERR("LsaRegisterLogonProcess failed (Status 0x%08lx)\n", Status);
-        return FALSE;
+        return Status;
     }
 
     /* Get the authentication package */
@@ -43,21 +43,21 @@ ConnectToLsa(
     if (!NT_SUCCESS(Status))
     {
         ERR("LsaLookupAuthenticationPackage failed (Status 0x%08lx)\n", Status);
-        return FALSE;
     }
 
-    return TRUE;
+    return Status;
 }
 
 
-BOOL
+NTSTATUS
 MyLogonUser(
     HANDLE LsaHandle,
     ULONG AuthenticationPackage,
     LPWSTR lpszUsername,
     LPWSTR lpszDomain,
     LPWSTR lpszPassword,
-    PHANDLE phToken)
+    PHANDLE phToken,
+    PNTSTATUS SubStatus)
 {
     SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
@@ -78,7 +78,6 @@ MyLogonUser(
     LUID LogonId = {0, 0};
     HANDLE TokenHandle = NULL;
     QUOTA_LIMITS QuotaLimits;
-    NTSTATUS SubStatus = STATUS_SUCCESS;
     NTSTATUS Status;
 
     *phToken = NULL;
@@ -209,7 +208,7 @@ MyLogonUser(
                           &Luid,
                           &TokenHandle,
                           &QuotaLimits,
-                          &SubStatus);
+                          SubStatus);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsaLogonUser failed (Status 0x%08lx)\n", Status);
@@ -259,13 +258,7 @@ done:
     if (AuthInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AuthInfo);
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return Status;
 }
 
 /* EOF */
