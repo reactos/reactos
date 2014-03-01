@@ -184,6 +184,8 @@ CSR_API(BaseSrvCheckVDM)
     PBASE_CHECK_VDM CheckVdmRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CheckVDMRequest;
     PRTL_CRITICAL_SECTION CriticalSection = NULL;
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+    PVDM_DOS_RECORD DosRecord = NULL;
+    BOOLEAN NewConsoleRecord = FALSE;
 
     /* Don't do anything if the VDM has been disabled in the registry */
     if (!BaseSrvIsVdmAllowed()) return STATUS_ACCESS_DENIED;
@@ -253,14 +255,38 @@ CSR_API(BaseSrvCheckVDM)
             ConsoleRecord->CurDirsLength = 0;
             ConsoleRecord->SessionId = GetNextDosSesId();
             InitializeListHead(&ConsoleRecord->DosListHead);
+            // TODO: The console record structure is incomplete
 
+            /* Remember that the console record was allocated here */
+            NewConsoleRecord = TRUE;
+        }
+
+        /* Allocate a new DOS record */
+        DosRecord = (PVDM_DOS_RECORD)RtlAllocateHeap(BaseSrvHeap,
+                                                     HEAP_ZERO_MEMORY,
+                                                     sizeof(VDM_DOS_RECORD));
+        if (DosRecord == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Cleanup;
+        }
+
+        /* Initialize the DOS record */
+        DosRecord->State = NewConsoleRecord ? VDM_NOT_LOADED : VDM_READY;
+        DosRecord->ExitCode = 0;
+        // TODO: The DOS record structure is incomplete
+
+        /* Add the DOS record */
+        InsertHeadList(&ConsoleRecord->DosListHead, &DosRecord->Entry);
+
+        if (NewConsoleRecord)
+        {
             /* Add the console record */
             InsertTailList(&VDMConsoleListHead, &ConsoleRecord->Entry);
         }
 
-        // TODO: NOT IMPLEMENTED
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        CheckVdmRequest->VDMState = DosRecord->State;
+        Status = STATUS_SUCCESS;
     }
     else
     {
@@ -270,6 +296,24 @@ CSR_API(BaseSrvCheckVDM)
     }
 
 Cleanup:
+    /* Check if it failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Free the DOS record */
+        if (DosRecord != NULL)
+        {
+            RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
+            DosRecord = NULL;
+        }
+
+        /* Free the console record if it was allocated here */
+        if (NewConsoleRecord)
+        {
+            RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+            ConsoleRecord = NULL;
+        }
+    }
+
     /* Leave the critical section */
     RtlLeaveCriticalSection(CriticalSection);
 
