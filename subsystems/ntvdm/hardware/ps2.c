@@ -337,17 +337,20 @@ BOOLEAN PS2Initialize(HANDLE ConsoleInput)
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
 
 #if 0
-    if (MousePresent)
+    if (GetConsoleMode(ConsoleInput, &ConInMode))
     {
-        /* Support mouse input events if there is a mouse on the system */
-        if (GetConsoleMode(ConsoleInput, &ConInMode))
-            SetConsoleMode(ConsoleInput, ConInMode | ENABLE_MOUSE_INPUT);
-    }
-    else
-    {
-        /* Do not support mouse input events if there is no mouse on the system */
-        if (GetConsoleMode(ConsoleInput, &ConInMode))
-            SetConsoleMode(ConsoleInput, ConInMode & ~ENABLE_MOUSE_INPUT);
+        if (MousePresent)
+        {
+            /* Support mouse input events if there is a mouse on the system */
+            ConInMode |= ENABLE_MOUSE_INPUT;
+        }
+        else
+        {
+            /* Do not support mouse input events if there is no mouse on the system */
+            ConInMode &= ~ENABLE_MOUSE_INPUT;
+        }
+
+        SetConsoleMode(ConsoleInput, ConInMode);
     }
 #endif
 
