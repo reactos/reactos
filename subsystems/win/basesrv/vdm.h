@@ -32,7 +32,8 @@ typedef struct _VDM_DOS_RECORD
     LIST_ENTRY Entry;
     USHORT State;
     ULONG ExitCode;
-    HANDLE ParentProcess;
+    HANDLE ServerEvent;
+    HANDLE ClientEvent;
     // TODO: Structure incomplete!!!
 } VDM_DOS_RECORD, *PVDM_DOS_RECORD;
 

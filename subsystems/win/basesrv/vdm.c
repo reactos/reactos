@@ -166,6 +166,27 @@ BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID)
     return VdmAllowed;
 }
 
+NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientEvent)
+{
+    NTSTATUS Status;
+
+    /* Create the event */
+    Status = NtCreateEvent(ServerEvent, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Duplicate the event into the client process */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               *ServerEvent,
+                               CsrGetClientThread()->Process->ProcessHandle,
+                               ClientEvent,
+                               0,
+                               0,
+                               DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
+
+    if (!NT_SUCCESS(Status)) NtClose(*ServerEvent);
+    return Status;
+}
+
 VOID NTAPI BaseInitializeVDM(VOID)
 {
     /* Initialize the list head */
@@ -275,6 +296,9 @@ CSR_API(BaseSrvCheckVDM)
         DosRecord->State = NewConsoleRecord ? VDM_NOT_LOADED : VDM_READY;
         DosRecord->ExitCode = 0;
         // TODO: The DOS record structure is incomplete
+
+        Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent, &DosRecord->ClientEvent);
+        if (!NT_SUCCESS(Status)) goto Cleanup;
 
         /* Add the DOS record */
         InsertHeadList(&ConsoleRecord->DosListHead, &DosRecord->Entry);
@@ -423,7 +447,7 @@ CSR_API(BaseSrvGetVDMExitCode)
     for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
     {
         DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
-        if (DosRecord->ParentProcess == GetVDMExitCodeRequest->hParent) break;
+        if (DosRecord->ClientEvent == GetVDMExitCodeRequest->hParent) break;
     }
 
     /* Check if no DOS record was found */
