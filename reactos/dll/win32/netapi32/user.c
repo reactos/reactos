@@ -3887,9 +3887,9 @@ NetUserSetInfo(LPCWSTR servername,
         case 1:
         case 2:
         case 3:
-//        case 4:
+        case 4:
 //        case 21:
-//        case 22:
+        case 22:
         case 1003:
 //        case 1005:
         case 1006:
@@ -3901,8 +3901,8 @@ NetUserSetInfo(LPCWSTR servername,
         case 1012:
         case 1013:
         case 1014:
-//        case 1017:
-//        case 1018:
+        case 1017:
+        case 1018:
 //        case 1020:
         case 1024:
         case 1025:
