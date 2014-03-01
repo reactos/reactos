@@ -1083,7 +1083,33 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
 
-    /* FIXME: Check restrictions */
+    /* Check account restrictions for non-administrator accounts */
+    if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
+    {
+        /* Check if the account has been disabled */
+        if (UserInfo->All.UserAccountControl & USER_ACCOUNT_DISABLED)
+        {
+            ERR("Account disabled!\n");
+            *SubStatus = STATUS_ACCOUNT_DISABLED;
+            Status = STATUS_ACCOUNT_RESTRICTION;
+            goto done;
+        }
+
+        /* Check if the account has been locked */
+        if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
+        {
+            ERR("Account disabled!\n");
+            *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
+            Status = STATUS_ACCOUNT_RESTRICTION;
+            goto done;
+        }
+
+        /* FIXME: more checks */
+//            *SubStatus = STATUS_PASSWORD_EXPIRED;
+//            *SubStatus = STATUS_INVALID_LOGON_HOURS;
+//            *SubStatus = STATUS_INVALID_WORKSTATION;
+
+    }
 
     /* Check the password */
     if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
