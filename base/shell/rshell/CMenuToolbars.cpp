@@ -113,27 +113,29 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
                 rc = cdraw->nmcd.rc;
                 hdc = cdraw->nmcd.hdc;
 
-                isHot = m_hotBar == this && m_hotItem == (INT) cdraw->nmcd.dwItemSpec;
-                isPopup = m_popupBar == this && m_popupItem == (INT) cdraw->nmcd.dwItemSpec;
+                isHot = m_hotBar == this && m_hotItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
+                isPopup = m_popupBar == this && m_popupItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
 
                 if (isHot || (m_hotItem < 0 && isPopup))
                 {
-                    cdraw->nmcd.uItemState = CDIS_HOT;
+                    cdraw->nmcd.uItemState |= CDIS_HOT;
+                }
+                else
+                {
+                    cdraw->nmcd.uItemState &= ~CDIS_HOT;
                 }
 
-                switch (cdraw->nmcd.uItemState)
+                if (cdraw->nmcd.uItemState&CDIS_HOT)
                 {
-                case CDIS_HOT:
-                case CDIS_FOCUS:
                     FillRect(hdc, &rc, hotBrush);
                     SetTextColor(hdc, clrTextHighlight);
                     cdraw->clrText = clrTextHighlight;
-                    break;
-                default:
+                }
+                else
+                {
                     FillRect(hdc, &rc, bgBrush);
                     SetTextColor(hdc, clrText);
                     cdraw->clrText = clrText;
-                    break;
                 }
 
                 cdraw->iListGap += 4;
@@ -257,7 +259,9 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     if (dwFlags & SMINIT_VERTICAL)
     {
         tbStyles |= CCS_VERT;
-        tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
+
+        // FIXME: Use when it works in ros (?)
+        //tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
     }
 
     RECT rc;
@@ -700,7 +704,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
         TBBUTTON tbb = { 0 };
         PWSTR MenuString = NULL;
 
-        tbb.fsState = TBSTATE_ENABLED;
+        tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
         tbb.fsStyle = 0;
 
         info.cbSize = sizeof(info);
@@ -833,7 +837,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
         INT indexOpen = 0;
 
         TBBUTTON tbb = { 0 };
-        tbb.fsState = TBSTATE_ENABLED;
+        tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
         tbb.fsStyle = 0;
 
         STRRET sr = { STRRET_CSTR, { 0 } };
