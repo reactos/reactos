@@ -1152,7 +1152,7 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
             break;
         }
 
-        /* Get Cursor Position */
+        /* Get Cursor Position and Shape */
         case 0x03:
         {
             /* Make sure the selected video page exists */
@@ -1191,22 +1191,20 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
             /* Call the internal function */
             VidBiosScrollWindow((getAH() == 0x06) ? SCROLL_DIRECTION_UP
-                                               : SCROLL_DIRECTION_DOWN,
-                             getAL(),
-                             Rectangle,
-                             Bda->VideoPage,
-                             getBH());
+                                                  : SCROLL_DIRECTION_DOWN,
+                                getAL(),
+                                Rectangle,
+                                Bda->VideoPage,
+                                getBH());
 
             break;
         }
 
-        /* Read/Write Character From Cursor Position */
+        /* Read Character and Attribute at Cursor Position */
         case 0x08:
-        case 0x09:
-        case 0x0A:
         {
-            WORD CharacterData = MAKEWORD(getAL(), getBL());
-            BYTE Page = getBH();
+            WORD  CharacterData;
+            BYTE  Page = getBH();
             DWORD Offset;
 
             /* Check if the page exists */
@@ -1214,27 +1212,47 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
             /* Find the offset of the character */
             Offset = Page * Bda->VideoPageSize +
-                     (HIBYTE(Bda->CursorPosition[Page]) * Bda->ScreenColumns +
+                     (HIBYTE(Bda->CursorPosition[Page])  * Bda->ScreenColumns +
                       LOBYTE(Bda->CursorPosition[Page])) * 2;
 
-            if (getAH() == 0x08)
-            {
-                /* Read from the video memory */
-                EmulatorReadMemory(&EmulatorContext,
-                                   TO_LINEAR(TEXT_VIDEO_SEG, Offset),
-                                   (LPVOID)&CharacterData,
-                                   sizeof(WORD));
+            /* Read from the video memory */
+            EmulatorReadMemory(&EmulatorContext,
+                               TO_LINEAR(TEXT_VIDEO_SEG, Offset),
+                               (LPVOID)&CharacterData,
+                               sizeof(WORD));
 
-                /* Return the character in AX */
-                setAX(CharacterData);
-            }
-            else
+            /* Return the character data in AX */
+            setAX(CharacterData);
+
+            break;
+        }
+
+        /* Write Character and Attribute at Cursor Position */
+        case 0x09:
+        /* Write Character only (PCjr: + Attribute) at Cursor Position */
+        case 0x0A:
+        {
+            WORD  CharacterData = MAKEWORD(getAL(), getBL());
+            BYTE  Page = getBH();
+            DWORD Offset, Counter = getCX();
+
+            /* Check if the page exists */
+            if (Page >= BIOS_MAX_PAGES) break;
+
+            /* Find the offset of the character */
+            Offset = Page * Bda->VideoPageSize +
+                     (HIBYTE(Bda->CursorPosition[Page])  * Bda->ScreenColumns +
+                      LOBYTE(Bda->CursorPosition[Page])) * 2;
+
+            /* Write to video memory a certain number of times */
+            while (Counter > 0)
             {
-                /* Write to video memory */
                 EmulatorWriteMemory(&EmulatorContext,
                                     TO_LINEAR(TEXT_VIDEO_SEG, Offset),
                                     (LPVOID)&CharacterData,
-                                    (getBH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
+                                    (getAH() == 0x09) ? sizeof(WORD) : sizeof(BYTE));
+                Offset += 2;
+                Counter--;
             }
 
             break;
@@ -1460,18 +1478,18 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
             break;
         }
 
-        /* Scroll Window */
+        /* Alternate Function Select */
         case 0x12:
         {
-            SMALL_RECT Rectangle = { getCL(), getCH(), getDL(), getDH() };
+            DPRINT1("BIOS Function INT 12h (Alternate Function Select), BX = 0x%04X NOT IMPLEMENTED\n",
+                    getBX());
+            break;
+        }
 
-            /* Call the internal function */
-            VidBiosScrollWindow(getBL(),
-                             getAL(),
-                             Rectangle,
-                             Bda->VideoPage,
-                             DEFAULT_ATTRIBUTE);
-
+        /* Write String */
+        case 0x13:
+        {
+            DPRINT1("BIOS Function INT 13h (Write String) is UNIMPLEMENTED\n");
             break;
         }
 
