@@ -73,7 +73,11 @@ else()
 endif()
 
 # Warnings, errors
-add_compile_flags("-Werror -Wall -Wpointer-arith")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-Werror")
+endif()
+
+add_compile_flags("-Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
