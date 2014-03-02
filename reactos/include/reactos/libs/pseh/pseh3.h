@@ -21,6 +21,8 @@ typedef struct _SEH3$_SCOPE_TABLE
 {
     void *Target;
     void *Filter;
+    unsigned char TryLevel;
+    unsigned char HandlerType;
 } SEH3$_SCOPE_TABLE, *PSEH3$_SCOPE_TABLE;
 
 typedef struct _SEH3$_EXCEPTION_POINTERS
@@ -57,6 +59,7 @@ typedef struct _SEH3$_REGISTRATION_FRAME
 /* Prevent gcc from inlining functions that use SEH. */
 static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH3$_PreventInlining() {}
 
+/* Unregister the root frame */
 extern inline __attribute__((always_inline,gnu_inline))
 void _SEH3$_UnregisterFrame(volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame)
 {
@@ -64,6 +67,7 @@ void _SEH3$_UnregisterFrame(volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame
                   : : [NewHead] "ir" (RegistrationFrame->Next) : "memory");
 }
 
+/* Unregister a trylevel frame */
 extern inline __attribute__((always_inline,gnu_inline))
 void _SEH3$_UnregisterTryLevel(
     volatile SEH3$_REGISTRATION_FRAME *TrylevelFrame)
@@ -84,41 +88,80 @@ int __cdecl __attribute__((error ("Can only be used inside a __finally block."))
 unsigned long __cdecl __attribute__((error("Can only be used inside an exception filter or __except block."))) _exception_code(void);
 void * __cdecl __attribute__((error("Can only be used inside an exception filter."))) _exception_info(void);
 
-/* Define the registers that get clobbered, when reaching the __except block.
-   We specify ebp on optimized builds without frame pointer, since it will be
-   used by GCC as a general purpose register then. */
-#if defined(__OPTIMIZE__) && defined(_ALLOW_OMIT_FRAME_POINTER)
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebp", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#else
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#endif
-
 /* This attribute allows automatic cleanup of the registered frames */
 #define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_AutoCleanup)))
 
-#define _SEH3$_ASM_GOTO(_Asm, _Label, ...) asm goto (_Asm : : : "memory", ## __VA_ARGS__ : _Label)
+/* CLANG specific definitions! */
+#ifdef __clang__
+
+/* CLANG doesn't have asm goto! */
+#define _SEH3$_ASM_GOTO(_Label, ...)
+
+int
+__attribute__((regparm(2)))
+__attribute__((returns_twice))
+_SEH3$_RegisterFrameWithNonVolatiles(
+    volatile SEH3$_REGISTRATION_FRAME* RegistrationFrame,
+    const SEH3$_SCOPE_TABLE* ScopeTable);
+
+#define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
+    do { \
+        int result = _SEH3$_RegisterFrameWithNonVolatiles(_TrylevelFrame, _DataTable); \
+        if (__builtin_expect(result != 0, 0)) \
+        { \
+            if (result == 1) goto _SEH3$_l_FilterOrFinally; \
+            if (result == 2) goto _SEH3$_l_HandlerTarget; \
+            goto _SEH3$_l_BeforeFilterOrFinally; \
+        } \
+    } while(0)
+
+int
+__attribute__((regparm(2)))
+__attribute__((returns_twice))
+_SEH3$_RegisterTryLevelWithNonVolatiles(
+    volatile SEH3$_REGISTRATION_FRAME* RegistrationFrame,
+    const SEH3$_SCOPE_TABLE* ScopeTable);
+
+#define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
+    do { \
+        int result = _SEH3$_RegisterTryLevelWithNonVolatiles(_TrylevelFrame, _DataTable); \
+        if (__builtin_expect(result != 0, 0)) \
+        { \
+            if (result == 1) goto _SEH3$_l_FilterOrFinally; \
+            if (result == 2) goto _SEH3$_l_HandlerTarget; \
+            goto _SEH3$_l_BeforeFilterOrFinally; \
+        } \
+    } while(0)
+
+#else /* !__clang__ */
+
+#define _SEH3$_ASM_GOTO(_Label, ...) asm goto ("#\n" : : : "memory", ## __VA_ARGS__ : _Label)
+
+/* This is an asm wrapper around _SEH3$_RegisterFrame */
+#define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
+    asm goto ("leal %1, %%edx\n" \
+              "call __SEH3$_RegisterFrame\n" \
+              : \
+              : "a" (_TrylevelFrame), "m" (*(_DataTable)) \
+              : "ecx", "edx", "memory" \
+              : _SEH3$_l_HandlerTarget)
+
+/* This is an asm wrapper around _SEH3$_RegisterTryLevel */
+#define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
+    asm goto ("leal %1, %%edx\n" \
+              "call __SEH3$_RegisterTryLevel\n" \
+              : \
+              : "a" (_TrylevelFrame), "m" (*(_DataTable)) \
+              : "ecx", "edx", "memory" \
+              : _SEH3$_l_HandlerTarget)
+
+#endif /* __clang__ */
+
 
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
     inline __attribute__((always_inline, gnu_inline)) \
     unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; }
 
-/* This is an asm wrapper around _SEH3$_RegisterFrame */
-#define _SEH3$_RegisterFrame(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("leal %0, %%edx\n" \
-              "call __SEH3$_RegisterFrame\n" \
-              : \
-              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
-              : "ecx", "edx", "memory" \
-              : _Target)
-
-/* This is an asm wrapper around _SEH3$_EnterTryLevel */
-#define _SEH3$_RegisterTryLevel(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("leal %0, %%edx\n" \
-              "call __SEH3$_RegisterTryLevel\n" \
-              : \
-              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
-              : "ecx", "edx", "memory" \
-              : _Target)
 
 /* On GCC the filter function is a nested function with __fastcall calling
    convention. The eax register contains a base address the function uses
@@ -176,13 +219,22 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         _SEH3$_FinallyFunction(1); \
     }
 
+/* Define the registers that get clobbered, when reaching the __except block.
+   We specify ebp on optimized builds without frame pointer, since it will be
+   used by GCC as a general purpose register then. */
+#if defined(__OPTIMIZE__) && defined(_ALLOW_OMIT_FRAME_POINTER)
+#define _SEH3$_CLOBBER_ON_EXCEPTION "ebp", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
+#else
+#define _SEH3$_CLOBBER_ON_EXCEPTION "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
+#endif
+
 /* This construct scares GCC so much, that it will stop moving code
    around into places that are never executed. */
 #define _SEH3$_SCARE_GCC() \
         void *plabel; \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_BeforeTry); \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_HandlerTarget); \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_BeforeTry); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_HandlerTarget); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
         asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
                       : _SEH3$_CLOBBER_ON_EXCEPTION ); \
         goto _SEH3$_l_OnException;
@@ -226,7 +278,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         goto _SEH3$_l_EndTry; \
 \
     _SEH3$_l_BeforeTry: (void)0; \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
         /* Forward declaration of the filter function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
@@ -235,8 +287,8 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { &&_SEH3$_l_HandlerTarget, _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)) }; \
 \
         /* Register the registration record. */ \
-        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable, _SEH3$_l_HandlerTarget); \
-        else _SEH3$_RegisterTryLevel(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable, _SEH3$_l_HandlerTarget); \
+        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
 \
         /* Emit the filter function */ \
         _SEH3$_DEFINE_FILTER_FUNC(_SEH3$_FilterFunction, (__VA_ARGS__)) \
@@ -268,7 +320,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         goto _SEH3$_l_EndTry; \
 \
     _SEH3$_l_BeforeTry: (void)0; \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
         /* Forward declaration of the finally function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
@@ -277,8 +329,8 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { 0, &_SEH3$_FinallyFunction }; \
 \
         /* Register the registration record. */ \
-        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable, _SEH3$_l_HandlerTarget); \
-        else _SEH3$_RegisterTryLevel(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable, _SEH3$_l_HandlerTarget); \
+        if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
 \
         goto _SEH3$_l_DoTry; \
 \
@@ -300,7 +352,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
         _SEH3$_SCARE_GCC() \
 \
     _SEH3$_l_EndTry:(void)0; \
-        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
         /* Implementation of the auto cleanup function */ \
         _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
