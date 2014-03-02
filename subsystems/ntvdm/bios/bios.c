@@ -86,8 +86,7 @@ static VOID WINAPI BiosInitBop(LPWORD Stack)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN
-BiosInitialize(IN LPCSTR BiosFileName,
-               IN HANDLE ConsoleOutput)
+BiosInitialize(IN LPCSTR BiosFileName)
 {
     /* Register the BIOS support BOPs */
     RegisterBop(BOP_BIOSINIT, BiosInitBop);
@@ -143,7 +142,7 @@ BiosInitialize(IN LPCSTR BiosFileName,
     }
     else
     {
-        Bios32Loaded = Bios32Initialize(ConsoleOutput);
+        Bios32Loaded = Bios32Initialize();
         return Bios32Loaded;
     }
 }

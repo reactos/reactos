@@ -733,58 +733,6 @@ Done:
     return TRUE;
 }
 
-static VOID VidBiosCopyTextConsoleToVgaMemory(HANDLE ConsoleOutput, PCOORD ConsoleSize)
-{
-    PCHAR_INFO CharBuffer;
-    COORD BufferSize = {Bda->ScreenColumns, Bda->ScreenRows + 1};
-    COORD Origin = { 0, 0 };
-    SMALL_RECT ConRect;
-
-    INT i, j;
-    INT Counter = 0;
-    WORD Character;
-    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
-
-    /* Allocate a temporary buffer for ReadConsoleOutput */
-    CharBuffer = HeapAlloc(GetProcessHeap(),
-                           HEAP_ZERO_MEMORY,
-                           BufferSize.X * BufferSize.Y
-                             * sizeof(CHAR_INFO));
-    if (CharBuffer == NULL) return;
-
-    ConRect.Left   = 0;
-    ConRect.Top    = ConsoleSize->Y - BufferSize.Y;
-    ConRect.Right  = ConRect.Left + BufferSize.X - 1;
-    ConRect.Bottom = ConRect.Top  + BufferSize.Y - 1;
-
-    /* Read the data from the console into the temporary buffer... */
-    ReadConsoleOutputA(ConsoleOutput,
-                       CharBuffer,
-                       BufferSize,
-                       Origin,
-                       &ConRect);
-
-    /* ... and copy the temporary buffer into the VGA memory */
-    for (i = 0; i < BufferSize.Y; i++)
-    {
-        for (j = 0; j < BufferSize.X; j++)
-        {
-            Character = MAKEWORD(CharBuffer[Counter].Char.AsciiChar,
-                                 (BYTE)CharBuffer[Counter].Attributes);
-            ++Counter;
-
-            /* Write to video memory */
-            EmulatorWriteMemory(&EmulatorContext,
-                                VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                                (LPVOID)&Character,
-                                sizeof(WORD));
-        }
-    }
-
-    /* Free the temporary buffer */
-    HeapFree(GetProcessHeap(), 0, CharBuffer);
-}
-
 static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 {
     INT i;
@@ -925,6 +873,24 @@ static VOID VgaChangePalette(BYTE ModeNumber)
     VgaSetPalette(Palette, Size);
 }
 
+static VOID VgaGetCursorPosition(PBYTE Row, PBYTE Column)
+{
+    SHORT ScreenColumns = VgaGetDisplayResolution().X;
+    BYTE OffsetLow, OffsetHigh;
+    WORD Offset;
+
+    /* Get the cursor location */
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+    OffsetLow  = IOReadB(VGA_CRTC_DATA);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+    OffsetHigh = IOReadB(VGA_CRTC_DATA);
+
+    Offset = MAKEWORD(OffsetLow, OffsetHigh);
+
+    *Row    = (BYTE)(Offset / ScreenColumns);
+    *Column = (BYTE)(Offset % ScreenColumns);
+}
+
 static VOID VidBiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
 {
     /* Make sure the selected video page is valid */
@@ -1000,10 +966,11 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_HIGH_REG);
     IOWriteB(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
-    /* Get the character height */
+    /* Update the character height */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
     Bda->CharacterHeight = 1 + (IOReadB(VGA_CRTC_DATA) & 0x1F);
 
+    /* Update the screen size */
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
@@ -1011,6 +978,9 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     /* Set the cursor position for each page */
     for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
         VidBiosSetCursorPosition(0, 0, Page);
+
+    /* Refresh display */
+    VgaRefreshDisplay();
 
     return TRUE;
 }
@@ -1533,8 +1503,10 @@ static VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN VidBios32Initialize(HANDLE ConsoleOutput)
+BOOLEAN VidBios32Initialize(VOID)
 {
+    BYTE Row, Column;
+
     /* Some interrupts are in fact addresses to tables */
     ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x1F] = (ULONG)NULL;
@@ -1545,21 +1517,9 @@ BOOLEAN VidBios32Initialize(HANDLE ConsoleOutput)
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
 
-    /* Set some screen properties if the console output handle is valid */
-    if (ConsoleOutput != INVALID_HANDLE_VALUE)
-    {
-        CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-
-        GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo);
-
-        /* Copy console data into VGA memory */
-        VidBiosCopyTextConsoleToVgaMemory(ConsoleOutput, &ConsoleInfo.dwSize);
-
-        /* Update the cursor position for the current page */
-        VidBiosSetCursorPosition(ConsoleInfo.dwCursorPosition.Y,
-                                 ConsoleInfo.dwCursorPosition.X,
-                                 Bda->VideoPage);
-    }
+    /* Update cursor position */
+    VgaGetCursorPosition(&Row, &Column);
+    VidBiosSetCursorPosition(Row, Column, Bda->VideoPage);
 
     /* Register the BIOS 32-bit Interrupts */
     RegisterBiosInt32(BIOS_VIDEO_INTERRUPT, VidBiosVideoService);

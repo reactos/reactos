@@ -151,7 +151,16 @@ static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
 {
     WCHAR szMenuString[255] = L"";
 
-    ShowConsoleCursor(ConOutHandle, ShowPtr);
+    if (ShowPtr)
+    {
+        /* Be sure the cursor will be shown */
+        while (ShowConsoleCursor(ConOutHandle, TRUE) < 0) ;
+    }
+    else
+    {
+        /* Be sure the cursor will be hidden */
+        while (ShowConsoleCursor(ConOutHandle, FALSE) >= 0) ;
+    }
 
     if (LoadStringW(GetModuleHandle(NULL),
                     (!ShowPtr ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
@@ -400,7 +409,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the system BIOS */
-    if (!BiosInitialize(NULL, ConsoleOutput))
+    if (!BiosInitialize(NULL))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;

@@ -380,13 +380,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Register the I/O Ports */
     RegisterIoPort(CONTROL_SYSTEM_PORT61H, Port61hRead, Port61hWrite);
 
-    /* Initialize the PS2 port */
-    PS2Initialize(ConsoleInput);
-
     /* Set the console input mode */
     // FIXME: Activate ENABLE_WINDOW_INPUT when we will want to perform actions
     // upon console window events (screen buffer resize, ...).
     SetConsoleMode(ConsoleInput, ENABLE_PROCESSED_INPUT /* | ENABLE_WINDOW_INPUT */);
+    // SetConsoleMode(ConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+
+    /* Initialize the PS2 port */
+    PS2Initialize(ConsoleInput);
 
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &PumpConsoleInput, ConsoleInput, 0, NULL);

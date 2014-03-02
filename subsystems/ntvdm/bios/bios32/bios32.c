@@ -361,7 +361,7 @@ static VOID InitializeBiosInt32(VOID)
 /*
  * The BIOS POST (Power On-Self Test)
  */
-BOOLEAN Bios32Initialize(IN HANDLE ConsoleOutput)
+BOOLEAN Bios32Initialize(VOID)
 {
     BOOLEAN Success;
     UCHAR Low, High;
@@ -403,7 +403,7 @@ BOOLEAN Bios32Initialize(IN HANDLE ConsoleOutput)
     if (!KbdBios32Initialize()) return FALSE;
 
     /* Initialize the Video BIOS */
-    if (!VidBios32Initialize(ConsoleOutput)) return FALSE;
+    if (!VidBios32Initialize()) return FALSE;
 
     /* Enable interrupts */
     setIF(1);

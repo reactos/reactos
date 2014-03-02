@@ -36,7 +36,7 @@ enum
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN VidBios32Initialize(HANDLE BiosConsoleOutput);
+BOOLEAN VidBios32Initialize(VOID);
 VOID VidBios32Cleanup(VOID);
 
 #endif // _VIDBIOS32_H_

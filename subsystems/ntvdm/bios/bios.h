@@ -106,8 +106,7 @@ C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
 extern PBIOS_DATA_AREA Bda;
 
 BOOLEAN
-BiosInitialize(IN LPCSTR BiosFileName,
-               IN HANDLE ConsoleOutput);
+BiosInitialize(IN LPCSTR BiosFileName);
 
 VOID
 BiosCleanup(VOID);

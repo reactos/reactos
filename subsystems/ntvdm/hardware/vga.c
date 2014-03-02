@@ -402,11 +402,20 @@ __InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static inline DWORD VgaGetAddressSize(VOID);
+
 static BOOL VgaAttachToConsole(PCOORD Resolution)
 {
-    BOOL Success = FALSE;
+    BOOL Success;
     ULONG Length = 0;
     PVIDEO_HARDWARE_STATE_HEADER State;
+
+    SHORT i, j;
+    DWORD AddressSize, ScanlineSize;
+    DWORD Address = 0;
+    DWORD CurrentAddr;
+    SMALL_RECT ScreenRect; // ConRect;
+    COORD Origin = { 0, 0 };
 
     ASSERT(TextFramebuffer == NULL);
 
@@ -442,9 +451,53 @@ static BOOL VgaAttachToConsole(PCOORD Resolution)
     {
         DisplayMessage(L"RegisterConsoleVDM failed with error %d\n", GetLastError());
         VdmRunning = FALSE;
+        return FALSE;
     }
 
-    return Success;
+    /* Copy console data into VGA memory */
+
+    /* Get the data */
+    AddressSize = VgaGetAddressSize();
+    ScreenRect.Left = ScreenRect.Top = 0;
+    ScreenRect.Right  = TextResolution.X;
+    ScreenRect.Bottom = TextResolution.Y;
+
+    // ConRect.Left   = 0;
+    // ConRect.Top    = ConsoleSize->Y - BufferSize.Y;
+    // ConRect.Right  = ConRect.Left + BufferSize.X - 1;
+    // ConRect.Bottom = ConRect.Top  + BufferSize.Y - 1;
+
+    ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
+
+    /* Read the data from the console into the framebuffer... */
+    ReadConsoleOutputA(TextConsoleBuffer,
+                       CharBuff,
+                       TextResolution,
+                       Origin,
+                       &ScreenRect); // &ConRect);
+
+    /* ... and copy the framebuffer into the VGA memory */
+
+    /* Loop through the scanlines */
+    for (i = 0; i < TextResolution.Y; i++)
+    {
+        /* Loop through the characters */
+        for (j = 0; j < TextResolution.X; j++)
+        {
+            CurrentAddr = LOWORD((Address + j) * AddressSize);
+
+            /* Store the character in plane 0 */
+            VgaMemory[CurrentAddr] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
+
+            /* Store the attribute in plane 1 */
+            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
+        }
+
+        /* Move to the next scanline */
+        Address += ScanlineSize;
+    }
+
+    return TRUE;
 }
 
 static VOID VgaDetachFromConsole(VOID)
@@ -893,12 +946,14 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
 {
     SMALL_RECT ConRect;
 
+    DPRINT1("VgaEnterTextMode\n");
+
     /* Switch to the text buffer */
     SetConsoleActiveScreenBuffer(TextConsoleBuffer);
 
     /* Resize the console */
     ConRect.Left   = 0; // ConsoleInfo.srWindow.Left;
-    ConRect.Top    = ConsoleInfo.srWindow.Top;
+    ConRect.Top    = ConsoleInfo.srWindow.Top; // ConsoleSize->Y - Resolution->Y;
     ConRect.Right  = ConRect.Left + Resolution->X - 1;
     ConRect.Bottom = ConRect.Top  + Resolution->Y - 1;
     /*
@@ -919,6 +974,8 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     if (TextResolution.X != Resolution->X ||
         TextResolution.Y != Resolution->Y)
     {
+        WORD Offset;
+
         VgaDetachFromConsole();
 
         /* VgaAttachToConsole sets TextResolution to the new resolution */
@@ -928,6 +985,14 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
             VdmRunning = FALSE;
             return FALSE;
         }
+
+        /* Update the cursor position in the registers */
+        Offset = ConsoleInfo.dwCursorPosition.Y * Resolution->X +
+                 ConsoleInfo.dwCursorPosition.X;
+        DPRINT1("X = %d ; Y = %d\n", ConsoleInfo.dwCursorPosition.X, ConsoleInfo.dwCursorPosition.Y);
+        VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG]  = LOBYTE(Offset);
+        VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG] = HIBYTE(Offset);
+        CursorMoved = TRUE;
     }
 
     /* The active framebuffer is now the text framebuffer */
@@ -1217,8 +1282,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                 CharInfo.Attributes = VgaMemory[CurrentAddr + VGA_BANK_SIZE];
 
                 /* Now check if the resulting character data has changed */
-                if ((CharBuffer[i * Resolution.X + j].Char != CharInfo.Char)
-                    || (CharBuffer[i * Resolution.X + j].Attributes != CharInfo.Attributes))
+                if ((CharBuffer[i * Resolution.X + j].Char != CharInfo.Char) ||
+                    (CharBuffer[i * Resolution.X + j].Attributes != CharInfo.Attributes))
                 {
                     /* Yes, write the new value */
                     CharBuffer[i * Resolution.X + j] = CharInfo;
@@ -1265,8 +1330,10 @@ static VOID VgaUpdateTextCursor(VOID)
     Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 3;
 
     /* Find the coordinates of the new position */
-    Position.X = (WORD)(Location % ScanlineSize);
-    Position.Y = (WORD)(Location / ScanlineSize);
+    Position.X = (SHORT)(Location % ScanlineSize);
+    Position.Y = (SHORT)(Location / ScanlineSize);
+
+    DPRINT1("VgaUpdateTextCursor: X = %d ; Y = %d\n", Position.X, Position.Y);
 
     /* Update the physical cursor */
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
