@@ -66,7 +66,12 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
                                        REAL_TO_PHYS(TO_LINEAR(getDI(), 0x0000)),
                                        ulDosKernelSize,
                                        &ulDosKernelSize);
-            DPRINT1("DOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+
+            DPRINT1("Windows NT DOS loading %s at 0x%04X:0x%04X, size 0x%x ; GetLastError() = %u\n",
+                    (Success ? "succeeded" : "failed"),
+                    getDI(), 0x0000,
+                    ulDosKernelSize,
+                    GetLastError());
 
             /* Close the DOS kernel file */
             FileClose(hDosKernel);
@@ -203,7 +208,12 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
                                    REAL_TO_PHYS(TO_LINEAR(0x0070, 0x0000)),
                                    ulDosBiosSize,
                                    &ulDosBiosSize);
-        DPRINT1("DOS BIOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+
+        DPRINT1("DOS BIOS loading %s at 0x%04X:0x%04X, size 0x%x ; GetLastError() = %u\n",
+                (Success ? "succeeded" : "failed"),
+                0x0070, 0x0000,
+                ulDosBiosSize,
+                GetLastError());
 
         /* Close the DOS BIOS file */
         FileClose(hDosBios);
