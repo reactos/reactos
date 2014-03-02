@@ -1130,7 +1130,7 @@ ExitVDM(BOOL IsWow, ULONG iWowTask)
  */
 DWORD
 WINAPI
-GetNextVDMCommand(PGET_NEXT_VDM_COMMAND_DATA CommandData)
+GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
 {
     STUB;
     return 0;

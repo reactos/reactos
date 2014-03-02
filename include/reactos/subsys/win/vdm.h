@@ -30,6 +30,37 @@
 #define VDM_NOT_READY       0x02
 #define VDM_READY           0x04
 
+typedef struct
+{
+    ULONG TaskId;
+    ULONG Unused;
+    ULONG ExitCode;
+    ULONG CodePage;
+    HANDLE StdIn;
+    HANDLE StdOut;
+    HANDLE StdErr;
+    LPSTR CmdLine;
+    LPSTR AppName;
+    LPSTR PifFile;
+    LPSTR CurDirectory;
+    LPSTR Env;
+    ULONG EnvLen;
+    STARTUPINFOA StartupInfo;
+    LPSTR Desktop;
+    ULONG DesktopLen;
+    LPSTR Title;
+    ULONG TitleLen;
+    LPVOID Reserved;
+    ULONG ReservedLen;
+    USHORT CmdLen;
+    USHORT AppLen;
+    USHORT PifLen;
+    USHORT CurDirectoryLen;
+    USHORT VDMState;
+    USHORT CurrentDrive;
+    BOOLEAN ComingFromBat;
+} VDM_COMMAND_INFO, *PVDM_COMMAND_INFO;
+
 #endif // _VDM_H
 
 /* EOF */

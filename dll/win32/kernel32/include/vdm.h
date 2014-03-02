@@ -25,39 +25,6 @@ typedef enum _VDM_ENTRY_CODE
 #define VDM_UNDO_REUSE      0x04
 #define VDM_UNDO_COMPLETED  0x08
 
-/* STRUCTURES *****************************************************************/
-
-typedef struct _GET_NEXT_VDM_COMMAND_DATA
-{
-    ULONG iTask;
-    ULONG dwUnused;
-    ULONG dwExitCode;
-    ULONG dwCodePage;
-    HANDLE hStdIn;
-    HANDLE hStdOut;
-    HANDLE hStdErr;
-    LPSTR lpCmdLine;
-    LPSTR lpAppName;
-    LPSTR lpPifFile;
-    LPSTR lpCurDirectory;
-    LPSTR lpEnv;
-    ULONG dwEnvLen;
-    STARTUPINFOA StartupInfo;
-    LPSTR lpDesktop;
-    ULONG dwDesktopLen;
-    LPSTR lpTitle;
-    ULONG dwTitleLen;
-    LPVOID lpReserved;
-    ULONG dwReservedLen;
-    USHORT wCmdLen;
-    USHORT wAppLen;
-    USHORT wPifLen;
-    USHORT wCurDirectoryLen;
-    USHORT wVDMState;
-    USHORT wCurrentDrive;
-    BOOLEAN fComingFromBat;
-} GET_NEXT_VDM_COMMAND_DATA, *PGET_NEXT_VDM_COMMAND_DATA;
-
 /* FUNCTION PROTOTYPES ********************************************************/
 
 BOOL

@@ -34,6 +34,7 @@ typedef struct _VDM_DOS_RECORD
     ULONG ExitCode;
     HANDLE ServerEvent;
     HANDLE ClientEvent;
+    PVDM_COMMAND_INFO CommandInfo;
     // TODO: Structure incomplete!!!
 } VDM_DOS_RECORD, *PVDM_DOS_RECORD;
 
