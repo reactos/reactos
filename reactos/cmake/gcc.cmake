@@ -40,13 +40,19 @@ set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
  if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
-add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
+
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
+endif()
 
 # Debugging
 if(SEPARATE_DBG)
     add_compile_flags("-gdwarf-2 -g2")
 else()
-    add_compile_flags("-gdwarf-2 -gstrict-dwarf -femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+    add_compile_flags("-gdwarf-2 -gstrict-dwarf")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags("-femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+    endif()
 endif()
 
 # For some reason, cmake sets -fPIC, and we don't want it
@@ -63,8 +69,14 @@ endif()
 
 # Warnings, errors
 add_compile_flags("-Werror -Wall -Wpointer-arith")
-add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value -Wno-maybe-uninitialized")
-add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=narrowing")
+add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
+
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-Wno-maybe-uninitialized")
+    add_compile_flags("-Wno-error=unused-but-set-variable")
+endif()
+
+add_compile_flags("-Wno-error=narrowing")
 add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
@@ -96,7 +108,10 @@ if(LTCG)
 endif()
 
 if(ARCH STREQUAL "i386")
-    add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    add_compile_flags("-fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable")
+    endif()
     # FIXME: this doesn't work. CMAKE_BUILD_TYPE is always "Debug"
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_flags("-momit-leaf-frame-pointer")
@@ -174,9 +189,13 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> -Wa,--compress-debug-sections <FLAGS> -o <OBJECT> -c <SOURCE>")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
+endif()
+
+SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <FLAGS> -o <OBJECT> -c <SOURCE>")
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -Wa,--compress-debug-sections -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
