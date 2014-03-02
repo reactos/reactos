@@ -337,23 +337,20 @@ BOOL ConsoleInit(VOID)
 VOID ConsoleCleanup(VOID)
 {
     SMALL_RECT ConRect;
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 
     /* Restore the old screen buffer */
     SetConsoleActiveScreenBuffer(ConsoleOutput);
 
     /* Restore the original console size */
-    GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo);
-    ConRect.Left = 0; // OrgConsoleBufferInfo.srWindow.Left;
-    // ConRect.Top  = ConsoleInfo.dwCursorPosition.Y / (OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top + 1);
-    // ConRect.Top *= (OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top + 1);
-    ConRect.Top    = ConsoleInfo.dwCursorPosition.Y;
+    ConRect.Left   = 0;
+    ConRect.Top    = 0;
     ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
     ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-    /* See the following trick explanation in vga.c:VgaEnterTextMode() */
+    /*
+     * See the following trick explanation in vga.c:VgaEnterTextMode() .
+     */
     SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
     SetConsoleWindowInfo(ConsoleOutput, TRUE, &ConRect);
-    // SetConsoleWindowInfo(ConsoleOutput, TRUE, &OrgConsoleBufferInfo.srWindow);
     SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
 
     /* Restore the original cursor shape */

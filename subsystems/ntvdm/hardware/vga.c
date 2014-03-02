@@ -952,8 +952,8 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     SetConsoleActiveScreenBuffer(TextConsoleBuffer);
 
     /* Resize the console */
-    ConRect.Left   = 0; // ConsoleInfo.srWindow.Left;
-    ConRect.Top    = ConsoleInfo.srWindow.Top; // ConsoleSize->Y - Resolution->Y;
+    ConRect.Left   = 0;
+    ConRect.Top    = ConsoleInfo.srWindow.Top;
     ConRect.Right  = ConRect.Left + Resolution->X - 1;
     ConRect.Bottom = ConRect.Top  + Resolution->Y - 1;
     /*
