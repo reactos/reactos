@@ -5300,6 +5300,7 @@ MmGetPhysicalAddress(PVOID Address)
     }
 
     DPRINT1("MM:MmGetPhysicalAddressFailed base address was %p\n", Address);
+    KeRosDumpStackFrames(NULL, 20);
     PhysicalAddress.QuadPart = 0;
     return PhysicalAddress;
 }
