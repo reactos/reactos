@@ -50,8 +50,9 @@ C_ASSERT(SEH3_REGISTRATION_FRAME_Ebp == FIELD_OFFSET(SEH3$_REGISTRATION_FRAME, E
 C_ASSERT(SEH3_SCOPE_TABLE_Filter == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Filter));
 C_ASSERT(SEH3_SCOPE_TABLE_Target == FIELD_OFFSET(SEH3$_SCOPE_TABLE, Target));
 
-static inline
-void _SEH3$_Unregister(
+void
+__attribute__((regparm(1)))
+_SEH3$_Unregister(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
     if (Frame->Handler)

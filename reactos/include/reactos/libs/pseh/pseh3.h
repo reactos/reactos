@@ -89,7 +89,7 @@ unsigned long __cdecl __attribute__((error("Can only be used inside an exception
 void * __cdecl __attribute__((error("Can only be used inside an exception filter."))) _exception_info(void);
 
 /* This attribute allows automatic cleanup of the registered frames */
-#define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_AutoCleanup)))
+#define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_Unregister)))
 
 /* CLANG specific definitions! */
 #ifdef __clang__
@@ -133,6 +133,8 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
         } \
     } while(0)
 
+#define _SEH3$_SCARE_GCC()
+
 #else /* !__clang__ */
 
 #define _SEH3$_ASM_GOTO(_Label, ...) asm goto ("#\n" : : : "memory", ## __VA_ARGS__ : _Label)
@@ -155,13 +157,48 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
               : "ecx", "edx", "memory" \
               : _SEH3$_l_HandlerTarget)
 
+/* Define the registers that get clobbered, when reaching the __except block.
+   We specify ebp on optimized builds without frame pointer, since it will be
+   used by GCC as a general purpose register then. */
+#if defined(__OPTIMIZE__) && defined(_ALLOW_OMIT_FRAME_POINTER)
+#define _SEH3$_CLOBBER_ON_EXCEPTION "ebp", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
+#else
+#define _SEH3$_CLOBBER_ON_EXCEPTION "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
+#endif
+
+/* This construct scares GCC so much, that it will stop moving code
+   around into places that are never executed. */
+#define _SEH3$_SCARE_GCC() \
+        void *plabel; \
+        _SEH3$_ASM_GOTO(_SEH3$_l_BeforeTry); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_HandlerTarget); \
+        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
+        asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
+                      : _SEH3$_CLOBBER_ON_EXCEPTION ); \
+        goto _SEH3$_l_OnException;
+
 #endif /* __clang__ */
 
+/* Neither CLANG nor C++ support nested functions */
+#if defined(__cplusplus) || defined(__clang__)
+
+/* Use the global unregister function */
+void
+__attribute__((regparm(1)))
+_SEH3$_Unregister(
+    volatile SEH3$_REGISTRATION_FRAME *Frame);
+
+/* These are only dummies here */
+#define _SEH3$_DECLARE_CLEANUP_FUNC(_Name)
+#define _SEH3$_DEFINE_CLEANUP_FUNC(_Name)
+#define _SEH3$_DECLARE_FILTER_FUNC(_Name)
+#define _SEH3$_DEFINE_DUMMY_FINALLY(_Name)
+
+#else /* __cplusplus || __clang__ */
 
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
     inline __attribute__((always_inline, gnu_inline)) \
     unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; }
-
 
 /* On GCC the filter function is a nested function with __fastcall calling
    convention. The eax register contains a base address the function uses
@@ -219,25 +256,8 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
         _SEH3$_FinallyFunction(1); \
     }
 
-/* Define the registers that get clobbered, when reaching the __except block.
-   We specify ebp on optimized builds without frame pointer, since it will be
-   used by GCC as a general purpose register then. */
-#if defined(__OPTIMIZE__) && defined(_ALLOW_OMIT_FRAME_POINTER)
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebp", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#else
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#endif
+#endif /* __cplusplus || __clang__ */
 
-/* This construct scares GCC so much, that it will stop moving code
-   around into places that are never executed. */
-#define _SEH3$_SCARE_GCC() \
-        void *plabel; \
-        _SEH3$_ASM_GOTO(_SEH3$_l_BeforeTry); \
-        _SEH3$_ASM_GOTO(_SEH3$_l_HandlerTarget); \
-        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
-        asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
-                      : _SEH3$_CLOBBER_ON_EXCEPTION ); \
-        goto _SEH3$_l_OnException;
 
 
 #define _SEH3_TRY \
@@ -259,7 +279,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
         }; \
 \
         /* Forward declaration of the auto cleanup function */ \
-        _SEH3$_DECLARE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
+        _SEH3$_DECLARE_CLEANUP_FUNC(_SEH3$_Unregister); \
 \
         /* Allocate a registration frame */ \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
@@ -355,7 +375,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
         /* Implementation of the auto cleanup function */ \
-        _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
+        _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_Unregister); \
 \
     /* Close the outer scope */ \
     } while (0);
