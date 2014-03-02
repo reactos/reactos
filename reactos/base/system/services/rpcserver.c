@@ -1617,12 +1617,13 @@ DWORD RSetServiceStatus(
 {
     PSERVICE lpService;
     DWORD dwPreviousState;
+    DWORD dwPreviousType;
     LPCWSTR lpErrorStrings[2];
     WCHAR szErrorBuffer[32];
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
-    DPRINT("dwServiceType = %lu\n", lpServiceStatus->dwServiceType);
+    DPRINT("dwServiceType = 0x%lx\n", lpServiceStatus->dwServiceType);
     DPRINT("dwCurrentState = %lu\n", lpServiceStatus->dwCurrentState);
     DPRINT("dwControlsAccepted = %lu\n", lpServiceStatus->dwControlsAccepted);
     DPRINT("dwWin32ExitCode = %lu\n", lpServiceStatus->dwWin32ExitCode);
@@ -1666,9 +1667,16 @@ DWORD RSetServiceStatus(
     /* Save the current service state */
     dwPreviousState = lpService->Status.dwCurrentState;
 
+    /* Save the current service type */
+    dwPreviousType = lpService->Status.dwServiceType;
+
+    /* Update the service status */
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
                   sizeof(SERVICE_STATUS));
+
+    /* Restore the previous service type */
+    lpService->Status.dwServiceType = dwPreviousType;
 
     /* Unlock the service database */
     ScmUnlockDatabase();
@@ -1755,7 +1763,7 @@ DWORD RChangeServiceConfigW(
     LPWSTR lpImagePathW = NULL;
 
     DPRINT("RChangeServiceConfigW() called\n");
-    DPRINT("dwServiceType = %lu\n", dwServiceType);
+    DPRINT("dwServiceType = 0x%lx\n", dwServiceType);
     DPRINT("dwStartType = %lu\n", dwStartType);
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
     DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
@@ -1999,7 +2007,7 @@ DWORD RCreateServiceW(
     DPRINT("lpServiceName = %S\n", lpServiceName);
     DPRINT("lpDisplayName = %S\n", lpDisplayName);
     DPRINT("dwDesiredAccess = %lx\n", dwDesiredAccess);
-    DPRINT("dwServiceType = %lu\n", dwServiceType);
+    DPRINT("dwServiceType = 0x%lx\n", dwServiceType);
     DPRINT("dwStartType = %lu\n", dwStartType);
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
     DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
