@@ -186,10 +186,12 @@ __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Desti
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
+#ifndef __clang__
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
+#endif
 
 __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
@@ -224,10 +226,12 @@ __INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, co
 	return __sync_fetch_and_add(Addend, Value);
 }
 
+#ifndef __clang__
 __INTRIN_INLINE long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
+#endif
 
 #if defined(_M_AMD64)
 __INTRIN_INLINE long long _InterlockedExchangeAdd64(volatile long long * const Addend, const long long Value)
@@ -302,6 +306,7 @@ __INTRIN_INLINE long long _InterlockedXor64(volatile long long * const value, co
 }
 #endif
 
+#ifndef __clang__
 __INTRIN_INLINE long _InterlockedDecrement(volatile long * const lpAddend)
 {
 	return __sync_sub_and_fetch(lpAddend, 1);
@@ -311,6 +316,7 @@ __INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
 {
 	return __sync_add_and_fetch(lpAddend, 1);
 }
+#endif
 
 __INTRIN_INLINE short _InterlockedDecrement16(volatile short * const lpAddend)
 {
