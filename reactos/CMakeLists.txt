@@ -134,7 +134,7 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS"))
+    if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
         set(PCH 1)
     else()
         set(PCH 0)
