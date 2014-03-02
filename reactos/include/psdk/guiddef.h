@@ -32,12 +32,7 @@ typedef struct _GUID
 #endif
 
 #ifndef DECLSPEC_SELECTANY
-#ifdef __clang__
-/* FIXME: http://llvm.org/bugs/show_bug.cgi?id=13778 */
-#define DECLSPEC_SELECTANY __attribute__((weak))
-#else
 #define DECLSPEC_SELECTANY __declspec(selectany)
-#endif
 #endif
 
 #ifndef EXTERN_C
