@@ -16,7 +16,7 @@ include_directories(
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    authors.cpp
+    #authors.cpp
     autocomplete.cpp
     brsfolder.cpp
     changenotify.cpp
@@ -54,6 +54,7 @@ list(APPEND SOURCE
     folders/fonts.cpp
     folders/cpanel.cpp
     folders/recyclebin.cpp
+    droptargets/CexeDropHandler.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp
