@@ -12,6 +12,11 @@
 
 #include "excpt.h"
 
+/* CLANG must safe non-volatiles, because it uses a return-twice algorithm */
+#if defined(__clang__) && !defined(_SEH3$_FRAME_ALL_NONVOLATILES)
+#define _SEH3$_FRAME_ALL_NONVOLATILES 1
+#endif
+
 typedef struct _SEH3$_SCOPE_TABLE
 {
     void *Target;
@@ -42,7 +47,11 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     /* Registers that we need to save */
     unsigned long Esp;
     unsigned long Ebp;
-
+#ifdef _SEH3$_FRAME_ALL_NONVOLATILES
+    unsigned long Ebx;
+    unsigned long Esi;
+    unsigned long Edi;
+#endif
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
 
 /* Prevent gcc from inlining functions that use SEH. */
@@ -95,7 +104,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("leal %0, %%ecx\n" \
+    asm goto ("leal %0, %%edx\n" \
               "call __SEH3$_RegisterFrame\n" \
               : \
               : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
@@ -104,7 +113,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 /* This is an asm wrapper around _SEH3$_EnterTryLevel */
 #define _SEH3$_RegisterTryLevel(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("leal %0, %%ecx\n" \
+    asm goto ("leal %0, %%edx\n" \
               "call __SEH3$_RegisterTryLevel\n" \
               : \
               : "m" (*(_TrylevelFrame)), "a" (_DataTable) \

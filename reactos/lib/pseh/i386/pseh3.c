@@ -34,6 +34,8 @@
 #include <windef.h>
 #include <winnt.h>
 
+/* We need the full structure with all non-volatile */
+#define _SEH3$_FRAME_ALL_NONVOLATILES 1
 #include "pseh3.h"
 #include "pseh3_asmdef.h"
 
