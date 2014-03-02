@@ -298,28 +298,6 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
    }
 }
 
-HWND FASTCALL
-IntFindChildWindowToOwner(PWND Root, PWND Owner)
-{
-   HWND Ret;
-   PWND Child, OwnerWnd;
-
-   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
-   {
-       OwnerWnd = Child->spwndOwner;
-      if(!OwnerWnd)
-         continue;
-
-      if(OwnerWnd == Owner)
-      {
-         Ret = Child->head.h;
-         return Ret;
-      }
-   }
-
-   return NULL;
-}
-
 VOID FASTCALL
 FindRemoveAsyncMsg(PWND Wnd, WPARAM wParam)
 {
@@ -544,6 +522,30 @@ co_IntSetForegroundAndFocusWindow(
        Ret = TRUE;
    }
    return Ret && fgRet;
+}
+
+/*
+  Revision 7888, activate modal dialog when clicking on a disabled window.
+*/
+HWND FASTCALL
+IntFindChildWindowToOwner(PWND Root, PWND Owner)
+{
+   HWND Ret;
+   PWND Child, OwnerWnd;
+
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
+   {
+       OwnerWnd = Child->spwndOwner;
+      if(!OwnerWnd)
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child->head.h;
+         return Ret;
+      }
+   }
+   return NULL;
 }
 
 BOOL FASTCALL
