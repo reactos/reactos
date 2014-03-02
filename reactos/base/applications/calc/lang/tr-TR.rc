@@ -415,7 +415,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STRING_LICENSE "Hesap Makinesi, GNU GPL ile yayınlanan özgür bir yazılımdır.\r\n\r\nGNU GPL'nin bir tıpkısını buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nBir de GNU GPL'nin çevirilerini buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE "Hesap Makinesi, GNU GPL ile yayınlanan özgür bir yazılımdır.\r\n\r\nGNU GPL'nin bir sûretini buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nBir de GNU GPL'nin çevirilerini buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR "Yanlışlık"
     IDS_QUICKHELP "Hızlı Yardım"
 END

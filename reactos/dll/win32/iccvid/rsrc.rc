@@ -46,9 +46,6 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/iccvid_Sv.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/iccvid_Tr.rc"
-#endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
@@ -83,6 +80,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/iccvid_Sq.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/iccvid_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/iccvid_Uk.rc"

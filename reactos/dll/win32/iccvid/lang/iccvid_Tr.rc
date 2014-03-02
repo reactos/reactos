@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Fatih Aþýcý
+ * Copyrights: 2006 - Fatih AÅŸÄ±cÄ±, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "Cinepak Vidyo çözücü"
-    IDS_DESCRIPTION "Cinepak Vidyo çözücü"
+    IDS_NAME "Cinepak Vidyo Kodeki"
+    IDS_DESCRIPTION "Cinepak Vidyo Kodeki"
 }

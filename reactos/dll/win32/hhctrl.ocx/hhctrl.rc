@@ -57,9 +57,6 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/Sv.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/Tr.rc"
-#endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
@@ -97,6 +94,9 @@
 #endif
 #ifdef LANGAUGE_SQ_AL
     #include "lang/Sq.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"

@@ -10,7 +10,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "&Seçke"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Çıkış", IDM_EXIT
         MENUITEM "&Seçenekler...", IDM_OPTIONS
@@ -53,7 +53,7 @@ BEGIN
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
     CONTROL "&Metin Düzenlemesini İzle", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "&Renkleri Ters Çevir", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Renkleri Evir", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
     CONTROL "&Simge Durumunda Başlat", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
@@ -68,8 +68,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Büyüteç, hafif görme engelli kullanıcıların en az çaba harcamaları için tasarlanmıştır. Görme engelli bir çok kullanıcı, günlük kullanım için bu aracı kullanmaya gereksinim duyacaktır.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Bunu bir daha gösterme.", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Büyüteç, yeğni görme bozukluğu olan kullanıcılara en yüksek düzeydeki işlevliliği sağlamak için tasarlanmıştır. Görme bozukluğu olan birçok kullanıcı, günlük kullanım için yüksek işlevlikli bir büyütme aracına gereksinim duyacaktır.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Bu iletiyi bir daha gösterme.", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 

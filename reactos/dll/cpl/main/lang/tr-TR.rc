@@ -66,7 +66,7 @@ BEGIN
     GROUPBOX "Tıklama Kilidi", -1, 5, 150, 236, 70
     CHECKBOX "&Tıklama Kilidi'ni Aç", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
     PUSHBUTTON "&Ayarlar...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "Fâre düğmesine basılı tutmadan sürüklemeyi ve seçmeyi etkinleştirir. Kilitlemek için kısaca fâre düğmesine basınız. Bırakmak için fâre düğmesine tekrar basınız.", -1, 10, 180, 224, 30
+    LTEXT "Fâre düğmesine basılı tutmadan sürüklemeyi ve seçmeyi etkinleştirir. Kilitlemek için kısaca fâre düğmesine basınız. Bırakmak için fâre düğmesine yine basınız.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228

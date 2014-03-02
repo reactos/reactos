@@ -357,7 +357,7 @@ BEGIN
     IDS_FLT_REGFILES_FLT "*.reg"
     IDS_FLT_HIVFILES "Yığın Dosyaları (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Pencereler 9x ve Pencereler NT 4.0 Türündeki Değer Kütükleri (*.reg)"
+    IDS_FLT_REGEDIT4 "Windows 9x ve Windows NT 4.0 Türündeki Değer Kütükleri (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Tüm Kütükler (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"

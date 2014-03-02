@@ -2,7 +2,7 @@
  * HTML Help resources
  * Turkish Language Support
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyrights: 2006 - Fatih AÅŸÄ±cÄ± (fasici@linux-sevenler.org), 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,24 +23,24 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Ýçerik"
-    IDS_INDEX        "Di&zin"
+    IDS_CONTENTS     "&Ä°Ã§indekiler"
+    IDS_INDEX        "&Dizin"
     IDS_SEARCH       "&Ara"
-    IDS_FAVORITES    "&Sýk Kullanýlanlar"
+    IDS_FAVORITES    "&Yer Ä°mleri"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Göster"
+    IDTB_EXPAND      "GÃ¶ster"
     IDTB_CONTRACT    "Gizle"
     IDTB_STOP        "Dur"
     IDTB_REFRESH     "Yenile"
     IDTB_BACK        "Geri"
     IDTB_HOME        "Ev"
-    IDTB_SYNC        "Eþitle"
-    IDTB_PRINT       "Yazdýr"
-    IDTB_OPTIONS     "Seçenekler"
-    IDTB_FORWARD     "Ýleri"
+    IDTB_SYNC        "EÅŸitle"
+    IDTB_PRINT       "YazdÄ±r"
+    IDTB_OPTIONS     "SeÃ§enekler"
+    IDTB_FORWARD     "Ä°leri"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -51,8 +51,8 @@ BEGIN
     IDTB_FAVORITES   "IDTB_FAVORITES"
     IDTB_JUMP1       "Jump1"
     IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Özelleþtir"
-    IDTB_ZOOM        "Yaklaþtýr"
+    IDTB_CUSTOMIZE   "HusÃ»sileÅŸtir"
+    IDTB_ZOOM        "YakÄ±nlaÅŸtÄ±r"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END

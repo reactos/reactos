@@ -115,6 +115,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_SL_SI
     #include "lang/sl-SI.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/sq-AL.rc"
+#endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
@@ -123,9 +126,6 @@ IDI_NPICON ICON "res/notepad.ico"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
-#endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"

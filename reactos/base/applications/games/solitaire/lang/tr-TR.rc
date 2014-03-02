@@ -16,7 +16,7 @@ CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kâğıtlar", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "T&ekli Çek", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Tekli Çek", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Üçlü Çek", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
     AUTOCHECKBOX "&Süreyi Göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX "&Durum Çubuğu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
@@ -25,7 +25,7 @@ BEGIN
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Deste Seç"
+CAPTION "Kâğıt Arkalığı Seçme"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -51,9 +51,9 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
     IDS_SOL_ABOUT "Solitaire, J Brown eliyle yapılmıştır.\n\nCardLib sürümü: 1.0"
-    IDS_SOL_QUIT "Bu oyundan çıkmak ister misiniz?"
+    IDS_SOL_QUIT "Bu oyundan çıkılsın mı?"
     IDS_SOL_WIN "Tebrikler, kazandınız!"
-    IDS_SOL_DEAL "Tekrar dağıtılsın mı?"
+    IDS_SOL_DEAL "Yine dağıtılsın mı?"
 END
 
 /* Menus */
@@ -71,7 +71,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&İçindekiler\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Hakkında", IDM_HELP_ABOUT
     END
 END

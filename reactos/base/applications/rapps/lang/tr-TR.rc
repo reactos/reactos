@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "Y&ardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", ID_HELP, GRAYED
+        MENUITEM "&Yardım", ID_HELP, GRAYED
         MENUITEM "&Hakkında", ID_ABOUT
     END
 END
