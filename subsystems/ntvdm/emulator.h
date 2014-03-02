@@ -119,15 +119,18 @@ UCHAR WINAPI EmulatorIntAcknowledge
 
 VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
 
-BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
-VOID EmulatorInterrupt(BYTE Number);
-VOID EmulatorInterruptSignal(VOID);
 VOID EmulatorStep(VOID);
 VOID EmulatorSimulate(VOID);
 VOID EmulatorUnsimulate(VOID);
-VOID EmulatorCleanup(VOID);
+VOID EmulatorTerminate(VOID);
+
+VOID EmulatorInterrupt(BYTE Number);
+VOID EmulatorInterruptSignal(VOID);
 VOID EmulatorSetA20(BOOLEAN Enabled);
+
+BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
+VOID EmulatorCleanup(VOID);
 
 #endif // _EMULATOR_H_
 

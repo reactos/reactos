@@ -124,12 +124,11 @@ CreateVdmMenu(HANDLE ConOutHandle)
     hConsoleMenu = ConsoleMenuControl(ConsoleOutput,
                                       ID_SHOWHIDE_MOUSE,
                                       ID_VDM_QUIT);
-    if (hConsoleMenu != NULL)
-    {
-        VdmMenuPos = GetMenuItemCount(hConsoleMenu);
-        AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
-        DrawMenuBar(GetConsoleWindow());
-    }
+    if (hConsoleMenu == NULL) return;
+
+    VdmMenuPos = GetMenuItemCount(hConsoleMenu);
+    AppendMenuItems(hConsoleMenu, VdmMainMenuItems);
+    DrawMenuBar(GetConsoleWindow());
 }
 
 static VOID
@@ -200,7 +199,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         default:
         {
             /* Stop the VDM if the user logs out or closes the console */
-            VdmRunning = FALSE;
+            EmulatorTerminate();
         }
     }
     return TRUE;
@@ -256,7 +255,8 @@ DWORD WINAPI PumpConsoleInput(LPVOID Parameter)
                         break;
 
                     case ID_VDM_QUIT:
-                        VdmRunning = FALSE;
+                        /* Stop the VDM */
+                        EmulatorTerminate();
                         break;
 
                     default:

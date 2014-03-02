@@ -188,7 +188,7 @@ Quit:
             {
                 DPRINT1("Invalid VDD DLL Handle: %d\n", Entry);
                 /* Stop the VDM */
-                VdmRunning = FALSE;
+                EmulatorTerminate();
                 return;
             }
 
@@ -214,7 +214,7 @@ Quit:
             {
                 DPRINT1("Invalid VDD DLL Handle: %d\n", Entry);
                 /* Stop the VDM */
-                VdmRunning = FALSE;
+                EmulatorTerminate();
                 return;
             }
 

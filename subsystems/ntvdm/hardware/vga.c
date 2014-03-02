@@ -450,7 +450,7 @@ static BOOL VgaAttachToConsole(PCOORD Resolution)
     if (!Success)
     {
         DisplayMessage(L"RegisterConsoleVDM failed with error %d\n", GetLastError());
-        VdmRunning = FALSE;
+        EmulatorTerminate();
         return FALSE;
     }
 
@@ -982,7 +982,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
         if (!VgaAttachToConsole(Resolution))
         {
             DisplayMessage(L"An unexpected error occurred!\n");
-            VdmRunning = FALSE;
+            EmulatorTerminate();
             return FALSE;
         }
 
@@ -1045,7 +1045,7 @@ static VOID VgaChangeMode(VOID)
         if (!VgaEnterTextMode(&Resolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into text mode.");
-            VdmRunning = FALSE;
+            EmulatorTerminate();
             return;
         }
     }
@@ -1055,7 +1055,7 @@ static VOID VgaChangeMode(VOID)
         if (!VgaEnterGraphicsMode(&Resolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode.");
-            VdmRunning = FALSE;
+            EmulatorTerminate();
             return;
         }
     }

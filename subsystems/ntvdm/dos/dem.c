@@ -75,7 +75,7 @@ Quit:
             if (!Success)
             {
                 /* We failed everything, stop the VDM */
-                VdmRunning = FALSE;
+                EmulatorTerminate();
             }
 
             break;

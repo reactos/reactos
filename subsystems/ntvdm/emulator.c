@@ -170,7 +170,7 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
                    Opcode[9]);
 
     /* Stop the VDM */
-    VdmRunning = FALSE;
+    EmulatorTerminate();
     return;
 }
 
@@ -198,7 +198,7 @@ VOID EmulatorSimulate(VOID)
                        CpuCallLevel, MaxCpuCallLevel);
 
         /* Stop the VDM */
-        VdmRunning = FALSE;
+        EmulatorTerminate();
         return;
     }
     CpuCallLevel++;
@@ -219,6 +219,12 @@ VOID EmulatorUnsimulate(VOID)
     CpuSimulate = FALSE;
 }
 
+VOID EmulatorTerminate(VOID)
+{
+    /* Stop the VDM */
+    VdmRunning = FALSE;
+}
+
 VOID EmulatorInterrupt(BYTE Number)
 {
     /* Call the Fast486 API */
@@ -236,13 +242,13 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
     A20Line = Enabled;
 }
 
-VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
+static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
 {
     DPRINT1("NTVDM: BOP_DEBUGGER\n");
     DebugBreak();
 }
 
-VOID WINAPI EmulatorUnsimulateBop(LPWORD Stack)
+static VOID WINAPI EmulatorUnsimulateBop(LPWORD Stack)
 {
     EmulatorUnsimulate();
 }
@@ -443,7 +449,7 @@ WINAPI
 VDDTerminateVDM(VOID)
 {
     /* Stop the VDM */
-    VdmRunning = FALSE;
+    EmulatorTerminate();
 }
 
 PBYTE

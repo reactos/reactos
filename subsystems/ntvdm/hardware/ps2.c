@@ -214,8 +214,8 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
             case 0xFC:
             case 0xFE:
             {
-                /* Stop the simulation */
-                VdmRunning = FALSE;
+                /* Stop the VDM */
+                EmulatorTerminate();
                 break;
             }
         }
@@ -243,8 +243,8 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
                     /* Check if bit 0 is unset */
                     if (!(Data & (1 << 0)))
                     {
-                        /* CPU disabled - end simulation */
-                        VdmRunning = FALSE;
+                        /* CPU disabled - Stop the VDM */
+                        EmulatorTerminate();
                     }
 
                     /* Update the A20 line setting */
