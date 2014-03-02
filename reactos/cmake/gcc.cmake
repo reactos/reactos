@@ -31,6 +31,10 @@ if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags_language("-std=gnu89" "C")
+endif()
+
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug
