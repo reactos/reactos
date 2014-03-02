@@ -1,7 +1,5 @@
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(
     POINTL *ppt,
     RECTL *prcExclude,
@@ -137,4 +135,3 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(THIS_ LPMSG lpMsg
 {
     return S_OK;
 }
-
