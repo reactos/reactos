@@ -1661,6 +1661,16 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_DATA;
     }
 
+    /* Set the wait hint and check point only if the service is in a pending state,
+       otherwise they should be 0 */
+    if (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
+        lpServiceStatus->dwCurrentState == SERVICE_PAUSED ||
+        lpServiceStatus->dwCurrentState == SERVICE_RUNNING)
+    {
+        lpServiceStatus->dwWaitHint = 0;
+        lpServiceStatus->dwCheckPoint = 0;
+    }
+
     /* Lock the service database exclusively */
     ScmLockDatabaseExclusive();
 
