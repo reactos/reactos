@@ -12,14 +12,15 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
-#include "bios32/bios32.h"
+#include "kbdbios.h"
+#include "vidbios.h"
 
 /* DEFINES ********************************************************************/
 
-// #define BDA_SEGMENT     0x40
+#define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-#if 0
+#define BIOS_EQUIPMENT_LIST     0x2C // HACK: Disable FPU for now
 
 /*
  * BIOS Data Area at 0040:XXXX
@@ -99,11 +100,12 @@ typedef struct
 
 C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
 
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
 extern PBIOS_DATA_AREA Bda;
+
+VOID WINAPI BiosEquipmentService(LPWORD Stack);
+VOID WINAPI BiosGetMemorySize(LPWORD Stack);
 
 BOOLEAN
 BiosInitialize(IN LPCSTR BiosFileName);

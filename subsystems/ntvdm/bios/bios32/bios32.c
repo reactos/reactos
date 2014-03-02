@@ -14,9 +14,12 @@
 #include "callback.h"
 #include "bop.h"
 
-#include "../rom.h"
 #include "../bios.h"
+#include "../rom.h"
 #include "bios32.h"
+#include "bios32p.h"
+#include "kbdbios32.h"
+#include "vidbios32.h"
 
 #include "io.h"
 #include "hardware/cmos.h"
@@ -26,10 +29,6 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 CALLBACK16 BiosContext;
-PBIOS_DATA_AREA Bda;
-
-/* BOP Identifiers */
-#define BOP_GETMEMSIZE  0x12
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -38,18 +37,6 @@ static VOID WINAPI BiosException(LPWORD Stack)
     /* Get the exception number and call the emulator API */
     BYTE ExceptionNumber = LOBYTE(Stack[STACK_INT_NUM]);
     EmulatorException(ExceptionNumber, Stack);
-}
-
-static VOID WINAPI BiosEquipmentService(LPWORD Stack)
-{
-    /* Return the equipment list */
-    setAX(Bda->EquipmentList);
-}
-
-static VOID WINAPI BiosGetMemorySize(LPWORD Stack)
-{
-    /* Return the conventional memory size in kB, typically 640 kB */
-    setAX(Bda->MemorySize);
 }
 
 static VOID WINAPI BiosMiscService(LPWORD Stack)
@@ -351,9 +338,6 @@ static VOID InitializeBiosInt32(VOID)
     ((PULONG)BaseAddress)[0x46] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x48] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
-
-    /* Register the BIOS support BOPs */
-    RegisterBop(BOP_GETMEMSIZE, BiosGetMemorySize);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -366,9 +350,6 @@ BOOLEAN Bios32Initialize(VOID)
     BOOLEAN Success;
     UCHAR Low, High;
 
-    /* Disable interrupts */
-    setIF(0);
-
     /* Initialize the stack */
     // That's what says IBM... (stack at 30:00FF going downwards)
     // setSS(0x0000);
@@ -379,8 +360,7 @@ BOOLEAN Bios32Initialize(VOID)
     /* Set data segment */
     setDS(BDA_SEGMENT);
 
-    /* Initialize the BDA */
-    Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
+    /* Initialize the BDA contents */
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
 
     /*
@@ -399,14 +379,8 @@ BOOLEAN Bios32Initialize(VOID)
     /* Initialize platform hardware (PIC/PIT chips, ...) */
     BiosHwSetup();
 
-    /* Initialize the Keyboard BIOS */
-    if (!KbdBios32Initialize()) return FALSE;
-
-    /* Initialize the Video BIOS */
-    if (!VidBios32Initialize()) return FALSE;
-
-    /* Enable interrupts */
-    setIF(1);
+    /* Initialize the Keyboard and Video BIOS */
+    if (!KbdBios32Initialize() || !VidBios32Initialize()) return FALSE;
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 

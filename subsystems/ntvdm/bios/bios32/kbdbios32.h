@@ -15,7 +15,7 @@
 
 /* DEFINES ********************************************************************/
 
-#define BIOS_KBD_INTERRUPT      0x16
+// #define BIOS_KBD_INTERRUPT      0x16
 
 #define BIOS_KBD_BUFFER_SIZE    16
 
@@ -37,8 +37,6 @@
 #define BDA_KBDFLAG_INSERT      (1 << 15)
 
 /* FUNCTIONS ******************************************************************/
-
-WORD BiosGetCharacter(VOID);
 
 BOOLEAN KbdBios32Initialize(VOID);
 VOID KbdBios32Cleanup(VOID);

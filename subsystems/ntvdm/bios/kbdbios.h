@@ -1,15 +1,13 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            vidbios32.h
- * PURPOSE:         VDM Video 32-bit BIOS
+ * FILE:            kbdbios.h
+ * PURPOSE:         VDM Keyboard BIOS Support Library
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *
- * NOTE:            All of the real code is in bios/vidbios.c
  */
 
-#ifndef _VIDBIOS32_H_
-#define _VIDBIOS32_H_
+#ifndef _KBDBIOS_H_
+#define _KBDBIOS_H_
 
 /* INCLUDES *******************************************************************/
 
@@ -17,13 +15,17 @@
 
 /* DEFINES ********************************************************************/
 
-// #define BIOS_VIDEO_INTERRUPT    0x10
+#define BIOS_KBD_INTERRUPT      0x16
+
+#define BIOS_KBD_BUFFER_SIZE    16
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN VidBios32Initialize(VOID);
-VOID VidBios32Cleanup(VOID);
+WORD BiosGetCharacter(VOID);
 
-#endif // _VIDBIOS32_H_
+BOOLEAN KbdBiosInitialize(VOID);
+VOID KbdBiosCleanup(VOID);
+
+#endif // _KBDBIOS_H_
 
 /* EOF */

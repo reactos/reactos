@@ -13,8 +13,9 @@
 #include "emulator.h"
 #include "callback.h"
 
-// #include "kbdbios32.h"
-#include "bios32.h"
+#include "kbdbios32.h"
+#include "../kbdbios.h"
+#include "bios32p.h"
 
 #include "io.h"
 #include "hardware/ps2.h"
@@ -263,6 +264,9 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 
 BOOLEAN KbdBios32Initialize(VOID)
 {
+    /* Initialize the common Keyboard BIOS Support Library */
+    if (!KbdBiosInitialize()) return FALSE;
+
     /* Initialize the BDA */
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
@@ -282,6 +286,8 @@ BOOLEAN KbdBios32Initialize(VOID)
 
 VOID KbdBios32Cleanup(VOID)
 {
+    /* Cleanup the common Keyboard BIOS Support Library */
+    KbdBiosCleanup();
 }
 
 /* EOF */
