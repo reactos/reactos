@@ -33,6 +33,7 @@ endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags_language("-std=gnu89" "C")
+    add_compile_flags("-Wno-microsoft")
 endif()
 
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
