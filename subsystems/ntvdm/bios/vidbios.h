@@ -39,6 +39,8 @@ enum
 
 VOID WINAPI VidBiosVideoService(LPWORD Stack);
 
+VOID VidBiosSyncCursorPosition(VOID);
+
 BOOLEAN VidBiosInitialize(VOID);
 VOID VidBiosCleanup(VOID);
 

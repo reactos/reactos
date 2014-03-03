@@ -880,24 +880,6 @@ static VOID VgaChangePalette(BYTE ModeNumber)
     VgaSetPalette(Palette, Size);
 }
 
-static VOID VgaGetCursorPosition(PBYTE Row, PBYTE Column)
-{
-    SHORT ScreenColumns = VgaGetDisplayResolution().X;
-    BYTE OffsetLow, OffsetHigh;
-    WORD Offset;
-
-    /* Get the cursor location */
-    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
-    OffsetLow  = IOReadB(VGA_CRTC_DATA);
-    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
-    OffsetHigh = IOReadB(VGA_CRTC_DATA);
-
-    Offset = MAKEWORD(OffsetLow, OffsetHigh);
-
-    *Row    = (BYTE)(Offset / ScreenColumns);
-    *Column = (BYTE)(Offset % ScreenColumns);
-}
-
 static VOID VidBiosGetCursorPosition(PBYTE Row, PBYTE Column, BYTE Page)
 {
     /* Make sure the selected video page is valid */
@@ -927,6 +909,28 @@ static VOID VidBiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
         IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
         IOWriteB(VGA_CRTC_DATA , HIBYTE(Offset));
     }
+}
+
+VOID VidBiosSyncCursorPosition(VOID)
+{
+    BYTE Row, Column;
+    BYTE Low, High;
+    SHORT ScreenColumns = VgaGetDisplayResolution().X;
+    WORD Offset;
+
+    /* Get the cursor location */
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+    Low  = IOReadB(VGA_CRTC_DATA);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+    High = IOReadB(VGA_CRTC_DATA);
+
+    Offset = MAKEWORD(Low, High);
+
+    Row    = (BYTE)(Offset / ScreenColumns);
+    Column = (BYTE)(Offset % ScreenColumns);
+
+    /* Synchronize our cursor position with VGA */
+    VidBiosSetCursorPosition(Row, Column, Bda->VideoPage);
 }
 
 BYTE VidBiosGetVideoMode(VOID)
@@ -1530,8 +1534,6 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
 BOOLEAN VidBiosInitialize(VOID)
 {
-    BYTE Row, Column;
-
     /* Some interrupts are in fact addresses to tables */
     ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x1F] = (ULONG)NULL;
@@ -1542,9 +1544,8 @@ BOOLEAN VidBiosInitialize(VOID)
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
 
-    /* Update cursor position */
-    VgaGetCursorPosition(&Row, &Column);
-    VidBiosSetCursorPosition(Row, Column, Bda->VideoPage);
+    /* Synchronize our cursor position with VGA */
+    VidBiosSyncCursorPosition();
 
     /* Register the BIOS support BOPs */
     RegisterBop(BOP_VIDEO_INT, VidBiosVideoService);
