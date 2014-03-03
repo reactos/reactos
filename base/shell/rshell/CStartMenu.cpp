@@ -156,11 +156,11 @@ private:
 #else
         hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 #if WRAP_MENUBAND
         hr = CMenuBand_Wrapper(pShellMenu, IID_PPV_ARG(IShellMenu, &pShellMenu));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 #endif
 
@@ -304,11 +304,11 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUBAND
     hr = CMenuBand_Wrapper(pShellMenu, IID_PPV_ARG(IShellMenu, &pShellMenu));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
@@ -320,11 +320,11 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
 #else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUSITE
     hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
@@ -336,23 +336,23 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUDESKBAR
     hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
     CComObject<CShellMenuCallback> *pCallback;
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
     pShellMenu->Initialize(pCallback, (UINT)-1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = SHGetDesktopFolder(&shellFolder);
@@ -369,24 +369,24 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
 
     IShellFolder * psfMerged;
     hr = CMergedFolder_Constructor(psfStartMenuUser, psfStartMenuAll, IID_PPV_ARG(IShellFolder, &psfMerged));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pShellMenu->SetShellFolder(psfMerged, NULL, NULL, 0);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #else
     hr = pShellMenu->SetShellFolder(psfStartMenuUser, NULL, NULL, 0);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
     hr = pDeskBar->SetClient(pBandSite);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pBandSite->AddBand(pShellMenu);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return pDeskBar->QueryInterface(riid, ppv);

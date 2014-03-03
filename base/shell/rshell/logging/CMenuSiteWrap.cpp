@@ -116,7 +116,7 @@ HRESULT WINAPI CMenuSite_Wrapper(IBandSite * bandSite, REFIID riid, LPVOID *ppv)
         return E_OUTOFMEMORY;
 
     hr = site->InitWrap(bandSite);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         site->Release();
         return hr;
@@ -124,7 +124,7 @@ HRESULT WINAPI CMenuSite_Wrapper(IBandSite * bandSite, REFIID riid, LPVOID *ppv)
 
     hr = site->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
 
     return hr;
@@ -139,17 +139,17 @@ HRESULT CMenuSiteWrap::InitWrap(IBandSite * bandSite)
     m_IBandSite = bandSite;
 
     hr = bandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &m_IDeskBarClient));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IInputObjectSite, &m_IInputObjectSite));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_IWinEventHandler));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
     return hr;
 }

@@ -207,13 +207,13 @@ HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
     }
 
     hr = newBand->_GetTopLevelWindow(&newFocus);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!m_currentBand)
     {
         hr = PlaceHooks(newFocus);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
@@ -228,7 +228,7 @@ HRESULT CMenuFocusManager::PushMenu(CMenuBand * mb)
     HRESULT hr;
 
     hr = PushToArray(mb);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return UpdateFocus(mb);
@@ -240,7 +240,7 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
     HRESULT hr;
 
     hr = PopFromArray(&mbc);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (mb != mbc)

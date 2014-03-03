@@ -182,7 +182,7 @@ HRESULT WINAPI CMenuBand_Wrapper(IShellMenu * shellMenu, REFIID riid, LPVOID *pp
         return E_OUTOFMEMORY;
 
     hr = site->InitWrap(shellMenu);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         site->Release();
         return hr;
@@ -190,7 +190,7 @@ HRESULT WINAPI CMenuBand_Wrapper(IShellMenu * shellMenu, REFIID riid, LPVOID *pp
 
     hr = site->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
 
     return hr;
@@ -205,33 +205,33 @@ HRESULT CMenuBandWrap::InitWrap(IShellMenu * shellMenu)
     m_IShellMenu = shellMenu;
 
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBand, &m_IDeskBand));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IDockingWindow, &m_IDockingWindow));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IPersistStream, &m_IPersistStream));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IPersist, &m_IPersist));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBar, &m_IDeskBar));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IMenuBand, &m_IMenuBand));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IShellMenu2, &m_IShellMenu2));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = shellMenu->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_IWinEventHandler));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     //hr = shellMenu->QueryInterface(IID_PPV_ARG(IShellMenuAcc, &m_IShellMenuAcc));
     m_IShellMenuAcc = NULL;
     return hr;

@@ -82,7 +82,7 @@ HRESULT WINAPI CStartMenuSite_Wrapper(ITrayPriv * trayPriv, REFIID riid, LPVOID 
         return E_OUTOFMEMORY;
 
     hr = site->InitWrap(trayPriv);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         site->Release();
         return hr;
@@ -90,7 +90,7 @@ HRESULT WINAPI CStartMenuSite_Wrapper(ITrayPriv * trayPriv, REFIID riid, LPVOID 
 
     hr = site->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
 
     return hr;
@@ -105,9 +105,9 @@ HRESULT CStartMenuSiteWrap::InitWrap(ITrayPriv * bandSite)
     m_ITrayPriv = bandSite;
 
     hr = bandSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = bandSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
     return hr;
 }

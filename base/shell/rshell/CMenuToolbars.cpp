@@ -457,11 +457,11 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
 #else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUSITE
     hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
@@ -473,25 +473,25 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUDESKBAR
     hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
     hr = pDeskBar->SetClient(pBandSite);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pBandSite->AddBand(childShellMenu);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IMenuPopup> popup;
     hr = pDeskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &popup));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl, this, m_popupItem);
@@ -526,7 +526,7 @@ HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
         return E_FAIL;
 
     hr = contextMenu->QueryContextMenu(hPopup, 0, 0, UINT_MAX, CMF_NORMAL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         DestroyMenu(hPopup);
         return hr;
@@ -667,7 +667,10 @@ HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSu
     tbb.iBitmap = iconId;
     tbb.dwData = buttonData;
 
-    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+    DbgPrint("Trying to add a new button with id %d and caption '%S'...\n", commandId, caption);
+
+    if (!SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb)))
+        return HRESULT_FROM_WIN32(GetLastError());
 
     return S_OK;
 }
@@ -684,7 +687,10 @@ HRESULT CMenuToolbarBase::AddSeparator(BOOL last)
     tbb.fsStyle = BTNS_SEP;
     tbb.iBitmap = 0;
 
-    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+    DbgPrint("Trying to add a new separator...\n");
+
+    if (!SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb)))
+        return HRESULT_FROM_WIN32(GetLastError());
 
     return S_OK;
 }
@@ -699,7 +705,10 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
     tbb.iString = (INT_PTR) MenuString;
     tbb.iBitmap = -1;
 
-    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+    DbgPrint("Trying to add a new placeholder...\n");
+
+    if (!SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb)))
+        return HRESULT_FROM_WIN32(GetLastError());
 
     return S_OK;
 }
@@ -790,12 +799,23 @@ HRESULT CMenuStaticToolbar::FillToolbar()
 
         info.cbSize = sizeof(info);
         info.dwTypeData = NULL;
-        info.fMask = MIIM_FTYPE | MIIM_STRING;
+        info.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
 
-        GetMenuItemInfoW(m_hmenu, i, TRUE, &info);
-
-        if (info.fType == MFT_STRING)
+        if (!GetMenuItemInfoW(m_hmenu, i, TRUE, &info))
         {
+            DbgPrint("Error obtaining info for menu item at pos=%d\n", i);
+            continue;
+        }
+
+        DbgPrint("Found item with fType=%x, cmdId=%d\n", info.fType, info.wID);
+
+        if (info.fType & MFT_SEPARATOR)
+        {
+            AddSeparator(last);
+        }
+        else // if (info.fType == MFT_STRING)
+        {
+
             info.cch++;
             info.dwTypeData = (PWSTR) HeapAlloc(GetProcessHeap(), 0, (info.cch + 1) * sizeof(WCHAR));
 
@@ -807,16 +827,12 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             // FIXME: remove before deleting the toolbar or it will leak
 
             HRESULT hr = m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo));
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
             AddButton(info.wID, info.dwTypeData, info.hSubMenu != NULL, sminfo->iIcon, reinterpret_cast<DWORD_PTR>(sminfo), last);
 
             HeapFree(GetProcessHeap(), 0, info.dwTypeData);
-        }
-        else
-        {
-            AddSeparator(last);
         }
     }
 
@@ -837,7 +853,7 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
 {
     HRESULT hr;
     hr = CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     // in case the clicked item has a submenu, we do not need to execute the item
@@ -861,7 +877,7 @@ HRESULT CMenuStaticToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dw
     {
         CComPtr<IShellMenu> shellMenu;
         HRESULT hr = m_menuBand->_CallCBWithItemId(uItem, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IShellMenu), reinterpret_cast<LPARAM>(&shellMenu));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         return PopupSubMenu(uItem, index, shellMenu);
@@ -903,7 +919,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
         STRRET sr = { STRRET_CSTR, { 0 } };
 
         hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         StrRetToStr(&sr, NULL, &MenuString);
@@ -950,7 +966,7 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
     HRESULT hr;
 
     hr = m_shellFolder->QueryInterface(riid, ppv);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (pdwFlags)
@@ -993,7 +1009,7 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
 {
     HRESULT hr;
     hr = CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     // in case the clicked item has a submenu, we do not need to execute the item
@@ -1028,11 +1044,11 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
 #endif
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #if WRAP_MENUBAND
     hr = CMenuBand_Wrapper(shellMenu, IID_PPV_ARG(IShellMenu, &shellMenu));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 #endif
 
@@ -1040,16 +1056,16 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData
 
     // FIXME: not sure what to use as uId/uIdAncestor here
     hr = shellMenu->Initialize(psmc, 0, uId, SMINIT_VERTICAL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IShellFolder> childFolder;
     hr = m_shellFolder->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &childFolder));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = shellMenu->SetShellFolder(childFolder, NULL, NULL, 0);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return PopupSubMenu(uItem, index, shellMenu);
@@ -1062,7 +1078,7 @@ HRESULT CMenuSFToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwDat
 
     SFGAOF attrs = SFGAO_FOLDER;
     hr = m_shellFolder->GetAttributesOf(1, &pidl, &attrs);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return (attrs & SFGAO_FOLDER) ? S_OK : S_FALSE;

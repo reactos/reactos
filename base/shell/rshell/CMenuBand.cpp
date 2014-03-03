@@ -40,7 +40,7 @@ HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 
     HRESULT hr = site->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
 
     return hr;
@@ -126,7 +126,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     m_menuOwner;
 
     HRESULT hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_site)
@@ -134,11 +134,11 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
         HWND hwndParent;
 
         hr = m_site->GetWindow(&hwndParent);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_staticToolbar->FillToolbar();
@@ -170,11 +170,11 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
 
     hwndParent = NULL;
     hr = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = m_site->GetWindow(&hwndParent);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!::IsWindow(hwndParent))
@@ -183,32 +183,32 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
     if (m_staticToolbar != NULL)
     {
         hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_staticToolbar->FillToolbar();
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
     if (m_SFToolbar != NULL)
     {
         hr = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_SFToolbar->FillToolbar();
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
     hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_subMenuParent));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IOleWindow> pTopLevelWindow;
     hr = IUnknown_QueryService(m_site, SID_STopLevelBrowser, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return pTopLevelWindow->GetWindow(&m_topLevelWindow);
@@ -242,12 +242,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 
     if (m_staticToolbar != NULL)
         hr = m_staticToolbar->GetIdealSize(sizeStatic);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_SFToolbar != NULL)
         hr = m_SFToolbar->GetIdealSize(sizeShlFld);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_staticToolbar == NULL && m_SFToolbar == NULL)
@@ -289,12 +289,12 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
 
     if (m_staticToolbar != NULL)
         hr = m_staticToolbar->GetIdealSize(sizeStatic);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_SFToolbar != NULL)
         hr = m_SFToolbar->GetIdealSize(sizeShlFld);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_staticToolbar == NULL && m_SFToolbar == NULL)
@@ -312,17 +312,17 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
 
     if (m_staticToolbar != NULL)
         hr = m_staticToolbar->ShowWindow(fShow);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
     if (m_SFToolbar != NULL)
         hr = m_SFToolbar->ShowWindow(fShow);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (fShow)
     {
         hr = _CallCB(SMC_INITMENU, 0, 0);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
@@ -363,18 +363,18 @@ HRESULT STDMETHODCALLTYPE CMenuBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
     HRESULT hr;
 
     hr = m_subMenuParent->SetSubMenu(this, fActivate);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (fActivate)
     {
         CComPtr<IOleWindow> pTopLevelWindow;
         hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = pTopLevelWindow->GetWindow(&m_topLevelWindow);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
     else
@@ -497,7 +497,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMID
     }
 
     HRESULT hr = m_SFToolbar->SetShellFolder(psf, pidlFolder, hKey, dwFlags);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_site)
@@ -505,11 +505,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMID
         HWND hwndParent;
 
         hr = m_site->GetWindow(&hwndParent);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_SFToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = m_SFToolbar->FillToolbar();
@@ -719,7 +719,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
     if (m_subMenuChild)
     {
         HRESULT hr = m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
     if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);

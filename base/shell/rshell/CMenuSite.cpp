@@ -37,7 +37,7 @@ HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
 
     HRESULT hr = site->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
 
     return hr;
@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
     if (m_BandObject)
     {
         hr = IUnknown_SetSite(m_BandObject, NULL);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
@@ -122,19 +122,19 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
         return TO_HRESULT(0);
 
     hr = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = IUnknown_SetSite(punk, this->ToIUnknown());
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = IUnknown_GetWindow(punk, &m_hWndBand);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     m_BandObject = punk;

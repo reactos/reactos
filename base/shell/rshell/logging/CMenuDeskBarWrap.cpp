@@ -121,7 +121,7 @@ HRESULT WINAPI CMenuDeskBar_Wrapper(IDeskBar * deskBar, REFIID riid, LPVOID *ppv
         return E_OUTOFMEMORY;
 
     hr = bar->InitWrap(deskBar);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         bar->Release();
         return hr;
@@ -129,7 +129,7 @@ HRESULT WINAPI CMenuDeskBar_Wrapper(IDeskBar * deskBar, REFIID riid, LPVOID *ppv
 
     hr = bar->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         bar->Release();
 
     return hr;
@@ -144,21 +144,21 @@ HRESULT CMenuDeskBarWrap::InitWrap(IDeskBar * deskBar)
     m_IDeskBar = deskBar;
 
     hr = deskBar->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_IOleCommandTarget));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_IServiceProvider));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_IMenuPopup));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IOleWindow, &m_IOleWindow));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IInputObjectSite, &m_IInputObjectSite));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IInputObject, &m_IInputObject));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_IObjectWithSite));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IBanneredBar, &m_IBanneredBar));
-    if (FAILED(hr)) return hr;
+    if (FAILED_UNEXPECTEDLY(hr)) return hr;
     hr = deskBar->QueryInterface(IID_PPV_ARG(IInitializeObject, &m_IInitializeObject));
     return hr;
 }

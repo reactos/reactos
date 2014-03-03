@@ -39,7 +39,7 @@ HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 
     HRESULT hr = deskbar->QueryInterface(riid, ppv);
 
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         deskbar->Release();
 
     return hr;
@@ -79,7 +79,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(IUnknown *punkObj, BOOL 
     CComPtr<IInputObjectSite> ios;
 
     HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObjectSite, &ios));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return ios->OnFocusChangeIS(punkObj, fSetFocus);
@@ -150,7 +150,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::HasFocusIO()
     CComPtr<IInputObject> io;
 
     HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return io->HasFocusIO();
@@ -161,7 +161,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
     CComPtr<IInputObject> io;
 
     HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return io->TranslateAcceleratorIO(lpMsg);
@@ -183,15 +183,15 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
     }
 
     hr = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &m_Client));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDeskBandClient));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pDeskBandClient->SetDeskBarSite(static_cast<IDeskBar*>(this));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return IUnknown_GetWindow(m_Client, &m_ClientWindow);
@@ -250,11 +250,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         return E_FAIL;
 
     hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IOleCommandTarget, &oct));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     // Windows calls this, but it appears to be unimplemented?
@@ -263,12 +263,12 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
 
     // No clue about the arg, using anything != 0
     hr = dbc->UIActivateDBC(TRUE);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     RECT rc = { 0 };
     hr = dbc->GetSize(0, &rc);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     // Unknown meaning
@@ -276,7 +276,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
     const int CMD_EXEC_OPT = 0;
 
     hr = IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     ::AdjustWindowRect(&rc, ::GetWindowLong(m_hWnd, GWL_STYLE), FALSE);
@@ -372,7 +372,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetIconSize(THIS_ DWORD iIcon)
     const int CMD_EXEC_OPT = iIcon ? 0 : 2; // seems to work
 
     hr = IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD, CMD_EXEC_OPT, NULL, NULL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     BOOL bHandled;
@@ -479,16 +479,16 @@ HRESULT CMenuDeskBar::_CloseBar()
     if (m_SubMenuChild)
     {
         hr = m_SubMenuChild->OnSelect(MPOS_CANCELLEVEL);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
     hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &dbc));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = dbc->UIActivateDBC(FALSE);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
@@ -506,7 +506,7 @@ BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
         CComPtr<IOleWindow> window;
 
         hr = popup->QueryInterface(IID_PPV_ARG(IOleWindow, &window));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
         HWND parent;
@@ -517,7 +517,7 @@ BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
 
         popup = NULL;
         hr = IUnknown_GetSite(window, IID_PPV_ARG(IMenuPopup, &popup));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
     }
 
@@ -552,14 +552,14 @@ LRESULT CMenuDeskBar::_OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     CComPtr<IWinEventHandler> winEventHandler;
     HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
     if (winEventHandler)
     {
         LRESULT result;
         hr = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return 0;
         return result;
     }
@@ -615,13 +615,13 @@ LRESULT CMenuDeskBar::_OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     // HACK! I just want it to work !!!
     CComPtr<IDeskBar> db;
     HRESULT hr = IUnknown_QueryService(m_Client, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
     CComPtr<IUnknown> punk;
 
     hr = db->GetClient(&punk);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
     if (!punk && m_Shown)

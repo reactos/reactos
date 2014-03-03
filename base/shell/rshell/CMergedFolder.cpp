@@ -49,10 +49,10 @@ public:
     {
         HRESULT hr;
         hr = userLocal->EnumObjects(hwndOwner, flags, &m_UserLocal);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
         hr = userLocal->EnumObjects(hwndOwner, flags, &m_AllUSers);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             m_UserLocal = NULL;
             return hr;
@@ -73,7 +73,7 @@ public:
         if (!m_FirstDone)
         {
             hr = m_UserLocal->Next(celt, rgelt, pceltFetched);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
             if (hr == S_FALSE)
                 m_FirstDone = true;
@@ -89,7 +89,7 @@ public:
             *pceltFetched = 0;
 
             hr = m_AllUSers->Next(celt, rgelt, pceltFetched);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
             *pceltFetched += offset;
@@ -138,7 +138,7 @@ HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* 
     hr = fld->_SetSources(userLocal, allUsers);
 
     hr = fld->QueryInterface(riid, ppv);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         fld->Release();
 
     return hr;
