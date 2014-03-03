@@ -120,7 +120,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                                (WPARAM)UserHMGetHandle(Window),
                                 0);
       }
-      //// Fixes bug 7089.
+      //// Fixes CORE-6434.
       if (!(Window->style & WS_CHILD))
       {
          PWND pwndTemp = co_GetDesktopWindow(Window)->spwndChild;
@@ -228,8 +228,6 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
       }
 
       co_IntMakeWindowActive(Window);
-
-      /* FIXME: IntIsWindow */
 
       co_IntSendMessageNoWait( UserHMGetHandle(Window),
                                WM_NCACTIVATE,
@@ -552,9 +550,7 @@ BOOL FASTCALL
 co_IntMouseActivateWindow(PWND Wnd)
 {
    HWND Top;
-   PWND TopWindow;
    USER_REFERENCE_ENTRY Ref;
-
    ASSERT_REFS_CO(Wnd);
 
    if (Wnd->style & WS_DISABLED)
@@ -564,6 +560,7 @@ co_IntMouseActivateWindow(PWND Wnd)
       PWND DesktopWindow = UserGetDesktopWindow();
       if (DesktopWindow)
       {
+         ERR("Window Diabled\n");
          Top = IntFindChildWindowToOwner(DesktopWindow, Wnd);
          if ((TopWnd = ValidateHwndNoErr(Top)))
          {
@@ -576,15 +573,8 @@ co_IntMouseActivateWindow(PWND Wnd)
       }
       return FALSE;
    }
-
-   TopWindow = UserGetAncestor(Wnd, GA_ROOT);
-   //if (TopWindow) {ERR("MAW 2 pWnd %p hWnd %p\n",TopWindow,TopWindow->head.h);}
-   if (!TopWindow) return FALSE;
-
-   /* TMN: Check return value from this function? */
-   UserRefObjectCo(TopWindow, &Ref);
-   co_IntSetForegroundAndFocusWindow(TopWindow, TRUE);
-   UserDerefObjectCo(TopWindow);
+   ERR("Mouse Active\n");
+   co_IntSetForegroundAndFocusWindow(Wnd, TRUE);
    return TRUE;
 }
 
@@ -733,6 +723,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
    InAAPM = co_IntSendActivateMessages(WndPrev, Wnd, bMouse, Async);
 
    /* now change focus if necessary */
+   //// Fixes CORE-6452 allows setting focus on window.
    if (bFocus && !(ThreadQueue->QF_flags & QF_FOCUSNULLSINCEACTIVE))
    {
       /* Do not change focus if the window is no longer active */
@@ -745,7 +736,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
          IntSendFocusMessages( pti, pWndSend);
       }
    }
-
+   ////
    if (InAAPM)
    {
       pti->TIF_flags &= ~TIF_INACTIVATEAPPMSG;

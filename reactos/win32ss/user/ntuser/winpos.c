@@ -2440,7 +2440,8 @@ PWND FASTCALL
 co_WinPosSearchChildren(
    PWND ScopeWin,
    POINT *Point,
-   USHORT *HitTest
+   USHORT *HitTest,
+   BOOL Ignore
    )
 {
     PWND pwndChild;
@@ -2451,7 +2452,7 @@ co_WinPosSearchChildren(
         return NULL;
     }
 
-    if ((ScopeWin->style & WS_DISABLED))
+    if (!Ignore && (ScopeWin->style & WS_DISABLED))
     {
         return NULL;
     }
@@ -2475,7 +2476,7 @@ co_WinPosSearchChildren(
                     continue;
                 }
 
-                pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest);
+                pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest, Ignore);
 
                 if(pwndChild != NULL)
                 {
@@ -2506,7 +2507,7 @@ co_WinPosSearchChildren(
 }
 
 PWND FASTCALL
-co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
+co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest, BOOL Ignore)
 {
    PWND Window;
    POINT Point = *WinPoint;
@@ -2524,7 +2525,7 @@ co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
    ASSERT_REFS_CO(ScopeWin);
    UserRefObjectCo(ScopeWin, &Ref);
 
-   Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest);
+   Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest, Ignore);
 
    UserDerefObjectCo(ScopeWin);
    if (Window)
@@ -3447,7 +3448,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       UserRefObjectCo(DesktopWindow, &Ref);
 
       //pti = PsGetCurrentThreadWin32Thread();
-      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
+      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest, FALSE);
 
       if (Window)
       {
