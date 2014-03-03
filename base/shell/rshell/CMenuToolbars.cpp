@@ -791,6 +791,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
     int i;
     int ic = GetMenuItemCount(m_hmenu);
 
+    int count = 0;
     for (i = 0; i < ic; i++)
     {
         BOOL last = i + 1 == ic;
@@ -806,6 +807,8 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             DbgPrint("Error obtaining info for menu item at pos=%d\n", i);
             continue;
         }
+
+        count++;
 
         DbgPrint("Found item with fType=%x, cmdId=%d\n", info.fType, info.wID);
 
@@ -835,6 +838,8 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             HeapFree(GetProcessHeap(), 0, info.dwTypeData);
         }
     }
+
+    DbgPrint("Created toolbar with %d buttons.\n", count);
 
     return S_OK;
 }
@@ -937,7 +942,7 @@ HRESULT CMenuSFToolbar::FillToolbar()
         // Fetch next item already, so we know if the current one is the last
         hr = eidl->Next(1, &item, &fetched);
 
-        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, SUCCEEDED(hr) && fetched > 0);
+        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, FAILED(hr) || fetched == 0);
 
         CoTaskMemFree(MenuString);
     }
@@ -946,8 +951,12 @@ HRESULT CMenuSFToolbar::FillToolbar()
     // If no items were added, show the "empty" placeholder
     if (i == 0)
     {
+        DbgPrint("The toolbar is empty, adding placeholder.\n");
+
         return AddPlaceholder();
     }
+
+    DbgPrint("Created toolbar with %d buttons.\n", i);
 
     return hr;
 }
