@@ -34,7 +34,8 @@ HRESULT WINAPI SHGetImageList(
     _Out_  void **ppv
     );
 
-#define TBSTYLE_EX_VERTICAL 4
+// FIXME: Enable if/when wine comctl supports this flag properly
+//#define TBSTYLE_EX_VERTICAL 4
 
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
@@ -259,8 +260,10 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     {
         tbStyles |= CCS_VERT;
 
+#ifdef TBSTYLE_EX_VERTICAL
         // FIXME: Use when it works in ros (?)
-        //tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
+        tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
+#endif
     }
 
     RECT rc;
@@ -644,11 +647,15 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
     return S_FALSE;
 }
 
-HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData)
+HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData, BOOL last)
 {
     TBBUTTON tbb = { 0 };
 
-    tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
+    tbb.fsState = TBSTATE_ENABLED;
+#ifndef TBSTYLE_EX_VERTICAL
+    if (!last)
+        tbb.fsState |= TBSTATE_WRAP;
+#endif
     tbb.fsStyle = 0;
 
     if (hasSubMenu)
@@ -665,11 +672,15 @@ HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSu
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::AddSeparator()
+HRESULT CMenuToolbarBase::AddSeparator(BOOL last)
 {
     TBBUTTON tbb = { 0 };
 
-    tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
+    tbb.fsState = TBSTATE_ENABLED;
+#ifndef TBSTYLE_EX_VERTICAL
+    if (!last)
+        tbb.fsState |= TBSTATE_WRAP;
+#endif
     tbb.fsStyle = BTNS_SEP;
     tbb.iBitmap = 0;
 
@@ -683,7 +694,7 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
     TBBUTTON tbb = { 0 };
     PCWSTR MenuString = L"(Empty)";
 
-    tbb.fsState = TBSTATE_WRAP; // disabled
+    tbb.fsState = 0;
     tbb.fsStyle = 0;
     tbb.iString = (INT_PTR) MenuString;
     tbb.iBitmap = -1;
@@ -773,11 +784,13 @@ HRESULT CMenuStaticToolbar::FillToolbar()
 
     for (i = 0; i < ic; i++)
     {
+        BOOL last = i + 1 == ic;
+
         MENUITEMINFOW info;
 
         info.cbSize = sizeof(info);
         info.dwTypeData = NULL;
-        info.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_SUBMENU;
+        info.fMask = MIIM_FTYPE | MIIM_STRING;
 
         GetMenuItemInfoW(m_hmenu, i, TRUE, &info);
 
@@ -786,7 +799,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             info.cch++;
             info.dwTypeData = (PWSTR) HeapAlloc(GetProcessHeap(), 0, (info.cch + 1) * sizeof(WCHAR));
 
-            info.fMask = MIIM_STRING;
+            info.fMask = MIIM_STRING | MIIM_SUBMENU | MIIM_ID;
             GetMenuItemInfoW(m_hmenu, i, TRUE, &info);
 
             SMINFO * sminfo = new SMINFO();
@@ -797,13 +810,13 @@ HRESULT CMenuStaticToolbar::FillToolbar()
             if (FAILED(hr))
                 return hr;
 
-            AddButton(info.wID, info.dwTypeData, info.hSubMenu != NULL, sminfo->iIcon, reinterpret_cast<DWORD_PTR>(sminfo));
+            AddButton(info.wID, info.dwTypeData, info.hSubMenu != NULL, sminfo->iIcon, reinterpret_cast<DWORD_PTR>(sminfo), last);
 
             HeapFree(GetProcessHeap(), 0, info.dwTypeData);
         }
         else
         {
-            AddSeparator();
+            AddSeparator(last);
         }
     }
 
@@ -881,7 +894,8 @@ HRESULT CMenuSFToolbar::FillToolbar()
 
     LPITEMIDLIST item = static_cast<LPITEMIDLIST>(CoTaskMemAlloc(sizeof(ITEMIDLIST)));
     ULONG fetched;
-    while ((hr = eidl->Next(1, &item, &fetched)) == S_OK)
+    hr = eidl->Next(1, &item, &fetched);
+    while (SUCCEEDED(hr) && fetched > 0)
     {
         INT index = 0;
         INT indexOpen = 0;
@@ -904,7 +918,10 @@ HRESULT CMenuSFToolbar::FillToolbar()
         DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
         // FIXME: remove before deleting the toolbar or it will leak
 
-        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData);
+        // Fetch next item already, so we know if the current one is the last
+        hr = eidl->Next(1, &item, &fetched);
+
+        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, SUCCEEDED(hr) && fetched > 0);
 
         CoTaskMemFree(MenuString);
     }

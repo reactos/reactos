@@ -87,8 +87,8 @@ protected:
 
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    HRESULT AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData);
-    HRESULT AddSeparator();
+    HRESULT AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData, BOOL last);
+    HRESULT AddSeparator(BOOL last);
     HRESULT AddPlaceholder();
 
     HRESULT UpdateImageLists();
