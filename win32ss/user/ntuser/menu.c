@@ -529,7 +529,7 @@ IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
          }
          else
          {
-            if(CurItem->fType & MF_POPUP)
+            if(CurItem->hSubMenu)
             {
                PMENU_OBJECT NewMenu = UserGetMenuObject(CurItem->hSubMenu);
                if(NewMenu)
@@ -653,8 +653,7 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
 BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
-   PMENU_OBJECT SubMenuObject;
-   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
+   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
@@ -735,24 +734,6 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    if(lpmii->fMask & MIIM_SUBMENU)
    {
       MenuItem->hSubMenu = lpmii->hSubMenu;
-      /* Make sure the submenu is marked as a popup menu */
-      if (MenuItem->hSubMenu)
-      {
-         SubMenuObject = UserGetMenuObject(MenuItem->hSubMenu);
-         if (SubMenuObject != NULL)
-         {
-            SubMenuObject->MenuInfo.Flags |= MF_POPUP;
-            MenuItem->fType |= MF_POPUP;
-         }
-         else
-         {
-            MenuItem->fType &= ~MF_POPUP;
-         }
-      }
-      else
-      {
-         MenuItem->fType &= ~MF_POPUP;
-      }
    }
 
    if ((lpmii->fMask & MIIM_STRING) ||
@@ -1469,7 +1450,7 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
           return NO_SELECTED_ITEM;
        }
 
-       if (!(mi->fType & MF_POPUP)) continue;
+       if (!(mi->hSubMenu)) continue;
 
        if (mi->hSubMenu == hSubTarget)
        {
@@ -2038,7 +2019,7 @@ NtUserGetMenuItemRect(
 
    if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
 
-   if(MenuItem->fType & MF_POPUP)
+   if(MenuItem->hSubMenu)
    {
      XMove = ReferenceWnd->rcClient.left;
      YMove = ReferenceWnd->rcClient.top;

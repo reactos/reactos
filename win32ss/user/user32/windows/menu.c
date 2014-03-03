@@ -396,7 +396,7 @@ static UINT FASTCALL MenuFindSubMenu(HMENU *hmenu, HMENU hSubTarget )
             MenuCleanupRosMenuItemInfo(&item);
             return NO_SELECTED_ITEM;
         }
-        if (!(item.fType & MF_POPUP)) continue;
+        if (!(item.hSubMenu)) continue;
         if (item.hSubMenu == hSubTarget) {
             MenuCleanupRosMenuItemInfo(&item);
             return i;
@@ -1207,7 +1207,7 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
 	        dis.rcItem.bottom);
         SendMessageW(WndOwner, WM_DRAWITEM, 0, (LPARAM) &dis);
         /* Draw the popup-menu arrow */
-        if (lpitem->fType & MF_POPUP)
+        if (lpitem->hSubMenu)
         {
             RECT rectTemp;
             CopyRect(&rectTemp, &rect);
@@ -1345,7 +1345,7 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
             }
         }
         /* Draw the popup-menu arrow */
-        if (lpitem->fType & MF_POPUP)
+        if (lpitem->hSubMenu)
         {
             RECT rectTemp;
             CopyRect(&rectTemp, &rect);
@@ -1694,7 +1694,7 @@ static void FASTCALL MenuSelectItem(HWND hwndOwner, PROSMENUINFO hmenu, UINT wIn
             if (sendMenuSelect)
             {
                 SendMessageW(hwndOwner, WM_MENUSELECT,
-                           MAKELONG(ItemInfo.fType & MF_POPUP ? wIndex : ItemInfo.wID,
+                           MAKELONG(ItemInfo.hSubMenu ? wIndex : ItemInfo.wID,
                                     ItemInfo.fType | ItemInfo.fState | MF_MOUSESELECT |
                                     (hmenu->Flags & MF_SYSMENU)), (LPARAM) hmenu->Self);
             }
@@ -2114,8 +2114,7 @@ static LPCSTR MENUEX_ParseResource(LPCSTR res, HMENU hMenu)
                 return NULL;
             }
             mii.fMask |= MIIM_SUBMENU;
-            mii.fType |= MF_POPUP;
-            mii.wID = (UINT)mii.hSubMenu;
+            /*mii.wID = (UINT)mii.hSubMenu;*/
         }
         else if (!mii.dwTypeData[0])
             mii.fType |= MF_SEPARATOR;
@@ -2315,7 +2314,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
       MenuCleanupRosMenuItemInfo(&ItemInfo);
       return MenuInfo->Self;
     }
-  if (0 == (ItemInfo.fType & MF_POPUP) || 0 != (ItemInfo.fState & (MF_GRAYED | MF_DISABLED)))
+  if (0 == (ItemInfo.hSubMenu) || 0 != (ItemInfo.fState & (MF_GRAYED | MF_DISABLED)))
     {
       MenuCleanupRosMenuItemInfo(&ItemInfo);
       return MenuInfo->Self;
@@ -2447,7 +2446,7 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo,
       MenuInitRosMenuItemInfo(&ItemInfo);
       ItemInfo.fMask |= MIIM_FTYPE | MIIM_STATE;
       if (! MenuGetRosMenuItemInfo(MenuInfo->Self, MenuInfo->FocusedItem, &ItemInfo)
-          || 0 == (ItemInfo.fType & MF_POPUP)
+          || 0 == (ItemInfo.hSubMenu)
           || 0 == (ItemInfo.fState & MF_MOUSESELECT))
       {
           MenuCleanupRosMenuItemInfo(&ItemInfo);
@@ -2532,7 +2531,7 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
 
   TRACE("%p %08x %p\n", MenuInfo, ItemInfo.wID, ItemInfo.hSubMenu);
 
-  if (0 == (ItemInfo.fType & MF_POPUP))
+  if (0 == (ItemInfo.hSubMenu))
     {
       if (0 == (ItemInfo.fState & (MF_GRAYED | MF_DISABLED))
           && 0 == (ItemInfo.fType & MF_SEPARATOR))
@@ -2663,7 +2662,7 @@ MenuButtonUp(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
       if (0 <= Id && MenuGetRosMenuItemInfo(MenuInfo.Self, Id, &ItemInfo) &&
           MenuInfo.FocusedItem == Id)
         {
-          if (0 == (ItemInfo.fType & MF_POPUP))
+          if (0 == (ItemInfo.hSubMenu))
             {
               INT ExecutedMenuId = MenuExecFocusedItem(Mt, &MenuInfo, Flags);
               MenuCleanupRosMenuItemInfo(&ItemInfo);
@@ -2712,7 +2711,7 @@ MenuPtMenu(HMENU Menu, POINT Pt)
     {
       MenuInitRosMenuItemInfo(&ItemInfo);
       if (MenuGetRosMenuItemInfo(MenuInfo.Self, MenuInfo.FocusedItem, &ItemInfo) &&
-          0 != (ItemInfo.fType & MF_POPUP) &&
+          0 != (ItemInfo.hSubMenu) &&
           0 != (ItemInfo.fState & MF_MOUSESELECT))
         {
           Ret = MenuPtMenu(ItemInfo.hSubMenu, Pt);
@@ -2826,7 +2825,7 @@ MenuGetSubPopup(HMENU Menu)
       MenuCleanupRosMenuItemInfo(&ItemInfo);
       return NULL;
     }
-  if (0 != (ItemInfo.fType & MF_POPUP) && 0 != (ItemInfo.fState & MF_MOUSESELECT))
+  if (0 != (ItemInfo.hSubMenu) && 0 != (ItemInfo.fState & MF_MOUSESELECT))
     {
       MenuCleanupRosMenuItemInfo(&ItemInfo);
       return ItemInfo.hSubMenu;
@@ -3885,7 +3884,6 @@ MenuSetItemData(
 
   if(Flags & MF_POPUP)
   {
-    mii->fType |= MF_POPUP;
     mii->fMask |= MIIM_SUBMENU;
     mii->hSubMenu = (HMENU)IDNewItem;
   }
@@ -3995,7 +3993,7 @@ MenuCheckMenuRadioItem(HMENU hMenu, UINT idFirst, UINT idLast, UINT idCheck, UIN
     if (0 != (Items[i].fType & MF_MENUBARBREAK)) continue;
     if (0 != (Items[i].fType & MF_SEPARATOR)) continue;
 
-    if ((Items[i].fType & MF_POPUP) && (uFlags == MF_BYCOMMAND))
+    if ((Items[i].hSubMenu) && (uFlags == MF_BYCOMMAND))
     {
       MenuCheckMenuRadioItem(Items[i].hSubMenu, idFirst, idLast, idCheck, uFlags, bCheck, pChecked, pUnchecked, pMenuChanged);
       continue;
@@ -4899,7 +4897,7 @@ ModifyMenuA(
 
   if(!MenuGetRosMenuItemInfo( hMnu, uPosition, &rmii)) return FALSE;
 
-  if ((rmii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (rmii.hSubMenu != (HMENU)uIDNewItem))
+  if ((rmii.hSubMenu) && (uFlags & MF_POPUP) && (rmii.hSubMenu != (HMENU)uIDNewItem))
     NtUserDestroyMenu( rmii.hSubMenu );   /* ModifyMenu() spec */
 
   MenuCleanupRosMenuItemInfo( &rmii );
@@ -4946,7 +4944,7 @@ ModifyMenuW(
 
   if(!MenuGetRosMenuItemInfo( hMnu, uPosition, &rmii)) return FALSE;
 
-  if ((rmii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (rmii.hSubMenu != (HMENU)uIDNewItem))
+  if ((rmii.hSubMenu) && (uFlags & MF_POPUP) && (rmii.hSubMenu != (HMENU)uIDNewItem))
     NtUserDestroyMenu( rmii.hSubMenu );   /* ModifyMenu() spec */
 
   MenuCleanupRosMenuItemInfo( &rmii );
