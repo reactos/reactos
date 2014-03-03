@@ -215,7 +215,8 @@
         FT_UShort  ah;
 
 
-        TT_Get_VMetrics( face, start + nn, &tsb, &ah );
+        /* since we don't need `tsb', we use zero for `yMax' parameter */
+        TT_Get_VMetrics( face, start + nn, 0, &tsb, &ah );
         advances[nn] = ah;
       }
     }

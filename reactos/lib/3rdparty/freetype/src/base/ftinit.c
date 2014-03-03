@@ -23,8 +23,8 @@
   /*  FT_Add_Default_Modules():                                            */
   /*     This function is used to add the set of default modules to a      */
   /*     fresh new library object.  The set is taken from the header file  */
-  /*     `freetype/config/ftmodule.h'.  See the document `FreeType 2.0     */
-  /*     Build System' for more information.                               */
+  /*     `config/ftmodule.h'.  See the document `FreeType 2.0 Build        */
+  /*     System' for more information.                                     */
   /*                                                                       */
   /*  FT_Init_FreeType():                                                  */
   /*     This function creates a system object for the current platform,   */

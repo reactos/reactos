@@ -67,14 +67,16 @@
   pfr_cmap_char_index( PFR_CMap   cmap,
                        FT_UInt32  char_code )
   {
-    FT_UInt   min = 0;
-    FT_UInt   max = cmap->num_chars;
-    FT_UInt   mid;
-    PFR_Char  gchar;
+    FT_UInt  min = 0;
+    FT_UInt  max = cmap->num_chars;
 
 
     while ( min < max )
     {
+      PFR_Char  gchar;
+      FT_UInt   mid;
+
+
       mid   = min + ( max - min ) / 2;
       gchar = cmap->chars + mid;
 

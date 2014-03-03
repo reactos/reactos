@@ -13,11 +13,11 @@
 
 #include FT_GLYPH_H
 #include FT_TYPE1_TABLES_H
-#include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftbitmap.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
+#include <tttables.h>
+#include <fttrigon.h>
+#include <ftbitmap.h>
+#include <ftoutln.h>
+#include <ftwinfnt.h>
 
 #define NDEBUG
 #include <debug.h>

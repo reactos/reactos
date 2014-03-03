@@ -123,6 +123,7 @@
   {
     FT_UNUSED( valid );
 
+#ifdef FT_DEBUG_LEVEL_TRACE
     if ( coverage & 0x8000U )
       GXV_TRACE(( " this subtable is for vertical text only\n" ));
     else
@@ -141,6 +142,7 @@
 
     if ( coverage & 0x1FF8 )
       GXV_TRACE(( " coverage has non-zero bits in reserved area\n" ));
+#endif
   }
 
 

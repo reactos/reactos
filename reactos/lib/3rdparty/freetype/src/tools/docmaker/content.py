@@ -1,4 +1,4 @@
-#  Content (c) 2002, 2004, 2006-2009, 2012
+#  Content (c) 2002, 2004, 2006-2009, 2012, 2013
 #    David Turner <david@freetype.org>
 #
 #  This file contains routines used to parse the content of documentation
@@ -267,15 +267,6 @@ class  DocMarkup:
             return self.fields[0].items[0].words[0]
         except:
             return None
-
-    def  get_start( self ):
-        try:
-            result = ""
-            for word in self.fields[0].items[0].words:
-                result = result + " " + word
-            return result[1:]
-        except:
-            return "ERROR"
 
     def  dump( self, margin ):
         print " " * margin + "<" + self.tag + ">"
@@ -554,14 +545,6 @@ class  DocBlock:
             if m.tag == string.lower( tag_name ):
                 return m
         return None
-
-    def  get_markup_name( self, tag_name ):
-        """return the name of a given primary markup in a block"""
-        try:
-            m = self.get_markup( tag_name )
-            return m.get_name()
-        except:
-            return None
 
     def  get_markup_words( self, tag_name ):
         try:

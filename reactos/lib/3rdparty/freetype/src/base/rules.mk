@@ -19,8 +19,8 @@
 #   BASE_OBJ_S:   The single-object base layer.
 #   BASE_OBJ_M:   A list of all objects for a multiple-objects build.
 #   BASE_EXT_OBJ: A list of base layer extensions, i.e., components found
-#                 in `freetype/src/base' which are not compiled within the
-#                 base layer proper.
+#                 in `src/base' which are not compiled within the base
+#                 layer proper.
 
 
 BASE_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(SRC_DIR)/base)
