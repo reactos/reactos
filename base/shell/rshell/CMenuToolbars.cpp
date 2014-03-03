@@ -36,7 +36,6 @@ HRESULT WINAPI SHGetImageList(
 
 #define TBSTYLE_EX_VERTICAL 4
 
-
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
 
@@ -170,10 +169,10 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_hwnd(NULL),
     m_useFlatMenus(FALSE),
+    m_SubclassOld(NULL),
     m_menuBand(menuBand),
     m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
-    m_SubclassOld(NULL),
     m_hasIdealSize(FALSE),
     m_usePager(usePager),
     m_hotItem(-1),
@@ -645,23 +644,97 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
     return S_FALSE;
 }
 
-BOOL
-AllocAndGetMenuString(HMENU hMenu, UINT ItemIDByPosition, WCHAR** String)
+HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData)
 {
-    int Length;
+    TBBUTTON tbb = { 0 };
 
-    Length = GetMenuStringW(hMenu, ItemIDByPosition, NULL, 0, MF_BYPOSITION);
+    tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
+    tbb.fsStyle = 0;
 
-    if (!Length)
-        return FALSE;
+    if (hasSubMenu)
+        tbb.fsStyle |= BTNS_DROPDOWN;
 
-    /* Also allocate space for the terminating NULL character */
-    ++Length;
-    *String = (PWSTR) HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
+    tbb.iString = (INT_PTR) caption;
+    tbb.idCommand = commandId;
 
-    GetMenuStringW(hMenu, ItemIDByPosition, *String, Length, MF_BYPOSITION);
+    tbb.iBitmap = iconId;
+    tbb.dwData = buttonData;
 
-    return TRUE;
+    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::AddSeparator()
+{
+    TBBUTTON tbb = { 0 };
+
+    tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
+    tbb.fsStyle = BTNS_SEP;
+    tbb.iBitmap = 0;
+
+    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::AddPlaceholder()
+{
+    TBBUTTON tbb = { 0 };
+    PCWSTR MenuString = L"(Empty)";
+
+    tbb.fsState = TBSTATE_WRAP; // disabled
+    tbb.fsStyle = 0;
+    tbb.iString = (INT_PTR) MenuString;
+    tbb.iBitmap = -1;
+
+    SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData)
+{
+    TBBUTTONINFO info = { 0 };
+    info.cbSize = sizeof(TBBUTTONINFO);
+    info.dwMask = 0;
+    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
+    if (index < 0)
+        return E_FAIL;
+
+    if (pIndex)
+        *pIndex = index;
+
+    if (pData)
+    {
+        TBBUTTON btn = { 0 };
+        if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
+            return E_FAIL;
+        *pData = btn.dwData;
+    }
+
+    return S_OK;
+}
+
+
+HRESULT CMenuToolbarBase::PopupItem(INT uItem)
+{
+    INT index;
+    DWORD_PTR dwData;
+
+    GetDataFromId(uItem, &index, &dwData);
+
+    return InternalPopupItem(uItem, index, dwData);
+}
+
+HRESULT CMenuToolbarBase::HasSubMenu(INT uItem)
+{
+    INT index;
+    DWORD_PTR dwData;
+
+    GetDataFromId(uItem, &index, &dwData);
+
+    return InternalHasSubMenu(uItem, index, dwData);
 }
 
 CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
@@ -701,44 +774,37 @@ HRESULT CMenuStaticToolbar::FillToolbar()
     for (i = 0; i < ic; i++)
     {
         MENUITEMINFOW info;
-        TBBUTTON tbb = { 0 };
-        PWSTR MenuString = NULL;
-
-        tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
-        tbb.fsStyle = 0;
 
         info.cbSize = sizeof(info);
-        info.fMask = MIIM_FTYPE | MIIM_ID;
+        info.dwTypeData = NULL;
+        info.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_SUBMENU;
 
         GetMenuItemInfoW(m_hmenu, i, TRUE, &info);
 
         if (info.fType == MFT_STRING)
         {
-            if (!AllocAndGetMenuString(m_hmenu, i, &MenuString))
-                return E_OUTOFMEMORY;
-            if (::GetSubMenu(m_hmenu, i) != NULL)
-                tbb.fsStyle |= BTNS_DROPDOWN;
-            tbb.iString = (INT_PTR) MenuString;
-            tbb.idCommand = info.wID;
+            info.cch++;
+            info.dwTypeData = (PWSTR) HeapAlloc(GetProcessHeap(), 0, (info.cch + 1) * sizeof(WCHAR));
+
+            info.fMask = MIIM_STRING;
+            GetMenuItemInfoW(m_hmenu, i, TRUE, &info);
 
             SMINFO * sminfo = new SMINFO();
             sminfo->dwMask = SMIM_ICON | SMIM_FLAGS;
-            if (SUCCEEDED(m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo))))
-            {
-                tbb.iBitmap = sminfo->iIcon;
-                tbb.dwData = reinterpret_cast<DWORD_PTR>(sminfo);
-                // FIXME: remove before deleting the toolbar or it will leak
-            }
+            // FIXME: remove before deleting the toolbar or it will leak
+
+            HRESULT hr = m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo));
+            if (FAILED(hr))
+                return hr;
+
+            AddButton(info.wID, info.dwTypeData, info.hSubMenu != NULL, sminfo->iIcon, reinterpret_cast<DWORD_PTR>(sminfo));
+
+            HeapFree(GetProcessHeap(), 0, info.dwTypeData);
         }
         else
         {
-            tbb.fsStyle |= BTNS_SEP;
+            AddSeparator();
         }
-
-        SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
-
-        if (MenuString)
-            HeapFree(GetProcessHeap(), 0, MenuString);
     }
 
     return S_OK;
@@ -768,19 +834,9 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
     return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
 }
 
-HRESULT CMenuStaticToolbar::PopupItem(INT uItem)
+HRESULT CMenuStaticToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData)
 {
-    TBBUTTONINFO info = { 0 };
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = 0;
-    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
-    if (index < 0)
-        return E_FAIL;
-
-    TBBUTTON btn = { 0 };
-    SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
-
-    SMINFO * nfo = reinterpret_cast<SMINFO*>(btn.dwData);
+    SMINFO * nfo = reinterpret_cast<SMINFO*>(dwData);
     if (!nfo)
         return E_FAIL;
 
@@ -799,14 +855,8 @@ HRESULT CMenuStaticToolbar::PopupItem(INT uItem)
     }
 }
 
-HRESULT CMenuStaticToolbar::HasSubMenu(INT uItem)
+HRESULT CMenuStaticToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData)
 {
-    TBBUTTONINFO info = { 0 };
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = 0;
-    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
-    if (index < 0)
-        return E_FAIL;
     return ::GetSubMenu(m_hmenu, index) ? S_OK : S_FALSE;
 }
 
@@ -836,10 +886,6 @@ HRESULT CMenuSFToolbar::FillToolbar()
         INT index = 0;
         INT indexOpen = 0;
 
-        TBBUTTON tbb = { 0 };
-        tbb.fsState = TBSTATE_ENABLED | TBSTATE_WRAP;
-        tbb.fsStyle = 0;
-
         STRRET sr = { STRRET_CSTR, { 0 } };
 
         hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
@@ -855,37 +901,19 @@ HRESULT CMenuSFToolbar::FillToolbar()
         SFGAOF attrs = SFGAO_FOLDER;
         hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
 
-        if (attrs & SFGAO_FOLDER)
-        {
-            tbb.fsStyle |= BTNS_DROPDOWN;
-        }
-
-        tbb.idCommand = ++i;
-        tbb.iString = (INT_PTR) MenuString;
-        tbb.iBitmap = index;
-        tbb.dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
+        DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
         // FIXME: remove before deleting the toolbar or it will leak
 
-        SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
-        CoTaskMemFree(MenuString);
+        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData);
 
+        CoTaskMemFree(MenuString);
     }
     CoTaskMemFree(item);
 
     // If no items were added, show the "empty" placeholder
     if (i == 0)
     {
-        TBBUTTON tbb = { 0 };
-        PCWSTR MenuString = L"(Empty)";
-
-        tbb.fsState = 0/*TBSTATE_DISABLED*/;
-        tbb.fsStyle = 0;
-        tbb.iString = (INT_PTR) MenuString;
-        tbb.iBitmap = -1;
-
-        SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
-
-        return S_OK;
+        return AddPlaceholder();
     }
 
     return hr;
@@ -931,25 +959,6 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
     return hr;
 }
 
-LPITEMIDLIST CMenuSFToolbar::GetPidlFromId(INT uItem, INT* pIndex)
-{
-    TBBUTTONINFO info = { 0 };
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = 0;
-    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
-    if (index < 0)
-        return NULL;
-
-    if (pIndex)
-        *pIndex = index;
-
-    TBBUTTON btn = { 0 };
-    if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
-        return NULL;
-
-    return reinterpret_cast<LPITEMIDLIST>(btn.dwData);
-}
-
 HRESULT CMenuSFToolbar::OnContextMenu(NMMOUSE * rclick)
 {
     HRESULT hr;
@@ -974,20 +983,22 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
     if (hr == S_FALSE)
         return hr;
 
-    return m_menuBand->_CallCBWithItemPidl(GetPidlFromId(wParam), SMC_SFEXEC, 0, 0);
+    DWORD_PTR data;
+    GetDataFromId(wParam, NULL, &data);
+
+    return m_menuBand->_CallCBWithItemPidl(reinterpret_cast<LPITEMIDLIST>(data), SMC_SFEXEC, 0, 0);
 }
 
-HRESULT CMenuSFToolbar::PopupItem(INT uItem)
+HRESULT CMenuSFToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData)
 {
     HRESULT hr;
     UINT uId;
     UINT uIdAncestor;
     DWORD flags;
-    int index;
     CComPtr<IShellMenuCallback> psmc;
     CComPtr<IShellMenu> shellMenu;
 
-    LPITEMIDLIST pidl = GetPidlFromId(uItem, &index);
+    LPITEMIDLIST pidl = reinterpret_cast<LPITEMIDLIST>(dwData);
 
     if (!pidl)
         return E_FAIL;
@@ -1027,10 +1038,10 @@ HRESULT CMenuSFToolbar::PopupItem(INT uItem)
     return PopupSubMenu(uItem, index, shellMenu);
 }
 
-HRESULT CMenuSFToolbar::HasSubMenu(INT uItem)
+HRESULT CMenuSFToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData)
 {
     HRESULT hr;
-    LPCITEMIDLIST pidl = GetPidlFromId(uItem);
+    LPCITEMIDLIST pidl = reinterpret_cast<LPITEMIDLIST>(dwData);
 
     SFGAOF attrs = SFGAO_FOLDER;
     hr = m_shellFolder->GetAttributesOf(1, &pidl, &attrs);

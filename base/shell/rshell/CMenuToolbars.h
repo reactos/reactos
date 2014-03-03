@@ -28,12 +28,12 @@ private:
     HWND  m_hwnd;        // May be the pager
     HFONT m_marlett;
     BOOL  m_useFlatMenus;
+    WNDPROC m_SubclassOld;
 
 protected:
     CMenuBand * m_menuBand;
     HWND        m_hwndToolbar;
     DWORD       m_dwMenuFlags;
-    WNDPROC     m_SubclassOld;
     BOOL        m_hasIdealSize;
     SIZE        m_idealSize;
     BOOL        m_usePager;
@@ -73,14 +73,23 @@ public:
     void InvalidateDraw();
 
     virtual HRESULT FillToolbar() = 0;
-    virtual HRESULT PopupItem(INT uItem) = 0;
-    virtual HRESULT HasSubMenu(INT uItem) = 0;
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
+
+    HRESULT PopupItem(INT uItem);
+    HRESULT HasSubMenu(INT uItem);
+    HRESULT GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData);
 
 protected:
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
+    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData) = 0;
+    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData) = 0;
+
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    HRESULT AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSubMenu, INT iconId, DWORD_PTR buttonData);
+    HRESULT AddSeparator();
+    HRESULT AddPlaceholder();
 
     HRESULT UpdateImageLists();
 };
@@ -99,11 +108,12 @@ public:
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
     virtual HRESULT FillToolbar();
-    virtual HRESULT PopupItem(INT uItem);
-    virtual HRESULT HasSubMenu(INT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
+protected:
+    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
 };
 
 class CMenuSFToolbar :
@@ -122,11 +132,10 @@ public:
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
     virtual HRESULT FillToolbar();
-    virtual HRESULT PopupItem(INT uItem);
-    virtual HRESULT HasSubMenu(INT uItem);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
-private:
-    LPITEMIDLIST GetPidlFromId(INT uItem, INT* pIndex = NULL);
+protected:
+    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
 };
