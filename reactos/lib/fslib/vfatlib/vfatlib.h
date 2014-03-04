@@ -14,7 +14,6 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
-#include <objbase.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>

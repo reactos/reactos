@@ -15,4 +15,3 @@ list(APPEND SOURCE
 
 add_library(vfatlib ${SOURCE})
 add_pch(vfatlib vfatlib.h SOURCE)
-add_dependencies(vfatlib psdk)
