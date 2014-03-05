@@ -107,6 +107,7 @@ DisableThreadLibraryCalls(
  */
 HINSTANCE
 WINAPI
+DECLSPEC_HOTPATCH
 LoadLibraryA(LPCSTR lpLibFileName)
 {
     LPSTR PathBuffer;
@@ -152,6 +153,7 @@ LoadLibraryA(LPCSTR lpLibFileName)
  */
 HINSTANCE
 WINAPI
+DECLSPEC_HOTPATCH
 LoadLibraryExA(LPCSTR lpLibFileName,
                HANDLE hFile,
                DWORD dwFlags)
@@ -171,6 +173,7 @@ LoadLibraryExA(LPCSTR lpLibFileName,
  */
 HINSTANCE
 WINAPI
+DECLSPEC_HOTPATCH
 LoadLibraryW(LPCWSTR lpLibFileName)
 {
     /* Call Ex version of the API */
@@ -279,6 +282,7 @@ BasepLoadLibraryAsDatafile(PWSTR Path, LPCWSTR Name, HMODULE *hModule)
  */
 HINSTANCE
 WINAPI
+DECLSPEC_HOTPATCH
 LoadLibraryExW(LPCWSTR lpLibFileName,
                HANDLE hFile,
                DWORD dwFlags)
@@ -447,7 +451,10 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 /*
  * @implemented
  */
-BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+FreeLibrary(HINSTANCE hLibModule)
 {
     NTSTATUS Status;
     PIMAGE_NT_HEADERS NtHeaders;
@@ -806,6 +813,7 @@ quickie:
  */
 HMODULE
 WINAPI
+DECLSPEC_HOTPATCH
 GetModuleHandleA(LPCSTR lpModuleName)
 {
     PUNICODE_STRING ModuleNameW;
