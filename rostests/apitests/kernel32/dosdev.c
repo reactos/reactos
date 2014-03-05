@@ -137,7 +137,7 @@ static void test_DefineDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
     ok(DriveType1 != SystemDriveType, "subst drive types match when it shouldn't\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_FILE_NOT_FOUND), GetLastError());
     dwMaskCur = GetLogicalDrives();
     ok(dwMaskCur != dwMaskPrev, "Drive masks match when it shouldn't\n");
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
@@ -168,7 +168,7 @@ static void test_DefineDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
     ok(DriveType1 != SystemDriveType, "subst drive types match when it shouldn't\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_FILE_NOT_FOUND), GetLastError());
     dwMaskCur = GetLogicalDrives();
     ok(dwMaskCur != dwMaskPrev, "Drive masks match when it shouldn't\n");
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
@@ -203,7 +203,7 @@ static void test_DefineDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
     ok(DriveType1 != SystemDriveType, "subst drive types match when it shouldn't\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_FILE_NOT_FOUND), GetLastError());
     dwMaskCur = GetLogicalDrives();
     ok(dwMaskCur != dwMaskPrev, "Drive masks match when it shouldn't\n");
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
@@ -266,7 +266,7 @@ static void test_DefineDosDeviceA(void)
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
     hnd = FindFirstFileA(SUBST_DRIVE_SEARCH, &Data);
     ok(hnd == INVALID_HANDLE_VALUE, "Opened subst drive when it should fail\n");
-    ok(GetLastError() == ERROR_INVALID_NAME, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_INVALID_NAME), GetLastError());
     if (hnd) FindClose(hnd);
     Result = DefineDosDeviceA(DDD_REMOVE_DEFINITION, SUBST_DRIVE, NULL);
     ok(Result, "Failed to remove subst drive using NULL Target name\n");
@@ -313,7 +313,7 @@ static void test_DefineDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
     ok(DriveType1 != SystemDriveType, "subst drive types match when it shouldn't\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_FILE_NOT_FOUND), GetLastError());
     dwMaskCur = GetLogicalDrives();
     ok(dwMaskCur != dwMaskPrev, "Drive masks match when it shouldn't\n");
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
@@ -333,7 +333,7 @@ static void test_DefineDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     DriveType1 = GetDriveTypeA(SUBST_DRIVE_WITH_TRAILING_PATH_SEPERATOR);
     ok(DriveType1 != SystemDriveType, "subst drive types match when it shouldn't\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_FILE_NOT_FOUND), GetLastError());
     dwMaskCur = GetLogicalDrives();
     ok(dwMaskCur != dwMaskPrev, "Drive masks match when it shouldn't\n");
     ok((dwMaskCur & (1 << (SUBST_DRIVE_LETTER - 'A'))), "Drive bit is not set\n");
@@ -362,7 +362,7 @@ static void test_QueryDosDeviceA(void)
     ok(Result, "Failed to subst drive\n");
     Result = QueryDosDeviceA(SUBST_DRIVE, Buffer, 0);
     ok(!Result, "Should fail as the buffer passed is supposed to be small\n");
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_INSUFFICIENT_BUFFER), GetLastError());
     Result = QueryDosDeviceA(SUBST_DRIVE, Buffer, MAX_PATH);
     ok(Result, "failed to get target path\n");
     ok(_strnicmp(Buffer, "\\??\\", 4) == 0, "The target returned does have correct prefix set\n");
@@ -374,7 +374,7 @@ static void test_QueryDosDeviceA(void)
     /* This will try to retrieve all existing MS-DOS device names */
     Result = QueryDosDeviceA(NULL, Buffer, 0);
     ok(!Result, "Should fail as the buffer passed is supposed to be small\n");
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() reports unexpected error code\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(ERROR_INSUFFICIENT_BUFFER), GetLastError());
 }
 
 START_TEST(dosdev)
