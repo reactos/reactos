@@ -2911,7 +2911,7 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
     TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
-    return SHInvokeCommand(hWnd, lpFolder, lpApidl, TRUE);
+    return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
 }
 
 /*************************************************************************
@@ -3466,12 +3466,12 @@ UINT WINAPI SHDefExtractIconWrapW(LPCWSTR pszIconFile, int iIndex, UINT uFlags, 
  *           executed.
  *  Failure: An HRESULT error code indicating the error.
  */
-HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, BOOL bInvokeDefault)
+HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, BOOL bQueryAllCommands)
 {
   IContextMenu *iContext;
   HRESULT hRet;
 
-  TRACE("(%p, %p, %p, %d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
+  TRACE("(%p, %p, %p, %d)\n", hWnd, lpFolder, lpApidl, bQueryAllCommands);
 
   if (!lpFolder)
     return E_FAIL;
@@ -3489,11 +3489,11 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
 
       /* Add the context menu entries to the popup */
       hQuery = IContextMenu_QueryContextMenu(iContext, hMenu, 0, 1, 0x7FFF,
-                                             bInvokeDefault ? CMF_NORMAL : CMF_DEFAULTONLY);
+                                             bQueryAllCommands ? CMF_NORMAL : CMF_DEFAULTONLY);
 
       if (SUCCEEDED(hQuery))
       {
-        if (bInvokeDefault &&
+        if (!bQueryAllCommands &&
             (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != (UINT)-1)
         {
           CMINVOKECOMMANDINFO cmIci;
