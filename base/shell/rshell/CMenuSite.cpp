@@ -103,7 +103,11 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 
 #define TO_HRESULT(x) ((HRESULT)(S_OK+(x)))
 
-    if (SHIsSameObject(punk, m_BandObject))
+    CComPtr<IUnknown> pUnknown;
+
+    punk->QueryInterface(IID_PPV_ARG(IUnknown, &pUnknown));
+
+    if (pUnknown == m_BandObject)
         return TO_HRESULT(0);
 
     if (m_BandObject)
@@ -118,28 +122,26 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
     m_WinEventHandler = NULL;
     m_hWndBand = NULL;
 
-    if (!punk)
+    if (!pUnknown)
         return TO_HRESULT(0);
 
-    hr = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand));
+    hr = pUnknown->QueryInterface(IID_PPV_ARG(IDeskBand, &m_DeskBand));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler));
+    hr = pUnknown->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WinEventHandler));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = IUnknown_SetSite(punk, this->ToIUnknown());
+    hr = IUnknown_SetSite(pUnknown, this->ToIUnknown());
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = IUnknown_GetWindow(punk, &m_hWndBand);
+    hr = IUnknown_GetWindow(pUnknown, &m_hWndBand);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    m_BandObject = punk;
-
-    punk->AddRef();
+    m_BandObject = pUnknown;
 
     return TO_HRESULT(0);
 }
