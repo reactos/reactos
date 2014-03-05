@@ -120,7 +120,7 @@ class CMenuSFToolbar :
     public CMenuToolbarBase
 {
 private:
-    IShellFolder * m_shellFolder;
+    CComPtr<IShellFolder> m_shellFolder;
     LPCITEMIDLIST  m_idList;
     HKEY           m_hKey;
 
