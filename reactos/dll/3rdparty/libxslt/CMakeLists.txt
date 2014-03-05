@@ -37,7 +37,7 @@ list(APPEND SOURCE
 
 add_library(libxslt SHARED ${SOURCE})
 set_module_type(libxslt win32dll)
-target_link_libraries(libxslt libxml2)
+target_link_libraries(libxslt libxml2 iconv-static)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 if(MSVC)
     add_importlibs(libxslt ntdll)

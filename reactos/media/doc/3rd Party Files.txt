@@ -61,3 +61,7 @@ Website: http://www.mpg123.de/
 Title:  STLport
 Used Version: 5.2.1
 Website: http://stlport.sourceforge.net/
+
+Title: win-iconv
+Used Version: r44
+Website: https://code.google.com/p/win-iconv/
