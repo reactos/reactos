@@ -340,6 +340,9 @@ BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECOR
     /* Set the DOS record's command structure */
     DosRecord->CommandInfo = CommandInfo;
 
+    /* The operation was successful */
+    Success = TRUE;
+
 Cleanup:
     /* If it wasn't successful, free the memory */
     if (!Success) BaseSrvFreeVDMInfo(CommandInfo);
