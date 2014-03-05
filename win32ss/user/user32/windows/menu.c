@@ -1696,7 +1696,7 @@ static void FASTCALL MenuSelectItem(HWND hwndOwner, PROSMENUINFO hmenu, UINT wIn
                 SendMessageW(hwndOwner, WM_MENUSELECT,
                            MAKELONG(ItemInfo.hSubMenu ? wIndex : ItemInfo.wID,
                                     ItemInfo.fType | ItemInfo.fState | MF_MOUSESELECT |
-                                    (hmenu->Flags & MF_SYSMENU)), (LPARAM) hmenu->Self);
+                                    (hmenu->Flags & (MF_SYSMENU|MF_POPUP))), (LPARAM) hmenu->Self);
             }
         }
     }

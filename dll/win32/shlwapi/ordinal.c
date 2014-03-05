@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SHLWAPI ordinal functions
  *
  * Copyright 1997 Marcus Meissner
@@ -2911,7 +2911,7 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
     TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
-    return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
+    return SHInvokeCommand(hWnd, lpFolder, lpApidl, TRUE);
 }
 
 /*************************************************************************

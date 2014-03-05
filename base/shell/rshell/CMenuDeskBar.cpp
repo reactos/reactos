@@ -517,7 +517,7 @@ BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
 
         popup = NULL;
         hr = IUnknown_GetSite(window, IID_PPV_ARG(IMenuPopup, &popup));
-        if (FAILED_UNEXPECTEDLY(hr))
+        if (FAILED(hr))
             return FALSE;
     }
 

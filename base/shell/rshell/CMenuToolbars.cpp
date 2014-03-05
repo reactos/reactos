@@ -816,7 +816,7 @@ HRESULT CMenuStaticToolbar::FillToolbar()
         {
             AddSeparator(last);
         }
-        else // if (info.fType == MFT_STRING)
+        else if (!(info.fType & MFT_BITMAP))
         {
 
             info.cch++;

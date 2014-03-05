@@ -976,7 +976,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
 
             ItemInfo.cbSize = sizeof(MENUITEMINFOW);
             ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
-            ItemInfo.fType = MF_POPUP;
+            ItemInfo.fType = 0;
             ItemInfo.fState = MFS_ENABLED;
             ItemInfo.dwTypeData = NULL;
             ItemInfo.cch = 0;
