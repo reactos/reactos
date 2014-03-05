@@ -596,18 +596,15 @@ IWinEventHandlerImpl_ContainsWindow(IN OUT IWinEventHandler *iface,
                                        IN HWND hWnd)
 {
     ITaskBandImpl *This = ITaskBandImpl_from_IWinEventHandler(iface);
-    HRESULT hRet = S_OK;
 
-    if (This->hWnd != hWnd ||
-        !IsChild(This->hWnd,
-                 hWnd))
+    if (This->hWnd == hWnd ||
+        IsChild(This->hWnd, hWnd))
     {
-        hRet = S_FALSE;
+        DbgPrint("ITaskBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
+        return S_OK;
     }
 
-    DbgPrint("ITaskBand::ContainsWindow(0x%p) returns %s\n", hWnd, hRet == S_OK ? "S_OK" : "S_FALSE");
-
-    return hRet;
+    return S_FALSE;
 }
 
 static const IWinEventHandlerVtbl IWinEventHandlerImpl_Vtbl =
