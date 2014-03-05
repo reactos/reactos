@@ -80,7 +80,7 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
-set_module_type(shell32 win32dll UNICODE)
+set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
 
 target_link_libraries(shell32
     atlnew
