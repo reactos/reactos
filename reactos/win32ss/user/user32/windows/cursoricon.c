@@ -2112,6 +2112,7 @@ CursorIconToCursor(HICON hIcon,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetCursorPos(int X, int Y)
 {
     return NtUserxSetCursorPos(X,Y);
@@ -2122,6 +2123,7 @@ SetCursorPos(int X, int Y)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetCursorPos(LPPOINT lpPoint)
 {
     BOOL res;

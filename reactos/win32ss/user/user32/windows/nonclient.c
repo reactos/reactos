@@ -1233,7 +1233,9 @@ RealAdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 AdjustWindowRectEx(LPRECT lpRect,
 		   DWORD dwStyle,
 		   BOOL bMenu,
@@ -1266,7 +1268,9 @@ AdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
 		 BOOL bMenu)

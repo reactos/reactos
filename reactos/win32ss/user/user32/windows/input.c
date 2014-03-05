@@ -114,7 +114,9 @@ EnableWindow(HWND hWnd, BOOL bEnable)
 /*
  * @implemented
  */
-SHORT WINAPI
+SHORT
+WINAPI
+DECLSPEC_HOTPATCH
 GetAsyncKeyState(int vKey)
 {
     if (vKey < 0 || vKey > 256)
@@ -185,7 +187,9 @@ GetKeyNameTextW(LONG lParam,
 /*
  * @implemented
  */
-SHORT WINAPI
+SHORT
+WINAPI
+DECLSPEC_HOTPATCH
 GetKeyState(int nVirtKey)
 {
     return (SHORT)NtUserGetKeyState((DWORD)nVirtKey);

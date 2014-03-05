@@ -36,7 +36,9 @@ static short iMenuSysKey = 0;
 /*
  * @implemented
  */
-DWORD WINAPI
+DWORD
+WINAPI
+DECLSPEC_HOTPATCH
 GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
@@ -51,7 +53,9 @@ GetSysColor(int nIndex)
 /*
  * @implemented
  */
-HBRUSH WINAPI
+HBRUSH
+WINAPI
+DECLSPEC_HOTPATCH
 GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)

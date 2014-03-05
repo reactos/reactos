@@ -297,6 +297,7 @@ DefRawInputProc(
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetRawInputBuffer(
     PRAWINPUT pData,
     PUINT pcbSize,
@@ -359,6 +360,7 @@ GetRegisteredRawInputDevices(
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 RegisterRawInputDevices(
     PCRAWINPUTDEVICE pRawInputDevices,
     UINT uiNumDevices,

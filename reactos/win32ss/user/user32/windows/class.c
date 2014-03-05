@@ -1832,6 +1832,7 @@ SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
  */
 LONG
 WINAPI
+DECLSPEC_HOTPATCH
 SetWindowLongA(
   HWND hWnd,
   int nIndex,
