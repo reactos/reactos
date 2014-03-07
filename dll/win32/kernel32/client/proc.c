@@ -3966,6 +3966,8 @@ StartScan:
                                     &VdmWaitObject,
                                     VdmTask,
                                     VdmBinaryType);
+
+        if (!Result)
         {
             /* Bail out on failure */
             DPRINT1("Failed to update VDM with wait object\n");
