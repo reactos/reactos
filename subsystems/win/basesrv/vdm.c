@@ -40,6 +40,22 @@ NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
+NTSTATUS NTAPI GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Record)
+{
+    PLIST_ENTRY i;
+    PVDM_CONSOLE_RECORD CurrentRecord = NULL;
+
+    /* Search for a record that has the same console handle */
+    for (i = VDMConsoleListHead.Flink; i != &VDMConsoleListHead; i = i->Flink)
+    {
+        CurrentRecord = CONTAINING_RECORD(i, VDM_CONSOLE_RECORD, Entry);
+        if (CurrentRecord->SessionId == TaskId) break;
+    }
+
+    *Record = CurrentRecord;
+    return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
+}
+
 ULONG NTAPI GetNextDosSesId(VOID)
 {
     ULONG SessionId;
@@ -463,6 +479,9 @@ CSR_API(BaseSrvCheckVDM)
         Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent, &DosRecord->ClientEvent);
         if (!NT_SUCCESS(Status)) goto Cleanup;
 
+        /* Return the client event handle */
+        CheckVdmRequest->WaitObjectForParent = DosRecord->ClientEvent;
+
         /* Translate the input structure into a VDM command structure and set it in the DOS record */
         if (!BaseSrvCopyCommand(CheckVdmRequest, DosRecord))
         {
@@ -487,7 +506,7 @@ CSR_API(BaseSrvCheckVDM)
     {
         // TODO: NOT IMPLEMENTED
         UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
     }
 
 Cleanup:
@@ -497,6 +516,19 @@ Cleanup:
         /* Free the DOS record */
         if (DosRecord != NULL)
         {
+            if (DosRecord->ServerEvent) NtClose(DosRecord->ServerEvent);
+            if (DosRecord->ClientEvent)
+            {
+                /* Close the remote handle */
+                NtDuplicateObject(CsrGetClientThread()->Process->ProcessHandle,
+                                  DosRecord->ClientEvent,
+                                  NULL,
+                                  NULL,
+                                  0,
+                                  0,
+                                  DUPLICATE_CLOSE_SOURCE);
+            }
+
             RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
             DosRecord = NULL;
         }
@@ -517,8 +549,125 @@ Cleanup:
 
 CSR_API(BaseSrvUpdateVDMEntry)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_UPDATE_VDM_ENTRY UpdateVdmEntryRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.UpdateVDMEntryRequest;
+    PRTL_CRITICAL_SECTION CriticalSection = NULL;
+    PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+    PVDM_DOS_RECORD DosRecord = NULL;
+
+    CriticalSection = (UpdateVdmEntryRequest->BinaryType != BINARY_TYPE_SEPARATE_WOW)
+                      ? &DosCriticalSection
+                      : &WowCriticalSection;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(CriticalSection);
+
+    /* Check if this is a DOS or WOW VDM */
+    if (UpdateVdmEntryRequest->BinaryType != BINARY_TYPE_SEPARATE_WOW)
+    {
+        if (UpdateVdmEntryRequest->iTask != 0)
+        {
+            /* Get the console record using the task ID */
+            Status = GetConsoleRecordBySessionId(UpdateVdmEntryRequest->iTask,
+                                                 &ConsoleRecord);
+        }
+        else
+        {
+            /* Get the console record using the console handle */
+            Status = BaseSrvGetConsoleRecord(UpdateVdmEntryRequest->ConsoleHandle,
+                                             &ConsoleRecord);
+        }
+
+        if (!NT_SUCCESS(Status)) goto Cleanup;
+
+        /* Get the primary DOS record */
+        DosRecord = (PVDM_DOS_RECORD)CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
+                                                       VDM_DOS_RECORD,
+                                                       Entry);
+
+        switch (UpdateVdmEntryRequest->EntryIndex)
+        {
+            case VdmEntryUndo:
+            {
+                /* Close the server event handle, the client will close the client handle */
+                NtClose(DosRecord->ServerEvent);
+                DosRecord->ServerEvent = DosRecord->ClientEvent = NULL;
+
+                if (UpdateVdmEntryRequest->VDMCreationState & (VDM_UNDO_PARTIAL | VDM_UNDO_FULL))
+                {
+                    /* Remove the DOS record */
+                    if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
+                    RemoveEntryList(&DosRecord->Entry);
+                    RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
+
+                    /*
+                     * Since this is an undo, if that was the only DOS record the VDM
+                     * won't even start, so the console record should be removed too.
+                     */
+                    if (ConsoleRecord->DosListHead.Flink == &ConsoleRecord->DosListHead)
+                    {
+                        RemoveEntryList(&ConsoleRecord->Entry);
+                        RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+                    }
+                }
+
+                /* It was successful */
+                Status = STATUS_SUCCESS;
+
+                break;
+            }
+
+            case VdmEntryUpdateProcess:
+            {
+                /* Duplicate the VDM process handle */
+                Status = NtDuplicateObject(CsrGetClientThread()->Process->ProcessHandle,
+                                           UpdateVdmEntryRequest->VDMProcessHandle,
+                                           NtCurrentProcess(),
+                                           &ConsoleRecord->ProcessHandle,
+                                           0,
+                                           0,
+                                           DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
+                if (!NT_SUCCESS(Status)) goto Cleanup;
+
+                /* Create a pair of handles to one event object */
+                Status = BaseSrvCreatePairWaitHandles(&DosRecord->ServerEvent,
+                                                      &DosRecord->ClientEvent);
+                if (!NT_SUCCESS(Status)) goto Cleanup;
+
+                /* Return the client event handle */
+                UpdateVdmEntryRequest->WaitObjectForParent = DosRecord->ClientEvent;
+
+                break;
+            }
+
+            case VdmEntryUpdateControlCHandler:
+            {
+                // TODO: NOT IMPLEMENTED
+                DPRINT1("BaseSrvUpdateVDMEntry: VdmEntryUpdateControlCHandler not implemented!");
+                Status = STATUS_NOT_IMPLEMENTED;
+
+                break;
+            }
+
+            default:
+            {
+                /* Invalid */
+                Status = STATUS_INVALID_PARAMETER;
+            }
+        }
+    }
+    else
+    {
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(CriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvGetNextVDMCommand)
@@ -555,7 +704,12 @@ CSR_API(BaseSrvExitVDM)
                                           VDM_DOS_RECORD,
                                           Entry);
 
+            /* Set the event and close it */
+            NtSetEvent(DosRecord->ServerEvent, NULL);
+            NtClose(DosRecord->ServerEvent);
+
             /* Remove the DOS entry */
+            if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
             RemoveEntryList(&DosRecord->Entry);
             RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
         }
@@ -576,7 +730,7 @@ CSR_API(BaseSrvExitVDM)
     {
         // TODO: NOT IMPLEMENTED
         UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        Status = STATUS_NOT_IMPLEMENTED;
     }
 
 Cleanup:
@@ -639,6 +793,7 @@ CSR_API(BaseSrvGetVDMExitCode)
     GetVDMExitCodeRequest->ExitCode = DosRecord->ExitCode;
 
     /* Since this is a zombie task record, remove it */
+    if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
     RemoveEntryList(&DosRecord->Entry);
     RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
 

@@ -12,6 +12,23 @@
 
 #pragma once
 
+/* CONSTANTS ******************************************************************/
+
+typedef enum _VDM_ENTRY_CODE
+{
+    VdmEntryUndo,
+    VdmEntryUpdateProcess,
+    VdmEntryUpdateControlCHandler
+} VDM_ENTRY_CODE;
+
+//
+// Undo States
+//
+#define VDM_UNDO_PARTIAL    0x01
+#define VDM_UNDO_FULL       0x02
+#define VDM_UNDO_REUSE      0x04
+#define VDM_UNDO_COMPLETED  0x08
+
 //
 // Binary Types to share with VDM
 //

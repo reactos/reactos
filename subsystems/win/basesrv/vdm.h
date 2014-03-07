@@ -20,6 +20,7 @@ typedef struct _VDM_CONSOLE_RECORD
 {
     LIST_ENTRY Entry;
     HANDLE ConsoleHandle;
+    HANDLE ProcessHandle;
     PCHAR CurrentDirs;
     ULONG CurDirsLength;
     ULONG SessionId;
