@@ -381,6 +381,8 @@ _tWinMain(IN HINSTANCE hInstance,
     HANDLE hShellDesktop = NULL;
     BOOL CreateShellDesktop = FALSE;
 
+    DbgPrint("Explorer starting... Commandline: %S\n", lpCmdLine);
+
     if (RegOpenKey(HKEY_CURRENT_USER,
                    TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"),
                    &hkExplorer) != ERROR_SUCCESS)
@@ -442,10 +444,109 @@ _tWinMain(IN HINSTANCE hInstance,
     }
     else
     {
+        WCHAR root[MAX_PATH];
+        HMODULE hBrowseui;
+        HRESULT hr;
+        LPSHELLFOLDER pDesktopFolder = NULL;
+        LPITEMIDLIST pidlRoot = NULL;
+
         /* A shell is already loaded. Parse the command line arguments
            and unless we need to do something specific simply display
            the desktop in a separate explorer window */
         /* FIXME */
+
+        /* Commandline switches:
+         *
+         * /n               Open a new window, even if an existing one still exists.
+         * /e               Start with the explorer sidebar shown.
+         * /root,<object>   Open a window for the given object path.
+         * /select,<object> Open a window with the given object selected.
+         */
+        
+        /* FIXME: Do it right */
+        WCHAR* tmp = wcsstr(lpCmdLine,L"/root,");
+        if (tmp)
+        {
+            WCHAR* tmp2;
+            
+            tmp += 6; // skip to beginning of path
+            tmp2 = wcschr(tmp, L',');
+
+            if (tmp2)
+            {
+                wcsncpy(root, tmp, tmp2 - tmp);
+            }
+            else
+            {
+                wcscpy(root, tmp);
+            }
+        }
+        else
+        {
+            wcscpy(root, lpCmdLine);
+        }
+
+        if (root[0] == L'"')
+        {
+            int len = wcslen(root) - 2;
+            wcsncpy(root, root + 1, len);
+            root[len] = 0;
+        }
+
+        if (wcslen(root) > 0)
+        {
+            LPITEMIDLIST  pidl;
+            ULONG         chEaten;
+            ULONG         dwAttributes;
+
+            if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
+            {
+                hr = pDesktopFolder->lpVtbl->ParseDisplayName(pDesktopFolder,
+                    NULL,
+                    NULL,
+                    root,
+                    &chEaten,
+                    &pidl,
+                    &dwAttributes);
+                if (SUCCEEDED(hr))
+                {
+                    pidlRoot = pidl;
+                    DbgPrint("Got PIDL for folder '%S'\n", root);
+                }
+            }
+        }
+
+        if (!pidlRoot)
+        {
+            DbgPrint("No folder, getting PIDL for My Computer.\n", root);
+            hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlRoot);
+            if (FAILED(hr))
+                return 0;
+        }
+
+        DbgPrint("Trying to open browser window... \n");
+
+        typedef HRESULT(WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
+        SH_OPEN_NEW_FRAME SHOpenNewFrame;
+
+        hBrowseui = LoadLibraryW(L"browseui.dll");
+        if (!hBrowseui)
+        {
+            DbgPrint("Browseui not found.. \n");
+            return 0;
+        }
+
+        SHOpenNewFrame = (SH_OPEN_NEW_FRAME) GetProcAddress(hBrowseui, (LPCSTR) 103);
+
+        hr = SHOpenNewFrame(pidlRoot, (IUnknown*)pDesktopFolder, 0, 0);
+        if (FAILED(hr))
+            return 0;
+
+        /* FIXME: we should wait a bit here and see if a window was created. If not we should exit this process. */
+        Sleep(1000);
+        ExitThread(0);
+
+        return 0;
     }
 
     if (Tray != NULL)

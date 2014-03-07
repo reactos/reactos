@@ -33,7 +33,7 @@ int _tmain(int argc, _TCHAR* argv[])
     {
         SH_OPEN_NEW_FRAME SHOpenNewFrame = (SH_OPEN_NEW_FRAME)GetProcAddress(hBrowseui, (LPCSTR)103);
         LPITEMIDLIST pidlDrives;
-        HRESULT hRet = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlDrives);
+        SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlDrives);
         SHOpenNewFrame((LPITEMIDLIST)pidlDrives, NULL, 0, 0);
     }
 

@@ -19,10 +19,10 @@ list(APPEND SOURCE
     traywnd.c
     precomp.h)
 
-add_executable(explorer_new ${SOURCE} explorer.rc)
-target_link_libraries(explorer_new uuid)
-set_module_type(explorer_new win32gui UNICODE)
-add_importlibs(explorer_new
+add_executable(explorer ${SOURCE} explorer.rc)
+target_link_libraries(explorer uuid)
+set_module_type(explorer win32gui UNICODE)
+add_importlibs(explorer
     advapi32
     gdi32
     user32
@@ -37,5 +37,5 @@ add_importlibs(explorer_new
     msvcrt
     kernel32
     ntdll)
-add_pch(explorer_new precomp.h SOURCE)
-add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)
+add_pch(explorer precomp.h SOURCE)
+add_cd_file(TARGET explorer DESTINATION reactos FOR all)

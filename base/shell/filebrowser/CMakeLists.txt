@@ -11,4 +11,5 @@ add_importlibs(filebrowser
     shell32
     msvcrt
     kernel32)
-	
+
+add_cd_file(TARGET explorer DESTINATION reactos FOR all)add_cd_file(TARGET explorer DESTINATION reactos FOR all)
