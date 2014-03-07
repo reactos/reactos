@@ -176,7 +176,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
                NotifyChange->Buffer = Buffer;
            }
 
-           /* If we don't have valide buffer, ensure everything is 0-ed out */
+           /* If we have to notify immediately, ensure that any buffer is 0-ed out */
            if (NotifyChange->Flags & NOTIFY_IMMEDIATELY)
            {
                NotifyChange->Buffer = 0;
