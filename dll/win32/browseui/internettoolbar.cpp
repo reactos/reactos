@@ -67,6 +67,8 @@ extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
+typedef HRESULT(*PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
+
 class CInternetToolbar;
 
 class CDockSite :
@@ -372,8 +374,23 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         favoritesHMenu = GetSubMenu(parentHMenu, 3);
         if (favoritesHMenu == NULL)
             return E_FAIL;
+#if 1
+        HMODULE hrs = LoadLibrary(L"rshell.dll");
+
+        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
+        if (func)
+        {
+            hResult = func(IID_PPV_ARG(IShellMenu, &newMenu));
+        }
+        else
+        {
+            hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
+                IID_IShellMenu, reinterpret_cast<void **>(&newMenu));
+        }
+#else
         hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
             IID_IShellMenu, reinterpret_cast<void **>(&newMenu));
+#endif
         if (FAILED(hResult))
             return hResult;
         hResult = newMenu->Initialize(this, FCIDM_MENU_FAVORITES, -1, SMINIT_VERTICAL | SMINIT_CACHED);
@@ -536,8 +553,35 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
 
+#if 1
+    HMODULE hrs = LoadLibraryW(L"rshell.dll");
+
+    if (!hrs)
+    {
+        DbgPrint("Failed: %d\n", GetLastError());
+        return E_FAIL;
+    }
+
+    PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
+    if (func)
+    {
+        hResult = func(IID_PPV_ARG(IShellMenu, menuBar));
+    }
+    else
+    {
+        DbgPrint("Failed: %d\n", GetLastError());
+        hResult = E_FAIL;
+    }
+    
+    if (FAILED(hResult))
+    {
+        hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
+            IID_IShellMenu, reinterpret_cast<void **>(menuBar));
+    }
+#else
     hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
         IID_IShellMenu, reinterpret_cast<void **>(menuBar));
+#endif
     if (FAILED(hResult))
         return hResult;
     hResult = fMenuCallback.QueryInterface(IID_IShellMenuCallback, reinterpret_cast<void **>(&callback));
@@ -1137,12 +1181,16 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::OnWinEvent(
     CComPtr<IWinEventHandler>               menuWinEventHandler;
     HRESULT                                 hResult;
 
-    if (fMenuBar.p != NULL)
+    if (fMenuBar)
     {
         hResult = fMenuBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        return menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, theResult);
+        if (menuWinEventHandler->IsWindowOwner(hWnd))
+        {
+            return menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, theResult);
+        }
     }
-    return E_FAIL;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::IsWindowOwner(HWND hWnd)
@@ -1410,20 +1458,6 @@ LRESULT CInternetToolbar::OnQueryDelete(UINT idControl, NMHDR *pNMHDR, BOOL &bHa
     return 1;
 }
 
-LRESULT CInternetToolbar::OnNavigateCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    CComPtr<IWinEventHandler>               winEventHandler;
-    LRESULT                                 theResult;
-    HRESULT                                 hResult;
-
-    hResult = fNavigationBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
-    hResult = winEventHandler->OnWinEvent(m_hWnd, uMsg, wParam, lParam, &theResult);
-    if (SUCCEEDED(hResult))
-        return theResult;
-    bHandled = FALSE;
-    return 0;
-}
-
 LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HMENU                                   contextMenuBar;
@@ -1553,27 +1587,78 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
     return 0;
 }
 
+LRESULT CInternetToolbar::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LRESULT theResult;
+    HRESULT hResult;
+    HWND    target = (HWND) lParam;
+
+    if (fMenuBar)
+    {
+        CComPtr<IWinEventHandler> menuWinEventHandler;
+        hResult = fMenuBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
+        if (SUCCEEDED(hResult))
+        {
+            if (menuWinEventHandler->IsWindowOwner(target) == S_OK)
+            {
+                hResult = menuWinEventHandler->OnWinEvent(target, uMsg, wParam, lParam, &theResult);
+                return FAILED(hResult) ? 0 : theResult;
+            }
+        }
+    }
+
+    if (fNavigationBar)
+    {
+        CComPtr<IWinEventHandler> menuWinEventHandler;
+        hResult = fNavigationBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
+        if (SUCCEEDED(hResult))
+        {
+            if (menuWinEventHandler->IsWindowOwner(target) == S_OK)
+            {
+                hResult = menuWinEventHandler->OnWinEvent(target, uMsg, wParam, lParam, &theResult);
+                return FAILED(hResult) ? 0 : theResult;
+            }
+        }
+    }
+
+    return 0;
+}
 LRESULT CInternetToolbar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    NMHDR                                   *notifyHeader;
-    CComPtr<IWinEventHandler>               menuWinEventHandler;
-    LRESULT                                 theResult;
-    HRESULT                                 hResult;
+    NMHDR   *notifyHeader;
+    LRESULT theResult;
+    HRESULT hResult;
 
-    notifyHeader = (NMHDR *)lParam;
-    if (fMenuBar.p != NULL && notifyHeader->hwndFrom == fMenuBandWindow)
+    notifyHeader = (NMHDR *) lParam;
+
+    if (fMenuBar)
     {
+        CComPtr<IWinEventHandler> menuWinEventHandler;
         hResult = fMenuBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        hResult = menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, &theResult);
-        return theResult;
+        if (SUCCEEDED(hResult))
+        {
+            if (menuWinEventHandler->IsWindowOwner(notifyHeader->hwndFrom) == S_OK)
+            {
+                hResult = menuWinEventHandler->OnWinEvent(notifyHeader->hwndFrom, uMsg, wParam, lParam, &theResult);
+                return FAILED(hResult) ? 0 : theResult;
+            }
+        }
     }
-    if (fNavigationBar.p != NULL && notifyHeader->hwndFrom == fNavigationWindow)
+
+    if (fNavigationBar)
     {
-        hResult = fNavigationBar->QueryInterface(
-            IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        hResult = menuWinEventHandler->OnWinEvent(m_hWnd, uMsg, wParam, lParam, &theResult);
-        return theResult;
+        CComPtr<IWinEventHandler> menuWinEventHandler;
+        hResult = fNavigationBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
+        if (SUCCEEDED(hResult))
+        {
+            if (menuWinEventHandler->IsWindowOwner(notifyHeader->hwndFrom) == S_OK)
+            {
+                hResult = menuWinEventHandler->OnWinEvent(notifyHeader->hwndFrom, uMsg, wParam, lParam, &theResult);
+                return FAILED(hResult) ? 0 : theResult;
+            }
+        }
     }
+
     return 0;
 }
 

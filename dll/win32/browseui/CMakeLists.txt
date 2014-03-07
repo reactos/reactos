@@ -59,3 +59,9 @@ add_importlibs(browseui
 
 add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
+
+add_custom_command(TARGET browseui POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:browseui>"
+     "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:browseui>" 
+  COMMENT "Copying to output directory")

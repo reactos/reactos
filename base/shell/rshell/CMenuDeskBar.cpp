@@ -417,7 +417,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
     {
         if (m_SubMenuChild)
         {
-            if (SHIsSameObject(pmp, m_SubMenuChild))
+            if (pmp == m_SubMenuChild)
             {
                 m_SubMenuChild = NULL;
             }

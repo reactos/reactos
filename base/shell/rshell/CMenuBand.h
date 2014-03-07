@@ -171,7 +171,7 @@ public:
 
     HRESULT _CallCBWithItemId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT _TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y);
+    HRESULT _TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude);
     HRESULT _GetTopLevelWindow(HWND*topLevel);
     HRESULT _OnHotItemChanged(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);

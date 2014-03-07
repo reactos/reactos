@@ -49,3 +49,9 @@ add_custom_command(TARGET rshell POST_BUILD
      "$<TARGET_FILE:rshell>"
      "$<TARGET_FILE_DIR:explorer_new>/$<TARGET_FILE_NAME:rshell>" 
   COMMENT "Copying to output directory")
+
+add_custom_command(TARGET rshell POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:rshell>"
+     "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:rshell>" 
+  COMMENT "Copying to output directory")

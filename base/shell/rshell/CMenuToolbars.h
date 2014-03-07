@@ -42,6 +42,8 @@ protected:
     CMenuToolbarBase * m_popupBar;
     INT                m_popupItem;
 
+    DWORD m_toolbarFlags;
+
 private:
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -61,7 +63,7 @@ public:
     HRESULT OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item);
 
     HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu);
-    HRESULT PopupSubMenu(UINT index, HMENU menu);
+    HRESULT PopupSubMenu(UINT itemId, UINT index, HMENU menu);
     HRESULT DoContextMenu(IContextMenu* contextMenu);
 
     HRESULT ChangeHotItem(DWORD changeType);

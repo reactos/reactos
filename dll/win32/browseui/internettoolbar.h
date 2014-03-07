@@ -196,6 +196,7 @@ public:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetCursor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CInternetToolbar)
@@ -208,7 +209,7 @@ public:
         NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
         NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)
         NOTIFY_HANDLER(0, TBN_QUERYDELETE, OnQueryDelete)
-        MESSAGE_HANDLER(WM_COMMAND, OnNavigateCommand)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)

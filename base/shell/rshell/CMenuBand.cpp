@@ -52,7 +52,10 @@ CMenuBand::CMenuBand() :
     m_site(NULL),
     m_psmc(NULL),
     m_subMenuChild(NULL),
+    m_hmenu(NULL),
+    m_menuOwner(NULL),
     m_useBigIcons(FALSE),
+    m_topLevelWindow(NULL),
     m_hotBar(NULL),
     m_hotItem(-1)
 {
@@ -123,7 +126,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
         m_staticToolbar = new CMenuStaticToolbar(this);
     }
     m_hmenu = hmenu;
-    m_menuOwner;
+    m_menuOwner = hwnd;
 
     HRESULT hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -203,7 +206,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
     }
 
     hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_subMenuParent));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr) && hr != E_NOINTERFACE)
         return hr;
 
     CComPtr<IOleWindow> pTopLevelWindow;
@@ -326,10 +329,13 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             return hr;
     }
 
-    if (fShow)
-        hr = m_focusManager->PushMenu(this);
-    else
-        hr = m_focusManager->PopMenu(this);
+    if (m_dwFlags & SMINIT_VERTICAL)
+    {
+        if (fShow)
+            hr = m_focusManager->PushMenu(this);
+        else
+            hr = m_focusManager->PopMenu(this);
+    }
 
     return S_OK;
 }
@@ -401,6 +407,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
         {
             return S_FALSE;
         }
+
+        return S_FALSE;
     }
 
     UNIMPLEMENTED;
@@ -610,9 +618,24 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     return hr;
 }
 
-HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y)
+HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 {
-    ::TrackPopupMenu(popup, 0, x, y, 0, m_menuOwner, NULL);
+    HWND sendTo = m_menuOwner;
+
+    // FIXME: use?
+    //TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
+
+    if (sendTo)
+    {
+        ::TrackPopupMenuEx(popup, 0, x, y, sendTo, NULL); // &params);
+    }
+    else
+    {
+        GetWindow(&sendTo);
+        ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, sendTo, NULL); // &params);
+        // TODO: use the result somehow
+    }
+
     return S_OK;
 }
 

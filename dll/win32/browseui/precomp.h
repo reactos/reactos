@@ -38,6 +38,43 @@
 #include "commonbrowser.h"
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
+#include <stdio.h>
+
+static __inline ULONG
+Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
+{
+    char szMsg[512];
+    char *szMsgStart;
+    const char *fname;
+    va_list vl;
+    ULONG uRet;
+
+    fname = strrchr(filename, '\\');
+    if (fname == NULL)
+    {
+        fname = strrchr(filename, '/');
+        if (fname != NULL)
+            fname++;
+    }
+    else
+        fname++;
+
+    if (fname == NULL)
+        fname = filename;
+
+    szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
+
+    va_start(vl, lpFormat);
+    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
+    va_end(vl);
+
+    OutputDebugStringA(szMsg);
+
+    return uRet;
+}
+
+#define DbgPrint(fmt, ...) \
+    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
