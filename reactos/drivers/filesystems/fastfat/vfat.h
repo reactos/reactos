@@ -291,6 +291,10 @@ typedef struct DEVICE_EXTENSION
     ULONG BaseDateYear;
 
     LIST_ENTRY VolumeListEntry;
+
+    /* Notifications */
+    LIST_ENTRY NotifyList;
+    PNOTIFY_SYNC NotifySync;
 } DEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct

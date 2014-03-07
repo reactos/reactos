@@ -600,6 +600,8 @@ VfatMount(
     VolumeFcb->Flags |= VCB_IS_DIRTY;
 
     FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
+    FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
+    InitializeListHead(&DeviceExt->NotifyList);
 
     Status = STATUS_SUCCESS;
 
