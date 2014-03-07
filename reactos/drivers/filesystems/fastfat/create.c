@@ -762,7 +762,8 @@ VfatCreateFile(
                                     pFcb->PathNameU.Length - pFcb->LongNameU.Length,
                                     NULL,
                                     NULL,
-                                    FILE_NOTIFY_CHANGE_FILE_NAME,
+                                    ((*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                    FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                     FILE_ACTION_ADDED,
                                     NULL);
     }
