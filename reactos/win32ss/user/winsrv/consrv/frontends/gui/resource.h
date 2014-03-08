@@ -7,14 +7,16 @@
 
 #pragma once
 
-#define ID_SYSTEM_EDIT_MARK      1001
-#define ID_SYSTEM_EDIT_COPY      1002
-#define ID_SYSTEM_EDIT_PASTE     1003
-#define ID_SYSTEM_EDIT_SELECTALL 1004
-#define ID_SYSTEM_EDIT_SCROLL    1005
-#define ID_SYSTEM_EDIT_FIND      1006
-#define ID_SYSTEM_DEFAULTS       1007
-#define ID_SYSTEM_PROPERTIES     1008
+// Console System Menu Item IDs.
+// Use IDs in the range 0xFFFx for not clashing with user-defined menu IDs.
+#define ID_SYSTEM_EDIT_MARK      0xFFF0
+#define ID_SYSTEM_EDIT_COPY      0xFFF1
+#define ID_SYSTEM_EDIT_PASTE     0xFFF2
+#define ID_SYSTEM_EDIT_SELECTALL 0xFFF3
+#define ID_SYSTEM_EDIT_SCROLL    0xFFF4
+#define ID_SYSTEM_EDIT_FIND      0xFFF5
+#define ID_SYSTEM_DEFAULTS       0xFFF6
+#define ID_SYSTEM_PROPERTIES     0xFFF7
 
 #define NCPOPUP_MENU 103
 
