@@ -2301,7 +2301,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     BOOLEAN InJob, SaferNeeded, UseLargePages, HavePrivilege;
     BOOLEAN QuerySection, SkipSaferAndAppCompat;
     CONTEXT Context;
-    BASE_API_MESSAGE CsrMsg;
+    BASE_API_MESSAGE CsrMsg[2];
     PBASE_CREATE_PROCESS CreateProcessMsg;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     PVOID BaseAddress, PrivilegeState, RealTimePrivilegeState;
@@ -2431,8 +2431,8 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     IsWowApp = FALSE;
 
     /* Set message structures */
-    CreateProcessMsg = &CsrMsg.Data.CreateProcessRequest;
-    CheckVdmMsg = &CsrMsg.Data.CheckVDMRequest;
+    CreateProcessMsg = &CsrMsg[0].Data.CreateProcessRequest;
+    CheckVdmMsg = &CsrMsg[1].Data.CheckVDMRequest;
 
     /* Clear the more complex structures by zeroing out their entire memory */
     RtlZeroMemory(&Context, sizeof(Context));
@@ -3205,7 +3205,7 @@ StartScan:
                                           lpCommandLine,
                                           lpCurrentDirectory,
                                           &VdmAnsiEnv,
-                                          &CsrMsg,
+                                          &CsrMsg[1],
                                           &VdmTask,
                                           dwCreationFlags,
                                           &StartupInfo,
@@ -3342,7 +3342,7 @@ StartScan:
                                       lpCommandLine,
                                       lpCurrentDirectory,
                                       &VdmAnsiEnv,
-                                      &CsrMsg,
+                                      &CsrMsg[1],
                                       &VdmTask,
                                       dwCreationFlags,
                                       &StartupInfo,
@@ -4337,7 +4337,7 @@ StartScan:
     }
 
     /* We are finally ready to call CSRSS to tell it about our new process! */
-    CsrClientCallServer((PCSR_API_MESSAGE)&CsrMsg,
+    CsrClientCallServer((PCSR_API_MESSAGE)&CsrMsg[0],
                         CaptureBuffer,
                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX,
                                               BasepCreateProcess),
@@ -4351,12 +4351,12 @@ StartScan:
     }
 
     /* Check if CSRSS failed to accept ownership of the new Windows process */
-    if (!NT_SUCCESS(CsrMsg.Status))
+    if (!NT_SUCCESS(CsrMsg[0].Status))
     {
         /* Terminate the process and enter failure path with the CSRSS status */
         DPRINT1("Failed to tell csrss about new process\n");
-        BaseSetLastNTError(CsrMsg.Status);
-        NtTerminateProcess(ProcessHandle, CsrMsg.Status);
+        BaseSetLastNTError(CsrMsg[0].Status);
+        NtTerminateProcess(ProcessHandle, CsrMsg[0].Status);
         Result = FALSE;
         goto Quickie;
     }
