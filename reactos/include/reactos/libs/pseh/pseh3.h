@@ -17,6 +17,20 @@
 #define _SEH3$_FRAME_ALL_NONVOLATILES 1
 #endif
 
+enum
+{
+    _SEH3$_NESTED_HANDLER = 0,
+    _SEH3$_CPP_HANDLER = 1,
+    _SEH3$_CLANG_HANDLER = 2,
+#ifdef __clang__
+    _SEH3$_HANDLER_TYPE = _SEH3$_CLANG_HANDLER,
+#elif defined(__cplusplus)
+    _SEH3$_HANDLER_TYPE = _SEH3$_CPP_HANDLER,
+#else
+    _SEH3$_HANDLER_TYPE = _SEH3$_NESTED_HANDLER,
+#endif
+};
+
 typedef struct _SEH3$_SCOPE_TABLE
 {
     void *Target;
@@ -270,6 +284,8 @@ _SEH3$_Unregister(
         __label__ _SEH3$_l_EndTry; \
         __label__ _SEH3$_l_HandlerTarget; \
         __label__ _SEH3$_l_OnException; \
+        __label__ _SEH3$_l_FilterOrFinally; \
+        (void)&&_SEH3$_l_FilterOrFinally; \
 \
         /* Count the try level. Outside of any __try, _SEH3$_TryLevel is 0 */ \
         enum { \
@@ -303,14 +319,11 @@ _SEH3$_Unregister(
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
 \
         /* Create a static data table that contains the jump target and filter function */ \
-        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { &&_SEH3$_l_HandlerTarget, _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)) }; \
+        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { &&_SEH3$_l_HandlerTarget, _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
 \
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
-\
-        /* Emit the filter function */ \
-        _SEH3$_DEFINE_FILTER_FUNC(_SEH3$_FilterFunction, (__VA_ARGS__)) \
 \
         /* Define an empty inline finally function */ \
         _SEH3$_DEFINE_DUMMY_FINALLY(_SEH3$_FinallyFunction) \
@@ -319,6 +332,10 @@ _SEH3$_Unregister(
         _SEH3$_DECLARE_EXCEPT_INTRINSICS(); \
 \
         goto _SEH3$_l_DoTry; \
+\
+    _SEH3$_l_FilterOrFinally: (void)0; \
+        /* Emit the filter function */ \
+        _SEH3$_DEFINE_FILTER_FUNC(_SEH3$_FilterFunction, (__VA_ARGS__)) \
 \
     _SEH3$_l_HandlerTarget: (void)0; \
         _SEH3$_EnforceFramePointer(); \
@@ -357,6 +374,7 @@ _SEH3$_Unregister(
     _SEH3$_l_HandlerTarget: (void)0; \
         _SEH3$_EnforceFramePointer(); \
 \
+    _SEH3$_l_FilterOrFinally: (void)0; \
         _SEH3$_FINALLY_FUNC_OPEN(_SEH3$_FinallyFunction) \
             /* This construct makes sure that the finally function returns */ \
             /* a proper value at the end */ \
