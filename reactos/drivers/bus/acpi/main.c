@@ -457,7 +457,7 @@ GetProcessorInformation(VOID)
     PWCHAR Ptr;
     NTSTATUS Status;
 
-    DPRINT1("GetProcessorInformation()\n");
+    DPRINT("GetProcessorInformation()\n");
 
     /* Open the key for CPU 0 */
     Status = AcpiRegOpenKey(NULL,
