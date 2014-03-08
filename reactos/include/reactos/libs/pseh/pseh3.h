@@ -94,6 +94,9 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 /* CLANG specific definitions! */
 #ifdef __clang__
 
+/* CLANG thinks it is smart and optimizes the alloca away if it is 0 and with it the use of a frame register */
+#define _SEH3$_EnforceFramePointer() asm volatile ("#\n" : : "m"(*(char*)__builtin_alloca(4)) : "%esp", "memory")
+
 /* CLANG doesn't have asm goto! */
 #define _SEH3$_ASM_GOTO(_Label, ...)
 
@@ -137,34 +140,30 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 
 #else /* !__clang__ */
 
+/* This will make GCC use ebp, even if it was disabled by -fomit-frame-pointer */
+#define _SEH3$_EnforceFramePointer() asm volatile ("#\n" : : "m"(*(char*)__builtin_alloca(0)) : "%esp", "memory")
+
 #define _SEH3$_ASM_GOTO(_Label, ...) asm goto ("#\n" : : : "memory", ## __VA_ARGS__ : _Label)
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
-    asm goto ("leal %1, %%edx\n" \
+    asm goto ("leal %0, %%eax\n" \
+              "leal %1, %%edx\n" \
               "call __SEH3$_RegisterFrame\n" \
               : \
-              : "a" (_TrylevelFrame), "m" (*(_DataTable)) \
+              : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)) \
               : "ecx", "edx", "memory" \
               : _SEH3$_l_HandlerTarget)
 
 /* This is an asm wrapper around _SEH3$_RegisterTryLevel */
 #define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
-    asm goto ("leal %1, %%edx\n" \
+    asm goto ("leal %0, %%eax\n" \
+              "leal %1, %%edx\n" \
               "call __SEH3$_RegisterTryLevel\n" \
               : \
-              : "a" (_TrylevelFrame), "m" (*(_DataTable)) \
+              : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)) \
               : "ecx", "edx", "memory" \
               : _SEH3$_l_HandlerTarget)
-
-/* Define the registers that get clobbered, when reaching the __except block.
-   We specify ebp on optimized builds without frame pointer, since it will be
-   used by GCC as a general purpose register then. */
-#if defined(__OPTIMIZE__) && defined(_ALLOW_OMIT_FRAME_POINTER)
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebp", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#else
-#define _SEH3$_CLOBBER_ON_EXCEPTION "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
-#endif
 
 /* This construct scares GCC so much, that it will stop moving code
    around into places that are never executed. */
@@ -174,7 +173,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
         _SEH3$_ASM_GOTO(_SEH3$_l_HandlerTarget); \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
         asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
-                      : _SEH3$_CLOBBER_ON_EXCEPTION ); \
+                      : "ebx", "ecx", "edx", "esi", "edi", "flags", "memory" ); \
         goto _SEH3$_l_OnException;
 
 #endif /* __clang__ */
@@ -317,11 +316,12 @@ _SEH3$_Unregister(
         _SEH3$_DEFINE_DUMMY_FINALLY(_SEH3$_FinallyFunction) \
 \
         /* Allow intrinsics for __except to be used */ \
-        _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
+        _SEH3$_DECLARE_EXCEPT_INTRINSICS(); \
 \
         goto _SEH3$_l_DoTry; \
 \
     _SEH3$_l_HandlerTarget: (void)0; \
+        _SEH3$_EnforceFramePointer(); \
 \
         if (1) \
         { \
@@ -355,6 +355,7 @@ _SEH3$_Unregister(
         goto _SEH3$_l_DoTry; \
 \
     _SEH3$_l_HandlerTarget: (void)0; \
+        _SEH3$_EnforceFramePointer(); \
 \
         _SEH3$_FINALLY_FUNC_OPEN(_SEH3$_FinallyFunction) \
             /* This construct makes sure that the finally function returns */ \
