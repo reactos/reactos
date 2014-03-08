@@ -503,12 +503,13 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
                 OutputBuffer->FileName[ParentName->Length / sizeof(WCHAR)] = L'\\';
                 AlreadyWritten = ParentName->Length + sizeof(WCHAR);
             }
-            RtlCopyMemory(OutputBuffer->FileName + AlreadyWritten, TargetName->Buffer, TargetName->Length);
+            RtlCopyMemory((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten),
+                          TargetName->Buffer, TargetName->Length);
             if (StreamName)
             {
                 AlreadyWritten += TargetName->Length;
                 OutputBuffer->FileName[AlreadyWritten / sizeof(WCHAR)] = L':';
-                RtlCopyMemory(OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR),
+                RtlCopyMemory((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR)),
                               StreamName->Buffer, StreamName->Length);
             }
         }
@@ -527,7 +528,7 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
                 OutputBuffer->FileName[ResultSize / sizeof(WCHAR)] = L'\\';
                 AlreadyWritten = ResultSize + sizeof(WCHAR);
 
-                RtlOemToUnicodeN(OutputBuffer->FileName + AlreadyWritten,
+                RtlOemToUnicodeN((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten),
                                  OutputBuffer->FileNameLength, &ResultSize,
                                  TargetName->Buffer, TargetName->Length);
 
@@ -535,7 +536,7 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
                 {
                     AlreadyWritten += ResultSize;
                     OutputBuffer->FileName[AlreadyWritten / sizeof(WCHAR)] = L':';
-                    RtlOemToUnicodeN(OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR),
+                    RtlOemToUnicodeN((PVOID)((ULONG_PTR)OutputBuffer->FileName + AlreadyWritten + sizeof(WCHAR)),
                                      OutputBuffer->FileNameLength, &ResultSize,
                                      StreamName->Buffer, StreamName->Length);
                 }
@@ -991,7 +992,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
     BOOLEAN IsStream, IsParent, PoolQuotaCharged;
     STRING TargetDirectory, TargetName, ParentName, IntNormalizedParentName;
     ULONG NumberOfBytes, TargetNumberOfParts, FullNumberOfParts, LastPartOffset, ParentNameOffset, ParentNameLength;
-    ULONG DataLength, TargetNameLength, AlignedDataLength;
+    ULONG DataLength, AlignedDataLength;
 
     TargetDirectory.Length = 0;
     TargetDirectory.MaximumLength = 0;
@@ -1251,16 +1252,11 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                         }
 
                         /* Look for target name & construct it, if required */
-                        if (TargetName.Buffer)
-                        {
-                            TargetNameLength = TargetName.Length;
-                        }
-                        else
+                        if (TargetName.Buffer == NULL)
                         {
                             TargetName.Buffer = &FullTargetName->Buffer[TargetNameOffset];
-                            TargetNameLength = FullTargetName->Length - TargetNameOffset;
-                            TargetName.Length = TargetNameLength;
-                            TargetName.MaximumLength = TargetNameLength;
+                            TargetName.Length =
+                            TargetName.MaximumLength = FullTargetName->Length - TargetNameOffset;
                         }
 
                         /* Then, we will append it as well */
@@ -1296,8 +1292,8 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                     }
                     else
                     {
-                        OutputBuffer = 0;
-                        FileNotifyInfo = 0;
+                        OutputBuffer = NULL;
+                        FileNotifyInfo = NULL;
                         /* If we already had a buffer, update last entry position */
                         if (NotifyChange->Buffer != NULL)
                         {
