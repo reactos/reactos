@@ -8,10 +8,10 @@ list(APPEND SOURCE
     mainwnd.c
     misc.c
     opensave.c
-    vgafontedit.rc)
+    precomp.h)
 
+add_executable(vgafontedit ${SOURCE} vgafontedit.rc)
 add_pch(vgafontedit precomp.h SOURCE)
-add_executable(vgafontedit ${SOURCE})
 set_module_type(vgafontedit win32gui UNICODE)
 add_importlibs(vgafontedit user32 gdi32 comdlg32 msvcrt kernel32)
 add_cd_file(TARGET vgafontedit DESTINATION reactos/system32 FOR all)

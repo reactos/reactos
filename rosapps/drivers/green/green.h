@@ -1,3 +1,6 @@
+#ifndef __GREEN_H__
+#define __GREEN_H__
+
 #include <ntddk.h>
 #include <ntifs.h>
 #include <ntndk.h>
@@ -191,3 +194,5 @@ GreenDuplicateUnicodeString(
     IN ULONG Flags,
     IN PCUNICODE_STRING SourceString,
     OUT PUNICODE_STRING DestinationString);
+
+#endif
