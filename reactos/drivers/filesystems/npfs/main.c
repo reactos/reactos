@@ -330,7 +330,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    DPRINT1("Next-Generation NPFS-Advanced\n");
+    DPRINT("Next-Generation NPFS-Advanced\n");
 
     Status = NpInitializeAliases();
     if (!NT_SUCCESS(Status))

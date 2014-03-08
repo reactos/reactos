@@ -1336,7 +1336,7 @@ ExpAddTagForBigPages(IN PVOID Va,
             InterlockedIncrementUL(&ExpPoolBigEntriesInUse);
             if ((i >= 16) && (ExpPoolBigEntriesInUse > (TableSize / 4)))
             {
-                DPRINT1("Should attempt expansion since we now have %lu entries\n",
+                DPRINT("Should attempt expansion since we now have %lu entries\n",
                         ExpPoolBigEntriesInUse);
             }
 
