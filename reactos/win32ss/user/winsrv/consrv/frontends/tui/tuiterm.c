@@ -726,7 +726,7 @@ TuiChangeTitle(IN OUT PFRONTEND This)
 
 static BOOL NTAPI
 TuiChangeIcon(IN OUT PFRONTEND This,
-              HICON hWindowIcon)
+              HICON IconHandle)
 {
     return TRUE;
 }
@@ -778,15 +778,15 @@ TuiShowMouseCursor(IN OUT PFRONTEND This,
 
 static BOOL NTAPI
 TuiSetMouseCursor(IN OUT PFRONTEND This,
-                  HCURSOR hCursor)
+                  HCURSOR CursorHandle)
 {
     return TRUE;
 }
 
 static HMENU NTAPI
 TuiMenuControl(IN OUT PFRONTEND This,
-               UINT cmdIdLow,
-               UINT cmdIdHigh)
+               UINT CmdIdLow,
+               UINT CmdIdHigh)
 {
     return NULL;
 }

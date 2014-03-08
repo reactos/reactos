@@ -99,7 +99,7 @@ DummyChangeTitle(IN OUT PFRONTEND This)
 
 static BOOL NTAPI
 DummyChangeIcon(IN OUT PFRONTEND This,
-                HICON hWindowIcon)
+                HICON IconHandle)
 {
     return TRUE;
 }
@@ -146,15 +146,15 @@ DummyShowMouseCursor(IN OUT PFRONTEND This,
 
 static BOOL NTAPI
 DummySetMouseCursor(IN OUT PFRONTEND This,
-                    HCURSOR hCursor)
+                    HCURSOR CursorHandle)
 {
     return TRUE;
 }
 
 static HMENU NTAPI
 DummyMenuControl(IN OUT PFRONTEND This,
-                 UINT cmdIdLow,
-                 UINT cmdIdHigh)
+                 UINT CmdIdLow,
+                 UINT CmdIdHigh)
 {
     return NULL;
 }

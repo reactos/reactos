@@ -1007,12 +1007,12 @@ ConDrvSetConsoleTitle(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvGetConsoleCP(IN PCONSOLE Console,
                    OUT PUINT CodePage,
-                   IN BOOLEAN InputCP)
+                   IN BOOLEAN OutputCP)
 {
     if (Console == NULL || CodePage == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    *CodePage = (InputCP ? Console->CodePage : Console->OutputCodePage);
+    *CodePage = (OutputCP ? Console->OutputCodePage : Console->CodePage);
 
     return STATUS_SUCCESS;
 }
@@ -1020,15 +1020,15 @@ ConDrvGetConsoleCP(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
-                   IN BOOLEAN InputCP)
+                   IN BOOLEAN OutputCP)
 {
     if (Console == NULL || !IsValidCodePage(CodePage))
         return STATUS_INVALID_PARAMETER;
 
-    if (InputCP)
-        Console->CodePage = CodePage;
-    else
+    if (OutputCP)
         Console->OutputCodePage = CodePage;
+    else
+        Console->CodePage = CodePage;
 
     return STATUS_SUCCESS;
 }

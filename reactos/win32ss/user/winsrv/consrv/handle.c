@@ -836,7 +836,7 @@ CSR_API(SrvCloseHandle)
         return Status;
     }
 
-    Status = ConSrvRemoveObject(ProcessData, CloseHandleRequest->ConsoleHandle);
+    Status = ConSrvRemoveObject(ProcessData, CloseHandleRequest->Handle);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -849,8 +849,10 @@ CSR_API(SrvVerifyConsoleIoHandle)
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCONSOLE Console;
 
-    HANDLE ConsoleHandle = VerifyHandleRequest->ConsoleHandle;
-    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+    HANDLE IoHandle = VerifyHandleRequest->Handle;
+    ULONG Index = HandleToULong(IoHandle) >> 2;
+
+    VerifyHandleRequest->IsValid = FALSE;
 
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
@@ -864,18 +866,21 @@ CSR_API(SrvVerifyConsoleIoHandle)
     // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
     //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
 
-    if (!IsConsoleHandle(ConsoleHandle)    ||
+    if (!IsConsoleHandle(IoHandle)            ||
         Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
     {
         DPRINT("SrvVerifyConsoleIoHandle failed\n");
-        Status = STATUS_INVALID_HANDLE;
+    }
+    else
+    {
+        VerifyHandleRequest->IsValid = TRUE;
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

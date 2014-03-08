@@ -427,10 +427,10 @@ GetCurrentConsoleFont(
 #if (_WIN32_WINNT >= 0x0500)
 
 HWND WINAPI GetConsoleWindow(VOID);
-BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
+BOOL WINAPI GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
 
 BOOL
-APIENTRY
+WINAPI
 SetConsoleDisplayMode(
   _In_ HANDLE hConsoleOutput,
   _In_ DWORD dwFlags,
@@ -607,8 +607,16 @@ BOOL WINAPI SetConsoleMenuClose(_In_ BOOL);
 BOOL WINAPI SetConsoleCursor(_In_ HANDLE, _In_ HCURSOR);
 /* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ShowConsoleCursor.php */
 INT WINAPI ShowConsoleCursor(_In_ HANDLE, _In_ BOOL);
+/* Undocumented */
+BOOL WINAPI SetConsoleIcon(_In_ HICON);
 /* Undocumented, see http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844 */
 BOOL WINAPI SetConsolePalette(_In_ HANDLE, _In_ HPALETTE, _In_ UINT);
+/* Undocumented */
+BOOL WINAPI CloseConsoleHandle(_In_ HANDLE);
+// HANDLE WINAPI GetStdHandle(_In_ DWORD);
+// BOOL WINAPI SetStdHandle(_In_ DWORD, _In_ HANDLE);
+/* Undocumented */
+BOOL WINAPI VerifyConsoleIoHandle(_In_ HANDLE);
 
 BOOL
 WINAPI

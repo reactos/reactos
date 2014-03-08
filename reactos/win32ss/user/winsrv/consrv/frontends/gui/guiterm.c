@@ -231,6 +231,7 @@ GuiSendMenuEvent(PCONSOLE Console, UINT CmdId)
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
 
+    DPRINT1("Menu item ID: %d\n", CmdId);
     ConioProcessInputEvent(Console, &er);
 }
 
@@ -265,7 +266,7 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
      * send to him a menu event and return directly. The user must handle those
      * reserved menu commands...
      */
-    if (GuiData->cmdIdLow <= (UINT)wParam && (UINT)wParam <= GuiData->cmdIdHigh)
+    if (GuiData->CmdIdLow <= (UINT)wParam && (UINT)wParam <= GuiData->CmdIdHigh)
     {
         GuiSendMenuEvent(Console, (UINT)wParam);
         goto Unlock_Quit;
@@ -2462,7 +2463,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->IsCloseButtonEnabled = TRUE;
 
     /* There is no user-reserved menu id range by default */
-    GuiData->cmdIdLow = GuiData->cmdIdHigh = 0;
+    GuiData->CmdIdLow = GuiData->CmdIdHigh = 0;
 
     /*
      * We need to wait until the GUI has been fully initialized
@@ -2747,7 +2748,7 @@ GuiProcessKeyCallback(IN OUT PFRONTEND This,
 
 static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
-                  HCURSOR hCursor);
+                  HCURSOR CursorHandle);
 
 static VOID NTAPI
 GuiRefreshInternalInfo(IN OUT PFRONTEND This)
@@ -2781,20 +2782,20 @@ GuiChangeTitle(IN OUT PFRONTEND This)
 
 static BOOL NTAPI
 GuiChangeIcon(IN OUT PFRONTEND This,
-              HICON hWindowIcon)
+              HICON IconHandle)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
     HICON hIcon, hIconSm;
 
-    if (hWindowIcon == NULL)
+    if (IconHandle == NULL)
     {
         hIcon   = ghDefaultIcon;
         hIconSm = ghDefaultIconSm;
     }
     else
     {
-        hIcon   = CopyIcon(hWindowIcon);
-        hIconSm = CopyIcon(hWindowIcon);
+        hIcon   = CopyIcon(IconHandle);
+        hIconSm = CopyIcon(IconHandle);
     }
 
     if (hIcon == NULL)
@@ -2953,7 +2954,7 @@ GuiShowMouseCursor(IN OUT PFRONTEND This,
 
 static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
-                  HCURSOR hCursor)
+                  HCURSOR CursorHandle)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
@@ -2961,7 +2962,7 @@ GuiSetMouseCursor(IN OUT PFRONTEND This,
      * Set the cursor's handle. If the given handle is NULL,
      * then restore the default cursor.
      */
-    GuiData->hCursor = (hCursor ? hCursor : ghDefaultCursor);
+    GuiData->hCursor = (CursorHandle ? CursorHandle : ghDefaultCursor);
 
     /* Effectively modify the shape of the cursor (use special values for (w|l)Param) */
     PostMessageW(GuiData->hWindow, WM_SETCURSOR, -1, -1);
@@ -2971,13 +2972,13 @@ GuiSetMouseCursor(IN OUT PFRONTEND This,
 
 static HMENU NTAPI
 GuiMenuControl(IN OUT PFRONTEND This,
-               UINT cmdIdLow,
-               UINT cmdIdHigh)
+               UINT CmdIdLow,
+               UINT CmdIdHigh)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    GuiData->cmdIdLow  = cmdIdLow ;
-    GuiData->cmdIdHigh = cmdIdHigh;
+    GuiData->CmdIdLow  = CmdIdLow ;
+    GuiData->CmdIdHigh = CmdIdHigh;
 
     return GetSystemMenu(GuiData->hWindow, FALSE);
 }
