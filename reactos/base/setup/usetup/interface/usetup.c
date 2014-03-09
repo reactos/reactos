@@ -1472,6 +1472,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
+        else if (IsListEmpty (&PartitionList->DiskListHead))
+        {
+            MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
     }
 
     DrawPartitionList(PartitionList);
