@@ -943,19 +943,26 @@ DoLogon(
         goto done;
 
     Status = DoLoginTasks(pgContext, UserName, Domain, Password, &SubStatus);
-    if (!NT_SUCCESS(Status))
+    if (Status == STATUS_LOGON_FAILURE)
     {
-TRACE("DoLoginTasks failed! Status 0x%08lx  SubStatus 0x%08lx\n", Status, SubStatus);
+        ResourceMessageBox(pgContext,
+                           hwndDlg,
+                           MB_OK | MB_ICONEXCLAMATION,
+                           IDS_LOGONTITLE,
+                           IDS_LOGONWRONGUSERORPWD);
+        goto done;
+    }
+    else if (Status == STATUS_ACCOUNT_RESTRICTION)
+    {
+        TRACE("DoLoginTasks failed! Status 0x%08lx  SubStatus 0x%08lx\n", Status, SubStatus);
 
         if (SubStatus == STATUS_ACCOUNT_DISABLED)
         {
-TRACE("Account disabled!\n");
-            pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
-                                                hwndDlg,
-                                                L"Account disabled!",
-                                                L"Logon error",
-                                                MB_OK | MB_ICONERROR);
-
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONEXCLAMATION,
+                               IDS_LOGONTITLE,
+                               IDS_LOGONUSERDISABLED);
             goto done;
         }
         else if (SubStatus == STATUS_ACCOUNT_LOCKED_OUT)
@@ -979,6 +986,13 @@ TRACE("Other error!\n");
             goto done;
         }
     }
+    else if (!NT_SUCCESS(Status))
+    {
+TRACE("DoLoginTasks failed! Status 0x%08lx\n", Status);
+
+        goto done;
+    }
+
 
     if (!CreateProfile(pgContext, UserName, Domain, Password))
     {

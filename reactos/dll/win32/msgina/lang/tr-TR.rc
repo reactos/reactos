@@ -147,6 +147,9 @@ BEGIN
     IDS_CHANGEPWDTITLE "Şifre Değştirme"
     IDS_NONMATCHINGPASSWORDS "Yazıdığınız bu şifreler birbiriyle uyuşmuyor. Her iki metin kutusuna da aynı şifreyi yazınız."
     IDS_PASSWORDCHANGED "Şifreniz değiştirildi."
+    IDS_LOGONTITLE "Logon Message"
+    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
+    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */
