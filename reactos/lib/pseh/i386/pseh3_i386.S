@@ -15,11 +15,12 @@
 
 /*
  *  void
- *  __attribute__((regparm(2)))
+ *  __attribute__((regparm(3)))
  *  __attribute__((returns_twice))
  *  _SEH3$_RegisterFrame[WithNonVolatiles](
  *       PSEH3$_REGISTRATION_FRAME RegistrationFrame<eax>,
- *       PSEH3$_SCOPE_TABLE ScopeTable<edx>);
+ *       PSEH3$_SCOPE_TABLE ScopeTable<edx>,
+ *       PVOID AllocaFrame);
  */
 .global __SEH3$_RegisterFrameWithNonVolatiles
 __SEH3$_RegisterFrameWithNonVolatiles:
@@ -28,6 +29,12 @@ __SEH3$_RegisterFrameWithNonVolatiles:
     mov [eax + SEH3_REGISTRATION_FRAME_Ebx], ebx
     mov [eax + SEH3_REGISTRATION_FRAME_Esi], esi
     mov [eax + SEH3_REGISTRATION_FRAME_Edi], edi
+
+.global __SEH3$_RegisterFrameWithStackLayout
+__SEH3$_RegisterFrameWithStackLayout:
+
+    /* Save the pointer to the alloca frame */
+    mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], ecx
 
 .global __SEH3$_RegisterFrame
 __SEH3$_RegisterFrame:
@@ -57,11 +64,12 @@ __SEH3$_RegisterFrame:
 
 /*
  *  void
- *  __attribute__((regparm(2)))
+ *  __attribute__((regparm(3)))
  *  __attribute__((returns_twice))
  *  _SEH3$_RegisterTryLevel[WithNonVolatiles](
  *       PSEH3$_REGISTRATION_FRAME RegistrationFrame<edx>,
- *       PSEH3$_SCOPE_TABLE ScopeTable<eax>);
+ *       PSEH3$_SCOPE_TABLE ScopeTable<eax>,
+ *       PVOID AllocaFrame);
  */
 .global __SEH3$_RegisterTryLevelWithNonVolatiles
 __SEH3$_RegisterTryLevelWithNonVolatiles:
@@ -70,6 +78,12 @@ __SEH3$_RegisterTryLevelWithNonVolatiles:
     mov [eax + SEH3_REGISTRATION_FRAME_Ebx], ebx
     mov [eax + SEH3_REGISTRATION_FRAME_Esi], esi
     mov [eax + SEH3_REGISTRATION_FRAME_Edi], edi
+
+.global __SEH3$_RegisterTryLevelWithStackLayout
+__SEH3$_RegisterTryLevelWithStackLayout:
+
+    /* Save the pointer to the alloca frame */
+    mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], ecx
 
 .global __SEH3$_RegisterTryLevel
 __SEH3$_RegisterTryLevel:
@@ -96,5 +110,107 @@ __SEH3$_RegisterTryLevel:
 
     /* Set eax to 0 to indicate 1st return */
     xor eax, eax
+    ret
+
+
+.global __SEH3$_InvokeEmbeddedFilterFromRegistration
+__SEH3$_InvokeEmbeddedFilterFromRegistration:
+
+    /* Safe the current non-volatiles */
+    push ebp
+    push ebx
+    push esi
+    push edi
+
+    /* Load the non-volatiles from the registration invocation */
+    mov ebx, [eax + SEH3_REGISTRATION_FRAME_Ebx]
+    mov esi, [eax + SEH3_REGISTRATION_FRAME_Esi]
+    mov edi, [eax + SEH3_REGISTRATION_FRAME_Edi]
+    mov ebp, [eax + SEH3_REGISTRATION_FRAME_Ebp]
+
+    /* Get the saved stack pointer */
+    mov edx, [eax + SEH3_REGISTRATION_FRAME_Esp]
+
+    xor eax, eax
+    inc eax
+    call [edx]
+
+    /* Restore the current non-volatiles */
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    ret
+
+
+.global __SEH3$_InvokeEmbeddedFilter
+__SEH3$_InvokeEmbeddedFilter:
+
+    /* Safe the current non-volatiles */
+    push ebp
+    push ebx
+    push esi
+    push edi
+
+    /* Load ebp from the registration invocation */
+    mov ebp, [eax + SEH3_REGISTRATION_FRAME_Ebp]
+
+    /* Calculate the size of the temp stack frame region */
+    mov ecx, [eax + SEH3_REGISTRATION_FRAME_AllocaFrame]
+    sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
+
+    /* Put the return address on the stack */
+    push offset __SEH3$_InvokeEmbeddedFilterReturn
+
+    /* Save the current stack pointer in the AllocaFrame member */
+    mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], esp
+
+    /* Allocate enough temp stack space on the stack */
+    sub esp, ecx
+
+    /* Get the scope table */
+    mov edx, [eax + SEH3_REGISTRATION_FRAME_ScopeTable]
+
+    /* Jump into the filter or finally function */
+    jmp [edx + SEH3_SCOPE_TABLE_Filter]
+
+    /* We return to this label with a cleaned up stack */
+__SEH3$_InvokeEmbeddedFilterReturn:
+
+    /* Restore the current non-volatiles */
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    ret
+
+/*
+ * void
+ * __fastcall
+ * _SEH3$_CallRtlUnwind(
+ *     PSEH3$_REGISTRATION_FRAME RegistrationFrame<ecx>)
+ */
+.global @_SEH3$_CallRtlUnwind@4
+@_SEH3$_CallRtlUnwind@4:
+
+    push ebp
+    mov ebp, esp
+
+    push edi
+    push esi
+    push ebx
+
+    push 0   /* ReturnValue */
+    push 0   /* ExceptionRecord */
+    push 0   /* TargetIp */
+    push ecx /* TargetFrame */
+    call _RtlUnwind@16
+
+    pop ebx
+    pop esi
+    pop edi
+    pop ebp
     ret
 

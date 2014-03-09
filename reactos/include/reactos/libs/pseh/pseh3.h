@@ -67,6 +67,8 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     /* Registers that we need to save */
     unsigned long Esp;
     unsigned long Ebp;
+
+    char* AllocaFrame;
 #ifdef _SEH3$_FRAME_ALL_NONVOLATILES
     unsigned long Ebx;
     unsigned long Esi;
@@ -101,10 +103,12 @@ enum
     _SEH3$_TryLevel = 0,
 };
 
+#ifndef __clang__
 /* These are global dummy definitions, that get overwritten in the local context of __finally / __except blocks */
 int __cdecl __attribute__((error ("Can only be used inside a __finally block."))) _abnormal_termination(void);
 unsigned long __cdecl __attribute__((error("Can only be used inside an exception filter or __except block."))) _exception_code(void);
 void * __cdecl __attribute__((error("Can only be used inside an exception filter."))) _exception_info(void);
+#endif
 
 /* This attribute allows automatic cleanup of the registered frames */
 #define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_Unregister)))
@@ -119,15 +123,16 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 #define _SEH3$_ASM_GOTO(_Label, ...)
 
 int
-__attribute__((regparm(2)))
+__attribute__((regparm(3)))
 __attribute__((returns_twice))
 _SEH3$_RegisterFrameWithNonVolatiles(
     volatile SEH3$_REGISTRATION_FRAME* RegistrationFrame,
-    const SEH3$_SCOPE_TABLE* ScopeTable);
+    const SEH3$_SCOPE_TABLE* ScopeTable,
+    void* AllocaFrame);
 
 #define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
     do { \
-        int result = _SEH3$_RegisterFrameWithNonVolatiles(_TrylevelFrame, _DataTable); \
+        int result = _SEH3$_RegisterFrameWithNonVolatiles(_TrylevelFrame, _DataTable, __builtin_alloca(0)); \
         if (__builtin_expect(result != 0, 0)) \
         { \
             if (result == 1) goto _SEH3$_l_FilterOrFinally; \
@@ -137,15 +142,16 @@ _SEH3$_RegisterFrameWithNonVolatiles(
     } while(0)
 
 int
-__attribute__((regparm(2)))
+__attribute__((regparm(3)))
 __attribute__((returns_twice))
 _SEH3$_RegisterTryLevelWithNonVolatiles(
     volatile SEH3$_REGISTRATION_FRAME* RegistrationFrame,
-    const SEH3$_SCOPE_TABLE* ScopeTable);
+    const SEH3$_SCOPE_TABLE* ScopeTable,
+    void* AllocaFrame);
 
 #define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
     do { \
-        int result = _SEH3$_RegisterTryLevelWithNonVolatiles(_TrylevelFrame, _DataTable); \
+        int result = _SEH3$_RegisterTryLevelWithNonVolatiles(_TrylevelFrame, _DataTable, __builtin_alloca(0)); \
         if (__builtin_expect(result != 0, 0)) \
         { \
             if (result == 1) goto _SEH3$_l_FilterOrFinally; \
@@ -163,25 +169,34 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 
 #define _SEH3$_ASM_GOTO(_Label, ...) asm goto ("#\n" : : : "memory", ## __VA_ARGS__ : _Label)
 
-/* This is an asm wrapper around _SEH3$_RegisterFrame */
-#define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
+#ifdef __cplusplus
+#define _SEH3$_CALL_WRAPPER(_Function, _TrylevelFrame, _DataTable) \
     asm goto ("leal %0, %%eax\n" \
               "leal %1, %%edx\n" \
-              "call __SEH3$_RegisterFrame\n" \
+              "call " #_Function "WithStackLayout\n" \
+              : \
+              : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)), "c"(__builtin_alloca(0)) \
+              : "eax", "edx", "memory" \
+              : _SEH3$_l_HandlerTarget, _SEH3$_l_FilterOrFinally)
+
+#else
+#define _SEH3$_CALL_WRAPPER(_Function, _TrylevelFrame, _DataTable) \
+    asm goto ("leal %0, %%eax\n" \
+              "leal %1, %%edx\n" \
+              "call " #_Function "\n" \
               : \
               : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)) \
-              : "ecx", "edx", "memory" \
+              : "eax", "edx", "ecx", "memory" \
               : _SEH3$_l_HandlerTarget)
+#endif
+
+/* This is an asm wrapper around _SEH3$_RegisterFrame */
+#define _SEH3$_RegisterFrame_(_TrylevelFrame, _DataTable) \
+     _SEH3$_CALL_WRAPPER(__SEH3$_RegisterFrame, _TrylevelFrame, _DataTable)
 
 /* This is an asm wrapper around _SEH3$_RegisterTryLevel */
 #define _SEH3$_RegisterTryLevel_(_TrylevelFrame, _DataTable) \
-    asm goto ("leal %0, %%eax\n" \
-              "leal %1, %%edx\n" \
-              "call __SEH3$_RegisterTryLevel\n" \
-              : \
-              : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)) \
-              : "ecx", "edx", "memory" \
-              : _SEH3$_l_HandlerTarget)
+     _SEH3$_CALL_WRAPPER(__SEH3$_RegisterTryLevel, _TrylevelFrame, _DataTable)
 
 /* This construct scares GCC so much, that it will stop moving code
    around into places that are never executed. */
@@ -214,15 +229,17 @@ _SEH3$_Unregister(
 /* The "nested" functions are a piece of code with a ret instruction at the end */
 #define _SEH3$_NESTED_FUNC_OPEN() \
     { \
-        int SavedEsp, result = 0; \
-\
-        /* Save esp */ \
-        asm volatile ("movl %%esp, %[SavedEsp]\n" : : [SavedEsp]"m"(SavedEsp));
+        int _SEH3$_Result = 0; \
+
+/* On invocation, the AllocaFrame field is loaded with the return esp value */
+#define _SEH3$_NESTED_FUNC_RETURN() \
+        /* Restore esp and return to the caller */ \
+        asm volatile ("movl %[FixedEsp], %%esp\nret\n" \
+            : : "a"(_SEH3$_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "memory")
 
 #define _SEH3$_NESTED_FUNC_CLOSE() \
-        /* Restore esp and return to the caller */ \
-        asm volatile ("movl %[SavedEsp], %%esp\nret\n" \
-            : : "a"(result), [SavedEsp]"irm"(SavedEsp)); \
+        /* Return to the caller */ \
+        _SEH3$_NESTED_FUNC_RETURN(); \
     }
 
 /* The filter function */
@@ -230,7 +247,7 @@ _SEH3$_Unregister(
     _SEH3$_NESTED_FUNC_OPEN() \
     { \
         /* Evaluate the filter expression */ \
-        result = (expression); \
+        _SEH3$_Result = (expression); \
     } \
     _SEH3$_NESTED_FUNC_CLOSE()
 
@@ -238,11 +255,10 @@ _SEH3$_Unregister(
     _SEH3$_NESTED_FUNC_OPEN() \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
-        for (; ; (void)({asm volatile ("movl %[SavedEsp], %%esp\nret\n" \
-            : : "a"(result), [SavedEsp]"irm"(SavedEsp)); 0;}))
+        for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(); 0;}))
 
 #define _SEH3$_FILTER(_Filter, _FilterExpression) (&&_SEH3$_l_FilterOrFinally)
-#define _SEH3$_FINALLY(_Finally) 0
+#define _SEH3$_FINALLY(_Finally) (&&_SEH3$_l_FilterOrFinally)
 
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS()
 
@@ -336,6 +352,7 @@ _SEH3$_Unregister(
         __label__ _SEH3$_l_OnException; \
         __label__ _SEH3$_l_BeforeFilterOrFinally; \
         __label__ _SEH3$_l_FilterOrFinally; \
+        (void)&&_SEH3$_l_OnException; \
         (void)&&_SEH3$_l_BeforeFilterOrFinally; \
         (void)&&_SEH3$_l_FilterOrFinally; \
 \
@@ -419,7 +436,7 @@ _SEH3$_Unregister(
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
 \
         /* Create a static data table that contains the finally function */ \
-        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { 0, _SEH3$_FINALLY(&_SEH3$_FinallyFunction) }; \
+        static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { 0, _SEH3$_FINALLY(&_SEH3$_FinallyFunction), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
 \
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
@@ -431,6 +448,7 @@ _SEH3$_Unregister(
         _SEH3$_EnforceFramePointer(); \
 \
     _SEH3$_l_BeforeFilterOrFinally: (void)0; \
+        _SEH3$_EnforceFramePointer(); \
     _SEH3$_l_FilterOrFinally: (void)0; \
         _SEH3$_FINALLY_FUNC_OPEN(_SEH3$_FinallyFunction)
 
