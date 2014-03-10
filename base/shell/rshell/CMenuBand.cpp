@@ -622,18 +622,22 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
 {
     HWND sendTo = m_menuOwner;
 
-    // FIXME: use?
-    //TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
+    TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
+
+    UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
     if (sendTo)
     {
-        ::TrackPopupMenuEx(popup, 0, x, y, sendTo, NULL); // &params);
+        ::TrackPopupMenuEx(popup, flags, x, y, sendTo, &params);
     }
     else
     {
+        // FIXME: Windows uses the top-level window when calling TrackPopupMenuEx,
+        // but this is probably not the means by which it obtains that HWND.
+        // Meanwhile, this works.
         GetWindow(&sendTo);
-        ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, sendTo, NULL); // &params);
-        // TODO: use the result somehow
+        sendTo = GetAncestor(sendTo, GA_ROOT);
+        ::TrackPopupMenuEx(popup, flags, x, y, sendTo, &params);
     }
 
     return S_OK;

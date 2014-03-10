@@ -25,6 +25,8 @@ toolbar, and address band for an explorer window
 
 #include "precomp.h"
 
+#define USE_CUSTOM_MENUBAND 1
+
 // navigation controls and menubar just send a message to parent window
 /*
 TODO:
@@ -374,7 +376,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         favoritesHMenu = GetSubMenu(parentHMenu, 3);
         if (favoritesHMenu == NULL)
             return E_FAIL;
-#if 1
+#if USE_CUSTOM_MENUBAND
         HMODULE hrs = LoadLibrary(L"rshell.dll");
 
         PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
@@ -553,7 +555,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
 
-#if 1
+#if USE_CUSTOM_MENUBAND
     HMODULE hrs = LoadLibraryW(L"rshell.dll");
 
     if (!hrs)

@@ -549,17 +549,17 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, HMENU menu)
     if (!SendMessage(m_hwndToolbar, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&rc)))
         return E_FAIL;
 
-    GetWindowRect(m_hwnd, &rcx);
+    GetClientRect(m_hwndToolbar, &rcx);
 
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
-    POINT c = { rcx.left, rcx.top };
-    POINT d = { rcx.right, rcx.bottom };
+    POINT c = { rc.left, rc.top };
+    POINT d = { rc.right, rc.bottom };
 
     ClientToScreen(m_hwndToolbar, &a);
     ClientToScreen(m_hwndToolbar, &b);
-    ClientToScreen(m_hwnd, &c);
-    ClientToScreen(m_hwnd, &d);
+    ClientToScreen(m_hwndToolbar, &c);
+    ClientToScreen(m_hwndToolbar, &d);
 
     POINT pt = { a.x, b.y };
     RECT rcl = { c.x, c.y, d.x, d.y };
