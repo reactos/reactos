@@ -632,7 +632,7 @@ typedef enum _FSINFOCLASS {
     FileFsMaximumInformation
 } FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
-typedef enum _KEY_INFORMATION_CLASS { 
+typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation           = 0,
   KeyNodeInformation            = 1,
   KeyFullInformation            = 2,
@@ -2244,7 +2244,7 @@ ULONG     WINAPI RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR);
 DWORD     WINAPI RtlLengthSid(PSID);
 NTSTATUS  WINAPI RtlLocalTimeToSystemTime(const LARGE_INTEGER*,PLARGE_INTEGER);
 BOOLEAN   WINAPI RtlLockHeap(HANDLE);
-NTSTATUS  WINAPI RtlLookupAtomInAtomTable(RTL_ATOM_TABLE,const WCHAR*,RTL_ATOM*);
+NTSTATUS  WINAPI RtlLookupAtomInAtomTable(RTL_ATOM_TABLE*,const WCHAR*,RTL_ATOM*);
 
 NTSTATUS  WINAPI RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR,LPDWORD);
 void      WINAPI RtlMapGenericMask(PACCESS_MASK,const GENERIC_MAPPING*);
