@@ -922,7 +922,7 @@ GUILoggedOnSAS(
 
 
 static
-INT
+BOOL
 DoLogon(
     IN HWND hwndDlg,
     IN OUT PGINA_CONTEXT pgContext)
@@ -930,7 +930,7 @@ DoLogon(
     LPWSTR UserName = NULL;
     LPWSTR Password = NULL;
     LPWSTR Domain = NULL;
-    INT result = WLX_SAS_ACTION_NONE;
+    BOOL result = FALSE;
     NTSTATUS Status, SubStatus = STATUS_SUCCESS;
 
     if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
@@ -1003,7 +1003,7 @@ TRACE("DoLoginTasks failed! Status 0x%08lx\n", Status);
     ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
     wcscpy(pgContext->Password, Password);
 
-    result = WLX_SAS_ACTION_LOGON;
+    result = TRUE;
 
 done:
     if (UserName != NULL)
@@ -1074,7 +1074,8 @@ LoggedOutWindowProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwndDlg, DoLogon(hwndDlg, pgContext));
+                    if (DoLogon(hwndDlg, pgContext))
+                        EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
                     return TRUE;
 
                 case IDCANCEL:
