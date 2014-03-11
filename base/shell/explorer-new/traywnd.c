@@ -2610,7 +2610,7 @@ HandleTrayContextMenu:
                 }
 
                 if (This->TrayBandSite == NULL ||
-                    !SUCCEEDED(ITrayBandSite_ProcessMessage(This->TrayBandSite,
+                    FAILED(ITrayBandSite_ProcessMessage(This->TrayBandSite,
                                                             hwnd,
                                                             uMsg,
                                                             wParam,

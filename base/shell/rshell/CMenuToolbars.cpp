@@ -622,7 +622,10 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
         PopupItem(wParam);
         return S_FALSE;
     }
-    return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+    HRESULT hr = m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK; // filter out a possible S_FALSE from here.
 }
 
 HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
@@ -938,7 +941,10 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
 
     // in case the clicked item has a submenu, we do not need to execute the item
     if (hr == S_FALSE)
+    {
+        DbgPrint("CMenuToolbarBase::OnCommand told us to cancel.\n");
         return hr;
+    }
 
     return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
 }
@@ -1102,7 +1108,10 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
 
     // in case the clicked item has a submenu, we do not need to execute the item
     if (hr == S_FALSE)
+    {
+        DbgPrint("CMenuToolbarBase::OnCommand told us to cancel.\n");
         return hr;
+    }
 
     DWORD_PTR data;
     GetDataFromId(wParam, NULL, &data);
