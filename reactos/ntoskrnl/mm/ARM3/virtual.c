@@ -5283,7 +5283,7 @@ MmGetPhysicalAddress(PVOID Address)
         if (TempPde.u.Hard.LargePage)
         {
             /* Physical address is base page + large page offset */
-            PhysicalAddress.QuadPart = TempPde.u.Hard.PageFrameNumber << PAGE_SHIFT;
+            PhysicalAddress.QuadPart = (ULONG64)TempPde.u.Hard.PageFrameNumber << PAGE_SHIFT;
             PhysicalAddress.QuadPart += ((ULONG_PTR)Address & (PAGE_SIZE * PTE_PER_PAGE - 1));
             return PhysicalAddress;
         }
@@ -5293,7 +5293,7 @@ MmGetPhysicalAddress(PVOID Address)
         if (TempPte.u.Hard.Valid)
         {
             /* Physical address is base page + page offset */
-            PhysicalAddress.QuadPart = TempPte.u.Hard.PageFrameNumber << PAGE_SHIFT;
+            PhysicalAddress.QuadPart = (ULONG64)TempPte.u.Hard.PageFrameNumber << PAGE_SHIFT;
             PhysicalAddress.QuadPart += ((ULONG_PTR)Address & (PAGE_SIZE - 1));
             return PhysicalAddress;
         }
