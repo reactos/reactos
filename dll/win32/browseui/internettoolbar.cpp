@@ -822,7 +822,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetSizeMax(ULARGE_INTEGER *pcbSize)
 HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
 {
     CComPtr<IShellMenu>                     menuBar;
-    CComPtr<IUnknown>                       logoBar;
+    //CComPtr<IUnknown>                       logoBar;
     CComPtr<IUnknown>                       toolsBar;
     CComPtr<IUnknown>                       navigationBar;
     CComPtr<IOleWindow>                     menuOleWindow;
@@ -840,12 +840,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = menuOleWindow->GetWindow(&fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
+    /* FIXME
     hResult = CreateBrandBand(&logoBar);
     if (FAILED(hResult))
         return hResult;
     AddDockItem(logoBar, ITBBID_BRANDBAND,
         CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
     fLogoBar.Attach(logoBar.Detach());                  // transfer the ref count
+    */
 
     hResult = CreateToolsBar(&toolsBar);
     if (FAILED(hResult))
@@ -1217,8 +1219,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryBand(DWORD dwBandID,
         return E_POINTER;
     if (dwBandID == ITBBID_MENUBAND && fMenuBar.p != NULL)
         return fMenuBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(ppstb));
-    if (dwBandID == ITBBID_BRANDBAND && fLogoBar.p != NULL)
-        return fLogoBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(ppstb));
+    //if (dwBandID == ITBBID_BRANDBAND && fLogoBar.p != NULL)
+    //    return fLogoBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(ppstb));
     *ppstb = NULL;
     return E_FAIL;
 }

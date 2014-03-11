@@ -42,20 +42,9 @@ HRESULT WINAPI SHGetImageList(
 
 HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    RECT rc;
-    HDC hdc;
-    HBRUSH bgBrush;
-    HBRUSH hotBrush;
     NMHDR * hdr;
-    NMTBCUSTOMDRAW * cdraw;
-    NMTBHOTITEM * hot;
-    NMMOUSE * rclick;
     NMPGCALCSIZE* csize;
-    TBBUTTONINFO btni;
-    COLORREF clrText;
-    COLORREF clrTextHighlight;
     SIZE tbs;
-    bool isHot, isPopup;
 
     *theResult = 0;
     switch (uMsg)
@@ -70,6 +59,9 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case TTN_GETDISPINFOA:
         case TTN_GETDISPINFOW:
             return S_OK;
+
+        case TBN_DELETINGBUTTON:
+            return OnDeletingButton(reinterpret_cast<LPNMTOOLBAR>(hdr));
 
         case PGN_CALCSIZE:
             csize = reinterpret_cast<LPNMPGCALCSIZE>(hdr);
@@ -90,83 +82,17 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return OnCommand(wParam, 0, theResult);
 
         case TBN_HOTITEMCHANGE:
-            hot = reinterpret_cast<LPNMTBHOTITEM>(hdr);
-            return OnHotItemChange(hot);
+            return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr));
 
         case NM_RCLICK:
-            rclick = reinterpret_cast<LPNMMOUSE>(hdr);
-
-            return OnContextMenu(rclick);
+            return OnContextMenu(reinterpret_cast<LPNMMOUSE>(hdr));
 
         case NM_CUSTOMDRAW:
-            cdraw = reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr);
-            switch (cdraw->nmcd.dwDrawStage)
-            {
-            case CDDS_PREPAINT:
-                if (m_toolbarFlags & SMINIT_VERTICAL)
-                    *theResult = CDRF_NOTIFYITEMDRAW;
-                return S_OK;
+            return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
 
-            case CDDS_ITEMPREPAINT:
-                
-                clrText = GetSysColor(COLOR_MENUTEXT);
-                clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
-
-                bgBrush = GetSysColorBrush(COLOR_MENU);
-                hotBrush = GetSysColorBrush(m_useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
-
-                rc = cdraw->nmcd.rc;
-                hdc = cdraw->nmcd.hdc;
-
-                isHot = m_hotBar == this && m_hotItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
-                isPopup = m_popupBar == this && m_popupItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
-
-                if (isHot || (m_hotItem < 0 && isPopup))
-                {
-                    cdraw->nmcd.uItemState |= CDIS_HOT;
-                }
-                else
-                {
-                    cdraw->nmcd.uItemState &= ~CDIS_HOT;
-                }
-
-                if (cdraw->nmcd.uItemState&CDIS_HOT)
-                {
-                    FillRect(hdc, &rc, hotBrush);
-                    SetTextColor(hdc, clrTextHighlight);
-                    cdraw->clrText = clrTextHighlight;
-                }
-                else
-                {
-                    FillRect(hdc, &rc, bgBrush);
-                    SetTextColor(hdc, clrText);
-                    cdraw->clrText = clrText;
-                }
-
-                cdraw->iListGap += 4;
-
-                *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
-                return S_OK;
-
-            case CDDS_ITEMPOSTPAINT:
-                btni.cbSize = sizeof(btni);
-                btni.dwMask = TBIF_STYLE;
-                SendMessage(hWnd, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
-                if (btni.fsStyle & BTNS_DROPDOWN)
-                {
-                    SelectObject(cdraw->nmcd.hdc, m_marlett);
-                    WCHAR text[] = L"8";
-                    SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
-                    RECT rc = cdraw->nmcd.rc;
-                    rc.right += 1;
-                    DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
-                }
-                *theResult = TRUE;
-                return S_OK;
-            }
-            return S_OK;
         case RBN_CHILDSIZE:
             return S_OK;
+
         default:
             DbgPrint("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
         }
@@ -174,6 +100,84 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     }
 
     return S_FALSE;
+}
+
+HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult)
+{
+    RECT rc;
+    HDC hdc;
+    HBRUSH bgBrush;
+    HBRUSH hotBrush;
+    COLORREF clrText;
+    COLORREF clrTextHighlight;
+    bool isHot, isPopup;
+    TBBUTTONINFO btni;
+
+    switch (cdraw->nmcd.dwDrawStage)
+    {
+    case CDDS_PREPAINT:
+        if (m_toolbarFlags & SMINIT_VERTICAL)
+            *theResult = CDRF_NOTIFYITEMDRAW;
+        return S_OK;
+
+    case CDDS_ITEMPREPAINT:
+
+        clrText = GetSysColor(COLOR_MENUTEXT);
+        clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
+
+        bgBrush = GetSysColorBrush(COLOR_MENU);
+        hotBrush = GetSysColorBrush(m_useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
+
+        rc = cdraw->nmcd.rc;
+        hdc = cdraw->nmcd.hdc;
+
+        isHot = m_hotBar == this && m_hotItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
+        isPopup = m_popupBar == this && m_popupItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
+
+        if (isHot || (m_hotItem < 0 && isPopup))
+        {
+            cdraw->nmcd.uItemState |= CDIS_HOT;
+        }
+        else
+        {
+            cdraw->nmcd.uItemState &= ~CDIS_HOT;
+        }
+
+        if (cdraw->nmcd.uItemState&CDIS_HOT)
+        {
+            FillRect(hdc, &rc, hotBrush);
+            SetTextColor(hdc, clrTextHighlight);
+            cdraw->clrText = clrTextHighlight;
+        }
+        else
+        {
+            FillRect(hdc, &rc, bgBrush);
+            SetTextColor(hdc, clrText);
+            cdraw->clrText = clrText;
+        }
+
+        cdraw->iListGap += 4;
+
+        *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
+        return S_OK;
+
+    case CDDS_ITEMPOSTPAINT:
+        btni.cbSize = sizeof(btni);
+        btni.dwMask = TBIF_STYLE;
+        SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
+        if (btni.fsStyle & BTNS_DROPDOWN)
+        {
+            SelectObject(cdraw->nmcd.hdc, m_marlett);
+            WCHAR text[] = L"8";
+            SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
+            RECT rc = cdraw->nmcd.rc;
+            rc.right += 1;
+            DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
+        }
+        *theResult = TRUE;
+        return S_OK;
+    }
+    return S_OK;
 }
 
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
@@ -845,10 +849,18 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     return S_OK;
 }
 
-HRESULT CMenuStaticToolbar::FillToolbar()
+HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 {
     int i;
     int ic = GetMenuItemCount(m_hmenu);
+
+    if (clearFirst)
+    {
+        while (SendMessage(m_hwndToolbar, TB_DELETEBUTTON, 0, 0))
+        {
+            // empty;
+        }
+    }
 
     int count = 0;
     for (i = 0; i < ic; i++)
@@ -896,6 +908,14 @@ HRESULT CMenuStaticToolbar::FillToolbar()
         }
     }
 
+    DbgPrint("Created toolbar with %d buttons.\n", count);
+
+    return S_OK;
+}
+
+HRESULT CMenuStaticToolbar::OnDeletingButton(const NMTOOLBAR * tb)
+{
+    delete reinterpret_cast<SMINFO*>(tb->tbButton.dwData);
     return S_OK;
 }
 
@@ -959,7 +979,7 @@ CMenuSFToolbar::~CMenuSFToolbar()
 {
 }
 
-HRESULT CMenuSFToolbar::FillToolbar()
+HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
 {
     HRESULT hr;
     int i = 0;
@@ -1009,7 +1029,15 @@ HRESULT CMenuSFToolbar::FillToolbar()
         return AddPlaceholder();
     }
 
+    DbgPrint("Created toolbar with %d buttons.\n", i);
+
     return hr;
+}
+
+HRESULT CMenuSFToolbar::OnDeletingButton(const NMTOOLBAR * tb)
+{
+    ILFree(reinterpret_cast<LPITEMIDLIST>(tb->tbButton.dwData));
+    return S_OK;
 }
 
 HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags)

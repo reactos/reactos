@@ -28,6 +28,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
+#undef UNIMPLEMENTED
+
+#define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
+
 extern "C"
 HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 {
@@ -121,9 +125,14 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     HWND hwnd,
     DWORD dwFlags)
 {
+    DbgPrint("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
+
+    BOOL created = FALSE;
+
     if (m_staticToolbar == NULL)
     {
         m_staticToolbar = new CMenuStaticToolbar(this);
+        created = true;
     }
     m_hmenu = hmenu;
     m_menuOwner = hwnd;
@@ -140,11 +149,18 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+        if (created)
+        {
+            hr = m_staticToolbar->CreateToolbar(hwndParent, m_dwFlags);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
-        hr = m_staticToolbar->FillToolbar();
+            hr = m_staticToolbar->FillToolbar();
+        }
+        else
+        {
+            hr = m_staticToolbar->FillToolbar(TRUE);
+        }
     }
 
     return hr;
@@ -206,7 +222,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
     }
 
     hr = IUnknown_QueryService(m_site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_subMenuParent));
-    if (FAILED(hr) && hr != E_NOINTERFACE)
+    if (hr != E_NOINTERFACE && FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IOleWindow> pTopLevelWindow;
@@ -303,6 +319,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
     if (m_staticToolbar == NULL && m_SFToolbar == NULL)
         return E_FAIL;
 
+    pdbi->ptMinSize.x = max(sizeStatic.cx, sizeShlFld.cx) + 20;
+    pdbi->ptMinSize.y = sizeStatic.cy + sizeShlFld.cy;
     pdbi->ptMaxSize.x = max(sizeStatic.cx, sizeShlFld.cx) + 20;
     pdbi->ptMaxSize.y = sizeStatic.cy + sizeShlFld.cy;
 
@@ -368,9 +386,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
     HRESULT hr;
 
-    hr = m_subMenuParent->SetSubMenu(this, fActivate);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (m_subMenuParent)
+    {
+        hr = m_subMenuParent->SetSubMenu(this, fActivate);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
 
     if (fActivate)
     {
@@ -436,18 +457,26 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
     switch (dwSelectType)
     {
     case MPOS_CHILDTRACKING:
+        if (!m_subMenuParent)
+            break;
         // TODO: Cancel timers?
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_SELECTLEFT:
         if (m_subMenuChild)
             m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+        if (!m_subMenuParent)
+            break;
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_SELECTRIGHT:
+        if (!m_subMenuParent)
+            break;
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_EXECUTE:
     case MPOS_FULLCANCEL:
         if (m_subMenuChild)
             m_subMenuChild->OnSelect(dwSelectType);
+        if (!m_subMenuParent)
+            break;
         return m_subMenuParent->OnSelect(dwSelectType);
     case MPOS_CANCELLEVEL:
         if (m_subMenuChild)
@@ -620,24 +649,17 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
 
 HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 {
-    HWND sendTo = m_menuOwner;
-
     TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
 
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
-    if (sendTo)
+    if (m_menuOwner)
     {
-        ::TrackPopupMenuEx(popup, flags, x, y, sendTo, &params);
+        ::TrackPopupMenuEx(popup, flags, x, y, m_menuOwner, &params);
     }
     else
     {
-        // FIXME: Windows uses the top-level window when calling TrackPopupMenuEx,
-        // but this is probably not the means by which it obtains that HWND.
-        // Meanwhile, this works.
-        GetWindow(&sendTo);
-        sendTo = GetAncestor(sendTo, GA_ROOT);
-        ::TrackPopupMenuEx(popup, flags, x, y, sendTo, &params);
+        ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
     }
 
     return S_OK;
@@ -720,6 +742,8 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_subMenuChild)
             m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+        if (!m_subMenuParent)
+            return S_OK;
         return m_subMenuParent->OnSelect(MPOS_CANCELLEVEL);
     }
     else if (changeType == MPOS_SELECTRIGHT)
@@ -732,10 +756,14 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
                 return S_FALSE;
             }
         }
+        if (!m_subMenuParent)
+            return S_OK;
         return m_subMenuParent->OnSelect(changeType);
     }
     else
     {
+        if (!m_subMenuParent)
+            return S_OK;
         return m_subMenuParent->OnSelect(changeType);
     }
     return S_OK;
@@ -754,7 +782,10 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
     m_subMenuChild = popup;
     if (popup)
     {
-        IUnknown_SetSite(popup, m_subMenuParent);
+        if (m_subMenuParent)
+            IUnknown_SetSite(popup, m_subMenuParent);
+        else
+            IUnknown_SetSite(popup, m_site);
 
         popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }

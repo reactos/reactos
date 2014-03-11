@@ -814,29 +814,6 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
 
     ShowWindow(SW_SHOWNORMAL);
 
-
-    // test code to make brand band animate
-    {
-        CComPtr<IOleCommandTarget>              oleCommandTarget;
-        CComPtr<IServiceProvider>               serviceProvider;
-        CComPtr<IBandSite>                      bandSite;
-        CComPtr<IDeskBand>                      deskBand;
-        CComPtr<IWinEventHandler>               winEventHandler;
-        HRESULT                                 hResult;
-
-        if (fClientBars[BIInternetToolbar].clientBar.p == NULL)
-            return 0;
-        hResult = fClientBars[BIInternetToolbar].clientBar->
-            QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-        hResult = serviceProvider->QueryService(SID_IBandSite, IID_IBandSite, reinterpret_cast<void **>(&bandSite));
-        hResult = bandSite->QueryBand(5, &deskBand, NULL, NULL, 0);
-        deskBand->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
-        winEventHandler->IsWindowOwner(NULL);
-        deskBand->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&oleCommandTarget));
-        oleCommandTarget->QueryStatus(&CGID_BrandCmdGroup, 0, NULL, NULL);
-        oleCommandTarget->Exec(&CGID_BrandCmdGroup, BBID_STARTANIMATION, 0, NULL, NULL);
-    }
-
     return S_OK;
 }
 
@@ -3256,6 +3233,9 @@ static void ExplorerMessageLoop()
 
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
+
+            if (Msg.message == WM_QUIT)
+                break;
         }
     }
 }

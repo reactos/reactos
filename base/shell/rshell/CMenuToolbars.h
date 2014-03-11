@@ -74,7 +74,7 @@ public:
 
     void InvalidateDraw();
 
-    virtual HRESULT FillToolbar() = 0;
+    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) = 0;
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
 
     HRESULT PopupItem(INT uItem);
@@ -84,6 +84,7 @@ public:
 protected:
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
     virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData) = 0;
     virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData) = 0;
 
@@ -94,6 +95,9 @@ protected:
     HRESULT AddPlaceholder();
 
     HRESULT UpdateImageLists();
+
+private:
+    HRESULT OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult);
 };
 
 class CMenuStaticToolbar :
@@ -109,11 +113,13 @@ public:
     HRESULT SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags);
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
-    virtual HRESULT FillToolbar();
+    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 protected:
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
+
     virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
     virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
 };
@@ -133,11 +139,13 @@ public:
     HRESULT SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags);
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
-    virtual HRESULT FillToolbar();
+    virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 protected:
+    virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
+
     virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
     virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
 };

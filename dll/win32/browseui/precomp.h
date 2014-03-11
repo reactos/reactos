@@ -76,6 +76,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #define DbgPrint(fmt, ...) \
     Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
+#if 1
+#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
+#else
+#define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
 #endif /* _BROWSEUI_PCH_ */

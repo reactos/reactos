@@ -87,7 +87,7 @@ public:
     CComPtr<IShellMenu>                     fMenuBar;           // the menu rebar
     HWND                                    fMenuBandWindow;
     HWND                                    fNavigationWindow;
-    CComPtr<IUnknown>                       fLogoBar;           // the reactos logo
+    //CComPtr<IUnknown>                       fLogoBar;           // the reactos logo
     CComPtr<IUnknown>                       fControlsBar;       // navigation controls
     CComPtr<IUnknown>                       fNavigationBar;     // address bar
     CComObject<CMenuCallback>               fMenuCallback;
