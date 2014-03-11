@@ -9,18 +9,12 @@ struct _EPROCESS;
 extern PMMSUPPORT MmKernelAddressSpace;
 extern PFN_COUNT MiFreeSwapPages;
 extern PFN_COUNT MiUsedSwapPages;
-extern SIZE_T MmTotalPagedPoolQuota;
-extern SIZE_T MmTotalNonPagedPoolQuota;
-extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 extern PFN_COUNT MmNumberOfPhysicalPages;
 extern UCHAR MmDisablePagingExecutive;
 extern PFN_NUMBER MmLowestPhysicalPage;
 extern PFN_NUMBER MmHighestPhysicalPage;
 extern PFN_NUMBER MmAvailablePages;
 extern PFN_NUMBER MmResidentAvailablePages;
-
-extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
-extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 
 extern LIST_ENTRY MmLoadedUserImageList;
 
@@ -43,8 +37,8 @@ extern SIZE_T MmPagedPoolCommit;
 extern SIZE_T MmPeakCommitment;
 extern SIZE_T MmtotalCommitLimitMaximum;
 
-extern PVOID MiDebugMapping;
-extern PMMPTE MmDebugPte;
+extern PVOID MiDebugMapping; // internal
+extern PMMPTE MmDebugPte; // internal
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
@@ -66,7 +60,7 @@ typedef ULONG_PTR SWAPENTRY;
 //
 #define MMDBG_COPY_MAX_SIZE         0x8
 
-#if defined(_X86_)
+#if defined(_X86_) // intenal for marea.c
 #define MI_STATIC_MEMORY_AREAS              (14)
 #else
 #define MI_STATIC_MEMORY_AREAS              (13)
@@ -76,19 +70,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define MEMORY_AREA_CACHE                   (2)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
-
-#define MM_PHYSICAL_PAGE_MPW_PENDING        (0x8)
-
-#define MM_CORE_DUMP_TYPE_NONE              (0x0)
-#define MM_CORE_DUMP_TYPE_MINIMAL           (0x1)
-#define MM_CORE_DUMP_TYPE_FULL              (0x2)
-
-/* Number of list heads to use */
-#define MI_FREE_POOL_LISTS 4
-
-
-/* Signature of free pool blocks */
-#define MM_FREE_POOL_TAG    'lprF'
 
 /* Although Microsoft says this isn't hardcoded anymore,
    they won't be able to change it. Stuff depends on it */
@@ -119,31 +100,12 @@ typedef ULONG_PTR SWAPENTRY;
 #define SESSION_POOL_MASK                   32
 #define VERIFIER_POOL_MASK                  64
 
-#define MM_PAGED_POOL_SIZE                  (100*1024*1024)
-#define MM_NONPAGED_POOL_SIZE               (100*1024*1024)
-
-/*
- * Paged and non-paged pools are 8-byte aligned
- */
-#define MM_POOL_ALIGNMENT                   8
-
+// FIXME: use ALIGN_UP_BY
 #define MM_ROUND_UP(x,s)                    \
     ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
 
 #define MM_ROUND_DOWN(x,s)                  \
     ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
-
-#define PAGE_FLAGS_VALID_FROM_USER_MODE     \
-    (PAGE_READONLY | \
-    PAGE_READWRITE | \
-    PAGE_WRITECOPY | \
-    PAGE_EXECUTE | \
-    PAGE_EXECUTE_READ | \
-    PAGE_EXECUTE_READWRITE | \
-    PAGE_EXECUTE_WRITECOPY | \
-    PAGE_GUARD | \
-    PAGE_NOACCESS | \
-    PAGE_NOCACHE)
 
 #define PAGE_FLAGS_VALID_FOR_SECTION \
     (PAGE_READONLY | \
@@ -331,9 +293,10 @@ typedef struct _MMPFNENTRY
     USHORT RemovalRequested:1;
     USHORT CacheAttribute:2;
     USHORT Rom:1;
-    USHORT ParityError:1;                    // HasRmap
+    USHORT ParityError:1;
 } MMPFNENTRY;
 
+// Mm internal
 typedef struct _MMPFN
 {
     union
@@ -427,6 +390,7 @@ typedef struct _MM_REGION
     LIST_ENTRY RegionListEntry;
 } MM_REGION, *PMM_REGION;
 
+// Mm internal
 /* Entry describing free pool memory */
 typedef struct _MMFREE_POOL_ENTRY
 {
@@ -531,9 +495,10 @@ MmLocateMemoryAreaByAddress(
     PVOID Address
 );
 
+// fixme: unused?
 ULONG_PTR
 NTAPI
-MmFindGapAtAddress(
+MmFindGapAtAddress_(
     PMMSUPPORT AddressSpace,
     PVOID Address
 );
@@ -556,10 +521,6 @@ MmFreeMemoryAreaByPtr(
     PVOID FreePageContext
 );
 
-VOID
-NTAPI
-MmDumpMemoryAreas(PMMSUPPORT AddressSpace);
-
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(
@@ -579,14 +540,6 @@ MmFindGap(
 
 VOID
 NTAPI
-MmReleaseMemoryAreaIfDecommitted(
-    struct _EPROCESS *Process,
-    PMMSUPPORT AddressSpace,
-    PVOID BaseAddress
-);
-
-VOID
-NTAPI
 MmMapMemoryArea(PVOID BaseAddress,
                 SIZE_T Length,
                 ULONG Consumer,
@@ -602,14 +555,6 @@ NTAPI
 MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
-
-VOID
-NTAPI
-MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
-
-VOID
-NTAPI
-MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
 
 VOID
 NTAPI
@@ -634,70 +579,7 @@ MiFreePoolPages(
     IN PVOID StartingAddress
 );
 
-PVOID
-NTAPI
-MmGetMdlPageAddress(
-    PMDL Mdl,
-    PVOID Offset
-);
-
 /* pool.c *******************************************************************/
-
-PVOID
-NTAPI
-ExAllocateNonPagedPoolWithTag(
-    POOL_TYPE type,
-    ULONG size,
-    ULONG Tag,
-    PVOID Caller
-);
-
-PVOID
-NTAPI
-ExAllocatePagedPoolWithTag(
-    POOL_TYPE Type,
-    ULONG size,
-    ULONG Tag
-);
-
-VOID
-NTAPI
-ExFreeNonPagedPool(PVOID block);
-
-VOID
-NTAPI
-ExFreePagedPool(IN PVOID Block);
-
-BOOLEAN
-NTAPI
-ExpIsPoolTagDebuggable(ULONG Tag);
-
-PVOID
-NTAPI
-ExpAllocateDebugPool(
-    POOL_TYPE Type,
-    ULONG Size,
-    ULONG Tag,
-    PVOID Caller,
-    BOOLEAN EndOfPage
-);
-
-VOID
-NTAPI
-ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool);
-
-VOID
-NTAPI
-MmInitializePagedPool(VOID);
-
-PVOID
-NTAPI
-MiAllocateSpecialPool(
-    IN POOL_TYPE PoolType,
-    IN SIZE_T NumberOfBytes,
-    IN ULONG Tag,
-    IN ULONG Underrun
-);
 
 BOOLEAN
 NTAPI
@@ -720,10 +602,6 @@ MmBuildMdlFromPages(
 
 VOID
 NTAPI
-MiShutdownMemoryManager(VOID);
-
-VOID
-NTAPI
 MmInit1(
     VOID
 );
@@ -733,23 +611,12 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-VOID
-NTAPI
-MiFreeInitMemory(VOID);
-
-VOID
-NTAPI
-MmInitializeMdlImplementation(VOID);
 
 /* pagefile.c ****************************************************************/
 
 SWAPENTRY
 NTAPI
 MmAllocSwapPage(VOID);
-
-VOID
-NTAPI
-MmDereserveSwapPages(ULONG Nr);
 
 VOID
 NTAPI
@@ -770,31 +637,12 @@ MmReadFromSwapPage(
     PFN_NUMBER Page
 );
 
-BOOLEAN
-NTAPI
-MmReserveSwapPages(ULONG Nr);
-
 NTSTATUS
 NTAPI
 MmWriteToSwapPage(
     SWAPENTRY SwapEntry,
     PFN_NUMBER Page
 );
-
-NTSTATUS
-NTAPI
-MmDumpToPagingFile(
-    ULONG BugCode,
-    ULONG BugCodeParameter1,
-    ULONG BugCodeParameter2,
-    ULONG BugCodeParameter3,
-    ULONG BugCodeParameter4,
-    struct _KTRAP_FRAME* TrapFrame
-);
-
-BOOLEAN
-NTAPI
-MmIsAvailableSwapPage(VOID);
 
 VOID
 NTAPI
@@ -908,74 +756,7 @@ MmAccessFault(
     IN PVOID TrapInformation
 );
 
-/* anonmem.c *****************************************************************/
-
-NTSTATUS
-NTAPI
-MmNotPresentFaultVirtualMemory(
-    PMMSUPPORT AddressSpace,
-    MEMORY_AREA* MemoryArea,
-    PVOID Address
-);
-
-NTSTATUS
-NTAPI
-MmPageOutVirtualMemory(
-    PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MemoryArea,
-    PVOID Address,
-    PFN_NUMBER Page
-);
-
-NTSTATUS
-NTAPI
-MmQueryAnonMem(
-    PMEMORY_AREA MemoryArea,
-    PVOID Address,
-    PMEMORY_BASIC_INFORMATION Info,
-    PSIZE_T ResultLength
-);
-
-VOID
-NTAPI
-MmFreeVirtualMemory(
-    struct _EPROCESS* Process,
-    PMEMORY_AREA MemoryArea
-);
-
-NTSTATUS
-NTAPI
-MmProtectAnonMem(
-    PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MemoryArea,
-    PVOID BaseAddress,
-    SIZE_T Length,
-    ULONG Protect,
-    PULONG OldProtect
-);
-
-NTSTATUS
-NTAPI
-MmWritePageVirtualMemory(
-    PMMSUPPORT AddressSpace,
-    PMEMORY_AREA MArea,
-    PVOID Address,
-    PFN_NUMBER Page
-);
-
 /* kmap.c ********************************************************************/
-
-PVOID
-NTAPI
-ExAllocatePage(VOID);
-
-VOID
-NTAPI
-ExUnmapPage(PVOID Addr);
-
-PVOID
-NTAPI
-ExAllocatePageWithPhysPage(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
@@ -983,16 +764,6 @@ MiCopyFromUserPage(
     PFN_NUMBER NewPage,
     PFN_NUMBER OldPage
 );
-
-NTSTATUS
-NTAPI
-MiZeroPage(PFN_NUMBER Page);
-
-/* memsafe.s *****************************************************************/
-
-PVOID
-FASTCALL
-MmSafeReadPtr(PVOID Source);
 
 /* process.c *****************************************************************/
 
@@ -1151,36 +922,8 @@ MmRemoveLRUUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmLockPage(PFN_NUMBER Page);
-
-VOID
-NTAPI
-MmUnlockPage(PFN_NUMBER Page);
-
-ULONG
-NTAPI
-MmGetLockCountPage(PFN_NUMBER Page);
-
-VOID
-NTAPI
-MmInitializePageList(
-    VOID
-);
-
-VOID
-NTAPI
 MmDumpArmPfnDatabase(
    IN BOOLEAN StatusOnly
-);
-
-PFN_NUMBER
-NTAPI
-MmGetContinuousPages(
-    ULONG NumberOfBytes,
-    PHYSICAL_ADDRESS LowestAcceptableAddress,
-    PHYSICAL_ADDRESS HighestAcceptableAddress,
-    PHYSICAL_ADDRESS BoundaryAddressMultiple,
-    BOOLEAN ZeroPages
 );
 
 VOID
@@ -1230,22 +973,6 @@ MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 #define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
 
 /* i386/page.c *********************************************************/
-
-NTSTATUS
-NTAPI
-MmCreateVirtualMappingForKernel(
-    PVOID Address,
-    ULONG flProtect,
-    PPFN_NUMBER Pages,
-    ULONG PageCount
-);
-
-NTSTATUS
-NTAPI
-MmCommitPagedPoolAddress(
-    PVOID Address,
-    BOOLEAN Locked
-);
 
 NTSTATUS
 NTAPI
@@ -1301,13 +1028,6 @@ MmInitGlobalKernelPageDirectory(VOID);
 
 VOID
 NTAPI
-MmEnableVirtualMapping(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
-
-VOID
-NTAPI
 MmGetPageFileMapping(
 	struct _EPROCESS *Process,
 	PVOID Address,
@@ -1338,13 +1058,6 @@ MmIsPageSwapEntry(
 
 VOID
 NTAPI
-MmTransferOwnershipPage(
-    PFN_NUMBER Page,
-    ULONG NewConsumer
-);
-
-VOID
-NTAPI
 MmSetDirtyPage(
     struct _EPROCESS *Process,
     PVOID Address
@@ -1354,16 +1067,6 @@ PFN_NUMBER
 NTAPI
 MmAllocPage(
     ULONG Consumer
-);
-
-LONG
-NTAPI
-MmAllocPagesSpecifyRange(
-    ULONG Consumer,
-    PHYSICAL_ADDRESS LowestAddress,
-    PHYSICAL_ADDRESS HighestAddress,
-    ULONG NumberOfPages,
-    PPFN_NUMBER Pages
 );
 
 VOID
@@ -1398,10 +1101,6 @@ MmSetCleanPage(
     struct _EPROCESS *Process,
     PVOID Address
 );
-
-NTSTATUS
-NTAPI
-MmCreatePageTable(PVOID PAddress);
 
 VOID
 NTAPI
@@ -1441,19 +1140,11 @@ MmInitializeHandBuiltProcess2(
 
 NTSTATUS
 NTAPI
-MmReleaseMmInfo(struct _EPROCESS *Process);
-
-NTSTATUS
-NTAPI
 MmSetExecuteOptions(IN ULONG ExecuteOptions);
 
 NTSTATUS
 NTAPI
 MmGetExecuteOptions(IN PULONG ExecuteOptions);
-
-VOID
-NTAPI
-MmDeleteProcessPageDirectory(struct _EPROCESS *Process);
 
 VOID
 NTAPI
@@ -1471,30 +1162,6 @@ MmIsDirtyPage(
     struct _EPROCESS *Process,
     PVOID Address
 );
-
-VOID
-NTAPI
-MmMarkPageMapped(PFN_NUMBER Page);
-
-VOID
-NTAPI
-MmMarkPageUnmapped(PFN_NUMBER Page);
-
-VOID
-NTAPI
-MmUpdatePageDir(
-    struct _EPROCESS *Process,
-    PVOID Address,
-    ULONG Size
-);
-
-VOID
-NTAPI
-MiInitPageDirectoryMap(VOID);
-
-ULONG
-NTAPI
-MiGetUserPageDirectoryCount(VOID);
 
 /* wset.c ********************************************************************/
 
@@ -1565,13 +1232,6 @@ MmGetFileNameForSection(
     OUT POBJECT_NAME_INFORMATION *ModuleName
 );
 
-PVOID
-NTAPI
-MmAllocateSection(
-    IN SIZE_T Length,
-    PVOID BaseAddress
-);
-
 NTSTATUS
 NTAPI
 MmQuerySectionView(
@@ -1629,41 +1289,6 @@ MmAccessFaultSectionView(
 VOID
 NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
-
-/* mpw.c *********************************************************************/
-
-NTSTATUS
-NTAPI
-MmInitMpwThread(VOID);
-
-NTSTATUS
-NTAPI
-MmInitBsmThread(VOID);
-
-/* pager.c *******************************************************************/
-
-BOOLEAN
-NTAPI
-MiIsPagerThread(VOID);
-
-VOID
-NTAPI
-MiStartPagerThread(VOID);
-
-VOID
-NTAPI
-MiStopPagerThread(VOID);
-
-NTSTATUS
-FASTCALL
-MiQueryVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID Address,
-    IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
-    OUT PVOID VirtualMemoryInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
-);
 
 /* sysldr.c ******************************************************************/
 

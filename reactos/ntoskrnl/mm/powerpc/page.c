@@ -17,7 +17,6 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#pragma alloc_text(INIT, MiInitPageDirectoryMap)
 #endif
 
 /* GLOBALS *****************************************************************/
@@ -103,22 +102,6 @@ MmCopyMmInfo(PEPROCESS Src,
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
-{
-    /* Share the directory base with the idle process */
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
-
-    /* Initialize the Addresss Space */
-    MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
-
-    /* The process now has an address space */
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
-}
-
 BOOLEAN
 NTAPI
 MmCreateProcessAddressSpace(IN ULONG MinWs,
@@ -175,20 +158,6 @@ MmGetPhysicalAddressProcess(PEPROCESS Process, PVOID Addr)
     info.addr = (vaddr_t)Addr;
     MmuInqPage(&info, 1);
     return (PVOID)info.phys;
-}
-
-/*
- * @implemented
- */
-PHYSICAL_ADDRESS NTAPI
-MmGetPhysicalAddress(PVOID vaddr)
-/*
- * FUNCTION: Returns the physical address corresponding to a virtual address
- */
-{
-    PHYSICAL_ADDRESS Addr;
-    Addr.QuadPart = (ULONG)MmGetPhysicalAddressProcess(PsGetCurrentProcess()->UniqueProcessId, vaddr);
-    return Addr;
 }
 
 PFN_NUMBER
@@ -274,24 +243,6 @@ MmIsDirtyPage(PEPROCESS Process, PVOID Address)
     return !!(info.flags & MMU_PAGE_DIRTY);
 }
 
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
-{
-    ppc_map_info_t info = { 0 };
-
-    if (Address < MmSystemRangeStart && Process == NULL)
-    {
-        DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
-        ASSERT(FALSE);
-    }
-
-    info.proc = Process ? (int)Process->UniqueProcessId : 0;
-    info.addr = (vaddr_t)Address;
-    MmuInqPage(&info, 1);
-    return !!(info.flags /*& MMU_PAGE_ACCESS*/);
-}
-
 VOID
 NTAPI
 MmSetCleanPage(PEPROCESS Process, PVOID Address)
@@ -301,12 +252,6 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
 VOID
 NTAPI
 MmSetDirtyPage(PEPROCESS Process, PVOID Address)
-{
-}
-
-VOID
-NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
 }
 
@@ -333,44 +278,6 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
     ULONG Entry;
     Entry = MmGetPageEntryForProcess(Process, Address);
     return !(Entry & PA_PRESENT) && Entry != 0 ? TRUE : FALSE;
-}
-
-NTSTATUS
-NTAPI
-MmCreateVirtualMappingForKernel(PVOID Address,
-                                ULONG flProtect,
-                                PPFN_NUMBER Pages,
-                                ULONG PageCount)
-{
-    ULONG i;
-    PVOID Addr;
-
-    DPRINT("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
-           Address, flProtect, Pages, PageCount);
-
-    if (Address < MmSystemRangeStart)
-    {
-        DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
-        ASSERT(FALSE);
-    }
-
-    Addr = Address;
-
-    for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
-    {
-#if 0
-        if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
-        {
-            DPRINT1("Setting physical address but not allowing access at address "
-                    "0x%.8X with attributes %x/%x.\n",
-                    Addr, Attributes, flProtect);
-            ASSERT(FALSE);
-        }
-        (void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-#endif
-    }
-
-    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -570,23 +477,6 @@ MmCreateHyperspaceMapping(PFN_NUMBER Page)
 
 PFN_NUMBER
 NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_NUMBER NewPage)
-{
-    PFN_NUMBER OldPage;
-    ppc_map_info_t info = { 0 };
-
-    info.proc = 0;
-    info.addr = (vaddr_t)Address;
-    MmuUnmapPage(&info, 1);
-    OldPage = info.phys;
-    info.phys = (paddr_t)NewPage;
-    MmuMapPage(&info, 1);
-
-    return NewPage;
-}
-
-PFN_NUMBER
-NTAPI
 MmDeleteHyperspaceMapping(PVOID Address)
 {
     ppc_map_info_t info = { 0 };
@@ -604,26 +494,6 @@ VOID
 INIT_FUNCTION
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
-{
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitPageDirectoryMap(VOID)
-{
-}
-
-ULONG
-NTAPI
-MiGetUserPageDirectoryCount(VOID)
-{
-    return 0;
-}
-
-VOID
-NTAPI
-MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
 }
 

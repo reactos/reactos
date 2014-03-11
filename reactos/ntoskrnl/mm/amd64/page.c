@@ -138,57 +138,6 @@ MiFlushTlb(PMMPTE Pte, PVOID Address)
 }
 
 static
-VOID
-MmDeletePageTablePfn(PFN_NUMBER PageFrameNumber, ULONG Level)
-{
-    PMMPTE PageTable;
-    KIRQL OldIrql;
-    PMMPFN PfnEntry;
-    ULONG i, NumberEntries;
-
-    /* Check if this is a page table */
-    if (Level > 0)
-    {
-        NumberEntries = (Level == 4) ? MiAddressToPxi(MmHighestUserAddress)+1 : 512;
-
-        /* Map the page table in hyperspace */
-        PageTable = (PMMPTE)MmCreateHyperspaceMapping(PageFrameNumber);
-
-        /* Loop all page table entries */
-        for (i = 0; i < NumberEntries; i++)
-        {
-            /* Check if the entry is valid */
-            if (PageTable[i].u.Hard.Valid)
-            {
-                /* Recursively free the page that backs it */
-                MmDeletePageTablePfn(PageTable[i].u.Hard.PageFrameNumber, Level - 1);
-            }
-        }
-
-        /* Delete the hyperspace mapping */
-        MmDeleteHyperspaceMapping(PageTable);
-    }
-
-    /* Check if this is a legacy allocation */
-    PfnEntry = MiGetPfnEntry(PageFrameNumber);
-    if (MI_IS_ROS_PFN(PfnEntry))
-    {
-        /* Free it using the legacy API */
-        MmReleasePageMemoryConsumer(MC_SYSTEM, PageFrameNumber);
-    }
-    else
-    {
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-        /* Free it using the ARM3 API */
-        MI_SET_PFN_DELETED(PfnEntry);
-        MiDecrementShareCount(PfnEntry, PageFrameNumber);
-
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    }
-}
-
-static
 PMMPTE
 MiGetPteForProcess(
     PEPROCESS Process,
@@ -497,15 +446,6 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     MiFlushTlb(Pte, Address);
 }
 
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
 VOID
 NTAPI
 MmDeleteVirtualMapping(
@@ -559,15 +499,6 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 {
     UNIMPLEMENTED;
 }
-
-
-VOID
-NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
-{
-    UNIMPLEMENTED;
-}
-
 
 NTSTATUS
 NTAPI

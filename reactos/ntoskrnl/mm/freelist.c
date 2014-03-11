@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializePageList)
-#endif
-
 #define MODULE_INVOLVED_IN_ARM3
 #include "ARM3/miarm.h"
 

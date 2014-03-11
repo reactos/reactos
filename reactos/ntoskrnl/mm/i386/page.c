@@ -16,7 +16,6 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#pragma alloc_text(INIT, MiInitPageDirectoryMap)
 #endif
 
 
@@ -590,35 +589,6 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
          * we do not need to flush the TLB here when setting it */
         MmUnmapPageTable(Pt);
     }
-}
-
-VOID
-NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
-{
-    PULONG Pt;
-    ULONG Pte;
-
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (Pt == NULL)
-    {
-        //HACK to get DPH working, waiting for MM rewrite :-/
-        //KeBugCheck(MEMORY_MANAGEMENT);
-        return;
-    }
-
-    /* Do not mark a 0 page as present */
-    if(0 == InterlockedCompareExchangePte(Pt, 0, 0))
-        return;
-
-    do
-    {
-        Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_PRESENT, Pte));
-
-    /* We don't need to flush the TLB here because it
-     * won't cache translations for non-present pages */
-    MmUnmapPageTable(Pt);
 }
 
 BOOLEAN

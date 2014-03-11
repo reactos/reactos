@@ -1205,7 +1205,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
    MmUnlockAddressSpace(&Process->Vm);
 
-   DPRINT("Finished MmReleaseMmInfo()\n");
+   DPRINT("Finished MmDeleteProcessAddressSpace()\n");
    MmDeleteProcessAddressSpace2(Process);
    return(STATUS_SUCCESS);
 }
