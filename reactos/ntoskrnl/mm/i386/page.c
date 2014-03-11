@@ -40,22 +40,10 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define HYPERSPACE          (0xc0400000)
-#define IS_HYPERSPACE(v)    (((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
+#define IS_HYPERSPACE(v)    (((ULONG)(v) >= HYPER_SPACE && (ULONG)(v) <= HYPER_SPACE_END))
 
 #define PTE_TO_PFN(X)  ((X) >> PAGE_SHIFT)
 #define PFN_TO_PTE(X)  ((X) << PAGE_SHIFT)
-
-#if defined(__GNUC__)
-#define PTE_TO_PAGE(X) ((LARGE_INTEGER)(LONGLONG)(PAGE_MASK(X)))
-#else
-__inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
-{
-    LARGE_INTEGER dummy;
-    dummy.QuadPart = (LONGLONG)(PAGE_MASK(npage));
-    return dummy;
-}
-#endif
 
 const
 ULONG
