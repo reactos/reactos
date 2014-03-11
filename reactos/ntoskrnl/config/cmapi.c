@@ -1434,7 +1434,7 @@ CmpQueryKeyDataFromCache(
     }
 
     /* Validate buffer length (we do not copy the name!) */
-    *ResultLength = sizeof(KeyCachedInfo);
+    *ResultLength = sizeof(*KeyCachedInfo);
     if (Length < *ResultLength)
     {
         return STATUS_BUFFER_TOO_SMALL;
