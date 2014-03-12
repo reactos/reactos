@@ -57,6 +57,11 @@ VfatCleanupFile(
             return STATUS_PENDING;
         }
 
+        /* Notify about the cleanup */
+        FsRtlNotifyCleanup(IrpContext->DeviceExt->NotifySync,
+                           &(IrpContext->DeviceExt->NotifyList),
+                           FileObject->FsContext2);
+
         pFcb->OpenHandleCount--;
 
         if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
