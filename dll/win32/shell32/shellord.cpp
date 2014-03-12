@@ -2265,7 +2265,10 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
     }
 
     Shell_GetImageLists(&hLarge, &hSmall);
-    hNew = ImageList_Duplicate(iImageList == SHIL_LARGE ? hLarge : hSmall);
+
+    // Duplicating the imagelist causes the start menu items not to draw on the first show.
+    // Was the Duplicate necessary for some reason? I believe Windows returns the raw pointer here.
+    hNew = /*ImageList_Duplicate*/(iImageList == SHIL_LARGE ? hLarge : hSmall);
 
     /* Get the interface for the new image list */
     if (hNew)

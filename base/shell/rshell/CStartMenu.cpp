@@ -267,10 +267,8 @@ public:
         case SMC_GETOBJECT:
             return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
         case SMC_EXEC:
-            DbgPrint("SMC_EXEC\n");
             return OnExec(psmd);
         case SMC_SFEXEC:
-            DbgPrint("SMC_SFEXEC\n");
             m_pTrayPriv->Execute(psmd->psf, psmd->pidlItem);
             break;
         }
