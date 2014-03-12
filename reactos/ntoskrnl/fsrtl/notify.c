@@ -494,7 +494,7 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
     {
         OutputBuffer->NextEntryOffset = 0;
         OutputBuffer->Action = Action;
-        OutputBuffer->FileNameLength = DataLength - sizeof(FILE_NOTIFY_INFORMATION);
+        OutputBuffer->FileNameLength = DataLength - FIELD_OFFSET(FILE_NOTIFY_INFORMATION, FileName);
         if (IsUnicode)
         {
             if (ParentName->Length)
