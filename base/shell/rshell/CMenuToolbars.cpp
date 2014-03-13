@@ -492,8 +492,14 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
     ClientToScreen(m_hwnd, &c);
     ClientToScreen(m_hwnd, &d);
 
-    POINTL pt = { b.x - 3, a.y - 3 };
+    POINTL pt = { a.x, b.y };
     RECTL rcl = { c.x, c.y, d.x, d.y };
+
+    if(m_toolbarFlags & SMINIT_VERTICAL)
+    {
+        pt.x = b.x - 3;
+        pt.y = a.y - 3;
+    }
 
 #if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
@@ -830,13 +836,16 @@ CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
 }
 
 HRESULT  CMenuStaticToolbar::GetMenu(
-    HMENU *phmenu,
-    HWND *phwnd,
-    DWORD *pdwFlags)
+    _Out_opt_ HMENU *phmenu,
+    _Out_opt_ HWND *phwnd,
+    _Out_opt_ DWORD *pdwFlags)
 {
-    *phmenu = m_hmenu;
-    *phwnd = NULL;
-    *pdwFlags = m_dwMenuFlags;
+    if (phmenu)
+        *phmenu = m_hmenu;
+    if (phwnd)
+        *phwnd = NULL;
+    if (pdwFlags)
+        *pdwFlags = m_dwMenuFlags;
 
     return S_OK;
 }
@@ -977,7 +986,9 @@ HRESULT CMenuStaticToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR d
 
 CMenuSFToolbar::CMenuSFToolbar(CMenuBand * menuBand) :
     CMenuToolbarBase(menuBand, TRUE),
-    m_shellFolder(NULL)
+    m_shellFolder(NULL),
+    m_idList(NULL),
+    m_hKey(NULL)
 {
 }
 
@@ -1049,7 +1060,7 @@ HRESULT CMenuSFToolbar::OnDeletingButton(const NMTOOLBAR * tb)
 HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags)
 {
     m_shellFolder = psf;
-    m_idList = pidlFolder;
+    m_idList = ILClone(pidlFolder);
     m_hKey = hKey;
     m_dwMenuFlags = dwFlags;
     return S_OK;

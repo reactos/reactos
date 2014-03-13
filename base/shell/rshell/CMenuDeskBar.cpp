@@ -345,8 +345,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         y = rcWorkArea.bottom - cy;
     }
 
-
-
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
 
     m_ShowFlags = dwFlags;

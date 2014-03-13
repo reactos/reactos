@@ -311,10 +311,14 @@ HRESULT STDMETHODCALLTYPE CAddressBand::IsWindowOwner(HWND hWnd)
     CComPtr<IWinEventHandler>               winEventHandler;
     HRESULT                                 hResult;
 
-    hResult = fAddressEditBox->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
-    if (FAILED(hResult))
-        return hResult;
-    return winEventHandler->IsWindowOwner(hWnd);
+    if (fAddressEditBox)
+    {
+        hResult = fAddressEditBox->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+        if (FAILED(hResult))
+            return hResult;
+        return winEventHandler->IsWindowOwner(hWnd);
+    }
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressBand::FileSysChange(long param8, long paramC)
