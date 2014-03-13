@@ -749,7 +749,7 @@ DECLARE_INTERFACE_(IShellFolderView, IUnknown)
     STDMETHOD(RefreshObject) (THIS_ _In_ PITEMID_CHILD pidl, _Out_ UINT *puItem) PURE;
     STDMETHOD(SetRedraw) (THIS_ BOOL bRedraw) PURE;
     STDMETHOD(GetSelectedCount) (THIS_ _Out_ UINT *puSelected) PURE;
-    STDMETHOD(GetSelectedObjects) (THIS_ _Outptr_result_buffer_(*puItems) PCITEMID_CHILD **pppidl, _Out_ UINT *puItems) PURE;
+    STDMETHOD(GetSelectedObjects) (THIS_ _Outptr_result_buffer_(*puItems) PCUITEMID_CHILD **pppidl, _Out_ UINT *puItems) PURE;
     STDMETHOD(IsDropOnSource) (THIS_ _In_opt_ IDropTarget *pDropTarget) PURE;
     STDMETHOD(GetDragPoint) (THIS_ _Out_ POINT *ppt) PURE;
     STDMETHOD(GetDropPoint) (THIS_ _Out_ POINT *ppt) PURE;

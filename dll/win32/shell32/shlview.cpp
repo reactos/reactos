@@ -71,6 +71,7 @@ class CDefView :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellView,
     public IFolderView,
+    public IShellFolderView,
     public IOleCommandTarget,
     public IDropTarget,
     public IDropSource,
@@ -165,6 +166,36 @@ class CDefView :
         virtual HRESULT STDMETHODCALLTYPE GetAutoArrange();
         virtual HRESULT STDMETHODCALLTYPE SelectItem(int iItem, DWORD dwFlags);
         virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItems(UINT cidl, LPCITEMIDLIST *apidl, POINT *apt, DWORD dwFlags);
+
+        // *** IShellFolderView methods ***
+        virtual HRESULT STDMETHODCALLTYPE Rearrange(LPARAM sort);
+        virtual HRESULT STDMETHODCALLTYPE GetArrangeParam(LPARAM *sort);
+        virtual HRESULT STDMETHODCALLTYPE ArrangeGrid();
+        virtual HRESULT STDMETHODCALLTYPE AutoArrange();
+        virtual HRESULT STDMETHODCALLTYPE IShellFolderView_GetAutoArrange();
+        virtual HRESULT STDMETHODCALLTYPE AddObject(PITEMID_CHILD pidl, UINT *item);
+        virtual HRESULT STDMETHODCALLTYPE GetObject(PITEMID_CHILD *pidl, UINT item);
+        virtual HRESULT STDMETHODCALLTYPE RemoveObject(PITEMID_CHILD pidl, UINT *item);
+        virtual HRESULT STDMETHODCALLTYPE GetObjectCount(UINT *count);
+        virtual HRESULT STDMETHODCALLTYPE SetObjectCount(UINT count, UINT flags);
+        virtual HRESULT STDMETHODCALLTYPE UpdateObject(PITEMID_CHILD pidl_old, PITEMID_CHILD pidl_new, UINT *item);
+        virtual HRESULT STDMETHODCALLTYPE RefreshObject(PITEMID_CHILD pidl, UINT *item);
+        virtual HRESULT STDMETHODCALLTYPE SetRedraw(BOOL redraw);
+        virtual HRESULT STDMETHODCALLTYPE GetSelectedCount(UINT *count);
+        virtual HRESULT STDMETHODCALLTYPE GetSelectedObjects(PCUITEMID_CHILD **pidl, UINT *items);
+        virtual HRESULT STDMETHODCALLTYPE IsDropOnSource(IDropTarget *drop_target);
+        virtual HRESULT STDMETHODCALLTYPE GetDragPoint(POINT *pt);
+        virtual HRESULT STDMETHODCALLTYPE GetDropPoint(POINT *pt);
+        virtual HRESULT STDMETHODCALLTYPE MoveIcons(IDataObject *obj);
+        virtual HRESULT STDMETHODCALLTYPE SetItemPos(PCUITEMID_CHILD pidl, POINT *pt);
+        virtual HRESULT STDMETHODCALLTYPE IsBkDropTarget(IDropTarget *drop_target);
+        virtual HRESULT STDMETHODCALLTYPE SetClipboard(BOOL move);
+        virtual HRESULT STDMETHODCALLTYPE SetPoints(IDataObject *obj);
+        virtual HRESULT STDMETHODCALLTYPE GetItemSpacing(ITEMSPACING *spacing);
+        virtual HRESULT STDMETHODCALLTYPE SetCallback(IShellFolderViewCB *new_cb, IShellFolderViewCB **old_cb);
+        virtual HRESULT STDMETHODCALLTYPE Select(UINT flags);
+        virtual HRESULT STDMETHODCALLTYPE QuerySupport(UINT *support);
+        virtual HRESULT STDMETHODCALLTYPE SetAutomationObject(IDispatch *disp);
 
         // *** IOleCommandTarget methods ***
         virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
@@ -269,6 +300,7 @@ class CDefView :
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
         COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_IDropSource, IDropSource)
@@ -2310,6 +2342,206 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, LPCITEMIDL
     return E_NOTIMPL;
 }
 
+/**********************************************************
+ * IShellFolderView implementation
+ */
+HRESULT STDMETHODCALLTYPE CDefView::Rearrange(LPARAM sort)
+{
+    FIXME("(%p)->(%ld) stub\n", this, sort);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetArrangeParam(LPARAM *sort)
+{
+    FIXME("(%p)->(%p) stub\n", this, sort);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::ArrangeGrid()
+{
+    FIXME("(%p) stub\n", this);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
+{
+    FIXME("(%p) stub\n", this);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::IShellFolderView_GetAutoArrange()
+{
+    TRACE("(%p)\n", this);
+    return GetAutoArrange();
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::AddObject(PITEMID_CHILD pidl, UINT *item)
+{
+    FIXME("(%p)->(%p %p) stub\n", this, pidl, item);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetObject(PITEMID_CHILD *pidl, UINT item)
+{
+    TRACE("(%p)->(%p %d)\n", this, pidl, item);
+    return Item(item, pidl);
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::RemoveObject(PITEMID_CHILD pidl, UINT *item)
+{
+
+    TRACE("(%p)->(%p %p)\n", this, pidl, item);
+
+    if (pidl)
+    {
+        *item = LV_FindItemByPidl(ILFindLastID(pidl));
+        SendMessageW(m_hWndList, LVM_DELETEITEM, *item, 0);
+    }
+    else
+    {
+        *item = 0;
+        SendMessageW(m_hWndList, LVM_DELETEALLITEMS, 0, 0);
+    }
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetObjectCount(UINT *count)
+{
+    TRACE("(%p)->(%p)\n", this, count);
+    return ItemCount(SVGIO_ALLVIEW, reinterpret_cast<INT*>(count));
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetObjectCount(UINT count, UINT flags)
+{
+    FIXME("(%p)->(%d %x) stub\n", this, count, flags);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::UpdateObject(PITEMID_CHILD pidl_old, PITEMID_CHILD pidl_new, UINT *item)
+{
+    FIXME("(%p)->(%p %p %p) stub\n", this, pidl_old, pidl_new, item);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::RefreshObject(PITEMID_CHILD pidl, UINT *item)
+{
+    FIXME("(%p)->(%p %p) stub\n", this, pidl, item);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetRedraw(BOOL redraw)
+{
+    TRACE("(%p)->(%d)\n", this, redraw);
+    SendMessageW(m_hWndList, WM_SETREDRAW, redraw, 0);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetSelectedCount(UINT *count)
+{
+    FIXME("(%p)->(%p) stub\n", this, count);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, UINT *items)
+{
+    TRACE("(%p)->(%p %p)\n", this, pidl, items);
+
+    *items = GetSelections();
+
+    if (*items)
+    {
+        *pidl = static_cast<PCUITEMID_CHILD *>(LocalAlloc(0, *items * sizeof(LPITEMIDLIST)));
+        if (!*pidl)
+        {
+            return E_OUTOFMEMORY;
+        }
+        
+        /* it's documented that caller shouldn't PIDLs, only array itself */
+        memcpy(static_cast<PCUITEMID_CHILD *>(*pidl), m_apidl, *items * sizeof(LPITEMIDLIST));
+    }
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::IsDropOnSource(IDropTarget *drop_target)
+{
+    FIXME("(%p)->(%p) stub\n", this, drop_target);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetDragPoint(POINT *pt)
+{
+    FIXME("(%p)->(%p) stub\n", this, pt);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetDropPoint(POINT *pt)
+{
+    FIXME("(%p)->(%p) stub\n", this, pt);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::MoveIcons(IDataObject *obj)
+{
+    TRACE("(%p)->(%p)\n", this, obj);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetItemPos(PCUITEMID_CHILD pidl, POINT *pt)
+{
+    FIXME("(%p)->(%p %p) stub\n", this, pidl, pt);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::IsBkDropTarget(IDropTarget *drop_target)
+{
+    FIXME("(%p)->(%p) stub\n", this, drop_target);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetClipboard(BOOL move)
+{
+    FIXME("(%p)->(%d) stub\n", this, move);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetPoints(IDataObject *obj)
+{
+    FIXME("(%p)->(%p) stub\n", this, obj);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::GetItemSpacing(ITEMSPACING *spacing)
+{
+    FIXME("(%p)->(%p) stub\n", this, spacing);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetCallback(IShellFolderViewCB  *new_cb, IShellFolderViewCB **old_cb)
+{
+    FIXME("(%p)->(%p %p) stub\n", this, new_cb, old_cb);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::Select(UINT flags)
+{
+    FIXME("(%p)->(%d) stub\n", this, flags);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::QuerySupport(UINT *support)
+{
+    TRACE("(%p)->(%p)\n", this, support);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::SetAutomationObject(IDispatch *disp)
+{
+    FIXME("(%p)->(%p) stub\n", this, disp);
+    return E_NOTIMPL;
+}
+ 
 /**********************************************************
  * ISVOleCmdTarget_QueryStatus (IOleCommandTarget)
  */
