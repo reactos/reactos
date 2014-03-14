@@ -123,8 +123,7 @@ static __inline VOID BltCard(HDC hdc, INT x, INT y, INT dx, INT dy, HDC hdcCard,
  */
 BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type, COLORREF color)
 {
-    HDC hdcCard;
-    DWORD dwRasterOp = SRCCOPY, OldBkColor;
+    DWORD dwRasterOp = SRCCOPY;
     BOOL bSaveEdges = TRUE;
     BOOL bStretch = FALSE;
 
@@ -180,22 +179,25 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
     }
     if (type != ectERASE)
     {
+        HDC hdcCard;
+        COLORREF OldBkColor;
+
         hdcCard = CreateCompatibleDC(hdc);
         SelectObject(hdcCard, g_CardBitmaps[card]);
         OldBkColor = SetBkColor(hdc, (type == ectFACES) ? 0xFFFFFF : color);
         if (bSaveEdges)
         {
             COLORREF SavedPixels[12];
-            SavedPixels[0] = GetPixel(hdc, x, y);
-            SavedPixels[1] = GetPixel(hdc, x + 1, y);
-            SavedPixels[2] = GetPixel(hdc, x, y + 1);
-            SavedPixels[3] = GetPixel(hdc, x + dx - 1, y);
-            SavedPixels[4] = GetPixel(hdc, x + dx - 2, y);
-            SavedPixels[5] = GetPixel(hdc, x + dx - 1, y + 1);
-            SavedPixels[6] = GetPixel(hdc, x, y + dy - 1);
-            SavedPixels[7] = GetPixel(hdc, x + 1, y + dy - 1);
-            SavedPixels[8] = GetPixel(hdc, x, y + dy - 2);
-            SavedPixels[9] = GetPixel(hdc, x + dx - 1, y + dy - 1);
+            SavedPixels[0]  = GetPixel(hdc, x, y);
+            SavedPixels[1]  = GetPixel(hdc, x + 1, y);
+            SavedPixels[2]  = GetPixel(hdc, x, y + 1);
+            SavedPixels[3]  = GetPixel(hdc, x + dx - 1, y);
+            SavedPixels[4]  = GetPixel(hdc, x + dx - 2, y);
+            SavedPixels[5]  = GetPixel(hdc, x + dx - 1, y + 1);
+            SavedPixels[6]  = GetPixel(hdc, x, y + dy - 1);
+            SavedPixels[7]  = GetPixel(hdc, x + 1, y + dy - 1);
+            SavedPixels[8]  = GetPixel(hdc, x, y + dy - 2);
+            SavedPixels[9]  = GetPixel(hdc, x + dx - 1, y + dy - 1);
             SavedPixels[10] = GetPixel(hdc, x + dx - 2, y + dy - 1);
             SavedPixels[11] = GetPixel(hdc, x + dx - 1, y + dy - 2);
 
@@ -244,6 +246,7 @@ BOOL WINAPI cdtAnimate(HDC hdc, int cardback, int x, int y, int frame)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     UNREFERENCED_PARAMETER(lpvReserved);
+
     if (fdwReason == DLL_PROCESS_ATTACH)
         g_hModule = hinstDLL;
 
