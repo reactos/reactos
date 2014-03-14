@@ -2571,6 +2571,16 @@ NtUserCreateWindowEx(
 
     ASSERT(plstrWindowName);
 
+    if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD) 
+    {
+        /* check hMenu is valid handle */
+        if (hMenu && !ValidateHandle(hMenu, TYPE_MENU))
+        {
+            /* error is set in ValidateHandle */
+            return NULL;
+        }
+    } 
+
     /* Copy the window name to kernel mode */
     Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
     if (!NT_SUCCESS(Status))
