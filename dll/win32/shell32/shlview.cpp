@@ -1051,7 +1051,12 @@ void CDefView::MergeFileMenu(HMENU hSubMenu)
     if (hSubMenu)
     {   /*insert This item at the beginning of the menu */
         _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"dummy45", MFS_ENABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+4, MFT_STRING, L"Properties", MFS_DISABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+3, MFT_STRING, L"Rename", MFS_DISABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+2, MFT_STRING, L"Delete", MFS_DISABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+1, MFT_STRING, L"Create Shortcut", MFS_DISABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"New", MFS_ENABLED);
     }
 
     TRACE("--\n");
@@ -1391,12 +1396,6 @@ void CDefView::DoActivate(UINT uState)
             mii.fState = MFS_ENABLED;
             mii.dwTypeData = szText;
             mii.hSubMenu = BuildFileMenu();
-
-            /*insert our menu into the menu bar*/
-            if (mii.hSubMenu)
-            {
-                InsertMenuItemA(m_hMenu, FCIDM_MENU_HELP, FALSE, &mii);
-            }
 
             /*get the view menu so we can merge with it*/
             ZeroMemory(&mii, sizeof(mii));
