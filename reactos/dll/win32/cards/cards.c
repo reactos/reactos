@@ -169,13 +169,15 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
     if (type == ectEMPTY || type == ectERASE)
     {
         POINT pPoint;
-        HBRUSH hBrush;
+        HBRUSH hBrush, hOldBrush;
 
         hBrush = CreateSolidBrush(color);
         GetDCOrgEx(hdc, &pPoint);
         SetBrushOrgEx(hdc, pPoint.x, pPoint.y, 0);
-        SelectObject(hdc, hBrush);
+        hOldBrush = SelectObject(hdc, hBrush);
         PatBlt(hdc, x, y, dx, dy, PATCOPY);
+        SelectObject(hdc, hOldBrush);
+        DeleteObject(hBrush);
     }
     if (type != ectERASE)
     {
