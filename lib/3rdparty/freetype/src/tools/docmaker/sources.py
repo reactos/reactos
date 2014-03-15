@@ -1,4 +1,4 @@
-#  Sources (c) 2002-2004, 2006-2009, 2012
+#  Sources (c) 2002-2004, 2006-2009, 2012, 2013
 #    David Turner <david@freetype.org>
 #
 #
@@ -132,13 +132,49 @@ re_markup_tags = [re_markup_tag1, re_markup_tag2]
 #
 # used to detect a cross-reference, after markup tags have been stripped
 #
-re_crossref = re.compile( r'@((?:\w|-)*)(.*)' )
+re_crossref = re.compile( r'@((?:\w|-)*)(.*)' )    #  @foo
 
 #
 # used to detect italic and bold styles in paragraph text
 #
 re_italic = re.compile( r"_(\w(\w|')*)_(.*)" )     #  _italic_
 re_bold   = re.compile( r"\*(\w(\w|')*)\*(.*)" )   #  *bold*
+
+#
+# this regular expression code to identify an URL has been taken from
+#
+#   http://mail.python.org/pipermail/tutor/2002-September/017228.html
+#
+# (with slight modifications)
+#
+
+urls = r'(?:https?|telnet|gopher|file|wais|ftp)'
+ltrs = r'\w'
+gunk = r'/#~:.?+=&%@!\-'
+punc = r'.:?\-'
+any  = "%(ltrs)s%(gunk)s%(punc)s" % { 'ltrs' : ltrs,
+                                      'gunk' : gunk,
+                                      'punc' : punc }
+url  = r"""
+         (
+           \b                    # start at word boundary
+           %(urls)s :            # need resource and a colon
+           [%(any)s] +?          # followed by one or more of any valid
+                                 # character, but be conservative and
+                                 # take only what you need to...
+           (?=                   # [look-ahead non-consumptive assertion]
+             [%(punc)s]*         # either 0 or more punctuation
+             (?:                 # [non-grouping parentheses]
+               [^%(any)s] | $    # followed by a non-url char
+                                 # or end of the string
+             )
+           )
+         )
+        """ % {'urls' : urls,
+               'any'  : any,
+               'punc' : punc }
+
+re_url = re.compile( url, re.VERBOSE | re.MULTILINE )
 
 #
 # used to detect the end of commented source lines

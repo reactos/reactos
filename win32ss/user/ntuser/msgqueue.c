@@ -575,6 +575,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    {
        pti = pwnd->head.pti;
        MessageQueue = pti->MessageQueue;
+       // MessageQueue->ptiMouse = pti;
 
        if ( pti->TIF_flags & TIF_INCLEANUP || MessageQueue->QF_flags & QF_INDESTROY)
        {
@@ -1342,7 +1343,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     USHORT hittest;
     EVENTMSG event;
     MOUSEHOOKSTRUCT hook;
-    BOOL eatMsg;
+    BOOL eatMsg = FALSE;
 
     PWND pwndMsg, pwndDesktop;
     PUSER_MESSAGE_QUEUE MessageQueue;
@@ -1367,9 +1368,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (pwndMsg) UserReferenceObject(pwndMsg);
     }
     else
-    {   // Fix wine Msg test_HTTRANSPARENT. Start with a NULL window.
-        // http://www.winehq.org/pipermail/wine-patches/2012-August/116776.html
-        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest);
+    {
+        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest, TRUE);
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);
@@ -1391,10 +1391,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     msg->hwnd = UserHMGetHandle(pwndMsg);
-
-#if 0
-    if (!check_hwnd_filter( msg, hwnd_filter )) RETURN(FALSE);
-#endif
 
     pt = msg->pt;
     message = msg->message;
@@ -1546,8 +1542,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         msg->message = message;
         RETURN(TRUE);
     }
-
-    eatMsg = FALSE;
 
     if ((msg->message == WM_LBUTTONDOWN) ||
         (msg->message == WM_RBUTTONDOWN) ||
@@ -1807,8 +1801,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
               break;
            }
         }
-        CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                          ListEntry);
+        CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
     }
     while(CurrentEntry != ListHead);
 

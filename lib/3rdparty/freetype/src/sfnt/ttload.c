@@ -236,7 +236,8 @@
          */
         if ( table.Length < 0x36 )
         {
-          FT_TRACE2(( "check_table_dir: `head' table too small\n" ));
+          FT_TRACE2(( "check_table_dir:"
+                      " `head' or `bhed' table too small\n" ));
           error = FT_THROW( Table_Missing );
           goto Exit;
         }
@@ -246,12 +247,8 @@
           goto Exit;
 
         if ( magic != 0x5F0F3CF5UL )
-        {
           FT_TRACE2(( "check_table_dir:"
-                      " no magic number found in `head' table\n"));
-          error = FT_THROW( Table_Missing );
-          goto Exit;
-        }
+                      " invalid magic number in `head' or `bhed' table\n"));
 
         if ( FT_STREAM_SEEK( offset + ( nn + 1 ) * 16 ) )
           goto Exit;
@@ -394,8 +391,8 @@
     {
       entry->Tag      = FT_GET_TAG4();
       entry->CheckSum = FT_GET_ULONG();
-      entry->Offset   = FT_GET_LONG();
-      entry->Length   = FT_GET_LONG();
+      entry->Offset   = FT_GET_ULONG();
+      entry->Length   = FT_GET_ULONG();
 
       /* ignore invalid tables */
       if ( entry->Offset + entry->Length > stream->size )
@@ -1006,7 +1003,8 @@
       FT_FRAME_END
     };
 
-    static const FT_Frame_Field  os2_fields_extra[] =
+    /* `OS/2' version 1 and newer */
+    static const FT_Frame_Field  os2_fields_extra1[] =
     {
       FT_FRAME_START( 8 ),
         FT_FRAME_ULONG( ulCodePageRange1 ),
@@ -1014,6 +1012,7 @@
       FT_FRAME_END
     };
 
+    /* `OS/2' version 2 and newer */
     static const FT_Frame_Field  os2_fields_extra2[] =
     {
       FT_FRAME_START( 10 ),
@@ -1022,6 +1021,15 @@
         FT_FRAME_USHORT( usDefaultChar ),
         FT_FRAME_USHORT( usBreakChar ),
         FT_FRAME_USHORT( usMaxContext ),
+      FT_FRAME_END
+    };
+
+    /* `OS/2' version 5 and newer */
+    static const FT_Frame_Field  os2_fields_extra5[] =
+    {
+      FT_FRAME_START( 4 ),
+        FT_FRAME_USHORT( usLowerOpticalPointSize ),
+        FT_FRAME_USHORT( usUpperOpticalPointSize ),
       FT_FRAME_END
     };
 
@@ -1038,18 +1046,20 @@
     if ( FT_STREAM_READ_FIELDS( os2_fields, os2 ) )
       goto Exit;
 
-    os2->ulCodePageRange1 = 0;
-    os2->ulCodePageRange2 = 0;
-    os2->sxHeight         = 0;
-    os2->sCapHeight       = 0;
-    os2->usDefaultChar    = 0;
-    os2->usBreakChar      = 0;
-    os2->usMaxContext     = 0;
+    os2->ulCodePageRange1        = 0;
+    os2->ulCodePageRange2        = 0;
+    os2->sxHeight                = 0;
+    os2->sCapHeight              = 0;
+    os2->usDefaultChar           = 0;
+    os2->usBreakChar             = 0;
+    os2->usMaxContext            = 0;
+    os2->usLowerOpticalPointSize = 0;
+    os2->usUpperOpticalPointSize = 0xFFFF;
 
     if ( os2->version >= 0x0001 )
     {
       /* only version 1 tables */
-      if ( FT_STREAM_READ_FIELDS( os2_fields_extra, os2 ) )
+      if ( FT_STREAM_READ_FIELDS( os2_fields_extra1, os2 ) )
         goto Exit;
 
       if ( os2->version >= 0x0002 )
@@ -1057,6 +1067,13 @@
         /* only version 2 tables */
         if ( FT_STREAM_READ_FIELDS( os2_fields_extra2, os2 ) )
           goto Exit;
+
+        if ( os2->version >= 0x0005 )
+        {
+          /* only version 5 tables */
+          if ( FT_STREAM_READ_FIELDS( os2_fields_extra5, os2 ) )
+            goto Exit;
+        }
       }
     }
 
@@ -1164,6 +1181,7 @@
         FT_FRAME_USHORT( Style ),
         FT_FRAME_USHORT( TypeFamily ),
         FT_FRAME_USHORT( CapHeight ),
+        FT_FRAME_USHORT( SymbolSet ),
         FT_FRAME_BYTES ( TypeFace, 16 ),
         FT_FRAME_BYTES ( CharacterComplement, 8 ),
         FT_FRAME_BYTES ( FileName, 6 ),

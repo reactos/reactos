@@ -288,8 +288,10 @@ ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
 {
     LPWSTR *lpVector;
     LPWSTR *lpArg;
-    DWORD i, cbServiceName, cbTotal;
     LPWSTR pszServiceName;
+    DWORD cbServiceName;
+    DWORD cbTotal;
+    DWORD i;
 
     if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -297,18 +299,12 @@ ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     *lpArgCount = 0;
     *lpArgVector = NULL;
 
-    pszServiceName = (PWSTR) ((PBYTE) ControlPacket + ControlPacket->dwServiceNameOffset);
+    pszServiceName = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
     cbServiceName = lstrlenW(pszServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
+    cbTotal = cbServiceName + sizeof(LPWSTR);
     if (ControlPacket->dwArgumentsCount > 0)
-    {
-        cbTotal = ControlPacket->dwSize - ControlPacket->dwArgumentsOffset +
-                  cbServiceName + sizeof(LPWSTR);
-    }
-    else
-    {
-        cbTotal = cbServiceName + sizeof(LPWSTR);
-    }
+        cbTotal += ControlPacket->dwSize - ControlPacket->dwArgumentsOffset;
 
     lpVector = HeapAlloc(GetProcessHeap(),
                          HEAP_ZERO_MEMORY,
@@ -321,7 +317,7 @@ ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     lpArg++;
 
     memcpy(lpArg, pszServiceName, cbServiceName);
-    lpArg = (LPWSTR*) ((ULONG_PTR) lpArg + cbServiceName);
+    lpArg = (LPWSTR*)((ULONG_PTR)lpArg + cbServiceName);
 
     if (ControlPacket->dwArgumentsCount > 0)
     {
@@ -351,10 +347,13 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     LPSTR *lpVector;
     LPSTR *lpPtr;
     LPWSTR lpUnicodeString;
+    LPWSTR pszServiceName;
     LPSTR lpAnsiString;
+    DWORD cbServiceName;
     DWORD dwVectorSize;
     DWORD dwUnicodeSize;
-    DWORD dwAnsiSize;
+    DWORD dwAnsiSize = 0;
+    DWORD dwAnsiNameSize = 0;
     DWORD i;
 
     if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
@@ -363,13 +362,21 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     *lpArgCount = 0;
     *lpArgVector = NULL;
 
-    /* FIXME: There should always be one argument (the name) sent to services... */
-    /* FIXME: See the Unicode version above on how to achieve this */
+    pszServiceName = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+    cbServiceName = lstrlenW(pszServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
+    dwAnsiNameSize = WideCharToMultiByte(CP_ACP,
+                                         0,
+                                         pszServiceName,
+                                         cbServiceName,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL);
+
+    dwVectorSize = ControlPacket->dwArgumentsCount * sizeof(LPWSTR);
     if (ControlPacket->dwArgumentsCount > 0)
     {
-        dwVectorSize = ControlPacket->dwArgumentsCount * sizeof(LPWSTR);
-
         lpUnicodeString = (LPWSTR)((PBYTE)ControlPacket +
                                    ControlPacket->dwArgumentsOffset +
                                    dwVectorSize);
@@ -385,15 +392,31 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
                                          0,
                                          NULL,
                                          NULL);
+    }
 
-        lpVector = HeapAlloc(GetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             dwVectorSize + dwAnsiSize);
-        if (lpVector == NULL)
-            return ERROR_OUTOFMEMORY;
+    dwVectorSize += sizeof(LPWSTR);
 
-        lpPtr = (LPSTR*)lpVector;
-        lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
+    lpVector = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         dwVectorSize + dwAnsiNameSize + dwAnsiSize);
+    if (lpVector == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    lpPtr = (LPSTR*)lpVector;
+    lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        pszServiceName,
+                        cbServiceName,
+                        lpAnsiString,
+                        dwAnsiNameSize,
+                        NULL,
+                        NULL);
+
+    if (ControlPacket->dwArgumentsCount > 0)
+    {
+        lpAnsiString = (LPSTR)((ULONG_PTR)lpAnsiString + dwAnsiNameSize);
 
         WideCharToMultiByte(CP_ACP,
                             0,
@@ -403,18 +426,19 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
                             dwAnsiSize,
                             NULL,
                             NULL);
-
-        for (i = 0; i < ControlPacket->dwArgumentsCount; i++)
-        {
-            *lpPtr = lpAnsiString;
-
-            lpPtr++;
-            lpAnsiString += (strlen(lpAnsiString) + 1);
-        }
-
-        *lpArgCount = ControlPacket->dwArgumentsCount;
-        *lpArgVector = lpVector;
     }
+
+    lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
+    for (i = 0; i < ControlPacket->dwArgumentsCount + 1; i++)
+    {
+        *lpPtr = lpAnsiString;
+
+        lpPtr++;
+        lpAnsiString += (strlen(lpAnsiString) + 1);
+    }
+
+    *lpArgCount = ControlPacket->dwArgumentsCount + 1;
+    *lpArgVector = lpVector;
 
     return ERROR_SUCCESS;
 }

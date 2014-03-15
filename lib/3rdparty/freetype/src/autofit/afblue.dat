@@ -1,0 +1,218 @@
+//  afblue.dat
+//
+//    Auto-fitter data for blue strings.
+//
+//  Copyright 2013 by
+//  David Turner, Robert Wilhelm, and Werner Lemberg.
+//
+//  This file is part of the FreeType project, and may only be used,
+//  modified, and distributed under the terms of the FreeType project
+//  license, LICENSE.TXT.  By continuing to use, modify, or distribute
+//  this file you indicate that you have read the license and
+//  understand and accept it fully.
+
+
+// This file contains data specific to blue zones.  It gets processed by
+// a script to simulate `jagged arrays', with enumeration values holding
+// offsets into the arrays.
+//
+// The format of the file is rather simple:  A section starts with three
+// labels separated by whitespace and followed by a colon (everything in a
+// single line); the first label gives the name of the enumeration template,
+// the second the name of the array template, and the third the name of the
+// `maximum' template, holding the size of the largest array element.  The
+// script then fills the corresponding templates (indicated by `@'
+// characters around the name).
+//
+// A section contains one or more data records.  Each data record consists
+// of two or more lines.  The first line holds the enumeration name, and the
+// remaining lines the corresponding array data.
+//
+// There are two possible representations for array data.
+//
+// - A string of characters in UTF-8 encoding enclosed in double quotes,
+//   using C syntax.  There can be only one string per line, thus the
+//   starting and ending double quote must be the first and last character
+//   in the line, respectively, ignoring whitespace before and after the
+//   string.  If there are multiple strings (in multiple lines), they are
+//   concatenated to a single string.  In the output, a string gets
+//   represented as a series of singles bytes, followed by a zero byte.  The
+//   enumeration values simply hold byte offsets to the start of the
+//   corresponding strings.
+//
+// - Data blocks enclosed in balanced braces, which get copied verbatim and
+//   which can span multiple lines.  The opening brace of a block must be
+//   the first character of a line (ignoring whitespace), and the closing
+//   brace the last (ignoring whitespace also).  The script appends a comma
+//   character after each block and counts the number of blocks to set the
+//   enumeration values.
+//
+// A section can contain either strings only or data blocks only.
+//
+// A comment line starts with `//'; it gets removed.  A preprocessor
+// directive line (using the standard syntax of `cpp') starts with `#' and
+// gets copied verbatim to both the enumeration and the array.  Whitespace
+// outside of a string is insignificant.
+//
+// Preprocessor directives are ignored while the script computes maximum
+// values; this essentially means that the maximum values can easily be too
+// large.  Given that the purpose of those values is to create local
+// fixed-size arrays at compile time for further processing of the blue zone
+// data, this isn't a problem.  Note the the final zero byte of a string is
+// not counted.  Note also that the count holds the number of UTF-8 encoded
+// characters, not bytes.
+
+
+AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
+
+  AF_BLUE_STRING_LATIN_CAPITAL_TOP
+    "THEZOCQS"
+  AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM
+    "HEZLOCUS"
+  AF_BLUE_STRING_LATIN_SMALL_F_TOP
+    "fijkdbh"
+  AF_BLUE_STRING_LATIN_SMALL
+    "xzroesc"
+  AF_BLUE_STRING_LATIN_SMALL_DESCENDER
+    "pqgjy"
+
+  AF_BLUE_STRING_GREEK_CAPITAL_TOP
+    "ΓΒΕΖΘΟΩ"
+  AF_BLUE_STRING_GREEK_CAPITAL_BOTTOM
+    "ΒΔΖΞΘΟ"
+  AF_BLUE_STRING_GREEK_SMALL_BETA_TOP
+    "βθδζλξ"
+  AF_BLUE_STRING_GREEK_SMALL
+    "αειοπστω"
+  AF_BLUE_STRING_GREEK_SMALL_DESCENDER
+    "βγημρφχψ"
+
+  AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP
+    "БВЕПЗОСЭ"
+  AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM
+    "БВЕШЗОСЭ"
+  AF_BLUE_STRING_CYRILLIC_SMALL
+    "хпншезос"
+  AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER
+    "руф"
+
+  AF_BLUE_STRING_HEBREW_TOP
+    "בדהחךכםס"
+  AF_BLUE_STRING_HEBREW_BOTTOM
+    "בטכםסצ"
+  AF_BLUE_STRING_HEBREW_DESCENDER
+    "קךןףץ"
+
+#ifdef AF_CONFIG_OPTION_CJK
+
+  AF_BLUE_STRING_CJK_TOP_FILL
+    "他们你來們到和地"
+    "对對就席我时時會"
+    "来為能舰說说这這"
+    "齊"
+  AF_BLUE_STRING_CJK_TOP_UNFILL
+    "军同已愿既星是景"
+    "民照现現理用置要"
+    "軍那配里開雷露面"
+    "顾"
+  AF_BLUE_STRING_CJK_BOTTOM_FILL
+    "个为人他以们你來"
+    "個們到和大对對就"
+    "我时時有来為要說"
+    "说"
+  AF_BLUE_STRING_CJK_BOTTOM_UNFILL
+    "主些因它想意理生"
+    "當看着置者自著裡"
+    "过还进進過道還里"
+    "面"
+
+#ifdef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
+
+  AF_BLUE_STRING_CJK_LEFT_FILL
+    "些们你來們到和地"
+    "她将將就年得情最"
+    "样樣理能說说这這"
+    "通"
+  AF_BLUE_STRING_CJK_LEFT_UNFILL
+    "即吗吧听呢品响嗎"
+    "师師收断斷明眼間"
+    "间际陈限除陳随際"
+    "隨"
+  AF_BLUE_STRING_CJK_RIGHT_FILL
+    "事前學将將情想或"
+    "政斯新样樣民沒没"
+    "然特现現球第經谁"
+    "起"
+  AF_BLUE_STRING_CJK_RIGHT_UNFILL
+    "例別别制动動吗嗎"
+    "增指明朝期构物确"
+    "种調调費费那都間"
+    "间"
+
+#endif /* AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT */
+
+#endif /* AF_CONFIG_OPTION_CJK                */
+
+
+AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
+
+  AF_BLUE_STRINGSET_LATN
+    { AF_BLUE_STRING_LATIN_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_CAPITAL_BOTTOM,  0                                 }
+    { AF_BLUE_STRING_LATIN_SMALL_F_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_LATIN_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
+                                            AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_LATIN_SMALL,           0                                 }
+    { AF_BLUE_STRING_LATIN_SMALL_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                   0                                 }
+
+  AF_BLUE_STRINGSET_GREK
+    { AF_BLUE_STRING_GREEK_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_GREEK_CAPITAL_BOTTOM,  0                                 }
+    { AF_BLUE_STRING_GREEK_SMALL_BETA_TOP,  AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_GREEK_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
+                                            AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_GREEK_SMALL,           0                                 }
+    { AF_BLUE_STRING_GREEK_SMALL_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                   0                                 }
+
+  AF_BLUE_STRINGSET_CYRL
+    { AF_BLUE_STRING_CYRILLIC_CAPITAL_TOP,     AF_BLUE_PROPERTY_LATIN_TOP        }
+    { AF_BLUE_STRING_CYRILLIC_CAPITAL_BOTTOM,  0                                 }
+    { AF_BLUE_STRING_CYRILLIC_SMALL,           AF_BLUE_PROPERTY_LATIN_TOP      |
+                                               AF_BLUE_PROPERTY_LATIN_X_HEIGHT   }
+    { AF_BLUE_STRING_CYRILLIC_SMALL,           0                                 }
+    { AF_BLUE_STRING_CYRILLIC_SMALL_DESCENDER, 0                                 }
+    { AF_BLUE_STRING_MAX,                      0                                 }
+
+  AF_BLUE_STRINGSET_HEBR
+    { AF_BLUE_STRING_HEBREW_TOP,       AF_BLUE_PROPERTY_LATIN_TOP  |
+                                       AF_BLUE_PROPERTY_LATIN_LONG   }
+    { AF_BLUE_STRING_HEBREW_BOTTOM,    0                             }
+    { AF_BLUE_STRING_HEBREW_DESCENDER, 0                             }
+    { AF_BLUE_STRING_MAX,              0                             }
+
+#ifdef AF_CONFIG_OPTION_CJK
+
+  AF_BLUE_STRINGSET_HANI
+    { AF_BLUE_STRING_CJK_TOP_FILL,      AF_BLUE_PROPERTY_CJK_TOP |
+                                        AF_BLUE_PROPERTY_CJK_FILL    }
+    { AF_BLUE_STRING_CJK_TOP_UNFILL,    AF_BLUE_PROPERTY_CJK_TOP     }
+    { AF_BLUE_STRING_CJK_BOTTOM_FILL,   AF_BLUE_PROPERTY_CJK_FILL    }
+    { AF_BLUE_STRING_CJK_BOTTOM_UNFILL, 0                            }
+#ifdef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
+    { AF_BLUE_STRING_CJK_LEFT_FILL,     AF_BLUE_PROPERTY_CJK_HORIZ |
+                                        AF_BLUE_PROPERTY_CJK_FILL    }
+    { AF_BLUE_STRING_CJK_LEFT_UNFILL,   AF_BLUE_PROPERTY_CJK_HORIZ   }
+    { AF_BLUE_STRING_CJK_RIGHT_FILL,    AF_BLUE_PROPERTY_CJK_HORIZ |
+                                        AF_BLUE_PROPERTY_CJK_RIGHT |
+                                        AF_BLUE_PROPERTY_CJK_FILL    }
+    { AF_BLUE_STRING_CJK_RIGHT_UNFILL,  AF_BLUE_PROPERTY_CJK_HORIZ |
+                                        AF_BLUE_PROPERTY_CJK_RIGHT   }
+#endif /* AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT */
+    { AF_BLUE_STRING_MAX,               0                            }
+
+#endif /* AF_CONFIG_OPTION_CJK                */
+
+
+// END

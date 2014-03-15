@@ -920,6 +920,104 @@ GUILoggedOnSAS(
     return result;
 }
 
+
+static
+BOOL
+DoLogon(
+    IN HWND hwndDlg,
+    IN OUT PGINA_CONTEXT pgContext)
+{
+    LPWSTR UserName = NULL;
+    LPWSTR Password = NULL;
+    LPWSTR Domain = NULL;
+    BOOL result = FALSE;
+    NTSTATUS Status, SubStatus = STATUS_SUCCESS;
+
+    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+        goto done;
+
+    if (GetTextboxText(hwndDlg, IDC_LOGON_TO, &Domain) && *Domain == '\0')
+        goto done;
+
+    if (!GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
+        goto done;
+
+    Status = DoLoginTasks(pgContext, UserName, Domain, Password, &SubStatus);
+    if (Status == STATUS_LOGON_FAILURE)
+    {
+        ResourceMessageBox(pgContext,
+                           hwndDlg,
+                           MB_OK | MB_ICONEXCLAMATION,
+                           IDS_LOGONTITLE,
+                           IDS_LOGONWRONGUSERORPWD);
+        goto done;
+    }
+    else if (Status == STATUS_ACCOUNT_RESTRICTION)
+    {
+        TRACE("DoLoginTasks failed! Status 0x%08lx  SubStatus 0x%08lx\n", Status, SubStatus);
+
+        if (SubStatus == STATUS_ACCOUNT_DISABLED)
+        {
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONEXCLAMATION,
+                               IDS_LOGONTITLE,
+                               IDS_LOGONUSERDISABLED);
+            goto done;
+        }
+        else if (SubStatus == STATUS_ACCOUNT_LOCKED_OUT)
+        {
+TRACE("Account locked!\n");
+            pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
+                                                hwndDlg,
+                                                L"Account locked!",
+                                                L"Logon error",
+                                                MB_OK | MB_ICONERROR);
+            goto done;
+        }
+        else
+        {
+TRACE("Other error!\n");
+            pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
+                                                hwndDlg,
+                                                L"Other error!",
+                                                L"Logon error",
+                                                MB_OK | MB_ICONERROR);
+            goto done;
+        }
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+TRACE("DoLoginTasks failed! Status 0x%08lx\n", Status);
+
+        goto done;
+    }
+
+
+    if (!CreateProfile(pgContext, UserName, Domain, Password))
+    {
+        ERR("Failed to create the profile!\n");
+        goto done;
+    }
+
+    ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
+    wcscpy(pgContext->Password, Password);
+
+    result = TRUE;
+
+done:
+    if (UserName != NULL)
+        HeapFree(GetProcessHeap(), 0, UserName);
+
+    if (Password != NULL)
+        HeapFree(GetProcessHeap(), 0, Password);
+
+    if (Domain != NULL)
+        HeapFree(GetProcessHeap(), 0, Domain);
+
+    return result;
+}
+
 static INT_PTR CALLBACK
 LoggedOutWindowProc(
     IN HWND hwndDlg,
@@ -934,7 +1032,6 @@ LoggedOutWindowProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             /* FIXME: take care of NoDomainUI */
             pgContext = (PGINA_CONTEXT)lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
@@ -955,7 +1052,7 @@ LoggedOutWindowProc(
 
             pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             return TRUE;
-        }
+
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -968,51 +1065,28 @@ LoggedOutWindowProc(
             }
             return TRUE;
         }
+
         case WM_DESTROY:
-        {
             DeleteObject(pgContext->hBitmap);
             return TRUE;
-        }
+
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                {
-                    LPWSTR UserName = NULL, Password = NULL, Domain = NULL;
-                    INT result = WLX_SAS_ACTION_NONE;
-
-                    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
-                        break;
-                    if (GetTextboxText(hwndDlg, IDC_LOGON_TO, &Domain) && *Domain == '\0')
-                        break;
-                    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password) &&
-                        DoLoginTasks(pgContext, UserName, Domain, Password))
-                    {
-                        ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
-                        wcscpy(pgContext->Password, Password);
-
-                        result = WLX_SAS_ACTION_LOGON;
-                    }
-                    HeapFree(GetProcessHeap(), 0, UserName);
-                    HeapFree(GetProcessHeap(), 0, Password);
-                    HeapFree(GetProcessHeap(), 0, Domain);
-                    EndDialog(hwndDlg, result);
+                    if (DoLogon(hwndDlg, pgContext))
+                        EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
                     return TRUE;
-                }
+
                 case IDCANCEL:
-                {
                     EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
                     return TRUE;
-                }
+
                 case IDC_SHUTDOWN:
-                {
                     EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN);
                     return TRUE;
-                }
             }
             break;
-        }
     }
 
     return FALSE;

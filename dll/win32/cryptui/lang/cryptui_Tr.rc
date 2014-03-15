@@ -51,16 +51,16 @@ STRINGTABLE
     IDS_FIELDS_CRITICAL_EXTENSIONS "Yalnızca Önemli Eklentiler"
     IDS_FIELDS_PROPERTIES "Yalnızca Husûsiyetler"
     IDS_FIELD_VERSION "Sürüm"
-    IDS_FIELD_SERIAL_NUMBER "Dizi numarası"
+    IDS_FIELD_SERIAL_NUMBER "Dizi Numarası"
     IDS_FIELD_ISSUER "Dağıtıcı"
-    IDS_FIELD_VALID_FROM "Şuradan geçerlidir"
-    IDS_FIELD_VALID_TO "Şuraya geçerlidir"
+    IDS_FIELD_VALID_FROM "Şuradan Geçerlidir"
+    IDS_FIELD_VALID_TO "Şuraya Geçerlidir"
     IDS_FIELD_SUBJECT "Konu"
-    IDS_FIELD_PUBLIC_KEY "Açık anahtar"
+    IDS_FIELD_PUBLIC_KEY "Açık Anahtar"
     IDS_FIELD_PUBLIC_KEY_FORMAT "%1 (%2!d! bit)"
-    IDS_PROP_HASH "SHA1 düzgüsü"
+    IDS_PROP_HASH "SHA1 Kodu"
     IDS_PROP_ENHKEY_USAGE "Gelişmiş anahtar kullanımı (husûsiyet)"
-    IDS_PROP_FRIENDLY_NAME "Kolay adı"
+    IDS_PROP_FRIENDLY_NAME "Kolay Adı"
     IDS_PROP_DESCRIPTION "Tanımı"
     IDS_CERTIFICATE_PROPERTIES "Onay Belgesi Husûsiyetleri"
     IDS_CERTIFICATE_PURPOSE_ERROR "1.2.3.4 biçiminde bir OID giriniz."
@@ -77,7 +77,7 @@ STRINGTABLE
     IDS_IMPORT_FILTER_PFX "Şahsî Bilgi Değiştirmesi (*.pfx; *.p12)"
     IDS_IMPORT_FILTER_CRL "Onay Belgesi İptal Dizelgesi (*.crl)"
     IDS_IMPORT_FILTER_CTL "Onay Belgesi Güven Dizelgesi (*.stl)"
-    IDS_IMPORT_FILTER_SERIALIZED_STORE "Mikroyazılım Dizilendirilmiş Onay Belgesi Deposu (*.sst)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Dizilendirilmiş Onay Belgesi Deposu (*.sst)"
     IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 İletileri (*.spc; *.p7b)"
     IDS_IMPORT_FILTER_ALL "Tüm Kütükler (*.*)"
     IDS_IMPORT_EMPTY_FILE "Bir kütük seçiniz."
@@ -140,10 +140,10 @@ Yazılımı yayımlamadan sonraki değişikliklerden korur."
     IDS_PURPOSE_CTL_USAGE_SIGNING "Onay belgesi güven dizelgesini sayılık olarak imzâlamanızı sağlar."
     IDS_PURPOSE_EFS "Diskteki verilerin şifrelenmesini sağlar."
     IDS_PURPOSE_EFS_RECOVERY "Kütük Kurtarma"
-    IDS_PURPOSE_WHQL "Pencereler Donanım Sürücüsü Doğrulaması"
-    IDS_PURPOSE_NT5 "Pencereler Dizge Bileşeni Doğrulaması"
-    IDS_PURPOSE_OEM_WHQL "OEM Pencereler Dizge Bileşeni Doğrulaması"
-    IDS_PURPOSE_EMBEDDED_NT "Gömülü Pencereler Dizge Bileşeni Doğrulaması"
+    IDS_PURPOSE_WHQL "Windows Donanım Sürücüsü Doğrulaması"
+    IDS_PURPOSE_NT5 "Windows Dizge Bileşeni Doğrulaması"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows Dizge Bileşeni Doğrulaması"
+    IDS_PURPOSE_EMBEDDED_NT "Gömülü Windows Dizge Bileşeni Doğrulaması"
     IDS_PURPOSE_ROOT_LIST_SIGNER "Kök Dizelgesi İmzâlayıcısı"
     IDS_PURPOSE_QUALIFIED_SUBORDINATION "Nitelikli Bağlılık"
     IDS_PURPOSE_KEY_RECOVERY "Anahtar Kurtarma"
@@ -312,7 +312,7 @@ BEGIN
     -1, 31,53,265,10
   LTEXT "Şahsî Bilgi Değiştirmesi/PKCS #12 (.pfx, .p12)",
     -1, 31,68,265,10
-  LTEXT "Mikroyazılım Dizilendirilmiş Onay Belgesi Deposu (.sst)",
+  LTEXT "Microsoft Dizilendirilmiş Onay Belgesi Deposu (.sst)",
     -1, 31,83,265,10
 END
 

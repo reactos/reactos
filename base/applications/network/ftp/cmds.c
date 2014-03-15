@@ -85,18 +85,11 @@ void setpeer(int argc, const char *argv[])
 	}
 	host = hookup(argv[1], portnum);
 	if (host) {
-#if defined(unix) && NBBY == 8
 		int overbose;
-#endif
 		connected = 1;
 		if (autologin)
 			(void) login(argv[1]);
 
-#if defined(unix) && NBBY == 8
-/*
- * this ifdef is to keep someone form "porting" this to an incompatible
- * system and not checking this out. This way they have to think about it.
- */
 		overbose = verbose;
 		if (debug == 0)
 			verbose = -1;
@@ -119,7 +112,7 @@ void setpeer(int argc, const char *argv[])
 				*cp = c;
 		}
 		if (!strncmp(reply_string, "215 UNIX Type: L8", 17)) {
-			setbinary();
+			setbinary(0, NULL);
 			/* allbinary = 1; this violates the RFC */
 			if (overbose)
 			    printf("Using %s mode to transfer files.\n",
@@ -130,7 +123,6 @@ void setpeer(int argc, const char *argv[])
 "Remember to set tenex mode when transfering binary files from this machine.\n");
 		}
 		verbose = overbose;
-#endif /* unix */
 	}
 	(void) fflush(stdout);
 }

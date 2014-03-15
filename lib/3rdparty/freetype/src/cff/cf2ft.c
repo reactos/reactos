@@ -344,6 +344,15 @@
       if ( scaled && !driver->no_stem_darkening )
         font->renderingFlags |= CF2_FlagsDarkened;
 
+      font->darkenParams[0] = driver->darken_params[0];
+      font->darkenParams[1] = driver->darken_params[1];
+      font->darkenParams[2] = driver->darken_params[2];
+      font->darkenParams[3] = driver->darken_params[3];
+      font->darkenParams[4] = driver->darken_params[4];
+      font->darkenParams[5] = driver->darken_params[5];
+      font->darkenParams[6] = driver->darken_params[6];
+      font->darkenParams[7] = driver->darken_params[7];
+
       /* now get an outline for this glyph;      */
       /* also get units per em to validate scale */
       font->unitsPerEm = (CF2_Int)cf2_getUnitsPerEm( decoder );

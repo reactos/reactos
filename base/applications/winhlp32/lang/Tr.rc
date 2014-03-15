@@ -57,7 +57,7 @@ MAIN_MENU MENU
   MENUITEM "&Dizge Renklerini Kullan", MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Yardım" {
-   MENUITEM "&Yardım Konuları",        MNID_HELP_HELPON
+   MENUITEM "&Yardım İçin Yardım",     MNID_HELP_HELPON
    MENUITEM "H&er Zaman Üstte",        MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Hakkında",               MNID_HELP_ABOUT

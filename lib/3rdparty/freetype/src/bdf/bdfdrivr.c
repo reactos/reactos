@@ -351,7 +351,6 @@ THE SOFTWARE.
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
-    FT_UNUSED( face_index );
 
 
     FT_TRACE2(( "BDF driver\n" ));
@@ -375,6 +374,19 @@ THE SOFTWARE.
 
     /* we have a bdf font: let's construct the face object */
     face->bdffont = font;
+
+    /* BDF could not have multiple face in single font file.
+     * XXX: non-zero face_index is already invalid argument, but
+     *      Type1, Type42 driver has a convention to return
+     *      an invalid argument error when the font could be
+     *      opened by the specified driver.
+     */
+    if ( face_index > 0 ) {
+      FT_ERROR(( "BDF_Face_Init: invalid face index\n" ));
+      BDF_Face_Done( bdfface );
+      return FT_THROW( Invalid_Argument );
+    }
+ 
     {
       bdf_property_t*  prop = NULL;
 
@@ -673,6 +685,8 @@ THE SOFTWARE.
       error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
+
+    FT_TRACE1(( "BDF_Glyph_Load: glyph index %d\n", glyph_index ));
 
     /* index 0 is the undefined glyph */
     if ( glyph_index == 0 )

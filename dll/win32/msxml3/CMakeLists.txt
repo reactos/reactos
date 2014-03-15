@@ -66,7 +66,7 @@ add_library(msxml3 SHARED
 
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)
-target_link_libraries(msxml3 libxml2 uuid wine)
+target_link_libraries(msxml3 libxml2 iconv-static uuid wine)
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h SOURCE)

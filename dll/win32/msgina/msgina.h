@@ -81,18 +81,19 @@ typedef struct _GINA_UI
 
 /* lsa.c */
 
-BOOL
+NTSTATUS
 ConnectToLsa(
     PGINA_CONTEXT pgContext);
 
-BOOL
+NTSTATUS
 MyLogonUser(
     HANDLE LsaHandle,
     ULONG AuthenticationPackage,
     LPWSTR lpszUsername,
     LPWSTR lpszDomain,
     LPWSTR lpszPassword,
-    PHANDLE phToken);
+    PHANDLE phToken,
+    PNTSTATUS SubStatus);
 
 /* msgina.c */
 
@@ -103,8 +104,16 @@ DoAdminUnlock(
     IN PWSTR Domain,
     IN PWSTR Password);
 
-BOOL
+NTSTATUS
 DoLoginTasks(
+    IN OUT PGINA_CONTEXT pgContext,
+    IN PWSTR UserName,
+    IN PWSTR Domain,
+    IN PWSTR Password,
+    OUT PNTSTATUS SubStatus);
+
+BOOL
+CreateProfile(
     IN OUT PGINA_CONTEXT pgContext,
     IN PWSTR UserName,
     IN PWSTR Domain,

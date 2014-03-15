@@ -683,9 +683,14 @@ CSR_API(SrvFillConsoleOutput)
 }
 
 NTSTATUS NTAPI
-ConDrvGetConsoleScreenBufferInfo(IN PCONSOLE Console,
-                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                 OUT PCONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo);
+ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
+                                 IN  PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 OUT PCOORD ScreenBufferSize,
+                                 OUT PCOORD CursorPosition,
+                                 OUT PCOORD ViewOrigin,
+                                 OUT PCOORD ViewSize,
+                                 OUT PCOORD MaximumViewSize,
+                                 OUT PWORD  Attributes);
 CSR_API(SrvGetConsoleScreenBufferInfo)
 {
     NTSTATUS Status;
@@ -701,7 +706,12 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
 
     Status = ConDrvGetConsoleScreenBufferInfo(Buffer->Header.Console,
                                               Buffer,
-                                              &ScreenBufferInfoRequest->Info);
+                                              &ScreenBufferInfoRequest->ScreenBufferSize,
+                                              &ScreenBufferInfoRequest->CursorPosition,
+                                              &ScreenBufferInfoRequest->ViewOrigin,
+                                              &ScreenBufferInfoRequest->ViewSize,
+                                              &ScreenBufferInfoRequest->MaximumViewSize,
+                                              &ScreenBufferInfoRequest->Attributes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;

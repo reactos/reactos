@@ -1416,7 +1416,7 @@ BOOL CRecycleBin::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 HRESULT WINAPI CRecycleBin::DragEnter(IDataObject *pDataObject,
                                     DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    FIXME("Recycle bin drag over (%p)\n", this);
+    TRACE("Recycle bin drag over (%p)\n", this);
     /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
     fAcceptFmt = TRUE;
 
@@ -1449,7 +1449,7 @@ HRESULT WINAPI CRecycleBin::DragLeave()
 HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
                                DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    FIXME("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
+    TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
     
     /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
 

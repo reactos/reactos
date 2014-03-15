@@ -37,6 +37,9 @@ if defined ROS_ARCH (
         set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
     ) else if /I "%1" == "Makefiles" (
         set CMAKE_GENERATOR="MinGW Makefiles"
+    ) else if /I "%1" == "clang" (
+        set BUILD_ENVIRONMENT=Clang
+        set CMAKE_GENERATOR="Ninja"
     ) else (
         set CMAKE_GENERATOR="Ninja"
     )
@@ -151,6 +154,8 @@ if EXIST CMakeCache.txt (
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
+) else if "%BUILD_ENVIRONMENT%" == "Clang" (
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-clang.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 ) else (
     cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 )

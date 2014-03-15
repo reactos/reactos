@@ -1153,26 +1153,33 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvGetConsoleScreenBufferInfo(IN PCONSOLE Console,
-                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                 OUT PCONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo)
+ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
+                                 IN  PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 OUT PCOORD ScreenBufferSize,
+                                 OUT PCOORD CursorPosition,
+                                 OUT PCOORD ViewOrigin,
+                                 OUT PCOORD ViewSize,
+                                 OUT PCOORD MaximumViewSize,
+                                 OUT PWORD  Attributes)
 {
-    if (Console == NULL || Buffer == NULL || ScreenBufferInfo == NULL)
+    if (Console == NULL || Buffer == NULL || ScreenBufferSize == NULL ||
+        CursorPosition  == NULL || ViewOrigin == NULL || ViewSize == NULL ||
+        MaximumViewSize == NULL || Attributes == NULL)
+    {
         return STATUS_INVALID_PARAMETER;
+    }
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
-    ScreenBufferInfo->dwSize              = Buffer->ScreenBufferSize;
-    ScreenBufferInfo->dwCursorPosition    = Buffer->CursorPosition;
-    ScreenBufferInfo->wAttributes         = Buffer->ScreenDefaultAttrib;
-    ScreenBufferInfo->srWindow.Left       = Buffer->ViewOrigin.X;
-    ScreenBufferInfo->srWindow.Top        = Buffer->ViewOrigin.Y;
-    ScreenBufferInfo->srWindow.Right      = Buffer->ViewOrigin.X + Buffer->ViewSize.X - 1;
-    ScreenBufferInfo->srWindow.Bottom     = Buffer->ViewOrigin.Y + Buffer->ViewSize.Y - 1;
+    *ScreenBufferSize = Buffer->ScreenBufferSize;
+    *CursorPosition   = Buffer->CursorPosition;
+    *ViewOrigin       = Buffer->ViewOrigin;
+    *ViewSize         = Buffer->ViewSize;
+    *Attributes       = Buffer->ScreenDefaultAttrib;
 
     // FIXME: Refine the computation
-    ScreenBufferInfo->dwMaximumWindowSize = Buffer->ScreenBufferSize;
+    *MaximumViewSize  = Buffer->ScreenBufferSize;
 
     return STATUS_SUCCESS;
 }

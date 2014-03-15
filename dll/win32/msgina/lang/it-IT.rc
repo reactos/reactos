@@ -148,11 +148,14 @@ BEGIN
     IDS_LOGONMSG "You are logged on as %s."
     IDS_LOGONDATE "Dati di accesso: %s %s"
     IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
+    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
+    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
     IDS_CHANGEPWDTITLE "Change Password"
     IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
     IDS_PASSWORDCHANGED "Your password has been changed."
+    IDS_LOGONTITLE "Logon Message"
+    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
+    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

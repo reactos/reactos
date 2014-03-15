@@ -476,7 +476,6 @@ ShellAboutW(
   _In_opt_ HICON hIcon);
 
 int
-WINAPI
 ShellMessageBoxA(
   _In_opt_ HINSTANCE hAppInst,
   _In_opt_ HWND hWnd,
@@ -486,7 +485,6 @@ ShellMessageBoxA(
   ...);
 
 int
-WINAPI
 ShellMessageBoxW(
   _In_opt_ HINSTANCE hAppInst,
   _In_opt_ HWND hWnd,

@@ -4605,6 +4605,7 @@ Quickie:
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessW(LPCWSTR lpApplicationName,
                LPWSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -4773,6 +4774,7 @@ CreateProcessInternalA(HANDLE hToken,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessA(LPCSTR lpApplicationName,
                LPSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,

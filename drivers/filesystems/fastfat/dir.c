@@ -584,6 +584,32 @@ DoQuery(
     return Status;
 }
 
+NTSTATUS VfatNotifyChangeDirectory(PVFAT_IRP_CONTEXT * IrpContext)
+{
+    PVCB pVcb;
+    PVFATFCB pFcb;
+    PIO_STACK_LOCATION Stack;
+    Stack = (*IrpContext)->Stack;
+    pVcb = (*IrpContext)->DeviceExt;
+    pFcb = (PVFATFCB) (*IrpContext)->FileObject->FsContext;
+ 
+    FsRtlNotifyFullChangeDirectory(pVcb->NotifySync,
+                                   &(pVcb->NotifyList),
+                                   (*IrpContext)->FileObject->FsContext2,
+                                   (PSTRING)&(pFcb->PathNameU),
+                                   BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
+                                   FALSE,
+                                   Stack->Parameters.NotifyDirectory.CompletionFilter,
+                                   (*IrpContext)->Irp,
+                                   NULL,
+                                   NULL);
+
+    /* We don't need the IRP context as we won't handle IRP completion */
+    VfatFreeIrpContext(*IrpContext);
+    *IrpContext = NULL;
+
+    return STATUS_PENDING;
+}
 
 /*
  * FUNCTION: directory control : read/write directory informations
@@ -603,8 +629,7 @@ VfatDirectoryControl(
             break;
 
         case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-            DPRINT("VFAT, dir : change\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = VfatNotifyChangeDirectory(&IrpContext);
             break;
 
         default:
@@ -617,7 +642,11 @@ VfatDirectoryControl(
 
     if (Status == STATUS_PENDING)
     {
-        Status = VfatQueueRequest(IrpContext);
+        /* Only queue if there's IRP context */
+        if (IrpContext)
+        {
+            Status = VfatQueueRequest(IrpContext);
+        }
     }
     else
     {

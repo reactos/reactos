@@ -65,7 +65,7 @@ DWORD WINAPI XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
     return ERROR_BAD_ARGUMENTS;
 }
 
-DWORD WINAPI XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
+DWORD WINAPI DECLSPEC_HOTPATCH XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
 {
     static int warn_once;
 

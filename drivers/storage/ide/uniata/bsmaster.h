@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2014 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bsmaster.h
@@ -31,10 +31,10 @@ Notes:
 Revision History:
 
     Code was created by
-         Alter, Copyright (c) 2002-2008
+         Alter, Copyright (c) 2002-2014
 
-    Some definitions were taken from FreeBSD 4.3-4.6 ATA driver by
-         Søren Schmidt, Copyright (c) 1998,1999,2000,2001
+    Some definitions were taken from FreeBSD 4.3-9.2 ATA driver by
+         Søren Schmidt, Copyright (c) 1998-2014
 
 --*/
 
@@ -245,6 +245,12 @@ typedef struct _IDE_AHCI_REGISTERS {
         ULONG Reserved:27;
     } BOHC;
 
+#define AHCI_BOHC_BB      0x00000001
+#define AHCI_BOHC_OOC     0x00000002
+#define AHCI_BOHC_SOOE    0x00000004
+#define AHCI_BOHC_OOS     0x00000008
+#define AHCI_BOHC_BOS     0x00000010
+
     UCHAR Reserved2[0x74];
 
     UCHAR VendorSpec[0x60];
@@ -289,6 +295,22 @@ typedef union _SATA_SSTATUS_REG {
 
 } SATA_SSTATUS_REG, *PSATA_SSTATUS_REG;
 
+#define         ATA_SS_DET_MASK         0x0000000f
+#define         ATA_SS_DET_NO_DEVICE    0x00000000
+#define         ATA_SS_DET_DEV_PRESENT  0x00000001
+#define         ATA_SS_DET_PHY_ONLINE   0x00000003
+#define         ATA_SS_DET_PHY_OFFLINE  0x00000004
+
+#define         ATA_SS_SPD_MASK         0x000000f0
+#define         ATA_SS_SPD_NO_SPEED     0x00000000
+#define         ATA_SS_SPD_GEN1         0x00000010
+#define         ATA_SS_SPD_GEN2         0x00000020
+
+#define         ATA_SS_IPM_MASK         0x00000f00
+#define         ATA_SS_IPM_NO_DEVICE    0x00000000
+#define         ATA_SS_IPM_ACTIVE       0x00000100
+#define         ATA_SS_IPM_PARTIAL      0x00000200
+#define         ATA_SS_IPM_SLUMBER      0x00000600
 
 typedef union _SATA_SCONTROL_REG {
 
@@ -322,6 +344,21 @@ typedef union _SATA_SCONTROL_REG {
 
 } SATA_SCONTROL_REG, *PSATA_SCONTROL_REG;
 
+#define         ATA_SC_DET_MASK         0x0000000f
+#define         ATA_SC_DET_IDLE         0x00000000
+#define         ATA_SC_DET_RESET        0x00000001
+#define         ATA_SC_DET_DISABLE      0x00000004
+
+#define         ATA_SC_SPD_MASK         0x000000f0
+#define         ATA_SC_SPD_NO_SPEED     0x00000000
+#define         ATA_SC_SPD_SPEED_GEN1   0x00000010
+#define         ATA_SC_SPD_SPEED_GEN2   0x00000020
+#define         ATA_SC_SPD_SPEED_GEN3   0x00000040
+
+#define         ATA_SC_IPM_MASK         0x00000f00
+#define         ATA_SC_IPM_NONE         0x00000000
+#define         ATA_SC_IPM_DIS_PARTIAL  0x00000100
+#define         ATA_SC_IPM_DIS_SLUMBER  0x00000200
 
 typedef union _SATA_SERROR_REG {
 
@@ -358,6 +395,22 @@ typedef union _SATA_SERROR_REG {
 
 } SATA_SERROR_REG, *PSATA_SERROR_REG;
 
+#define         ATA_SE_DATA_CORRECTED   0x00000001
+#define         ATA_SE_COMM_CORRECTED   0x00000002
+#define         ATA_SE_DATA_ERR         0x00000100
+#define         ATA_SE_COMM_ERR         0x00000200
+#define         ATA_SE_PROT_ERR         0x00000400
+#define         ATA_SE_HOST_ERR         0x00000800
+#define         ATA_SE_PHY_CHANGED      0x00010000
+#define         ATA_SE_PHY_IERROR       0x00020000
+#define         ATA_SE_COMM_WAKE        0x00040000
+#define         ATA_SE_DECODE_ERR       0x00080000
+#define         ATA_SE_PARITY_ERR       0x00100000
+#define         ATA_SE_CRC_ERR          0x00200000
+#define         ATA_SE_HANDSHAKE_ERR    0x00400000
+#define         ATA_SE_LINKSEQ_ERR      0x00800000
+#define         ATA_SE_TRANSPORT_ERR    0x01000000
+#define         ATA_SE_UNKNOWN_FIS      0x02000000
 
 typedef struct _IDE_SATA_REGISTERS {
     union {
@@ -842,6 +895,7 @@ typedef union _ATA_REQ {
                     PIDE_AHCI_CMD   ahci_cmd_ptr;
                     ULONG           in_bcount;
                     ULONG           in_status;
+                    ULONG           in_serror;
                     USHORT          io_cmd_flags; // out
                     UCHAR           in_error;
                 } ahci;
@@ -1032,6 +1086,7 @@ typedef struct _HW_CHANNEL {
     ULONG                             AhciPrevCI;
     ULONG                             AhciCompleteCI;
     ULONG                             AhciLastIS;
+    ULONG                             AhciLastSError;
     //PVOID                    AHCI_FIS;  // is not actually used by UniATA now, but is required by AHCI controller
     //ULONGLONG                AHCI_FIS_PhAddr;
     // Note: in contrast to FBSD, we keep PRD and CMD item in AtaReq structure 

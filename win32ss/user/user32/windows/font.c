@@ -605,7 +605,7 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
     p = str + chars_fit; /* The character that doesn't fit */
     word_fits = TRUE;
     if (!chars_fit)
-        ; /* we pretend that it fits anyway */
+        word_fits = FALSE;
     else if (*p == SPACE) /* chars_fit < *len_str so this is valid */
         p--; /* the word just fitted */
     else
@@ -615,7 +615,7 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
             ;
         word_fits = (p != str || *p == SPACE || IsCJKT(p[1]));
     }
-    /* If there was one or the first character didn't fit then */
+    /* If there was one. */
     if (word_fits)
     {
         int next_is_space;

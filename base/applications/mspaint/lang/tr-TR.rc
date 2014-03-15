@@ -186,7 +186,7 @@ BEGIN
     IDS_PROGRAMNAME "Görüntü Düzenleyicisi"
     IDS_WINDOWTITLE "%s - Görüntü Düzenleyicisi"
     IDS_INFOTITLE "Görüntü Düzenleyicisi"
-    IDS_INFOTEXT "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Ruhsatı'nın (LGPL). sürümüyle ruhsatlıdır. (bkz: www.gnu.org)"
+    IDS_INFOTEXT "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Ruhsatı'yla (LGPL'yle) ruhsatlıdır. (bkz: www.gnu.org)"
     IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikler kaydedilsin mi?"
     IDS_DEFAULTFILENAME "Adsız.bmp"
     IDS_MINIATURETITLE "Küçüğü"

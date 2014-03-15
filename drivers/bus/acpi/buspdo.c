@@ -496,8 +496,8 @@ Bus_PDO_QueryDeviceId(
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-            DPRINT1("Device name: %s\n", Device->pnp.device_name);
-            DPRINT1("Hardware ID: %s\n", Device->pnp.hardware_id);
+            DPRINT("Device name: %s\n", Device->pnp.device_name);
+            DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
 
             if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
             {
@@ -755,10 +755,10 @@ Bus_PDO_QueryResources(
         }
         else
         {
-            DPRINT1("Using _BBN for bus number\n");
+            DPRINT("Using _BBN for bus number\n");
         }
 
-        DPRINT1("Found PCI root hub: %d\n", BusNumber);
+        DPRINT("Found PCI root hub: %d\n", BusNumber);
 
         ResourceListSize = sizeof(CM_RESOURCE_LIST);
         ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');

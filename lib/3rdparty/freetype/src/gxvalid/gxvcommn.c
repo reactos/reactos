@@ -1288,7 +1288,9 @@
                                valid );
     else
     {
+#if 0
       maxState = 1;     /* 0:start of text, 1:start of line are predefined */
+#endif
       maxEntry = 0;
     }
 
@@ -1621,8 +1623,10 @@
       gxv_LookupTable_validate( table + classTable,
                                 table + classTable + classTable_length,
                                 valid );
+#if 0
       if ( valid->subtable_length < classTable_length )
         classTable_length = valid->subtable_length;
+#endif
     }
     else
     {
@@ -1641,7 +1645,9 @@
                                 valid );
     else
     {
+#if 0
       maxState = 1; /* 0:start of text, 1:start of line are predefined */
+#endif
       maxEntry = 0;
     }
 
@@ -1727,6 +1733,7 @@
                                       odtect->range[j].start,
                                       odtect->range[j].length ) )
         {
+#ifdef FT_DEBUG_LEVEL_TRACE
           if ( odtect->range[i].name || odtect->range[j].name )
             GXV_TRACE(( "found overlap between range %d and range %d\n",
                         i, j ));
@@ -1734,6 +1741,7 @@
             GXV_TRACE(( "found overlap between `%s' and `%s\'\n",
                         odtect->range[i].name,
                         odtect->range[j].name ));
+#endif
           FT_INVALID_OFFSET;
         }
 

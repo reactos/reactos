@@ -322,7 +322,9 @@ cleanup:
 /*
  * @implemented
  */
-HWND WINAPI
+HWND
+WINAPI
+DECLSPEC_HOTPATCH
 CreateWindowExA(DWORD dwExStyle,
                 LPCSTR lpClassName,
                 LPCSTR lpWindowName,
@@ -445,7 +447,9 @@ CreateWindowExA(DWORD dwExStyle,
 /*
  * @implemented
  */
-HWND WINAPI
+HWND
+WINAPI
+DECLSPEC_HOTPATCH
 CreateWindowExW(DWORD dwExStyle,
                 LPCWSTR lpClassName,
                 LPCWSTR lpWindowName,
@@ -1143,7 +1147,9 @@ GetTopWindow(HWND hWnd)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetWindowInfo(HWND hWnd,
               PWINDOWINFO pwi)
 {
@@ -1636,7 +1642,9 @@ return NtUserCallOneParam( (DWORD_PTR)dwDefaultLayout, ONEPARAM_ROUTINE_SETPROCD
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetWindowTextA(HWND hWnd,
                LPCSTR lpString)
 {
@@ -1659,7 +1667,9 @@ SetWindowTextA(HWND hWnd,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetWindowTextW(HWND hWnd,
                LPCWSTR lpString)
 {

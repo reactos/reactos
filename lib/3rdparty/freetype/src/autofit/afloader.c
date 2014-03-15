@@ -21,6 +21,7 @@
 #include "afhints.h"
 #include "aferrors.h"
 #include "afmodule.h"
+#include "afpic.h"
 
 
   /* Initialize glyph loader. */
@@ -180,10 +181,20 @@
 
       /* now load the slot image into the auto-outline and run the */
       /* automatic hinting process                                 */
-      if ( metrics->clazz->script_hints_apply )
-        metrics->clazz->script_hints_apply( hints,
-                                            &gloader->current.outline,
-                                            metrics );
+      {
+#ifdef FT_CONFIG_OPTION_PIC
+        AF_FaceGlobals         globals              = loader->globals;
+#endif
+        AF_WritingSystemClass  writing_system_class =
+                                 AF_WRITING_SYSTEM_CLASSES_GET
+                                   [metrics->script_class->writing_system];
+
+
+        if ( writing_system_class->script_hints_apply )
+          writing_system_class->script_hints_apply( hints,
+                                                    &gloader->current.outline,
+                                                    metrics );
+      }
 
       /* we now need to adjust the metrics according to the change in */
       /* width/positioning that occurred during the hinting process   */
@@ -519,33 +530,41 @@
     if ( !error )
     {
       AF_ScriptMetrics  metrics;
-      FT_UInt           options = 0;
+      FT_UInt           options = AF_SCRIPT_DFLT;
 
 
 #ifdef FT_OPTION_AUTOFIT2
-      /* XXX: undocumented hook to activate the latin2 hinter */
+      /* XXX: undocumented hook to activate the latin2 writing system */
       if ( load_flags & ( 1UL << 20 ) )
-        options = 2;
+        options = AF_SCRIPT_LTN2;
 #endif
 
       error = af_face_globals_get_metrics( loader->globals, gindex,
                                            options, &metrics );
       if ( !error )
       {
+#ifdef FT_CONFIG_OPTION_PIC
+        AF_FaceGlobals         globals              = loader->globals;
+#endif
+        AF_WritingSystemClass  writing_system_class =
+                                 AF_WRITING_SYSTEM_CLASSES_GET
+                                   [metrics->script_class->writing_system];
+
+
         loader->metrics = metrics;
 
-        if ( metrics->clazz->script_metrics_scale )
-          metrics->clazz->script_metrics_scale( metrics, &scaler );
+        if ( writing_system_class->script_metrics_scale )
+          writing_system_class->script_metrics_scale( metrics, &scaler );
         else
           metrics->scaler = scaler;
 
         load_flags |=  FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
         load_flags &= ~FT_LOAD_RENDER;
 
-        if ( metrics->clazz->script_hints_init )
+        if ( writing_system_class->script_hints_init )
         {
-          error = metrics->clazz->script_hints_init( &loader->hints,
-                                                     metrics );
+          error = writing_system_class->script_hints_init( &loader->hints,
+                                                           metrics );
           if ( error )
             goto Exit;
         }

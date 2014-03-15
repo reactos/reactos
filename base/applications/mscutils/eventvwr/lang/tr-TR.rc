@@ -19,7 +19,7 @@ BEGIN
     MENUITEM "&Seçenekler", ID_OPTIONS
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", IDM_HELP
+        MENUITEM "&Yardım", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Hakkında", IDM_ABOUT
     END

@@ -26,7 +26,7 @@ add_library(d3d8 SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
-set_module_type(d3d8 win32dll UNICODE)
+set_module_type(d3d8 win32dll UNICODE HOTPATCHABLE)
 target_link_libraries(d3d8 uuid wine)
 add_importlibs(d3d8 wined3d msvcrt kernel32 ntdll)
 add_pch(d3d8 d3d8_private.h SOURCE)

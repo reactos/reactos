@@ -61,6 +61,7 @@ class CDefaultContextMenu :
         HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink);
         HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi);
+        HRESULT DoRefresh(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoDelete(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy);
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
@@ -931,17 +932,32 @@ NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
     if (FAILED(lpSB->QueryActiveShellView(&lpSV)))
         return E_FAIL;
 
-    if (LOWORD(lpcmi->lpVerb) == FCIDM_SHVIEW_REFRESH || bRefresh)
-        lpSV->Refresh();
-    else
-    {
-        HWND hwndSV = NULL;
-        if (SUCCEEDED(lpSV->GetWindow(&hwndSV)))
-            SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0), 0);
-    }
+    HWND hwndSV = NULL;
+    if (SUCCEEDED(lpSV->GetWindow(&hwndSV)))
+        SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0), 0);
 
     lpSV->Release();
     return S_OK;
+}
+
+HRESULT
+CDefaultContextMenu::DoRefresh(
+    LPCMINVOKECOMMANDINFO lpcmi)
+{
+    CComPtr<IPersistFolder2> ppf2 = NULL;
+    LPITEMIDLIST pidl;
+    HRESULT hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+    if (SUCCEEDED(hr))
+    {
+        hr = ppf2->GetCurFolder(&pidl);
+        if (SUCCEEDED(hr))
+        {
+            SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, NULL);
+            ILFree(pidl);
+        }
+        ppf2->Release();
+    }
+    return hr;
 }
 
 HRESULT
@@ -1512,8 +1528,9 @@ CDefaultContextMenu::InvokeCommand(
         case 0x33:
         case FCIDM_SHVIEW_AUTOARRANGE:
         case FCIDM_SHVIEW_SNAPTOGRID:
-        case FCIDM_SHVIEW_REFRESH:
             return NotifyShellViewWindow(lpcmi, FALSE);
+        case FCIDM_SHVIEW_REFRESH:
+            return DoRefresh(lpcmi);
         case FCIDM_SHVIEW_INSERT:
             return DoPaste(lpcmi, FALSE);
         case FCIDM_SHVIEW_INSERTLINK:

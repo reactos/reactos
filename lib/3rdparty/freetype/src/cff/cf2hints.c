@@ -596,22 +596,31 @@
     indexInsert = 0;
     for ( ; indexInsert < hintmap->count; indexInsert++ )
     {
-      if ( hintmap->edge[indexInsert].csCoord > firstHintEdge->csCoord )
+      if ( hintmap->edge[indexInsert].csCoord >= firstHintEdge->csCoord )
         break;
     }
 
     /*
-     * Discard any hints that overlap in character space.  Most often,
-     * this is while building the initial map, but in theory, it can also
-     * occur because of darkening.
+     * Discard any hints that overlap in character space.  Most often, this
+     * is while building the initial map, where captured hints from all
+     * zones are combined.  Define overlap to include hints that `touch'
+     * (overlap zero).  Hiragino Sans/Gothic fonts have numerous hints that
+     * touch.  Some fonts have non-ideographic glyphs that overlap our
+     * synthetic hints.
+     *
+     * Overlap also occurs when darkening stem hints that are close.
      *
      */
     if ( indexInsert < hintmap->count )
     {
-      /* we are inserting before an existing edge:              */
+      /* we are inserting before an existing edge:    */
+      /* verify that an existing edge is not the same */
+      if ( hintmap->edge[indexInsert].csCoord == firstHintEdge->csCoord )
+        return; /* ignore overlapping stem hint */
+
       /* verify that a new pair does not straddle the next edge */
-      if ( isPair                                                       &&
-           hintmap->edge[indexInsert].csCoord < secondHintEdge->csCoord )
+      if ( isPair                                                        &&
+           hintmap->edge[indexInsert].csCoord <= secondHintEdge->csCoord )
         return; /* ignore overlapping stem hint */
 
       /* verify that we are not inserting between paired edges */
@@ -645,8 +654,27 @@
                                                   firstHintEdge->csCoord );
     }
 
-    /* discard any hints that overlap in device space; this can occur */
-    /* because locked hints have been moved to align with blue zones  */
+    /*
+     * Discard any hints that overlap in device space; this can occur
+     * because locked hints have been moved to align with blue zones.
+     *
+     * TODO: Although we might correct this later during adjustment, we
+     * don't currently have a way to delete a conflicting hint once it has
+     * been inserted.  See v2.030 MinionPro-Regular, 12 ppem darkened,
+     * initial hint map for second path, glyph 945 (the perispomeni (tilde)
+     * in U+1F6E, Greek omega with psili and perispomeni).  Darkening is
+     * 25.  Pair 667,747 initially conflicts in design space with top edge
+     * 660.  This is because 667 maps to 7.87, and the top edge was
+     * captured by a zone at 8.0.  The pair is later successfully inserted
+     * in a zone without the top edge.  In this zone it is adjusted to 8.0,
+     * and no longer conflicts with the top edge in design space.  This
+     * means it can be included in yet a later zone which does have the top
+     * edge hint.  This produces a small mismatch between the first and
+     * last points of this path, even though the hint masks are the same.
+     * The density map difference is tiny (1/256).
+     *
+     */
+
     if ( indexInsert > 0 )
     {
       /* we are inserting after an existing edge */
@@ -1035,6 +1063,7 @@
 
     glyphpath->moveIsPending = TRUE;
     glyphpath->pathIsOpen    = FALSE;
+    glyphpath->pathIsClosing = FALSE;
     glyphpath->elemIsQueued  = FALSE;
   }
 
@@ -1175,12 +1204,16 @@
   /*
    * Push the cached element (glyphpath->prevElem*) to the outline
    * consumer.  When a darkening offset is used, the end point of the
-   * cached element may be adjusted to an intersection point or it may be
-   * connected by a line to the current element.  This calculation must
-   * use a HintMap that was valid at the time the element was saved.  For
-   * the first point in a subpath, that is a saved HintMap.  For most
-   * elements, it just means the caller has delayed building a HintMap
-   * from the current HintMask.
+   * cached element may be adjusted to an intersection point or we may
+   * synthesize a connecting line to the current element.  If we are
+   * closing a subpath, we may also generate a connecting line to the start
+   * point.
+   *
+   * This is where Character Space (CS) is converted to Device Space (DS)
+   * using a hint map.  This calculation must use a HintMap that was valid
+   * at the time the element was saved.  For the first point in a subpath,
+   * that is a saved HintMap.  For most elements, it just means the caller
+   * has delayed building a HintMap from the current HintMask.
    *
    * Transform each point with outerTransform and call the outline
    * callbacks.  This is a general 3x3 transform:
@@ -1250,16 +1283,32 @@
       params.op = CF2_PathOpLineTo;
 
       /* note: pt2 and pt3 are unused */
-      cf2_glyphpath_hintPoint( glyphpath,
-                               hintmap,
-                               &params.pt1,
-                               glyphpath->prevElemP1.x,
-                               glyphpath->prevElemP1.y );
 
-      glyphpath->callbacks->lineTo( glyphpath->callbacks, &params );
+      if ( close )
+      {
+        /* use first hint map if closing */
+        cf2_glyphpath_hintPoint( glyphpath,
+                                 &glyphpath->firstHintMap,
+                                 &params.pt1,
+                                 glyphpath->prevElemP1.x,
+                                 glyphpath->prevElemP1.y );
+      }
+      else
+      {
+        cf2_glyphpath_hintPoint( glyphpath,
+                                 hintmap,
+                                 &params.pt1,
+                                 glyphpath->prevElemP1.x,
+                                 glyphpath->prevElemP1.y );
+      }
 
-      glyphpath->currentDS = params.pt1;
+      /* output only non-zero length lines */
+      if ( params.pt0.x != params.pt1.x || params.pt0.y != params.pt1.y )
+      {
+        glyphpath->callbacks->lineTo( glyphpath->callbacks, &params );
 
+        glyphpath->currentDS = params.pt1;
+      }
       break;
 
     case CF2_PathOpCubeTo:
@@ -1296,11 +1345,24 @@
       /* note: at the end of a subpath, we might do both, so use `nextP0' */
       /* before we change it, below                                       */
 
-      cf2_glyphpath_hintPoint( glyphpath,
-                               hintmap,
-                               &params.pt1,
-                               nextP0->x,
-                               nextP0->y );
+      if ( close )
+      {
+        /* if we are closing the subpath, then nextP0 is in the first     */
+        /* hint zone                                                      */
+        cf2_glyphpath_hintPoint( glyphpath,
+                                 &glyphpath->firstHintMap,
+                                 &params.pt1,
+                                 nextP0->x,
+                                 nextP0->y );
+      }
+      else
+      {
+        cf2_glyphpath_hintPoint( glyphpath,
+                                 hintmap,
+                                 &params.pt1,
+                                 nextP0->x,
+                                 nextP0->y );
+      }
 
       if ( params.pt1.x != glyphpath->currentDS.x ||
            params.pt1.y != glyphpath->currentDS.y )
@@ -1511,6 +1573,16 @@
   }
 
 
+  /*
+   * The functions cf2_glyphpath_{moveTo,lineTo,curveTo,closeOpenPath} are
+   * called by the interpreter with Character Space (CS) coordinates.  Each
+   * path element is placed into a queue of length one to await the
+   * calculation of the following element.  At that time, the darkening
+   * offset of the following element is known and joins can be computed,
+   * including possible modification of this element, before mapping to
+   * Device Space (DS) and passing it on to the outline consumer.
+   *
+   */
   FT_LOCAL_DEF( void )
   cf2_glyphpath_moveTo( CF2_GlyphPath  glyphpath,
                         CF2_Fixed      x,
@@ -1548,10 +1620,46 @@
   {
     CF2_Fixed  xOffset, yOffset;
     FT_Vector  P0, P1;
+    FT_Bool    newHintMap;
 
+    /*
+     * New hints will be applied after cf2_glyphpath_pushPrevElem has run.
+     * In case this is a synthesized closing line, any new hints should be
+     * delayed until this path is closed (`cf2_hintmask_isNew' will be
+     * called again before the next line or curve).
+     */
 
-    /* can't compute offset of zero length line, so ignore them */
-    if ( glyphpath->currentCS.x == x && glyphpath->currentCS.y == y )
+    /* true if new hint map not on close */
+    newHintMap = cf2_hintmask_isNew( glyphpath->hintMask ) &&
+                 !glyphpath->pathIsClosing;
+
+    /*
+     * Zero-length lines may occur in the charstring.  Because we cannot
+     * compute darkening offsets or intersections from zero-length lines,
+     * it is best to remove them and avoid artifacts.  However, zero-length
+     * lines in CS at the start of a new hint map can generate non-zero
+     * lines in DS due to hint substitution.  We detect a change in hint
+     * map here and pass those zero-length lines along.
+     */
+
+    /*
+     * Note: Find explicitly closed paths here with a conditional
+     *       breakpoint using
+     *
+     *         !gp->pathIsClosing && gp->start.x == x && gp->start.y == y
+     *
+     */
+
+    if ( glyphpath->currentCS.x == x &&
+         glyphpath->currentCS.y == y &&
+         !newHintMap                 )
+      /*
+       * Ignore zero-length lines in CS where the hint map is the same
+       * because the line in DS will also be zero length.
+       *
+       * Ignore zero-length lines when we synthesize a closing line because
+       * the close will be handled in cf2_glyphPath_pushPrevElem.
+       */
       return;
 
     cf2_glyphpath_computeOffset( glyphpath,
@@ -1597,7 +1705,7 @@
     glyphpath->prevElemP1   = P1;
 
     /* update current map */
-    if ( cf2_hintmask_isNew( glyphpath->hintMask ) )
+    if ( newHintMap )
       cf2_hintmap_build( &glyphpath->hintMap,
                          glyphpath->hStemHintArray,
                          glyphpath->vStemHintArray,
@@ -1703,29 +1811,29 @@
   {
     if ( glyphpath->pathIsOpen )
     {
-      FT_ASSERT( cf2_hintmap_isValid( &glyphpath->firstHintMap ) );
+      /*
+       * A closing line in Character Space line is always generated below
+       * with `cf2_glyphPath_lineTo'.  It may be ignored later if it turns
+       * out to be zero length in Device Space.
+       */
+      glyphpath->pathIsClosing = TRUE;
 
-      /* since we need to apply an offset to the implicit lineto, we make */
-      /* it explicit here                                                 */
       cf2_glyphpath_lineTo( glyphpath,
                             glyphpath->start.x,
                             glyphpath->start.y );
 
-      /* Draw previous element (the explicit LineTo we just created,      */
-      /* above) and connect it to the start point, but with the offset we */
-      /* saved from the first element.                                    */
-      /* Use the saved HintMap, too. */
-      FT_ASSERT( glyphpath->elemIsQueued );
-
-      cf2_glyphpath_pushPrevElem( glyphpath,
-                                  &glyphpath->firstHintMap,
-                                  &glyphpath->offsetStart0,
-                                  glyphpath->offsetStart1,
-                                  TRUE );
+      /* empty the final element from the queue and close the path */
+      if ( glyphpath->elemIsQueued )
+        cf2_glyphpath_pushPrevElem( glyphpath,
+                                    &glyphpath->hintMap,
+                                    &glyphpath->offsetStart0,
+                                    glyphpath->offsetStart1,
+                                    TRUE );
 
       /* reset state machine */
       glyphpath->moveIsPending = TRUE;
       glyphpath->pathIsOpen    = FALSE;
+      glyphpath->pathIsClosing = FALSE;
       glyphpath->elemIsQueued  = FALSE;
     }
   }

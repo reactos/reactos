@@ -657,7 +657,7 @@ INTSAFE_NAME(ULongLongMult)(
         M2 = M2Low + M2Hi * 0x100000000
 
        Then the multiplication looks like this:
-        M1 * M2 = (M1Low + M1Hi * 0x100000000) + (M2Low + M2Hi * 0x100000000)
+        M1 * M2 = (M1Low + M1Hi * 0x100000000) * (M2Low + M2Hi * 0x100000000)
                 = M1Low * M2Low
                   + M1Low * M2Hi * 0x100000000
                   + M2Low * M1Hi * 0x100000000
@@ -686,13 +686,13 @@ INTSAFE_NAME(ULongLongMult)(
     }
     else
     {
-        *pOutput = LONGLONG_ERROR;
+        *pOutput = ULONGLONG_ERROR;
         return INTSAFE_E_ARITHMETIC_OVERFLOW;
     }
 
     if (Temp > ULONG_MAX)
     {
-        *pOutput = LONGLONG_ERROR;
+        *pOutput = ULONGLONG_ERROR;
         return INTSAFE_E_ARITHMETIC_OVERFLOW;
     }
 

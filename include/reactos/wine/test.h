@@ -254,10 +254,10 @@ static tls_data* get_tls_data(void)
     DWORD last_error;
 
     last_error=GetLastError();
-    data=TlsGetValue(tls_index);
+    data=(tls_data*)TlsGetValue(tls_index);
     if (!data)
     {
-        data=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(tls_data));
+        data=(tls_data*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(tls_data));
         data->str_pos = data->strings;
         TlsSetValue(tls_index,data);
     }

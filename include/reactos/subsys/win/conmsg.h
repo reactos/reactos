@@ -197,9 +197,9 @@ C_ASSERT(sizeof(CONSRV_API_CONNECTINFO) == 0x638);
 
 typedef struct
 {
-    ULONG  nMaxIds;
-    ULONG  nProcessIdsTotal;
-    PDWORD pProcessIds;
+    HANDLE ConsoleHandle;
+    ULONG  ProcessCount;
+    PDWORD ProcessIdsList;
 } CONSOLE_GETPROCESSLIST, *PCONSOLE_GETPROCESSLIST;
 
 typedef struct
@@ -262,8 +262,14 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    CONSOLE_SCREEN_BUFFER_INFO Info;
+    COORD  ScreenBufferSize;
+    COORD  CursorPosition;
+    COORD  ViewOrigin;
+    WORD   Attributes;
+    COORD  ViewSize;
+    COORD  MaximumViewSize;
 } CONSOLE_GETSCREENBUFFERINFO, *PCONSOLE_GETSCREENBUFFERINFO;
 
 typedef struct
@@ -274,6 +280,7 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     BOOL   Show;
     INT    RefCount;
@@ -281,8 +288,9 @@ typedef struct
 
 typedef struct
 {
+    HANDLE  ConsoleHandle;
     HANDLE  OutputHandle;
-    HCURSOR hCursor;
+    HCURSOR CursorHandle;
 } CONSOLE_SETCURSOR, *PCONSOLE_SETCURSOR;
 
 typedef struct
@@ -305,15 +313,17 @@ typedef struct
 
 typedef struct
 {
-    // HANDLE OutputHandle;
-    DWORD  DisplayMode;
+    HANDLE ConsoleHandle;
+    DWORD  DisplayMode; // ModeFlags
 } CONSOLE_GETDISPLAYMODE, *PCONSOLE_GETDISPLAYMODE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    DWORD  DisplayMode;
+    DWORD  DisplayMode; // ModeFlags
     COORD  NewSBDim;
+    HANDLE EventHandle;
 } CONSOLE_SETDISPLAYMODE, *PCONSOLE_SETDISPLAYMODE;
 
 /*
@@ -324,7 +334,9 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
+    DWORD  Flags;
     DWORD  State;
 } CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
 
@@ -351,12 +363,14 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     SMALL_RECT Region;
 } CONSOLE_INVALIDATEDIBITS, *PCONSOLE_INVALIDATEDIBITS;
 
 typedef struct
 {
+    HANDLE   ConsoleHandle;
     HANDLE   OutputHandle;
     HPALETTE PaletteHandle;
     UINT     Usage;
@@ -501,11 +515,14 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
+    HANDLE Handle;
 } CONSOLE_CLOSEHANDLE, *PCONSOLE_CLOSEHANDLE;
 
 typedef struct
 {
+    BOOL   IsValid;
     HANDLE ConsoleHandle;
+    HANDLE Handle;
 } CONSOLE_VERIFYHANDLE, *PCONSOLE_VERIFYHANDLE;
 
 typedef struct
@@ -543,15 +560,17 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    DWORD  dwCmdIdLow;
-    DWORD  dwCmdIdHigh;
-    HMENU  hMenu;
+    DWORD  CmdIdLow;
+    DWORD  CmdIdHigh;
+    HMENU  MenuHandle;
 } CONSOLE_MENUCONTROL, *PCONSOLE_MENUCONTROL;
 
 typedef struct
 {
-    BOOL Enable;
+    HANDLE ConsoleHandle;
+    BOOL   Enable;
 } CONSOLE_SETMENUCLOSE, *PCONSOLE_SETMENUCLOSE;
 
 typedef struct
@@ -564,12 +583,14 @@ typedef struct
 
 typedef struct
 {
-    HWND WindowHandle;
+    HANDLE ConsoleHandle;
+    HWND   WindowHandle;
 } CONSOLE_GETWINDOW, *PCONSOLE_GETWINDOW;
 
 typedef struct
 {
-    HICON WindowIcon;
+    HANDLE ConsoleHandle;
+    HICON  IconHandle;
 } CONSOLE_SETICON, *PCONSOLE_SETICON;
 
 
@@ -665,14 +686,24 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     CONSOLE_SELECTION_INFO Info;
 } CONSOLE_GETSELECTIONINFO, *PCONSOLE_GETSELECTIONINFO;
 
 typedef struct
 {
-    BOOL InputCP;   // TRUE : Input Code Page ; FALSE : Output Code Page
-    UINT CodePage;
-} CONSOLE_GETSETINPUTOUTPUTCP, *PCONSOLE_GETSETINPUTOUTPUTCP;
+    HANDLE ConsoleHandle;
+    UINT   CodePage;
+    BOOL   OutputCP;    // TRUE : Output Code Page ; FALSE : Input Code Page
+} CONSOLE_GETINPUTOUTPUTCP, *PCONSOLE_GETINPUTOUTPUTCP;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    UINT   CodePage;
+    BOOL   OutputCP;    // TRUE : Output Code Page ; FALSE : Input Code Page
+    HANDLE EventHandle;
+} CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
 typedef struct _CONSOLE_API_MESSAGE
 {
@@ -764,7 +795,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
 
         /* Input and Output Code Pages */
-        CONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest;
+        CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
+        CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

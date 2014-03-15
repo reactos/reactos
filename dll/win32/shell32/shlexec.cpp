@@ -2025,7 +2025,10 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation, LPCSTR lpFile,
  * ShellExecuteExA                [SHELL32.292]
  *
  */
-BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
 {
     SHELLEXECUTEINFOW seiW;
     BOOL ret;
@@ -2072,7 +2075,10 @@ BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
  * ShellExecuteExW                [SHELL32.293]
  *
  */
-BOOL WINAPI ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 {
     return SHELL_execute(sei, SHELL_ExecuteW);
 }

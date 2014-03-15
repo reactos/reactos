@@ -64,8 +64,8 @@ typedef struct _GUI_CONSOLE_DATA
     BOOL IgnoreNextMouseSignal; /* Used in cases where we don't want to treat a mouse signal */
 
     BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled (default), FALSE otherwise */
-    UINT cmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */
-    UINT cmdIdHigh;             /* Highest menu id of the user-reserved menu id range */
+    UINT CmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */
+    UINT CmdIdHigh;             /* Highest menu id of the user-reserved menu id range */
 
 //  COLORREF Colors[16];
 

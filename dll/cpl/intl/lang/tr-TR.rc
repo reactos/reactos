@@ -47,11 +47,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Evrenlik Düzgülü Olmayan Çizeylemler İçin Dil", -1, 5, 5, 234, 90
+    GROUPBOX "Evrenlik Kodlu Olmayan Çizeylemler İçin Dil", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Bu dizge ayârı, Evrenlik Düzgülü olmayan çizeylemlerin seçkelerinin ve iletişim kutularının kendi dillerinde görüntülenmesini etkinleştirir. Bu ayar, Evrenlik Düzgülü çizeylemleri etkilemez ve bu ayar, bu bilgisayardaki tüm kullanıcıları etkiler.", -1, 14, 18, 223, 33
-    LTEXT "Kullanmak istediğiniz Evrenlik Düzgülü olmayan çizeylemlerin dil sürümlerini karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
-    GROUPBOX "Düzgü Sayfası Dönüştürme Çizelgesi", -1, 5, 101, 234, 88
+    LTEXT "Bu dizge ayârı, Evrenlik Kodlu olmayan çizeylemlerin seçkelerinin ve iletişim kutularının kendi dillerinde görüntülenmesini etkinleştirir. Bu ayar, Evrenlik Kodlu çizeylemleri etkilemez ve bu ayar, bu bilgisayardaki tüm kullanıcıları etkiler.", -1, 14, 18, 223, 33
+    LTEXT "Kullanmak istediğiniz Evrenlik Kodlu olmayan çizeylemlerin dil sürümlerini karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
+    GROUPBOX "Kod Sayfası Dönüştürme Çizelgesi", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Öntanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 30
     CHECKBOX "Bu Kullanıcının Tüm Ayarlarını Öntanımlı Olarak Ayarla", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
@@ -200,8 +200,8 @@ BEGIN
     IDS_ERROR_SYMBOL_SEPARATE "Girilen kısa târih ayıracı yanlış simge(ler) içeriyor."
     IDS_ERROR_SYMBOL_FORMAT_SHORT "Girilen kısa târih biçimi yanlış simge(ler) içeriyor."
     IDS_ERROR_SYMBOL_FORMAT_LONG "Girilen uzun târih biçimi yanlış simge(ler) içeriyor."
-    IDS_ERROR_OEM_CODE_PAGE "OEM düzgü sayfasının okunmasında sorun var."
-    IDS_ERROR_ANSI_CODE_PAGE "ANSI düzgü sayfasının okunmasında sorun var."
+    IDS_ERROR_OEM_CODE_PAGE "OEM kod sayfasının okunmasında sorun var."
+    IDS_ERROR_ANSI_CODE_PAGE "ANSI kod sayfasının okunmasında sorun var."
     IDS_ERROR_INT_KEY_REG "HKCU\\Control Panel\\International dizininin açılmasında sorun var."
     IDS_ERROR_DEF_INT_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizininin açılmasında sorun var."
     IDS_ERROR_NLS_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizininin açılmasında sorun var."

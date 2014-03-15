@@ -1908,7 +1908,9 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -2000,7 +2002,9 @@ DispatchMessageA(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -2100,7 +2104,9 @@ IntConvertMsgToAnsi(LPMSG lpMsg)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageA(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -2128,7 +2134,9 @@ GetMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageW(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -2191,7 +2199,9 @@ PeekMessageWorker( PMSG pMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageA(LPMSG lpMsg,
 	     HWND hWnd,
 	     UINT wMsgFilterMin,
@@ -2217,6 +2227,7 @@ PeekMessageA(LPMSG lpMsg,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageW(
   LPMSG lpMsg,
   HWND hWnd,

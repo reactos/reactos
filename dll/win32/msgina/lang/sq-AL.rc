@@ -145,6 +145,12 @@ BEGIN
     IDS_COMPUTERLOCKED "Kompjuter mbyllur"
     IDS_LOCKEDWRONGPASSWORD "Fjalëkalimi është gabim.  Ju lutem shkruani fjalëkalimin tuaj përsëri. Gërmat në fjalëkalim duhet të shkruhen duke përdorur rastin e duhur."
     IDS_LOCKEDWRONGUSER "Ky kompjuter është i bllokuar.  Vetëm %s\\%s ose një Administrator mund të zhbllokoj këtë kompjuter."
+    IDS_CHANGEPWDTITLE "Change Password"
+    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
+    IDS_PASSWORDCHANGED "Your password has been changed."
+    IDS_LOGONTITLE "Logon Message"
+    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
+    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

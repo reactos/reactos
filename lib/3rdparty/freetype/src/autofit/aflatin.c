@@ -60,8 +60,11 @@
     AF_GlyphHintsRec  hints[1];
 
 
-    FT_TRACE5(( "standard widths computation\n"
-                "===========================\n\n" ));
+    FT_TRACE5(( "\n"
+                "latin standard widths computation (script `%s')\n"
+                "=================================================\n"
+                "\n",
+                af_script_names[metrics->root.script_class->script] ));
 
     af_glyph_hints_init( hints, face->memory );
 
@@ -76,13 +79,14 @@
       AF_Scaler           scaler = &dummy->root.scaler;
 
 
-      glyph_index = FT_Get_Char_Index( face,
-                                       metrics->root.clazz->standard_char );
+      glyph_index = FT_Get_Char_Index(
+                      face,
+                      metrics->root.script_class->standard_char );
       if ( glyph_index == 0 )
         goto Exit;
 
-      FT_TRACE5(( "standard character: 0x%X (glyph index %d)\n",
-                  metrics->root.clazz->standard_char, glyph_index ));
+      FT_TRACE5(( "standard character: U+%04lX (glyph index %d)\n",
+                  metrics->root.script_class->standard_char, glyph_index ));
 
       error = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
       if ( error || face->glyph->outline.n_points <= 0 )
@@ -146,22 +150,21 @@
         }
 
         /* this also replaces multiple almost identical stem widths */
-        /* with a single one (the value 100 is heuristic) */
+        /* with a single one (the value 100 is heuristic)           */
         af_sort_and_quantize_widths( &num_widths, axis->widths,
                                      dummy->units_per_em / 100 );
         axis->width_count = num_widths;
       }
 
-  Exit:
+    Exit:
       for ( dim = 0; dim < AF_DIMENSION_MAX; dim++ )
       {
         AF_LatinAxis  axis = &metrics->axis[dim];
         FT_Pos        stdw;
 
 
-        stdw = ( axis->width_count > 0 )
-                 ? axis->widths[0].org
-                 : AF_LATIN_CONSTANT( metrics, 50 );
+        stdw = ( axis->width_count > 0 ) ? axis->widths[0].org
+                                         : AF_LATIN_CONSTANT( metrics, 50 );
 
         /* let's try 20% of the smallest width */
         axis->edge_distance_threshold = stdw / 5;
@@ -193,22 +196,6 @@
   }
 
 
-
-#define AF_LATIN_MAX_TEST_CHARACTERS  12
-
-
-  static const char af_latin_blue_chars[AF_LATIN_MAX_BLUES]
-                                       [AF_LATIN_MAX_TEST_CHARACTERS + 1] =
-  {
-    "THEZOCQS",
-    "HEZLOCUS",
-    "fijkdbh",
-    "xzroesc",
-    "xzroesc",
-    "pqgjy"
-  };
-
-
   /* Find all blue zones.  Flat segments give the reference points, */
   /* round segments the overshoot positions.                        */
 
@@ -216,39 +203,80 @@
   af_latin_metrics_init_blues( AF_LatinMetrics  metrics,
                                FT_Face          face )
   {
-    FT_Pos        flats [AF_LATIN_MAX_TEST_CHARACTERS];
-    FT_Pos        rounds[AF_LATIN_MAX_TEST_CHARACTERS];
+    FT_Pos        flats [AF_BLUE_STRING_MAX_LEN];
+    FT_Pos        rounds[AF_BLUE_STRING_MAX_LEN];
+
     FT_Int        num_flats;
     FT_Int        num_rounds;
-    FT_Int        bb;
+
     AF_LatinBlue  blue;
     FT_Error      error;
-    AF_LatinAxis  axis  = &metrics->axis[AF_DIMENSION_VERT];
+    AF_LatinAxis  axis = &metrics->axis[AF_DIMENSION_VERT];
     FT_Outline    outline;
 
+    AF_Blue_Stringset         bss = metrics->root.script_class->blue_stringset;
+    const AF_Blue_StringRec*  bs  = &af_blue_stringsets[bss];
 
-    /* we compute the blues simply by loading each character from the    */
-    /* `af_latin_blue_chars[blues]' string, then finding its top-most or */
-    /* bottom-most points (depending on `AF_IS_TOP_BLUE')                */
 
-    FT_TRACE5(( "blue zones computation\n"
-                "======================\n\n" ));
+    /* we walk over the blue character strings as specified in the  */
+    /* script's entry in the `af_blue_stringset' array              */
 
-    for ( bb = 0; bb < AF_LATIN_BLUE_MAX; bb++ )
+    FT_TRACE5(( "latin blue zones computation\n"
+                "============================\n"
+                "\n" ));
+
+    for ( ; bs->string != AF_BLUE_STRING_MAX; bs++ )
     {
-      const char*  p     = af_latin_blue_chars[bb];
-      const char*  limit = p + AF_LATIN_MAX_TEST_CHARACTERS;
+      const char*  p = &af_blue_strings[bs->string];
       FT_Pos*      blue_ref;
       FT_Pos*      blue_shoot;
 
 
-      FT_TRACE5(( "blue zone %d:\n", bb ));
+#ifdef FT_DEBUG_LEVEL_TRACE
+      {
+        FT_Bool  have_flag = 0;
+
+
+        FT_TRACE5(( "blue zone %d", axis->blue_count ));
+
+        if ( bs->properties )
+        {
+          FT_TRACE5(( " (" ));
+
+          if ( AF_LATIN_IS_TOP_BLUE( bs ) )
+          {
+            FT_TRACE5(( "top" ));
+            have_flag = 1;
+          }
+
+          if ( AF_LATIN_IS_X_HEIGHT_BLUE( bs ) )
+          {
+            if ( have_flag )
+              FT_TRACE5(( ", " ));
+            FT_TRACE5(( "small top" ));
+            have_flag = 1;
+          }
+
+          if ( AF_LATIN_IS_LONG_BLUE( bs ) )
+          {
+            if ( have_flag )
+              FT_TRACE5(( ", " ));
+            FT_TRACE5(( "long" ));
+          }
+
+          FT_TRACE5(( ")" ));
+        }
+
+        FT_TRACE5(( ":\n" ));
+      }
+#endif /* FT_DEBUG_LEVEL_TRACE */
 
       num_flats  = 0;
       num_rounds = 0;
 
-      for ( ; p < limit && *p; p++ )
+      while ( *p )
       {
+        FT_ULong    ch;
         FT_UInt     glyph_index;
         FT_Pos      best_y;                            /* same as points.y */
         FT_Int      best_point, best_contour_first, best_contour_last;
@@ -256,15 +284,23 @@
         FT_Bool     round = 0;
 
 
+        GET_UTF8_CHAR( ch, p );
+
         /* load the character in the face -- skip unknown or empty ones */
-        glyph_index = FT_Get_Char_Index( face, (FT_UInt)*p );
+        glyph_index = FT_Get_Char_Index( face, ch );
         if ( glyph_index == 0 )
+        {
+          FT_TRACE5(( "  U+%04lX unavailable\n", ch ));
           continue;
+        }
 
         error   = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
         outline = face->glyph->outline;
         if ( error || outline.n_points <= 0 )
+        {
+          FT_TRACE5(( "  U+%04lX contains no outlines\n", ch ));
           continue;
+        }
 
         /* now compute min or max point indices and coordinates */
         points             = outline.points;
@@ -289,11 +325,11 @@
 
             /* Avoid single-point contours since they are never rasterized. */
             /* In some fonts, they correspond to mark attachment points     */
-            /* which are way outside of the glyph's real outline.           */
+            /* that are way outside of the glyph's real outline.            */
             if ( last <= first )
               continue;
 
-            if ( AF_LATIN_IS_TOP_BLUE( bb ) )
+            if ( AF_LATIN_IS_TOP_BLUE( bs ) )
             {
               for ( pp = first; pp <= last; pp++ )
                 if ( best_point < 0 || points[pp].y > best_y )
@@ -318,7 +354,6 @@
               best_contour_last  = last;
             }
           }
-          FT_TRACE5(( "  %c  %ld", *p, best_y ));
         }
 
         /* now check whether the point belongs to a straight or round   */
@@ -328,9 +363,13 @@
         {
           FT_Pos  best_x = points[best_point].x;
           FT_Int  prev, next;
+          FT_Int  best_segment_first, best_segment_last;
           FT_Int  best_on_point_first, best_on_point_last;
           FT_Pos  dist;
 
+
+          best_segment_first = best_point;
+          best_segment_last  = best_point;
 
           if ( FT_CURVE_TAG( outline.tags[best_point] ) == FT_CURVE_TAG_ON )
           {
@@ -343,8 +382,9 @@
             best_on_point_last  = -1;
           }
 
-          /* look for the previous and next points that are not on the */
-          /* same Y coordinate, then threshold the `closeness'...      */
+          /* look for the previous and next points on the contour  */
+          /* that are not on the same Y coordinate, then threshold */
+          /* the `closeness'...                                    */
           prev = best_point;
           next = prev;
 
@@ -361,6 +401,8 @@
             if ( dist > 5 )
               if ( FT_ABS( points[prev].x - best_x ) <= 20 * dist )
                 break;
+
+            best_segment_first = prev;
 
             if ( FT_CURVE_TAG( outline.tags[prev] ) == FT_CURVE_TAG_ON )
             {
@@ -383,6 +425,8 @@
               if ( FT_ABS( points[next].x - best_x ) <= 20 * dist )
                 break;
 
+            best_segment_last = next;
+
             if ( FT_CURVE_TAG( outline.tags[next] ) == FT_CURVE_TAG_ON )
             {
               best_on_point_last = next;
@@ -392,8 +436,186 @@
 
           } while ( next != best_point );
 
-          /* now set the `round' flag depending on the segment's kind */
-          /* (value 8 is heuristic)                                   */
+          if ( AF_LATIN_IS_LONG_BLUE( bs ) )
+          {
+            /* If this flag is set, we have an additional constraint to  */
+            /* get the blue zone distance: Find a segment of the topmost */
+            /* (or bottommost) contour that is longer than a heuristic   */
+            /* threshold.  This ensures that small bumps in the outline  */
+            /* are ignored (for example, the `vertical serifs' found in  */
+            /* many Hebrew glyph designs).                               */
+
+            /* If this segment is long enough, we are done.  Otherwise,  */
+            /* search the segment next to the extremum that is long      */
+            /* enough, has the same direction, and a not too large       */
+            /* vertical distance from the extremum.  Note that the       */
+            /* algorithm doesn't check whether the found segment is      */
+            /* actually the one (vertically) nearest to the extremum.    */
+
+            /* heuristic threshold value */
+            FT_Pos  length_threshold = metrics->units_per_em / 25;
+
+
+            dist = FT_ABS( points[best_segment_last].x -
+                             points[best_segment_first].x );
+
+            if ( dist < length_threshold                       &&
+                 best_segment_last - best_segment_first + 2 <=
+                   best_contour_last - best_contour_first      )
+            {
+              /* heuristic threshold value */
+              FT_Pos  height_threshold = metrics->units_per_em / 4;
+
+              FT_Int   first;
+              FT_Int   last;
+              FT_Bool  hit;
+
+              FT_Bool  left2right;
+
+
+              /* compute direction */
+              prev = best_point;
+
+              do
+              {
+                if ( prev > best_contour_first )
+                  prev--;
+                else
+                  prev = best_contour_last;
+
+                if ( points[prev].x != best_x )
+                  break;
+
+              } while ( prev != best_point );
+
+              /* skip glyph for the degenerate case */
+              if ( prev == best_point )
+                continue;
+
+              left2right = FT_BOOL( points[prev].x < points[best_point].x );
+
+              first = best_segment_last;
+              last  = first;
+              hit   = 0;
+
+              do
+              {
+                FT_Bool  l2r;
+                FT_Pos   d;
+                FT_Int   p_first, p_last;
+
+
+                if ( !hit )
+                {
+                  /* no hit; adjust first point */
+                  first = last;
+
+                  /* also adjust first and last on point */
+                  if ( FT_CURVE_TAG( outline.tags[first] ) ==
+                         FT_CURVE_TAG_ON )
+                  {
+                    p_first = first;
+                    p_last  = first;
+                  }
+                  else
+                  {
+                    p_first = -1;
+                    p_last  = -1;
+                  }
+
+                  hit = 1;
+                }
+
+                if ( last < best_contour_last )
+                  last++;
+                else
+                  last = best_contour_first;
+
+                if ( FT_ABS( best_y - points[first].y ) > height_threshold )
+                {
+                  /* vertical distance too large */
+                  hit = 0;
+                  continue;
+                }
+
+                /* same test as above */
+                dist = FT_ABS( points[last].y - points[first].y );
+                if ( dist > 5 )
+                  if ( FT_ABS( points[last].x - points[first].x ) <=
+                         20 * dist )
+                  {
+                    hit = 0;
+                    continue;
+                  }
+
+                if ( FT_CURVE_TAG( outline.tags[last] ) == FT_CURVE_TAG_ON )
+                {
+                  p_last = last;
+                  if ( p_first < 0 )
+                    p_first = last;
+                }
+
+                l2r = FT_BOOL( points[first].x < points[last].x );
+                d   = FT_ABS( points[last].x - points[first].x );
+
+                if ( l2r == left2right     &&
+                     d >= length_threshold )
+                {
+                  /* all constraints are met; update segment after finding */
+                  /* its end                                               */
+                  do
+                  {
+                    if ( last < best_contour_last )
+                      last++;
+                    else
+                      last = best_contour_first;
+
+                    d = FT_ABS( points[last].y - points[first].y );
+                    if ( d > 5 )
+                      if ( FT_ABS( points[next].x - points[first].x ) <=
+                             20 * dist )
+                      {
+                        last--;
+                        break;
+                      }
+
+                    p_last = last;
+
+                    if ( FT_CURVE_TAG( outline.tags[last] ) ==
+                           FT_CURVE_TAG_ON )
+                    {
+                      p_last = last;
+                      if ( p_first < 0 )
+                        p_first = last;
+                    }
+
+                  } while ( last != best_segment_first );
+
+                  best_y = points[first].y;
+
+                  best_segment_first = first;
+                  best_segment_last  = last;
+
+                  best_on_point_first = p_first;
+                  best_on_point_last  = p_last;
+
+                  break;
+                }
+
+              } while ( last != best_segment_first );
+            }
+          }
+
+          FT_TRACE5(( "  U+%04lX: best_y = %5ld", ch, best_y ));
+
+          /* now set the `round' flag depending on the segment's kind: */
+          /*                                                           */
+          /* - if the horizontal distance between the first and last   */
+          /*   `on' point is larger than upem/8 (value 8 is heuristic) */
+          /*   we have a flat segment                                  */
+          /* - if either the first or the last point of the segment is */
+          /*   an `off' point, the segment is round, otherwise it is   */
+          /*   flat                                                    */
           if ( best_on_point_first >= 0                               &&
                best_on_point_last >= 0                                &&
                (FT_UInt)( FT_ABS( points[best_on_point_last].x -
@@ -402,8 +624,10 @@
             round = 0;
           else
             round = FT_BOOL(
-              FT_CURVE_TAG( outline.tags[prev] ) != FT_CURVE_TAG_ON ||
-              FT_CURVE_TAG( outline.tags[next] ) != FT_CURVE_TAG_ON );
+                      FT_CURVE_TAG( outline.tags[best_segment_first] ) !=
+                        FT_CURVE_TAG_ON                                   ||
+                      FT_CURVE_TAG( outline.tags[best_segment_last]  ) !=
+                        FT_CURVE_TAG_ON                                   );
 
           FT_TRACE5(( " (%s)\n", round ? "round" : "flat" ));
         }
@@ -448,7 +672,7 @@
       }
       else
       {
-        *blue_ref   = flats[num_flats / 2];
+        *blue_ref   = flats [num_flats  / 2];
         *blue_shoot = rounds[num_rounds / 2];
       }
 
@@ -462,7 +686,7 @@
         FT_Bool  over_ref = FT_BOOL( shoot > ref );
 
 
-        if ( AF_LATIN_IS_TOP_BLUE( bb ) ^ over_ref )
+        if ( AF_LATIN_IS_TOP_BLUE( bs ) ^ over_ref )
         {
           *blue_ref   =
           *blue_shoot = ( shoot + ref ) / 2;
@@ -473,7 +697,7 @@
       }
 
       blue->flags = 0;
-      if ( AF_LATIN_IS_TOP_BLUE( bb ) )
+      if ( AF_LATIN_IS_TOP_BLUE( bs ) )
         blue->flags |= AF_LATIN_BLUE_TOP;
 
       /*
@@ -481,7 +705,7 @@
        * in order to optimize the pixel grid alignment of the top of small
        * letters.
        */
-      if ( bb == AF_LATIN_BLUE_SMALL_TOP )
+      if ( AF_LATIN_IS_X_HEIGHT_BLUE( bs ) )
         blue->flags |= AF_LATIN_BLUE_ADJUSTMENT;
 
       FT_TRACE5(( "    -> reference = %ld\n"
@@ -650,7 +874,20 @@
           else
 #endif
           if ( dim == AF_DIMENSION_VERT )
+          {
             scale = FT_MulDiv( scale, fitted, scaled );
+
+            FT_TRACE5((
+              "af_latin_metrics_scale_dim:"
+              " x height alignment (script `%s'):\n"
+              "                           "
+              " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
+              "\n",
+              af_script_names[metrics->root.script_class->script],
+              axis->org_scale / 65536.0,
+              scale / 65536.0,
+              ( fitted - scaled ) * 100 / scaled ));
+          }
         }
       }
     }
@@ -669,6 +906,10 @@
       metrics->root.scaler.y_delta = delta;
     }
 
+    FT_TRACE5(( "%s widths (script `%s')\n",
+                dim == AF_DIMENSION_HORZ ? "horizontal" : "vertical",
+                af_script_names[metrics->root.script_class->script] ));
+
     /* scale the widths */
     for ( nn = 0; nn < axis->width_count; nn++ )
     {
@@ -677,15 +918,31 @@
 
       width->cur = FT_MulFix( width->org, scale );
       width->fit = width->cur;
+
+      FT_TRACE5(( "  %d scaled to %.2f\n",
+                  width->org,
+                  width->cur / 64.0 ));
     }
+
+    FT_TRACE5(( "\n" ));
 
     /* an extra-light axis corresponds to a standard width that is */
     /* smaller than 5/8 pixels                                     */
     axis->extra_light =
       (FT_Bool)( FT_MulFix( axis->standard_width, scale ) < 32 + 8 );
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+    if ( axis->extra_light )
+      FT_TRACE5(( "`%s' script is extra light (at current resolution)\n"
+                  "\n",
+                  af_script_names[metrics->root.script_class->script] ));
+#endif
+
     if ( dim == AF_DIMENSION_VERT )
     {
+      FT_TRACE5(( "blue zones (script `%s')\n",
+                  af_script_names[metrics->root.script_class->script] ));
+
       /* scale the blue zones */
       for ( nn = 0; nn < axis->blue_count; nn++ )
       {
@@ -757,6 +1014,19 @@
 #endif
 
           blue->flags |= AF_LATIN_BLUE_ACTIVE;
+
+          FT_TRACE5(( "  reference %d: %d scaled to %.2f%s\n"
+                      "  overshoot %d: %d scaled to %.2f%s\n",
+                      nn,
+                      blue->ref.org,
+                      blue->ref.fit / 64.0,
+                      blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
+                                                         : " (inactive)",
+                      nn,
+                      blue->shoot.org,
+                      blue->shoot.fit / 64.0,
+                      blue->flags & AF_LATIN_BLUE_ACTIVE ? ""
+                                                         : " (inactive)" ));
         }
       }
     }
@@ -1654,8 +1924,8 @@
                                AF_Edge_Flags  base_flags,
                                AF_Edge_Flags  stem_flags )
   {
-    AF_LatinMetrics  metrics  = (AF_LatinMetrics) hints->metrics;
-    AF_LatinAxis     axis     = & metrics->axis[dim];
+    AF_LatinMetrics  metrics  = (AF_LatinMetrics)hints->metrics;
+    AF_LatinAxis     axis     = &metrics->axis[dim];
     FT_Pos           dist     = width;
     FT_Int           sign     = 0;
     FT_Int           vertical = ( dim == AF_DIMENSION_VERT );
@@ -1878,8 +2148,9 @@
 #endif
 
 
-    FT_TRACE5(( "%s edge hinting\n",
-                dim == AF_DIMENSION_VERT ? "horizontal" : "vertical" ));
+    FT_TRACE5(( "latin %s edge hinting (script `%s')\n",
+                dim == AF_DIMENSION_VERT ? "horizontal" : "vertical",
+                af_script_names[hints->metrics->script_class->script] ));
 
     /* we begin by aligning all stems relative to the blue zone */
     /* if needed -- that's only for horizontal edges            */
@@ -2414,6 +2685,7 @@
         af_glyph_hints_align_weak_points( hints, (AF_Dimension)dim );
       }
     }
+
     af_glyph_hints_save( hints, outline );
 
   Exit:
@@ -2430,47 +2702,10 @@
   /*************************************************************************/
 
 
-  /* XXX: this should probably fine tuned to differentiate better between */
-  /*      scripts...                                                      */
+  AF_DEFINE_WRITING_SYSTEM_CLASS(
+    af_latin_writing_system_class,
 
-  static const AF_Script_UniRangeRec  af_latin_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0020UL,  0x007FUL ),  /* Basic Latin (no control chars) */
-    AF_UNIRANGE_REC(  0x00A0UL,  0x00FFUL ),  /* Latin-1 Supplement (no control chars) */
-    AF_UNIRANGE_REC(  0x0100UL,  0x017FUL ),  /* Latin Extended-A */
-    AF_UNIRANGE_REC(  0x0180UL,  0x024FUL ),  /* Latin Extended-B */
-    AF_UNIRANGE_REC(  0x0250UL,  0x02AFUL ),  /* IPA Extensions */
-    AF_UNIRANGE_REC(  0x02B0UL,  0x02FFUL ),  /* Spacing Modifier Letters */
-    AF_UNIRANGE_REC(  0x0300UL,  0x036FUL ),  /* Combining Diacritical Marks */
-    AF_UNIRANGE_REC(  0x0370UL,  0x03FFUL ),  /* Greek and Coptic */
-    AF_UNIRANGE_REC(  0x0400UL,  0x04FFUL ),  /* Cyrillic */
-    AF_UNIRANGE_REC(  0x0500UL,  0x052FUL ),  /* Cyrillic Supplement */
-    AF_UNIRANGE_REC(  0x1D00UL,  0x1D7FUL ),  /* Phonetic Extensions */
-    AF_UNIRANGE_REC(  0x1D80UL,  0x1DBFUL ),  /* Phonetic Extensions Supplement */
-    AF_UNIRANGE_REC(  0x1DC0UL,  0x1DFFUL ),  /* Combining Diacritical Marks Supplement */
-    AF_UNIRANGE_REC(  0x1E00UL,  0x1EFFUL ),  /* Latin Extended Additional */
-    AF_UNIRANGE_REC(  0x1F00UL,  0x1FFFUL ),  /* Greek Extended */
-    AF_UNIRANGE_REC(  0x2000UL,  0x206FUL ),  /* General Punctuation */
-    AF_UNIRANGE_REC(  0x2070UL,  0x209FUL ),  /* Superscripts and Subscripts */
-    AF_UNIRANGE_REC(  0x20A0UL,  0x20CFUL ),  /* Currency Symbols */
-    AF_UNIRANGE_REC(  0x2150UL,  0x218FUL ),  /* Number Forms */
-    AF_UNIRANGE_REC(  0x2460UL,  0x24FFUL ),  /* Enclosed Alphanumerics */
-    AF_UNIRANGE_REC(  0x2C60UL,  0x2C7FUL ),  /* Latin Extended-C */
-    AF_UNIRANGE_REC(  0x2DE0UL,  0x2DFFUL ),  /* Cyrillic Extended-A */
-    AF_UNIRANGE_REC(  0x2E00UL,  0x2E7FUL ),  /* Supplemental Punctuation */
-    AF_UNIRANGE_REC(  0xA640UL,  0xA69FUL ),  /* Cyrillic Extended-B */
-    AF_UNIRANGE_REC(  0xA720UL,  0xA7FFUL ),  /* Latin Extended-D */
-    AF_UNIRANGE_REC(  0xFB00UL,  0xFB06UL ),  /* Alphab. Present. Forms (Latin Ligs) */
-    AF_UNIRANGE_REC( 0x1D400UL, 0x1D7FFUL ),  /* Mathematical Alphanumeric Symbols */
-    AF_UNIRANGE_REC( 0x1F100UL, 0x1F1FFUL ),  /* Enclosed Alphanumeric Supplement */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
-
-
-  AF_DEFINE_SCRIPT_CLASS( af_latin_script_class,
-    AF_SCRIPT_LATIN,
-    af_latin_uniranges,
-    'o',
+    AF_WRITING_SYSTEM_LATIN,
 
     sizeof ( AF_LatinMetricsRec ),
 
@@ -2480,6 +2715,105 @@
 
     (AF_Script_InitHintsFunc)   af_latin_hints_init,
     (AF_Script_ApplyHintsFunc)  af_latin_hints_apply
+  )
+
+
+  /* XXX: this should probably fine tuned to differentiate better between */
+  /*      scripts...                                                      */
+
+  static const AF_Script_UniRangeRec  af_latn_uniranges[] =
+  {
+    AF_UNIRANGE_REC(  0x0020UL,  0x007FUL ),  /* Basic Latin (no control chars) */
+    AF_UNIRANGE_REC(  0x00A0UL,  0x00FFUL ),  /* Latin-1 Supplement (no control chars) */
+    AF_UNIRANGE_REC(  0x0100UL,  0x017FUL ),  /* Latin Extended-A */
+    AF_UNIRANGE_REC(  0x0180UL,  0x024FUL ),  /* Latin Extended-B */
+    AF_UNIRANGE_REC(  0x0250UL,  0x02AFUL ),  /* IPA Extensions */
+    AF_UNIRANGE_REC(  0x02B0UL,  0x02FFUL ),  /* Spacing Modifier Letters */
+    AF_UNIRANGE_REC(  0x0300UL,  0x036FUL ),  /* Combining Diacritical Marks */
+    AF_UNIRANGE_REC(  0x1D00UL,  0x1D7FUL ),  /* Phonetic Extensions */
+    AF_UNIRANGE_REC(  0x1D80UL,  0x1DBFUL ),  /* Phonetic Extensions Supplement */
+    AF_UNIRANGE_REC(  0x1DC0UL,  0x1DFFUL ),  /* Combining Diacritical Marks Supplement */
+    AF_UNIRANGE_REC(  0x1E00UL,  0x1EFFUL ),  /* Latin Extended Additional */
+    AF_UNIRANGE_REC(  0x2000UL,  0x206FUL ),  /* General Punctuation */
+    AF_UNIRANGE_REC(  0x2070UL,  0x209FUL ),  /* Superscripts and Subscripts */
+    AF_UNIRANGE_REC(  0x20A0UL,  0x20CFUL ),  /* Currency Symbols */
+    AF_UNIRANGE_REC(  0x2150UL,  0x218FUL ),  /* Number Forms */
+    AF_UNIRANGE_REC(  0x2460UL,  0x24FFUL ),  /* Enclosed Alphanumerics */
+    AF_UNIRANGE_REC(  0x2C60UL,  0x2C7FUL ),  /* Latin Extended-C */
+    AF_UNIRANGE_REC(  0x2E00UL,  0x2E7FUL ),  /* Supplemental Punctuation */
+    AF_UNIRANGE_REC(  0xA720UL,  0xA7FFUL ),  /* Latin Extended-D */
+    AF_UNIRANGE_REC(  0xFB00UL,  0xFB06UL ),  /* Alphab. Present. Forms (Latin Ligs) */
+    AF_UNIRANGE_REC( 0x1D400UL, 0x1D7FFUL ),  /* Mathematical Alphanumeric Symbols */
+    AF_UNIRANGE_REC( 0x1F100UL, 0x1F1FFUL ),  /* Enclosed Alphanumeric Supplement */
+    AF_UNIRANGE_REC(       0UL,       0UL )
+  };
+
+  static const AF_Script_UniRangeRec  af_grek_uniranges[] =
+  {
+    AF_UNIRANGE_REC(  0x0370UL,  0x03FFUL ),  /* Greek and Coptic */
+    AF_UNIRANGE_REC(  0x1F00UL,  0x1FFFUL ),  /* Greek Extended */
+    AF_UNIRANGE_REC(       0UL,       0UL )
+  };
+
+  static const AF_Script_UniRangeRec  af_cyrl_uniranges[] =
+  {
+    AF_UNIRANGE_REC(  0x0400UL,  0x04FFUL ),  /* Cyrillic */
+    AF_UNIRANGE_REC(  0x0500UL,  0x052FUL ),  /* Cyrillic Supplement */
+    AF_UNIRANGE_REC(  0x2DE0UL,  0x2DFFUL ),  /* Cyrillic Extended-A */
+    AF_UNIRANGE_REC(  0xA640UL,  0xA69FUL ),  /* Cyrillic Extended-B */
+    AF_UNIRANGE_REC(       0UL,       0UL )
+  };
+
+  static const AF_Script_UniRangeRec  af_hebr_uniranges[] =
+  {
+    AF_UNIRANGE_REC(  0x0590UL,  0x05FFUL ),  /* Hebrew */
+    AF_UNIRANGE_REC(  0xFB1DUL,  0xFB4FUL ),  /* Alphab. Present. Forms (Hebrew) */
+    AF_UNIRANGE_REC(       0UL,       0UL )
+  };
+
+
+  AF_DEFINE_SCRIPT_CLASS(
+    af_latn_script_class,
+
+    AF_SCRIPT_LATN,
+    AF_BLUE_STRINGSET_LATN,
+    AF_WRITING_SYSTEM_LATIN,
+
+    af_latn_uniranges,
+    'o'
+  )
+
+  AF_DEFINE_SCRIPT_CLASS(
+    af_grek_script_class,
+
+    AF_SCRIPT_GREK,
+    AF_BLUE_STRINGSET_GREK,
+    AF_WRITING_SYSTEM_LATIN,
+
+    af_grek_uniranges,
+    0x3BF /* ο */
+  )
+
+  AF_DEFINE_SCRIPT_CLASS(
+    af_cyrl_script_class,
+
+    AF_SCRIPT_CYRL,
+    AF_BLUE_STRINGSET_CYRL,
+    AF_WRITING_SYSTEM_LATIN,
+
+    af_cyrl_uniranges,
+    0x43E /* о */
+  )
+
+  AF_DEFINE_SCRIPT_CLASS(
+    af_hebr_script_class,
+
+    AF_SCRIPT_HEBR,
+    AF_BLUE_STRINGSET_HEBR,
+    AF_WRITING_SYSTEM_LATIN,
+
+    af_hebr_uniranges,
+    0x5DD /* ם */
   )
 
 

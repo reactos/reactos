@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Arkagörünüm"
+CAPTION "Arka Plan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 80, 0
@@ -245,7 +245,7 @@ BEGIN
     IDS_ELEMENT_14 "Edilgin Seçke Öğeleri"
     IDS_ELEMENT_15 "İleti"
     IDS_ELEMENT_16 "Kaydırma Çubukları Denetimleri"
-    IDS_ELEMENT_17 "Uygulama Arkagörünümü"
+    IDS_ELEMENT_17 "Uygulama Arka Planı"
     IDS_ELEMENT_18 "Küçük Başlık Çubuğu"
     IDS_ELEMENT_19 "Simge Aralığı (Yatay)"
     IDS_ELEMENT_20 "Simge Aralığı (Dikey)"

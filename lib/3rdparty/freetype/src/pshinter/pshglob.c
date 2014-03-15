@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001-2004, 2006, 2010, 2012 by                               */
+/*  Copyright 2001-2004, 2006, 2010, 2012, 2013 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -757,7 +757,7 @@
                          FT_Fixed     x_delta,
                          FT_Fixed     y_delta )
   {
-    PSH_Dimension  dim = &globals->dimension[0];
+    PSH_Dimension  dim;
 
 
     dim = &globals->dimension[0];

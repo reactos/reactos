@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (specification).         */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2011, 2012 by                                    */
+/*  Copyright 2006, 2007, 2011-2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -26,39 +26,48 @@
 FT_BEGIN_HEADER
 
 
-  /* the CJK-specific script class */
+  /* the CJK-specific writing system */
 
-  AF_DECLARE_SCRIPT_CLASS( af_cjk_script_class )
+  AF_DECLARE_WRITING_SYSTEM_CLASS( af_cjk_writing_system_class )
 
-  /* CJK (global) metrics management */
+
+  /* the CJK-specific script classes */
+
+  AF_DECLARE_SCRIPT_CLASS( af_hani_script_class )
+
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /*****                                                               *****/
+  /*****              C J K   G L O B A L   M E T R I C S              *****/
+  /*****                                                               *****/
+  /*************************************************************************/
+  /*************************************************************************/
+
 
   /*
    *  CJK glyphs tend to fill the square.  So we have both vertical and
    *  horizontal blue zones.  But some glyphs have flat bounding strokes that
    *  leave some space between neighbour glyphs.
    */
-  enum
-  {
-    AF_CJK_BLUE_TOP,
-    AF_CJK_BLUE_BOTTOM,
-    AF_CJK_BLUE_LEFT,
-    AF_CJK_BLUE_RIGHT,
 
-    AF_CJK_BLUE_MAX
-  };
-
+#define AF_CJK_IS_TOP_BLUE( b ) \
+          ( (b)->properties & AF_BLUE_PROPERTY_CJK_TOP )
+#define AF_CJK_IS_HORIZ_BLUE( b ) \
+          ( (b)->properties & AF_BLUE_PROPERTY_CJK_HORIZ )
+#define AF_CJK_IS_FILLED_BLUE( b ) \
+          ( (b)->properties & AF_BLUE_PROPERTY_CJK_FILL )
+#define AF_CJK_IS_RIGHT_BLUE  AF_CJK_IS_TOP_BLUE
 
 #define AF_CJK_MAX_WIDTHS  16
-#define AF_CJK_MAX_BLUES   AF_CJK_BLUE_MAX
 
 
   enum
   {
-    AF_CJK_BLUE_ACTIVE     = 1 << 0,
-    AF_CJK_BLUE_IS_TOP     = 1 << 1,
-    AF_CJK_BLUE_IS_RIGHT   = 1 << 2,
-    AF_CJK_BLUE_ADJUSTMENT = 1 << 3,  /* used for scale adjustment */
-                                      /* optimization              */
+    AF_CJK_BLUE_ACTIVE     = 1 << 0,  /* set if zone height is <= 3/4px */
+    AF_CJK_BLUE_TOP        = 1 << 1,  /* result of AF_CJK_IS_TOP_BLUE   */
+    AF_CJK_BLUE_ADJUSTMENT = 1 << 2,  /* used for scale adjustment      */
+                                      /* optimization                   */
     AF_CJK_BLUE_FLAG_MAX
   };
 
@@ -77,16 +86,16 @@ FT_BEGIN_HEADER
     FT_Fixed       scale;
     FT_Pos         delta;
 
-    FT_UInt        width_count;
-    AF_WidthRec    widths[AF_CJK_MAX_WIDTHS];
-    FT_Pos         edge_distance_threshold;
-    FT_Pos         standard_width;
-    FT_Bool        extra_light;
+    FT_UInt        width_count;                   /* number of used widths */
+    AF_WidthRec    widths[AF_CJK_MAX_WIDTHS];     /* widths array          */
+    FT_Pos         edge_distance_threshold;     /* used for creating edges */
+    FT_Pos         standard_width;           /* the default stem thickness */
+    FT_Bool        extra_light;           /* is standard width very light? */
 
     /* used for horizontal metrics too for CJK */
     FT_Bool        control_overshoot;
     FT_UInt        blue_count;
-    AF_CJKBlueRec  blues[AF_CJK_BLUE_MAX];
+    AF_CJKBlueRec  blues[AF_BLUE_STRINGSET_MAX];
 
     FT_Fixed       org_scale;
     FT_Pos         org_delta;

@@ -763,7 +763,7 @@
         PFR_SubGlyph  subglyph;
 
 
-        FT_TRACE4(( "subglyph %d:\n", n ));
+        FT_TRACE4(( "  subglyph %d:\n", n ));
 
         subglyph   = glyph->subs + old_count + n;
         old_points = base->n_points;

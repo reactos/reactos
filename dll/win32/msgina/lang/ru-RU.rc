@@ -51,7 +51,7 @@ BEGIN
     PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 135, 86, 14
     PUSHBUTTON "Завершение сеанса", IDC_LOGOFF, 102, 135, 86, 14
     PUSHBUTTON "Выключение", IDC_SHUTDOWN, 198, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Изменение пароля", IDC_CHANGEPWD, 7, 155, 86, 14
     PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 102, 154, 86, 14
     PUSHBUTTON "Отмена", IDCANCEL, 198, 154, 70, 14
 END
@@ -77,9 +77,9 @@ BEGIN
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
     LTEXT "Этот компьютер используется и заблокирован.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Сообщение", IDC_LOCKMSG, 36, 75, 232, 26
-    LTEXT "По&льзователь:", IDC_STATIC, 36, 107, 40, 8
+    LTEXT "По&льзователь:", IDC_STATIC, 36, 107, 51, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "&Пароль:", IDC_STATIC, 36, 125, 42, 8
+    LTEXT "&Пароль:", IDC_STATIC, 33, 125, 42, 8
     EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Отмена", IDCANCEL, 144, 154, 50, 14
@@ -87,33 +87,33 @@ END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Изменение пароля"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Имя:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Войти на:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Старый пароль:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Новый пароль:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Подтвердите пароль:", IDC_STATIC, 7, 127, 78, 20
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Выход из ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "No", IDNO, 95, 39, 50, 14
+    LTEXT "Вы уверены, что хотите выйти?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Да", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Нет", IDNO, 95, 39, 50, 14
 END
 
 IDD_SHUTDOWN_DLG DIALOGEX 0, 0, 275, 146
@@ -139,28 +139,31 @@ BEGIN
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
     IDS_LOCKMSG "Только %s или Администратор могут разблокировать этот компьютер."
-    IDS_LOGONMSG "You are logged on as %s."
+    IDS_LOGONMSG "Вы вошли в систему как %s."
     IDS_LOGONDATE "Дата входа: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong.  Please enter your password again.  Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked.  Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
+    IDS_COMPUTERLOCKED "Компьютер заблокирован"
+    IDS_LOCKEDWRONGPASSWORD "Неверный пароль. Пожалуйста, введите пароль еще раз. Символы в Пароли вводятся с учетом регистра."
+    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
+    IDS_CHANGEPWDTITLE "Изменить пароль"
+    IDS_NONMATCHINGPASSWORDS "Введенные пароли несовпадают. Введите пароль в оба поля"
+    IDS_PASSWORDCHANGED "Ваш пароль был изменен."
+    IDS_LOGONTITLE "Logon Message"
+    IDS_LOGONWRONGUSERORPWD "Системе не удается войти в. Убедитесь в том, ваше имя пользователя и домен верны, то введите пароль еще раз. Символы в Пароли вводятся с учетом регистра"
+    IDS_LOGONUSERDISABLED "Ваш аккаунт был отключен. Пожалуйста, обратитесь к системному администратору."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Выйти ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Завершение работы"
+    IDS_SHUTDOWN_RESTART "Перезагрузка"
+    IDS_SHUTDOWN_SLEEP "Спящий режим"
+    IDS_SHUTDOWN_HIBERNATE "Гибернация"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Завершает текущий сеанс и позволяет другим пользователям войти в систему."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Завершает текущий сеанс и отключает систему так что можно спокойно выключить питание."
+    IDS_SHUTDOWN_RESTART_DESC "Завершает текущий сеанс и перезагружает систему."
+    IDS_SHUTDOWN_SLEEP_DESC "Переводит систему в режим ожидания."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Сохраняет текущий сеанс и выключит компьютер."
 END

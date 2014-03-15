@@ -264,6 +264,25 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return TRUE;
     if( sub && ILIsParent( watched, changed, TRUE ) )
         return TRUE;
+    if (sub && _ILIsDesktop(watched)) {
+        WCHAR wszPath[MAX_PATH];
+        SHGetSpecialFolderPathW(0, wszPath, CSIDL_DESKTOPDIRECTORY, FALSE);
+        LPITEMIDLIST deskpidl = SHSimpleIDListFromPathW(wszPath);
+        if (ILIsParent(deskpidl, changed, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+        SHGetSpecialFolderPathW(0, wszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
+        deskpidl = SHSimpleIDListFromPathW(wszPath);
+        if (ILIsParent(deskpidl, changed, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+    }
     return FALSE;
 }
 
@@ -272,7 +291,7 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
  */
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 {
-    LPCITEMIDLIST Pidls[2];
+    LPITEMIDLIST Pidls[2];
     LPNOTIFICATIONLIST ptr;
     UINT typeFlag = uFlags & SHCNF_TYPE;
 
@@ -316,10 +335,43 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     case SHCNF_PATHW:
         if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
         if (dwItem2) Pidls[1] = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
+        if (wEventId & (SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_RENAMEFOLDER))
+        {
+            /*
+             * The last items in the ID are currently files. So we chop off the last
+             * entry, and create a new one using a find data struct.
+             */
+            if (dwItem1 && Pidls[0]){
+                ILRemoveLastID(Pidls[0]);
+                WIN32_FIND_DATAW wfd;
+                LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem1);
+                lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
+                wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                LPITEMIDLIST newpidl = _ILCreateFromFindDataW(&wfd);
+                LPITEMIDLIST oldpidl = ILClone(Pidls[0]);
+                ILFree(Pidls[0]);
+                Pidls[0] = ILCombine(oldpidl, newpidl);
+                ILFree(newpidl);
+                ILFree(oldpidl);
+            }
+            if (dwItem2 && Pidls[1]){
+                ILRemoveLastID(Pidls[1]);
+                WIN32_FIND_DATAW wfd;
+                LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem2);
+                lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
+                wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                LPITEMIDLIST newpidl = _ILCreateFromFindDataW(&wfd);
+                LPITEMIDLIST oldpidl = ILClone(Pidls[0]);
+                ILFree(Pidls[1]);
+                Pidls[1] = ILCombine(oldpidl, newpidl);
+                ILFree(newpidl);
+                ILFree(oldpidl);
+            }
+        }
         break;
     case SHCNF_IDLIST:
-        Pidls[0] = (LPCITEMIDLIST)dwItem1;
-        Pidls[1] = (LPCITEMIDLIST)dwItem2;
+        Pidls[0] = (LPITEMIDLIST)dwItem1;
+        Pidls[1] = (LPITEMIDLIST)dwItem2;
         break;
     case SHCNF_PRINTERA:
     case SHCNF_PRINTERW:

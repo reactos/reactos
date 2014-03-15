@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2008-2012 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2008-2014 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -649,6 +649,8 @@ UniataAhciInit(
     ULONG PI;
 #endif //DBG
     ULONG CAP;
+    ULONG CAP2;
+    ULONG BOHC;
     ULONG GHC;
     BOOLEAN MemIo = FALSE;
 
@@ -657,6 +659,37 @@ UniataAhciInit(
 #ifdef DBG
     UniataDumpAhciRegs(deviceExtension);
 #endif //DBG
+
+    CAP2 = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP2);
+    if(CAP2 & AHCI_CAP2_BOH) {
+        BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
+        KdPrint2((PRINT_PREFIX "  stage 1 BOHC %#x\n", BOHC));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_BOHC,
+            BOHC | AHCI_BOHC_OOS);
+        for(i=0; i<50; i++) {
+            AtapiStallExecution(500);
+            BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
+            KdPrint2((PRINT_PREFIX "  BOHC %#x\n", BOHC));
+            if(BOHC & AHCI_BOHC_BB) {
+                break;
+            }
+            if(!(BOHC & AHCI_BOHC_BOS)) {
+                break;
+            }
+        }
+        KdPrint2((PRINT_PREFIX "  stage 2 BOHC %#x\n", BOHC));
+        if(BOHC & AHCI_BOHC_BB) {
+            for(i=0; i<2000; i++) {
+                AtapiStallExecution(1000);
+                BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
+                KdPrint2((PRINT_PREFIX "  BOHC %#x\n", BOHC));
+                if(!(BOHC & AHCI_BOHC_BOS)) {
+                    break;
+                }
+            }
+        }
+        KdPrint2((PRINT_PREFIX "  final BOHC %#x\n", BOHC));
+    }
 
     /* disable AHCI interrupts, for MSI compatibility issue
        see http://www.intel.com/Assets/PDF/specupdate/307014.pdf
@@ -729,7 +762,14 @@ UniataAhciInit(
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
 #endif //DBG
-
+    CAP2 = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP2);
+    if(CAP2 & AHCI_CAP2_BOH) {
+        KdPrint2((PRINT_PREFIX "  retry BOHC\n"));
+        BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
+        KdPrint2((PRINT_PREFIX "  BOHC %#x\n", BOHC));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_BOHC,
+            BOHC | AHCI_BOHC_OOS);
+    }
     /* clear interrupts */
     UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_IS,
         UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_IS));
@@ -1061,6 +1101,7 @@ UniataAhciStatus(
     }
     chan->AhciCompleteCI = (chan->AhciPrevCI ^ CI) & chan->AhciPrevCI; // only 1->0 states
     chan->AhciPrevCI = CI;
+    chan->AhciLastSError = SError.Reg;
     KdPrint((" AHCI: complete mask %#x\n", chan->AhciCompleteCI));
     chan->AhciLastIS = IS.Reg;
     if(CI & (1 << tag)) {

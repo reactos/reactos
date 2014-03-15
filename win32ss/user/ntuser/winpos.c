@@ -120,8 +120,6 @@ IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
        Delta.y -= ToWnd->rcClient.top;
     }
 
-    if (mirror_from) Delta.x = -Delta.x;
-
     for (i = 0; i != cPoints; i++)
     {
         lpPoints[i].x += Delta.x;
@@ -1383,7 +1381,7 @@ co_WinPosDoWinPosChanging(PWND Window,
  *
  * FIXME: hide/show owned popups when owner visibility changes.
  *
- * ReactOS: See bug 6751 and 7228.
+ * ReactOS: See bug CORE-6129 and CORE-6554.
  *
  */
  ////
@@ -1452,7 +1450,7 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
 
    if (hWndInsertAfter == HWND_BOTTOM)
    {
-      TRACE("Window is HWND_BOTTOM\n");
+      ERR("Window is HWND_BOTTOM\n");
       if (List) ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
       goto done;
    }
@@ -1723,7 +1721,6 @@ co_WinPosSetWindowPos(
    RECTL CopyRect;
    PWND Ancestor;
    BOOL bPointerInWindow;
-   //BOOL bNoTopMost;
 
    ASSERT_REFS_CO(Window);
 
@@ -1761,9 +1758,6 @@ co_WinPosSetWindowPos(
    }
 
    co_WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
-
-   // HWND_NOTOPMOST is redirected in WinPosFixupFlags.
-   //bNoTopMost = WndInsertAfter == HWND_NOTOPMOST;
 
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
@@ -1825,70 +1819,6 @@ co_WinPosSetWindowPos(
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
    {
       IntLinkHwnd(Window, WinPos.hwndInsertAfter);
-#if 0
-      //// Fix bug 6751 & 7228 see WinPosDoOwnedPopups wine Fixme.
-      PWND ParentWindow;
-      PWND Sibling;
-      PWND InsertAfterWindow;
-
-      if ((ParentWindow = Window->spwndParent)) // Must have a Parent window!
-      {
-         //ERR("SetWindowPos has parent window.\n");
-         if (WinPos.hwndInsertAfter == HWND_TOPMOST)
-         {
-            InsertAfterWindow = NULL;
-         }
-         else if ( WinPos.hwndInsertAfter == HWND_TOP )
-         {
-            InsertAfterWindow = NULL;
-
-            Sibling = ParentWindow->spwndChild;
-
-            while ( Sibling && Sibling->ExStyle & WS_EX_TOPMOST )
-            {
-               InsertAfterWindow = Sibling;
-               Sibling = Sibling->spwndNext;
-            }
-         }
-         else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
-         {
-            if (ParentWindow->spwndChild)
-            {
-               InsertAfterWindow = ParentWindow->spwndChild;
-
-               if(InsertAfterWindow)
-               {
-                  while (InsertAfterWindow->spwndNext)
-                     InsertAfterWindow = InsertAfterWindow->spwndNext;
-               }
-            }
-            else
-               InsertAfterWindow = NULL;
-         }
-         else
-            InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
-         /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
-            the last window */
-         if (InsertAfterWindow != Window)
-         {
-            IntUnlinkWindow(Window);
-            IntLinkWindow(Window, InsertAfterWindow);
-         }
-
-         if ( ( WinPos.hwndInsertAfter == HWND_TOPMOST ||
-               ( Window->ExStyle & WS_EX_TOPMOST && Window->spwndPrev && Window->spwndPrev->ExStyle & WS_EX_TOPMOST ) ||
-               ( Window->spwndNext && Window->spwndNext->ExStyle & WS_EX_TOPMOST ) ) &&
-               !bNoTopMost )
-         {
-            Window->ExStyle |= WS_EX_TOPMOST;
-         }
-         else
-         {
-            Window->ExStyle &= ~ WS_EX_TOPMOST;
-         }
-      }
-      ////
-#endif
    }
 
    OldWindowRect = Window->rcWindow;
@@ -2510,7 +2440,8 @@ PWND FASTCALL
 co_WinPosSearchChildren(
    PWND ScopeWin,
    POINT *Point,
-   USHORT *HitTest
+   USHORT *HitTest,
+   BOOL Ignore
    )
 {
     PWND pwndChild;
@@ -2521,7 +2452,7 @@ co_WinPosSearchChildren(
         return NULL;
     }
 
-    if ((ScopeWin->style & WS_DISABLED))
+    if (!Ignore && (ScopeWin->style & WS_DISABLED))
     {
         return NULL;
     }
@@ -2545,7 +2476,7 @@ co_WinPosSearchChildren(
                     continue;
                 }
 
-                pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest);
+                pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest, Ignore);
 
                 if(pwndChild != NULL)
                 {
@@ -2576,7 +2507,7 @@ co_WinPosSearchChildren(
 }
 
 PWND FASTCALL
-co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
+co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest, BOOL Ignore)
 {
    PWND Window;
    POINT Point = *WinPoint;
@@ -2594,7 +2525,7 @@ co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
    ASSERT_REFS_CO(ScopeWin);
    UserRefObjectCo(ScopeWin, &Ref);
 
-   Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest);
+   Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest, Ignore);
 
    UserDerefObjectCo(ScopeWin);
    if (Window)
@@ -3517,7 +3448,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       UserRefObjectCo(DesktopWindow, &Ref);
 
       //pti = PsGetCurrentThreadWin32Thread();
-      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
+      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest, FALSE);
 
       if (Window)
       {

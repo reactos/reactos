@@ -17,7 +17,7 @@ include_directories(
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    authors.cpp
+    #authors.cpp
     autocomplete.cpp
     brsfolder.cpp
     changenotify.cpp
@@ -55,6 +55,7 @@ list(APPEND SOURCE
     folders/fonts.cpp
     folders/cpanel.cpp
     folders/recyclebin.cpp
+    droptargets/CexeDropHandler.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp
@@ -81,7 +82,7 @@ add_library(shell32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
-set_module_type(shell32 win32dll UNICODE)
+set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
 
 target_link_libraries(shell32
     atlnew

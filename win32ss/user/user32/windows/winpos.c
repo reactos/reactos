@@ -218,8 +218,6 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
        Delta.y -= ToWnd->rcClient.top;
     }
 
-    if (mirror_from) Delta.x = -Delta.x;
-
     for (i = 0; i != cPoints; i++)
     {
         lpPoints[i].x += Delta.x;

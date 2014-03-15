@@ -554,6 +554,47 @@ HANDLE FASTCALL ValidateHandleNoErr(HANDLE handle, HANDLE_TYPE type)
    if (handle) return (PWND)UserGetObjectNoErr(gHandleTable, handle, type);
    return NULL;
 }
+
+PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type)
+{
+  PVOID pObj;
+  DWORD dwError = 0;
+  if (handle) 
+  {
+      pObj = UserGetObjectNoErr(gHandleTable, handle, type);
+      if (!pObj)
+      {
+          switch (type)
+          {  
+              case TYPE_WINDOW:
+                  dwError = ERROR_INVALID_WINDOW_HANDLE;
+                  break;
+              case TYPE_MENU:
+                  dwError = ERROR_INVALID_MENU_HANDLE;
+                  break;
+              case TYPE_CURSOR:
+                  dwError = ERROR_INVALID_CURSOR_HANDLE;
+                  break;
+              case TYPE_SETWINDOWPOS:
+                  dwError = ERROR_INVALID_DWP_HANDLE;
+                  break;
+              case TYPE_HOOK:
+                  dwError = ERROR_INVALID_HOOK_HANDLE;
+                  break;
+              case TYPE_ACCELTABLE:
+                  dwError = ERROR_INVALID_ACCEL_HANDLE;
+                  break;
+              default:
+                  dwError = ERROR_INVALID_HANDLE;
+                  break;
+          }
+          EngSetLastError(dwError);
+          return NULL;
+      }
+      return pObj;
+  }
+  return NULL;
+}
       
 /*
  * NtUserValidateHandleSecure

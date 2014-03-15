@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-#  DocMaker (c) 2002, 2004, 2008 David Turner <david@freetype.org>
+#  DocMaker (c) 2002, 2004, 2008, 2013 David Turner <david@freetype.org>
 #
-# This program is a re-write of the original DocMaker took used
+# This program is a re-write of the original DocMaker tool used
 # to generate the API Reference of the FreeType font engine
 # by converting in-source comments into structured HTML.
 #

@@ -224,7 +224,7 @@ typedef struct _FRONTEND_VTBL
      */
     VOID (NTAPI *ChangeTitle)(IN OUT PFRONTEND This);
     BOOL (NTAPI *ChangeIcon)(IN OUT PFRONTEND This,
-                             HICON hWindowIcon);
+                             HICON IconHandle);
     HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                               PCOORD pSize);
@@ -237,10 +237,10 @@ typedef struct _FRONTEND_VTBL
     INT   (NTAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
                                    BOOL Show);
     BOOL  (NTAPI *SetMouseCursor)(IN OUT PFRONTEND This,
-                                  HCURSOR hCursor);
+                                  HCURSOR CursorHandle);
     HMENU (NTAPI *MenuControl)(IN OUT PFRONTEND This,
-                               UINT cmdIdLow,
-                               UINT cmdIdHigh);
+                               UINT CmdIdLow,
+                               UINT CmdIdHigh);
     BOOL  (NTAPI *SetMenuClose)(IN OUT PFRONTEND This,
                                 BOOL Enable);
 

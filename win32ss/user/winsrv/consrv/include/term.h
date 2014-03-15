@@ -32,8 +32,8 @@
 
 #define TermChangeTitle(Console) \
     (Console)->TermIFace.Vtbl->ChangeTitle(&(Console)->TermIFace)
-#define TermChangeIcon(Console, hWindowIcon) \
-    (Console)->TermIFace.Vtbl->ChangeIcon(&(Console)->TermIFace, (hWindowIcon))
+#define TermChangeIcon(Console, IconHandle) \
+    (Console)->TermIFace.Vtbl->ChangeIcon(&(Console)->TermIFace, (IconHandle))
 #define TermGetConsoleWindowHandle(Console) \
     (Console)->TermIFace.Vtbl->GetConsoleWindowHandle(&(Console)->TermIFace)
 #define TermGetLargestConsoleWindowSize(Console, pSize) \
@@ -46,8 +46,8 @@
     (Console)->TermIFace.Vtbl->SetDisplayMode(&(Console)->TermIFace, (NewMode))
 #define TermShowMouseCursor(Console, Show) \
     (Console)->TermIFace.Vtbl->ShowMouseCursor(&(Console)->TermIFace, (Show))
-#define TermSetMouseCursor(Console, hCursor) \
-    (Console)->TermIFace.Vtbl->SetMouseCursor(&(Console)->TermIFace, (hCursor))
+#define TermSetMouseCursor(Console, CursorHandle) \
+    (Console)->TermIFace.Vtbl->SetMouseCursor(&(Console)->TermIFace, (CursorHandle))
 #define TermMenuControl(Console, CmdIdLow, CmdIdHigh) \
     (Console)->TermIFace.Vtbl->MenuControl(&(Console)->TermIFace, (CmdIdLow), (CmdIdHigh))
 #define TermSetMenuClose(Console, Enable) \

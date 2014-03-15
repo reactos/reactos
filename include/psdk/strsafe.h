@@ -12,6 +12,11 @@
 #include <stdarg.h>
 #include <specstrings.h>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#endif
+
 #ifndef _SIZE_T_DEFINED
 #define _SIZE_T_DEFINED
 #undef size_t
@@ -2059,4 +2064,9 @@ STRSAFE_INLINE_API StringGetsExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,siz
 #undef _getws
 #define _getws _getws_instead_use_StringCbGetsW_or_StringCchGetsW;
 #endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif
+
+#endif /* _STRSAFE_H_INCLUDED_ */

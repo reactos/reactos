@@ -1,3 +1,1559 @@
+2013-12-08  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.5.2 released.
+	=========================
+
+
+	Tag sources with `VER-2-5-2'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.5.2.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.1/2.5.2/, s/251/252/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 17:1:11.
+	* docs/CHANGES: Updated.
+
+2013-12-07  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Next round in phantom point handling.
+
+	Greg Hitchcock provided very interesting insights into the
+	complicated history of the horizontal positions of the TSB and BSB
+	phantom points.
+
+	* src/truetype/ttgload.c (TT_LOADER_SET_PP)
+	[TT_CONFIG_OPTION_SUBPIXEL_HINTING]: Use `subpixel_hinting' and
+	`grayscale_hinting' flags as conditionals for the x position of TSB
+	and BSB.
+
+2013-12-05  Werner Lemberg  <wl@gnu.org>
+
+	* builds/freetype.mk (FT_CC): Removed.  Unused.
+
+2013-12-04  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix handling of embedded bitmap strikes.
+
+	This corrects the commit from 2013-11-21.  Problem reported by
+	Andrey Panov <panov@canopus.iacp.dvo.ru>.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_bitmap): Fix logic to
+	detect excessive bytes for bit-aligned bitmaps.
+
+2013-12-03  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Remove dead code.
+
+	Reported by Nigel Tao <nigeltao@golang.org>.
+
+	* include/internal/tttypes.h (TT_LoaderRec): Remove unused
+	`preserve_pps' field.
+	* src/truetype/ttgload.c (TT_Hint_Glyph): Updated.
+
+2013-12-03  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix phantom point handling.
+
+	This is a further improvement to the changes from 2013-11-06.
+
+	* src/truetype/ttgload.c (TT_Hint_Glyph): Horizontal phantom points
+	are rounded horizontally, vertical ones are rounded vertically.
+	(TT_LOADER_SET_PP): The horizontal position of vertical phantom
+	points in pre-ClearType mode is zero, as shown in the OpenType
+	specification.
+
+2013-12-02  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix change from 2013-11-20.
+
+	Problem reported by Akira Kakuto <kakuto@fuk.kindai.ac.jp>.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Protect call to
+	`Update_Max' with both a TT_USE_BYTECODE_INTERPRETER guard and a
+	`IS_HINTED' clause.
+	Also remove redundant check using `maxSizeOfInstructions' – in
+	simple glyphs, the bytecode data comes before the outline data, and
+	a validity test for this is already present.
+
+2013-11-27  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix use of dumping functions in `ftgrid' demo program.
+
+	* src/autofit/afhints.c (AF_DUMP) [FT_DEBUG_AUTOFIT]: New macro.
+	(af_glyph_hints_dump_points, af_glyph_hints_dump_segments,
+	af_glyph_hints_dump_edges) [FT_DEBUG_AUTOFIT]: Add parameter to
+	handle output to stdout.
+	Use AF_DUMP.
+	(af_glyph_hints_dump_points, af_glyph_hints_dump_segments,
+	af_glyph_hints_dump_edges) [!FT_DEBUG_AUTOFIT]: Removed.
+
+2013-11-25  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.5.1 released.
+	=========================
+
+
+	Tag sources with `VER-2-5-1'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.5.1.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.0/2.5.1/, s/250/251/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 17:0:11.
+	* CMakeLists.txt (VERSION_PATCH): Set to 2.
+	* docs/CHANGES, docs/release: Updated.
+
+2013-11-23  Werner Lemberg  <wl@gnu.org>
+
+	[truetype]: Add tricky font names `hkscsiic.ttf' and `iicore.ttf'.
+
+	* src/truetype/ttobjs.c (TRICK_NAMES_MAX_CHARACTERS,
+	TRICK_NAMES_COUNT): Updated.
+	(trick_names): Add family name for the two fonts.
+
+2013-11-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_bitmap): Typo.
+
+2013-11-21  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Typo.
+
+	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Return correct `bsize->width'
+	value if the font lacks an `OS/2' table.
+
+2013-11-21  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Improve handling of buggy embedded bitmap strikes.
+
+	We are now able to successfully load `AppleMyoungJo.ttf'.
+	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_bitmap): Don't trust glyph
+	format.
+
+2013-11-20  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Don't trust `maxp's `maxSizeOfInstructions'.
+
+	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>; see
+
+	  http://lists.nongnu.org/archive/html/freetype-devel/2013-08/msg00005.html
+
+	for details.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Check size of `fpgm' and `prep'
+	tables also for setting `autohint'.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Use code from
+	`TT_Process_Composite_Glyph' for handling unreliable values of
+	`maxSizeOfInstructions'.
+
+2013-11-16  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix `OS/2' table version 5 support.
+
+	We now follow the `official' announcement from Microsoft (on the
+	OpenType mailing list, which unfortunately hasn't a public archive).
+
+	* include/freetype/tttables.h (TT_OS2):
+	s/usLowerPointSize/usLowerOpticalPointSize/,
+	s/usUpperPointSize/usUpperOpticalPointSize/.
+
+	* src/sfnt/ttload.c (tt_face_load_os2): Update, and set correct
+	default values.
+
+2013-11-13  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/ft2unix.h: Remove.  No longer necessary.
+
+	* builds/unix/install.mk (install): Updated.
+
+2013-11-13  Werner Lemberg  <wl@gnu.org>
+
+	Simplify header file hierarchy.
+
+	This large patch changes the header file directory layout from
+	`include/freetype/...' to `include/...', effectively removing one
+	level.  Since the file `ft2build.h' is also located in `include'
+	(and it stays there even after installation), all FreeType header
+	files are now in a single directory.
+
+	Applications that use (a) `freetype-config' or FreeType's
+	`pkg-config' file to get the include directory for the compiler, and
+	(b) the documented way for header inclusion like
+
+	  #include <ft2build.h>
+	  #include FT_FREETYPE_H
+	  ...
+
+	don't need any change to the source code.
+
+	* include/freetype/*: Move up to...
+	* include/*: ... this directory.
+
+	* builds/amiga/include/freetype/*: Move up to...
+	* builds/amiga/include/*: ... this directory.
+
+	*/*: Essentially do `s@/freetype/@/@' where appropriate.
+
+	* CMakeList.txt: Simplify.
+	* builds/unix/freetype-config.in, builds/unix/freetype2.in: For
+	`--cflags', return a single directory.
+	* builds/unix/install.mk (install): No longer try to remove `cache'
+	and `internal' subdirectories; instead, remove the `freetype'
+	subdirectory.
+
+2013-11-12  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix last `truetype' commit.
+
+	* src/truetype/ttgload.c (tt_get_metrics): Preserve stream position.
+	Return error value.
+	(load_truetype_glyph): Updated.
+
+2013-11-10  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CMAKE: New dummy file.
+
+2013-11-08  Dave Arnold  <darnold@adobe.com>
+
+	[cff] Fix for hints that touch.
+
+	* src/cff/cf2hints.c (cf2_hintmap_insertHint): Fix condition for
+	finding index value of insertion point.
+
+2013-11-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix handling of phantom points in composite glyphs.
+	Problem reported by Nigel Tao <nigeltao@golang.org>.
+
+	This is a follow-up commit to the previous one.
+
+	* src/truetype/ttgload.c (load_truetype_glyph): Call
+	`tt_get_metrics' after loading the glyph header.
+
+2013-11-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve emulation of vertical metrics.
+
+	This commit also improves the start values of vertical phantom
+	points.  Kudos to Greg Hitchcock for help.
+
+	* src/truetype/ttgload.c (TT_Get_VMetrics): Add parameter to pass
+	`yMax' value.  Replace code with fixed Microsoft definition.
+	(tt_get_metrics): Updated.
+	(TT_LOADER_SET_PP): Add explanation how to initialize phantom
+	points, taken from both the OpenType specification and private
+	communication with Greg (which will eventually be added to the
+	standard).
+	Fix horizontal position of `pp3' and `pp4'.
+
+	* src/truetype/ttgload.h: Updated.
+
+	* src/truetype/ttdriver.c (tt_get_advances): Updated.
+
+	* docs/CHANGES: Updated.
+
+2013-11-05  Werner Lemberg  <wl@gnu.org>
+
+	* builds/windows/vc2010/freetype.vcxproj: s/v110/v100/.
+	PlatformToolSet version 110 is for VC2012.
+
+	Problem reported (with solution) by Dave Arnold <darnold@adobe.com>.
+
+2013-11-05  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Correctly reset point tags for glyph components.
+	Problem reported by Nigel Tao <nigeltao@golang.org>.
+
+	* src/truetype/ttgload.c (TT_Process_Composite_Glyph): Fix loop.
+
+2013-11-02  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix GETINFO opcode handling of subpixel hinting bits.
+
+	* src/truetype/ttinterp.c (Ins_GETINFO): Don't request bit 6 set to
+	get info on subpixel hinting.
+
+	* docs/CHANGES: Updated.
+
+2013-11-02  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #40451.
+
+	Simply apply the patch from the bug report.
+
+	* builds/unix/ftconfig.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: The used #pragma directives only
+	work with gcc versions 4.6 and higher.
+
+2013-11-01  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2013-11-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Minor code refactoring.
+
+	Two benefits: The allocated FDEF (and IDEF) array gets slightly
+	smaller, and the `ttdebug' demo program has access to function
+	numbers without additional costs.
+
+	Fortunately, no changes to FontForge are necessary – this is the
+	only external TrueType debugger I know of, but others may exist and
+	should check the code accordingly.
+
+	* src/truetype/ttinterp.h (TT_CallRec): Replace `Cur_Restart' and
+	`Cur_End' with a pointer to the corresponding `TT_DefRecord'
+	structure.
+
+	* src/truetype/ttinterp.c (DO_JROT, DO_JMPR, DO_JROF, Ins_ENDF,
+	Ins_CALL, Ins_LOOPCALL, Ins_UNKNOWN, TT_RunIns <Invalid_Opcode>):
+	Updated.
+
+2013-10-27  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Implement support for `OS/2' table version 5.
+
+	See
+
+	  http://typedrawers.com/discussion/470/new-microsoft-size-specific-design-selection-mechanism
+
+	for the announcement.
+
+	* include/freetype/tttables.h (TT_OS2): Add fields
+	`usLowerPointSize' and `usUpperPointSize'.  Since FreeType returns
+	this structure only as a pointer through `FT_Get_Sfnt_Table', there
+	shouldn't be any ABI problems.
+
+	* src/sfnt/ttload.c (tt_face_load_os2): Implement it.
+
+	* docs/CHANGES: Updated.
+
+2013-10-24  Werner Lemberg  <wl@gnu.org>
+
+	* README.git, docs/CHANGES, docs/INSTALL: Updated.
+
+2013-10-24  John Cary  <cary@txcorp.com>
+
+	Provide cmake support.
+
+	* CMakeLists.txt: New file.
+
+2013-10-23  Kenneth Miller  <kennethadammiller@yahoo.com>
+	    Werner Lemberg  <wl@gnu.org>
+
+	Provide support for x64 builds in Visual C++ project files.
+
+	* src/builds/win32: Renamed to...
+	* src/builds/windows: This.
+
+	* src/builds/windows/vc2010/*: Updated to handle x64 target.
+
+	* src/builds/windows/*.mk, docs/INSTALL.GNU: s/win32/windows/ where
+	appropriate.
+
+2013-10-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/md5.c, src/base/md5.h: Updated to recent version.
+
+	* src/base/ftobjs.c: Updated; `md5.c' no longer uses `free'.
+
+	The canonical URL to get updates for this file is
+
+	  http://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/md5/
+
+	as the author told me in private communication.
+
+2013-10-19  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] s/SMALL_TOP/X_HEIGHT/.
+
+	* src/autofit/afblue.dat: Updated.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/aflatin.c, src/autofit/aflatin.h,
+	src/autofit/atlatin2.c: Updated.
+
+2013-10-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afblue.dat: s/MINOR/DESCENDER/.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+2013-10-16  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add description strings to script entries.
+
+	Currently, this is unused.
+
+	* src/autofit/afscript.h: Do it.
+	* src/autofit/afglobal.c, src/autofit/afpic.c,
+	src/autofit/aftypes.h: Updated.
+
+2013-10-16  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve tracing message for extra light flag.
+
+	* src/autofit/aflatin.c (af_latin_metrics_scale_dim): Do it.
+
+2013-10-15  Chongyu Zhu  <lembacon@gmail.com>
+
+	[arm] Fix thumb2 inline assembly under LLVM.
+
+	When using `ADD' with an immediate operand, the instruction is
+	actually `ADD Rd, Rn, #<imm12>', that is, the maximum of the
+	immediate operand cannot exceed 4095.  It will fail to compile with
+	LLVM.
+
+	However, in GCC, due to some legacy compatibility considerations,
+	`ADD.W' will be automatically emitted when the immediate operand is
+	larger than 4095.
+
+	* builds/unix/ftconfig.in, include/freetype/config/ftconfig.h
+	(FT_MulFix_arm) [__GNUC__]: Support clang compiler.
+
+	* src/truetype/ttinterp.c (TT_MulFix14_arm) [__GNUC__]: Ditto.
+
+2013-10-12  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve tracing of `latin' hinter.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Report blue
+	zone types.
+	(af_latin_metrics_scale_dim): Report scaling changes due to x height
+	alignment.
+	Report scaled stroke width and blue zone values.
+
+2013-10-03  Dave Arnold  <darnold@adobe.com>
+
+	* src/cff/cf2font.c (cf2_computeDarkening): Avoid division by zero.
+
+	Note that the old code avoided using a region of the piecewise
+	linear function where the slope was zero.  The recovery was to use a
+	different section of the function, which produced a different,
+	incorrect amount of darkening.
+
+2013-10-02  Darrell Bellert  <darrell.bellert@hl.konicaminolta.us>
+
+	* src/sfnt/ttload.c (tt_face_load_pclt): Fix `pclt_fields'.
+
+2013-10-02  Dave Arnold  <darnold@adobe.com>
+
+	* src/cff/cf2font.c (cf2_computeDarkening): Initialize darkenAmount.
+
+	This line was lost in commit 89ca1fd6 (from 2013-06-25).  The effect
+	is to use a previous darkening amount when producing an unhinted,
+	unscaled outline.  This can cause autohint samples in ftgrid and
+	ftview to be based on darkened CFF outlines instead of unhinted,
+	undarkened ones.
+
+2013-09-29  Dave Arnold  <darnold@adobe.com>
+
+	Fix Savannah bug #39295.
+
+	The bug was caused by switching to the initial hintmap (the one in
+	effect when `moveto' executes) just before drawing the final element
+	in the charstring.  This ensured that the path was closed (in both
+	Character Space and Device Space).  But if the final element was a
+	curve and if the final hintmap was different enough from the initial
+	one, then the curve was visibly distorted.
+
+	The first part of the fix is to draw the final curve using the final
+	hintmap as specified by the charstring.  This corrects the
+	distortion but does not ensure closing in Device Space.  It may
+	require the rasterizer to automatically generate an extra closing
+	line.  Depending on the hintmap differences, this line could be from
+	zero to a couple pixels in length.
+
+	The second part of the fix covers the case where the charstring
+	subpath is closed with an explicit line.  We now modify that line's
+	end point to avoid the distortion.
+
+	Some glyphs in the bug report font (TexGyreHeros-Regular) that show
+	the change are:
+
+	  25ppem    S (98)
+	  24ppem    eight (52)
+	  25.5ppem  p (85)
+
+	Curves at the *end* of a subpath are no longer distorted.  However,
+	some of these glyphs have bad hint substitutions in the middle of a
+	subpath, and these are not affected.
+
+	The patch has been tested with a set of 106 fonts that shipped with
+	Adobe Creative Suite 4, together with 756 Open Source CFF fonts from
+	Google Fonts.  There are 1.5 million glyphs, of which some 20k are
+	changed with the fix.  A sampling of a few hundred of these changes
+	have been examined more closely, and the changes look good (or at
+	least acceptable).
+
+	* src/cff/cf2hints.h (CF2_GlyphPathRec): New element `pathIsClosing'
+	to indicate that we synthesize a closepath line.
+
+	* src/cff/cf2hints.c (cf2_glyphpath_init): Updated.
+	(cf2_glyphpath_pushPrevElem): If closing, use first hint map (for
+	`lineto' operator) and adjust hint zone.
+	For synthesized closing lines, use end point in first hint zone.
+	(cf2_glyphpath_lineTo): Take care of synthesized closing lines.  In
+	particular, shift the detection of zero-length lines from character
+	space to device space.
+	(cf2_glyphpath_closeOpenPath): Remove assertion.
+	Updated.
+
+2013-09-25  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/aflatin.c (af_{grek,cyrl}_uniranges): Fix arrays.
+
+2013-09-25  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[bdf, pcf] Refuse non-zero face_index.
+
+	Suggested by Akira Tagoh, see
+
+	  http://lists.gnu.org/archive/html/freetype/2013-09/msg00030.html
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Return `Invalid_Argument'
+	error if the font could be opened but non-zero `face_index' is
+	given.
+	* src/pcf/pcfdrivr.c (PCF_Face_Init): Ditto.
+
+	* src/type42/t42objs.c (T42_Face_Init): Remove unrequired FT_UNUSED
+	macro for `face_index' because it is validated later.
+
+2013-09-23  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #40090.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_scale): Revert commit
+	306f8c5d (from 2013-08-25) affecting this function.
+
+2013-09-22  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Disunify Cyrillic and Greek handling from Latin.
+
+	* src/autofit/afscript.h: Add Cyrillic and Greek.
+
+	* src/autofit/afblue.dat (AF_BLUE_STRINGSET_GREK,
+	AF_BLUE_STRINGSET_CYRL): Add blue zones for Greek and Cyrillic.
+	(AF_BLUE_STRINGSET_LATN): Fix typo.
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/aflatin.c (af_grek_uniranges, af_cyrl_uniranges): New
+	arrays.
+	(af_grek_script_class, af_cyrl_script_class): New scripts.
+	* src/autofit/aflatin.h: Updated.
+
+2013-09-20  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2013-09-20  Behdad Esfahbod  <behdad@behdad.org>
+
+	Fix vertical size of emboldened glyphs.
+
+	Cf. https://bugzilla.gnome.org/show_bug.cgi?id=686709
+
+	* src/base/ftsynth.c (FT_GlyphSlot_Embolden): Adjust `horiBearingY'
+	also.
+
+2013-09-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* include/freetype/ftoutln.h: Correct FT_Outline_Get_Orientation
+	algorithm description.
+
+2013-09-11  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve Hebrew rendering.
+
+	This change introduces a new blue zone property
+	`AF_BLUE_PROPERTY_LATIN_LONG' to make the auto-hinter ignore short
+	top segments.
+
+	* src/autofit/afblue.dat: Fix Hebrew blue strings.
+	Use AF_BLUE_PROPERTY_LATIN_LONG for AF_BLUE_STRING_HEBREW_TOP.
+
+	* src/autofit/afblue.hin (AF_BLUE_PROPERTY_LATIN_LONG): New macro.
+
+	* src/autofit/afblue.c, src/autofit/afblue.h: Updated.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Handle
+	`AF_LATIN_IS_LONG_BLUE'.
+
+	* src/autofit/aflatin.h (AF_LATIN_IS_LONG_BLUE): New macro.
+
+2013-08-28  Behdad Esfahbod  <behdad@google.com>
+
+	[sfnt] Fix frame access while reading WOFF table directory.
+
+	* src/sfnt/sfobjs.c (woff_open_font): Using single memory frame
+	while reading the directory entries for the whole loop.
+
+2013-08-29  Werner Lemberg  <wl@gnu.org>
+            Behdad Esfahbod  <behdad@google.com>
+
+	Implement support for WOFF containers.
+
+	We simply synthesize a SFNT from the WOFF, create a memory stream
+	for the new data, and load the SFNT as usual.
+
+	Does NOT add any API to access WOFF metadata or private blocks.
+
+	* include/freetype/internal/tttypes.h (WOFF_HeaderRec,
+	WOFF_TableRec): New structures.
+
+	* include/freetype/tttags.h (TTAG_wOFF): New macro.
+
+	* src/base/ftobjs.c (FT_Open_Face): Set `stream' after calling
+	`open_face'.
+
+	* src/sfnt/sfobjs.c [FT_CONFIG_OPTION_SYSTEM_ZLIB]: Include
+	`FT_GZIP_H'.
+	(WRITE_BYTE, WRITE_USHORT, WRITE_ULONG): New temporary macros for
+	writing to a stream.
+	(sfnt_stream_close, compare_offsets, woff_open_font): New functions.
+	(sfnt_open_font): Handle `TTAG_wOFF'.
+	(sfnt_init_face): Set `stream' after calling `sfnt_open_font'.
+
+	* src/truetype/ttobjs.c (tt_face_init): Set `stream' after calling
+	`sfnt->init_face'.
+
+	* src/base/ftobjs.c (open_face): Use a pointer to FT_Stream as an
+	argument so that a changed stream survives.
+	Update callers.
+
+2013-08-28  Werner Lemberg  <wl@gnu.org>
+
+	[gzip] New function `FT_Gzip_Uncompress'.
+
+	This is modeled after zlib's `uncompress' function.  We need this
+	for WOFF support.
+
+	* include/freetype/ftgzip.h, src/gzip/ftgzip.c (FT_Gzip_Uncompress):
+	New function.
+
+	* src/gzip/rules.mk: Rewrite to better reflect dependencies.
+
+2013-08-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix `make multi' compilation.
+
+	* src/autofit/afblue.cin, src/autofit/afblue.c: Don't include
+	`afblue.h' but `aftypes.h'.
+	* src/autofit/afcjk.c: Don't include `aftypes.h' but `afglobal.h'.
+
+2013-08-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix C++ compilation.
+
+	* src/autofit/afglobal.c (af_face_globals_get_metrics),
+	src/autofit/afdummy.c (af_dflt_script_class), src/autofit/afindic.c
+	(af_deva_script_class): Use proper casts.
+
+2013-08-27  Behdad Esfahbod  <behdad@google.com>
+
+	* src/sfnt/ttload.c (tt_face_load_font_dir): Fix sign typos.
+
+2013-08-27  Behdad Esfahbod  <behdad@google.com>
+
+	FT_Open_Face: Improve external stream handling.
+
+	If the font's `clazz->init_face' function wants to swap to new
+	stream, handling of whether original stream was external could
+	result to either memory leak or double free.  Mark externality into
+	face flags before calling `init_face' such that the clazz can handle
+	external streams properly.
+
+	* src/base/ftobjs.c (FT_Open_Face): Move code to set
+	FT_FACE_FLAG_EXTERNAL_STREAM to...
+	(open_face): This function.
+
+2013-08-27  Werner Lemberg  <wl@gnu.org>
+
+	Remove `FT_SqrtFixed' function.
+
+	It's no longer used.
+
+	* include/freetype/internal/ftcalc.h, src/base/ftcalc.c: Do it.
+
+2013-08-27  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] While tracing, report script names instead of ID values.
+
+	* src/autofit/afglobal.c (af_script_names) [FT_DEBUG_LEVEL_TRACE]:
+	New array.
+	* src/autofit/afglobal.h: Updated.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths,
+	af_cjk_hint_edges): Use `af_script_names'.
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths,
+	af_latin_hint_edges): Ditto.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Report used script while hinting a glyph.
+
+	* src/autofit/afcjk.c (af_cjk_hint_edges), src/autofit/aflatin.c
+	(af_latin_hint_edges): Implement it.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add support for Hebrew script.
+
+	* src/autofit/afblue.dat: Add blue strings for Hebrew.
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/aflatin.c (af_hebr_uniranges): New array.
+	(af_hebr_script_class): New script.
+	* src/autofit/aflatin.h, src/autofit/afscript.h: Updated.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve tracing messages.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths): Mention script
+	ID in tracing message.
+	(af_cjk_metrics_init_blues): Initialize `axis' outside of the inner
+	loop.
+	Improve tracing messages.
+	(af_cjk_hint_edges) [FT_DEBUG_LEVEL_TRACE]: New variable
+	`num_actions' to count hinting actions.
+	Improve tracing messages.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths): Mention
+	script ID in tracing message.
+	(af_latin_metrics_init_blues, af_latin_hint_edges): Improve tracing
+	messages.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	Better tracing of loaded glyphs.
+
+	Previously, the loading of a glyph was traced at level 4, if at all.
+	With this change, all font loading routines emit a tracing message
+	at level 1, making it easier to select tracing output (for example
+	using F2_DEBUG="any:1 afhints:7 aflatin:7").
+
+	* src/bdf/bdfdrivr.c (BDF_Glyph_Load): Add tracing message.
+	* src/cff/cffdrivr.c (cff_glyph_load): Ditto.
+	* src/cff/cffgload.c (cff_decoder_prepare): Improve tracing
+	messages.
+	* src/cid/cidgload.c (cid_load_glyph): Use level 1 for tracing
+	message.
+	* src/pcf/pcfdrivr.c (PCF_Glyph_Load): Ditto.
+	* src/pfr/pfrobjs.c (pfr_slot_load): Add tracing message.
+	* src/truetype/ttgload.c (TT_Load_Glyph): Ditto.
+	* src/type1/t1gload.c (T1_Load_Glyph): Ditto.
+	* src/type42/t42objs.c (T42_GlyphSlot_Load): Ditto.
+	* src/winfonts/winfnt.c (FNT_Load_Glyph): Ditto.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix script selection.
+
+	* src/autofit/afglobal.c (af_face_globals_get_metrics): Use
+	`AF_SCRIPT_DFLT', not value 0.
+	Simplify code.
+
+	* src/autofit/afscript.h: Sort by script name.
+
+2013-08-26  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Make `dummy' hinter work as expected.
+
+	* src/autofit/afdummy.c (af_dummy_hints_init): Properly set scaling
+	information.
+	(af_dummy_hints_apply): Scale the glyphs.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Make `cjk' module use blue stringsets.
+
+	* src/autofit/afcjk.c (AF_CJK_MAX_TEST_CHARACTERS): Removed.
+	(af_cjk_hani_blue_chars): Removed.
+	(AF_CJK_BLUE_TYPE_*): Removed.
+	(af_cjk_metrics_init_blues): Replace AF_CJK_MAX_TEST_CHARACTERS with
+	AF_BLUE_STRING_MAX_LEN.
+	Change loops to use offsets (in file `afblue.h') into the new arrays
+	`af_blue_stringsets' and `af_blue_strings' (in file `afblue.c').
+	Instead of three dimensions (as used in the old blue string array)
+	we now use properties to do the same, saving one loop nesting level.
+
+	* src/autofit/afcjk.h: Remove old enumeration values superseded by
+	the new data in `afblue.h'.
+	(AF_CJK_IS_TOP_BLUE, AF_CJK_IS_HORIZ_BLUE, AF_CJK_IS_FILLED_BLUE,
+	AF_CJK_IS_RIGHT_BLUE): New macros, to be used in
+	`af_cjk_metrics_init_blues'.
+	(AF_CJK_BLUE_IS_RIGHT): Remove this now redundant enum value.
+	(AF_CJK_BLUE_IS_TOP): Renamed to...
+	(AF_CJK_BLUE_TOP): This.
+	(AF_CJK_MAX_BLUES): Remove.
+	(AF_CJKAxisRec): Updated.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Typo.
+
+	* src/autofit/afblue.hin, src/autofit/afblue.c (GET_UTF8_CHAR): Use
+	cast.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Synchronize `cjk' with `latin' module (and vice versa).
+
+	* src/autofit/afcjk.c (af_cjk_metrics_init_widths): Add tracing
+	messages.
+	(af_cjk_metrics_init_blues): Don't pass blue string array as
+	argument but use the global array directly.
+	Use `outline' directly.
+	Update and add tracing messages.
+	(af_cjk_metrics_init): Simplify code.
+	(af_cjk_metrics_scale_dim): Improve tracing message.
+	(af_cjk_metrics_scale): Synchronize.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths,
+	af_latin_metrics_init_blues): Improve and add tracing messages.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Make `latin' module use blue stringsets.
+
+	* src/autofit/aflatin.c (AF_LATIN_MAX_TEST_CHARACTERS): Removed.
+	(af_latin_blue_chars): Removed.
+	(af_latin_metrics_init_blues): Replace AF_LATIN_MAX_TEST_CHARACTERS
+	with AF_BLUE_STRING_MAX_LEN.
+	Change loops to use offsets (in file `afblue.h') into the new arrays
+	`af_blue_stringsets' and `af_blue_strings' (in file `afblue.c').
+	Use `AF_LATIN_IS_SMALL_TOP_BLUE' macro.
+
+	* src/autofit/aflatin.h: Remove old enumeration values superseded by
+	the new data in `afblue.h'.
+	(AF_LATIN_IS_TOP_BLUE): Updated definition.
+	(AF_LATIN_IS_SMALL_TOP_BLUE): New macro.
+	(AF_LATIN_MAX_BLUES): Remove.
+	(AF_LatinAxisRec): Updated.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Add blue stringsets.
+
+	* src/autofit/aftypes.h: Include `afblue.h'.
+	(AF_ScriptClassRec): Add `blue_stringset' field.
+	(AF_DEFINE_SCRIPT_CLASS): Updated.
+
+	* src/autofit/autofit.c: Include `afblue.c'.
+
+	* src/autofit/afcjk.c (af_hani_script_class), src/autofit/afdummy.c
+	(af_dflt_script_class), src/autofit/afindic.c
+	(af_deva_script_class), src/autofit/aflatin.c
+	(af_latn_script_class), src/autofit/aflatin2.c
+	(af_ltn2_script_class): Updated.
+
+	* src/autofit/rules.mk (AUTOF_DRV_SRC): Add `afblue.c'.
+
+2013-08-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Introduce data file for blue strings.
+
+	The idea is to have a central file which gets processed by a Perl
+	script to create proper `.c' and `.h' files using templates.  There
+	are two other reasons to do that:
+
+	  . The data file should be easily readable.  We use UTF-8 encoding
+	    which then gets converted to single bytes.
+
+	  . Since the number of supported scripts will increase soon, the
+	    current usage of blue string arrays is a waste of space.  Using
+	    the Perl script it is possible to imitate jagged arrays,
+	    defining enumeration constants as offsets into the arrays.
+
+	This commit only adds files without changing any functionality.
+
+	* src/autofit/afblue.dat: New data file.
+	* src/tools/afblue.pl: New Perl script for processing `afblue.dat'.
+
+	* src/autofit/afblue.cin, src/autofit/afblue.hin: New template files
+	for...
+	* src/autofit/afblue.c, src/autofit/afblue.c: New source files.
+	To avoid a dependency on Perl, we add them too.
+
+2013-08-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Enable new algorithm for `BBox_Cubic_Check'.
+
+	* src/base/ftbbox.c: Enable new BBox_Cubic_Check algorithm, remove
+	the old one.
+	Improve comments.
+
+2013-08-18  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/unix-def.in (freetype2.pc): Don't set executable bit.
+
+2013-08-18  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #39804.
+
+	* builds/unix/configure.raw (LIBPNG): Define and export.
+	* builds/unix/freetype-config.in, builds/unix/freetype2.in: Handle
+	libpng.
+
+2013-08-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Clean up BBox_Conic_Check.
+
+	* src/base/ftbbox.c (BBox_Conic_Check): Remove redundant checks for
+	extremum at the segment ends, which are already within the bbox.
+	Slightly modify calculations.
+
+2013-08-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Finish experimental (disabled) BBox_Cubic_Check implementation.
+
+	* src/base/ftbbox.c (BBox_Cubic_Check): Scale arguments to improve
+	accuracy and avoid overflows.
+
+2013-08-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Refactor experimental (disabled) BBox_Cubic_Check.
+
+	* src/base/ftbbox.c (BBox_Cubic_Check): Implement the minimum search
+	as the mirror image of the maximum search implemented here...
+	(update_max): New function.
+
+2013-08-06  John Tytgat  <John.Tytgat@esko.com>
+
+	Fix Savannah bug #39702.
+
+	* src/cff/cffload.c (cff_index_get_pointers): Check for `cur_offset
+	!= 0'; this stronger test is mandated by the CFF specification.
+	Fix test for INDEX structures which have one or more empty entries
+	at the end.
+
+2013-08-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix gcc pragmas, part 2.
+
+	* src/truetype/ttinterp.c (TT_MulFix14_long_long,
+	TT_DotFix14_long_long): `#pragma gcc diagnostic {push,pop}' has been
+	introduced with gcc version 4.6.
+
+2013-08-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix gcc pragmas.
+
+	* src/truetype/ttinterp.c (TT_MulFix14_long_long,
+	TT_DotFix14_long_long): Older gcc versions don't accept diagnostic
+	pragmas within a function body.
+
+2013-08-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #39700.
+
+	* builds/unix/ftconfig.h: Synchronize with
+	`include/freetype/config/ftconfig.h'.
+
+	* builds/vms/ftconfig.h: Ditto.
+	Make the differences to the master `ftconfig.h' file as small as
+	possible for easier maintainance.
+
+2013-08-05  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve handling of `near' points.
+
+	Points which are very near to each other are now marked as such.
+	The `weak' flag is then computed by using the `in' vector of the
+	first and the `out' vector of the last point of a group of near
+	points.
+
+	For example, this fixes the rendering of glyph `Oslash' in
+	`Roboto-Thin.ttf'.
+
+	* src/autofit/afhints.h (AF_Flags): New value `AF_FLAGS_NEAR'.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Introduce
+	the heuristic value `near_limit' to decide whether the current point
+	is near to the previous one, then set `AF_FLAG_NEAR' accordingly.
+	Store good `in' vector (of last non-near point) in
+	`last_good_in_{x,y}' and use it as an argument to
+	`ft_corner_is_flat' if necessary.
+
+2013-08-02  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/ftcffdrv.h: Improve documentation.
+	This is based on blog entries from David Lemon and Dave Arnold (both
+	from Adobe) with kind permission.  Dave also helped in
+	proof-reading.
+
+2013-08-02  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Move declaration of scripts into separate file.
+
+	This has the benefit that we don't need to duplicate the data at
+	different places.
+
+	* src/autofit/afscript.h: New file.
+
+	* src/autofit/aftypes.h (AF_Script): Include `afscript.h' to define
+	the enumeration values.
+
+	* src/autofit/afglobal.c: Include `afscript.h' to get the script
+	specific header files.
+	(af_script_classes): Include `afscript.h' to fill this array.
+
+	* src/autofit/afpic.c: Include `afscript.h' to get the script
+	specific header files.
+	(autofit_module_class_pic_init): Include `afscript.h' for
+	initialization.
+	* src/autofit/afpic.h (AF_SCRIPT_CLASSES_COUNT,
+	AF_SCRIPT_CLASSES_REC_COUNT): Removed.  Use `AF_SCRIPT_MAX' instead.
+
+	* src/autofit/rules.mk (AUTOF_DRV_H): Updated.
+
+2013-08-02  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Move declaration of writing systems into separate file.
+
+	This has the benefit that we don't need to duplicate the data at
+	different places.
+
+	* src/autofit/afwrtsys.h: New file.
+
+	* src/autofit/aftypes.h (AF_WritingSystem): Include `afwrtsys.h' to
+	define the enumeration values.
+
+	* src/autofit/afglobal.c: Include `afwrtsys.h' to get the writing
+	system specific header files.
+	Include `afpic.h'.
+	(af_writing_system_classes): Include `afwrtsys.h' to fill this
+	array.
+
+	* src/autofit/afpic.c: Include `afwrtsys.h' to get the writing
+	system specific header files.
+	(autofit_module_class_pic_init): Include `afwrtsys.h' for
+	initialization.
+	* src/autofit/afpic.h (AF_WRITING_SYSTEM_CLASSES_COUNT,
+	AF_WRITING_SYSTEM_CLASSES_REC_COUNT): Removed.  Use
+	`AF_WRITING_SYSTEM_MAX' instead.
+
+2013-08-02  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix compilation with g++.
+
+	* src/sfnt/pngshim.c (error_callback, read_data_from_FT_stream): Use
+	cast.
+	(Load_SBit_Png): Pacify compiler.
+
+2013-08-02  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+            Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix `make multi'.
+
+	* include/freetype/config/ftconfig.h (FT_LOCAL_ARRAY,
+	FT_LOCAL_ARRAY_DEF): New macros.
+
+	* src/autofit/afglobal.c (af_writing_system_classes,
+	af_script_classes): Use FT_LOCAL_ARRAY_DEF.
+	* src/autofit/afglobal.h: Declare `af_writing_system_classes' and
+	`af_script_classes'.
+	* src/autofit/afloader.c: Include `afpic.h'.
+
+2013-08-01  Werner Lemberg  <wl@gnu.org>
+
+	Another round of cppcheck nitpicks.
+
+	The call was (from the top-level of the FreeType tree):
+
+	  cppcheck --force \
+	           --enable=all \
+	           -I /usr/include \
+	           -I /usr/local/include \
+	           -I /usr/lib/gcc/i586-suse-linux/4.7/include \
+	           -I include \
+	           -I include/freetype \
+	           -I include/freetype/config \
+	           -I include/freetype/internal \
+	           -DFT2_BUILD_LIBRARY \
+	           . &> cppcheck.log
+
+	using cppcheck git commit f7e93f99.
+
+	Note that cppcheck still can't handle `#include FOO' (with `FOO' a
+	macro).
+
+	*/* Improve variable scopes.
+	*/* Remove redundant initializations which get overwritten.
+
+	* src/gxvalid/*: Comment out redundant code or guard it with
+	FT_DEBUG_LEVEL_TRACE.
+
+2013-07-30  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Introduce `writing systems'.
+
+	This patch adds a new top level to the auto-hinter's script class
+	hierarchy.  It defines `writing systems' which can contain multiple
+	scripts.
+
+	For example, the `latin' writing system (in file `aflatin.c') is
+	able to support scripts like Latin, Cyrillic, Armenian, etc., which
+	can be handled similarly.
+
+	Scripts are now named using four-letter OpenType tags.
+
+	* src/autofit/aftypes.h (AF_ScriptClassRec): Move relevant members
+	to...
+	(AF_WritingSystemClassRec): This new structure.  It holds pointers
+	to functions which can be shared among related scripts.
+	(AF_WritingSystem): New enumeration.
+	(AF_Script): Revised values using four-letter tags.
+	(AF_DEFINE_WRITING_SYSTEM_CLASS): New macro.
+	(AF_DEFINE_SCRIPT_CLASS): Updated.
+
+	* src/autofit/afglobal.c (af_writing_system_classes): New global,
+	constant array.
+	(af_script_classes): Updated.
+	(af_face_globals_free): Updated.
+	Remove assertion.
+	(af_face_globals_get_metrics): Updated.
+
+	* src/autofit/afglobal.h (AF_SCRIPT_FALLBACK)
+	[!AF_CONFIG_OPTION_CJK]: Handle this case.
+
+	* src/autofit/afloader.c (af_loader_load_g, af_loader_load_glyph):
+	Updated.
+
+	* src/autofit/afpic.c (autofit_module_class_pic_init): Updated;
+	initialize structures for both writing systems and scripts.
+	* src/autofit/afpic.h: Updated.
+	(AF_WRITING_SYSTEM_CLASSES_GET): New macro.
+
+	* src/autofit/afcjk.c (af_cjk_writing_system_class): New writing
+	system.
+	(af_cjk_uniranges): Renamed to...
+	(af_hani_uniranges): This.
+	(af_cjk_script_class): Reduced and renamed to...
+	(af_hani_script_class): This.
+	* src/autofit/afcjk.h: Updated.
+
+	* src/autofit/afdummy.c (af_dummy_writing_system_class): New writing
+	system.
+	(af_dummy_script_class): Reduced and renamed to...
+	(af_dflt_script_class): This.
+	* src/autofit/afdummy.h: Updated.
+
+	* src/autofit/afindic.c (af_indic_writing_system_class): New writing
+	system.
+	(af_indic_uniranges): Renamed to...
+	(af_deva_uniranges): This.
+	(af_indic_script_class): Reduced and renamed to...
+	(af_deva_script_class): This.
+	* src/autofit/afcjk.h: Updated.
+
+	* src/autofit/aflatin.c (af_latin_writing_system_class): New writing
+	system.
+	(af_latin_uniranges): Renamed to...
+	(af_latn_uniranges): This.
+	(af_latin_script_class): Reduced and renamed to...
+	(af_latn_script_class): This.
+	* src/autofit/aflatin.h: Updated.
+
+	* src/autofit/aflatin2.c (af_latin2_writing_system_class): New
+	writing system.
+	(af_latin2_uniranges): Renamed to...
+	(af_ltn2_uniranges): This.
+	Synchronize ranges with `latin'.
+	(af_latin2_script_class): Reduced and renamed to...
+	(af_ltn2_script_class): This.
+	* src/autofit/aflatin2.h: Updated.
+
+2013-07-30  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Variable renaming.
+
+	* src/autofit/aftypes.h (AF_ScriptMetricsRec):
+	s/clazz/script_class/.
+	Update all users.
+
+2013-07-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Ignore libpng-config under cross-building configuration,
+	because it will return the flags for the hosting environment.
+
+	* builds/unix/configure.raw: Ignore libpng-config when
+	`cross_compiling' == yes.
+
+2013-07-30  Behdad Esfahbod  <behdad@google.com>
+
+	Prevent division by zero by a transparent color.
+
+	* src/base/ftbitmap.c (ft_gray_for_premultiplied_srgb_bgra):
+	Return 0 immediately, when alpha channel is zero.
+
+2013-07-25  Behdad Esfahbod  <behdad@google.com>
+
+	Add FT_FACE_FLAG_COLOR and FT_HAS_COLOR.
+
+	Also disambiguate Google's color bitmap tables.
+
+	* include/freetype/freetype.h (FT_FACE_FLAG_COLOR, FT_HAS_COLOR):
+	New macros.
+
+	* include/freetype/internal/tttypes.h (TT_SbitTableType): Add
+	TT_SBIT_TABLE_TYPE_CBLC.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Handle FT_FACE_FLAG_COLOR.
+
+	* src/sfnt/ttsbit.c (tt_face_load_sbit,
+	tt_face_load_strike_metrics, tt_face_load_sbit_image): Handle
+	TT_SBIT_TABLE_TYPE_CBLC.
+
+2013-07-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[sfnt] Fix for `make multi' target.
+
+	* src/sfnt/pngshim.c (Load_SBit_Png): Use FT_LOCAL_DEF().
+
+2013-07-20  Werner Lemberg  <wl@gnu.org>
+
+	* docs/INSTALL.GNU: Updated.
+
+2013-07-20  Behdad Esfahbod  <behdad@google.com>
+
+	[sfnt] Fix `sbix' table version handling.
+
+	* src/sfnt/ttsbit.c (tt_face_load_sbit) [TT_SBIT_TABLE_TYPE_SBIX]:
+	USHORT version numbers are to be considered as `minor'.
+
+2013-07-19  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Fix segment classification for blue zones.
+
+	The old code (essentially unchanged since the very beginning)
+	incorrectly handled this configuration
+
+	               x -o- x
+	                /   \
+	               /     \
+	              /       \
+	             o         o
+
+	as flat and this
+
+	                o               o
+	               /               /
+	             x|              x|
+	              |               |
+	              o---------------o
+
+	as round.  (`o' and `x' are on and off points, respectively).
+
+	This is a major change which should improve the rendering results
+	enormously for many TrueType fonts, especially in the range approx.
+	20-40ppem, fixing the appearance of many overshoots.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Look at the
+	first and last points of the segment, not the points right before
+	and after.
+
+2013-07-19  Behdad Esfahbod  <behdad@google.com>
+
+	[sfnt] `sbix' fix-ups.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Apple's `sbix' color bitmaps
+	are rendered scaled and then the `glyf' outline rendered on top.  We
+	don't support that yet, so just ignore the `glyf' outline and
+	advertise it as a bitmap-only font.
+
+	* src/sfnt/ttsbit.c (tt_face_load_strike_metrics)
+	[TT_SBIT_TABLE_TYPE_SBIX]: Return metrics in 26.6 units.
+	(tt_face_load_sbix_image): Typo.
+
+2013-07-18  Behdad Esfahbod  <behdad@google.com>
+
+	[sfnt] Add support for Apple's `sbix' color bitmap table.
+
+	* include/freetype/internal/tttypes.h (TT_SBit_MetricsRec): Widen
+	fields to FT_Short and FT_UShort, respectively.
+	(TT_SBitTableType): New enumeration.
+	(TT_FaceRec): Add `sbit_table_type' field.
+
+	* include/freetype/tttags.h (TTAG_sbix): New macro.
+
+	* src/sfnt/pngshim.c (Load_SBit_Png): Pass a more generic
+	FT_GlyphSlot argument instead FT_Bitmap.
+	Add flag to control map and metrics handling.
+	Update all users.
+
+	* src/sfnt/ttsbit.c: Include `ttmtx.h'.
+	(tt_face_load_eblc): Renamed to...
+	(tt_face_load_sbit): This.
+	Handlic `sbix' bitmaps.
+	(tt_face_free_eblc): Renamed to...
+	(tt_face_load_sbit): This.
+	Updated.
+	(tt_face_load_strike_metrics): Handle `sbix' bitmaps.
+	(tt_face_load_sbix_image): New function.
+	(tt_sbit_decoder_alloc_bitmap, tt_sbit_decoder_load_image,
+	tt_sbit_decoder_load_byte_aligned, tt_sbit_decoder_load_bit_aligned,
+	tt_sbit_decoder_load_compound, tt_sbit_decoder_load_png,
+	tt_sbit_decoder_load_image, tt_sbit_decoder_load_bitmap): Don't pass
+	and handle load flags.
+	(tt_sbit_decoder_load_bitmap) [!FT_CONFIG_OPTION_USE_PNG]: Better
+	handle formats 17-19.
+	Move color to grayscale conversion to...
+	(tt_face_load_sbit_image): Here.
+	Handle `sbix' bitmaps.
+
+	* src/sfnt/pngshim.h: Updated.
+	* src/sfnt/ttsbit.h: Updated.
+	* src/sfnt/sfdriver.c: Updated.
+
+2013-07-18  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Ignore invalid magic number in `head' or `bhed'.
+
+	Other font engines seem to ignore it also.  Problem reported by
+	Hin-Tak Leung <htl10@users.sourceforge.net>.
+
+	* src/sfnt/ttload.c (check_table_dir): Don't abort but warn only if
+	we have an invalid magic number.
+
+2013-07-16  Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Fix segfault caused by previous commit.
+
+	* src/smooth/ftgrays.c (gray_set_cell): Always compute
+	`ras.invalid'.
+
+2013-07-16  David Turner  <digit@google.com>
+
+	[smooth] Improve performance.
+
+	Provide a work-around for an ARM-specific performance bug in GCC.
+	This speeds up the rasterizer by more than 5%.
+
+	Also slightly optimize `set_gray_cell' and `gray_record_cell' (which
+	also improves performance on other platforms by a tiny bit (<1%).
+
+	* src/smooth/ftgrays.c (FT_DIV_MOD): New macro.
+	Use it where appropriate.
+
+	(gray_record_cell, gray_set_cell, gray_move_to,
+	gray_convert_glyph_inner): Streamline condition handling.
+
+2013-07-16  David Turner  <digit@google.com>
+
+	[truetype] Add assembler code for TT_MulFix14 and TT_DotFix14.
+
+	This patch provides slightly optimized versions for ARM, x86, and
+	x86_64 CPUs if built with GCC.
+
+	Also remove some dead code.
+
+	* src/truetype/ttinterp.c (TT_MulFix14_arm, TT_MulFix14_long_long,
+	TT_DotFix14_long_long): New functions.
+
+2013-07-16  David Turner  <digit@google.com>
+
+	Optimize FT_MulFix for x86_64 GCC builds.
+
+	This patch provides an optimized `FT_MulFix' implementation for
+	x86_64 machines when FreeType is built with GCC, or compatible
+	compilers like Clang.
+
+	Example:
+	  bin/ftbench -p -t 5 -s 14 -f 0008 Arial.ttf
+
+	Before:
+
+	  Load                       4.863 us/op
+	  Load_Advances (Normal)     4.816 us/op
+	  Load_Advances (Fast)       0.028 us/op
+	  Render                     2.753 us/op
+	  Get_Glyph                  0.463 us/op
+	  Get_CBox                   0.077 us/op
+	  Get_Char_Index             0.023 us/op
+	  Iterate CMap              13.898 us/op
+	  New_Face                  12.368 us/op
+	  Embolden                   0.028 us/op
+	  Get_BBox                   0.302 us/op
+
+	After:
+
+	  Load                       4.617 us/op
+	  Load_Advances (Normal)     4.645 us/op
+	  Load_Advances (Fast)       0.027 us/op
+	  Render                     2.789 us/op
+	  Get_Glyph                  0.460 us/op
+	  Get_CBox                   0.077 us/op
+	  Get_Char_Index             0.024 us/op
+	  Iterate CMap              13.403 us/op
+	  New_Face                  12.278 us/op
+	  Embolden                   0.028 us/op
+	  Get_BBox                   0.301 us/op
+
+	* builds/unix/ftconfig.in, include/freetype/config/ftconfig.h
+	(FT_MulFix_x86_64): New function.
+
+2013-07-16  David Turner  <digit@google.com>
+
+	Speed up ARMv7 support.
+
+	When building for ARMv7 with thumb2 instructions, the optimized
+	`FT_MulFix_arm' assembly routine was not being used.
+
+	The reason for this is in the `ftconfig.h' header, namely:
+
+	- The assembly routine uses the `smull' instruction which is not
+	  available when generating Thumb-1 machine code.  It is available
+	  in Thumb-2 mode, though.
+
+	- The header was written a long time ago before Thumb-2 became
+	  widely popular (e.g. with Android).  So it simply doesn't use the
+	  assembly routine if the `__thumb__' built-in macro is defined.
+
+	- When compiling in Thumb-2 mode, the compiler will define both
+	  `__thumb__' and `__thumb2__'.
+
+	By checking for `(__thumb2__ || !__thumb__)', we ensure that the
+	assembly routine is only avoided when generating Thumb-1 code.
+
+	Given that this is performance-sensitive function, this improves
+	`ftbench' as follows on a Galaxy Nexus:
+
+	                           Before (us/op)   After (us/op)
+
+	  - loading Arial.ttf glyphs at 14 ppem [1]
+
+	      Load                   34.285          33.098
+
+	  - same operation with the light auto-hinter [2]
+
+	      Load                   31.317          29.590
+
+	  - same operation without hinting [3]
+
+	      Load                    6.143           5.376
+
+	  - loading Arial.ttf advances at 14 ppem [4]
+
+	      Load_Advances (normal) 34.216          33.016
+	      Load_Advances (fast)    0.176           0.176
+
+	  [1] ftbench -t 5 -p -s 14 -b a -f 0008 Arial.ttf
+	  [2] ftbench -t 5 -p -s 14 -b a -r 1 -f 0028 Arial.ttf
+	  [3] ftbench -t 5 -p -s 14 -b a -f 000a Arial.ttf
+	  [4] ftbench -t 5 -p -s 14 -b b -f 0008 Arial.ttf
+
+	* builds/unix/ftconfig.in, include/freetype/config/ftconfig.h
+	(FT_MULFIX_ASSEMBLER): Fix handling for ARMv7.
+
+2013-06-28  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2013-06-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/winfonts/winfnt.c (FNT_Load_Glyph): Fix bitmap width guard.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Add darkening limit to `darkening-parameters'.
+
+	* src/cff/cffdrivr.c (cff_property_set): Add check.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Add `darkening-parameters' property.
+
+	* include/freetype/ftcffdrv.h: Document it.
+
+	* src/cff/cffdrivr.c (cff_property_set, cff_property_get): Handle
+	`darkening-parameters' property.
+
+	* src/cff/cf2font.h (CF2_FontRec): Add `darkenParams' array.
+
+	* src/cff/cf2font.c (cf2_computeDarkening): Add `darkenParams'
+	argument and use it.
+	Update all callers.
+
+	* src/cff/cf2ft.c (cf2_decoder_parse_charstrings): Copy
+	`darken_params' values.
+
+	* src/cff/cffobjs.h (CFF_DriverRec): Add `darken_params' array.
+
+	* src/cff/cffobjs.c (cff_driver_init): Set default values for
+	`darken_params'.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Code shuffling.
+
+	* src/tools/docmaker/tohtml.py (re_url): Move regexp...
+	* src/tools/docmaker/sources.py: ... to this file.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Remove unused functions.
+
+	* src/tools/docmaker/content.py (DocMarkup.get_start,
+	DocBlock.get_markup_name): Removed.
+	* src/tools/docmaker/tohtml.py (html_quote0, dump_html_code,
+	HtmlFormatter.make_html_words): Removed.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	* builds/freetype.mk (dll): Remove target.
+
+	Problem reported by Jörg Günnewig <joerg.guennewig@googlemail.com>.
+
+2013-06-25  Werner Lemberg  <wl@gnu.org>
+
+	[docmaker] Recognise URLs.
+
+	* src/tools/docmaker/tohtml.py (re_url): New regular expression.
+	(make_html_para): Use it.
+
 2013-06-19  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.5.0.1 released.
@@ -295,7 +1851,7 @@
 	*/* Improve variable scopes.
 	*/* Remove redundant initializations which get overwritten.
 
-	* src/base/ftmac.c ,builds/mac/ftmac.c (count_faces_scalable):
+	* src/base/ftmac.c, builds/mac/ftmac.c (count_faces_scalable):
 	Remove unused variable.
 
 	* src/base/ftdbgmem.c (ft_mem_table_destroy): `table' can't be zero.
@@ -575,7 +2131,7 @@
 	[sfnt] Clean up bitmap code.
 
 	* src/sfnt/ttsbit.c: Deleted.
-	* src/sfnt/ttsbit0.c: Renamed to `ttsbit.c'. 
+	* src/sfnt/ttsbit0.c: Renamed to `ttsbit.c'.
 	* rules.mk (SFNT_DRV_H): Updated.
 
 2013-05-10  Werner Lemberg  <wl@gnu.org>

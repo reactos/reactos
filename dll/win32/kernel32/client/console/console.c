@@ -252,17 +252,18 @@ ConsoleMenuControl(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_MENUCONTROL MenuControlRequest = &ApiMessage.Data.MenuControlRequest;
 
-    MenuControlRequest->OutputHandle = hConsoleOutput;
-    MenuControlRequest->dwCmdIdLow   = dwCmdIdLow;
-    MenuControlRequest->dwCmdIdHigh  = dwCmdIdHigh;
-    MenuControlRequest->hMenu        = NULL;
+    MenuControlRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    MenuControlRequest->OutputHandle  = hConsoleOutput;
+    MenuControlRequest->CmdIdLow      = dwCmdIdLow;
+    MenuControlRequest->CmdIdHigh     = dwCmdIdHigh;
+    MenuControlRequest->MenuHandle    = NULL;
 
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepMenuControl),
-                        sizeof(CONSOLE_MENUCONTROL));
+                        sizeof(*MenuControlRequest));
 
-    return MenuControlRequest->hMenu;
+    return MenuControlRequest->MenuHandle;
 }
 
 
@@ -314,7 +315,6 @@ BOOL
 WINAPI
 GetConsoleDisplayMode(LPDWORD lpModeFlags)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETDISPLAYMODE GetDisplayModeRequest = &ApiMessage.Data.GetDisplayModeRequest;
 
@@ -324,19 +324,19 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
         return FALSE;
     }
 
-    // GetDisplayModeRequest->OutputHandle = hConsoleOutput;
+    GetDisplayModeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetDisplayMode),
-                                 sizeof(CONSOLE_GETDISPLAYMODE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetDisplayMode),
+                        sizeof(*GetDisplayModeRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    *lpModeFlags = GetDisplayModeRequest->DisplayMode;
+    *lpModeFlags = GetDisplayModeRequest->DisplayMode; // ModeFlags
     return TRUE;
 }
 
@@ -378,33 +378,34 @@ GetConsoleFontSize(HANDLE hConsoleOutput,
 BOOL
 WINAPI
 GetConsoleHardwareState(HANDLE hConsoleOutput,
-                        DWORD Flags,
+                        PDWORD Flags,
                         PDWORD State)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &ApiMessage.Data.HardwareStateRequest;
 
     DPRINT1("GetConsoleHardwareState(%lu, 0x%p) UNIMPLEMENTED!\n", Flags, State);
 
-    if (State == NULL)
+    if (Flags == NULL || State == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    HardwareStateRequest->OutputHandle = hConsoleOutput;
+    HardwareStateRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    HardwareStateRequest->OutputHandle  = hConsoleOutput;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHardwareState),
-                                 sizeof(CONSOLE_GETSETHWSTATE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHardwareState),
+                        sizeof(*HardwareStateRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
+    *Flags = HardwareStateRequest->Flags;
     *State = HardwareStateRequest->State;
     return TRUE;
 }
@@ -458,7 +459,6 @@ WINAPI
 InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
                         IN PSMALL_RECT lpRect)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest = &ApiMessage.Data.InvalidateDIBitsRequest;
 
@@ -468,16 +468,17 @@ InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
         return FALSE;
     }
 
-    InvalidateDIBitsRequest->OutputHandle = hConsoleOutput;
-    InvalidateDIBitsRequest->Region       = *lpRect;
+    InvalidateDIBitsRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    InvalidateDIBitsRequest->OutputHandle  = hConsoleOutput;
+    InvalidateDIBitsRequest->Region        = *lpRect;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepInvalidateBitMapRect),
-                                 sizeof(CONSOLE_INVALIDATEDIBITS));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepInvalidateBitMapRect),
+                        sizeof(*InvalidateDIBitsRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -546,23 +547,23 @@ OpenConsoleW(LPCWSTR wsName,
  */
 BOOL
 WINAPI
-SetConsoleCursor(HANDLE hConsoleOutput,
+SetConsoleCursor(HANDLE  hConsoleOutput,
                  HCURSOR hCursor)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETCURSOR SetCursorRequest = &ApiMessage.Data.SetCursorRequest;
 
-    SetCursorRequest->OutputHandle = hConsoleOutput;
-    SetCursorRequest->hCursor      = hCursor;
+    SetCursorRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetCursorRequest->OutputHandle  = hConsoleOutput;
+    SetCursorRequest->CursorHandle  = hCursor;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCursor),
-                                 sizeof(CONSOLE_SETCURSOR));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCursor),
+                        sizeof(*SetCursorRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -576,25 +577,26 @@ SetConsoleCursor(HANDLE hConsoleOutput,
 BOOL
 WINAPI
 SetConsoleDisplayMode(HANDLE hConsoleOutput,
-                      DWORD dwFlags,
+                      DWORD  dwFlags, // dwModeFlags
                       PCOORD lpNewScreenBufferDimensions)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETDISPLAYMODE SetDisplayModeRequest = &ApiMessage.Data.SetDisplayModeRequest;
 
-    SetDisplayModeRequest->OutputHandle = hConsoleOutput;
-    SetDisplayModeRequest->DisplayMode  = dwFlags;
-    SetDisplayModeRequest->NewSBDim.X   = 0;
-    SetDisplayModeRequest->NewSBDim.Y   = 0;
+    SetDisplayModeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetDisplayModeRequest->OutputHandle  = hConsoleOutput;
+    SetDisplayModeRequest->DisplayMode   = dwFlags; // ModeFlags ; dwModeFlags
+    SetDisplayModeRequest->NewSBDim.X    = 0;
+    SetDisplayModeRequest->NewSBDim.Y    = 0;
+    /* SetDisplayModeRequest->EventHandle; */
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetDisplayMode),
-                                 sizeof(CONSOLE_SETDISPLAYMODE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetDisplayMode),
+                        sizeof(*SetDisplayModeRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -628,22 +630,23 @@ SetConsoleHardwareState(HANDLE hConsoleOutput,
                         DWORD Flags,
                         DWORD State)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &ApiMessage.Data.HardwareStateRequest;
 
     DPRINT1("SetConsoleHardwareState(%lu, %lu) UNIMPLEMENTED!\n", Flags, State);
 
-    HardwareStateRequest->OutputHandle = hConsoleOutput;
-    HardwareStateRequest->State = State;
+    HardwareStateRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    HardwareStateRequest->OutputHandle  = hConsoleOutput;
+    HardwareStateRequest->Flags         = Flags;
+    HardwareStateRequest->State         = State;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHardwareState),
-                                 sizeof(CONSOLE_GETSETHWSTATE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHardwareState),
+                        sizeof(*HardwareStateRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -690,19 +693,19 @@ BOOL
 WINAPI
 SetConsoleMenuClose(BOOL bEnable)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETMENUCLOSE SetMenuCloseRequest = &ApiMessage.Data.SetMenuCloseRequest;
 
-    SetMenuCloseRequest->Enable = bEnable;
+    SetMenuCloseRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetMenuCloseRequest->Enable        = bEnable;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetMenuClose),
-                                 sizeof(CONSOLE_SETMENUCLOSE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetMenuClose),
+                        sizeof(*SetMenuCloseRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -721,21 +724,21 @@ SetConsolePalette(HANDLE hConsoleOutput,
                   HPALETTE hPalette,
                   UINT dwUsage)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETPALETTE SetPaletteRequest = &ApiMessage.Data.SetPaletteRequest;
 
+    SetPaletteRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     SetPaletteRequest->OutputHandle  = hConsoleOutput;
     SetPaletteRequest->PaletteHandle = hPalette;
     SetPaletteRequest->Usage         = dwUsage;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetPalette),
-                                 sizeof(CONSOLE_SETPALETTE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetPalette),
+                        sizeof(*SetPaletteRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -754,14 +757,15 @@ ShowConsoleCursor(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SHOWCURSOR ShowCursorRequest = &ApiMessage.Data.ShowCursorRequest;
 
-    ShowCursorRequest->OutputHandle = hConsoleOutput;
-    ShowCursorRequest->Show         = bShow;
-    ShowCursorRequest->RefCount     = 0;
+    ShowCursorRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ShowCursorRequest->OutputHandle  = hConsoleOutput;
+    ShowCursorRequest->Show          = bShow;
+    ShowCursorRequest->RefCount      = 0;
 
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepShowCursor),
-                        sizeof(CONSOLE_SHOWCURSOR));
+                        sizeof(*ShowCursorRequest));
 
     return ShowCursorRequest->RefCount;
 }
@@ -771,10 +775,10 @@ ShowConsoleCursor(HANDLE hConsoleOutput,
  * FUNCTION: Checks whether the given handle is a valid console handle.
  *
  * ARGUMENTS:
- *      Handle - Handle to be checked
+ *      hIoHandle - Handle to be checked.
  *
  * RETURNS:
- *      TRUE: Handle is a valid console handle
+ *      TRUE : Handle is a valid console handle.
  *      FALSE: Handle is not a valid console handle.
  *
  * STATUS: Officially undocumented
@@ -783,24 +787,29 @@ ShowConsoleCursor(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-VerifyConsoleIoHandle(HANDLE Handle)
+VerifyConsoleIoHandle(HANDLE hIoHandle)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &ApiMessage.Data.VerifyHandleRequest;
 
-    ApiMessage.Data.VerifyHandleRequest.ConsoleHandle = Handle;
+    VerifyHandleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    VerifyHandleRequest->Handle        = hIoHandle;
+    VerifyHandleRequest->IsValid       = FALSE;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepVerifyIoHandle),
-                                 sizeof(CONSOLE_VERIFYHANDLE));
-    if (!NT_SUCCESS(Status))
+    /* If the process is not attached to a console, return invalid handle */
+    if (VerifyHandleRequest->ConsoleHandle == NULL) return FALSE;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepVerifyIoHandle),
+                        sizeof(*VerifyHandleRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    return TRUE;
+    return VerifyHandleRequest->IsValid;
 }
 
 
@@ -809,20 +818,21 @@ VerifyConsoleIoHandle(HANDLE Handle)
  */
 BOOL
 WINAPI
-CloseConsoleHandle(HANDLE Handle)
+CloseConsoleHandle(HANDLE hHandle)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_CLOSEHANDLE CloseHandleRequest = &ApiMessage.Data.CloseHandleRequest;
 
-    ApiMessage.Data.CloseHandleRequest.ConsoleHandle = Handle;
+    CloseHandleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    CloseHandleRequest->Handle        = hHandle;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepCloseHandle),
-                                 sizeof(CONSOLE_CLOSEHANDLE));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepCloseHandle),
+                        sizeof(*CloseHandleRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -848,21 +858,27 @@ GetStdHandle(DWORD nStdHandle)
  */
 {
     PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
+    HANDLE Handle = INVALID_HANDLE_VALUE;
 
     switch (nStdHandle)
     {
         case STD_INPUT_HANDLE:
-            return Ppb->StandardInput;
+            Handle = Ppb->StandardInput;
+            break;
 
         case STD_OUTPUT_HANDLE:
-            return Ppb->StandardOutput;
+            Handle = Ppb->StandardOutput;
+            break;
 
         case STD_ERROR_HANDLE:
-            return Ppb->StandardError;
+            Handle = Ppb->StandardError;
+            break;
     }
 
-    SetLastError(ERROR_INVALID_HANDLE);
-    return INVALID_HANDLE_VALUE;
+    /* If the returned handle is invalid, set last error */
+    if (Handle == INVALID_HANDLE_VALUE) SetLastError(ERROR_INVALID_HANDLE);
+
+    return Handle;
 }
 
 
@@ -871,7 +887,7 @@ GetStdHandle(DWORD nStdHandle)
  */
 BOOL
 WINAPI
-SetStdHandle(DWORD nStdHandle,
+SetStdHandle(DWORD  nStdHandle,
              HANDLE hHandle)
 /*
  * FUNCTION: Set the handle for the standard input, standard output or
@@ -886,7 +902,7 @@ SetStdHandle(DWORD nStdHandle,
 {
     PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
 
-    /* no need to check if hHandle == INVALID_HANDLE_VALUE */
+    /* No need to check if hHandle == INVALID_HANDLE_VALUE */
 
     switch (nStdHandle)
     {
@@ -903,7 +919,7 @@ SetStdHandle(DWORD nStdHandle,
             return TRUE;
     }
 
-    /* Windows for whatever reason sets the last error to ERROR_INVALID_HANDLE here */
+    /* nStdHandle was invalid, bail out */
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
 }
@@ -1021,8 +1037,8 @@ WINAPI
 GetConsoleScreenBufferInfo(HANDLE hConsoleOutput,
                            PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest = &ApiMessage.Data.ScreenBufferInfoRequest;
 
     if (lpConsoleScreenBufferInfo == NULL)
     {
@@ -1030,19 +1046,27 @@ GetConsoleScreenBufferInfo(HANDLE hConsoleOutput,
         return FALSE;
     }
 
-    ApiMessage.Data.ScreenBufferInfoRequest.OutputHandle = hConsoleOutput;
+    ScreenBufferInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ScreenBufferInfoRequest->OutputHandle  = hConsoleOutput;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetScreenBufferInfo),
-                                 sizeof(CONSOLE_GETSCREENBUFFERINFO));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetScreenBufferInfo),
+                        sizeof(*ScreenBufferInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    *lpConsoleScreenBufferInfo = ApiMessage.Data.ScreenBufferInfoRequest.Info;
+    lpConsoleScreenBufferInfo->dwSize              = ScreenBufferInfoRequest->ScreenBufferSize;
+    lpConsoleScreenBufferInfo->dwCursorPosition    = ScreenBufferInfoRequest->CursorPosition;
+    lpConsoleScreenBufferInfo->wAttributes         = ScreenBufferInfoRequest->Attributes;
+    lpConsoleScreenBufferInfo->srWindow.Left       = ScreenBufferInfoRequest->ViewOrigin.X;
+    lpConsoleScreenBufferInfo->srWindow.Top        = ScreenBufferInfoRequest->ViewOrigin.Y;
+    lpConsoleScreenBufferInfo->srWindow.Right      = ScreenBufferInfoRequest->ViewOrigin.X + ScreenBufferInfoRequest->ViewSize.X - 1;
+    lpConsoleScreenBufferInfo->srWindow.Bottom     = ScreenBufferInfoRequest->ViewOrigin.Y + ScreenBufferInfoRequest->ViewSize.Y - 1;
+    lpConsoleScreenBufferInfo->dwMaximumWindowSize = ScreenBufferInfoRequest->MaximumViewSize;
 
     return TRUE;
 }
@@ -1932,21 +1956,24 @@ UINT
 WINAPI
 GetConsoleCP(VOID)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest = &ApiMessage.Data.GetConsoleCPRequest;
 
     /* Get the Input Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP  = TRUE;
-    ApiMessage.Data.ConsoleCPRequest.CodePage = 0;
+    GetConsoleCPRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetConsoleCPRequest->OutputCP      = FALSE;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
-                                 sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
+                        sizeof(*GetConsoleCPRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return 0;
+    }
 
-    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
-
-    return ApiMessage.Data.ConsoleCPRequest.CodePage;
+    return GetConsoleCPRequest->CodePage;
 }
 
 
@@ -1959,21 +1986,26 @@ BOOL
 WINAPI
 SetConsoleCP(UINT wCodePageID)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest = &ApiMessage.Data.SetConsoleCPRequest;
 
     /* Set the Input Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP  = TRUE;
-    ApiMessage.Data.ConsoleCPRequest.CodePage = wCodePageID;
+    SetConsoleCPRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetConsoleCPRequest->CodePage      = wCodePageID;
+    SetConsoleCPRequest->OutputCP      = FALSE;
+    /* SetConsoleCPRequest->EventHandle; */
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
-                                 sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
+                        sizeof(*SetConsoleCPRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
 
-    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
-
-    return NT_SUCCESS(Status);
+    return TRUE;
 }
 
 
@@ -1986,21 +2018,24 @@ UINT
 WINAPI
 GetConsoleOutputCP(VOID)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest = &ApiMessage.Data.GetConsoleCPRequest;
 
     /* Get the Output Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP  = FALSE;
-    ApiMessage.Data.ConsoleCPRequest.CodePage = 0;
+    GetConsoleCPRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetConsoleCPRequest->OutputCP      = TRUE;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
-                                 sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
+                        sizeof(*GetConsoleCPRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return 0;
+    }
 
-    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
-
-    return ApiMessage.Data.ConsoleCPRequest.CodePage;
+    return GetConsoleCPRequest->CodePage;
 }
 
 
@@ -2013,21 +2048,26 @@ BOOL
 WINAPI
 SetConsoleOutputCP(UINT wCodePageID)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest = &ApiMessage.Data.SetConsoleCPRequest;
 
     /* Set the Output Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP  = FALSE;
-    ApiMessage.Data.ConsoleCPRequest.CodePage = wCodePageID;
+    SetConsoleCPRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetConsoleCPRequest->CodePage      = wCodePageID;
+    SetConsoleCPRequest->OutputCP      = TRUE;
+    /* SetConsoleCPRequest->EventHandle; */
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
-                                 sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
+                        sizeof(*SetConsoleCPRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
 
-    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
-
-    return NT_SUCCESS(Status);
+    return TRUE;
 }
 
 
@@ -2041,11 +2081,10 @@ WINAPI
 GetConsoleProcessList(LPDWORD lpdwProcessList,
                       DWORD dwProcessCount)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETPROCESSLIST GetProcessListRequest = &ApiMessage.Data.GetProcessListRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG nProcesses;
+    ULONG nProcesses = 0;
 
     if (lpdwProcessList == NULL || dwProcessCount == 0)
     {
@@ -2058,30 +2097,30 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        return 0;
     }
 
-    GetProcessListRequest->nMaxIds = dwProcessCount;
+    GetProcessListRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetProcessListRequest->ProcessCount  = dwProcessCount;
 
     CsrAllocateMessagePointer(CaptureBuffer,
                               dwProcessCount * sizeof(DWORD),
-                              (PVOID*)&GetProcessListRequest->pProcessIds);
+                              (PVOID*)&GetProcessListRequest->ProcessIdsList);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetProcessList),
-                                 sizeof(CONSOLE_GETPROCESSLIST));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetProcessList),
+                        sizeof(*GetProcessListRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError (Status);
-        nProcesses = 0;
+        BaseSetLastNTError(ApiMessage.Status);
     }
     else
     {
-        nProcesses = GetProcessListRequest->nProcessIdsTotal;
+        nProcesses = GetProcessListRequest->ProcessCount;
         if (dwProcessCount >= nProcesses)
         {
-            memcpy(lpdwProcessList, GetProcessListRequest->pProcessIds, nProcesses * sizeof(DWORD));
+            memcpy(lpdwProcessList, GetProcessListRequest->ProcessIdsList, nProcesses * sizeof(DWORD));
         }
     }
 
@@ -2099,8 +2138,8 @@ BOOL
 WINAPI
 GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETSELECTIONINFO GetSelectionInfoRequest = &ApiMessage.Data.GetSelectionInfoRequest;
 
     if (lpConsoleSelectionInfo == NULL)
     {
@@ -2108,17 +2147,19 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
         return FALSE;
     }
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetSelectionInfo),
-                                 sizeof(CONSOLE_GETSELECTIONINFO));
-    if (!NT_SUCCESS(Status))
+    GetSelectionInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetSelectionInfo),
+                        sizeof(*GetSelectionInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    *lpConsoleSelectionInfo = ApiMessage.Data.GetSelectionInfoRequest.Info;
+    *lpConsoleSelectionInfo = GetSelectionInfoRequest->Info;
     return TRUE;
 }
 
@@ -2183,20 +2224,22 @@ HWND
 WINAPI
 GetConsoleWindow(VOID)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETWINDOW GetWindowRequest = &ApiMessage.Data.GetWindowRequest;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetConsoleWindow),
-                                 sizeof(CONSOLE_GETWINDOW));
-    if (!NT_SUCCESS(Status))
+    GetWindowRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetConsoleWindow),
+                        sizeof(*GetWindowRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return (HWND)NULL;
     }
 
-    return ApiMessage.Data.GetWindowRequest.WindowHandle;
+    return GetWindowRequest->WindowHandle;
 }
 
 
@@ -2207,24 +2250,25 @@ GetConsoleWindow(VOID)
  */
 BOOL
 WINAPI
-SetConsoleIcon(HICON hicon)
+SetConsoleIcon(HICON hIcon)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETICON SetIconRequest = &ApiMessage.Data.SetIconRequest;
 
-    ApiMessage.Data.SetIconRequest.WindowIcon = hicon;
+    SetIconRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetIconRequest->IconHandle    = hIcon;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetIcon),
-                                 sizeof(CONSOLE_SETICON));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetIcon),
+                        sizeof(*SetIconRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    return NT_SUCCESS(Status);
+    return TRUE;
 }
 
 
