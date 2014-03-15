@@ -523,3 +523,4 @@
 #define IDR_DRVDEFEXT           148
 #define IDR_MENUBAND            149
 #define IDR_MENUDESKBAR         150
+#define IDR_EXEDROPHANDLER      151

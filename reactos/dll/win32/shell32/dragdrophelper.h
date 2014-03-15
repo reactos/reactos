@@ -26,6 +26,7 @@
 class CDropTargetHelper :
 	public CComCoClass<CDropTargetHelper, &CLSID_DragDropHelper>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
+	public IDragSourceHelper,
 	public IDropTargetHelper
 {
 private:
@@ -33,7 +34,9 @@ public:
 	CDropTargetHelper();
 	~CDropTargetHelper();
 
-	////////
+	virtual HRESULT WINAPI InitializeFromBitmap(LPSHDRAGIMAGE pshdi, IDataObject *pDataObject);
+	virtual HRESULT WINAPI InitializeFromWindow(HWND hwnd, POINT *ppt, IDataObject *pDataObject);
+
 	virtual HRESULT WINAPI DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect);
 	virtual HRESULT WINAPI DragLeave();
 	virtual HRESULT WINAPI DragOver(POINT *ppt, DWORD dwEffect);
@@ -46,6 +49,7 @@ DECLARE_NOT_AGGREGATABLE(CDropTargetHelper)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CDropTargetHelper)
+	COM_INTERFACE_ENTRY_IID(IID_IDragSourceHelper, IDragSourceHelper)
 	COM_INTERFACE_ENTRY_IID(IID_IDropTargetHelper, IDropTargetHelper)
 END_COM_MAP()
 };

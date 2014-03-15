@@ -81,6 +81,7 @@ CFSFolder::CFSFolder()
     cfShellIDList = 0;
     SF_RegisterClipFmt();
     fAcceptFmt = FALSE;
+    m_bGroupPolicyActive = 0;
 }
 
 CFSFolder::~CFSFolder()
@@ -502,7 +503,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         else if (IsEqualIID (riid, IID_IDropTarget))
         {
             /* only interested in attempting to bind to shell folders, not files (except exe), so if we fail, rebind to root */
-            if (cidl == 1 && SUCCEEDED(hr = this->BindToObject(apidl[0], NULL, IID_IDropTarget, (LPVOID*)&pObj)));
+            if (cidl == 1 && SUCCEEDED(hr = this->_GetDropTarget(apidl[0], (LPVOID*)&pObj)));
             else
                 hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
         }
@@ -1617,6 +1618,9 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
                     }
 
                     hr = ppf->Save(wszTarget, FALSE);
+					if (FAILED(hr))
+						break;
+					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
                 else
                 {
@@ -1653,6 +1657,9 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
                         break;
 
                     hr = ppf->Save(wszTarget, TRUE);
+					if (FAILED(hr))
+						break;
+					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
             }
         }
@@ -1748,4 +1755,114 @@ DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
     //Release the parameter from the heap.
     HeapFree(GetProcessHeap(), 0, data);
     return 0;
+}
+
+HRESULT WINAPI CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
+    HKEY hKey;
+    HRESULT hr;
+
+    TRACE("CFSFolder::_GetDropTarget entered\n");
+
+    if (_ILGetGUIDPointer (pidl) || _ILIsFolder (pidl))
+        return this->BindToObject(pidl, NULL, IID_IDropTarget, ppvOut);
+
+    STRRET strFile;
+    hr = this->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strFile);
+    if (hr == S_OK)
+    {
+        WCHAR wszPath[MAX_PATH];
+        hr = StrRetToBufW(&strFile, pidl, wszPath, _countof(wszPath));
+
+        if (hr == S_OK)
+        {
+            LPCWSTR pwszExt = PathFindExtensionW(wszPath);
+            if (pwszExt[0])
+            {
+                /* enumerate dynamic/static for a given file class */
+                if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+                {
+                    /* load dynamic extensions from file extension key, for example .jpg */
+                    _LoadDynamicDropTargetHandlerForKey(hKey, wszPath, ppvOut);
+                    RegCloseKey(hKey);
+                }
+
+                WCHAR wszTemp[40];
+                DWORD dwSize = sizeof(wszTemp);
+                if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszTemp, &dwSize) == ERROR_SUCCESS)
+                {
+                    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszTemp, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+                    {
+                        /* load dynamic extensions from progid key, for example jpegfile */
+                        _LoadDynamicDropTargetHandlerForKey(hKey, wszPath, ppvOut);
+                        RegCloseKey(hKey);
+                    }
+                }
+            }
+        }
+    }
+    else
+        ERR("GetDisplayNameOf failed: %x\n", hr);
+
+    return hr;
+}
+
+HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPCWSTR pwcsname, LPVOID *ppvOut) 
+{
+    TRACE("CFSFolder::_LoadDynamicDropTargetHandlerForKey entered\n");
+
+    WCHAR wszName[MAX_PATH], *pwszClsid;
+    DWORD dwSize = sizeof(wszName);
+    HRESULT hr;
+
+    if (RegGetValueW(hRootKey, L"shellex\\DropHandler", NULL, RRF_RT_REG_SZ, NULL, wszName, &dwSize) == ERROR_SUCCESS)
+    {
+        CLSID clsid;
+        hr = CLSIDFromString(wszName, &clsid);
+        if (hr == S_OK)
+            pwszClsid = wszName;
+
+        if (m_bGroupPolicyActive)
+        {
+            if (RegGetValueW(HKEY_LOCAL_MACHINE,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                pwszClsid,
+                RRF_RT_REG_SZ,
+                NULL,
+                NULL,
+                NULL) == ERROR_SUCCESS)
+            {
+                hr = _LoadDynamicDropTargetHandler(&clsid, pwcsname, ppvOut);
+            }
+        }
+        else
+        {
+            hr = _LoadDynamicDropTargetHandler(&clsid, pwcsname, ppvOut);
+        }
+    }
+    else
+        return E_FAIL;
+    return hr;
+}
+
+HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut)
+{
+    TRACE("CFSFolder::_LoadDynamicDropTargetHandler entered\n");
+    HRESULT hr;
+
+    IPersistFile *pp;
+    hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IPersistFile, &pp));
+    if (hr != S_OK)
+    {
+        ERR("SHCoCreateInstance failed %x\n", GetLastError());
+    }
+    pp->Load(pwcsname, 0);
+
+    hr = pp->QueryInterface(IID_PPV_ARG(IDropTarget, (IDropTarget**) ppvOut));
+    if (hr != S_OK)
+    {
+        ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
+        return hr;
+    }
+    pp->Release();
+    return hr;
 }

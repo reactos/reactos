@@ -2168,6 +2168,68 @@ HRESULT WINAPI CShellLink::GetSite(REFIID iid, void ** ppvSite)
     return site->QueryInterface(iid, ppvSite);
 }
 
+HRESULT WINAPI CShellLink::DragEnter(IDataObject *pDataObject,
+    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
+    LPCITEMIDLIST pidlLast;
+    IShellFolder *psf;
+
+    HRESULT hr = SHBindToParent(pPidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IDropTarget, NULL, (LPVOID*)&mDropTarget);
+
+        if (SUCCEEDED(hr))
+            hr = mDropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
+        else 
+            *pdwEffect = DROPEFFECT_NONE;
+
+        psf->Release();
+    }
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
+    return S_OK;
+}
+
+
+
+HRESULT WINAPI CShellLink::DragOver(DWORD dwKeyState, POINTL pt,
+    DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+        hr = mDropTarget->DragOver(dwKeyState, pt, pdwEffect);
+    return hr;
+}
+
+HRESULT WINAPI CShellLink::DragLeave()
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+    {
+        hr = mDropTarget->DragLeave();
+        mDropTarget->Release();
+    }
+
+    return hr;
+}
+
+HRESULT WINAPI CShellLink::Drop(IDataObject *pDataObject,
+    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+        hr = mDropTarget->Drop(pDataObject, dwKeyState, pt, pdwEffect);
+
+    return hr;
+}
+
 /**************************************************************************
  *      IShellLink_ConstructFromFile
  */

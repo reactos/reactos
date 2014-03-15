@@ -36,6 +36,18 @@ CDropTargetHelper::~CDropTargetHelper()
 {
 }
 
+HRESULT WINAPI CDropTargetHelper::InitializeFromBitmap(LPSHDRAGIMAGE pshdi, IDataObject *pDataObject)
+{
+    FIXME ("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+HRESULT WINAPI CDropTargetHelper::InitializeFromWindow(HWND hwnd, POINT *ppt, IDataObject *pDataObject)
+{
+    FIXME ("(%p)->()\n", this);
+    return E_NOTIMPL;
+}
+
+
 HRESULT WINAPI CDropTargetHelper::DragEnter (HWND hwndTarget, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
 {
     FIXME ("(%p)->(%p %p %p 0x%08x)\n", this, hwndTarget, pDataObject, ppt, dwEffect);

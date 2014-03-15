@@ -651,7 +651,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     else if (IsEqualIID (riid, IID_IDropTarget))
     {
         /* only interested in attempting to bind to shell folders, not files, semicolon intentionate */
-        if (cidl == 1 && SUCCEEDED(this->BindToObject(apidl[0], NULL, IID_IDropTarget, (LPVOID*)&pObj)));
+        if (cidl == 1 && SUCCEEDED(hr = this->_GetDropTarget(apidl[0], (LPVOID*)&pObj)));
         else
             hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
     }
@@ -1451,7 +1451,7 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
     else
     {
         InitFormatEtc (formatetc, CF_HDROP, TYMED_HGLOBAL);
-        if SUCCEEDED(pDataObject->QueryGetData(&formatetc));
+        if (SUCCEEDED(pDataObject->QueryGetData(&formatetc)))
         {
             passthroughtofs = TRUE;
         }
@@ -1487,5 +1487,54 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
 
     /* Todo, rewrite the registry such that the icons are well placed.
     Blocked by no bags implementation. */
+    return hr;
+}
+
+HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
+    HRESULT hr;
+
+    TRACE("CFSFolder::_GetDropTarget entered\n");
+
+    if (_ILGetGUIDPointer (pidl) || _ILIsFolder (pidl))
+        return this->BindToObject(pidl, NULL, IID_IDropTarget, ppvOut);
+
+    LPITEMIDLIST pidlNext = NULL;
+
+    STRRET strFile;
+    hr = this->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strFile);
+    if (SUCCEEDED(hr))
+    {
+        WCHAR wszPath[MAX_PATH];
+        hr = StrRetToBufW(&strFile, pidl, wszPath, _countof(wszPath));
+
+        if (SUCCEEDED(hr))
+        {
+            PathRemoveFileSpecW (wszPath);
+            hr = this->ParseDisplayName(NULL, NULL, wszPath, NULL, &pidlNext, NULL);
+
+            if (SUCCEEDED(hr))
+            {
+                IShellFolder *psf;
+                hr = this->BindToObject(pidlNext, NULL, IID_IShellFolder, (LPVOID*)&psf);
+                CoTaskMemFree(pidlNext);
+                if (SUCCEEDED(hr))
+                {
+                    hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_IDropTarget, NULL, ppvOut);
+                    psf->Release();
+                    if (FAILED(hr))
+                        ERR("FS GetUIObjectOf failed: %x\n", hr);
+                }
+                else 
+                    ERR("BindToObject failed: %x\n", hr);
+            }
+            else
+                ERR("ParseDisplayName failed: %x\n", hr);
+        }
+        else
+            ERR("StrRetToBufW failed: %x\n", hr);
+    }    
+    else
+        ERR("GetDisplayNameOf failed: %x\n", hr);
+
     return hr;
 }

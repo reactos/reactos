@@ -1371,6 +1371,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
     OBJECT_ENTRY(CLSID_MenuBand, CMenuBand)
     OBJECT_ENTRY(CLSID_MenuDeskBar, CMenuDeskBar)
+    OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
 END_OBJECT_MAP()
 
 CShell32Module                                gModule;

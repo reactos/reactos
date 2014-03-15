@@ -54,6 +54,7 @@ list(APPEND SOURCE
     folders/fonts.cpp
     folders/cpanel.cpp
     folders/recyclebin.cpp
+    droptargets/CexeDropHandler.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp

@@ -44,10 +44,14 @@ class CFSFolder :
         UINT cfShellIDList;    /* clipboardformat for IDropTarget */
         BOOL fAcceptFmt;       /* flag for pending Drop */
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        DWORD m_bGroupPolicyActive;
         void SF_RegisterClipFmt();
         BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
         static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
         virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
+        virtual HRESULT WINAPI _LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPCWSTR pwcsname, LPVOID *ppvOut);
+        virtual HRESULT WINAPI _LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut);
 
     public:
         CFSFolder();

@@ -100,6 +100,7 @@ HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
+HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
@@ -191,6 +192,7 @@ HKCR,"lnkfile","NeverShowExt",0x00000000,""
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
+HKCR,"lnkfile\shellex\DropHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046}","",0x00000000,""
 HKCR,"lnkfile\shellex\PropertySheetHandlers\Shellink Property Page", "", 0x00000000, "{00021401-0000-0000-C000-000000000046}"
 
