@@ -231,7 +231,7 @@ GuiSendMenuEvent(PCONSOLE Console, UINT CmdId)
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
 
-    DPRINT1("Menu item ID: %d\n", CmdId);
+    DPRINT("Menu item ID: %d\n", CmdId);
     ConioProcessInputEvent(Console, &er);
 }
 
@@ -1713,7 +1713,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
-            DPRINT1("WM_PALETTECHANGED called\n");
+            DPRINT("WM_PALETTECHANGED called\n");
 
             /*
              * Protects against infinite loops:
@@ -1730,12 +1730,12 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
              */
             if ((HWND)wParam == hWnd) break;
 
-            DPRINT1("WM_PALETTECHANGED ok\n");
+            DPRINT("WM_PALETTECHANGED ok\n");
 
             // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
             if (ActiveBuffer->PaletteHandle)
             {
-                DPRINT1("WM_PALETTECHANGED changing palette\n");
+                DPRINT("WM_PALETTECHANGED changing palette\n");
 
                 /* Specify the use of the system palette for the framebuffer */
                 SetSystemPaletteUse(GuiData->hMemDC, ActiveBuffer->PaletteUsage);
@@ -1744,7 +1744,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 RealizePalette(GuiData->hMemDC);
             }
 
-            DPRINT1("WM_PALETTECHANGED quit\n");
+            DPRINT("WM_PALETTECHANGED quit\n");
 
             break;
         }
