@@ -100,44 +100,44 @@ WINE_DEFAULT_DEBUG_CHANNEL(font);
 #include <ft2build.h>
 #endif
 #ifdef HAVE_FREETYPE_FREETYPE_H
-#include <freetype/freetype.h>
+#include <freetype.h>
 #endif
 #ifdef HAVE_FREETYPE_FTGLYPH_H
-#include <freetype/ftglyph.h>
+#include <ftglyph.h>
 #endif
 #ifdef HAVE_FREETYPE_TTTABLES_H
-#include <freetype/tttables.h>
+#include <tttables.h>
 #endif
 #ifdef HAVE_FREETYPE_FTTYPES_H
-#include <freetype/fttypes.h>
+#include <fttypes.h>
 #endif
 #ifdef HAVE_FREETYPE_FTSNAMES_H
-#include <freetype/ftsnames.h>
+#include <ftsnames.h>
 #else
 # ifdef HAVE_FREETYPE_FTNAMES_H
-# include <freetype/ftnames.h>
+# include <ftnames.h>
 # endif
 #endif
 #ifdef HAVE_FREETYPE_TTNAMEID_H
-#include <freetype/ttnameid.h>
+#include <ttnameid.h>
 #endif
 #ifdef HAVE_FREETYPE_FTOUTLN_H
-#include <freetype/ftoutln.h>
+#include <ftoutln.h>
 #endif
 #ifdef HAVE_FREETYPE_INTERNAL_SFNT_H
-#include <freetype/internal/sfnt.h>
+#include <internal/sfnt.h>
 #endif
 #ifdef HAVE_FREETYPE_FTTRIGON_H
-#include <freetype/fttrigon.h>
+#include <fttrigon.h>
 #endif
 #ifdef HAVE_FREETYPE_FTWINFNT_H
-#include <freetype/ftwinfnt.h>
+#include <ftwinfnt.h>
 #endif
 #ifdef HAVE_FREETYPE_FTMODAPI_H
-#include <freetype/ftmodapi.h>
+#include <ftmodapi.h>
 #endif
 #ifdef HAVE_FREETYPE_FTLCDFIL_H
-#include <freetype/ftlcdfil.h>
+#include <ftlcdfil.h>
 #endif
 
 #ifndef HAVE_FT_TRUETYPEENGINETYPE
