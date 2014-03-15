@@ -347,6 +347,35 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             return hr;
     }
 
+    CComPtr<IObjectWithSite> ows;
+    if (SUCCEEDED(m_subMenuParent->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows))))
+    {
+        CComPtr<IServiceProvider> sp;
+        if (SUCCEEDED(ows->GetSite(IID_PPV_ARG(IServiceProvider, &sp))))
+        {
+            CComPtr<IDeskBar> db0;
+            if (SUCCEEDED(sp->QueryInterface(IID_PPV_ARG(IDeskBar, &db0))))
+            {
+                CComPtr<IUnknown> unk0;
+                if (SUCCEEDED(db0->GetClient(&unk0)))
+                {
+                    CComPtr<IDeskBar> db;
+                    if (SUCCEEDED(IUnknown_QueryService(unk0, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db))))
+                    {
+                        CComPtr<IDeskBar> db1;
+                        if (SUCCEEDED(IUnknown_QueryService(m_site, SID_SMenuBandParent, IID_PPV_ARG(IDeskBar, &db1))))
+                        {
+                            if (fShow)
+                                db->SetClient(db1);
+                            else
+                                db->SetClient(NULL);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (m_dwFlags & SMINIT_VERTICAL)
     {
         if (fShow)
@@ -494,8 +523,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    if (m_subMenuChild)
+        m_subMenuChild = NULL;
+    if (!punkClient)
+        return S_OK;
+    return punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
@@ -673,6 +705,10 @@ HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
 
 HRESULT CMenuBand::_OnHotItemChanged(CMenuToolbarBase * tb, INT id)
 {
+    if (m_subMenuChild && id == -1)
+    {
+        return S_FALSE;
+    }
     m_hotBar = tb;
     m_hotItem = id;
     if (m_staticToolbar) m_staticToolbar->OnHotItemChanged(tb, id);
@@ -779,7 +815,6 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
     }
     if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);
     if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(toolbar, item);
-    m_subMenuChild = popup;
     if (popup)
     {
         if (m_subMenuParent)
@@ -789,6 +824,15 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
 
         popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }
+    return S_OK;
+}
+
+HRESULT CMenuBand::_DisableMouseTrack(BOOL bDisable)
+{
+    if (m_staticToolbar)
+        m_staticToolbar->DisableMouseTrack(bDisable);
+    if (m_SFToolbar)
+        m_SFToolbar->DisableMouseTrack(bDisable);
     return S_OK;
 }
 

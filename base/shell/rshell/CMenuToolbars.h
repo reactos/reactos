@@ -29,6 +29,7 @@ private:
     HFONT m_marlett;
     BOOL  m_useFlatMenus;
     WNDPROC m_SubclassOld;
+    BOOL m_disableMouseTrack;
 
 protected:
     CMenuBand * m_menuBand;
@@ -67,12 +68,14 @@ public:
     HRESULT DoContextMenu(IContextMenu* contextMenu);
 
     HRESULT ChangeHotItem(DWORD changeType);
-    HRESULT OnHotItemChange(const NMTBHOTITEM * hot);
+    HRESULT OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult);
 
     HRESULT GetIdealSize(SIZE& size);
     HRESULT SetPosSize(int x, int y, int cx, int cy);
 
     void InvalidateDraw();
+
+    HRESULT DisableMouseTrack(BOOL bDisable);
 
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) = 0;
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;

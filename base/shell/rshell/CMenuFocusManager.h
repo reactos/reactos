@@ -43,6 +43,9 @@ private:
     HWND m_currentFocus;
     HHOOK m_hHook;
     DWORD m_threadId;
+    BOOL m_mouseTrackDisabled;
+    WPARAM m_lastMoveFlags;
+    LPARAM m_lastMovePos;
 
     // TODO: make dynamic
 #define MAX_RECURSE 20
@@ -64,10 +67,14 @@ public:
     BEGIN_COM_MAP(CMenuFocusManager)
     END_COM_MAP()
 
+private:
     LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);
     HRESULT PlaceHooks(HWND window);
     HRESULT RemoveHooks(HWND window);
     HRESULT UpdateFocus(CMenuBand * newBand);
+    HRESULT ActivationChange(HWND newHwnd);
+    void DisableMouseTrack(HWND enableTo, BOOL disableThis);
+    HRESULT IsTrackedWindow(HWND hWnd);
 
 public:
     HRESULT PushMenu(CMenuBand * mb);

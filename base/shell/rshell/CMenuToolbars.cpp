@@ -40,6 +40,12 @@ HRESULT WINAPI SHGetImageList(
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
 
+HRESULT CMenuToolbarBase::DisableMouseTrack(BOOL bDisable)
+{
+    m_disableMouseTrack = bDisable;
+    return S_OK;
+}
+
 HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     NMHDR * hdr;
@@ -82,7 +88,7 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return OnCommand(wParam, 0, theResult);
 
         case TBN_HOTITEMCHANGE:
-            return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr));
+            return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
 
         case NM_RCLICK:
             return OnContextMenu(reinterpret_cast<LPNMMOUSE>(hdr));
@@ -183,7 +189,8 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_hwnd(NULL),
     m_useFlatMenus(FALSE),
-    m_SubclassOld(NULL),
+    m_SubclassOld(NULL), 
+    m_disableMouseTrack(FALSE),
     m_menuBand(menuBand),
     m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
@@ -417,18 +424,34 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return m_SubclassOld(hWnd, uMsg, wParam, lParam);
 }
 
-HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
+HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult)
 {
+    if (m_disableMouseTrack && hot->dwFlags & HICF_MOUSE)
+    {
+        *theResult = 1;
+        return S_OK;
+    }
+
     if (hot->dwFlags & HICF_LEAVING)
     {
         KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
-        m_hotItem = -1;
-        m_menuBand->_OnHotItemChanged(NULL, -1);
-        m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+
+        if (m_menuBand->_OnHotItemChanged(NULL, -1) == S_FALSE)
+        {
+            *theResult = 1;
+            return S_OK;
+        }
+        else
+        {
+            m_hotItem = -1;
+            m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+            return S_OK;
+        }
     }
     else if (m_hotItem != hot->idNew)
     {
-        if (m_toolbarFlags & SMINIT_VERTICAL)
+        if (hot->dwFlags & HICF_MOUSE &&
+            m_toolbarFlags & SMINIT_VERTICAL)
         {
             DWORD elapsed = 0;
             SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
@@ -438,6 +461,7 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot)
         m_hotItem = hot->idNew;
         m_menuBand->_OnHotItemChanged(this, m_hotItem);
         m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+        return S_OK;
     }
     return S_OK;
 }
@@ -693,11 +717,9 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
 
             if (btn.dwData)
             {
-                m_hotItem = btn.idCommand;
-                if (prev != m_hotItem)
+                if (prev != btn.idCommand)
                 {
                     SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
-                    return m_menuBand->_OnHotItemChanged(this, m_hotItem);
                 }
                 return S_OK;
             }
@@ -713,11 +735,9 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
         }
     }
 
-    m_hotItem = -1;
-    if (prev != m_hotItem)
+    if (prev != -1)
     {
         SendMessage(m_hwndToolbar, TB_SETHOTITEM, -1, 0);
-        m_menuBand->_OnHotItemChanged(NULL, -1);
     }
     return S_FALSE;
 }

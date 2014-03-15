@@ -115,7 +115,10 @@ HRESULT CMenuFocusManager::PeekArray(CMenuBand ** pItem)
 CMenuFocusManager::CMenuFocusManager() :
     m_currentBand(NULL),
     m_currentFocus(NULL),
-    m_bandCount(0)
+    m_bandCount(0),
+    m_mouseTrackDisabled(FALSE),
+    m_lastMoveFlags(0),
+    m_lastMovePos(0)
 {
     m_threadId = GetCurrentThreadId();
 }
@@ -124,10 +127,72 @@ CMenuFocusManager::~CMenuFocusManager()
 {
 }
 
+void CMenuFocusManager::DisableMouseTrack(HWND enableTo, BOOL disableThis)
+{
+    BOOL bDisable = FALSE;
+
+    int i = m_bandCount;
+    while (--i >= 0)
+    {
+        CMenuBand * band = m_bandStack[i];
+        
+        HWND hwnd;
+        HRESULT hr = band->_GetTopLevelWindow(&hwnd);
+        if (FAILED_UNEXPECTEDLY(hr))
+            break;
+
+        if (hwnd == enableTo)
+        {
+            band->_DisableMouseTrack(disableThis);
+            bDisable = TRUE;
+        }
+        else
+        {
+            band->_DisableMouseTrack(bDisable);
+        }
+    }
+
+    if (m_mouseTrackDisabled == bDisable)
+    {
+        if (bDisable)
+        {
+            SetCapture(m_currentFocus);
+        }
+        else
+            ReleaseCapture();
+
+        m_mouseTrackDisabled = bDisable;
+    }
+}
+
+HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd)
+{
+    if (hWnd == m_currentFocus)
+        return S_OK;
+
+    int i = m_bandCount - 1;
+    while (--i >= 0)
+    {
+        CMenuBand * band = m_bandStack[i];
+
+        HWND hwnd;
+        HRESULT hr = band->_GetTopLevelWindow(&hwnd);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (hwnd == hWnd)
+            return S_OK;
+    }
+
+    return S_FALSE;
+}
+
 LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode < 0)
         return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+
+    DWORD pos = GetMessagePos();
 
     if (nCode == HC_ACTION)
     {
@@ -138,10 +203,33 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
 
         switch (msg->message)
         {
+        case WM_ACTIVATE: // does not trigger
+            ActivationChange(msg->hwnd);
         case WM_CLOSE:
+            break;
+        case WM_MOUSEMOVE:
+            if (m_lastMoveFlags != wParam || m_lastMovePos != pos)
+            {
+                m_lastMoveFlags = wParam;
+                m_lastMovePos = pos;
+
+                POINT pt = { GET_X_LPARAM(pos), GET_Y_LPARAM(pos) };
+
+                HWND window = WindowFromPoint(pt);
+
+                if (IsTrackedWindow(window) == S_OK)
+                {
+                    DisableMouseTrack(window, FALSE);
+                }
+                else
+                {
+                    DisableMouseTrack(NULL, FALSE);
+                }
+            }
             break;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
+            DisableMouseTrack(m_currentFocus, TRUE);
             switch (msg->wParam)
             {
             case VK_MENU:
@@ -193,6 +281,36 @@ HRESULT CMenuFocusManager::RemoveHooks(HWND window)
     return S_OK;
 }
 
+HRESULT CMenuFocusManager::ActivationChange(HWND newHwnd)
+{
+    HRESULT hr;
+    CMenuBand * newBand = NULL;
+    
+    CMenuBand * band;
+    PeekArray(&band);
+
+    while (m_bandCount >= 0)
+    {
+        HWND hwnd;
+        hr = band->_GetTopLevelWindow(&hwnd);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (hwnd == newHwnd)
+        {
+            newBand = band;
+            break;
+        }
+        else
+        {
+            PopFromArray(NULL);
+            PeekArray(&band);
+        }
+    }
+
+    return UpdateFocus(newBand);
+}
+
 HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
 {
     HRESULT hr;
@@ -217,6 +335,11 @@ HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
             return hr;
     }
 
+    CHAR title[1024];
+    GetWindowTextA(newFocus, title, 1024);
+
+    DbgPrint("Focus is now at %08p, hwnd=%08x, title='%s'. m_bandCount=%d\n", newBand, newFocus, title, m_bandCount);
+
     m_currentFocus = newFocus;
     m_currentBand = newBand;
 
@@ -239,14 +362,33 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
     CMenuBand * mbc;
     HRESULT hr;
 
-    hr = PopFromArray(&mbc);
+    HWND newFocus;
+    hr = mb->_GetTopLevelWindow(&newFocus);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (mb != mbc)
+    DbgPrint("Trying to pop %08p, hwnd=%08x\n", mb, newFocus);
+
+    do {
+        hr = PopFromArray(&mbc);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            mbc = NULL;
+            return hr;
+        }
+    }
+    while (mbc && mb != mbc);
+    
+    hr = PeekArray(&mb);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = UpdateFocus(mb);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (!mbc)
         return E_FAIL;
 
-    hr = PeekArray(&mbc);
-
-    return UpdateFocus(mbc);
+    return S_OK;
 }

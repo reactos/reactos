@@ -607,8 +607,6 @@ LRESULT CMenuDeskBar::_OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CMenuDeskBar::_OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    DbgPrint("BaseBar %08p (de)activated (%08x, %08x).\n", m_hWnd, wParam, lParam);
-
     // BUG in ReactOS: WM_ACTIVATE/WA_INACTIVE makes no sense with lParam==hWnd
     if (LOWORD(wParam) != 0 || reinterpret_cast<HWND>(lParam) == m_hWnd)
     {

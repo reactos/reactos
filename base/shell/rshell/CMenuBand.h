@@ -176,6 +176,7 @@ public:
     HRESULT _OnHotItemChanged(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);
     HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item);
+    HRESULT _DisableMouseTrack(BOOL bDisable);
 
     BOOL UseBigIcons()
     {
