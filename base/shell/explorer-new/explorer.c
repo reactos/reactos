@@ -449,6 +449,8 @@ _tWinMain(IN HINSTANCE hInstance,
         HRESULT hr;
         LPSHELLFOLDER pDesktopFolder = NULL;
         LPITEMIDLIST pidlRoot = NULL;
+        typedef HRESULT(WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
+        SH_OPEN_NEW_FRAME SHOpenNewFrame;
 
         /* A shell is already loaded. Parse the command line arguments
            and unless we need to do something specific simply display
@@ -525,9 +527,6 @@ _tWinMain(IN HINSTANCE hInstance,
         }
 
         DbgPrint("Trying to open browser window... \n");
-
-        typedef HRESULT(WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
-        SH_OPEN_NEW_FRAME SHOpenNewFrame;
 
         hBrowseui = LoadLibraryW(L"browseui.dll");
         if (!hBrowseui)
