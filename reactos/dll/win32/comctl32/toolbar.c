@@ -843,8 +843,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
         /* empirical tests show that iBitmap can/will be non-zero    */
         /* when drawing the vertical bar...      */
         if ((dwStyle & TBSTYLE_FLAT) /* && (btnPtr->iBitmap == 0) */) {
-            if (dwStyle & CCS_VERT)
-               TOOLBAR_DrawFlatHorizontalSeparator (&rc, hdc, infoPtr);
+            if (dwStyle & CCS_VERT) {
+                RECT rcsep = rc;
+                InflateRect(&rcsep, -infoPtr->szPadding.cx, -infoPtr->szPadding.cy);
+                TOOLBAR_DrawFlatHorizontalSeparator (&rcsep, hdc, infoPtr);
+            }
 	    else
 		TOOLBAR_DrawFlatSeparator (&rc, hdc, infoPtr);
 	}
@@ -1662,7 +1665,7 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	if (btnPtr->fsStyle & BTNS_SEP) {
 	    if (infoPtr->dwStyle & CCS_VERT) {
                 cy = (btnPtr->iBitmap > 0) ? btnPtr->iBitmap : SEPARATOR_WIDTH;
-                cx = (btnPtr->cx > 0) ? btnPtr->cx : infoPtr->nWidth;
+                cx = (btnPtr->cx > 0) ? btnPtr->cx : infoPtr->nButtonWidth;
 	    }
 	    else
                 cx = (btnPtr->cx > 0) ? btnPtr->cx :
