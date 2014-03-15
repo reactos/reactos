@@ -347,33 +347,19 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             return hr;
     }
 
-    CComPtr<IObjectWithSite> ows;
-    if (SUCCEEDED(m_subMenuParent->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows))))
+    CComPtr<IServiceProvider> sp;
+    CComPtr<IUnknown> unk0;
+    CComPtr<IDeskBar> db0, db, db1;
+    if (SUCCEEDED(IUnknown_GetSite(m_subMenuParent, IID_PPV_ARG(IServiceProvider, &sp))) && 
+        SUCCEEDED(sp->QueryInterface(IID_PPV_ARG(IDeskBar, &db0))) &&
+        SUCCEEDED(db0->GetClient(&unk0)) &&
+        SUCCEEDED(IUnknown_QueryService(unk0, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db))) &&
+        SUCCEEDED(IUnknown_QueryService(m_site, SID_SMenuBandParent, IID_PPV_ARG(IDeskBar, &db1))))
     {
-        CComPtr<IServiceProvider> sp;
-        if (SUCCEEDED(ows->GetSite(IID_PPV_ARG(IServiceProvider, &sp))))
-        {
-            CComPtr<IDeskBar> db0;
-            if (SUCCEEDED(sp->QueryInterface(IID_PPV_ARG(IDeskBar, &db0))))
-            {
-                CComPtr<IUnknown> unk0;
-                if (SUCCEEDED(db0->GetClient(&unk0)))
-                {
-                    CComPtr<IDeskBar> db;
-                    if (SUCCEEDED(IUnknown_QueryService(unk0, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db))))
-                    {
-                        CComPtr<IDeskBar> db1;
-                        if (SUCCEEDED(IUnknown_QueryService(m_site, SID_SMenuBandParent, IID_PPV_ARG(IDeskBar, &db1))))
-                        {
-                            if (fShow)
-                                db->SetClient(db1);
-                            else
-                                db->SetClient(NULL);
-                        }
-                    }
-                }
-            }
-        }
+        if (fShow)
+            db->SetClient(db1);
+        else
+            db->SetClient(NULL);
     }
 
     if (m_dwFlags & SMINIT_VERTICAL)
