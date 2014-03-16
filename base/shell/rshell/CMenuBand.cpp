@@ -521,6 +521,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
         if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(NULL, -1);
         if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(NULL, -1);
     }
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
