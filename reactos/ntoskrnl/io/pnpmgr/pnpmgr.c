@@ -648,7 +648,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     
     ASSERT(!(DeviceNode->Flags & DNF_DISABLED));
 
-    /* Build the I/O stack locaiton */
+    /* Build the I/O stack location */
     RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_START_DEVICE;
