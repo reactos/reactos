@@ -35,7 +35,7 @@ HRESULT WINAPI SHGetImageList(
     );
 
 // FIXME: Enable if/when wine comctl supports this flag properly
-//#define TBSTYLE_EX_VERTICAL 4
+#define USE_TBSTYLE_EX_VERTICAL 0
 
 #define TIMERID_HOTTRACK 1
 #define SUBCLASS_ID_MENUBAND 1
@@ -287,7 +287,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     {
         tbStyles |= CCS_VERT;
 
-#ifdef TBSTYLE_EX_VERTICAL
+#if USE_TBSTYLE_EX_VERTICAL
         // FIXME: Use when it works in ros (?)
         tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
 #endif
@@ -747,7 +747,7 @@ HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSu
     TBBUTTON tbb = { 0 };
 
     tbb.fsState = TBSTATE_ENABLED;
-#ifndef TBSTYLE_EX_VERTICAL
+#if !USE_TBSTYLE_EX_VERTICAL
     if (!last && (m_toolbarFlags & SMINIT_VERTICAL))
         tbb.fsState |= TBSTATE_WRAP;
 #endif
@@ -776,7 +776,7 @@ HRESULT CMenuToolbarBase::AddSeparator(BOOL last)
     TBBUTTON tbb = { 0 };
 
     tbb.fsState = TBSTATE_ENABLED;
-#ifndef TBSTYLE_EX_VERTICAL
+#if !USE_TBSTYLE_EX_VERTICAL
     if (!last && (m_toolbarFlags & SMINIT_VERTICAL))
         tbb.fsState |= TBSTATE_WRAP;
 #endif
