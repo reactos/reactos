@@ -105,7 +105,7 @@ HRESULT CMenuFocusManager::PeekArray(CMenuBand ** pItem)
     *pItem = NULL;
 
     if (m_bandCount <= 0)
-        return E_FAIL;
+        return S_FALSE;
 
     *pItem = m_bandStack[m_bandCount - 1];
 
@@ -115,10 +115,10 @@ HRESULT CMenuFocusManager::PeekArray(CMenuBand ** pItem)
 CMenuFocusManager::CMenuFocusManager() :
     m_currentBand(NULL),
     m_currentFocus(NULL),
-    m_bandCount(0),
     m_mouseTrackDisabled(FALSE),
     m_lastMoveFlags(0),
-    m_lastMovePos(0)
+    m_lastMovePos(0),
+    m_bandCount(0)
 {
     m_threadId = GetCurrentThreadId();
 }
@@ -318,6 +318,8 @@ HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
 
     if (newBand == NULL)
     {
+        DisableMouseTrack(NULL, FALSE);
+
         hr = RemoveHooks(m_currentFocus);
         m_currentFocus = NULL;
         m_currentBand = NULL;

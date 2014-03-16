@@ -60,6 +60,7 @@ private:
 
     CMenuToolbarBase * m_hotBar;
     INT                m_hotItem;
+    BOOL               m_trackingPopup;
 
 public:
     CMenuBand();

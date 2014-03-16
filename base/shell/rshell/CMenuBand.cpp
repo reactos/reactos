@@ -61,7 +61,8 @@ CMenuBand::CMenuBand() :
     m_useBigIcons(FALSE),
     m_topLevelWindow(NULL),
     m_hotBar(NULL),
-    m_hotItem(-1)
+    m_hotItem(-1),
+    m_trackingPopup(FALSE)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -513,7 +514,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
         m_subMenuChild = NULL;
     if (!punkClient)
         return S_OK;
-    return punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
+    HRESULT hr =  punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
+    m_trackingPopup = m_subMenuChild != NULL;
+    if (!m_trackingPopup)
+    {
+        if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(NULL, -1);
+        if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(NULL, -1);
+    }
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
@@ -671,6 +678,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
 
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
+    m_trackingPopup = TRUE;
     if (m_menuOwner)
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_menuOwner, &params);
@@ -679,6 +687,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
     }
+    m_trackingPopup = FALSE;
 
     return S_OK;
 }
@@ -691,7 +700,7 @@ HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
 
 HRESULT CMenuBand::_OnHotItemChanged(CMenuToolbarBase * tb, INT id)
 {
-    if (m_subMenuChild && id == -1)
+    if (m_trackingPopup && id == -1)
     {
         return S_FALSE;
     }
@@ -801,6 +810,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
     }
     if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);
     if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(toolbar, item);
+    m_trackingPopup = popup != NULL;
     if (popup)
     {
         if (m_subMenuParent)

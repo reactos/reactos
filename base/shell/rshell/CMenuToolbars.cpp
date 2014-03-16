@@ -472,7 +472,10 @@ HRESULT CMenuToolbarBase::OnHotItemChanged(CMenuToolbarBase * toolbar, INT item)
     if (m_hotBar == this && !(m_toolbarFlags & SMINIT_VERTICAL))
     {
         wasChecked = SendMessage(m_hwndToolbar, TB_ISBUTTONCHECKED, m_hotItem, 0);
-        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_hotItem, FALSE);
+        if (wasChecked)
+        {
+            SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_hotItem, FALSE);
+        }
     }
     m_hotBar = toolbar;
     m_hotItem = item;
@@ -486,6 +489,10 @@ HRESULT CMenuToolbarBase::OnHotItemChanged(CMenuToolbarBase * toolbar, INT item)
 
 HRESULT CMenuToolbarBase::OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item)
 {
+    if (toolbar == NULL && m_popupBar == this)
+    {
+        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, item, FALSE);
+    }
     m_popupBar = toolbar;
     m_popupItem = item;
     InvalidateDraw();
