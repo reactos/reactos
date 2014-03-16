@@ -88,7 +88,8 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     /* We do not use anything else than uncompressed bitmaps */
     if (GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biCompression != BI_RGB)
     {
-        DPRINT1("biCompression == %d != BI_RGB, correct that!\n", GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biCompression);
+        DPRINT1("biCompression == %d != BI_RGB, fix that!\n",
+                GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biCompression);
         GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biCompression = BI_RGB;
     }
 
