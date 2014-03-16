@@ -192,7 +192,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
     if (nCode < 0)
         return CallNextHookEx(m_hHook, nCode, wParam, lParam);
 
-    DWORD pos = GetMessagePos();
+    LPARAM pos = (LPARAM) GetMessagePos();
 
     if (nCode == HC_ACTION)
     {
