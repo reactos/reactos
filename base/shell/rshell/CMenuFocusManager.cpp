@@ -207,6 +207,20 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
             ActivationChange(msg->hwnd);
         case WM_CLOSE:
             break;
+        case WM_LBUTTONDOWN:
+        {
+            POINT pt = { GET_X_LPARAM(pos), GET_Y_LPARAM(pos) };
+
+            HWND window = WindowFromPoint(pt);
+
+            if (IsTrackedWindow(window) != S_OK)
+            {
+                DisableMouseTrack(NULL, FALSE);
+                m_currentBand->_MenuItemHotTrack(MPOS_FULLCANCEL);
+            }
+
+            break;
+        }
         case WM_MOUSEMOVE:
             if (m_lastMoveFlags != wParam || m_lastMovePos != pos)
             {
@@ -229,34 +243,30 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
             break;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
-            DisableMouseTrack(m_currentFocus, TRUE);
-            switch (msg->wParam)
+            //if (!m_currentMenu)
             {
-            case VK_MENU:
-            case VK_LMENU:
-            case VK_RMENU:
-                m_currentBand->_MenuItemHotTrack(MPOS_FULLCANCEL);
-                break;
-            case VK_LEFT:
-                m_currentBand->_MenuItemHotTrack(MPOS_SELECTLEFT);
-                break;
-            case VK_RIGHT:
-                m_currentBand->_MenuItemHotTrack(MPOS_SELECTRIGHT);
-                break;
-            case VK_UP:
-                m_currentBand->_MenuItemHotTrack(VK_UP);
-                break;
-            case VK_DOWN:
-                m_currentBand->_MenuItemHotTrack(VK_DOWN);
-                break;
+                DisableMouseTrack(m_currentFocus, TRUE);
+                switch (msg->wParam)
+                {
+                case VK_MENU:
+                case VK_LMENU:
+                case VK_RMENU:
+                    m_currentBand->_MenuItemHotTrack(MPOS_FULLCANCEL);
+                    break;
+                case VK_LEFT:
+                    m_currentBand->_MenuItemHotTrack(MPOS_SELECTLEFT);
+                    break;
+                case VK_RIGHT:
+                    m_currentBand->_MenuItemHotTrack(MPOS_SELECTRIGHT);
+                    break;
+                case VK_UP:
+                    m_currentBand->_MenuItemHotTrack(VK_UP);
+                    break;
+                case VK_DOWN:
+                    m_currentBand->_MenuItemHotTrack(VK_DOWN);
+                    break;
+                }
             }
-            break;
-        case WM_CHAR:
-            //if (msg->wParam >= 'a' && msg->wParam <= 'z')
-            //{
-            //    callNext = FALSE;
-            //    PostMessage(m_currentFocus, WM_SYSCHAR, wParam, lParam);
-            //}
             break;
         }
 
@@ -311,7 +321,7 @@ HRESULT CMenuFocusManager::ActivationChange(HWND newHwnd)
     return UpdateFocus(newBand);
 }
 
-HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
+HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand, HMENU popupToTrack)
 {
     HRESULT hr;
     HWND newFocus;
@@ -323,6 +333,7 @@ HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
         hr = RemoveHooks(m_currentFocus);
         m_currentFocus = NULL;
         m_currentBand = NULL;
+        m_currentMenu = NULL;
         return S_OK;
     }
 
@@ -344,6 +355,7 @@ HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand)
 
     m_currentFocus = newFocus;
     m_currentBand = newBand;
+    m_currentMenu = popupToTrack;
 
     return S_OK;
 }
@@ -393,4 +405,20 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
         return E_FAIL;
 
     return S_OK;
+}
+
+HRESULT CMenuFocusManager::PushTrackedPopup(CMenuBand * mb, HMENU popup)
+{
+    HRESULT hr;
+
+    hr = PushToArray(mb);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return UpdateFocus(mb, popup);
+}
+
+HRESULT CMenuFocusManager::PopTrackedPopup(CMenuBand * mb, HMENU popup)
+{
+    return PopMenu(mb);
 }

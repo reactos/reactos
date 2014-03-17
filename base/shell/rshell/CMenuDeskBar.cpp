@@ -345,7 +345,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         y = rcWorkArea.bottom - cy;
     }
 
-    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
+    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW | SWP_NOACTIVATE);
 
     m_ShowFlags = dwFlags;
     m_Shown = true;
@@ -634,6 +634,11 @@ LRESULT CMenuDeskBar::_OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     }
 
     return 0;
+}
+
+LRESULT CMenuDeskBar::_OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    return MA_NOACTIVATE;
 }
 
 LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

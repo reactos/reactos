@@ -680,6 +680,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
     m_trackingPopup = TRUE;
+    m_focusManager->PushTrackedPopup(this, popup);
     if (m_menuOwner)
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_menuOwner, &params);
@@ -689,6 +690,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
         ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
     }
     m_trackingPopup = FALSE;
+    m_focusManager->PopTrackedPopup(this, popup);
 
     return S_OK;
 }
@@ -716,7 +718,52 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 {
     HRESULT hr;
 
-    if (changeType == VK_DOWN)
+    if (!(m_dwFlags & SMINIT_VERTICAL))
+    {
+        if (changeType == MPOS_SELECTRIGHT)
+        {
+            SendMessageW(m_menuOwner, WM_CANCELMODE, 0, 0);
+            if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
+            {
+                DbgPrint("SF Toolbars in Horizontal menus is not implemented.\n");
+                return S_FALSE;
+            }
+            else if (m_staticToolbar && m_hotBar == m_staticToolbar)
+            {
+                hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
+                if (hr == S_FALSE)
+                {
+                    if (m_SFToolbar)
+                        return m_SFToolbar->ChangeHotItem(VK_HOME);
+                    else
+                        return m_staticToolbar->ChangeHotItem(VK_HOME);
+                }
+                return hr;
+            }
+        }
+        else if (changeType == MPOS_SELECTLEFT)
+        {
+            SendMessageW(m_menuOwner, WM_CANCELMODE, 0, 0);
+            if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
+            {
+                hr = m_staticToolbar->ChangeHotItem(VK_UP);
+                if (hr == S_FALSE)
+                {
+                    if (m_SFToolbar)
+                        return m_SFToolbar->ChangeHotItem(VK_END);
+                    else
+                        return m_staticToolbar->ChangeHotItem(VK_END);
+                }
+                return hr;
+            }
+            else if (m_SFToolbar && m_hotBar == m_SFToolbar)
+            {
+                DbgPrint("SF Toolbars in Horizontal menus is not implemented.\n");
+                return S_FALSE;
+            }
+        }
+    }
+    else if (changeType == VK_DOWN)
     {
         if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
         {

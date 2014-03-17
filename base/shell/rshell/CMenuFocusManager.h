@@ -41,6 +41,7 @@ private:
 private:
     CMenuBand * m_currentBand;
     HWND m_currentFocus;
+    HMENU m_currentMenu;
     HHOOK m_hHook;
     DWORD m_threadId;
     BOOL m_mouseTrackDisabled;
@@ -71,7 +72,7 @@ private:
     LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);
     HRESULT PlaceHooks(HWND window);
     HRESULT RemoveHooks(HWND window);
-    HRESULT UpdateFocus(CMenuBand * newBand);
+    HRESULT UpdateFocus(CMenuBand * newBand, HMENU popupToTrack = NULL);
     HRESULT ActivationChange(HWND newHwnd);
     void DisableMouseTrack(HWND enableTo, BOOL disableThis);
     HRESULT IsTrackedWindow(HWND hWnd);
@@ -79,4 +80,6 @@ private:
 public:
     HRESULT PushMenu(CMenuBand * mb);
     HRESULT PopMenu(CMenuBand * mb);
+    HRESULT PushTrackedPopup(CMenuBand * mb, HMENU popup);
+    HRESULT PopTrackedPopup(CMenuBand * mb, HMENU popup);
 };

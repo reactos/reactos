@@ -65,6 +65,7 @@ public:
         MESSAGE_HANDLER(WM_PAINT, _OnPaint)
         MESSAGE_HANDLER(WM_ACTIVATE, _OnActivate)
         MESSAGE_HANDLER(WM_ACTIVATEAPP, _OnAppActivate)
+        MESSAGE_HANDLER(WM_MOUSEACTIVATE, _OnMouseActivate)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CMenuDeskBar)
@@ -128,6 +129,7 @@ private:
     LRESULT _OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BOOL _IsSubMenuParent(HWND hwnd);
