@@ -6,9 +6,6 @@
 	<directory name="comp">
 		<xi:include href="comp/comp.rbuild" />
 	</directory>
-	<directory name="mode">
-		<xi:include href="mode/mode.rbuild" />
-	</directory>
 	<directory name="sort">
 		<xi:include href="sort/sort.rbuild" />
 	</directory>
