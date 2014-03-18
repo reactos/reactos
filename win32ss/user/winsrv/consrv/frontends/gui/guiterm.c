@@ -1333,8 +1333,12 @@ Quit:
         return 0;
 }
 
-VOID GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer);
-VOID GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer);
+VOID
+GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
+                          PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
+                          PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
@@ -1346,11 +1350,11 @@ GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
-            GuiCopyFromTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)Buffer);
+            GuiCopyFromTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)Buffer, GuiData);
         }
         else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
         {
-            GuiCopyFromGraphicsBuffer((PGRAPHICS_SCREEN_BUFFER)Buffer);
+            GuiCopyFromGraphicsBuffer((PGRAPHICS_SCREEN_BUFFER)Buffer, GuiData);
         }
 
         CloseClipboard();
@@ -1361,8 +1365,12 @@ GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
     }
 }
 
-VOID GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer);
-VOID GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer);
+VOID
+GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
+                         PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
+                         PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 GuiConsolePaste(PGUI_CONSOLE_DATA GuiData)
@@ -1373,11 +1381,11 @@ GuiConsolePaste(PGUI_CONSOLE_DATA GuiData)
 
         if (GetType(Buffer) == TEXTMODE_BUFFER)
         {
-            GuiPasteToTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)Buffer);
+            GuiPasteToTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)Buffer, GuiData);
         }
         else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
         {
-            GuiPasteToGraphicsBuffer((PGRAPHICS_SCREEN_BUFFER)Buffer);
+            GuiPasteToGraphicsBuffer((PGRAPHICS_SCREEN_BUFFER)Buffer, GuiData);
         }
 
         CloseClipboard();
@@ -1909,6 +1917,8 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 EnableMenuItem(hMenu, ID_SYSTEM_EDIT_COPY , MF_BYCOMMAND |
                                ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
                                 (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY) ? MF_ENABLED : MF_GRAYED));
+                // FIXME: Following whether the active screen buffer is text-mode
+                // or graphics-mode, search for CF_UNICODETEXT or CF_BITMAP formats.
                 EnableMenuItem(hMenu, ID_SYSTEM_EDIT_PASTE, MF_BYCOMMAND |
                                (!(Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
                                 IsClipboardFormatAvailable(CF_UNICODETEXT) ? MF_ENABLED : MF_GRAYED));

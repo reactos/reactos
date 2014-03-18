@@ -178,7 +178,7 @@ le selezioni preimpostate mettendo - (trattino) prima della selezione per esempi
     STRING_DIR_HELP3 " Il Volume nel disco %c non ha etichetta.\n"
     STRING_DIR_HELP4 " Il numero di serie del Volume è %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Numero dei file elencati:\n%16i % 14s byte\n"
-    STRING_DIR_HELP6 "%16i Cartelle% 15s byte\n"
+    STRING_DIR_HELP6 "%16i Cartelle% 15s byte liberi\n"
     STRING_DIR_HELP7 "\n Cartelle di %s\n\n"
     STRING_DIR_HELP8 "%16i File% 14s byte\n"
     STRING_DIRSTACK_HELP1 "Salva la cartella corrente per l'uso con il comando POPD, poi\n\

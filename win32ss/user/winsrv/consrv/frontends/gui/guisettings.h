@@ -52,7 +52,7 @@ typedef struct _GUI_CONSOLE_DATA
 
     HWND hWindow;               /* Handle to the console's window            */
     HDC  hMemDC;                /* Memory DC holding the console framebuffer */
-    HBITMAP hBitmap;            /* Console framebuffer                       */
+    HBITMAP  hBitmap;           /* Console framebuffer                       */
     HPALETTE hSysPalette;       /* Handle to the original system palette     */
 
     HICON hIcon;                /* Handle to the console's icon (big)   */

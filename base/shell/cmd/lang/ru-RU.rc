@@ -180,7 +180,7 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP3 " Том в устройстве %c не имеет метки.\n"
     STRING_DIR_HELP4 " Серийный номер тома: %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Всего:\n%16i Файл(ов)% 14s байт\n"
-    STRING_DIR_HELP6 "%16i Dir(s)% 15s байт\n"
+    STRING_DIR_HELP6 "%16i Dir(s)% 15s байт свободно\n"
     STRING_DIR_HELP7 "\n Каталог of %s\n\n"
     STRING_DIR_HELP8 "%16i файл(ов)% 14s байт\n"
     STRING_DIRSTACK_HELP1 "Сохраняет текущую директорию для использования командой POPD, затем\n\

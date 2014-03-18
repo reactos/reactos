@@ -170,7 +170,7 @@ A kapcsolók a DIRCMD környezeti változóban is lehetnek.\n"
     STRING_DIR_HELP3 " A (%c) meghajtóban található kötetnek nincs címkéje.\n"
     STRING_DIR_HELP4 " A kötet sorozatszáma: %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Összes állomány:\n%16i Állomány(ok)% 14s bájt\n"
-    STRING_DIR_HELP6 "%16i Mappa %15s bájt"
+    STRING_DIR_HELP6 "%16i Mappa %15s bájt szabad"
     STRING_DIR_HELP7 "\n %s tartalma\n\n"
     STRING_DIR_HELP8 "%16i Állomány %14s bájt\n"
     STRING_DIRSTACK_HELP1 "Megjegyzi az aktuális mappát, majd átvált egy máasikra.\n\n\

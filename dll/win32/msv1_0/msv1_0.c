@@ -966,6 +966,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     UNICODE_STRING LogonServer;
     BOOLEAN SessionCreated = FALSE;
+    LARGE_INTEGER LogonTime;
+//    LARGE_INTEGER AccountExpires;
+    LARGE_INTEGER PasswordMustChange;
+    LARGE_INTEGER PasswordLastSet;
     NTSTATUS Status;
 
     TRACE("()\n");
@@ -1005,6 +1009,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         return STATUS_NOT_IMPLEMENTED;
     }
 
+    /* Get the logon time */
+    NtQuerySystemTime(&LogonTime);
+
+    /* Get the domain SID */
     Status = GetDomainSid(&AccountDomainSid);
     if (!NT_SUCCESS(Status))
     {
@@ -1080,8 +1088,19 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         goto done;
     }
 
-
     TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
+
+    /* Check the password */
+    if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
+    {
+        Status = MsvpCheckPassword(&(LogonInfo->Password),
+                                   UserInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("MsvpCheckPassword failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
 
     /* Check account restrictions for non-administrator accounts */
     if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
@@ -1098,29 +1117,48 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Check if the account has been locked */
         if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
         {
-            ERR("Account disabled!\n");
+            ERR("Account locked!\n");
             *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
             Status = STATUS_ACCOUNT_RESTRICTION;
             goto done;
         }
 
-        /* FIXME: more checks */
-//            *SubStatus = STATUS_PASSWORD_EXPIRED;
-//            *SubStatus = STATUS_INVALID_LOGON_HOURS;
-//            *SubStatus = STATUS_INVALID_WORKSTATION;
+#if 0
+        /* Check if the account expired */
+        AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
+        AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
 
-    }
-
-    /* Check the password */
-    if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
-    {
-        Status = MsvpCheckPassword(&(LogonInfo->Password),
-                                   UserInfo);
-        if (!NT_SUCCESS(Status))
+        if (AccountExpires.QuadPart != 0 &&
+            LogonTime.QuadPart >= AccountExpires.QuadPart)
         {
-            TRACE("MsvpCheckPassword failed (Status %08lx)\n", Status);
+            ERR("Account expired!\n");
+            *SubStatus = STATUS_ACCOUNT_EXPIRED;
+            Status = STATUS_ACCOUNT_RESTRICTION;
             goto done;
         }
+#endif
+
+        /* Check if the password expired */
+        PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
+        PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
+        PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
+        PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
+
+        if (LogonTime.QuadPart >= PasswordMustChange.QuadPart)
+        {
+            ERR("Password expired!\n");
+            if (PasswordLastSet.QuadPart == 0)
+                *SubStatus = STATUS_PASSWORD_MUST_CHANGE;
+            else
+                *SubStatus = STATUS_PASSWORD_EXPIRED;
+
+            Status = STATUS_ACCOUNT_RESTRICTION;
+            goto done;
+        }
+
+        /* FIXME: more checks */
+        // STATUS_INVALID_LOGON_HOURS;
+        // STATUS_INVALID_WORKSTATION;
     }
 
     /* Return logon information */
@@ -1220,7 +1258,7 @@ done:
         Status = STATUS_LOGON_FAILURE;
     }
 
-    TRACE("LsaApLogonUser done (Status %08lx)\n", Status);
+    TRACE("LsaApLogonUser done (Status 0x%08lx  SubStatus 0x%08lx)\n", Status, *SubStatus);
 
     return Status;
 }

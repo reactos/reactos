@@ -931,7 +931,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          if(NewMenu)
          {
             Window->SystemMenu = NewMenu->MenuInfo.Self;
-            NewMenu->MenuInfo.Flags |= MF_SYSMENU;
+            NewMenu->MenuInfo.Flags |= MNF_SYSDESKMN;
             NewMenu->MenuInfo.Wnd = Window->head.h;
             ret = NewMenu;
             //IntReleaseMenuObject(NewMenu);
@@ -950,7 +950,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
             UserDestroyMenu(hSysMenu);
             return NULL;
          }
-         SysMenu->MenuInfo.Flags |= MF_SYSMENU;
+         SysMenu->MenuInfo.Flags |= MNF_SYSDESKMN;
          SysMenu->MenuInfo.Wnd = Window->head.h;
          hNewMenu = co_IntLoadSysMenuTemplate();
          if(!hNewMenu)
@@ -970,7 +970,8 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          NewMenu = IntCloneMenu(Menu);
          if(NewMenu)
          {
-            NewMenu->MenuInfo.Flags |= MF_SYSMENU | MF_POPUP;
+            NewMenu->MenuInfo.Flags |= MNF_SYSDESKMN | MNF_POPUP;
+            NewMenu->MenuInfo.dwStyle = MNS_CHECKORBMP;
             IntReleaseMenuObject(NewMenu);
             UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
 
@@ -1426,7 +1427,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
       OldMenu = IntGetMenuObject(Window->SystemMenu);
       if(OldMenu)
       {
-         OldMenu->MenuInfo.Flags &= ~ MF_SYSMENU;
+         OldMenu->MenuInfo.Flags &= ~ MNF_SYSDESKMN;
          IntReleaseMenuObject(OldMenu);
       }
    }
@@ -1435,7 +1436,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
    {
       /* FIXME: Check window style, propably return FALSE? */
       Window->SystemMenu = Menu->MenuInfo.Self;
-      Menu->MenuInfo.Flags |= MF_SYSMENU;
+      Menu->MenuInfo.Flags |= MNF_SYSDESKMN;
    }
    else
       Window->SystemMenu = (HMENU)0;
