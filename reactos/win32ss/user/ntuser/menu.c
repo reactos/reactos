@@ -454,7 +454,17 @@ IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
       Menu->MenuInfo.dwStyle = lpmi->dwStyle;
    if(lpmi->fMask & MIM_APPLYTOSUBMENUS)
    {
-      /* FIXME */
+      int i;
+      PMENU_ITEM item = Menu->MenuItemList;
+      for ( i = Menu->MenuInfo.MenuItemCount; i; i--, item = item->Next)
+      {
+         if ( item->fType & MF_POPUP ) // item->hSubMenu )
+         {
+            PMENU_OBJECT SubMenu;
+            if (!(SubMenu = UserGetMenuObject(item->hSubMenu))) continue;
+            IntSetMenuInfo( SubMenu, lpmi);
+         }
+      }
    }
    if (sizeof(MENUINFO) < lpmi->cbSize)
    {
