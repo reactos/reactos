@@ -271,7 +271,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuInfo.dwMenuData = 0; /* Default */
    Menu->MenuInfo.Self = *Handle;
    Menu->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
-   Menu->MenuInfo.Flags = (IsMenuBar ? 0 : MF_POPUP);
+   Menu->MenuInfo.Flags = (IsMenuBar ? 0 : MNF_POPUP);
    Menu->MenuInfo.Wnd = NULL;
    Menu->MenuInfo.WndOwner = NULL;
    Menu->MenuInfo.Height = 0;
@@ -741,7 +741,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          SubMenuObject = UserGetMenuObject(MenuItem->hSubMenu);
          if (SubMenuObject != NULL)
          {
-            SubMenuObject->MenuInfo.Flags |= MF_POPUP;
+            SubMenuObject->MenuInfo.Flags |= MNF_POPUP;
             MenuItem->fType |= MF_POPUP;
          }
          else
@@ -784,7 +784,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
       else
       {
-         if (0 == (MenuObject->MenuInfo.Flags & MF_SYSMENU))
+         if (0 == (MenuObject->MenuInfo.Flags & MNF_SYSDESKMN))
          {
             MenuItem->fType |= MF_SEPARATOR;
          }
@@ -1733,6 +1733,50 @@ CLEANUP:
    END_CLEANUP;
 }
 
+BOOL FASTCALL
+IntGetMenuItemRect(
+   PWND pWnd,
+   PMENU_OBJECT Menu,
+   UINT uItem,
+   PRECTL Rect)
+{
+   LONG XMove, YMove;
+   PMENU_ITEM MenuItem;
+   int p = 0;
+
+   if (!pWnd)
+   {
+      HWND hWnd = Menu->MenuInfo.Wnd;
+      if (!(pWnd = UserGetWindowObject(hWnd))) return FALSE;
+   }
+                   
+   if ((p = IntGetMenuItemByFlag(Menu, uItem, MF_BYPOSITION, NULL, &MenuItem, NULL)) > -1)
+        *Rect = MenuItem->Rect;
+   else
+   {
+      ERR("Failed Item Lookup! %d\n", p);
+      return FALSE;
+   }
+
+   if (Menu->MenuInfo.Flags & MNF_POPUP)
+   {
+     XMove = pWnd->rcClient.left;
+     YMove = pWnd->rcClient.top;
+   }
+   else
+   {
+     XMove = pWnd->rcWindow.left;
+     YMove = pWnd->rcWindow.top;
+   }
+
+   Rect->left   += XMove;
+   Rect->top    += YMove;
+   Rect->right  += XMove;
+   Rect->bottom += YMove;
+
+   return TRUE;
+}
+
 /*
  * @implemented
  */
@@ -1743,219 +1787,126 @@ NtUserGetMenuBarInfo(
    LONG idItem,
    PMENUBARINFO pmbi)
 {
-   BOOL Res = TRUE;
-   PMENU_OBJECT MenuObject;
-   PMENU_ITEM mi;
-   PWND WindowObject;
+   PWND pWnd;
    HMENU hMenu;
-   POINT Offset;
-   RECTL Rect;
    MENUBARINFO kmbi;
+   BOOL Ret;
+   NTSTATUS Status = STATUS_SUCCESS;
+   PMENU_OBJECT Menu = NULL;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetMenuBarInfo\n");
    UserEnterShared();
 
-   if (!(WindowObject = UserGetWindowObject(hwnd)))
-     {
+   if (!(pWnd = UserGetWindowObject(hwnd)))
+   {
         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
         RETURN(FALSE);
-     }
-
-   hMenu = (HMENU)(DWORD_PTR)WindowObject->IDMenu;
-
-   if (!(MenuObject = UserGetMenuObject(hMenu)))
-     {
-       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
-       RETURN(FALSE);
-     }
-
-   if (pmbi->cbSize != sizeof(MENUBARINFO))
-     {
-       EngSetLastError(ERROR_INVALID_PARAMETER);
-       RETURN(FALSE);
-     }
-
-   kmbi.cbSize = sizeof(MENUBARINFO);
-   kmbi.fBarFocused = FALSE;
-   kmbi.fFocused = FALSE;
-   kmbi.hwndMenu = NULL;
+   }
 
    switch (idObject)
    {
-      case OBJID_MENU:
-      {
-         PMENU_OBJECT SubMenuObject;
-         kmbi.hMenu = hMenu;
-         if (idItem) /* Non-Zero-Based. */
-           {
-              if (IntGetMenuItemByFlag(MenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
-                   kmbi.rcBar = mi->Rect;
-              else
-                {
-                   Res = FALSE;
-                   break;
-                }
-           }
-         else
-           {
-              /* If items is zero we assume info for the menu itself. */
-              if (!(IntGetClientOrigin(WindowObject, &Offset)))
-                {
-                   Res = FALSE;
-                   break;
-                }
-              Rect.left = Offset.x;
-              Rect.right = Offset.x + MenuObject->MenuInfo.Width;
-              Rect.bottom = Offset.y;
-              Rect.top = Offset.y - MenuObject->MenuInfo.Height;
-              kmbi.rcBar = Rect;
-              TRACE("Rect top = %d bottom = %d left = %d right = %d \n",
-                       Rect.top, Rect.bottom, Rect.left, Rect.right);
-           }
-         if (idItem)
-           {
-              if (idItem-1 == MenuObject->MenuInfo.FocusedItem)
-                    kmbi.fFocused = TRUE;
-           }
-         if (MenuObject->MenuInfo.FocusedItem != NO_SELECTED_ITEM)
-               kmbi.fBarFocused = TRUE;
-
-         if (MenuObject->MenuItemList)
-         {
-         SubMenuObject = UserGetMenuObject(MenuObject->MenuItemList->hSubMenu);
-         if(SubMenuObject) kmbi.hwndMenu = SubMenuObject->MenuInfo.Wnd;
-         }
-         TRACE("OBJID_MENU, idItem = %d\n",idItem);
-         break;
-      }
-      case OBJID_CLIENT:
-      {
-         PMENU_OBJECT SubMenuObject, XSubMenuObject;
-         HMENU hMenuChk;
-         // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
-         hMenuChk = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
-
-         if (!(MenuObject = UserGetMenuObject(hMenuChk)))
-         {
-            ERR("Window does not have a Popup Menu!\n");
+    case OBJID_CLIENT:
+        if (!pWnd->pcls->fnid)
+            RETURN(FALSE);
+        if (pWnd->pcls->fnid != FNID_MENU)
+        {
+            WARN("called on invalid window: %d\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
             RETURN(FALSE);
-         }
-
-         SubMenuObject = UserGetMenuObject(MenuObject->MenuItemList->hSubMenu);
-         if(SubMenuObject) kmbi.hMenu = SubMenuObject->MenuInfo.Self;
-         else
-           {
-              Res = FALSE;
-              ERR("OBJID_CLIENT, No SubMenu!\n");
-              break;
-           }
-         if (idItem)
-           {
-              if (IntGetMenuItemByFlag(SubMenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
-                   kmbi.rcBar = mi->Rect;
-              else
-                {
-                   Res = FALSE;
-                   break;
-                }
-           }
-         else
-           {
-              PWND SubWinObj;
-              if (!(SubWinObj = UserGetWindowObject(SubMenuObject->MenuInfo.Wnd)))
-                {
-                   Res = FALSE;
-                   break;
-                }
-              if (!(IntGetClientOrigin(SubWinObj, &Offset)))
-                {
-                   Res = FALSE;
-                   break;
-                }
-              Rect.left = Offset.x;
-              Rect.right = Offset.x + SubMenuObject->MenuInfo.Width;
-              Rect.top = Offset.y;
-              Rect.bottom = Offset.y + SubMenuObject->MenuInfo.Height;
-              kmbi.rcBar = Rect;
-           }
-         if (idItem)
-           {
-              if (idItem-1 == SubMenuObject->MenuInfo.FocusedItem)
-                   kmbi.fFocused = TRUE;
-           }
-         if (SubMenuObject->MenuInfo.FocusedItem != NO_SELECTED_ITEM)
-               kmbi.fBarFocused = TRUE;
-         XSubMenuObject = UserGetMenuObject(SubMenuObject->MenuItemList->hSubMenu);
-         if (XSubMenuObject) kmbi.hwndMenu = XSubMenuObject->MenuInfo.Wnd;
-         TRACE("OBJID_CLIENT, idItem = %d\n",idItem);
-         break;
-      }
-      case OBJID_SYSMENU:
-      {
-         PMENU_OBJECT SysMenuObject, SubMenuObject;
-         if(!(SysMenuObject = IntGetSystemMenu(WindowObject, FALSE, FALSE)))
-         {
-           Res = FALSE;
-           break;
-         }
-         kmbi.hMenu = SysMenuObject->MenuInfo.Self;
-         if (idItem)
-           {
-              if (IntGetMenuItemByFlag(SysMenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
-                   kmbi.rcBar = mi->Rect;
-              else
-                {
-                   Res = FALSE;
-                   break;
-                }
-           }
-         else
-           {
-              PWND SysWinObj;
-              if (!(SysWinObj = UserGetWindowObject(SysMenuObject->MenuInfo.Wnd)))
-                {
-                   Res = FALSE;
-                   break;
-                }
-              if (!(IntGetClientOrigin(SysWinObj, &Offset)))
-                {
-                   Res = FALSE;
-                   break;
-                }
-              Rect.left = Offset.x;
-              Rect.right = Offset.x + SysMenuObject->MenuInfo.Width;
-              Rect.top = Offset.y;
-              Rect.bottom = Offset.y + SysMenuObject->MenuInfo.Height;
-              kmbi.rcBar = Rect;
-           }
-         if (idItem)
-           {
-              if (idItem-1 == SysMenuObject->MenuInfo.FocusedItem)
-                    kmbi.fFocused = TRUE;
-           }
-         if (SysMenuObject->MenuInfo.FocusedItem != NO_SELECTED_ITEM)
-               kmbi.fBarFocused = TRUE;
-         SubMenuObject = UserGetMenuObject(SysMenuObject->MenuItemList->hSubMenu);
-         if(SubMenuObject) kmbi.hwndMenu = SubMenuObject->MenuInfo.Wnd;
-         TRACE("OBJID_SYSMENU, idItem = %d\n",idItem);
-         break;
-      }
-      default:
-         Res = FALSE;
-         ERR("Unknown idObject = %d, idItem = %d\n",idObject,idItem);
+        }
+        // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
+        hMenu = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
+        break;
+    case OBJID_MENU:
+        hMenu = UlongToHandle(pWnd->IDMenu);
+        break;
+    case OBJID_SYSMENU:
+        if (!(pWnd->style & WS_SYSMENU)) RETURN(FALSE);
+        Menu = IntGetSystemMenu(pWnd, FALSE, FALSE);
+        hMenu = Menu->MenuInfo.Self;
+        break;
+    default:
+        RETURN(FALSE);
    }
-   if (Res)
-     {
-        NTSTATUS Status = MmCopyToCaller(pmbi, &kmbi, sizeof(MENUBARINFO));
-        if (! NT_SUCCESS(Status))
-          {
-            SetLastNtError(Status);
-            RETURN(FALSE);
-          }
-     }
-   RETURN(Res);
+
+   if (!hMenu)
+      RETURN(FALSE);
+
+   _SEH2_TRY
+   {
+       kmbi.cbSize = pmbi->cbSize;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       kmbi.cbSize = 0;
+   }
+   _SEH2_END
+
+   if (kmbi.cbSize != sizeof(MENUBARINFO))
+   {
+       EngSetLastError(ERROR_INVALID_PARAMETER);
+       RETURN(FALSE);
+   }
+
+   if (!Menu) Menu = UserGetMenuObject(hMenu);
+   if (!Menu)
+       RETURN(FALSE);
+
+   if (idItem < 0 || idItem > Menu->MenuInfo.MenuItemCount)
+       RETURN(FALSE);
+
+   RECTL_vSetEmptyRect(&kmbi.rcBar);
+
+   if (idItem == 0)
+   {
+      Ret = IntGetMenuItemRect(pWnd, Menu, -1, &kmbi.rcBar);
+      kmbi.rcBar.right = kmbi.rcBar.left + Menu->MenuInfo.Width;
+      kmbi.rcBar.bottom = kmbi.rcBar.top + Menu->MenuInfo.Height;
+      ERR("idItem 0 %d\n",Ret);
+   }
+   else
+   {
+      Ret = IntGetMenuItemRect(pWnd, Menu, idItem-1, &kmbi.rcBar);
+      ERR("idItem X %d\n", Ret);
+   }
+
+   kmbi.hMenu = hMenu;
+   kmbi.hwndMenu = NULL;
+   //kmbi.fBarFocused = top_popup_hmenu == hMenu;
+   if (idItem)
+   {
+       PMENU_OBJECT SubMenuObject;
+       kmbi.fFocused = Menu->MenuInfo.FocusedItem == idItem-1;
+
+       if ( kmbi.fFocused && Menu->MenuItemList->hSubMenu )
+       {
+          SubMenuObject = UserGetMenuObject(Menu->MenuItemList->hSubMenu); 
+          if (SubMenuObject) kmbi.hwndMenu = SubMenuObject->MenuInfo.Wnd;
+       }
+   }
+/*   else
+   {
+       kmbi.fFocused = kmbi.fBarFocused;
+   }
+*/
+   _SEH2_TRY
+   {
+      RtlCopyMemory(pmbi, &kmbi, sizeof(MENUBARINFO));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN(FALSE);
+   }
+
+   RETURN(TRUE);
 
 CLEANUP:
    TRACE("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
@@ -2011,9 +1962,9 @@ NtUserGetMenuItemRect(
    PWND ReferenceWnd;
    LONG XMove, YMove;
    RECTL Rect;
-   NTSTATUS Status;
    PMENU_OBJECT Menu;
    PMENU_ITEM MenuItem;
+   NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetMenuItemRect\n");
@@ -2038,7 +1989,7 @@ NtUserGetMenuItemRect(
 
    if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
 
-   if(MenuItem->fType & MF_POPUP)
+   if (Menu->MenuInfo.Flags & MNF_POPUP)
    {
      XMove = ReferenceWnd->rcClient.left;
      YMove = ReferenceWnd->rcClient.top;
@@ -2054,13 +2005,22 @@ NtUserGetMenuItemRect(
    Rect.right  += XMove;
    Rect.bottom += YMove;
 
-   Status = MmCopyToCaller(lprcItem, &Rect, sizeof(RECT));
-   if (! NT_SUCCESS(Status))
+   _SEH2_TRY
+   {
+      RtlCopyMemory(lprcItem, &Rect, sizeof(RECTL));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      RETURN(FALSE);
    }
-   RETURN( TRUE);
+   RETURN(TRUE);
 
 CLEANUP:
    TRACE("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
