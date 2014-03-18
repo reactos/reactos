@@ -458,7 +458,7 @@ IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
       PMENU_ITEM item = Menu->MenuItemList;
       for ( i = Menu->MenuInfo.MenuItemCount; i; i--, item = item->Next)
       {
-         if ( item->fType & MF_POPUP ) // item->hSubMenu )
+         if ( item->hSubMenu )
          {
             PMENU_OBJECT SubMenu;
             if (!(SubMenu = UserGetMenuObject(item->hSubMenu))) continue;
@@ -539,7 +539,7 @@ IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
          }
          else
          {
-            if(CurItem->fType & MF_POPUP)
+            if(CurItem->hSubMenu)
             {
                PMENU_OBJECT NewMenu = UserGetMenuObject(CurItem->hSubMenu);
                if(NewMenu)
@@ -664,7 +664,7 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
    PMENU_OBJECT SubMenuObject;
-   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
+   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
@@ -752,16 +752,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          if (SubMenuObject != NULL)
          {
             SubMenuObject->MenuInfo.Flags |= MNF_POPUP;
-            MenuItem->fType |= MF_POPUP;
          }
-         else
-         {
-            MenuItem->fType &= ~MF_POPUP;
-         }
-      }
-      else
-      {
-         MenuItem->fType &= ~MF_POPUP;
       }
    }
 
@@ -1479,7 +1470,7 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
           return NO_SELECTED_ITEM;
        }
 
-       if (!(mi->fType & MF_POPUP)) continue;
+       if (!(mi->hSubMenu)) continue;
 
        if (mi->hSubMenu == hSubTarget)
        {
