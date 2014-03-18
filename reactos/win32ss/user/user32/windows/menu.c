@@ -4181,20 +4181,17 @@ EndMenu(VOID)
   return TRUE;
 }
 
-// So this one maybe one day it will be a callback!
 BOOL WINAPI HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
                                 UINT wHilite )
 {
     ROSMENUINFO MenuInfo;
-    ROSMENUITEMINFO mii;
     TRACE("(%p, %p, %04x, %04x);\n", hWnd, hMenu, wItemID, wHilite);
-    if (!hWnd)
-    {
-       SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-       return FALSE;
-    }
-    if (!NtUserMenuItemInfo(hMenu, wItemID, wHilite, &mii, FALSE)) return FALSE;
-    if (!NtUserMenuInfo(hMenu, &MenuInfo, FALSE)) return FALSE;
+    // Force bits to be set call server side....
+    // This alone works and passes all the menu test_menu_hilitemenuitem tests.
+    if (!NtUserHiliteMenuItem(hWnd, hMenu, wItemID, wHilite)) return FALSE;
+    // Without the above call we fail 3 out of the wine failed todo tests, see CORE-7967
+    // Now redraw menu.
+    if (!MenuGetRosMenuInfo(&MenuInfo, hMenu)) return FALSE;
     if (MenuInfo.FocusedItem == wItemID) return TRUE;
     MenuHideSubPopups( hWnd, &MenuInfo, FALSE, 0 );
     MenuSelectItem( hWnd, &MenuInfo, wItemID, TRUE, 0 );
