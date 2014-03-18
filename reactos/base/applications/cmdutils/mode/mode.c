@@ -21,9 +21,7 @@
  */
 
 #include <windows.h>
-#include <string.h>
 #include <stdio.h>
-#include <tchar.h>
 
 #define MAX_PORTNAME_LEN 20
 #define MAX_COMPORT_NUM  10
@@ -32,116 +30,116 @@
 #define NUM_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 #define ASSERT(a)
 
-const TCHAR* const usage_strings[] =
+const WCHAR* const usage_strings[] =
 {
-    _T("Device Status:     MODE [device] [/STATUS]"),
-    _T("Select code page:  MODE CON[:] CP SELECT=yyy"),
-    _T("Code page status:  MODE CON[:] CP [/STATUS]"),
-    _T("Display mode:      MODE CON[:] [COLS=c] [LINES=n]"),
-    _T("Typematic rate:    MODE CON[:] [RATE=r DELAY=d]"),
-    _T("Redirect printing: MODE LPTn[:]=COMm[:]"),
-    _T("Serial port:       MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n") \
-    _T("                            [to=on|off] [xon=on|off] [odsr=on|off]\n") \
-    _T("                            [octs=on|off] [dtr=on|off|hs]\n") \
-    _T("                            [rts=on|off|hs|tg] [idsr=on|off]"),
+    L"Device Status:     MODE [device] [/STATUS]",
+    L"Select code page:  MODE CON[:] CP SELECT=yyy",
+    L"Code page status:  MODE CON[:] CP [/STATUS]",
+    L"Display mode:      MODE CON[:] [COLS=c] [LINES=n]",
+    L"Typematic rate:    MODE CON[:] [RATE=r DELAY=d]",
+    L"Redirect printing: MODE LPTn[:]=COMm[:]",
+    L"Serial port:       MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n" \
+    L"                            [to=on|off] [xon=on|off] [odsr=on|off]\n"    \
+    L"                            [octs=on|off] [dtr=on|off|hs]\n"             \
+    L"                            [rts=on|off|hs|tg] [idsr=on|off]",
 };
 
-const TCHAR* const parity_strings[] =
+const WCHAR* const parity_strings[] =
 {
-    _T("None"),   // default
-    _T("Odd"),    // only symbol in this set to have a 'd' in it
-    _T("Even"),   // ... 'v' in it
-    _T("Mark"),   // ... 'm' in it
-    _T("Space")   // ... 's' and/or a 'c' in it
+    L"None",    // default
+    L"Odd",     // only symbol in this set to have a 'd' in it
+    L"Even",    // ... 'v' in it
+    L"Mark",    // ... 'm' in it
+    L"Space"    // ... 's' and/or a 'c' in it
 };
 
-const TCHAR* const control_strings[] = { _T("OFF"), _T("ON"), _T("HANDSHAKE"), _T("TOGGLE") };
+const WCHAR* const control_strings[] = { L"OFF", L"ON", L"HANDSHAKE", L"TOGGLE" };
 
-const TCHAR* const stopbit_strings[] = { _T("1"), _T("1.5"), _T("2") };
+const WCHAR* const stopbit_strings[] = { L"1", L"1.5", L"2" };
 
 
 int Usage()
 {
     int i;
 
-    _tprintf(_T("\nConfigures system devices.\n\n"));
+    wprintf(L"\nConfigures system devices.\n\n");
     for (i = 0; i < NUM_ELEMENTS(usage_strings); i++)
     {
-        _tprintf(_T("%s\n"), usage_strings[i]);
+        wprintf(L"%s\n", usage_strings[i]);
     }
-    _tprintf(_T("\n"));
+    wprintf(L"\n");
     return 0;
 }
 
 int QueryDevices()
 {
-    TCHAR buffer[20240];
+    WCHAR buffer[20240];
     int len;
-    TCHAR* ptr = buffer;
+    WCHAR* ptr = buffer;
 
-    *ptr = '\0';
-    if (QueryDosDevice(NULL, buffer, NUM_ELEMENTS(buffer)))
+    *ptr = L'\0';
+    if (QueryDosDeviceW(NULL, buffer, NUM_ELEMENTS(buffer)))
     {
-        while (*ptr != '\0')
+        while (*ptr != L'\0')
         {
-            len = _tcslen(ptr);
-            if (_tcsstr(ptr, _T("COM")))
+            len = wcslen(ptr);
+            if (wcsstr(ptr, L"COM"))
             {
-                _tprintf(_T("    Found serial device - %s\n"), ptr);
+                wprintf(L"    Found serial device - %s\n", ptr);
             }
-            else if (_tcsstr(ptr, _T("PRN")))
+            else if (wcsstr(ptr, L"PRN"))
             {
-                _tprintf(_T("    Found printer device - %s\n"), ptr);
+                wprintf(L"    Found printer device - %s\n", ptr);
             }
-            else if (_tcsstr(ptr, _T("LPT")))
+            else if (wcsstr(ptr, L"LPT"))
             {
-                _tprintf(_T("    Found parallel device - %s\n"), ptr);
+                wprintf(L"    Found parallel device - %s\n", ptr);
             }
             else
             {
-                //_tprintf(_T("    Found other device - %s\n"), ptr);
+                // wprintf(L"    Found other device - %s\n", ptr);
             }
             ptr += (len+1);
         }
     }
     else
     {
-        _tprintf(_T("    ERROR: QueryDosDevice(...) failed.%ld\n"), GetLastError());
+        wprintf(L"    ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
     }
     return 1;
 }
 
 int ShowParallelStatus(int nPortNum)
 {
-    TCHAR buffer[250];
-    TCHAR szPortName[MAX_PORTNAME_LEN];
+    WCHAR buffer[250];
+    WCHAR szPortName[MAX_PORTNAME_LEN];
 
-    _stprintf(szPortName, _T("LPT%d"), nPortNum);
-    _tprintf(_T("\nStatus for device LPT%d:\n"), nPortNum);
-    _tprintf(_T("-----------------------\n"));
-    if (QueryDosDevice(szPortName, buffer, NUM_ELEMENTS(buffer)))
+    swprintf(szPortName, L"LPT%d", nPortNum);
+    wprintf(L"\nStatus for device LPT%d:\n", nPortNum);
+    wprintf(L"-----------------------\n");
+    if (QueryDosDeviceW(szPortName, buffer, NUM_ELEMENTS(buffer)))
     {
-        TCHAR* ptr = _tcsrchr(buffer, '\\');
+        WCHAR* ptr = wcsrchr(buffer, L'\\');
         if (ptr != NULL)
         {
-            if (0 == _tcscmp(szPortName, ++ptr))
+            if (0 == wcscmp(szPortName, ++ptr))
             {
-                _tprintf(_T("    Printer output is not being rerouted.\n"));
+                wprintf(L"    Printer output is not being rerouted.\n");
             }
             else
             {
-                _tprintf(_T("    Printer output is being rerouted to serial port %s\n"), ptr);
+                wprintf(L"    Printer output is being rerouted to serial port %s\n", ptr);
             }
             return 0;
         }
         else
         {
-            _tprintf(_T("    QueryDosDevice(%s) returned unrecogised form %s.\n"), szPortName, buffer);
+            wprintf(L"    QueryDosDeviceW(%s) returned unrecognised form %s.\n", szPortName, buffer);
         }
     }
     else
     {
-        _tprintf(_T("    ERROR: QueryDosDevice(%s) failed.\n"), szPortName);
+        wprintf(L"    ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
     }
     return 1;
 }
@@ -153,22 +151,22 @@ int ShowConsoleStatus()
     CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    _tprintf(_T("\nStatus for device CON:\n"));
-    _tprintf(_T("-----------------------\n"));
+    wprintf(L"\nStatus for device CON:\n");
+    wprintf(L"-----------------------\n");
     if (GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleScreenBufferInfo))
     {
-        _tprintf(_T("    Lines:          %d\n"), ConsoleScreenBufferInfo.dwSize.Y);
-        _tprintf(_T("    Columns:        %d\n"), ConsoleScreenBufferInfo.dwSize.X);
+        wprintf(L"    Lines:          %d\n", ConsoleScreenBufferInfo.dwSize.Y);
+        wprintf(L"    Columns:        %d\n", ConsoleScreenBufferInfo.dwSize.X);
     }
     if (SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0))
     {
-        _tprintf(_T("    Keyboard delay: %ld\n"), dwKbdDelay);
+        wprintf(L"    Keyboard delay: %ld\n", dwKbdDelay);
     }
     if (SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &dwKbdSpeed, 0))
     {
-        _tprintf(_T("    Keyboard rate:  %ld\n"), dwKbdSpeed);
+        wprintf(L"    Keyboard rate:  %ld\n", dwKbdSpeed);
     }
-    _tprintf(_T("    Code page:      %d\n"), GetConsoleOutputCP());
+    wprintf(L"    Code page:      %d\n", GetConsoleOutputCP());
     return 0;
 }
 
@@ -177,24 +175,24 @@ BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOO
 {
     BOOL result;
     HANDLE hPort;
-    TCHAR szPortName[MAX_PORTNAME_LEN];
+    WCHAR szPortName[MAX_PORTNAME_LEN];
 
     ASSERT(pDCB);
     ASSERT(pCommTimeouts);
 
-    _stprintf(szPortName, _T("COM%d"), nPortNum);
-    hPort = CreateFile(szPortName,
-                       GENERIC_READ|GENERIC_WRITE,
-                       0,     // exclusive
-                       NULL,  // sec attr
-                       OPEN_EXISTING,
-                       0,     // no attributes
-                       NULL); // no template
+    swprintf(szPortName, L"COM%d", nPortNum);
+    hPort = CreateFileW(szPortName,
+                        GENERIC_READ | GENERIC_WRITE,
+                        0,     // exclusive
+                        NULL,  // sec attr
+                        OPEN_EXISTING,
+                        0,     // no attributes
+                        NULL); // no template
 
     if (hPort == INVALID_HANDLE_VALUE)
     {
-        _tprintf(_T("Illegal device name - %s\n"), szPortName);
-        _tprintf(_T("Last error = 0x%lx\n"), GetLastError());
+        wprintf(L"Illegal device name - %s\n", szPortName);
+        wprintf(L"Last error = 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -202,7 +200,7 @@ BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOO
                     : GetCommState(hPort, pDCB);
     if (!result)
     {
-        _tprintf(_T("Failed to %s the status for device COM%d:\n"), bWrite ? _T("set") : _T("get"), nPortNum);
+        wprintf(L"Failed to %s the status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
         CloseHandle(hPort);
         return FALSE;
     }
@@ -211,7 +209,7 @@ BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOO
                     : GetCommTimeouts(hPort, pCommTimeouts);
     if (!result)
     {
-        _tprintf(_T("Failed to %s Timeout status for device COM%d:\n"), bWrite ? _T("set") : _T("get"), nPortNum);
+        wprintf(L"Failed to %s Timeout status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
         CloseHandle(hPort);
         return FALSE;
     }
@@ -230,41 +228,40 @@ int ShowSerialStatus(int nPortNum)
     }
     if (dcb.Parity > NUM_ELEMENTS(parity_strings))
     {
-        _tprintf(_T("ERROR: Invalid value for Parity Bits %d:\n"), dcb.Parity);
+        wprintf(L"ERROR: Invalid value for Parity Bits %d:\n", dcb.Parity);
         dcb.Parity = 0;
     }
     if (dcb.StopBits > NUM_ELEMENTS(stopbit_strings))
     {
-        _tprintf(_T("ERROR: Invalid value for Stop Bits %d:\n"), dcb.StopBits);
+        wprintf(L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
         dcb.StopBits = 0;
     }
-    _tprintf(_T("\nStatus for device COM%d:\n"), nPortNum);
-    _tprintf(_T("-----------------------\n"));
-    _tprintf(_T("    Baud:            %ld\n"), dcb.BaudRate);
-    _tprintf(_T("    Parity:          %s\n"), parity_strings[dcb.Parity]);
-    _tprintf(_T("    Data Bits:       %d\n"), dcb.ByteSize);
-    _tprintf(_T("    Stop Bits:       %s\n"), stopbit_strings[dcb.StopBits]);
-    _tprintf(_T("    Timeout:         %s\n"), CommTimeouts.ReadIntervalTimeout ? _T("ON") : _T("OFF"));
-    _tprintf(_T("    XON/XOFF:        %s\n"), dcb.fOutX ? _T("ON") : _T("OFF"));
-    _tprintf(_T("    CTS handshaking: %s\n"), dcb.fOutxCtsFlow ? _T("ON") : _T("OFF"));
-    _tprintf(_T("    DSR handshaking: %s\n"), dcb.fOutxDsrFlow ? _T("ON") : _T("OFF"));
-    _tprintf(_T("    DSR sensitivity: %s\n"), dcb.fDsrSensitivity ? _T("ON") : _T("OFF"));
-    _tprintf(_T("    DTR circuit:     %s\n"), control_strings[dcb.fDtrControl]);
-    _tprintf(_T("    RTS circuit:     %s\n"), control_strings[dcb.fRtsControl]);
+    wprintf(L"\nStatus for device COM%d:\n", nPortNum);
+    wprintf(L"-----------------------\n");
+    wprintf(L"    Baud:            %ld\n", dcb.BaudRate);
+    wprintf(L"    Parity:          %s\n", parity_strings[dcb.Parity]);
+    wprintf(L"    Data Bits:       %d\n", dcb.ByteSize);
+    wprintf(L"    Stop Bits:       %s\n", stopbit_strings[dcb.StopBits]);
+    wprintf(L"    Timeout:         %s\n", CommTimeouts.ReadIntervalTimeout ? L"ON" : L"OFF");
+    wprintf(L"    XON/XOFF:        %s\n", dcb.fOutX           ? L"ON" : L"OFF");
+    wprintf(L"    CTS handshaking: %s\n", dcb.fOutxCtsFlow    ? L"ON" : L"OFF");
+    wprintf(L"    DSR handshaking: %s\n", dcb.fOutxDsrFlow    ? L"ON" : L"OFF");
+    wprintf(L"    DSR sensitivity: %s\n", dcb.fDsrSensitivity ? L"ON" : L"OFF");
+    wprintf(L"    DTR circuit:     %s\n", control_strings[dcb.fDtrControl]);
+    wprintf(L"    RTS circuit:     %s\n", control_strings[dcb.fRtsControl]);
     return 0;
 }
 
 int SetParallelState(int nPortNum)
 {
-    TCHAR szPortName[MAX_PORTNAME_LEN];
-    TCHAR szTargetPath[MAX_PORTNAME_LEN];
+    WCHAR szPortName[MAX_PORTNAME_LEN];
+    WCHAR szTargetPath[MAX_PORTNAME_LEN];
 
-    _stprintf(szPortName, _T("LPT%d"), nPortNum);
-    _stprintf(szTargetPath, _T("COM%d"), nPortNum);
-    if (!DefineDosDevice(DDD_REMOVE_DEFINITION, szPortName, szTargetPath))
+    swprintf(szPortName, L"LPT%d", nPortNum);
+    swprintf(szTargetPath, L"COM%d", nPortNum);
+    if (!DefineDosDeviceW(DDD_REMOVE_DEFINITION, szPortName, szTargetPath))
     {
-        DWORD error = GetLastError();
-        _tprintf(_T("SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n"), nPortNum, szPortName, error);
+        wprintf(L"SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
     }
     return 0;
 }
@@ -296,70 +293,70 @@ int SetConsoleState()
 }
 
 static
-int ExtractModeSerialParams(const TCHAR* param)
+int ExtractModeSerialParams(const WCHAR* param)
 {
-    if (_tcsstr(param, _T("OFF")))
+    if (wcsstr(param, L"OFF"))
         return 0;
-    else if (_tcsstr(param, _T("ON")))
+    else if (wcsstr(param, L"ON"))
         return 1;
-    else if (_tcsstr(param, _T("HS")))
+    else if (wcsstr(param, L"HS"))
         return 2;
-    else if (_tcsstr(param, _T("TG")))
+    else if (wcsstr(param, L"TG"))
         return 3;
 
     return -1;
 }
 
-int SetSerialState(int nPortNum, int args, TCHAR *argv[])
+int SetSerialState(int nPortNum, int args, WCHAR *argv[])
 {
     int arg;
     int value;
     DCB dcb;
     COMMTIMEOUTS CommTimeouts;
-    TCHAR buf[MAX_COMPARAM_LEN+1];
+    WCHAR buf[MAX_COMPARAM_LEN+1];
 
     if (SerialPortQuery(nPortNum, &dcb, &CommTimeouts, FALSE))
     {
         for (arg = 2; arg < args; arg++)
         {
-            if (_tcslen(argv[arg]) > MAX_COMPARAM_LEN)
+            if (wcslen(argv[arg]) > MAX_COMPARAM_LEN)
             {
-                _tprintf(_T("Invalid parameter (too long) - %s\n"), argv[arg]);
+                wprintf(L"Invalid parameter (too long) - %s\n", argv[arg]);
                 return 1;
             }
-            _tcscpy(buf, argv[arg]);
-            _tcslwr(buf);
-            if (_tcsstr(buf, _T("baud=")))
+            wcscpy(buf, argv[arg]);
+            _wcslwr(buf);
+            if (wcsstr(buf, L"baud="))
             {
-                _tscanf(buf+5, "%lu", &dcb.BaudRate);
+                wscanf(buf+5, L"%lu", &dcb.BaudRate);
             }
-            else if (_tcsstr(buf, _T("parity=")))
+            else if (wcsstr(buf, L"parity="))
             {
-                if (_tcschr(buf, 'D'))
+                if (wcschr(buf, L'D'))
                     dcb.Parity = 1;
-                else if (_tcschr(buf, 'V'))
+                else if (wcschr(buf, L'V'))
                     dcb.Parity = 2;
-                else if (_tcschr(buf, 'M'))
+                else if (wcschr(buf, L'M'))
                     dcb.Parity = 3;
-                else if (_tcschr(buf, 'S'))
+                else if (wcschr(buf, L'S'))
                     dcb.Parity = 4;
                 else
                     dcb.Parity = 0;
             }
-            else if (_tcsstr(buf, _T("data=")))
+            else if (wcsstr(buf, L"data="))
             {
-                _tscanf(buf+5, "%lu", &dcb.ByteSize);
+                wscanf(buf+5, L"%lu", &dcb.ByteSize);
             }
-            else if (_tcsstr(buf, _T("stop=")))
+            else if (wcsstr(buf, L"stop="))
             {
-                if (_tcschr(buf, '5'))
+                if (wcschr(buf, L'5'))
                     dcb.StopBits = 1;
-                else if (_tcschr(buf, '2'))
+                else if (wcschr(buf, L'2'))
                     dcb.StopBits = 2;
                 else
                     dcb.StopBits = 0;
             }
-            else if (_tcsstr(buf, _T("to="))) // to=on|off
+            else if (wcsstr(buf, L"to=")) // to=on|off
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -370,7 +367,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("xon="))) // xon=on|off
+            else if (wcsstr(buf, L"xon=")) // xon=on|off
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -383,7 +380,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("odsr="))) // odsr=on|off
+            else if (wcsstr(buf, L"odsr=")) // odsr=on|off
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -395,7 +392,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("octs="))) // octs=on|off
+            else if (wcsstr(buf, L"octs=")) // octs=on|off
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -407,7 +404,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("dtr="))) // dtr=on|off|hs
+            else if (wcsstr(buf, L"dtr=")) // dtr=on|off|hs
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -419,7 +416,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("rts="))) // rts=on|off|hs|tg
+            else if (wcsstr(buf, L"rts=")) // rts=on|off|hs|tg
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -431,7 +428,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
                     goto invalid_serial_parameter;
                 }
             }
-            else if (_tcsstr(buf, _T("idsr="))) // idsr=on|off
+            else if (wcsstr(buf, L"idsr=")) // idsr=on|off
             {
                 value = ExtractModeSerialParams(buf);
                 if (value != -1)
@@ -446,7 +443,7 @@ int SetSerialState(int nPortNum, int args, TCHAR *argv[])
             else
             {
 invalid_serial_parameter:;
-                _tprintf(_T("Invalid parameter - %s\n"), buf);
+                wprintf(L"Invalid parameter - %s\n", buf);
                 return 1;
             }
         }
@@ -455,75 +452,75 @@ invalid_serial_parameter:;
     return 0;
 }
 
-int find_portnum(const TCHAR* cmdverb)
+int find_portnum(const WCHAR* cmdverb)
 {
     int portnum = -1;
 
-    if (cmdverb[3] >= '0' && cmdverb[3] <= '9')
+    if (cmdverb[3] >= L'0' && cmdverb[3] <= L'9')
     {
-        portnum = cmdverb[3] - '0';
-        if (cmdverb[4] >= '0' && cmdverb[4] <= '9')
+        portnum = cmdverb[3] - L'0';
+        if (cmdverb[4] >= L'0' && cmdverb[4] <= L'9')
         {
             portnum *= 10;
-            portnum += cmdverb[4] - '0';
+            portnum += cmdverb[4] - L'0';
         }
     }
     return portnum;
 }
 
-int main(int argc, TCHAR *argv[])
+int wmain(int argc, WCHAR* argv[])
 {
     int nPortNum;
-    TCHAR param1[MAX_COMPARAM_LEN+1];
-    TCHAR param2[MAX_COMPARAM_LEN+1];
+    WCHAR param1[MAX_COMPARAM_LEN+1];
+    WCHAR param2[MAX_COMPARAM_LEN+1];
 
     if (argc > 1)
     {
-        if (_tcslen(argv[1]) > MAX_COMPARAM_LEN)
+        if (wcslen(argv[1]) > MAX_COMPARAM_LEN)
         {
-            _tprintf(_T("Invalid parameter (too long) - %s\n"), argv[1]);
+            wprintf(L"Invalid parameter (too long) - %s\n", argv[1]);
             return 1;
         }
-        _tcscpy(param1, argv[1]);
-        _tcslwr(param1);
+        wcscpy(param1, argv[1]);
+        _wcslwr(param1);
         if (argc > 2)
         {
-            if (_tcslen(argv[2]) > MAX_COMPARAM_LEN)
+            if (wcslen(argv[2]) > MAX_COMPARAM_LEN)
             {
-                _tprintf(_T("Invalid parameter (too long) - %s\n"), argv[2]);
+                wprintf(L"Invalid parameter (too long) - %s\n", argv[2]);
                 return 1;
             }
-            _tcscpy(param2, argv[2]);
-            _tcslwr(param2);
+            wcscpy(param2, argv[2]);
+            _wcslwr(param2);
         }
         else
         {
-            param2[0] = '\0';
+            param2[0] = L'\0';
         }
-        if (_tcsstr(param1, _T("/?")) || _tcsstr(param1, _T("-?")))
+        if (wcsstr(param1, L"/?") || wcsstr(param1, L"-?"))
         {
             return Usage();
         }
-        else if (_tcsstr(param1, _T("/status")))
+        else if (wcsstr(param1, L"/status"))
         {
             goto show_status;
         }
-        else if (_tcsstr(param1, _T("lpt")))
+        else if (wcsstr(param1, L"lpt"))
         {
             nPortNum = find_portnum(param1);
             if (nPortNum != -1)
                 return ShowParallelStatus(nPortNum);
         }
-        else if (_tcsstr(param1, _T("con")))
+        else if (wcsstr(param1, L"con"))
         {
             return ShowConsoleStatus();
         }
-        else if (_tcsstr(param1, _T("com")))
+        else if (wcsstr(param1, L"com"))
         {
             nPortNum = find_portnum(param1);
             if (nPortNum != -1)
             {
-                if (param2[0] == '\0' || _tcsstr(param2, _T("/status")))
+                if (param2[0] == L'\0' || wcsstr(param2, L"/status"))
                 {
                     return ShowSerialStatus(nPortNum);
                 }
@@ -533,7 +530,7 @@ int main(int argc, TCHAR *argv[])
                 }
             }
         }
-        _tprintf(_T("Invalid parameter - %s\n"), param1);
+        wprintf(L"Invalid parameter - %s\n", param1);
         return 1;
     }
     else
