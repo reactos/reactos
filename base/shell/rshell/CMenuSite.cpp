@@ -252,13 +252,13 @@ HRESULT STDMETHODCALLTYPE CMenuSite::QueryService(REFGUID guidService, REFIID ri
         IsEqualGUID(guidService, SID_SMenuBandChild))
     {
         if (m_BandObject == NULL)
-            return E_FAIL;
+            return E_NOINTERFACE;
 
         return IUnknown_QueryService(m_BandObject, guidService, riid, ppvObject);
     }
 
     if (!m_DeskBarSite)
-        return E_FAIL;
+        return E_NOINTERFACE;
 
     return IUnknown_QueryService(m_DeskBarSite, guidService, riid, ppvObject);
 }

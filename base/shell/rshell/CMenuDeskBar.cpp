@@ -133,6 +133,17 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
     {
         return this->QueryInterface(riid, ppvObject);
     }
+    
+    if (IsEqualGUID(guidService, SID_SMenuBandBottom) ||
+        IsEqualGUID(guidService, SID_SMenuBandBottomSelected) ||
+        IsEqualGUID(guidService, SID_SMenuBandChild))
+    {
+        if (m_Client == NULL)
+            return E_NOINTERFACE;
+
+        return IUnknown_QueryService(m_Client, guidService, riid, ppvObject);
+    }
+
 
     if (m_Site == NULL)
         return E_NOINTERFACE;
@@ -643,7 +654,7 @@ LRESULT CMenuDeskBar::_OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (wParam == 0)
+    if (wParam == 0 && m_Shown)
     {
         OnSelect(MPOS_FULLCANCEL);
     }

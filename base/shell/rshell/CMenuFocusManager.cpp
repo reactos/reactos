@@ -23,6 +23,7 @@
 #include <shlwapi_undoc.h>
 
 #include "CMenuFocusManager.h"
+#include "CMenuToolbars.h"
 #include "CMenuBand.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuFocus);
@@ -65,6 +66,11 @@ void CMenuFocusManager::ReleaseManager(CMenuFocusManager * obj)
     }
 }
 
+LRESULT CALLBACK CMenuFocusManager::s_MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    return GetManager()->MsgFilterHook(nCode, wParam, lParam);
+}
+
 LRESULT CALLBACK CMenuFocusManager::s_GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     return GetManager()->GetMsgHook(nCode, wParam, lParam);
@@ -85,7 +91,7 @@ HRESULT CMenuFocusManager::PopFromArray(CMenuBand ** pItem)
         *pItem = NULL;
 
     if (m_bandCount <= 0)
-        return E_FAIL;
+        return S_FALSE;
 
     m_bandCount--;
 
@@ -115,6 +121,10 @@ HRESULT CMenuFocusManager::PeekArray(CMenuBand ** pItem)
 CMenuFocusManager::CMenuFocusManager() :
     m_currentBand(NULL),
     m_currentFocus(NULL),
+    m_currentMenu(NULL),
+    m_parentToolbar(NULL),
+    m_hMsgFilterHook(NULL),
+    m_hGetMsgHook(NULL),
     m_mouseTrackDisabled(FALSE),
     m_lastMoveFlags(0),
     m_lastMovePos(0),
@@ -167,10 +177,7 @@ void CMenuFocusManager::DisableMouseTrack(HWND enableTo, BOOL disableThis)
 
 HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd)
 {
-    if (hWnd == m_currentFocus)
-        return S_OK;
-
-    int i = m_bandCount - 1;
+    int i = m_bandCount;
     while (--i >= 0)
     {
         CMenuBand * band = m_bandStack[i];
@@ -187,10 +194,72 @@ HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd)
     return S_FALSE;
 }
 
+LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    HWND parent;
+    HWND child;
+    POINT pt;
+    int iHitTestResult;
+
+    if (nCode < 0)
+        return CallNextHookEx(m_hMsgFilterHook, nCode, wParam, lParam);
+
+    if (nCode == MSGF_MENU)
+    {
+        BOOL callNext = TRUE;
+        MSG* msg = reinterpret_cast<MSG*>(lParam);
+
+        // Do whatever is necessary here
+
+        switch (msg->message)
+        {
+        case WM_MOUSEMOVE:
+
+            pt = msg->pt;
+
+            parent = WindowFromPoint(pt);
+
+            ScreenToClient(parent, &pt);
+
+            child = ChildWindowFromPoint(parent, pt);
+
+            if (child != m_parentToolbar)
+                break;
+
+            ScreenToClient(m_parentToolbar, &msg->pt);
+
+            /* Don't do anything if the mouse has not been moved */
+            if (msg->pt.x == m_ptPrev.x && msg->pt.y == m_ptPrev.y)
+                return TRUE;
+
+            m_ptPrev = msg->pt;
+
+            iHitTestResult = SendMessageW(m_parentToolbar, TB_HITTEST, 0, (LPARAM) &msg->pt);
+
+            /* Make sure that iHitTestResult is one of the menu items and that it is not the current menu item */
+            if (iHitTestResult >= 0)
+            {
+                if (SendMessage(m_parentToolbar, WM_USER_ISTRACKEDITEM, iHitTestResult, 0))
+                {
+                    SendMessage(m_currentFocus, WM_CANCELMODE, 0, 0);
+                    PostMessage(m_parentToolbar, WM_USER_CHANGETRACKEDITEM, iHitTestResult, iHitTestResult);
+                    return TRUE;
+                }
+            }
+            break;
+        }
+
+        if (!callNext)
+            return 0;
+    }
+
+    return CallNextHookEx(m_hMsgFilterHook, nCode, wParam, lParam);
+}
+
 LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode < 0)
-        return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+        return CallNextHookEx(m_hGetMsgHook, nCode, wParam, lParam);
 
     LPARAM pos = (LPARAM) GetMessagePos();
 
@@ -203,15 +272,15 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
 
         switch (msg->message)
         {
-        case WM_ACTIVATE: // does not trigger
-            ActivationChange(msg->hwnd);
         case WM_CLOSE:
             break;
+
+        case WM_NCLBUTTONDOWN:
         case WM_LBUTTONDOWN:
         {
             POINT pt = { GET_X_LPARAM(pos), GET_Y_LPARAM(pos) };
 
-            HWND window = WindowFromPoint(pt);
+            HWND window = GetAncestor(WindowFromPoint(pt), GA_ROOT);
 
             if (IsTrackedWindow(window) != S_OK)
             {
@@ -274,88 +343,72 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
             return 0;
     }
 
-    return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+    return CallNextHookEx(m_hGetMsgHook, nCode, wParam, lParam);
 }
 
-HRESULT CMenuFocusManager::PlaceHooks(HWND window)
+HRESULT CMenuFocusManager::PlaceHooks()
 {
     //SetCapture(window);
-    m_hHook = SetWindowsHookEx(WH_GETMESSAGE, s_GetMsgHook, NULL, m_threadId);
-    return S_OK;
-}
-
-HRESULT CMenuFocusManager::RemoveHooks(HWND window)
-{
-    UnhookWindowsHookEx(m_hHook);
-    //ReleaseCapture();
-    return S_OK;
-}
-
-HRESULT CMenuFocusManager::ActivationChange(HWND newHwnd)
-{
-    HRESULT hr;
-    CMenuBand * newBand = NULL;
-    
-    CMenuBand * band;
-    PeekArray(&band);
-
-    while (m_bandCount >= 0)
+    if (m_currentMenu)
     {
-        HWND hwnd;
-        hr = band->_GetTopLevelWindow(&hwnd);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        if (hwnd == newHwnd)
-        {
-            newBand = band;
-            break;
-        }
-        else
-        {
-            PopFromArray(NULL);
-            PeekArray(&band);
-        }
+        m_hMsgFilterHook = SetWindowsHookEx(WH_MSGFILTER, s_MsgFilterHook, NULL, m_threadId);
     }
+    else
+    {
+        m_hGetMsgHook = SetWindowsHookEx(WH_GETMESSAGE, s_GetMsgHook, NULL, m_threadId);
+    }
+    return S_OK;
+}
 
-    return UpdateFocus(newBand);
+HRESULT CMenuFocusManager::RemoveHooks()
+{
+    if (m_hMsgFilterHook)
+        UnhookWindowsHookEx(m_hMsgFilterHook);
+    if (m_hGetMsgHook)
+        UnhookWindowsHookEx(m_hGetMsgHook);
+    m_hMsgFilterHook = NULL;
+    m_hGetMsgHook = NULL;
+    return S_OK;
 }
 
 HRESULT CMenuFocusManager::UpdateFocus(CMenuBand * newBand, HMENU popupToTrack)
 {
     HRESULT hr;
-    HWND newFocus;
+    HWND newFocus = NULL;
+    HWND oldFocus = m_currentFocus;
+    HMENU oldMenu = m_currentMenu;
 
-    if (newBand == NULL)
+    if (newBand)
     {
-        DisableMouseTrack(NULL, FALSE);
-
-        hr = RemoveHooks(m_currentFocus);
-        m_currentFocus = NULL;
-        m_currentBand = NULL;
-        m_currentMenu = NULL;
-        return S_OK;
-    }
-
-    hr = newBand->_GetTopLevelWindow(&newFocus);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    if (!m_currentBand)
-    {
-        hr = PlaceHooks(newFocus);
+        hr = newBand->_GetTopLevelWindow(&newFocus);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
-    CHAR title[1024];
-    GetWindowTextA(newFocus, title, 1024);
-
-    DbgPrint("Focus is now at %08p, hwnd=%08x, title='%s'. m_bandCount=%d\n", newBand, newFocus, title, m_bandCount);
-
-    m_currentFocus = newFocus;
     m_currentBand = newBand;
     m_currentMenu = popupToTrack;
+    m_currentFocus = newFocus;
+    if (m_currentMenu)
+    {
+        m_currentBand->GetWindow(&m_parentToolbar);
+    }
+
+    if (oldFocus && (!newFocus || (oldMenu != popupToTrack)))
+    {
+        DisableMouseTrack(NULL, FALSE);
+
+        hr = RemoveHooks();
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    
+    if (newFocus && (!oldFocus || (oldMenu != popupToTrack)))
+    {
+        hr = PlaceHooks();
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
 
     return S_OK;
 }
@@ -364,9 +417,16 @@ HRESULT CMenuFocusManager::PushMenu(CMenuBand * mb)
 {
     HRESULT hr;
 
+    CMenuBand * mbParent = m_currentBand;
+
     hr = PushToArray(mb);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    if (mbParent)
+    {
+        mbParent->SetClient(static_cast<IMenuPopup*>(mb));
+    }
 
     return UpdateFocus(mb);
 }
@@ -387,11 +447,14 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
         hr = PopFromArray(&mbc);
         if (FAILED_UNEXPECTEDLY(hr))
         {
-            mbc = NULL;
+            UpdateFocus(NULL);
             return hr;
         }
     }
     while (mbc && mb != mbc);
+
+    if (!mbc)
+        return E_FAIL;
     
     hr = PeekArray(&mb);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -401,8 +464,10 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (!mbc)
-        return E_FAIL;
+    if (mb)
+    {
+        mb->SetClient(NULL);
+    }
 
     return S_OK;
 }
@@ -420,5 +485,40 @@ HRESULT CMenuFocusManager::PushTrackedPopup(CMenuBand * mb, HMENU popup)
 
 HRESULT CMenuFocusManager::PopTrackedPopup(CMenuBand * mb, HMENU popup)
 {
-    return PopMenu(mb);
+    CMenuBand * mbc;
+    HRESULT hr;
+
+    HWND newFocus;
+    hr = mb->_GetTopLevelWindow(&newFocus);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    DbgPrint("Trying to pop %08p, hwnd=%08x\n", mb, newFocus);
+
+    do {
+        hr = PopFromArray(&mbc);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            UpdateFocus(NULL);
+            return hr;
+        }
+    } while (mbc && mb != mbc);
+
+    if (!mbc)
+        return E_FAIL;
+
+    hr = PeekArray(&mb);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = UpdateFocus(mb);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (mb)
+    {
+        mb->SetClient(NULL);
+    }
+
+    return S_OK;
 }

@@ -325,15 +325,10 @@ HRESULT STDMETHODCALLTYPE CDockSite::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
 
 HRESULT STDMETHODCALLTYPE CDockSite::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
-    HRESULT                                 hResult;
-
     if (IsEqualIID(guidService, SID_SMenuBandParent))
         return this->QueryInterface(riid, ppvObject);
-    hResult = fToolbar->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    return serviceProvider->QueryService(guidService, riid, ppvObject);
+
+    return fToolbar->QueryService(guidService, riid, ppvObject);
 }
 
 CMenuCallback::CMenuCallback()
@@ -1173,10 +1168,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryService(REFGUID guidService, RE
         }
         return fBandProxy->QueryInterface(riid, ppvObject);
     }
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    return serviceProvider->QueryService(guidService, riid, ppvObject);
+    return IUnknown_QueryService(fSite, guidService, riid, ppvObject);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::OnWinEvent(

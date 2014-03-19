@@ -36,17 +36,21 @@ public:
     static void ReleaseManager(CMenuFocusManager * obj);
 
 private:
+    static LRESULT CALLBACK s_MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK s_GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);
 
 private:
     CMenuBand * m_currentBand;
     HWND m_currentFocus;
     HMENU m_currentMenu;
-    HHOOK m_hHook;
+    HWND m_parentToolbar;
+    HHOOK m_hGetMsgHook;
+    HHOOK m_hMsgFilterHook;
     DWORD m_threadId;
     BOOL m_mouseTrackDisabled;
     WPARAM m_lastMoveFlags;
     LPARAM m_lastMovePos;
+    POINT m_ptPrev;
 
     // TODO: make dynamic
 #define MAX_RECURSE 20
@@ -70,12 +74,13 @@ public:
 
 private:
     LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);
-    HRESULT PlaceHooks(HWND window);
-    HRESULT RemoveHooks(HWND window);
+    LRESULT MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam);
+    HRESULT PlaceHooks();
+    HRESULT RemoveHooks();
     HRESULT UpdateFocus(CMenuBand * newBand, HMENU popupToTrack = NULL);
-    HRESULT ActivationChange(HWND newHwnd);
-    void DisableMouseTrack(HWND enableTo, BOOL disableThis);
     HRESULT IsTrackedWindow(HWND hWnd);
+
+    void DisableMouseTrack(HWND enableTo, BOOL disableThis);
 
 public:
     HRESULT PushMenu(CMenuBand * mb);

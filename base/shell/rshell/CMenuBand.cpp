@@ -348,22 +348,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             return hr;
     }
 
-    CComPtr<IServiceProvider> sp;
-    CComPtr<IUnknown> unk0;
-    CComPtr<IDeskBar> db0, db, db1;
-    if (SUCCEEDED(IUnknown_GetSite(m_subMenuParent, IID_PPV_ARG(IServiceProvider, &sp))) && 
-        SUCCEEDED(sp->QueryInterface(IID_PPV_ARG(IDeskBar, &db0))) &&
-        SUCCEEDED(db0->GetClient(&unk0)) &&
-        SUCCEEDED(IUnknown_QueryService(unk0, SID_SMenuBandChild, IID_PPV_ARG(IDeskBar, &db))) &&
-        SUCCEEDED(IUnknown_QueryService(m_site, SID_SMenuBandParent, IID_PPV_ARG(IDeskBar, &db1))))
-    {
-        if (fShow)
-            db->SetClient(db1);
-        else
-            db->SetClient(NULL);
-    }
-
-    if (m_dwFlags & SMINIT_VERTICAL)
     {
         if (fShow)
             hr = m_focusManager->PushMenu(this);
@@ -513,14 +497,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
     if (m_subMenuChild)
         m_subMenuChild = NULL;
     if (!punkClient)
-        return S_OK;
-    HRESULT hr =  punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
-    m_trackingPopup = m_subMenuChild != NULL;
-    if (!m_trackingPopup)
     {
         if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(NULL, -1);
         if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(NULL, -1);
+        return S_OK;
     }
+    HRESULT hr =  punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
+    m_trackingPopup = m_subMenuChild != NULL;
     return hr;
 }
 

@@ -22,6 +22,10 @@
 class CMenuBand;
 class CMenuFocusManager;
 
+#define WM_USER_ISTRACKEDITEM (WM_USER+41)
+#define WM_USER_CHANGETRACKEDITEM (WM_USER+42)
+
+
 class CMenuToolbarBase
 {
 private:
@@ -44,6 +48,7 @@ protected:
     INT                m_popupItem;
 
     DWORD m_toolbarFlags;
+    BOOL m_isTracking;
 
 private:
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -69,6 +74,9 @@ public:
 
     HRESULT ChangeHotItem(DWORD changeType);
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult);
+
+    HRESULT IsTrackedItem(INT index);
+    HRESULT ChangeTrackedItem(INT index);
 
     HRESULT GetIdealSize(SIZE& size);
     HRESULT SetPosSize(int x, int y, int cx, int cy);

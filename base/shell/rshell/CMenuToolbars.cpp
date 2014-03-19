@@ -197,7 +197,8 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_hasIdealSize(FALSE),
     m_usePager(usePager),
     m_hotItem(-1),
-    m_popupItem(-1)
+    m_popupItem(-1),
+    m_isTracking(FALSE)
 {
     m_marlett = CreateFont(
         0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
@@ -401,6 +402,14 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
     switch (uMsg)
     {
+    case WM_USER_ISTRACKEDITEM:
+        m_SubclassOld(hWnd, uMsg, wParam, lParam);
+        return IsTrackedItem(wParam);
+    case WM_USER_CHANGETRACKEDITEM:
+        m_isTracking = TRUE;
+        m_SubclassOld(hWnd, uMsg, wParam, lParam);
+        return ChangeTrackedItem(wParam);
+
     case WM_COMMAND:
         OnWinEvent(hWnd, uMsg, wParam, lParam, &lr);
         break;
@@ -461,6 +470,18 @@ HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * the
         m_hotItem = hot->idNew;
         m_menuBand->_OnHotItemChanged(this, m_hotItem);
         m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+
+        if (m_isTracking && !(m_toolbarFlags & SMINIT_VERTICAL))
+        {
+            KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+
+            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL, NULL, -1);
+
+            if (HasSubMenu(m_hotItem) == S_OK)
+            {
+                PopupItem(m_hotItem);
+            }
+        }
         return S_OK;
     }
     return S_OK;
@@ -491,11 +512,38 @@ HRESULT CMenuToolbarBase::OnPopupItemChanged(CMenuToolbarBase * toolbar, INT ite
 {
     if (toolbar == NULL && m_popupBar == this)
     {
-        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, item, FALSE);
+        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_popupItem, FALSE);
+        m_isTracking = FALSE;
     }
     m_popupBar = toolbar;
     m_popupItem = item;
     InvalidateDraw();
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
+{
+    TBBUTTON btn;
+
+    if (m_hotBar != this)
+        return S_FALSE;
+
+    SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
+
+    if (m_hotItem == btn.idCommand)
+        return S_OK;
+    return S_FALSE;
+}
+
+HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index)
+{
+    TBBUTTON btn;
+    SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
+
+    if (m_hotItem != btn.idCommand)
+    {
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
+    }
     return S_OK;
 }
 
@@ -577,7 +625,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl, this, m_popupItem);
+    m_isTracking = TRUE;
+    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl, this, uItem);
 
     return S_OK;
 }
@@ -613,9 +662,11 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, HMENU menu)
 
     HMENU popup = GetSubMenu(menu, index);
 
+    m_isTracking = TRUE;
     m_menuBand->_TrackSubMenuUsingTrackPopupMenu(popup, pt.x, pt.y, rcl);
 
     SendMessage(m_hwndToolbar, TB_CHECKBUTTON, uItem, FALSE);
+    m_isTracking = FALSE;
 
     return S_OK;
 }
@@ -840,6 +891,12 @@ HRESULT CMenuToolbarBase::PopupItem(INT uItem)
 {
     INT index;
     DWORD_PTR dwData;
+
+    if (!(m_toolbarFlags & SMINIT_VERTICAL))
+    {
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, uItem, 0);
+        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, uItem, TRUE);
+    }
 
     GetDataFromId(uItem, &index, &dwData);
 
