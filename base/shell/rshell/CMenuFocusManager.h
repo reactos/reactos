@@ -44,8 +44,8 @@ private:
     HWND m_currentFocus;
     HMENU m_currentMenu;
     HWND m_parentToolbar;
-    HHOOK m_hGetMsgHook;
     HHOOK m_hMsgFilterHook;
+    HHOOK m_hGetMsgHook;
     DWORD m_threadId;
     BOOL m_mouseTrackDisabled;
     WPARAM m_lastMoveFlags;
@@ -82,6 +82,7 @@ private:
 
     void DisableMouseTrack(HWND enableTo, BOOL disableThis);
 
+    LRESULT ProcessMouseMove(MSG* msg);
 public:
     HRESULT PushMenu(CMenuBand * mb);
     HRESULT PopMenu(CMenuBand * mb);

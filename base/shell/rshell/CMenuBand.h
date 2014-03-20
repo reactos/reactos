@@ -47,6 +47,7 @@ private:
     CComPtr<IShellMenuCallback> m_psmc;
     CComPtr<IMenuPopup>         m_subMenuChild;
     CComPtr<IMenuPopup>         m_subMenuParent;
+    CComPtr<CMenuBand>          m_childBand;
 
     UINT  m_uId;
     UINT  m_uIdAncestor;
@@ -178,6 +179,7 @@ public:
     HRESULT _MenuItemHotTrack(DWORD changeType);
     HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item);
     HRESULT _DisableMouseTrack(BOOL bDisable);
+    HRESULT _SetChildBand(CMenuBand * child);
 
     BOOL UseBigIcons()
     {

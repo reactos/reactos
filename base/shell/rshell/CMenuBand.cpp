@@ -19,7 +19,7 @@
  */
 #include "precomp.h"
 #include <windowsx.h>
-#include <CommonControls.h>
+#include <commoncontrols.h>
 #include <shlwapi_undoc.h>
 
 #include "CMenuBand.h"
@@ -333,13 +333,18 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
     HRESULT hr = S_OK;
 
     if (m_staticToolbar != NULL)
+    {
         hr = m_staticToolbar->ShowWindow(fShow);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
     if (m_SFToolbar != NULL)
+    {
         hr = m_SFToolbar->ShowWindow(fShow);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
 
     if (fShow)
     {
@@ -348,12 +353,10 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             return hr;
     }
 
-    {
-        if (fShow)
-            hr = m_focusManager->PushMenu(this);
-        else
-            hr = m_focusManager->PopMenu(this);
-    }
+    if (fShow)
+        hr = m_focusManager->PushMenu(this);
+    else
+        hr = m_focusManager->PopMenu(this);
 
     return S_OK;
 }
@@ -368,17 +371,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
     if (m_SFToolbar != NULL)
         return m_SFToolbar->Close();
 
-    return S_OK;
-}
-HRESULT STDMETHODCALLTYPE CMenuBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    UNIMPLEMENTED;
     return S_OK;
 }
 
@@ -492,6 +484,12 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
     return S_OK;
 }
 
+HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
+{
+    m_childBand = child;
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
     if (m_subMenuChild)
@@ -504,13 +502,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
     }
     HRESULT hr =  punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
     m_trackingPopup = m_subMenuChild != NULL;
+    DbgPrint("Tracking: %d\n", m_trackingPopup);
     return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 {
     // HACK, so I can test for a submenu in the DeskBar
-    //UNIMPLEMENTED;
     if (ppunkClient)
     {
         if (m_subMenuChild)
@@ -523,15 +521,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::IsMenuMessage(MSG *pmsg)
 {
-    //UNIMPLEMENTED;
-    //return S_OK;
     return S_FALSE;
-    //return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::TranslateMenuMessage(MSG *pmsg, LRESULT *plRet)
 {
-    //UNIMPLEMENTED;
     return S_FALSE;
 }
 
@@ -569,24 +563,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIS
     if (m_SFToolbar)
         return m_SFToolbar->GetShellFolder(pdwFlags, ppidl, riid, ppv);
     return E_FAIL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::GetState(LPSMDATA psmd)
-{
-    UNIMPLEMENTED;
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
@@ -663,6 +639,8 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
     m_trackingPopup = TRUE;
+    DbgPrint("Tracking: %d\n", m_trackingPopup);
+
     m_focusManager->PushTrackedPopup(this, popup);
     if (m_menuOwner)
     {
@@ -672,8 +650,10 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
     }
-    m_trackingPopup = FALSE;
     m_focusManager->PopTrackedPopup(this, popup);
+
+    m_trackingPopup = FALSE;
+    DbgPrint("Tracking: %d\n", m_trackingPopup);
 
     return S_OK;
 }
@@ -812,11 +792,8 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_hotBar && m_hotItem >= 0)
         {
-            if (m_hotBar->HasSubMenu(m_hotItem)==S_OK)
-            {
-                m_hotBar->PopupItem(m_hotItem);
+            if (m_hotBar->PopupItem(m_hotItem) == S_OK)
                 return S_FALSE;
-            }
         }
         if (!m_subMenuParent)
             return S_OK;
@@ -839,9 +816,14 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
+
     if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);
     if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(toolbar, item);
+
+    m_subMenuChild = popup;
     m_trackingPopup = popup != NULL;
+    DbgPrint("Tracking: %d\n", m_trackingPopup);
+
     if (popup)
     {
         if (m_subMenuParent)
@@ -851,6 +833,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pEx
 
         popup->Popup(pAt, pExclude, MPPF_RIGHT);
     }
+
     return S_OK;
 }
 
@@ -860,6 +843,36 @@ HRESULT CMenuBand::_DisableMouseTrack(BOOL bDisable)
         m_staticToolbar->DisableMouseTrack(bDisable);
     if (m_SFToolbar)
         m_SFToolbar->DisableMouseTrack(bDisable);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::GetState(LPSMDATA psmd)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::SetMenuToolbar(IUnknown *punk, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
+{
+    UNIMPLEMENTED;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuBand::ContextSensitiveHelp(BOOL fEnterMode)
+{
+    UNIMPLEMENTED;
     return S_OK;
 }
 

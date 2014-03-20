@@ -22,8 +22,8 @@
 class CMenuBand;
 class CMenuFocusManager;
 
-#define WM_USER_ISTRACKEDITEM (WM_USER+41)
-#define WM_USER_CHANGETRACKEDITEM (WM_USER+42)
+#define WM_USER_ISTRACKEDITEM (WM_APP+41)
+#define WM_USER_CHANGETRACKEDITEM (WM_APP+42)
 
 
 class CMenuToolbarBase
@@ -89,7 +89,6 @@ public:
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
 
     HRESULT PopupItem(INT uItem);
-    HRESULT HasSubMenu(INT uItem);
     HRESULT GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData);
 
 protected:
