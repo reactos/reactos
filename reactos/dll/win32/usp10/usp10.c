@@ -1381,7 +1381,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
         else
         {
             BOOL inNumber = FALSE;
-            static WCHAR math_punc[] = {'#','$','%','+',',','-','.','/',':',0x2212, 0x2044, 0x00a0,0};
+            static const WCHAR math_punc[] = {'#','$','%','+',',','-','.','/',':',0x2212, 0x2044, 0x00a0,0};
 
             strength = heap_alloc_zero(cInChars * sizeof(WORD));
             if (!strength)
