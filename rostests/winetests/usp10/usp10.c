@@ -828,10 +828,9 @@ typedef struct tagRangeP {
     LOGFONTA lf;
 } fontEnumParam;
 
-static int CALLBACK enumFontProc( const LOGFONT *lpelfe, const TEXTMETRIC *lpntme,
-                           DWORD FontType, LPARAM lParam)
+static int CALLBACK enumFontProc( const LOGFONTA *lpelfe, const TEXTMETRICA *lpntme, DWORD FontType, LPARAM lParam )
 {
-    NEWTEXTMETRICEX *ntme = (NEWTEXTMETRICEX*)lpntme;
+    NEWTEXTMETRICEXA *ntme = (NEWTEXTMETRICEXA*)lpntme;
     fontEnumParam *rp = (fontEnumParam*) lParam;
     int idx = 0;
     DWORD i;
@@ -853,7 +852,7 @@ static int CALLBACK enumFontProc( const LOGFONT *lpelfe, const TEXTMETRIC *lpntm
 
     if (ntme->ntmFontSig.fsUsb[idx] & mask)
     {
-        memcpy(&(rp->lf),lpelfe,sizeof(LOGFONT));
+        memcpy(&(rp->lf),lpelfe,sizeof(LOGFONTA));
         return 0;
     }
     return 1;
@@ -865,7 +864,7 @@ static int _find_font_for_range(HDC hdc, const CHAR *recommended, BYTE range, co
     fontEnumParam lParam;
 
     lParam.range = range;
-    memset(&lParam.lf,0,sizeof(LOGFONT));
+    memset(&lParam.lf,0,sizeof(LOGFONTA));
     *hfont = NULL;
 
     if (recommended)
@@ -884,7 +883,7 @@ static int _find_font_for_range(HDC hdc, const CHAR *recommended, BYTE range, co
 
     if (!*hfont)
     {
-        memset(&lParam.lf,0,sizeof(LOGFONT));
+        memset(&lParam.lf,0,sizeof(LOGFONTA));
         lParam.lf.lfCharSet = DEFAULT_CHARSET;
 
         if (!EnumFontFamiliesExA(hdc, &lParam.lf, enumFontProc, (LPARAM)&lParam, 0) && lParam.lf.lfFaceName[0])
@@ -1812,10 +1811,10 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
 struct enum_font_data
 {
     int total;
-    ENUMLOGFONT elf[MAX_ENUM_FONTS];
+    ENUMLOGFONTA elf[MAX_ENUM_FONTS];
 };
 
-static INT CALLBACK enum_bitmap_font_proc(const LOGFONT *lf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
+static INT CALLBACK enum_bitmap_font_proc(const LOGFONTA *lf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
 {
     struct enum_font_data *efnd = (struct enum_font_data *)lParam;
 
@@ -1823,7 +1822,7 @@ static INT CALLBACK enum_bitmap_font_proc(const LOGFONT *lf, const TEXTMETRIC *n
 
     if (efnd->total < MAX_ENUM_FONTS)
     {
-        efnd->elf[efnd->total++] = *(ENUMLOGFONT*)lf;
+        efnd->elf[efnd->total++] = *(ENUMLOGFONTA*)lf;
     }
     else
         trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
@@ -1831,7 +1830,7 @@ static INT CALLBACK enum_bitmap_font_proc(const LOGFONT *lf, const TEXTMETRIC *n
     return 1;
 }
 
-static INT CALLBACK enum_truetype_proc(const LOGFONT *lf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
+static INT CALLBACK enum_truetype_proc(const LOGFONTA *lf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
 {
     struct enum_font_data *efnd = (struct enum_font_data *)lParam;
 
@@ -1839,7 +1838,7 @@ static INT CALLBACK enum_truetype_proc(const LOGFONT *lf, const TEXTMETRIC *ntm,
 
     if (efnd->total < MAX_ENUM_FONTS)
     {
-        efnd->elf[efnd->total++] = *(ENUMLOGFONT*)lf;
+        efnd->elf[efnd->total++] = *(ENUMLOGFONTA*)lf;
     }
     else
         trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
@@ -1853,7 +1852,7 @@ static void test_ScriptGetFontProperties(HDC hdc)
     SCRIPT_CACHE    psc,old_psc;
     SCRIPT_FONTPROPERTIES sfp;
     HFONT font, oldfont;
-    LOGFONT lf;
+    LOGFONTA lf;
     struct enum_font_data efnd;
     TEXTMETRICA tmA;
     WORD gi[3];
@@ -1937,7 +1936,7 @@ static void test_ScriptGetFontProperties(HDC hdc)
     for (i = 0; i < efnd.total; i++)
     {
         lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
-        font = CreateFontIndirect(&lf);
+        font = CreateFontIndirectA(&lf);
         oldfont = SelectObject(hdc, font);
 
         sfp.cBytes = sizeof(SCRIPT_FONTPROPERTIES);
@@ -1978,7 +1977,7 @@ static void test_ScriptGetFontProperties(HDC hdc)
     for (i = 0; i < efnd.total; i++)
     {
         lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
-        font = CreateFontIndirect(&lf);
+        font = CreateFontIndirectA(&lf);
         oldfont = SelectObject(hdc, font);
 
         sfp.cBytes = sizeof(SCRIPT_FONTPROPERTIES);
