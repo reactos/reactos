@@ -199,7 +199,7 @@
 #ifndef __GNUC__
 #define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
-#define FIELD_OFFSET(Type, Field) __builtin_offsetof(Type, Field)
+#define FIELD_OFFSET(Type, Field) ((LONG)__builtin_offsetof(Type, Field))
 #endif
 
 /* Returns the type's alignment */
