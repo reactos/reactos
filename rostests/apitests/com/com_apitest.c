@@ -40,6 +40,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     ID_NAME(IID_IAddressBarParser),
     ID_NAME(IID_IAddressBand),
     ID_NAME(IID_IAddressEditBox),
+    ID_NAME(IID_IAugmentedShellFolder),
+    ID_NAME(IID_IAugmentedShellFolder2),
     ID_NAME(IID_IAutoComplete),
     ID_NAME(IID_IAutoComplete2),
     ID_NAME(IID_IBandNavigate),

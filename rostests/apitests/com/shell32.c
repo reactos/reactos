@@ -209,6 +209,22 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     },
 #endif
     {
+        ID_NAME(CLSID_MergedFolder),
+        {
+            {   -0x8,   &IID_IShellFolder2 },
+            {   -0x4,   &IID_IStorage },
+            {    0x0,   &IID_IAugmentedShellFolder2 },
+            {    0x0,       &IID_IAugmentedShellFolder },
+            {    0x0,           &IID_IShellFolder },
+            {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IShellService },
+            {    0xc,   &IID_IPersistFolder2 },
+            {    0xc,       &IID_IPersistFolder },
+            {    0xc,           &IID_IPersist },
+            {   0x10,   &IID_IPersistPropertyBag },
+        }
+    },
+    {
         ID_NAME(CLSID_MoveToMenu),
         {
             {    0x0,   &IID_IContextMenu3 },

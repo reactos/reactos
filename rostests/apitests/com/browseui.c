@@ -35,6 +35,28 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_AugmentedShellFolder),
+        {
+            {    0x0,   &IID_IAugmentedShellFolder2 },
+            {    0x0,       &IID_IAugmentedShellFolder },
+            {    0x0,           &IID_IShellFolder },
+            {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IShellService },
+        }
+    },
+    {
+        ID_NAME(CLSID_AugmentedShellFolder2),
+        {
+            {    0x0,   &IID_IAugmentedShellFolder2 },
+            {    0x0,       &IID_IAugmentedShellFolder },
+            {    0x0,           &IID_IShellFolder },
+            {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IShellFolder2 },
+            {    0x8,   &IID_IShellService },
+            {   0x10,   &IID_IDropTarget },
+        }
+    },
+    {
         ID_NAME(CLSID_BandProxy),
         {
             {    0x0,   &IID_IBandProxy },
