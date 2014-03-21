@@ -188,7 +188,9 @@ HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd)
             return hr;
 
         if (hwnd == hWnd)
-            return S_OK;
+        {
+            return band->_IsPopup();
+        }
     }
 
     return S_FALSE;
@@ -232,10 +234,10 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             if (m_currentMenu)
                 SendMessage(m_currentFocus, WM_CANCELMODE, 0, 0);
             else
-                m_currentBand->_MenuItemHotTrack(MPOS_SELECTLEFT);
+                m_currentBand->_MenuItemHotTrack(MPOS_CANCELLEVEL);
             DbgPrint("Active popup cancelled, notifying of change...\n");
             PostMessage(hwndToolbar, WM_USER_CHANGETRACKEDITEM, iHitTestResult, iHitTestResult);
-            return TRUE;
+            return FALSE;
         }
     }
 
@@ -447,6 +449,7 @@ HRESULT CMenuFocusManager::PushMenu(CMenuBand * mb)
     if (mbParent)
     {
         mbParent->_SetChildBand(mb);
+        mb->_SetParentBand(mbParent);
     }
 
     return UpdateFocus(mb);
@@ -456,6 +459,11 @@ HRESULT CMenuFocusManager::PopMenu(CMenuBand * mb)
 {
     CMenuBand * mbc;
     HRESULT hr;
+
+    if (m_currentBand)
+    {
+        m_currentBand->_SetParentBand(NULL);
+    }
 
     HWND newFocus;
     hr = mb->_GetTopLevelWindow(&newFocus);

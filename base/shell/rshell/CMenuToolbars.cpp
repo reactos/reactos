@@ -1050,6 +1050,12 @@ HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
 HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     HRESULT hr;
+
+    if (m_isTracking)
+    {
+        return S_FALSE;
+    }
+
     hr = CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -1057,7 +1063,6 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
     // in case the clicked item has a submenu, we do not need to execute the item
     if (hr == S_FALSE)
     {
-        DbgPrint("CMenuToolbarBase::OnCommand told us to cancel.\n");
         return hr;
     }
 

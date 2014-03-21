@@ -48,6 +48,7 @@ private:
     CComPtr<IMenuPopup>         m_subMenuChild;
     CComPtr<IMenuPopup>         m_subMenuParent;
     CComPtr<CMenuBand>          m_childBand;
+    CComPtr<CMenuBand>          m_parentBand;
 
     UINT  m_uId;
     UINT  m_uIdAncestor;
@@ -180,6 +181,8 @@ public:
     HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item);
     HRESULT _DisableMouseTrack(BOOL bDisable);
     HRESULT _SetChildBand(CMenuBand * child);
+    HRESULT _SetParentBand(CMenuBand * parent);
+    HRESULT _IsPopup();
 
     BOOL UseBigIcons()
     {

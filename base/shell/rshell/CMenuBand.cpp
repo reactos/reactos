@@ -56,6 +56,9 @@ CMenuBand::CMenuBand() :
     m_site(NULL),
     m_psmc(NULL),
     m_subMenuChild(NULL),
+    m_subMenuParent(NULL),
+    m_childBand(NULL),
+    m_parentBand(NULL),
     m_hmenu(NULL),
     m_menuOwner(NULL),
     m_useBigIcons(FALSE),
@@ -352,6 +355,10 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
+    else if (m_parentBand)
+    {
+        m_parentBand->SetClient(NULL);
+    }
 
     if (fShow)
         hr = m_focusManager->PushMenu(this);
@@ -488,6 +495,17 @@ HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
 {
     m_childBand = child;
     return S_OK;
+}
+
+HRESULT CMenuBand::_SetParentBand(CMenuBand * parent)
+{
+    m_parentBand = parent;
+    return S_OK;
+}
+
+HRESULT CMenuBand::_IsPopup()
+{
+    return m_subMenuParent ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
