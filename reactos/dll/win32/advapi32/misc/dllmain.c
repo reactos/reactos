@@ -36,7 +36,7 @@ DllMain(
             break;
     }
 
-   return TRUE;
+    return TRUE;
 }
 
 /* EOF */
