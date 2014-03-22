@@ -615,10 +615,15 @@ BaseInitializeContext(IN PCONTEXT Context,
 
 /*
  * Checks if the privilege for Real-Time Priority is there
+ * Beware about this function behavior:
+ * - In case CheckOnly is set to TRUE, then the function will only check
+ * whether real time is allowed and won't grant the privilege. In that case
+ * it will return TRUE if allowed, FALSE otherwise. Not a state!
+ * It means you don't have to release privilege when calling with TRUE.
  */
 PVOID
 WINAPI
-BasepIsRealtimeAllowed(IN BOOLEAN Keep)
+BasepIsRealtimeAllowed(IN BOOLEAN CheckOnly)
 {
     ULONG Privilege = SE_INC_BASE_PRIORITY_PRIVILEGE;
     PVOID State;
@@ -627,7 +632,7 @@ BasepIsRealtimeAllowed(IN BOOLEAN Keep)
     Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
     if (!NT_SUCCESS(Status)) return NULL;
 
-    if (Keep)
+    if (CheckOnly)
     {
         RtlReleasePrivilege(State);
         State = (PVOID)TRUE;
