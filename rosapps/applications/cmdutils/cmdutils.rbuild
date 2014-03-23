@@ -3,12 +3,6 @@
 	<directory name="appwiz">
 		<xi:include href="appwiz/appwiz.rbuild" />
 	</directory>
-	<directory name="comp">
-		<xi:include href="comp/comp.rbuild" />
-	</directory>
-	<directory name="sort">
-		<xi:include href="sort/sort.rbuild" />
-	</directory>
 	<directory name="tee">
 		<xi:include href="tee/tee.rbuild" />
 	</directory>
