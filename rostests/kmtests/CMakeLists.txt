@@ -22,6 +22,7 @@ list(APPEND COMMON_SOURCE
 # kmtest_drv.sys driver
 #
 list(APPEND KMTEST_DRV_SOURCE
+    kmtest_drv/guid.c
     kmtest_drv/kmtest_drv.c
     kmtest_drv/testlist.c
 

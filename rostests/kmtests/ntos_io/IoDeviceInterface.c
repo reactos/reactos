@@ -8,6 +8,7 @@
 /* TODO: what's with the prototypes at the top, what's with the if-ed out part? Doesn't process most results */
 
 #include <kmt_test.h>
+#include <poclass.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -85,7 +86,9 @@ static VOID DeviceInterfaceTest_Func()
    ExFreePool(SymbolicLinkList);
 }
 
-START_TEST(IoDeviceInterface)
+static
+VOID
+Test_IoRegisterDeviceInterface(VOID)
 {
     GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
     DEVICE_OBJECT DeviceObject;
@@ -117,4 +120,70 @@ START_TEST(IoDeviceInterface)
         "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
 
     DeviceInterfaceTest_Func();
+}
+
+static UCHAR NotificationContext;
+
+static DRIVER_NOTIFICATION_CALLBACK_ROUTINE NotificationCallback;
+static
+NTSTATUS
+NTAPI
+NotificationCallback(
+    _In_ PVOID NotificationStructure,
+    _Inout_opt_ PVOID Context)
+{
+    PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification = NotificationStructure;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+
+    ok_irql(PASSIVE_LEVEL);
+    ok_eq_pointer(Context, &NotificationContext);
+    ok_eq_uint(Notification->Version, 1);
+    ok_eq_uint(Notification->Size, sizeof(*Notification));
+
+    /* symbolic link must exist */
+    trace("Interface change: %wZ\n", Notification->SymbolicLinkName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               Notification->SymbolicLinkName,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSymbolicLinkObject(&Handle, GENERIC_READ, &ObjectAttributes);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "No symbolic link\n"))
+    {
+        Status = ObCloseHandle(Handle, KernelMode);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+    return STATUS_SUCCESS;
+}
+
+static
+VOID
+Test_IoRegisterPlugPlayNotification(VOID)
+{
+    NTSTATUS Status;
+    PVOID NotificationEntry;
+
+    Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                            PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                            (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                            KmtDriverObject,
+                                            NotificationCallback,
+                                            &NotificationContext,
+                                            &NotificationEntry);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "PlugPlayNotification not registered\n"))
+    {
+        Status = IoUnregisterPlugPlayNotification(NotificationEntry);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+}
+
+START_TEST(IoDeviceInterface)
+{
+    // FIXME: This test crashes in Windows
+    (void)Test_IoRegisterDeviceInterface;
+    Test_IoRegisterPlugPlayNotification();
 }
