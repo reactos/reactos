@@ -162,8 +162,6 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 	BOOLEAN Arrival;
 	ULONG Caps;
 	NTSTATUS Status;
-    UNICODE_STRING DeviceName;
-	UNICODE_STRING DeviceNamePrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
 	DPRINT("PopAddRemoveSysCapsCallback(%p %p)\n",
 		NotificationStructure, Context);
@@ -184,20 +182,10 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 	{
 		DPRINT("Arrival of %wZ\n", Notification->SymbolicLinkName);
 
-        DeviceName.Length = 0;
-		DeviceName.MaximumLength = Notification->SymbolicLinkName->MaximumLength + DeviceNamePrefix.MaximumLength;
-		DeviceName.Buffer = ExAllocatePool(PagedPool, DeviceName.MaximumLength);
-		if (!DeviceName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
-
-		RtlCopyUnicodeString(&DeviceName, &DeviceNamePrefix);
-		RtlAppendUnicodeStringToString(&DeviceName, Notification->SymbolicLinkName);
-
-		DPRINT("Opening handle to %wZ\n", &DeviceName);
-
 		/* Open the device */
 		InitializeObjectAttributes(
 			&ObjectAttributes,
-			&DeviceName,
+			Notification->SymbolicLinkName,
 			OBJ_KERNEL_HANDLE,
 			NULL,
 			NULL);
@@ -208,7 +196,6 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			&IoStatusBlock,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			0);
-        RtlFreeUnicodeString(&DeviceName);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("ZwOpenFile() failed with status 0x%08lx\n", Status);
