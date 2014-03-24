@@ -92,10 +92,16 @@ else()
 endif()
 
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
-    # for VS builds we'll only have en-US in resource files
+    # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+    # Only VS 10+ resource compiler supports /nologo
+    if(MSVC_VERSION GREATER 1599)
+        set(rc_nologo_flag "/nologo")
+    else()
+        set(rc_nologo_flag)
+    endif()
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_nologo_flag} <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
     set(CMAKE_ASM_COMPILE_OBJECT
         "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
@@ -213,7 +219,7 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 endfunction()
 
-#define those for having real libraries
+# Define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
 set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
 function(add_delay_importlibs _module)
@@ -246,12 +252,12 @@ function(generate_import_lib _libname _dllname _spec_file)
             COMMAND ${CMAKE_ASM_COMPILER} /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file}
             DEPENDS ${_asm_stubs_file})
     else()
-        # be clear about the "language"
+        # Be clear about the "language"
         # Thanks MS for creating a stupid linker
         set_source_files_properties(${_asm_stubs_file} PROPERTIES LANGUAGE "STUB_ASM")
     endif()
 
-    # add our library
+    # Add our library
     if(MSVC_IDE)
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file}.obj)
         set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT 1)
@@ -273,7 +279,7 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 function(spec2def _dllname _spec_file)
-    # do we also want to add importlib targets?
+    # Do we also want to add importlib targets?
     if(${ARGC} GREATER 2)
         if(${ARGN} STREQUAL "ADD_IMPORTLIB")
             set(__add_importlib TRUE)
@@ -282,15 +288,15 @@ function(spec2def _dllname _spec_file)
         endif()
     endif()
 
-    # get library basename
+    # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
 
-    # error out on anything else than spec
+    # Error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    #generate def for the DLL and C stubs file
+    # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
@@ -305,7 +311,7 @@ macro(macro_mc FLAG FILE)
     set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
 endmacro()
 
-#pseh workaround
+# PSEH workaround
 set(PSEH_LIB "pseh")
 
 # Use a full path for the x86 version of ml when using x64 VS.
