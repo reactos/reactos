@@ -155,8 +155,26 @@ NtGdiBitBlt(
     IN DWORD crBackColor,
     IN FLONG fl)
 {
+    DWORD dwTRop;
+
+    if (ROP & CAPTUREBLT)
+       return NtGdiStretchBlt(hDCDest,
+                              XDest,
+                              YDest,
+                              Width,  
+                              Height,
+                              hDCSrc,
+                              XSrc,
+                              YSrc,
+                              Width,
+                              Height,
+                              ROP, 
+                              crBackColor);
+
+    dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+
     /* Forward to NtGdiMaskBlt */
-    // TODO: What's fl for?
+    // TODO: What's fl for? LOL not to send this to MaskBit!
     return NtGdiMaskBlt(hDCDest,
                         XDest,
                         YDest,
@@ -168,7 +186,7 @@ NtGdiBitBlt(
                         NULL,
                         0,
                         0,
-                        ROP,
+                        dwTRop,
                         crBackColor);
 }
 
@@ -712,6 +730,8 @@ NtGdiStretchBlt(
     DWORD ROP,
     IN DWORD dwBackColor)
 {
+    DWORD dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+
     return GreStretchBltMask(
                 hDCDest,
                 XOriginDest,
@@ -723,7 +743,7 @@ NtGdiStretchBlt(
                 YOriginSrc,
                 WidthSrc,
                 HeightSrc,
-                ROP,
+                dwTRop,
                 dwBackColor,
                 NULL,
                 0,
