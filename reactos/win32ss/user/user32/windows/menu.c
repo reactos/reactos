@@ -2545,9 +2545,8 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
                 }
               else
                 {
-                  BOOL ret;
                   ROSMENUINFO topmenuI;
-                  ret = MenuGetRosMenuInfo(&topmenuI, Mt->TopMenu);
+                  BOOL ret = MenuGetRosMenuInfo(&topmenuI, Mt->TopMenu);
                   DWORD dwStyle = MenuInfo->dwStyle | (ret ? topmenuI.dwStyle : 0);
 
                   if (dwStyle & MNS_NOTIFYBYPOS)
