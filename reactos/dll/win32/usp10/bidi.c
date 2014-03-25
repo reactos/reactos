@@ -819,9 +819,12 @@ static void resolveResolved(unsigned baselevel, const WORD * pcls, WORD *plevel,
 static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel, int uCount, struct list *set)
 {
     int run_start, run_end, i;
-    Run runs[uCount];
     int run_count = 0;
+    Run *runs;
     IsolatedRun *current_isolated;
+
+    runs = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(Run));
+    if (!runs) return;
 
     list_init(set);
 
@@ -849,6 +852,7 @@ static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, WORD *pLevel
             int type_fence, real_end;
             int j;
             current_isolated = HeapAlloc(GetProcessHeap(), 0, sizeof(IsolatedRun) + sizeof(WORD*)*uCount);
+            if (!current_isolated) break;
 
             run_start = runs[k].start;
             current_isolated->e = runs[k].e;
@@ -936,6 +940,8 @@ search:
         }
         i++;
     }
+
+    HeapFree(GetProcessHeap(), 0, runs);
 }
 
 /*************************************************************
