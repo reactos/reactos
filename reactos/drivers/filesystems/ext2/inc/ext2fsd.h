@@ -60,7 +60,6 @@ typedef unsigned char   BYTE;
 extern Ext2Data				Ext2GlobalData;
 
 // try-finally simulation
-#define try_return()	{ goto try_exit; }
 #define try_return(S)	{ S; goto try_exit; }
 #define try_return1(S)	{ S; goto try_exit1; }
 #define try_return2(S)	{ S; goto try_exit2; }
