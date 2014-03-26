@@ -284,17 +284,17 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
     if (m_SFToolbar)
     {
         m_SFToolbar->SetPosSize(
-            prc->left, 
-            prc->top, 
-            prc->right - prc->left, 
+            prc->left,
+            prc->top,
+            prc->right - prc->left,
             syShlFld);
     }
     if (m_staticToolbar)
     {
         m_staticToolbar->SetPosSize(
-            prc->left, 
-            prc->top + syShlFld, 
-            prc->right - prc->left, 
+            prc->left,
+            prc->top + syShlFld,
+            prc->right - prc->left,
             syStatic);
     }
 
@@ -360,10 +360,20 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
         m_parentBand->SetClient(NULL);
     }
 
-    if (fShow)
-        hr = m_focusManager->PushMenu(this);
+    if (_IsPopup() == S_OK)
+    {
+        if (fShow)
+            hr = m_focusManager->PushMenuPopup(this);
+        else
+            hr = m_focusManager->PopMenuPopup(this);
+    }
     else
-        hr = m_focusManager->PopMenu(this);
+    {
+        if (fShow)
+            hr = m_focusManager->PushMenuBar(this);
+        else
+            hr = m_focusManager->PopMenuBar(this);
+    }
 
     return S_OK;
 }
@@ -510,15 +520,15 @@ HRESULT CMenuBand::_IsPopup()
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
-    if (m_subMenuChild)
-        m_subMenuChild = NULL;
+    m_subMenuChild = NULL;
+
     if (!punkClient)
     {
         if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(NULL, -1);
         if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(NULL, -1);
         return S_OK;
     }
-    HRESULT hr =  punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
+    HRESULT hr = punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
     m_trackingPopup = m_subMenuChild != NULL;
     DbgPrint("Tracking: %d\n", m_trackingPopup);
     return hr;
@@ -596,7 +606,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
     {
         return m_SFToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
     }
-        
+
     return S_FALSE;
 }
 
@@ -659,7 +669,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     m_trackingPopup = TRUE;
     DbgPrint("Tracking: %d\n", m_trackingPopup);
 
-    m_focusManager->PushTrackedPopup(this, popup);
+    m_focusManager->PushTrackedPopup(popup);
     if (m_menuOwner)
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_menuOwner, &params);
@@ -668,7 +678,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     {
         ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
     }
-    m_focusManager->PopTrackedPopup(this, popup);
+    m_focusManager->PopTrackedPopup(popup);
 
     m_trackingPopup = FALSE;
     DbgPrint("Tracking: %d\n", m_trackingPopup);
@@ -1008,7 +1018,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
     UNIMPLEMENTED;
     return S_OK;

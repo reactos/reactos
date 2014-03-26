@@ -65,14 +65,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     if (fname == NULL)
     {
         fname = strrchr(filename, '/');
-        if (fname != NULL)
-            fname++;
     }
-    else
-        fname++;
 
     if (fname == NULL)
         fname = filename;
+    else
+        fname++;
 
     szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
 

@@ -30,6 +30,22 @@ private:
 
     static CMenuFocusManager * GetManager();
 
+    enum StackEntryType
+    {
+        NoEntry,
+        MenuBarEntry,
+        MenuPopupEntry,
+        TrackedMenuEntry
+    };
+
+    struct StackEntry
+    {
+        StackEntryType type;
+        CMenuBand *    mb;
+        HMENU          hmenu;
+        HWND           hwnd;
+    };
+
 public:
     static CMenuFocusManager * AcquireManager();
 
@@ -40,26 +56,29 @@ private:
     static LRESULT CALLBACK s_GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);
 
 private:
-    CMenuBand * m_currentBand;
-    HWND m_currentFocus;
-    HMENU m_currentMenu;
-    HWND m_parentToolbar;
+    StackEntry * m_current;
+    StackEntry * m_parent;
+
     HHOOK m_hMsgFilterHook;
     HHOOK m_hGetMsgHook;
     DWORD m_threadId;
+
     BOOL m_mouseTrackDisabled;
+
     WPARAM m_lastMoveFlags;
     LPARAM m_lastMovePos;
+
     POINT m_ptPrev;
+
+    HWND m_captureHwnd;
 
     // TODO: make dynamic
 #define MAX_RECURSE 20
-    CMenuBand* m_bandStack[MAX_RECURSE];
+    StackEntry m_bandStack[MAX_RECURSE];
     int m_bandCount;
 
-    HRESULT PushToArray(CMenuBand * item);
-    HRESULT PopFromArray(CMenuBand ** pItem);
-    HRESULT PeekArray(CMenuBand ** pItem);
+    HRESULT PushToArray(StackEntryType type, CMenuBand * mb, HMENU hmenu);
+    HRESULT PopFromArray(StackEntryType * pType, CMenuBand ** pMb, HMENU * pHmenu);
 
 protected:
     CMenuFocusManager();
@@ -77,15 +96,18 @@ private:
     LRESULT MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam);
     HRESULT PlaceHooks();
     HRESULT RemoveHooks();
-    HRESULT UpdateFocus(CMenuBand * newBand, HMENU popupToTrack = NULL);
+    HRESULT UpdateFocus();
     HRESULT IsTrackedWindow(HWND hWnd);
 
-    void DisableMouseTrack(HWND enableTo, BOOL disableThis);
+    void DisableMouseTrack(HWND parent, BOOL disableThis);
+    void SetCapture(HWND child);
 
     LRESULT ProcessMouseMove(MSG* msg);
 public:
-    HRESULT PushMenu(CMenuBand * mb);
-    HRESULT PopMenu(CMenuBand * mb);
-    HRESULT PushTrackedPopup(CMenuBand * mb, HMENU popup);
-    HRESULT PopTrackedPopup(CMenuBand * mb, HMENU popup);
+    HRESULT PushMenuBar(CMenuBand * mb);
+    HRESULT PushMenuPopup(CMenuBand * mb);
+    HRESULT PushTrackedPopup(HMENU popup);
+    HRESULT PopMenuBar(CMenuBand * mb);
+    HRESULT PopMenuPopup(CMenuBand * mb);
+    HRESULT PopTrackedPopup(HMENU popup);
 };

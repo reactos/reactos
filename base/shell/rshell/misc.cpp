@@ -50,7 +50,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         new (&_AtlComModule) CAtlComModule;
 
         gModule.Init(NULL, hInstance, NULL);
-        DisableThreadLibraryCalls (hInstance);
+        DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
