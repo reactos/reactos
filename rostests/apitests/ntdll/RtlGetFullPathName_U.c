@@ -155,7 +155,7 @@ RunTestCases(VOID)
                     ExpectedPathName[2] = UNICODE_NULL;
                 break;
             default:
-                skip(0, "Invalid test!\n");
+                skip("Invalid test!\n");
                 continue;
         }
         wcscat(ExpectedPathName, TestCases[i].FullPathName);
@@ -207,7 +207,7 @@ RunTestCases(VOID)
                 break;
             }
             default:
-                skip(0, "Invalid test!\n");
+                skip("Invalid test!\n");
                 continue;
         }
         ExpectedFilePartSize += TestCases[i].FilePartSize;

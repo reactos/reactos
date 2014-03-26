@@ -128,8 +128,8 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_ustr(&CallerBuffer, &EmptyString);
     ok_eq_ustr(&DynamicString, &EmptyString);
     ok_eq_pointer(FullNameOut, NULL);
-    ok_eq_ulong(FilePartSize, 0);
-    ok_eq_ulong(LengthNeeded, 0);
+    ok_eq_ulong(FilePartSize, 0UL);
+    ok_eq_ulong(LengthNeeded, 0UL);
 
     /* Everything except FileNameString */
     RtlInitUnicodeString(&PathString, NULL);
@@ -156,8 +156,8 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_ustr(&CallerBuffer, &EmptyString);
     ok_eq_ustr(&DynamicString, &EmptyString);
     ok_eq_pointer(FullNameOut, NULL);
-    ok_eq_ulong(FilePartSize, 0);
-    ok_eq_ulong(LengthNeeded, 0);
+    ok_eq_ulong(FilePartSize, 0UL);
+    ok_eq_ulong(LengthNeeded, 0UL);
 
     /* Passing CallerBuffer and DynamicString, but not FullNameOut is invalid */
     RtlInitUnicodeString(&PathString, NULL);
@@ -185,8 +185,8 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_ustr(&ExtensionString, &EmptyString);
     ok_eq_ustr(&CallerBuffer, &EmptyString);
     ok_eq_ustr(&DynamicString, &EmptyString);
-    ok_eq_ulong(FilePartSize, 0);
-    ok_eq_ulong(LengthNeeded, 0);
+    ok_eq_ulong(FilePartSize, 0UL);
+    ok_eq_ulong(LengthNeeded, 0UL);
 
     /* All parameters given */
     RtlInitUnicodeString(&PathString, NULL);
@@ -215,6 +215,6 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_ustr(&CallerBuffer, &EmptyString);
     ok_eq_ustr(&DynamicString, &EmptyString);
     ok_eq_pointer(FullNameOut, NULL);
-    ok_eq_ulong(FilePartSize, 0);
-    ok_eq_ulong(LengthNeeded, 0);
+    ok_eq_ulong(FilePartSize, 0UL);
+    ok_eq_ulong(LengthNeeded, 0UL);
 }

@@ -55,7 +55,7 @@ START_TEST(NtProtectVirtualMemory)
         PAGE_READONLY,
         &oldProtection);
     ok(NT_SUCCESS(status), "NtProtectVirtualMemory failed.\n");
-    ok(oldProtection == PAGE_READWRITE, "Expected PAGE_READWRITE, got %08x.\n", oldProtection);
+    ok(oldProtection == PAGE_READWRITE, "Expected PAGE_READWRITE, got %08lx.\n", oldProtection);
     
     /* Try writing it */
     StartSeh()
@@ -76,7 +76,7 @@ START_TEST(NtProtectVirtualMemory)
         PAGE_NOACCESS,
         &oldProtection);
     ok(NT_SUCCESS(status), "NtProtectVirtualMemory failed.\n");
-    ok(oldProtection == PAGE_READONLY, "Expected PAGE_READONLY, got %08x.\n", oldProtection);
+    ok(oldProtection == PAGE_READONLY, "Expected PAGE_READONLY, got %08lx.\n", oldProtection);
     
     /* Try writing it */
     StartSeh()

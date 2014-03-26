@@ -205,7 +205,7 @@ START_TEST(RtlDosSearchPath_U)
     ok(Success, "DeleteFile failed, test might leave stale file\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
     Success = RemoveDirectoryW(FileName);
-    ok(Success, "RemoveDirectory failed %(lu), test might leave stale directory\n", GetLastError());
+    ok(Success, "RemoveDirectory failed (%lu), test might leave stale directory\n", GetLastError());
     swprintf(FileName, L"C:\\%ls", CustomPath);
     Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed (%lu), test might leave stale directory\n", GetLastError());
