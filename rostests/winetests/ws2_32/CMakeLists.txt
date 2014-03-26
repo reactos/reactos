@@ -6,5 +6,4 @@ add_cd_file(TARGET ws2_32_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
     add_target_compile_flags(ws2_32_winetest "-Wno-format")
-    allow_warnings(ws2_32_winetest)
 endif()

@@ -17,5 +17,5 @@ add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32)
 add_cd_file(TARGET setupapi_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(setupapi_winetest "-Wno-format")
+    add_target_compile_flags(setupapi_winetest "-Wno-error=format")
 endif()
