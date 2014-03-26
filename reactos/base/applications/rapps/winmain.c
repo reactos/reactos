@@ -18,8 +18,6 @@ HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
 
-PCWSTR (WINAPI *pStrStrIW)(PCWSTR, PCWSTR);
-
 WCHAR szSearchPattern[MAX_STR_LEN] = L"";
 BOOL SearchEnabled = TRUE;
 
@@ -29,7 +27,7 @@ SearchPatternMatch(PCWSTR szHaystack, PCWSTR szNeedle)
     if (!*szNeedle)
         return TRUE;
     /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
-    return pStrStrIW(szHaystack, szNeedle) != NULL;
+    return StrStrIW(szHaystack, szNeedle) != NULL;
 }
 
 VOID
@@ -906,10 +904,6 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WCHAR szWindowName[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
-
-    /* FIXME: CORE-7786 requires this to be loaded at runtime because we
-     *        would get comctl32's version otherwise */
-    pStrStrIW = (PVOID)GetProcAddress(GetModuleHandle(L"shlwapi"), "StrStrIW");
 
     switch (GetUserDefaultUILanguage())
     {

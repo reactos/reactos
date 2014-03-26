@@ -17,6 +17,7 @@
 #include <wincon.h>
 #include <richedit.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <stdio.h>
 #include <strsafe.h>
 
