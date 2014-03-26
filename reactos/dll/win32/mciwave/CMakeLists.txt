@@ -21,5 +21,5 @@ add_dependencies(mciwave psdk)
 add_cd_file(TARGET mciwave DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    allow_warnings(mciwave)
+    add_target_compile_flags(mciwave "-Wno-error=overflow")
 endif()

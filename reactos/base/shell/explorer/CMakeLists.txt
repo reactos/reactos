@@ -60,3 +60,7 @@ add_pch(explorer precomp.h SOURCE)
 add_dependencies(explorer psdk)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)
+
+if(NOT MSVC)
+    add_compile_flags("-Wno-error=narrowing")
+endif()

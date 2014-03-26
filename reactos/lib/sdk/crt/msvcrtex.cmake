@@ -83,7 +83,6 @@ set_source_files_properties(startup/crtexe.c
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
-    allow_warnings(msvcrtex)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

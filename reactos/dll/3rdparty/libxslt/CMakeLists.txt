@@ -49,5 +49,4 @@ add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
     add_target_compile_flags(libxslt "-Wno-pointer-sign -Wno-unused-but-set-variable -Wno-unused-function")
-    allow_warnings(libxslt)
 endif()

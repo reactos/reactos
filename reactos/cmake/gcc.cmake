@@ -85,7 +85,6 @@ if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-error=unused-but-set-variable")
 endif()
 
-add_compile_flags("-Wno-error=narrowing")
 add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
