@@ -130,12 +130,13 @@ extern LIST_ENTRY CmiHiveListHead;
 #define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifndef _MSC_VER
+#if (!defined(_MSC_VER) || (defined(_MSC_VER) && (_MSC_VER < 1600)))
 #define _In_
 #define _Out_
 #define _In_opt_
 #define _In_range_(x, y)
 #endif
+
 #define __drv_aliasesMem
 
 /* EOF */
