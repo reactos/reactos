@@ -50,7 +50,7 @@ typedef enum _VDM_ENTRY_CODE
 typedef struct
 {
     ULONG TaskId;
-    ULONG Unused;
+    ULONG CreationFlags;
     ULONG ExitCode;
     ULONG CodePage;
     HANDLE StdIn;
