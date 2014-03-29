@@ -76,10 +76,10 @@ int _tmain (int argc, TCHAR *argv[])
             --argc;
             switch (argv[i][1]) {
                case 'A': bAscii = TRUE;
-                         _tprintf(_T("/a not Supported\n")); /*FIXME: needs adding */
+                         _tprintf(_T("/a not Supported\n")); (void)bAscii;   /*FIXME: needs adding */
                          break;
                case 'L': bLineNos = TRUE;
-                         _tprintf(_T("/l not supported\n")); /*FIXME: needs adding */
+                         _tprintf(_T("/l not supported\n")); (void)bLineNos; /*FIXME: needs adding */
                          break;
                case '?': Usage();
                          return EXIT_SUCCESS;
