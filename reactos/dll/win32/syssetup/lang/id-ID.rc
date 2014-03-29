@@ -46,7 +46,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Type an Administrator Password that is 14 characters or less.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Type an Administrator Password that is 127 characters or less.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 75, 8
@@ -148,6 +148,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "DllInstall gagal: "
     IDS_TIMEOUT "Kehabisan waktu selama registrasi"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

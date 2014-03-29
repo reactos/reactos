@@ -566,6 +566,59 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     return TRUE;
 }
 
+
+static
+BOOL
+WriteDefaultLogonData(LPWSTR Domain)
+{
+    WCHAR szAdministratorName[256];
+    HKEY hKey = NULL;
+    LONG lError;
+
+    if (LoadStringW(hDllInstance,
+                    IDS_ADMINISTRATOR_NAME,
+                    szAdministratorName,
+                    sizeof(szAdministratorName) / sizeof(WCHAR)) == 0)
+    {
+        wcscpy(szAdministratorName, L"Administrator");
+    }
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                           0,
+                           KEY_SET_VALUE,
+                           &hKey);
+    if (lError != ERROR_SUCCESS)
+        return FALSE;
+
+    lError = RegSetValueEx(hKey,
+                           L"DefaultDomain",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)Domain,
+                           (wcslen(Domain)+ 1) * sizeof(WCHAR));
+    if (lError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegSetValueEx(\"DefaultDomain\") failed!\n");
+    }
+
+    lError = RegSetValueEx(hKey,
+                           L"DefaultUserName",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szAdministratorName,
+                           (wcslen(szAdministratorName)+ 1) * sizeof(WCHAR));
+    if (lError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegSetValueEx(\"DefaultUserName\") failed!\n");
+    }
+
+    RegCloseKey(hKey);
+
+    return TRUE;
+}
+
+
 /* lpBuffer will be filled with a 15-char string (plus the null terminator) */
 static void
 GenerateComputerName(LPWSTR lpBuffer)
@@ -592,8 +645,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-    WCHAR Password1[15];
-    WCHAR Password2[15];
+    WCHAR Password1[128];
+    WCHAR Password2[128];
     PWCHAR Password;
     WCHAR Title[64];
     WCHAR EmptyComputerName[256], NotMatchPassword[256], WrongPassword[256];
@@ -607,7 +660,6 @@ ComputerPageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             /* Generate a new pseudo-random computer name */
             GenerateComputerName(ComputerName);
 
@@ -616,8 +668,8 @@ ComputerPageDlgProc(HWND hwndDlg,
 
             /* Set text limits */
             SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, MAX_COMPUTERNAME_LENGTH, 0);
-            SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
-            SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
+            SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 127, 0);
+            SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 127, 0);
 
             /* Set focus to computer name */
             SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
@@ -630,8 +682,9 @@ ComputerPageDlgProc(HWND hwndDlg,
                 SetAdministratorPassword(SetupData.AdminPassword);
             }
 
-        }
-        break;
+            /* Store the administrator account name as the default user name */
+            WriteDefaultLogonData(SetupData.ComputerName);
+            break;
 
 
         case WM_NOTIFY:
@@ -676,8 +729,8 @@ ComputerPageDlgProc(HWND hwndDlg,
 
 #if 0
                     /* Check if admin passwords have been entered */
-                    if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15) == 0) ||
-                            (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15) == 0))
+                    if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 128) == 0) ||
+                        (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 128) == 0))
                     {
                         if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDEMPTY, EmptyPassword,
                                              sizeof(EmptyPassword) / sizeof(EmptyPassword[0])))
@@ -689,8 +742,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                         return TRUE;
                     }
 #else
-                    GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
-                    GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+                    GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, Password1, 128);
+                    GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, Password2, 128);
 #endif
                     /* Check if passwords match */
                     if (wcscmp(Password1, Password2))

@@ -101,6 +101,7 @@
 #define IDS_DLLINSTALL_FAILED      3306
 #define IDS_TIMEOUT                3307
 #define IDS_REASON_UNKNOWN         3308
+#define IDS_ADMINISTRATOR_NAME     3309
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451

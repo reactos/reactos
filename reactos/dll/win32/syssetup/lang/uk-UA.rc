@@ -54,7 +54,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Програма встановлення створить обліковий запис користувача 'Адміністратор', який дає повні права доступу до Вашого комп'ютера.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Введіть пароль адміністратора довжиною до 14 символів.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Введіть пароль адміністратора довжиною до 127 символів.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Пароль адміністратора:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "Пі&дтвердження:", IDC_STATIC, 54, 123, 75, 8
@@ -156,6 +156,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "Помилка DllInstall: "
     IDS_TIMEOUT "Таймаут під час реєстрації"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE
