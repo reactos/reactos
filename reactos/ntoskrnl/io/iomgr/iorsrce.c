@@ -756,7 +756,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
                                   KEY_ALL_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to open HKLM\SYSTEM, Status=%lx\n", Status);
+        DPRINT("Failed to open HKLM\\SYSTEM, Status=%lx\n", Status);
         return;
     }
 
