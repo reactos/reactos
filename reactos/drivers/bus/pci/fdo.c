@@ -503,7 +503,7 @@ FdoPnpControl(
 
     DPRINT("Called\n");
 
-    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     switch (IrpSp->MinorFunction)
@@ -582,8 +582,13 @@ FdoPnpControl(
             Status = STATUS_SUCCESS;
             break;
 
+        case IRP_MN_QUERY_CAPABILITIES:
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+            /* Don't print the warning, too much noise */
+            break;
+
         default:
-            DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
+            DPRINT1("Unknown PNP minor function 0x%x\n", IrpSp->MinorFunction);
             break;
     }
 
@@ -591,7 +596,7 @@ FdoPnpControl(
     IoSkipCurrentIrpStackLocation(Irp);
     Status = IoCallDriver(DeviceExtension->Ldo, Irp);
 
-    DPRINT("Leaving. Status 0x%X\n", Status);
+    DPRINT("Leaving. Status 0x%lx\n", Status);
 
     return Status;
 }
