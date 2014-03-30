@@ -75,10 +75,21 @@ int wmain(int argc, WCHAR * argv[])
         fprintf(stderr, "Failed to create file1\n");
         return GetLastError();
     }
+
+    /* Get its creation timestamp. It will be our reference */
+    /* Get it in FileTime because file1 will renamed to file */
+    if (GetFileTime(hFile, &FileTime, NULL, NULL) == FALSE)
+    {
+        fprintf(stderr, "Failed to read creation time\n");
+        CloseHandle(hFile);
+        return GetLastError();
+    }
+
     CloseHandle(hFile);
 
     /* Wait a least 10ms (resolution of FAT) */
-    Sleep(10 * 2);
+    /* XXX: Increased to 1s for ReactOS... */
+    Sleep(1000);
 
     /* Create second file */
     /* Remove old file from buffer */
@@ -114,24 +125,6 @@ int wmain(int argc, WCHAR * argv[])
         return GetLastError();
     }
 
-    /* Time to compare creation time of both file & file1 */
-    CopyPath[wcslen(TempPath) - 1] = 0;
-
-    /* Open file and get its creation time */
-    hFile = CreateFileW(CopyPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-    {
-        fprintf(stderr, "Failed to open file\n");
-        return GetLastError();
-    }
-    if (GetFileTime(hFile, &FileTime, NULL, NULL) == FALSE)
-    {
-        fprintf(stderr, "Failed to read creation time\n");
-        CloseHandle(hFile);
-        return GetLastError();
-    }
-    CloseHandle(hFile);
-
     /* Open file1 and get its creation time */
     hFile = CreateFileW(TempPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -147,7 +140,8 @@ int wmain(int argc, WCHAR * argv[])
     }
     CloseHandle(hFile);
 
-    /* Delete file */
+    /* Delete files */
+    CopyPath[wcslen(TempPath) - 1] = 0;
     DeleteFileW(TempPath);
     DeleteFileW(CopyPath);
 
