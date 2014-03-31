@@ -122,21 +122,4 @@ RegOpenKeyW(
 extern LIST_ENTRY CmiHiveListHead;
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 
-#ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
-
-#if (!defined(_MSC_VER) || (_MSC_VER < 1500))
-#define _In_
-#define _Out_
-#define _In_opt_
-#define _In_range_(x, y)
-#endif
-
-#define __drv_aliasesMem
-
 /* EOF */
