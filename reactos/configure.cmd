@@ -49,6 +49,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
+    cl 2>&1 | find "15.00." > NUL && set BUILD_ENVIRONMENT=VS9
     cl 2>&1 | find "16.00." > NUL && set BUILD_ENVIRONMENT=VS10
     cl 2>&1 | find "17.00." > NUL && set BUILD_ENVIRONMENT=VS11
     cl 2>&1 | find "18.00." > NUL && set BUILD_ENVIRONMENT=VS12
@@ -59,7 +60,13 @@ if defined ROS_ARCH (
 
     echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!-!ARCH!
     if /I "%1" == "VSSolution" (
-        if "!BUILD_ENVIRONMENT!" == "VS10" (
+        if "!BUILD_ENVIRONMENT!" == "VS9" (
+            if "!ARCH!" == "amd64" (
+                set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
+            ) else (
+                set CMAKE_GENERATOR="Visual Studio 9 2008"
+            )
+        ) else if "!BUILD_ENVIRONMENT!" == "VS10" (
             if "!ARCH!" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 10 Win64"
             ) else (
