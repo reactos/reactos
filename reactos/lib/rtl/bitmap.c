@@ -467,8 +467,11 @@ RtlNumberOfSetBits(
         BitCount += BitCountTable[*Byte++];
     }
 
-    Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
-    BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    if (BitMapHeader->SizeOfBitMap & 7)
+    {
+        Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
+        BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    }
 
     return BitCount;
 }
