@@ -1136,260 +1136,285 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
     BASE_API_MESSAGE ApiMessage;
     PBASE_GET_NEXT_VDM_COMMAND GetNextVdmCommand = &ApiMessage.Data.GetNextVDMCommandRequest;
     PBASE_IS_FIRST_VDM IsFirstVdm = &ApiMessage.Data.IsFirstVDMRequest;
+    PBASE_SET_REENTER_COUNT SetReenterCount = &ApiMessage.Data.SetReenterCountRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
-    ULONG NumStrings = 1;
+    ULONG NumStrings = 0;
 
     if (CommandData != NULL)
     {
-        /* Clear the structure */
-        ZeroMemory(GetNextVdmCommand, sizeof(GetNextVdmCommand));
-
-        /* Setup the input parameters */
-        GetNextVdmCommand->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-        GetNextVdmCommand->CmdLen = CommandData->CmdLen;
-        GetNextVdmCommand->AppLen = CommandData->AppLen;
-        GetNextVdmCommand->PifLen = CommandData->PifLen;
-        GetNextVdmCommand->CurDirectoryLen = CommandData->CurDirectoryLen;
-        GetNextVdmCommand->EnvLen = CommandData->EnvLen;
-        GetNextVdmCommand->DesktopLen = CommandData->DesktopLen;
-        GetNextVdmCommand->TitleLen = CommandData->TitleLen;
-        GetNextVdmCommand->ReservedLen = CommandData->ReservedLen;
-
-        /* Count the number of strings */
-        if (CommandData->CmdLen) NumStrings++;
-        if (CommandData->AppLen) NumStrings++;
-        if (CommandData->PifLen) NumStrings++;
-        if (CommandData->CurDirectoryLen) NumStrings++;
-        if (CommandData->EnvLen) NumStrings++;
-        if (CommandData->DesktopLen) NumStrings++;
-        if (CommandData->TitleLen) NumStrings++;
-        if (CommandData->ReservedLen) NumStrings++;
-
-        /* Allocate the capture buffer */
-        CaptureBuffer = CsrAllocateCaptureBuffer(NumStrings,
-                                                 GetNextVdmCommand->CmdLen
-                                                 + GetNextVdmCommand->AppLen
-                                                 + GetNextVdmCommand->PifLen
-                                                 + GetNextVdmCommand->CurDirectoryLen
-                                                 + GetNextVdmCommand->EnvLen
-                                                 + GetNextVdmCommand->DesktopLen
-                                                 + GetNextVdmCommand->TitleLen
-                                                 + GetNextVdmCommand->ReservedLen
-                                                 + sizeof(STARTUPINFOA));
-        if (CaptureBuffer == NULL)
+        if (CommandData->VDMState & (VDM_NOT_LOADED | VDM_NOT_READY | VDM_READY))
         {
-            BaseSetLastNTError(STATUS_NO_MEMORY);
-            goto Cleanup;
-        }
+            /* Clear the structure */
+            ZeroMemory(GetNextVdmCommand, sizeof(*GetNextVdmCommand));
 
-        /* Allocate memory for the startup info */
-        CsrAllocateMessagePointer(CaptureBuffer,
-                                  sizeof(STARTUPINFOA),
-                                  (PVOID*)&GetNextVdmCommand->StartupInfo);
+            /* Setup the input parameters */
+            GetNextVdmCommand->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+            GetNextVdmCommand->CmdLen = CommandData->CmdLen;
+            GetNextVdmCommand->AppLen = CommandData->AppLen;
+            GetNextVdmCommand->PifLen = CommandData->PifLen;
+            GetNextVdmCommand->CurDirectoryLen = CommandData->CurDirectoryLen;
+            GetNextVdmCommand->EnvLen = CommandData->EnvLen;
+            GetNextVdmCommand->DesktopLen = CommandData->DesktopLen;
+            GetNextVdmCommand->TitleLen = CommandData->TitleLen;
+            GetNextVdmCommand->ReservedLen = CommandData->ReservedLen;
+            GetNextVdmCommand->VDMState = CommandData->VDMState;
 
-        if (CommandData->CmdLen)
-        {
-            /* Allocate memory for the command line */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->CmdLen,
-                                      (PVOID*)&GetNextVdmCommand->CmdLine);
-        }
+            /* Count the number of strings */
+            if (CommandData->CmdLen) NumStrings++;
+            if (CommandData->AppLen) NumStrings++;
+            if (CommandData->PifLen) NumStrings++;
+            if (CommandData->CurDirectoryLen) NumStrings++;
+            if (CommandData->EnvLen) NumStrings++;
+            if (CommandData->DesktopLen) NumStrings++;
+            if (CommandData->TitleLen) NumStrings++;
+            if (CommandData->ReservedLen) NumStrings++;
 
-        if (CommandData->AppLen)
-        {
-            /* Allocate memory for the application name */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->AppLen,
-                                      (PVOID*)&GetNextVdmCommand->AppName);
-        }
-
-        if (CommandData->PifLen)
-        {
-            /* Allocate memory for the PIF file name */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->PifLen,
-                                      (PVOID*)&GetNextVdmCommand->PifFile);
-        }
-
-        if (CommandData->CurDirectoryLen)
-        {
-            /* Allocate memory for the current directory */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->CurDirectoryLen,
-                                      (PVOID*)&GetNextVdmCommand->CurDirectory);
-        }
-
-        if (CommandData->EnvLen)
-        {
-            /* Allocate memory for the environment */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->EnvLen,
-                                      (PVOID*)&GetNextVdmCommand->Env);
-        }
-
-        if (CommandData->DesktopLen)
-        {
-            /* Allocate memory for the desktop name */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->DesktopLen,
-                                      (PVOID*)&GetNextVdmCommand->Desktop);
-        }
-
-        if (CommandData->TitleLen)
-        {
-            /* Allocate memory for the title */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->TitleLen,
-                                      (PVOID*)&GetNextVdmCommand->Title);
-        }
-
-        if (CommandData->ReservedLen)
-        {
-            /* Allocate memory for the reserved parameter */
-            CsrAllocateMessagePointer(CaptureBuffer,
-                                      CommandData->ReservedLen,
-                                      (PVOID*)&GetNextVdmCommand->Reserved);
-        }
-
-        do
-        {
-            /* Call CSRSS */
-            Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                         CaptureBuffer,
-                                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetNextVDMCommand),
-                                         sizeof(BASE_GET_NEXT_VDM_COMMAND));
-
-            if (!NT_SUCCESS(Status))
+            /* Allocate the capture buffer */
+            CaptureBuffer = CsrAllocateCaptureBuffer(NumStrings + 1,
+                                                     GetNextVdmCommand->CmdLen
+                                                     + GetNextVdmCommand->AppLen
+                                                     + GetNextVdmCommand->PifLen
+                                                     + GetNextVdmCommand->CurDirectoryLen
+                                                     + GetNextVdmCommand->EnvLen
+                                                     + GetNextVdmCommand->DesktopLen
+                                                     + GetNextVdmCommand->TitleLen
+                                                     + GetNextVdmCommand->ReservedLen
+                                                     + sizeof(STARTUPINFOA));
+            if (CaptureBuffer == NULL)
             {
-                BaseSetLastNTError(Status);
+                BaseSetLastNTError(STATUS_NO_MEMORY);
                 goto Cleanup;
             }
 
-            /* Did we receive an event handle? */
-            if (GetNextVdmCommand->WaitObjectForVDM != NULL)
+            /* Allocate memory for the startup info */
+            CsrAllocateMessagePointer(CaptureBuffer,
+                                      sizeof(STARTUPINFOA),
+                                      (PVOID*)&GetNextVdmCommand->StartupInfo);
+
+            if (CommandData->CmdLen)
             {
-                /* Wait for the event to become signaled and try again */
-                Status = NtWaitForSingleObject(GetNextVdmCommand->WaitObjectForVDM,
-                                               FALSE,
-                                               NULL);
+                /* Allocate memory for the command line */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->CmdLen,
+                                          (PVOID*)&GetNextVdmCommand->CmdLine);
+            }
+
+            if (CommandData->AppLen)
+            {
+                /* Allocate memory for the application name */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->AppLen,
+                                          (PVOID*)&GetNextVdmCommand->AppName);
+            }
+
+            if (CommandData->PifLen)
+            {
+                /* Allocate memory for the PIF file name */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->PifLen,
+                                          (PVOID*)&GetNextVdmCommand->PifFile);
+            }
+
+            if (CommandData->CurDirectoryLen)
+            {
+                /* Allocate memory for the current directory */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->CurDirectoryLen,
+                                          (PVOID*)&GetNextVdmCommand->CurDirectory);
+            }
+
+            if (CommandData->EnvLen)
+            {
+                /* Allocate memory for the environment */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->EnvLen,
+                                          (PVOID*)&GetNextVdmCommand->Env);
+            }
+
+            if (CommandData->DesktopLen)
+            {
+                /* Allocate memory for the desktop name */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->DesktopLen,
+                                          (PVOID*)&GetNextVdmCommand->Desktop);
+            }
+
+            if (CommandData->TitleLen)
+            {
+                /* Allocate memory for the title */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->TitleLen,
+                                          (PVOID*)&GetNextVdmCommand->Title);
+            }
+
+            if (CommandData->ReservedLen)
+            {
+                /* Allocate memory for the reserved parameter */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          CommandData->ReservedLen,
+                                          (PVOID*)&GetNextVdmCommand->Reserved);
+            }
+
+            do
+            {
+                /* Call CSRSS */
+                Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                             CaptureBuffer,
+                                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetNextVDMCommand),
+                                             sizeof(BASE_GET_NEXT_VDM_COMMAND));
+
                 if (!NT_SUCCESS(Status))
                 {
                     BaseSetLastNTError(Status);
                     goto Cleanup;
                 }
+
+                /* Did we receive an event handle? */
+                if (GetNextVdmCommand->WaitObjectForVDM != NULL)
+                {
+                    /* Wait for the event to become signaled and try again */
+                    Status = NtWaitForSingleObject(GetNextVdmCommand->WaitObjectForVDM,
+                                                   FALSE,
+                                                   NULL);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        BaseSetLastNTError(Status);
+                        goto Cleanup;
+                    }
+                }
             }
+            while (GetNextVdmCommand->WaitObjectForVDM != NULL);
+
+            /* Write back the standard handles */
+            CommandData->StdIn = GetNextVdmCommand->StdIn;
+            CommandData->StdOut = GetNextVdmCommand->StdOut;
+            CommandData->StdErr = GetNextVdmCommand->StdErr;
+
+            /* Write back the startup info */
+            RtlMoveMemory(&CommandData->StartupInfo,
+                          GetNextVdmCommand->StartupInfo,
+                          sizeof(STARTUPINFOA));
+
+            if (CommandData->CmdLen)
+            {
+                /* Write back the command line */
+                RtlMoveMemory(CommandData->CmdLine,
+                              GetNextVdmCommand->CmdLine,
+                              GetNextVdmCommand->CmdLen);
+
+                /* Set the actual length */
+                CommandData->CmdLen = GetNextVdmCommand->CmdLen;
+            }
+
+            if (CommandData->AppLen)
+            {
+                /* Write back the application name */
+                RtlMoveMemory(CommandData->AppName,
+                              GetNextVdmCommand->AppName,
+                              GetNextVdmCommand->AppLen);
+
+                /* Set the actual length */
+                CommandData->AppLen = GetNextVdmCommand->AppLen;
+            }
+
+            if (CommandData->PifLen)
+            {
+                /* Write back the PIF file name */
+                RtlMoveMemory(CommandData->PifFile,
+                              GetNextVdmCommand->PifFile,
+                              GetNextVdmCommand->PifLen);
+
+                /* Set the actual length */
+                CommandData->PifLen = GetNextVdmCommand->PifLen;
+            }
+
+            if (CommandData->CurDirectoryLen)
+            {
+                /* Write back the current directory */
+                RtlMoveMemory(CommandData->CurDirectory,
+                              GetNextVdmCommand->CurDirectory,
+                              GetNextVdmCommand->CurDirectoryLen);
+
+                /* Set the actual length */
+                CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
+            }
+
+            if (CommandData->EnvLen)
+            {
+                /* Write back the environment */
+                RtlMoveMemory(CommandData->Env,
+                              GetNextVdmCommand->Env,
+                              GetNextVdmCommand->EnvLen);
+
+                /* Set the actual length */
+                CommandData->EnvLen = GetNextVdmCommand->EnvLen;
+            }
+
+            if (CommandData->DesktopLen)
+            {
+                /* Write back the desktop name */
+                RtlMoveMemory(CommandData->Desktop,
+                              GetNextVdmCommand->Desktop,
+                              GetNextVdmCommand->DesktopLen);
+
+                /* Set the actual length */
+                CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
+            }
+
+            if (CommandData->TitleLen)
+            {
+                /* Write back the title */
+                RtlMoveMemory(CommandData->Title,
+                              GetNextVdmCommand->Title,
+                              GetNextVdmCommand->TitleLen);
+
+                /* Set the actual length */
+                CommandData->TitleLen = GetNextVdmCommand->TitleLen;
+            }
+
+            if (CommandData->ReservedLen)
+            {
+                /* Write back the reserved parameter */
+                RtlMoveMemory(CommandData->Reserved,
+                              GetNextVdmCommand->Reserved,
+                              GetNextVdmCommand->ReservedLen);
+
+                /* Set the actual length */
+                CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
+            }
+
+            /* Write the remaining output parameters */
+            CommandData->TaskId = GetNextVdmCommand->iTask;
+            CommandData->CreationFlags = GetNextVdmCommand->dwCreationFlags;
+            CommandData->CodePage = GetNextVdmCommand->CodePage;
+            CommandData->ExitCode = GetNextVdmCommand->ExitCode;
+            CommandData->CurrentDrive = GetNextVdmCommand->CurrentDrive;
+            CommandData->VDMState = GetNextVdmCommand->VDMState;
+            CommandData->ComingFromBat = GetNextVdmCommand->fComingFromBat;
+
+            /* It was successful */
+            Result = TRUE;
         }
-        while (GetNextVdmCommand->WaitObjectForVDM != NULL);
-
-        /* Write back the standard handles */
-        CommandData->StdIn = GetNextVdmCommand->StdIn;
-        CommandData->StdOut = GetNextVdmCommand->StdOut;
-        CommandData->StdErr = GetNextVdmCommand->StdErr;
-
-        /* Write back the startup info */
-        RtlMoveMemory(&CommandData->StartupInfo,
-                      GetNextVdmCommand->StartupInfo,
-                      sizeof(STARTUPINFOA));
-
-        if (CommandData->CmdLen)
+        else if ((CommandData->VDMState == VDM_INC_REENTER_COUNT)
+                 || (CommandData->VDMState == VDM_DEC_REENTER_COUNT))
         {
-            /* Write back the command line */
-            RtlMoveMemory(CommandData->CmdLine,
-                          GetNextVdmCommand->CmdLine,
-                          GetNextVdmCommand->CmdLen);
+            /* Setup the input parameters */
+            SetReenterCount->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+            SetReenterCount->fIncDec = CommandData->VDMState;
 
-            /* Set the actual length */
-            CommandData->CmdLen = GetNextVdmCommand->CmdLen;
+            /* Call CSRSS */
+            Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                         NULL,
+                                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
+                                         sizeof(BASE_SET_REENTER_COUNT));
+            BaseSetLastNTError(Status);
+            Result = NT_SUCCESS(Status);
         }
-
-        if (CommandData->AppLen)
+        else
         {
-            /* Write back the application name */
-            RtlMoveMemory(CommandData->AppName,
-                          GetNextVdmCommand->AppName,
-                          GetNextVdmCommand->AppLen);
-
-            /* Set the actual length */
-            CommandData->AppLen = GetNextVdmCommand->AppLen;
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+            Result = FALSE;
         }
-
-        if (CommandData->PifLen)
-        {
-            /* Write back the PIF file name */
-            RtlMoveMemory(CommandData->PifFile,
-                          GetNextVdmCommand->PifFile,
-                          GetNextVdmCommand->PifLen);
-
-            /* Set the actual length */
-            CommandData->PifLen = GetNextVdmCommand->PifLen;
-        }
-
-        if (CommandData->CurDirectoryLen)
-        {
-            /* Write back the current directory */
-            RtlMoveMemory(CommandData->CurDirectory,
-                          GetNextVdmCommand->CurDirectory,
-                          GetNextVdmCommand->CurDirectoryLen);
-
-            /* Set the actual length */
-            CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
-        }
-
-        if (CommandData->EnvLen)
-        {
-            /* Write back the environment */
-            RtlMoveMemory(CommandData->Env,
-                          GetNextVdmCommand->Env,
-                          GetNextVdmCommand->EnvLen);
-
-            /* Set the actual length */
-            CommandData->EnvLen = GetNextVdmCommand->EnvLen;
-        }
-
-        if (CommandData->DesktopLen)
-        {
-            /* Write back the desktop name */
-            RtlMoveMemory(CommandData->Desktop,
-                          GetNextVdmCommand->Desktop,
-                          GetNextVdmCommand->DesktopLen);
-
-            /* Set the actual length */
-            CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
-        }
-
-        if (CommandData->TitleLen)
-        {
-            /* Write back the title */
-            RtlMoveMemory(CommandData->Title,
-                          GetNextVdmCommand->Title,
-                          GetNextVdmCommand->TitleLen);
-
-            /* Set the actual length */
-            CommandData->TitleLen = GetNextVdmCommand->TitleLen;
-        }
-
-        if (CommandData->ReservedLen)
-        {
-            /* Write back the reserved parameter */
-            RtlMoveMemory(CommandData->Reserved,
-                          GetNextVdmCommand->Reserved,
-                          GetNextVdmCommand->ReservedLen);
-
-            /* Set the actual length */
-            CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
-        }
-
-        /* Write the remaining output parameters */
-        CommandData->TaskId = GetNextVdmCommand->iTask;
-        CommandData->CreationFlags = GetNextVdmCommand->dwCreationFlags;
-        CommandData->CodePage = GetNextVdmCommand->CodePage;
-        CommandData->ExitCode = GetNextVdmCommand->ExitCode;
-        CommandData->CurrentDrive = GetNextVdmCommand->CurrentDrive;
-        CommandData->VDMState = GetNextVdmCommand->VDMState;
-        CommandData->ComingFromBat = GetNextVdmCommand->fComingFromBat;
-
-        /* It was successful */
-        Result = TRUE;
     }
     else
     {
