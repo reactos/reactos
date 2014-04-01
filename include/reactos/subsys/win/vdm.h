@@ -47,6 +47,12 @@ typedef enum _VDM_ENTRY_CODE
 #define VDM_NOT_READY       0x02
 #define VDM_READY           0x04
 
+//
+// VDM Magic Values
+//
+#define VDM_INC_REENTER_COUNT   0x10
+#define VDM_DEC_REENTER_COUNT   0x20
+
 typedef struct
 {
     ULONG TaskId;
