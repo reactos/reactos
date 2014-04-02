@@ -366,6 +366,83 @@ Cleanup:
     return Success;
 }
 
+VOID NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
+                                  PBASE_GET_NEXT_VDM_COMMAND Message)
+{
+    /* Copy the data */
+    Message->iTask = CommandInfo->TaskId;
+    Message->StdIn = CommandInfo->StdIn;
+    Message->StdOut = CommandInfo->StdOut;
+    Message->StdErr = CommandInfo->StdErr;
+    Message->CodePage = CommandInfo->CodePage;
+    Message->dwCreationFlags = CommandInfo->CreationFlags;
+    Message->ExitCode = CommandInfo->ExitCode;
+    Message->CurrentDrive = CommandInfo->CurrentDrive;
+    Message->VDMState = CommandInfo->VDMState;
+    Message->fComingFromBat = CommandInfo->ComingFromBat;
+
+    if (CommandInfo->CmdLen)
+    {
+        /* Copy the command line */
+        RtlMoveMemory(Message->CmdLine, CommandInfo->CmdLine, CommandInfo->CmdLen);
+        Message->CmdLen = CommandInfo->CmdLen;
+    }
+
+    if (CommandInfo->AppLen)
+    {
+        /* Copy the application name */
+        RtlMoveMemory(Message->AppName, CommandInfo->AppName, CommandInfo->AppLen);
+        Message->AppLen = CommandInfo->AppLen;
+    }
+
+    if (CommandInfo->PifLen)
+    {
+        /* Copy the PIF file name */
+        RtlMoveMemory(Message->PifFile, CommandInfo->PifFile, CommandInfo->PifLen);
+        Message->PifLen = CommandInfo->PifLen;
+    }
+
+    if (CommandInfo->CurDirectoryLen)
+    {
+        /* Copy the current directory */
+        RtlMoveMemory(Message->CurDirectory, CommandInfo->CurDirectory, CommandInfo->CurDirectoryLen);
+        Message->CurDirectoryLen = CommandInfo->CurDirectoryLen;
+    }
+
+    if (CommandInfo->EnvLen)
+    {
+        /* Copy the environment */
+        RtlMoveMemory(Message->Env, CommandInfo->Env, CommandInfo->EnvLen);
+        Message->EnvLen = CommandInfo->EnvLen;
+    }
+
+    /* Copy the startup info */
+    RtlMoveMemory(Message->StartupInfo,
+                  &CommandInfo->StartupInfo,
+                  sizeof(STARTUPINFOA));
+
+    if (CommandInfo->DesktopLen)
+    {
+        /* Copy the desktop name */
+        RtlMoveMemory(Message->Desktop, CommandInfo->Desktop, CommandInfo->DesktopLen);
+        Message->DesktopLen = CommandInfo->DesktopLen;
+    }
+
+    if (CommandInfo->TitleLen)
+    {
+        /* Copy the title */
+        RtlMoveMemory(Message->Title, CommandInfo->Title, CommandInfo->TitleLen);
+        Message->TitleLen = CommandInfo->TitleLen;
+    }
+
+    if (CommandInfo->ReservedLen)
+    {
+        /* Copy the reserved parameter */
+        RtlMoveMemory(Message->Reserved, CommandInfo->Reserved, CommandInfo->ReservedLen);
+        Message->ReservedLen = CommandInfo->ReservedLen;
+    }
+}
+
 VOID NTAPI BaseInitializeVDM(VOID)
 {
     /* Initialize the list head */
