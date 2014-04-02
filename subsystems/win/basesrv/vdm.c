@@ -382,6 +382,7 @@ CSR_API(BaseSrvCheckVDM)
 {
     NTSTATUS Status;
     PBASE_CHECK_VDM CheckVdmRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CheckVDMRequest;
+    PCSR_PROCESS ClientProcess;
     PRTL_CRITICAL_SECTION CriticalSection = NULL;
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
     PVDM_DOS_RECORD DosRecord = NULL;
@@ -423,6 +424,11 @@ CSR_API(BaseSrvCheckVDM)
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Lock the process */
+    Status = CsrLockProcessByClientId(ApiMessage->Header.ClientId.UniqueProcess,
+                                      &ClientProcess);
+    if (!NT_SUCCESS(Status)) return Status;
+
     CriticalSection = (CheckVdmRequest->BinaryType != BINARY_TYPE_SEPARATE_WOW)
                       ? &DosCriticalSection
                       : &WowCriticalSection;
@@ -451,6 +457,9 @@ CSR_API(BaseSrvCheckVDM)
 
             /* Initialize the console record */
             ConsoleRecord->ConsoleHandle = CheckVdmRequest->ConsoleHandle;
+            ConsoleRecord->ProcessHandle = ClientProcess->ProcessHandle;
+            ConsoleRecord->ServerEvent = ConsoleRecord->ClientEvent = NULL;
+            ConsoleRecord->ReenterCount = 0;
             ConsoleRecord->CurrentDirs = NULL;
             ConsoleRecord->CurDirsLength = 0;
             ConsoleRecord->SessionId = GetNextDosSesId();
@@ -543,6 +552,9 @@ Cleanup:
 
     /* Leave the critical section */
     RtlLeaveCriticalSection(CriticalSection);
+
+    /* Unlock the process */
+    CsrUnlockProcess(ClientProcess);
 
     return Status;
 }
@@ -806,8 +818,30 @@ Cleanup:
 
 CSR_API(BaseSrvSetReenterCount)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PBASE_SET_REENTER_COUNT SetReenterCountRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.SetReenterCountRequest;
+    PVDM_CONSOLE_RECORD ConsoleRecord;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(&DosCriticalSection);
+
+    /* Get the console record */
+    Status = BaseSrvGetConsoleRecord(SetReenterCountRequest->ConsoleHandle, &ConsoleRecord);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    if (SetReenterCountRequest->fIncDec == VDM_INC_REENTER_COUNT) ConsoleRecord->ReenterCount++;
+    else if (SetReenterCountRequest->fIncDec == VDM_DEC_REENTER_COUNT)
+    {
+        ConsoleRecord->ReenterCount--;
+        if (ConsoleRecord->ServerEvent != NULL) NtSetEvent(ConsoleRecord->ServerEvent, NULL);
+    }
+    else Status = STATUS_INVALID_PARAMETER;
+
+Cleanup:
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(&DosCriticalSection);
+
+    return Status;
 }
 
 CSR_API(BaseSrvSetVDMCurDirs)

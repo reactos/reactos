@@ -21,6 +21,9 @@ typedef struct _VDM_CONSOLE_RECORD
     LIST_ENTRY Entry;
     HANDLE ConsoleHandle;
     HANDLE ProcessHandle;
+    HANDLE ServerEvent;
+    HANDLE ClientEvent;
+    ULONG ReenterCount;
     PCHAR CurrentDirs;
     ULONG CurDirsLength;
     ULONG SessionId;
