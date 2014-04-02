@@ -37,20 +37,12 @@ HRESULT WINAPI SHGetImageList(
 // FIXME: Enable if/when wine comctl supports this flag properly
 #define USE_TBSTYLE_EX_VERTICAL 0
 
+// User-defined timer ID used while hot-tracking around the menu
 #define TIMERID_HOTTRACK 1
-#define SUBCLASS_ID_MENUBAND 1
-
-HRESULT CMenuToolbarBase::DisableMouseTrack(BOOL bDisable)
-{
-    m_disableMouseTrack = bDisable;
-    return S_OK;
-}
 
 HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     NMHDR * hdr;
-    NMPGCALCSIZE* csize;
-    SIZE tbs;
 
     *theResult = 0;
     switch (uMsg)
@@ -62,26 +54,11 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         hdr = reinterpret_cast<LPNMHDR>(lParam);
         switch (hdr->code)
         {
-        case TTN_GETDISPINFOA:
-        case TTN_GETDISPINFOW:
-            return S_OK;
-
         case TBN_DELETINGBUTTON:
             return OnDeletingButton(reinterpret_cast<LPNMTOOLBAR>(hdr));
 
         case PGN_CALCSIZE:
-            csize = reinterpret_cast<LPNMPGCALCSIZE>(hdr);
-
-            GetIdealSize(tbs);
-            if (csize->dwFlag == PGF_CALCHEIGHT)
-            {
-                csize->iHeight = tbs.cy;
-            }
-            else if (csize->dwFlag == PGF_CALCWIDTH)
-            {
-                csize->iHeight = tbs.cx;
-            }
-            return S_OK;
+            return OnPagerCalcSize(reinterpret_cast<LPNMPGCALCSIZE>(hdr));
 
         case TBN_DROPDOWN:
             return OnCommand(reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem, 0, theResult);
@@ -95,12 +72,20 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case NM_CUSTOMDRAW:
             return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
 
+        case TBN_GETINFOTIP:
+            return OnGetInfoTip(reinterpret_cast<LPNMTBGETINFOTIP>(hdr));
+
+            // Silence unhandled items so that they don't print as unknown
         case RBN_CHILDSIZE:
+            return S_OK;
+
+        case TTN_GETDISPINFO:
             return S_OK;
 
         case NM_RELEASEDCAPTURE:
             break;
 
+        case NM_CLICK:
         case NM_RDOWN:
         case NM_LDOWN:
             break;
@@ -115,10 +100,6 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case NM_TOOLTIPSCREATED:
             break;
 
-        case TBN_GETINFOTIP:
-            // TODO: Get tooltip for item
-            break;
-
         default:
             DbgPrint("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
             return S_OK;
@@ -127,288 +108,6 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     }
 
     return S_FALSE;
-}
-
-HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult)
-{
-    RECT rc;
-    HDC hdc;
-    HBRUSH bgBrush;
-    HBRUSH hotBrush;
-    COLORREF clrText;
-    COLORREF clrTextHighlight;
-    bool isHot, isPopup;
-    TBBUTTONINFO btni;
-
-    switch (cdraw->nmcd.dwDrawStage)
-    {
-    case CDDS_PREPAINT:
-        if (m_toolbarFlags & SMINIT_VERTICAL)
-            *theResult = CDRF_NOTIFYITEMDRAW;
-        return S_OK;
-
-    case CDDS_ITEMPREPAINT:
-
-        clrText = GetSysColor(COLOR_MENUTEXT);
-        clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
-
-        bgBrush = GetSysColorBrush(COLOR_MENU);
-        hotBrush = GetSysColorBrush(m_useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
-
-        rc = cdraw->nmcd.rc;
-        hdc = cdraw->nmcd.hdc;
-
-        isHot = m_hotBar == this && m_hotItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
-        isPopup = m_popupBar == this && m_popupItem == static_cast<INT>(cdraw->nmcd.dwItemSpec);
-
-        if (isHot || (m_hotItem < 0 && isPopup))
-        {
-            cdraw->nmcd.uItemState |= CDIS_HOT;
-        }
-        else
-        {
-            cdraw->nmcd.uItemState &= ~CDIS_HOT;
-        }
-
-        if (cdraw->nmcd.uItemState&CDIS_HOT)
-        {
-            FillRect(hdc, &rc, hotBrush);
-            SetTextColor(hdc, clrTextHighlight);
-            cdraw->clrText = clrTextHighlight;
-        }
-        else
-        {
-            FillRect(hdc, &rc, bgBrush);
-            SetTextColor(hdc, clrText);
-            cdraw->clrText = clrText;
-        }
-
-        cdraw->iListGap += 4;
-
-        *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, for debugging only
-        return S_OK;
-
-    case CDDS_ITEMPOSTPAINT:
-        btni.cbSize = sizeof(btni);
-        btni.dwMask = TBIF_STYLE;
-        SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
-        if (btni.fsStyle & BTNS_DROPDOWN)
-        {
-            SelectObject(cdraw->nmcd.hdc, m_marlett);
-            WCHAR text [] = L"8";
-            SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
-            RECT rc = cdraw->nmcd.rc;
-            rc.right += 1;
-            DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
-        }
-        *theResult = TRUE;
-        return S_OK;
-    }
-    return S_OK;
-}
-
-CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
-    m_hwnd(NULL),
-    m_useFlatMenus(FALSE),
-    m_SubclassOld(NULL),
-    m_disableMouseTrack(FALSE),
-    m_menuBand(menuBand),
-    m_hwndToolbar(NULL),
-    m_dwMenuFlags(0),
-    m_hasIdealSize(FALSE),
-    m_usePager(usePager),
-    m_hotItem(-1),
-    m_popupItem(-1),
-    m_isTracking(FALSE)
-{
-    m_marlett = CreateFont(
-        0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY, FF_DONTCARE, L"Marlett");
-}
-
-CMenuToolbarBase::~CMenuToolbarBase()
-{
-    DeleteObject(m_marlett);
-}
-
-HRESULT CMenuToolbarBase::IsWindowOwner(HWND hwnd)
-{
-    return (m_hwnd && m_hwnd == hwnd) ||
-        (m_hwndToolbar && m_hwndToolbar == hwnd) ? S_OK : S_FALSE;
-}
-
-void CMenuToolbarBase::InvalidateDraw()
-{
-    InvalidateRect(m_hwnd, NULL, FALSE);
-}
-
-HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
-{
-    ::ShowWindow(m_hwnd, fShow ? SW_SHOW : SW_HIDE);
-
-    UpdateImageLists();
-
-    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
-
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::UpdateImageLists()
-{
-    if ((m_toolbarFlags & (SMINIT_TOPLEVEL | SMINIT_VERTICAL)) == SMINIT_TOPLEVEL) // not vertical.
-    {
-        /* Hide the placeholders for the button images */
-        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, 0);
-        return S_OK;
-    }
-
-    int shiml;
-    if (m_menuBand->UseBigIcons())
-    {
-        shiml = SHIL_LARGE;
-        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 0));
-    }
-    else
-    {
-        shiml = SHIL_SMALL;
-        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 4));
-    }
-
-    IImageList * piml;
-    HRESULT hr = SHGetImageList(shiml, IID_PPV_ARG(IImageList, &piml));
-    if (SUCCEEDED(hr))
-    {
-        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
-    }
-    else
-    {
-        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, 0);
-    }
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::Close()
-{
-    DestroyWindow(m_hwndToolbar);
-    if (m_hwndToolbar != m_hwnd)
-        DestroyWindow(m_hwnd);
-    m_hwndToolbar = NULL;
-    m_hwnd = NULL;
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
-{
-    LONG tbStyles = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_CUSTOMERASE |
-        CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
-    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER;
-
-    if (dwFlags & SMINIT_VERTICAL)
-    {
-        tbStyles |= CCS_VERT;
-
-#if USE_TBSTYLE_EX_VERTICAL
-        // FIXME: Use when it works in ros (?)
-        tbExStyles |= TBSTYLE_EX_VERTICAL | WS_EX_TOOLWINDOW;
-#endif
-    }
-
-    m_toolbarFlags = dwFlags;
-
-    RECT rc;
-
-    if (!::GetClientRect(hwndParent, &rc) || (rc.left == rc.right) || (rc.top == rc.bottom))
-    {
-        rc.left = 0;
-        rc.top = 0;
-        rc.right = 1;
-        rc.bottom = 1;
-    }
-
-    HWND hwndToolbar = CreateWindowEx(
-        tbExStyles, TOOLBARCLASSNAMEW, NULL,
-        tbStyles, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
-        hwndParent, NULL, _AtlBaseModule.GetModuleInstance(), 0);
-
-    if (hwndToolbar == NULL)
-        return E_FAIL;
-
-    if (m_usePager)
-    {
-        LONG pgStyles = PGS_VERT | WS_CHILD | WS_VISIBLE;
-        LONG pgExStyles = 0;
-
-        HWND hwndPager = CreateWindowEx(
-            pgExStyles, WC_PAGESCROLLER, NULL,
-            pgStyles, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
-            hwndParent, NULL, _AtlBaseModule.GetModuleInstance(), 0);
-
-        ::SetParent(hwndToolbar, hwndPager);
-        ::SetParent(hwndPager, hwndParent);
-
-        SendMessage(hwndPager, PGM_SETCHILD, 0, reinterpret_cast<LPARAM>(hwndToolbar));
-        m_hwndToolbar = hwndToolbar;
-        m_hwnd = hwndPager;
-    }
-    else
-    {
-        ::SetParent(hwndToolbar, hwndParent);
-        m_hwndToolbar = hwndToolbar;
-        m_hwnd = hwndToolbar;
-    }
-
-    /* Identify the version of the used Common Controls DLL by sending the size of the TBBUTTON structure */
-    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-
-    SetWindowLongPtr(hwndToolbar, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-    m_SubclassOld = (WNDPROC) SetWindowLongPtr(hwndToolbar, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CMenuToolbarBase::s_SubclassProc));
-
-    UpdateImageLists();
-
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::GetIdealSize(SIZE& size)
-{
-    size.cx = size.cy = 0;
-
-    if (m_hwndToolbar && !m_hasIdealSize)
-    {
-        SendMessageW(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
-        SendMessageW(m_hwndToolbar, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&m_idealSize));
-        m_hasIdealSize = TRUE;
-    }
-
-    size = m_idealSize;
-
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::SetPosSize(int x, int y, int cx, int cy)
-{
-    if (m_hwnd != m_hwndToolbar)
-    {
-        SetWindowPos(m_hwndToolbar, NULL, x, y, cx, m_idealSize.cy, 0);
-    }
-    SetWindowPos(m_hwnd, NULL, x, y, cx, cy, 0);
-    if (m_toolbarFlags & SMINIT_VERTICAL)
-    {
-        DWORD btnSize = SendMessage(m_hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
-        SendMessage(m_hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(cx, HIWORD(btnSize)));
-    }
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::GetWindow(HWND *phwnd)
-{
-    if (!phwnd)
-        return E_FAIL;
-
-    *phwnd = m_hwnd;
-
-    return S_OK;
 }
 
 LRESULT CALLBACK CMenuToolbarBase::s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -437,106 +136,531 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         OnWinEvent(hWnd, uMsg, wParam, lParam, &lr);
         break;
     case WM_TIMER:
-        if (wParam == TIMERID_HOTTRACK)
-        {
-            KillTimer(hWnd, TIMERID_HOTTRACK);
-
-            DbgPrint("Closing previous submenu...\n");
-
-            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL, NULL, -1);
-
-            DbgPrint("Opening new submenu...\n");
-
-            PopupItem(m_hotItem);
-        }
+        OnPopupTimer(wParam);
     }
 
     return m_SubclassOld(hWnd, uMsg, wParam, lParam);
 }
 
-HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult)
+HRESULT CMenuToolbarBase::DisableMouseTrack(BOOL bDisable)
 {
-    if (m_disableMouseTrack && hot->dwFlags & HICF_MOUSE)
+    if (m_disableMouseTrack != bDisable)
     {
-        *theResult = 1;
-        return S_OK;
+        m_disableMouseTrack = bDisable;
+        DbgPrint("DisableMouseTrack %d\n", bDisable);
     }
+    return S_OK;
+}
 
-    if (hot->dwFlags & HICF_LEAVING)
+HRESULT CMenuToolbarBase::OnPagerCalcSize(LPNMPGCALCSIZE csize)
+{
+    SIZE tbs;
+    GetIdealSize(tbs);
+    if (csize->dwFlag == PGF_CALCHEIGHT)
     {
-        KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+        csize->iHeight = tbs.cy;
+    }
+    else if (csize->dwFlag == PGF_CALCWIDTH)
+    {
+        csize->iWidth = tbs.cx;
+    }
+    return S_OK;
+}
 
-        if (m_menuBand->_OnHotItemChanged(NULL, -1) == S_FALSE)
+HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult)
+{
+    RECT     rc;
+    HDC      hdc;
+    COLORREF clrText;
+    HBRUSH   bgBrush;
+    bool     isHot, isPopup;
+    TBBUTTONINFO btni;
+
+    switch (cdraw->nmcd.dwDrawStage)
+    {
+    case CDDS_PREPAINT:
+        *theResult = CDRF_NOTIFYITEMDRAW;
+        return S_OK;
+
+    case CDDS_ITEMPREPAINT:
+
+        rc = cdraw->nmcd.rc;
+        hdc = cdraw->nmcd.hdc;
+
+        // The item with an active submenu gets the CHECKED flag.
+        isHot = m_hotBar == this && cdraw->nmcd.dwItemSpec == m_hotItem;
+        isPopup = m_popupBar == this && cdraw->nmcd.dwItemSpec == m_popupItem;
+
+        if (m_initFlags & SMINIT_VERTICAL)
         {
-            *theResult = 1;
+            // Remove HOT and CHECKED flags (will restore HOT if necessary)
+            cdraw->nmcd.uItemState &= ~(CDIS_HOT|CDIS_CHECKED);
+
+            // Decide on the colors
+            if (isHot || (m_hotItem < 0 && isPopup))
+            {
+                cdraw->nmcd.uItemState |= CDIS_HOT;
+
+                clrText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+                bgBrush = GetSysColorBrush(m_useFlatMenus ? COLOR_MENUHILIGHT : COLOR_HIGHLIGHT);
+            }
+            else
+            {
+                clrText = GetSysColor(COLOR_MENUTEXT);
+                bgBrush = GetSysColorBrush(COLOR_MENU);
+            }
+
+            // Paint the background color with the selected color
+            FillRect(hdc, &rc, bgBrush);
+
+            // Set the text color in advance, this color will be assigned when the ITEMPOSTPAINT triggers
+            SetTextColor(hdc, clrText);
+
+            // Set the text color, will be used by the internal drawing code
+            cdraw->clrText = clrText;
+            cdraw->iListGap += 4;
+
+            // Tell the default drawing code we don't want any fanciness, not even a background.
+            *theResult = CDRF_NOTIFYPOSTPAINT | TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | 0x00800000; // FIXME: the last bit is Vista+, useful for debugging only
         }
         else
         {
-            m_menuBand->_OnHotItemChanged(NULL, -1);
-            m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+            // Remove HOT and CHECKED flags (will restore HOT if necessary)
+            cdraw->nmcd.uItemState &= ~CDIS_HOT;
+
+            // Decide on the colors
+            if (isHot || (m_hotItem < 0 && isPopup))
+            {
+                cdraw->nmcd.uItemState |= CDIS_HOT;
+            }
+
+            *theResult = 0;
         }
 
+        return S_OK;
+
+    case CDDS_ITEMPOSTPAINT:
+
+        // Fetch the button style
+        btni.cbSize = sizeof(btni);
+        btni.dwMask = TBIF_STYLE;
+        SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, cdraw->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btni));
+
+        // Check if we need to draw a submenu arrow
+        if (btni.fsStyle & BTNS_DROPDOWN)
+        {
+            // TODO: Support RTL text modes by drawing a leftwards arrow aligned to the left of the control
+
+            // "8" is the rightwards dropdown arrow in the Marlett font
+            WCHAR text[] = L"8";
+            
+            // Configure the font to draw with Marlett, keeping the current background color as-is
+            SelectObject(cdraw->nmcd.hdc, m_marlett);
+            SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
+
+            // Tweak the alignment by 1 pixel so the menu draws like the Windows start menu.
+            RECT rc = cdraw->nmcd.rc;
+            rc.right += 1;
+
+            // The arrow is drawn at the right of the item's rect, aligned vertically.
+            DrawTextEx(cdraw->nmcd.hdc, text, 1, &rc, DT_NOCLIP | DT_VCENTER | DT_RIGHT | DT_SINGLELINE, NULL);
+        }
+        *theResult = TRUE;
+        return S_OK;
+    }
+    return S_OK;
+}
+
+CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
+    m_hwnd(NULL),
+    m_useFlatMenus(FALSE),
+    m_SubclassOld(NULL),
+    m_disableMouseTrack(FALSE),
+    m_timerEnabled(FALSE),
+    m_menuBand(menuBand),
+    m_hwndToolbar(NULL),
+    m_dwMenuFlags(0),
+    m_hasIdealSize(FALSE),
+    m_usePager(usePager),
+    m_hotItem(-1),
+    m_popupItem(-1),
+    m_isTracking(FALSE)
+{
+    m_marlett = CreateFont(
+        0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, FF_DONTCARE, L"Marlett");
+}
+
+CMenuToolbarBase::~CMenuToolbarBase()
+{
+    if (m_hwndToolbar && m_hwndToolbar != m_hwnd)
+        DestroyWindow(m_hwndToolbar);
+
+    if (m_hwnd)
+        DestroyWindow(m_hwnd);
+
+    DeleteObject(m_marlett);
+}
+
+void CMenuToolbarBase::InvalidateDraw()
+{
+    InvalidateRect(m_hwnd, NULL, FALSE);
+}
+
+HRESULT CMenuToolbarBase::ShowWindow(BOOL fShow)
+{
+    ::ShowWindow(m_hwnd, fShow ? SW_SHOW : SW_HIDE);
+
+    // Ensure that the right image list is assigned to the toolbar
+    UpdateImageLists();
+
+    // For custom-drawing
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::UpdateImageLists()
+{
+    if ((m_initFlags & (SMINIT_TOPLEVEL | SMINIT_VERTICAL)) == SMINIT_TOPLEVEL) // not vertical.
+    {
+        // No image list, prevents the buttons from having a margin at the left side
+        SendMessageW(m_hwnd, TB_SETIMAGELIST, 0, 0);
         return S_OK;
     }
 
-    if (m_hotItem != hot->idNew)
+    // Assign the correct imagelist and padding based on the current icon size
+
+    int shiml;
+    if (m_menuBand->UseBigIcons())
     {
-        if (hot->dwFlags & HICF_MOUSE &&
-            m_toolbarFlags & SMINIT_VERTICAL)
-        {
-            DWORD elapsed = 0;
-            SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
-            SetTimer(m_hwndToolbar, TIMERID_HOTTRACK, elapsed, NULL);
-        }
+        shiml = SHIL_LARGE;
+        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 0));
+    }
+    else
+    {
+        shiml = SHIL_SMALL;
+        SendMessageW(m_hwndToolbar, TB_SETPADDING, 0, MAKELPARAM(4, 4));
+    }
 
-        m_menuBand->_OnHotItemChanged(this, hot->idNew);
-        m_menuBand->_MenuItemHotTrack(MPOS_CHILDTRACKING);
+    IImageList * piml;
+    HRESULT hr = SHGetImageList(shiml, IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, 0); 
+    }
+    else
+    {
+        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+    }
+    return S_OK;
+}
 
-        if (m_isTracking && !(m_toolbarFlags & SMINIT_VERTICAL))
-        {
-            KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+HRESULT CMenuToolbarBase::Close()
+{
+    if (m_hwndToolbar != m_hwnd)
+        DestroyWindow(m_hwndToolbar);
 
-            m_menuBand->_OnPopupSubMenu(NULL, NULL, NULL, NULL, -1);
+    DestroyWindow(m_hwnd);
 
-            PopupItem(m_hotItem);
-        }
-        return S_OK;
+    m_hwndToolbar = NULL;
+    m_hwnd = NULL;
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
+{
+    LONG tbStyles = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+        TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_CUSTOMERASE |
+        CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
+    LONG tbExStyles = TBSTYLE_EX_DOUBLEBUFFER | WS_EX_TOOLWINDOW;
+
+    if (dwFlags & SMINIT_VERTICAL)
+    {
+        // Activate vertical semantics
+        tbStyles |= CCS_VERT;
+
+#if USE_TBSTYLE_EX_VERTICAL
+        tbExStyles |= TBSTYLE_EX_VERTICAL;
+#endif
+    }
+
+    m_initFlags = dwFlags;
+
+    // Get a temporary rect to use while creating the toolbar window.
+    // Ensure that it is not a null rect.
+    RECT rc;
+    if (!::GetClientRect(hwndParent, &rc) ||
+        (rc.left == rc.right) ||
+        (rc.top == rc.bottom))
+    {
+        rc.left = 0;
+        rc.top = 0;
+        rc.right = 1;
+        rc.bottom = 1;
+    }
+
+    HWND hwndToolbar = CreateWindowEx(
+        tbExStyles, TOOLBARCLASSNAMEW, NULL,
+        tbStyles, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+        hwndParent, NULL, _AtlBaseModule.GetModuleInstance(), 0);
+
+    if (hwndToolbar == NULL)
+        return E_FAIL;
+
+    // If needed, create the pager.
+    if (m_usePager)
+    {
+        LONG pgStyles = PGS_VERT | WS_CHILD | WS_VISIBLE;
+        LONG pgExStyles = 0;
+
+        HWND hwndPager = CreateWindowEx(
+            pgExStyles, WC_PAGESCROLLER, NULL,
+            pgStyles, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+            hwndParent, NULL, _AtlBaseModule.GetModuleInstance(), 0);
+
+        ::SetParent(hwndToolbar, hwndPager);
+        ::SetParent(hwndPager, hwndParent);
+
+        SendMessage(hwndPager, PGM_SETCHILD, 0, reinterpret_cast<LPARAM>(hwndToolbar));
+        m_hwndToolbar = hwndToolbar;
+        m_hwnd = hwndPager;
+    }
+    else
+    {
+        ::SetParent(hwndToolbar, hwndParent);
+        m_hwndToolbar = hwndToolbar;
+        m_hwnd = hwndToolbar;
+    }
+
+    // Identify the version of the used Common Controls DLL by sending the size of the TBBUTTON structure.
+    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+    // Apply subclassing
+    SetWindowLongPtr(hwndToolbar, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+    m_SubclassOld = (WNDPROC) SetWindowLongPtr(hwndToolbar, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(CMenuToolbarBase::s_SubclassProc));
+
+    // Configure the image lists
+    UpdateImageLists();
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::GetIdealSize(SIZE& size)
+{
+    size.cx = size.cy = 0;
+
+    if (m_hwndToolbar && !m_hasIdealSize)
+    {
+        SendMessageW(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
+        SendMessageW(m_hwndToolbar, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&m_idealSize));
+        m_hasIdealSize = TRUE;
+    }
+
+    size = m_idealSize;
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::SetPosSize(int x, int y, int cx, int cy)
+{
+    // If we have a pager, set the toolbar height to the ideal height of the toolbar
+    if (m_hwnd != m_hwndToolbar)
+    {
+        SetWindowPos(m_hwndToolbar, NULL, x, y, cx, m_idealSize.cy, 0);
+    }
+
+    // Update the toolbar or pager to fit the requested rect
+    SetWindowPos(m_hwnd, NULL, x, y, cx, cy, 0);
+
+    // In a vertical menu, resize the buttons to fit the width
+    if (m_initFlags & SMINIT_VERTICAL)
+    {
+        DWORD btnSize = SendMessage(m_hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
+        SendMessage(m_hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(cx, HIWORD(btnSize)));
     }
 
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::OnHotItemChanged(CMenuToolbarBase * toolbar, INT item)
+HRESULT CMenuToolbarBase::IsWindowOwner(HWND hwnd)
 {
-    BOOL wasChecked = FALSE;
-    if (m_hotBar == this && !(m_toolbarFlags & SMINIT_VERTICAL))
+    if (m_hwnd && m_hwnd == hwnd) return S_OK;
+    if (m_hwndToolbar && m_hwndToolbar == hwnd) return S_OK;
+    return S_FALSE;
+}
+
+HRESULT CMenuToolbarBase::GetWindow(HWND *phwnd)
+{
+    if (!phwnd)
+        return E_FAIL;
+
+    *phwnd = m_hwnd;
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::OnGetInfoTip(NMTBGETINFOTIP * tip)
+{
+    INT index;
+    DWORD_PTR dwData;
+
+    INT iItem = tip->iItem;
+
+    GetDataFromId(iItem, &index, &dwData);
+
+    return GetInfoTip(tip->pszText, tip->cchTextMax, iItem, index, dwData);
+}
+
+HRESULT CMenuToolbarBase::OnPopupTimer(DWORD timerId)
+{
+    if (timerId != TIMERID_HOTTRACK)
+        return S_FALSE;
+
+    KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+
+    if (!m_timerEnabled)
+        return S_FALSE;
+
+    m_timerEnabled = FALSE;
+
+    if (m_hotItem < 0)
+        return S_FALSE;
+
+    // Returns S_FALSE if the current item did not show a submenu
+    HRESULT hr = PopupItem(m_hotItem);
+    if (hr != S_FALSE)
+        return hr;
+
+    // If we didn't switch submenus, cancel the current popup regardless
+    if (m_popupBar)
     {
-        wasChecked = SendMessage(m_hwndToolbar, TB_ISBUTTONCHECKED, m_hotItem, 0);
-        if (wasChecked)
+        HRESULT hr = CancelCurrentPopup();
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::KillPopupTimer()
+{
+    if (m_timerEnabled)
+    {
+        m_timerEnabled = FALSE;
+        KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
+HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult)
+{
+    // Prevent a change of hot item if the change was triggered by the mouse,
+    // and mouse tracking is disabled.
+    if (m_disableMouseTrack && hot->dwFlags & HICF_MOUSE)
+    {
+        *theResult = 1;
+        DbgPrint("Hot item change prevented by DisableMouseTrack\n");
+        return S_OK;
+    }
+
+    HRESULT hr = S_OK;
+    if (hot->dwFlags & HICF_LEAVING)
+    {
+        // Only notify of LEAVING if this was the hot toolbar.
+        if (m_hotBar == this)
         {
-            SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_hotItem, FALSE);
+            DbgPrint("The hot bar is now cold.\n");
+            hr = m_menuBand->_ChangeHotItem(NULL, -1, hot->dwFlags);
         }
     }
+    else
+    {
+        hr = m_menuBand->_ChangeHotItem(this, hot->idNew, hot->dwFlags);
+    }
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Reuse S_OK/S_FALSE as Continue/Cancel
+    *theResult = hr;
+
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DWORD dwFlags)
+{
+    if (m_hotBar == toolbar && m_hotItem == item)
+        return S_FALSE;
+
+    if (m_hotBar == this && toolbar != this)
+    {
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, -1, 0);
+    }
+
     m_hotBar = toolbar;
     m_hotItem = item;
-    if (wasChecked && m_hotBar == this && !(m_toolbarFlags & SMINIT_VERTICAL))
+
+    if (m_hotBar == this)
     {
-        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_hotItem, TRUE);
+        if (dwFlags & HICF_MOUSE)
+        {
+            // Vertical menus show/hide the submenu after a delay,
+            // but horizontal menubars switch between items instantly,
+            // if they were open.
+            if (m_initFlags & SMINIT_VERTICAL)
+            {
+                DWORD elapsed = 0;
+                SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
+                SetTimer(m_hwndToolbar, TIMERID_HOTTRACK, elapsed, NULL);
+                m_timerEnabled = TRUE;
+                DbgPrint("SetTimer called with m_hotItem=%d\n", m_hotItem);
+            }
+            else if (m_isTracking)
+            {
+                m_menuBand->_KillPopupTimers();
+
+                PopupItem(m_hotItem);
+            }
+        }
+        else
+        {
+            TBBUTTONINFO info;
+            info.cbSize = sizeof(info);
+            info.dwMask = 0;
+
+            int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, item, reinterpret_cast<LPARAM>(&info));
+
+            SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
+        }
     }
+
     InvalidateDraw();
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item)
+HRESULT CMenuToolbarBase::ChangePopupItem(CMenuToolbarBase * toolbar, INT item)
 {
-    if (toolbar == NULL && m_popupBar == this)
+    if (m_popupBar == toolbar && m_popupItem == item)
+        return S_FALSE;
+
+    if (m_popupBar == this && toolbar != this)
     {
         SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_popupItem, FALSE);
         m_isTracking = FALSE;
-        DbgPrint("%s -- Is Tracking: %d\n", __FUNCTION__, m_isTracking);
     }
+
     m_popupBar = toolbar;
     m_popupItem = item;
+
+    if (m_popupBar == this)
+    {
+        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_popupItem, TRUE);
+    }
+
     InvalidateDraw();
     return S_OK;
 }
@@ -548,32 +672,32 @@ HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
     if (m_hotBar != this)
         return S_FALSE;
 
-    SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
+    if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
+        return E_FAIL;
 
     if (m_hotItem == btn.idCommand)
         return S_OK;
+
+    if (m_popupItem == btn.idCommand)
+        return S_OK;
+
     return S_FALSE;
 }
 
 HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index)
 {
     TBBUTTON btn;
-    SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn));
+    if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
+        return E_FAIL;
 
     DbgPrint("Changing tracked item to %d...\n", index);
-
-    if (m_hotItem != btn.idCommand)
-    {
-        m_isTracking = TRUE;
-        DbgPrint("%s -- Is Tracking: %d\n", __FUNCTION__, m_isTracking);
-
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
-    }
+    m_isTracking = TRUE;
+    m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
 
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* childShellMenu)
+HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu)
 {
     IBandSite* pBandSite;
     IDeskBar* pDeskBar;
@@ -600,7 +724,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
     POINTL pt = { a.x, b.y };
     RECTL rcl = { c.x, c.y, d.x, d.y };
 
-    if (m_toolbarFlags & SMINIT_VERTICAL)
+    if (m_initFlags & SMINIT_VERTICAL)
     {
         pt.x = b.x - 3;
         pt.y = a.y - 3;
@@ -652,14 +776,14 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, IShellMenu* child
         return hr;
 
     m_isTracking = TRUE;
-    DbgPrint("%s -- Is Tracking: %d\n", __FUNCTION__, m_isTracking);
 
-    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl, this, uItem);
+    m_menuBand->_ChangePopupItem(this, iItem);
+    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl);
 
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, HMENU menu)
+HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
 {
     RECT rc = { 0 };
     RECT rcx = { 0 };
@@ -682,7 +806,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, HMENU menu)
     POINT pt = { a.x, b.y };
     RECT rcl = { c.x, c.y, d.x, d.y };
 
-    if (m_toolbarFlags & SMINIT_VERTICAL)
+    if (m_initFlags & SMINIT_VERTICAL)
     {
         pt.x = b.x;
         pt.y = a.y;
@@ -691,14 +815,12 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT uItem, UINT index, HMENU menu)
     HMENU popup = GetSubMenu(menu, index);
 
     m_isTracking = TRUE;
-    DbgPrint("%s -- Is Tracking: %d\n", __FUNCTION__, m_isTracking);
 
+    m_menuBand->_ChangePopupItem(this, iItem);
     m_menuBand->_TrackSubMenuUsingTrackPopupMenu(popup, pt.x, pt.y, rcl);
-
-    SendMessage(m_hwndToolbar, TB_CHECKBUTTON, uItem, FALSE);
+    m_menuBand->_ChangePopupItem(NULL, -1);
 
     m_isTracking = FALSE;
-    DbgPrint("%s -- Is Tracking: %d\n", __FUNCTION__, m_isTracking);
 
     return S_OK;
 }
@@ -735,12 +857,24 @@ HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
 
 HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    theResult = 0;
+    if (m_disableMouseTrack)
+    {
+        *theResult = 1;
+        DbgPrint("Item click prevented by DisableMouseTrack\n");
+        return S_OK;
+    }
 
-    KillTimer(m_hwndToolbar, TIMERID_HOTTRACK);
+    *theResult = 0;
+
+    m_menuBand->_KillPopupTimers();
 
     if (PopupItem(wParam) == S_OK)
+    {
+        DbgPrint("PopupItem returned S_OK\n");
         return S_FALSE;
+    }
+
+    DbgPrint("Executing...\n");
 
     HRESULT hr = m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
 
@@ -750,7 +884,7 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     return S_OK; // filter out a possible S_FALSE from here.
 }
 
-HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
+HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
 {
     int prev = m_hotItem;
     int index = -1;
@@ -811,6 +945,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
             {
                 if (prev != btn.idCommand)
                 {
+                    DbgPrint("Setting Hot item to %d\n", index);
                     SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
                 }
                 return S_OK;
@@ -829,6 +964,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(DWORD dwSelectType)
 
     if (prev != -1)
     {
+        DbgPrint("Setting Hot item to null\n");
         SendMessage(m_hwndToolbar, TB_SETHOTITEM, -1, 0);
     }
     return S_FALSE;
@@ -840,16 +976,16 @@ HRESULT CMenuToolbarBase::AddButton(DWORD commandId, LPCWSTR caption, BOOL hasSu
 
     tbb.fsState = TBSTATE_ENABLED;
 #if !USE_TBSTYLE_EX_VERTICAL
-    if (!last && (m_toolbarFlags & SMINIT_VERTICAL))
+    if (!last && (m_initFlags & SMINIT_VERTICAL))
         tbb.fsState |= TBSTATE_WRAP;
 #endif
-    tbb.fsStyle = 0;
+    tbb.fsStyle = BTNS_CHECKGROUP;
 
-    if (hasSubMenu && (m_toolbarFlags & SMINIT_VERTICAL))
+    if (hasSubMenu && (m_initFlags & SMINIT_VERTICAL))
         tbb.fsStyle |= BTNS_DROPDOWN;
 
-    if (!(m_toolbarFlags & SMINIT_VERTICAL))
-        tbb.fsStyle |= BTNS_AUTOSIZE | BTNS_CHECKGROUP;
+    if (!(m_initFlags & SMINIT_VERTICAL))
+        tbb.fsStyle |= BTNS_AUTOSIZE;
 
     tbb.iString = (INT_PTR) caption;
     tbb.idCommand = commandId;
@@ -869,7 +1005,7 @@ HRESULT CMenuToolbarBase::AddSeparator(BOOL last)
 
     tbb.fsState = TBSTATE_ENABLED;
 #if !USE_TBSTYLE_EX_VERTICAL
-    if (!last && (m_toolbarFlags & SMINIT_VERTICAL))
+    if (!last && (m_initFlags & SMINIT_VERTICAL))
         tbb.fsState |= TBSTATE_WRAP;
 #endif
     tbb.fsStyle = BTNS_SEP;
@@ -897,15 +1033,23 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData)
+HRESULT CMenuToolbarBase::GetDataFromId(INT iItem, INT* pIndex, DWORD_PTR* pData)
 {
+    if (pData)
+        *pData = NULL;
+
+    if (pIndex)
+        *pIndex = -1;
+
+    if (iItem < 0)
+        return S_OK;
+
     TBBUTTONINFO info = { 0 };
-    DbgPrint("GetDataFromId %d\n", uItem);
 
     info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_COMMAND | TBIF_LPARAM;
 
-    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, uItem, reinterpret_cast<LPARAM>(&info));
+    int index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, iItem, reinterpret_cast<LPARAM>(&info));
     if (index < 0)
         return E_FAIL;
 
@@ -915,29 +1059,45 @@ HRESULT CMenuToolbarBase::GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData
     if (pData)
         *pData = info.lParam;
 
-    DbgPrint("GetDataFromId ret: %d, %d, %x, %x\n", info.idCommand, index, info.lParam);
-
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::PopupItem(INT uItem)
+HRESULT CMenuToolbarBase::CancelCurrentPopup()
+{
+    return m_menuBand->_CancelCurrentPopup();
+}
+
+HRESULT CMenuToolbarBase::PopupItem(INT iItem)
 {
     INT index;
     DWORD_PTR dwData;
 
-    GetDataFromId(uItem, &index, &dwData);
+    if (iItem < 0)
+        return S_OK;
 
-    if (!(m_toolbarFlags & SMINIT_VERTICAL))
-    {
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
-        SendMessage(m_hwndToolbar, TB_CHECKBUTTON, uItem, TRUE);
-    }
+    if (m_popupBar == this && m_popupItem == iItem)
+        return S_OK;
 
-    HRESULT hr = InternalHasSubMenu(uItem, index, dwData);
+    GetDataFromId(iItem, &index, &dwData);
+
+    HRESULT hr = InternalHasSubMenu(iItem, index, dwData);
     if (hr != S_OK)
         return hr;
 
-    return InternalPopupItem(uItem, index, dwData);
+    if (m_popupBar)
+    {
+        HRESULT hr = CancelCurrentPopup();
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    if (!(m_initFlags & SMINIT_VERTICAL))
+    {
+        DbgPrint("PopupItem non-vertical %d %d\n", index, iItem);
+        m_menuBand->_ChangeHotItem(this, iItem, 0);
+    }
+
+    return InternalPopupItem(iItem, index, dwData);
 }
 
 CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
@@ -1031,9 +1191,14 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
         }
     }
 
-    DbgPrint("Created toolbar with %d buttons.\n", count);
-
     return S_OK;
+}
+
+HRESULT CMenuStaticToolbar::GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData)
+{
+    //SMINFO * info = reinterpret_cast<SMINFO*>(dwData);
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
 }
 
 HRESULT CMenuStaticToolbar::OnDeletingButton(const NMTOOLBAR * tb)
@@ -1074,7 +1239,7 @@ HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *the
     return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
 }
 
-HRESULT CMenuStaticToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuStaticToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData)
 {
     SMINFO * nfo = reinterpret_cast<SMINFO*>(dwData);
     if (!nfo)
@@ -1082,20 +1247,20 @@ HRESULT CMenuStaticToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dw
 
     if (nfo->dwFlags&SMIF_TRACKPOPUP)
     {
-        return PopupSubMenu(uItem, index, m_hmenu);
+        return PopupSubMenu(iItem, index, m_hmenu);
     }
     else
     {
         CComPtr<IShellMenu> shellMenu;
-        HRESULT hr = m_menuBand->_CallCBWithItemId(uItem, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IShellMenu), reinterpret_cast<LPARAM>(&shellMenu));
+        HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IShellMenu), reinterpret_cast<LPARAM>(&shellMenu));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        return PopupSubMenu(uItem, index, shellMenu);
+        return PopupSubMenu(iItem, index, shellMenu);
     }
 }
 
-HRESULT CMenuStaticToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuStaticToolbar::InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData)
 {
     return ::GetSubMenu(m_hmenu, index) ? S_OK : S_FALSE;
 }
@@ -1163,9 +1328,14 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         return AddPlaceholder();
     }
 
-    DbgPrint("Created toolbar with %d buttons.\n", i);
-
     return hr;
+}
+
+HRESULT CMenuSFToolbar::GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData)
+{
+    //ITEMIDLIST * pidl = reinterpret_cast<LPITEMIDLIST>(dwData);
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
 }
 
 HRESULT CMenuSFToolbar::OnDeletingButton(const NMTOOLBAR * tb)
@@ -1247,7 +1417,7 @@ HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResu
     return m_menuBand->_CallCBWithItemPidl(reinterpret_cast<LPITEMIDLIST>(data), SMC_SFEXEC, 0, 0);
 }
 
-HRESULT CMenuSFToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData)
 {
     HRESULT hr;
     UINT uId;
@@ -1293,10 +1463,10 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return PopupSubMenu(uItem, index, shellMenu);
+    return PopupSubMenu(iItem, index, shellMenu);
 }
 
-HRESULT CMenuSFToolbar::InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuSFToolbar::InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData)
 {
     HRESULT hr;
     LPCITEMIDLIST pidl = reinterpret_cast<LPITEMIDLIST>(dwData);

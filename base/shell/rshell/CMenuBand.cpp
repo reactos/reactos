@@ -65,7 +65,8 @@ CMenuBand::CMenuBand() :
     m_topLevelWindow(NULL),
     m_hotBar(NULL),
     m_hotItem(-1),
-    m_trackingPopup(FALSE)
+    m_popupBar(NULL),
+    m_popupItem(-1)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -504,6 +505,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
 HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
 {
     m_childBand = child;
+    if (!child)
+    {
+        _ChangePopupItem(NULL, -1);
+    }
     return S_OK;
 }
 
@@ -524,13 +529,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 
     if (!punkClient)
     {
-        if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(NULL, -1);
-        if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(NULL, -1);
         return S_OK;
     }
+
     HRESULT hr = punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
-    m_trackingPopup = m_subMenuChild != NULL;
-    DbgPrint("Tracking: %d\n", m_trackingPopup);
+
     return hr;
 }
 
@@ -666,8 +669,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
 
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
-    m_trackingPopup = TRUE;
-    DbgPrint("Tracking: %d\n", m_trackingPopup);
+    //_DisableMouseTrack(TRUE);
 
     m_focusManager->PushTrackedPopup(popup);
     if (m_menuOwner)
@@ -680,8 +682,7 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     }
     m_focusManager->PopTrackedPopup(popup);
 
-    m_trackingPopup = FALSE;
-    DbgPrint("Tracking: %d\n", m_trackingPopup);
+    _DisableMouseTrack(FALSE);
 
     return S_OK;
 }
@@ -692,16 +693,36 @@ HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
     return S_OK;
 }
 
-HRESULT CMenuBand::_OnHotItemChanged(CMenuToolbarBase * tb, INT id)
+HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
 {
-    if (m_trackingPopup && id == -1)
-    {
+    if (m_hotBar == tb && m_hotItem == id)
         return S_FALSE;
-    }
+
+    DbgPrint("Hot item changed from %p %p, to %p %p\n", m_hotBar, m_hotItem, tb, id);
+
+    if (m_hotBar != tb)
+        _KillPopupTimers();
+
     m_hotBar = tb;
     m_hotItem = id;
-    if (m_staticToolbar) m_staticToolbar->OnHotItemChanged(tb, id);
-    if (m_SFToolbar) m_SFToolbar->OnHotItemChanged(tb, id);
+    if (m_staticToolbar) m_staticToolbar->ChangeHotItem(tb, id, dwFlags);
+    if (m_SFToolbar) m_SFToolbar->ChangeHotItem(tb, id, dwFlags);
+
+    _MenuItemHotTrack(MPOS_CHILDTRACKING);
+
+
+    return S_OK;
+}
+
+HRESULT CMenuBand::_ChangePopupItem(CMenuToolbarBase * tb, INT id)
+{
+    DbgPrint("Popup item changed from %p %p, to %p %p\n", m_popupBar, m_popupItem, tb, id);
+
+    m_popupBar = tb;
+    m_popupItem = id;
+    if (m_staticToolbar) m_staticToolbar->ChangePopupItem(tb, id);
+    if (m_SFToolbar) m_SFToolbar->ChangePopupItem(tb, id);
+
     return S_OK;
 }
 
@@ -721,13 +742,13 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
             }
             else if (m_staticToolbar && m_hotBar == m_staticToolbar)
             {
-                hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
+                hr = m_staticToolbar->KeyboardItemChange(VK_DOWN);
                 if (hr == S_FALSE)
                 {
                     if (m_SFToolbar)
-                        return m_SFToolbar->ChangeHotItem(VK_HOME);
+                        return m_SFToolbar->KeyboardItemChange(VK_HOME);
                     else
-                        return m_staticToolbar->ChangeHotItem(VK_HOME);
+                        return m_staticToolbar->KeyboardItemChange(VK_HOME);
                 }
                 return hr;
             }
@@ -737,13 +758,13 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
             SendMessageW(m_menuOwner, WM_CANCELMODE, 0, 0);
             if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
             {
-                hr = m_staticToolbar->ChangeHotItem(VK_UP);
+                hr = m_staticToolbar->KeyboardItemChange(VK_UP);
                 if (hr == S_FALSE)
                 {
                     if (m_SFToolbar)
-                        return m_SFToolbar->ChangeHotItem(VK_END);
+                        return m_SFToolbar->KeyboardItemChange(VK_END);
                     else
-                        return m_staticToolbar->ChangeHotItem(VK_END);
+                        return m_staticToolbar->KeyboardItemChange(VK_END);
                 }
                 return hr;
             }
@@ -758,25 +779,25 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
         {
-            hr = m_SFToolbar->ChangeHotItem(VK_DOWN);
+            hr = m_SFToolbar->KeyboardItemChange(VK_DOWN);
             if (hr == S_FALSE)
             {
                 if (m_staticToolbar)
-                    return m_staticToolbar->ChangeHotItem(VK_HOME);
+                    return m_staticToolbar->KeyboardItemChange(VK_HOME);
                 else
-                    return m_SFToolbar->ChangeHotItem(VK_HOME);
+                    return m_SFToolbar->KeyboardItemChange(VK_HOME);
             }
             return hr;
         }
         else if (m_staticToolbar && m_hotBar == m_staticToolbar)
         {
-            hr = m_staticToolbar->ChangeHotItem(VK_DOWN);
+            hr = m_staticToolbar->KeyboardItemChange(VK_DOWN);
             if (hr == S_FALSE)
             {
                 if (m_SFToolbar)
-                    return m_SFToolbar->ChangeHotItem(VK_HOME);
+                    return m_SFToolbar->KeyboardItemChange(VK_HOME);
                 else
-                    return m_staticToolbar->ChangeHotItem(VK_HOME);
+                    return m_staticToolbar->KeyboardItemChange(VK_HOME);
             }
             return hr;
         }
@@ -785,25 +806,25 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     {
         if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
         {
-            hr = m_staticToolbar->ChangeHotItem(VK_UP);
+            hr = m_staticToolbar->KeyboardItemChange(VK_UP);
             if (hr == S_FALSE)
             {
                 if (m_SFToolbar)
-                    return m_SFToolbar->ChangeHotItem(VK_END);
+                    return m_SFToolbar->KeyboardItemChange(VK_END);
                 else
-                    return m_staticToolbar->ChangeHotItem(VK_END);
+                    return m_staticToolbar->KeyboardItemChange(VK_END);
             }
             return hr;
         }
         else if (m_SFToolbar && m_hotBar == m_SFToolbar)
         {
-            hr = m_SFToolbar->ChangeHotItem(VK_UP);
+            hr = m_SFToolbar->KeyboardItemChange(VK_UP);
             if (hr == S_FALSE)
             {
                 if (m_staticToolbar)
-                    return m_staticToolbar->ChangeHotItem(VK_END);
+                    return m_staticToolbar->KeyboardItemChange(VK_END);
                 else
-                    return m_SFToolbar->ChangeHotItem(VK_END);
+                    return m_SFToolbar->KeyboardItemChange(VK_END);
             }
             return hr;
         }
@@ -836,31 +857,25 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     return S_OK;
 }
 
-HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item)
+HRESULT CMenuBand::_CancelCurrentPopup()
 {
-    if (m_subMenuChild)
-    {
-        HRESULT hr = m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-    }
+    if (!m_subMenuChild)
+        return S_FALSE;
 
-    if (m_staticToolbar) m_staticToolbar->OnPopupItemChanged(toolbar, item);
-    if (m_SFToolbar) m_SFToolbar->OnPopupItemChanged(toolbar, item);
+    HRESULT hr = m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+    return hr;
+}
 
+HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude)
+{
     m_subMenuChild = popup;
-    m_trackingPopup = popup != NULL;
-    DbgPrint("Tracking: %d\n", m_trackingPopup);
+    
+    if (m_subMenuParent)
+        IUnknown_SetSite(popup, m_subMenuParent);
+    else
+        IUnknown_SetSite(popup, m_site);
 
-    if (popup)
-    {
-        if (m_subMenuParent)
-            IUnknown_SetSite(popup, m_subMenuParent);
-        else
-            IUnknown_SetSite(popup, m_site);
-
-        popup->Popup(pAt, pExclude, MPPF_RIGHT);
-    }
+    popup->Popup(pAt, pExclude, MPPF_RIGHT);
 
     return S_OK;
 }
@@ -872,6 +887,20 @@ HRESULT CMenuBand::_DisableMouseTrack(BOOL bDisable)
     if (m_SFToolbar)
         m_SFToolbar->DisableMouseTrack(bDisable);
     return S_OK;
+}
+
+HRESULT CMenuBand::_KillPopupTimers()
+{
+    HRESULT hr = S_OK;
+    if (m_staticToolbar)
+        hr = m_staticToolbar->KillPopupTimer();
+    if (FAILED(hr))
+        return hr;
+
+    if (m_SFToolbar)
+        hr = m_SFToolbar->KillPopupTimer();
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)

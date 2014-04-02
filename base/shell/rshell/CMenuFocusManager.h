@@ -58,6 +58,7 @@ private:
 private:
     StackEntry * m_current;
     StackEntry * m_parent;
+    StackEntry * m_menuBar;
 
     HHOOK m_hMsgFilterHook;
     HHOOK m_hGetMsgHook;
@@ -65,12 +66,11 @@ private:
 
     BOOL m_mouseTrackDisabled;
 
-    WPARAM m_lastMoveFlags;
-    LPARAM m_lastMovePos;
-
     POINT m_ptPrev;
 
     HWND m_captureHwnd;
+
+    HWND m_hwndUnderMouse;
 
     // TODO: make dynamic
 #define MAX_RECURSE 20
@@ -97,7 +97,7 @@ private:
     HRESULT PlaceHooks();
     HRESULT RemoveHooks();
     HRESULT UpdateFocus();
-    HRESULT IsTrackedWindow(HWND hWnd);
+    HRESULT IsTrackedWindow(HWND hWnd, StackEntry ** pentry = NULL);
 
     void DisableMouseTrack(HWND parent, BOOL disableThis);
     void SetCapture(HWND child);

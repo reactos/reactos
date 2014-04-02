@@ -62,7 +62,8 @@ private:
 
     CMenuToolbarBase * m_hotBar;
     INT                m_hotItem;
-    BOOL               m_trackingPopup;
+    CMenuToolbarBase * m_popupBar;
+    INT                m_popupItem;
 
 public:
     CMenuBand();
@@ -176,13 +177,16 @@ public:
     HRESULT _CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude);
     HRESULT _GetTopLevelWindow(HWND*topLevel);
-    HRESULT _OnHotItemChanged(CMenuToolbarBase * tb, INT id);
+    HRESULT _ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags);
+    HRESULT _ChangePopupItem(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);
-    HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude, CMenuToolbarBase * toolbar, INT item);
+    HRESULT _CancelCurrentPopup();
+    HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude);
     HRESULT _DisableMouseTrack(BOOL bDisable);
     HRESULT _SetChildBand(CMenuBand * child);
     HRESULT _SetParentBand(CMenuBand * parent);
     HRESULT _IsPopup();
+    HRESULT _KillPopupTimers();
 
     BOOL UseBigIcons()
     {

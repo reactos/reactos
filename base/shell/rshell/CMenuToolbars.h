@@ -34,6 +34,7 @@ private:
     BOOL  m_useFlatMenus;
     WNDPROC m_SubclassOld;
     BOOL m_disableMouseTrack;
+    BOOL m_timerEnabled;
 
 protected:
     CMenuBand * m_menuBand;
@@ -47,7 +48,7 @@ protected:
     CMenuToolbarBase * m_popupBar;
     INT                m_popupItem;
 
-    DWORD m_toolbarFlags;
+    DWORD m_initFlags;
     BOOL m_isTracking;
 
 private:
@@ -65,14 +66,14 @@ public:
 
     HRESULT OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
-    HRESULT OnHotItemChanged(CMenuToolbarBase * toolbar, INT item);
-    HRESULT OnPopupItemChanged(CMenuToolbarBase * toolbar, INT item);
+    HRESULT ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DWORD dwFlags);
+    HRESULT ChangePopupItem(CMenuToolbarBase * toolbar, INT item);
 
     HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu);
     HRESULT PopupSubMenu(UINT itemId, UINT index, HMENU menu);
     HRESULT DoContextMenu(IContextMenu* contextMenu);
 
-    HRESULT ChangeHotItem(DWORD changeType);
+    HRESULT KeyboardItemChange(DWORD changeType);
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult);
 
     HRESULT IsTrackedItem(INT index);
@@ -88,15 +89,20 @@ public:
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) = 0;
     virtual HRESULT OnContextMenu(NMMOUSE * rclick) = 0;
 
-    HRESULT PopupItem(INT uItem);
-    HRESULT GetDataFromId(INT uItem, INT* pIndex, DWORD_PTR* pData);
+    HRESULT CancelCurrentPopup();
+    HRESULT PopupItem(INT iItem);
+    HRESULT GetDataFromId(INT iItem, INT* pIndex, DWORD_PTR* pData);
+
+    HRESULT KillPopupTimer();
 
 protected:
     virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
-    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData) = 0;
-    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData) = 0;
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData) = 0;
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) = 0;
+
+    virtual HRESULT GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData)=0;
 
     LRESULT CALLBACK SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -107,7 +113,10 @@ protected:
     HRESULT UpdateImageLists();
 
 private:
+    HRESULT OnPagerCalcSize(LPNMPGCALCSIZE csize);
+    HRESULT OnPopupTimer(DWORD timerId);
     HRESULT OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult);
+    HRESULT OnGetInfoTip(NMTBGETINFOTIP * tip);
 };
 
 class CMenuStaticToolbar :
@@ -130,8 +139,10 @@ public:
 protected:
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
 
-    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData);
+
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
 };
 
 class CMenuSFToolbar :
@@ -156,6 +167,8 @@ public:
 protected:
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb);
 
-    virtual HRESULT InternalPopupItem(INT uItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalHasSubMenu(INT uItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData);
+
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
 };

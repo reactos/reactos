@@ -72,7 +72,7 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     else
         fname++;
 
-    szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
+    szMsgStart = szMsg + sprintf(szMsg, "[%10d] %s:%d: ", GetTickCount(), fname, line);
 
     va_start(vl, lpFormat);
     uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
