@@ -147,4 +147,65 @@
 #undef strchr
 #endif
 
+
+/* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
+
+#ifdef ACPI_APPLICATION
+#define ACPI_FLUSH_CPU_CACHE()
+#else
+#define ACPI_FLUSH_CPU_CACHE()  asm ("WBINVD")
+#endif
+
+/*
+ * Global Lock acquire/release code
+ *
+ * Note: Taken from our old adaptation.
+ * TODO: Check whether it is equivalent to the MSVC code
+ *       (which was also the same in the older version).
+ */
+#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq)                \
+do {                                                        \
+    int dummy;                                              \
+    asm("1:     movl (%1),%%eax;"                           \
+        "movl   %%eax,%%edx;"                               \
+        "andl   %2,%%edx;"                                  \
+        "btsl   $0x1,%%edx;"                                \
+        "adcl   $0x0,%%edx;"                                \
+        "lock;  cmpxchgl %%edx,(%1);"                       \
+        "jnz    1b;"                                        \
+        "cmpb   $0x3,%%dl;"                                 \
+        "sbbl   %%eax,%%eax"                                \
+        :"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~1L):"dx");   \
+} while(0)
+
+#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Acq)                \
+do {                                                        \
+    int dummy;                                              \
+    asm("1:     movl (%1),%%eax;"                           \
+        "movl   %%eax,%%edx;"                               \
+        "andl   %2,%%edx;"                                  \
+        "lock;  cmpxchgl %%edx,(%1);"                       \
+        "jnz    1b;"                                        \
+        "andl   $0x1,%%eax"                                 \
+        :"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~3L):"dx");   \
+} while(0)
+
+
+/*
+ * Note: This is also taken from our old adaptation.
+ *       See acmsvc.h for where it came originally.
+ */
+#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
+{                           \
+    q32 = n_hi / d32;       \
+    r32 = n_lo / d32;       \
+}
+
+#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
+{                           \
+    n_hi >>= 1;    \
+    n_lo >>= 1;    \
+}
+
+
 #endif /* __ACGCC_H__ */
