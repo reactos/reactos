@@ -71,6 +71,7 @@ private:
     HWND m_captureHwnd;
 
     HWND m_hwndUnderMouse;
+    StackEntry * m_entryUnderMouse;
 
     // TODO: make dynamic
 #define MAX_RECURSE 20

@@ -523,6 +523,11 @@ HRESULT CMenuBand::_IsPopup()
     return m_subMenuParent ? S_OK : S_FALSE;
 }
 
+HRESULT CMenuBand::_IsTracking()
+{
+    return m_popupBar != NULL;
+}
+
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
     m_subMenuChild = NULL;
@@ -669,8 +674,6 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
 
     UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
 
-    //_DisableMouseTrack(TRUE);
-
     m_focusManager->PushTrackedPopup(popup);
     if (m_menuOwner)
     {
@@ -700,8 +703,7 @@ HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
 
     DbgPrint("Hot item changed from %p %p, to %p %p\n", m_hotBar, m_hotItem, tb, id);
 
-    if (m_hotBar != tb)
-        _KillPopupTimers();
+    _KillPopupTimers();
 
     m_hotBar = tb;
     m_hotItem = id;

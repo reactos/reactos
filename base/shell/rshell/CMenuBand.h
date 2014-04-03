@@ -186,6 +186,7 @@ public:
     HRESULT _SetChildBand(CMenuBand * child);
     HRESULT _SetParentBand(CMenuBand * parent);
     HRESULT _IsPopup();
+    HRESULT _IsTracking();
     HRESULT _KillPopupTimers();
 
     BOOL UseBigIcons()

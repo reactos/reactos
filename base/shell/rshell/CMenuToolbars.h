@@ -77,7 +77,7 @@ public:
     HRESULT OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult);
 
     HRESULT IsTrackedItem(INT index);
-    HRESULT ChangeTrackedItem(INT index);
+    HRESULT ChangeTrackedItem(INT index, BOOL wasTracking);
 
     HRESULT GetIdealSize(SIZE& size);
     HRESULT SetPosSize(int x, int y, int cx, int cy);

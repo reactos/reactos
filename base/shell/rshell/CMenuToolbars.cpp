@@ -64,7 +64,8 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return OnCommand(reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem, 0, theResult);
 
         case TBN_HOTITEMCHANGE:
-            return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
+            //return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
+            return S_OK;
 
         case NM_RCLICK:
             return OnContextMenu(reinterpret_cast<LPNMMOUSE>(hdr));
@@ -100,6 +101,9 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case NM_TOOLTIPSCREATED:
             break;
 
+            // Unknown
+        case -714: return S_FALSE;
+
         default:
             DbgPrint("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
             return S_OK;
@@ -127,7 +131,7 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         return IsTrackedItem(wParam);
     case WM_USER_CHANGETRACKEDITEM:
         m_SubclassOld(hWnd, uMsg, wParam, lParam);
-        return ChangeTrackedItem(wParam);
+        return ChangeTrackedItem(wParam, lParam);
 
     case WM_COMMAND:
         OnWinEvent(hWnd, uMsg, wParam, lParam, &lr);
@@ -188,8 +192,8 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         hdc = cdraw->nmcd.hdc;
 
         // The item with an active submenu gets the CHECKED flag.
-        isHot = m_hotBar == this && cdraw->nmcd.dwItemSpec == m_hotItem;
-        isPopup = m_popupBar == this && cdraw->nmcd.dwItemSpec == m_popupItem;
+        isHot = m_hotBar == this && (int)cdraw->nmcd.dwItemSpec == m_hotItem;
+        isPopup = m_popupBar == this && (int)cdraw->nmcd.dwItemSpec == m_popupItem;
 
         if (m_initFlags & SMINIT_VERTICAL)
         {
@@ -621,8 +625,6 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
             }
             else if (m_isTracking)
             {
-                m_menuBand->_KillPopupTimers();
-
                 PopupItem(m_hotItem);
             }
         }
@@ -684,14 +686,14 @@ HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
     return S_FALSE;
 }
 
-HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index)
+HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
 {
     TBBUTTON btn;
     if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
         return E_FAIL;
 
     DbgPrint("Changing tracked item to %d...\n", index);
-    m_isTracking = TRUE;
+    m_isTracking = wasTracking;
     m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
 
     return S_OK;
