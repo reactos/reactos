@@ -290,7 +290,7 @@
 /* Type of mutex supported by host. Default is binary semaphores. */
 
 #ifndef ACPI_MUTEX_TYPE
-#define ACPI_MUTEX_TYPE             ACPI_BINARY_SEMAPHORE
+#define ACPI_MUTEX_TYPE             ACPI_OSL_MUTEX
 #endif
 
 /* Global Lock acquire/release */
