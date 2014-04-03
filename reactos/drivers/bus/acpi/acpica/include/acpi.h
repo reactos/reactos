@@ -117,6 +117,12 @@
 #define __ACPI_H__
 
 /*
+ * Header inclusion HACK (see modifications to actypes.h too).
+ */
+#include <ntddk.h>
+#undef ACPI_BIOS_ERROR  // ACPI_BIOS_ERROR is redefined in acoutput.h
+
+/*
  * Public include files for use by code that will interface to ACPICA.
  *
  * Information includes the ACPICA data types, names, exceptions, and
