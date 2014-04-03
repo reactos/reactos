@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -121,6 +121,8 @@
 #include "acinterp.h"
 #include "acnamesp.h"
 #include "acdisasm.h"
+#include "acparser.h"
+#include "amlcode.h"
 
 
 #define _COMPONENT          ACPI_DISPATCHER
@@ -129,8 +131,152 @@
 /* Local prototypes */
 
 static ACPI_STATUS
+AcpiDsDetectNamedOpcodes (
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       **OutOp);
+
+static ACPI_STATUS
 AcpiDsCreateMethodMutex (
     ACPI_OPERAND_OBJECT     *MethodDesc);
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiDsAutoSerializeMethod
+ *
+ * PARAMETERS:  Node                        - Namespace Node of the method
+ *              ObjDesc                     - Method object attached to node
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Parse a control method AML to scan for control methods that
+ *              need serialization due to the creation of named objects.
+ *
+ * NOTE: It is a bit of overkill to mark all such methods serialized, since
+ * there is only a problem if the method actually blocks during execution.
+ * A blocking operation is, for example, a Sleep() operation, or any access
+ * to an operation region. However, it is probably not possible to easily
+ * detect whether a method will block or not, so we simply mark all suspicious
+ * methods as serialized.
+ *
+ * NOTE2: This code is essentially a generic routine for parsing a single
+ * control method.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiDsAutoSerializeMethod (
+    ACPI_NAMESPACE_NODE     *Node,
+    ACPI_OPERAND_OBJECT     *ObjDesc)
+{
+    ACPI_STATUS             Status;
+    ACPI_PARSE_OBJECT       *Op = NULL;
+    ACPI_WALK_STATE         *WalkState;
+
+
+    ACPI_FUNCTION_TRACE_PTR (DsAutoSerializeMethod, Node);
+
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+        "Method auto-serialization parse [%4.4s] %p\n",
+        AcpiUtGetNodeName (Node), Node));
+
+    /* Create/Init a root op for the method parse tree */
+
+    Op = AcpiPsAllocOp (AML_METHOD_OP);
+    if (!Op)
+    {
+        return_ACPI_STATUS (AE_NO_MEMORY);
+    }
+
+    AcpiPsSetName (Op, Node->Name.Integer);
+    Op->Common.Node = Node;
+
+    /* Create and initialize a new walk state */
+
+    WalkState = AcpiDsCreateWalkState (Node->OwnerId, NULL, NULL, NULL);
+    if (!WalkState)
+    {
+        return_ACPI_STATUS (AE_NO_MEMORY);
+    }
+
+    Status = AcpiDsInitAmlWalk (WalkState, Op, Node, ObjDesc->Method.AmlStart,
+                ObjDesc->Method.AmlLength, NULL, 0);
+    if (ACPI_FAILURE (Status))
+    {
+        AcpiDsDeleteWalkState (WalkState);
+        return_ACPI_STATUS (Status);
+    }
+
+    WalkState->DescendingCallback = AcpiDsDetectNamedOpcodes;
+
+    /* Parse the method, scan for creation of named objects */
+
+    Status = AcpiPsParseAml (WalkState);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    AcpiPsDeleteParseTree (Op);
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiDsDetectNamedOpcodes
+ *
+ * PARAMETERS:  WalkState       - Current state of the parse tree walk
+ *              OutOp           - Unused, required for parser interface
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Descending callback used during the loading of ACPI tables.
+ *              Currently used to detect methods that must be marked serialized
+ *              in order to avoid problems with the creation of named objects.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiDsDetectNamedOpcodes (
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       **OutOp)
+{
+
+    ACPI_FUNCTION_NAME (AcpiDsDetectNamedOpcodes);
+
+
+    /* We are only interested in opcodes that create a new name */
+
+    if (!(WalkState->OpInfo->Flags & (AML_NAMED | AML_CREATE | AML_FIELD)))
+    {
+        return (AE_OK);
+    }
+
+    /*
+     * At this point, we know we have a Named object opcode.
+     * Mark the method as serialized. Later code will create a mutex for
+     * this method to enforce serialization.
+     *
+     * Note, ACPI_METHOD_IGNORE_SYNC_LEVEL flag means that we will ignore the
+     * Sync Level mechanism for this method, even though it is now serialized.
+     * Otherwise, there can be conflicts with existing ASL code that actually
+     * uses sync levels.
+     */
+    WalkState->MethodDesc->Method.SyncLevel = 0;
+    WalkState->MethodDesc->Method.InfoFlags |=
+        (ACPI_METHOD_SERIALIZED | ACPI_METHOD_IGNORE_SYNC_LEVEL);
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
+        "Method serialized [%4.4s] %p - [%s] (%4.4X)\n",
+        WalkState->MethodNode->Name.Ascii, WalkState->MethodNode,
+        WalkState->OpInfo->Name, WalkState->Opcode));
+
+    /* Abort the parse, no need to examine this method any further */
+
+    return (AE_CTRL_TERMINATE);
+}
 
 
 /*******************************************************************************
@@ -235,6 +381,7 @@ AcpiDsCreateMethodMutex (
     Status = AcpiOsCreateMutex (&MutexDesc->Mutex.OsMutex);
     if (ACPI_FAILURE (Status))
     {
+        AcpiUtDeleteObjectDesc (MutexDesc);
         return_ACPI_STATUS (Status);
     }
 
@@ -255,7 +402,7 @@ AcpiDsCreateMethodMutex (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Prepare a method for execution.  Parses the method if necessary,
+ * DESCRIPTION: Prepare a method for execution. Parses the method if necessary,
  *              increments the thread count, and waits at the method semaphore
  *              for clearance to execute.
  *
@@ -309,11 +456,16 @@ AcpiDsBeginMethodExecution (
         /*
          * The CurrentSyncLevel (per-thread) must be less than or equal to
          * the sync level of the method. This mechanism provides some
-         * deadlock prevention
+         * deadlock prevention.
+         *
+         * If the method was auto-serialized, we just ignore the sync level
+         * mechanism, because auto-serialization of methods can interfere
+         * with ASL code that actually uses sync levels.
          *
          * Top-level method invocation has no walk state at this point
          */
         if (WalkState &&
+            (!(ObjDesc->Method.InfoFlags & ACPI_METHOD_IGNORE_SYNC_LEVEL)) &&
             (WalkState->Thread->CurrentSyncLevel > ObjDesc->Method.Mutex->Mutex.SyncLevel))
         {
             ACPI_ERROR ((AE_INFO,
@@ -481,7 +633,8 @@ AcpiDsCallControlMethod (
     Info = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_EVALUATE_INFO));
     if (!Info)
     {
-        return_ACPI_STATUS (AE_NO_MEMORY);
+        Status = AE_NO_MEMORY;
+        goto Cleanup;
     }
 
     Info->Parameters = &ThisWalkState->Operands[0];
@@ -552,7 +705,7 @@ Cleanup:
  * RETURN:      Status
  *
  * DESCRIPTION: Restart a method that was preempted by another (nested) method
- *              invocation.  Handle the return value (if any) from the callee.
+ *              invocation. Handle the return value (if any) from the callee.
  *
  ******************************************************************************/
 
@@ -642,7 +795,7 @@ AcpiDsRestartControlMethod (
  *
  * RETURN:      None
  *
- * DESCRIPTION: Terminate a control method.  Delete everything that the method
+ * DESCRIPTION: Terminate a control method. Delete everything that the method
  *              created, delete all locals and arguments, and delete the parse
  *              tree if requested.
  *
@@ -780,7 +933,8 @@ AcpiDsTerminateControlMethod (
              * thread exits here.
              */
             MethodDesc->Method.InfoFlags &= ~ACPI_METHOD_SERIALIZED_PENDING;
-            MethodDesc->Method.InfoFlags |= ACPI_METHOD_SERIALIZED;
+            MethodDesc->Method.InfoFlags |=
+                (ACPI_METHOD_SERIALIZED | ACPI_METHOD_IGNORE_SYNC_LEVEL);
             MethodDesc->Method.SyncLevel = 0;
         }
 
@@ -794,5 +948,3 @@ AcpiDsTerminateControlMethod (
 
     return_VOID;
 }
-
-

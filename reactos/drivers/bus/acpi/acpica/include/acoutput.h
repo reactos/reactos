@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -144,6 +144,7 @@
 #define ACPI_EXAMPLE                0x00004000
 #define ACPI_DRIVER                 0x00008000
 #define DT_COMPILER                 0x00010000
+#define ASL_PREPROCESSOR            0x00020000
 
 #define ACPI_ALL_COMPONENTS         0x0001FFFF
 #define ACPI_COMPONENT_DEFAULT      (ACPI_ALL_COMPONENTS)
@@ -288,6 +289,8 @@
 #define ACPI_WARNING(plist)             AcpiWarning plist
 #define ACPI_EXCEPTION(plist)           AcpiException plist
 #define ACPI_ERROR(plist)               AcpiError plist
+#define ACPI_BIOS_WARNING(plist)        AcpiBiosWarning plist
+#define ACPI_BIOS_ERROR(plist)          AcpiBiosError plist
 #define ACPI_DEBUG_OBJECT(obj,l,i)      AcpiExDoDebugObject(obj,l,i)
 
 #else
@@ -298,6 +301,8 @@
 #define ACPI_WARNING(plist)
 #define ACPI_EXCEPTION(plist)
 #define ACPI_ERROR(plist)
+#define ACPI_BIOS_WARNING(plist)
+#define ACPI_BIOS_ERROR(plist)
 #define ACPI_DEBUG_OBJECT(obj,l,i)
 
 #endif /* ACPI_NO_ERROR_MESSAGES */
@@ -334,25 +339,199 @@
  * Common parameters used for debug output functions:
  * line number, function name, module(file) name, component ID
  */
-#define ACPI_DEBUG_PARAMETERS           __LINE__, ACPI_GET_FUNCTION_NAME, _AcpiModuleName, _COMPONENT
+#define ACPI_DEBUG_PARAMETERS \
+    __LINE__, ACPI_GET_FUNCTION_NAME, _AcpiModuleName, _COMPONENT
+
+/* Check if debug output is currently dynamically enabled */
+
+#define ACPI_IS_DEBUG_ENABLED(Level, Component) \
+    ((Level & AcpiDbgLevel) && (Component & AcpiDbgLayer))
 
 /*
  * Master debug print macros
  * Print message if and only if:
  *    1) Debug print for the current component is enabled
  *    2) Debug error level or trace level for the print statement is enabled
+ *
+ * November 2012: Moved the runtime check for whether to actually emit the
+ * debug message outside of the print function itself. This improves overall
+ * performance at a relatively small code cost. Implementation involves the
+ * use of variadic macros supported by C99.
+ *
+ * Note: the ACPI_DO_WHILE0 macro is used to prevent some compilers from
+ * complaining about these constructs. On other compilers the do...while
+ * adds some extra code, so this feature is optional.
  */
-#define ACPI_DEBUG_PRINT(plist)         AcpiDebugPrint plist
-#define ACPI_DEBUG_PRINT_RAW(plist)     AcpiDebugPrintRaw plist
-
+#ifdef ACPI_USE_DO_WHILE_0
+#define ACPI_DO_WHILE0(a)               do a while(0)
 #else
+#define ACPI_DO_WHILE0(a)               a
+#endif
+
+/* DEBUG_PRINT functions */
+
+#define ACPI_DEBUG_PRINT(plist)         ACPI_ACTUAL_DEBUG plist
+#define ACPI_DEBUG_PRINT_RAW(plist)     ACPI_ACTUAL_DEBUG_RAW plist
+
+/* Helper macros for DEBUG_PRINT */
+
+#define ACPI_DO_DEBUG_PRINT(Function, Level, Line, Filename, Modulename, Component, ...) \
+    ACPI_DO_WHILE0 ({ \
+        if (ACPI_IS_DEBUG_ENABLED (Level, Component)) \
+        { \
+            Function (Level, Line, Filename, Modulename, Component, __VA_ARGS__); \
+        } \
+    })
+
+#define ACPI_ACTUAL_DEBUG(Level, Line, Filename, Modulename, Component, ...) \
+    ACPI_DO_DEBUG_PRINT (AcpiDebugPrint, Level, Line, \
+        Filename, Modulename, Component, __VA_ARGS__)
+
+#define ACPI_ACTUAL_DEBUG_RAW(Level, Line, Filename, Modulename, Component, ...) \
+    ACPI_DO_DEBUG_PRINT (AcpiDebugPrintRaw, Level, Line, \
+        Filename, Modulename, Component, __VA_ARGS__)
+
+
+/*
+ * Function entry tracing
+ *
+ * The name of the function is emitted as a local variable that is
+ * intended to be used by both the entry trace and the exit trace.
+ */
+
+/* Helper macro */
+
+#define ACPI_TRACE_ENTRY(Name, Function, Type, Param) \
+    ACPI_FUNCTION_NAME (Name) \
+    Function (ACPI_DEBUG_PARAMETERS, (Type) (Param))
+
+/* The actual entry trace macros */
+
+#define ACPI_FUNCTION_TRACE(Name) \
+    ACPI_FUNCTION_NAME(Name) \
+    AcpiUtTrace (ACPI_DEBUG_PARAMETERS)
+
+#define ACPI_FUNCTION_TRACE_PTR(Name, Pointer) \
+    ACPI_TRACE_ENTRY (Name, AcpiUtTracePtr, void *, Pointer)
+
+#define ACPI_FUNCTION_TRACE_U32(Name, Value) \
+    ACPI_TRACE_ENTRY (Name, AcpiUtTraceU32, UINT32, Value)
+
+#define ACPI_FUNCTION_TRACE_STR(Name, String) \
+    ACPI_TRACE_ENTRY (Name, AcpiUtTraceStr, char *, String)
+
+#define ACPI_FUNCTION_ENTRY() \
+    AcpiUtTrackStackPtr()
+
+
+/*
+ * Function exit tracing
+ *
+ * These macros include a return statement. This is usually considered
+ * bad form, but having a separate exit macro before the actual return
+ * is very ugly and difficult to maintain.
+ *
+ * One of the FUNCTION_TRACE macros above must be used in conjunction
+ * with these macros so that "_AcpiFunctionName" is defined.
+ *
+ * There are two versions of most of the return macros. The default version is
+ * safer, since it avoids side-effects by guaranteeing that the argument will
+ * not be evaluated twice.
+ *
+ * A less-safe version of the macros is provided for optional use if the
+ * compiler uses excessive CPU stack (for example, this may happen in the
+ * debug case if code optimzation is disabled.)
+ */
+
+/* Exit trace helper macro */
+
+#ifndef ACPI_SIMPLE_RETURN_MACROS
+
+#define ACPI_TRACE_EXIT(Function, Type, Param) \
+    ACPI_DO_WHILE0 ({ \
+        register Type _Param = (Type) (Param); \
+        Function (ACPI_DEBUG_PARAMETERS, _Param); \
+        return (_Param); \
+    })
+
+#else /* Use original less-safe macros */
+
+#define ACPI_TRACE_EXIT(Function, Type, Param) \
+    ACPI_DO_WHILE0 ({ \
+        Function (ACPI_DEBUG_PARAMETERS, (Type) (Param)); \
+        return (Param); \
+    })
+
+#endif /* ACPI_SIMPLE_RETURN_MACROS */
+
+/* The actual exit macros */
+
+#define return_VOID \
+    ACPI_DO_WHILE0 ({ \
+        AcpiUtExit (ACPI_DEBUG_PARAMETERS); \
+        return; \
+    })
+
+#define return_ACPI_STATUS(Status) \
+    ACPI_TRACE_EXIT (AcpiUtStatusExit, ACPI_STATUS, Status)
+
+#define return_PTR(Pointer) \
+    ACPI_TRACE_EXIT (AcpiUtPtrExit, void *, Pointer)
+
+#define return_VALUE(Value) \
+    ACPI_TRACE_EXIT (AcpiUtValueExit, UINT64, Value)
+
+#define return_UINT32(Value) \
+    ACPI_TRACE_EXIT (AcpiUtValueExit, UINT32, Value)
+
+#define return_UINT8(Value) \
+    ACPI_TRACE_EXIT (AcpiUtValueExit, UINT8, Value)
+
+/* Conditional execution */
+
+#define ACPI_DEBUG_EXEC(a)              a
+#define ACPI_DEBUG_ONLY_MEMBERS(a)      a;
+#define _VERBOSE_STRUCTURES
+
+
+/* Various object display routines for debug */
+
+#define ACPI_DUMP_STACK_ENTRY(a)        AcpiExDumpOperand((a), 0)
+#define ACPI_DUMP_OPERANDS(a, b ,c)     AcpiExDumpOperands(a, b, c)
+#define ACPI_DUMP_ENTRY(a, b)           AcpiNsDumpEntry (a, b)
+#define ACPI_DUMP_PATHNAME(a, b, c, d)  AcpiNsDumpPathname(a, b, c, d)
+#define ACPI_DUMP_BUFFER(a, b)          AcpiUtDebugDumpBuffer((UINT8 *) a, b, DB_BYTE_DISPLAY, _COMPONENT)
+
+#else /* ACPI_DEBUG_OUTPUT */
 /*
  * This is the non-debug case -- make everything go away,
  * leaving no executable debug code!
  */
-#define ACPI_FUNCTION_NAME(a)
 #define ACPI_DEBUG_PRINT(pl)
 #define ACPI_DEBUG_PRINT_RAW(pl)
+#define ACPI_DEBUG_EXEC(a)
+#define ACPI_DEBUG_ONLY_MEMBERS(a)
+#define ACPI_FUNCTION_NAME(a)
+#define ACPI_FUNCTION_TRACE(a)
+#define ACPI_FUNCTION_TRACE_PTR(a, b)
+#define ACPI_FUNCTION_TRACE_U32(a, b)
+#define ACPI_FUNCTION_TRACE_STR(a, b)
+#define ACPI_FUNCTION_ENTRY()
+#define ACPI_DUMP_STACK_ENTRY(a)
+#define ACPI_DUMP_OPERANDS(a, b, c)
+#define ACPI_DUMP_ENTRY(a, b)
+#define ACPI_DUMP_PATHNAME(a, b, c, d)
+#define ACPI_DUMP_BUFFER(a, b)
+#define ACPI_IS_DEBUG_ENABLED(Level, Component) 0
+
+/* Return macros must have a return statement at the minimum */
+
+#define return_VOID                     return
+#define return_ACPI_STATUS(s)           return(s)
+#define return_PTR(s)                   return(s)
+#define return_VALUE(s)                 return(s)
+#define return_UINT8(s)                 return(s)
+#define return_UINT32(s)                return(s)
 
 #endif /* ACPI_DEBUG_OUTPUT */
 

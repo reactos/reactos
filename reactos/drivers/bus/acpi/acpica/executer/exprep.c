@@ -1,4 +1,3 @@
-
 /******************************************************************************
  *
  * Module Name: exprep - ACPI AML (p-code) execution - field prep utilities
@@ -9,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -32,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -44,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -56,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -81,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -121,6 +120,7 @@
 #include "acinterp.h"
 #include "amlcode.h"
 #include "acnamesp.h"
+#include "acdispat.h"
 
 
 #define _COMPONENT          ACPI_EXECUTER
@@ -158,8 +158,8 @@ AcpiExGenerateAccess (
  *              AnyAcc keyword.
  *
  * NOTE: Need to have the RegionLength in order to check for boundary
- *       conditions (end-of-region).  However, the RegionLength is a deferred
- *       operation.  Therefore, to complete this implementation, the generation
+ *       conditions (end-of-region). However, the RegionLength is a deferred
+ *       operation. Therefore, to complete this implementation, the generation
  *       of this access width must be deferred until the region length has
  *       been evaluated.
  *
@@ -339,26 +339,31 @@ AcpiExDecodeFieldAccess (
 
     case AML_FIELD_ACCESS_BYTE:
     case AML_FIELD_ACCESS_BUFFER:   /* ACPI 2.0 (SMBus Buffer) */
+
         ByteAlignment = 1;
         BitLength     = 8;
         break;
 
     case AML_FIELD_ACCESS_WORD:
+
         ByteAlignment = 2;
         BitLength     = 16;
         break;
 
     case AML_FIELD_ACCESS_DWORD:
+
         ByteAlignment = 4;
         BitLength     = 32;
         break;
 
     case AML_FIELD_ACCESS_QWORD:    /* ACPI 2.0 */
+
         ByteAlignment = 8;
         BitLength     = 64;
         break;
 
     default:
+
         /* Invalid field access type */
 
         ACPI_ERROR ((AE_INFO,
@@ -397,7 +402,7 @@ AcpiExDecodeFieldAccess (
  * RETURN:      Status
  *
  * DESCRIPTION: Initialize the areas of the field object that are common
- *              to the various types of fields.  Note: This is very "sensitive"
+ *              to the various types of fields. Note: This is very "sensitive"
  *              code because we are solving the general case for field
  *              alignment.
  *
@@ -429,13 +434,13 @@ AcpiExPrepCommonFieldObject (
     ObjDesc->CommonField.BitLength  = FieldBitLength;
 
     /*
-     * Decode the access type so we can compute offsets.  The access type gives
+     * Decode the access type so we can compute offsets. The access type gives
      * two pieces of information - the width of each field access and the
      * necessary ByteAlignment (address granularity) of the access.
      *
      * For AnyAcc, the AccessBitWidth is the largest width that is both
      * necessary and possible in an attempt to access the whole field in one
-     * I/O operation.  However, for AnyAcc, the ByteAlignment is always one
+     * I/O operation. However, for AnyAcc, the ByteAlignment is always one
      * byte.
      *
      * For all Buffer Fields, the ByteAlignment is always one byte.
@@ -457,7 +462,7 @@ AcpiExPrepCommonFieldObject (
 
     /*
      * BaseByteOffset is the address of the start of the field within the
-     * region.  It is the byte address of the first *datum* (field-width data
+     * region. It is the byte address of the first *datum* (field-width data
      * unit) of the field. (i.e., the first datum that contains at least the
      * first *bit* of the field.)
      *
@@ -489,8 +494,8 @@ AcpiExPrepCommonFieldObject (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Construct an ACPI_OPERAND_OBJECT of type DefField and
- *              connect it to the parent Node.
+ * DESCRIPTION: Construct an object of type ACPI_OPERAND_OBJECT with a
+ *              subtype of DefField and connect it to the parent Node.
  *
  ******************************************************************************/
 
@@ -556,6 +561,32 @@ AcpiExPrepFieldValue (
 
         ObjDesc->Field.RegionObj = AcpiNsGetAttachedObject (Info->RegionNode);
 
+        /* Fields specific to GenericSerialBus fields */
+
+        ObjDesc->Field.AccessLength = Info->AccessLength;
+
+        if (Info->ConnectionNode)
+        {
+            SecondDesc = Info->ConnectionNode->Object;
+            if (!(SecondDesc->Common.Flags & AOPOBJ_DATA_VALID))
+            {
+                Status = AcpiDsGetBufferArguments (SecondDesc);
+                if (ACPI_FAILURE (Status))
+                {
+                    AcpiUtDeleteObjectDesc (ObjDesc);
+                    return_ACPI_STATUS (Status);
+                }
+            }
+
+            ObjDesc->Field.ResourceBuffer = SecondDesc->Buffer.Pointer;
+            ObjDesc->Field.ResourceLength = (UINT16) SecondDesc->Buffer.Length;
+        }
+        else if (Info->ResourceBuffer)
+        {
+            ObjDesc->Field.ResourceBuffer = Info->ResourceBuffer;
+            ObjDesc->Field.ResourceLength = Info->ResourceLength;
+        }
+
         /* Allow full data read from EC address space */
 
         if ((ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_EC) &&
@@ -581,7 +612,6 @@ AcpiExPrepFieldValue (
             ObjDesc->Field.StartFieldBitOffset, ObjDesc->Field.BaseByteOffset,
             ObjDesc->Field.AccessByteWidth, ObjDesc->Field.RegionObj));
         break;
-
 
     case ACPI_TYPE_LOCAL_BANK_FIELD:
 
@@ -616,7 +646,6 @@ AcpiExPrepFieldValue (
             Info->DataRegisterNode)->Named.Length;
 
         break;
-
 
     case ACPI_TYPE_LOCAL_INDEX_FIELD:
 
@@ -671,7 +700,9 @@ AcpiExPrepFieldValue (
         break;
 
     default:
+
         /* No other types should get here */
+
         break;
     }
 
@@ -690,4 +721,3 @@ AcpiExPrepFieldValue (
     AcpiUtRemoveReference (ObjDesc);
     return_ACPI_STATUS (Status);
 }
-

@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -158,7 +158,7 @@ AcpiExSetupRegion (
  * RETURN:      Status
  *
  * DESCRIPTION: Common processing for AcpiExExtractFromField and
- *              AcpiExInsertIntoField.  Initialize the Region if necessary and
+ *              AcpiExInsertIntoField. Initialize the Region if necessary and
  *              validate the request.
  *
  ******************************************************************************/
@@ -170,6 +170,7 @@ AcpiExSetupRegion (
 {
     ACPI_STATUS             Status = AE_OK;
     ACPI_OPERAND_OBJECT     *RgnDesc;
+    UINT8                   SpaceId;
 
 
     ACPI_FUNCTION_TRACE_U32 (ExSetupRegion, FieldDatumByteOffset);
@@ -188,6 +189,16 @@ AcpiExSetupRegion (
         return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
+    SpaceId = RgnDesc->Region.SpaceId;
+
+    /* Validate the Space ID */
+
+    if (!AcpiIsValidSpaceId (SpaceId))
+    {
+        ACPI_ERROR ((AE_INFO, "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
+        return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
+    }
+
     /*
      * If the Region Address and Length have not been previously evaluated,
      * evaluate them now and save the results.
@@ -202,11 +213,12 @@ AcpiExSetupRegion (
     }
 
     /*
-     * Exit now for SMBus or IPMI address space, it has a non-linear
+     * Exit now for SMBus, GSBus or IPMI address space, it has a non-linear
      * address space and the request cannot be directly validated
      */
-    if (RgnDesc->Region.SpaceId == ACPI_ADR_SPACE_SMBUS ||
-        RgnDesc->Region.SpaceId == ACPI_ADR_SPACE_IPMI)
+    if (SpaceId == ACPI_ADR_SPACE_SMBUS ||
+        SpaceId == ACPI_ADR_SPACE_GSBUS ||
+        SpaceId == ACPI_ADR_SPACE_IPMI)
     {
         /* SMBus or IPMI has a non-linear address space */
 
@@ -228,7 +240,7 @@ AcpiExSetupRegion (
 #endif
 
     /*
-     * Validate the request.  The entire request from the byte offset for a
+     * Validate the request. The entire request from the byte offset for a
      * length of one field datum (access width) must fit within the region.
      * (Region length is specified in bytes)
      */
@@ -257,7 +269,7 @@ AcpiExSetupRegion (
         {
             /*
              * This is the case where the AccessType (AccWord, etc.) is wider
-             * than the region itself.  For example, a region of length one
+             * than the region itself. For example, a region of length one
              * byte, and a field with Dword access specified.
              */
             ACPI_ERROR ((AE_INFO,
@@ -362,7 +374,8 @@ AcpiExAccessRegion (
 
     /* Invoke the appropriate AddressSpace/OpRegion handler */
 
-    Status = AcpiEvAddressSpaceDispatch (RgnDesc, Function, RegionOffset,
+    Status = AcpiEvAddressSpaceDispatch (RgnDesc, ObjDesc,
+                Function, RegionOffset,
                 ACPI_MUL_8 (ObjDesc->CommonField.AccessByteWidth), Value);
 
     if (ACPI_FAILURE (Status))
@@ -398,7 +411,7 @@ AcpiExAccessRegion (
  *
  * DESCRIPTION: Check if a value is out of range of the field being written.
  *              Used to check if the values written to Index and Bank registers
- *              are out of range.  Normally, the value is simply truncated
+ *              are out of range. Normally, the value is simply truncated
  *              to fit the field, but this case is most likely a serious
  *              coding error in the ASL.
  *
@@ -425,6 +438,11 @@ AcpiExRegisterOverflow (
          * The Value is larger than the maximum value that can fit into
          * the register.
          */
+        ACPI_ERROR ((AE_INFO,
+            "Index value 0x%8.8X%8.8X overflows field width 0x%X",
+            ACPI_FORMAT_UINT64 (Value),
+            ObjDesc->CommonField.BitLength));
+
         return (TRUE);
     }
 
@@ -446,7 +464,7 @@ AcpiExRegisterOverflow (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Read or Write a single datum of a field.  The FieldType is
+ * DESCRIPTION: Read or Write a single datum of a field. The FieldType is
  *              demultiplexed here to handle the different types of fields
  *              (BufferField, RegionField, IndexField, BankField)
  *
@@ -534,9 +552,7 @@ AcpiExFieldDatumIo (
         Status = AE_OK;
         break;
 
-
     case ACPI_TYPE_LOCAL_BANK_FIELD:
-
         /*
          * Ensure that the BankValue is not beyond the capacity of
          * the register
@@ -566,7 +582,6 @@ AcpiExFieldDatumIo (
 
         /*lint -fallthrough */
 
-
     case ACPI_TYPE_LOCAL_REGION_FIELD:
         /*
          * For simple RegionFields, we just directly access the owning
@@ -576,10 +591,7 @@ AcpiExFieldDatumIo (
                     ReadWrite);
         break;
 
-
     case ACPI_TYPE_LOCAL_INDEX_FIELD:
-
-
         /*
          * Ensure that the IndexValue is not beyond the capacity of
          * the register
@@ -628,7 +640,6 @@ AcpiExFieldDatumIo (
                         Value, sizeof (UINT64));
         }
         break;
-
 
     default:
 
@@ -820,7 +831,18 @@ AcpiExExtractFromField (
     if ((ObjDesc->CommonField.StartFieldBitOffset == 0) &&
         (ObjDesc->CommonField.BitLength == AccessBitWidth))
     {
-        Status = AcpiExFieldDatumIo (ObjDesc, 0, Buffer, ACPI_READ);
+        if (BufferLength >= sizeof (UINT64))
+        {
+            Status = AcpiExFieldDatumIo (ObjDesc, 0, Buffer, ACPI_READ);
+        }
+        else
+        {
+            /* Use RawDatum (UINT64) to handle buffers < 64 bits */
+
+            Status = AcpiExFieldDatumIo (ObjDesc, 0, &RawDatum, ACPI_READ);
+            ACPI_MEMCPY (Buffer, &RawDatum, BufferLength);
+        }
+
         return_ACPI_STATUS (Status);
     }
 
@@ -960,7 +982,7 @@ AcpiExInsertIntoField (
                         ObjDesc->CommonField.BitLength);
     /*
      * We must have a buffer that is at least as long as the field
-     * we are writing to.  This is because individual fields are
+     * we are writing to. This is because individual fields are
      * indivisible and partial writes are not supported -- as per
      * the ACPI specification.
      */
@@ -976,7 +998,7 @@ AcpiExInsertIntoField (
 
         /*
          * Copy the original data to the new buffer, starting
-         * at Byte zero.  All unused (upper) bytes of the
+         * at Byte zero. All unused (upper) bytes of the
          * buffer will be 0.
          */
         ACPI_MEMCPY ((char *) NewBuffer, (char *) Buffer, BufferLength);
@@ -1105,5 +1127,3 @@ Exit:
     }
     return_ACPI_STATUS (Status);
 }
-
-

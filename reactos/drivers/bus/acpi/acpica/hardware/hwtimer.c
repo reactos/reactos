@@ -1,4 +1,3 @@
-
 /******************************************************************************
  *
  * Name: hwtimer.c - ACPI Power Management Timer Interface
@@ -9,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -32,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -44,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -56,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -81,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -114,6 +113,8 @@
  *
  *****************************************************************************/
 
+#define EXPORT_ACPI_INTERFACES
+
 #include "acpi.h"
 #include "accommon.h"
 
@@ -121,6 +122,7 @@
         ACPI_MODULE_NAME    ("hwtimer")
 
 
+#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
 /******************************************************************************
  *
  * FUNCTION:    AcpiGetTimerResolution
@@ -187,8 +189,14 @@ AcpiGetTimer (
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
-    Status = AcpiHwRead (Ticks, &AcpiGbl_FADT.XPmTimerBlock);
+    /* ACPI 5.0A: PM Timer is optional */
 
+    if (!AcpiGbl_FADT.XPmTimerBlock.Address)
+    {
+        return_ACPI_STATUS (AE_SUPPORT);
+    }
+
+    Status = AcpiHwRead (Ticks, &AcpiGbl_FADT.XPmTimerBlock);
     return_ACPI_STATUS (Status);
 }
 
@@ -215,7 +223,7 @@ ACPI_EXPORT_SYMBOL (AcpiGetTimer)
  *              a versatile and accurate timer.
  *
  *              Note that this function accommodates only a single timer
- *              rollover.  Thus for 24-bit timers, this function should only
+ *              rollover. Thus for 24-bit timers, this function should only
  *              be used for calculating durations less than ~4.6 seconds
  *              (~20 minutes for 32-bit timers) -- calculations below:
  *
@@ -241,6 +249,13 @@ AcpiGetTimerDuration (
     if (!TimeElapsed)
     {
         return_ACPI_STATUS (AE_BAD_PARAMETER);
+    }
+
+    /* ACPI 5.0A: PM Timer is optional */
+
+    if (!AcpiGbl_FADT.XPmTimerBlock.Address)
+    {
+        return_ACPI_STATUS (AE_SUPPORT);
     }
 
     /*
@@ -275,10 +290,11 @@ AcpiGetTimerDuration (
     /*
      * Compute Duration (Requires a 64-bit multiply and divide):
      *
-     * TimeElapsed = (DeltaTicks * 1000000) / PM_TIMER_FREQUENCY;
+     * TimeElapsed (microseconds) =
+     *  (DeltaTicks * ACPI_USEC_PER_SEC) / ACPI_PM_TIMER_FREQUENCY;
      */
-    Status = AcpiUtShortDivide (((UINT64) DeltaTicks) * 1000000,
-                PM_TIMER_FREQUENCY, &Quotient, NULL);
+    Status = AcpiUtShortDivide (((UINT64) DeltaTicks) * ACPI_USEC_PER_SEC,
+                ACPI_PM_TIMER_FREQUENCY, &Quotient, NULL);
 
     *TimeElapsed = (UINT32) Quotient;
     return_ACPI_STATUS (Status);
@@ -286,3 +302,4 @@ AcpiGetTimerDuration (
 
 ACPI_EXPORT_SYMBOL (AcpiGetTimerDuration)
 
+#endif /* !ACPI_REDUCED_HARDWARE */

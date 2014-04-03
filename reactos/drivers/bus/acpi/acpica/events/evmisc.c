@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -158,6 +158,7 @@ AcpiEvIsNotifyObject (
         return (TRUE);
 
     default:
+
         return (FALSE);
     }
 }
@@ -183,105 +184,82 @@ AcpiEvQueueNotifyRequest (
     UINT32                  NotifyValue)
 {
     ACPI_OPERAND_OBJECT     *ObjDesc;
-    ACPI_OPERAND_OBJECT     *HandlerObj = NULL;
-    ACPI_GENERIC_STATE      *NotifyInfo;
+    ACPI_OPERAND_OBJECT     *HandlerListHead = NULL;
+    ACPI_GENERIC_STATE      *Info;
+    UINT8                   HandlerListId = 0;
     ACPI_STATUS             Status = AE_OK;
 
 
     ACPI_FUNCTION_NAME (EvQueueNotifyRequest);
 
 
-    /*
-     * For value 3 (Ejection Request), some device method may need to be run.
-     * For value 2 (Device Wake) if _PRW exists, the _PS0 method may need
-     *   to be run.
-     * For value 0x80 (Status Change) on the power button or sleep button,
-     *   initiate soft-off or sleep operation?
-     */
-    ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-        "Dispatching Notify on [%4.4s] Node %p Value 0x%2.2X (%s)\n",
-        AcpiUtGetNodeName (Node), Node, NotifyValue,
-        AcpiUtGetNotifyName (NotifyValue)));
+    /* Are Notifies allowed on this object? */
 
-    /* Get the notify object attached to the NS Node */
+    if (!AcpiEvIsNotifyObject (Node))
+    {
+        return (AE_TYPE);
+    }
+
+    /* Get the correct notify list type (System or Device) */
+
+    if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
+    {
+        HandlerListId = ACPI_SYSTEM_HANDLER_LIST;
+    }
+    else
+    {
+        HandlerListId = ACPI_DEVICE_HANDLER_LIST;
+    }
+
+    /* Get the notify object attached to the namespace Node */
 
     ObjDesc = AcpiNsGetAttachedObject (Node);
     if (ObjDesc)
     {
-        /* We have the notify object, Get the right handler */
+        /* We have an attached object, Get the correct handler list */
 
-        switch (Node->Type)
-        {
-        /* Notify allowed only on these types */
-
-        case ACPI_TYPE_DEVICE:
-        case ACPI_TYPE_THERMAL:
-        case ACPI_TYPE_PROCESSOR:
-
-            if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
-            {
-                HandlerObj = ObjDesc->CommonNotify.SystemNotify;
-            }
-            else
-            {
-                HandlerObj = ObjDesc->CommonNotify.DeviceNotify;
-            }
-            break;
-
-        default:
-
-            /* All other types are not supported */
-
-            return (AE_TYPE);
-        }
+        HandlerListHead = ObjDesc->CommonNotify.NotifyList[HandlerListId];
     }
 
     /*
-     * If there is any handler to run, schedule the dispatcher.
-     * Check for:
-     * 1) Global system notify handler
-     * 2) Global device notify handler
-     * 3) Per-device notify handler
+     * If there is no notify handler (Global or Local)
+     * for this object, just ignore the notify
      */
-    if ((AcpiGbl_SystemNotify.Handler &&
-            (NotifyValue <= ACPI_MAX_SYS_NOTIFY)) ||
-        (AcpiGbl_DeviceNotify.Handler &&
-            (NotifyValue > ACPI_MAX_SYS_NOTIFY))  ||
-        HandlerObj)
+    if (!AcpiGbl_GlobalNotify[HandlerListId].Handler && !HandlerListHead)
     {
-        NotifyInfo = AcpiUtCreateGenericState ();
-        if (!NotifyInfo)
-        {
-            return (AE_NO_MEMORY);
-        }
-
-        if (!HandlerObj)
-        {
-            ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-                "Executing system notify handler for Notify (%4.4s, %X) "
-                "node %p\n",
-                AcpiUtGetNodeName (Node), NotifyValue, Node));
-        }
-
-        NotifyInfo->Common.DescriptorType = ACPI_DESC_TYPE_STATE_NOTIFY;
-        NotifyInfo->Notify.Node = Node;
-        NotifyInfo->Notify.Value = (UINT16) NotifyValue;
-        NotifyInfo->Notify.HandlerObj = HandlerObj;
-
-        Status = AcpiOsExecute (
-                    OSL_NOTIFY_HANDLER, AcpiEvNotifyDispatch, NotifyInfo);
-        if (ACPI_FAILURE (Status))
-        {
-            AcpiUtDeleteGenericState (NotifyInfo);
-        }
-    }
-    else
-    {
-        /* There is no notify handler (per-device or system) for this device */
-
         ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-            "No notify handler for Notify (%4.4s, %X) node %p\n",
+            "No notify handler for Notify, ignoring (%4.4s, %X) node %p\n",
             AcpiUtGetNodeName (Node), NotifyValue, Node));
+
+        return (AE_OK);
+    }
+
+    /* Setup notify info and schedule the notify dispatcher */
+
+    Info = AcpiUtCreateGenericState ();
+    if (!Info)
+    {
+        return (AE_NO_MEMORY);
+    }
+
+    Info->Common.DescriptorType = ACPI_DESC_TYPE_STATE_NOTIFY;
+
+    Info->Notify.Node = Node;
+    Info->Notify.Value = (UINT16) NotifyValue;
+    Info->Notify.HandlerListId = HandlerListId;
+    Info->Notify.HandlerListHead = HandlerListHead;
+    Info->Notify.Global = &AcpiGbl_GlobalNotify[HandlerListId];
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
+        "Dispatching Notify on [%4.4s] (%s) Value 0x%2.2X (%s) Node %p\n",
+        AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Node->Type),
+        NotifyValue, AcpiUtGetNotifyName (NotifyValue, ACPI_TYPE_ANY), Node));
+
+    Status = AcpiOsExecute (OSL_NOTIFY_HANDLER, AcpiEvNotifyDispatch,
+        Info);
+    if (ACPI_FAILURE (Status))
+    {
+        AcpiUtDeleteGenericState (Info);
     }
 
     return (Status);
@@ -305,64 +283,41 @@ static void ACPI_SYSTEM_XFACE
 AcpiEvNotifyDispatch (
     void                    *Context)
 {
-    ACPI_GENERIC_STATE      *NotifyInfo = (ACPI_GENERIC_STATE *) Context;
-    ACPI_NOTIFY_HANDLER     GlobalHandler = NULL;
-    void                    *GlobalContext = NULL;
+    ACPI_GENERIC_STATE      *Info = (ACPI_GENERIC_STATE *) Context;
     ACPI_OPERAND_OBJECT     *HandlerObj;
 
 
     ACPI_FUNCTION_ENTRY ();
 
 
-    /*
-     * We will invoke a global notify handler if installed. This is done
-     * _before_ we invoke the per-device handler attached to the device.
-     */
-    if (NotifyInfo->Notify.Value <= ACPI_MAX_SYS_NOTIFY)
-    {
-        /* Global system notification handler */
+    /* Invoke a global notify handler if installed */
 
-        if (AcpiGbl_SystemNotify.Handler)
-        {
-            GlobalHandler = AcpiGbl_SystemNotify.Handler;
-            GlobalContext = AcpiGbl_SystemNotify.Context;
-        }
-    }
-    else
+    if (Info->Notify.Global->Handler)
     {
-        /* Global driver notification handler */
-
-        if (AcpiGbl_DeviceNotify.Handler)
-        {
-            GlobalHandler = AcpiGbl_DeviceNotify.Handler;
-            GlobalContext = AcpiGbl_DeviceNotify.Context;
-        }
+        Info->Notify.Global->Handler (Info->Notify.Node,
+            Info->Notify.Value,
+            Info->Notify.Global->Context);
     }
 
-    /* Invoke the system handler first, if present */
+    /* Now invoke the local notify handler(s) if any are installed */
 
-    if (GlobalHandler)
+    HandlerObj = Info->Notify.HandlerListHead;
+    while (HandlerObj)
     {
-        GlobalHandler (NotifyInfo->Notify.Node, NotifyInfo->Notify.Value,
-            GlobalContext);
-    }
-
-    /* Now invoke the per-device handler, if present */
-
-    HandlerObj = NotifyInfo->Notify.HandlerObj;
-    if (HandlerObj)
-    {
-        HandlerObj->Notify.Handler (NotifyInfo->Notify.Node,
-            NotifyInfo->Notify.Value,
+        HandlerObj->Notify.Handler (Info->Notify.Node,
+            Info->Notify.Value,
             HandlerObj->Notify.Context);
+
+        HandlerObj = HandlerObj->Notify.Next[Info->Notify.HandlerListId];
     }
 
     /* All done with the info object */
 
-    AcpiUtDeleteGenericState (NotifyInfo);
+    AcpiUtDeleteGenericState (Info);
 }
 
 
+#if (!ACPI_REDUCED_HARDWARE)
 /******************************************************************************
  *
  * FUNCTION:    AcpiEvTerminate
@@ -409,21 +364,23 @@ AcpiEvTerminate (
 
         Status = AcpiEvWalkGpeList (AcpiHwDisableGpeBlock, NULL);
 
-        /* Remove SCI handler */
-
-        Status = AcpiEvRemoveSciHandler ();
-        if (ACPI_FAILURE(Status))
-        {
-            ACPI_ERROR ((AE_INFO,
-                "Could not remove SCI handler"));
-        }
-
         Status = AcpiEvRemoveGlobalLockHandler ();
         if (ACPI_FAILURE(Status))
         {
             ACPI_ERROR ((AE_INFO,
                 "Could not remove Global Lock handler"));
         }
+
+        AcpiGbl_EventsInitialized = FALSE;
+    }
+
+    /* Remove SCI handlers */
+
+    Status = AcpiEvRemoveAllSciHandlers ();
+    if (ACPI_FAILURE(Status))
+    {
+        ACPI_ERROR ((AE_INFO,
+            "Could not remove SCI handler"));
     }
 
     /* Deallocate all handler objects installed within GPE info structs */
@@ -442,3 +399,5 @@ AcpiEvTerminate (
     }
     return_VOID;
 }
+
+#endif /* !ACPI_REDUCED_HARDWARE */

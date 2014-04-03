@@ -9,13 +9,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -32,7 +32,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -44,11 +44,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -56,7 +56,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -82,10 +82,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -94,14 +94,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -123,11 +123,64 @@
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evsci")
 
+#if (!ACPI_REDUCED_HARDWARE) /* Entire module */
+
 /* Local prototypes */
 
 static UINT32 ACPI_SYSTEM_XFACE
 AcpiEvSciXruptHandler (
     void                    *Context);
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiEvSciDispatch
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Status code indicates whether interrupt was handled.
+ *
+ * DESCRIPTION: Dispatch the SCI to all host-installed SCI handlers.
+ *
+ ******************************************************************************/
+
+UINT32
+AcpiEvSciDispatch (
+    void)
+{
+    ACPI_SCI_HANDLER_INFO   *SciHandler;
+    ACPI_CPU_FLAGS          Flags;
+    UINT32                  IntStatus = ACPI_INTERRUPT_NOT_HANDLED;
+
+
+    ACPI_FUNCTION_NAME (EvSciDispatch);
+
+
+    /* Are there any host-installed SCI handlers? */
+
+    if (!AcpiGbl_SciHandlerList)
+    {
+        return (IntStatus);
+    }
+
+    Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+
+    /* Invoke all host-installed SCI handlers */
+
+    SciHandler = AcpiGbl_SciHandlerList;
+    while (SciHandler)
+    {
+        /* Invoke the installed handler (at interrupt level) */
+
+        IntStatus |= SciHandler->Address (
+            SciHandler->Context);
+
+        SciHandler = SciHandler->Next;
+    }
+
+    AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+    return (IntStatus);
+}
 
 
 /*******************************************************************************
@@ -155,7 +208,7 @@ AcpiEvSciXruptHandler (
 
 
     /*
-     * We are guaranteed by the ACPI CA initialization/shutdown code that
+     * We are guaranteed by the ACPICA initialization/shutdown code that
      * if this interrupt handler is installed, ACPI is enabled.
      */
 
@@ -170,6 +223,10 @@ AcpiEvSciXruptHandler (
      * Check for and dispatch any GPEs that have occurred
      */
     InterruptHandled |= AcpiEvGpeDetect (GpeXruptList);
+
+    /* Invoke all host-installed SCI handlers */
+
+    InterruptHandled |= AcpiEvSciDispatch ();
 
     AcpiSciCount++;
     return_UINT32 (InterruptHandled);
@@ -200,14 +257,13 @@ AcpiEvGpeXruptHandler (
 
 
     /*
-     * We are guaranteed by the ACPI CA initialization/shutdown code that
+     * We are guaranteed by the ACPICA initialization/shutdown code that
      * if this interrupt handler is installed, ACPI is enabled.
      */
 
     /* GPEs: Check for and dispatch any GPEs that have occurred */
 
     InterruptHandled |= AcpiEvGpeDetect (GpeXruptList);
-
     return_UINT32 (InterruptHandled);
 }
 
@@ -242,15 +298,15 @@ AcpiEvInstallSciHandler (
 
 /******************************************************************************
  *
- * FUNCTION:    AcpiEvRemoveSciHandler
+ * FUNCTION:    AcpiEvRemoveAllSciHandlers
  *
  * PARAMETERS:  none
  *
- * RETURN:      E_OK if handler uninstalled OK, E_ERROR if handler was not
+ * RETURN:      AE_OK if handler uninstalled, AE_ERROR if handler was not
  *              installed to begin with
  *
  * DESCRIPTION: Remove the SCI interrupt handler. No further SCIs will be
- *              taken.
+ *              taken. Remove all host-installed SCI handlers.
  *
  * Note:  It doesn't seem important to disable all events or set the event
  *        enable registers to their original values. The OS should disable
@@ -260,13 +316,15 @@ AcpiEvInstallSciHandler (
  ******************************************************************************/
 
 ACPI_STATUS
-AcpiEvRemoveSciHandler (
+AcpiEvRemoveAllSciHandlers (
     void)
 {
+    ACPI_SCI_HANDLER_INFO   *SciHandler;
+    ACPI_CPU_FLAGS          Flags;
     ACPI_STATUS             Status;
 
 
-    ACPI_FUNCTION_TRACE (EvRemoveSciHandler);
+    ACPI_FUNCTION_TRACE (EvRemoveAllSciHandlers);
 
 
     /* Just let the OS remove the handler and disable the level */
@@ -274,7 +332,24 @@ AcpiEvRemoveSciHandler (
     Status = AcpiOsRemoveInterruptHandler ((UINT32) AcpiGbl_FADT.SciInterrupt,
                 AcpiEvSciXruptHandler);
 
+    if (!AcpiGbl_SciHandlerList)
+    {
+        return (Status);
+    }
+
+    Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+
+    /* Free all host-installed SCI handlers */
+
+    while (AcpiGbl_SciHandlerList)
+    {
+        SciHandler = AcpiGbl_SciHandlerList;
+        AcpiGbl_SciHandlerList = SciHandler->Next;
+        ACPI_FREE (SciHandler);
+    }
+
+    AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
     return_ACPI_STATUS (Status);
 }
 
-
+#endif /* !ACPI_REDUCED_HARDWARE */

@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -121,47 +121,6 @@
 
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utdecode")
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiFormatException
- *
- * PARAMETERS:  Status       - The ACPI_STATUS code to be formatted
- *
- * RETURN:      A string containing the exception text. A valid pointer is
- *              always returned.
- *
- * DESCRIPTION: This function translates an ACPI exception into an ASCII string
- *              It is here instead of utxface.c so it is always present.
- *
- ******************************************************************************/
-
-const char *
-AcpiFormatException (
-    ACPI_STATUS             Status)
-{
-    const char              *Exception = NULL;
-
-
-    ACPI_FUNCTION_ENTRY ();
-
-
-    Exception = AcpiUtValidateException (Status);
-    if (!Exception)
-    {
-        /* Exception code was not recognized */
-
-        ACPI_ERROR ((AE_INFO,
-            "Unknown exception code: 0x%8.8X", Status));
-
-        Exception = "UNKNOWN_STATUS_CODE";
-    }
-
-    return (ACPI_CAST_PTR (const char, Exception));
-}
-
-ACPI_EXPORT_SYMBOL (AcpiFormatException)
 
 
 /*
@@ -252,14 +211,17 @@ AcpiUtHexToAsciiChar (
 
 const char        *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS] =
 {
-    "SystemMemory",
-    "SystemIO",
-    "PCI_Config",
-    "EmbeddedControl",
-    "SMBus",
-    "SystemCMOS",
-    "PCIBARTarget",
-    "IPMI"
+    "SystemMemory",     /* 0x00 */
+    "SystemIO",         /* 0x01 */
+    "PCI_Config",       /* 0x02 */
+    "EmbeddedControl",  /* 0x03 */
+    "SMBus",            /* 0x04 */
+    "SystemCMOS",       /* 0x05 */
+    "PCIBARTarget",     /* 0x06 */
+    "IPMI",             /* 0x07 */
+    "GeneralPurposeIo", /* 0x08 */
+    "GenericSerialBus", /* 0x09 */
+    "PCC"               /* 0x0A */
 };
 
 
@@ -637,39 +599,99 @@ AcpiUtGetMutexName (
 
 /* Names for Notify() values, used for debug output */
 
-static const char           *AcpiGbl_NotifyValueNames[] =
+static const char           *AcpiGbl_GenericNotify[ACPI_NOTIFY_MAX + 1] =
 {
-    "Bus Check",
-    "Device Check",
-    "Device Wake",
-    "Eject Request",
-    "Device Check Light",
-    "Frequency Mismatch",
-    "Bus Mode Mismatch",
-    "Power Fault",
-    "Capabilities Check",
-    "Device PLD Check",
-    "Reserved",
-    "System Locality Update"
+    /* 00 */ "Bus Check",
+    /* 01 */ "Device Check",
+    /* 02 */ "Device Wake",
+    /* 03 */ "Eject Request",
+    /* 04 */ "Device Check Light",
+    /* 05 */ "Frequency Mismatch",
+    /* 06 */ "Bus Mode Mismatch",
+    /* 07 */ "Power Fault",
+    /* 08 */ "Capabilities Check",
+    /* 09 */ "Device PLD Check",
+    /* 0A */ "Reserved",
+    /* 0B */ "System Locality Update",
+    /* 0C */ "Shutdown Request"
 };
+
+static const char           *AcpiGbl_DeviceNotify[4] =
+{
+    /* 80 */ "Status Change",
+    /* 81 */ "Information Change",
+    /* 82 */ "Device-Specific Change",
+    /* 83 */ "Device-Specific Change"
+};
+
+static const char           *AcpiGbl_ProcessorNotify[4] =
+{
+    /* 80 */ "Performance Capability Change",
+    /* 81 */ "C-State Change",
+    /* 82 */ "Throttling Capability Change",
+    /* 83 */ "Device-Specific Change"
+};
+
+static const char           *AcpiGbl_ThermalNotify[4] =
+{
+    /* 80 */ "Thermal Status Change",
+    /* 81 */ "Thermal Trip Point Change",
+    /* 82 */ "Thermal Device List Change",
+    /* 83 */ "Thermal Relationship Change"
+};
+
 
 const char *
 AcpiUtGetNotifyName (
-    UINT32                  NotifyValue)
+    UINT32                  NotifyValue,
+    ACPI_OBJECT_TYPE        Type)
 {
+
+    /* 00 - 0C are common to all object types */
 
     if (NotifyValue <= ACPI_NOTIFY_MAX)
     {
-        return (AcpiGbl_NotifyValueNames[NotifyValue]);
+        return (AcpiGbl_GenericNotify[NotifyValue]);
     }
-    else if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
+
+    /* 0D - 7F are reserved */
+
+    if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
     {
         return ("Reserved");
     }
-    else /* Greater or equal to 0x80 */
+
+    /* 80 - 83 are per-object-type */
+
+    if (NotifyValue <= 0x83)
     {
-        return ("**Device Specific**");
+        switch (Type)
+        {
+        case ACPI_TYPE_ANY:
+        case ACPI_TYPE_DEVICE:
+            return (AcpiGbl_DeviceNotify [NotifyValue - 0x80]);
+
+        case ACPI_TYPE_PROCESSOR:
+            return (AcpiGbl_ProcessorNotify [NotifyValue - 0x80]);
+
+        case ACPI_TYPE_THERMAL:
+            return (AcpiGbl_ThermalNotify [NotifyValue - 0x80]);
+
+        default:
+            return ("Target object type does not support notifies");
+        }
     }
+
+    /* 84 - BF are device-specific */
+
+    if (NotifyValue <= ACPI_MAX_DEVICE_SPECIFIC_NOTIFY)
+    {
+        return ("Device-Specific");
+    }
+
+    /* C0 and above are hardware-specific */
+
+    return ("Hardware-Specific");
 }
 #endif
 

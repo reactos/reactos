@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -135,74 +135,101 @@
 typedef const struct acpi_dmtable_info
 {
     UINT8                       Opcode;
-    UINT8                       Offset;
+    UINT16                      Offset;
     char                        *Name;
     UINT8                       Flags;
 
 } ACPI_DMTABLE_INFO;
 
+/* Values for Flags field above */
+
 #define DT_LENGTH                       0x01    /* Field is a subtable length */
 #define DT_FLAG                         0x02    /* Field is a flag value */
 #define DT_NON_ZERO                     0x04    /* Field must be non-zero */
-
-/* TBD: Not used at this time */
-
-#define DT_OPTIONAL                     0x08
-#define DT_COUNT                        0x10
+#define DT_OPTIONAL                     0x08    /* Field is optional */
+#define DT_DESCRIBES_OPTIONAL           0x10    /* Field describes an optional field (length, etc.) */
+#define DT_COUNT                        0x20    /* Currently not used */
 
 /*
  * Values for Opcode above.
- * Note: 0-7 must not change, used as a flag shift value
+ * Note: 0-7 must not change, they are used as a flag shift value. Other
+ * than those, new values can be added wherever appropriate.
  */
-#define ACPI_DMT_FLAG0                  0
-#define ACPI_DMT_FLAG1                  1
-#define ACPI_DMT_FLAG2                  2
-#define ACPI_DMT_FLAG3                  3
-#define ACPI_DMT_FLAG4                  4
-#define ACPI_DMT_FLAG5                  5
-#define ACPI_DMT_FLAG6                  6
-#define ACPI_DMT_FLAG7                  7
-#define ACPI_DMT_FLAGS0                 8
-#define ACPI_DMT_FLAGS2                 9
-#define ACPI_DMT_UINT8                  10
-#define ACPI_DMT_UINT16                 11
-#define ACPI_DMT_UINT24                 12
-#define ACPI_DMT_UINT32                 13
-#define ACPI_DMT_UINT56                 14
-#define ACPI_DMT_UINT64                 15
-#define ACPI_DMT_STRING                 16
-#define ACPI_DMT_NAME4                  17
-#define ACPI_DMT_NAME6                  18
-#define ACPI_DMT_NAME8                  19
-#define ACPI_DMT_CHKSUM                 20
-#define ACPI_DMT_SPACEID                21
-#define ACPI_DMT_GAS                    22
-#define ACPI_DMT_ASF                    23
-#define ACPI_DMT_DMAR                   24
-#define ACPI_DMT_HEST                   25
-#define ACPI_DMT_HESTNTFY               26
-#define ACPI_DMT_HESTNTYP               27
-#define ACPI_DMT_MADT                   28
-#define ACPI_DMT_SRAT                   29
-#define ACPI_DMT_EXIT                   30
-#define ACPI_DMT_SIG                    31
-#define ACPI_DMT_FADTPM                 32
-#define ACPI_DMT_BUF16                  33
-#define ACPI_DMT_IVRS                   34
-#define ACPI_DMT_BUFFER                 35
-#define ACPI_DMT_PCI_PATH               36
-#define ACPI_DMT_EINJACT                37
-#define ACPI_DMT_EINJINST               38
-#define ACPI_DMT_ERSTACT                39
-#define ACPI_DMT_ERSTINST               40
-#define ACPI_DMT_ACCWIDTH               41
-#define ACPI_DMT_UNICODE                42
-#define ACPI_DMT_UUID                   43
-#define ACPI_DMT_DEVICE_PATH            44
-#define ACPI_DMT_LABEL                  45
-#define ACPI_DMT_BUF7                   46
-#define ACPI_DMT_BUF128                 47
-#define ACPI_DMT_SLIC                   48
+typedef enum
+{
+    /* Simple Data Types */
+
+    ACPI_DMT_FLAG0          = 0,
+    ACPI_DMT_FLAG1          = 1,
+    ACPI_DMT_FLAG2          = 2,
+    ACPI_DMT_FLAG3          = 3,
+    ACPI_DMT_FLAG4          = 4,
+    ACPI_DMT_FLAG5          = 5,
+    ACPI_DMT_FLAG6          = 6,
+    ACPI_DMT_FLAG7          = 7,
+    ACPI_DMT_FLAGS0,
+    ACPI_DMT_FLAGS1,
+    ACPI_DMT_FLAGS2,
+    ACPI_DMT_FLAGS4,
+    ACPI_DMT_UINT8,
+    ACPI_DMT_UINT16,
+    ACPI_DMT_UINT24,
+    ACPI_DMT_UINT32,
+    ACPI_DMT_UINT40,
+    ACPI_DMT_UINT48,
+    ACPI_DMT_UINT56,
+    ACPI_DMT_UINT64,
+    ACPI_DMT_BUF7,
+    ACPI_DMT_BUF10,
+    ACPI_DMT_BUF16,
+    ACPI_DMT_BUF128,
+    ACPI_DMT_SIG,
+    ACPI_DMT_STRING,
+    ACPI_DMT_NAME4,
+    ACPI_DMT_NAME6,
+    ACPI_DMT_NAME8,
+
+    /* Types that are decoded to strings and miscellaneous */
+
+    ACPI_DMT_ACCWIDTH,
+    ACPI_DMT_CHKSUM,
+    ACPI_DMT_GAS,
+    ACPI_DMT_SPACEID,
+    ACPI_DMT_UNICODE,
+    ACPI_DMT_UUID,
+
+    /* Types used only for the Data Table Compiler */
+
+    ACPI_DMT_BUFFER,
+    ACPI_DMT_DEVICE_PATH,
+    ACPI_DMT_LABEL,
+    ACPI_DMT_PCI_PATH,
+
+    /* Types that are specific to particular ACPI tables */
+
+    ACPI_DMT_ASF,
+    ACPI_DMT_DMAR,
+    ACPI_DMT_EINJACT,
+    ACPI_DMT_EINJINST,
+    ACPI_DMT_ERSTACT,
+    ACPI_DMT_ERSTINST,
+    ACPI_DMT_FADTPM,
+    ACPI_DMT_HEST,
+    ACPI_DMT_HESTNTFY,
+    ACPI_DMT_HESTNTYP,
+    ACPI_DMT_IVRS,
+    ACPI_DMT_MADT,
+    ACPI_DMT_PCCT,
+    ACPI_DMT_PMTT,
+    ACPI_DMT_SLIC,
+    ACPI_DMT_SRAT,
+
+    /* Special opcodes */
+
+    ACPI_DMT_EXTRA_TEXT,
+    ACPI_DMT_EXIT
+
+} ACPI_ENTRY_TYPES;
 
 typedef
 void (*ACPI_DMTABLE_HANDLER) (
@@ -247,6 +274,11 @@ ACPI_STATUS (*ASL_WALK_CALLBACK) (
 #define ASL_WALK_CALLBACK_DEFINED
 #endif
 
+typedef
+void (*ACPI_RESOURCE_HANDLER) (
+    AML_RESOURCE            *Resource,
+    UINT32                  Length,
+    UINT32                  Level);
 
 typedef struct acpi_resource_tag
 {
@@ -274,8 +306,18 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAsf4[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAsfHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBoot[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBert[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoBgrt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCpep[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCpep0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCsrt0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCsrt1[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoCsrt2[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2Device[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2Addr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2Size[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2Name[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbg2OemData[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDbgp[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmar[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmarHdr[];
@@ -284,6 +326,7 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmar0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmar1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmar2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDmar3[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoDrtm[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEcdt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEinj[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoEinj0[];
@@ -293,7 +336,13 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFacs[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt3[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFadt5[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFpdt[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFpdtHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFpdt0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoFpdt1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoGas[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoGtdt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoHeader[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoHest[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoHest0[];
@@ -326,14 +375,37 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt7[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt8[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt9[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt10[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt11[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadt12[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMadtHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMcfg[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMcfg0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMchi[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst0A[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst0B[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst1[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMtmr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMtmr0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmtt[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmtt0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmtt1[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmtt1a[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmtt2[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPmttHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPcct[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPcctHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoPcct0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoRsdp1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoRsdp2[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3pt[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3ptHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3pt0[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoS3pt1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSbst[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlicHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSlic0[];
@@ -347,7 +419,10 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSrat0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSrat1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoSrat2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoTcpa[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoTpm2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoUefi[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoVrtc[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoVrtc0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWaet[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat0[];
@@ -410,6 +485,14 @@ AcpiDmDumpCpep (
     ACPI_TABLE_HEADER       *Table);
 
 void
+AcpiDmDumpCsrt (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpDbg2 (
+    ACPI_TABLE_HEADER       *Table);
+
+void
 AcpiDmDumpDmar (
     ACPI_TABLE_HEADER       *Table);
 
@@ -426,6 +509,10 @@ AcpiDmDumpFadt (
     ACPI_TABLE_HEADER       *Table);
 
 void
+AcpiDmDumpFpdt (
+    ACPI_TABLE_HEADER       *Table);
+
+void
 AcpiDmDumpHest (
     ACPI_TABLE_HEADER       *Table);
 
@@ -434,15 +521,31 @@ AcpiDmDumpIvrs (
     ACPI_TABLE_HEADER       *Table);
 
 void
-AcpiDmDumpMcfg (
-    ACPI_TABLE_HEADER       *Table);
-
-void
 AcpiDmDumpMadt (
     ACPI_TABLE_HEADER       *Table);
 
 void
+AcpiDmDumpMcfg (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpMpst (
+    ACPI_TABLE_HEADER       *Table);
+
+void
 AcpiDmDumpMsct (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpMtmr (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpPcct (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpPmtt (
     ACPI_TABLE_HEADER       *Table);
 
 UINT32
@@ -451,6 +554,10 @@ AcpiDmDumpRsdp (
 
 void
 AcpiDmDumpRsdt (
+    ACPI_TABLE_HEADER       *Table);
+
+UINT32
+AcpiDmDumpS3pt (
     ACPI_TABLE_HEADER       *Table);
 
 void
@@ -463,6 +570,10 @@ AcpiDmDumpSlit (
 
 void
 AcpiDmDumpSrat (
+    ACPI_TABLE_HEADER       *Table);
+
+void
+AcpiDmDumpVrtc (
     ACPI_TABLE_HEADER       *Table);
 
 void
@@ -510,6 +621,22 @@ AcpiDmListType (
 
 void
 AcpiDmMethodFlags (
+    ACPI_PARSE_OBJECT       *Op);
+
+void
+AcpiDmDisplayTargetPathname (
+    ACPI_PARSE_OBJECT       *Op);
+
+void
+AcpiDmNotifyDescription (
+    ACPI_PARSE_OBJECT       *Op);
+
+void
+AcpiDmPredefinedDescription (
+    ACPI_PARSE_OBJECT       *Op);
+
+void
+AcpiDmFieldPredefinedDescription (
     ACPI_PARSE_OBJECT       *Op);
 
 void
@@ -584,11 +711,11 @@ AcpiDmByteList (
     ACPI_PARSE_OBJECT       *Op);
 
 void
-AcpiDmIsEisaId (
+AcpiDmCheckForHardwareId (
     ACPI_PARSE_OBJECT       *Op);
 
 void
-AcpiDmEisaId (
+AcpiDmDecompressEisaId (
     UINT32                  EncodedId);
 
 BOOLEAN
@@ -599,11 +726,22 @@ BOOLEAN
 AcpiDmIsStringBuffer (
     ACPI_PARSE_OBJECT       *Op);
 
+BOOLEAN
+AcpiDmIsPldBuffer (
+    ACPI_PARSE_OBJECT       *Op);
+
+
+/*
+ * dmdeferred
+ */
+ACPI_STATUS
+AcpiDmParseDeferredOps (
+    ACPI_PARSE_OBJECT       *Root);
+
 
 /*
  * dmextern
  */
-
 ACPI_STATUS
 AcpiDmAddToExternalFileList (
     char                    *PathList);
@@ -613,11 +751,19 @@ AcpiDmClearExternalFileList (
     void);
 
 void
-AcpiDmAddToExternalList (
+AcpiDmAddOpToExternalList (
     ACPI_PARSE_OBJECT       *Op,
     char                    *Path,
     UINT8                   Type,
-    UINT32                  Value);
+    UINT32                  Value,
+    UINT16                  Flags);
+
+void
+AcpiDmAddNodeToExternalList (
+    ACPI_NAMESPACE_NODE     *Node,
+    UINT8                   Type,
+    UINT32                  Value,
+    UINT16                  Flags);
 
 void
 AcpiDmAddExternalsToNamespace (
@@ -635,6 +781,13 @@ void
 AcpiDmEmitExternals (
     void);
 
+void
+AcpiDmUnresolvedWarning (
+    UINT8                   Type);
+
+void
+AcpiDmGetExternalsFromFile (
+    void);
 
 /*
  * dmresrc
@@ -668,6 +821,7 @@ AcpiDmResourceTemplate (
 
 ACPI_STATUS
 AcpiDmIsResourceTemplate (
+    ACPI_WALK_STATE         *WalkState,
     ACPI_PARSE_OBJECT       *Op);
 
 void
@@ -743,6 +897,18 @@ AcpiDmVendorLargeDescriptor (
     UINT32                  Level);
 
 void
+AcpiDmGpioDescriptor (
+    AML_RESOURCE            *Resource,
+    UINT32                  Length,
+    UINT32                  Level);
+
+void
+AcpiDmSerialBusDescriptor (
+    AML_RESOURCE            *Resource,
+    UINT32                  Length,
+    UINT32                  Level);
+
+void
 AcpiDmVendorCommon (
     char                    *Name,
     UINT8                   *ByteData,
@@ -761,6 +927,12 @@ AcpiDmIrqDescriptor (
 
 void
 AcpiDmDmaDescriptor (
+    AML_RESOURCE            *Resource,
+    UINT32                  Length,
+    UINT32                  Level);
+
+void
+AcpiDmFixedDmaDescriptor (
     AML_RESOURCE            *Resource,
     UINT32                  Length,
     UINT32                  Level);
