@@ -1776,6 +1776,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
          */
          if ( Class->fnid != FNID_DIALOG )
          {
+            ERR("No parent and not a dialog Fix HACK\n");
             if (pti->ppi->dwLayout & LAYOUT_RTL)
             {
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
@@ -2114,7 +2115,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Now find the parent and the owner window */
+   ///////////////
+   // FIXME!!!! Breaks wine win.c test_CreateWindow line 5470!
    hWndParent = pti->rpdesk->pDeskInfo->spwnd->head.h;
+   ///////////////
    hWndOwner = NULL;
 
     if (Cs->hwndParent == HWND_MESSAGE)
