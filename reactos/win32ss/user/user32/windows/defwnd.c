@@ -123,15 +123,13 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
     /* Remove frame from rectangle */
     if (UserHasThickFrameStyle(Style, ExStyle ))
     {
-        InflateRect(rect, -GetSystemMetrics(SM_CXFRAME),
-                    -GetSystemMetrics(SM_CYFRAME));
+        InflateRect(rect, -GetSystemMetrics(SM_CXFRAME), -GetSystemMetrics(SM_CYFRAME));
     }
     else
     {
         if (UserHasDlgFrameStyle(Style, ExStyle ))
         {
-            InflateRect(rect, -GetSystemMetrics(SM_CXDLGFRAME),
-                        -GetSystemMetrics(SM_CYDLGFRAME));
+            InflateRect(rect, -GetSystemMetrics(SM_CXDLGFRAME), -GetSystemMetrics(SM_CYDLGFRAME));
             /* FIXME: this isn't in NC_AdjustRect? why not? */
             if (ExStyle & WS_EX_DLGMODALFRAME)
 	            InflateRect( rect, -1, 0 );
@@ -140,10 +138,18 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
         {
             if (UserHasThinFrameStyle(Style, ExStyle))
             {
-                InflateRect(rect, -GetSystemMetrics(SM_CXBORDER),
-                            -GetSystemMetrics(SM_CYBORDER));
+                InflateRect(rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER));
             }
         }
+    }
+    /* We have additional border information if the window
+     * is a child (but not an MDI child) */
+    if ((Style & WS_CHILD) && !(ExStyle & WS_EX_MDICHILD))
+    {
+       if (ExStyle & WS_EX_CLIENTEDGE)
+          InflateRect (rect, -GetSystemMetrics(SM_CXEDGE), -GetSystemMetrics(SM_CYEDGE));
+       if (ExStyle & WS_EX_STATICEDGE)
+          InflateRect (rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER));
     }
 }
 
@@ -1086,7 +1092,6 @@ DefWndScreenshot(HWND hWnd)
     ReleaseDC(hWnd, hdc2);
 
     CloseClipboard();
-
 }
 
 
