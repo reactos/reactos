@@ -163,7 +163,7 @@ add_library(acpica
     ${ACPICA_SOURCE}
     acpica/utilities/utglobal.c)
 
-add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
+#add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 add_dependencies(acpica bugcodes)
 
