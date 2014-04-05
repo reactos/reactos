@@ -1353,7 +1353,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    co_WinPosSetWindowPos( Wnd,
                          (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
                           pt.x, pt.y, 0, 0, swFlags);
-   //ERR("IntSetParent SetWindowPos 2\n");
+   //ERR("IntSetParent SetWindowPos 2 X %d Y %d\n",pt.x, pt.y);
    if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
    return WndOldParent;
@@ -1742,12 +1742,12 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
 
 /* Allocates and initializes a window */
 PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
-                                        PLARGE_STRING WindowName,
-                                        PCLS Class,
-                                        PWND ParentWindow,
-                                        PWND OwnerWindow,
-                                        PVOID acbiBuffer,
-                                        PDESKTOP pdeskCreated)
+                              PLARGE_STRING WindowName,
+                              PCLS Class,
+                              PWND ParentWindow,
+                              PWND OwnerWindow,
+                              PVOID acbiBuffer,
+                              PDESKTOP pdeskCreated)
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1759,8 +1759,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
    if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
-   {
-      if (ParentWindow)
+   {      // Need both here for wine win.c test_CreateWindow.
+      if (Cs->hwndParent && ParentWindow)
       {
          if ( (Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD &&
               ParentWindow->ExStyle & WS_EX_LAYOUTRTL &&
@@ -1776,7 +1776,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
          */
          if ( Class->fnid != FNID_DIALOG )
          {
-            ERR("No parent and not a dialog Fix HACK\n");
             if (pti->ppi->dwLayout & LAYOUT_RTL)
             {
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
@@ -2115,10 +2114,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Now find the parent and the owner window */
-   ///////////////
-   // FIXME!!!! Breaks wine win.c test_CreateWindow line 5470!
    hWndParent = pti->rpdesk->pDeskInfo->spwnd->head.h;
-   ///////////////
    hWndOwner = NULL;
 
     if (Cs->hwndParent == HWND_MESSAGE)
