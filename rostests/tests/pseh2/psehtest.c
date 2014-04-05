@@ -22,6 +22,10 @@
 
 #include <pseh/pseh2.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define STANDALONE
 #include <wine/test.h>
 
@@ -54,7 +58,11 @@ extern int return_minusone_4(void *, int);
 
 extern void set_positive(int *);
 
-static int call_test(int (*)(void));
+//static int call_test(int (*)(void));
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #define DEFINE_TEST(NAME_) static int NAME_(void)
 
@@ -2487,6 +2495,25 @@ DEFINE_TEST(test_unvolatile_3)
     return FALSE;
 }
 
+DEFINE_TEST(test_unvolatile_4)
+{
+    unsigned result = 0xdeadbeef;
+
+    _SEH2_TRY
+    {
+        *(char*)0x80000000 = 1;
+    }
+    _SEH2_EXCEPT(result == 0xdeadbeef)
+    {
+        result = 2;
+    }
+    _SEH2_END;
+
+    result = (result == 0xdeadbeef) ? 0 : result + 1;
+
+    return result == 3;
+}
+
 DEFINE_TEST(test_finally_goto)
 {
     volatile int val = 0;
@@ -2814,6 +2841,7 @@ void testsuite_syntax(void)
 		USE_TEST(test_unvolatile),
 		USE_TEST(test_unvolatile_2),
 		USE_TEST(test_unvolatile_3),
+		USE_TEST(test_unvolatile_4),
 		USE_TEST(test_finally_goto),
 		USE_TEST(test_nested_exception),
 		USE_TEST(test_PSEH3_bug),
