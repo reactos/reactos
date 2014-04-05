@@ -81,7 +81,18 @@ typedef struct _PRIVATE_CACHE_MAP
     LIST_ENTRY PrivateLinks;
 } PRIVATE_CACHE_MAP, *PPRIVATE_CACHE_MAP;
 
-typedef struct _MBCB {
+typedef struct _BITMAP_RANGE
+{
+    LIST_ENTRY Links;
+    LONGLONG BasePage;
+    ULONG FirstDirtyPage;
+    ULONG LastDirtyPage;
+    ULONG DirtyPages;
+    PULONG Bitmap;
+} BITMAP_RANGE, *PBITMAP_RANGE;
+
+typedef struct _MBCB
+{
     CSHORT NodeTypeCode;
     CSHORT NodeIsInZone;
     ULONG PagesToWrite;
