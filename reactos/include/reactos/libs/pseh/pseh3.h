@@ -230,17 +230,19 @@ _SEH3$_AutoCleanup(
 #define _SEH3$_NESTED_FUNC_RETURN(_Result) \
         /* Restore esp and return to the caller */ \
         asm volatile ("movl %[FixedEsp], %%esp\nret\n" \
-            : : "a"(_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "memory")
+            : : "a"(_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "ebx", "ecx", "edx", "esi", "edi", "flags", "memory")
 
 /* The filter "function" */
 #define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
     { \
         /* Evaluate and return the filter expression */ \
+        asm volatile ("#\n" : : : "eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"); \
         _SEH3$_NESTED_FUNC_RETURN((expression)); \
     }
 
 #define _SEH3$_FINALLY_FUNC_OPEN(_Name) \
     { \
+        asm volatile ("#\n" : : : "eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"); \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
         for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(0); 0;}))
@@ -429,6 +431,7 @@ _SEH3$_AutoCleanup(
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        _SEH3$_TrylevelFrame.ExceptionPointers = (PSEH3$_EXCEPTION_POINTERS)1; \
 \
         goto _SEH3$_l_DoTry; \
 \
