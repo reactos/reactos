@@ -196,7 +196,7 @@ GetINIValue(PCWCH AppName, PCWCH KeyName, PCWCH FileName)
         WideCharToMultiByte(CP_ACP, 0, Buffer, Length + 1, AsciiBuffer, Length + 1, NULL, NULL);
 
         ReturnedString = AsciiBuffer;
-        delete AsciiBuffer;
+        delete[] AsciiBuffer;
     }
 
     return ReturnedString;

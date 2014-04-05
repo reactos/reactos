@@ -178,7 +178,7 @@ CWineTest::GetNextTest()
         m_CurrentFile.clear();
 
         /* Also free the memory for the list buffer */
-        delete m_ListBuffer;
+        delete[] m_ListBuffer;
         m_ListBuffer = NULL;
 
         return false;
