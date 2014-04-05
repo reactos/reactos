@@ -219,7 +219,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         GET_STRING2(L"URLSite", Info.szUrlSite);
         GET_STRING2(L"CDPath", Info.szCDPath);
 
-        if (!lpEnumProc(Info)) break;
+        if (!lpEnumProc(&Info)) break;
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);

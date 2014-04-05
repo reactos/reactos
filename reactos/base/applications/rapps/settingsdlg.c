@@ -48,15 +48,15 @@ ChooseFolder(HWND hwnd)
 }
 
 static VOID
-InitSettingsControls(HWND hDlg, SETTINGS_INFO Info)
+InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 {
-    SendDlgItemMessage(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info.bSaveWndPos, 0);
-    SendDlgItemMessage(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info.bUpdateAtStart, 0);
-    SendDlgItemMessage(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info.bLogEnabled, 0);
-    SendDlgItemMessage(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info.bDelInstaller, 0);
+    SendDlgItemMessage(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info->bSaveWndPos, 0);
+    SendDlgItemMessage(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info->bUpdateAtStart, 0);
+    SendDlgItemMessage(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info->bLogEnabled, 0);
+    SendDlgItemMessage(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info->bDelInstaller, 0);
 
     SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
-                   Info.szDownloadDir);
+                   Info->szDownloadDir);
 }
 
 static
@@ -68,7 +68,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
         {
             NewSettingsInfo = SettingsInfo;
-            InitSettingsControls(hDlg, SettingsInfo);
+            InitSettingsControls(hDlg, &SettingsInfo);
         }
         break;
 
@@ -98,7 +98,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
                 case IDC_DEFAULT_SETTINGS:
                     FillDefaultSettings(&NewSettingsInfo);
-                    InitSettingsControls(hDlg, NewSettingsInfo);
+                    InitSettingsControls(hDlg, &NewSettingsInfo);
                     break;
 
                 case IDOK:
