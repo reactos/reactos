@@ -41,6 +41,8 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
                      bRet = TRUE;
                  }
             }
+
+            CloseServiceHandle(hService);
         }
 
         CloseServiceHandle(hSCManager);
@@ -163,9 +165,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                               0,
                               FALSE);
 
-            HeapFree(ProcessHeap,
-                     0,
-                     lpNoDepends);
+            LocalFree(lpNoDepends);
 
             /* Disable the window */
             EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
