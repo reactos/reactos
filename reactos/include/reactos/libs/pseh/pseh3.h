@@ -226,36 +226,24 @@ _SEH3$_Unregister(
 #define _SEH3$_DECLARE_FILTER_FUNC(_Name)
 #define _SEH3$_DEFINE_DUMMY_FINALLY(_Name)
 
-/* The "nested" functions are a piece of code with a ret instruction at the end */
-#define _SEH3$_NESTED_FUNC_OPEN() \
-    { \
-        int _SEH3$_Result = 0; \
-
 /* On invocation, the AllocaFrame field is loaded with the return esp value */
-#define _SEH3$_NESTED_FUNC_RETURN() \
+#define _SEH3$_NESTED_FUNC_RETURN(_Result) \
         /* Restore esp and return to the caller */ \
         asm volatile ("movl %[FixedEsp], %%esp\nret\n" \
-            : : "a"(_SEH3$_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "memory")
+            : : "a"(_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "memory")
 
-#define _SEH3$_NESTED_FUNC_CLOSE() \
-        /* Return to the caller */ \
-        _SEH3$_NESTED_FUNC_RETURN(); \
+/* The filter "function" */
+#define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
+    { \
+        /* Evaluate and return the filter expression */ \
+        _SEH3$_NESTED_FUNC_RETURN((expression)); \
     }
 
-/* The filter function */
-#define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
-    _SEH3$_NESTED_FUNC_OPEN() \
-    { \
-        /* Evaluate the filter expression */ \
-        _SEH3$_Result = (expression); \
-    } \
-    _SEH3$_NESTED_FUNC_CLOSE()
-
 #define _SEH3$_FINALLY_FUNC_OPEN(_Name) \
-    _SEH3$_NESTED_FUNC_OPEN() \
+    { \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
-        for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(); 0;}))
+        for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(0); 0;}))
 
 #define _SEH3$_FILTER(_Filter, _FilterExpression) (&&_SEH3$_l_FilterOrFinally)
 #define _SEH3$_FINALLY(_Finally) (&&_SEH3$_l_FilterOrFinally)
