@@ -43,7 +43,7 @@ CreateTrayIcon(LPTSTR szLCID)
                       szBuf,
                       sizeof(szBuf) / sizeof(TCHAR)) == 0)
     {
-        lstrcpy(szBuf, _T("??\0"));
+        lstrcpy(szBuf, _T("??"));
     }
 
     hdcsrc = GetDC(NULL);
