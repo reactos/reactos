@@ -304,10 +304,10 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
             pMemObj->cbData = sizeof(LCID);
             *((LCID*)pMemObj->Data) = NtCurrentTeb()->CurrentLocale;
             IntAddFormatedData(pWinStaObj, CF_LOCALE, hMem, TRUE, TRUE);
-        }
 
-        /* Release the extra reference (UserCreateObject added 2 references) */
-        UserDereferenceObject(pMemObj);
+            /* Release the extra reference (UserCreateObject added 2 references) */
+            UserDereferenceObject(pMemObj);
+        }
     }
 
     /* Add CF_TEXT. Note: it is synthesized in user32.dll */
