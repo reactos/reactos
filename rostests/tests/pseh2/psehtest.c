@@ -2447,6 +2447,15 @@ DEFINE_TEST(test_unvolatile_2)
     return (val == 3) || (val == 4) || (val == 5);
 }
 
+/* This test is mainly for documentation purpose. As can be seen it doesn't
+   provide a satisfying result. In fact the compiler could do even more
+   crazy things like reusing val1 between the assignment to 0 and the last
+   assignment to 3. This DOES happen with C++ and it's NOT a PSEH bug, but
+   rather an unavoidable consequence of how the compiler works.
+   The conclusion: Do not use assignments to a variable inside a __try block
+   that is being used later inside the __except block, unless it is declared
+   volatile! */
+#ifndef __cplusplus
 DEFINE_TEST(test_unvolatile_3)
 {
     int register val1 = 0, val2 = 0;
@@ -2494,6 +2503,7 @@ DEFINE_TEST(test_unvolatile_3)
 
     return FALSE;
 }
+#endif // __cplusplus
 
 DEFINE_TEST(test_unvolatile_4)
 {
@@ -2840,7 +2850,9 @@ void testsuite_syntax(void)
 
 		USE_TEST(test_unvolatile),
 		USE_TEST(test_unvolatile_2),
+#ifndef __cplusplus
 		USE_TEST(test_unvolatile_3),
+#endif
 		USE_TEST(test_unvolatile_4),
 		USE_TEST(test_finally_goto),
 		USE_TEST(test_nested_exception),
