@@ -301,10 +301,12 @@ WINAPI
 GetComputerNameA(LPSTR lpBuffer, LPDWORD lpnSize)
 {
     BOOL ret;
+
     ret = GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);    
-    if(!ret && GetLastError() == ERROR_MORE_DATA)
-      SetLastError(ERROR_BUFFER_OVERFLOW);
-      return ret;
+    if (!ret && GetLastError() == ERROR_MORE_DATA)
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+
+    return ret;
 }
 
 

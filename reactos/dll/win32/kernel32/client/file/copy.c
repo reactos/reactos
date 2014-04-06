@@ -325,7 +325,7 @@ CopyFileExA(IN LPCSTR lpExistingFileName,
     PUNICODE_STRING lpExistingFileNameW;
 
     lpExistingFileNameW = Basep8BitStringToStaticUnicodeString(lpExistingFileName);
-    if (!lpExistingFileName)
+    if (!lpExistingFileNameW)
     {
         return FALSE;
     }

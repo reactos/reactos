@@ -232,7 +232,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine),
+                   sizeof(CommandLine) / sizeof(CommandLine[0]),
                    L"\"%s\\ntvdm.exe\" -i%lx %s%c",
                    Buffer,
                    DosSeqId,
@@ -246,7 +246,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR CommandLineReserved,
          * %s%c  : Nothing if DOS VDM, -w if WoW VDM, -ws if separate WoW VDM.
          */
         _snwprintf(CommandLine,
-                   sizeof(CommandLine),
+                   sizeof(CommandLine) / sizeof(CommandLine[0]),
                    L"\"%s\\ntvdm.exe\" %s%c",
                    Buffer,
                    (BinaryType == BINARY_TYPE_DOS) ? L" " : L"-w",
