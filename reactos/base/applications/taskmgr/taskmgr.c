@@ -130,6 +130,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
             SendMessage(hTaskMgr, WM_SYSCOMMAND, SC_RESTORE, 0);
             SetForegroundWindow(hTaskMgr);
         }
+
+        CloseHandle(hMutex);
         return 0;
     }
     else if (!hMutex)
@@ -175,6 +177,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     /* Save our settings to the registry */
     SaveSettings();
     PerfDataUninitialize();
+    CloseHandle(hMutex);
     return 0;
 }
 
