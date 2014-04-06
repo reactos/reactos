@@ -718,6 +718,7 @@ SaveCursorScheme(HWND hwndDlg)
     if (nSel == 0)
     {
         szSchemeName[0] = 0;
+        szNewSchemeName[0] = 0;
     }
     else
     {
@@ -775,6 +776,9 @@ SaveCursorScheme(HWND hwndDlg)
 
     lpSchemeData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(TCHAR));
 
+    if(!lpSchemeData)
+        return FALSE;
+
     for (index = IDS_ARROW, i = 0; index <= IDS_HAND; index++, i++)
     {
         CompressPath(szTempPath, g_CursorData[i].szCursorPath);
@@ -784,11 +788,15 @@ SaveCursorScheme(HWND hwndDlg)
     }
 
     if (RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hCuKey) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, lpSchemeData);
         return FALSE;
+    }
 
     if (RegOpenKeyEx(hCuKey, _T("Control Panel\\Cursors\\Schemes"), 0, KEY_READ | KEY_SET_VALUE, &hCuCursorKey) != ERROR_SUCCESS)
     {
         RegCloseKey(hCuKey);
+        HeapFree(GetProcessHeap(), 0, lpSchemeData);
         return FALSE;
     }
 
