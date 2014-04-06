@@ -2474,7 +2474,7 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                     NumberOfEntries = EfiHeader->NumberOfEntries;
                     RtlCopyMemory(&DiskGuid, &EfiHeader->DiskGUID, sizeof(GUID));
                     /* Count number of sectors needed to store partitions */
-                    SectorsForPartitions = (NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
+                    SectorsForPartitions = ((ULONGLONG)NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
                     /* Set first usable LBA: Legacy MBR + GPT header + Partitions entries */
                     FirstUsableLBA = SectorsForPartitions + 2;
                     /* Set last usable LBA: Last sector - GPT header - Partitions entries */
