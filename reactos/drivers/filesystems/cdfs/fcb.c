@@ -57,7 +57,7 @@ CdfsGetNextPathElement(PWCHAR FileName)
 
 
 static VOID
-CdfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
+CdfsWSubString(LPWSTR pTarget, LPCWSTR pSource, size_t pLength)
 {
     wcsncpy (pTarget, pSource, pLength);
     pTarget [pLength] = L'\0';
@@ -76,7 +76,7 @@ CdfsCreateFCB(PCWSTR FileName)
 
     if (FileName)
     {
-        wcscpy(Fcb->PathName, FileName);
+        CdfsWSubString(Fcb->PathName, FileName, sizeof(Fcb->PathName) / sizeof(Fcb->PathName[0]) - 1);
         if (wcsrchr(Fcb->PathName, '\\') != 0)
         {
             Fcb->ObjectName = wcsrchr(Fcb->PathName, '\\');
