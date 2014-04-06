@@ -598,7 +598,7 @@ CcRosCreateCacheSegment (
 
     if (FileOffset >= Bcb->FileSize.u.LowPart)
     {
-        CacheSeg = NULL;
+        *CacheSeg = NULL;
         return STATUS_INVALID_PARAMETER;
     }
 
