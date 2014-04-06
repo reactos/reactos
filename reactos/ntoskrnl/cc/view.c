@@ -41,14 +41,6 @@
 
 /* GLOBALS *******************************************************************/
 
-/*
- * If CACHE_BITMAP is defined, the cache manager uses one large memory region
- * within the kernel address space and allocate/deallocate space from this block
- * over a bitmap. If CACHE_BITMAP is used, the size of the mdl mapping region
- * must be reduced (ntoskrnl\mm\mdl.c, MI_MDLMAPPING_REGION_SIZE).
- */
-//#define CACHE_BITMAP
-
 static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
 static LIST_ENTRY CacheSegmentLRUListHead;
@@ -56,15 +48,6 @@ static LIST_ENTRY ClosedListHead;
 ULONG DirtyPageCount = 0;
 
 KGUARDED_MUTEX ViewLock;
-
-#ifdef CACHE_BITMAP
-#define    CI_CACHESEG_MAPPING_REGION_SIZE    (128*1024*1024)
-
-static PVOID CiCacheSegMappingRegionBase = NULL;
-static RTL_BITMAP CiCacheSegMappingRegionAllocMap;
-static ULONG CiCacheSegMappingRegionHint;
-static KSPIN_LOCK CiCacheSegMappingRegionLock;
-#endif
 
 NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST BcbLookasideList;
@@ -608,9 +591,6 @@ CcRosCreateCacheSegment (
     PLIST_ENTRY current_entry;
     NTSTATUS Status;
     KIRQL oldIrql;
-#ifdef CACHE_BITMAP
-    ULONG StartingOffset;
-#endif
 
     ASSERT(Bcb);
 
@@ -708,28 +688,7 @@ CcRosCreateCacheSegment (
     InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
     InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
     KeReleaseGuardedMutex(&ViewLock);
-#ifdef CACHE_BITMAP
-    KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);
 
-    StartingOffset = RtlFindClearBitsAndSet(&CiCacheSegMappingRegionAllocMap,
-                                            VACB_MAPPING_GRANULARITY / PAGE_SIZE,
-                                            CiCacheSegMappingRegionHint);
-
-    if (StartingOffset == 0xffffffff)
-    {
-        DPRINT1("Out of CacheSeg mapping space\n");
-        KeBugCheck(CACHE_MANAGER);
-    }
-
-    current->BaseAddress = CiCacheSegMappingRegionBase + StartingOffset * PAGE_SIZE;
-
-    if (CiCacheSegMappingRegionHint == StartingOffset)
-    {
-        CiCacheSegMappingRegionHint += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    }
-
-    KeReleaseSpinLock(&CiCacheSegMappingRegionLock, oldIrql);
-#else
     MmLockAddressSpace(MmGetKernelAddressSpace());
     current->BaseAddress = NULL;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -746,7 +705,6 @@ CcRosCreateCacheSegment (
     {
         KeBugCheck(CACHE_MANAGER);
     }
-#endif
 
     /* Create a virtual mapping for this memory area */
     MI_SET_USAGE(MI_USAGE_CACHE);
@@ -916,8 +874,7 @@ CcRosRequestCacheSegment (
                                 UptoDate,
                                 CacheSeg);
 }
-#ifdef CACHE_BITMAP
-#else
+
 static
 VOID
 CcFreeCachePage (
@@ -935,7 +892,7 @@ CcFreeCachePage (
         MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
 }
-#endif
+
 NTSTATUS
 CcRosInternalFreeCacheSegment (
     PCACHE_SEGMENT CacheSeg)
@@ -943,13 +900,6 @@ CcRosInternalFreeCacheSegment (
  * FUNCTION: Releases a cache segment associated with a BCB
  */
 {
-#ifdef CACHE_BITMAP
-    ULONG i;
-    ULONG RegionSize;
-    ULONG Base;
-    PFN_NUMBER Page;
-    KIRQL oldIrql;
-#endif
     DPRINT("Freeing cache segment 0x%p\n", CacheSeg);
 #if DBG
     if ( CacheSeg->Bcb->Trace )
@@ -957,37 +907,14 @@ CcRosInternalFreeCacheSegment (
         DPRINT1("CacheMap 0x%p: deleting Cache Segment: 0x%p\n", CacheSeg->Bcb, CacheSeg );
     }
 #endif
-#ifdef CACHE_BITMAP
-    RegionSize = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
 
-    /* Unmap all the pages. */
-    for (i = 0; i < RegionSize; i++)
-    {
-        MmDeleteVirtualMapping(NULL,
-                               CacheSeg->BaseAddress + (i * PAGE_SIZE),
-                               FALSE,
-                               NULL,
-                               &Page);
-        MmReleasePageMemoryConsumer(MC_CACHE, Page);
-    }
-
-    KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);
-    /* Deallocate all the pages used. */
-    Base = (ULONG)(CacheSeg->BaseAddress - CiCacheSegMappingRegionBase) / PAGE_SIZE;
-
-    RtlClearBits(&CiCacheSegMappingRegionAllocMap, Base, RegionSize);
-
-    CiCacheSegMappingRegionHint = min(CiCacheSegMappingRegionHint, Base);
-
-    KeReleaseSpinLock(&CiCacheSegMappingRegionLock, oldIrql);
-#else
     MmLockAddressSpace(MmGetKernelAddressSpace());
     MmFreeMemoryArea(MmGetKernelAddressSpace(),
                      CacheSeg->MemoryArea,
                      CcFreeCachePage,
                      NULL);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
-#endif
+
     ExFreeToNPagedLookasideList(&CacheSegLookasideList, CacheSeg);
     return STATUS_SUCCESS;
 }
@@ -1365,48 +1292,8 @@ NTAPI
 CcInitView (
     VOID)
 {
-#ifdef CACHE_BITMAP
-    PMEMORY_AREA marea;
-    PVOID Buffer;
-#endif
-
     DPRINT("CcInitView()\n");
-#ifdef CACHE_BITMAP
-    CiCacheSegMappingRegionHint = 0;
-    CiCacheSegMappingRegionBase = NULL;
 
-    MmLockAddressSpace(MmGetKernelAddressSpace());
-
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_CACHE_SEGMENT,
-                                &CiCacheSegMappingRegionBase,
-                                CI_CACHESEG_MAPPING_REGION_SIZE,
-                                PAGE_READWRITE,
-                                &marea,
-                                FALSE,
-                                0,
-                                PAGE_SIZE);
-    MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(CACHE_MANAGER);
-    }
-
-    Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                   CI_CACHESEG_MAPPING_REGION_SIZE / (PAGE_SIZE * 8),
-                                   TAG_CC);
-    if (!Buffer)
-    {
-        KeBugCheck(CACHE_MANAGER);
-    }
-
-    RtlInitializeBitMap(&CiCacheSegMappingRegionAllocMap,
-                        Buffer,
-                        CI_CACHESEG_MAPPING_REGION_SIZE / PAGE_SIZE);
-    RtlClearAllBits(&CiCacheSegMappingRegionAllocMap);
-
-    KeInitializeSpinLock(&CiCacheSegMappingRegionLock);
-#endif
     InitializeListHead(&CacheSegmentListHead);
     InitializeListHead(&DirtySegmentListHead);
     InitializeListHead(&CacheSegmentLRUListHead);
