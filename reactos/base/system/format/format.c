@@ -238,20 +238,24 @@ FormatExCallback (
 BOOLEAN LoadFMIFSEntryPoints()
 {
 	HMODULE hFmifs = LoadLibrary( _T("fmifs.dll") );
-	if( !(void*) GetProcAddress( hFmifs, "FormatEx" ) ) {
+	if (hFmifs == NULL) {
+		return FALSE;
+	}
 
+	if( !(void*) GetProcAddress( hFmifs, "FormatEx" ) ) {
+		FreeLibrary(hFmifs);
 		return FALSE;
 	}
 
 	if( !((void *) GetProcAddress( hFmifs,
 			"EnableVolumeCompression" )) ) {
-
+		FreeLibrary(hFmifs);
 		return FALSE;
 	}
 
 	if( !((void *) GetProcAddress( hFmifs,
 			"QueryAvailableFileSystemFormat" )) ) {
-
+		FreeLibrary(hFmifs);
 		return FALSE;
 	}
 
