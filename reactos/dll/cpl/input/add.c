@@ -221,7 +221,7 @@ LanguagesEnumProc(LPTSTR lpLanguage)
 
     Lcid = _tcstoul(lpLanguage, NULL, 16);
 
-    GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang));
+    GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang) / sizeof(Lang[0]));
     Index = (INT)SendMessage(hLangList, CB_ADDSTRING,
                              0, (LPARAM)Lang);
 
