@@ -113,7 +113,7 @@ AddTrayIcon(HWND hwnd)
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
-    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip) / sizeof(TCHAR));
 
     Shell_NotifyIcon(NIM_ADD, &tnid);
 }
@@ -142,7 +142,7 @@ UpdateTrayIcon(HWND hwnd, LPTSTR szLCID, LPTSTR szName)
     tnid.uCallbackMessage = WM_NOTIFYICONMSG;
     tnid.hIcon = CreateTrayIcon(szLCID);
 
-    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip));
+    lstrcpyn(tnid.szTip, szName, sizeof(tnid.szTip) / sizeof(TCHAR));
 
     Shell_NotifyIcon(NIM_MODIFY, &tnid);
 }
