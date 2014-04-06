@@ -1162,7 +1162,42 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
 
             case WM_LBUTTONDBLCLK:
             {
-                DPRINT1("Handle left-double-click for selecting a word\n");
+                PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
+
+                if (GetType(Buffer) == TEXTMODE_BUFFER)
+                {
+#define IS_WHITESPACE(c)    \
+    ((c) == L'\0' || (c) == L' ' || (c) == L'\t' || (c) == L'\r' || (c) == L'\n')
+
+                    PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
+                    COORD cL, cR;
+                    PCHAR_INFO ptrL, ptrR;
+
+                    /* Starting point */
+                    cL = cR = PointToCoord(GuiData, lParam);
+                    ptrL = ptrR = ConioCoordToPointer(TextBuffer, cL.X, cL.Y);
+
+                    /* Enlarge the selection by checking for whitespace */
+                    while ((0 < cL.X) && !IS_WHITESPACE(ptrL->Char.UnicodeChar)
+                                      && !IS_WHITESPACE((ptrL-1)->Char.UnicodeChar))
+                    {
+                        --cL.X;
+                        --ptrL;
+                    }
+                    while ((cR.X < TextBuffer->ScreenBufferSize.X - 1) &&
+                           !IS_WHITESPACE(ptrR->Char.UnicodeChar)      &&
+                           !IS_WHITESPACE((ptrR+1)->Char.UnicodeChar))
+                    {
+                        ++cR.X;
+                        ++ptrR;
+                    }
+
+                    Console->Selection.dwSelectionAnchor = cL;
+                    Console->dwSelectionCursor           = cR;
+
+                    GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
+                }
+
                 break;
             }
 

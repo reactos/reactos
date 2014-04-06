@@ -89,9 +89,9 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     for (yPos = 0; yPos < selHeight; yPos++)
     {
-        ptr = ConioCoordToPointer(Buffer, 
+        ptr = ConioCoordToPointer(Buffer,
                                   Console->Selection.srSelection.Left,
-                                  yPos + Console->Selection.srSelection.Top);
+                                  Console->Selection.srSelection.Top + yPos);
         /* Copy only the characters, leave attributes alone */
         for (xPos = 0; xPos < selWidth; xPos++)
         {
@@ -139,7 +139,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     LPWSTR str;
     WCHAR CurChar = 0;
 
-    SHORT VkKey; // MAKEWORD(low = vkey_code, high = shift_state);
+    USHORT VkKey; // MAKEWORD(low = vkey_code, high = shift_state);
     INPUT_RECORD er;
 
     hData = GetClipboardData(CF_UNICODETEXT);
