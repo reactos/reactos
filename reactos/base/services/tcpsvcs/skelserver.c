@@ -21,6 +21,7 @@ SetUpListener(USHORT Port)
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock != INVALID_SOCKET)
     {
+        ZeroMemory(&server, sizeof(SOCKADDR_IN));
         server.sin_family = AF_INET;
         server.sin_addr.s_addr = htonl(INADDR_ANY);
         server.sin_port = Port;
