@@ -499,7 +499,7 @@ EnumerateCursorSchemes(HWND hwndDlg)
                 /* Remove quotation marks */
                 if (szTempData[0] == _T('"'))
                 {
-                    lpStart = szValueData + 1;
+                    lpStart = szTempData + 1;
                     szTempData[_tcslen(szTempData) - 1] = 0;
                 }
                 else
@@ -1022,9 +1022,9 @@ LoadNewCursorScheme(HWND hwndDlg)
 static VOID
 LoadInitialCursorScheme(HWND hwndDlg)
 {
-    TCHAR szSchemeName[256];
-    TCHAR szSystemScheme[256];
-    TCHAR szCursorPath[256];
+    TCHAR szSchemeName[MAX_PATH];
+    TCHAR szSystemScheme[MAX_PATH];
+    TCHAR szCursorPath[MAX_PATH];
     HKEY hCursorKey;
     LONG lError;
     DWORD dwDataSize;
@@ -1057,7 +1057,7 @@ LoadInitialCursorScheme(HWND hwndDlg)
 
     if (dwSchemeSource != 0)
     {
-        dwDataSize = 256 * sizeof(TCHAR);
+        dwDataSize = MAX_PATH * sizeof(TCHAR);
         lError = RegQueryValueEx(hCursorKey,
                                  NULL,
                                  NULL,
@@ -1101,8 +1101,8 @@ LoadInitialCursorScheme(HWND hwndDlg)
     else if (dwSchemeSource == 2)
     {
         LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-        _tcscat(szSchemeName, _T(" "));
-        _tcscat(szSchemeName, szSystemScheme);
+        _tcsncat(szSchemeName, _T(" "), MAX_PATH - _tcslen(szSchemeName));
+        _tcsncat(szSchemeName, szSystemScheme, MAX_PATH - _tcslen(szSchemeName));
     }
 
     /* Search and select the curent scheme name from the scheme list */
@@ -1276,6 +1276,10 @@ PointerProc(IN HWND hwndDlg,
                     {
                         case LBN_SELCHANGE:
                             nSel = SendMessage((HWND)lParam, LB_GETCURSEL, 0, 0);
+
+                            if(nSel == LB_ERR)
+                                break;
+
                             SendDlgItemMessage(hwndDlg, IDC_IMAGE_CURRENT_CURSOR, STM_SETIMAGE, IMAGE_CURSOR,
                                                (LPARAM)g_CursorData[nSel].hCursor);
                             EnableWindow(GetDlgItem(hwndDlg,IDC_BUTTON_USE_DEFAULT_CURSOR),
