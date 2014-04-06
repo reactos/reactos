@@ -65,7 +65,10 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
                                   (LPBYTE)lpBuf,
                                   &BufSize);
             if (Ret != ERROR_SUCCESS)
+            {
+                HeapFree(GetProcessHeap(), 0, lpBuf);
                 lpBuf = NULL;
+            }
         }
     }
 

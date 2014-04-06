@@ -288,7 +288,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
             }
 
             if(!FindNextFile(hFind, &fd))
-                hFind = INVALID_HANDLE_VALUE;
+                break;
         }
 
         token = _tcstok(NULL, separators);
