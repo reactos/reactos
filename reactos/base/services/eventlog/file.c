@@ -979,6 +979,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             if (RecBuf->Reserved != LOGFILE_SIGNATURE)
             {
                 DPRINT1("LogFile corrupt!\n");
+                HeapFree(GetProcessHeap(), 0, RecBuf);
                 RtlReleaseResource(&LogFile->Lock);
                 return FALSE;
             }
