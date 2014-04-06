@@ -45,11 +45,11 @@ InitializeSetupActionLog (BOOL bDeleteOldLogFile)
     {
         wcsncat(szFileName,
                 L"\\",
-                MAX_PATH);
+                (sizeof(szFileName) / sizeof(szFileName[0])) - wcslen(szFileName));
     }
     wcsncat(szFileName,
             L"setuplog.txt",
-            MAX_PATH);
+            (sizeof(szFileName) / sizeof(szFileName[0])) - wcslen(szFileName));
 
     if (bDeleteOldLogFile)
     {
