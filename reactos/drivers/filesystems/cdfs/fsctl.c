@@ -439,8 +439,6 @@ ByeBye:
             ObDereferenceObject(DeviceExt->StreamFileObject);
         if (Fcb)
             ExFreePool(Fcb);
-        if (Ccb)
-            ExFreePool(Ccb);
         if (NewDeviceObject)
             IoDeleteDevice(NewDeviceObject);
     }
