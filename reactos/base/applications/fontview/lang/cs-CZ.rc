@@ -1,0 +1,13 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "Nainstalovat"
+    IDS_PRINT "Tisk"
+    IDS_STRING "Příliš žluťoučký kůň úpěl ďábelské ódy. 1234567890"
+    IDS_OPEN "Otevřít soubor písma..."
+    IDS_ERROR "Chyba"
+    IDS_ERROR_NOMEM "K dokončení operace není dostatek paměti."
+    IDS_ERROR_NOFONT "Soubor %1 není platným souborem písma."
+    IDS_ERROR_NOCLASS "Inicializace okna aplikace selhala."
+END
