@@ -35,7 +35,7 @@ NpQueryFsVolumeInfo(IN PVOID Buffer,
     NameLength = 18;
     InfoBuffer->VolumeLabelLength = 18;
 
-    if (NameLength < 18)
+    if (*Length < 18)
     {
         NameLength = (USHORT)*Length;
         Status = STATUS_BUFFER_OVERFLOW;
@@ -45,7 +45,7 @@ NpQueryFsVolumeInfo(IN PVOID Buffer,
         Status = STATUS_SUCCESS;
     }
 
-    RtlCopyMemory(InfoBuffer->VolumeLabel, L"Named Pipe", NameLength);
+    RtlCopyMemory(InfoBuffer->VolumeLabel, L"NamedPipe", NameLength);
     *Length -= NameLength;
 
     TRACE("Leaving, Status = %lx\n", Status);
