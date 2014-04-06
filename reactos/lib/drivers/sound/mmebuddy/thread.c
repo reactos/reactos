@@ -143,10 +143,6 @@ TerminateSoundThread(
     WaitResult = WaitForSingleObject(Thread->Handle, INFINITE);
     SND_ASSERT( WaitResult == WAIT_OBJECT_0 );
 
-    /* Close the thread and invalidate the handle */
-    CloseHandle(Thread->Handle);    /* Is this needed? */
-    Thread->Handle = INVALID_HANDLE_VALUE;
-
     return MMSYSERR_NOERROR;
 }
 
