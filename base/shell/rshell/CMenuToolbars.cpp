@@ -159,7 +159,7 @@ HRESULT CMenuToolbarBase::DisableMouseTrack(BOOL bDisable)
 HRESULT CMenuToolbarBase::OnPagerCalcSize(LPNMPGCALCSIZE csize)
 {
     SIZE tbs;
-    GetIdealSize(tbs);
+    GetSizes(NULL, &tbs, NULL);
     if (csize->dwFlag == PGF_CALCHEIGHT)
     {
         csize->iHeight = tbs.cy;
@@ -284,12 +284,16 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_menuBand(menuBand),
     m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
-    m_hasIdealSize(FALSE),
+    m_hasSizes(FALSE),
     m_usePager(usePager),
     m_hotItem(-1),
     m_popupItem(-1),
-    m_isTracking(FALSE)
+    m_isTrackingPopup(FALSE)
 {
+    m_idealSize.cx = 0;
+    m_idealSize.cy = 0;
+    m_itemSize.cx = 0;
+    m_itemSize.cy = 0;
     m_marlett = CreateFont(
         0, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -452,18 +456,38 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::GetIdealSize(SIZE& size)
+HRESULT CMenuToolbarBase::GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegralSize)
 {
-    size.cx = size.cy = 0;
+    if (pMinSize)
+        *pMinSize = m_idealSize;
+    if (pMaxSize)
+        *pMaxSize = m_idealSize;
+    if (pIntegralSize)
+        *pIntegralSize = m_itemSize;
+    
+    if (m_hasSizes)
+        return S_OK;
 
-    if (m_hwndToolbar && !m_hasIdealSize)
-    {
-        SendMessageW(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
-        SendMessageW(m_hwndToolbar, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&m_idealSize));
-        m_hasIdealSize = TRUE;
-    }
+    if (!m_hwndToolbar)
+        return S_OK;
 
-    size = m_idealSize;
+    // Obtain the ideal size, to be used as min and max
+    SendMessageW(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
+    SendMessageW(m_hwndToolbar, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&m_idealSize));
+    SendMessageW(m_hwndToolbar, TB_GETIDEALSIZE, (m_initFlags & SMINIT_VERTICAL) != 0, reinterpret_cast<LPARAM>(&m_idealSize));
+    
+    // Obtain the button size, to be used as the integral size
+    DWORD size = SendMessageW(m_hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
+    m_itemSize.cx = GET_X_LPARAM(size);
+    m_itemSize.cy = GET_Y_LPARAM(size);
+    m_hasSizes = TRUE;
+
+    if (pMinSize)
+        *pMinSize = m_idealSize;
+    if (pMaxSize)
+        *pMaxSize = m_idealSize;
+    if (pIntegralSize)
+        *pIntegralSize = m_itemSize;
 
     return S_OK;
 }
@@ -560,46 +584,21 @@ HRESULT CMenuToolbarBase::KillPopupTimer()
     return S_FALSE;
 }
 
-HRESULT CMenuToolbarBase::OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult)
+HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DWORD dwFlags)
 {
+    // Ignore the change if it already matches the stored info
+    if (m_hotBar == toolbar && m_hotItem == item)
+        return S_FALSE;
+
     // Prevent a change of hot item if the change was triggered by the mouse,
     // and mouse tracking is disabled.
-    if (m_disableMouseTrack && hot->dwFlags & HICF_MOUSE)
+    if (m_disableMouseTrack && dwFlags & HICF_MOUSE)
     {
-        *theResult = 1;
         DbgPrint("Hot item change prevented by DisableMouseTrack\n");
         return S_OK;
     }
 
-    HRESULT hr = S_OK;
-    if (hot->dwFlags & HICF_LEAVING)
-    {
-        // Only notify of LEAVING if this was the hot toolbar.
-        if (m_hotBar == this)
-        {
-            DbgPrint("The hot bar is now cold.\n");
-            hr = m_menuBand->_ChangeHotItem(NULL, -1, hot->dwFlags);
-        }
-    }
-    else
-    {
-        hr = m_menuBand->_ChangeHotItem(this, hot->idNew, hot->dwFlags);
-    }
-
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    // Reuse S_OK/S_FALSE as Continue/Cancel
-    *theResult = hr;
-
-    return S_OK;
-}
-
-HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DWORD dwFlags)
-{
-    if (m_hotBar == toolbar && m_hotItem == item)
-        return S_FALSE;
-
+    // Notify the toolbar if the hot-tracking left this toolbar
     if (m_hotBar == this && toolbar != this)
     {
         SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM)-1, 0);
@@ -623,8 +622,9 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
                 m_timerEnabled = TRUE;
                 DbgPrint("SetTimer called with m_hotItem=%d\n", m_hotItem);
             }
-            else if (m_isTracking)
+            else if (m_isTrackingPopup)
             {
+                // If the menubar has an open submenu, switch to the new item's submenu immediately
                 PopupItem(m_hotItem);
             }
         }
@@ -646,13 +646,15 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
 
 HRESULT CMenuToolbarBase::ChangePopupItem(CMenuToolbarBase * toolbar, INT item)
 {
+    // Ignore the change if it already matches the stored info
     if (m_popupBar == toolbar && m_popupItem == item)
         return S_FALSE;
 
+    // Notify the toolbar if the popup-tracking this toolbar
     if (m_popupBar == this && toolbar != this)
     {
         SendMessage(m_hwndToolbar, TB_CHECKBUTTON, m_popupItem, FALSE);
-        m_isTracking = FALSE;
+        m_isTrackingPopup = FALSE;
     }
 
     m_popupBar = toolbar;
@@ -693,7 +695,7 @@ HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
         return E_FAIL;
 
     DbgPrint("Changing tracked item to %d...\n", index);
-    m_isTracking = wasTracking;
+    m_isTrackingPopup = wasTracking;
     m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
 
     return S_OK;
@@ -701,10 +703,7 @@ HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
 
 HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu)
 {
-    IBandSite* pBandSite;
-    IDeskBar* pDeskBar;
-
-    HRESULT hr = 0;
+    // Calculate the submenu position and exclude area
     RECT rc = { 0 };
     RECT rcx = { 0 };
 
@@ -732,81 +731,31 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
         pt.y = a.y - 3;
     }
 
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#if WRAP_MENUSITE
-    hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
-
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#if WRAP_MENUDESKBAR
-    hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
-
-    hr = pDeskBar->SetClient(pBandSite);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pBandSite->AddBand(childShellMenu);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComPtr<IMenuPopup> popup;
-    hr = pDeskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &popup));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    m_isTracking = TRUE;
+    // Display the submenu
+    m_isTrackingPopup = TRUE;
 
     m_menuBand->_ChangePopupItem(this, iItem);
-    m_menuBand->_OnPopupSubMenu(popup, &pt, &rcl);
+    m_menuBand->_OnPopupSubMenu(childShellMenu, &pt, &rcl);
 
     return S_OK;
 }
 
 HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
 {
+    // Calculate the submenu position and exclude area
     RECT rc = { 0 };
-    RECT rcx = { 0 };
 
     if (!SendMessage(m_hwndToolbar, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&rc)))
         return E_FAIL;
-
-    GetClientRect(m_hwndToolbar, &rcx);
-
+    
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
-    POINT c = { rc.left, rc.top };
-    POINT d = { rc.right, rc.bottom };
 
     ClientToScreen(m_hwndToolbar, &a);
     ClientToScreen(m_hwndToolbar, &b);
-    ClientToScreen(m_hwndToolbar, &c);
-    ClientToScreen(m_hwndToolbar, &d);
 
     POINT pt = { a.x, b.y };
-    RECT rcl = { c.x, c.y, d.x, d.y };
+    RECT rcl = { a.x, a.y, b.x, b.y };
 
     if (m_initFlags & SMINIT_VERTICAL)
     {
@@ -816,45 +765,24 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
 
     HMENU popup = GetSubMenu(menu, index);
 
-    m_isTracking = TRUE;
-
+    // Display the submenu
+    m_isTrackingPopup = TRUE;
     m_menuBand->_ChangePopupItem(this, iItem);
-    m_menuBand->_TrackSubMenuUsingTrackPopupMenu(popup, pt.x, pt.y, rcl);
+    m_menuBand->_TrackSubMenu(popup, pt.x, pt.y, rcl);
     m_menuBand->_ChangePopupItem(NULL, -1);
-
-    m_isTracking = FALSE;
+    m_isTrackingPopup = FALSE;
 
     return S_OK;
 }
 
 HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
 {
-    HRESULT hr;
-    HMENU hPopup = CreatePopupMenu();
-
-    if (hPopup == NULL)
-        return E_FAIL;
-
-    hr = contextMenu->QueryContextMenu(hPopup, 0, 0, UINT_MAX, CMF_NORMAL);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        DestroyMenu(hPopup);
-        return hr;
-    }
-
+    // Calculate the context menu position
     DWORD dwPos = GetMessagePos();
-    UINT uCommand = ::TrackPopupMenu(hPopup, TPM_RETURNCMD, GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos), 0, m_hwnd, NULL);
-    if (uCommand == 0)
-        return S_FALSE;
+    POINT pt = { GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos) };
 
-    CMINVOKECOMMANDINFO cmi = { 0 };
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
-    cmi.hwnd = m_hwnd;
-    hr = contextMenu->InvokeCommand(&cmi);
-
-    DestroyMenu(hPopup);
-    return hr;
+    // Display the submenu
+    return m_menuBand->_TrackContextMenu(contextMenu, pt.x, pt.y);
 }
 
 HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
@@ -866,6 +794,13 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
         return S_OK;
     }
 
+    // If a button is clicked while a submenu was open, cancel the submenu.
+    if (!(m_initFlags & SMINIT_VERTICAL) && m_isTrackingPopup)
+    {
+        DbgPrint("OnCommand cancelled because it was tracking submenu.\n");
+        return S_FALSE;
+    }
+    
     *theResult = 0;
 
     m_menuBand->_KillPopupTimers();
@@ -883,7 +818,7 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return S_OK; // filter out a possible S_FALSE from here.
+    return OnCommandInternal(wParam, lParam, theResult);
 }
 
 HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
@@ -948,7 +883,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                 if (prev != btn.idCommand)
                 {
                     DbgPrint("Setting Hot item to %d\n", index);
-                    SendMessage(m_hwndToolbar, TB_SETHOTITEM, index, 0);
+                    m_menuBand->_ChangeHotItem(this, index, 0);
                 }
                 return S_OK;
             }
@@ -967,8 +902,9 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
     if (prev != -1)
     {
         DbgPrint("Setting Hot item to null\n");
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM) -1, 0);
+        m_menuBand->_ChangeHotItem(NULL, -1, 0);
     }
+
     return S_FALSE;
 }
 
@@ -1219,25 +1155,8 @@ HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
     return DoContextMenu(contextMenu);
 }
 
-HRESULT CMenuStaticToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT CMenuStaticToolbar::OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    HRESULT hr;
-
-    if (m_isTracking)
-    {
-        return S_FALSE;
-    }
-
-    hr = CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    // in case the clicked item has a submenu, we do not need to execute the item
-    if (hr == S_FALSE)
-    {
-        return hr;
-    }
-
     return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
 }
 
@@ -1313,7 +1232,6 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
 
         DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
-        // FIXME: remove before deleting the toolbar or it will leak
 
         // Fetch next item already, so we know if the current one is the last
         hr = eidl->Next(1, &item, &fetched);
@@ -1399,21 +1317,10 @@ HRESULT CMenuSFToolbar::OnContextMenu(NMMOUSE * rclick)
     return DoContextMenu(contextMenu);
 }
 
-HRESULT CMenuSFToolbar::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT CMenuSFToolbar::OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    HRESULT hr;
-    hr = CMenuToolbarBase::OnCommand(wParam, lParam, theResult);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    // in case the clicked item has a submenu, we do not need to execute the item
-    if (hr == S_FALSE)
-    {
-        DbgPrint("CMenuToolbarBase::OnCommand told us to cancel.\n");
-        return hr;
-    }
-
     DWORD_PTR data;
+
     GetDataFromId(wParam, NULL, &data);
 
     return m_menuBand->_CallCBWithItemPidl(reinterpret_cast<LPITEMIDLIST>(data), SMC_SFEXEC, 0, 0);

@@ -175,13 +175,14 @@ public:
 
     HRESULT _CallCBWithItemId(UINT Id, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _CallCBWithItemPidl(LPITEMIDLIST pidl, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT _TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude);
+    HRESULT _TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude);
+    HRESULT _TrackContextMenu(IContextMenu * popup, INT x, INT y);
     HRESULT _GetTopLevelWindow(HWND*topLevel);
     HRESULT _ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags);
     HRESULT _ChangePopupItem(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);
     HRESULT _CancelCurrentPopup();
-    HRESULT _OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude);
+    HRESULT _OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude);
     HRESULT _DisableMouseTrack(BOOL bDisable);
     HRESULT _SetChildBand(CMenuBand * child);
     HRESULT _SetParentBand(CMenuBand * parent);
@@ -195,5 +196,6 @@ public:
     }
 
 private:
+    HRESULT _KeyboardItemChange(DWORD change);
     HRESULT _CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id = 0, LPITEMIDLIST pidl = NULL);
 };

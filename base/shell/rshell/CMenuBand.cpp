@@ -260,26 +260,26 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetWindow(
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 {
-    SIZE sizeStatic = { 0 };
-    SIZE sizeShlFld = { 0 };
+    SIZE maxStatic = { 0 };
+    SIZE maxShlFld = { 0 };
     HRESULT hr = S_OK;
 
     if (m_staticToolbar != NULL)
-        hr = m_staticToolbar->GetIdealSize(sizeStatic);
+        hr = m_staticToolbar->GetSizes(NULL, &maxStatic, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_SFToolbar != NULL)
-        hr = m_SFToolbar->GetIdealSize(sizeShlFld);
+        hr = m_SFToolbar->GetSizes(NULL, &maxShlFld, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_staticToolbar == NULL && m_SFToolbar == NULL)
         return E_FAIL;
 
-    int sy = min(prc->bottom - prc->top, sizeStatic.cy + sizeShlFld.cy);
+    int sy = min(prc->bottom - prc->top, maxStatic.cy + maxShlFld.cy);
 
-    int syStatic = sizeStatic.cy;
+    int syStatic = maxStatic.cy;
     int syShlFld = sy - syStatic;
 
     if (m_SFToolbar)
@@ -306,28 +306,46 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
     DWORD dwViewMode,
     DESKBANDINFO *pdbi)
 {
-    SIZE sizeStatic = { 0 };
-    SIZE sizeShlFld = { 0 };
+    SIZE minStatic = { 0 };
+    SIZE minShlFld = { 0 };
+    SIZE maxStatic = { 0 };
+    SIZE maxShlFld = { 0 };
+    SIZE intStatic = { 0 };
+    SIZE intShlFld = { 0 };
 
     HRESULT hr = S_OK;
 
     if (m_staticToolbar != NULL)
-        hr = m_staticToolbar->GetIdealSize(sizeStatic);
+        hr = m_staticToolbar->GetSizes(&minStatic, &maxStatic, &intStatic);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_SFToolbar != NULL)
-        hr = m_SFToolbar->GetIdealSize(sizeShlFld);
+        hr = m_SFToolbar->GetSizes(&minShlFld, &maxShlFld, &intShlFld);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (m_staticToolbar == NULL && m_SFToolbar == NULL)
         return E_FAIL;
 
-    pdbi->ptMinSize.x = max(sizeStatic.cx, sizeShlFld.cx) + 20;
-    pdbi->ptMinSize.y = sizeStatic.cy + sizeShlFld.cy;
-    pdbi->ptMaxSize.x = max(sizeStatic.cx, sizeShlFld.cx) + 20;
-    pdbi->ptMaxSize.y = sizeStatic.cy + sizeShlFld.cy;
+    if (m_dwFlags & SMINIT_VERTICAL)
+    {
+        pdbi->ptMinSize.x = max(minStatic.cx, minStatic.cx) + 20;
+        pdbi->ptMinSize.y = minStatic.cy + minStatic.cy;
+        pdbi->ptMaxSize.x = max(maxStatic.cx, maxShlFld.cx) + 20;
+        pdbi->ptMaxSize.y = maxStatic.cy + maxShlFld.cy;
+        pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
+    }
+    else
+    {
+        pdbi->ptMinSize.x = minStatic.cx + minStatic.cx;
+        pdbi->ptMinSize.y = max(minStatic.cy, minStatic.cy);
+        pdbi->ptMaxSize.x = maxStatic.cx + maxShlFld.cx;
+        pdbi->ptMaxSize.y = max(maxStatic.cy, maxShlFld.cy);
+    }
+    pdbi->ptIntegral.x = max(intStatic.cx, intStatic.cx);
+    pdbi->ptIntegral.y = max(intStatic.cy, intShlFld.cy);
+    pdbi->ptActual = pdbi->ptMinSize;
 
     return S_OK;
 }
@@ -652,12 +670,10 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     smData.uId = id;
     smData.uIdParent = m_uId;
     smData.uIdAncestor = m_uIdAncestor;
-    smData.hwnd = hwnd;
     smData.pidlItem = pidl;
-    if (m_staticToolbar)
-    {
+    smData.hwnd = hwnd;
+    if (m_hmenu)
         smData.hmenu = m_hmenu;
-    }
     smData.pvUserData = NULL;
     if (m_SFToolbar)
         m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
@@ -668,7 +684,7 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     return hr;
 }
 
-HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
+HRESULT CMenuBand::_TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 {
     TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
 
@@ -688,6 +704,41 @@ HRESULT CMenuBand::_TrackSubMenuUsingTrackPopupMenu(HMENU popup, INT x, INT y, R
     _DisableMouseTrack(FALSE);
 
     return S_OK;
+}
+
+HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
+{
+    HRESULT hr;
+    UINT uCommand;
+    HMENU popup = CreatePopupMenu();
+
+    if (popup == NULL)
+        return E_FAIL;
+
+    hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        DestroyMenu(popup);
+        return hr;
+    }
+
+    HWND hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
+
+    m_focusManager->PushTrackedPopup(popup);
+    uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, m_menuOwner, NULL);
+    m_focusManager->PopTrackedPopup(popup);
+
+    if (uCommand == 0)
+        return S_FALSE;
+
+    CMINVOKECOMMANDINFO cmi = { 0 };
+    cmi.cbSize = sizeof(cmi);
+    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
+    cmi.hwnd = hwnd;
+    hr = contextMenu->InvokeCommand(&cmi);
+
+    DestroyMenu(popup);
+    return hr;
 }
 
 HRESULT CMenuBand::_GetTopLevelWindow(HWND*topLevel)
@@ -728,119 +779,91 @@ HRESULT CMenuBand::_ChangePopupItem(CMenuToolbarBase * tb, INT id)
     return S_OK;
 }
 
+HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
+{
+    HRESULT hr;
+    CMenuToolbarBase *tb = m_hotBar;
+
+    if (!tb)
+    {
+        // If no hot item was selected
+        // choose the first toolbar (prefer shell-folder, which will be positionedat the top)
+
+        if (m_SFToolbar)
+            tb = m_SFToolbar;
+        else
+            tb = m_staticToolbar;
+    }
+
+    // Ask the first toolbar to change
+    hr = tb->KeyboardItemChange(change);
+
+    if (hr != S_FALSE)
+        return hr;
+
+    // Select the second toolbar based on the first
+    if (tb == m_SFToolbar)
+        tb = m_staticToolbar;
+    else
+        tb = m_SFToolbar;
+
+    if (!tb)
+        return hr;
+
+    // Ask the second toolbar to change
+    return tb->KeyboardItemChange(change == VK_DOWN ? VK_END : VK_HOME);
+}
+
 HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 {
     HRESULT hr;
 
-    if (!(m_dwFlags & SMINIT_VERTICAL))
+    
+    if (m_dwFlags & SMINIT_VERTICAL)
     {
-        if (changeType == MPOS_SELECTRIGHT)
+        switch (changeType)
         {
-            SendMessageW(m_menuOwner, WM_CANCELMODE, 0, 0);
-            if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
-            {
-                DbgPrint("SF Toolbars in Horizontal menus is not implemented.\n");
-                return S_FALSE;
-            }
-            else if (m_staticToolbar && m_hotBar == m_staticToolbar)
-            {
-                hr = m_staticToolbar->KeyboardItemChange(VK_DOWN);
-                if (hr == S_FALSE)
-                {
-                    if (m_SFToolbar)
-                        return m_SFToolbar->KeyboardItemChange(VK_HOME);
-                    else
-                        return m_staticToolbar->KeyboardItemChange(VK_HOME);
-                }
+        case VK_UP:
+        case VK_DOWN:
+            return _KeyboardItemChange(changeType);
+
+            // TODO: Left/Right across multi-column menus, if they ever work.
+        case VK_LEFT:
+            changeType = MPOS_SELECTLEFT;
+            break;
+        case VK_RIGHT:
+            changeType = MPOS_SELECTRIGHT;
+            break;
+        }
+    }
+    else
+    {
+        // In horizontal menubars, left/right are equivalent to vertical's up/down
+        switch(changeType)
+        {
+        case VK_LEFT:
+            hr = _KeyboardItemChange(VK_UP);
+            if (hr != S_FALSE)
                 return hr;
-            }
-        }
-        else if (changeType == MPOS_SELECTLEFT)
-        {
-            SendMessageW(m_menuOwner, WM_CANCELMODE, 0, 0);
-            if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
-            {
-                hr = m_staticToolbar->KeyboardItemChange(VK_UP);
-                if (hr == S_FALSE)
-                {
-                    if (m_SFToolbar)
-                        return m_SFToolbar->KeyboardItemChange(VK_END);
-                    else
-                        return m_staticToolbar->KeyboardItemChange(VK_END);
-                }
+        case VK_RIGHT:
+            hr = _KeyboardItemChange(VK_DOWN);
+            if (hr != S_FALSE)
                 return hr;
-            }
-            else if (m_SFToolbar && m_hotBar == m_SFToolbar)
-            {
-                DbgPrint("SF Toolbars in Horizontal menus is not implemented.\n");
-                return S_FALSE;
-            }
         }
     }
-    else if (changeType == VK_DOWN)
+
+    switch (changeType)
     {
-        if (m_SFToolbar && (m_hotBar == m_SFToolbar || m_hotBar == NULL))
-        {
-            hr = m_SFToolbar->KeyboardItemChange(VK_DOWN);
-            if (hr == S_FALSE)
-            {
-                if (m_staticToolbar)
-                    return m_staticToolbar->KeyboardItemChange(VK_HOME);
-                else
-                    return m_SFToolbar->KeyboardItemChange(VK_HOME);
-            }
-            return hr;
-        }
-        else if (m_staticToolbar && m_hotBar == m_staticToolbar)
-        {
-            hr = m_staticToolbar->KeyboardItemChange(VK_DOWN);
-            if (hr == S_FALSE)
-            {
-                if (m_SFToolbar)
-                    return m_SFToolbar->KeyboardItemChange(VK_HOME);
-                else
-                    return m_staticToolbar->KeyboardItemChange(VK_HOME);
-            }
-            return hr;
-        }
-    }
-    else if (changeType == VK_UP)
-    {
-        if (m_staticToolbar && (m_hotBar == m_staticToolbar || m_hotBar == NULL))
-        {
-            hr = m_staticToolbar->KeyboardItemChange(VK_UP);
-            if (hr == S_FALSE)
-            {
-                if (m_SFToolbar)
-                    return m_SFToolbar->KeyboardItemChange(VK_END);
-                else
-                    return m_staticToolbar->KeyboardItemChange(VK_END);
-            }
-            return hr;
-        }
-        else if (m_SFToolbar && m_hotBar == m_SFToolbar)
-        {
-            hr = m_SFToolbar->KeyboardItemChange(VK_UP);
-            if (hr == S_FALSE)
-            {
-                if (m_staticToolbar)
-                    return m_staticToolbar->KeyboardItemChange(VK_END);
-                else
-                    return m_SFToolbar->KeyboardItemChange(VK_END);
-            }
-            return hr;
-        }
-    }
-    else if (changeType == MPOS_SELECTLEFT)
-    {
-        if (m_subMenuChild)
-            m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+    case MPOS_SELECTLEFT:
         if (!m_subMenuParent)
+        {
+            if (m_subMenuChild)
+                return m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
             return S_OK;
+        }
         return m_subMenuParent->OnSelect(MPOS_CANCELLEVEL);
-    }
-    else if (changeType == MPOS_SELECTRIGHT)
-    {
+
+    case MPOS_SELECTRIGHT:
         if (m_hotBar && m_hotItem >= 0)
         {
             if (m_hotBar->PopupItem(m_hotItem) == S_OK)
@@ -848,14 +871,14 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
         }
         if (!m_subMenuParent)
             return S_OK;
-        return m_subMenuParent->OnSelect(changeType);
-    }
-    else
-    {
+        return m_subMenuParent->OnSelect(MPOS_SELECTRIGHT);
+
+    default:
         if (!m_subMenuParent)
             return S_OK;
         return m_subMenuParent->OnSelect(changeType);
     }
+
     return S_OK;
 }
 
@@ -868,8 +891,60 @@ HRESULT CMenuBand::_CancelCurrentPopup()
     return hr;
 }
 
-HRESULT CMenuBand::_OnPopupSubMenu(IMenuPopup * popup, POINTL * pAt, RECTL * pExclude)
+HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude)
 {
+    HRESULT hr = 0;
+    IBandSite* pBandSite;
+    IDeskBar* pDeskBar;
+
+    // Create the necessary objects
+
+#if USE_SYSTEM_MENUSITE
+    hr = CoCreateInstance(CLSID_MenuBandSite,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IBandSite, &pBandSite));
+#else
+    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
+#endif
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+#if WRAP_MENUSITE
+    hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+#endif
+
+#if USE_SYSTEM_MENUDESKBAR
+    hr = CoCreateInstance(CLSID_MenuDeskBar,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IDeskBar, &pDeskBar));
+#else
+    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
+#endif
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+#if WRAP_MENUDESKBAR
+    hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+#endif
+
+    hr = pDeskBar->SetClient(pBandSite);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pBandSite->AddBand(childShellMenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // 
+    CComPtr<IMenuPopup> popup;
+    hr = pDeskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &popup));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     m_subMenuChild = popup;
     
     if (m_subMenuParent)

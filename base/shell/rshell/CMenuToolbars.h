@@ -40,8 +40,9 @@ protected:
     CMenuBand * m_menuBand;
     HWND        m_hwndToolbar;
     DWORD       m_dwMenuFlags;
-    BOOL        m_hasIdealSize;
+    BOOL        m_hasSizes;
     SIZE        m_idealSize;
+    SIZE        m_itemSize;
     BOOL        m_usePager;
     CMenuToolbarBase * m_hotBar;
     INT                m_hotItem;
@@ -49,7 +50,7 @@ protected:
     INT                m_popupItem;
 
     DWORD m_initFlags;
-    BOOL m_isTracking;
+    BOOL m_isTrackingPopup;
 
 private:
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -74,12 +75,11 @@ public:
     HRESULT DoContextMenu(IContextMenu* contextMenu);
 
     HRESULT KeyboardItemChange(DWORD changeType);
-    HRESULT OnHotItemChange(const NMTBHOTITEM * hot, LRESULT * theResult);
 
     HRESULT IsTrackedItem(INT index);
     HRESULT ChangeTrackedItem(INT index, BOOL wasTracking);
 
-    HRESULT GetIdealSize(SIZE& size);
+    HRESULT GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegralSize);
     HRESULT SetPosSize(int x, int y, int cx, int cy);
 
     void InvalidateDraw();
@@ -96,7 +96,7 @@ public:
     HRESULT KillPopupTimer();
 
 protected:
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+    virtual HRESULT OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult) = 0;
 
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
     virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData) = 0;
@@ -113,6 +113,7 @@ protected:
     HRESULT UpdateImageLists();
 
 private:
+    HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     HRESULT OnPagerCalcSize(LPNMPGCALCSIZE csize);
     HRESULT OnPopupTimer(DWORD timerId);
     HRESULT OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult);
@@ -133,7 +134,7 @@ public:
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);
 
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+    virtual HRESULT OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 protected:
@@ -161,7 +162,7 @@ public:
     HRESULT GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REFIID riid, void **ppv);
 
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE);
-    virtual HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+    virtual HRESULT OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     virtual HRESULT OnContextMenu(NMMOUSE * rclick);
 
 protected:

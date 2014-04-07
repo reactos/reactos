@@ -261,7 +261,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
-    if (cCapture && cCapture != m_captureHwnd)
+    if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
         return TRUE;
 
     m_ptPrev = pt;
@@ -283,7 +283,8 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             {
                 m_entryUnderMouse->mb->_ChangeHotItem(NULL, -1, HICF_MOUSE);
             }
-            SetCapture(NULL);
+            if (cCapture == m_captureHwnd)
+                SetCapture(NULL);
         }
 
     }
@@ -303,7 +304,8 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             if (m_current->type == TrackedMenuEntry)
                 SendMessage(entry->hwnd, WM_CANCELMODE, 0, 0);
             PostMessage(child, WM_USER_CHANGETRACKEDITEM, iHitTestResult, isTracking);
-            return FALSE;
+            if (m_current->type == TrackedMenuEntry)
+                return FALSE;
         }
     }
 
@@ -311,10 +313,10 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     {
         if (entry)
         {
-            SetCapture(child);
-
             if (m_current->type == MenuPopupEntry)
             {
+                //SetCapture(child);
+
                 ScreenToClient(child, &pt2);
                 SendMessage(child, WM_MOUSEMOVE, msg->wParam, MAKELPARAM(pt2.x, pt2.y));
             }
@@ -399,6 +401,10 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             callNext = ProcessMouseMove(msg);
             break;
+        case WM_MOUSELEAVE:
+            callNext = ProcessMouseMove(msg);
+            //callNext = ProcessMouseLeave(msg);
+            break;
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
             if (m_current->type == MenuPopupEntry)
@@ -406,16 +412,17 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
                 DisableMouseTrack(m_current->hwnd, TRUE);
                 switch (msg->wParam)
                 {
+                case VK_ESCAPE:
                 case VK_MENU:
                 case VK_LMENU:
                 case VK_RMENU:
                     m_current->mb->_MenuItemHotTrack(MPOS_FULLCANCEL);
                     break;
                 case VK_LEFT:
-                    m_current->mb->_MenuItemHotTrack(MPOS_SELECTLEFT);
+                    m_current->mb->_MenuItemHotTrack(VK_LEFT);
                     break;
                 case VK_RIGHT:
-                    m_current->mb->_MenuItemHotTrack(MPOS_SELECTRIGHT);
+                    m_current->mb->_MenuItemHotTrack(VK_RIGHT);
                     break;
                 case VK_UP:
                     m_current->mb->_MenuItemHotTrack(VK_UP);
