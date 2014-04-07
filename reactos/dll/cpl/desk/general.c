@@ -33,7 +33,7 @@ InitFontSizeList(HWND hWnd)
                 TCHAR Buffer[LINE_LEN];
                 TCHAR Desc[LINE_LEN];
 
-                if (SetupGetStringField(&Context, 0, Buffer, sizeof(Buffer), NULL) &&
+                if (SetupGetStringField(&Context, 0, Buffer, sizeof(Buffer) / sizeof(TCHAR), NULL) &&
                     SetupGetIntField(&Context, 1, &ci))
                 {
                     _stprintf(Desc, _T("%s (%d DPI)"), Buffer, ci);

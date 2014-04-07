@@ -340,7 +340,6 @@ SearchScreenSavers(HWND hwndScreenSavers,
 
     ScreenSaverCount = pData->ScreenSaverCount;
 
-    
     hr = StringCbCopy(szSearchPath, sizeof(szSearchPath), pszSearchPath);
     if (FAILED(hr))
         return;
