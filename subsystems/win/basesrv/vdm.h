@@ -28,7 +28,6 @@ typedef struct _VDM_CONSOLE_RECORD
     ULONG CurDirsLength;
     ULONG SessionId;
     LIST_ENTRY DosListHead;
-    // TODO: Structure incomplete!!!
 } VDM_CONSOLE_RECORD, *PVDM_CONSOLE_RECORD;
 
 typedef struct _VDM_DOS_RECORD
@@ -39,7 +38,6 @@ typedef struct _VDM_DOS_RECORD
     HANDLE ServerEvent;
     HANDLE ClientEvent;
     PVDM_COMMAND_INFO CommandInfo;
-    // TODO: Structure incomplete!!!
 } VDM_DOS_RECORD, *PVDM_DOS_RECORD;
 
 /* FUNCTIONS ******************************************************************/

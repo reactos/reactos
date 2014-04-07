@@ -50,6 +50,7 @@ typedef enum _VDM_ENTRY_CODE
 //
 // VDM Magic Values
 //
+#define VDM_FLAG_WOW            0x02
 #define VDM_INC_REENTER_COUNT   0x10
 #define VDM_DEC_REENTER_COUNT   0x20
 
