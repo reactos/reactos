@@ -254,9 +254,14 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     POINT pt2 = { GET_X_LPARAM(msg->lParam), GET_Y_LPARAM(msg->lParam) };
     ClientToScreen(msg->hwnd, &pt2);
 
-    /* Don't do anything if the mouse has not been moved */
+    // Don't do anything if the mouse has not been moved
     POINT pt = msg->pt;
     if (pt.x == m_ptPrev.x && pt.y == m_ptPrev.y)
+        return TRUE;
+
+    // Don't do anything if another window is capturing the mouse.
+    HWND cCapture = ::GetCapture();
+    if (cCapture && cCapture != m_captureHwnd)
         return TRUE;
 
     m_ptPrev = pt;

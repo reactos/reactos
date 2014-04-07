@@ -1,4 +1,22 @@
 
+#ifdef _MSC_VER
+
+// Disabling spammy warnings when compiling with /W4 or /Wall
+#pragma warning(disable:4100) // unreferenced formal parameter
+#pragma warning(disable:4201) // nonstandard extension used
+#pragma warning(disable:4265) // class has virtual functions, but destructor is not virtual
+#pragma warning(disable:4365) // signed/unsigned mismatch
+#pragma warning(disable:4514) // unreferenced inline function
+#pragma warning(disable:4710) // function was not inlined
+#pragma warning(disable:4820) // padding added
+#pragma warning(disable:4946) // reinterpret_cast between related classes
+
+// Disable some warnings in headers only
+#pragma warning(push)
+#pragma warning(disable:4244) // possible loss of data
+#pragma warning(disable:4512) // assignment operator could not be gernerated
+#endif
+
 #define USE_SYSTEM_MENUDESKBAR 0
 #define USE_SYSTEM_MENUSITE 0
 #define USE_SYSTEM_MENUBAND 0
@@ -37,10 +55,14 @@
 #include <atlcom.h>
 #include <wine/debug.h>
 
+#if _MSC_VER
+// Restore warnings
+#pragma warning(pop)
+#endif
+
 #define shell32_hInstance 0
 #define SMC_EXEC 4
 extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
-
 
 extern "C" HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
 extern "C" HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);

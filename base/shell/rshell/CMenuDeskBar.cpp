@@ -300,37 +300,32 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         rc.right += bm.bmWidth;
     }
 
-    int x, y, cx, cy;
-
     RECT rcWorkArea;
     GetWindowRect(GetDesktopWindow(), &rcWorkArea);
     int waHeight = rcWorkArea.bottom - rcWorkArea.top;
+
+    int x = ppt->x;
+    int y = ppt->y;
+    int cx = rc.right - rc.left;
+    int cy = rc.bottom - rc.top;
 
     switch (dwFlags & 0xFF000000)
     {
     case MPPF_BOTTOM:
         x = ppt->x;
-        cx = rc.right - rc.left;
         y = ppt->y - rc.bottom;
-        cy = rc.bottom - rc.top;
         break;
     case MPPF_RIGHT:
         x = ppt->x + rc.left;
-        cx = rc.right - rc.left;
         y = ppt->y + rc.top;
-        cy = rc.bottom - rc.top;
         break;
     case MPPF_TOP | MPPF_ALIGN_LEFT:
         x = ppt->x - rc.right;
-        cx = rc.right - rc.left;
         y = ppt->y + rc.top;
-        cy = rc.bottom - rc.top;
         break;
     case MPPF_TOP | MPPF_ALIGN_RIGHT:
         x = ppt->x;
-        cx = rc.right - rc.left;
         y = ppt->y + rc.top;
-        cy = rc.bottom - rc.top;
         break;
     }
 

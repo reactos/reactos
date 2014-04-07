@@ -602,7 +602,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
 
     if (m_hotBar == this && toolbar != this)
     {
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, -1, 0);
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM)-1, 0);
     }
 
     m_hotBar = toolbar;
@@ -967,7 +967,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
     if (prev != -1)
     {
         DbgPrint("Setting Hot item to null\n");
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, -1, 0);
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM) -1, 0);
     }
     return S_FALSE;
 }
