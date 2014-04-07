@@ -327,9 +327,9 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     if (pConInfo->ci.ConsoleTitle[0] != L'\0')
     {
-        wcsncpy(szTitle, L"\"", sizeof(szTitle) / sizeof(szTitle[0]));
-        wcsncat(szTitle, pConInfo->ci.ConsoleTitle, sizeof(szTitle) / sizeof(szTitle[0]));
-        wcsncat(szTitle, L"\"", sizeof(szTitle) / sizeof(szTitle[0]));
+        wcsncpy(szTitle, L"\"", MAX_PATH);
+        wcsncat(szTitle, pConInfo->ci.ConsoleTitle, MAX_PATH - wcslen(szTitle));
+        wcsncat(szTitle, L"\"", MAX_PATH - wcslen(szTitle));
     }
     else
     {

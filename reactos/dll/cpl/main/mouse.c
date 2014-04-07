@@ -1109,8 +1109,8 @@ LoadInitialCursorScheme(HWND hwndDlg)
     else if (dwSchemeSource == 2)
     {
         LoadString(hApplet, IDS_SYSTEM_SCHEME, szSystemScheme, MAX_PATH);
-        _tcsncat(szSchemeName, _T(" "), MAX_PATH - _tcslen(szSchemeName));
-        _tcsncat(szSchemeName, szSystemScheme, MAX_PATH - _tcslen(szSchemeName));
+        _tcsncat(szSchemeName, _T(" "), MAX_PATH - _tcslen(szSchemeName) - 1);
+        _tcsncat(szSchemeName, szSystemScheme, MAX_PATH - _tcslen(szSchemeName) - 1);
     }
 
     /* Search and select the curent scheme name from the scheme list */
