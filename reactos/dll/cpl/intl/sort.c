@@ -134,7 +134,7 @@ CreateSortList(HWND hwnd, LCID lcid)
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang));
+    GetLocaleInfo(lcid, LOCALE_SSORTNAME, lang, sizeof(lang)/sizeof(TCHAR));
 
     SendMessage(hwnd,
                 CB_SELECTSTRING,
