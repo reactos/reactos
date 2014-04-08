@@ -394,9 +394,9 @@ INT wmain(INT argc, WCHAR *argv[])
         return 0;
     }
 
-    DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
-
 #endif
+
+    DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
     /* Initialize the console */
     if (!ConsoleInit())
@@ -446,12 +446,14 @@ INT wmain(INT argc, WCHAR *argv[])
         CommandInfo.Title = Title;
         CommandInfo.TitleLen = sizeof(Title);
 
+        /* Wait for the next available VDM */
         if (!GetNextVDMCommand(&CommandInfo)) break;
 
         /* Start the process from the command line */
+        DPRINT1("Starting '%s'...\n", AppName);
         if (!DosCreateProcess(AppName, 0))
         {
-            DisplayMessage(L"Could not start program: %S", AppName);
+            DisplayMessage(L"Could not start '%S'", AppName);
             goto Cleanup;
         }
 
@@ -465,28 +467,32 @@ INT wmain(INT argc, WCHAR *argv[])
 #else
 
     /* Start the process from the command line */
+    DPRINT1("Starting '%s'...\n", CommandLine);
     if (!DosCreateProcess(CommandLine, 0))
     {
-        DisplayMessage(L"Could not start program: %S", CommandLine);
+        DisplayMessage(L"Could not start '%S'", CommandLine);
         goto Cleanup;
     }
 
     /* Start simulation */
     EmulatorSimulate();
 
-#endif
-
     /* Perform another screen refresh */
     VgaRefreshDisplay();
+
+#endif
 
 Cleanup:
     BiosCleanup();
     EmulatorCleanup();
     ConsoleCleanup();
 
+#ifndef STANDALONE
+    ExitVDM(FALSE, 0);
+#endif
+
     /* Quit the VDM */
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
-    ExitVDM(FALSE, 0);
 
     return 0;
 }
