@@ -66,17 +66,4 @@ BaseCheckVDM(
     IN HANDLE hUserToken OPTIONAL
 );
 
-BOOL
-WINAPI
-GetNextVDMCommand(
-    IN OUT PVDM_COMMAND_INFO CommandData OPTIONAL
-);
-
-VOID
-WINAPI
-ExitVDM(
-    IN BOOL IsWow,
-    IN ULONG iWowTask
-);
-
 /* EOF */

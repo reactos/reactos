@@ -12,7 +12,7 @@
 
 #pragma once
 
-/* CONSTANTS ******************************************************************/
+/* CONSTANTS & TYPES **********************************************************/
 
 typedef enum _VDM_ENTRY_CODE
 {
@@ -84,6 +84,22 @@ typedef struct
     USHORT CurrentDrive;
     BOOLEAN ComingFromBat;
 } VDM_COMMAND_INFO, *PVDM_COMMAND_INFO;
+
+
+/* FUNCTION PROTOTYPES ********************************************************/
+
+BOOL
+WINAPI
+GetNextVDMCommand(
+    IN OUT PVDM_COMMAND_INFO CommandData OPTIONAL
+);
+
+VOID
+WINAPI
+ExitVDM(
+    IN BOOL IsWow,
+    IN ULONG iWowTask
+);
 
 #endif // _VDM_H
 

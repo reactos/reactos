@@ -29,21 +29,6 @@
 
 #include <debug.h>
 
-/* PROTOTYPES *****************************************************************/
-
-BOOL
-WINAPI
-GetNextVDMCommand(
-    IN OUT PVDM_COMMAND_INFO CommandData OPTIONAL
-);
-
-VOID
-WINAPI
-ExitVDM(
-    IN BOOL IsWow,
-    IN ULONG iWowTask
-);
-
 /* FUNCTIONS ******************************************************************/
 
 VOID DisplayMessage(LPCWSTR Format, ...);
