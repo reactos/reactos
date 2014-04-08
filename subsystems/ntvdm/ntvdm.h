@@ -23,12 +23,26 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <subsys/win/vdm.h>
 
 #include <vddsvc.h>
 
 #include <debug.h>
 
-/* DEFINES ********************************************************************/
+/* PROTOTYPES *****************************************************************/
+
+BOOL
+WINAPI
+GetNextVDMCommand(
+    IN OUT PVDM_COMMAND_INFO CommandData OPTIONAL
+);
+
+VOID
+WINAPI
+ExitVDM(
+    IN BOOL IsWow,
+    IN ULONG iWowTask
+);
 
 /* FUNCTIONS ******************************************************************/
 

@@ -371,9 +371,14 @@ VOID ConsoleCleanup(VOID)
 INT wmain(INT argc, WCHAR *argv[])
 {
 #ifndef STANDALONE
-    wprintf(L"\nReactOS Virtual DOS Machine\n\n"
-            L"OS integration (BaseVDM) unimplemented\n");
-    return 0;
+
+    VDM_COMMAND_INFO CommandInfo;
+    CHAR CmdLine[MAX_PATH];
+    CHAR AppName[MAX_PATH];
+    CHAR PifFile[MAX_PATH];
+    CHAR Desktop[MAX_PATH];
+    CHAR Title[MAX_PATH];
+
 #else
 
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
@@ -390,6 +395,8 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     DPRINT1("\n\n\nNTVDM - Starting '%s'...\n\n\n", CommandLine);
+
+#endif
 
     /* Initialize the console */
     if (!ConsoleInit())
@@ -419,6 +426,44 @@ INT wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
+#ifndef STANDALONE
+
+    while (TRUE)
+    {
+        /* Clear the structure */
+        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+
+        /* Initialize the structure members */
+        CommandInfo.VDMState = VDM_NOT_LOADED;
+        CommandInfo.CmdLine = CmdLine;
+        CommandInfo.CmdLen = sizeof(CmdLine);
+        CommandInfo.AppName = AppName;
+        CommandInfo.AppLen = sizeof(AppName);
+        CommandInfo.PifFile = PifFile;
+        CommandInfo.PifLen = sizeof(PifFile);
+        CommandInfo.Desktop = Desktop;
+        CommandInfo.DesktopLen = sizeof(Desktop);
+        CommandInfo.Title = Title;
+        CommandInfo.TitleLen = sizeof(Title);
+
+        if (!GetNextVDMCommand(&CommandInfo)) break;
+
+        /* Start the process from the command line */
+        if (!DosCreateProcess(AppName, 0))
+        {
+            DisplayMessage(L"Could not start program: %S", AppName);
+            goto Cleanup;
+        }
+
+        /* Start simulation */
+        EmulatorSimulate();
+
+        /* Perform another screen refresh */
+        VgaRefreshDisplay();
+    }
+
+#else
+
     /* Start the process from the command line */
     if (!DosCreateProcess(CommandLine, 0))
     {
@@ -429,6 +474,8 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Start simulation */
     EmulatorSimulate();
 
+#endif
+
     /* Perform another screen refresh */
     VgaRefreshDisplay();
 
@@ -437,11 +484,11 @@ Cleanup:
     EmulatorCleanup();
     ConsoleCleanup();
 
+    /* Quit the VDM */
     DPRINT1("\n\n\nNTVDM - Exiting...\n\n\n");
+    ExitVDM(FALSE, 0);
 
     return 0;
-
-#endif
 }
 
 /* EOF */
