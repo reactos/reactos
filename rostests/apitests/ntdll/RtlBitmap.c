@@ -409,6 +409,8 @@ Test_RtlFindClearBits(void)
     ok_int(RtlFindClearBits(&BitMapHeader, 5, 64), 20);
     ok_int(RtlFindClearBits(&BitMapHeader, 9, 28), 27);
     ok_int(RtlFindClearBits(&BitMapHeader, 10, 0), -1);
+    Buffer[1] = 0xFF303F30;
+    ok_int(RtlFindClearBits(&BitMapHeader, 1, 56), 1);
     FreeGuarded(Buffer);
 }
 
@@ -457,6 +459,7 @@ Test_RtlFindSetBits(void)
     ok_int(RtlFindSetBits(&BitMapHeader, 5, 64), 20);
     ok_int(RtlFindSetBits(&BitMapHeader, 6, 57), 40);
     ok_int(RtlFindSetBits(&BitMapHeader, 7, 0), -1);
+    ok_int(RtlFindSetBits(&BitMapHeader, 1, 62), 1);
     FreeGuarded(Buffer);
 }
 
