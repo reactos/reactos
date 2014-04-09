@@ -158,11 +158,6 @@ private:
 #endif
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-#if WRAP_MENUBAND
-        hr = CMenuBand_Wrapper(pShellMenu, IID_PPV_ARG(IShellMenu, &pShellMenu));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-#endif
 
         hr = pShellMenu->Initialize(this, 0, ANCESTORDEFAULT, SMINIT_VERTICAL);
 
@@ -298,51 +293,36 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
 
 #if USE_SYSTEM_MENUBAND
     hr = CoCreateInstance(CLSID_MenuBand,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellMenu, &pShellMenu));
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IShellMenu, &pShellMenu));
 #else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUBAND
-    hr = CMenuBand_Wrapper(pShellMenu, IID_PPV_ARG(IShellMenu, &pShellMenu));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
 #if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IBandSite, &pBandSite));
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IBandSite, &pBandSite));
 #else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUSITE
-    hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
 #if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IDeskBar, &pDeskBar));
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IDeskBar, &pDeskBar));
 #else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUDESKBAR
-    hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
     CComObject<CShellMenuCallback> *pCallback;
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
@@ -351,7 +331,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
-    pShellMenu->Initialize(pCallback, (UINT)-1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
+    pShellMenu->Initialize(pCallback, (UINT) -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

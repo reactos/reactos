@@ -105,7 +105,7 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case -714: return S_FALSE;
 
         default:
-            DbgPrint("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
+            TRACE("WM_NOTIFY unknown code %d, %d\n", hdr->code, hdr->idFrom);
             return S_OK;
         }
         return S_FALSE;
@@ -151,7 +151,7 @@ HRESULT CMenuToolbarBase::DisableMouseTrack(BOOL bDisable)
     if (m_disableMouseTrack != bDisable)
     {
         m_disableMouseTrack = bDisable;
-        DbgPrint("DisableMouseTrack %d\n", bDisable);
+        TRACE("DisableMouseTrack %d\n", bDisable);
     }
     return S_OK;
 }
@@ -192,13 +192,13 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         hdc = cdraw->nmcd.hdc;
 
         // The item with an active submenu gets the CHECKED flag.
-        isHot = m_hotBar == this && (int)cdraw->nmcd.dwItemSpec == m_hotItem;
-        isPopup = m_popupBar == this && (int)cdraw->nmcd.dwItemSpec == m_popupItem;
+        isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
+        isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
 
         if (m_initFlags & SMINIT_VERTICAL)
         {
             // Remove HOT and CHECKED flags (will restore HOT if necessary)
-            cdraw->nmcd.uItemState &= ~(CDIS_HOT|CDIS_CHECKED);
+            cdraw->nmcd.uItemState &= ~(CDIS_HOT | CDIS_CHECKED);
 
             // Decide on the colors
             if (isHot || (m_hotItem < 0 && isPopup))
@@ -256,8 +256,8 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             // TODO: Support RTL text modes by drawing a leftwards arrow aligned to the left of the control
 
             // "8" is the rightwards dropdown arrow in the Marlett font
-            WCHAR text[] = L"8";
-            
+            WCHAR text [] = L"8";
+
             // Configure the font to draw with Marlett, keeping the current background color as-is
             SelectObject(cdraw->nmcd.hdc, m_marlett);
             SetBkMode(cdraw->nmcd.hdc, TRANSPARENT);
@@ -356,7 +356,7 @@ HRESULT CMenuToolbarBase::UpdateImageLists()
     HRESULT hr = SHGetImageList(shiml, IID_PPV_ARG(IImageList, &piml));
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, 0); 
+        SendMessageW(m_hwndToolbar, TB_SETIMAGELIST, 0, 0);
     }
     else
     {
@@ -464,7 +464,7 @@ HRESULT CMenuToolbarBase::GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegr
         *pMaxSize = m_idealSize;
     if (pIntegralSize)
         *pIntegralSize = m_itemSize;
-    
+
     if (m_hasSizes)
         return S_OK;
 
@@ -475,7 +475,7 @@ HRESULT CMenuToolbarBase::GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegr
     SendMessageW(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
     SendMessageW(m_hwndToolbar, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&m_idealSize));
     SendMessageW(m_hwndToolbar, TB_GETIDEALSIZE, (m_initFlags & SMINIT_VERTICAL) != 0, reinterpret_cast<LPARAM>(&m_idealSize));
-    
+
     // Obtain the button size, to be used as the integral size
     DWORD size = SendMessageW(m_hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
     m_itemSize.cx = GET_X_LPARAM(size);
@@ -594,14 +594,14 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
     // and mouse tracking is disabled.
     if (m_disableMouseTrack && dwFlags & HICF_MOUSE)
     {
-        DbgPrint("Hot item change prevented by DisableMouseTrack\n");
+        TRACE("Hot item change prevented by DisableMouseTrack\n");
         return S_OK;
     }
 
     // Notify the toolbar if the hot-tracking left this toolbar
     if (m_hotBar == this && toolbar != this)
     {
-        SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM)-1, 0);
+        SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM) -1, 0);
     }
 
     m_hotBar = toolbar;
@@ -620,7 +620,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
                 SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &elapsed, 0);
                 SetTimer(m_hwndToolbar, TIMERID_HOTTRACK, elapsed, NULL);
                 m_timerEnabled = TRUE;
-                DbgPrint("SetTimer called with m_hotItem=%d\n", m_hotItem);
+                TRACE("SetTimer called with m_hotItem=%d\n", m_hotItem);
             }
             else if (m_isTrackingPopup)
             {
@@ -676,6 +676,9 @@ HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
     if (m_hotBar != this)
         return S_FALSE;
 
+    if (index < 0)
+        return S_FALSE;
+
     if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
         return E_FAIL;
 
@@ -691,14 +694,18 @@ HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
 HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
 {
     TBBUTTON btn;
+
+    if (index < 0)
+    {
+        m_isTrackingPopup = FALSE;
+        return m_menuBand->_ChangeHotItem(NULL, -1, HICF_MOUSE);
+    }
+
     if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
         return E_FAIL;
 
-    DbgPrint("Changing tracked item to %d...\n", index);
     m_isTrackingPopup = wasTracking;
-    m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
-
-    return S_OK;
+    return m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
 }
 
 HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu)
@@ -747,7 +754,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
 
     if (!SendMessage(m_hwndToolbar, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&rc)))
         return E_FAIL;
-    
+
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
 
@@ -772,6 +779,8 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
     m_menuBand->_ChangePopupItem(NULL, -1);
     m_isTrackingPopup = FALSE;
 
+    m_menuBand->_ChangeHotItem(NULL, -1, 0);
+
     return S_OK;
 }
 
@@ -790,28 +799,28 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     if (m_disableMouseTrack)
     {
         *theResult = 1;
-        DbgPrint("Item click prevented by DisableMouseTrack\n");
+        TRACE("Item click prevented by DisableMouseTrack\n");
         return S_OK;
     }
 
     // If a button is clicked while a submenu was open, cancel the submenu.
     if (!(m_initFlags & SMINIT_VERTICAL) && m_isTrackingPopup)
     {
-        DbgPrint("OnCommand cancelled because it was tracking submenu.\n");
+        TRACE("OnCommand cancelled because it was tracking submenu.\n");
         return S_FALSE;
     }
-    
+
     *theResult = 0;
 
     m_menuBand->_KillPopupTimers();
 
     if (PopupItem(wParam) == S_OK)
     {
-        DbgPrint("PopupItem returned S_OK\n");
+        TRACE("PopupItem returned S_OK\n");
         return S_FALSE;
     }
 
-    DbgPrint("Executing...\n");
+    TRACE("Executing...\n");
 
     HRESULT hr = m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
 
@@ -882,7 +891,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
             {
                 if (prev != btn.idCommand)
                 {
-                    DbgPrint("Setting Hot item to %d\n", index);
+                    TRACE("Setting Hot item to %d\n", index);
                     m_menuBand->_ChangeHotItem(this, index, 0);
                 }
                 return S_OK;
@@ -901,7 +910,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
 
     if (prev != -1)
     {
-        DbgPrint("Setting Hot item to null\n");
+        TRACE("Setting Hot item to null\n");
         m_menuBand->_ChangeHotItem(NULL, -1, 0);
     }
 
@@ -1031,7 +1040,7 @@ HRESULT CMenuToolbarBase::PopupItem(INT iItem)
 
     if (!(m_initFlags & SMINIT_VERTICAL))
     {
-        DbgPrint("PopupItem non-vertical %d %d\n", index, iItem);
+        TRACE("PopupItem non-vertical %d %d\n", index, iItem);
         m_menuBand->_ChangeHotItem(this, iItem, 0);
     }
 
@@ -1096,7 +1105,7 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 
         if (!GetMenuItemInfoW(m_hmenu, i, TRUE, &info))
         {
-            DbgPrint("Error obtaining info for menu item at pos=%d\n", i);
+            TRACE("Error obtaining info for menu item at pos=%d\n", i);
             continue;
         }
 
@@ -1185,7 +1194,6 @@ HRESULT CMenuStaticToolbar::InternalHasSubMenu(INT iItem, INT index, DWORD_PTR d
 {
     return ::GetSubMenu(m_hmenu, index) ? S_OK : S_FALSE;
 }
-
 
 CMenuSFToolbar::CMenuSFToolbar(CMenuBand * menuBand) :
     CMenuToolbarBase(menuBand, TRUE),
@@ -1350,11 +1358,6 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUBAND
-    hr = CMenuBand_Wrapper(shellMenu, IID_PPV_ARG(IShellMenu, &shellMenu));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
     m_menuBand->GetMenuInfo(&psmc, &uId, &uIdAncestor, &flags);
 

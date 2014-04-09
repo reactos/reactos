@@ -26,8 +26,9 @@
 #include "CMenuToolbars.h"
 #include "CMenuBand.h"
 
-#undef _ASSERT
-#define _ASSERT(x) DbgAssert(!!(x), __FILE__, __LINE__, #x)
+#if DBG
+#   undef _ASSERT
+#   define _ASSERT(x) DbgAssert(!!(x), __FILE__, __LINE__, #x)
 
 bool DbgAssert(bool x, const char * filename, int line, const char * expr)
 {
@@ -55,6 +56,10 @@ bool DbgAssert(bool x, const char * filename, int line, const char * expr)
     }
     return x;
 }
+#else
+#   undef _ASSERT
+#   define _ASSERT(x) (!!(x))
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuFocus);
 
@@ -192,10 +197,6 @@ void CMenuFocusManager::DisableMouseTrack(HWND parent, BOOL disableThis)
                 entry.mb->_DisableMouseTrack(bDisable);
             }
         }
-        //else
-        //{
-        //    continue;
-        //}
     }
     m_mouseTrackDisabled = lastDisable;
 }
@@ -208,13 +209,13 @@ void CMenuFocusManager::SetCapture(HWND child)
         {
             ::SetCapture(child);
             m_captureHwnd = child;
-            DbgPrint("MouseTrack is now capturing %p\n", child);
+            TRACE("MouseTrack is now capturing %p\n", child);
         }
         else
         {
             ::ReleaseCapture();
             m_captureHwnd = NULL;
-            DbgPrint("MouseTrack is now off\n");
+            TRACE("MouseTrack is now off\n");
         }
 
     }
@@ -249,7 +250,7 @@ HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd, StackEntry ** pentry)
 LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 {
     HWND child;
-    int iHitTestResult;
+    int iHitTestResult = -1;
 
     POINT pt2 = { GET_X_LPARAM(msg->lParam), GET_Y_LPARAM(msg->lParam) };
     ClientToScreen(msg->hwnd, &pt2);
@@ -271,37 +272,18 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     StackEntry * entry = NULL;
     IsTrackedWindow(child, &entry);
 
-    if (m_hwndUnderMouse != child)
-    {
-        WCHAR cn[1024];
-        GetClassName(child, cn, 1023);
-        DbgPrint("Mouse moved to %p (%S)\n", child, cn);
-
-        if (!entry)
-        {
-            if (m_entryUnderMouse)
-            {
-                m_entryUnderMouse->mb->_ChangeHotItem(NULL, -1, HICF_MOUSE);
-            }
-            if (cCapture == m_captureHwnd)
-                SetCapture(NULL);
-        }
-
-    }
-
+    BOOL isTracking = FALSE;
     if (entry)
     {
         ScreenToClient(child, &pt);
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
+        isTracking = entry->mb->_IsTracking();
 
-        BOOL isTracking = entry->mb->_IsTracking();
-
-        if (iHitTestResult >= 0 &&
-            SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
+        if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
         {
-            DbgPrint("Hot item tracking detected a change (capture=%p)...\n", m_captureHwnd);
+            TRACE("Hot item tracking detected a change (capture=%p)...\n", m_captureHwnd);
             DisableMouseTrack(NULL, FALSE);
-            if (m_current->type == TrackedMenuEntry)
+            if (isTracking && iHitTestResult>=0 && m_current->type == TrackedMenuEntry)
                 SendMessage(entry->hwnd, WM_CANCELMODE, 0, 0);
             PostMessage(child, WM_USER_CHANGETRACKEDITEM, iHitTestResult, isTracking);
             if (m_current->type == TrackedMenuEntry)
@@ -309,14 +291,24 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
         }
     }
 
+    if (m_entryUnderMouse != entry)
+    {
+        // Mouse moved away from a tracked window
+        if (m_entryUnderMouse)
+        {
+            m_entryUnderMouse->mb->_ChangeHotItem(NULL, -1, HICF_MOUSE);
+        }
+        if (cCapture == m_captureHwnd)
+            SetCapture(NULL);
+    }
+
     if (m_hwndUnderMouse != child)
     {
         if (entry)
         {
+            // Mouse moved to a tracked window
             if (m_current->type == MenuPopupEntry)
             {
-                //SetCapture(child);
-
                 ScreenToClient(child, &pt2);
                 SendMessage(child, WM_MOUSEMOVE, msg->wParam, MAKELPARAM(pt2.x, pt2.y));
             }
@@ -446,12 +438,12 @@ HRESULT CMenuFocusManager::PlaceHooks()
 {
     if (m_current->type == TrackedMenuEntry)
     {
-        DbgPrint("Entering MSGFILTER hook...\n");
+        TRACE("Entering MSGFILTER hook...\n");
         m_hMsgFilterHook = SetWindowsHookEx(WH_MSGFILTER, s_MsgFilterHook, NULL, m_threadId);
     }
     else
     {
-        DbgPrint("Entering GETMESSAGE hook...\n");
+        TRACE("Entering GETMESSAGE hook...\n");
         m_hGetMsgHook = SetWindowsHookEx(WH_GETMESSAGE, s_GetMsgHook, NULL, m_threadId);
     }
     return S_OK;
@@ -459,7 +451,7 @@ HRESULT CMenuFocusManager::PlaceHooks()
 
 HRESULT CMenuFocusManager::RemoveHooks()
 {
-    DbgPrint("Removing all hooks...\n");
+    TRACE("Removing all hooks...\n");
     if (m_hMsgFilterHook)
         UnhookWindowsHookEx(m_hMsgFilterHook);
     if (m_hGetMsgHook)
@@ -538,11 +530,19 @@ HRESULT CMenuFocusManager::UpdateFocus()
         // When the mouse moves, it should set itself to the proper band
         SetCapture(m_current->hwnd);
 
-        //// FIXME: Debugging code, probably not right
-        //POINT pt2;
-        //GetCursorPos(&pt2);
-        //ScreenToClient(m_current->hwnd, &pt2);
-        //SendMessage(m_current->hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(pt2.x, pt2.y));
+        if (old && old->type == TrackedMenuEntry)
+        {
+            // FIXME: Debugging code, probably not right
+            POINT pt2;
+            RECT rc2;
+            GetCursorPos(&pt2);
+            ScreenToClient(m_current->hwnd, &pt2);
+            GetClientRect(m_current->hwnd, &rc2);
+            if (PtInRect(&rc2, pt2))
+                SendMessage(m_current->hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(pt2.x, pt2.y));
+            else
+                SendMessage(m_current->hwnd, WM_MOUSELEAVE, 0, 0);
+        }
     }
 
     _ASSERT(!m_parent || m_parent->type != TrackedMenuEntry);

@@ -30,7 +30,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 #undef UNIMPLEMENTED
 
-#define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
+#define UNIMPLEMENTED TRACE("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 
 extern "C"
 HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
@@ -130,7 +130,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     HWND hwnd,
     DWORD dwFlags)
 {
-    DbgPrint("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
+    TRACE("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
 
     BOOL created = FALSE;
 
@@ -752,7 +752,7 @@ HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
     if (m_hotBar == tb && m_hotItem == id)
         return S_FALSE;
 
-    DbgPrint("Hot item changed from %p %p, to %p %p\n", m_hotBar, m_hotItem, tb, id);
+    TRACE("Hot item changed from %p %p, to %p %p\n", m_hotBar, m_hotItem, tb, id);
 
     _KillPopupTimers();
 
@@ -769,7 +769,7 @@ HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
 
 HRESULT CMenuBand::_ChangePopupItem(CMenuToolbarBase * tb, INT id)
 {
-    DbgPrint("Popup item changed from %p %p, to %p %p\n", m_popupBar, m_popupItem, tb, id);
+    TRACE("Popup item changed from %p %p, to %p %p\n", m_popupBar, m_popupItem, tb, id);
 
     m_popupBar = tb;
     m_popupItem = id;
@@ -818,7 +818,6 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 {
     HRESULT hr;
 
-    
     if (m_dwFlags & SMINIT_VERTICAL)
     {
         switch (changeType)
@@ -839,7 +838,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     else
     {
         // In horizontal menubars, left/right are equivalent to vertical's up/down
-        switch(changeType)
+        switch (changeType)
         {
         case VK_LEFT:
             hr = _KeyboardItemChange(VK_UP);
@@ -878,8 +877,6 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
             return S_OK;
         return m_subMenuParent->OnSelect(changeType);
     }
-
-    return S_OK;
 }
 
 HRESULT CMenuBand::_CancelCurrentPopup()
@@ -909,11 +906,6 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUSITE
-    hr = CMenuSite_Wrapper(pBandSite, IID_PPV_ARG(IBandSite, &pBandSite));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
 #if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
@@ -925,11 +917,6 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#if WRAP_MENUDESKBAR
-    hr = CMenuDeskBar_Wrapper(pDeskBar, IID_PPV_ARG(IDeskBar, &pDeskBar));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-#endif
 
     hr = pDeskBar->SetClient(pBandSite);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -946,7 +933,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
         return hr;
 
     m_subMenuChild = popup;
-    
+
     if (m_subMenuParent)
         IUnknown_SetSite(popup, m_subMenuParent);
     else
