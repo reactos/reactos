@@ -153,7 +153,7 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
     }
 }
 
-#if 0 // Moved to Win32k
+#if 0
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
@@ -344,6 +344,7 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
     }
     SetCursorPos( pt.x, pt.y );
     DefWndHandleSetCursor(hWnd, (WPARAM)hWnd, MAKELONG(hittest, WM_MOUSEMOVE), Style);
+    //SendMessageW(hWnd, WM_SETCURSOR, (WPARAM)hWnd, MAKELONG(hittest, WM_MOUSEMOVE));
     return hittest;
 }
 
@@ -419,7 +420,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   //
   // Show window contents while dragging the window, get flag from registry data.
   //
-  SystemParametersInfoA(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
+  SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
 
   pt.x = GET_X_LPARAM(dwPoint);
   pt.y = GET_Y_LPARAM(dwPoint);
@@ -450,11 +451,11 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	  SetCapture(hwnd);
 	  hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
 	  if (!hittest)
-	    {
+	  {
 	      ReleaseCapture();
 	      return;
-	    }
-	}
+	  }
+      }
   }
 
   /* Get min/max info */
@@ -515,7 +516,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   }
 
   IntNotifyWinEvent( EVENT_SYSTEM_MOVESIZESTART, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
-  SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
+  SendMessageW( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
   NtUserxSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
   if (GetCapture() != hwnd) SetCapture( hwnd );
 
@@ -703,8 +704,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   }
 
   NtUserxSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
-  SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
-  SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
+  SendMessageW( hwnd, WM_EXITSIZEMOVE, 0, 0 );
+  SendMessageW( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
 
   /* window moved or resized */
   if (moved)
@@ -744,7 +745,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	if( !moved )
         {
 	    if( Style & WS_SYSMENU )
-	      SendMessageA( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
+	      SendMessageW( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
         }
     }
 }
