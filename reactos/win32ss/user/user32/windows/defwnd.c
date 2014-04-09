@@ -153,7 +153,7 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
     }
 }
 
-
+#if 0 // Moved to Win32k
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
@@ -177,7 +177,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
     }
     return;
 }
-
+#endif
 
 LRESULT
 DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
@@ -277,8 +277,11 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 	rect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
       if (Style & WS_MAXIMIZEBOX)
 	rect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
-      pt.x = rectWindow.left + (rect.right - rect.left) / 2;
-      pt.y = rectWindow.top + rect.top + GetSystemMetrics(SM_CYSIZE)/2;
+      //pt.x = rectWindow.left + (rect.right - rect.left) / 2;
+      //pt.y = rectWindow.top + rect.top + GetSystemMetrics(SM_CYSIZE)/2;
+      pt.x = (rect.right + rect.left) / 2;
+      pt.y = rect.top + GetSystemMetrics(SM_CYSIZE)/2;
+      ERR("SC_MOVE\n");
       hittest = HTCAPTION;
       *capturePoint = pt;
     }
@@ -293,9 +296,12 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
+	      //// Clamp the mouse position to the window rectangle when starting a window resize.
+              //pt.x = min( max( msg.pt.x, rectWindow.left ), rectWindow.right - 1 );
+              //pt.y = min( max( msg.pt.y, rectWindow.top ), rectWindow.bottom - 1 );
+              //// Breaks a win test.
 	      hittest = DefWndNCHitTest(hWnd, msg.pt);
-	      if ((hittest < HTLEFT) || (hittest > HTBOTTOMRIGHT))
-		hittest = 0;
+	      if ((hittest < HTLEFT) || (hittest > HTBOTTOMRIGHT)) hittest = 0;
 	      break;
 
 	    case WM_LBUTTONUP:
@@ -354,19 +360,8 @@ static VOID
 UserDrawWindowFrame(HDC hdc, const RECT *rect,
 		    ULONG width, ULONG height)
 {
-  static HBRUSH hDraggingRectBrush = NULL;
-  HBRUSH hbrush;
+  HBRUSH hbrush = SelectObject( hdc, gpsi->hbrGray );
 
-  if(!hDraggingRectBrush)
-  {
-    static HBITMAP hDraggingPattern = NULL;
-    const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
-
-    hDraggingPattern = CreateBitmap(8, 8, 1, 1, Pattern);
-    hDraggingRectBrush = CreatePatternBrush(hDraggingPattern);
-  }
-
-  hbrush = SelectObject( hdc, hDraggingRectBrush );
   PatBlt( hdc, rect->left, rect->top,
 	  rect->right - rect->left - width, height, PATINVERT );
   PatBlt( hdc, rect->left, rect->top + height, width,
@@ -410,6 +405,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   BOOL DragFullWindows = FALSE;
   HWND hWndParent = NULL;
   PWND Wnd;
+  WPARAM syscommand = wParam & 0xfff0;
+  HMONITOR mon = 0;
 
   Wnd = ValidateHwnd(hwnd);
   if (!Wnd)
@@ -419,36 +416,32 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   ExStyle = Wnd->ExStyle;
   iconic = (Style & WS_MINIMIZE) != 0;
 
+  //
+  // Show window contents while dragging the window, get flag from registry data.
+  //
   SystemParametersInfoA(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
 
   pt.x = GET_X_LPARAM(dwPoint);
   pt.y = GET_Y_LPARAM(dwPoint);
   capturePoint = pt;
 
-  if ((Style & WS_MAXIMIZE) || !IsWindowVisible(hwnd))
-    {
-      return;
-    }
+  TRACE("hwnd %p command %04lx, hittest %d, pos %d,%d\n",
+         hwnd, syscommand, hittest, pt.x, pt.y);
 
-  thickframe = UserHasThickFrameStyle(Style, ExStyle) && !(Style & WS_MINIMIZE);
-  if ((wParam & 0xfff0) == SC_MOVE)
-    {
-      if (!hittest)
-	{
-	  hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
-	}
-      if (!hittest)
-	{
-	  return;
-	}
-    }
+  if ((Style & WS_MAXIMIZE) || !IsWindowVisible(hwnd)) return;
+
+  thickframe = UserHasThickFrameStyle(Style, ExStyle) && !iconic;
+
+  if (syscommand == SC_MOVE)
+  {
+      ERR("SC_MOVE\n");
+      if (!hittest) hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
+      if (!hittest) return;
+  }
   else  /* SC_SIZE */
-    {
-      if (!thickframe)
-	{
-	  return;
-	}
-      if (hittest && ((wParam & 0xfff0) != SC_MOUSEMENU))
+  {
+      if (!thickframe) return;
+      if (hittest && (syscommand != SC_MOUSEMENU))
 	{
           hittest += (HTLEFT - WMSZ_LEFT);
 	}
@@ -462,23 +455,24 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      return;
 	    }
 	}
-    }
+  }
 
   /* Get min/max info */
 
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   sizingRect = Wnd->rcWindow;
+  ERR("x %d y %d X %d Y %d\n",pt.x,pt.y,sizingRect.left,sizingRect.top);
   if (Style & WS_CHILD)
-    {
+  {
       hWndParent = GetParent(hwnd);
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
       unmodRect = sizingRect;
       GetClientRect(hWndParent, &mouseRect );
       clipRect = mouseRect;
       MapWindowPoints(hWndParent, HWND_DESKTOP, (LPPOINT)&clipRect, 2);
-    }
+  }
   else
-    {
+  {
       if(!(ExStyle & WS_EX_TOPMOST))
       {
         SystemParametersInfoW(SPI_GETWORKAREA, 0, &clipRect, 0);
@@ -489,70 +483,72 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         SetRect(&mouseRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
         clipRect = mouseRect;
       }
+      mon = MonitorFromPoint( pt, MONITOR_DEFAULTTONEAREST );
       unmodRect = sizingRect;
-    }
+  }
   ClipCursor(&clipRect);
 
   origRect = sizingRect;
   if (ON_LEFT_BORDER(hittest))
-    {
+  {
       mouseRect.left  = max( mouseRect.left, sizingRect.right-maxTrack.x );
       mouseRect.right = min( mouseRect.right, sizingRect.right-minTrack.x );
-    }
+  }
   else if (ON_RIGHT_BORDER(hittest))
-    {
+  {
       mouseRect.left  = max( mouseRect.left, sizingRect.left+minTrack.x );
       mouseRect.right = min( mouseRect.right, sizingRect.left+maxTrack.x );
-    }
+  }
   if (ON_TOP_BORDER(hittest))
-    {
+  {
       mouseRect.top    = max( mouseRect.top, sizingRect.bottom-maxTrack.y );
       mouseRect.bottom = min( mouseRect.bottom,sizingRect.bottom-minTrack.y);
-    }
+  }
   else if (ON_BOTTOM_BORDER(hittest))
-    {
+  {
       mouseRect.top    = max( mouseRect.top, sizingRect.top+minTrack.y );
       mouseRect.bottom = min( mouseRect.bottom, sizingRect.top+maxTrack.y );
-    }
+  }
   if (Style & WS_CHILD)
-    {
+  {
       MapWindowPoints( hWndParent, 0, (LPPOINT)&mouseRect, 2 );
-    }
+  }
 
+  IntNotifyWinEvent( EVENT_SYSTEM_MOVESIZESTART, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
   SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
   NtUserxSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
   if (GetCapture() != hwnd) SetCapture( hwnd );
 
   if (Style & WS_CHILD)
-    {
+  {
       /* Retrieve a default cache DC (without using the window style) */
       hdc = GetDCEx(hWndParent, 0, DCX_CACHE);
       DesktopRgn = NULL;
-    }
+  }
   else
-    {
+  {
       hdc = GetDC( 0 );
       DesktopRgn = CreateRectRgnIndirect(&clipRect);
-    }
+  }
 
   SelectObject(hdc, DesktopRgn);
 
   if( iconic ) /* create a cursor for dragging */
-    {
+  {
       HICON hIcon = (HICON)GetClassLongPtrW(hwnd, GCL_HICON);
       if(!hIcon) hIcon = (HICON)SendMessageW( hwnd, WM_QUERYDRAGICON, 0, 0L);
       if( hIcon ) hDragCursor = CursorIconToCursor( hIcon, TRUE );
       if( !hDragCursor ) iconic = FALSE;
-    }
+  }
 
   /* invert frame if WIN31_LOOK to indicate mouse click on caption */
   if( !iconic && !DragFullWindows)
-    {
+  {
       UserDrawMovingFrame( hdc, &sizingRect, thickframe);
-    }
+  }
 
   for(;;)
-    {
+  {
       int dx = 0, dy = 0;
 
       if (!GetMessageW(&msg, 0, 0, 0)) break;
@@ -564,12 +560,12 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	   ((msg.wParam == VK_RETURN) || (msg.wParam == VK_ESCAPE)))) break;
 
       if (msg.message == WM_PAINT)
-        {
+      {
 	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  UpdateWindow( msg.hwnd );
 	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  continue;
-        }
+      }
 
       if ((msg.message != WM_KEYDOWN) && (msg.message != WM_MOUSEMOVE))
       {
@@ -581,39 +577,56 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       pt = msg.pt;
 
       if (msg.message == WM_KEYDOWN) switch(msg.wParam)
-	{
+      {
 	case VK_UP:    pt.y -= 8; break;
 	case VK_DOWN:  pt.y += 8; break;
 	case VK_LEFT:  pt.x -= 8; break;
 	case VK_RIGHT: pt.x += 8; break;
-	}
+      }
 
       pt.x = max( pt.x, mouseRect.left );
-      pt.x = min( pt.x, mouseRect.right );
+      pt.x = min( pt.x, mouseRect.right - 1 );
       pt.y = max( pt.y, mouseRect.top );
-      pt.y = min( pt.y, mouseRect.bottom );
+      pt.y = min( pt.y, mouseRect.bottom - 1 );
+
+      if (!hWndParent)
+      {
+          HMONITOR newmon;
+          MONITORINFO info;
+
+          if ((newmon = MonitorFromPoint( pt, MONITOR_DEFAULTTONULL )))
+              mon = newmon;
+
+          info.cbSize = sizeof(info);
+          if (mon && GetMonitorInfoW( mon, &info ))
+          {
+              pt.x = max( pt.x, info.rcWork.left );
+              pt.x = min( pt.x, info.rcWork.right - 1 );
+              pt.y = max( pt.y, info.rcWork.top );
+              pt.y = min( pt.y, info.rcWork.bottom - 1 );
+          }
+      }
 
       dx = pt.x - capturePoint.x;
       dy = pt.y - capturePoint.y;
 
       if (dx || dy)
-	{
+      {
 	  if( !moved )
-	    {
+	  {
 	      moved = TRUE;
 
 		if( iconic ) /* ok, no system popup tracking */
-		  {
+		{
 		    hOldCursor = SetCursor(hDragCursor);
 		    ShowCursor( TRUE );
-		  }
-	    }
+		}
+	  }
 
 	  if (msg.message == WM_KEYDOWN) SetCursorPos( pt.x, pt.y );
 	  else
-	    {
+	  {
 	      RECT newRect = unmodRect;
-	      WPARAM wpSizingHit = 0;
 
 	      if (hittest == HTCAPTION) OffsetRect( &newRect, dx, dy );
 	      if (ON_LEFT_BORDER(hittest)) newRect.left += dx;
@@ -624,18 +637,26 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      capturePoint = pt;
 
 	      /* determine the hit location */
-	      if (hittest >= HTLEFT && hittest <= HTBOTTOMRIGHT)
-		wpSizingHit = WMSZ_LEFT + (hittest - HTLEFT);
 	      unmodRect	= newRect;
-	      SendMessageA( hwnd, WM_SIZING, wpSizingHit, (LPARAM)&newRect );
+              if (syscommand == SC_SIZE)
+              {
+                  WPARAM wpSizingHit = 0;
+
+                  if (hittest >= HTLEFT && hittest <= HTBOTTOMRIGHT)
+                      wpSizingHit = WMSZ_LEFT + (hittest - HTLEFT);
+                  SendMessageW( hwnd, WM_SIZING, wpSizingHit, (LPARAM)&newRect );
+              }
+              else
+                  SendMessageW( hwnd, WM_MOVING, 0, (LPARAM)&newRect );
 
 	      if (!iconic)
 		{
 		  if(!DragFullWindows)
 		    UserDrawMovingFrame( hdc, &newRect, thickframe );
-		  else {
-		    /* To avoid any deadlocks, all the locks on the windows
+		  else
+		  { /* To avoid any deadlocks, all the locks on the windows
 		       structures must be suspended before the SetWindowPos */
+                    //ERR("SWP 1\n");
 		    SetWindowPos( hwnd, 0, newRect.left, newRect.top,
 				  newRect.right - newRect.left,
 				  newRect.bottom - newRect.top,
@@ -643,21 +664,21 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 		  }
 		}
 	      sizingRect = newRect;
-	    }
-	}
-    }
+	  }
+      }
+  }
 
   ReleaseCapture();
   ClipCursor(NULL);
   if( iconic )
-    {
+  {
       if( moved ) /* restore cursors, show icon title later on */
-	{
+      {
 	  ShowCursor( FALSE );
 	  SetCursor( hOldCursor );
-	}
+      }
       DestroyCursor( hDragCursor );
-    }
+  }
   else if(!DragFullWindows)
       UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 
@@ -671,6 +692,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
+  //// This causes the mdi child window to jump up when it is moved.
+  //if (hWndParent) MapWindowPoints( 0, hWndParent, (POINT *)&sizingRect, 2 );
 
   if (ISITHOOKED(WH_CBT))
   {
@@ -685,40 +708,45 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 
   /* window moved or resized */
   if (moved)
-    {
+  {
       /* if the moving/resizing isn't canceled call SetWindowPos
        * with the new position or the new size of the window
        */
       if (!((msg.message == WM_KEYDOWN) && (msg.wParam == VK_ESCAPE)) )
-        {
+      {
 	  /* NOTE: SWP_NOACTIVATE prevents document window activation in Word 6 */
-	  if(!DragFullWindows)
+	  if(!DragFullWindows )//|| iconic) breaks 2 win tests.
+	  {
+	    //ERR("SWP 2\n");
 	    SetWindowPos( hwnd, 0, sizingRect.left, sizingRect.top,
 			  sizingRect.right - sizingRect.left,
 			  sizingRect.bottom - sizingRect.top,
 			  ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
-        }
-      else { /* restore previous size/position */
+          }
+      }
+      else
+      { /* restore previous size/position */
 	if(DragFullWindows)
+	{
+	  //ERR("SWP 3\n");
 	  SetWindowPos( hwnd, 0, origRect.left, origRect.top,
 			origRect.right - origRect.left,
 			origRect.bottom - origRect.top,
 			( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
+        }
       }
-    }
+  }
 
   if( IsWindow(hwnd) )
-    if( Style & WS_MINIMIZE )
-      {
+    if( iconic )
+    {
 	/* Single click brings up the system menu when iconized */
-
 	if( !moved )
-	  {
+        {
 	    if( Style & WS_SYSMENU )
-	      SendMessageA( hwnd, WM_SYSCOMMAND,
-			    SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
-	  }
-      }
+	      SendMessageA( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x,pt.y));
+        }
+    }
 }
 
 
@@ -858,7 +886,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   return(0);
 }
-
+#if 0 // Move to Win32k
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
@@ -916,6 +944,7 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 
   return 0;
 }
+#endif
 
 /***********************************************************************
  *           DefWndControlColor
@@ -1165,7 +1194,7 @@ User32DefWindowProc(HWND hWnd,
         {
             return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));
         }
-
+/* Moved to Win32k
         case WM_WINDOWPOSCHANGING:
         {
             return (DefWndHandleWindowPosChanging(hWnd, (WINDOWPOS*)lParam));
@@ -1175,7 +1204,7 @@ User32DefWindowProc(HWND hWnd,
         {
             return (DefWndHandleWindowPosChanged(hWnd, (WINDOWPOS*)lParam));
         }
-
+*/
         case WM_NCRBUTTONDOWN:
             return NC_HandleNCRButtonDown( hWnd, wParam, lParam );
 
@@ -1314,7 +1343,7 @@ User32DefWindowProc(HWND hWnd,
             }
             return (0);
         }
-/*
+/* Moved to Win32k
         case WM_SYNCPAINT:
         {
             HRGN hRgn;
@@ -1845,7 +1874,7 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
-/* Move to win32k !*/
+/* Move to Win32k !*/
         case WM_SHOWWINDOW:
             if (!lParam) break; // Call when it is necessary.
         case WM_SYNCPAINT:
@@ -1853,6 +1882,8 @@ User32DefWindowProc(HWND hWnd,
         case WM_CLIENTSHUTDOWN:
         case WM_GETHOTKEY:
         case WM_SETHOTKEY:
+        case WM_WINDOWPOSCHANGING:
+        case WM_WINDOWPOSCHANGED:
         {
             LRESULT lResult;
             NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);

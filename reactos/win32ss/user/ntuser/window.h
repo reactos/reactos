@@ -39,6 +39,7 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 BOOL FASTCALL IntIsWindow(HWND hWnd);
 HWND* FASTCALL IntWinListChildren(PWND Window);
 VOID FASTCALL IntGetClientRect (PWND WindowObject, RECTL *Rect);
+INT FASTCALL  IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints);
 BOOL FASTCALL IntIsChildWindow (PWND Parent, PWND Child);
 VOID FASTCALL IntUnlinkWindow(PWND Wnd);
 VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev);

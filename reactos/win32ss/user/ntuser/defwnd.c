@@ -135,6 +135,72 @@ DefWndControlColor(HDC hDC, UINT ctlType)
 
 
 LRESULT FASTCALL
+DefWndHandleWindowPosChanging(PWND pWnd, WINDOWPOS* Pos)
+{
+    POINT maxTrack, minTrack;
+    LONG style = pWnd->style;
+
+    if (Pos->flags & SWP_NOSIZE) return 0;
+    if ((style & WS_THICKFRAME) || ((style & (WS_POPUP | WS_CHILD)) == 0))
+    {
+        co_WinPosGetMinMaxInfo(pWnd, NULL, NULL, &minTrack, &maxTrack);
+        Pos->cx = min(Pos->cx, maxTrack.x);
+        Pos->cy = min(Pos->cy, maxTrack.y);
+        if (!(style & WS_MINIMIZE))
+        {
+            if (Pos->cx < minTrack.x) Pos->cx = minTrack.x;
+            if (Pos->cy < minTrack.y) Pos->cy = minTrack.y;
+        }
+    }
+    else
+    {
+        Pos->cx = max(Pos->cx, 0);
+        Pos->cy = max(Pos->cy, 0);
+    }
+    return 0;
+}
+
+LRESULT FASTCALL
+DefWndHandleWindowPosChanged(PWND pWnd, WINDOWPOS* Pos)
+{
+  RECT Rect;
+  LONG style = pWnd->style;
+
+  IntGetClientRect(pWnd, &Rect);
+  IntMapWindowPoints(pWnd, (style & WS_CHILD ? IntGetParent(pWnd) : NULL), (LPPOINT) &Rect, 2);
+
+  if (! (Pos->flags & SWP_NOCLIENTMOVE))
+  {
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_MOVE, 0, MAKELONG(Rect.left, Rect.top));
+  }
+
+  if (! (Pos->flags & SWP_NOCLIENTSIZE))
+  {
+      WPARAM wp = SIZE_RESTORED;
+
+      if (style & WS_MAXIMIZE) wp = SIZE_MAXIMIZED;
+      else if (style & WS_MINIMIZE) wp = SIZE_MINIMIZED;
+
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_SIZE, wp, MAKELONG(Rect.right - Rect.left, Rect.bottom - Rect.top));
+  }
+  return 0;
+}
+
+VOID FASTCALL
+UserDrawWindowFrame(HDC hdc,
+                    RECTL *rect,
+		    ULONG width,
+		    ULONG height)
+{
+  HBRUSH hbrush = NtGdiSelectBrush( hdc, gpsi->hbrGray );
+  NtGdiPatBlt( hdc, rect->left, rect->top, rect->right - rect->left - width, height, PATINVERT );
+  NtGdiPatBlt( hdc, rect->left, rect->top + height, width, rect->bottom - rect->top - height, PATINVERT );
+  NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -height, PATINVERT );
+  NtGdiPatBlt( hdc, rect->right - 1, rect->top, -width, rect->bottom - rect->top - height, PATINVERT );
+  NtGdiSelectBrush( hdc, hbrush );
+}
+
+LRESULT FASTCALL
 DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
    LRESULT lResult = 0;
@@ -264,6 +330,7 @@ IntDefWindowProc(
       }
 
       case WM_SETREDRAW:
+          ERR("WM_SETREDRAW\n");
           if (wParam)
           {
              if (!(Wnd->style & WS_VISIBLE))
@@ -281,6 +348,16 @@ IntDefWindowProc(
              }
           }
           return 0;
+
+      case WM_WINDOWPOSCHANGING:
+      {
+          return (DefWndHandleWindowPosChanging(Wnd, (WINDOWPOS*)lParam));
+      }
+
+      case WM_WINDOWPOSCHANGED: 
+      {
+          return (DefWndHandleWindowPosChanged(Wnd, (WINDOWPOS*)lParam));
+      }
 
       /* ReactOS only. */
       case WM_CBT:
