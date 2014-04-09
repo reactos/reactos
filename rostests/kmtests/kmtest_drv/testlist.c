@@ -38,6 +38,9 @@ KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KeTimer;
 KMT_TESTFUNC Test_KernelType;
 KMT_TESTFUNC Test_MmSection;
+KMT_TESTFUNC Test_NpfsConnect;
+KMT_TESTFUNC Test_NpfsCreate;
+KMT_TESTFUNC Test_NpfsReadWrite;
 KMT_TESTFUNC Test_ObReference;
 KMT_TESTFUNC Test_ObType;
 KMT_TESTFUNC Test_ObTypeClean;
@@ -89,6 +92,9 @@ const KMT_TEST TestList[] =
     { "KeTimer",                            Test_KeTimer },
     { "-KernelType",                        Test_KernelType },
     { "MmSection",                          Test_MmSection },
+    { "NpfsConnect",                        Test_NpfsConnect },
+    { "NpfsCreate",                         Test_NpfsCreate },
+    { "NpfsReadWrite",                      Test_NpfsReadWrite },
     { "ObReference",                        Test_ObReference },
     { "ObType",                             Test_ObType },
     { "-ObTypeClean",                       Test_ObTypeClean },
