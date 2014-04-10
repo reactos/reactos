@@ -1906,6 +1906,22 @@ IntUninitMessagePumpHook()
     return FALSE;
 }
 
+BOOL FASTCALL
+IntCallMsgFilter( LPMSG lpmsg, INT code)
+{
+    BOOL Ret = FALSE;
+
+    if ( co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)lpmsg))
+    {
+        Ret = TRUE;
+    }
+    else
+    {
+        Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)lpmsg);
+    }
+    return Ret;
+}
+
 /** Functions ******************************************************************/
 
 BOOL
