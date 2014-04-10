@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -10,7 +10,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ses Kaydedicisi Hakkında"
+CAPTION "Ses Kaydedicisi Üzerine"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
@@ -27,12 +27,12 @@ BEGIN
         MENUITEM "&Aç...", ID_FILE_OPEN
         MENUITEM "&Kaydet", ID_FILE_SAVE, GRAYED
         MENUITEM "Ay&rı Kaydet...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Eski Durumuna Döndür...", ID_FILE_RESTORE, GRAYED
         MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_FILE_EXIT
     END
-    POPUP "&Düzen"
+    POPUP "&Düzenleme"
     BEGIN
         MENUITEM "&Çoğalt", ID_EDIT_COPY
         MENUITEM "&Ekleyerek Yapıştır", ID_EDIT_PASTE, GRAYED
@@ -55,11 +55,11 @@ BEGIN
         MENUITEM "H&ızı Düşür", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
         MENUITEM "&Yankı Ekle", ID_EFFECTS_ECHO
-        MENUITEM "&Tersine Çevir", ID_EFFECTS_REVERSE
+        MENUITEM "&Evir", ID_EFFECTS_REVERSE
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında", ID_ABOUT
+        MENUITEM "&Üzerine...", ID_ABOUT
     END
 END
 
@@ -76,6 +76,6 @@ BEGIN
     IDS_STRBUF "Ara Bellek: %.2f KB"
     IDS_STRFMT "%.1f kHz, %u bitlik"
     IDS_STRMONO "Tek Yollu"
-    IDS_STRSTEREO "Çift Yollu"
+    IDS_STRSTEREO "Çok Yollu"
     IDS_STRCHAN "%s"
 END

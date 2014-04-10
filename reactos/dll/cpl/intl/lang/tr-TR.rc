@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,13 +8,13 @@ CAPTION "Bölgelik Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ölçünler ve Biçimler", -1, 5, 5, 234, 162
-    LTEXT "Bu seçenek, birtakım çizeylemlerdeki sayıların, para birimlerinin, târihlerin ve saatlerin biçimlerini etkiler.", -1, 14, 17, 220, 25
+    LTEXT "Bu seçenek, birtakım izlencelerdeki sayıların, nakit birimlerinin, târihlerin ve saatlerin biçimlerini etkiler.", -1, 14, 17, 220, 25
     LTEXT "Husûsiyetleri karşılaştırmak için bir öğe seçiniz veyâ ""Husûsileştir..."" düğmesine tıklayarak kendi biçiminizi değiştiriniz.", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Husûsileştir...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Örnekler", -1, 14, 73, 70, 10
     LTEXT "Sayı:", -1, 16, 86, 48, 10
-    LTEXT "Para Birimi:", -1, 16, 101, 48, 10
+    LTEXT "Nakit Birimi:", -1, 16, 101, 48, 10
     LTEXT "Saat:", -1, 16, 116, 48, 10
     LTEXT "Kısa Târih:", -1, 16, 131, 48, 10
     LTEXT "Uzun Târih:", -1, 16, 146, 48, 10
@@ -24,7 +24,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Coğrâfî Konum", -1, 5, 172, 234, 55
-    LTEXT "Birtakım hizmetlerin size haberler, hava durumları gibi mahallî bilgileri sağlayabilmesi için konumunuzu belirleyiniz.", -1, 14, 184, 210, 24
+    LTEXT "Birtakım hizmetlerin size haberler, hava durumları gibi yerli bilgileri sağlayabilmesi için konumunuzu belirleyiniz.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -37,7 +37,7 @@ BEGIN
     LTEXT "Dil veyâ metin giriş yöntemlerini değiştirmek için ""Ayrıntılar..."" düğmesine tıklayınız.", -1, 12, 15, 220, 18
     PUSHBUTTON "&Ayrıntılar...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Ek Dil Desteği", -1, 5, 62, 234, 82
-    LTEXT "Birçok dil öntanımlı olarak yüklenmiştir. Ek dilleri yüklemek için aşağıdaki uygun seçme kutucuklarını imleyiniz.", -1, 12, 72, 220, 18
+    LTEXT "Birçok dil ön tanımlı olarak yüklenmiştir. Ek dilleri yüklemek için aşağıdaki uygun seçme kutucuklarını imleyiniz.", -1, 12, 72, 220, 18
     CHECKBOX "&Karmaşık El Yazısı ve Sağdan Sola Doğru Yazılan Diller İçin Gereken Kütükleri Yükle", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "&Doğu Asya Dilleri İçin Gereken Kütükleri Yükle", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
@@ -47,14 +47,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Evrenlik Kodlu Olmayan Çizeylemler İçin Dil", -1, 5, 5, 234, 90
+    GROUPBOX "Evrenlik Kodlu Olmayan İzlenceler İçin Dil", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Bu dizge ayârı, Evrenlik Kodlu olmayan çizeylemlerin seçkelerinin ve iletişim kutularının kendi dillerinde görüntülenmesini etkinleştirir. Bu ayar, Evrenlik Kodlu çizeylemleri etkilemez ve bu ayar, bu bilgisayardaki tüm kullanıcıları etkiler.", -1, 14, 18, 223, 33
-    LTEXT "Kullanmak istediğiniz Evrenlik Kodlu olmayan çizeylemlerin dil sürümlerini karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
+    LTEXT "Bu dizge ayârı, Evrenlik Kodlu olmayan izlencelerin seçkelerinin ve iletişim kutularının kendi dillerinde görüntülenmesini etkinleştirir. Bu ayar, Evrenlik Kodlu izlenceleri etkilemez ve bu ayar, bu bilgisayardaki tüm kullanıcıları etkiler.", -1, 14, 18, 223, 33
+    LTEXT "Kullanmak istediğiniz Evrenlik Kodlu olmayan izlencelerin dil sürümlerini karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
     GROUPBOX "Kod Sayfası Dönüştürme Çizelgesi", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Öntanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 30
-    CHECKBOX "Bu Kullanıcının Tüm Ayarlarını Öntanımlı Olarak Ayarla", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "Ön Tanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 30
+    CHECKBOX "Bu Kullanıcının Tüm Ayarlarını Ön Tanımlı Olarak Ayarla", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -89,7 +89,7 @@ END
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Para Birimi"
+CAPTION "Nakit Birimi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görünüm Örenkleri", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
@@ -97,7 +97,7 @@ BEGIN
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Eksi:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Para Birimi Simgesi:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Nakit Birimi Simgesi:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Artı Nicelik:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -191,7 +191,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Bölgelik Ayarlar"
-    IDS_CPLDESCRIPTION "Dilleri ve sayı, para birimi, saat ve târih biçimlerini seçer."
+    IDS_CPLDESCRIPTION "Dilleri ve sayı, nakit birimi, saat ve târih biçimlerini seçer."
 END
 
 STRINGTABLE

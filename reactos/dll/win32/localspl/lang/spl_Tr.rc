@@ -1,7 +1,7 @@
 /*
- * Turkish resource file for MS-RLE
+ * Turkish resources for localspl
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,13 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msrle_private.h"
-
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-	IDS_NAME	"ReactOS MS-RLE"
-	IDS_DESCRIPTION	"ReactOS MS-RLE Vidyo Kodeki"
-	IDS_ABOUT       "ReactOS MS-RLE Vidyo Kodeki\nTelif Hakkı: 2002 - Michael Günnewig"
+    IDS_LOCALPORT "Yerli Giriş"
+    IDS_LOCALMONITOR "Yerli İzleyici"
 }

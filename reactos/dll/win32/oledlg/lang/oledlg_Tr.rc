@@ -1,7 +1,7 @@
 /*
  * Turkish Resources
  *
- * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ END
 STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Belgeye yeni bir %s nesnesi ekle."
-  IDS_RESULTFILEOBJDESC	"Kütük içeriğini belgenize nesne olarak ekleyiniz, böylece kendisini oluşturan çizeylemi kullanarak onu etkinleştirebilirsiniz."
+  IDS_RESULTFILEOBJDESC	"Kütük içeriğini belgenize nesne olarak ekleyiniz, böylece kendisini oluşturan izlenceyi kullanarak onu etkinleştirebilirsiniz."
   IDS_BROWSE            "Göz At"
   IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi kaydedilemiyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
@@ -93,5 +93,5 @@ STRINGTABLE
     IDS_PS_NON_OLE                        "Belgeye panonun içeriğini ekler."
     IDS_PS_UNKNOWN_TYPE                   "Bilinmeyen Tür"
     IDS_PS_UNKNOWN_SRC                    "Bilinmeyen Kaynak"
-    IDS_PS_UNKNOWN_APP                    "onu oluşturan çizeylem"
+    IDS_PS_UNKNOWN_APP                    "onu oluşturan izlence"
 }

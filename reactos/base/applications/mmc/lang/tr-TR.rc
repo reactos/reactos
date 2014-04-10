@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,7 +12,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında...", IDM_HELP_ABOUT
+        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
     END
 END
 
@@ -30,7 +30,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında...", IDM_HELP_ABOUT
+        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
     END
 END
 

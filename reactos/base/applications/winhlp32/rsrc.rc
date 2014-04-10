@@ -103,14 +103,14 @@ IDI_WINHELP ICON "res/winhelp.ico"
 #ifdef LANGUAGE_SL_SI
     #include "lang/Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/Sq.rc"
+#endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/Sr.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/Tr.rc"
-#endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/Sq.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"

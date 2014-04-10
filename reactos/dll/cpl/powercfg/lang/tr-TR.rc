@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -49,7 +49,7 @@ BEGIN
     LTEXT "Bilinmiyor", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "Eylem:", -1, 95, 83, 55, 10
     LTEXT "Bilinmiyor", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "Çizeylem Çalıştır:", -1, 95, 95, 55, 10
+    LTEXT "İzlence Çalıştır:", -1, 95, 95, 55, 10
     LTEXT "Bilinmiyor", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Çok Az Kalan Pil Uyarısı", -1, 6, 120, 239, 106
     CONTROL "G&üç düzeyi şuraya gelirse çok az kalan pil uyarısını etkinleştir:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
@@ -62,7 +62,7 @@ BEGIN
     LTEXT "Bilinmiyor", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "Eylem:", -1, 95, 198, 45, 10
     LTEXT "Bilinmiyor", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "Çizeylem Çalıştır:", -1, 95, 211, 50, 10
+    LTEXT "İzlence Çalıştır:", -1, 95, 211, 50, 10
     LTEXT "Bilinmiyor", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
@@ -74,7 +74,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Kullanılacak güç kullanımı ayarlarını seçiniz.", -1, 37, 6, 207, 20
     GROUPBOX "Seçenekler", -1, 6, 30, 240, 65
-    CONTROL "&Görev Çubuğunda Simgeyi Her Zaman Göster", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "&Görev Çubuğunda Simgeyi Sürekli Göster", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
     CONTROL "&Bilgisayar Uykudan Döndüğünde Şifre Sor", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
     CONTROL "&Pilde Çalışırken Görüntülüğün Parlaklığını Azalt", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
     GROUPBOX "Güç Düğmeleri", -1, 6, 101, 240, 127
@@ -100,7 +100,7 @@ BEGIN
     LTEXT "Bilinmiyor", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "Anıkta Bekletmek İçin Gereken Disk Alanı:", -1, 15, 115, 140, 10
     LTEXT "Bilinmiyor", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "Bilgisayarın anıkta bekleyebilmesi için yeteri kadar disk boşluğu oluşturulması gerekir.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Bilgisayarın anıkta bekleyebilmesi için yeterli disk boşluğu oluşturulması gerekir.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "4 Saat Sonra"
     IDS_TIMEOUT15 "5 Saat Sonra"
     IDS_TIMEOUT16 "Hiçbir Zaman"
-    IDS_DEL_SCHEME "Bu güç düzenini silmeyi onaylıyor musunuz?"
+    IDS_DEL_SCHEME "Bu güç düzenini silmeyi doğruluyor musunuz?"
     IDS_DEL_SCHEME_TITLE "Düzeni Sil"
 END

@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com); 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com); 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -19,15 +19,15 @@ IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi toplar.", -1, 10, 10, 443, 17
-    LTEXT "Soruna hangi bölümün neden olduğunu biliyorsanız yukarıdaki uygun sekmeyi tıklatınız. Bilmiyorsanız sırayla her bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
-    GROUPBOX "Bilgisayar Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri üzerine ayrıntılı bilgi raporlar.", -1, 10, 10, 443, 17
+    LTEXT "Soruna neden olan bölümü biliyorsanız yukarıdaki uygun sekmeyi tıklayınız. Yoksa sırayla her bir bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
+    GROUPBOX "Dizge Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Geçerli Zaman:", -1, 70, 70, 80, 10, SS_RIGHT
-    LTEXT "Ad:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "Bilgisayar Adı:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "İşletim Dizgesi:", -1, 70, 90, 80, 10, SS_RIGHT
     LTEXT "Dil:", -1, 70, 100, 80, 10, SS_RIGHT
-    LTEXT "Üretici:", -1, 70, 110, 80, 10, SS_RIGHT
-    LTEXT "Biçim:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "Dizge Üreticisi:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "Dizge Modeli:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "İşlemci:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Bellek:", -1, 70, 150, 80, 10, SS_RIGHT
@@ -56,7 +56,7 @@ BEGIN
     RTEXT "Yonga Türü:", -1, 20, 45, 70, 10
     RTEXT "DAC Türü:", -1, 20, 55, 70, 10
     RTEXT "Yaklaşık Toplam Bellek:", -1, 14, 65, 75, 10
-    RTEXT "Geçerli Görüntü Seçeneği:", -1, 14, 75, 75, 10
+    RTEXT "Şimdiki Görüntü Kipi:", -1, 14, 75, 75, 10
     RTEXT "Göstergeç:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
@@ -65,7 +65,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-    GROUPBOX "Sürücüler", -1, 270, 10, 190, 100
+    GROUPBOX "Sürücü", -1, 270, 10, 190, 100
     RTEXT "Ana Sürücü:", -1, 275, 25, 55, 10
     RTEXT "Sürüm:", -1, 275, 35, 55, 10
     RTEXT "Zaman:", -1, 275, 45, 55, 10
@@ -128,7 +128,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX Husûsiyetleri", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Donanım İvmesi:", -1, 20, 135, 90, 20
+    RTEXT "Donanım Ses\nİvme Düzeyi:", -1, 20, 135, 90, 20
     PUSHBUTTON "&ReactSound'u Sına", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Notlar", -1, 10, 180, 450, 40
     EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -178,46 +178,46 @@ BEGIN
     IDS_NETWORK_DIALOG "Ağ"
     IDS_HELP_DIALOG "Yardım"
     IDS_FORMAT_MB "%I64u MB RAM"
-    IDS_FORMAT_SWAP "%I64u MB kullanıldı, %I64u MB kullanılabilir"
+    IDS_FORMAT_SWAP "%I64u MB kullanılan, %I64u MB kullanılabilir."
     IDS_FORMAT_UNIPROC "%s (%u CPU)"
     IDS_FORMAT_MPPROC "%s (%u CPU)"
     IDS_VERSION_UNKNOWN "Bilinmeyen Sürüm"
     IDS_DEVICE_STATUS_ATTACHED "Bağlı"
-    IDS_DEVICE_STATUS_MISSING "Bağlı değil"
+    IDS_DEVICE_STATUS_MISSING "Bağlı Değil"
     IDS_DEVICE_STATUS_UNKNOWN "Bilinmiyor"
     IDS_DEVICE_NAME "Aygıt Adı"
     IDS_DEVICE_STATUS "Durum"
     IDS_DEVICE_CONTROLLER "Denetleyici Kimliği"
     IDS_DEVICE_MANUFACTURER "Üretici Kimliği"
     IDS_DEVICE_PRODUCT "Ürün Kimliği"
-    IDS_DEVICE_FORCEFEEDBACK "Güç Dönütlü Sürücüsü"
+    IDS_DEVICE_FORCEFEEDBACK "Güç Dönütlü Sürücü"
     IDS_NOT_APPLICABLE "Uygulanamaz"
     IDS_OPTION_YES "Evet"
     IDS_DIRECTPLAY_COL_NAME1 "Ad"
-    IDS_DIRECTPLAY_COL_NAME2 "Değer"
+    IDS_DIRECTPLAY_COL_NAME2 "Kayıt"
     IDS_DIRECTPLAY_COL_NAME3 "Kütük"
     IDS_DIRECTPLAY_COL_NAME4 "Sürüm"
     IDS_DIRECTPLAY8_MODEMSP "ReactPlay8 Çevirge Hizmeti Sağlayıcısı"
     IDS_DIRECTPLAY8_SERIALSP "ReactPlay8 Dizilik Hizmeti Sağlayıcısı"
     IDS_DIRECTPLAY8_IPXSP "ReactPlay8 IPX Hizmeti Sağlayıcısı"
     IDS_DIRECTPLAY8_TCPSP "ReactPlay8 TCP/IP Hizmeti Sağlayıcısı"
-    IDS_DIRECTPLAY_TCPCONN "ReactPlay için Örütbağ TCP/IP Bağlantısı"
+    IDS_DIRECTPLAY_TCPCONN "ReactPlay için Umûmî Ağ TCP/IP Bağlantısı"
     IDS_DIRECTPLAY_IPXCONN "ReactPlay için IPX Bağlantısı"
     IDS_DIRECTPLAY_MODEMCONN "ReactPlay için Çeivrge Bağlantısı"
     IDS_DIRECTPLAY_SERIALCONN "ReactPlay için Dizilik Bağlantı"
     IDS_REG_SUCCESS "Tamam"
     IDS_REG_FAIL "Yanlışlık"
     IDS_DDTEST_ERROR "Sınama başarısız oldu."
-    IDS_DDTEST_DESCRIPTION "ReactDraw arayüz sınaması başlatılacak. Sürdürülsün mü?"
-    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Görüntülüğe ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
-    IDS_DDPRIMARY_RESULT "Görüntülükte ak ve kara dikdörtgenler gördünüz mü?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı görüntülük dışı arabelleğe çizmek için kullanacak. Görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
-    IDS_DDOFFSCREEN_RESULT "Görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
-    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Tüm görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+    IDS_DDTEST_DESCRIPTION "Bu, ReactDraw arayüz sınamasını başlatacak. Sürdürülsün mü?"
+    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı ana yüzeye çizmek için kullanacak. Ak ve kara dikdörtgenler çizilecektir. Sürdürülsün mü?"
+    IDS_DDPRIMARY_RESULT "Ak ve kara dikdörtgenler gördünüz mü?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı görüntülük dışı arabelleğe çizmek için kullanacak. Devinen bir ak dikdörtgen çizilecektir. Sürdürülsün mü?"
+    IDS_DDOFFSCREEN_RESULT "Devinen bir ak dikdörtgen gördünüz mü?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
     IDS_DDFULLSCREEN_RESULT "Tüm görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bitlik) (%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%04u*%04u (%u bitlik) (%uHz)"
     IDS_OPTION_NO "Hayır"
-    IDS_D3DTEST_DESCRIPTION "React3D arayüz sınaması başlatılacak. Sürdürülsün mü?"
+    IDS_D3DTEST_DESCRIPTION "Bu, React3D arayüz sınamasını başlatılacak. Sürdürülsün mü?"
     IDS_D3DTEST_D3Dx "Bu sınama, donanım hızlandırmalı React3D %u arayüzünü kullanacak."
 END

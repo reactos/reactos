@@ -6,7 +6,7 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı'na Hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Bu sihirbaz bilgisayarınıza ReactOS kurar. Sihirbaz'ın düzgün kurulum için bilgisayarınız hakkında bilgi toplaması gerekmekte.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bu sihirbaz bilgisayarınıza ReactOS kurar. Sihirbaz'ın düzgün kurulum için bilgisayarınız üzerine bilgi toplaması gerekmekte.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Kur'a devam etmek için İleri'ye basın.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -146,7 +146,7 @@ BEGIN
     IDS_GETPROCADDR_FAILED "Eylem adresi alınamadı: "
     IDS_REGSVR_FAILED "Dll Hizmet Kaydı başarısız oldu: "
     IDS_DLLINSTALL_FAILED "Dll Kurulumu başarısız oldu: "
-    IDS_TIMEOUT "Kayıt zaman aşımına uğradı"
+    IDS_TIMEOUT "Kayıt, süre aşımına uğradı"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION: 

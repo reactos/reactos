@@ -1,7 +1,7 @@
 /*
  * Turkish Resources for ReactOS Write
  *
- * Copyright: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,5 +24,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FAILED, "Kelime İşlemci'nin açılması başarısız oldu."
+    IDS_FAILED, "WordPad'in açılması başarısız oldu."
 }

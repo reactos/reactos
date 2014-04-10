@@ -96,6 +96,9 @@
 #ifdef LANGUAGE_SQ_AL
     #include "lang/jscript_Sq.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/jscript_Tr.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/jscript_Uk.rc"
 #endif

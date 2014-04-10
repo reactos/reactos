@@ -3,7 +3,7 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/magnify/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for RecatOS Magnifier
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Çıkış", IDM_EXIT
         MENUITEM "&Seçenekler...", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Hakkında", IDM_ABOUT
+        MENUITEM "&Üzerine...", IDM_ABOUT
     END
 END
 
@@ -27,7 +27,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Hakkında"
+CAPTION "Üzerine"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20

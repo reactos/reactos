@@ -1,7 +1,7 @@
 /*
  * Turkish Resources
  *
- * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,13 +32,13 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
     PUSHBUTTON "&Yapılandır...",882,129,36,49,14
-    PUSHBUTTON "&Hakkında...",883,129,52,49,14
+    PUSHBUTTON "&Üzerine...",883,129,52,49,14
 
     SCROLLBAR 884,9,44,111,9,WS_TABSTOP
 
     LTEXT "S&ıkıştırma Niteliği:",886,9,34,80,8
 
-    CONTROL "H&er Anahtar Kare",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "&Her Anahtar Kare",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
     LTEXT "kareler",889,103,62,26,10
 

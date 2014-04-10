@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2006 - Fatih Aşıcı, 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2006 Fatih Aşıcı, 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -27,7 +27,7 @@ BEGIN
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&En Kısa Süreler...", IDM_TIMES
-        MENUITEM "&Hakkında", IDM_ABOUT
+        MENUITEM "&Üzerine...", IDM_ABOUT
     END
 END
 

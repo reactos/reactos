@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,26 +6,26 @@ IDR_TASKMANAGER MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni Görev Çalıştır...", ID_FILE_NEW
+        MENUITEM "&Yeni Görev (Çalıştır...)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_FILE_EXIT
     END
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Her Zaman Üstte", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "&Sürekli Üstte", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Kullanımda Simge Durumuna Küçült", ID_OPTIONS_MINIMIZEONUSE, CHECKED
-        MENUITEM "&Simge Durumuna Küçültüldüğünde Gizle", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16 İkillik Görevleri Göster", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "S&imge Durumuna Küçültüldüğünde Gizle", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "&16 Bitlik Görevleri Göster", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Yenile", ID_VIEW_REFRESH
+        MENUITEM "&Şimdi Yenile", ID_VIEW_REFRESH
         POPUP "&Yenilenme Hızı"
         BEGIN
             MENUITEM "&Yüksek", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Orta", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
             MENUITEM "&Düşük", ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Sıfır", ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "D&uraklatılmış", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
         MENUITEM "&Büyük Simgeler", ID_VIEW_LARGE
@@ -34,43 +34,43 @@ BEGIN
         MENUITEM "&Dikeçleri Seç...", ID_VIEW_SELECTCOLUMNS
         POPUP "&CPU Geçmişi"
         BEGIN
-            MENUITEM "&Tüm CPU'lar İçin Aynı Çizge", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&Her CPU'ya Birer Çizge", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "&Tek Çizge, Tüm CPU'lar", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&CPU Başına Bir Çizge", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Çekirdek Zamanlarını Göster", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Çekirdek Sürelerini Göster", ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Pencereler"
     BEGIN
-        MENUITEM "&Yatay Olarak Sırala", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Dikey Olarak Sırala", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Küçült", ID_WINDOWS_MINIMIZE
+        MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
         MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-        MENUITEM "B&asamakla", ID_WINDOWS_CASCADE
+        MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
         MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Hakkında", ID_HELP_ABOUT
+        MENUITEM "&Üzerine...", ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU
 BEGIN
-    MENUITEM "&Yatay Olarak Sırala", ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "&Dikey Olarak Sırala", ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "&Küçült", ID_WINDOWS_MINIMIZE
+    MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
     MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-    MENUITEM "B&asamakla", ID_WINDOWS_CASCADE
+    MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
     MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
-    POPUP "SAHTE"
+    POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Yeni Görev Çalıştır...", ID_FILE_NEW
+        MENUITEM "&Yeni Görev (Çalıştır...)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Büyük Simgeler", ID_VIEW_LARGE
         MENUITEM "&Küçük Simgeler", ID_VIEW_SMALL
@@ -80,16 +80,16 @@ END
 
 IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
-    POPUP "SAHTE"
+    POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Geçiş Yap", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&Geç", ID_APPLICATION_PAGE_SWITCHTO
         MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "&Yatay Olarak Sırala", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "&Dikey Olarak Sırala", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Küçült", ID_WINDOWS_MINIMIZE
+        MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
         MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-        MENUITEM "B&asamakla", ID_WINDOWS_CASCADE
+        MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "Gö&revi Sonlandır", ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&İşleme Git", ID_APPLICATION_PAGE_GOTOPROCESS
@@ -98,34 +98,34 @@ END
 
 IDR_TRAY_POPUP MENU
 BEGIN
-    POPUP "SAHTE"
+    POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Önceki Boyutuna Getir", ID_RESTORE
+        MENUITEM "&Eski Durumuna Getir", ID_RESTORE
         MENUITEM "&Kapat", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Her Zaman Üstte", ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Sürekli Üstte", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
 IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
-    POPUP "SAHTE"
+    POPUP "DUMMY"
     BEGIN
         MENUITEM "&İşlemi Sonlandır", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "İ&şlem Ağacını Sonlandır", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Yanlışlık Ayıkla", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "&Öncelik Ata"
+        POPUP "&Önceliği Aayarla"
         BEGIN
             MENUITEM "&Eş Zamanlı", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Yüksek", ID_PROCESS_PAGE_SETPRIORITY_HIGH
-            MENUITEM "&Orta-Yüksek", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-            MENUITEM "O&rta", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-            MENUITEM "Or&ta-Düşük", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-            MENUITEM "&Düşük", ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&Düzgülü Üstü", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "D&üzgülü", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "Dü&zgülü Altı", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "Dü&şük", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
-        MENUITEM "&CPU'larla İlişkisini Değiştir...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "H&atâ Ayıklama Kanallarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "İ&lişkiyi Ayarla...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Y&anlışlık Ayıklama Kanallarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -148,7 +148,7 @@ BEGIN
     CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Yeni Görev...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&Geçiş Yap", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Geç", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "G&örevi Sonlandır", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
 END
 
@@ -159,7 +159,7 @@ BEGIN
     CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&İşlemi Sonlandır", IDC_ENDPROCESS, 171, 189, 69, 14
-    CONTROL "&Her Kullanıcıda Çalışan İşlemleri Göster", IDC_SHOWALLPROCESSES, "Button",
+    CONTROL "&Her Kullanıcının İşlemlerini Göster", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
 END
 
@@ -172,7 +172,7 @@ BEGIN
     GROUPBOX "Bellek Kullanımı", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Toplam", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Ayrılmış Bellek (KB)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Fizikî Bellek (KB)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Fizîkî Bellek (KB)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Çekirdek Belleği (KB)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
     LTEXT "İşleçler", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
     LTEXT "İş Parçacıkları", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
@@ -184,7 +184,7 @@ BEGIN
     EDITTEXT IDC_TOTALS_PROCESS_COUNT, 65, 149, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Toplam", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
-    LTEXT "Sınır", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
+    LTEXT "Hudut", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
     LTEXT "En Yüksek", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
     EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -211,11 +211,11 @@ BEGIN
     EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 185, 193, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "CPU Kullanım Geçmişi", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Sayfalama Dosyası Kullanım Geçmişi", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Bellek Kullanım Geçmişi", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
     PUSHBUTTON "CPU Kullanım Çizgesi", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Sayfalama Dosyası Kullanım Çizgesi", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Bellek Kullanım Çizgesi", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
     PUSHBUTTON "CPU Kullanım Geçmişi Çizgesi", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Sayfalama Dosyası Kullanım Geçmişi Çizgesi", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Bellek Kullanım Geçmişi Çizgesi", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
@@ -230,12 +230,12 @@ END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "CPU'larla İlişkisini Değiştir"
+CAPTION "İşlemci İlişkisi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 120, 133, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 174, 133, 50, 14
-    LTEXT "Bu seçenekler, bu işlemin hangi CPU'larla yürütüleceğini belirler.", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "İşlemci İlişkisi ayârı, işleme hangi CPU'ların üzerinde çalışmasına izin verileceğini denetler.", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -341,7 +341,7 @@ BEGIN
     ID_HELP_TOPICS "Görev Yöneticisi ile ilgili yardım konularını görüntüler."
     ID_HELP_ABOUT "Görev Yöneticisi ile ilgili bilgi görüntüler."
     ID_FILE_EXIT "Görev Yöneticisi'nden çıkar."
-    ID_OPTIONS_SHOW16BITTASKS "Farazî DOS makinesi (ntvdm.exe) altında çalışan 16 bitlik uygulamaları da görüntüler."
+    ID_OPTIONS_SHOW16BITTASKS "Farazî DOS Makinesi (ntvdm.exe) altında çalışan 16 bitlik uygulamaları da görüntüler."
     ID_VIEW_SELECTCOLUMNS """İşlemler"" sekmesinde hangi dikeçlerin görüntülenip görüntülenmeyeceğini belirler."
     ID_VIEW_SHOWKERNELTIMES "İşlemci çizgelerinde çekirdek zamanlarını gösterir."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Toplam CPU kullanımını tek çizgede gösterir."
@@ -399,7 +399,7 @@ BEGIN
     IDS_TAB_IOWRITESBYTES "G/Ç Yazma Çokluları"
     IDS_TAB_IOOTHERBYTES "G/Ç Diğer Çoklular"
     IDS_MENU_SELECTCOLUMNS "&Dikeçleri Seç..."
-    IDS_MENU_16BITTASK "&16 İkillik Görevleri Göster"
+    IDS_MENU_16BITTASK "&16 Bitlik Görevleri Göster"
     IDS_MENU_WINDOWS "&Pencereler"
     IDS_MENU_LARGEICONS "&Büyük Simgeler"
     IDS_MENU_SMALLICONS "&Küçük Simgeler"
@@ -414,12 +414,12 @@ BEGIN
     IDS_MSG_PROCESSONEPRO "Herhangi bir işlem, en az bir CPU ile ilişkili olmalıdır."
     IDS_MSG_INVALIDOPTION "Geçersiz seçenek."
     IDS_MSG_UNABLEDEBUGPROCESS "Yanlışlık ayıklama işlemi yapılamaz."
-    IDS_MSG_WARNINGDEBUG "UYARI: Bu işlemde yanlışlık ayıklama, veri yitimine neden olabilir.\nBu işleme bir yanlışlık ayıklayıcı bağlamayı onaylıyor musunuz?"
+    IDS_MSG_WARNINGDEBUG "UYARI: Bu işlemde yanlışlık ayıklama, veri yitimine neden olabilir.\nBu işleme bir yanlışlık ayıklayıcı bağlamayı doğruluyor musunuz?"
     IDS_MSG_TASKMGRWARNING "Uyarı"
-    IDS_MSG_WARNINGTERMINATING "UYARI: Bir işlemin sonlandırılması, dizge\nkararsızlığı veyâ veri yitimi gibi istenmeyen durumlara neden olabilir. Bu\nişlemi sonlandırmayı onaylıyor musunuz?"
+    IDS_MSG_WARNINGTERMINATING "UYARI: Bir işlemin sonlandırılması, dizge\nkararsızlığı veyâ veri yitimi gibi istenmeyen durumlara neden olabilir. Bu\nişlemi sonlandırmayı doğruluyor musunuz?"
     IDS_MSG_UNABLETERMINATEPRO "İşlem sonlandırma yapılamaz."
     IDS_MSG_UNABLECHANGEPRIORITY "İşlemci önceliği değiştirilemez."
-    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: İşlemci önceliğinin değiştirilmesi, dizge\nkararsızlığı gibi istenmeyen durumlara neden olabilir. Bu işlemin\nişlemci önceliğini değiştirmeyi onaylıyor musunuz?"
+    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: İşlemci önceliğinin değiştirilmesi, dizge\nkararsızlığı gibi istenmeyen durumlara neden olabilir. Bu işlemin\nişlemci önceliğini değiştirmeyi doğruluyor musunuz?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Kullanımı: %%%d"
     IDS_STATUS_MEMUSAGE "Bellek Kullanımı: %d KB / %d KB"
     IDS_STATUS_CPUUSAGE "CPU Kullanımı: %%%3d"

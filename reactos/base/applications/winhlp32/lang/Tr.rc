@@ -1,7 +1,7 @@
 /*
  * Turkish Resources for ReactOS Winhlp32
  *
- * Copyrights: 2006 - Fatih Aşıcı (fasici@linux-sevenler.org), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,40 +28,56 @@ MAIN_MENU MENU
   MENUITEM "&Aç...",                   MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Yazdır...",               MNID_FILE_PRINT
-  MENUITEM "Ya&zıcı Ayarları...",      MNID_FILE_SETUP
+  MENUITEM "Ya&zıcı Ayarla...",        MNID_FILE_SETUP
   MENUITEM SEPARATOR
   MENUITEM "&Çıkış",                   MNID_FILE_EXIT
  }
- POPUP "&Düzen" {
+ POPUP "&Düzenleme" {
    MENUITEM "&Çoğalt",                 MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Hâşiye Ekle...",         MNID_EDIT_ANNOTATE
  }
  POPUP "Y&er İmleri" {
-   MENUITEM "&Düzenle...",             MNID_BKMK_DEFINE
+   MENUITEM "&Belirle...",             MNID_BKMK_DEFINE
  }
  POPUP "&Seçenekler" {
-   POPUP "&Her Zaman Üstte Olma"
+   POPUP "&Sürekli Görünür"
    BEGIN
-     MENUITEM "&Öntanımlı",            MNID_OPTS_HELP_DEFAULT
+     MENUITEM "&Ön Tanımlı",           MNID_OPTS_HELP_DEFAULT
      MENUITEM "&Evet",                 MNID_OPTS_HELP_VISIBLE
      MENUITEM "&Hayır",                MNID_OPTS_HELP_NONVISIBLE
   END
   MENUITEM "&Geçmiş",                  MNID_OPTS_HISTORY
-  POPUP "&Metin Boyutu"
+  POPUP "&Yazı Tipi"
   BEGIN
     MENUITEM "&Küçük",                 MNID_OPTS_FONTS_SMALL
-    MENUITEM "&Orta",                  MNID_OPTS_FONTS_NORMAL
+    MENUITEM "&Düzgülü",               MNID_OPTS_FONTS_NORMAL
     MENUITEM "&Büyük",                 MNID_OPTS_FONTS_LARGE
   END
   MENUITEM "&Dizge Renklerini Kullan", MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Yardım" {
    MENUITEM "&Yardım İçin Yardım",     MNID_HELP_HELPON
-   MENUITEM "H&er Zaman Üstte",        MNID_HELP_HELPTOP
+   MENUITEM "&Sürekli Üstte",          MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Hakkında",               MNID_HELP_ABOUT
+   MENUITEM "&Üzerine...",             MNID_HELP_ABOUT
  }
+}
+
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Dizin"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Bul"
+{
+    LTEXT  "Daha bitirilmemiştir.", -1, 10, 10, 180, 150
 }
 
 /* Strings */
@@ -72,12 +88,36 @@ STID_WHERROR,          "YANLIŞLIK"
 STID_WARNING,          "UYARI"
 STID_INFO,             "Bilgi"
 STID_NOT_IMPLEMENTED,  "Daha bitirilmemiştir."
-STID_HLPFILE_ERROR_s,  "%s kütüğü açılırken bir yanlışlık oluştu."
+STID_HLPFILE_ERROR_s,  """%s"" kütüğü okunurken bir yanlışlık oldu."
 STID_INDEX,            "D&izin"
 STID_CONTENTS,         "İ&çindekiler"
 STID_BACK,             "&Geri"
 STID_ALL_FILES,        "Tüm Kütükler (*.*)"
 STID_HELP_FILES_HLP,   "Yardım Kütükleri (*.hlp)"
-STID_FILE_NOT_FOUND_s, "%s kütüğü bulunamıyor. Bu kütüğü kendiniz bulmak istiyor musunuz?"
-STID_NO_RICHEDIT,      "Zengin metin kitaplığı bulunamadı."
+STID_FILE_NOT_FOUND_s, """%s"" bulunamıyor. Bu kütüğü kendiniz bulmak istiyor musunuz?"
+STID_NO_RICHEDIT,      "Zengin metin kitaplığı bulunamıyor. Çıkılacaktır."
+STID_PSH_INDEX,        "Yardım Konuları: "
 }
+
+CONTEXT_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Hâşiye Ekleme...",  MNID_CTXT_ANNOTATE
+        MENUITEM "&Çoğalt",            MNID_CTXT_COPY
+        MENUITEM "&Yazdır...",         MNID_CTXT_PRINT
+        POPUP    "Y&azı Tipi"
+        BEGIN
+            MENUITEM "&Küçük",         MNID_CTXT_FONTS_SMALL
+            MENUITEM "&Düzgülü",       MNID_CTXT_FONTS_NORMAL
+            MENUITEM "&Büyük",         MNID_CTXT_FONTS_LARGE
+        END
+        POPUP   "&Sürekli Görünür"
+        BEGIN
+            MENUITEM "&Ön Tanımlı",    MNID_CTXT_HELP_DEFAULT
+            MENUITEM "&Evet",          MNID_CTXT_HELP_VISIBLE
+            MENUITEM "&Hayır",         MNID_CTXT_HELP_NONVISIBLE
+        END
+        MENUITEM "&Dizge Renklerini Kullan",   MNID_CTXT_SYSTEM_COLORS
+    END
+END

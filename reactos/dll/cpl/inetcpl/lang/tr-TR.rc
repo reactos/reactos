@@ -1,7 +1,7 @@
 /*
  * Turkish resources for the Internet control panel applet
  *
- * Copyright: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,7 +36,7 @@ BEGIN
                 IDC_STATIC, 58, 10, 252, 10
     EDITTEXT    IDC_HOME_EDIT, 58, 22, 252, 12, WS_VISIBLE | ES_AUTOHSCROLL
     PUSHBUTTON  "&Şimdiki Sayfa", IDC_HOME_CURRENT, 58, 36, 80, 14
-    PUSHBUTTON  "&Öntanımlı Sayfa", IDC_HOME_DEFAULT, 144, 36, 80, 14
+    PUSHBUTTON  "&Ön Tanımlı Sayfa", IDC_HOME_DEFAULT, 144, 36, 80, 14
     PUSHBUTTON  "&Boş Sayfa", IDC_HOME_BLANK, 230, 36, 80, 14
     GROUPBOX    " Tarama Geçmişi ", IDC_STATIC, 4, 60, 312, 46
     LTEXT       "Saklanan sayfaları, yemişleri ve diğer verileri silebilirsiniz.",
@@ -53,9 +53,9 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Tarama Geçmişini Silme"
 BEGIN
 
-    AUTOCHECKBOX   "Geçici Örütbağ Kütüleri:\nSaklanan sayfa sûretleri, resimler ve onay belgeleri.",
+    AUTOCHECKBOX   "Geçici Umûmî Ağ Kütüleri:\nSaklanan sayfa kopyaları, resimler ve onay belgeleri.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 30, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Yemişler:\nÖrütbağ siteleri eliyle bilgisayara kaydedilmiş, kullanıcı yeğlemeleri ve oturum açma bilgileri gibi şeyleri saklayan kütükler.",
+    AUTOCHECKBOX   "Yemişler:\nUmûmî Ağ siteleri eliyle bilgisayara kaydedilmiş, kullanıcı yeğlemeleri ve oturum açma bilgileri gibi şeyleri saklayan kütükler.",
                     IDC_DELETE_COOKIES, 10, 38, 230, 30, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Geçmiş:\nErişilen sayfaların dizelgesi.",
                     IDC_DELETE_HISTORY, 10, 68, 230, 30, BS_TOP | BS_MULTILINE
@@ -103,8 +103,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Örütbağ Ayarları"
-    IDS_CPL_INFO        "Wine Örütbağ Tarayıcısı'nı ve bununla ilişkili ayarları yapılandırır."
+    IDS_CPL_NAME        "Umûmî Ağ Ayarları"
+    IDS_CPL_INFO        "Wine Umûmî Ağ Tarayıcısı'nı ve bununla ilişkili ayarları yapılandırır."
     IDS_SEC_SETTINGS    "Bölgeye Göre Güvenlik Ayarları: "
     IDS_SEC_LEVEL0      "Değişik"
     IDS_SEC_LEVEL1      "Çok Düşük"
