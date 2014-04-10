@@ -51,6 +51,7 @@ INT_PTR CALLBACK LicenceDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 typedef struct _PAGEFILE
 {
     TCHAR  szDrive[3];
+    LPTSTR pszVolume;
     UINT   InitialSize;
     UINT   MaximumSize;
     UINT   FreeSize;
