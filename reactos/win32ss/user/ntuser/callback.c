@@ -736,21 +736,30 @@ co_IntCallHookProc(INT HookId,
    switch (HookId)
    {
       case WH_CBT:
-         if (Code == HCBT_CREATEWND)
+      {
+         switch (Code)
          {
-            if (CbtCreatewndExtra)
-            {/*
-               The parameters could have been changed, include the coordinates
-               and dimensions of the window. We copy it back.
-              */
-               CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
-               CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
-               CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
-               CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
-               CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
-            }
+            case HCBT_CREATEWND:
+               if (CbtCreatewndExtra)
+               {/*
+                  The parameters could have been changed, include the coordinates
+                  and dimensions of the window. We copy it back.
+                 */
+                  CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+                  CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
+                  CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
+                  CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
+                  CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
+               }
+            break;
+            case HCBT_MOVESIZE:
+               if (Common->lParam && lParam)
+               {
+                  RtlCopyMemory((PVOID) lParam, (PVOID) Common->lParam, sizeof(RECTL));
+               }
+            break;
          }
-         break;
+      }
       // "The GetMsgProc hook procedure can examine or modify the message."
       case WH_GETMESSAGE:
          if (pMsg)
