@@ -55,7 +55,7 @@ BEGIN
         MENUITEM "Caută u&rmătorul\tF3",                ID_FIND_NEXT
         MENUITEM "Î&nlocuire…\tCtrl+H",                 ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "D&oar citire",                        ID_EDIT_READONLY
+        MENUITEM "Nem&odificabil",                      ID_EDIT_READONLY
         MENUITEM "&Modificat",                          ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "&Suplimente"

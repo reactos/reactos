@@ -127,15 +127,15 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Conștientizări"
     IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
-    IDS_OWNERTITLE "Personalizarea sistemului de operare"
+    IDS_OWNERTITLE "Personalizare sistem"
     IDS_OWNERSUBTITLE "Asistentul va folosi câteva informații pentru a personaliza ReactOS."
-    IDS_COMPUTERTITLE "Numele calculatorului și parola de administrator"
+    IDS_COMPUTERTITLE "Nume calculator și parolă de administrator"
     IDS_COMPUTERSUBTITLE "Pentru calculator sunt necesare un nume și o parolă de administrator."
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizarea ReactOS pentru anumite regiuni sau limbi."
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabiliți data și ora corectă pentru calculator."
-    IDS_PROCESSTITLE "Înregistrarea componentelor"
+    IDS_PROCESSTITLE "Înregistrare componente"
     IDS_PROCESSSUBTITLE "Așteptați…"
 END
 

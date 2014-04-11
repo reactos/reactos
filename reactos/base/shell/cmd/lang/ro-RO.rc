@@ -21,8 +21,8 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fișier ...\n\
        [/S [/D]]\n\n\
   +   Consimte atributul\n\
   -   Reprobă atributul\n\
-  R   Atributul fișierelor protejate la scriere\n\
-  A   Atributul fișierelor pentru arhivare\n\
+  R   Atributul fișierelor nemodificabile\n\
+  A   Atributul fișierelor arhivabile\n\
   S   Atributul fișierelor de sistem\n\
   H   Atributul fișierelor ascunse\n\
   /S  Aplică și pentru fișierele din subdirectoare\n\
@@ -145,12 +145,12 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fișier ...\n\n\
   /Q    Suprimă orice mesaj.\n\
   /W    Suprascrie fișierele cu informații aleatoare înainte de a le șterge.\n\
   /Y    Preconfirmă toate ștergerile.\n\
-  /F    Șterge și fișierelor ascunse, de sistem sau protejate la scriere.\n\
+  /F    Șterge și fișierelor ascunse, nemodificabile și de sistem.\n\
   /S    Șterge fișierul specificat din toate subdirectoarele.\n\
   /A    Selectează fișierele după atribute.\n\
         Atribute:\n\
-          R   Protejat la scriere\n\
-          S   Sistem\n\
+          R   Nemodificabil\n\
+          S   De sistem\n\
           A   Arhivabil\n\
           H   Ascuns\n\
           -   Prefix de negație\n"
@@ -166,7 +166,7 @@ DELAY [/m]n\n\n\
   [unitate:][cale][fișier]\n\
               Specifică unitatea, directorul și/sau fișierele de enumerat.\n\n\
   /A          Afișează fișierele după atributele specificate.\n\
-  atribute      D  Directoare             R  Fișiere protejate la scriere\n\
+  atribute      D  Directoare             R  Fișiere nemodificabile\n\
                 H  Fișiere ascunse        A  Fișiere arhivabile\n\
                 S  Fișiere de sistem      -  Prefix pentru negație\n\
   /B          Preferă format minim (fără sumar sau informații de titlu).\n\
@@ -383,8 +383,8 @@ REPLACE [unitate1:][cale1]fișier [unitate2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\
                            poate folosi cu argumentele /S sau /U\n\
   /P                       Cere confirmare înaintea înlocuirii unui fișier sau\n\
                            a adăugării unui fișier sursă.\n\
-  /R                       Înlocuiește atât fișierele neprotejate, cât și cele\n\
-                           protejate la scriere.\n\
+  /R                       Înlocuiește atât fișierele modificabile, cât și\n\
+                           fișierele nemodificabile.\n\
   /S                       Înlocuiește fișierele în toate subdirectoarele\n\
                            directorului destinație. Nu se poate folosi cu\n\
                            argumentul /A.\n\

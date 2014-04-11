@@ -49,7 +49,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME         "Gestionar de aplicații"
+    IDS_CPLSYSTEMNAME         "Gestionar de programe"
     IDS_CPLSYSTEMDESCRIPTION  "Instalează programe și crează scurtături."
     IDS_CREATE_SHORTCUT       "Asistentul pentru creare de scurtătură"
     IDS_ERROR_NOT_FOUND       "Elementul „%s” nu poate fi localizat."
@@ -64,7 +64,7 @@ END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalarea Wine Gecko"
+CAPTION "Instalare Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Pachetul Wine Gecko, necesar pentru funcționarea corectă a aplicațiilor cu HTML încorporat, nu este există local. ReactOS permite totuși descărcarea și instalarea automată a acestuia.",
