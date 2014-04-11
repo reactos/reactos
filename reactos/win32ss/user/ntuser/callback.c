@@ -753,9 +753,9 @@ co_IntCallHookProc(INT HookId,
                }
             break;
             case HCBT_MOVESIZE:
-               if (Common->lParam && lParam)
+               if (Extra && lParam)
                {
-                  RtlCopyMemory((PVOID) lParam, (PVOID) Common->lParam, sizeof(RECTL));
+                  RtlCopyMemory((PVOID) lParam, Extra, sizeof(RECTL));
                }
             break;
          }
