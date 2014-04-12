@@ -39,6 +39,7 @@
 #define IDS_WARNMAXIMUMRANGE 81
 #define IDS_PAGEFILE_NONE    82
 #define IDS_PAGEFILE_SYSTEM  83
+#define IDS_INFOREBOOT       84
 
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100

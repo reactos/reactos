@@ -371,14 +371,10 @@ static VOID
 OnSet(PVIRTMEM pVirtMem)
 {
     INT Index;
-    UINT InitialSize;
-    UINT MaximumSize;
+    UINT InitialSize = -1;
+    UINT MaximumSize = -1;
     BOOL bTranslated;
-    TCHAR szTitle[64];
-    TCHAR szMessage[256];
     INT DriveIndex = 0;
-
-    pVirtMem->bSave = TRUE;
 
     Index  = (INT)SendDlgItemMessage(pVirtMem->hSelf,
                                      IDC_PAGEFILELIST,
@@ -403,22 +399,11 @@ OnSet(PVIRTMEM pVirtMem)
                                         FALSE);
             if (!bTranslated)
             {
-                if (LoadString(hApplet,
-                               IDS_MESSAGEBOXTITLE,
-                               szTitle,
-                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
-                    _tcscpy(szTitle, _T("System control panel applet"));
-
-                if (LoadString(hApplet,
-                               IDS_WARNINITIALSIZE,
-                               szMessage,
-                               sizeof(szMessage) / sizeof(szMessage[0])) == 0)
-                    _tcscpy(szMessage, _T("Enter a numeric value for the initial size of the paging file."));
-
-                MessageBox(NULL,
-                           szMessage,
-                           szTitle,
-                           MB_ICONWARNING | MB_OK);
+                ResourceMessageBox(hApplet,
+                                   NULL,
+                                   MB_ICONWARNING | MB_OK,
+                                   IDS_MESSAGEBOXTITLE,
+                                   IDS_WARNINITIALSIZE);
                 return;
             }
 
@@ -428,22 +413,11 @@ OnSet(PVIRTMEM pVirtMem)
                                         FALSE);
             if (!bTranslated)
             {
-                if (LoadString(hApplet,
-                               IDS_MESSAGEBOXTITLE,
-                               szTitle,
-                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
-                    _tcscpy(szTitle, _T("System control panel applet"));
-
-                if (LoadString(hApplet,
-                               IDS_WARNMAXIMUMSIZE,
-                               szMessage,
-                               sizeof(szMessage) / sizeof(szMessage[0])) == 0)
-                    _tcscpy(szMessage, _T("Enter a numeric value for the maximum size of the paging file."));
-
-                MessageBox(NULL,
-                           szMessage,
-                           szTitle,
-                           MB_ICONWARNING | MB_OK);
+                ResourceMessageBox(hApplet,
+                                   NULL,
+                                   MB_ICONWARNING | MB_OK,
+                                   IDS_MESSAGEBOXTITLE,
+                                   IDS_WARNMAXIMUMSIZE);
                 return;
             }
 
@@ -451,21 +425,11 @@ OnSet(PVIRTMEM pVirtMem)
             if (InitialSize < 2 ||
                 InitialSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
             {
-                if (LoadString(hApplet,
-                               IDS_MESSAGEBOXTITLE,
-                               szTitle,
-                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
-                    _tcscpy(szTitle, _T("System control panel applet"));
-
-                LoadString(hApplet,
-                           IDS_WARNINITIALRANGE,
-                           szMessage,
-                           sizeof(szMessage) / sizeof(szMessage[0]));
-
-                MessageBox(NULL,
-                           szMessage,
-                           szTitle,
-                           MB_ICONWARNING | MB_OK);
+                ResourceMessageBox(hApplet,
+                                   NULL,
+                                   MB_ICONWARNING | MB_OK,
+                                   IDS_MESSAGEBOXTITLE,
+                                   IDS_WARNINITIALRANGE);
                 return;
             }
 
@@ -473,23 +437,17 @@ OnSet(PVIRTMEM pVirtMem)
             if (MaximumSize < InitialSize ||
                 MaximumSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
             {
-                if (LoadString(hApplet,
-                               IDS_MESSAGEBOXTITLE,
-                               szTitle,
-                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
-                    _tcscpy(szTitle, _T("System control panel applet"));
-
-                LoadString(hApplet,
-                           IDS_WARNMAXIMUMRANGE,
-                           szMessage,
-                           sizeof(szMessage) / sizeof(szMessage[0]));
-
-                MessageBox(NULL,
-                           szMessage,
-                           szTitle,
-                           MB_ICONWARNING | MB_OK);
+                ResourceMessageBox(hApplet,
+                                   NULL,
+                                   MB_ICONWARNING | MB_OK,
+                                   IDS_MESSAGEBOXTITLE,
+                                   IDS_WARNMAXIMUMRANGE);
                 return;
             }
+
+            if ((pVirtMem->Pagefile[DriveIndex].InitialSize != InitialSize) &&
+                (pVirtMem->Pagefile[DriveIndex].MaximumSize != MaximumSize))
+                pVirtMem->bModified = TRUE;
 
             pVirtMem->Pagefile[DriveIndex].InitialSize = InitialSize;
             pVirtMem->Pagefile[DriveIndex].MaximumSize = MaximumSize;
@@ -498,6 +456,10 @@ OnSet(PVIRTMEM pVirtMem)
         else if (IsDlgButtonChecked(pVirtMem->hSelf,
                                     IDC_NOPAGEFILE) == BST_CHECKED)
         {
+            if ((pVirtMem->Pagefile[DriveIndex].InitialSize != InitialSize) &&
+                (pVirtMem->Pagefile[DriveIndex].MaximumSize != MaximumSize))
+                pVirtMem->bModified = TRUE;
+
             /* Set sizes to -1 */
             pVirtMem->Pagefile[DriveIndex].InitialSize = -1;
             pVirtMem->Pagefile[DriveIndex].MaximumSize = -1;
@@ -505,6 +467,10 @@ OnSet(PVIRTMEM pVirtMem)
         }
         else
         {
+            if ((pVirtMem->Pagefile[DriveIndex].InitialSize != InitialSize) &&
+                (pVirtMem->Pagefile[DriveIndex].MaximumSize != MaximumSize))
+                pVirtMem->bModified = TRUE;
+
             pVirtMem->Pagefile[DriveIndex].InitialSize = 0;
             pVirtMem->Pagefile[DriveIndex].MaximumSize = 0;
             pVirtMem->Pagefile[DriveIndex].bUsed = TRUE;
@@ -618,8 +584,14 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 static VOID
 OnOk(PVIRTMEM pVirtMem)
 {
-    if (pVirtMem->bSave == TRUE)
+    if (pVirtMem->bModified == TRUE)
     {
+        ResourceMessageBox(hApplet,
+                           NULL,
+                           MB_ICONINFORMATION | MB_OK,
+                           IDS_MESSAGEBOXTITLE,
+                           IDS_INFOREBOOT);
+
         WritePageFileSettings(pVirtMem);
     }
 }
@@ -632,7 +604,7 @@ OnInitDialog(HWND hwnd, PVIRTMEM pVirtMem)
 
     pVirtMem->hSelf = hwnd;
     pVirtMem->hListBox = GetDlgItem(hwnd, IDC_PAGEFILELIST);
-    pVirtMem->bSave = FALSE;
+    pVirtMem->bModified = FALSE;
 
     SetListBoxColumns(pVirtMem->hListBox);
 
@@ -711,7 +683,7 @@ VirtMemDlgProc(HWND hwndDlg,
 
                 case IDOK:
                     OnOk(pVirtMem);
-                    EndDialog(hwndDlg, 0);
+                    EndDialog(hwndDlg, pVirtMem->bModified);
                     return TRUE;
 
                 case IDC_NOPAGEFILE:
