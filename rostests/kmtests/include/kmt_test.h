@@ -190,6 +190,8 @@ VOID KmtFreeGuarded(PVOID Pointer);
 #define ok_eq_ulong(value, expected)        ok_eq_print(value, expected, "%lu")
 #define ok_eq_longlong(value, expected)     ok_eq_print(value, expected, "%I64d")
 #define ok_eq_ulonglong(value, expected)    ok_eq_print(value, expected, "%I64u")
+#define ok_eq_char(value, expected)         ok_eq_print(value, expected, "%c")
+#define ok_eq_wchar(value, expected)        ok_eq_print(value, expected, "%C")
 #ifndef _WIN64
 #define ok_eq_size(value, expected)         ok_eq_print(value, (SIZE_T)(expected), "%lu")
 #define ok_eq_longptr(value, expected)      ok_eq_print(value, (LONG_PTR)(expected), "%ld")
