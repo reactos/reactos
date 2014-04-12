@@ -42,3 +42,10 @@ Authors: Jean-Baptiste Lallement, and Derek Veit
 Credits: Darien Gavin Valentine
 
 https://bugs.launchpad.net/ubuntu/+bug/200671
+
+
++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
+
+
+Monospace flag added to FSEX301.ttf and FSEX301-L2.ttf
+Hermès Bélusca-Maïto
