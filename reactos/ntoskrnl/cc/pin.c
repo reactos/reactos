@@ -53,8 +53,8 @@ CcMapData (
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     ASSERT(SharedCacheMap);
 
-    DPRINT("AllocationSize %I64x, FileSize %I64x\n",
-           SharedCacheMap->AllocationSize.QuadPart,
+    DPRINT("SectionSize %I64x, FileSize %I64x\n",
+           SharedCacheMap->SectionSize.QuadPart,
            SharedCacheMap->FileSize.QuadPart);
 
     if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)

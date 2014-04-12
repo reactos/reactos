@@ -106,7 +106,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LIST_ENTRY CacheMapVacbListHead;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
-    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER SectionSize;
     LARGE_INTEGER FileSize;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;

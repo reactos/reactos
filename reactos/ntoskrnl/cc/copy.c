@@ -199,7 +199,7 @@ CcReadVirtualAddress (
     KEVENT Event;
 
     VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->SharedCacheMap->AllocationSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -252,7 +252,7 @@ CcWriteVirtualAddress (
 
     Vacb->Dirty = FALSE;
     VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->SharedCacheMap->AllocationSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -344,8 +344,8 @@ CcCopyRead (
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     ReadOffset = (ULONG)FileOffset->QuadPart;
 
-    DPRINT("AllocationSize %I64d, FileSize %I64d\n",
-           SharedCacheMap->AllocationSize.QuadPart,
+    DPRINT("SectionSize %I64d, FileSize %I64d\n",
+           SharedCacheMap->SectionSize.QuadPart,
            SharedCacheMap->FileSize.QuadPart);
 
     /*

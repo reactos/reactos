@@ -1220,7 +1220,7 @@ CcRosInitializeFileCache (
         SharedCacheMap->LazyWriteContext = LazyWriterContext;
         if (FileObject->FsContext)
         {
-            SharedCacheMap->AllocationSize =
+            SharedCacheMap->SectionSize =
                 ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
             SharedCacheMap->FileSize =
                 ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;

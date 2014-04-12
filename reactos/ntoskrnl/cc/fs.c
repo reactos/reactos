@@ -150,7 +150,7 @@ CcSetFileSizes (
     if (SharedCacheMap == NULL)
         return;
 
-    if (FileSizes->AllocationSize.QuadPart < SharedCacheMap->AllocationSize.QuadPart)
+    if (FileSizes->AllocationSize.QuadPart < SharedCacheMap->SectionSize.QuadPart)
     {
         InitializeListHead(&FreeListHead);
         KeAcquireGuardedMutex(&ViewLock);
@@ -185,7 +185,7 @@ CcSetFileSizes (
             }
         }
 
-        SharedCacheMap->AllocationSize = FileSizes->AllocationSize;
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
         SharedCacheMap->FileSize = FileSizes->FileSize;
         KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
         KeReleaseGuardedMutex(&ViewLock);
@@ -206,7 +206,7 @@ CcSetFileSizes (
     else
     {
         KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
-        SharedCacheMap->AllocationSize = FileSizes->AllocationSize;
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
         SharedCacheMap->FileSize = FileSizes->FileSize;
         KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
     }
@@ -256,7 +256,7 @@ CcGetFileSizes (
     if (!SharedCacheMap)
         return FALSE;
 
-    FileSizes->AllocationSize = SharedCacheMap->AllocationSize;
+    FileSizes->AllocationSize = SharedCacheMap->SectionSize;
     FileSizes->FileSize = FileSizes->ValidDataLength = SharedCacheMap->FileSize;
     return TRUE;
 }
