@@ -2930,6 +2930,17 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           return STATUS_INFO_LENGTH_MISMATCH;
         }
       KMMsg.lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
+     switch(KMMsg.message)
+     {
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           ERR("WM_SIZING 1 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
     }
   else
     {
@@ -2965,6 +2976,20 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     }
 
+  if (0 <= CallbackArgs->lParamBufferSize)
+  {
+     switch(KMMsg.message)
+     {
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           ERR("WM_SIZING 2 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
+  }
   return ZwCallbackReturn(CallbackArgs, ArgumentLength, STATUS_SUCCESS);
 }
 

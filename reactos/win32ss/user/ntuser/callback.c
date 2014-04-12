@@ -374,6 +374,8 @@ co_IntCallWindowProc(WNDPROC Proc,
           case WM_NCCREATE:
           case WM_STYLECHANGING:
           case WM_WINDOWPOSCHANGING:
+          case WM_SIZING:
+          case WM_MOVING:
             TRACE("Copy lParam, Message %d Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
             if (InSendMessage)
                // Copy into kernel space.
