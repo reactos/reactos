@@ -4720,7 +4720,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
             return FALSE;
          }
 #ifndef NEWCC
-         CcRosSetRemoveOnClose(SectionObjectPointer);
+         CcRosRemoveIfClosed(SectionObjectPointer);
 #endif
          return TRUE;
       case MmFlushForWrite:

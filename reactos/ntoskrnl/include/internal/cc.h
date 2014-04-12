@@ -104,8 +104,6 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
 typedef struct _BCB
 {
     LIST_ENTRY BcbVacbListHead;
-    LIST_ENTRY BcbRemoveListEntry;
-    BOOLEAN RemoveOnClose;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
     LARGE_INTEGER AllocationSize;
@@ -264,7 +262,7 @@ CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
 NTAPI
-CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
+CcRosRemoveIfClosed(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
 NTAPI

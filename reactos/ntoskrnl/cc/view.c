@@ -44,7 +44,6 @@
 static LIST_ENTRY DirtyVacbListHead;
 static LIST_ENTRY VacbListHead;
 static LIST_ENTRY VacbLruListHead;
-static LIST_ENTRY ClosedListHead;
 ULONG DirtyPageCount = 0;
 
 KGUARDED_MUTEX ViewLock;
@@ -1026,12 +1025,6 @@ CcRosDeleteFileCache (
     Bcb->RefCount--;
     if (Bcb->RefCount == 0)
     {
-        if (Bcb->BcbRemoveListEntry.Flink != NULL)
-        {
-            RemoveEntryList(&Bcb->BcbRemoveListEntry);
-            Bcb->BcbRemoveListEntry.Flink = NULL;
-        }
-
         FileObject->SectionObjectPointer->SharedCacheMap = NULL;
 
         /*
@@ -1082,37 +1075,23 @@ CcRosReferenceCache (
     KeAcquireGuardedMutex(&ViewLock);
     Bcb = (PBCB)FileObject->SectionObjectPointer->SharedCacheMap;
     ASSERT(Bcb);
-    if (Bcb->RefCount == 0)
-    {
-        ASSERT(Bcb->BcbRemoveListEntry.Flink != NULL);
-        RemoveEntryList(&Bcb->BcbRemoveListEntry);
-        Bcb->BcbRemoveListEntry.Flink = NULL;
-
-    }
-    else
-    {
-        ASSERT(Bcb->BcbRemoveListEntry.Flink == NULL);
-    }
+    ASSERT(Bcb->RefCount != 0);
     Bcb->RefCount++;
     KeReleaseGuardedMutex(&ViewLock);
 }
 
 VOID
 NTAPI
-CcRosSetRemoveOnClose (
+CcRosRemoveIfClosed (
     PSECTION_OBJECT_POINTERS SectionObjectPointer)
 {
     PBCB Bcb;
-    DPRINT("CcRosSetRemoveOnClose()\n");
+    DPRINT("CcRosRemoveIfClosed()\n");
     KeAcquireGuardedMutex(&ViewLock);
     Bcb = (PBCB)SectionObjectPointer->SharedCacheMap;
-    if (Bcb)
+    if (Bcb && Bcb->RefCount == 0)
     {
-        Bcb->RemoveOnClose = TRUE;
-        if (Bcb->RefCount == 0)
-        {
-            CcRosDeleteFileCache(Bcb->FileObject, Bcb);
-        }
+        CcRosDeleteFileCache(Bcb->FileObject, Bcb);
     }
     KeReleaseGuardedMutex(&ViewLock);
 }
@@ -1196,11 +1175,6 @@ CcTryToInitializeFileCache (
             FileObject->PrivateCacheMap = Bcb;
             Bcb->RefCount++;
         }
-        if (Bcb->BcbRemoveListEntry.Flink != NULL)
-        {
-            RemoveEntryList(&Bcb->BcbRemoveListEntry);
-            Bcb->BcbRemoveListEntry.Flink = NULL;
-        }
         Status = STATUS_SUCCESS;
     }
     KeReleaseGuardedMutex(&ViewLock);
@@ -1258,11 +1232,6 @@ CcRosInitializeFileCache (
         FileObject->PrivateCacheMap = Bcb;
         Bcb->RefCount++;
     }
-    if (Bcb->BcbRemoveListEntry.Flink != NULL)
-    {
-        RemoveEntryList(&Bcb->BcbRemoveListEntry);
-        Bcb->BcbRemoveListEntry.Flink = NULL;
-    }
     KeReleaseGuardedMutex(&ViewLock);
 
     return STATUS_SUCCESS;
@@ -1297,7 +1266,6 @@ CcInitView (
     InitializeListHead(&VacbListHead);
     InitializeListHead(&DirtyVacbListHead);
     InitializeListHead(&VacbLruListHead);
-    InitializeListHead(&ClosedListHead);
     KeInitializeGuardedMutex(&ViewLock);
     ExInitializeNPagedLookasideList (&iBcbLookasideList,
                                      NULL,
