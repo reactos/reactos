@@ -24,4 +24,4 @@ Size = 111 Mo
 
 [Section.041f]
 Licence = Değiştirilmiş LGPL, GPL
-Description = Basarî ve basarî olmayan Nesne Paskal çizeylemleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.
+Description = Basarî ve basarî olmayan Nesne Paskal izlenceleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.

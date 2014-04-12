@@ -20,7 +20,6 @@ Description = Un joc strategic de cărți. Jucătorul își va construi un caste
 Size = 632 ko
 
 [Section.041f]
-Name = Karıncalar
 Licence = Ücretsiz
 Description = Bir kartlarla izlem oyunu. Kalenizi bitirmeye veyâ rakip kaleyi yıkmaya çalışın. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
 Size = 632 KB

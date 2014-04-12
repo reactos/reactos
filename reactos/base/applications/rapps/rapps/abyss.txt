@@ -38,9 +38,9 @@ Description = Abyss Web Server vă permite găzduirea de pagini Web pe calculato
 Size = 2,1 Mo
 
 [Section.041f]
-Name = Abyss Örütbağ Sunucusu X1
+Name = Abyss Umûmî Ağ Sunucusu X1
 Licence = Ücretsiz
-Description = Abyss Örütbağ Sunucusu, bilgisayarda örütbağ sitelerinin yayınlanmasını sağlar. Abyss Örütbağ Sunucusu, güvenli SSL/TLS bağlantılarını (HTTPS), örütbağ teknikbiliminin geniş yelpâzesiyle destekler. Abyss Örütbağ Sunucusu; MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veritabanlarını destekleyen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby örütbağ uygulamalarını çalıştırabilir.
+Description = Abyss Umûmî Ağ Sunucusu, bilgisayarda Umûmî Ağ sitelerinin yayınlanmasını sağlar. Abyss Umûmî Ağ Sunucusu, güvenli SSL/TLS bağlantılarını (HTTPS), Umûmî Ağ uygulayım biliminin geniş yelpâzesiyle destekler. Abyss Umûmî Ağ Sunucusu; MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarını destekleyen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
 Size = 2,1 MB
 
 [Section.0422]

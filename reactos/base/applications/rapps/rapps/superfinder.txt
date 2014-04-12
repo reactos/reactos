@@ -36,7 +36,6 @@ Description = Aplicație rapidă de căutări complexe de text.
 Size = 4,94 Mo
 
 [Section.041f]
-Name = Süper Bulucu XT
 Licence = Ücretsiz
 Description = Hızlı ve husûsiyet zengini bir arama uygulaması.
 Size = 4,94 MB

@@ -40,9 +40,9 @@ Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: T
 Size = 305,12 ko
 
 [Section.041f]
-Name = Mikroyazılım Tahoma Yazı Türü
+Name = Microsoft Tahoma Yazı Tipi
 Licence = Bilinmiyor
-Description = Tahoma Yazı Türleri. Steam gibi birtakım yazılımlar için gereklidir. Şunları içerir: Tahoma.ttf, Tahomabd.ttf.
+Description = Tahoma Yazı Tipleri. Steam gibi birtakım yazılımlar için gereklidir. Şunları içerir: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,12 KB
 
 [Section.0422]

@@ -35,7 +35,7 @@ Description = Acest instrument permite accesarea în ReactOS a dosarelor/imprima
 Size = 2,13 Mo
 
 [Section.041f]
-Description = Bu araç, ReactOS'ta Pencereler'in paylaşılan yazıcılarıyla paylaşılan dizinlerine erişimi sağlar.
+Description = Bu araç, ReactOS'ta Windows'un paylaşılan yazıcılarıyla paylaşılan dizinlerine erişimi sağlar.
 Size = 2,13 MB
 
 [Section.0422]

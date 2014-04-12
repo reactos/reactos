@@ -20,7 +20,6 @@ Description = Cel mai rapid joc de artilerie pe care-l veți juca vreodată.
 Size = 2,86 Mo
 
 [Section.041f]
-Name = Küçük Tanklar
 Licence = Kısıtlı
-Description = Bu güne kadar oynadığınız en hızlı topçu oyunu.
+Description = Bu güne dek oynadığınız en hızlı topçu oyunu.
 Size = 2,86 MB

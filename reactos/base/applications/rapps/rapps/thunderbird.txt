@@ -60,7 +60,6 @@ URLSite = https://www.mozilla.org/ru/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.2.0/win32/ru/Thunderbird%20Setup%2024.2.0.exe
 
 [Section.041f]
-Name = Mozilla Yıldırımkuşu
 Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
 Size = 20,99 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/

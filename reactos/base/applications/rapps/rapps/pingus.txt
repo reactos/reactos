@@ -22,5 +22,5 @@ Description = Pingus este un joc-enigmă asemănător cu Lemmings.
 Size = 16,0 Mo
 
 [Section.041f]
-Description = Pingus, ücretsiz, Yaban Sıçanları gibi bir bulmaca oyunudur.
+Description = Pingus, ücretsiz, Lemmings gibi bir bulmaca oyunudur.
 Size = 16,0 MB

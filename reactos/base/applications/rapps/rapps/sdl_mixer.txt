@@ -38,7 +38,7 @@ Description = Necesar pentru execuția unor jocuri (open-source). Dezarhivați c
 Size = 548,02 ko
 
 [Section.041f]
-Name = Bayağı Doğrudan Ortam Katmanı (SDL) Karıştırıcısı
+Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı
 Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
 Size = 548,02 KB
 

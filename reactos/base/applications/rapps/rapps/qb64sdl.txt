@@ -22,5 +22,5 @@ Size = 33,1 Mo
 [Section.041f]
 Name = QB64 (SDL Sürümü)
 Licence = Ücretsiz
-Description = QB64; Mikroyazılım Pencereler, Linux ve Mac OS X için yapılmış, Mikroyazılım QBasic ve Mikroyazılım QuickBASIC ile uyumlu olarak tasarlanan, kendi kendini derleyen bir BASIC derleyicisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = QB64; Microsoft Windows, Linux ve Mac OS X için yapılmış, Microsoft QBasic ve Microsoft QuickBASIC ile uyumlu olarak tasarlanan, kendi kendini derleyen bir BASIC derleyicisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
 Size = 33,1 MB
