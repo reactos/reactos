@@ -896,7 +896,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
    {
       PFILE_OBJECT FileObject;
 #ifndef NEWCC
-      PBCB Bcb;
+      PROS_SHARED_CACHE_MAP SharedCacheMap;
 #endif
       SWAPENTRY SavedSwapEntry;
       PFN_NUMBER Page;
@@ -918,10 +918,10 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                (Offset->QuadPart + PAGE_SIZE <= Segment->RawLength.QuadPart || !IsImageSection))
          {
             NTSTATUS Status;
-            Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+            SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
             IsDirectMapped = TRUE;
 #ifndef NEWCC
-            Status = CcRosUnmapVacb(Bcb, FileOffset.LowPart, Dirty);
+            Status = CcRosUnmapVacb(SharedCacheMap, FileOffset.LowPart, Dirty);
 #else
             Status = STATUS_SUCCESS;
 #endif
@@ -1015,13 +1015,13 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 #ifndef NEWCC
    if (!(MemoryArea->Data.SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
    {
-      PBCB Bcb;
+      PROS_SHARED_CACHE_MAP SharedCacheMap;
       PROS_VACB Vacb;
-      Bcb = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
-      Vacb = CcRosLookupVacb(Bcb, (ULONG)(SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset));
+      SharedCacheMap = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
+      Vacb = CcRosLookupVacb(SharedCacheMap, (ULONG)(SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset));
       if (Vacb)
       {
-         CcRosReleaseVacb(Bcb, Vacb, Vacb->Valid, FALSE, TRUE);
+         CcRosReleaseVacb(SharedCacheMap, Vacb, Vacb->Valid, FALSE, TRUE);
          return TRUE;
       }
    }
@@ -1074,17 +1074,17 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
    ULONG_PTR RawLength;
-   PBCB Bcb;
+   PROS_SHARED_CACHE_MAP SharedCacheMap;
    BOOLEAN IsImageSection;
    ULONG_PTR Length;
 
    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+   SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
    RawLength = (ULONG_PTR)(MemoryArea->Data.SectionData.Segment->RawLength.QuadPart);
    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
-   ASSERT(Bcb);
+   ASSERT(SharedCacheMap);
 
    DPRINT("%S %I64x\n", FileObject->FileName.Buffer, FileOffset);
 
@@ -1103,7 +1103,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * filesystems do because it is safe for us to use an offset with an
        * alignment less than the file system block size.
        */
-      Status = CcRosGetVacb(Bcb,
+      Status = CcRosGetVacb(SharedCacheMap,
                             (ULONG)FileOffset,
                             &BaseOffset,
                             &BaseAddress,
@@ -1122,7 +1122,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          Status = CcReadVirtualAddress(Vacb);
          if (!NT_SUCCESS(Status))
          {
-            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             return Status;
          }
       }
@@ -1136,7 +1136,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       (*Page) = MmGetPhysicalAddress((char*)BaseAddress +
                                      FileOffset - BaseOffset).LowPart >> PAGE_SHIFT;
 
-      CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, TRUE);
+      CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, TRUE);
    }
    else
    {
@@ -1156,7 +1156,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       {
          return(Status);
       }
-      Status = CcRosGetVacb(Bcb,
+      Status = CcRosGetVacb(SharedCacheMap,
                             (ULONG)FileOffset,
                             &BaseOffset,
                             &BaseAddress,
@@ -1175,7 +1175,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          Status = CcReadVirtualAddress(Vacb);
          if (!NT_SUCCESS(Status))
          {
-            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             return Status;
          }
       }
@@ -1196,8 +1196,8 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       {
          memcpy(PageAddr, (char*)BaseAddress + FileOffset - BaseOffset, VacbOffset);
          MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
-         CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, FALSE);
-         Status = CcRosGetVacb(Bcb,
+         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+         Status = CcRosGetVacb(SharedCacheMap,
                                (ULONG)(FileOffset + VacbOffset),
                                &BaseOffset,
                                &BaseAddress,
@@ -1216,7 +1216,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             Status = CcReadVirtualAddress(Vacb);
             if (!NT_SUCCESS(Status))
             {
-               CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+               CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
                return Status;
             }
          }
@@ -1231,7 +1231,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          }
       }
       MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
-      CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, FALSE);
+      CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
    }
    return(STATUS_SUCCESS);
 }
@@ -1869,7 +1869,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
 #ifndef NEWCC
-   PBCB Bcb = NULL;
+   PROS_SHARED_CACHE_MAP SharedCacheMap = NULL;
 #endif
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
@@ -1901,7 +1901,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    if (FileObject != NULL &&
        !(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+      SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 
       /*
        * If the file system is letting us go directly to the cache and the
@@ -2066,7 +2066,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          KeBugCheckEx(MEMORY_MANAGEMENT, STATUS_UNSUCCESSFUL, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
 #ifndef NEWCC
-      Status = CcRosUnmapVacb(Bcb, (ULONG)FileOffset, FALSE);
+      Status = CcRosUnmapVacb(SharedCacheMap, (ULONG)FileOffset, FALSE);
 #else
       Status = STATUS_SUCCESS;
 #endif
@@ -2074,7 +2074,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("CcRosUnmapVacb failed, status = %x\n", Status);
-         KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)Bcb, (ULONG_PTR)FileOffset, (ULONG_PTR)Address);
+         KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)SharedCacheMap, (ULONG_PTR)FileOffset, (ULONG_PTR)Address);
       }
 #endif
       MiSetPageEvent(NULL, NULL);
@@ -2276,7 +2276,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    BOOLEAN Private;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   PBCB Bcb = NULL;
+   PROS_SHARED_CACHE_MAP SharedCacheMap = NULL;
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -2298,7 +2298,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    if (FileObject != NULL &&
          !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
    {
-      Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+      SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 
       /*
        * If the file system is letting us go directly to the cache and the
@@ -2366,7 +2366,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
       ASSERT(SwapEntry == 0);
       //SOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset;
 #ifndef NEWCC
-      CcRosMarkDirtyVacb(Bcb, Offset.LowPart);
+      CcRosMarkDirtyVacb(SharedCacheMap, Offset.LowPart);
 #endif
       MmLockSectionSegment(Segment);
       MmSetPageEntrySectionSegment(Segment, &Offset, PageEntry);
@@ -3970,7 +3970,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 {
    ULONG_PTR Entry;
    PFILE_OBJECT FileObject;
-   PBCB Bcb;
+   PROS_SHARED_CACHE_MAP SharedCacheMap;
    LARGE_INTEGER Offset;
    SWAPENTRY SavedSwapEntry;
    PROS_SECTION_OBJECT Section;
@@ -4011,9 +4011,9 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (Page == PFN_FROM_SSE(Entry) && Dirty)
       {
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
-         Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 #ifndef NEWCC
-         CcRosMarkDirtyVacb(Bcb, (ULONG)(Offset.QuadPart + Segment->Image.FileOffset));
+         CcRosMarkDirtyVacb(SharedCacheMap, (ULONG)(Offset.QuadPart + Segment->Image.FileOffset));
 #endif
          ASSERT(SwapEntry == 0);
       }
@@ -4674,8 +4674,8 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
           /* Check size of file */
           if (SectionObjectPointer->SharedCacheMap)
           {
-             PBCB Bcb = SectionObjectPointer->SharedCacheMap;
-             if (NewFileSize->QuadPart <= Bcb->FileSize.QuadPart)
+             PROS_SHARED_CACHE_MAP SharedCacheMap = SectionObjectPointer->SharedCacheMap;
+             if (NewFileSize->QuadPart <= SharedCacheMap->FileSize.QuadPart)
              {
                 return FALSE;
              }

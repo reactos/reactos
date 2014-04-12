@@ -57,7 +57,7 @@ CcInitCacheZeroPage (
 NTSTATUS
 NTAPI
 ReadVacbChain (
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG ReadOffset,
     ULONG Length,
     PVOID Buffer)
@@ -74,7 +74,7 @@ ReadVacbChain (
 
     Mdl = _alloca(MmSizeOfMdl(NULL, MAX_RW_LENGTH));
 
-    Status = CcRosGetVacbChain(Bcb, ReadOffset, Length, &head);
+    Status = CcRosGetVacbChain(SharedCacheMap, ReadOffset, Length, &head);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -95,7 +95,7 @@ ReadVacbChain (
             Length = Length - TempLength;
             previous = current;
             current = current->NextInChain;
-            CcRosReleaseVacb(Bcb, previous, TRUE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, previous, TRUE, FALSE, FALSE);
         }
         /*
          * Otherwise read in as much as we can.
@@ -143,7 +143,7 @@ ReadVacbChain (
              */
             VacbOffset.QuadPart = current->FileOffset;
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Status = IoPageRead(Bcb->FileObject,
+            Status = IoPageRead(SharedCacheMap->FileObject,
                                 Mdl,
                                 &VacbOffset,
                                 &Event,
@@ -163,7 +163,7 @@ ReadVacbChain (
                 {
                     previous = current;
                     current = current->NextInChain;
-                    CcRosReleaseVacb(Bcb, previous, FALSE, FALSE, FALSE);
+                    CcRosReleaseVacb(SharedCacheMap, previous, FALSE, FALSE, FALSE);
                 }
                 return Status;
             }
@@ -178,7 +178,7 @@ ReadVacbChain (
                 Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
 
                 Length = Length - TempLength;
-                CcRosReleaseVacb(Bcb, previous, TRUE, FALSE, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, previous, TRUE, FALSE, FALSE);
                 current_size += VACB_MAPPING_GRANULARITY;
             }
         }
@@ -199,7 +199,7 @@ CcReadVirtualAddress (
     KEVENT Event;
 
     VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->Bcb->AllocationSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->AllocationSize.QuadPart - Vacb->FileOffset);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -214,7 +214,7 @@ CcReadVirtualAddress (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoPageRead(Vacb->Bcb->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
+    Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -252,7 +252,7 @@ CcWriteVirtualAddress (
 
     Vacb->Dirty = FALSE;
     VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->Bcb->AllocationSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->AllocationSize.QuadPart - Vacb->FileOffset);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -277,7 +277,7 @@ CcWriteVirtualAddress (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoSynchronousPageWrite(Vacb->Bcb->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
+    Status = IoSynchronousPageWrite(Vacb->SharedCacheMap->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -331,7 +331,7 @@ CcCopyRead (
     PROS_VACB Vacb;
     BOOLEAN Valid;
     ULONG ReadLength = 0;
-    PBCB Bcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     KIRQL oldirql;
     PLIST_ENTRY current_entry;
     PROS_VACB current;
@@ -341,12 +341,12 @@ CcCopyRead (
            FileObject, FileOffset->QuadPart, Length, Wait,
            Buffer, IoStatus);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     ReadOffset = (ULONG)FileOffset->QuadPart;
 
     DPRINT("AllocationSize %I64d, FileSize %I64d\n",
-           Bcb->AllocationSize.QuadPart,
-           Bcb->FileSize.QuadPart);
+           SharedCacheMap->AllocationSize.QuadPart,
+           SharedCacheMap->FileSize.QuadPart);
 
     /*
      * Check for the nowait case that all the cache VACBs that would
@@ -354,19 +354,20 @@ CcCopyRead (
      */
     if (!Wait)
     {
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
         /* FIXME: this loop doesn't take into account areas that don't have
          * a VACB in the list yet */
-        current_entry = Bcb->BcbVacbListHead.Flink;
-        while (current_entry != &Bcb->BcbVacbListHead)
+        current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+        while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
         {
-            current = CONTAINING_RECORD(current_entry, ROS_VACB,
-                                        BcbVacbListEntry);
+            current = CONTAINING_RECORD(current_entry,
+                                        ROS_VACB,
+                                        CacheMapVacbListEntry);
             if (!current->Valid &&
                 DoRangesIntersect(current->FileOffset, VACB_MAPPING_GRANULARITY,
                                   ReadOffset, Length))
             {
-                KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+                KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
                 IoStatus->Status = STATUS_UNSUCCESSFUL;
                 IoStatus->Information = 0;
                 return FALSE;
@@ -375,14 +376,14 @@ CcCopyRead (
                 break;
             current_entry = current_entry->Flink;
         }
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
     }
 
     TempLength = ReadOffset % VACB_MAPPING_GRANULARITY;
     if (TempLength != 0)
     {
         TempLength = min(Length, VACB_MAPPING_GRANULARITY - TempLength);
-        Status = CcRosRequestVacb(Bcb,
+        Status = CcRosRequestVacb(SharedCacheMap,
                                   ROUND_DOWN(ReadOffset,
                                              VACB_MAPPING_GRANULARITY),
                                   &BaseAddress, &Valid, &Vacb);
@@ -400,14 +401,14 @@ CcCopyRead (
             {
                 IoStatus->Information = 0;
                 IoStatus->Status = Status;
-                CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
                 return FALSE;
             }
         }
         RtlCopyMemory(Buffer,
                       (char*)BaseAddress + ReadOffset % VACB_MAPPING_GRANULARITY,
                       TempLength);
-        CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         ReadLength += TempLength;
         Length -= TempLength;
         ReadOffset += TempLength;
@@ -417,7 +418,7 @@ CcCopyRead (
     while (Length > 0)
     {
         TempLength = min(VACB_MAPPING_GRANULARITY, Length);
-        Status = ReadVacbChain(Bcb, ReadOffset, TempLength, Buffer);
+        Status = ReadVacbChain(SharedCacheMap, ReadOffset, TempLength, Buffer);
         if (!NT_SUCCESS(Status))
         {
             IoStatus->Information = 0;
@@ -454,7 +455,7 @@ CcCopyWrite (
     NTSTATUS Status;
     ULONG WriteOffset;
     KIRQL oldirql;
-    PBCB Bcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PLIST_ENTRY current_entry;
     PROS_VACB Vacb;
     ULONG TempLength;
@@ -465,26 +466,26 @@ CcCopyWrite (
            "Length %lu, Wait %u, Buffer 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     WriteOffset = (ULONG)FileOffset->QuadPart;
 
     if (!Wait)
     {
         /* testing, if the requested datas are available */
-        KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
         /* FIXME: this loop doesn't take into account areas that don't have
          * a VACB in the list yet */
-        current_entry = Bcb->BcbVacbListHead.Flink;
-        while (current_entry != &Bcb->BcbVacbListHead)
+        current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+        while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
         {
             Vacb = CONTAINING_RECORD(current_entry,
                                      ROS_VACB,
-                                     BcbVacbListEntry);
+                                     CacheMapVacbListEntry);
             if (!Vacb->Valid &&
                 DoRangesIntersect(Vacb->FileOffset, VACB_MAPPING_GRANULARITY,
                                   WriteOffset, Length))
             {
-                KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+                KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
                 /* datas not available */
                 return FALSE;
             }
@@ -492,7 +493,7 @@ CcCopyWrite (
                 break;
             current_entry = current_entry->Flink;
         }
-        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
     }
 
     TempLength = WriteOffset % VACB_MAPPING_GRANULARITY;
@@ -501,7 +502,7 @@ CcCopyWrite (
         ULONG ROffset;
         ROffset = ROUND_DOWN(WriteOffset, VACB_MAPPING_GRANULARITY);
         TempLength = min(Length, VACB_MAPPING_GRANULARITY - TempLength);
-        Status = CcRosRequestVacb(Bcb, ROffset,
+        Status = CcRosRequestVacb(SharedCacheMap, ROffset,
                                   &BaseAddress, &Valid, &Vacb);
         if (!NT_SUCCESS(Status))
         {
@@ -517,7 +518,7 @@ CcCopyWrite (
         RtlCopyMemory((char*)BaseAddress + WriteOffset % VACB_MAPPING_GRANULARITY,
                       Buffer,
                       TempLength);
-        CcRosReleaseVacb(Bcb, Vacb, TRUE, TRUE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, TRUE, FALSE);
 
         Length -= TempLength;
         WriteOffset += TempLength;
@@ -528,7 +529,7 @@ CcCopyWrite (
     while (Length > 0)
     {
         TempLength = min(VACB_MAPPING_GRANULARITY, Length);
-        Status = CcRosRequestVacb(Bcb,
+        Status = CcRosRequestVacb(SharedCacheMap,
                                   WriteOffset,
                                   &BaseAddress,
                                   &Valid,
@@ -541,12 +542,12 @@ CcCopyWrite (
         {
             if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
             {
-                CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
                 return FALSE;
             }
         }
         RtlCopyMemory(BaseAddress, Buffer, TempLength);
-        CcRosReleaseVacb(Bcb, Vacb, TRUE, TRUE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, TRUE, FALSE);
         Length -= TempLength;
         WriteOffset += TempLength;
 
@@ -684,29 +685,29 @@ CcZeroData (
     {
         /* File is cached */
         KIRQL oldirql;
-        PBCB Bcb;
+        PROS_SHARED_CACHE_MAP SharedCacheMap;
         PLIST_ENTRY current_entry;
         PROS_VACB Vacb, current, previous;
         ULONG TempLength;
 
-        Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+        SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
         if (!Wait)
         {
             /* testing, if the requested datas are available */
-            KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+            KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
             /* FIXME: this loop doesn't take into account areas that don't have
              * a VACB in the list yet */
-            current_entry = Bcb->BcbVacbListHead.Flink;
-            while (current_entry != &Bcb->BcbVacbListHead)
+            current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+            while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
             {
                 Vacb = CONTAINING_RECORD(current_entry,
                                          ROS_VACB,
-                                         BcbVacbListEntry);
+                                         CacheMapVacbListEntry);
                 if (!Vacb->Valid &&
                     DoRangesIntersect(Vacb->FileOffset, VACB_MAPPING_GRANULARITY,
                                       WriteOffset.u.LowPart, Length))
                 {
-                    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+                    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
                     /* datas not available */
                     return FALSE;
                 }
@@ -714,7 +715,7 @@ CcZeroData (
                     break;
                 current_entry = current_entry->Flink;
             }
-            KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+            KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
         }
 
         while (Length > 0)
@@ -729,7 +730,7 @@ CcZeroData (
             {
                 CurrentLength = Length;
             }
-            Status = CcRosGetVacbChain(Bcb, WriteOffset.u.LowPart - Offset,
+            Status = CcRosGetVacbChain(SharedCacheMap, WriteOffset.u.LowPart - Offset,
                                        Offset + CurrentLength, &Vacb);
             if (!NT_SUCCESS(Status))
             {
@@ -774,7 +775,7 @@ CcZeroData (
             {
                 previous = current;
                 current = current->NextInChain;
-                CcRosReleaseVacb(Bcb, previous, TRUE, TRUE, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, previous, TRUE, TRUE, FALSE);
             }
         }
     }

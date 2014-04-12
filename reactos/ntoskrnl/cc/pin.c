@@ -34,7 +34,7 @@ CcMapData (
 {
     ULONG ReadOffset;
     BOOLEAN Valid;
-    PBCB Bcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PROS_VACB Vacb;
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
@@ -50,12 +50,12 @@ CcMapData (
     ASSERT(FileObject->SectionObjectPointer);
     ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
 
-    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-    ASSERT(Bcb);
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
 
     DPRINT("AllocationSize %I64x, FileSize %I64x\n",
-           Bcb->AllocationSize.QuadPart,
-           Bcb->FileSize.QuadPart);
+           SharedCacheMap->AllocationSize.QuadPart,
+           SharedCacheMap->FileSize.QuadPart);
 
     if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)
     {
@@ -63,7 +63,7 @@ CcMapData (
     }
 
     ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
-    Status = CcRosRequestVacb(Bcb,
+    Status = CcRosRequestVacb(SharedCacheMap,
                               ROffset,
                               pBuffer,
                               &Valid,
@@ -77,13 +77,13 @@ CcMapData (
     {
         if (!(Flags & MAP_WAIT))
         {
-            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             return FALSE;
         }
 
         if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
         {
-            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             return FALSE;
         }
     }
@@ -92,7 +92,7 @@ CcMapData (
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         return FALSE;
     }
 
@@ -195,7 +195,7 @@ CcUnpinData (
 {
     PINTERNAL_BCB iBcb = Bcb;
 
-    CcRosReleaseVacb(iBcb->Vacb->Bcb,
+    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
                      iBcb->Vacb,
                      TRUE,
                      iBcb->Dirty,

@@ -101,21 +101,21 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
     LONG ActivePrefetches;
 } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
 
-typedef struct _BCB
+typedef struct _ROS_SHARED_CACHE_MAP
 {
-    LIST_ENTRY BcbVacbListHead;
+    LIST_ENTRY CacheMapVacbListHead;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
     LARGE_INTEGER AllocationSize;
     LARGE_INTEGER FileSize;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
-    KSPIN_LOCK BcbLock;
+    KSPIN_LOCK CacheMapLock;
     ULONG RefCount;
 #if DBG
-    BOOLEAN Trace; /* enable extra trace output for this BCB and it's VACBs */
+    BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
-} BCB, *PBCB;
+} ROS_SHARED_CACHE_MAP, *PROS_SHARED_CACHE_MAP;
 
 typedef struct _ROS_VACB
 {
@@ -130,8 +130,8 @@ typedef struct _ROS_VACB
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
-    /* Entry in the list of VACBs for this BCB. */
-    LIST_ENTRY BcbVacbListEntry;
+    /* Entry in the list of VACBs for this shared cache map. */
+    LIST_ENTRY CacheMapVacbListEntry;
     /* Entry in the list of VACBs which are dirty. */
     LIST_ENTRY DirtyVacbListEntry;
     /* Entry in the list of VACBs. */
@@ -143,8 +143,8 @@ typedef struct _ROS_VACB
     KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
-    /* Pointer to the BCB for the file which this view maps data for. */
-    PBCB Bcb;
+    /* Pointer to the shared cache map for the file which this view maps data for. */
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
     struct _ROS_VACB *NextInChain;
 } ROS_VACB, *PROS_VACB;
@@ -185,7 +185,7 @@ CcRosFlushVacb(PROS_VACB Vacb);
 NTSTATUS
 NTAPI
 CcRosGetVacb(
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     PULONG BaseOffset,
     PVOID *BaseAddress,
@@ -212,7 +212,7 @@ CcInitializeCacheManager(VOID);
 NTSTATUS
 NTAPI
 CcRosUnmapVacb(
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     BOOLEAN NowDirty
 );
@@ -220,14 +220,14 @@ CcRosUnmapVacb(
 PROS_VACB
 NTAPI
 CcRosLookupVacb(
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset
 );
 
 NTSTATUS
 NTAPI
 CcRosGetVacbChain(
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     ULONG Length,
     PROS_VACB *Vacb
@@ -240,7 +240,7 @@ CcInitCacheZeroPage(VOID);
 NTSTATUS
 NTAPI
 CcRosMarkDirtyVacb(
-    PBCB Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset
 );
 
@@ -267,7 +267,7 @@ CcRosRemoveIfClosed(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 NTSTATUS
 NTAPI
 CcRosReleaseVacb(
-    BCB* Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
     BOOLEAN Valid,
     BOOLEAN Dirty,
@@ -277,7 +277,7 @@ CcRosReleaseVacb(
 NTSTATUS
 NTAPI
 CcRosRequestVacb(
-    BCB *Bcb,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
