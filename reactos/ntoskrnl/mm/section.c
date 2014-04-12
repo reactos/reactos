@@ -1066,7 +1066,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   ULONG BaseOffset;
+   ULONGLONG BaseOffset;
    ULONGLONG FileOffset;
    PVOID BaseAddress;
    BOOLEAN UptoDate;

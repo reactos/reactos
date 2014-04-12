@@ -66,7 +66,6 @@ ReadVacbChain (
     PROS_VACB current;
     PROS_VACB previous;
     IO_STATUS_BLOCK Iosb;
-    LARGE_INTEGER VacbOffset;
     NTSTATUS Status;
     ULONG TempLength;
     KEVENT Event;
@@ -141,11 +140,10 @@ ReadVacbChain (
             /*
              * Read in the information.
              */
-            VacbOffset.QuadPart = current->FileOffset;
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             Status = IoPageRead(SharedCacheMap->FileObject,
                                 Mdl,
-                                &VacbOffset,
+                                &current->FileOffset,
                                 &Event,
                                 &Iosb);
             if (Status == STATUS_PENDING)
@@ -194,12 +192,10 @@ CcReadVirtualAddress (
     ULONG Size;
     PMDL Mdl;
     NTSTATUS Status;
-    LARGE_INTEGER VacbOffset;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
 
-    VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -214,7 +210,7 @@ CcReadVirtualAddress (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
+    Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -247,12 +243,10 @@ CcWriteVirtualAddress (
     PMDL Mdl;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
-    LARGE_INTEGER VacbOffset;
     KEVENT Event;
 
     Vacb->Dirty = FALSE;
-    VacbOffset.QuadPart = Vacb->FileOffset;
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset);
+    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
         Size = VACB_MAPPING_GRANULARITY;
@@ -277,7 +271,7 @@ CcWriteVirtualAddress (
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoSynchronousPageWrite(Vacb->SharedCacheMap->FileObject, Mdl, &VacbOffset, &Event, &IoStatus);
+    Status = IoSynchronousPageWrite(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -364,7 +358,8 @@ CcCopyRead (
                                         ROS_VACB,
                                         CacheMapVacbListEntry);
             if (!current->Valid &&
-                DoRangesIntersect(current->FileOffset, VACB_MAPPING_GRANULARITY,
+                DoRangesIntersect(current->FileOffset.QuadPart,
+                                  VACB_MAPPING_GRANULARITY,
                                   ReadOffset, Length))
             {
                 KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
@@ -372,7 +367,7 @@ CcCopyRead (
                 IoStatus->Information = 0;
                 return FALSE;
             }
-            if (current->FileOffset >= ReadOffset + Length)
+            if (current->FileOffset.QuadPart >= ReadOffset + Length)
                 break;
             current_entry = current_entry->Flink;
         }
@@ -482,14 +477,15 @@ CcCopyWrite (
                                      ROS_VACB,
                                      CacheMapVacbListEntry);
             if (!Vacb->Valid &&
-                DoRangesIntersect(Vacb->FileOffset, VACB_MAPPING_GRANULARITY,
+                DoRangesIntersect(Vacb->FileOffset.QuadPart,
+                                  VACB_MAPPING_GRANULARITY,
                                   WriteOffset, Length))
             {
                 KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
                 /* datas not available */
                 return FALSE;
             }
-            if (Vacb->FileOffset >= WriteOffset + Length)
+            if (Vacb->FileOffset.QuadPart >= WriteOffset + Length)
                 break;
             current_entry = current_entry->Flink;
         }
@@ -704,14 +700,15 @@ CcZeroData (
                                          ROS_VACB,
                                          CacheMapVacbListEntry);
                 if (!Vacb->Valid &&
-                    DoRangesIntersect(Vacb->FileOffset, VACB_MAPPING_GRANULARITY,
+                    DoRangesIntersect(Vacb->FileOffset.QuadPart,
+                                      VACB_MAPPING_GRANULARITY,
                                       WriteOffset.u.LowPart, Length))
                 {
                     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
                     /* datas not available */
                     return FALSE;
                 }
-                if (Vacb->FileOffset >= WriteOffset.u.LowPart + Length)
+                if (Vacb->FileOffset.QuadPart >= WriteOffset.u.LowPart + Length)
                     break;
                 current_entry = current_entry->Flink;
             }

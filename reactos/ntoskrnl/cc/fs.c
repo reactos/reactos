@@ -163,7 +163,7 @@ CcSetFileSizes (
                                         ROS_VACB,
                                         CacheMapVacbListEntry);
             current_entry = current_entry->Flink;
-            if (current->FileOffset >= FileSizes->AllocationSize.QuadPart)
+            if (current->FileOffset.QuadPart >= FileSizes->AllocationSize.QuadPart)
             {
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {

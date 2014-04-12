@@ -138,7 +138,7 @@ typedef struct _ROS_VACB
     LIST_ENTRY VacbListEntry;
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
-    ULONG FileOffset;
+    LARGE_INTEGER FileOffset;
     /* Mutex */
     KMUTEX Mutex;
     /* Number of references. */
@@ -187,7 +187,7 @@ NTAPI
 CcRosGetVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
-    PULONG BaseOffset,
+    PULONGLONG BaseOffset,
     PVOID *BaseAddress,
     PBOOLEAN UptoDate,
     PROS_VACB *Vacb
@@ -305,9 +305,9 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 FORCEINLINE
 BOOLEAN
 DoRangesIntersect(
-    _In_ ULONG Offset1,
+    _In_ ULONGLONG Offset1,
     _In_ ULONG Length1,
-    _In_ ULONG Offset2,
+    _In_ ULONGLONG Offset2,
     _In_ ULONG Length2)
 {
     if (Offset1 + Length1 <= Offset2)
@@ -320,9 +320,9 @@ DoRangesIntersect(
 FORCEINLINE
 BOOLEAN
 IsPointInRange(
-    _In_ ULONG Offset1,
+    _In_ ULONGLONG Offset1,
     _In_ ULONG Length1,
-    _In_ ULONG Point)
+    _In_ ULONGLONG Point)
 {
     return DoRangesIntersect(Offset1, Length1, Point, 1);
 }

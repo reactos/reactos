@@ -456,7 +456,8 @@ CcRosLookupVacb (
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     CacheMapVacbListEntry);
-        if (IsPointInRange(current->FileOffset, VACB_MAPPING_GRANULARITY,
+        if (IsPointInRange(current->FileOffset.QuadPart,
+                           VACB_MAPPING_GRANULARITY,
                            FileOffset))
         {
             CcRosVacbIncRefCount(current);
@@ -469,7 +470,7 @@ CcRosLookupVacb (
                                   NULL);
             return current;
         }
-        if (current->FileOffset > FileOffset)
+        if (current->FileOffset.QuadPart > FileOffset)
             break;
         current_entry = current_entry->Flink;
     }
@@ -606,7 +607,7 @@ CcRosCreateVacb (
     current->Valid = FALSE;
     current->Dirty = FALSE;
     current->PageOut = FALSE;
-    current->FileOffset = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
+    current->FileOffset.QuadPart = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
     current->SharedCacheMap = SharedCacheMap;
 #if DBG
     if (SharedCacheMap->Trace)
@@ -640,7 +641,8 @@ CcRosCreateVacb (
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     CacheMapVacbListEntry);
-        if (IsPointInRange(current->FileOffset, VACB_MAPPING_GRANULARITY,
+        if (IsPointInRange(current->FileOffset.QuadPart,
+                           VACB_MAPPING_GRANULARITY,
                            FileOffset))
         {
             CcRosVacbIncRefCount(current);
@@ -665,13 +667,13 @@ CcRosCreateVacb (
                                   NULL);
             return STATUS_SUCCESS;
         }
-        if (current->FileOffset < FileOffset)
+        if (current->FileOffset.QuadPart < FileOffset)
         {
             ASSERT(previous == NULL ||
-                   previous->FileOffset < current->FileOffset);
+                   previous->FileOffset.QuadPart < current->FileOffset.QuadPart);
             previous = current;
         }
-        if (current->FileOffset > FileOffset)
+        if (current->FileOffset.QuadPart > FileOffset)
             break;
         current_entry = current_entry->Flink;
     }
@@ -798,7 +800,7 @@ NTAPI
 CcRosGetVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
-    PULONG BaseOffset,
+    PULONGLONG BaseOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
     PROS_VACB *Vacb)
@@ -841,7 +843,7 @@ CcRosGetVacb (
     *BaseAddress = current->BaseAddress;
     DPRINT("*BaseAddress %p\n", *BaseAddress);
     *Vacb = current;
-    *BaseOffset = current->FileOffset;
+    *BaseOffset = current->FileOffset.QuadPart;
     return STATUS_SUCCESS;
 }
 
@@ -857,7 +859,7 @@ CcRosRequestVacb (
  * FUNCTION: Request a page mapping for a shared cache map
  */
 {
-    ULONG BaseOffset;
+    ULONGLONG BaseOffset;
 
     ASSERT(SharedCacheMap);
 
