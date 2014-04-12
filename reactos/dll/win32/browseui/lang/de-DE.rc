@@ -30,8 +30,8 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "S&ymbolleisten fixieren", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Anpassen...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Text Labels", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Go Button", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+        MENUITEM "Symboltitel", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Schaltfläche Wechseln zu", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -57,9 +57,9 @@ BEGIN
         BEGIN
             MENUITEM "Su&chen\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Favoriten\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "Medien", IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Verlauf\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "F&olders", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&Ordner", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
@@ -90,8 +90,8 @@ BEGIN
     END
     POPUP "&?", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Ist diese Kopie von ReactOS &legal?", IDM_HELP_ISTHISCOPYLEGAL
-        MENUITEM "Ü&ber ReactOS", IDM_HELP_ABOUT
+        MENUITEM "Ist dies eine &legale ReactOS-Kopie?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "Inf&o", IDM_HELP_ABOUT
     END
 END
 
@@ -103,7 +103,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT "Te&xt Optionen:", -1, 4, 2, 48, 15
     COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Ico&n Optionen:", -1, 4, 20, 48, 15
+    LTEXT "Symboloptio&nen:", -1, 4, 20, 48, 15
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -129,97 +129,97 @@ END
 
 STRINGTABLE
 BEGIN
-    800 "Contains commands for manipulating the selected items."
+    800 "Enthält Befehle, um das ausgewählte Objekt zu bearbeiten."
 END
 
 STRINGTABLE
 BEGIN
-    864 "Contains edit commands."
+    864 "Enthält Befehle zum Bearbeiten."
 END
 
 STRINGTABLE
 BEGIN
-    928 "Contains commands for manipulating the view."
+    928 "Enthält Befehle, um die Ansicht zu bearbeiten."
 END
 
 STRINGTABLE
 BEGIN
-    992 "Contains tools commands."
+    992 "Enthält Werkzeugbefehle."
 END
 
 STRINGTABLE
 BEGIN
-    1056 "Contains commands for displaying Help."
+    1056 "Enthält Befehle, um die Hilfe anzuzeigen."
 END
 
 STRINGTABLE
 BEGIN
-    9025 "Closes the window."
-    9026 "Goes up one level."
+    9025 "Schließt das Fenster."
+    9026 "Wechselt zur übergeordneten Ebene."
 END
 
 STRINGTABLE
 BEGIN
-    9121 "Connects to a network drive."
-    9122 "Disconnects from a network drive."
+    9121 "Verbindet ein Netzlaufwerk."
+    9122 "Trennt ein Netzlaufwerk."
 END
 
 STRINGTABLE
 BEGIN
-    9250 "Displays program information, version number, and copyright."
-    9252 "Displays information for debugging."
+    9250 "Zeigt Programminformationen, Versionsnummer, und Copyright-Informationen."
+    9252 "Zeigt Informationen zum Debuggen."
 END
 
 STRINGTABLE
 BEGIN
-    9281 "Goes to the previous page."
-    9282 "Goes to the next page."
-    9283 "Enables you to change settings."
-    9285 "Goes to your home page."
+    9281 "Wechselt zur vorherigen Seite."
+    9282 "Wechselt zur nächsten Seite."
+    9283 "Erlaubt es Ihnen Einstellungen zu ändern."
+    9285 "Wechselt zur Startseite."
 END
 
 STRINGTABLE
 BEGIN
-    9362 "Opens the Favorites folder."
-    9363 "Adds the current page to your Favorites list."
+    9362 "Öffnet den Ordner Favoriten."
+    9363 "Fügt die aktuelle Seite der Favoritenliste hinzu."
 END
 
 STRINGTABLE
 BEGIN
-    9505 "Shows or hides toolbars."
-    9506 "Shows or hides the status bar."
-    9508 "Displays the Standard Buttons toolbar."
-    9509 "Displays the Address bar."
-    9510 "Displays the Quick Links bar."
-    9516 "Locks the sizes and positions of the toolbars."
+    9505 "Zeigt oder versteckt Symbolleisten."
+    9506 "Zeigt oder versteckt die Statusleiste."
+    9508 "Zeigt oder versteckt die Standardschaltfächensymbole."
+    9509 "Zeigt die Adressleiste."
+    9510 "Zeigt die Quick Links Leiste."
+    9516 "Fixiert Größe und Position der Symbolleisten."
 END
 
 STRINGTABLE
 BEGIN
-    9533 "Customizes the toolbar."
+    9533 "Passt die Symbolleiste an."
 END
 
 STRINGTABLE
 BEGIN
-    9552 "Shows or hides an Explorer bar."
-    9553 "Shows the Search bar."
-    9554 "Shows the Favorites bar."
-    9555 "Shows the History bar."
-    9557 "Shows the Folders bar."
-    9559 "Shows the Media Bar."
+    9552 "Zeigt oder versteckt die Explorer-Leiste."
+    9553 "Zeigt die Suchleiste."
+    9554 "Zeigt die Favoritenleiste."
+    9555 "Zeigt die Verlaufsleiste."
+    9557 "Zeigt die Ordnerleiste."
+    9559 "Zeigt die Medienleiste."
 END
 
 STRINGTABLE
 BEGIN
     IDS_SMALLICONS "Kleine Symbole"
     IDS_LARGEICONS "Große Symbole"
-    IDS_SHOWTEXTLABELS "Show text labels"
+    IDS_SHOWTEXTLABELS "Symboltitel anzeigen"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS "No text labels"
-    IDS_SELECTIVETEXTONRIGHT "Selective text on right"
+    IDS_NOTEXTLABELS "Keine Symboltitel"
+    IDS_SELECTIVETEXTONRIGHT "Symboltitel rechts"
 END
 
 STRINGTABLE
