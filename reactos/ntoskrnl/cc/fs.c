@@ -22,7 +22,7 @@
 extern KGUARDED_MUTEX ViewLock;
 extern ULONG DirtyPageCount;
 
-NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
+NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -52,7 +52,7 @@ CcGetFileObjectFromBcb (
     IN PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
-    return iBcb->CacheSegment->Bcb->FileObject;
+    return iBcb->Vacb->Bcb->FileObject;
 }
 
 /*
@@ -130,7 +130,7 @@ CcSetFileSizes (
     KIRQL oldirql;
     PBCB Bcb;
     PLIST_ENTRY current_entry;
-    PCACHE_SEGMENT current;
+    PROS_VACB current;
     LIST_ENTRY FreeListHead;
     NTSTATUS Status;
 
@@ -156,30 +156,30 @@ CcSetFileSizes (
         KeAcquireGuardedMutex(&ViewLock);
         KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
 
-        current_entry = Bcb->BcbSegmentListHead.Flink;
-        while (current_entry != &Bcb->BcbSegmentListHead)
+        current_entry = Bcb->BcbVacbListHead.Flink;
+        while (current_entry != &Bcb->BcbVacbListHead)
         {
             current = CONTAINING_RECORD(current_entry,
-                                        CACHE_SEGMENT,
-                                        BcbSegmentListEntry);
+                                        ROS_VACB,
+                                        BcbVacbListEntry);
             current_entry = current_entry->Flink;
             if (current->FileOffset >= FileSizes->AllocationSize.QuadPart)
             {
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {
-                    RemoveEntryList(&current->BcbSegmentListEntry);
-                    RemoveEntryList(&current->CacheSegmentListEntry);
-                    RemoveEntryList(&current->CacheSegmentLRUListEntry);
+                    RemoveEntryList(&current->BcbVacbListEntry);
+                    RemoveEntryList(&current->VacbListEntry);
+                    RemoveEntryList(&current->VacbLruListEntry);
                     if (current->Dirty)
                     {
-                        RemoveEntryList(&current->DirtySegmentListEntry);
+                        RemoveEntryList(&current->DirtyVacbListEntry);
                         DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                     }
-                    InsertHeadList(&FreeListHead, &current->BcbSegmentListEntry);
+                    InsertHeadList(&FreeListHead, &current->BcbVacbListEntry);
                 }
                 else
                 {
-                    DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
+                    DPRINT1("Someone has referenced a VACB behind the new size.\n");
                     KeBugCheck(CACHE_MANAGER);
                 }
             }
@@ -193,12 +193,12 @@ CcSetFileSizes (
         current_entry = FreeListHead.Flink;
         while(current_entry != &FreeListHead)
         {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            current = CONTAINING_RECORD(current_entry, ROS_VACB, BcbVacbListEntry);
             current_entry = current_entry->Flink;
-            Status = CcRosInternalFreeCacheSegment(current);
+            Status = CcRosInternalFreeVacb(current);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n", Status);
+                DPRINT1("CcRosInternalFreeVacb failed, status = %x\n", Status);
                 KeBugCheck(CACHE_MANAGER);
             }
         }

@@ -35,7 +35,7 @@ CcMapData (
     ULONG ReadOffset;
     BOOLEAN Valid;
     PBCB Bcb;
-    PCACHE_SEGMENT CacheSeg;
+    PROS_VACB Vacb;
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
     ULONG ROffset;
@@ -63,11 +63,11 @@ CcMapData (
     }
 
     ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
-    Status = CcRosRequestCacheSegment(Bcb,
-                                      ROffset,
-                                      pBuffer,
-                                      &Valid,
-                                      &CacheSeg);
+    Status = CcRosRequestVacb(Bcb,
+                              ROffset,
+                              pBuffer,
+                              &Valid,
+                              &Vacb);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -77,13 +77,13 @@ CcMapData (
     {
         if (!(Flags & MAP_WAIT))
         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
             return FALSE;
         }
 
-        if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
+        if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
         {
-            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+            CcRosReleaseVacb(Bcb, Vacb, FALSE, FALSE, FALSE);
             return FALSE;
         }
     }
@@ -92,7 +92,7 @@ CcMapData (
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
+        CcRosReleaseVacb(Bcb, Vacb, TRUE, FALSE, FALSE);
         return FALSE;
     }
 
@@ -101,7 +101,7 @@ CcMapData (
     iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
     iBcb->PFCB.MappedLength = Length;
     iBcb->PFCB.MappedFileOffset = *FileOffset;
-    iBcb->CacheSegment = CacheSeg;
+    iBcb->Vacb = Vacb;
     iBcb->Dirty = FALSE;
     iBcb->RefCount = 1;
     *pBcb = (PVOID)iBcb;
@@ -165,7 +165,7 @@ CcPreparePinWrite (
     /*
      * FIXME: This is function is similar to CcPinRead, but doesn't
      * read the data if they're not present. Instead it should just
-     * prepare the cache segments and zero them out if Zero == TRUE.
+     * prepare the VACBs and zero them out if Zero == TRUE.
      *
      * For now calling CcPinRead is better than returning error or
      * just having UNIMPLEMENTED here.
@@ -195,11 +195,11 @@ CcUnpinData (
 {
     PINTERNAL_BCB iBcb = Bcb;
 
-    CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb,
-                             iBcb->CacheSegment,
-                             TRUE,
-                             iBcb->Dirty,
-                             FALSE);
+    CcRosReleaseVacb(iBcb->Vacb->Bcb,
+                     iBcb->Vacb,
+                     TRUE,
+                     iBcb->Dirty,
+                     FALSE);
     if (--iBcb->RefCount == 0)
     {
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
@@ -248,20 +248,20 @@ CcUnpinRepinnedBcb (
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            KeWaitForSingleObject(&iBcb->CacheSegment->Mutex,
+            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
                                   Executive,
                                   KernelMode,
                                   FALSE,
                                   NULL);
-            if (iBcb->CacheSegment->Dirty)
+            if (iBcb->Vacb->Dirty)
             {
-                IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
+                IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
             }
             else
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->CacheSegment->Mutex, FALSE);
+            KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
         }
         else
         {
