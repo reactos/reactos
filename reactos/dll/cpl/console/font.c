@@ -41,7 +41,7 @@ FontProc(HWND hwndDlg,
             }
             else if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
             {
-                PaintText(drawItem, pConInfo);
+                PaintText(drawItem, pConInfo, Screen);
             }
             return TRUE;
         }
