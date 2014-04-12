@@ -48,7 +48,7 @@ TestVolumeInfo(
     ok_eq_ulong(VolumeInfo.VolumeLabelLength, 18);
     ok_eq_size(RtlCompareMemory(VolumeInfo.VolumeLabel, L"NamedPipe", 18), 18);
     ok_eq_wchar(VolumeInfo.VolumeLabel[9], 0xFFFF);
-    ok_eq_ulong(IoStatusBlock.Information, 36);
+    ok_eq_ulong(IoStatusBlock.Information, (FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + 9 * sizeof(WCHAR)));
 
     RtlFillMemory(&VolumeInfo, sizeof(VolumeInfo), 0xFF);
     Status = ZwQueryVolumeInformationFile(ServerHandle,
@@ -65,7 +65,7 @@ TestVolumeInfo(
     ok_eq_ulong(VolumeInfo.VolumeLabelLength, 18);
     ok_eq_size(RtlCompareMemory(VolumeInfo.VolumeLabel, L"NamedP", 10), 10);
     ok_eq_wchar(VolumeInfo.VolumeLabel[5], 0xFFFF);
-    ok_eq_ulong(IoStatusBlock.Information, 28);
+    ok_eq_ulong(IoStatusBlock.Information, (FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + 5 * sizeof(WCHAR)));
 
     RtlFillMemory(&FileFsSizeInfo, sizeof(FileFsSizeInfo), 0xFF);
     Status = ZwQueryVolumeInformationFile(ServerHandle,
