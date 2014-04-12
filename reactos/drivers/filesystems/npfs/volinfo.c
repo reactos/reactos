@@ -25,7 +25,7 @@ NpQueryFsVolumeInfo(IN PVOID Buffer,
     USHORT NameLength;
     TRACE("Entered\n");
 
-    *Length -= sizeof(*InfoBuffer);
+    *Length -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel);
 
     InfoBuffer->VolumeCreationTime.LowPart = 0;
     InfoBuffer->VolumeCreationTime.HighPart = 0;
@@ -77,23 +77,15 @@ NpQueryFsDeviceInfo(IN PVOID Buffer,
                     IN OUT PULONG Length)
 {
     PFILE_FS_DEVICE_INFORMATION InfoBuffer = Buffer;
-    NTSTATUS Status;
     TRACE("Entered\n");
 
-    if (*Length >= sizeof(*InfoBuffer))
-    {
-        InfoBuffer->DeviceType = 0;
-        InfoBuffer->Characteristics = 0;
-        InfoBuffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
-        *Length -= sizeof(*InfoBuffer);
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        Status = STATUS_BUFFER_OVERFLOW;
-    }
-    TRACE("Leaving, Status = %lx\n", Status);
-    return Status;
+    InfoBuffer->DeviceType = 0;
+    InfoBuffer->Characteristics = 0;
+    InfoBuffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
+    *Length -= sizeof(*InfoBuffer);
+
+    TRACE("Leaving, Status = STATUS_SUCCESS\n");
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
