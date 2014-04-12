@@ -296,22 +296,6 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
             return 0;
         }
 
-        /* Check that we are really going to modify GUI terminal information... */
-        if (pSharedInfo->TerminalInfo.Size != sizeof(GUI_CONSOLE_INFO) ||
-            pSharedInfo->TerminalInfo.TermInfo == 0)
-        {
-            /* ... it's not the case, bail out */
-
-            /* Cleanup */
-            HeapFree(GetProcessHeap(), 0, pConInfo);
-
-            /* Close the section */
-            UnmapViewOfFile(pSharedInfo);
-            CloseHandle(hSection);
-
-            return 0;
-        }
-
         /* Find the console window and whether we set the default parameters */
         pConInfo->hConsoleWindow    = pSharedInfo->hConsoleWindow;
         pConInfo->ShowDefaultParams = pSharedInfo->ShowDefaultParams;
@@ -333,6 +317,13 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
          * Copy the shared data into our allocated buffer, and
          * de-offsetize the address of terminal-specific information.
          */
+
+        /* Check that we are really going to modify GUI terminal information */
+        // FIXME: Do something clever, for example copy the UI-independent part
+        // and init the UI-dependent part to some default values...
+        ASSERT(pSharedInfo->TerminalInfo.Size == sizeof(GUI_CONSOLE_INFO));
+        ASSERT(pSharedInfo->TerminalInfo.TermInfo);
+
         RtlCopyMemory(pConInfo, pSharedInfo, sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
         pConInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pConInfo + (ULONG_PTR)pConInfo->TerminalInfo.TermInfo);
     }
