@@ -1269,32 +1269,31 @@ CcInitView (
     InitializeListHead(&DirtyVacbListHead);
     InitializeListHead(&VacbLruListHead);
     KeInitializeGuardedMutex(&ViewLock);
-    ExInitializeNPagedLookasideList (&iBcbLookasideList,
-                                     NULL,
-                                     NULL,
-                                     0,
-                                     sizeof(INTERNAL_BCB),
-                                     TAG_IBCB,
-                                     20);
-    ExInitializeNPagedLookasideList (&SharedCacheMapLookasideList,
-                                     NULL,
-                                     NULL,
-                                     0,
-                                     sizeof(ROS_SHARED_CACHE_MAP),
-                                     TAG_BCB,
-                                     20);
-    ExInitializeNPagedLookasideList (&VacbLookasideList,
-                                     NULL,
-                                     NULL,
-                                     0,
-                                     sizeof(ROS_VACB),
-                                     TAG_CSEG,
-                                     20);
+    ExInitializeNPagedLookasideList(&iBcbLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(INTERNAL_BCB),
+                                    TAG_BCB,
+                                    20);
+    ExInitializeNPagedLookasideList(&SharedCacheMapLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(ROS_SHARED_CACHE_MAP),
+                                    TAG_SHARED_CACHE_MAP,
+                                    20);
+    ExInitializeNPagedLookasideList(&VacbLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(ROS_VACB),
+                                    TAG_VACB,
+                                    20);
 
     MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
 
     CcInitCacheZeroPage();
-
 }
 
 /* EOF */

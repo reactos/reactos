@@ -1,10 +1,11 @@
 #pragma once
 
-/* formerly located in cc/view.c */
-#define TAG_CC    '  cC'
-#define TAG_CSEG  'GESC'
-#define TAG_BCB   ' BCB'
-#define TAG_IBCB  'BCBi'
+/* Cache Manager Tags */
+#define TAG_CC                  '  cC'
+#define TAG_VACB                'aVcC'
+#define TAG_SHARED_CACHE_MAP    'cScC'
+#define TAG_PRIVATE_CACHE_MAP   'cPcC'
+#define TAG_BCB                 'cBcC'
 
 /* Executive Callbacks */
 #define TAG_CALLBACK_ROUTINE_BLOCK 'brbC'
