@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/colors.c
- * PURPOSE:         displays colors dialog
+ * PURPOSE:         Colors dialog
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
