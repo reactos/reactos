@@ -113,6 +113,8 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
+HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
+BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)

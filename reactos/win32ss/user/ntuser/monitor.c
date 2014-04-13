@@ -467,6 +467,35 @@ cleanup:
     return UserGetMonitorObject(hMonitor);
 }
 
+PMONITOR
+FASTCALL
+UserMonitorFromPoint(
+    IN POINT pt,
+    IN DWORD dwFlags)
+{
+    RECTL rc;
+    HMONITOR hMonitor = NULL;
+
+    /* Check if flags are valid */
+    if (dwFlags != MONITOR_DEFAULTTONULL &&
+        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
+        dwFlags != MONITOR_DEFAULTTONEAREST)
+    {
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return NULL;
+    }
+
+    /* Fill rect (bottom-right exclusive) */
+    rc.left = pt.x;
+    rc.right = pt.x + 1;
+    rc.top = pt.y;
+    rc.bottom = pt.y + 1;
+
+    /* Find intersecting monitor */
+    IntGetMonitorsFromRect(&rc, &hMonitor, NULL, 1, dwFlags);
+
+    return UserGetMonitorObject(hMonitor);
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
