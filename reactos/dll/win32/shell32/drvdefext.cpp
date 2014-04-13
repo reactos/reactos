@@ -339,7 +339,7 @@ CDrvDefExt::GeneralPageProc(
             if (ppsp == NULL)
                 break;
 
-            CDrvDefExt *pDrvDefExt = (CDrvDefExt*)ppsp->lParam;
+            CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(ppsp->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pDrvDefExt);
             pDrvDefExt->InitGeneralPage(hwndDlg);
             return TRUE;
@@ -350,7 +350,7 @@ CDrvDefExt::GeneralPageProc(
 
             if (pDrawItem->CtlID >= 14013 && pDrawItem->CtlID <= 14015)
             {
-                CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                 pDrvDefExt->PaintStaticControls(hwndDlg, pDrawItem);
                 return TRUE;
             }
@@ -361,7 +361,7 @@ CDrvDefExt::GeneralPageProc(
         case WM_COMMAND:
             if (LOWORD(wParam) == 14010) /* Disk Cleanup */
             {
-                CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                 WCHAR wszBuf[256];
                 DWORD cbBuf = sizeof(wszBuf);
 
@@ -395,7 +395,7 @@ CDrvDefExt::GeneralPageProc(
 
                 if (lppsn->hdr.code == PSN_APPLY)
                 {
-                    CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                    CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                     WCHAR wszBuf[256];
 
                     if (GetDlgItemTextW(hwndDlg, 14000, wszBuf, _countof(wszBuf)))
@@ -432,7 +432,7 @@ CDrvDefExt::ExtraPageProc(
         {
             WCHAR wszBuf[MAX_PATH];
             DWORD cbBuf = sizeof(wszBuf);
-            CDrvDefExt *pDrvDefExt = (CDrvDefExt*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
 
             switch(LOWORD(wParam))
             {

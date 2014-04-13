@@ -816,7 +816,7 @@ BOOLEAN CDefView::LV_RenameItem(LPCITEMIDLIST pidlOld, LPCITEMIDLIST pidlNew)
 INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
 {
     LPITEMIDLIST pidl = (LPITEMIDLIST)ptr;
-    CDefView *pThis = (CDefView *)arg;
+    CDefView *pThis = static_cast<CDefView *>(arg);
     /* in a commdlg This works as a filemask*/
     if (pThis->IncludeObject(pidl) == S_OK)
         pThis->LV_AddItem(pidl);

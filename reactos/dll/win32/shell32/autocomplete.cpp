@@ -256,7 +256,7 @@ HRESULT WINAPI CAutoComplete::SetOptions(DWORD dwFlag)
  */
 LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CAutoComplete            *pThis = (CAutoComplete *)GetPropW(hwnd, autocomplete_propertyW);;//GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    CAutoComplete *pThis = static_cast<CAutoComplete *>(GetPropW(hwnd, autocomplete_propertyW));//GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     LPOLESTR strs;
     HRESULT hr;
     WCHAR hwndText[255];
@@ -488,7 +488,7 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
 
 LRESULT APIENTRY CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CAutoComplete *pThis = (CAutoComplete *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    CAutoComplete *pThis = reinterpret_cast<CAutoComplete *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
     WCHAR *msg;
     int sel, len;
 
