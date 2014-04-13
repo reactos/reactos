@@ -110,7 +110,7 @@ GuiConsoleReadUserSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
         }
         else if (!wcscmp(szValueName, L"WindowPosition"))
         {
-            TermInfo->AutoPosition = FALSE;
+            TermInfo->AutoPosition   = FALSE;
             TermInfo->WindowOrigin.x = LOWORD(Value);
             TermInfo->WindowOrigin.y = HIWORD(Value);
             RetVal = TRUE;
@@ -326,7 +326,6 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         GuiInfo->FontWeight = GuiData->GuiInfo.FontWeight;
         GuiInfo->UseRasterFonts = GuiData->GuiInfo.UseRasterFonts;
         GuiInfo->FullScreen = GuiData->GuiInfo.FullScreen;
-        /// GuiInfo->WindowPosition = GuiData->GuiInfo.WindowPosition;
         GuiInfo->AutoPosition = GuiData->GuiInfo.AutoPosition;
         GuiInfo->WindowOrigin = GuiData->GuiInfo.WindowOrigin;
         /* Offsetize */
