@@ -47,5 +47,7 @@ https://bugs.launchpad.net/ubuntu/+bug/200671
 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 
-Monospace flag added to FSEX301.ttf and FSEX301-L2.ttf
+PostScript Monospace flag added, and PANOSE proportion byte fixed to Monospace,
+in FSEX301.ttf and FSEX301-L2.ttf.
+
 Hermès Bélusca-Maïto
