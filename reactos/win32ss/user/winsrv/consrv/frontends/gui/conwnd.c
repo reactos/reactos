@@ -1240,7 +1240,6 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                     Console->Selection.dwSelectionAnchor = cL;
                     Console->dwSelectionCursor           = cR;
 
-                    SetCapture(GuiData->hWindow);
                     Console->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
                     GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
 
