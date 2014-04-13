@@ -115,13 +115,18 @@ START_TEST(SHExplorerParseCmdLine)
         PCWSTR PidlPath;
     } Tests[] =
     {
-        { L"",            -1, CSIDL_MYDOCUMENTS, 0x00000009 },
-        { L"/e",        TRUE, PIDL_IS_UNTOUCHED, 0x00000008 },
-        { L"/n",        TRUE, PIDL_IS_UNTOUCHED, 0x00004001 },
-        { L"/x",        TRUE,      PIDL_IS_NULL, 0x02000000, L"/x" },
-        { L"-e",        TRUE,      PIDL_IS_NULL, 0x02000000, L"-e" },
-        { L"C:\\",      TRUE,      PIDL_IS_PATH, 0x00000200, NULL, L"C:\\" },
-        { L"/e,C:\\",   TRUE,      PIDL_IS_PATH, 0x00000208, NULL, L"C:\\" },
+        { L"",                                                    -1, CSIDL_MYDOCUMENTS, 0x00000009 },
+        { L"/e",                                                TRUE, PIDL_IS_UNTOUCHED, 0x00000008 },
+        { L"/n",                                                TRUE, PIDL_IS_UNTOUCHED, 0x00004001 },
+        { L"/x",                                                TRUE, PIDL_IS_NULL,      0x02000000, L"/x" },
+        { L"-e",                                                TRUE, PIDL_IS_NULL,      0x02000000, L"-e" },
+        { L"C:\\",                                              TRUE, PIDL_IS_PATH,      0x00000200, NULL, L"C:\\" },
+        { L"/e,C:\\",                                           TRUE, PIDL_IS_PATH,      0x00000208, NULL, L"C:\\" },
+        { L"/select,C:\\",                                      TRUE, PIDL_IS_PATH,      0x00000240, NULL, L"C:\\" },
+        { L"/e,::{20d04fe0-3aea-1069-a2d8-08002b30309d}",       TRUE, PIDL_IS_PATH,      0x00000208, NULL, L"::{20d04fe0-3aea-1069-a2d8-08002b30309d}" },
+        { L"::{645ff040-5081-101b-9f08-00aa002f954e}",          TRUE, PIDL_IS_PATH,      0x00000200, NULL, L"::{645ff040-5081-101b-9f08-00aa002f954e}" },
+        { L"/select,::{450d8fba-ad25-11d0-98a8-0800361b1103}",  TRUE, PIDL_IS_PATH,      0x00000240, NULL, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}" },
+        { L"=",                                                 TRUE, PIDL_IS_PATH,      0x00000200, NULL, L"::{20d04fe0-3aea-1069-a2d8-08002b30309d}" },
         /* TODO: needs a lot more testcases */
     };
     const int TestCount = sizeof(Tests) / sizeof(Tests[0]);
