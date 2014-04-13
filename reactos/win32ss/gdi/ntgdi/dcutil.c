@@ -3,40 +3,77 @@
 #define NDEBUG
 #include <debug.h>
 
-int FASTCALL
-GreGetBkMode(HDC hdc)
+BOOL FASTCALL
+GreDPtoLP(HDC hdc, LPPOINT lpPoints, INT nCount)
 {
    PDC dc;
    if (!(dc = DC_LockDc(hdc)))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   IntDPtoLP(dc, lpPoints, nCount);
+   DC_UnlockDc(dc);
+   return TRUE;
+}
+
+BOOL FASTCALL
+GreLPtoDP(HDC hdc, LPPOINT lpPoints, INT nCount)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   IntLPtoDP(dc, lpPoints, nCount);
+   DC_UnlockDc(dc);
+   return TRUE;
+}
+
+int FASTCALL
+GreGetBkMode(HDC hdc)
+{
+   PDC dc;
+   LONG lBkMode;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return CLR_INVALID;
    }
-   return dc->pdcattr->lBkMode;
+   lBkMode = dc->pdcattr->lBkMode;
+   DC_UnlockDc(dc);
+   return lBkMode;
 }
 
 int FASTCALL
 GreGetMapMode(HDC hdc)
 {
    PDC dc;
+   INT iMapMode;
    if (!(dc = DC_LockDc(hdc)))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
       return CLR_INVALID;
    }
-   return dc->pdcattr->iMapMode;
+   iMapMode = dc->pdcattr->iMapMode;
+   DC_UnlockDc(dc);
+   return iMapMode;
 }
 
 COLORREF FASTCALL
 GreGetTextColor(HDC hdc)
 {
    PDC dc;
+   ULONG ulForegroundClr;
    if (!(dc = DC_LockDc(hdc)))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
       return CLR_INVALID;
    }
-   return dc->pdcattr->ulForegroundClr;
+   ulForegroundClr = dc->pdcattr->ulForegroundClr;
+   DC_UnlockDc(dc);
+   return ulForegroundClr;
 }
 
 COLORREF FASTCALL
@@ -153,6 +190,7 @@ IntSetDCBrushColor(HDC hdc, COLORREF crColor)
          dc->pdcattr->crBrushClr = crColor;
       }
    }
+   DC_UnlockDc(dc);
    return OldColor;
 }
 
@@ -175,7 +213,7 @@ IntSetDCPenColor(HDC hdc, COLORREF crColor)
       dc->pdcattr->ulDirty_ |= DIRTY_LINE;
       dc->pdcattr->crPenClr = crColor;
    }
-
+   DC_UnlockDc(dc);
    return OldColor;
 }
 
@@ -199,6 +237,7 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
 
        pdcattr->jStretchBltMode = iStretchMode;
     }
+    DC_UnlockDc(pdc);
     return oSMode;
 }
 
