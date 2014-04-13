@@ -16,6 +16,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "guiterm.h"
+
 /* FUNCTIONS ******************************************************************/
 
 COLORREF RGBFromAttrib2(PCONSOLE Console, WORD Attribute)

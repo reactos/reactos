@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "guiterm.h"
+#include "guisettings.h"
+
 VOID GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 VOID SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
 

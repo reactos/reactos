@@ -22,6 +22,7 @@ list(APPEND CONSRV_SOURCE
     consrv/condrv/graphics.c
     consrv/condrv/text.c
     consrv/frontends/input.c
+    consrv/frontends/gui/conwnd.c
     consrv/frontends/gui/fullscreen.c
     consrv/frontends/gui/guiterm.c
     consrv/frontends/gui/guisettings.c
