@@ -26,6 +26,7 @@ GetPrivilege()
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, 0);
+    CloseHandle(hToken);
 }
 
 
@@ -36,8 +37,6 @@ Test_TimeAdjustment(void)
     SYSTEM_SET_TIME_ADJUST_INFORMATION SetTimeInfo;
     NTSTATUS Status;
     ULONG ReturnLength;
-
-    GetPrivilege();
 
     SetTimeInfo.TimeAdjustment = 0;
     SetTimeInfo.Enable = 0;
