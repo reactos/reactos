@@ -311,7 +311,7 @@ static const BOOL g_ObjectHeapTypeShared[TYPE_CTYPES] =
 {
     FALSE, /* TYPE_FREE (not used) */
     FALSE, /* TYPE_WINDOW */
-    TRUE,  /* TYPE_MENU  FALSE */
+    FALSE, /* TYPE_MENU */
     TRUE,  /* TYPE_CURSOR */
     TRUE,  /* TYPE_SETWINDOWPOS */
     FALSE, /* TYPE_HOOK */
@@ -324,7 +324,7 @@ static const BOOL g_ObjectHeapTypeShared[TYPE_CTYPES] =
     TRUE,  /* TYPE_MONITOR */
     FALSE, /* TYPE_KBDLAYOUT */
     FALSE, /* TYPE_KBDFILE */
-    TRUE,   /* TYPE_WINEVENTHOOK */
+    TRUE,  /* TYPE_WINEVENTHOOK */
     FALSE, /* TYPE_TIMER */
     FALSE, /* TYPE_INPUTCONTEXT */
     FALSE, /* TYPE_HIDDATA */
