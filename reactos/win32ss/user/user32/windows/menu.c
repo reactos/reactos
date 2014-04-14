@@ -1147,9 +1147,8 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
         if ( (Wnd->style & WS_MINIMIZE))
         {
           UserGetInsideRectNC(Wnd, &rect);
-          UserDrawSysMenuButton(hWnd, hdc, &rect,
-                                lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
-	    }
+          UserDrawSysMenuButton(hWnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
+	}
         return;
     }
 
@@ -1816,6 +1815,10 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
   {
      if (!pWnd->fnid)
      {
+        if (Message != WM_NCCREATE)
+        {
+           return DefWindowProcA(Wnd, Message, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
      else
@@ -4264,9 +4267,16 @@ GetMenuInfo(HMENU hmenu,
 {
   ROSMENUINFO mi;
   BOOL res = FALSE;
+  PVOID pMenu;
 
-  if(!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
-    return FALSE;
+  if (!(pMenu = ValidateHandle(hmenu, TYPE_MENU)))
+     return FALSE;
+
+  if (!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
 
   RtlZeroMemory(&mi, sizeof(MENUINFO));
   mi.cbSize = sizeof(MENUINFO);
