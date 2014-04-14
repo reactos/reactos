@@ -4269,14 +4269,14 @@ GetMenuInfo(HMENU hmenu,
   BOOL res = FALSE;
   PVOID pMenu;
 
-  if (!(pMenu = ValidateHandle(hmenu, TYPE_MENU)))
-     return FALSE;
-
   if (!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
   {
      SetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
+
+  if (!(pMenu = ValidateHandle(hmenu, TYPE_MENU)))
+     return FALSE;
 
   RtlZeroMemory(&mi, sizeof(MENUINFO));
   mi.cbSize = sizeof(MENUINFO);
