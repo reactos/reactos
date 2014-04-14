@@ -2918,7 +2918,7 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
                 default_right_margin = tm.tmAveCharWidth / 2;
                 min_size = calc_min_set_margin_size(dc, default_left_margin, default_right_margin);
                 GetClientRect(es->hwndSelf, &rc);
-                if(rc.right - rc.left < min_size) {
+                if (!IsRectEmpty(&rc) && (rc.right - rc.left < min_size)) {
                     default_left_margin = es->left_margin;
                     default_right_margin = es->right_margin;
                 }
@@ -3252,17 +3252,14 @@ static LRESULT EDIT_WM_Char(EDITSTATE *es, WCHAR c)
     return 1;
 }
 
-#if 0 // Removed see Revision 43925 comments.
+
 /*********************************************************************
  *
- *	WM_COMMAND
+ *	EDIT_ContextMenuCommand
  *
  */
-static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
+static void EDIT_ContextMenuCommand(EDITSTATE *es, UINT id)
 {
-	if (code || control)
-		return;
-
 	switch (id) {
 		case EM_UNDO:
                         SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
@@ -3280,15 +3277,13 @@ static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
                         SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
 			break;
 		case EM_SETSEL:
-			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
-			EDIT_EM_ScrollCaret(es);
+			SendMessageW(es->hwndSelf, EM_SETSEL, 0, -1);
 			break;
 		default:
 			ERR("unknown menu item, please report\n");
 			break;
 	}
 }
-#endif
 
 
 /*********************************************************************
@@ -3313,8 +3308,8 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	HMENU popup = GetSubMenu(menu, 0);
 	UINT start = es->selection_start;
 	UINT end = es->selection_end;
+	UINT cmd;
 
-	BOOL selectedItem; // reactos r40667
 	ORDER_UINT(start, end);
 
 	/* undo */
@@ -3345,34 +3340,12 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	if (!(es->flags & EF_FOCUSED))
             SetFocus(es->hwndSelf);
 
-#ifdef __REACTOS__ // r40667
-	selectedItem = TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, 0, es->hwndSelf, NULL);
-        // Added see Revision 43925 comments.
-	switch (selectedItem) {
-		case EM_UNDO:
-                        SendMessageW(es->hwndSelf, WM_UNDO, 0, 0);
-			break;
-		case WM_CUT:
-                        SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
-			break;
-		case WM_COPY:
-                        SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
-			break;
-		case WM_PASTE:
-                        SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
-			break;
-		case WM_CLEAR:
-                        SendMessageW(es->hwndSelf, WM_CLEAR, 0, 0);
-			break;
-		case EM_SETSEL:
-			EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
-			EDIT_EM_ScrollCaret(es);
-			break;
-		default:
-			ERR("unknown menu item, please report\n");
-			break;
-	}
-#endif
+	cmd = TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY,
+			     x, y, 0, es->hwndSelf, NULL);
+
+	if (cmd)
+	    EDIT_ContextMenuCommand(es, cmd);
+
 	DestroyMenu(menu);
 }
 
@@ -5049,11 +5022,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_CLEAR:
 		EDIT_WM_Clear(es);
 		break;
-#if 0 // Removed see Revision 43925 comments.
-	case WM_COMMAND:
-		EDIT_WM_Command(es, HIWORD(wParam), LOWORD(wParam), (HWND)lParam);
-		break;
-#endif
+
         case WM_CONTEXTMENU:
 		EDIT_WM_ContextMenu(es, (short)LOWORD(lParam), (short)HIWORD(lParam));
 		break;
