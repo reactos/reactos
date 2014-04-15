@@ -809,16 +809,16 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
         return hr;
 
     // Select the second toolbar based on the first
-    if (tb == m_SFToolbar)
+    if (tb == m_SFToolbar && m_staticToolbar)
         tb = m_staticToolbar;
-    else
+    else if (m_SFToolbar)
         tb = m_SFToolbar;
 
     if (!tb)
         return hr;
 
     // Ask the second toolbar to change
-    return tb->KeyboardItemChange(change == VK_DOWN ? VK_END : VK_HOME);
+    return tb->KeyboardItemChange(change == VK_DOWN ? VK_HOME : VK_END);
 }
 
 HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)

@@ -913,7 +913,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                 if (prev != btn.idCommand)
                 {
                     TRACE("Setting Hot item to %d\n", index);
-                    m_menuBand->_ChangeHotItem(this, index, 0);
+                    m_menuBand->_ChangeHotItem(this, btn.idCommand, 0);
                 }
                 return S_OK;
             }
@@ -927,6 +927,8 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                 index++;
             }
         }
+
+        return S_FALSE;
     }
 
     if (prev != -1)
