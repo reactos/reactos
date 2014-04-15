@@ -97,9 +97,18 @@ IntSetTebWndCallback (HWND * hWnd, PWND * pWnd, PVOID * pActCtx)
   *pWnd = ClientInfo->CallbackWnd.pWnd;
   *pActCtx = ClientInfo->CallbackWnd.pActCtx;
 
-  ClientInfo->CallbackWnd.hWnd  = hWndS;
-  ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
-  ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
+  if (Window)
+  {
+     ClientInfo->CallbackWnd.hWnd = hWndS;
+     ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
+     ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
+  }
+  else //// What if Dispatching WM_SYS/TIMER with NULL window? Fix AbiWord Crash when sizing.
+  {
+     ClientInfo->CallbackWnd.hWnd = hWndS;
+     ClientInfo->CallbackWnd.pWnd = Window;
+     ClientInfo->CallbackWnd.pActCtx = 0;
+  }
 }
 
 static VOID
