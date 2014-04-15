@@ -28,6 +28,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 extern "C"
 HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
 {
+#if USE_SYSTEM_MENUSITE
+    hr = CoCreateInstance(CLSID_MenuBandSite,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        riid, ppv);
+#else
     *ppv = NULL;
 
     CMenuSite * site = new CComObject<CMenuSite>();
@@ -41,6 +47,7 @@ HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
         site->Release();
 
     return hr;
+#endif
 }
 
 CMenuSite::CMenuSite() :

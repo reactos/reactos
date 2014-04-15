@@ -35,6 +35,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 extern "C"
 HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 {
+#if USE_SYSTEM_MENUBAND
+    hr = CoCreateInstance(CLSID_MenuBand,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        riid, ppv);
+#else
     *ppv = NULL;
 
     CMenuBand * site = new CComObject<CMenuBand>();
@@ -48,6 +54,7 @@ HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
         site->Release();
 
     return hr;
+#endif
 }
 
 CMenuBand::CMenuBand() :
@@ -687,18 +694,11 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
 HRESULT CMenuBand::_TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 {
     TPMPARAMS params = { sizeof(TPMPARAMS), rcExclude };
-
-    UINT flags = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
+    UINT      flags  = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
+    HWND      hwnd   = m_menuOwner ? m_menuOwner : m_topLevelWindow;
 
     m_focusManager->PushTrackedPopup(popup);
-    if (m_menuOwner)
-    {
-        ::TrackPopupMenuEx(popup, flags, x, y, m_menuOwner, &params);
-    }
-    else
-    {
-        ::TrackPopupMenuEx(popup, flags, x, y, m_topLevelWindow, &params);
-    }
+    ::TrackPopupMenuEx(popup, flags, x, y, hwnd, &params);
     m_focusManager->PopTrackedPopup(popup);
 
     _DisableMouseTrack(FALSE);
@@ -715,27 +715,34 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
     if (popup == NULL)
         return E_FAIL;
 
+    DbgPrint("Before Query\n");
     hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hr))
     {
+        DbgPrint("Query failed\n");
         DestroyMenu(popup);
         return hr;
     }
 
     HWND hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
 
-    m_focusManager->PushTrackedPopup(popup);
-    uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, m_menuOwner, NULL);
-    m_focusManager->PopTrackedPopup(popup);
+    DbgPrint("Before Tracking\n");
+    uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, hwnd, NULL);
 
-    if (uCommand == 0)
-        return S_FALSE;
-
-    CMINVOKECOMMANDINFO cmi = { 0 };
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
-    cmi.hwnd = hwnd;
-    hr = contextMenu->InvokeCommand(&cmi);
+    if (uCommand != 0)
+    {
+        DbgPrint("Before InvokeCommand\n");
+        CMINVOKECOMMANDINFO cmi = { 0 };
+        cmi.cbSize = sizeof(cmi);
+        cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
+        cmi.hwnd = hwnd;
+        hr = contextMenu->InvokeCommand(&cmi);
+    }
+    else
+    {
+        DbgPrint("TrackPopupMenu failed. Code=%d, LastError=%d\n", uCommand, GetLastError());
+        hr = S_FALSE;
+    }
 
     DestroyMenu(popup);
     return hr;
@@ -787,7 +794,7 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
     if (!tb)
     {
         // If no hot item was selected
-        // choose the first toolbar (prefer shell-folder, which will be positionedat the top)
+        // choose the first toolbar (prefer shell-folder, which will be positioned at the top)
 
         if (m_SFToolbar)
             tb = m_SFToolbar;
@@ -895,26 +902,11 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
     IDeskBar* pDeskBar;
 
     // Create the necessary objects
-
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

@@ -148,14 +148,7 @@ private:
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
         }
 
-#if USE_SYSTEM_MENUBAND
-        hr = CoCreateInstance(CLSID_MenuBand,
-            NULL,
-            CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
         hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -291,36 +284,15 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     IShellFolder *psfStartMenuAll;
 #endif
 
-#if USE_SYSTEM_MENUBAND
-    hr = CoCreateInstance(CLSID_MenuBand,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

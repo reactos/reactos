@@ -539,7 +539,7 @@ HRESULT CMenuToolbarBase::OnGetInfoTip(NMTBGETINFOTIP * tip)
 
     GetDataFromId(iItem, &index, &dwData);
 
-    return GetInfoTip(tip->pszText, tip->cchTextMax, iItem, index, dwData);
+    return InternalGetTooltip(iItem, index, dwData, tip->pszText, tip->cchTextMax);
 }
 
 HRESULT CMenuToolbarBase::OnPopupTimer(DWORD timerId)
@@ -784,13 +784,14 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, HMENU menu)
     return S_OK;
 }
 
-HRESULT CMenuToolbarBase::DoContextMenu(IContextMenu* contextMenu)
+HRESULT CMenuToolbarBase::TrackContextMenu(IContextMenu* contextMenu, POINT pt)
 {
-    // Calculate the context menu position
-    DWORD dwPos = GetMessagePos();
-    POINT pt = { GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos) };
+    // Cancel submenus
+    m_menuBand->_KillPopupTimers();
+    if (m_popupBar)
+        m_menuBand->_CancelCurrentPopup();
 
-    // Display the submenu
+    // Display the context menu
     return m_menuBand->_TrackContextMenu(contextMenu, pt.x, pt.y);
 }
 
@@ -827,7 +828,24 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return OnCommandInternal(wParam, lParam, theResult);
+    INT iItem = wParam;
+    INT index;
+    DWORD_PTR data;
+
+    GetDataFromId(iItem, &index, &data);
+
+    return InternalExecuteItem(iItem, index, data);
+}
+
+HRESULT CMenuToolbarBase::OnContextMenu(NMMOUSE * rclick)
+{
+    INT iItem = rclick->dwItemSpec;
+    INT index = rclick->dwHitInfo;
+    DWORD_PTR data = rclick->dwItemData;
+
+    GetDataFromId(iItem, &index, &data);
+
+    return InternalContextMenu(iItem, index, data, rclick->pt);
 }
 
 HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
@@ -839,14 +857,6 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
     {
         int count = SendMessage(m_hwndToolbar, TB_BUTTONCOUNT, 0, 0);
 
-        if (m_hotItem >= 0)
-        {
-            TBBUTTONINFO info = { 0 };
-            info.cbSize = sizeof(TBBUTTONINFO);
-            info.dwMask = 0;
-            index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, m_hotItem, reinterpret_cast<LPARAM>(&info));
-        }
-
         if (dwSelectType == VK_HOME)
         {
             index = 0;
@@ -857,26 +867,37 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
             index = count - 1;
             dwSelectType = VK_UP;
         }
-        else if (index < 0)
-        {
-            if (dwSelectType == VK_UP)
-            {
-                index = count - 1;
-            }
-            else if (dwSelectType == VK_DOWN)
-            {
-                index = 0;
-            }
-        }
         else
         {
-            if (dwSelectType == VK_UP)
+            if (m_hotItem >= 0)
             {
-                index--;
+                TBBUTTONINFO info = { 0 };
+                info.cbSize = sizeof(TBBUTTONINFO);
+                info.dwMask = 0;
+                index = SendMessage(m_hwndToolbar, TB_GETBUTTONINFO, m_hotItem, reinterpret_cast<LPARAM>(&info));
             }
-            else if (dwSelectType == VK_DOWN)
+
+            if (index < 0)
             {
-                index++;
+                if (dwSelectType == VK_UP)
+                {
+                    index = count - 1;
+                }
+                else if (dwSelectType == VK_DOWN)
+                {
+                    index = 0;
+                }
+            }
+            else
+            {
+                if (dwSelectType == VK_UP)
+                {
+                    index--;
+                }
+                else if (dwSelectType == VK_DOWN)
+                {
+                    index++;
+                }
             }
         }
 
@@ -977,6 +998,15 @@ HRESULT CMenuToolbarBase::AddPlaceholder()
     if (!SendMessageW(m_hwndToolbar, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb)))
         return HRESULT_FROM_WIN32(GetLastError());
 
+    return S_OK;
+}
+
+HRESULT CMenuToolbarBase::ClearToolbar()
+{
+    while (SendMessage(m_hwndToolbar, TB_DELETEBUTTON, 0, 0))
+    {
+        // empty;
+    }
     return S_OK;
 }
 
@@ -1086,10 +1116,7 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 
     if (clearFirst)
     {
-        while (SendMessage(m_hwndToolbar, TB_DELETEBUTTON, 0, 0))
-        {
-            // empty;
-        }
+        ClearToolbar();
     }
 
     int count = 0;
@@ -1141,7 +1168,7 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
     return S_OK;
 }
 
-HRESULT CMenuStaticToolbar::GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuStaticToolbar::InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax)
 {
     //SMINFO * info = reinterpret_cast<SMINFO*>(dwData);
     UNIMPLEMENTED;
@@ -1154,19 +1181,20 @@ HRESULT CMenuStaticToolbar::OnDeletingButton(const NMTOOLBAR * tb)
     return S_OK;
 }
 
-HRESULT CMenuStaticToolbar::OnContextMenu(NMMOUSE * rclick)
+HRESULT CMenuStaticToolbar::InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt)
 {
     CComPtr<IContextMenu> contextMenu;
-    HRESULT hr = m_menuBand->_CallCBWithItemId(rclick->dwItemSpec, SMC_GETOBJECT, reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
+    HRESULT hr = m_menuBand->_CallCBWithItemId(iItem, SMC_GETOBJECT, 
+        reinterpret_cast<WPARAM>(&IID_IContextMenu), reinterpret_cast<LPARAM>(&contextMenu));
     if (hr != S_OK)
         return hr;
 
-    return DoContextMenu(contextMenu);
+    return TrackContextMenu(contextMenu, pt);
 }
 
-HRESULT CMenuStaticToolbar::OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT CMenuStaticToolbar::InternalExecuteItem(INT iItem, INT index, DWORD_PTR data)
 {
-    return m_menuBand->_CallCBWithItemId(wParam, SMC_EXEC, 0, 0);
+    return m_menuBand->_CallCBWithItemId(iItem, SMC_EXEC, 0, 0);
 }
 
 HRESULT CMenuStaticToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData)
@@ -1214,7 +1242,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     PWSTR MenuString;
 
     IEnumIDList * eidl;
-    m_shellFolder->EnumObjects(m_hwndToolbar, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &eidl);
+    m_shellFolder->EnumObjects(GetToolbar(), SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &eidl);
 
     LPITEMIDLIST item = static_cast<LPITEMIDLIST>(CoTaskMemAlloc(sizeof(ITEMIDLIST)));
     ULONG fetched;
@@ -1259,7 +1287,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     return hr;
 }
 
-HRESULT CMenuSFToolbar::GetInfoTip(LPWSTR pszText, INT cchTextMax, INT iItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuSFToolbar::InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax)
 {
     //ITEMIDLIST * pidl = reinterpret_cast<LPITEMIDLIST>(dwData);
     UNIMPLEMENTED;
@@ -1312,25 +1340,27 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
     return hr;
 }
 
-HRESULT CMenuSFToolbar::OnContextMenu(NMMOUSE * rclick)
+HRESULT CMenuSFToolbar::InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt)
 {
     HRESULT hr;
-    CComPtr<IContextMenu> contextMenu;
-    LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(rclick->dwItemData);
+    CComPtr<IContextMenu> contextMenu = NULL;
+    LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(dwData);
 
-    hr = m_shellFolder->GetUIObjectOf(m_hwndToolbar, 1, &pidl, IID_IContextMenu, NULL, reinterpret_cast<VOID **>(&contextMenu));
-    if (hr != S_OK)
+#define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, reinterpret_cast<void**>((static_cast<Itype**>(ppType)))
+
+    hr = m_shellFolder->GetUIObjectOf(GetToolbar(), 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &contextMenu));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
         return hr;
+    }
 
-    return DoContextMenu(contextMenu);
+    hr = TrackContextMenu(contextMenu, pt);
+
+    return hr;
 }
 
-HRESULT CMenuSFToolbar::OnCommandInternal(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT CMenuSFToolbar::InternalExecuteItem(INT iItem, INT index, DWORD_PTR data)
 {
-    DWORD_PTR data;
-
-    GetDataFromId(wParam, NULL, &data);
-
     return m_menuBand->_CallCBWithItemPidl(reinterpret_cast<LPITEMIDLIST>(data), SMC_SFEXEC, 0, 0);
 }
 
@@ -1348,14 +1378,7 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
     if (!pidl)
         return E_FAIL;
 
-#if USE_SYSTEM_MENUBAND
-    hr = CoCreateInstance(CLSID_MenuBand,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IShellMenu, &shellMenu));
-#else
     hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
-#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
