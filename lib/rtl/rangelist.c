@@ -165,7 +165,7 @@ RtlCopyRangeList(OUT PRTL_RANGE_LIST CopyRangeList,
 
         RtlCopyMemory(&NewEntry->Range,
                       &Current->Range,
-                      sizeof(RTL_RANGE_ENTRY));
+                      sizeof(RTL_RANGE));
 
         InsertTailList(&CopyRangeList->ListHead,
                        &NewEntry->Entry);

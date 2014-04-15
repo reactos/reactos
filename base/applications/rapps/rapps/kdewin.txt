@@ -36,7 +36,7 @@ Size = 2,16 Mo
 
 [Section.041f]
 Name = K Masaüstü Ortamı
-Description = Pencereler için KDE.
+Description = Windows için KDE.
 Size = 2,16 MB
 
 [Section.0422]

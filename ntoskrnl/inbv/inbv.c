@@ -39,7 +39,7 @@ typedef struct tagRGBQUAD
 static RGBQUAD _MainPalette[16];
 
 #define PALETTE_FADE_STEPS  15
-#define PALETTE_FADE_TIME   20 * 10000 /* 20ms */
+#define PALETTE_FADE_TIME   20 * 1000 /* 20ms */
 
 /** From bootvid/precomp.h **/
 //
@@ -76,9 +76,6 @@ BootImageFadeIn(VOID)
     LPRGBQUAD Palette = (LPRGBQUAD)(PaletteBitmapBuffer + sizeof(BITMAPINFOHEADER));
 
     ULONG Iteration, Index, ClrUsed;
-    LARGE_INTEGER Interval;
-
-    Interval.QuadPart = -PALETTE_FADE_TIME;
 
     /* Check if we're installed and we own it */
     if ((InbvBootDriverInstalled) &&
@@ -115,14 +112,14 @@ BootImageFadeIn(VOID)
             VidBitBlt(PaletteBitmapBuffer, 0, 0);
 
             /* Wait for a bit. */
-            KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+            KeStallExecutionProcessor(PALETTE_FADE_TIME);
         }
 
         /* Release the lock */
         InbvReleaseLock();
 
         /* Wait for a bit. */
-        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+        KeStallExecutionProcessor(PALETTE_FADE_TIME);
     }
 }
 

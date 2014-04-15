@@ -617,8 +617,6 @@ ByeBye:
             vfatDestroyCCB(Ccb);
         if (DeviceObject)
             IoDeleteDevice(DeviceObject);
-        if (VolumeFcb)
-            vfatDestroyFCB(VolumeFcb);
     }
 
     return Status;

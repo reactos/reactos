@@ -267,17 +267,17 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"HistoryNoDup"))
         {
-            ConsoleInfo->HistoryNoDup = (BOOLEAN)Value;
+            ConsoleInfo->HistoryNoDup = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"QuickEdit"))
         {
-            ConsoleInfo->QuickEdit = (BOOLEAN)Value;
+            ConsoleInfo->QuickEdit = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"InsertMode"))
         {
-            ConsoleInfo->InsertMode = (BOOLEAN)Value;
+            ConsoleInfo->InsertMode = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"ScreenBufferSize"))
@@ -421,7 +421,7 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
 
     memcpy(ConsoleInfo->Colors, s_Colors, sizeof(s_Colors));
 
-    // ConsoleInfo->CodePage;
+    ConsoleInfo->CodePage = 0;
 
     ConsoleInfo->ConsoleTitle[0] = L'\0';
 

@@ -55,10 +55,10 @@ add_library(advapi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c)
 
-set_module_type(advapi32 win32dll UNICODE)
+set_module_type(advapi32 win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})
-add_delay_importlibs(advapi32 rpcrt4)
-add_importlibs(advapi32 secur32 msvcrt kernel32 ntdll)
+add_delay_importlibs(advapi32 secur32)
+add_importlibs(advapi32 rpcrt4 kernel32 ntdll)
 
 add_pch(advapi32 advapi32.h SOURCE)
 

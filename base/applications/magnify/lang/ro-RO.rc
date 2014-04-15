@@ -62,7 +62,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Î&nchide", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Acest instrument este destinat celor cu deficiențe vizuale minore. Pentru rezultate mai bune, folosiți un instrument mai sofisticat.", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "Acest instrument este destinat persoanelor cu deficiențe vizuale minore. Pentru rezultate mai bune, folosiți un instrument mai sofisticat.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "N&u doresc recurența acestui mesaj", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END

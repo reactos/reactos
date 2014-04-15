@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,11 +80,11 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
 
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +93,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -162,7 +162,7 @@ AcpiExCreateAlias (
     {
         /*
          * Dereference an existing alias so that we don't create a chain
-         * of aliases.  With this code, we guarantee that an alias is
+         * of aliases. With this code, we guarantee that an alias is
          * always exactly one level of indirection away from the
          * actual aliased name.
          */
@@ -172,7 +172,7 @@ AcpiExCreateAlias (
     /*
      * For objects that can never change (i.e., the NS node will
      * permanently point to the same object), we can simply attach
-     * the object to the new NS node.  For other objects (such as
+     * the object to the new NS node. For other objects (such as
      * Integers, buffers, etc.), we have to point the Alias node
      * to the original Node.
      */
@@ -186,7 +186,6 @@ AcpiExCreateAlias (
     case ACPI_TYPE_BUFFER:
     case ACPI_TYPE_PACKAGE:
     case ACPI_TYPE_BUFFER_FIELD:
-
     /*
      * These types open a new scope, so we need the NS node in order to access
      * any children.
@@ -196,7 +195,6 @@ AcpiExCreateAlias (
     case ACPI_TYPE_PROCESSOR:
     case ACPI_TYPE_THERMAL:
     case ACPI_TYPE_LOCAL_SCOPE:
-
         /*
          * The new alias has the type ALIAS and points to the original
          * NS node, not the object itself.
@@ -206,7 +204,6 @@ AcpiExCreateAlias (
         break;
 
     case ACPI_TYPE_METHOD:
-
         /*
          * Control method aliases need to be differentiated
          */
@@ -220,7 +217,7 @@ AcpiExCreateAlias (
 
         /*
          * The new alias assumes the type of the target, and it points
-         * to the same object.  The reference count of the object has an
+         * to the same object. The reference count of the object has an
          * additional reference to prevent deletion out from under either the
          * target node or the alias Node
          */
@@ -357,7 +354,7 @@ Cleanup:
  *
  * PARAMETERS:  AmlStart            - Pointer to the region declaration AML
  *              AmlLength           - Max length of the declaration AML
- *              RegionSpace         - SpaceID for the region
+ *              SpaceId             - Address space ID for the region
  *              WalkState           - Current state
  *
  * RETURN:      Status
@@ -370,7 +367,7 @@ ACPI_STATUS
 AcpiExCreateRegion (
     UINT8                   *AmlStart,
     UINT32                  AmlLength,
-    UINT8                   RegionSpace,
+    UINT8                   SpaceId,
     ACPI_WALK_STATE         *WalkState)
 {
     ACPI_STATUS             Status;
@@ -399,16 +396,18 @@ AcpiExCreateRegion (
      * Space ID must be one of the predefined IDs, or in the user-defined
      * range
      */
-    if ((RegionSpace >= ACPI_NUM_PREDEFINED_REGIONS) &&
-        (RegionSpace < ACPI_USER_REGION_BEGIN) &&
-        (RegionSpace != ACPI_ADR_SPACE_DATA_TABLE))
+    if (!AcpiIsValidSpaceId (SpaceId))
     {
-        ACPI_ERROR ((AE_INFO, "Invalid AddressSpace type 0x%X", RegionSpace));
-        return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
+        /*
+         * Print an error message, but continue. We don't want to abort
+         * a table load for this exception. Instead, if the region is
+         * actually used at runtime, abort the executing method.
+         */
+        ACPI_ERROR ((AE_INFO, "Invalid/unknown Address Space ID: 0x%2.2X", SpaceId));
     }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "Region Type - %s (0x%X)\n",
-        AcpiUtGetRegionName (RegionSpace), RegionSpace));
+        AcpiUtGetRegionName (SpaceId), SpaceId));
 
     /* Create the region descriptor */
 
@@ -426,10 +425,18 @@ AcpiExCreateRegion (
     RegionObj2 = ObjDesc->Common.NextObject;
     RegionObj2->Extra.AmlStart = AmlStart;
     RegionObj2->Extra.AmlLength = AmlLength;
+    if (WalkState->ScopeInfo)
+    {
+        RegionObj2->Extra.ScopeNode = WalkState->ScopeInfo->Scope.Node;
+    }
+    else
+    {
+        RegionObj2->Extra.ScopeNode = Node;
+    }
 
     /* Init the region from the operands */
 
-    ObjDesc->Region.SpaceId = RegionSpace;
+    ObjDesc->Region.SpaceId = SpaceId;
     ObjDesc->Region.Address = 0;
     ObjDesc->Region.Length = 0;
     ObjDesc->Region.Node = Node;
@@ -633,5 +640,3 @@ Exit:
     AcpiUtRemoveReference (Operand[1]);
     return_ACPI_STATUS (Status);
 }
-
-

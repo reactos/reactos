@@ -184,7 +184,10 @@ SystemApplet(VOID)
         return 0;
 
     if (!ReadSettings(pGlobalData))
+    {
+        HeapFree(GetProcessHeap(), 0, pGlobalData);
         return 0;
+    }
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);

@@ -73,7 +73,10 @@ RunScript(LPCWSTR filename)
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
         if (InterpretScript(tmp_string) == FALSE)
+        {
+            fclose(script);
             return FALSE;
+        }
     }
 
     /* Close the file */

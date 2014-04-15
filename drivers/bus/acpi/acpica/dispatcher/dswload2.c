@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -308,12 +308,26 @@ AcpiDsLoad2BeginOp (
              */
             ACPI_WARNING ((AE_INFO,
                 "Type override - [%4.4s] had invalid type (%s) "
-                "for Scope operator, changed to type ANY\n",
+                "for Scope operator, changed to type ANY",
                 AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Node->Type)));
 
             Node->Type = ACPI_TYPE_ANY;
             WalkState->ScopeInfo->Common.Value = ACPI_TYPE_ANY;
             break;
+
+        case ACPI_TYPE_METHOD:
+
+            /*
+             * Allow scope change to root during execution of module-level
+             * code. Root is typed METHOD during this time.
+             */
+            if ((Node == AcpiGbl_RootNode) &&
+                (WalkState->ParseFlags & ACPI_PARSE_MODULE_LEVEL))
+            {
+                break;
+            }
+
+            /*lint -fallthrough */
 
         default:
 
@@ -324,7 +338,7 @@ AcpiDsLoad2BeginOp (
                 "Scope operator [%4.4s] (Cannot override)",
                 AcpiUtGetTypeName (Node->Type), AcpiUtGetNodeName (Node)));
 
-            return (AE_AML_OPERAND_TYPE);
+            return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
         }
         break;
 
@@ -554,7 +568,6 @@ AcpiDsLoad2EndOp (
         Status = AcpiDsCreateBufferField (Op, WalkState);
         break;
 
-
      case AML_TYPE_NAMED_FIELD:
         /*
          * If we are executing a method, initialize the field
@@ -583,11 +596,11 @@ AcpiDsLoad2EndOp (
             break;
 
         default:
+
             /* All NAMED_FIELD opcodes must be handled above */
             break;
         }
         break;
-
 
      case AML_TYPE_NAMED_SIMPLE:
 
@@ -619,13 +632,13 @@ AcpiDsLoad2EndOp (
             Status = AcpiExCreateEvent (WalkState);
             break;
 
-
         case AML_ALIAS_OP:
 
             Status = AcpiExCreateAlias (WalkState);
             break;
 
         default:
+
             /* Unknown opcode */
 
             Status = AE_OK;
@@ -683,7 +696,7 @@ AcpiDsLoad2EndOp (
                             RegionSpace, WalkState);
                 if (ACPI_FAILURE (Status))
                 {
-                    return (Status);
+                    return_ACPI_STATUS (Status);
                 }
 
                 AcpiExExitInterpreter ();
@@ -710,12 +723,10 @@ AcpiDsLoad2EndOp (
             }
             break;
 
-
         case AML_NAME_OP:
 
             Status = AcpiDsCreateNode (WalkState, Node, Op);
             break;
-
 
         case AML_METHOD_OP:
             /*
@@ -754,17 +765,16 @@ AcpiDsLoad2EndOp (
 #endif /* ACPI_NO_METHOD_EXECUTION */
 
         default:
+
             /* All NAMED_COMPLEX opcodes must be handled above */
             break;
         }
         break;
 
-
     case AML_CLASS_INTERNAL:
 
         /* case AML_INT_NAMEPATH_OP: */
         break;
-
 
     case AML_CLASS_METHOD_CALL:
 
@@ -805,6 +815,7 @@ AcpiDsLoad2EndOp (
 
 
     default:
+
         break;
     }
 
@@ -816,4 +827,3 @@ Cleanup:
     WalkState->NumOperands = 0;
     return_ACPI_STATUS (Status);
 }
-

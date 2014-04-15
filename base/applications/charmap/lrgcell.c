@@ -48,8 +48,9 @@ SetLrgFont(PMAP infoPtr)
                       hdc);
 
             lf.lfCharSet =  DEFAULT_CHARSET;
-            wcscpy(lf.lfFaceName,
-                   lpFontName);
+            wcsncpy(lf.lfFaceName,
+                    lpFontName,
+                    sizeof(lf.lfFaceName) / sizeof(lf.lfFaceName[0]));
 
             hFont = CreateFontIndirectW(&lf);
 

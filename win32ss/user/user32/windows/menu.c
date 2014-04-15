@@ -1147,9 +1147,8 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
         if ( (Wnd->style & WS_MINIMIZE))
         {
           UserGetInsideRectNC(Wnd, &rect);
-          UserDrawSysMenuButton(hWnd, hdc, &rect,
-                                lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
-	    }
+          UserDrawSysMenuButton(hWnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
+	}
         return;
     }
 
@@ -1816,6 +1815,10 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
   {
      if (!pWnd->fnid)
      {
+        if (Message != WM_NCCREATE)
+        {
+           return DefWindowProcA(Wnd, Message, wParam, lParam);
+        }
         NtUserSetWindowFNID(Wnd, FNID_MENU);
      }
      else
@@ -2545,9 +2548,8 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
                 }
               else
                 {
-                  BOOL ret;
                   ROSMENUINFO topmenuI;
-                  ret = MenuGetRosMenuInfo(&topmenuI, Mt->TopMenu);
+                  BOOL ret = MenuGetRosMenuInfo(&topmenuI, Mt->TopMenu);
                   DWORD dwStyle = MenuInfo->dwStyle | (ret ? topmenuI.dwStyle : 0);
 
                   if (dwStyle & MNS_NOTIFYBYPOS)
@@ -4181,20 +4183,17 @@ EndMenu(VOID)
   return TRUE;
 }
 
-// So this one maybe one day it will be a callback!
 BOOL WINAPI HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
                                 UINT wHilite )
 {
     ROSMENUINFO MenuInfo;
-    ROSMENUITEMINFO mii;
     TRACE("(%p, %p, %04x, %04x);\n", hWnd, hMenu, wItemID, wHilite);
-    if (!hWnd)
-    {
-       SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-       return FALSE;
-    }
-    if (!NtUserMenuItemInfo(hMenu, wItemID, wHilite, &mii, FALSE)) return FALSE;
-    if (!NtUserMenuInfo(hMenu, &MenuInfo, FALSE)) return FALSE;
+    // Force bits to be set call server side....
+    // This alone works and passes all the menu test_menu_hilitemenuitem tests.
+    if (!NtUserHiliteMenuItem(hWnd, hMenu, wItemID, wHilite)) return FALSE;
+    // Without the above call we fail 3 out of the wine failed todo tests, see CORE-7967
+    // Now redraw menu.
+    if (!MenuGetRosMenuInfo(&MenuInfo, hMenu)) return FALSE;
     if (MenuInfo.FocusedItem == wItemID) return TRUE;
     MenuHideSubPopups( hWnd, &MenuInfo, FALSE, 0 );
     MenuSelectItem( hWnd, &MenuInfo, wItemID, TRUE, 0 );
@@ -4268,9 +4267,16 @@ GetMenuInfo(HMENU hmenu,
 {
   ROSMENUINFO mi;
   BOOL res = FALSE;
+  PVOID pMenu;
 
-  if(!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
-    return FALSE;
+  if (!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  if (!(pMenu = ValidateHandle(hmenu, TYPE_MENU)))
+     return FALSE;
 
   RtlZeroMemory(&mi, sizeof(MENUINFO));
   mi.cbSize = sizeof(MENUINFO);

@@ -1,0 +1,45 @@
+/*
+ * Copyright: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_TO_PRIMITIVE        "Nesneyi ilk türe dönüştürürken yanlışlık oldu."
+    IDS_INVALID_CALL_ARG    "Geçersiz yordam çağrısı ya da geçersiz değiştirgen."
+    IDS_CREATE_OBJ_ERROR    "Öz devinim sunucusu nesne oluşturamadı."
+    IDS_NO_PROPERTY         "Nesne bu husûsiyeti/yöntemi desteklemiyor."
+    IDS_ARG_NOT_OPT         "Değiştirgen, isteğe bağlı değil."
+    IDS_SYNTAX_ERROR        "Yazım yanlışlığı."
+    IDS_SEMICOLON           """;"" bekleniyordu."
+    IDS_LBRACKET            """("" bekleniyordu."
+    IDS_RBRACKET            """)"" bekleniyordu."
+    IDS_UNTERMINATED_STR    "Sonlandırılmamış dizgi değişmezi."
+    IDS_NOT_FUNC            "İşleç bekleniyordu."
+    IDS_NOT_DATE            """[nesne]"" bir zaman nesnesi değil."
+    IDS_NOT_NUM             "Sayı bekleniyordu."
+    IDS_OBJECT_EXPECTED     "Nesne bekleniyordu."
+    IDS_ILLEGAL_ASSIGN      "Geçersiz atama."
+    IDS_UNDEFINED           """|"" tanımlanmamış."
+    IDS_NOT_BOOL            "Boolean nesnesi bekleniyordu."
+    IDS_JSCRIPT_EXPECTED    "JScript nesnesi bekleniyordu."
+    IDS_REGEXP_SYNTAX_ERROR "Düzenli deyişte yazım yanlışlığı."
+    IDS_URI_INVALID_CHAR    "Şifrelenmiş URI geçersiz damgalar içeriyor."
+    IDS_INVALID_LENGTH      "Dizi büyüklüğü sonlu artı tam sayı olmalı."
+    IDS_ARRAY_EXPECTED      "Dizi nesnesi bekleniyordu."
+}

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -38,7 +38,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d, %s, %s eliyle %d"
-    IDS_DEFREFRESHRATE "Öntanımlı Yenileme"
+    IDS_DEFREFRESHRATE "Ön Tanımlı Yenileme"
     IDES_REFRESHRATEFMT "%d Hertz"
     IDS_4BPP "16 Renk"
     IDS_8BPP "256 Renk"

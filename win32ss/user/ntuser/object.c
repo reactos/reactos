@@ -337,7 +337,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    switch (type)
    {
       case TYPE_WINDOW:
-//      case TYPE_MENU:
+      case TYPE_MENU:
       case TYPE_HOOK:
       case TYPE_CALLPROC:
       case TYPE_INPUTCONTEXT:
@@ -436,7 +436,7 @@ UserDereferenceObject(PVOID object)
      switch (type)
      {
         case TYPE_WINDOW:
-//        case TYPE_MENU:
+        case TYPE_MENU:
         case TYPE_HOOK:
         case TYPE_CALLPROC:
         case TYPE_INPUTCONTEXT:

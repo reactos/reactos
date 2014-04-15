@@ -1,7 +1,7 @@
 /*
  * Turkish language resource file for Credentials UI
  *
- * Copyright: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,6 @@ STRINGTABLE
     IDS_MESSAGEFORMAT   "Bağlanıyor: %s"
     IDS_INCORRECTPASSWORDTITLE  "Oturum açma başarısız oldu."
     IDS_INCORRECTPASSWORD       "Kullanıcı adınızın ve şifrenizin\ndoğrulundan emin olunuz."
-    IDS_CAPSLOCKONTITLE "Büyük Hârf Kilidi açık."
-    IDS_CAPSLOCKON      "Büyük Hârf Kilidi'nin açık olması girdiğiniz şifrenin yanlış olmasına neden olabilir.\n\nŞifrenizi girmeden önce Büyük Hârf Kilidi'ni kapatmak için düğme takımınızdaki Büyük Hârf Kilidi düğmesine basınız."
+    IDS_CAPSLOCKONTITLE "Büyük Harf Kilidi açık."
+    IDS_CAPSLOCKON      "Büyük Harf Kilidi'nin açık olması girdiğiniz şifrenin yanlış olmasına neden olabilir.\n\nŞifrenizi girmeden önce Büyük Harf Kilidi'ni kapatmak için düğme takımınızdaki Büyük Harf Kilidi düğmesine basınız."
 }

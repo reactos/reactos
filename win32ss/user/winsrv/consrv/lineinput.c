@@ -444,8 +444,8 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         else
         {
             /* Normal character */
-            BOOL Overstrike = Console->LineInsertToggle && Console->LinePos != Console->LineSize;
-            LineInputEdit(Console, Overstrike, 1, &KeyEvent->uChar.UnicodeChar);
+            BOOL Overstrike = !Console->LineInsertToggle && (Console->LinePos != Console->LineSize);
+            LineInputEdit(Console, (Overstrike ? 1 : 0), 1, &KeyEvent->uChar.UnicodeChar);
         }
     }
 }

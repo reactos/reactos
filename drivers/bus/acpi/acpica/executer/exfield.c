@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -136,7 +136,7 @@
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Read from a named field.  Returns either an Integer or a
+ * DESCRIPTION: Read from a named field. Returns either an Integer or a
  *              Buffer, depending on the size of the field.
  *
  ******************************************************************************/
@@ -185,17 +185,23 @@ AcpiExReadDataFromField (
     }
     else if ((ObjDesc->Common.Type == ACPI_TYPE_LOCAL_REGION_FIELD) &&
              (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_SMBUS ||
+              ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS ||
               ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_IPMI))
     {
         /*
-         * This is an SMBus or IPMI read. We must create a buffer to hold
+         * This is an SMBus, GSBus or IPMI read. We must create a buffer to hold
          * the data and then directly access the region handler.
          *
-         * Note: Smbus protocol value is passed in upper 16-bits of Function
+         * Note: SMBus and GSBus protocol value is passed in upper 16-bits of Function
          */
         if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_SMBUS)
         {
             Length = ACPI_SMBUS_BUFFER_SIZE;
+            Function = ACPI_READ | (ObjDesc->Field.Attribute << 16);
+        }
+        else if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS)
+        {
+            Length = ACPI_GSBUS_BUFFER_SIZE;
             Function = ACPI_READ | (ObjDesc->Field.Attribute << 16);
         }
         else /* IPMI */
@@ -227,7 +233,7 @@ AcpiExReadDataFromField (
      * Allocate a buffer for the contents of the field.
      *
      * If the field is larger than the current integer width, create
-     * a BUFFER to hold it.  Otherwise, use an INTEGER.  This allows
+     * a BUFFER to hold it. Otherwise, use an INTEGER. This allows
      * the use of arithmetic operators on the returned value if the
      * field size is equal or smaller than an Integer.
      *
@@ -346,23 +352,24 @@ AcpiExWriteDataToField (
     }
     else if ((ObjDesc->Common.Type == ACPI_TYPE_LOCAL_REGION_FIELD) &&
              (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_SMBUS ||
+              ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS ||
               ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_IPMI))
     {
         /*
-         * This is an SMBus or IPMI write. We will bypass the entire field
+         * This is an SMBus, GSBus or IPMI write. We will bypass the entire field
          * mechanism and handoff the buffer directly to the handler. For
          * these address spaces, the buffer is bi-directional; on a write,
          * return data is returned in the same buffer.
          *
          * Source must be a buffer of sufficient size:
-         * ACPI_SMBUS_BUFFER_SIZE or ACPI_IPMI_BUFFER_SIZE.
+         * ACPI_SMBUS_BUFFER_SIZE, ACPI_GSBUS_BUFFER_SIZE, or ACPI_IPMI_BUFFER_SIZE.
          *
-         * Note: SMBus protocol type is passed in upper 16-bits of Function
+         * Note: SMBus and GSBus protocol type is passed in upper 16-bits of Function
          */
         if (SourceDesc->Common.Type != ACPI_TYPE_BUFFER)
         {
             ACPI_ERROR ((AE_INFO,
-                "SMBus or IPMI write requires Buffer, found type %s",
+                "SMBus/IPMI/GenericSerialBus write requires Buffer, found type %s",
                 AcpiUtGetObjectTypeName (SourceDesc)));
 
             return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
@@ -371,6 +378,11 @@ AcpiExWriteDataToField (
         if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_SMBUS)
         {
             Length = ACPI_SMBUS_BUFFER_SIZE;
+            Function = ACPI_WRITE | (ObjDesc->Field.Attribute << 16);
+        }
+        else if (ObjDesc->Field.RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS)
+        {
+            Length = ACPI_GSBUS_BUFFER_SIZE;
             Function = ACPI_WRITE | (ObjDesc->Field.Attribute << 16);
         }
         else /* IPMI */
@@ -382,7 +394,7 @@ AcpiExWriteDataToField (
         if (SourceDesc->Buffer.Length < Length)
         {
             ACPI_ERROR ((AE_INFO,
-                "SMBus or IPMI write requires Buffer of length %u, found length %u",
+                "SMBus/IPMI/GenericSerialBus write requires Buffer of length %u, found length %u",
                 Length, SourceDesc->Buffer.Length));
 
             return_ACPI_STATUS (AE_AML_BUFFER_LIMIT);
@@ -420,21 +432,25 @@ AcpiExWriteDataToField (
     switch (SourceDesc->Common.Type)
     {
     case ACPI_TYPE_INTEGER:
+
         Buffer = &SourceDesc->Integer.Value;
         Length = sizeof (SourceDesc->Integer.Value);
         break;
 
     case ACPI_TYPE_BUFFER:
+
         Buffer = SourceDesc->Buffer.Pointer;
         Length = SourceDesc->Buffer.Length;
         break;
 
     case ACPI_TYPE_STRING:
+
         Buffer = SourceDesc->String.Pointer;
         Length = SourceDesc->String.Length;
         break;
 
     default:
+
         return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
@@ -462,5 +478,3 @@ AcpiExWriteDataToField (
 
     return_ACPI_STATUS (Status);
 }
-
-

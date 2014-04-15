@@ -282,7 +282,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 {
                     RegProviders |= (1 << ProviderIndex);
                     szResult[0] = L'\0';
-                    LoadStringW(hInst, IDS_REG_SUCCESS, szResult, sizeof(szResult));
+                    LoadStringW(hInst, IDS_REG_SUCCESS, szResult, sizeof(szResult) / sizeof(WCHAR));
                     Item.iSubItem = 1;
 
                     Item.iItem = ProviderIndex + ItemCount;

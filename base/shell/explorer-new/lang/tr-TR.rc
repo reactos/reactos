@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -74,7 +74,7 @@ BEGIN
     AUTOCHECKBOX "&Görev Çubuğunu Kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "G&örev Çubuğunu Kendiliğinden Gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Gö&rev Çubuğunu Pencerelerin Üstünde Tut", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Kümeleştir", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Öbekleştir", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "&Hızlı Başlat'ı Göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
 END
 
@@ -105,7 +105,7 @@ BEGIN
     AUTOCHECKBOX "E&dilgin Simgeleri Gizle", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
     PUSHBUTTON "&Husûsileştir...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
     GROUPBOX "Dizge Simgeleri", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
-    LTEXT "Her zaman görüntülenecek dizge simgelerini seçiniz:", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
+    LTEXT "Sürekli görüntülenecek dizge simgelerini seçiniz:", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
     AUTOCHECKBOX "&Saat", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
     AUTOCHECKBOX "S&es Ayârı", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
     AUTOCHECKBOX "&Ağ", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
@@ -128,7 +128,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Gelişmiş Seçenekler", IDC_STATIC, 6, 6, 240, 121
     AUTOCHECKBOX "&Sâniyeleri Göster", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
-    AUTOCHECKBOX "&Pencere Önizlemelerini Göster", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
+    AUTOCHECKBOX "&Pencere Ön İzlemelerini Göster", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
 STRINGTABLE

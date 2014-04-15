@@ -7,10 +7,4 @@ add_executable(atactl atactl.cpp atactl.rc)
 set_module_type(atactl win32cui)
 add_importlibs(atactl advapi32 msvcrt kernel32 ntdll)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(atactl)
-    set_source_files_properties(atactl.cpp PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 add_cd_file(TARGET atactl DESTINATION reactos/system32 FOR all)

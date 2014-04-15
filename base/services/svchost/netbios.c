@@ -64,7 +64,7 @@ LanaFlagIsSet (
     DWORD i = Lana / 32;
 
     /* Clear the flag for this LANA */
-    return (i <= 8) ? LanaFlags[i] & (1 << (Lana - 32 * i)) : FALSE;
+    return (i <= 7) ? LanaFlags[i] & (1 << (Lana - 32 * i)) : FALSE;
 }
 
 VOID
@@ -76,7 +76,7 @@ SetLanaFlag (
     DWORD i = Lana / 32;
 
     /* Set the flag for this LANA */
-    if (i <= 8) LanaFlags[i] |= 1 << (Lana - 32 * i);
+    if (i <= 7) LanaFlags[i] |= 1 << (Lana - 32 * i);
 }
 
 VOID

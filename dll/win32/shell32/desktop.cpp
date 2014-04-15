@@ -389,8 +389,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
     if (uMsg != WM_NCCREATE)
     {
-        pThis = (CDesktopBrowser*)GetWindowLongPtrW(hwnd,
-                                          0);
+        pThis = reinterpret_cast<CDesktopBrowser *>(GetWindowLongPtrW(hwnd, 0));
         if (pThis == NULL)
             goto DefMsgHandler;
     }
@@ -554,7 +553,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
  */
 BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 {
-    CDesktopBrowser *Desk = (CDesktopBrowser *)hDesktop;
+    CDesktopBrowser *Desk = static_cast<CDesktopBrowser *>(hDesktop);
 
     if (Desk == NULL || Desk->Tag != SHDESK_TAG)
     {

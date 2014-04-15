@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -56,7 +56,7 @@ BEGIN
     IDS_DEV_LIAR "ReactOS, bu aygıtı başlatırken yanıt vermeyi durdurdu, bu yüzden bu aygıt bir daha başlatılmayacak."
     IDS_DEV_NORMAL_CONFLICT "Bu aygıt, kullanmak için hiç boş %1 kaynaklarını bulamıyor."
     IDS_DEV_NOT_VERIFIED "Bu aygıt ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
-    IDS_DEV_NEED_RESTART "Bu aygıt bilgisayarınızı yeniden başlatana kadar düzgün çalışamaz."
+    IDS_DEV_NEED_RESTART "Bu aygıt bilgisayarınızı yeniden başlatana dek düzgün çalışamaz."
     IDS_DEV_REENUMERATION "Bu aygıt, kaynak çakışmasına neden oldu."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS, bu aygıtın kullandığı tüm kaynakları tanılayamadı."
     IDS_DEV_UNKNOWN_RESOURCE "%1 sürücü bilgi kütüğü, bu alt aygıtın, bu üst aygıtın iye olmadığı ya da tanımadığı kaynağı kullandığını gösteriyor."
@@ -80,7 +80,7 @@ BEGIN
     IDS_DEV_TRANSLATION_FAILED "Bu aygıt sürücüsüne yanıt vermiyor."
     IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıtın ayarlarını belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı ayarlamak için ""Kaynaklar"" sekmesini kullanınız."
     IDS_DEV_BIOS_TABLE "Bilgisayarınızın dizge bellenimi, bu aygıtı, düzgün olarak, yapılandırmak ve kullanmak için yeterli bilgi içermiyor.\nBu aygıtı kullanmak için, bellenim veyâ BIOS güncellemesi elde etmek için bilgisayarınızın üreticisiyle iletişime geçiniz."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istemektedir ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıtın kesmesini yapılandırmak için bilgisayarın dizge kurulum çizeylemini kullanınız."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istemektedir ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıtın kesmesini yapılandırmak için bilgisayarın dizge kurulum izlencesini kullanınız."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanımın aygıt sürücüsünü başlatamıyor."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte hâlâ aygıt sürücüsünün bir önceki tıpkısı olduğundan dolayı bu donanımın aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanımın aygıt sürücüsünü yükleyemiyor. Sürücü eksik ya da bozulmuş olabilir."
@@ -93,7 +93,7 @@ BEGIN
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim dizgesinin kapatma işleminde olmasından dolayı bu donanım aygıtının erişimini elde edemiyor."
     IDS_DEV_HELD_FOR_EJECT "ReactOS, bu donanım aygıtının, güvenli kaldırılmaya anıklandığından ancak bilgisayardan kaldırılmadığından dolayı onu kullanamıyor."
     IDS_DEV_DRIVER_BLOCKED "Bu aygıtın yazılımı, ReactOS'la sorunları olduğu bilindiğinden dolayı başlatmaktan engellendi. Yeni bir donanım için donanımın satıcısıyla iletişime geçiniz."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, dizge yığınının çok büyük olmasından dolayı yeni donanım aygıtlarını başlatamıyor. (Değer Defteri Büyüklük Sınırı'nı aşar.)"
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, dizge yığınının çok büyük olmasından dolayı yeni donanım aygıtlarını başlatamıyor. (Değer Defteri Büyüklük Hudûdu'nu aşar.)"
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS, bu aygıtın ayarlarını değiştiremez."
 END
 
@@ -176,7 +176,7 @@ BEGIN
     LTEXT "Sürücü İmzâlayıcısı:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Sürücü Ayrıntıları...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Sürücü kütükleri hakkında ayrıntıları görmek için.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    LTEXT "Sürücü kütükleri üzerine ayrıntıları görmek için.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "S&ürücüyü Şimdikileştir...", IDC_UPDATEDRIVER, 7, 126, 75, 15
     LTEXT "Bu aygıtın sürücüsünü şimdikileştir.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END

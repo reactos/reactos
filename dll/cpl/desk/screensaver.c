@@ -65,7 +65,10 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
                                   (LPBYTE)lpBuf,
                                   &BufSize);
             if (Ret != ERROR_SUCCESS)
+            {
+                HeapFree(GetProcessHeap(), 0, lpBuf);
                 lpBuf = NULL;
+            }
         }
     }
 
@@ -337,7 +340,6 @@ SearchScreenSavers(HWND hwndScreenSavers,
 
     ScreenSaverCount = pData->ScreenSaverCount;
 
-    
     hr = StringCbCopy(szSearchPath, sizeof(szSearchPath), pszSearchPath);
     if (FAILED(hr))
         return;

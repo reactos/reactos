@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -209,13 +209,12 @@ AcpiExOpcode_2A_0T_0R (
         /*
          * Dispatch the notify to the appropriate handler
          * NOTE: the request is queued for execution after this method
-         * completes.  The notify handlers are NOT invoked synchronously
+         * completes. The notify handlers are NOT invoked synchronously
          * from this thread -- because handlers may in turn run other
          * control methods.
          */
         Status = AcpiEvQueueNotifyRequest (Node, Value);
         break;
-
 
     default:
 
@@ -289,7 +288,6 @@ AcpiExOpcode_2A_2T_1R (
         }
         break;
 
-
     default:
 
         ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
@@ -358,7 +356,7 @@ AcpiExOpcode_2A_1T_1R (
     ACPI_OPERAND_OBJECT     *ReturnDesc = NULL;
     UINT64                  Index;
     ACPI_STATUS             Status = AE_OK;
-    ACPI_SIZE               Length;
+    ACPI_SIZE               Length = 0;
 
 
     ACPI_FUNCTION_TRACE_STR (ExOpcode_2A_1T_1R,
@@ -403,16 +401,13 @@ AcpiExOpcode_2A_1T_1R (
                                &ReturnDesc->Integer.Value);
         break;
 
-
     case AML_CONCAT_OP: /* Concatenate (Data1, Data2, Result) */
 
         Status = AcpiExDoConcatenate (Operand[0], Operand[1],
                     &ReturnDesc, WalkState);
         break;
 
-
     case AML_TO_STRING_OP: /* ToString (Buffer, Length, Result) (ACPI 2.0) */
-
         /*
          * Input object is guaranteed to be a buffer at this point (it may have
          * been converted.)  Copy the raw buffer data to a new object of
@@ -428,7 +423,6 @@ AcpiExOpcode_2A_1T_1R (
          * NOTE: A length of zero is ok, and will create a zero-length, null
          *       terminated string.
          */
-        Length = 0;
         while ((Length < Operand[0]->Buffer.Length) &&
                (Length < Operand[1]->Integer.Value) &&
                (Operand[0]->Buffer.Pointer[Length]))
@@ -453,7 +447,6 @@ AcpiExOpcode_2A_1T_1R (
             Operand[0]->Buffer.Pointer, Length);
         break;
 
-
     case AML_CONCAT_RES_OP:
 
         /* ConcatenateResTemplate (Buffer, Buffer, Result) (ACPI 2.0) */
@@ -461,7 +454,6 @@ AcpiExOpcode_2A_1T_1R (
         Status = AcpiExConcatTemplate (Operand[0], Operand[1],
                     &ReturnDesc, WalkState);
         break;
-
 
     case AML_INDEX_OP:              /* Index (Source Index Result) */
 
@@ -490,6 +482,7 @@ AcpiExOpcode_2A_1T_1R (
 
             if (Index >= Operand[0]->String.Length)
             {
+                Length = Operand[0]->String.Length;
                 Status = AE_AML_STRING_LIMIT;
             }
 
@@ -500,6 +493,7 @@ AcpiExOpcode_2A_1T_1R (
 
             if (Index >= Operand[0]->Buffer.Length)
             {
+                Length = Operand[0]->Buffer.Length;
                 Status = AE_AML_BUFFER_LIMIT;
             }
 
@@ -510,6 +504,7 @@ AcpiExOpcode_2A_1T_1R (
 
             if (Index >= Operand[0]->Package.Count)
             {
+                Length = Operand[0]->Package.Count;
                 Status = AE_AML_PACKAGE_LIMIT;
             }
 
@@ -528,8 +523,8 @@ AcpiExOpcode_2A_1T_1R (
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
-                "Index (0x%8.8X%8.8X) is beyond end of object",
-                ACPI_FORMAT_UINT64 (Index)));
+                "Index (0x%X%8.8X) is beyond end of object (length 0x%X)",
+                ACPI_FORMAT_UINT64 (Index), (UINT32) Length));
             goto Cleanup;
         }
 
@@ -548,7 +543,6 @@ AcpiExOpcode_2A_1T_1R (
 
         WalkState->ResultObj = ReturnDesc;
         goto Cleanup;
-
 
     default:
 
@@ -672,7 +666,6 @@ AcpiExOpcode_2A_0T_1R (
         }
         break;
 
-
     default:
 
         ACPI_ERROR ((AE_INFO, "Unknown AML opcode 0x%X",
@@ -710,5 +703,3 @@ Cleanup:
 
     return_ACPI_STATUS (Status);
 }
-
-

@@ -38,7 +38,7 @@ Description = Un editor grafic bitmap, adresat copiilor.
 Size = 10,42 Mo
 
 [Section.041f]
-Description = Çocuklar için açık kaynak ikil eşlem çizge düzenleyicisi.
+Description = Çocuklar için açık kaynak bit eşlem çizge düzenleyicisi.
 Size = 10,42 MB
 
 [Section.0422]

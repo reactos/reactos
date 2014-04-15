@@ -20,7 +20,6 @@ Description = Resource Hacker este un utilitar gratuit pentru inspectarea, modif
 Size = 730 ko
 
 [Section.041f]
-Name = Kaynak Korsancısı
 Licence = Ücretsiz
-Description = Kaynak Korsancısı, 32 ya da 64 ikillik Pencereler çaılştırabilirlerini ve .res uzantılı kaynak kütüklerindeki kaynakları görüntüleyen, değiştiren, yeniden adlandıran, ekleyen, silen ve çıkartan ücretsiz bir araçtır.
+Description = Resource Hacker, 32 ya da 64 bitlik Windows çaılştırabilirlerini ve .res uzantılı kaynak kütüklerindeki kaynakları görüntüleyen, değiştiren, yeniden adlandıran, ekleyen, silen ve çıkartan ücretsiz bir araçtır.
 Size = 730 KB

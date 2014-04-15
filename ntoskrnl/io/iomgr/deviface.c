@@ -739,7 +739,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             if (ReturnBuffer.Length + KeyName.Length + sizeof(WCHAR) > ReturnBuffer.MaximumLength)
             {
                 PWSTR NewBuffer;
-                ReturnBuffer.MaximumLength = (USHORT)max(ReturnBuffer.MaximumLength * sizeof(WCHAR),
+                ReturnBuffer.MaximumLength = (USHORT)max(2 * ReturnBuffer.MaximumLength,
                                                          (USHORT)(ReturnBuffer.Length +
                                                          KeyName.Length +
                                                          2 * sizeof(WCHAR)));
@@ -800,6 +800,7 @@ NextReferenceString:
     }
 
     /* Add final NULL to ReturnBuffer */
+    NT_ASSERT(ReturnBuffer.Length <= ReturnBuffer.MaximumLength);
     if (ReturnBuffer.Length >= ReturnBuffer.MaximumLength)
     {
         PWSTR NewBuffer;

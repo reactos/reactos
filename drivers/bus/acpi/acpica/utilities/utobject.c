@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -158,7 +158,7 @@ AcpiUtGetElementLength (
  *
  * NOTE:        We always allocate the worst-case object descriptor because
  *              these objects are cached, and we want them to be
- *              one-size-satisifies-any-request.  This in itself may not be
+ *              one-size-satisifies-any-request. This in itself may not be
  *              the most memory efficient, but the efficiency of the object
  *              cache should more than make up for this!
  *
@@ -212,6 +212,7 @@ AcpiUtCreateInternalObjectDbg (
         break;
 
     default:
+
         /* All others have no secondary object */
         break;
     }
@@ -438,7 +439,7 @@ AcpiUtCreateStringObject (
  *
  * RETURN:      TRUE if object is valid, FALSE otherwise
  *
- * DESCRIPTION: Validate a pointer to be an ACPI_OPERAND_OBJECT
+ * DESCRIPTION: Validate a pointer to be of type ACPI_OPERAND_OBJECT
  *
  ******************************************************************************/
 
@@ -464,11 +465,12 @@ AcpiUtValidInternalObject (
     {
     case ACPI_DESC_TYPE_OPERAND:
 
-        /* The object appears to be a valid ACPI_OPERAND_OBJECT  */
+        /* The object appears to be a valid ACPI_OPERAND_OBJECT */
 
         return (TRUE);
 
     default:
+
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
                 "%p is not not an ACPI operand obj [%s]\n",
                 Object, AcpiUtGetDescriptorName (Object)));
@@ -487,9 +489,9 @@ AcpiUtValidInternalObject (
  *              LineNumber          - Caller's line number (for error output)
  *              ComponentId         - Caller's component ID (for error output)
  *
- * RETURN:      Pointer to newly allocated object descriptor.  Null on error
+ * RETURN:      Pointer to newly allocated object descriptor. Null on error
  *
- * DESCRIPTION: Allocate a new object descriptor.  Gracefully handle
+ * DESCRIPTION: Allocate a new object descriptor. Gracefully handle
  *              error conditions.
  *
  ******************************************************************************/
@@ -545,7 +547,7 @@ AcpiUtDeleteObjectDesc (
     ACPI_FUNCTION_TRACE_PTR (UtDeleteObjectDesc, Object);
 
 
-    /* Object must be an ACPI_OPERAND_OBJECT  */
+    /* Object must be of type ACPI_OPERAND_OBJECT */
 
     if (ACPI_GET_DESCRIPTOR_TYPE (Object) != ACPI_DESC_TYPE_OPERAND)
     {
@@ -628,12 +630,10 @@ AcpiUtGetSimpleObjectSize (
         Length += (ACPI_SIZE) InternalObject->String.Length + 1;
         break;
 
-
     case ACPI_TYPE_BUFFER:
 
         Length += (ACPI_SIZE) InternalObject->Buffer.Length;
         break;
-
 
     case ACPI_TYPE_INTEGER:
     case ACPI_TYPE_PROCESSOR:
@@ -643,13 +643,11 @@ AcpiUtGetSimpleObjectSize (
 
         break;
 
-
     case ACPI_TYPE_LOCAL_REFERENCE:
 
         switch (InternalObject->Reference.Class)
         {
         case ACPI_REFCLASS_NAME:
-
             /*
              * Get the actual length of the full pathname to this object.
              * The reference will be converted to the pathname to the object
@@ -664,7 +662,6 @@ AcpiUtGetSimpleObjectSize (
             break;
 
         default:
-
             /*
              * No other reference opcodes are supported.
              * Notably, Locals and Args are not supported, but this may be
@@ -679,7 +676,6 @@ AcpiUtGetSimpleObjectSize (
         }
         break;
 
-
     default:
 
         ACPI_ERROR ((AE_INFO, "Cannot convert to external object - "
@@ -692,7 +688,7 @@ AcpiUtGetSimpleObjectSize (
 
     /*
      * Account for the space required by the object rounded up to the next
-     * multiple of the machine word size.  This keeps each object aligned
+     * multiple of the machine word size. This keeps each object aligned
      * on a machine word boundary. (preventing alignment faults on some
      * machines.)
      */
@@ -728,7 +724,6 @@ AcpiUtGetElementLength (
     switch (ObjectType)
     {
     case ACPI_COPY_TYPE_SIMPLE:
-
         /*
          * Simple object - just get the size (Null object/entry is handled
          * here also) and sum it into the running package length
@@ -742,7 +737,6 @@ AcpiUtGetElementLength (
         Info->Length += ObjectSpace;
         break;
 
-
     case ACPI_COPY_TYPE_PACKAGE:
 
         /* Package object - nothing much to do here, let the walk handle it */
@@ -750,7 +744,6 @@ AcpiUtGetElementLength (
         Info->NumPackages++;
         State->Pkg.ThisTargetObj = NULL;
         break;
-
 
     default:
 
@@ -797,7 +790,7 @@ AcpiUtGetPackageObjectSize (
     Info.NumPackages = 1;
 
     Status = AcpiUtWalkPackageTree (InternalObject, NULL,
-                            AcpiUtGetElementLength, &Info);
+        AcpiUtGetElementLength, &Info);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
@@ -855,5 +848,3 @@ AcpiUtGetObjectSize (
 
     return (Status);
 }
-
-

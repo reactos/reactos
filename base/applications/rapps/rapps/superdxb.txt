@@ -20,7 +20,6 @@ Description = Un joc ce implică spargerea de cărămizi.
 Size = 3,8 Mo
 
 [Section.041f]
-Name = Süper DX-Ball
 Licence = Kısıtlı
-Description = Süper DX-Ball, canlı ve renkli bir tuğla kırma oyunudur.
+Description = Super DX-Ball, canlı ve renkli bir tuğla kırma oyunudur.
 Size = 3,8 MB

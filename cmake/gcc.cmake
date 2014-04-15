@@ -85,7 +85,6 @@ if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-error=unused-but-set-variable")
 endif()
 
-add_compile_flags("-Wno-error=narrowing")
 add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
@@ -139,7 +138,7 @@ endif()
 
 add_definitions(-D_inline=__inline)
 
-# alternative arch name
+# Alternative arch name
 if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
 else()
@@ -268,18 +267,18 @@ if(NOT ARCH STREQUAL "i386")
 endif()
 
 function(generate_import_lib _libname _dllname _spec_file)
-    # generate the def for the import lib
+    # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
-    #create normal importlib
+    # Create normal importlib
     _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
 
-    #create delayed importlib
+    # Create delayed importlib
     _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
 endfunction()
@@ -288,7 +287,7 @@ endfunction()
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    # do we also want to add importlib targets?
+    # Do we also want to add importlib targets?
     if(${ARGC} GREATER 2)
         if(${ARGN} STREQUAL "ADD_IMPORTLIB")
             set(__add_importlib TRUE)
@@ -297,15 +296,15 @@ function(spec2def _dllname _spec_file)
         endif()
     endif()
 
-    # get library basename
+    # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
 
-    # error out on anything else than spec
+    # Error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    # generate exports def and stubs C file for the module
+    # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
@@ -320,7 +319,7 @@ macro(macro_mc FLAG FILE)
     set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
 endmacro()
 
-#pseh lib, needed with mingw
+# PSEH lib, needed with mingw
 set(PSEH_LIB "pseh")
 
 # Macros
@@ -388,4 +387,3 @@ endfunction()
 macro(add_asm_files _target)
     list(APPEND ${_target} ${ARGN})
 endmacro()
-

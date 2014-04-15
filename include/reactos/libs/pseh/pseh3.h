@@ -10,7 +10,7 @@
 #pragma once
 #define _PSEH3_H_
 
-#include "excpt.h"
+#include <excpt.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,7 +111,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 #endif
 
 /* This attribute allows automatic cleanup of the registered frames */
-#define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_Unregister)))
+#define _SEH3$_AUTO_CLEANUP __attribute__((cleanup(_SEH3$_AutoCleanup)))
 
 /* CLANG specific definitions! */
 #ifdef __clang__
@@ -217,7 +217,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 /* Use the global unregister function */
 void
 __attribute__((regparm(1)))
-_SEH3$_Unregister(
+_SEH3$_AutoCleanup(
     volatile SEH3$_REGISTRATION_FRAME *Frame);
 
 /* These are only dummies here */
@@ -226,36 +226,26 @@ _SEH3$_Unregister(
 #define _SEH3$_DECLARE_FILTER_FUNC(_Name)
 #define _SEH3$_DEFINE_DUMMY_FINALLY(_Name)
 
-/* The "nested" functions are a piece of code with a ret instruction at the end */
-#define _SEH3$_NESTED_FUNC_OPEN() \
-    { \
-        int _SEH3$_Result = 0; \
-
 /* On invocation, the AllocaFrame field is loaded with the return esp value */
-#define _SEH3$_NESTED_FUNC_RETURN() \
+#define _SEH3$_NESTED_FUNC_RETURN(_Result) \
         /* Restore esp and return to the caller */ \
         asm volatile ("movl %[FixedEsp], %%esp\nret\n" \
-            : : "a"(_SEH3$_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "memory")
+            : : "a"(_Result), [FixedEsp]"m"(_SEH3$_TrylevelFrame.AllocaFrame) : "ebx", "ecx", "edx", "esi", "edi", "flags", "memory")
 
-#define _SEH3$_NESTED_FUNC_CLOSE() \
-        /* Return to the caller */ \
-        _SEH3$_NESTED_FUNC_RETURN(); \
+/* The filter "function" */
+#define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
+    { \
+        /* Evaluate and return the filter expression */ \
+        asm volatile ("#\n" : : : "eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"); \
+        _SEH3$_NESTED_FUNC_RETURN((expression)); \
     }
 
-/* The filter function */
-#define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
-    _SEH3$_NESTED_FUNC_OPEN() \
-    { \
-        /* Evaluate the filter expression */ \
-        _SEH3$_Result = (expression); \
-    } \
-    _SEH3$_NESTED_FUNC_CLOSE()
-
 #define _SEH3$_FINALLY_FUNC_OPEN(_Name) \
-    _SEH3$_NESTED_FUNC_OPEN() \
+    { \
+        asm volatile ("#\n" : : : "eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"); \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
-        for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(); 0;}))
+        for (; ; (void)({_SEH3$_NESTED_FUNC_RETURN(0); 0;}))
 
 #define _SEH3$_FILTER(_Filter, _FilterExpression) (&&_SEH3$_l_FilterOrFinally)
 #define _SEH3$_FINALLY(_Finally) (&&_SEH3$_l_FilterOrFinally)
@@ -263,7 +253,7 @@ _SEH3$_Unregister(
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS()
 
 /* Since we cannot use nested functions, we declare these globally as macros */
-#define _abnormal_termination() (_SEH3$_TrylevelFrame.ScopeTable != 0)
+#define _abnormal_termination() (_SEH3$_TrylevelFrame.ExceptionPointers != 0)
 #define _exception_code() (_SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode)
 #define _exception_info() (_SEH3$_TrylevelFrame.ExceptionPointers)
 
@@ -306,7 +296,7 @@ _SEH3$_Unregister(
     _SEH3$_NESTED_FUNC_OPEN(_Name) \
         /* Declare the intrinsics for the finally function */ \
         inline __attribute__((always_inline, gnu_inline)) \
-        int _abnormal_termination() { return (_SEH3$_TrylevelFrame.ScopeTable != 0); } \
+        int _abnormal_termination() { return (_SEH3$_TrylevelFrame.ExceptionPointers != 0); } \
 \
         /* This construct makes sure that the finally function returns */ \
         /* a proper value at the end */ \
@@ -363,7 +353,7 @@ _SEH3$_Unregister(
         }; \
 \
         /* Forward declaration of the auto cleanup function */ \
-        _SEH3$_DECLARE_CLEANUP_FUNC(_SEH3$_Unregister); \
+        _SEH3$_DECLARE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
 \
         /* Allocate a registration frame */ \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
@@ -424,8 +414,8 @@ _SEH3$_Unregister(
         /* End the try block */ \
         while (0); \
     _SEH3$_l_AfterTry: (void)0; \
-        /* Set ScopeTable to 0, this is used by _abnormal_termination() */ \
-         _SEH3$_TrylevelFrame.ScopeTable = 0; \
+        /* Set ExceptionPointers to 0, this is used by _abnormal_termination() */ \
+         _SEH3$_TrylevelFrame.ExceptionPointers = 0; \
 \
         goto _SEH3$_l_EndTry; \
 \
@@ -441,6 +431,7 @@ _SEH3$_Unregister(
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
         else _SEH3$_RegisterTryLevel_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
+        _SEH3$_TrylevelFrame.ExceptionPointers = (PSEH3$_EXCEPTION_POINTERS)1; \
 \
         goto _SEH3$_l_DoTry; \
 \
@@ -466,7 +457,7 @@ _SEH3$_Unregister(
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
         /* Implementation of the auto cleanup function */ \
-        _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_Unregister); \
+        _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
 \
     /* Close the outer scope */ \
     } while (0);

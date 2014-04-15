@@ -1,4 +1,4 @@
-﻿/* Romanian translation by Petru Dimitriu, Fulea Ștefan */
+/* Romanian translation by Petru Dimitriu, Ștefan Fulea */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -177,8 +177,8 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalii…", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "Mai multe detalii despre modulele pilot.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Actualizare modul-pilot…", IDC_UPDATEDRIVER, 7, 126, 75, 15
-    LTEXT "Actualizare modulului-pilot pentru dispozitiv.", -1, 91, 130, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizare…", IDC_UPDATEDRIVER, 7, 126, 75, 15
+    LTEXT "Actualizați modulul-pilot pentru dispozitiv.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

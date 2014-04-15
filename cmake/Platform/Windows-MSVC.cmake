@@ -22,7 +22,7 @@ set(CMAKE_LIBRARY_PATH_FLAG "-LIBPATH:")
 set(CMAKE_LINK_LIBRARY_FLAG "")
 set(MSVC 1)
 
-# hack: if a new cmake (which uses CMAKE__LINKER) runs on an old build tree
+# hack: if a new cmake (which uses CMAKE_LINKER) runs on an old build tree
 # (where link was hardcoded) and where CMAKE_LINKER isn't in the cache
 # and still cmake didn't fail in CMakeFindBinUtils.cmake (because it isn't rerun)
 # hardcode CMAKE_LINKER here to link, so it behaves as it did before, Alex
@@ -41,6 +41,7 @@ set(WIN32 1)
 if(CMAKE_SYSTEM_NAME MATCHES "WindowsCE")
   set(CMAKE_CREATE_WIN32_EXE "/subsystem:windowsce /entry:WinMainCRTStartup")
   set(CMAKE_CREATE_CONSOLE_EXE "/subsystem:windowsce /entry:mainACRTStartup")
+  set(WINCE 1)
 else()
   set(CMAKE_CREATE_WIN32_EXE "/subsystem:windows")
   set(CMAKE_CREATE_CONSOLE_EXE "/subsystem:console")
@@ -80,6 +81,7 @@ if(NOT MSVC_VERSION)
 
   set(MSVC10)
   set(MSVC11)
+  set(MSVC12)
   set(MSVC60)
   set(MSVC70)
   set(MSVC71)
@@ -87,7 +89,9 @@ if(NOT MSVC_VERSION)
   set(MSVC90)
   set(CMAKE_COMPILER_2005)
   set(CMAKE_COMPILER_SUPPORTS_PDBTYPE)
-  if(NOT "${_compiler_version}" VERSION_LESS 17)
+  if(NOT "${_compiler_version}" VERSION_LESS 18)
+    set(MSVC12 1)
+  elseif(NOT "${_compiler_version}" VERSION_LESS 17)
     set(MSVC11 1)
   elseif(NOT  "${_compiler_version}" VERSION_LESS 16)
     set(MSVC10 1)
@@ -106,7 +110,7 @@ if(NOT MSVC_VERSION)
   endif()
 endif()
 
-if(MSVC_C_ARCHITECTURE_ID MATCHES 64)
+if(MSVC_C_ARCHITECTURE_ID MATCHES 64 OR MSVC_CXX_ARCHITECTURE_ID MATCHES 64)
   set(CMAKE_CL_64 1)
 else()
   set(CMAKE_CL_64 0)
@@ -115,7 +119,7 @@ if(CMAKE_FORCE_WIN64 OR CMAKE_FORCE_IA64)
   set(CMAKE_CL_64 1)
 endif()
 
-if("${MSVC_VERSION}" GREATER 1599)
+if(MSVC_VERSION GREATER 1599)
   set(MSVC_INCREMENTAL_DEFAULT ON)
 endif()
 
@@ -160,7 +164,7 @@ set(CMAKE_CXX_STANDARD_LIBRARIES_INIT "${CMAKE_C_STANDARD_LIBRARIES_INIT}")
 
 # executable linker flags
 set (CMAKE_LINK_DEF_FILE_FLAG "/DEF:")
-# set the stack size and the machine type
+# set the machine type
 set(_MACHINE_ARCH_FLAG ${MSVC_C_ARCHITECTURE_ID})
 if(NOT _MACHINE_ARCH_FLAG)
   set(_MACHINE_ARCH_FLAG ${MSVC_CXX_ARCHITECTURE_ID})
@@ -173,7 +177,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "WindowsCE")
   endif()
 endif()
 set (CMAKE_EXE_LINKER_FLAGS_INIT
-    "${CMAKE_EXE_LINKER_FLAGS_INIT} /STACK:10000000 /machine:${_MACHINE_ARCH_FLAG}")
+    "${CMAKE_EXE_LINKER_FLAGS_INIT} /machine:${_MACHINE_ARCH_FLAG} /MANIFEST:NO")
 
 # add /debug and /INCREMENTAL:YES to DEBUG and RELWITHDEBINFO also add pdbtype
 # on versions that support it

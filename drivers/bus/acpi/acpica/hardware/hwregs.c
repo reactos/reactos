@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  *
  * Module Name: hwregs - Read/write access functions for the various ACPI
@@ -10,13 +9,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -33,7 +32,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -45,11 +44,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -57,7 +56,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -82,10 +81,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -94,14 +93,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -125,6 +124,8 @@
         ACPI_MODULE_NAME    ("hwregs")
 
 
+#if (!ACPI_REDUCED_HARDWARE)
+
 /* Local Prototypes */
 
 static ACPI_STATUS
@@ -139,6 +140,7 @@ AcpiHwWriteMultiple (
     ACPI_GENERIC_ADDRESS    *RegisterA,
     ACPI_GENERIC_ADDRESS    *RegisterB);
 
+#endif /* !ACPI_REDUCED_HARDWARE */
 
 /******************************************************************************
  *
@@ -242,6 +244,7 @@ AcpiHwRead (
     ACPI_GENERIC_ADDRESS    *Reg)
 {
     UINT64                  Address;
+    UINT64                  Value64;
     ACPI_STATUS             Status;
 
 
@@ -267,7 +270,9 @@ AcpiHwRead (
     if (Reg->SpaceId == ACPI_ADR_SPACE_SYSTEM_MEMORY)
     {
         Status = AcpiOsReadMemory ((ACPI_PHYSICAL_ADDRESS)
-                    Address, Value, Reg->BitWidth);
+                    Address, &Value64, Reg->BitWidth);
+
+        *Value = (UINT32) Value64;
     }
     else /* ACPI_ADR_SPACE_SYSTEM_IO, validated earlier */
     {
@@ -326,7 +331,7 @@ AcpiHwWrite (
     if (Reg->SpaceId == ACPI_ADR_SPACE_SYSTEM_MEMORY)
     {
         Status = AcpiOsWriteMemory ((ACPI_PHYSICAL_ADDRESS)
-                    Address, Value, Reg->BitWidth);
+                    Address, (UINT64) Value, Reg->BitWidth);
     }
     else /* ACPI_ADR_SPACE_SYSTEM_IO, validated earlier */
     {
@@ -343,6 +348,7 @@ AcpiHwWrite (
 }
 
 
+#if (!ACPI_REDUCED_HARDWARE)
 /*******************************************************************************
  *
  * FUNCTION:    AcpiHwClearAcpiStatus
@@ -393,7 +399,7 @@ UnlockAndExit:
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiHwGetRegisterBitMask
+ * FUNCTION:    AcpiHwGetBitRegisterInfo
  *
  * PARAMETERS:  RegisterId          - Index of ACPI Register to access
  *
@@ -496,14 +502,12 @@ AcpiHwRegisterRead (
                     &AcpiGbl_XPm1bStatus);
         break;
 
-
     case ACPI_REGISTER_PM1_ENABLE:           /* PM1 A/B: 16-bit access each */
 
         Status = AcpiHwReadMultiple (&Value,
                     &AcpiGbl_XPm1aEnable,
                     &AcpiGbl_XPm1bEnable);
         break;
-
 
     case ACPI_REGISTER_PM1_CONTROL:          /* PM1 A/B: 16-bit access each */
 
@@ -519,26 +523,23 @@ AcpiHwRegisterRead (
         Value &= ~ACPI_PM1_CONTROL_WRITEONLY_BITS;
         break;
 
-
     case ACPI_REGISTER_PM2_CONTROL:          /* 8-bit access */
 
         Status = AcpiHwRead (&Value, &AcpiGbl_FADT.XPm2ControlBlock);
         break;
-
 
     case ACPI_REGISTER_PM_TIMER:             /* 32-bit access */
 
         Status = AcpiHwRead (&Value, &AcpiGbl_FADT.XPmTimerBlock);
         break;
 
-
     case ACPI_REGISTER_SMI_COMMAND_BLOCK:    /* 8-bit access */
 
         Status = AcpiHwReadPort (AcpiGbl_FADT.SmiCommand, &Value, 8);
         break;
 
-
     default:
+
         ACPI_ERROR ((AE_INFO, "Unknown Register ID: 0x%X",
             RegisterId));
         Status = AE_BAD_PARAMETER;
@@ -612,7 +613,6 @@ AcpiHwRegisterWrite (
                     &AcpiGbl_XPm1bStatus);
         break;
 
-
     case ACPI_REGISTER_PM1_ENABLE:           /* PM1 A/B: 16-bit access each */
 
         Status = AcpiHwWriteMultiple (Value,
@@ -620,9 +620,7 @@ AcpiHwRegisterWrite (
                     &AcpiGbl_XPm1bEnable);
         break;
 
-
     case ACPI_REGISTER_PM1_CONTROL:          /* PM1 A/B: 16-bit access each */
-
         /*
          * Perform a read first to preserve certain bits (per ACPI spec)
          * Note: This includes SCI_EN, we never want to change this bit
@@ -646,9 +644,7 @@ AcpiHwRegisterWrite (
                     &AcpiGbl_FADT.XPm1bControlBlock);
         break;
 
-
     case ACPI_REGISTER_PM2_CONTROL:          /* 8-bit access */
-
         /*
          * For control registers, all reserved bits must be preserved,
          * as per the ACPI spec.
@@ -666,12 +662,10 @@ AcpiHwRegisterWrite (
         Status = AcpiHwWrite (Value, &AcpiGbl_FADT.XPm2ControlBlock);
         break;
 
-
     case ACPI_REGISTER_PM_TIMER:             /* 32-bit access */
 
         Status = AcpiHwWrite (Value, &AcpiGbl_FADT.XPmTimerBlock);
         break;
-
 
     case ACPI_REGISTER_SMI_COMMAND_BLOCK:    /* 8-bit access */
 
@@ -680,8 +674,8 @@ AcpiHwRegisterWrite (
         Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand, Value, 8);
         break;
 
-
     default:
+
         ACPI_ERROR ((AE_INFO, "Unknown Register ID: 0x%X",
             RegisterId));
         Status = AE_BAD_PARAMETER;
@@ -803,3 +797,4 @@ AcpiHwWriteMultiple (
     return (Status);
 }
 
+#endif /* !ACPI_REDUCED_HARDWARE */

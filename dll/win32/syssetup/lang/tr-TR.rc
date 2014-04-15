@@ -6,7 +6,7 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı'na Hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Bu sihirbaz bilgisayarınıza ReactOS kurar. Sihirbaz'ın düzgün kurulum için bilgisayarınız hakkında bilgi toplaması gerekmekte.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bu sihirbaz bilgisayarınıza ReactOS kurar. Sihirbaz'ın düzgün kurulum için bilgisayarınız üzerine bilgi toplaması gerekmekte.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Kur'a devam etmek için İleri'ye basın.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -46,7 +46,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Kur,'Administrator' adıyla bir yönetici hesabı oluşturacak. Bu hesabı bilgisayara tam erişim için kullanabileceksiniz.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "14 karakter yada daha az bir Yönetici Parolası yazın.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "127 karakter yada daha az bir Yönetici Parolası yazın.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Yönetici Parolası:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "Parolayı &Doğrula:", IDC_STATIC, 54, 123, 105, 8
@@ -146,8 +146,15 @@ BEGIN
     IDS_GETPROCADDR_FAILED "Eylem adresi alınamadı: "
     IDS_REGSVR_FAILED "Dll Hizmet Kaydı başarısız oldu: "
     IDS_DLLINSTALL_FAILED "Dll Kurulumu başarısız oldu: "
-    IDS_TIMEOUT "Kayıt zaman aşımına uğradı"
+    IDS_TIMEOUT "Kayıt, süre aşımına uğradı"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

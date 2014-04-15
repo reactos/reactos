@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dizelgede gösterilen her bir giriş dili için istediğiniz hizmetleri seçiniz.\nDizelgeyi değiştirmek için ""Ekle..."" veyâ ""Sil..."" düğmelerini kullanınız.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Öntanımlı Yap", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Ön Tanımlı Yap", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Sil...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Husûsiyetler...", IDC_PROP_BUTTON, 175, 142, 70, 14
@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Dizge Yapılandırması", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Gelişmiş Metin Hizmetlerini Kapat", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Tüm çizeylemlerdeki gelişmiş metin hizmetlerini kapatmak için bu kutucuğu seçiniz.\nBu ayar, dil çubuğunuu kapatacağından Doğu Asya kulanıcıları için önerilmez.", -1, 14, 40, 230, 35
+    LTEXT "Tüm izlencelerdeki gelişmiş metin hizmetlerini kapatmak için bu kutucuğu seçiniz.\nBu ayar, dil çubuğunuu kapatacağından Doğu Asya kulanıcıları için önerilmez.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -32,8 +32,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Gelişmiş Düğme Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Büyük Hârf Kilidini Kapatmak İçin", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "&Büyük Hârf düğmesine basılsın.", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    GROUPBOX "Büyük Harf Kilidi'ni Kapatmak İçin", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "&Büyük Harf düğmesine basılsın.", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
     AUTORADIOBUTTON "&Üst Damga düğmesine basılsın.", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Giriş Dilleri İçin Kısayol Düğmeleri", -1, 7, 37, 258, 95
     LTEXT "Eylem", -1, 14, 47, 60, 9
@@ -101,7 +101,7 @@ BEGIN
     IDS_WHATS_THIS "Bu nedir?"
     IDS_LANGUAGE "Dil"
     IDS_LAYOUT "Düğme Takımı Düzeni"
-    IDS_REM_QUESTION "Seçili düğme takımı düzenini silmeyi onaylıyor musunuz?"
+    IDS_REM_QUESTION "Seçili düğme takımı düzenini silmeyi doğruluyor musunuz?"
     IDS_CONFIRMATION "Doğrulama"
     IDS_LAYOUT_EXISTS "Bu düzen önceden var."
     IDS_LAYOUT_EXISTS2 "Bu düzen önceden var ve eklenemez."
@@ -142,7 +142,7 @@ BEGIN
     IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT "Çince (Bayağılaştırılmış) - ŞuangPin"
     IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT "Çince (Bayağılaştırılmış) - ABD Düğme Takımı"
     IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT "Çince (Bayağılaştırılmış) - ZengMa"
-    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Çince (Geleneklik) - Hârflik ve Sayılık"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Çince (Geleneklik) - Harflik ve Sayılık"
     IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT "Çince (Geleneklik) - Düzen"
     IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT "Çince (Geleneklik) - Big5 Kodu"
     IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT "Çince (Geleneklik) - ÇangJi"
@@ -158,7 +158,7 @@ BEGIN
     IDS_CZECH_PROGRAMMERS_LAYOUT "Çekçe Yazılımcılar"
     IDS_CZECH_QWERTY_LAYOUT "Çekçe (QWERTY)"
     IDS_DANISH_LAYOUT "Danca"
-    IDS_DEVANAGARI_INSCRIPT_LAYOUT "Devanagari Hârfliği - INSCRIPT"
+    IDS_DEVANAGARI_INSCRIPT_LAYOUT "Devanagari Harfliği - INSCRIPT"
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi (Tam Seslik)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi (Yazı Makinesi)"
     IDS_DUTCH_LAYOUT "Flemenkçe"

@@ -70,6 +70,8 @@ static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
+static WCHAR DestinationDriveLetter;
+
 /* Path to the active partition (boot manager) */
 static UNICODE_STRING SystemRootPath;
 
@@ -1588,6 +1590,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                    0ULL,
                                    TRUE);
             }
+
+            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -3334,6 +3338,9 @@ RegistryPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+
+    /* Set the default pagefile entry */
+    SetDefaultPagefile(DestinationDriveLetter);
 
     /* Update the mounted devices list */
     SetMountedDeviceValues(PartitionList);

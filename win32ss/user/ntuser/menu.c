@@ -485,8 +485,11 @@ IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
 
 
 int FASTCALL
-IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
-                     PMENU_OBJECT *SubMenu, PMENU_ITEM *MenuItem,
+IntGetMenuItemByFlag(PMENU_OBJECT Menu,
+                     UINT uSearchBy,
+                     UINT fFlag,
+                     PMENU_OBJECT *SubMenu,
+                     PMENU_ITEM *MenuItem,
                      PMENU_ITEM *PrevMenuItem)
 {
    PMENU_ITEM PrevItem = NULL;
@@ -1039,17 +1042,22 @@ IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
 }
 
 BOOL FASTCALL
-IntHiliteMenuItem(PWND WindowObject, PMENU_OBJECT MenuObject,
-                  UINT uItemHilite, UINT uHilite)
+IntHiliteMenuItem(PWND WindowObject,
+                  PMENU_OBJECT MenuObject,
+                  UINT uItemHilite,
+                  UINT uHilite)
 {
    PMENU_ITEM MenuItem;
-   BOOL res = IntGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, NULL, &MenuItem, NULL);
-   if(!MenuItem || !res)
+   int Pos;
+
+   Pos = IntGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, NULL, &MenuItem, NULL);
+
+   if (!MenuItem || (uHilite & MF_BYPOSITION && Pos == -1))
    {
       return FALSE;
    }
 
-   if(uHilite & MF_HILITE)
+   if (uHilite & MF_HILITE)
    {
       MenuItem->fState |= MF_HILITE;
    }
@@ -2058,12 +2066,7 @@ NtUserHiliteMenuItem(
       RETURN(FALSE);
    }
 
-   if(Window->IDMenu == (UINT)(UINT_PTR)hMenu)
-   {
-      RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
-   }
-
-   RETURN(FALSE);
+   RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
 
 CLEANUP:
    TRACE("Leave NtUserHiliteMenuItem, ret=%u\n",_ret_);
@@ -2224,7 +2227,7 @@ UserMenuItemInfo(
       EngSetLastError(ERROR_INVALID_PARAMETER);
 // This will crash menu (line 80) correct_behavior test!
 // "NT4 and below can't handle a bigger MENUITEMINFO struct"
-      //EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
+//      EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
       return( FALSE);
    }
 

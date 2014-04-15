@@ -279,7 +279,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                         ((EnumType == ENUM_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
                         ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
                     {
-                        if (!lpEnumProc(ItemIndex, pszDisplayName, Info))
+                        if (!lpEnumProc(ItemIndex, pszDisplayName, &Info))
                             break;
                     }
                 }

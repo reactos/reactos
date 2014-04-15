@@ -213,9 +213,9 @@ BEGIN
     EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribute:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Doar-citire", 14021, 56, 152, 70, 10
+    AUTOCHECKBOX "Nem&odificabil", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "Asc&uns", 14022, 56, 166, 70, 10
-    AUTOCHECKBOX "Ar&hivă", 14023, 56, 180, 70, 10
+    AUTOCHECKBOX "Ar&hivabil", 14023, 56, 180, 70, 10
     PUSHBUTTON "A&vansate…", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -249,9 +249,9 @@ BEGIN
     EDITTEXT 14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribute:", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "&Doar-citire", 14021, 58, 189, 67, 10
+    AUTOCHECKBOX "Nem&odificabil", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "Asc&uns", 14022, 126, 189, 50, 10
-    AUTOCHECKBOX "Ar&hivă", 14023, 181, 189, 49, 10
+    AUTOCHECKBOX "Ar&hivabil", 14023, 181, 189, 49, 10
     PUSHBUTTON "A&vansate…", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
@@ -455,7 +455,7 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
     LTEXT "Dosarul curent deja conține un fișier cu numele „%2”.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "Dosarul curent deja conține un fișier doar-citire cu numele „%2”.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Dosarul curent deja conține un fișier nemodificabil cu numele „%2”.", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Dosarul curent deja conține un fișier de sistem cu numele „%2”.", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Doriți să înlocuiți acest fișier?", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(mărime/dată necunoscută)", 12302, 79, 51, 198, 20, SS_NOPREFIX
@@ -730,7 +730,7 @@ BEGIN
     IDS_OPEN_WITH_OTHER "Alte programe:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Autori"
-    IDS_SHELL_ABOUT_BACK "< Îna&poi"
+    IDS_SHELL_ABOUT_BACK "< Înap&oi"
     FCIDM_SHVIEW_NEW "N&ou"
     FCIDM_SHVIEW_NEWFOLDER "&Dosar"
     FCIDM_SHVIEW_NEWLINK "Sc&urtătură"

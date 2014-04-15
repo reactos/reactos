@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -111,7 +111,7 @@ CAPTION "Oturumu Kapatma"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Oturumu kapatmayı onaylıyor musunuz?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Oturumu kapatmayı doğruluyor musunuz?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Evet", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Hayır", IDNO, 95, 39, 50, 14
 END
@@ -142,7 +142,7 @@ BEGIN
     IDS_LOGONMSG "%s olarak oturum açtınız."
     IDS_LOGONDATE "Oturum Açma Zamânı: %s %s"
     IDS_COMPUTERLOCKED "Bilgisayar kilitlendi."
-    IDS_LOCKEDWRONGPASSWORD "Şifre yanlıştır. Şifrenizi yine giriniz. Şifredeki hârfler doğru büyük-küçük ayrımıyla yazılmalıdır."
+    IDS_LOCKEDWRONGPASSWORD "Şifre yanlıştır. Şifrenizi yine giriniz. Şifredeki harfler doğru büyük-küçük ayrımıyla yazılmalıdır."
     IDS_LOCKEDWRONGUSER "Bu bilgisayar kilitli. Bu bilgisayarın kilidini yalnızca %s\\%s veyâ bir yönetici açabilir."
     IDS_CHANGEPWDTITLE "Şifre Değştirme"
     IDS_NONMATCHINGPASSWORDS "Yazıdığınız bu şifreler birbiriyle uyuşmuyor. Her iki metin kutusuna da aynı şifreyi yazınız."

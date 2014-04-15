@@ -1,6 +1,6 @@
 /* Unicode Indic Syllabic Category */
-/* generated from http://www.unicode.org/Public/6.2.0/ucd/IndicSyllabicCategory.txt */
-/*       and from http://www.unicode.org/Public/6.2.0/ucd/IndicMatraCategory.txt */
+/* generated from http://www.unicode.org/Public/6.3.0/ucd/IndicSyllabicCategory.txt */
+/*       and from http://www.unicode.org/Public/6.3.0/ucd/IndicMatraCategory.txt */
 /* DO NOT EDIT!! */
 
 //#include "wine/unicode.h"

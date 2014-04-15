@@ -57,6 +57,9 @@ FindDateSep(const TCHAR *szSourceStr)
 
     pszFoundSep = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
 
+    if(!pszFoundSep)
+        return NULL;
+
     _tcscpy(pszFoundSep,STD_DATE_SEP);
 
     while (nDateCompCount < _tcslen(szSourceStr))
@@ -121,8 +124,9 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
 {
     TCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
     TCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
-    TCHAR szFindedDateSep[MAX_SAMPLES_STR_SIZE];
+    TCHAR szFoundDateSep[MAX_SAMPLES_STR_SIZE];
     LPTSTR pszResultStr;
+    LPTSTR pszFoundSep;
     BOOL OpenApostFlg = FALSE;
     INT nFmtStrSize;
     INT nDateCompCount;
@@ -166,11 +170,16 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
         return FALSE;
     }
 
+    pszFoundSep = FindDateSep(szShortDateFmt);
+
     /* Substring replacement of separator */
-    _tcscpy(szFindedDateSep, FindDateSep(szShortDateFmt));
-    pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFindedDateSep);
+    _tcscpy(szFoundDateSep, pszFoundSep);
+    pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFoundDateSep);
     _tcscpy(szShortDateFmt, pszResultStr);
     free(pszResultStr);
+
+    if(pszFoundSep)
+        free(pszFoundSep);
 
     /* Save short date format */
     SetLocaleInfo(lcid, LOCALE_SSHORTDATE, szShortDateFmt);

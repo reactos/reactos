@@ -125,7 +125,7 @@ typedef struct _THREADINFO
 
     /* Queue of messages posted to the queue. */
     LIST_ENTRY          PostedMessagesListHead; // mlPost
-
+    UINT                fsChangeBitsRemoved;
     UINT                cWindows;
     UINT                cVisWindows;
     LIST_ENTRY          aphkStart[NB_HOOKS];
@@ -238,6 +238,7 @@ typedef struct _PROCESSINFO
   struct _CURICON_OBJECT* pCursorCache;
   LUID luidSession;
   USERSTARTUPINFO usi;
+  PVOID pW32Job;
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */

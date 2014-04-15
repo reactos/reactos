@@ -2267,7 +2267,7 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
         }
 
         /* Check if our buffer is large enough */
-        if (Name->Length > sizeof(ImportBuffer))
+        if (Length > sizeof(ImportBuffer))
         {
             /* Allocate from heap, plus 2 bytes for the Hint */
             ImportName = RtlAllocateHeap(RtlGetProcessHeap(),

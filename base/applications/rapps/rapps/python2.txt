@@ -35,8 +35,7 @@ Description = Un limbaj de programare dinamic și puternic.
 Size = 15,48 Mo
 
 [Section.041f]
-Name = Piton 2
-Description = İlgi çekici, güçlü ve devingen bir çizeylemleme dili.
+Description = İlgi çekici, güçlü ve devingen bir izlenceleme dili.
 Size = 15,48 MB
 
 [Section.0422]

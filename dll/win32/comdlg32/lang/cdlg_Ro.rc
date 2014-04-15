@@ -152,7 +152,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT          "N&ume fișier:",    stc3, 6, 6, 76, 9
  EDITTEXT                           edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX                            lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT          "D&osare:",         -1, 110, 6, 92, 9
+ LTEXT          "Dos&ar:",          -1, 110, 6, 92, 9
  LTEXT          "",                 stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX                            lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT          "&Tip de fișier:",  stc2, 6, 104, 90, 9
@@ -162,7 +162,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON  "&Deschide",        IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON     "A&nulează",        IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON     "&Manual…",         pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX       "Do&ar-citire",     chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX       "Nem&odificabil",   chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -174,7 +174,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT          "N&ume fișier:",    stc3, 6, 6, 76, 9
  EDITTEXT                           edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX                            lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT          "D&osare:",         -1, 110, 6, 92, 9
+ LTEXT          "Dos&ar:",          -1, 110, 6, 92, 9
  LTEXT          "",                 stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX                            lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT          "&Tip de fișier:",  stc2, 6, 104, 90, 9
@@ -184,7 +184,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON  "&Păstrează",       IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON     "A&nulează",        IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON     "&Manual…",         pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX       "Do&ar-citire",     chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX       "Nem&odificabil",   chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -459,11 +459,12 @@ FONT 8, "MS Shell Dlg"
 
     LTEXT       "N&ume fișier:",       IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
     EDITTEXT                           IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+    CONTROL     "",                    cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
 
     LTEXT       "&Tip de fișier:",     IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX                           IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL     "Do&ar-citire",        IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL     "Nem&odificabil",      IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
     DEFPUSHBUTTON  "&Deschide",        IDOK,222,110,54,14
     PUSHBUTTON     "A&nulează",        IDCANCEL,222,128,54,14

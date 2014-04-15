@@ -137,7 +137,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                 HeapFree(GetProcessHeap(), 0, Data);
             }
         }
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
     }
 }
 
@@ -199,8 +199,8 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     item.pszText = Path;
                     item.iSubItem = 2;
                     SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                    HeapFree(GetProcessHeap(), 0, Data);
                 }
+                HeapFree(GetProcessHeap(), 0, Data);
             }
         }
         RegCloseKey(hKey);

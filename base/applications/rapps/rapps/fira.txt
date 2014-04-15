@@ -21,7 +21,7 @@ Description = Pachetul Mozilla Fira Font, include fonturile Mono și Sans. Dezar
 Size = 543 ko
 
 [Section.041f]
-Name = Mozilla Fira Yazı Türü
+Name = Mozilla Fira Yazı Tipi
 Licence = Bilinmiyor
-Description = Mozilla Fira Yazı Türü Paketi, Mono ve Sans yazı türlerini kapsar. ReactOS dizinine çıkartınız.
+Description = Mozilla Fira Yazı Tipi Paketi, Mono ve Sans yazı tiplerini kapsar. ReactOS dizinine çıkartınız.
 Size = 543 KB

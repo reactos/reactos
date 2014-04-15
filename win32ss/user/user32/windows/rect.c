@@ -193,16 +193,20 @@ SubtractRect(LPRECT lprcDst,
     if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
         return(FALSE);
 
-    CopyRect(lprcDst, lprcSrc1);
-
     if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+    {
+        *lprcDst = *lprcSrc1;
         return(TRUE);
+    }
 
-    if (EqualRect(&tempRect, lprcDst))
+    if (EqualRect(&tempRect, lprcSrc1))
     {
         SetRectEmpty(lprcDst);
         return FALSE;
     }
+
+    *lprcDst = *lprcSrc1;
+
     if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
     {
         if(lprcDst->left == tempRect.left)

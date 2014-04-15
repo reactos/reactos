@@ -246,6 +246,66 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
     }
 }
 
+HCURSOR FASTCALL
+IntSetCursor(
+    HCURSOR hCursor)
+{
+    PCURICON_OBJECT pcurOld, pcurNew;
+    HCURSOR hOldCursor = NULL;
+
+    if (hCursor)
+    {
+        pcurNew = UserGetCurIconObject(hCursor);
+        if (!pcurNew)
+        {
+            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+            goto leave;
+        }
+        pcurNew->CURSORF_flags |= CURSORF_CURRENT;
+    }
+    else
+    {
+        pcurNew = NULL;
+    }
+
+    pcurOld = UserSetCursor(pcurNew, FALSE);
+    if (pcurOld)
+    {
+        hOldCursor = pcurOld->head.h;
+        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
+        if(UserObjectInDestroy(hOldCursor))
+        {
+            /* Destroy it once and for all */
+            IntDestroyCurIconObject(pcurOld, TRUE);
+            hOldCursor = NULL;
+        }
+        else
+        {
+            UserDereferenceObject(pcurOld);
+        }
+    }
+leave:
+    return hOldCursor;
+}
+
+BOOL FASTCALL
+IntDestroyCursor(
+  HANDLE hCurIcon,
+  BOOL bForce)
+{
+    PCURICON_OBJECT CurIcon;
+    BOOL ret;
+
+    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
+    {
+        RETURN(FALSE);
+    }
+
+    ret = IntDestroyCurIconObject(CurIcon, bForce);
+    /* Note: IntDestroyCurIconObject will remove our reference for us! */
+
+    return ret;
+}
 
 /*
  * @implemented

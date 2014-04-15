@@ -4,7 +4,7 @@
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Eric Kohl
  * Copyright 2008 Michael Stefaniuc
- *           2012 Fulea Ștefan
+ *           2012 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ END
 
 IDD_WIZARD DIALOG 0, 0, 290, 159
 STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Expert"
+CAPTION "Asistent"
 FONT 8, "MS Shell Dlg"
 BEGIN
   PUSHBUTTON    "< Înap&oi",     IDC_BACK_BUTTON,56,138,55,14

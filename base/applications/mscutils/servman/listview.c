@@ -192,9 +192,7 @@ ChangeListViewText(PMAIN_WND_INFO Info,
                             lvItem.iItem,
                             (LPARAM)&lvItem);
 
-                HeapFree(ProcessHeap,
-                         0,
-                         lpStartup);
+                LocalFree(lpStartup);
                 HeapFree(ProcessHeap,
                          0,
                          lpServiceConfig);

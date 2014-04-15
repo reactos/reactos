@@ -67,13 +67,12 @@ typedef struct _CONSOLE_PROCESS_DATA
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
 #include "include/conio.h"
+#include "include/console.h"
+#include "include/settings.h"
+#include "include/term.h"
 #include "console.h"
 #include "conoutput.h"
 #include "handle.h"
 #include "lineinput.h"
-#include "frontends/gui/guisettings.h"
-#include "include/console.h"
-#include "include/settings.h"
-#include "include/term.h"
 
 #endif /* __CONSRV_H__ */

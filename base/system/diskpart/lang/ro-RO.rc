@@ -1,4 +1,4 @@
-/* Romanian translation by Fulea Ștefan */
+/* Romanian translation by Ștefan Fulea */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -26,8 +26,8 @@ BEGIN
     IDS_DETAIL_INFO_TARGET "Țintă"
     IDS_DETAIL_INFO_LUN_ID "LUN ID"
     IDS_DETAIL_INFO_LOC_PATH "Localizat în"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă doar-citire"
-    IDS_DETAIL_INFO_RO "Protejat-la-scriere"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă"
+    IDS_DETAIL_INFO_RO "Nemodificabil"
     IDS_DETAIL_INFO_BOOT_DSK "Disc inițializator"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "Disc cu fișier de paginare"
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Disc cu fișier de hibernare"

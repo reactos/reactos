@@ -31,7 +31,7 @@ BEGIN
     EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
     LTEXT "Parola:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Log on to:", IDC_STATIC, 6, 96, 52, 8
+    LTEXT "Vă autentificați la:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_TO, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL
     PUSHBUTTON "Con&firmă", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "A&nulează", IDCANCEL, 160, 122, 50, 14
@@ -141,29 +141,29 @@ BEGIN
     IDS_LOCKMSG "Doar %s sau un Administrator poate debloca acest calculator."
     IDS_LOGONMSG "Sunteți autentificat ca %s."
     IDS_LOGONDATE "Data autentificării: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
-    IDS_LOGONTITLE "Logon Message"
-    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
+    IDS_COMPUTERLOCKED "Calculator blocat"
+    IDS_LOCKEDWRONGPASSWORD "Parola este eronată. Încercați din nou. Literele din parola necesită atenție la capitalizare."
+    IDS_LOCKEDWRONGUSER "Acest calculator a fost blocat. Doar %s\\%s sau un Administrator pot debloca acest calculator."
+    IDS_CHANGEPWDTITLE "Modifică parola"
+    IDS_NONMATCHINGPASSWORDS "Parolele tastate nu corespund. Tastați aceiași parolă în ambele câmpuri de intrpducere."
+    IDS_PASSWORDCHANGED "Parola dumneavoastră a fost modificată."
+    IDS_LOGONTITLE "Mesaj de autentificare"
+    IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă se face distincție între majuscule și minuscule."
+    IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Deautentificare ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Închidere"
+    IDS_SHUTDOWN_RESTART "Repornire"
+    IDS_SHUTDOWN_SLEEP "Stare de veghe"
+    IDS_SHUTDOWN_HIBERNATE "Hibernare"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Închide sesiunea curentă permițând altor utilizatori autentificarea în sistem."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Închide atât sesiunea curentă cât și sistemul de operare pentru a puta opri în siguranță alimentarea electrică."
+    IDS_SHUTDOWN_RESTART_DESC "Închide sesiunea curentă și repornește sistemul."
+    IDS_SHUTDOWN_SLEEP_DESC "Induce sistemul în starea de veghe."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Păstrează sesiunea curentă și oprește calculatorul."
 END

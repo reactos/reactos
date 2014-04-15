@@ -31,9 +31,8 @@ Size = 7,5 Mo
 Description = Double Commander - это открытый двухпанельный файловый менеджер. Вам нужен 7-Zip или подобная утилита для его распаковки.
 
 [Section.041f]
-Name = İkili Komutan
 Version = 0.5.8 Gelişme
-Description = İkili Komutan, yan yana duran iki bölmenin bulunduğu bir açık kaynak kütük yöneticisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = Double Commander, yan yana duran iki bölmenin bulunduğu bir açık kaynak kütük yöneticisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
 Size = 7,5 MB
 
 [Section.0422]

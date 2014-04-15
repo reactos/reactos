@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Stamina 2.5
@@ -13,9 +13,9 @@ CDPath = none
 Description = Ein freies Schreiblernprogramm. Um dieses Programm nutzen zu können, müssen Sie das Microsoft Visual C++ 6 Redistributable Package installieren.
 
 [Section.0418]
-Description = Tutor gratuit pentru dactilografiere. (FIXME)
+Description = Tutor gratuit pentru dactilografiere. Pentru a putea lansa acest program, asigurați-vă că aveți instalat pachetul Microsoft Visual C++ 6 Redistributable.
 Size = 4,7 Mo
 
 [Section.041f]
-Description = Ücretsiz bir düğme takımında yazma öğreticisi. Yazılımı çalıştırmk için Mikroyazılım Basarî C++ 6 Yeniden Dağıtılabilir Paket'i kurunuz.
+Description = Ücretsiz bir düğme takımında yazma öğreticisi. Yazılımı çalıştırmk için Microsoft Visual C++ 6 Yeniden Dağıtılabilir Paket'i kurunuz.
 Size = 4,7 MB

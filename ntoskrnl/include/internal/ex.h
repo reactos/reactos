@@ -33,18 +33,32 @@ extern LIST_ENTRY ExpPagedLookasideListHead;
 extern KSPIN_LOCK ExpNonPagedLookasideListLock;
 extern KSPIN_LOCK ExpPagedLookasideListLock;
 
-typedef struct _EXHANDLE
+#ifdef _WIN64
+#define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
+#define HANDLE_HIGH_BITS (PAGE_SHIFT - 3)
+#else
+#define HANDLE_LOW_BITS (PAGE_SHIFT - 3)
+#define HANDLE_HIGH_BITS (PAGE_SHIFT - 2)
+#endif
+#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - 31)
+
+typedef union _EXHANDLE
 {
-    union
-    {
-        struct
-        {
-            ULONG TagBits:2;
-            ULONG Index:30;
-        };
-        HANDLE GenericHandleOverlay;
-        ULONG_PTR Value;
-    };
+     struct
+     {
+         ULONG_PTR TagBits:2;
+         ULONG_PTR Index:29;
+     };
+     struct
+     {
+         ULONG_PTR TagBits2:2;
+         ULONG_PTR LowIndex:HANDLE_LOW_BITS;
+         ULONG_PTR MidIndex:HANDLE_HIGH_BITS;
+         ULONG_PTR HighIndex:HANDLE_HIGH_BITS;
+         ULONG_PTR KernelFlag:KERNEL_FLAG_BITS;
+     };
+     HANDLE GenericHandleOverlay;
+     ULONG_PTR Value;
 } EXHANDLE, *PEXHANDLE;
 
 typedef struct _ETIMER

@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -124,6 +124,7 @@
 #define _COMPONENT          ACPI_DISPATCHER
         ACPI_MODULE_NAME    ("dsinit")
 
+
 /* Local prototypes */
 
 static ACPI_STATUS
@@ -145,7 +146,7 @@ AcpiDsInitOneObject (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Callback from AcpiWalkNamespace.  Invoked for every object
+ * DESCRIPTION: Callback from AcpiWalkNamespace. Invoked for every object
  *              within the namespace.
  *
  *              Currently, the only objects that require initialization are:
@@ -163,8 +164,8 @@ AcpiDsInitOneObject (
 {
     ACPI_INIT_WALK_INFO     *Info = (ACPI_INIT_WALK_INFO *) Context;
     ACPI_NAMESPACE_NODE     *Node = (ACPI_NAMESPACE_NODE *) ObjHandle;
-    ACPI_OBJECT_TYPE        Type;
     ACPI_STATUS             Status;
+    ACPI_OPERAND_OBJECT     *ObjDesc;
 
 
     ACPI_FUNCTION_ENTRY ();
@@ -183,9 +184,7 @@ AcpiDsInitOneObject (
 
     /* And even then, we are only interested in a few object types */
 
-    Type = AcpiNsGetType (ObjHandle);
-
-    switch (Type)
+    switch (AcpiNsGetType (ObjHandle))
     {
     case ACPI_TYPE_REGION:
 
@@ -200,20 +199,55 @@ AcpiDsInitOneObject (
         Info->OpRegionCount++;
         break;
 
-
     case ACPI_TYPE_METHOD:
-
+        /*
+         * Auto-serialization support. We will examine each method that is
+         * NotSerialized to determine if it creates any Named objects. If
+         * it does, it will be marked serialized to prevent problems if
+         * the method is entered by two or more threads and an attempt is
+         * made to create the same named object twice -- which results in
+         * an AE_ALREADY_EXISTS exception and method abort.
+         */
         Info->MethodCount++;
-        break;
+        ObjDesc = AcpiNsGetAttachedObject (Node);
+        if (!ObjDesc)
+        {
+            break;
+        }
 
+        /* Ignore if already serialized */
+
+        if (ObjDesc->Method.InfoFlags & ACPI_METHOD_SERIALIZED)
+        {
+            Info->SerialMethodCount++;
+            break;
+        }
+
+        if (AcpiGbl_AutoSerializeMethods)
+        {
+            /* Parse/scan method and serialize it if necessary */
+
+            AcpiDsAutoSerializeMethod (Node, ObjDesc);
+            if (ObjDesc->Method.InfoFlags & ACPI_METHOD_SERIALIZED)
+            {
+                /* Method was just converted to Serialized */
+
+                Info->SerialMethodCount++;
+                Info->SerializedMethodCount++;
+                break;
+            }
+        }
+
+        Info->NonSerialMethodCount++;
+        break;
 
     case ACPI_TYPE_DEVICE:
 
         Info->DeviceCount++;
         break;
 
-
     default:
+
         break;
     }
 
@@ -261,7 +295,6 @@ AcpiDsInitializeObjects (
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "**** Starting initialization of namespace objects ****\n"));
-    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "Parsing all Control Methods:"));
 
     /* Set all init info to zero */
 
@@ -297,14 +330,14 @@ AcpiDsInitializeObjects (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nTable [%4.4s](id %4.4X) - %u Objects with %u Devices %u Methods %u Regions\n",
-        Table->Signature, OwnerId, Info.ObjectCount,
-        Info.DeviceCount, Info.MethodCount, Info.OpRegionCount));
+        "Table [%4.4s] (id %4.4X) - %4u Objects with %3u Devices, "
+        "%3u Regions, %3u Methods (%u/%u/%u Serial/Non/Cvt)\n",
+        Table->Signature, OwnerId, Info.ObjectCount, Info.DeviceCount,
+        Info.OpRegionCount, Info.MethodCount, Info.SerialMethodCount,
+        Info.NonSerialMethodCount, Info.SerializedMethodCount));
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Methods, %u Regions\n", Info.MethodCount, Info.OpRegionCount));
+    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH, "%u Methods, %u Regions\n",
+        Info.MethodCount, Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }
-
-

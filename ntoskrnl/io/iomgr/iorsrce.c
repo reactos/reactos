@@ -233,8 +233,8 @@ IopQueryDeviceDescription(
             /* How much buffer space */
             Status = ZwQueryValueKey(ControllerKeyHandle, &ControllerString, KeyValueFullInformation, NULL, 0, &LenKeyFullInformation);
 
-	    if(!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
-	      continue;
+            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
+               continue;
 
             /* Allocate it */
             ControllerInformation[ControllerLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
@@ -337,7 +337,7 @@ IopQueryDeviceDescription(
 
          /* Create String */
          Status |= RtlAppendUnicodeToString(&ControllerRootRegName, L"\\");
-	 Status |= RtlAppendUnicodeStringToString(&ControllerRootRegName, &TempString);
+         Status |= RtlAppendUnicodeStringToString(&ControllerRootRegName, &TempString);
 
          /* Something messed up */
          if (!NT_SUCCESS(Status)) break;
@@ -362,11 +362,11 @@ IopQueryDeviceDescription(
                /* How much buffer space */
                Status = ZwQueryValueKey(PeripheralKeyHandle, &PeripheralString, KeyValueFullInformation, NULL, 0, &LenKeyFullInformation);
 
-	       if(!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
-	       {
-	         PeripheralInformation[PeripheralLoop] = NULL;
-		 continue;
-	       }
+               if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
+               {
+                 PeripheralInformation[PeripheralLoop] = NULL;
+                 continue;
+               }
 
                /* Allocate it */
                PeripheralInformation[PeripheralLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
@@ -482,7 +482,7 @@ IopQueryBusDescription(
    /* Allocate it */
    FullInformation = ExAllocatePoolWithTag(PagedPool, LenFullInformation, TAG_IO_RESOURCE);
 
-   if(!FullInformation)
+   if (!FullInformation)
      return STATUS_NO_MEMORY;
 
    /* Get the Information */
@@ -722,7 +722,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
                                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed opening given symbolic link!\n");
+        DPRINT("Failed to open symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
         return;
     }
 
@@ -742,7 +742,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed querying given symbolic link!\n");
+        DPRINT("Failed querying symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
         return;
     }
 
@@ -756,7 +756,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
                                   KEY_ALL_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed opening registry!\n");
+        DPRINT("Failed to open HKLM\\SYSTEM, Status=%lx\n", Status);
         return;
     }
 
@@ -775,7 +775,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed opening/creating Setup key!\n");
+        DPRINT("Failed opening/creating Setup key, Status=%lx\n", Status);
         return;
     }
 
@@ -791,7 +791,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
                            LinkTarget.Length + sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed writing SystemPartition value!\n");
+        DPRINT("Failed writing SystemPartition value, Status=%lx\n", Status);
     }
 
     /* Prepare for second data writing... */
@@ -811,10 +811,10 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
                            0,
                            REG_SZ,
                            OsLoaderPathName->Buffer,
-                           OsLoaderPathName->Length + sizeof(WCHAR));
+                           OsLoaderPathName->Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed writing OsLoaderPath value!\n");
+        DPRINT("Failed writing OsLoaderPath value, Status=%lx\n", Status);
     }
 
     /* We're finally done! */
@@ -870,22 +870,22 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
 {
     NTSTATUS Status;
     PCM_RESOURCE_LIST ResourceList;
-    
+
     DPRINT1("IoReportResourceUsage is halfplemented!\n");
-    
+
     if (!DriverList && !DeviceList)
         return STATUS_INVALID_PARAMETER;
-    
+
     if (DeviceList)
         ResourceList = DeviceList;
     else
         ResourceList = DriverList;
-    
+
     Status = IopDetectResourceConflict(ResourceList, FALSE, NULL);
     if (Status == STATUS_CONFLICTING_ADDRESSES)
     {
         *ConflictDetected = TRUE;
-        
+
         if (!OverrideConflict)
         {
             DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
@@ -902,9 +902,9 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
     }
 
     /* TODO: Claim resources in registry */
-    
+
     *ConflictDetected = FALSE;
-    
+
     return STATUS_SUCCESS;
 }
 

@@ -533,19 +533,19 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
     switch (Flags)
     {
     case TCI_SRCFONTSIG:
-        while (0 == (*Src >> Index & 0x0001) && Index < MAXTCIINDEX)
+        while (Index < MAXTCIINDEX && 0 == (*Src >> Index & 0x0001))
         {
             Index++;
         }
         break;
     case TCI_SRCCODEPAGE:
-        while ( *Src != FontTci[Index].ciACP && Index < MAXTCIINDEX)
+        while (Index < MAXTCIINDEX && *Src != FontTci[Index].ciACP)
         {
             Index++;
         }
         break;
     case TCI_SRCCHARSET:
-        while ( *Src != FontTci[Index].ciCharset && Index < MAXTCIINDEX)
+        while (Index < MAXTCIINDEX && *Src != FontTci[Index].ciCharset)
         {
             Index++;
         }

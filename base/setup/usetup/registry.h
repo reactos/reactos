@@ -38,4 +38,7 @@ SetInstallPathValue(PUNICODE_STRING InstallPath);
 BOOLEAN
 SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset);
 
+VOID
+SetDefaultPagefile(WCHAR Drive);
+
 /* EOF */

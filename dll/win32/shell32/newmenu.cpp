@@ -165,7 +165,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
         return NULL;
 
     /* Create new item */
-    SHELLNEW_ITEM *pNewItem = (SHELLNEW_ITEM *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM));
+    SHELLNEW_ITEM *pNewItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));
     if (!pNewItem)
     {
         free(pData);
@@ -225,7 +225,7 @@ CNewMenu::LoadAllItems()
 
     if (!m_pLinkItem)
     {
-        m_pLinkItem = (SHELLNEW_ITEM *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM));
+        m_pLinkItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));
         if (m_pLinkItem)
         {
             m_pLinkItem->Type = SHELLNEW_TYPE_NULLFILE;

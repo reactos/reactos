@@ -130,6 +130,23 @@ _SEH3$_InvokeFilter(
     return FilterResult;
 }
 
+void
+__attribute__((regparm(1)))
+_SEH3$_AutoCleanup(
+    SEH3$_REGISTRATION_FRAME *Frame)
+{
+    /* Check for __finally frames */
+    if (Frame->ScopeTable->Target == NULL)
+    {
+         _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
+    }
+
+    if (Frame->Handler)
+        _SEH3$_UnregisterFrame(Frame);
+    else
+        _SEH3$_UnregisterTryLevel(Frame);
+}
+
 static inline
 LONG
 _SEH3$_GetFilterResult(

@@ -231,7 +231,7 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
 
 BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
 {
-    return ((CRecycleBinEnum *)Context)->CBEnumRecycleBin(hDeletedFile);
+    return static_cast<CRecycleBinEnum *>(Context)->CBEnumRecycleBin(hDeletedFile);
 }
 
 BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN HANDLE hDeletedFile)

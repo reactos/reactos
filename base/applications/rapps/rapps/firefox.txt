@@ -71,8 +71,7 @@ URLSite = http://www.mozilla.org/sk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/sk/Firefox%20Setup%2026.0.exe
 
 [Section.041f]
-Name = Mozilla Ateştilkisi 26
-Description = Özgür örütbağ tarayıcıları arasında en tutulanı ve en iyisi.
+Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyisi.
 Size = 22,8 MB
 URLSite = http://www.mozilla.org/tr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/26.0/win32/tr/Firefox%20Setup%2026.0.exe

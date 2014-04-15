@@ -288,7 +288,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
             }
 
             if(!FindNextFile(hFind, &fd))
-                hFind = INVALID_HANDLE_VALUE;
+                break;
         }
 
         token = _tcstok(NULL, separators);
@@ -493,7 +493,7 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     ofn.lpstrFileTitle = fileTitle;
     ofn.nMaxFileTitle = 256;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     if (GetOpenFileName(&ofn) == TRUE)
     {

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -26,7 +26,7 @@ BEGIN
     GROUPBOX "&Görüntülük Koruyucu", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Ayarlar", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON "&Önizleme", IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    PUSHBUTTON "&Ön İzleme", IDC_SCREENS_TESTSC, 175, 103, 50, 13
     LTEXT "&Bekleme:", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -76,10 +76,10 @@ BEGIN
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "2. Renk", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Yazı Türü", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "Yazı Tipi", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Yazı Türü Boyutu", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Yazı Tipi Boyutu", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "Renk", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
@@ -99,7 +99,7 @@ BEGIN
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Görüntülük Yazı Türlerinin Kenarlarını Düzgünleştirmeyi Etkinleştir", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "&Görüntülük Yazı Tiplerinin Kıyılarını Düzgünleştirmeyi Etkinleştir", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
@@ -109,7 +109,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
     CONTROL "S&ürüklerken Pencere İçeriğini Göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "S&eçenek Düğmesine Basana Kadar Düğme Takımı ile Yönlendirme Çizgilerini Gizle",
+    CONTROL "S&eçenek Düğmesine Basana Dek Düğme Takımı ile Yönlendirme Çizgilerini Gizle",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     PUSHBUTTON "İptal", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 172, 165, 50, 14
@@ -142,11 +142,11 @@ CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Yazı Türü Boyutu", -1, 14, 20, 222, 9
+    LTEXT "Yazı Tipi Boyutu", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
-    LTEXT "Birtakım çizeylemler, renk ayarlarını değiştirdikten sonra yeniden başlatılmazsa eksiksiz olarak çalışmayabilir.\r\n\nRenk ayarları değiştirildikten sonra:", -1, 12, 78, 228, 34
+    LTEXT "Birtakım izlenceler, renk ayarlarını değiştirdikten sonra yeniden başlatılmazsa eksiksiz olarak çalışmayabilir.\r\n\nRenk ayarları değiştirildikten sonra:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&yeni renk ayarları uygulanmadan önce bilgisayar yeniden başlatılsın.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "y&eniden başlatılmadan yeni renk ayarları uygulansın.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "ye&ni renk ayarlarının uygulanıp uygulanmayacağı kullanıcıya sorulsun.", IDC_ASKME_RB, 14, 146, 228, 10
@@ -204,9 +204,9 @@ STRINGTABLE
 BEGIN
     IDS_COLOR_4BIT "16 Renk"
     IDS_COLOR_8BIT "256 Renk"
-    IDS_COLOR_16BIT "Yüksek Renk (16 İkillik)"
-    IDS_COLOR_24BIT "Gerçek Renk (24 İkillik)"
-    IDS_COLOR_32BIT "Gerçek Renk (32 İkillik)"
+    IDS_COLOR_16BIT "Yüksek Renk (16 Bitlik)"
+    IDS_COLOR_24BIT "Gerçek Renk (24 Bitlik)"
+    IDS_COLOR_32BIT "Gerçek Renk (32 Bitlik)"
     IDS_PIXEL "%lux%lu Nokta"
 END
 

@@ -569,7 +569,8 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->InsertMode = ConsoleInfo->InsertMode;
     Console->LineBuffer = NULL;
     Console->LineMaxSize = Console->LineSize = Console->LinePos = 0;
-    Console->LineComplete = Console->LineUpPressed = Console->LineInsertToggle = FALSE;
+    Console->LineComplete = Console->LineUpPressed = FALSE;
+    Console->LineInsertToggle = Console->InsertMode;
     // LineWakeupMask
 
     // FIXME: This is terminal-specific !! VV

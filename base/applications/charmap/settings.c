@@ -122,13 +122,13 @@ extern void SaveSettings(void)
             hWnd = GetDlgItem(hCharmapDlg, IDC_FONTCOMBO);
             ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
 
-            if(szBuffer != NULL && *szBuffer != '\0')
+            if(*szBuffer != '\0')
                 RegSetValueEx(hKey, _T("Font"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
 
             hWnd = GetDlgItem(hCharmapDlg, IDC_COMBO_CHARSET);
             ComboBox_GetText(hWnd, szBuffer, MAX_PATH);
 
-            if(szBuffer != NULL && *szBuffer != '\0')
+            if(*szBuffer != '\0')
                 RegSetValueEx(hKey, _T("CodePage"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) MAX_PATH);
 
             RegSetValueEx(hKey, _T("Advanced"), 0, REG_DWORD, (LPBYTE)&Settings.IsAdvancedView, (DWORD) sizeof(DWORD));

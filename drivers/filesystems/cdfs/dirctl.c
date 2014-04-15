@@ -303,7 +303,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
             FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {
-            if (Parent && Parent->PathName)
+            if (Parent->PathName[0])
             {
                 len = wcslen(Parent->PathName);
                 memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));

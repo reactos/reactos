@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -186,6 +186,7 @@ AcpiExConvertToInteger (
         break;
 
     default:
+
         return_ACPI_STATUS (AE_TYPE);
     }
 
@@ -205,7 +206,6 @@ AcpiExConvertToInteger (
     switch (ObjDesc->Common.Type)
     {
     case ACPI_TYPE_STRING:
-
         /*
          * Convert string to an integer - for most cases, the string must be
          * hexadecimal as per the ACPI specification. The only exception (as
@@ -218,7 +218,6 @@ AcpiExConvertToInteger (
             return_ACPI_STATUS (Status);
         }
         break;
-
 
     case ACPI_TYPE_BUFFER:
 
@@ -251,10 +250,10 @@ AcpiExConvertToInteger (
         }
         break;
 
-
     default:
 
         /* No other types can get here */
+
         break;
     }
 
@@ -271,7 +270,7 @@ AcpiExConvertToInteger (
 
     /* Save the Result */
 
-    AcpiExTruncateFor32bitTable (ReturnDesc);
+    (void) AcpiExTruncateFor32bitTable (ReturnDesc);
     *ResultDesc = ReturnDesc;
     return_ACPI_STATUS (AE_OK);
 }
@@ -314,7 +313,6 @@ AcpiExConvertToBuffer (
 
 
     case ACPI_TYPE_INTEGER:
-
         /*
          * Create a new Buffer object.
          * Need enough space for one integer
@@ -333,9 +331,7 @@ AcpiExConvertToBuffer (
                         AcpiGbl_IntegerByteWidth);
         break;
 
-
     case ACPI_TYPE_STRING:
-
         /*
          * Create a new Buffer object
          * Size will be the string length
@@ -359,8 +355,8 @@ AcpiExConvertToBuffer (
             ObjDesc->String.Length);
         break;
 
-
     default:
+
         return_ACPI_STATUS (AE_TYPE);
     }
 
@@ -416,15 +412,18 @@ AcpiExConvertToAscii (
         switch (DataWidth)
         {
         case 1:
+
             DecimalLength = ACPI_MAX8_DECIMAL_DIGITS;
             break;
 
         case 4:
+
             DecimalLength = ACPI_MAX32_DECIMAL_DIGITS;
             break;
 
         case 8:
         default:
+
             DecimalLength = ACPI_MAX64_DECIMAL_DIGITS;
             break;
         }
@@ -533,7 +532,6 @@ AcpiExConvertToString (
         *ResultDesc = ObjDesc;
         return_ACPI_STATUS (AE_OK);
 
-
     case ACPI_TYPE_INTEGER:
 
         switch (Type)
@@ -576,7 +574,6 @@ AcpiExConvertToString (
         ReturnDesc->String.Length = StringLength;
         NewBuf [StringLength] = 0;
         break;
-
 
     case ACPI_TYPE_BUFFER:
 
@@ -676,6 +673,7 @@ AcpiExConvertToString (
         break;
 
     default:
+
         return_ACPI_STATUS (AE_TYPE);
     }
 
@@ -735,6 +733,7 @@ AcpiExConvertToTargetType (
             break;
 
         default:
+
             /* No conversion allowed for these types */
 
             if (DestinationType != SourceDesc->Common.Type)
@@ -747,7 +746,6 @@ AcpiExConvertToTargetType (
             }
         }
         break;
-
 
     case ARGI_TARGETREF:
 
@@ -765,7 +763,6 @@ AcpiExConvertToTargetType (
                         16);
             break;
 
-
         case ACPI_TYPE_STRING:
             /*
              * The operand must be a String. We can convert an
@@ -775,7 +772,6 @@ AcpiExConvertToTargetType (
                         ACPI_IMPLICIT_CONVERT_HEX);
             break;
 
-
         case ACPI_TYPE_BUFFER:
             /*
              * The operand must be a Buffer. We can convert an
@@ -784,8 +780,8 @@ AcpiExConvertToTargetType (
             Status = AcpiExConvertToBuffer (SourceDesc, ResultDesc);
             break;
 
-
         default:
+
             ACPI_ERROR ((AE_INFO, "Bad destination type during conversion: 0x%X",
                 DestinationType));
             Status = AE_AML_INTERNAL;
@@ -793,15 +789,14 @@ AcpiExConvertToTargetType (
         }
         break;
 
-
     case ARGI_REFERENCE:
         /*
          * CreateXxxxField cases - we are storing the field object into the name
          */
         break;
 
-
     default:
+
         ACPI_ERROR ((AE_INFO,
             "Unknown Target type ID 0x%X AmlOpcode 0x%X DestType %s",
             GET_CURRENT_ARG_TYPE (WalkState->OpInfo->RuntimeArgs),
@@ -822,5 +817,3 @@ AcpiExConvertToTargetType (
 
     return_ACPI_STATUS (Status);
 }
-
-

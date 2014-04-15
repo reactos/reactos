@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Qt-based Multimedia Player
+Name = Qmmp (Qt-based Multimedia Player)
 Version = 0.7.3
 Licence = GPL
 Description = Qmmp is an audio-player, written with the help of the Qt library. The user interface is similar to WinAMP or XMMS. Alternative user interfaces also are available.
@@ -22,6 +22,6 @@ Size = 16,0 Mo
 Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
 
 [Section.041f]
-Name = Qt Tabanlı Çokluortam Oynatıcısı
+Name = Qmmp (Qt Tabanlı Çokluortam Oynatıcısı)
 Description = Qmmp, Qt kitaplığının yardımıyla yazılan bir ses oynatıcısıdır. Kullanıcı arayüzüsü WinAMP'ınkine ve XMMS'ninkine benzer. Ayrıca değişik kullanıcı arayüzleri de vardır.
 Size = 16,0 MB

@@ -119,14 +119,14 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 #ifdef LANGUAGE_SL_SI
     #include "lang/Si.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/Sq.rc"
+#endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/Tr.rc"
-#endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/Sq.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/Uk.rc"

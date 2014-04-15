@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 - Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -144,6 +144,6 @@ BEGIN
     IDS_RESTARTSUBTITLE "Kurulumun ilk aşaması bitti. İkincisine geçmek için bilgisayarı yeniden başlatınız."
     IDS_SUMMARYTITLE "Kurulum Özeti"
     IDS_SUMMARYSUBTITLE "Kurulumdan önce, dizelgelenen kurulum seçeneklerini gözden geçiriniz."
-    IDS_ABORTSETUP "ReactOS kurulumu bitmedi. Eğer Kur'dan çıkarsanız, ReactOS'u kurmak için Kur'u yeniden çalıştırabilirsiniz. Çıkmayı onaylıyor musunuz?"
+    IDS_ABORTSETUP "ReactOS kurulumu bitmedi. Eğer Kur'dan çıkarsanız, ReactOS'u kurmak için Kur'u yeniden çalıştırabilirsiniz. Çıkmayı doğruluyor musunuz?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
 END

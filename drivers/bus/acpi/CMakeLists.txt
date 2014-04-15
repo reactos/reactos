@@ -28,6 +28,7 @@ list(APPEND ACPICA_SOURCE
     acpica/events/evgpeblk.c
     acpica/events/evgpeinit.c
     acpica/events/evgpeutil.c
+    acpica/events/evhandler.c
     acpica/events/evmisc.c
     acpica/events/evregion.c
     acpica/events/evrgnini.c
@@ -40,16 +41,16 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exconvrt.c
     acpica/executer/excreate.c
     acpica/executer/exdebug.c
-    #acpica/executer/exdump.c
+    # acpica/executer/exdump.c
     acpica/executer/exfield.c
     acpica/executer/exfldio.c
     acpica/executer/exmisc.c
     acpica/executer/exmutex.c
+    acpica/executer/exnames.c
     acpica/executer/exoparg1.c
     acpica/executer/exoparg2.c
     acpica/executer/exoparg3.c
     acpica/executer/exoparg6.c
-    acpica/executer/exnames.c
     acpica/executer/exprep.c
     acpica/executer/exregion.c
     acpica/executer/exresnte.c
@@ -61,6 +62,7 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exsystem.c
     acpica/executer/exutils.c
     acpica/hardware/hwacpi.c
+    acpica/hardware/hwesleep.c
     acpica/hardware/hwgpe.c
     acpica/hardware/hwpci.c
     acpica/hardware/hwregs.c
@@ -68,10 +70,13 @@ list(APPEND ACPICA_SOURCE
     acpica/hardware/hwtimer.c
     acpica/hardware/hwvalid.c
     acpica/hardware/hwxface.c
+    acpica/hardware/hwxfsleep.c
     acpica/namespace/nsaccess.c
     acpica/namespace/nsalloc.c
-    #acpica/namespace/nsdump.c
-    #acpica/namespace/nsdumpdv.c
+    acpica/namespace/nsarguments.c
+    acpica/namespace/nsconvert.c
+    # acpica/namespace/nsdump.c
+    # acpica/namespace/nsdumpdv.c
     acpica/namespace/nseval.c
     acpica/namespace/nsinit.c
     acpica/namespace/nsload.c
@@ -79,6 +84,7 @@ list(APPEND ACPICA_SOURCE
     acpica/namespace/nsobject.c
     acpica/namespace/nsparse.c
     acpica/namespace/nspredef.c
+    acpica/namespace/nsprepkg.c
     acpica/namespace/nsrepair.c
     acpica/namespace/nsrepair2.c
     acpica/namespace/nssearch.c
@@ -89,7 +95,9 @@ list(APPEND ACPICA_SOURCE
     acpica/namespace/nsxfobj.c
     acpica/parser/psargs.c
     acpica/parser/psloop.c
+    acpica/parser/psobject.c
     acpica/parser/psopcode.c
+    acpica/parser/psopinfo.c
     acpica/parser/psparse.c
     acpica/parser/psscope.c
     acpica/parser/pstree.c
@@ -99,29 +107,38 @@ list(APPEND ACPICA_SOURCE
     acpica/resources/rsaddr.c
     acpica/resources/rscalc.c
     acpica/resources/rscreate.c
-    #acpica/resources/rsdump.c
+    # acpica/resources/rsdump.c
+    # acpica/resources/rsdumpinfo.c
     acpica/resources/rsinfo.c
     acpica/resources/rsio.c
     acpica/resources/rsirq.c
     acpica/resources/rslist.c
     acpica/resources/rsmemory.c
     acpica/resources/rsmisc.c
+    acpica/resources/rsserial.c
     acpica/resources/rsutils.c
     acpica/resources/rsxface.c
+    acpica/tables/tbdata.c
     acpica/tables/tbfadt.c
     acpica/tables/tbfind.c
     acpica/tables/tbinstal.c
+    acpica/tables/tbprint.c
     acpica/tables/tbutils.c
     acpica/tables/tbxface.c
+    acpica/tables/tbxfload.c
     acpica/tables/tbxfroot.c
+    acpica/utilities/utaddress.c
     acpica/utilities/utalloc.c
+    acpica/utilities/utbuffer.c
     acpica/utilities/utcache.c
     acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
     acpica/utilities/utdebug.c
     acpica/utilities/utdecode.c
     acpica/utilities/utdelete.c
+    acpica/utilities/uterror.c
     acpica/utilities/uteval.c
+    acpica/utilities/utexcep.c
     acpica/utilities/utids.c
     acpica/utilities/utinit.c
     acpica/utilities/utlock.c
@@ -130,18 +147,23 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utmutex.c
     acpica/utilities/utobject.c
     acpica/utilities/utosi.c
+    acpica/utilities/utownerid.c
+    acpica/utilities/utpredef.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
+    acpica/utilities/utstring.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c
     acpica/utilities/utxferror.c
+    acpica/utilities/utxfinit.c
+    acpica/utilities/utxfmutex.c
     acpica/include/acpi.h)
 
 add_library(acpica
     ${ACPICA_SOURCE}
     acpica/utilities/utglobal.c)
 
-add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
+#add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 add_dependencies(acpica bugcodes)
 

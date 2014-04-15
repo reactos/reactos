@@ -2,8 +2,9 @@
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/console.c
- * PURPOSE:         initialization of DLL
+ * PURPOSE:         Initialization
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #include "console.h"
@@ -59,16 +60,16 @@ const COLORREF s_Colors[16] =
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp,
+InitPropSheetPage(PROPSHEETPAGEW *psp,
                   WORD idDlg,
                   DLGPROC DlgProc,
                   LPARAM lParam)
 {
-    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-    psp->dwSize = sizeof(PROPSHEETPAGE);
+    ZeroMemory(psp, sizeof(PROPSHEETPAGEW));
+    psp->dwSize = sizeof(PROPSHEETPAGEW);
     psp->dwFlags = PSP_DEFAULT;
     psp->hInstance = hApplet;
-    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pszTemplate = MAKEINTRESOURCEW(idDlg);
     psp->pfnDlgProc = DlgProc;
     psp->lParam = lParam;
 }
@@ -134,24 +135,20 @@ ApplyProc(HWND hwndDlg,
           WPARAM wParam,
           LPARAM lParam)
 {
-    HWND hDlgCtrl;
-
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
-            SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+            CheckDlgButton(hwndDlg, IDC_RADIO_APPLY_CURRENT, BST_CHECKED);
             return TRUE;
         }
         case WM_COMMAND:
         {
             if (LOWORD(wParam) == IDOK)
             {
-                hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
-                if (SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_APPLY_CURRENT) == BST_CHECKED)
                     EndDialog(hwndDlg, IDC_RADIO_APPLY_CURRENT);
                 else
                     EndDialog(hwndDlg, IDC_RADIO_APPLY_ALL);
@@ -187,7 +184,7 @@ ApplyConsoleInfo(HWND hwndDlg,
     }
     else
     {
-        INT_PTR res = DialogBox(hApplet, MAKEINTRESOURCE(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
+        INT_PTR res = DialogBoxW(hApplet, MAKEINTRESOURCEW(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
 
         SetParams  = (res != IDCANCEL);
         SaveParams = (res == IDC_RADIO_APPLY_ALL);
@@ -209,12 +206,12 @@ ApplyConsoleInfo(HWND hwndDlg,
          * Create a memory section to share with the server, and map it.
          */
         /* Holds data for console.dll + console info + terminal-specific info */
-        hSection = CreateFileMapping(INVALID_HANDLE_VALUE,
-                                     NULL,
-                                     PAGE_READWRITE,
-                                     0,
-                                     sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO),
-                                     NULL);
+        hSection = CreateFileMappingW(INVALID_HANDLE_VALUE,
+                                      NULL,
+                                      PAGE_READWRITE,
+                                      0,
+                                      sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO),
+                                      NULL);
         if (!hSection)
         {
             DPRINT1("Error when creating file mapping, error = %d\n", GetLastError());
@@ -264,12 +261,11 @@ LONG APIENTRY
 InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     HANDLE hSection = (HANDLE)wParam;
-    BOOL GuiTermInfo = FALSE;
-    PCONSOLE_PROPS pSharedInfo;
+    PCONSOLE_PROPS pSharedInfo = NULL;
     PCONSOLE_PROPS pConInfo;
     WCHAR szTitle[MAX_PATH + 1];
-    PROPSHEETPAGE psp[4];
-    PROPSHEETHEADER psh;
+    PROPSHEETPAGEW psp[4];
+    PROPSHEETHEADERW psh;
     INT i = 0;
 
     UNREFERENCED_PARAMETER(uMsg);
@@ -285,51 +281,71 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     pConInfo = AllocConsoleInfo();
     if (!pConInfo) return 0;
 
-    /* Map the shared section */
-    pSharedInfo = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
-    if (pSharedInfo == NULL)
+    /* Check whether we were launched from the terminal... */
+    if (hSection != NULL)
     {
-        HeapFree(GetProcessHeap(), 0, pConInfo);
-        return 0;
+        /* ... yes, map the shared section */
+        pSharedInfo = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
+        if (pSharedInfo == NULL)
+        {
+            /* Cleanup */
+            HeapFree(GetProcessHeap(), 0, pConInfo);
+
+            /* Close the section */
+            CloseHandle(hSection);
+
+            return 0;
+        }
+
+        /* Find the console window and whether we set the default parameters */
+        pConInfo->hConsoleWindow    = pSharedInfo->hConsoleWindow;
+        pConInfo->ShowDefaultParams = pSharedInfo->ShowDefaultParams;
+    }
+    else
+    {
+        /* ... no, we were launched as a CPL. Display the default settings. */
+        pConInfo->ShowDefaultParams = TRUE;
     }
 
-    /* Find the console window and whether we must use default parameters */
-    pConInfo->hConsoleWindow    = pSharedInfo->hConsoleWindow;
-    pConInfo->ShowDefaultParams = pSharedInfo->ShowDefaultParams;
-
-    /* Check that we are going to modify GUI terminal information */
-    GuiTermInfo = ( pSharedInfo->TerminalInfo.Size == sizeof(GUI_CONSOLE_INFO) &&
-                    pSharedInfo->TerminalInfo.TermInfo != 0 );
-
-    if (pConInfo->ShowDefaultParams || !GuiTermInfo)
+    if (pConInfo->ShowDefaultParams)
     {
         /* Use defaults */
         InitConsoleDefaults(pConInfo);
     }
-    else
+    else if (hSection && pSharedInfo)
     {
         /*
          * Copy the shared data into our allocated buffer, and
          * de-offsetize the address of terminal-specific information.
          */
+
+        /* Check that we are really going to modify GUI terminal information */
+        // FIXME: Do something clever, for example copy the UI-independent part
+        // and init the UI-dependent part to some default values...
+        ASSERT(pSharedInfo->TerminalInfo.Size == sizeof(GUI_CONSOLE_INFO));
+        ASSERT(pSharedInfo->TerminalInfo.TermInfo);
+
         RtlCopyMemory(pConInfo, pSharedInfo, sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
         pConInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pConInfo + (ULONG_PTR)pConInfo->TerminalInfo.TermInfo);
     }
 
-    /* Close the section */
-    UnmapViewOfFile(pSharedInfo);
-    CloseHandle(hSection);
+    if (hSection && pSharedInfo)
+    {
+        /* Close the section */
+        UnmapViewOfFile(pSharedInfo);
+        CloseHandle(hSection);
+    }
 
     /* Initialize the property sheet structure */
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
     psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | /* PSH_USEHICON */ PSH_USEICONID | PSH_NOAPPLYNOW;
 
     if (pConInfo->ci.ConsoleTitle[0] != L'\0')
     {
-        wcsncpy(szTitle, L"\"", sizeof(szTitle) / sizeof(szTitle[0]));
-        wcsncat(szTitle, pConInfo->ci.ConsoleTitle, sizeof(szTitle) / sizeof(szTitle[0]));
-        wcsncat(szTitle, L"\"", sizeof(szTitle) / sizeof(szTitle[0]));
+        wcsncpy(szTitle, L"\"", MAX_PATH);
+        wcsncat(szTitle, pConInfo->ci.ConsoleTitle, MAX_PATH - wcslen(szTitle));
+        wcsncat(szTitle, L"\"", MAX_PATH - wcslen(szTitle));
     }
     else
     {
@@ -339,18 +355,18 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     psh.hwndParent = pConInfo->hConsoleWindow;
     psh.hInstance = hApplet;
-    // psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-    psh.pszIcon = MAKEINTRESOURCE(IDC_CPLICON);
+    // psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCEW(IDC_CPLICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
     psh.nPages = 4;
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
     InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc, (LPARAM)pConInfo);
-    InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc, (LPARAM)pConInfo);
-    InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc, (LPARAM)pConInfo);
-    InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS, (DLGPROC) ColorsProc, (LPARAM)pConInfo);
+    InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT   , (DLGPROC) FontProc   , (LPARAM)pConInfo);
+    InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT , (DLGPROC) LayoutProc , (LPARAM)pConInfo);
+    InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS , (DLGPROC) ColorsProc , (LPARAM)pConInfo);
 
-    return (PropertySheet(&psh) != -1);
+    return (PropertySheetW(&psh) != -1);
 }
 
 /* Control Panel Callback */
@@ -375,9 +391,9 @@ CPlApplet(HWND hwndCPl,
         case CPL_INQUIRE:
         {
             CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->idIcon = Applets[0].idIcon;
-            CPlInfo->idName = Applets[0].idName;
-            CPlInfo->idInfo = Applets[0].idDescription;
+            CPlInfo->idIcon  = Applets[0].idIcon;
+            CPlInfo->idName  = Applets[0].idName;
+            CPlInfo->idInfo  = Applets[0].idDescription;
             break;
         }
 

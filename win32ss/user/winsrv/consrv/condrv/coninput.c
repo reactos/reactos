@@ -260,7 +260,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
             Console->LineComplete = FALSE;
             Console->LineUpPressed = FALSE;
-            Console->LineInsertToggle = 0;
+            Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
             Console->LineSize = ReadControl->nInitialChars;
             Console->LinePos = Console->LineSize;

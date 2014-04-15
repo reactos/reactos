@@ -1,7 +1,6 @@
 /******************************************************************************
  *
- * Module Name: tbxface - Public interfaces to the ACPI subsystem
- *                         ACPI table oriented interfaces
+ * Module Name: tbxface - ACPI table-oriented external interfaces
  *
  *****************************************************************************/
 
@@ -9,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -32,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -44,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -56,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -81,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -115,20 +114,14 @@
  *****************************************************************************/
 
 #define __TBXFACE_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
-#include "acnamesp.h"
 #include "actables.h"
 
 #define _COMPONENT          ACPI_TABLES
         ACPI_MODULE_NAME    ("tbxface")
-
-/* Local prototypes */
-
-static ACPI_STATUS
-AcpiTbLoadNamespace (
-    void);
 
 
 /*******************************************************************************
@@ -166,7 +159,7 @@ AcpiAllocateRootTable (
  *                                    array is dynamically allocated.
  *              InitialTableCount   - Size of InitialTableArray, in number of
  *                                    ACPI_TABLE_DESC structures
- *              AllowRealloc        - Flag to tell Table Manager if resize of
+ *              AllowResize         - Flag to tell Table Manager if resize of
  *                                    pre-allocated array is allowed. Ignored
  *                                    if InitialTableArray is NULL.
  *
@@ -197,8 +190,8 @@ AcpiInitializeTables (
 
 
     /*
-     * Set up the Root Table Array
-     * Allocate the table array if requested
+     * Setup the Root Table Array and allocate the table array
+     * if requested
      */
     if (!InitialTableArray)
     {
@@ -241,7 +234,7 @@ AcpiInitializeTables (
     return_ACPI_STATUS (Status);
 }
 
-ACPI_EXPORT_SYMBOL (AcpiInitializeTables)
+ACPI_EXPORT_SYMBOL_INIT (AcpiInitializeTables)
 
 
 /*******************************************************************************
@@ -255,7 +248,7 @@ ACPI_EXPORT_SYMBOL (AcpiInitializeTables)
  * DESCRIPTION: Reallocate Root Table List into dynamic memory. Copies the
  *              root list from the previously provided scratch area. Should
  *              be called once dynamic memory allocation is available in the
- *              kernel
+ *              kernel.
  *
  ******************************************************************************/
 
@@ -263,9 +256,7 @@ ACPI_STATUS
 AcpiReallocateRootTable (
     void)
 {
-    ACPI_TABLE_DESC         *Tables;
-    ACPI_SIZE               NewSize;
-    ACPI_SIZE               CurrentSize;
+    ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_TRACE (AcpiReallocateRootTable);
@@ -280,41 +271,13 @@ AcpiReallocateRootTable (
         return_ACPI_STATUS (AE_SUPPORT);
     }
 
-    /*
-     * Get the current size of the root table and add the default
-     * increment to create the new table size.
-     */
-    CurrentSize = (ACPI_SIZE)
-        AcpiGbl_RootTableList.CurrentTableCount * sizeof (ACPI_TABLE_DESC);
+    AcpiGbl_RootTableList.Flags |= ACPI_ROOT_ALLOW_RESIZE;
 
-    NewSize = CurrentSize +
-        (ACPI_ROOT_TABLE_SIZE_INCREMENT * sizeof (ACPI_TABLE_DESC));
-
-    /* Create new array and copy the old array */
-
-    Tables = ACPI_ALLOCATE_ZEROED (NewSize);
-    if (!Tables)
-    {
-        return_ACPI_STATUS (AE_NO_MEMORY);
-    }
-
-    ACPI_MEMCPY (Tables, AcpiGbl_RootTableList.Tables, CurrentSize);
-
-    /*
-     * Update the root table descriptor. The new size will be the current
-     * number of tables plus the increment, independent of the reserved
-     * size of the original table list.
-     */
-    AcpiGbl_RootTableList.Tables = Tables;
-    AcpiGbl_RootTableList.MaxTableCount =
-        AcpiGbl_RootTableList.CurrentTableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT;
-    AcpiGbl_RootTableList.Flags =
-        ACPI_ROOT_ORIGIN_ALLOCATED | ACPI_ROOT_ALLOW_RESIZE;
-
-    return_ACPI_STATUS (AE_OK);
+    Status = AcpiTbResizeRootTableList ();
+    return_ACPI_STATUS (Status);
 }
 
-ACPI_EXPORT_SYMBOL (AcpiReallocateRootTable)
+ACPI_EXPORT_SYMBOL_INIT (AcpiReallocateRootTable)
 
 
 /*******************************************************************************
@@ -371,29 +334,30 @@ AcpiGetTableHeader (
         {
             if ((AcpiGbl_RootTableList.Tables[i].Flags &
                     ACPI_TABLE_ORIGIN_MASK) ==
-                ACPI_TABLE_ORIGIN_MAPPED)
+                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL)
             {
                 Header = AcpiOsMapMemory (
                             AcpiGbl_RootTableList.Tables[i].Address,
                             sizeof (ACPI_TABLE_HEADER));
                 if (!Header)
                 {
-                    return AE_NO_MEMORY;
+                    return (AE_NO_MEMORY);
                 }
 
-                ACPI_MEMCPY (OutTableHeader, Header, sizeof(ACPI_TABLE_HEADER));
-                AcpiOsUnmapMemory (Header, sizeof(ACPI_TABLE_HEADER));
+                ACPI_MEMCPY (OutTableHeader, Header,
+                    sizeof (ACPI_TABLE_HEADER));
+                AcpiOsUnmapMemory (Header, sizeof (ACPI_TABLE_HEADER));
             }
             else
             {
-                return AE_NOT_FOUND;
+                return (AE_NOT_FOUND);
             }
         }
         else
         {
             ACPI_MEMCPY (OutTableHeader,
                 AcpiGbl_RootTableList.Tables[i].Pointer,
-                sizeof(ACPI_TABLE_HEADER));
+                sizeof (ACPI_TABLE_HEADER));
         }
 
         return (AE_OK);
@@ -413,9 +377,10 @@ ACPI_EXPORT_SYMBOL (AcpiGetTableHeader)
  *              Instance            - Which instance (for SSDTs)
  *              OutTable            - Where the pointer to the table is returned
  *
- * RETURN:      Status and pointer to table
+ * RETURN:      Status and pointer to the requested table
  *
- * DESCRIPTION: Finds and verifies an ACPI table.
+ * DESCRIPTION: Finds and verifies an ACPI table. Table must be in the
+ *              RSDT/XSDT.
  *
  ******************************************************************************/
 
@@ -452,7 +417,7 @@ AcpiGetTable (
             continue;
         }
 
-        Status = AcpiTbVerifyTable (&AcpiGbl_RootTableList.Tables[i]);
+        Status = AcpiTbValidateTable (&AcpiGbl_RootTableList.Tables[i]);
         if (ACPI_SUCCESS (Status))
         {
             *OutTable = AcpiGbl_RootTableList.Tables[i].Pointer;
@@ -474,9 +439,10 @@ ACPI_EXPORT_SYMBOL (AcpiGetTable)
  * PARAMETERS:  TableIndex          - Table index
  *              Table               - Where the pointer to the table is returned
  *
- * RETURN:      Status and pointer to the table
+ * RETURN:      Status and pointer to the requested table
  *
- * DESCRIPTION: Obtain a table by an index into the global table list.
+ * DESCRIPTION: Obtain a table by an index into the global table list. Used
+ *              internally also.
  *
  ******************************************************************************/
 
@@ -512,7 +478,7 @@ AcpiGetTableByIndex (
     {
         /* Table is not mapped, map it */
 
-        Status = AcpiTbVerifyTable (&AcpiGbl_RootTableList.Tables[TableIndex]);
+        Status = AcpiTbValidateTable (&AcpiGbl_RootTableList.Tables[TableIndex]);
         if (ACPI_FAILURE (Status))
         {
             (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
@@ -530,155 +496,6 @@ ACPI_EXPORT_SYMBOL (AcpiGetTableByIndex)
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiTbLoadNamespace
- *
- * PARAMETERS:  None
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Load the namespace from the DSDT and all SSDTs/PSDTs found in
- *              the RSDT/XSDT.
- *
- ******************************************************************************/
-
-static ACPI_STATUS
-AcpiTbLoadNamespace (
-    void)
-{
-    ACPI_STATUS             Status;
-    UINT32                  i;
-    ACPI_TABLE_HEADER       *NewDsdt;
-
-
-    ACPI_FUNCTION_TRACE (TbLoadNamespace);
-
-
-    (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
-
-    /*
-     * Load the namespace. The DSDT is required, but any SSDT and
-     * PSDT tables are optional. Verify the DSDT.
-     */
-    if (!AcpiGbl_RootTableList.CurrentTableCount ||
-        !ACPI_COMPARE_NAME (
-            &(AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT].Signature),
-            ACPI_SIG_DSDT) ||
-         ACPI_FAILURE (AcpiTbVerifyTable (
-            &AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT])))
-    {
-        Status = AE_NO_ACPI_TABLES;
-        goto UnlockAndExit;
-    }
-
-    /*
-     * Save the DSDT pointer for simple access. This is the mapped memory
-     * address. We must take care here because the address of the .Tables
-     * array can change dynamically as tables are loaded at run-time. Note:
-     * .Pointer field is not validated until after call to AcpiTbVerifyTable.
-     */
-    AcpiGbl_DSDT = AcpiGbl_RootTableList.Tables[ACPI_TABLE_INDEX_DSDT].Pointer;
-
-    /*
-     * Optionally copy the entire DSDT to local memory (instead of simply
-     * mapping it.) There are some BIOSs that corrupt or replace the original
-     * DSDT, creating the need for this option. Default is FALSE, do not copy
-     * the DSDT.
-     */
-    if (AcpiGbl_CopyDsdtLocally)
-    {
-        NewDsdt = AcpiTbCopyDsdt (ACPI_TABLE_INDEX_DSDT);
-        if (NewDsdt)
-        {
-            AcpiGbl_DSDT = NewDsdt;
-        }
-    }
-
-    /*
-     * Save the original DSDT header for detection of table corruption
-     * and/or replacement of the DSDT from outside the OS.
-     */
-    ACPI_MEMCPY (&AcpiGbl_OriginalDsdtHeader, AcpiGbl_DSDT,
-        sizeof (ACPI_TABLE_HEADER));
-
-    (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
-
-    /* Load and parse tables */
-
-    Status = AcpiNsLoadTable (ACPI_TABLE_INDEX_DSDT, AcpiGbl_RootNode);
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
-
-    /* Load any SSDT or PSDT tables. Note: Loop leaves tables locked */
-
-    (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
-    for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
-    {
-        if ((!ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                    ACPI_SIG_SSDT) &&
-             !ACPI_COMPARE_NAME (&(AcpiGbl_RootTableList.Tables[i].Signature),
-                    ACPI_SIG_PSDT)) ||
-             ACPI_FAILURE (AcpiTbVerifyTable (
-                &AcpiGbl_RootTableList.Tables[i])))
-        {
-            continue;
-        }
-
-        /* Ignore errors while loading tables, get as many as possible */
-
-        (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
-        (void) AcpiNsLoadTable (i, AcpiGbl_RootNode);
-        (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
-    }
-
-    ACPI_DEBUG_PRINT ((ACPI_DB_INIT, "ACPI Tables successfully acquired\n"));
-
-UnlockAndExit:
-    (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
-    return_ACPI_STATUS (Status);
-}
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiLoadTables
- *
- * PARAMETERS:  None
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Load the ACPI tables from the RSDT/XSDT
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiLoadTables (
-    void)
-{
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_TRACE (AcpiLoadTables);
-
-
-    /* Load the namespace from the tables */
-
-    Status = AcpiTbLoadNamespace ();
-    if (ACPI_FAILURE (Status))
-    {
-        ACPI_EXCEPTION ((AE_INFO, Status,
-            "While loading namespace from ACPI tables"));
-    }
-
-    return_ACPI_STATUS (Status);
-}
-
-ACPI_EXPORT_SYMBOL (AcpiLoadTables)
-
-
-/*******************************************************************************
- *
  * FUNCTION:    AcpiInstallTableHandler
  *
  * PARAMETERS:  Handler         - Table event handler
@@ -686,7 +503,7 @@ ACPI_EXPORT_SYMBOL (AcpiLoadTables)
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Install table event handler
+ * DESCRIPTION: Install a global table event handler.
  *
  ******************************************************************************/
 
@@ -742,7 +559,7 @@ ACPI_EXPORT_SYMBOL (AcpiInstallTableHandler)
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Remove table event handler
+ * DESCRIPTION: Remove a table event handler
  *
  ******************************************************************************/
 
@@ -781,4 +598,3 @@ Cleanup:
 }
 
 ACPI_EXPORT_SYMBOL (AcpiRemoveTableHandler)
-

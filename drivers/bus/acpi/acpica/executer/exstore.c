@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -134,21 +134,27 @@ AcpiExStoreObjectToIndex (
     ACPI_OPERAND_OBJECT     *DestDesc,
     ACPI_WALK_STATE         *WalkState);
 
+static ACPI_STATUS
+AcpiExStoreDirectToNode (
+    ACPI_OPERAND_OBJECT     *SourceDesc,
+    ACPI_NAMESPACE_NODE     *Node,
+    ACPI_WALK_STATE         *WalkState);
+
 
 /*******************************************************************************
  *
  * FUNCTION:    AcpiExStore
  *
  * PARAMETERS:  *SourceDesc         - Value to be stored
- *              *DestDesc           - Where to store it.  Must be an NS node
- *                                    or an ACPI_OPERAND_OBJECT of type
+ *              *DestDesc           - Where to store it. Must be an NS node
+ *                                    or ACPI_OPERAND_OBJECT of type
  *                                    Reference;
  *              WalkState           - Current walk state
  *
  * RETURN:      Status
  *
  * DESCRIPTION: Store the value described by SourceDesc into the location
- *              described by DestDesc.  Called by various interpreter
+ *              described by DestDesc. Called by various interpreter
  *              functions to store the result of an operation into
  *              the destination operand -- not just simply the actual "Store"
  *              ASL operator.
@@ -196,6 +202,7 @@ AcpiExStore (
     switch (DestDesc->Common.Type)
     {
     case ACPI_TYPE_LOCAL_REFERENCE:
+
         break;
 
     case ACPI_TYPE_INTEGER:
@@ -239,14 +246,12 @@ AcpiExStore (
                     WalkState, ACPI_IMPLICIT_CONVERSION);
         break;
 
-
     case ACPI_REFCLASS_INDEX:
 
         /* Storing to an Index (pointer into a packager or buffer) */
 
         Status = AcpiExStoreObjectToIndex (SourceDesc, RefDesc, WalkState);
         break;
-
 
     case ACPI_REFCLASS_LOCAL:
     case ACPI_REFCLASS_ARG:
@@ -257,9 +262,7 @@ AcpiExStore (
                     RefDesc->Reference.Value, SourceDesc, WalkState);
         break;
 
-
     case ACPI_REFCLASS_DEBUG:
-
         /*
          * Storing to the Debug object causes the value stored to be
          * displayed and otherwise has no effect -- see ACPI Specification
@@ -270,7 +273,6 @@ AcpiExStore (
 
         ACPI_DEBUG_OBJECT (SourceDesc, 0, 0);
         break;
-
 
     default:
 
@@ -380,9 +382,7 @@ AcpiExStoreObjectToIndex (
 
         break;
 
-
     case ACPI_TYPE_BUFFER_FIELD:
-
         /*
          * Store into a Buffer or String (not actually a real BufferField)
          * at a location defined by an Index.
@@ -440,7 +440,6 @@ AcpiExStoreObjectToIndex (
         ObjDesc->Buffer.Pointer[IndexDesc->Reference.Value] = Value;
         break;
 
-
     default:
         ACPI_ERROR ((AE_INFO,
             "Target is not a Package or BufferField"));
@@ -470,9 +469,13 @@ AcpiExStoreObjectToIndex (
  *              with the input value.
  *
  *              When storing into an object the data is converted to the
- *              target object type then stored in the object.  This means
+ *              target object type then stored in the object. This means
  *              that the target object type (for an initialized target) will
- *              not be changed by a store operation.
+ *              not be changed by a store operation. A CopyObject can change
+ *              the target type, however.
+ *
+ *              The ImplicitConversion flag is set to NO/FALSE only when
+ *              storing to an ArgX -- as per the rules of the ACPI spec.
  *
  *              Assumes parameters are already validated.
  *
@@ -499,7 +502,7 @@ AcpiExStoreObjectToNode (
     TargetType = AcpiNsGetType (Node);
     TargetDesc = AcpiNsGetAttachedObject (Node);
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Storing %p(%s) into node %p(%s)\n",
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Storing %p (%s) to node %p (%s)\n",
         SourceDesc, AcpiUtGetObjectTypeName (SourceDesc),
               Node, AcpiUtGetTypeName (TargetType)));
 
@@ -513,51 +516,35 @@ AcpiExStoreObjectToNode (
         return_ACPI_STATUS (Status);
     }
 
-    /* If no implicit conversion, drop into the default case below */
-
-    if ((!ImplicitConversion) ||
-          ((WalkState->Opcode == AML_COPY_OP) &&
-           (TargetType != ACPI_TYPE_LOCAL_REGION_FIELD) &&
-           (TargetType != ACPI_TYPE_LOCAL_BANK_FIELD) &&
-           (TargetType != ACPI_TYPE_LOCAL_INDEX_FIELD)))
-    {
-        /*
-         * Force execution of default (no implicit conversion). Note:
-         * CopyObject does not perform an implicit conversion, as per the ACPI
-         * spec -- except in case of region/bank/index fields -- because these
-         * objects must retain their original type permanently.
-         */
-        TargetType = ACPI_TYPE_ANY;
-    }
-
     /* Do the actual store operation */
 
     switch (TargetType)
     {
-    case ACPI_TYPE_BUFFER_FIELD:
-    case ACPI_TYPE_LOCAL_REGION_FIELD:
-    case ACPI_TYPE_LOCAL_BANK_FIELD:
-    case ACPI_TYPE_LOCAL_INDEX_FIELD:
-
-        /* For fields, copy the source data to the target field. */
-
-        Status = AcpiExWriteDataToField (SourceDesc, TargetDesc,
-                    &WalkState->ResultObj);
-        break;
-
-
     case ACPI_TYPE_INTEGER:
     case ACPI_TYPE_STRING:
     case ACPI_TYPE_BUFFER:
-
         /*
-         * These target types are all of type Integer/String/Buffer, and
-         * therefore support implicit conversion before the store.
-         *
-         * Copy and/or convert the source object to a new target object
+         * The simple data types all support implicit source operand
+         * conversion before the store.
          */
+
+        if ((WalkState->Opcode == AML_COPY_OP) ||
+            !ImplicitConversion)
+        {
+            /*
+             * However, CopyObject and Stores to ArgX do not perform
+             * an implicit conversion, as per the ACPI specification.
+             * A direct store is performed instead.
+             */
+            Status = AcpiExStoreDirectToNode (SourceDesc, Node,
+                WalkState);
+            break;
+        }
+
+        /* Store with implicit source operand conversion support */
+
         Status = AcpiExStoreObjectToObject (SourceDesc, TargetDesc,
-                    &NewDesc, WalkState);
+            &NewDesc, WalkState);
         if (ACPI_FAILURE (Status))
         {
             return_ACPI_STATUS (Status);
@@ -570,11 +557,12 @@ AcpiExStoreObjectToNode (
              * the Name's type to that of the value being stored in it.
              * SourceDesc reference count is incremented by AttachObject.
              *
-             * Note: This may change the type of the node if an explicit store
-             * has been performed such that the node/object type has been
-             * changed.
+             * Note: This may change the type of the node if an explicit
+             * store has been performed such that the node/object type
+             * has been changed.
              */
-            Status = AcpiNsAttachObject (Node, NewDesc, NewDesc->Common.Type);
+            Status = AcpiNsAttachObject (Node, NewDesc,
+                NewDesc->Common.Type);
 
             ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
                 "Store %s into %s via Convert/Attach\n",
@@ -583,17 +571,34 @@ AcpiExStoreObjectToNode (
         }
         break;
 
+    case ACPI_TYPE_BUFFER_FIELD:
+    case ACPI_TYPE_LOCAL_REGION_FIELD:
+    case ACPI_TYPE_LOCAL_BANK_FIELD:
+    case ACPI_TYPE_LOCAL_INDEX_FIELD:
+        /*
+         * For all fields, always write the source data to the target
+         * field. Any required implicit source operand conversion is
+         * performed in the function below as necessary. Note, field
+         * objects must retain their original type permanently.
+         */
+        Status = AcpiExWriteDataToField (SourceDesc, TargetDesc,
+            &WalkState->ResultObj);
+        break;
 
     default:
-
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-            "Storing %s (%p) directly into node (%p) with no implicit conversion\n",
-            AcpiUtGetObjectTypeName (SourceDesc), SourceDesc, Node));
-
-        /* No conversions for all other types.  Just attach the source object */
-
-        Status = AcpiNsAttachObject (Node, SourceDesc,
-                    SourceDesc->Common.Type);
+        /*
+         * No conversions for all other types. Directly store a copy of
+         * the source object. This is the ACPI spec-defined behavior for
+         * the CopyObject operator.
+         *
+         * NOTE: For the Store operator, this is a departure from the
+         * ACPI spec, which states "If conversion is impossible, abort
+         * the running control method". Instead, this code implements
+         * "If conversion is impossible, treat the Store operation as
+         * a CopyObject".
+         */
+        Status = AcpiExStoreDirectToNode (SourceDesc, Node,
+            WalkState);
         break;
     }
 
@@ -601,3 +606,51 @@ AcpiExStoreObjectToNode (
 }
 
 
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiExStoreDirectToNode
+ *
+ * PARAMETERS:  SourceDesc              - Value to be stored
+ *              Node                    - Named object to receive the value
+ *              WalkState               - Current walk state
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: "Store" an object directly to a node. This involves a copy
+ *              and an attach.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiExStoreDirectToNode (
+    ACPI_OPERAND_OBJECT     *SourceDesc,
+    ACPI_NAMESPACE_NODE     *Node,
+    ACPI_WALK_STATE         *WalkState)
+{
+    ACPI_STATUS             Status;
+    ACPI_OPERAND_OBJECT     *NewDesc;
+
+
+    ACPI_FUNCTION_TRACE (ExStoreDirectToNode);
+
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
+        "Storing [%s] (%p) directly into node [%s] (%p)"
+        " with no implicit conversion\n",
+        AcpiUtGetObjectTypeName (SourceDesc), SourceDesc,
+        AcpiUtGetTypeName (Node->Type), Node));
+
+    /* Copy the source object to a new object */
+
+    Status = AcpiUtCopyIobjectToIobject (SourceDesc, &NewDesc, WalkState);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Attach the new object to the node */
+
+    Status = AcpiNsAttachObject (Node, NewDesc, NewDesc->Common.Type);
+    AcpiUtRemoveReference (NewDesc);
+    return_ACPI_STATUS (Status);
+}

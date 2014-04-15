@@ -45,7 +45,7 @@ BOOL IEnumIDListImpl::AddToEnumList(LPITEMIDLIST pidl)
     if (!pidl)
         return FALSE;
 
-    pNew = (ENUMLIST *)SHAlloc(sizeof(ENUMLIST));
+    pNew = static_cast<ENUMLIST *>(SHAlloc(sizeof(ENUMLIST)));
     if (pNew)
     {
       /*set the next pointer */

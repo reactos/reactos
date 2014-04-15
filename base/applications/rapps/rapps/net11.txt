@@ -33,7 +33,7 @@ Description = Platforma Microsoft .NET versiunea 1.1 - Pachet redistributabl.
 Size = 23,14 Mo
 
 [Section.041f]
-Name = Mikroyazılım .NET Çatısı Sürüm 1.1 Yeniden Dağıtılabilir Paket
+Name = Microsoft .NET Çatısı Sürüm 1.1 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
-Description = Mikroyazılım .NET Çatısı Sürüm 1.1 - Yeniden Dağıtılabilir Paket
+Description = Microsoft .NET Çatısı Sürüm 1.1 - Yeniden Dağıtılabilir Paket
 Size = 23,14 MB

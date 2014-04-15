@@ -63,3 +63,9 @@ ReactOS = "ReactOS Team"
 FloppyClassName = "Floppy disk drives"
 GenericMfg = "(Generic floppy disk drives)"
 Floppy.DeviceDesc = "Generic floppy disk drive"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+FloppyClassName = "Unitate de disc flexibil"
+GenericMfg = "(unități generice de disc flexibil)"
+Floppy.DeviceDesc = "Unitate de disc flexibil"

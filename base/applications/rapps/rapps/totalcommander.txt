@@ -29,9 +29,8 @@ Description = Total Commander este un gestionar de fișiere după modelul «dou�
 Size = 3,3 Mo
 
 [Section.041f]
-Name = Eksiksiz Komutan
 Licence = Kısıtlı
-Description = Eksiksiz Komutan, yan yana iki bölmenin bulunduğu bir kütük yöneticisidir.
+Description = Total Commander, yan yana iki bölmenin bulunduğu bir kütük yöneticisidir.
 Size = 3,3 MB
 
 [Section.0813]

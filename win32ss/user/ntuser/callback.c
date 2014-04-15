@@ -97,9 +97,18 @@ IntSetTebWndCallback (HWND * hWnd, PWND * pWnd, PVOID * pActCtx)
   *pWnd = ClientInfo->CallbackWnd.pWnd;
   *pActCtx = ClientInfo->CallbackWnd.pActCtx;
 
-  ClientInfo->CallbackWnd.hWnd  = hWndS;
-  ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
-  ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
+  if (Window)
+  {
+     ClientInfo->CallbackWnd.hWnd = hWndS;
+     ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
+     ClientInfo->CallbackWnd.pActCtx = Window->pActCtx;
+  }
+  else //// What if Dispatching WM_SYS/TIMER with NULL window? Fix AbiWord Crash when sizing.
+  {
+     ClientInfo->CallbackWnd.hWnd = hWndS;
+     ClientInfo->CallbackWnd.pWnd = Window;
+     ClientInfo->CallbackWnd.pActCtx = 0;
+  }
 }
 
 static VOID
@@ -374,6 +383,8 @@ co_IntCallWindowProc(WNDPROC Proc,
           case WM_NCCREATE:
           case WM_STYLECHANGING:
           case WM_WINDOWPOSCHANGING:
+          case WM_SIZING:
+          case WM_MOVING:
             TRACE("Copy lParam, Message %d Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
             if (InSendMessage)
                // Copy into kernel space.
@@ -736,21 +747,30 @@ co_IntCallHookProc(INT HookId,
    switch (HookId)
    {
       case WH_CBT:
-         if (Code == HCBT_CREATEWND)
+      {
+         switch (Code)
          {
-            if (CbtCreatewndExtra)
-            {/*
-               The parameters could have been changed, include the coordinates
-               and dimensions of the window. We copy it back.
-              */
-               CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
-               CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
-               CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
-               CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
-               CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
-            }
+            case HCBT_CREATEWND:
+               if (CbtCreatewndExtra)
+               {/*
+                  The parameters could have been changed, include the coordinates
+                  and dimensions of the window. We copy it back.
+                 */
+                  CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+                  CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
+                  CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
+                  CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
+                  CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
+               }
+            break;
+            case HCBT_MOVESIZE:
+               if (Extra && lParam)
+               {
+                  RtlCopyMemory((PVOID) lParam, Extra, sizeof(RECTL));
+               }
+            break;
          }
-         break;
+      }
       // "The GetMsgProc hook procedure can examine or modify the message."
       case WH_GETMESSAGE:
          if (pMsg)

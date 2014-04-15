@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,11 +80,11 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
 
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +93,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -123,6 +123,7 @@
 #include "actables.h"
 #include "acdispat.h"
 #include "acevents.h"
+#include "amlcode.h"
 
 
 #define _COMPONENT          ACPI_EXECUTER
@@ -252,20 +253,21 @@ AcpiExLoadTableOp (
     ACPI_FUNCTION_TRACE (ExLoadTableOp);
 
 
-    /* Validate lengths for the SignatureString, OEMIDString, OEMTableID */
+    /* Validate lengths for the Signature, OemId, and OemTableId strings */
 
     if ((Operand[0]->String.Length > ACPI_NAME_SIZE) ||
         (Operand[1]->String.Length > ACPI_OEM_ID_SIZE) ||
         (Operand[2]->String.Length > ACPI_OEM_TABLE_ID_SIZE))
     {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
+        return_ACPI_STATUS (AE_AML_STRING_LIMIT);
     }
 
     /* Find the ACPI table in the RSDT/XSDT */
 
-    Status = AcpiTbFindTable (Operand[0]->String.Pointer,
-                              Operand[1]->String.Pointer,
-                              Operand[2]->String.Pointer, &TableIndex);
+    Status = AcpiTbFindTable (
+                Operand[0]->String.Pointer,
+                Operand[1]->String.Pointer,
+                Operand[2]->String.Pointer, &TableIndex);
     if (ACPI_FAILURE (Status))
     {
         if (Status != AE_NOT_FOUND)
@@ -295,7 +297,7 @@ AcpiExLoadTableOp (
     if (Operand[3]->String.Length > 0)
     {
         /*
-         * Find the node referenced by the RootPathString.  This is the
+         * Find the node referenced by the RootPathString. This is the
          * location within the namespace where the table will be loaded.
          */
         Status = AcpiNsGetNode (StartNode, Operand[3]->String.Pointer,
@@ -310,8 +312,8 @@ AcpiExLoadTableOp (
 
     if (Operand[4]->String.Length > 0)
     {
-        if ((Operand[4]->String.Pointer[0] != '\\') &&
-            (Operand[4]->String.Pointer[0] != '^'))
+        if ((Operand[4]->String.Pointer[0] != AML_ROOT_PREFIX) &&
+            (Operand[4]->String.Pointer[0] != AML_PARENT_PREFIX))
         {
             /*
              * Path is not absolute, so it will be relative to the node
@@ -372,7 +374,7 @@ AcpiExLoadTableOp (
     }
 
     *ReturnDesc = DdbHandle;
-    return_ACPI_STATUS  (Status);
+    return_ACPI_STATUS (Status);
 }
 
 
@@ -407,7 +409,7 @@ AcpiExRegionRead (
 
     for (i = 0; i < Length; i++)
     {
-        Status = AcpiEvAddressSpaceDispatch (ObjDesc, ACPI_READ,
+        Status = AcpiEvAddressSpaceDispatch (ObjDesc, NULL, ACPI_READ,
                     RegionOffset, 8, &Value);
         if (ACPI_FAILURE (Status))
         {
@@ -451,8 +453,8 @@ AcpiExLoadOp (
     ACPI_WALK_STATE         *WalkState)
 {
     ACPI_OPERAND_OBJECT     *DdbHandle;
+    ACPI_TABLE_HEADER       *TableHeader;
     ACPI_TABLE_HEADER       *Table;
-    ACPI_TABLE_DESC         TableDesc;
     UINT32                  TableIndex;
     ACPI_STATUS             Status;
     UINT32                  Length;
@@ -460,8 +462,6 @@ AcpiExLoadOp (
 
     ACPI_FUNCTION_TRACE (ExLoadOp);
 
-
-    ACPI_MEMSET (&TableDesc, 0, sizeof (ACPI_TABLE_DESC));
 
     /* Source Object can be either an OpRegion or a Buffer/Field */
 
@@ -494,16 +494,16 @@ AcpiExLoadOp (
 
         /* Get the table header first so we can get the table length */
 
-        Table = ACPI_ALLOCATE (sizeof (ACPI_TABLE_HEADER));
-        if (!Table)
+        TableHeader = ACPI_ALLOCATE (sizeof (ACPI_TABLE_HEADER));
+        if (!TableHeader)
         {
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
 
         Status = AcpiExRegionRead (ObjDesc, sizeof (ACPI_TABLE_HEADER),
-                    ACPI_CAST_PTR (UINT8, Table));
-        Length = Table->Length;
-        ACPI_FREE (Table);
+                    ACPI_CAST_PTR (UINT8, TableHeader));
+        Length = TableHeader->Length;
+        ACPI_FREE (TableHeader);
 
         if (ACPI_FAILURE (Status))
         {
@@ -535,8 +535,8 @@ AcpiExLoadOp (
 
         /* Allocate a buffer for the table */
 
-        TableDesc.Pointer = ACPI_ALLOCATE (Length);
-        if (!TableDesc.Pointer)
+        Table = ACPI_ALLOCATE (Length);
+        if (!Table)
         {
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
@@ -544,16 +544,13 @@ AcpiExLoadOp (
         /* Read the entire table */
 
         Status = AcpiExRegionRead (ObjDesc, Length,
-                    ACPI_CAST_PTR (UINT8, TableDesc.Pointer));
+                    ACPI_CAST_PTR (UINT8, Table));
         if (ACPI_FAILURE (Status))
         {
-            ACPI_FREE (TableDesc.Pointer);
+            ACPI_FREE (Table);
             return_ACPI_STATUS (Status);
         }
-
-        TableDesc.Address = ObjDesc->Region.Address;
         break;
-
 
     case ACPI_TYPE_BUFFER: /* Buffer or resolved RegionField */
 
@@ -569,8 +566,8 @@ AcpiExLoadOp (
 
         /* Get the actual table length from the table header */
 
-        Table = ACPI_CAST_PTR (ACPI_TABLE_HEADER, ObjDesc->Buffer.Pointer);
-        Length = Table->Length;
+        TableHeader = ACPI_CAST_PTR (ACPI_TABLE_HEADER, ObjDesc->Buffer.Pointer);
+        Length = TableHeader->Length;
 
         /* Table cannot extend beyond the buffer */
 
@@ -587,43 +584,45 @@ AcpiExLoadOp (
          * Copy the table from the buffer because the buffer could be modified
          * or even deleted in the future
          */
-        TableDesc.Pointer = ACPI_ALLOCATE (Length);
-        if (!TableDesc.Pointer)
+        Table = ACPI_ALLOCATE (Length);
+        if (!Table)
         {
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
 
-        ACPI_MEMCPY (TableDesc.Pointer, Table, Length);
-        TableDesc.Address = ACPI_TO_INTEGER (TableDesc.Pointer);
+        ACPI_MEMCPY (Table, TableHeader, Length);
         break;
 
-
     default:
+
         return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
-    /* Validate table checksum (will not get validated in TbAddTable) */
-
-    Status = AcpiTbVerifyChecksum (TableDesc.Pointer, Length);
-    if (ACPI_FAILURE (Status))
-    {
-        ACPI_FREE (TableDesc.Pointer);
-        return_ACPI_STATUS (Status);
-    }
-
-    /* Complete the table descriptor */
-
-    TableDesc.Length = Length;
-    TableDesc.Flags = ACPI_TABLE_ORIGIN_ALLOCATED;
-
     /* Install the new table into the local data structures */
 
-    Status = AcpiTbAddTable (&TableDesc, &TableIndex);
+    ACPI_INFO ((AE_INFO, "Dynamic OEM Table Load:"));
+    (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
+
+    Status = AcpiTbInstallStandardTable (ACPI_PTR_TO_PHYSADDR (Table),
+                ACPI_TABLE_ORIGIN_INTERNAL_VIRTUAL, TRUE, TRUE,
+                &TableIndex);
+
+    (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
     if (ACPI_FAILURE (Status))
     {
         /* Delete allocated table buffer */
 
-        AcpiTbDeleteTable (&TableDesc);
+        ACPI_FREE (Table);
+        return_ACPI_STATUS (Status);
+    }
+
+    /*
+     * Note: Now table is "INSTALLED", it must be validated before
+     * loading.
+     */
+    Status = AcpiTbValidateTable (&AcpiGbl_RootTableList.Tables[TableIndex]);
+    if (ACPI_FAILURE (Status))
+    {
         return_ACPI_STATUS (Status);
     }
 
@@ -655,9 +654,6 @@ AcpiExLoadOp (
         return_ACPI_STATUS (Status);
     }
 
-    ACPI_INFO ((AE_INFO, "Dynamic OEM Table Load:"));
-    AcpiTbPrintTableHeader (0, TableDesc.Pointer);
-
     /* Remove the reference by added by AcpiExStore above */
 
     AcpiUtRemoveReference (DdbHandle);
@@ -666,7 +662,7 @@ AcpiExLoadOp (
 
     if (AcpiGbl_TableHandler)
     {
-        (void) AcpiGbl_TableHandler (ACPI_TABLE_EVENT_LOAD, TableDesc.Pointer,
+        (void) AcpiGbl_TableHandler (ACPI_TABLE_EVENT_LOAD, Table,
                     AcpiGbl_TableHandlerContext);
     }
 
@@ -700,6 +696,14 @@ AcpiExUnloadTable (
 
 
     /*
+     * Temporarily emit a warning so that the ASL for the machine can be
+     * hopefully obtained. This is to say that the Unload() operator is
+     * extremely rare if not completely unused.
+     */
+    ACPI_WARNING ((AE_INFO,
+        "Received request to unload an ACPI table"));
+
+    /*
      * Validate the handle
      * Although the handle is partially validated in AcpiExReconfiguration()
      * when it calls AcpiExResolveOperands(), the handle is more completely
@@ -714,7 +718,7 @@ AcpiExUnloadTable (
         (DdbHandle->Common.Type != ACPI_TYPE_LOCAL_REFERENCE) ||
         (!(DdbHandle->Common.Flags & AOPOBJ_DATA_VALID)))
     {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
+        return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
     }
 
     /* Get the table index from the DdbHandle */
@@ -758,4 +762,3 @@ AcpiExUnloadTable (
     DdbHandle->Common.Flags &= ~AOPOBJ_DATA_VALID;
     return_ACPI_STATUS (AE_OK);
 }
-

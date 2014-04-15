@@ -39,7 +39,7 @@ Description = Necesar pentru execuția multor jocuri (open-source). Dezarhivați
 Size = 136,67 ko
 
 [Section.041f]
-Name = Bayağı Doğrudan Ortam Katmanı (SDL) Yürütücüsü
+Name = SDL (Bayağı Doğrudan Ortam Katmanı) Yürütücüsü
 Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
 Size = 136,67 KB
 
