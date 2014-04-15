@@ -852,7 +852,7 @@ BrowseCursor(HWND hwndDlg)
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrInitialDir = _T("%WINDIR%\\Cursors");
     ofn.lpstrTitle = szTitle;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     if (!GetOpenFileName(&ofn))
         return FALSE;
