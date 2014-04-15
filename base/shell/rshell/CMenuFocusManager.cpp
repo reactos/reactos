@@ -157,6 +157,9 @@ CMenuFocusManager::CMenuFocusManager() :
     m_captureHwnd(0),
     m_hwndUnderMouse(NULL),
     m_entryUnderMouse(NULL),
+    m_selectedMenu(NULL),
+    m_selectedItem(0),
+    m_selectedItemFlags(0),
     m_bandCount(0)
 {
     m_ptPrev.x = 0;
@@ -354,6 +357,35 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam
             break;
         case WM_MOUSEMOVE:
             callNext = ProcessMouseMove(msg);
+            break;
+        case WM_INITMENUPOPUP:
+            DbgPrint("WM_INITMENUPOPUP %p %p\n", wParam, lParam);
+            m_selectedMenu = reinterpret_cast<HMENU>(lParam);
+            m_selectedItem = -1;
+            m_selectedItemFlags = 0;
+            break;
+        case WM_MENUSELECT:
+            DbgPrint("WM_MENUSELECT %p %p\n", wParam, lParam);
+            m_selectedMenu = reinterpret_cast<HMENU>(lParam);
+            m_selectedItem = LOWORD(wParam);
+            m_selectedItemFlags = HIWORD(wParam);
+            break;
+        case WM_KEYDOWN:
+            switch (msg->wParam)
+            {
+            case VK_LEFT:
+                if (m_current->hmenu == m_selectedMenu)
+                {
+                    m_parent->mb->_MenuItemHotTrack(VK_LEFT);
+                }
+                break;
+            case VK_RIGHT:
+                if (!(m_selectedItemFlags & MF_POPUP))
+                {
+                    m_parent->mb->_MenuItemHotTrack(VK_RIGHT);
+                }
+                break;
+            }
             break;
         }
 

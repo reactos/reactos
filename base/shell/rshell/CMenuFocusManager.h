@@ -73,6 +73,10 @@ private:
     HWND m_hwndUnderMouse;
     StackEntry * m_entryUnderMouse;
 
+    HMENU m_selectedMenu;
+    INT   m_selectedItem;
+    DWORD m_selectedItemFlags;
+
     // TODO: make dynamic
 #define MAX_RECURSE 20
     StackEntry m_bandStack[MAX_RECURSE];

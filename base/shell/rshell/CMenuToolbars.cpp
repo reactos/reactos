@@ -277,12 +277,12 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
     m_hwnd(NULL),
+    m_hwndToolbar(NULL),
     m_useFlatMenus(FALSE),
     m_SubclassOld(NULL),
     m_disableMouseTrack(FALSE),
     m_timerEnabled(FALSE),
     m_menuBand(menuBand),
-    m_hwndToolbar(NULL),
     m_dwMenuFlags(0),
     m_hasSizes(FALSE),
     m_usePager(usePager),
