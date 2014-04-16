@@ -27,6 +27,12 @@
 #include <guiddef.h>
 #endif
 
+#include <builddir.h>
+
+#if !defined(__RELFILE__)
+#define __RELFILE__ __FILE__
+#endif
+
 #ifdef __WINE_WINE_TEST_H
 #error This file should not be used in Wine tests
 #endif
@@ -91,7 +97,7 @@ struct __wine_debug_channel
        __WINE_DBG_LOG
 
 #define __WINE_DBG_LOG(args...) \
-    ros_dbg_log( __dbcl, __dbch, __FILE__, __FUNCTION__, __LINE__, args); } } while(0)
+    ros_dbg_log( __dbcl, __dbch, __RELFILE__, __FUNCTION__, __LINE__, args); } } while(0)
 
 #define __WINE_PRINTF_ATTR(fmt,args) /*__attribute__((format (printf,fmt,args)))*/
 
