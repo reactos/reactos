@@ -113,14 +113,24 @@ SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
     Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ViewOrigin.Y) * HeightUnit;
 }
 
-static VOID NTAPI
-GuiDrawRegion(IN OUT PFRONTEND This,
-              SMALL_RECT* Region);
+static VOID
+DrawRegion(PGUI_CONSOLE_DATA GuiData,
+           SMALL_RECT* Region)
+{
+    RECT RegionRect;
+
+    SmallRectToRect(GuiData, &RegionRect, Region);
+    /* Do not erase the background: it speeds up redrawing and reduce flickering */
+    InvalidateRect(GuiData->hWindow, &RegionRect, FALSE);
+    /**UpdateWindow(GuiData->hWindow);**/
+}
+
 VOID
-GuiInvalidateCell(IN OUT PFRONTEND This, SHORT x, SHORT y)
+InvalidateCell(PGUI_CONSOLE_DATA GuiData,
+               SHORT x, SHORT y)
 {
     SMALL_RECT CellRect = { x, y, x, y };
-    GuiDrawRegion(This, &CellRect);
+    DrawRegion(GuiData, &CellRect);
 }
 
 
@@ -152,6 +162,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             PCONSOLE Console = GuiData->Console;
             RECT rcWnd;
 
+            DPRINT("PM_CREATE_CONSOLE -- creating window\n");
+
             NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
                                         GUI_CONWND_CLASS,
                                         Console->Title.Buffer,
@@ -172,33 +184,26 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 WindowCount++;
                 SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
 
-                DPRINT("Set icons via PM_CREATE_CONSOLE\n");
-                if (GuiData->hIcon == NULL)
-                {
-                    DPRINT("Not really /o\\...\n");
-                    GuiData->hIcon   = ghDefaultIcon;
-                    GuiData->hIconSm = ghDefaultIconSm;
-                }
-                else if (GuiData->hIcon != ghDefaultIcon)
-                {
-                    DPRINT("Yes \\o/\n");
-                    SendMessageW(GuiData->hWindow, WM_SETICON, ICON_BIG, (LPARAM)GuiData->hIcon);
-                    SendMessageW(GuiData->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)GuiData->hIconSm);
-                }
+                //
+                // FIXME: TODO: Move everything there into conwnd.c!OnNcCreate()
+                //
 
                 /* Retrieve our real position */
+                // See conwnd.c!OnMove()
                 GetWindowRect(GuiData->hWindow, &rcWnd);
                 GuiData->GuiInfo.WindowOrigin.x = rcWnd.left;
                 GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
 
                 /* Move and resize the window to the user's values */
                 /* CAN WE DEADLOCK ?? */
-                GuiConsoleMoveWindow(GuiData);
+                GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
                 SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
 
                 /* Switch to full-screen mode if necessary */
+                // FIXME: Move elsewhere, it cause misdrawings of the window.
                 if (GuiData->GuiInfo.FullScreen) SwitchFullScreen(GuiData, TRUE);
 
+                DPRINT("PM_CREATE_CONSOLE -- showing window\n");
                 // ShowWindow(NewWindow, (int)wParam);
                 ShowWindowAsync(NewWindow, (int)wParam);
                 DPRINT("Window showed\n");
@@ -424,7 +429,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create GUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    /* HACK */ Console->TermIFace.Data = (PVOID)GuiData; /* HACK */
+    ///// /* HACK */ Console->TermIFace.Data = (PVOID)GuiData; /* HACK */
     GuiData->Console      = Console;
     GuiData->ActiveBuffer = Console->ActiveBuffer;
     GuiData->hWindow = NULL;
@@ -509,13 +514,10 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
                               &hIconSm,
                               1);
         DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
-        if (hIcon != NULL)
-        {
-            DPRINT("Effectively set the icons\n");
-            GuiData->hIcon   = hIcon;
-            GuiData->hIconSm = hIconSm;
-        }
+        if (hIcon   != NULL) GuiData->hIcon   = hIcon;
+        if (hIconSm != NULL) GuiData->hIconSm = hIconSm;
     }
+    ASSERT(GuiData->hIcon && GuiData->hIconSm);
 
     /* Mouse is shown by default with its default cursor shape */
     GuiData->hCursor = ghDefaultCursor;
@@ -597,12 +599,7 @@ GuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
-    RECT RegionRect;
-
-    SmallRectToRect(GuiData, &RegionRect, Region);
-    /* Do not erase the background: it speeds up redrawing and reduce flickering */
-    InvalidateRect(GuiData->hWindow, &RegionRect, FALSE);
-    /**UpdateWindow(GuiData->hWindow);**/
+    DrawRegion(GuiData, Region);
 }
 
 static VOID NTAPI
@@ -641,12 +638,12 @@ GuiWriteStream(IN OUT PFRONTEND This,
                        SW_INVALIDATE);
     }
 
-    GuiDrawRegion(This, Region);
+    DrawRegion(GuiData, Region);
 
     if (CursorStartX < Region->Left || Region->Right < CursorStartX
             || CursorStartY < Region->Top || Region->Bottom < CursorStartY)
     {
-        GuiInvalidateCell(This, CursorStartX, CursorStartY);
+        InvalidateCell(GuiData, CursorStartX, CursorStartY);
     }
 
     CursorEndX = Buff->CursorPosition.X;
@@ -655,7 +652,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
             || CursorEndY < Region->Top || Region->Bottom < CursorEndY)
             && (CursorEndX != CursorStartX || CursorEndY != CursorStartY))
     {
-        GuiInvalidateCell(This, CursorEndX, CursorEndY);
+        InvalidateCell(GuiData, CursorEndX, CursorEndY);
     }
 
     // HACK!!
@@ -673,7 +670,7 @@ GuiSetCursorInfo(IN OUT PFRONTEND This,
 
     if (GuiData->ActiveBuffer == Buff)
     {
-        GuiInvalidateCell(This, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+        InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
     }
 
     return TRUE;
@@ -690,9 +687,9 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
     if (GuiData->ActiveBuffer == Buff)
     {
         /* Redraw char at old position (remove cursor) */
-        GuiInvalidateCell(This, OldCursorX, OldCursorY);
+        InvalidateCell(GuiData, OldCursorX, OldCursorY);
         /* Redraw char at new position (show cursor) */
-        GuiInvalidateCell(This, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+        InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
     }
 
     return TRUE;
@@ -884,7 +881,7 @@ GuiChangeIcon(IN OUT PFRONTEND This,
         GuiData->hIconSm = hIconSm;
 
         DPRINT("Set icons in GuiChangeIcon\n");
-        PostMessageW(GuiData->hWindow, WM_SETICON, ICON_BIG, (LPARAM)GuiData->hIcon);
+        PostMessageW(GuiData->hWindow, WM_SETICON, ICON_BIG  , (LPARAM)GuiData->hIcon  );
         PostMessageW(GuiData->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)GuiData->hIconSm);
     }
 
