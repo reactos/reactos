@@ -793,13 +793,21 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
 
     if (!tb)
     {
-        // If no hot item was selected
-        // choose the first toolbar (prefer shell-folder, which will be positioned at the top)
-
-        if (m_SFToolbar)
-            tb = m_SFToolbar;
-        else
-            tb = m_staticToolbar;
+        // If no hot item was selected choose the appropriate toolbar
+        if (change == VK_UP)
+        {
+            if (m_staticToolbar)
+                tb = m_staticToolbar;
+            else
+                tb = m_SFToolbar;
+        }
+        else if (change == VK_DOWN)
+        {
+            if (m_SFToolbar)
+                tb = m_SFToolbar;
+            else
+                tb = m_staticToolbar;
+        }
     }
 
     // Ask the first toolbar to change
@@ -861,20 +869,19 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     switch (changeType)
     {
     case MPOS_SELECTLEFT:
+        if (m_parentBand && m_parentBand->_IsPopup()==S_FALSE)
+            return m_parentBand->_MenuItemHotTrack(VK_LEFT);
+        if (m_subMenuChild)
+            return m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
         if (!m_subMenuParent)
-        {
-            if (m_subMenuChild)
-                return m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
             return S_OK;
-        }
         return m_subMenuParent->OnSelect(MPOS_CANCELLEVEL);
 
     case MPOS_SELECTRIGHT:
-        if (m_hotBar && m_hotItem >= 0)
-        {
-            if (m_hotBar->PopupItem(m_hotItem) == S_OK)
-                return S_FALSE;
-        }
+        if (m_hotBar && m_hotItem >= 0 && m_hotBar->PopupItem(m_hotItem) == S_OK)
+            return S_FALSE;
+        if (m_parentBand)
+            return m_parentBand->_MenuItemHotTrack(VK_RIGHT);
         if (!m_subMenuParent)
             return S_OK;
         return m_subMenuParent->OnSelect(MPOS_SELECTRIGHT);

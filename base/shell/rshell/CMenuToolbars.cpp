@@ -609,11 +609,15 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
 
     if (m_hotBar == this)
     {
-        if (dwFlags & HICF_MOUSE)
+        if (m_isTrackingPopup && !(m_initFlags & SMINIT_VERTICAL))
+        {
+            // If the menubar has an open submenu, switch to the new item's submenu immediately
+            PopupItem(m_hotItem);
+        }
+        else if (dwFlags & HICF_MOUSE)
         {
             // Vertical menus show/hide the submenu after a delay,
-            // but horizontal menubars switch between items instantly,
-            // if they were open.
+            // but only with the mouse.
             if (m_initFlags & SMINIT_VERTICAL)
             {
                 DWORD elapsed = 0;
@@ -621,11 +625,6 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
                 SetTimer(m_hwndToolbar, TIMERID_HOTTRACK, elapsed, NULL);
                 m_timerEnabled = TRUE;
                 TRACE("SetTimer called with m_hotItem=%d\n", m_hotItem);
-            }
-            else if (m_isTrackingPopup)
-            {
-                // If the menubar has an open submenu, switch to the new item's submenu immediately
-                PopupItem(m_hotItem);
             }
         }
         else
@@ -704,6 +703,7 @@ HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
     if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
         return E_FAIL;
 
+    DbgPrint("ChangeTrackedItem %d, %d\n", index, wasTracking);
     m_isTrackingPopup = wasTracking;
     return m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
 }
@@ -912,8 +912,16 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
             {
                 if (prev != btn.idCommand)
                 {
-                    TRACE("Setting Hot item to %d\n", index);
-                    m_menuBand->_ChangeHotItem(this, btn.idCommand, 0);
+                    DbgPrint("Setting Hot item to %d\n", index);
+                    if (!(m_initFlags & SMINIT_VERTICAL) && m_isTrackingPopup)
+                    {
+                        HWND tlw;
+                        m_menuBand->_GetTopLevelWindow(&tlw);
+                        SendMessage(tlw, WM_CANCELMODE, 0, 0);
+                        PostMessage(m_hwndToolbar, WM_USER_CHANGETRACKEDITEM, index, m_isTrackingPopup);
+                    }
+                    else
+                        m_menuBand->_ChangeHotItem(this, btn.idCommand, 0);
                 }
                 return S_OK;
             }

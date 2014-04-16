@@ -330,15 +330,15 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     return TRUE;
 }
 
-LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM hookLParam)
 {
     if (nCode < 0)
-        return CallNextHookEx(m_hMsgFilterHook, nCode, wParam, lParam);
+        return CallNextHookEx(m_hMsgFilterHook, nCode, hookWParam, hookLParam);
 
     if (nCode == MSGF_MENU)
     {
         BOOL callNext = TRUE;
-        MSG* msg = reinterpret_cast<MSG*>(lParam);
+        MSG* msg = reinterpret_cast<MSG*>(hookLParam);
 
         switch (msg->message)
         {
@@ -359,16 +359,16 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam
             callNext = ProcessMouseMove(msg);
             break;
         case WM_INITMENUPOPUP:
-            DbgPrint("WM_INITMENUPOPUP %p %p\n", wParam, lParam);
-            m_selectedMenu = reinterpret_cast<HMENU>(lParam);
+            DbgPrint("WM_INITMENUPOPUP %p %p\n", msg->wParam, msg->lParam);
+            m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
             m_selectedItem = -1;
             m_selectedItemFlags = 0;
             break;
         case WM_MENUSELECT:
-            DbgPrint("WM_MENUSELECT %p %p\n", wParam, lParam);
-            m_selectedMenu = reinterpret_cast<HMENU>(lParam);
-            m_selectedItem = LOWORD(wParam);
-            m_selectedItemFlags = HIWORD(wParam);
+            DbgPrint("WM_MENUSELECT %p %p\n", msg->wParam, msg->lParam);
+            m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
+            m_selectedItem = GET_X_LPARAM(msg->wParam);
+            m_selectedItemFlags = HIWORD(msg->wParam);
             break;
         case WM_KEYDOWN:
             switch (msg->wParam)
@@ -380,7 +380,7 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam
                 }
                 break;
             case VK_RIGHT:
-                if (!(m_selectedItemFlags & MF_POPUP))
+                if (m_selectedItem < 0 || !(m_selectedItemFlags & MF_POPUP))
                 {
                     m_parent->mb->_MenuItemHotTrack(VK_RIGHT);
                 }
@@ -393,18 +393,18 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM wParam, LPARAM lParam
             return 1;
     }
 
-    return CallNextHookEx(m_hMsgFilterHook, nCode, wParam, lParam);
+    return CallNextHookEx(m_hMsgFilterHook, nCode, hookWParam, hookLParam);
 }
 
-LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookLParam)
 {
     if (nCode < 0)
-        return CallNextHookEx(m_hGetMsgHook, nCode, wParam, lParam);
+        return CallNextHookEx(m_hGetMsgHook, nCode, hookWParam, hookLParam);
     
     if (nCode == HC_ACTION)
     {
         BOOL callNext = TRUE;
-        MSG* msg = reinterpret_cast<MSG*>(lParam);
+        MSG* msg = reinterpret_cast<MSG*>(hookLParam);
         POINT pt = msg->pt;
 
         switch (msg->message)
@@ -463,7 +463,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam)
             return 1;
     }
 
-    return CallNextHookEx(m_hGetMsgHook, nCode, wParam, lParam);
+    return CallNextHookEx(m_hGetMsgHook, nCode, hookWParam, hookLParam);
 }
 
 HRESULT CMenuFocusManager::PlaceHooks()
@@ -620,6 +620,11 @@ HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
     HRESULT hr = PushToArray(TrackedMenuEntry, NULL, popup);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    DbgPrint("PushTrackedPopup %p\n", popup);
+    m_selectedMenu = popup;
+    m_selectedItem = -1;
+    m_selectedItemFlags = 0;
 
     return UpdateFocus();
 }
