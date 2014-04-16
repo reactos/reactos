@@ -154,7 +154,7 @@
 @ stub EndFormPage
 @ stdcall EndPage(long)
 @ stdcall EndPath(long)
-@ stub EngAcquireSemaphore
+@ stdcall EngAcquireSemaphore(ptr)
 @ stub EngAlphaBlend
 @ stub EngAssociateSurface
 @ stub EngBitBlt
@@ -166,31 +166,31 @@
 @ stub EngCreateDeviceBitmap
 @ stub EngCreateDeviceSurface
 @ stub EngCreatePalette
-@ stub EngCreateSemaphore
+@ stdcall EngCreateSemaphore()
 @ stub EngDeleteClip
 @ stub EngDeletePalette
 @ stub EngDeletePath
-@ stub EngDeleteSemaphore
+@ stdcall EngDeleteSemaphore(ptr)
 @ stub EngDeleteSurface
 @ stub EngEraseSurface
 @ stub EngFillPath
-@ stub EngFindResource
-@ stub EngFreeModule
-@ stub EngGetCurrentCodePage
+@ stdcall EngFindResource(ptr long long ptr)
+@ stdcall EngFreeModule(ptr)
+@ stdcall EngGetCurrentCodePage(ptr ptr)
 @ stub EngGetDriverName
 @ stub EngGetPrinterDataFileName
 @ stub EngGradientFill
 @ stub EngLineTo
-@ stub EngLoadModule
+@ stdcall EngLoadModule(ptr)
 @ stub EngLockSurface
 @ stub EngMarkBandingSurface
 @ stub EngMultiByteToUnicodeN
-@ stub EngMultiByteToWideChar
+@ stdcall EngMultiByteToWideChar(long wstr long str long)
 @ stub EngPaint
 @ stub EngPlgBlt
 @ stub EngQueryEMFInfo
-@ stub EngQueryLocalTime
-@ stub EngReleaseSemaphore
+@ stdcall EngQueryLocalTime(ptr)
+@ stdcall EngReleaseSemaphore(ptr)
 @ stub EngStretchBlt
 @ stub EngStretchBltROP
 @ stub EngStrokeAndFillPath
@@ -249,15 +249,15 @@
 @ stdcall GdiComment(long long ptr)
 @ stub GdiConsoleTextOut
 @ stub GdiConvertAndCheckDC
-@ stub GdiConvertBitmap
+@ stdcall GdiConvertBitmap(ptr)
 @ stub GdiConvertBitmapV5
-@ stub GdiConvertBrush
-@ stub GdiConvertDC
+@ stdcall GdiConvertBrush(ptr)
+@ stdcall GdiConvertDC(ptr)
 @ stub GdiConvertEnhMetaFile
-@ stub GdiConvertFont
+@ stdcall GdiConvertFont(ptr)
 @ stub GdiConvertMetaFilePict
-@ stub GdiConvertPalette
-@ stub GdiConvertRegion
+@ stdcall GdiConvertPalette(ptr)
+@ stdcall GdiConvertRegion(ptr)
 @ stdcall GdiConvertToDevmodeW(ptr)
 @ stub GdiCreateLocalBitmap
 @ stub GdiCreateLocalBrush
@@ -335,7 +335,7 @@
 @ stub GdiQueryTable
 @ stdcall GdiRealizationInfo(long ptr)
 @ stub GdiReleaseDC
-@ stub GdiReleaseLocalDC
+@ stdcall GdiReleaseLocalDC(ptr)
 @ stub GdiResetDCEMF
 @ stdcall GdiSetAttrs(ptr)
 @ stdcall GdiSetBatchLimit(long)
@@ -405,7 +405,7 @@
 @ stdcall GetFontData(long long long ptr long)
 @ stdcall GetFontLanguageInfo(long)
 @ stub GetFontResourceInfo
-@ stub GetFontResourceInfoW
+@ stdcall GetFontResourceInfoW(str ptr ptr long)
 @ stdcall GetFontUnicodeRanges(ptr ptr)
 @ stdcall GetGlyphIndicesA(long ptr long ptr long)
 @ stdcall GetGlyphIndicesW(long ptr long ptr long)

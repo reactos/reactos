@@ -23,6 +23,14 @@ RestoreThunkLock(DWORD mutex_count)
 {
 }
 
+VOID
+WINAPI
+InitializeLpkHooks(FARPROC *hookfuncs)
+{
+  UNIMPLEMENTED;
+}
+
+
 /*
  * Private calls for CSRSS
  */

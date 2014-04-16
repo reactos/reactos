@@ -3480,3 +3480,16 @@ GdiAddFontResourceW(
     return 0;
 }
 
+
+BOOL
+WINAPI
+GetFontResourceInfoW(
+    LPCWSTR lpFileName,
+    DWORD *pdwBufSize,
+    void* lpBuffer,
+    DWORD dwType
+)
+{
+    FIXME("GetFontResourceInfoW(%S) UNIMPLEMENTED\n", lpFileName);
+    return FALSE;
+}

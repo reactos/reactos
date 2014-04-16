@@ -411,7 +411,7 @@
 @ stdcall InflateRect(ptr long long)
 # @ stub InitSharedTable
 # @ stub InitTask
-@ stub InitializeLpkHooks
+@ stdcall InitializeLpkHooks(ptr)
 @ stub InitializeWin32EntryTable
 @ stdcall InsertMenuA(long long long long ptr)
 @ stdcall InsertMenuItemA(long long long ptr)

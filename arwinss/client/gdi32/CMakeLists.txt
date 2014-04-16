@@ -23,6 +23,7 @@ list(APPEND SOURCE
     dc.c
     dib.c
     driver.c
+    eng.c
     enhmetafile.c
     enhmeta2.c
     font.c
