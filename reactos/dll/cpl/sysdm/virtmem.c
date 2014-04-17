@@ -465,10 +465,6 @@ OnSet(PVIRTMEM pVirtMem)
                 return;
             }
 
-            if ((pVirtMem->Pagefile[DriveIndex].NewMinSize != MinSize) &&
-                (pVirtMem->Pagefile[DriveIndex].NewMaxSize != MaxSize))
-                pVirtMem->bModified = TRUE;
-
             pVirtMem->Pagefile[DriveIndex].NewMinSize = MinSize;
             pVirtMem->Pagefile[DriveIndex].NewMaxSize = MaxSize;
             pVirtMem->Pagefile[DriveIndex].bUsed = TRUE;
@@ -476,25 +472,23 @@ OnSet(PVIRTMEM pVirtMem)
         else if (IsDlgButtonChecked(pVirtMem->hSelf,
                                     IDC_NOPAGEFILE) == BST_CHECKED)
         {
-            if ((pVirtMem->Pagefile[DriveIndex].NewMinSize != MinSize) &&
-                (pVirtMem->Pagefile[DriveIndex].NewMaxSize != MaxSize))
-                pVirtMem->bModified = TRUE;
-
-            /* Set sizes to -1 */
+            /* No pagefile */
             pVirtMem->Pagefile[DriveIndex].NewMinSize = -1;
             pVirtMem->Pagefile[DriveIndex].NewMaxSize = -1;
             pVirtMem->Pagefile[DriveIndex].bUsed = TRUE;
         }
         else
         {
-            if ((pVirtMem->Pagefile[DriveIndex].NewMinSize != MinSize) &&
-                (pVirtMem->Pagefile[DriveIndex].NewMaxSize != MaxSize))
-                pVirtMem->bModified = TRUE;
-
+            /* System managed size*/
             pVirtMem->Pagefile[DriveIndex].NewMinSize = 0;
             pVirtMem->Pagefile[DriveIndex].NewMaxSize = 0;
             pVirtMem->Pagefile[DriveIndex].bUsed = TRUE;
         }
+
+        /* Set the modified flag if min or max size has changed */
+        if ((pVirtMem->Pagefile[DriveIndex].OldMinSize != pVirtMem->Pagefile[DriveIndex].NewMinSize) ||
+            (pVirtMem->Pagefile[DriveIndex].OldMaxSize != pVirtMem->Pagefile[DriveIndex].NewMaxSize))
+            pVirtMem->bModified = TRUE;
 
         UpdatePagefileEntry(pVirtMem, Index, DriveIndex);
     }
