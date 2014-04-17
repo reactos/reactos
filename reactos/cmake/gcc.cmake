@@ -324,6 +324,7 @@ set(PSEH_LIB "pseh")
 
 # Macros
 if(PCH)
+    add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first
         set(_pch_final_name "${_target}_pch.h")
@@ -351,7 +352,7 @@ if(PCH)
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
         foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -Winvalid-pch -Werror=invalid-pch -include ${_pch_final_name}")
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${_pch_final_name}")
             set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
         endforeach()
     endmacro()
