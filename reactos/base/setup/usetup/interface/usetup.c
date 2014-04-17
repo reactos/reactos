@@ -1524,6 +1524,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                    MaxSize,
                                    TRUE);
 
+                DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
+
                 return SELECT_FILE_SYSTEM_PAGE;
             }
         }
@@ -1534,6 +1536,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
+
+            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
