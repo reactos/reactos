@@ -1135,8 +1135,8 @@ LRESULT NC_HandleNCRButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam )
       ReleaseCapture();
       if (hittest == HTCAPTION || hittest == HTSYSMENU)
       {
-         ERR("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
-         SendMessageW( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, msg.lParam );
+         TRACE("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
+         SendMessageW( hwnd, WM_CONTEXTMENU, (WPARAM)hwnd, MAKELONG(msg.pt.x,msg.pt.y));
       }
       break;
   }
