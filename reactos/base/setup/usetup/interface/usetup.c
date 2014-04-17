@@ -2392,8 +2392,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     }
                 }
             }
+#if 0
             else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
                 PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
+#endif
             else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
 
