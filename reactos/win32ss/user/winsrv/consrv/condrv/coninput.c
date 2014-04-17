@@ -54,6 +54,19 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
+static VOID FASTCALL
+ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
+{
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        CHAR AsciiChar = InputEvent->Event.KeyEvent.uChar.AsciiChar;
+        InputEvent->Event.KeyEvent.uChar.AsciiChar = 0;
+        ConsoleInputAnsiCharToUnicodeChar(Console,
+                                          &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
+                                          &AsciiChar);
+    }
+}
+
 NTSTATUS FASTCALL
 ConioAddInputEvent(PCONSOLE Console,
                    PINPUT_RECORD InputEvent,
@@ -465,12 +478,9 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     for (i = (NumEventsWritten ? *NumEventsWritten : 0); i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
     {
-        if (InputRecord->EventType == KEY_EVENT && !Unicode)
+        if (!Unicode)
         {
-            CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
-            ConsoleInputAnsiCharToUnicodeChar(Console,
-                                              &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
-                                              &AsciiChar);
+            ConioInputEventToUnicode(Console, InputRecord);
         }
 
         Status = ConioAddInputEvent(Console, InputRecord++, AppendToEnd);
