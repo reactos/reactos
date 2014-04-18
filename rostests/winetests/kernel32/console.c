@@ -50,7 +50,7 @@ static BOOL (WINAPI *pVerifyConsoleIoHandle)(HANDLE handle);
 
 #define okCHAR(hCon, c, ch, attr) do { \
   char __ch; WORD __attr; DWORD __len; BOOL expect; \
-  expect = ReadConsoleOutputCharacter((hCon), &__ch, 1, (c), &__len) == 1 && __len == 1 && __ch == (ch); \
+  expect = ReadConsoleOutputCharacterA((hCon), &__ch, 1, (c), &__len) == 1 && __len == 1 && __ch == (ch); \
   ok(expect, "At (%d,%d): expecting char '%c'/%02x got '%c'/%02x\n", (c).X, (c).Y, (ch), (ch), __ch, __ch); \
   expect = ReadConsoleOutputAttribute((hCon), &__attr, 1, (c), &__len) == 1 && __len == 1 && __attr == (attr); \
   ok(expect, "At (%d,%d): expecting attr %04x got %04x\n", (c).X, (c).Y, (attr), __attr); \
@@ -179,7 +179,7 @@ static void testEmptyWrite(HANDLE hCon)
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left\n");
 
     len = -1;
-    ok(WriteConsole(hCon, NULL, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, NULL, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
     okCURSOR(hCon, c);
 
     /* Passing a NULL lpBuffer with sufficiently large non-zero length succeeds
@@ -188,22 +188,22 @@ static void testEmptyWrite(HANDLE hCon)
     if (0)
     {
         len = -1;
-        ok(!WriteConsole(hCon, NULL, 16, &len, NULL) && len == -1, "WriteConsole\n");
+        ok(!WriteConsoleA(hCon, NULL, 16, &len, NULL) && len == -1, "WriteConsole\n");
         okCURSOR(hCon, c);
 
         /* Cursor advances for this call. */
         len = -1;
-        ok(WriteConsole(hCon, NULL, 128, &len, NULL) != 0 && len == 128, "WriteConsole\n");
+        ok(WriteConsoleA(hCon, NULL, 128, &len, NULL) != 0 && len == 128, "WriteConsole\n");
     }
 
     len = -1;
-    ok(WriteConsole(hCon, emptybuf, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, emptybuf, 0, &len, NULL) != 0 && len == 0, "WriteConsole\n");
     okCURSOR(hCon, c);
 
     /* WriteConsole does not halt on a null terminator and is happy to write
      * memory contents beyond the actual size of the buffer. */
     len = -1;
-    ok(WriteConsole(hCon, emptybuf, 16, &len, NULL) != 0 && len == 16, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, emptybuf, 16, &len, NULL) != 0 && len == 16, "WriteConsole\n");
     c.X += 16;
     okCURSOR(hCon, c);
 }
@@ -219,7 +219,7 @@ static void testWriteSimple(HANDLE hCon)
     c.X = c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     c.Y = 0;
     for (c.X = 0; c.X < mylen; c.X++)
     {
@@ -246,7 +246,7 @@ static void testWriteNotWrappedNotProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 3; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-3\n");
 
-    ret = WriteConsole(hCon, mytest, mylen, &len, NULL);
+    ret = WriteConsoleA(hCon, mytest, mylen, &len, NULL);
     ok(ret != 0 && len == mylen, "Couldn't write, ret = %d, len = %d\n", ret, len);
     c.Y = 0;
     for (p = mylen - 3; p < mylen; p++)
@@ -265,7 +265,7 @@ static void testWriteNotWrappedNotProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - mylen; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-3\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
 }
 
 static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
@@ -285,7 +285,7 @@ static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 5; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-5\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     c.Y = 0;
     for (c.X = sbSize.X - 5; c.X < sbSize.X - 1; c.X++)
     {
@@ -316,7 +316,7 @@ static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 4; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-4\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     c.Y = 0;
     for (c.X = sbSize.X - 4; c.X < sbSize.X; c.X++)
     {
@@ -336,7 +336,7 @@ static void testWriteNotWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 3; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-4\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     c.Y = 0;
     for (p = mylen2 - 3; p < mylen2; p++)
     {
@@ -369,7 +369,7 @@ static void testWriteWrappedNotProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 9; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-9\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     c.Y = 0;
     for (p = 0; p < mylen; p++)
     {
@@ -406,7 +406,7 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 9; c.Y = 0;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-9\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     for (p = 0; p < 4; p++)
     {
         c.X = sbSize.X - 9 + p;
@@ -431,7 +431,7 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
     c.X = sbSize.X - 3; c.Y = 2;
     ok(SetConsoleCursorPosition(hCon, c) != 0, "Cursor in upper-left-3\n");
 
-    ok(WriteConsole(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
+    ok(WriteConsoleA(hCon, mytest, mylen, &len, NULL) != 0 && len == mylen, "WriteConsole\n");
     for (p = 0; p < 3; p++)
     {
         c.X = sbSize.X - 3 + p;
@@ -458,7 +458,7 @@ static void testWriteWrappedProcessed(HANDLE hCon, COORD sbSize)
 
 static void testWrite(HANDLE hCon, COORD sbSize)
 {
-    /* FIXME: should in fact insure that the sb is at least 10 character wide */
+    /* FIXME: should in fact ensure that the sb is at least 10 characters wide */
     ok(SetConsoleTextAttribute(hCon, TEST_ATTRIB), "Setting default text color\n");
     resetContent(hCon, sbSize, FALSE);
     testEmptyWrite(hCon);
@@ -504,7 +504,7 @@ static void testScroll(HANDLE hCon, COORD sbSize)
     clip.Top = 0;
     clip.Bottom = sbSize.Y - 1;
 
-    ok(ScrollConsoleScreenBuffer(hCon, &scroll, NULL, dst, &ci), "Scrolling SB\n");
+    ok(ScrollConsoleScreenBufferA(hCon, &scroll, NULL, dst, &ci), "Scrolling SB\n");
 
     for (c.Y = 0; c.Y < sbSize.Y; c.Y++)
     {
@@ -539,7 +539,7 @@ static void testScroll(HANDLE hCon, COORD sbSize)
     clip.Top = 0;
     clip.Bottom = sbSize.Y - 1;
 
-    ok(ScrollConsoleScreenBuffer(hCon, &scroll, NULL, dst, &ci), "Scrolling SB\n");
+    ok(ScrollConsoleScreenBufferA(hCon, &scroll, NULL, dst, &ci), "Scrolling SB\n");
 
     for (c.Y = 0; c.Y < sbSize.Y; c.Y++)
     {
@@ -574,7 +574,7 @@ static void testScroll(HANDLE hCon, COORD sbSize)
     clip.Bottom = min(H + H / 2, sbSize.Y - 1);
 
     SetLastError(0xdeadbeef);
-    ret = ScrollConsoleScreenBuffer(hCon, &scroll, &clip, dst, &ci);
+    ret = ScrollConsoleScreenBufferA(hCon, &scroll, &clip, dst, &ci);
     if (ret)
     {
         for (c.Y = 0; c.Y < sbSize.Y; c.Y++)
@@ -617,7 +617,7 @@ static void testScroll(HANDLE hCon, COORD sbSize)
     clip.Top = H / 2;
     clip.Bottom = min(H + H / 2, sbSize.Y - 1);
 
-    ok(ScrollConsoleScreenBuffer(hCon, &scroll, &clip, dst, &ci), "Scrolling SB\n");
+    ok(ScrollConsoleScreenBufferA(hCon, &scroll, &clip, dst, &ci), "Scrolling SB\n");
 
     for (c.Y = 0; c.Y < sbSize.Y; c.Y++)
     {
@@ -654,8 +654,8 @@ static void testCtrlHandler(void)
     ok(!SetConsoleCtrlHandler(mch, FALSE), "Shouldn't succeed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Bad error %u\n", GetLastError());
     ok(SetConsoleCtrlHandler(mch, TRUE), "Couldn't set handler\n");
-    /* wine requires the event for the test, as we cannot insure, so far, that event
-     * are processed synchronously in GenerateConsoleCtrlEvent()
+    /* wine requires the event for the test, as we cannot ensure, so far, that
+     * events are processed synchronously in GenerateConsoleCtrlEvent()
      */
     mch_event = CreateEventA(NULL, TRUE, FALSE, NULL);
     mch_count = 0;
@@ -704,7 +704,7 @@ static void testScreenBuffer(HANDLE hConOut)
     WCHAR test_unicode[] = {0x0442, 0x0435, 0x0441, 0x0442, 0};
     WCHAR str_wbuf[20];
     char str_buf[20];
-    DWORD len;
+    DWORD len, error;
     COORD c;
     BOOL ret;
     DWORD oldcp;
@@ -782,25 +782,25 @@ static void testScreenBuffer(HANDLE hConOut)
 
     /* trying to write non-console handle */
     SetLastError(0xdeadbeef);
-    ok(!WriteConsoleA(hFileOutRW, test_str1, lstrlenA(test_str1), &len, NULL),
-        "Shouldn't succeed\n");
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "GetLastError: expecting %u got %u\n",
-       ERROR_INVALID_HANDLE, GetLastError());
+    ret = WriteConsoleA(hFileOutRW, test_str1, lstrlenA(test_str1), &len, NULL);
+    error = GetLastError();
+    ok(!ret, "Shouldn't succeed\n");
+    ok(error == ERROR_INVALID_HANDLE || error == ERROR_INVALID_FUNCTION,
+       "GetLastError: got %u\n", error);
 
     SetLastError(0xdeadbeef);
-    ok(!WriteConsoleA(hFileOutRO, test_str1, lstrlenA(test_str1), &len, NULL),
-        "Shouldn't succeed\n");
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "GetLastError: expecting %u got %u\n",
-       ERROR_INVALID_HANDLE, GetLastError());
+    ret = WriteConsoleA(hFileOutRO, test_str1, lstrlenA(test_str1), &len, NULL);
+    error = GetLastError();
+    ok(!ret, "Shouldn't succeed\n");
+    ok(error == ERROR_INVALID_HANDLE || error == ERROR_INVALID_FUNCTION,
+       "GetLastError: got %u\n", error);
 
     SetLastError(0xdeadbeef);
-    ok(!WriteConsoleA(hFileOutWT, test_str1, lstrlenA(test_str1), &len, NULL),
-        "Shouldn't succeed\n");
-    todo_wine ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "GetLastError: expecting %u got %u\n",
-       ERROR_INVALID_HANDLE, GetLastError());
+    ret = WriteConsoleA(hFileOutWT, test_str1, lstrlenA(test_str1), &len, NULL);
+    error = GetLastError();
+    ok(!ret, "Shouldn't succeed\n");
+    todo_wine ok(error == ERROR_INVALID_HANDLE || error == ERROR_INVALID_FUNCTION,
+       "GetLastError: got %u\n", error);
 
     CloseHandle(hFileOutRW);
     CloseHandle(hFileOutRO);
@@ -927,7 +927,7 @@ static void test_GetSetConsoleInputExeName(void)
     ok(ret, "GetConsoleInputExeNameA failed\n");
     ok(error == ERROR_BUFFER_OVERFLOW, "got %u expected ERROR_BUFFER_OVERFLOW\n", error);
 
-    GetModuleFileNameA(GetModuleHandle(NULL), module, sizeof(module));
+    GetModuleFileNameA(GetModuleHandleA(NULL), module, sizeof(module));
     p = strrchr(module, '\\') + 1;
 
     ret = pGetConsoleInputExeNameA(sizeof(buffer)/sizeof(buffer[0]), buffer);
@@ -1025,7 +1025,8 @@ static void test_OpenCON(void)
     for (i = 0; i < sizeof(accesses) / sizeof(accesses[0]); i++)
     {
         h = CreateFileW(conW, GENERIC_WRITE, 0, NULL, accesses[i], 0, NULL);
-        ok(h != INVALID_HANDLE_VALUE, "Expected to open the CON device on write (%x)\n", accesses[i]);
+        ok(h != INVALID_HANDLE_VALUE || broken(accesses[i] == TRUNCATE_EXISTING /* Win8 */),
+           "Expected to open the CON device on write (%x)\n", accesses[i]);
         CloseHandle(h);
 
         h = CreateFileW(conW, GENERIC_READ, 0, NULL, accesses[i], 0, NULL);
@@ -1034,14 +1035,13 @@ static void test_OpenCON(void)
          * NT, XP, Vista comply, but Win7 doesn't and allows opening CON with TRUNCATE_EXISTING
          * So don't test when disposition is TRUNCATE_EXISTING
          */
-        if (accesses[i] != TRUNCATE_EXISTING)
-        {
-            ok(h != INVALID_HANDLE_VALUE, "Expected to open the CON device on read (%x)\n", accesses[i]);
-        }
+        ok(h != INVALID_HANDLE_VALUE || broken(accesses[i] == TRUNCATE_EXISTING /* Win7+ */),
+           "Expected to open the CON device on read (%x)\n", accesses[i]);
         CloseHandle(h);
         h = CreateFileW(conW, GENERIC_READ|GENERIC_WRITE, 0, NULL, accesses[i], 0, NULL);
         ok(h == INVALID_HANDLE_VALUE, "Expected not to open the CON device on read-write (%x)\n", accesses[i]);
-        ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Unexpected error %x\n", GetLastError());
+        ok(GetLastError() == ERROR_FILE_NOT_FOUND || GetLastError() == ERROR_INVALID_PARAMETER,
+           "Unexpected error %x\n", GetLastError());
     }
 }
 
@@ -1051,6 +1051,7 @@ static void test_OpenConsoleW(void)
     static const WCHAR conoutW[] = {'C','O','N','O','U','T','$',0};
     static const WCHAR emptyW[] = {0};
     static const WCHAR invalidW[] = {'I','N','V','A','L','I','D',0};
+    DWORD gle;
 
     static const struct
     {
@@ -1058,42 +1059,63 @@ static void test_OpenConsoleW(void)
         DWORD access;
         BOOL inherit;
         DWORD creation;
-        DWORD gle;
+        DWORD gle, gle2;
     } invalid_table[] = {
-        {NULL,     0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {NULL,     0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
-        {NULL,     0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
-        {emptyW,   0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {emptyW,   0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
-        {emptyW,   0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
-        {invalidW, 0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {invalidW, 0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
-        {invalidW, 0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
-        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
-        {coninW,   0,                            FALSE,      0,                 ERROR_SHARING_VIOLATION},
-        {coninW,   0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
-        {coninW,   0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_SHARING_VIOLATION},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        ERROR_SHARING_VIOLATION},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     ERROR_SHARING_VIOLATION},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, ERROR_INVALID_PARAMETER},
-        {conoutW,  0,                            FALSE,      0,                 ERROR_SHARING_VIOLATION},
-        {conoutW,  0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
-        {conoutW,  0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_SHARING_VIOLATION},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        ERROR_SHARING_VIOLATION},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     ERROR_SHARING_VIOLATION},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, ERROR_INVALID_PARAMETER},
+        {NULL,     0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     0,                            FALSE,      0xdeadbeef,        ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     0xdeadbeef,                   FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     0xdeadbeef,                   TRUE,       0xdeadbeef,        ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   0,                            FALSE,      0xdeadbeef,        ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   0xdeadbeef,                   FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   0xdeadbeef,                   TRUE,       0xdeadbeef,        ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER, ERROR_PATH_NOT_FOUND},
+        {invalidW, 0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {invalidW, 0,                            FALSE,      0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+        {invalidW, 0xdeadbeef,                   FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {invalidW, 0xdeadbeef,                   TRUE,       0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+        {invalidW, 0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER, ERROR_FILE_NOT_FOUND},
+        {coninW,   0,                            FALSE,      0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+        {coninW,   0xdeadbeef,                   FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_ACCESS_DENIED},
+        {coninW,   0xdeadbeef,                   TRUE,       0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+        {conoutW,  0,                            FALSE,      0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+        {conoutW,  0xceadbeef,                   FALSE,      0,                 ERROR_INVALID_PARAMETER, ERROR_ACCESS_DENIED},
+        {conoutW,  0xdeadbeef,                   TRUE,       0xdeadbeef,        ERROR_INVALID_PARAMETER, 0},
+    };
+    static const struct
+    {
+        LPCWSTR name;
+        DWORD access;
+        BOOL inherit;
+        DWORD creation;
+    } valid_table[] = {
+        {coninW,   0,                            FALSE,      0                },
+        {coninW,   0,                            TRUE,       0                },
+        {coninW,   GENERIC_EXECUTE,              TRUE,       0                },
+        {coninW,   GENERIC_ALL,                  TRUE,       0                },
+        {coninW,   0,                            FALSE,      OPEN_ALWAYS      },
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0                },
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW       },
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS    },
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS      },
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING},
+        {conoutW,  0,                            FALSE,      0                },
+        {conoutW,  0,                            FALSE,      OPEN_ALWAYS      },
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      0                },
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,      },
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS    },
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS      },
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING},
     };
 
     int index;
@@ -1110,30 +1132,33 @@ static void test_OpenConsoleW(void)
         SetLastError(0xdeadbeef);
         ret = pOpenConsoleW(invalid_table[index].name, invalid_table[index].access,
                             invalid_table[index].inherit, invalid_table[index].creation);
+        gle = GetLastError();
         ok(ret == INVALID_HANDLE_VALUE,
            "Expected OpenConsoleW to return INVALID_HANDLE_VALUE for index %d, got %p\n",
            index, ret);
-        ok(GetLastError() == invalid_table[index].gle,
-           "Expected GetLastError() to return %u for index %d, got %u\n",
-           invalid_table[index].gle, index, GetLastError());
+        ok(gle == invalid_table[index].gle || (gle != 0 && gle == invalid_table[index].gle2),
+           "Expected GetLastError() to return %u/%u for index %d, got %u\n",
+           invalid_table[index].gle, invalid_table[index].gle2, index, gle);
     }
 
-    /* OpenConsoleW should not touch the last error on success. */
-    SetLastError(0xdeadbeef);
+    for (index = 0; index < sizeof(valid_table)/sizeof(valid_table[0]); index++)
+    {
+        ret = pOpenConsoleW(valid_table[index].name, valid_table[index].access,
+                            valid_table[index].inherit, valid_table[index].creation);
+        todo_wine
+        ok(ret != INVALID_HANDLE_VALUE || broken(ret == INVALID_HANDLE_VALUE /* until Win7 */),
+           "Expected OpenConsoleW to succeed for index %d, got %p\n", index, ret);
+        if (ret != INVALID_HANDLE_VALUE)
+            CloseHandle(ret);
+    }
+
     ret = pOpenConsoleW(coninW, GENERIC_READ | GENERIC_WRITE, FALSE, OPEN_EXISTING);
-    ok(ret != INVALID_HANDLE_VALUE,
-       "Expected OpenConsoleW to return a valid handle\n");
-    ok(GetLastError() == 0xdeadbeef,
-       "Expected the last error to be untouched, got %u\n", GetLastError());
+    ok(ret != INVALID_HANDLE_VALUE, "Expected OpenConsoleW to return a valid handle\n");
     if (ret != INVALID_HANDLE_VALUE)
         CloseHandle(ret);
 
-    SetLastError(0xdeadbeef);
     ret = pOpenConsoleW(conoutW, GENERIC_READ | GENERIC_WRITE, FALSE, OPEN_EXISTING);
-    ok(ret != INVALID_HANDLE_VALUE,
-       "Expected OpenConsoleW to return a valid handle\n");
-    ok(GetLastError() == 0xdeadbeef,
-       "Expected the last error to be untouched, got %u\n", GetLastError());
+    ok(ret != INVALID_HANDLE_VALUE, "Expected OpenConsoleW to return a valid handle\n");
     if (ret != INVALID_HANDLE_VALUE)
         CloseHandle(ret);
 }
@@ -1158,14 +1183,13 @@ static void test_CreateFileW(void)
         {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        0,                              FALSE},
         {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     0,                              FALSE},
         {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       0,                              FALSE},
-        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, 0,                              FALSE},
         {conoutW,  0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER,        TRUE},
         {conoutW,  0,                            FALSE,      OPEN_ALWAYS,       0,                              FALSE},
         {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER,        TRUE},
         {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        0,                              FALSE},
         {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     0,                              FALSE},
         {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       0,                              FALSE},
-        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, 0,                              FALSE},
+        /* TRUNCATE_EXISTING is forbidden starting with Windows 8 */
     };
 
     int index;
@@ -1342,7 +1366,7 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
     INPUT_RECORD event_list[5];
     MOUSE_EVENT_RECORD mouse_event = { {0, 0}, 0, 0, MOUSE_MOVED };
     KEY_EVENT_RECORD key_event;
-    DWORD count, console_mode;
+    DWORD count, console_mode, gle;
     BOOL ret;
     int i;
 
@@ -1353,31 +1377,31 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
         DWORD count;
         LPDWORD written;
         DWORD expected_count;
-        DWORD last_error;
+        DWORD gle, gle2;
         int win_crash;
     } invalid_table[] =
     {
-        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_NOACCESS, ERROR_INVALID_ACCESS},
+        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_HANDLE, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
-        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_NOACCESS, ERROR_INVALID_ACCESS},
+        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
     };
 
     /* Suppress external sources of input events for the duration of the test. */
@@ -1422,9 +1446,10 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
                "[%d] Expected output count to be %u, got %u\n",
                i, invalid_table[i].expected_count, count);
         }
-        ok(GetLastError() == invalid_table[i].last_error,
-           "[%d] Expected last error to be %u, got %u\n",
-           i, invalid_table[i].last_error, GetLastError());
+        gle = GetLastError();
+        ok(gle == invalid_table[i].gle || (gle != 0 && gle == invalid_table[i].gle2),
+           "[%d] Expected last error to be %u or %u, got %u\n",
+           i, invalid_table[i].gle, invalid_table[i].gle2, gle);
     }
 
     count = 0xdeadbeef;
@@ -1585,7 +1610,7 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
     INPUT_RECORD event_list[5];
     MOUSE_EVENT_RECORD mouse_event = { {0, 0}, 0, 0, MOUSE_MOVED };
     KEY_EVENT_RECORD key_event;
-    DWORD count, console_mode;
+    DWORD count, console_mode, gle;
     BOOL ret;
     int i;
 
@@ -1596,31 +1621,31 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
         DWORD count;
         LPDWORD written;
         DWORD expected_count;
-        DWORD last_error;
+        DWORD gle, gle2;
         int win_crash;
     } invalid_table[] =
     {
-        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_NOACCESS, ERROR_INVALID_ACCESS},
+        {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {NULL, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_HANDLE, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
         {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
-        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
-        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
+        {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_NOACCESS, ERROR_INVALID_ACCESS},
+        {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
+        {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 0, 1},
     };
 
     /* Suppress external sources of input events for the duration of the test. */
@@ -1665,9 +1690,10 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
                "[%d] Expected output count to be %u, got %u\n",
                i, invalid_table[i].expected_count, count);
         }
-        ok(GetLastError() == invalid_table[i].last_error,
-           "[%d] Expected last error to be %u, got %u\n",
-           i, invalid_table[i].last_error, GetLastError());
+        gle = GetLastError();
+        ok(gle == invalid_table[i].gle || (gle != 0 && gle == invalid_table[i].gle2),
+           "[%d] Expected last error to be %u or %u, got %u\n",
+           i, invalid_table[i].gle, invalid_table[i].gle2, gle);
     }
 
     count = 0xdeadbeef;
@@ -2001,7 +2027,7 @@ static void test_WriteConsoleOutputAttribute(HANDLE output_handle)
     const struct
     {
         HANDLE hConsoleOutput;
-        CONST WORD *attr;
+        const WORD *attr;
         DWORD length;
         COORD coord;
         LPDWORD lpNumAttrsWritten;
@@ -2527,6 +2553,41 @@ static void test_ReadConsoleOutputAttribute(HANDLE output_handle)
     ok(count == 1, "Expected count to be 1, got %u\n", count);
 }
 
+static void test_ReadConsole(void)
+{
+    HANDLE std_input;
+    DWORD ret, bytes;
+    char buf[1024];
+
+    std_input = GetStdHandle(STD_INPUT_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    ret = GetFileSize(std_input, NULL);
+    ok(ret == INVALID_FILE_SIZE, "expected INVALID_FILE_SIZE, got %#x\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(std_input, buf, -128, &bytes, NULL);
+    ok(!ret, "expected 0, got %u\n", ret);
+    ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "expected ERROR_NOT_ENOUGH_MEMORY, got %d\n", GetLastError());
+    ok(!bytes, "expected 0, got %u\n", bytes);
+
+    bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadConsoleA(std_input, buf, -128, &bytes, NULL);
+    ok(!ret, "expected 0, got %u\n", ret);
+    ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "expected ERROR_NOT_ENOUGH_MEMORY, got %d\n", GetLastError());
+    ok(bytes == 0xdeadbeef, "expected 0xdeadbeef, got %#x\n", bytes);
+
+    bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadConsoleW(std_input, buf, -128, &bytes, NULL);
+    ok(!ret, "expected 0, got %u\n", ret);
+    ok(GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "expected ERROR_NOT_ENOUGH_MEMORY, got %d\n", GetLastError());
+    ok(bytes == 0xdeadbeef, "expected 0xdeadbeef, got %#x\n", bytes);
+}
+
 START_TEST(console)
 {
     static const char font_name[] = "Lucida Console";
@@ -2620,6 +2681,7 @@ START_TEST(console)
     ok(sbi.dwSize.Y == size, "Unexpected buffer size: %d instead of %d\n", sbi.dwSize.Y, size);
     if (!ret) return;
 
+    test_ReadConsole();
     /* Non interactive tests */
     testCursor(hConOut, sbi.dwSize);
     /* test parameters (FIXME: test functionality) */

@@ -117,7 +117,7 @@ static void test_GetDiskFreeSpaceA(void)
 
                 if (!ret)
                     /* GetDiskFreeSpaceA() should succeed, but it can fail with too many
-                       different GetLastError() results to be usable for a ok() */
+                       different GetLastError() results to be usable for an ok() */
                     trace("GetDiskFreeSpaceA(%s) failed with %d\n", drive, GetLastError());
 
                 if( GetVersion() & 0x80000000)
@@ -134,7 +134,7 @@ static void test_GetDiskFreeSpaceA(void)
 
                     if (!ret)
                         /* GetDiskFreeSpaceExA() should succeed, but it can fail with too many
-                           different GetLastError() results to be usable for a ok() */
+                           different GetLastError() results to be usable for an ok() */
                         trace("GetDiskFreeSpaceExA(%s) failed with %d\n", drive, GetLastError());
 
                     ok( bytes_per_sector == 0 || /* empty cd rom drive */
@@ -192,7 +192,7 @@ static void test_GetDiskFreeSpaceW(void)
                    drive[0], ret, GetLastError());
             else if (!ret)
                 /* GetDiskFreeSpaceW() should succeed, but it can fail with too many
-                   different GetLastError() results to be usable for a ok() */
+                   different GetLastError() results to be usable for an ok() */
                 trace("GetDiskFreeSpaceW(%c) failed with %d\n", drive[0], GetLastError());
         }
         logical_drives >>= 1;

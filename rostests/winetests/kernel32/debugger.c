@@ -113,9 +113,9 @@ static void get_events(const char* name, HANDLE *start_event, HANDLE *done_event
     event_name=HeapAlloc(GetProcessHeap(), 0, 6+strlen(basename)+1);
 
     sprintf(event_name, "start_%s", basename);
-    *start_event=CreateEvent(NULL, 0,0, event_name);
+    *start_event=CreateEventA(NULL, 0,0, event_name);
     sprintf(event_name, "done_%s", basename);
-    *done_event=CreateEvent(NULL, 0,0, event_name);
+    *done_event=CreateEventA(NULL, 0,0, event_name);
     HeapFree(GetProcessHeap(), 0, event_name);
 }
 
@@ -429,8 +429,8 @@ static void test_ExitCode(void)
     reg_save_value auto_value;
     reg_save_value debugger_value;
 
-    GetModuleFileNameA(GetModuleHandle(NULL), test_exe, sizeof(test_exe));
-    if (GetFileAttributes(test_exe) == INVALID_FILE_ATTRIBUTES)
+    GetModuleFileNameA(GetModuleHandleA(NULL), test_exe, sizeof(test_exe));
+    if (GetFileAttributesA(test_exe) == INVALID_FILE_ATTRIBUTES)
         strcat(test_exe, ".so");
     if (GetFileAttributesA(test_exe) == INVALID_FILE_ATTRIBUTES)
     {
@@ -686,7 +686,7 @@ static void doChildren(int argc, char **argv)
     p = p ? p+1 : blackbox_file;
     strcpy(event_name, p);
     strcat(event_name, "_init");
-    event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name);
+    event = OpenEventA(EVENT_ALL_ACCESS, FALSE, event_name);
     child_ok(event != NULL, "OpenEvent failed, last error %d.\n", GetLastError());
     SetEvent(event);
     CloseHandle(event);
@@ -695,7 +695,7 @@ static void doChildren(int argc, char **argv)
     p = p ? p+1 : blackbox_file;
     strcpy(event_name, p);
     strcat(event_name, "_attach");
-    event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name);
+    event = OpenEventA(EVENT_ALL_ACCESS, FALSE, event_name);
     child_ok(event != NULL, "OpenEvent failed, last error %d.\n", GetLastError());
     WaitForSingleObject(event, INFINITE);
     CloseHandle(event);
@@ -747,14 +747,14 @@ static void test_debug_children(char *name, DWORD flag, BOOL debug_child)
     p = p ? p+1 : blackbox_file;
     strcpy(event_name, p);
     strcat(event_name, "_init");
-    event_init = CreateEvent(NULL, FALSE, FALSE, event_name);
+    event_init = CreateEventA(NULL, FALSE, FALSE, event_name);
     ok(event_init != NULL, "OpenEvent failed, last error %d.\n", GetLastError());
 
     p = strrchr(blackbox_file, '\\');
     p = p ? p+1 : blackbox_file;
     strcpy(event_name, p);
     strcat(event_name, "_attach");
-    event_attach = CreateEvent(NULL, FALSE, flag!=0, event_name);
+    event_attach = CreateEventA(NULL, FALSE, flag!=0, event_name);
     ok(event_attach != NULL, "CreateEvent failed, last error %d.\n", GetLastError());
 
     memset(&si, 0, sizeof(si));
@@ -814,12 +814,12 @@ START_TEST(debugger)
 {
     HMODULE hdll;
 
-    hdll=GetModuleHandle("kernel32.dll");
+    hdll=GetModuleHandleA("kernel32.dll");
     pCheckRemoteDebuggerPresent=(void*)GetProcAddress(hdll, "CheckRemoteDebuggerPresent");
     pDebugActiveProcessStop=(void*)GetProcAddress(hdll, "DebugActiveProcessStop");
     pDebugSetProcessKillOnExit=(void*)GetProcAddress(hdll, "DebugSetProcessKillOnExit");
     pIsDebuggerPresent=(void*)GetProcAddress(hdll, "IsDebuggerPresent");
-    hdll=GetModuleHandle("ntdll.dll");
+    hdll=GetModuleHandleA("ntdll.dll");
     if (hdll) pNtCurrentTeb = (void*)GetProcAddress(hdll, "NtCurrentTeb");
 
     myARGC=winetest_get_mainargs(&myARGV);
@@ -846,6 +846,7 @@ START_TEST(debugger)
         test_debug_loop(myARGC, myARGV);
         test_debug_children(myARGV[0], DEBUG_PROCESS, TRUE);
         test_debug_children(myARGV[0], DEBUG_ONLY_THIS_PROCESS, FALSE);
+        test_debug_children(myARGV[0], DEBUG_PROCESS|DEBUG_ONLY_THIS_PROCESS, FALSE);
         test_debug_children(myARGV[0], 0, FALSE);
     }
 }

@@ -19,17 +19,22 @@
  */
 
 /* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
-#define _WIN32_WINNT 0x0500
+#define _WIN32_WINNT 0x0600
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winnt.h>
 #include <winerror.h>
+#include <winnls.h>
+
+/* THREAD_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
+#define THREAD_ALL_ACCESS_NT4 (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3ff)
 
 /* Specify the number of simultaneous threads to test */
 #define NUM_THREADS 4
@@ -54,6 +59,14 @@
 # endif
 #endif
 
+#ifdef __i386__
+#define ARCH "x86"
+#elif defined __x86_64__
+#define ARCH "amd64"
+#else
+#define ARCH "none"
+#endif
+
 static BOOL (WINAPI *pGetThreadPriorityBoost)(HANDLE,PBOOL);
 static HANDLE (WINAPI *pOpenThread)(DWORD,BOOL,DWORD);
 static BOOL (WINAPI *pQueueUserWorkItem)(LPTHREAD_START_ROUTINE,PVOID,ULONG);
@@ -65,6 +78,16 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE,PBOOL);
 static BOOL (WINAPI *pSetThreadErrorMode)(DWORD,PDWORD);
 static DWORD (WINAPI *pGetThreadErrorMode)(void);
 static DWORD (WINAPI *pRtlGetThreadErrorMode)(void);
+static BOOL   (WINAPI *pActivateActCtx)(HANDLE,ULONG_PTR*);
+static HANDLE (WINAPI *pCreateActCtxW)(PCACTCTXW);
+static BOOL   (WINAPI *pDeactivateActCtx)(DWORD,ULONG_PTR);
+static BOOL   (WINAPI *pGetCurrentActCtx)(HANDLE *);
+static void   (WINAPI *pReleaseActCtx)(HANDLE);
+static PTP_POOL (WINAPI *pCreateThreadpool)(PVOID);
+static PTP_WORK (WINAPI *pCreateThreadpoolWork)(PTP_WORK_CALLBACK,PVOID,PTP_CALLBACK_ENVIRON);
+static void (WINAPI *pSubmitThreadpoolWork)(PTP_WORK);
+static void (WINAPI *pWaitForThreadpoolWorkCallbacks)(PTP_WORK,BOOL);
+static void (WINAPI *pCloseThreadpoolWork)(PTP_WORK);
 
 static HANDLE create_target_process(const char *arg)
 {
@@ -72,12 +95,12 @@ static HANDLE create_target_process(const char *arg)
     char cmdline[MAX_PATH];
     PROCESS_INFORMATION pi;
     BOOL ret;
-    STARTUPINFO si = { 0 };
+    STARTUPINFOA si = { 0 };
     si.cb = sizeof(si);
 
     winetest_get_mainargs( &argv );
     sprintf(cmdline, "%s %s %s", argv[0], argv[1], arg);
-    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     ok(ret, "error: %u\n", GetLastError());
     ret = CloseHandle(pi.hThread);
     ok(ret, "error %u\n", GetLastError());
@@ -102,9 +125,9 @@ static LONG num_synced;
 
 static void init_thread_sync_helpers(void)
 {
-  start_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+  start_event = CreateEventW(NULL, TRUE, FALSE, NULL);
   ok(start_event != NULL, "CreateEvent failed\n");
-  stop_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+  stop_event = CreateEventW(NULL, TRUE, FALSE, NULL);
   ok(stop_event != NULL, "CreateEvent failed\n");
   num_synced = -1;
 }
@@ -258,15 +281,36 @@ static DWORD WINAPI threadFunc_CloseHandle(LPVOID p)
     return 0;
 }
 
+struct thread_actctx_param
+{
+    HANDLE thread_context;
+    HANDLE handle;
+};
+
+static DWORD WINAPI thread_actctx_func(void *p)
+{
+    struct thread_actctx_param *param = (struct thread_actctx_param*)p;
+    HANDLE cur;
+    BOOL ret;
+
+    cur = (void*)0xdeadbeef;
+    ret = pGetCurrentActCtx(&cur);
+    ok(ret, "thread GetCurrentActCtx failed, %u\n", GetLastError());
+    ok(cur == param->handle, "got %p, expected %p\n", cur, param->handle);
+    param->thread_context = cur;
+
+    return 0;
+}
+
 static void create_function_addr_events(HANDLE events[2])
 {
     char buffer[256];
 
     sprintf(buffer, "threadFunc_SetEvent %p", threadFunc_SetEvent);
-    events[0] = CreateEvent(NULL, FALSE, FALSE, buffer);
+    events[0] = CreateEventA(NULL, FALSE, FALSE, buffer);
 
     sprintf(buffer, "threadFunc_CloseHandle %p", threadFunc_CloseHandle);
-    events[1] = CreateEvent(NULL, FALSE, FALSE, buffer);
+    events[1] = CreateEventA(NULL, FALSE, FALSE, buffer);
 }
 
 /* check CreateRemoteThread */
@@ -290,7 +334,7 @@ static VOID test_CreateRemoteThread(void)
     }
     ok(ret == WAIT_OBJECT_0 || broken(ret == WAIT_OBJECT_0+1 /* nt4,w2k */), "WaitForAllObjects 2 events %d\n", ret);
 
-    hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     ok(hEvent != NULL, "Can't create event, err=%u\n", GetLastError());
     ret = DuplicateHandle(GetCurrentProcess(), hEvent, hProcess, &hRemoteEvent,
                           0, FALSE, DUPLICATE_SAME_ACCESS);
@@ -522,7 +566,7 @@ static VOID test_SuspendThread(void)
   ok(error==1,"SuspendThread did not work\n");
 /* check that access restrictions are obeyed */
   if (pOpenThread) {
-    access_thread=pOpenThread(THREAD_ALL_ACCESS & (~THREAD_SUSPEND_RESUME),
+    access_thread=pOpenThread(THREAD_ALL_ACCESS_NT4 & (~THREAD_SUSPEND_RESUME),
                            0,threadId);
     ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
     if (access_thread!=NULL) {
@@ -567,7 +611,7 @@ static VOID test_TerminateThread(void)
      "TerminateThread didn't work\n");
 /* check that access restrictions are obeyed */
   if (pOpenThread) {
-    access_thread=pOpenThread(THREAD_ALL_ACCESS & (~THREAD_TERMINATE),
+    access_thread=pOpenThread(THREAD_ALL_ACCESS_NT4 & (~THREAD_TERMINATE),
                              0,threadId);
     ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
     if (access_thread!=NULL) {
@@ -636,7 +680,7 @@ static VOID test_thread_priority(void)
 
    if (pOpenThread) {
 /* check that access control is obeyed */
-     access_thread=pOpenThread(THREAD_ALL_ACCESS &
+     access_thread=pOpenThread(THREAD_ALL_ACCESS_NT4 &
                        (~THREAD_QUERY_INFORMATION) & (~THREAD_SET_INFORMATION),
                        0,curthreadId);
      ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
@@ -708,7 +752,7 @@ static VOID test_thread_priority(void)
 
    if (pOpenThread) {
 /* check that access control is obeyed */
-     access_thread=pOpenThread(THREAD_ALL_ACCESS &
+     access_thread=pOpenThread(THREAD_ALL_ACCESS_NT4 &
                        (~THREAD_QUERY_INFORMATION) & (~THREAD_SET_INFORMATION),
                        0,curthreadId);
      ok(access_thread!=NULL,"OpenThread returned an invalid handle\n");
@@ -748,7 +792,7 @@ static VOID test_GetThreadTimes(void)
      ok(thread!=NULL,"Create Thread failed\n");
 /* check that access control is obeyed */
      if (pOpenThread) {
-       access_thread=pOpenThread(THREAD_ALL_ACCESS &
+       access_thread=pOpenThread(THREAD_ALL_ACCESS_NT4 &
                                    (~THREAD_QUERY_INFORMATION), 0,threadId);
        ok(access_thread!=NULL,
           "OpenThread returned an invalid handle\n");
@@ -918,7 +962,7 @@ static void test_SetThreadContext(void)
     BOOL ret;
 
     SetLastError(0xdeadbeef);
-    event = CreateEvent( NULL, TRUE, FALSE, NULL );
+    event = CreateEventW( NULL, TRUE, FALSE, NULL );
     thread = CreateThread( NULL, 0, threadFunc6, (void *)2, 0, &threadid );
     ok( thread != NULL, "CreateThread failed : (%d)\n", GetLastError() );
     if (!thread)
@@ -999,7 +1043,7 @@ static void test_QueueUserWorkItem(void)
     /* QueueUserWorkItem not present on win9x */
     if (!pQueueUserWorkItem) return;
 
-    finish_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+    finish_event = CreateEventW(NULL, TRUE, FALSE, NULL);
 
     before = GetTickCount();
 
@@ -1047,8 +1091,8 @@ static void test_RegisterWaitForSingleObject(void)
 
     /* test signaled case */
 
-    handle = CreateEvent(NULL, TRUE, TRUE, NULL);
-    complete_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    handle = CreateEventW(NULL, TRUE, TRUE, NULL);
+    complete_event = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     ret = pRegisterWaitForSingleObject(&wait_handle, handle, signaled_function, complete_event, INFINITE, WT_EXECUTEONLYONCE);
     ok(ret, "RegisterWaitForSingleObject failed with error %d\n", GetLastError());
@@ -1391,7 +1435,7 @@ static WORD get_thread_fpu_cw(void)
     DWORD tid, res;
     HANDLE thread;
 
-    ctx.finished = CreateEvent(NULL, FALSE, FALSE, NULL);
+    ctx.finished = CreateEventW(NULL, FALSE, FALSE, NULL);
     ok(!!ctx.finished, "Failed to create event, last error %#x.\n", GetLastError());
 
     thread = CreateThread(NULL, 0, fpu_thread, &ctx, 0, &tid);
@@ -1432,28 +1476,243 @@ static void test_thread_fpu_cw(void)
 }
 #endif
 
+static const char manifest_dep[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.2.3.4\"  name=\"testdep1\" type=\"win32\" processorArchitecture=\"" ARCH "\"/>"
+"    <file name=\"testdep.dll\" />"
+"</assembly>";
+
+static const char manifest_main[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.2.3.4\" name=\"Wine.Test\" type=\"win32\" />"
+"<dependency>"
+" <dependentAssembly>"
+"  <assemblyIdentity type=\"win32\" name=\"testdep1\" version=\"1.2.3.4\" processorArchitecture=\"" ARCH "\" />"
+" </dependentAssembly>"
+"</dependency>"
+"</assembly>";
+
+static void create_manifest_file(const char *filename, const char *manifest)
+{
+    WCHAR path[MAX_PATH];
+    HANDLE file;
+    DWORD size;
+
+    MultiByteToWideChar( CP_ACP, 0, filename, -1, path, MAX_PATH );
+    file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+    WriteFile(file, manifest, strlen(manifest), &size, NULL);
+    CloseHandle(file);
+}
+
+static HANDLE test_create(const char *file)
+{
+    WCHAR path[MAX_PATH];
+    ACTCTXW actctx;
+    HANDLE handle;
+
+    MultiByteToWideChar(CP_ACP, 0, file, -1, path, MAX_PATH);
+    memset(&actctx, 0, sizeof(ACTCTXW));
+    actctx.cbSize = sizeof(ACTCTXW);
+    actctx.lpSource = path;
+
+    handle = pCreateActCtxW(&actctx);
+    ok(handle != INVALID_HANDLE_VALUE, "failed to create context, error %u\n", GetLastError());
+
+    ok(actctx.cbSize == sizeof(actctx), "cbSize=%d\n", actctx.cbSize);
+    ok(actctx.dwFlags == 0, "dwFlags=%d\n", actctx.dwFlags);
+    ok(actctx.lpSource == path, "lpSource=%p\n", actctx.lpSource);
+    ok(actctx.wProcessorArchitecture == 0, "wProcessorArchitecture=%d\n", actctx.wProcessorArchitecture);
+    ok(actctx.wLangId == 0, "wLangId=%d\n", actctx.wLangId);
+    ok(actctx.lpAssemblyDirectory == NULL, "lpAssemblyDirectory=%p\n", actctx.lpAssemblyDirectory);
+    ok(actctx.lpResourceName == NULL, "lpResourceName=%p\n", actctx.lpResourceName);
+    ok(actctx.lpApplicationName == NULL, "lpApplicationName=%p\n", actctx.lpApplicationName);
+    ok(actctx.hModule == NULL, "hModule=%p\n", actctx.hModule);
+
+    return handle;
+}
+
+static void test_thread_actctx(void)
+{
+    struct thread_actctx_param param;
+    HANDLE thread, handle, context;
+    ULONG_PTR cookie;
+    DWORD tid, ret;
+    BOOL b;
+
+    if (!pActivateActCtx)
+    {
+        win_skip("skipping activation context tests\n");
+        return;
+    }
+
+    create_manifest_file("testdep1.manifest", manifest_dep);
+    create_manifest_file("main.manifest", manifest_main);
+
+    context = test_create("main.manifest");
+    DeleteFileA("testdep1.manifest");
+    DeleteFileA("main.manifest");
+
+    handle = (void*)0xdeadbeef;
+    b = pGetCurrentActCtx(&handle);
+    ok(b, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(handle == 0, "active context %p\n", handle);
+
+    /* without active context */
+    param.thread_context = (void*)0xdeadbeef;
+    param.handle = NULL;
+    thread = CreateThread(NULL, 0, thread_actctx_func, &param, 0, &tid);
+    ok(thread != NULL, "failed, got %u\n", GetLastError());
+
+    ret = WaitForSingleObject(thread, 1000);
+    ok(ret == WAIT_OBJECT_0, "wait timeout\n");
+    ok(param.thread_context == NULL, "got wrong thread context %p\n", param.thread_context);
+    CloseHandle(thread);
+
+    b = pActivateActCtx(context, &cookie);
+    ok(b, "activation failed: %u\n", GetLastError());
+
+    handle = 0;
+    b = pGetCurrentActCtx(&handle);
+    ok(b, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(handle != 0, "no active context\n");
+
+    param.handle = NULL;
+    b = pGetCurrentActCtx(&param.handle);
+    ok(b && param.handle != NULL, "failed to get context, %u\n", GetLastError());
+
+    param.thread_context = (void*)0xdeadbeef;
+    thread = CreateThread(NULL, 0, thread_actctx_func, &param, 0, &tid);
+    ok(thread != NULL, "failed, got %u\n", GetLastError());
+
+    ret = WaitForSingleObject(thread, 1000);
+    ok(ret == WAIT_OBJECT_0, "wait timeout\n");
+    ok(param.thread_context == context, "got wrong thread context %p, %p\n", param.thread_context, context);
+    CloseHandle(thread);
+
+    /* similar test for CreateRemoteThread() */
+    param.thread_context = (void*)0xdeadbeef;
+    thread = CreateRemoteThread(GetCurrentProcess(), NULL, 0, thread_actctx_func, &param, 0, &tid);
+    ok(thread != NULL, "failed, got %u\n", GetLastError());
+
+    ret = WaitForSingleObject(thread, 1000);
+    ok(ret == WAIT_OBJECT_0, "wait timeout\n");
+    ok(param.thread_context == context, "got wrong thread context %p, %p\n", param.thread_context, context);
+    CloseHandle(thread);
+
+    b = pDeactivateActCtx(0, cookie);
+    ok(b, "DeactivateActCtx failed: %u\n", GetLastError());
+    pReleaseActCtx(context);
+}
+
+
+static void WINAPI threadpool_workcallback(PTP_CALLBACK_INSTANCE instance, void *context, PTP_WORK work) {
+    int *foo = (int*)context;
+
+    (*foo)++;
+}
+
+
+static void test_threadpool(void)
+{
+    PTP_POOL pool;
+    PTP_WORK work;
+    int workcalled = 0;
+
+    if (!pCreateThreadpool) {
+        todo_wine win_skip("thread pool apis not supported.\n");
+	return;
+    }
+
+    work = pCreateThreadpoolWork(threadpool_workcallback, &workcalled, NULL);
+    ok (work != NULL, "Error %d in CreateThreadpoolWork\n", GetLastError());
+    pSubmitThreadpoolWork(work);
+    pWaitForThreadpoolWorkCallbacks(work, FALSE);
+    pCloseThreadpoolWork(work);
+
+    ok (workcalled == 1, "expected work to be called once, got %d\n", workcalled);
+
+    pool = pCreateThreadpool(NULL);
+    todo_wine ok (pool != NULL, "CreateThreadpool failed\n");
+}
+
+static void test_reserved_tls(void)
+{
+    void *val;
+    DWORD tls;
+    BOOL ret;
+
+    /* This seems to be a WinXP SP2+ feature. */
+    if(!pIsWow64Process) {
+        win_skip("Skipping reserved TLS slot on too old Windows.\n");
+        return;
+    }
+
+    val = TlsGetValue(0);
+    ok(!val, "TlsGetValue(0) = %p\n", val);
+
+    /* Also make sure that there is a TLS allocated. */
+    tls = TlsAlloc();
+    ok(tls && tls != TLS_OUT_OF_INDEXES, "tls = %x\n", tls);
+    TlsSetValue(tls, (void*)1);
+
+    val = TlsGetValue(0);
+    ok(!val, "TlsGetValue(0) = %p\n", val);
+
+    TlsFree(tls);
+
+    /* The following is too ugly to be run by default */
+    if(0) {
+        /* Set TLS index 0 value and see that this works and doesn't cause problems
+         * for remaining tests. */
+        ret = TlsSetValue(0, (void*)1);
+        ok(ret, "TlsSetValue(0, 1) failed: %u\n", GetLastError());
+
+        val = TlsGetValue(0);
+        ok(val == (void*)1, "TlsGetValue(0) = %p\n", val);
+    }
+}
+
+static void init_funcs(void)
+{
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+
+/* Neither Cygwin nor mingW export OpenThread, so do a dynamic check
+   so that the compile passes */
+
+#define X(f) p##f = (void*)GetProcAddress(hKernel32, #f)
+    X(GetThreadPriorityBoost);
+    X(OpenThread);
+    X(QueueUserWorkItem);
+    X(SetThreadIdealProcessor);
+    X(SetThreadPriorityBoost);
+    X(RegisterWaitForSingleObject);
+    X(UnregisterWait);
+    X(IsWow64Process);
+    X(SetThreadErrorMode);
+    X(GetThreadErrorMode);
+    X(ActivateActCtx);
+    X(CreateActCtxW);
+    X(DeactivateActCtx);
+    X(GetCurrentActCtx);
+    X(ReleaseActCtx);
+
+    X(CreateThreadpool);
+    X(CreateThreadpoolWork);
+    X(SubmitThreadpoolWork);
+    X(WaitForThreadpoolWorkCallbacks);
+    X(CloseThreadpoolWork);
+#undef X
+}
+
 START_TEST(thread)
 {
-   HINSTANCE lib;
    HINSTANCE ntdll;
    int argc;
    char **argv;
    argc = winetest_get_mainargs( &argv );
-/* Neither Cygwin nor mingW export OpenThread, so do a dynamic check
-   so that the compile passes
-*/
-   lib=GetModuleHandleA("kernel32.dll");
-   ok(lib!=NULL,"Couldn't get a handle for kernel32.dll\n");
-   pGetThreadPriorityBoost=(void *)GetProcAddress(lib,"GetThreadPriorityBoost");
-   pOpenThread=(void *)GetProcAddress(lib,"OpenThread");
-   pQueueUserWorkItem=(void *)GetProcAddress(lib,"QueueUserWorkItem");
-   pSetThreadIdealProcessor=(void *)GetProcAddress(lib,"SetThreadIdealProcessor");
-   pSetThreadPriorityBoost=(void *)GetProcAddress(lib,"SetThreadPriorityBoost");
-   pRegisterWaitForSingleObject=(void *)GetProcAddress(lib,"RegisterWaitForSingleObject");
-   pUnregisterWait=(void *)GetProcAddress(lib,"UnregisterWait");
-   pIsWow64Process=(void *)GetProcAddress(lib,"IsWow64Process");
-   pSetThreadErrorMode=(void *)GetProcAddress(lib,"SetThreadErrorMode");
-   pGetThreadErrorMode=(void *)GetProcAddress(lib,"GetThreadErrorMode");
+
+   init_funcs();
 
    ntdll=GetModuleHandleA("ntdll.dll");
    if (ntdll)
@@ -1487,6 +1746,7 @@ START_TEST(thread)
        return;
    }
 
+   test_reserved_tls();
    test_CreateRemoteThread();
    test_CreateThread_basic();
    test_CreateThread_suspended();
@@ -1507,4 +1767,7 @@ START_TEST(thread)
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
    test_thread_fpu_cw();
 #endif
+   test_thread_actctx();
+
+   test_threadpool();
 }

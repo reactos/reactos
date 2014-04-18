@@ -426,7 +426,7 @@ static void test_readdirectorychanges(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    ov.hEvent = CreateEvent( NULL, 1, 0, NULL );
+    ov.hEvent = CreateEventW( NULL, 1, 0, NULL );
 
     SetLastError(0xd0b00b00);
     r = pReadDirectoryChangesW(hdir,NULL,0,FALSE,0,NULL,NULL,NULL);
@@ -644,7 +644,7 @@ static void test_readdirectorychanges_null(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    ov.hEvent = CreateEvent( NULL, 1, 0, NULL );
+    ov.hEvent = CreateEventW( NULL, 1, 0, NULL );
 
     filter = FILE_NOTIFY_CHANGE_FILE_NAME;
     filter |= FILE_NOTIFY_CHANGE_DIR_NAME;
@@ -733,7 +733,7 @@ static void test_readdirectorychanges_filedir(void)
     DeleteFileW( file );
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
@@ -743,7 +743,7 @@ static void test_readdirectorychanges_filedir(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    ov.hEvent = CreateEvent( NULL, 0, 0, NULL );
+    ov.hEvent = CreateEventW( NULL, 0, 0, NULL );
 
     filter = FILE_NOTIFY_CHANGE_FILE_NAME;
 
@@ -1088,7 +1088,7 @@ static void test_ffcn_directory_overlap(void)
 
 START_TEST(change)
 {
-    HMODULE hkernel32 = GetModuleHandle("kernel32");
+    HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
     pReadDirectoryChangesW = (void *)GetProcAddress(hkernel32, "ReadDirectoryChangesW");
 
     test_ffcnMultipleThreads();

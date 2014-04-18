@@ -255,7 +255,7 @@ static int build_exe( const sec_build* sec_descr )
                 file_size = phys_end_of_section;
         }
 
-    file = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    file = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
     ok (file != INVALID_HANDLE_VALUE, "failed to create file\n");
 
     /* write out the header */
@@ -279,7 +279,7 @@ static void update_missing_exe( void )
     HANDLE res;
 
     SetLastError(0xdeadbeef);
-    res = BeginUpdateResource( filename, TRUE );
+    res = BeginUpdateResourceA( filename, TRUE );
     GLE = GetLastError();
     ok( res == NULL, "BeginUpdateResource should fail\n");
 }
@@ -289,29 +289,29 @@ static void update_empty_exe( void )
     HANDLE file, res, test;
     BOOL r;
 
-    file = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    file = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
     ok (file != INVALID_HANDLE_VALUE, "failed to create file\n");
 
     CloseHandle( file );
 
-    res = BeginUpdateResource( filename, TRUE );
+    res = BeginUpdateResourceA( filename, TRUE );
     if ( res != NULL || GetLastError() != ERROR_FILE_INVALID )
     {
         ok( res != NULL, "BeginUpdateResource failed\n");
 
         /* check if it's possible to open the file now */
-        test = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+        test = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
         ok (test != INVALID_HANDLE_VALUE, "failed to create file\n");
 
         CloseHandle( test );
 
-        r = EndUpdateResource( res, FALSE );
+        r = EndUpdateResourceA( res, FALSE );
         ok( r == FALSE, "EndUpdateResource failed\n");
     }
     else
         skip( "Can't update resource in empty file\n" );
 
-    res = BeginUpdateResource( filename, FALSE );
+    res = BeginUpdateResourceA( filename, FALSE );
     ok( res == NULL, "BeginUpdateResource failed\n");
 }
 
@@ -320,10 +320,10 @@ static void update_resources_none( void )
     HMODULE res;
     BOOL r;
 
-    res = BeginUpdateResource( filename, FALSE );
+    res = BeginUpdateResourceA( filename, FALSE );
     ok( res != NULL, "BeginUpdateResource failed\n");
 
-    r = EndUpdateResource( res, FALSE );
+    r = EndUpdateResourceA( res, FALSE );
     ok( r, "EndUpdateResource failed\n");
 }
 
@@ -332,10 +332,10 @@ static void update_resources_delete( void )
     HMODULE res;
     BOOL r;
 
-    res = BeginUpdateResource( filename, TRUE );
+    res = BeginUpdateResourceA( filename, TRUE );
     ok( res != NULL, "BeginUpdateResource failed\n");
 
-    r = EndUpdateResource( res, FALSE );
+    r = EndUpdateResourceA( res, FALSE );
     ok( r, "EndUpdateResource failed\n");
 }
 
@@ -345,27 +345,27 @@ static void update_resources_version( void )
     BOOL r;
     char foo[] = "red and white";
 
-    res = BeginUpdateResource( filename, TRUE );
+    res = BeginUpdateResourceA( filename, TRUE );
     ok( res != NULL, "BeginUpdateResource failed\n");
 
     if (0)  /* this causes subsequent tests to fail on Vista */
     {
-        r = UpdateResource( res,
-                            MAKEINTRESOURCE(0x1230),
-                            MAKEINTRESOURCE(0x4567),
+        r = UpdateResourceA( res,
+                            MAKEINTRESOURCEA(0x1230),
+                            MAKEINTRESOURCEA(0x4567),
                             0xabcd,
                             NULL, 0 );
         ok( r == FALSE, "UpdateResource failed\n");
     }
 
-    r = UpdateResource( res,
-                        MAKEINTRESOURCE(0x1230),
-                        MAKEINTRESOURCE(0x4567),
+    r = UpdateResourceA( res,
+                        MAKEINTRESOURCEA(0x1230),
+                        MAKEINTRESOURCEA(0x4567),
                         0xabcd,
                         foo, sizeof foo );
     ok( r == TRUE, "UpdateResource failed: %d\n", GetLastError());
 
-    r = EndUpdateResource( res, FALSE );
+    r = EndUpdateResourceA( res, FALSE );
     ok( r, "EndUpdateResource failed: %d\n", GetLastError());
 }
 
@@ -375,17 +375,17 @@ static void update_resources_bigdata( void )
     BOOL r;
     char foo[2*page_size] = "foobar";
 
-    res = BeginUpdateResource( filename, TRUE );
+    res = BeginUpdateResourceA( filename, TRUE );
     ok( res != NULL, "BeginUpdateResource succeeded\n");
 
-    r = UpdateResource( res,
-                        MAKEINTRESOURCE(0x3012),
-                        MAKEINTRESOURCE(0x5647),
+    r = UpdateResourceA( res,
+                        MAKEINTRESOURCEA(0x3012),
+                        MAKEINTRESOURCEA(0x5647),
                         0xcdba,
                         foo, sizeof foo );
     ok( r == TRUE, "UpdateResource failed: %d\n", GetLastError());
 
-    r = EndUpdateResource( res, FALSE );
+    r = EndUpdateResourceA( res, FALSE );
     ok( r, "EndUpdateResource failed\n");
 }
 
@@ -399,13 +399,13 @@ static void check_exe( const sec_verify *verify )
     HANDLE file, mapping;
     DWORD length, sec_count = 0;
 
-    file = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+    file = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
     ok (file != INVALID_HANDLE_VALUE, "failed to create file (%d)\n", GetLastError());
 
     length = GetFileSize( file, NULL );
     ok( length >= verify->length, "file size wrong\n");
 
-    mapping = CreateFileMapping( file, NULL, PAGE_READONLY, 0, 0, NULL );
+    mapping = CreateFileMappingA( file, NULL, PAGE_READONLY, 0, 0, NULL );
     ok (mapping != NULL, "failed to create file\n");
 
     dos = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length );
@@ -458,33 +458,33 @@ static void test_find_resource(void)
 {
     HRSRC rsrc;
 
-    rsrc = FindResourceW( GetModuleHandle(0), (LPCWSTR)MAKEINTRESOURCE(1), (LPCWSTR)RT_MENU );
+    rsrc = FindResourceW( GetModuleHandleW(NULL), MAKEINTRESOURCEW(1), (LPCWSTR)RT_MENU );
     ok( rsrc != 0, "resource not found\n" );
-    rsrc = FindResourceExW( GetModuleHandle(0), (LPCWSTR)RT_MENU, (LPCWSTR)MAKEINTRESOURCE(1),
+    rsrc = FindResourceExW( GetModuleHandleW(NULL), (LPCWSTR)RT_MENU, MAKEINTRESOURCEW(1),
                             MAKELANGID( LANG_NEUTRAL, SUBLANG_NEUTRAL ));
     ok( rsrc != 0, "resource not found\n" );
-    rsrc = FindResourceExW( GetModuleHandle(0), (LPCWSTR)RT_MENU, (LPCWSTR)MAKEINTRESOURCE(1),
+    rsrc = FindResourceExW( GetModuleHandleW(NULL), (LPCWSTR)RT_MENU, MAKEINTRESOURCEW(1),
                             MAKELANGID( LANG_GERMAN, SUBLANG_DEFAULT ));
     ok( rsrc != 0, "resource not found\n" );
 
     SetLastError( 0xdeadbeef );
-    rsrc = FindResourceW( GetModuleHandle(0), (LPCWSTR)MAKEINTRESOURCE(1), (LPCWSTR)RT_DIALOG );
+    rsrc = FindResourceW( GetModuleHandleW(NULL), MAKEINTRESOURCEW(1), (LPCWSTR)RT_DIALOG );
     ok( !rsrc, "resource found\n" );
     ok( GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND, "wrong error %u\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    rsrc = FindResourceW( GetModuleHandle(0), (LPCWSTR)MAKEINTRESOURCE(2), (LPCWSTR)RT_MENU );
+    rsrc = FindResourceW( GetModuleHandleW(NULL), MAKEINTRESOURCEW(2), (LPCWSTR)RT_MENU );
     ok( !rsrc, "resource found\n" );
     ok( GetLastError() == ERROR_RESOURCE_NAME_NOT_FOUND, "wrong error %u\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    rsrc = FindResourceExW( GetModuleHandle(0), (LPCWSTR)RT_MENU, (LPCWSTR)MAKEINTRESOURCE(1),
+    rsrc = FindResourceExW( GetModuleHandleW(NULL), (LPCWSTR)RT_MENU, MAKEINTRESOURCEW(1),
                             MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT ) );
     ok( !rsrc, "resource found\n" );
     ok( GetLastError() == ERROR_RESOURCE_LANG_NOT_FOUND, "wrong error %u\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    rsrc = FindResourceExW( GetModuleHandle(0), (LPCWSTR)RT_MENU, (LPCWSTR)MAKEINTRESOURCE(1),
+    rsrc = FindResourceExW( GetModuleHandleW(NULL), (LPCWSTR)RT_MENU, MAKEINTRESOURCEW(1),
                             MAKELANGID( LANG_FRENCH, SUBLANG_DEFAULT ) );
     ok( !rsrc, "resource found\n" );
     ok( GetLastError() == ERROR_RESOURCE_LANG_NOT_FOUND, "wrong error %u\n", GetLastError() );
@@ -494,7 +494,7 @@ START_TEST(resource)
 {
     DWORD i;
 
-    DeleteFile( filename );
+    DeleteFileA( filename );
     update_missing_exe();
 
     if (GLE == ERROR_CALL_NOT_IMPLEMENTED)
@@ -517,7 +517,7 @@ START_TEST(resource)
         check_exe( &sec->chk_version );
         update_resources_bigdata();
         check_exe( &sec->chk_bigdata );
-        DeleteFile( filename );
+        DeleteFileA( filename );
     }
     test_find_resource();
 }

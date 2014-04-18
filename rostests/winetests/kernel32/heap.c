@@ -1,6 +1,7 @@
 /*
  * Unit test suite for heap functions
  *
+ * Copyright 2002 Geoffrey Hausheer
  * Copyright 2003 Dimitrie O. Paun
  * Copyright 2006 Detlef Riekenberg
  *
@@ -56,7 +57,7 @@ static SIZE_T resize_9x(SIZE_T size)
 
 static void test_sized_HeapAlloc(int nbytes)
 {
-    int success;
+    BOOL success;
     char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes);
     ok(buf != NULL, "allocate failed\n");
     ok(buf[0] == 0, "buffer not zeroed\n");
@@ -66,7 +67,7 @@ static void test_sized_HeapAlloc(int nbytes)
 
 static void test_sized_HeapReAlloc(int nbytes1, int nbytes2)
 {
-    int success;
+    BOOL success;
     char *buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbytes1);
     ok(buf != NULL, "allocate failed\n");
     ok(buf[0] == 0, "buffer not zeroed\n");
@@ -480,6 +481,278 @@ static void test_heap(void)
 
 }
 
+
+static void test_HeapCreate(void)
+{
+    SYSTEM_INFO sysInfo;
+    ULONG memchunk;
+    HANDLE heap;
+    LPVOID mem1,mem1a,mem3;
+    UCHAR *mem2,*mem2a;
+    UINT i;
+    BOOL error;
+    DWORD dwSize;
+
+    /* Retrieve the page size for this system */
+    GetSystemInfo(&sysInfo);
+    ok(sysInfo.dwPageSize>0,"GetSystemInfo should return a valid page size\n");
+
+    /* Create a Heap with a minimum and maximum size */
+    /* Note that Windows and Wine seem to behave a bit differently with respect
+       to memory allocation.  In Windows, you can't access all the memory
+       specified in the heap (due to overhead), so choosing a reasonable maximum
+       size for the heap was done mostly by trial-and-error on Win2k.  It may need
+       more tweaking for otherWindows variants.
+    */
+    memchunk=10*sysInfo.dwPageSize;
+    heap=HeapCreate(0,2*memchunk,5*memchunk);
+    ok( !((ULONG_PTR)heap & 0xffff), "heap %p not 64K aligned\n", heap );
+
+    /* Check that HeapCreate allocated the right amount of ram */
+    mem1=HeapAlloc(heap,0,5*memchunk+1);
+    ok(mem1==NULL,"HeapCreate allocated more Ram than it should have\n");
+    HeapFree(heap,0,mem1);
+
+    /* Check that a normal alloc works */
+    mem1=HeapAlloc(heap,0,memchunk);
+    ok(mem1!=NULL,"HeapAlloc failed\n");
+    if(mem1) {
+      ok(HeapSize(heap,0,mem1)>=memchunk, "HeapAlloc should return a big enough memory block\n");
+    }
+
+    /* Check that a 'zeroing' alloc works */
+    mem2=HeapAlloc(heap,HEAP_ZERO_MEMORY,memchunk);
+    ok(mem2!=NULL,"HeapAlloc failed\n");
+    if(mem2) {
+      ok(HeapSize(heap,0,mem2)>=memchunk,"HeapAlloc should return a big enough memory block\n");
+      error=FALSE;
+      for(i=0;i<memchunk;i++) {
+        if(mem2[i]!=0) {
+          error=TRUE;
+        }
+      }
+      ok(!error,"HeapAlloc should have zeroed out its allocated memory\n");
+    }
+
+    /* Check that HeapAlloc returns NULL when requested way too much memory */
+    mem3=HeapAlloc(heap,0,5*memchunk);
+    ok(mem3==NULL,"HeapAlloc should return NULL\n");
+    if(mem3) {
+      ok(HeapFree(heap,0,mem3),"HeapFree didn't pass successfully\n");
+    }
+
+    /* Check that HeapRealloc works */
+    mem2a=HeapReAlloc(heap,HEAP_ZERO_MEMORY,mem2,memchunk+5*sysInfo.dwPageSize);
+    ok(mem2a!=NULL,"HeapReAlloc failed\n");
+    if(mem2a) {
+      ok(HeapSize(heap,0,mem2a)>=memchunk+5*sysInfo.dwPageSize,"HeapReAlloc failed\n");
+      error=FALSE;
+      for(i=0;i<5*sysInfo.dwPageSize;i++) {
+        if(mem2a[memchunk+i]!=0) {
+          error=TRUE;
+        }
+      }
+      ok(!error,"HeapReAlloc should have zeroed out its allocated memory\n");
+    }
+
+    /* Check that HeapRealloc honours HEAP_REALLOC_IN_PLACE_ONLY */
+    error=FALSE;
+    mem1a=HeapReAlloc(heap,HEAP_REALLOC_IN_PLACE_ONLY,mem1,memchunk+sysInfo.dwPageSize);
+    if(mem1a!=NULL) {
+      if(mem1a!=mem1) {
+        error=TRUE;
+      }
+    }
+    ok(mem1a==NULL || !error,"HeapReAlloc didn't honour HEAP_REALLOC_IN_PLACE_ONLY\n");
+
+    /* Check that HeapFree works correctly */
+   if(mem1a) {
+     ok(HeapFree(heap,0,mem1a),"HeapFree failed\n");
+   } else {
+     ok(HeapFree(heap,0,mem1),"HeapFree failed\n");
+   }
+   if(mem2a) {
+     ok(HeapFree(heap,0,mem2a),"HeapFree failed\n");
+   } else {
+     ok(HeapFree(heap,0,mem2),"HeapFree failed\n");
+   }
+
+   /* 0-length buffer */
+   mem1 = HeapAlloc(heap, 0, 0);
+   ok(mem1 != NULL, "Reserved memory\n");
+
+   dwSize = HeapSize(heap, 0, mem1);
+   /* should work with 0-length buffer */
+   ok(dwSize < 0xFFFFFFFF, "The size of the 0-length buffer\n");
+   ok(HeapFree(heap, 0, mem1), "Freed the 0-length buffer\n");
+
+   /* Check that HeapDestroy works */
+   ok(HeapDestroy(heap),"HeapDestroy failed\n");
+}
+
+
+static void test_GlobalAlloc(void)
+{
+    ULONG memchunk;
+    HGLOBAL mem1,mem2,mem2a,mem2b;
+    UCHAR *mem2ptr;
+    UINT i;
+    BOOL error;
+    memchunk=100000;
+
+    SetLastError(NO_ERROR);
+    /* Check that a normal alloc works */
+    mem1=GlobalAlloc(0,memchunk);
+    ok(mem1!=NULL,"GlobalAlloc failed\n");
+    if(mem1) {
+      ok(GlobalSize(mem1)>=memchunk, "GlobalAlloc should return a big enough memory block\n");
+    }
+
+    /* Check that a 'zeroing' alloc works */
+    mem2=GlobalAlloc(GMEM_ZEROINIT,memchunk);
+    ok(mem2!=NULL,"GlobalAlloc failed: error=%d\n",GetLastError());
+    if(mem2) {
+      ok(GlobalSize(mem2)>=memchunk,"GlobalAlloc should return a big enough memory block\n");
+      mem2ptr=GlobalLock(mem2);
+      ok(mem2ptr==mem2,"GlobalLock should have returned the same memory as was allocated\n");
+      if(mem2ptr) {
+        error=FALSE;
+        for(i=0;i<memchunk;i++) {
+          if(mem2ptr[i]!=0) {
+            error=TRUE;
+          }
+        }
+        ok(!error,"GlobalAlloc should have zeroed out its allocated memory\n");
+      }
+   }
+    /* Check that GlobalReAlloc works */
+    /* Check that we can change GMEM_FIXED to GMEM_MOVEABLE */
+    mem2a=GlobalReAlloc(mem2,0,GMEM_MODIFY | GMEM_MOVEABLE);
+    if(mem2a!=NULL) {
+      mem2=mem2a;
+      mem2ptr=GlobalLock(mem2a);
+      ok(mem2ptr!=NULL && !GlobalUnlock(mem2a)&&GetLastError()==NO_ERROR,
+         "Converting from FIXED to MOVEABLE didn't REALLY work\n");
+    }
+
+    /* Check that ReAllocing memory works as expected */
+    mem2a=GlobalReAlloc(mem2,2*memchunk,GMEM_MOVEABLE | GMEM_ZEROINIT);
+    ok(mem2a!=NULL,"GlobalReAlloc failed\n");
+    if(mem2a) {
+      ok(GlobalSize(mem2a)>=2*memchunk,"GlobalReAlloc failed\n");
+      mem2ptr=GlobalLock(mem2a);
+      ok(mem2ptr!=NULL,"GlobalLock Failed\n");
+      if(mem2ptr) {
+        error=FALSE;
+        for(i=0;i<memchunk;i++) {
+          if(mem2ptr[memchunk+i]!=0) {
+            error=TRUE;
+          }
+        }
+        ok(!error,"GlobalReAlloc should have zeroed out its allocated memory\n");
+
+        /* Check that GlobalHandle works */
+        mem2b=GlobalHandle(mem2ptr);
+        ok(mem2b==mem2a,"GlobalHandle didn't return the correct memory handle %p/%p for %p\n",
+           mem2a, mem2b, mem2ptr);
+        /* Check that we can't discard locked memory */
+        mem2b=GlobalDiscard(mem2a);
+        if(mem2b==NULL) {
+          ok(!GlobalUnlock(mem2a) && GetLastError()==NO_ERROR,"GlobalUnlock Failed\n");
+        }
+      }
+    }
+    if(mem1) {
+      ok(GlobalFree(mem1)==NULL,"GlobalFree failed\n");
+    }
+    if(mem2a) {
+      ok(GlobalFree(mem2a)==NULL,"GlobalFree failed\n");
+    } else {
+      ok(GlobalFree(mem2)==NULL,"GlobalFree failed\n");
+    }
+}
+
+
+static void test_LocalAlloc(void)
+{
+    ULONG memchunk;
+    HLOCAL mem1,mem2,mem2a,mem2b;
+    UCHAR *mem2ptr;
+    UINT i;
+    BOOL error;
+    memchunk=100000;
+
+    /* Check that a normal alloc works */
+    mem1=LocalAlloc(0,memchunk);
+    ok(mem1!=NULL,"LocalAlloc failed: error=%d\n",GetLastError());
+    if(mem1) {
+      ok(LocalSize(mem1)>=memchunk, "LocalAlloc should return a big enough memory block\n");
+    }
+
+    /* Check that a 'zeroing' and lock alloc works */
+    mem2=LocalAlloc(LMEM_ZEROINIT|LMEM_MOVEABLE,memchunk);
+    ok(mem2!=NULL,"LocalAlloc failed: error=%d\n",GetLastError());
+    if(mem2) {
+      ok(LocalSize(mem2)>=memchunk,"LocalAlloc should return a big enough memory block\n");
+      mem2ptr=LocalLock(mem2);
+      ok(mem2ptr!=NULL,"LocalLock: error=%d\n",GetLastError());
+      if(mem2ptr) {
+        error=FALSE;
+        for(i=0;i<memchunk;i++) {
+          if(mem2ptr[i]!=0) {
+            error=TRUE;
+          }
+        }
+        ok(!error,"LocalAlloc should have zeroed out its allocated memory\n");
+        SetLastError(0);
+        error=LocalUnlock(mem2);
+        ok(!error && GetLastError()==NO_ERROR,
+           "LocalUnlock Failed: rc=%d err=%d\n",error,GetLastError());
+      }
+    }
+   mem2a=LocalFree(mem2);
+   ok(mem2a==NULL, "LocalFree failed: %p\n",mem2a);
+
+   /* Reallocate mem2 as moveable memory */
+   mem2=LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT,memchunk);
+   ok(mem2!=NULL, "LocalAlloc failed to create moveable memory, error=%d\n",GetLastError());
+
+   /* Check that ReAllocing memory works as expected */
+    mem2a=LocalReAlloc(mem2,2*memchunk,LMEM_MOVEABLE | LMEM_ZEROINIT);
+    ok(mem2a!=NULL,"LocalReAlloc failed, error=%d\n",GetLastError());
+    if(mem2a) {
+      ok(LocalSize(mem2a)>=2*memchunk,"LocalReAlloc failed\n");
+      mem2ptr=LocalLock(mem2a);
+      ok(mem2ptr!=NULL,"LocalLock Failed\n");
+      if(mem2ptr) {
+        error=FALSE;
+        for(i=0;i<memchunk;i++) {
+          if(mem2ptr[memchunk+i]!=0) {
+            error=TRUE;
+          }
+        }
+        ok(!error,"LocalReAlloc should have zeroed out its allocated memory\n");
+        /* Check that LocalHandle works */
+        mem2b=LocalHandle(mem2ptr);
+        ok(mem2b==mem2a,"LocalHandle didn't return the correct memory handle %p/%p for %p\n",
+           mem2a, mem2b, mem2ptr);
+        /* Check that we can't discard locked memory */
+        mem2b=LocalDiscard(mem2a);
+        ok(mem2b==NULL,"Discarded memory we shouldn't have\n");
+        SetLastError(NO_ERROR);
+        ok(!LocalUnlock(mem2a) && GetLastError()==NO_ERROR, "LocalUnlock Failed\n");
+      }
+    }
+    if(mem1) {
+      ok(LocalFree(mem1)==NULL,"LocalFree failed\n");
+    }
+    if(mem2a) {
+      ok(LocalFree(mem2a)==NULL,"LocalFree failed\n");
+    } else {
+      ok(LocalFree(mem2)==NULL,"LocalFree failed\n");
+    }
+}
+
 static void test_obsolete_flags(void)
 {
     static struct {
@@ -534,7 +807,7 @@ static void test_HeapQueryInformation(void)
     SIZE_T size;
     BOOL ret;
 
-    pHeapQueryInformation = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "HeapQueryInformation");
+    pHeapQueryInformation = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "HeapQueryInformation");
     if (!pHeapQueryInformation)
     {
         win_skip("HeapQueryInformation is not available\n");
@@ -888,6 +1161,9 @@ START_TEST(heap)
 
     test_heap();
     test_obsolete_flags();
+    test_HeapCreate();
+    test_GlobalAlloc();
+    test_LocalAlloc();
 
     /* Test both short and very long blocks */
     test_sized_HeapAlloc(1);

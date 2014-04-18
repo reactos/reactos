@@ -7,7 +7,6 @@
 #include "wine/test.h"
 
 extern void func_actctx(void);
-extern void func_alloc(void);
 extern void func_atom(void);
 extern void func_change(void);
 extern void func_codepage(void);
@@ -46,7 +45,6 @@ extern void func_interlck(void);
 const struct test winetest_testlist[] =
 {
     { "actctx", func_actctx },
-    { "alloc", func_alloc },
     { "atom", func_atom },
     { "change", func_change },
     { "codepage", func_codepage },

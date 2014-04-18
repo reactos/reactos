@@ -39,7 +39,7 @@ static WORD cbCount;
 
 static VOID init_funcs(void)
 {
-    HMODULE hKernel32 = GetModuleHandle("kernel32");
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
 
 #define X(f) p##f = (void*)GetProcAddress(hKernel32, #f);
     X(CreateFiber);
@@ -181,6 +181,35 @@ static void test_FiberLocalStorage(PFLS_CALLBACK_FUNCTION cbfunc)
     ok(ret, "FlsFree failed\n");
     if (cbfunc)
         todo_wine ok(cbCount == 1, "Wrong callback count: %d\n", cbCount);
+
+    /* test index 0 */
+    SetLastError( 0xdeadbeef );
+    val = pFlsGetValue( 0 );
+    ok( !val, "fls index 0 set to %p\n", val );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "setting fls index wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    ret = pFlsSetValue( 0, (void *)0xdeadbeef );
+    ok( !ret, "setting fls index 0 succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "setting fls index wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    val = pFlsGetValue( 0 );
+    ok( !val, "fls index 0 wrong value %p\n", val );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "setting fls index wrong error %u\n", GetLastError() );
+
+    fls = pFlsAlloc( NULL );
+    ok( fls != FLS_OUT_OF_INDEXES, "FlsAlloc failed\n" );
+    ok( fls != 0, "fls index 0 allocated\n" );
+    val = pFlsGetValue( fls );
+    ok( !val, "fls index %u wrong value %p\n", fls, val );
+    ret = pFlsSetValue( fls, (void *)0xdeadbeef );
+    ok( ret, "setting fls index %u failed\n", fls );
+    val = pFlsGetValue( fls );
+    ok( val == (void *)0xdeadbeef, "fls index %u wrong value %p\n", fls, val );
+    pFlsFree( fls );
+    ret = pFlsSetValue( fls, (void *)0xdeadbabe );
+    ok( ret, "setting fls index %u failed\n", fls );
+    val = pFlsGetValue( fls );
+    ok( val == (void *)0xdeadbabe, "fls index %u wrong value %p\n", fls, val );
 }
 
 START_TEST(fiber)

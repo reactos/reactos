@@ -1543,7 +1543,7 @@ static void test_message_from_hmodule(void)
     HMODULE h;
     CHAR out[0x100] = {0};
 
-    h = GetModuleHandle("kernel32.dll");
+    h = GetModuleHandleA("kernel32.dll");
     ok(h != 0, "GetModuleHandle failed\n");
 
     /*Test existing messageID; as the message strings from wine's kernel32 differ from windows' kernel32 we don't compare

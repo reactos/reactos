@@ -64,7 +64,7 @@ static inline WCHAR *strchrW( const WCHAR *str, WCHAR ch )
     return NULL;
 }
 
-static inline int isdigitW( WCHAR wc )
+static inline BOOL isdigitW( WCHAR wc )
 {
     WORD type;
     GetStringTypeW( CT_CTYPE1, &wc, 1, &type );
@@ -75,9 +75,9 @@ static inline int isdigitW( WCHAR wc )
 static HMODULE hKernel32;
 static WORD enumCount;
 
-static BOOL (WINAPI *pEnumSystemLanguageGroupsA)(LANGUAGEGROUP_ENUMPROC, DWORD, LONG_PTR);
-static BOOL (WINAPI *pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROC, LGRPID, DWORD, LONG_PTR);
-static BOOL (WINAPI *pEnumUILanguagesA)(UILANGUAGE_ENUMPROC, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumSystemLanguageGroupsA)(LANGUAGEGROUP_ENUMPROCA, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROCA, LGRPID, DWORD, LONG_PTR);
+static BOOL (WINAPI *pEnumUILanguagesA)(UILANGUAGE_ENUMPROCA, DWORD, LONG_PTR);
 static BOOL (WINAPI *pEnumSystemLocalesEx)(LOCALE_ENUMPROCEX, DWORD, LPARAM, LPVOID);
 static INT (WINAPI *pLCMapStringEx)(LPCWSTR, DWORD, LPCWSTR, INT, LPWSTR, INT, LPNLSVERSIONINFO, LPVOID, LPARAM);
 static LCID (WINAPI *pLocaleNameToLCID)(LPCWSTR, DWORD);
@@ -91,6 +91,8 @@ static INT (WINAPI *pIdnToUnicode)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 static INT (WINAPI *pGetLocaleInfoEx)(LPCWSTR, LCTYPE, LPWSTR, INT);
 static BOOL (WINAPI *pIsValidLocaleName)(LPCWSTR);
 static INT (WINAPI *pCompareStringOrdinal)(const WCHAR *, INT, const WCHAR *, INT, BOOL);
+static INT (WINAPI *pCompareStringEx)(LPCWSTR, DWORD, LPCWSTR, INT, LPCWSTR, INT,
+                                      LPNLSVERSIONINFO, LPVOID, LPARAM);
 
 static void InitFunctionPointers(void)
 {
@@ -111,6 +113,7 @@ static void InitFunctionPointers(void)
   pGetLocaleInfoEx = (void*)GetProcAddress(hKernel32, "GetLocaleInfoEx");
   pIsValidLocaleName = (void*)GetProcAddress(hKernel32, "IsValidLocaleName");
   pCompareStringOrdinal = (void*)GetProcAddress(hKernel32, "CompareStringOrdinal");
+  pCompareStringEx = (void*)GetProcAddress(hKernel32, "CompareStringEx");
 }
 
 #define eq(received, expected, label, type) \
@@ -121,7 +124,7 @@ static void InitFunctionPointers(void)
 #define COUNTOF(x) (sizeof(x)/sizeof(x)[0])
 
 #define STRINGSA(x,y) strcpy(input, x); strcpy(Expected, y); SetLastError(0xdeadbeef); buffer[0] = '\0'
-#define EXPECT_LENA ok(ret == lstrlen(Expected)+1, "Expected Len %d, got %d\n", lstrlen(Expected)+1, ret)
+#define EXPECT_LENA ok(ret == lstrlenA(Expected)+1, "Expected len %d, got %d\n", lstrlenA(Expected)+1, ret)
 #define EXPECT_EQA ok(strncmp(buffer, Expected, strlen(Expected)) == 0, \
   "Expected '%s', got '%s'\n", Expected, buffer)
 
@@ -660,21 +663,23 @@ static void test_GetDateFormatA(void)
       "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
   STRINGSA("ddd',' MMM dd ''''yy","5/4/2002"); /* Default to DATE_SHORTDATE */
-  ret = GetDateFormat(lcid, NUO, &curtime, NULL, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid, NUO, &curtime, NULL, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   if (strncmp(buffer, Expected, strlen(Expected)) && strncmp(buffer, "5/4/02", strlen(Expected)) != 0)
 	  ok (0, "Expected '%s' or '5/4/02', got '%s'\n", Expected, buffer);
 
-  STRINGSA("ddd',' MMM dd ''''yy", "Saturday, May 04, 2002"); /* DATE_LONGDATE */
-  ret = GetDateFormat(lcid, NUO|DATE_LONGDATE, &curtime, NULL, buffer, COUNTOF(buffer));
+  SetLastError(0xdeadbeef); buffer[0] = '\0'; /* DATE_LONGDATE */
+  ret = GetDateFormatA(lcid, NUO|DATE_LONGDATE, &curtime, NULL, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
-  EXPECT_LENA; EXPECT_EQA;
+  ok(strcmp(buffer, "Saturday, May 04, 2002") == 0 ||
+     strcmp(buffer, "Saturday, May 4, 2002") == 0 /* Win 8 */,
+     "got an unexpected date string '%s'\n", buffer);
 
   /* test for expected DATE_YEARMONTH behavior with null format */
   /* NT4 returns ERROR_INVALID_FLAGS for DATE_YEARMONTH */
   STRINGSA("ddd',' MMM dd ''''yy", ""); /* DATE_YEARMONTH */
   SetLastError(0xdeadbeef);
-  ret = GetDateFormat(lcid, NUO|DATE_YEARMONTH, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid, NUO|DATE_YEARMONTH, &curtime, input, buffer, COUNTOF(buffer));
   ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
   EXPECT_EQA;
@@ -683,12 +688,12 @@ static void test_GetDateFormatA(void)
   /* and return values */
   STRINGSA("m/d/y", ""); /* Invalid flags */
   SetLastError(0xdeadbeef);
-  ret = GetDateFormat(lcid, DATE_YEARMONTH|DATE_SHORTDATE|DATE_LONGDATE,
+  ret = GetDateFormatA(lcid, DATE_YEARMONTH|DATE_SHORTDATE|DATE_LONGDATE,
                       &curtime, input, buffer, COUNTOF(buffer));
   ok(!ret && GetLastError() == ERROR_INVALID_FLAGS,
      "Expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
 
-  ret = GetDateFormat(lcid_ru, 0, &curtime, "ddMMMM", buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, "ddMMMM", buffer, COUNTOF(buffer));
   if (!ret)
   {
     win_skip("LANG_RUSSIAN locale data unavailable\n");
@@ -697,37 +702,37 @@ static void test_GetDateFormatA(void)
 
   /* month part should be in genitive form */
   strcpy(genitive_month, buffer + 2);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, "MMMM", buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, "MMMM", buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   strcpy(month, buffer);
   ok(strcmp(genitive_month, month) != 0, "Expected different month forms\n");
 
-  ret = GetDateFormat(lcid_ru, 0, &curtime, "ddd", buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, "ddd", buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   strcpy(short_day, buffer);
 
   STRINGSA("dd MMMMddd dd", "");
   sprintf(Expected, "04 %s%s 04", genitive_month, short_day);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_EQA;
 
   STRINGSA("MMMMddd dd", "");
   sprintf(Expected, "%s%s 04", month, short_day);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_EQA;
 
   STRINGSA("MMMMddd", "");
   sprintf(Expected, "%s%s", month, short_day);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_EQA;
 
   STRINGSA("MMMMdd", "");
   sprintf(Expected, "%s04", genitive_month);
   sprintf(Broken, "%s04", month);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   ok(strncmp(buffer, Expected, strlen(Expected)) == 0 ||
      broken(strncmp(buffer, Broken, strlen(Broken)) == 0) /* nt4 */,
@@ -736,7 +741,7 @@ static void test_GetDateFormatA(void)
   STRINGSA("MMMMdd ddd", "");
   sprintf(Expected, "%s04 %s", genitive_month, short_day);
   sprintf(Broken, "%s04 %s", month, short_day);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   ok(strncmp(buffer, Expected, strlen(Expected)) == 0 ||
      broken(strncmp(buffer, Broken, strlen(Broken)) == 0) /* nt4 */,
@@ -744,14 +749,14 @@ static void test_GetDateFormatA(void)
 
   STRINGSA("dd dddMMMM", "");
   sprintf(Expected, "04 %s%s", short_day, month);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   EXPECT_EQA;
 
   STRINGSA("dd dddMMMM ddd MMMMdd", "");
   sprintf(Expected, "04 %s%s %s %s04", short_day, month, short_day, genitive_month);
   sprintf(Broken, "04 %s%s %s %s04", short_day, month, short_day, month);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   ok(strncmp(buffer, Expected, strlen(Expected)) == 0 ||
      broken(strncmp(buffer, Broken, strlen(Broken)) == 0) /* nt4 */,
@@ -761,7 +766,7 @@ static void test_GetDateFormatA(void)
   STRINGSA("ddd',' MMMM dd", "");
   sprintf(Expected, "%s, %s 04", short_day, genitive_month);
   sprintf(Broken, "%s, %s 04", short_day, month);
-  ret = GetDateFormat(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
+  ret = GetDateFormatA(lcid_ru, 0, &curtime, input, buffer, COUNTOF(buffer));
   ok(ret, "Expected ret != 0, got %d, error %d\n", ret, GetLastError());
   ok(strncmp(buffer, Expected, strlen(Expected)) == 0 ||
      broken(strncmp(buffer, Broken, strlen(Broken)) == 0) /* nt4 */,
@@ -1455,7 +1460,7 @@ static void test_CompareStringA(void)
     ret = CompareStringA(lcid, NORM_IGNORECASE, "_", -1, ".", -1);
     todo_wine ok(ret == CSTR_GREATER_THAN, "\"_\" vs \".\" expected CSTR_GREATER_THAN, got %d\n", ret);
 
-    ret = lstrcmpi("#", ".");
+    ret = lstrcmpiA("#", ".");
     todo_wine ok(ret == -1, "\"#\" vs \".\" expected -1, got %d\n", ret);
 
     lcid = MAKELCID(MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT), SORT_DEFAULT);
@@ -1471,6 +1476,202 @@ static void test_CompareStringA(void)
     ret = CompareStringA(lcid, 0, a, sizeof(a), a, sizeof(a));
     ok (GetLastError() == 0xdeadbeef && ret == CSTR_EQUAL,
         "ret %d, error %d, expected value %d\n", ret, GetLastError(), CSTR_EQUAL);
+}
+
+struct comparestringex_test {
+    const char *locale;
+    DWORD flags;
+    const WCHAR first[2];
+    const WCHAR second[2];
+    INT ret;
+    INT broken;
+    BOOL todo;
+};
+
+static const struct comparestringex_test comparestringex_tests[] = {
+    /* default behavior */
+    { /* 0 */
+      "tr-TR", 0,
+      {'i',0},   {'I',0},   CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 1 */
+      "tr-TR", 0,
+      {'i',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 2 */
+      "tr-TR", 0,
+      {'i',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 3 */
+      "tr-TR", 0,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 4 */
+      "tr-TR", 0,
+      {'I',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 5 */
+      "tr-TR", 0,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, -1,                TRUE
+    },
+    /* with NORM_IGNORECASE */
+    { /* 6 */
+      "tr-TR", NORM_IGNORECASE,
+      {'i',0},   {'I',0},   CSTR_EQUAL,        -1,                FALSE
+    },
+    { /* 7 */
+      "tr-TR", NORM_IGNORECASE,
+      {'i',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 8 */
+      "tr-TR", NORM_IGNORECASE,
+      {'i',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 9 */
+      "tr-TR", NORM_IGNORECASE,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 10 */
+      "tr-TR", NORM_IGNORECASE,
+      {'I',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 11 */
+      "tr-TR", NORM_IGNORECASE,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, -1,                TRUE
+    },
+    /* with NORM_LINGUISTIC_CASING */
+    { /* 12 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {'i',0},   {'I',0},   CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    },
+    { /* 13 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {'i',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 14 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {'i',0},   {0x131,0}, CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    },
+    { /* 15 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 16 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {'I',0},   {0x131,0}, CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    },
+    { /* 17 */
+      "tr-TR", NORM_LINGUISTIC_CASING,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, -1,                TRUE
+    },
+    /* with LINGUISTIC_IGNORECASE */
+    { /* 18 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {'i',0},   {'I',0},   CSTR_EQUAL,        -1,                TRUE
+    },
+    { /* 19 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {'i',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 20 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {'i',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 21 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 22 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {'I',0},   {0x131,0}, CSTR_LESS_THAN,    -1,                FALSE
+    },
+    { /* 23 */
+      "tr-TR", LINGUISTIC_IGNORECASE,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, -1,                TRUE
+    },
+    /* with NORM_LINGUISTIC_CASING | NORM_IGNORECASE */
+    { /* 24 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {'i',0},   {'I',0},   CSTR_GREATER_THAN, CSTR_EQUAL,        TRUE
+    },
+    { /* 25 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {'i',0},   {0x130,0}, CSTR_EQUAL,        CSTR_LESS_THAN,    FALSE
+    },
+    { /* 26 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {'i',0},   {0x131,0}, CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    },
+    { /* 27 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+     },
+    { /* 28 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {'I',0},   {0x131,0}, CSTR_EQUAL,        CSTR_LESS_THAN,    TRUE
+    },
+    { /* 29 */
+      "tr-TR", NORM_LINGUISTIC_CASING | NORM_IGNORECASE,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, -1,                TRUE
+    },
+    /* with NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE */
+    { /* 30 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {'i',0},   {'I',0},   CSTR_GREATER_THAN, CSTR_EQUAL,        TRUE
+    },
+    { /* 31 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {'i',0},   {0x130,0}, CSTR_EQUAL,        CSTR_LESS_THAN,    TRUE
+    },
+    { /* 32 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {'i',0},   {0x131,0}, CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    },
+    { /* 33 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {'I',0},   {0x130,0}, CSTR_LESS_THAN,    -1,                TRUE
+    },
+    { /* 34 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {'I',0},   {0x131,0}, CSTR_EQUAL,        CSTR_LESS_THAN,    TRUE
+    },
+    { /* 35 */
+      "tr-TR", NORM_LINGUISTIC_CASING | LINGUISTIC_IGNORECASE,
+      {0x130,0}, {0x131,0}, CSTR_GREATER_THAN, CSTR_LESS_THAN,    TRUE
+    }
+};
+
+static void test_CompareStringEx(void)
+{
+    const char *op[] = {"ERROR", "CSTR_LESS_THAN", "CSTR_EQUAL", "CSTR_GREATER_THAN"};
+    WCHAR locale[6];
+    INT ret, i;
+
+    /* CompareStringEx is only available on Vista+ */
+    if (!pCompareStringEx)
+    {
+        win_skip("CompareStringEx not supported\n");
+        return;
+    }
+
+    for (i = 0; i < sizeof(comparestringex_tests)/sizeof(comparestringex_tests[0]); i++)
+    {
+        const struct comparestringex_test *e = &comparestringex_tests[i];
+
+        MultiByteToWideChar(CP_ACP, 0, e->locale, -1, locale, sizeof(locale)/sizeof(WCHAR));
+        ret = pCompareStringEx(locale, e->flags, e->first, -1, e->second, -1, NULL, NULL, 0);
+        if (e->todo)
+        {
+            todo_wine ok(ret == e->ret || broken(ret == e->broken),
+                         "%d: got %s, expected %s\n", i, op[ret], op[e->ret]);
+        }
+        else
+        {
+            ok(ret == e->ret || broken(ret == e->broken),
+               "%d: got %s, expected %s\n", i, op[ret], op[e->ret]);
+        }
+    }
+
 }
 
 static void test_LCMapStringA(void)
@@ -2321,6 +2522,7 @@ static void test_FoldStringW(void)
     0x0030, /* '0'-'9' */
     0x0660, /* Eastern Arabic */
     0x06F0, /* Arabic - Hindu */
+    0x07C0, /* Nko */
     0x0966, /* Devengari */
     0x09E6, /* Bengalii */
     0x0A66, /* Gurmukhi */
@@ -2332,16 +2534,37 @@ static void test_FoldStringW(void)
     0x0D66, /* Maylayalam */
     0x0E50, /* Thai */
     0x0ED0, /* Laos */
-    0x0F29, /* Tibet - 0 is out of sequence */
+    0x0F20, /* Tibet */
+    0x0F29, /* Tibet half - 0 is out of sequence */
+    0x1040, /* Myanmar */
+    0x1090, /* Myanmar Shan */
+    0x1368, /* Ethiopic - no 0 */
+    0x17E0, /* Khmer */
+    0x1810, /* Mongolian */
+    0x1946, /* Limbu */
+    0x19D0, /* New Tai Lue */
+    0x1A80, /* Tai Tham Hora */
+    0x1A90, /* Tai Tham Tham */
+    0x1B50, /* Balinese */
+    0x1BB0, /* Sundanese */
+    0x1C40, /* Lepcha */
+    0x1C50, /* Ol Chiki */
     0x2070, /* Superscript - 1, 2, 3 are out of sequence */
     0x2080, /* Subscript */
     0x245F, /* Circled - 0 is out of sequence */
     0x2473, /* Bracketed */
     0x2487, /* Full stop */
+    0x24F4, /* Double Circled */
     0x2775, /* Inverted circled - No 0 */
     0x277F, /* Patterned circled - No 0 */
     0x2789, /* Inverted Patterned circled - No 0 */
     0x3020, /* Hangzhou */
+    0xA620, /* Vai */
+    0xA8D0, /* Saurashtra */
+    0xA900, /* Kayah Li */
+    0xA9D0, /* Javanese */
+    0xAA50, /* Cham */
+    0xABF0, /* Meetei Mayek */
     0xff10, /* Pliene chasse (?) */
     0xffff  /* Terminator */
   };
@@ -2351,8 +2574,17 @@ static void test_FoldStringW(void)
       0xB9,   /* Superscript 1 */
       0xB2,   /* Superscript 2 */
       0xB3,   /* Superscript 3 */
+      0x0C78, /* Telugu Fraction 0 */
+      0x0C79, /* Telugu Fraction 1 */
+      0x0C7A, /* Telugu Fraction 2 */
+      0x0C7B, /* Telugu Fraction 3 */
+      0x0C7C, /* Telugu Fraction 1 */
+      0x0C7D, /* Telugu Fraction 2 */
+      0x0C7E, /* Telugu Fraction 3 */
       0x0F33, /* Tibetan half zero */
+      0x19DA, /* New Tai Lue Tham 1 */
       0x24EA, /* Circled 0 */
+      0x24FF, /* Negative Circled 0 */
       0x3007, /* Ideographic number zero */
       '\0'    /* Terminator */
   };
@@ -2361,8 +2593,10 @@ static void test_FoldStringW(void)
   {
       0x0BE6, /* No Tamil 0 */
       0x0F29, /* No Tibetan half zero (out of sequence) */
+      0x1368, /* No Ethiopic 0 */
       0x2473, /* No Bracketed 0 */
       0x2487, /* No 0 Full stop */
+      0x24F4, /* No double circled 0 */
       0x2775, /* No inverted circled 0 */
       0x277F, /* No patterned circled */
       0x2789, /* No inverted Patterned circled */
@@ -2490,10 +2724,11 @@ static void test_FoldStringW(void)
       ok(ret == 2, "Expected ret == 2, got %d, error %d\n", ret, GetLastError());
 
       ok(dst[0] == ch || strchrW(outOfSequenceDigits, ch) ||
-         /* Wine (correctly) maps all Unicode 4.0+ digits */
-         isdigitW(ch) || (ch >= 0x24F5 && ch <= 0x24FD) || ch == 0x24FF || ch == 0x19da ||
-         (ch >= 0x1369 && ch <= 0x1371),
-         "MAP_FOLDDIGITS: ch %d 0x%04x Expected unchanged got %d\n", ch, ch, dst[0]);
+         (ch >= 0xa8e0 && ch <= 0xa8e9),  /* combining Devanagari on Win8 */
+         "MAP_FOLDDIGITS: ch 0x%04x Expected unchanged got %04x\n", ch, dst[0]);
+      ok(!isdigitW(ch) || strchrW(outOfSequenceDigits, ch) ||
+         broken( ch >= 0xbf0 && ch <= 0xbf2 ), /* win2k */
+         "char %04x should not be a digit\n", ch );
     }
 
     if (digitRanges[j] == 0xffff)
@@ -2520,7 +2755,7 @@ static void test_FoldStringW(void)
          (digitRanges[j] == 0x3020 && dst[0] == ch) || /* Hangzhou not present in all Windows versions */
          (digitRanges[j] == 0x0F29 && dst[0] == ch) || /* Tibetan not present in all Windows versions */
          strchrW(noDigitAvailable, c),
-         "MAP_FOLDDIGITS: ch %d Expected %d got %d\n",
+         "MAP_FOLDDIGITS: ch %04x Expected %04x got %04x\n",
          ch, '0' + digitRanges[j] - ch, dst[0]);
     }
     prev_ch = ch;
@@ -3108,6 +3343,7 @@ static void test_IdnToNameprepUnicode(void)
         DWORD in_len;
         const WCHAR in[64];
         DWORD ret;
+        DWORD broken_ret;
         const WCHAR out[64];
         DWORD flags;
         DWORD err;
@@ -3115,77 +3351,77 @@ static void test_IdnToNameprepUnicode(void)
     } test_data[] = {
         {
             5, {'t','e','s','t',0},
-            5, {'t','e','s','t',0},
+            5, 5, {'t','e','s','t',0},
             0, 0xdeadbeef
         },
         {
             3, {'a',0xe111,'b'},
-            0, {0},
+            0, 0, {0},
             0, ERROR_INVALID_NAME
         },
         {
             4, {'t',0,'e',0},
-            0, {0},
+            0, 0, {0},
             0, ERROR_INVALID_NAME
         },
         {
             1, {'T',0},
-            1, {'T',0},
+            1, 1, {'T',0},
             0, 0xdeadbeef
         },
         {
             1, {0},
-            0, {0},
+            0, 0, {0},
             0, ERROR_INVALID_NAME
         },
         {
             6, {' ','-','/','[',']',0},
-            6, {' ','-','/','[',']',0},
+            6, 6, {' ','-','/','[',']',0},
             0, 0xdeadbeef
         },
         {
             3, {'a','-','a'},
-            3, {'a','-','a'},
+            3, 3, {'a','-','a'},
             IDN_USE_STD3_ASCII_RULES, 0xdeadbeef
         },
         {
             3, {'a','a','-'},
-            0, {0},
+            0, 0, {0},
             IDN_USE_STD3_ASCII_RULES, ERROR_INVALID_NAME
         },
         { /* FoldString is not working as expected when MAP_FOLDCZONE is specified (composition+compatibility) */
             10, {'T',0xdf,0x130,0x143,0x37a,0x6a,0x30c,' ',0xaa,0},
-            12, {'t','s','s','i',0x307,0x144,' ',0x3b9,0x1f0,' ','a',0},
+            12, 12, {'t','s','s','i',0x307,0x144,' ',0x3b9,0x1f0,' ','a',0},
             0, 0xdeadbeef, TRUE
         },
         {
             11, {'t',0xad,0x34f,0x1806,0x180b,0x180c,0x180d,0x200b,0x200c,0x200d,0},
-            2, {'t',0},
+            2, 0, {'t',0},
             0, 0xdeadbeef
         },
         { /* Another example of incorrectly working FoldString (composition) */
             2, {0x3b0, 0},
-            2, {0x3b0, 0},
+            2, 2, {0x3b0, 0},
             0, 0xdeadbeef, TRUE
         },
         {
             2, {0x221, 0},
-            0, {0},
+            0, 2, {0},
             0, ERROR_NO_UNICODE_TRANSLATION
         },
         {
             2, {0x221, 0},
-            2, {0x221, 0},
+            2, 2, {0x221, 0},
             IDN_ALLOW_UNASSIGNED, 0xdeadbeef
         },
         {
             5, {'a','.','.','a',0},
-            0, {0},
+            0, 0, {0},
             0, ERROR_INVALID_NAME
         },
         {
             3, {'a','.',0},
-            3, {'a','.',0},
+            3, 3, {'a','.',0},
             0, 0xdeadbeef
         },
     };
@@ -3245,7 +3481,8 @@ static void test_IdnToNameprepUnicode(void)
     ret = pIdnToNameprepUnicode(4, NULL, 0, NULL, 0);
     err = GetLastError();
     ok(ret == 0, "ret = %d\n", ret);
-    ok(err == ERROR_INVALID_FLAGS, "err = %d\n", err);
+    ok(err == ERROR_INVALID_FLAGS || err == ERROR_INVALID_PARAMETER /* Win8 */,
+       "err = %d\n", err);
 
     for (i=0; i<sizeof(test_data)/sizeof(*test_data); i++)
     {
@@ -3253,15 +3490,23 @@ static void test_IdnToNameprepUnicode(void)
         ret = pIdnToNameprepUnicode(test_data[i].flags, test_data[i].in,
                 test_data[i].in_len, buf, sizeof(buf)/sizeof(WCHAR));
         err = GetLastError();
-        if(!test_data[i].todo) {
-            ok(ret == test_data[i].ret, "%d) ret = %d\n", i, ret);
-            ok(err == test_data[i].err, "%d) err = %d\n", i, err);
-            ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
-                    "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
-        }else {
-            todo_wine ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
-                    "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
+
+        if (!test_data[i].todo)
+        {
+            ok(ret == test_data[i].ret ||
+                    broken(ret == test_data[i].broken_ret), "%d) ret = %d\n", i, ret);
         }
+        else
+        {
+            todo_wine ok(ret == test_data[i].ret ||
+                    broken(ret == test_data[i].broken_ret), "%d) ret = %d\n", i, ret);
+        }
+        if(ret != test_data[i].ret)
+            continue;
+
+        ok(err == test_data[i].err, "%d) err = %d\n", i, err);
+        ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
+                "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
     }
 }
 
@@ -3599,6 +3844,7 @@ START_TEST(locale)
   test_GetCurrencyFormatA(); /* Also tests the W version */
   test_GetNumberFormatA();   /* Also tests the W version */
   test_CompareStringA();
+  test_CompareStringEx();
   test_LCMapStringA();
   test_LCMapStringW();
   test_LCMapStringEx();

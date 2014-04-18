@@ -462,6 +462,147 @@ static void test_undefined_byte_char(void)
     }
 }
 
+static void test_threadcp(void)
+{
+    static const LCID ENGLISH  = MAKELCID(MAKELANGID(LANG_ENGLISH,  SUBLANG_ENGLISH_US),         SORT_DEFAULT);
+    static const LCID HINDI    = MAKELCID(MAKELANGID(LANG_HINDI,    SUBLANG_HINDI_INDIA),        SORT_DEFAULT);
+    static const LCID GEORGIAN = MAKELCID(MAKELANGID(LANG_GEORGIAN, SUBLANG_GEORGIAN_GEORGIA),   SORT_DEFAULT);
+    static const LCID RUSSIAN  = MAKELCID(MAKELANGID(LANG_RUSSIAN,  SUBLANG_RUSSIAN_RUSSIA),     SORT_DEFAULT);
+    static const LCID JAPANESE = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN),     SORT_DEFAULT);
+    static const LCID CHINESE  = MAKELCID(MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT);
+
+    BOOL islead, islead_acp;
+    CPINFOEXA cpi;
+    UINT cp, acp;
+    int  i, num;
+    LCID last;
+    BOOL ret;
+
+    struct test {
+        LCID lcid;
+        UINT threadcp;
+    } lcids[] = {
+        { HINDI,    0    },
+        { GEORGIAN, 0    },
+        { ENGLISH,  1252 },
+        { RUSSIAN,  1251 },
+        { JAPANESE, 932  },
+        { CHINESE,  936  }
+    };
+
+    struct test_islead_nocp {
+        LCID lcid;
+        BYTE testchar;
+    } isleads_nocp[] = {
+        { HINDI,    0x00 },
+        { HINDI,    0x81 },
+        { HINDI,    0xa0 },
+        { HINDI,    0xe0 },
+
+        { GEORGIAN, 0x00 },
+        { GEORGIAN, 0x81 },
+        { GEORGIAN, 0xa0 },
+        { GEORGIAN, 0xe0 },
+    };
+
+    struct test_islead {
+        LCID lcid;
+        BYTE testchar;
+        BOOL islead;
+    } isleads[] = {
+        { ENGLISH,  0x00, FALSE },
+        { ENGLISH,  0x81, FALSE },
+        { ENGLISH,  0xa0, FALSE },
+        { ENGLISH,  0xe0, FALSE },
+
+        { RUSSIAN,  0x00, FALSE },
+        { RUSSIAN,  0x81, FALSE },
+        { RUSSIAN,  0xa0, FALSE },
+        { RUSSIAN,  0xe0, FALSE },
+
+        { JAPANESE, 0x00, FALSE },
+        { JAPANESE, 0x81,  TRUE },
+        { JAPANESE, 0xa0, FALSE },
+        { JAPANESE, 0xe0,  TRUE },
+
+        { CHINESE,  0x00, FALSE },
+        { CHINESE,  0x81,  TRUE },
+        { CHINESE,  0xa0,  TRUE },
+        { CHINESE,  0xe0,  TRUE },
+    };
+
+    last = GetThreadLocale();
+    acp  = GetACP();
+
+    for (i = 0; i < sizeof(lcids)/sizeof(lcids[0]); i++)
+    {
+        SetThreadLocale(lcids[i].lcid);
+
+        cp = 0xdeadbeef;
+        GetLocaleInfoA(lcids[i].lcid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&cp, sizeof(cp));
+        ok(cp == lcids[i].threadcp, "wrong codepage %u for lcid %04x, should be %u\n", cp, lcids[i].threadcp, cp);
+
+        /* GetCPInfoEx/GetCPInfo - CP_ACP */
+        SetLastError(0xdeadbeef);
+        memset(&cpi, 0, sizeof(cpi));
+        ret = GetCPInfoExA(CP_ACP, 0, &cpi);
+        ok(ret, "GetCPInfoExA failed for lcid %04x, error %d\n", lcids[i].lcid, GetLastError());
+        ok(cpi.CodePage == acp, "wrong codepage %u for lcid %04x, should be %u\n", cpi.CodePage, lcids[i].lcid, acp);
+
+        /* WideCharToMultiByte - CP_ACP */
+        num = WideCharToMultiByte(CP_ACP, 0, foobarW, -1, NULL, 0, NULL, NULL);
+        ok(num == 7, "ret is %d (%04x)\n", num, lcids[i].lcid);
+
+        /* MultiByteToWideChar - CP_ACP */
+        num = MultiByteToWideChar(CP_ACP, 0, "foobar", -1, NULL, 0);
+        ok(num == 7, "ret is %d (%04x)\n", num, lcids[i].lcid);
+
+        /* GetCPInfoEx/GetCPInfo - CP_THREAD_ACP */
+        SetLastError(0xdeadbeef);
+        memset(&cpi, 0, sizeof(cpi));
+        ret = GetCPInfoExA(CP_THREAD_ACP, 0, &cpi);
+        ok(ret, "GetCPInfoExA failed for lcid %04x, error %d\n", lcids[i].lcid, GetLastError());
+        if (lcids[i].threadcp)
+            ok(cpi.CodePage == lcids[i].threadcp, "wrong codepage %u for lcid %04x, should be %u\n",
+               cpi.CodePage, lcids[i].lcid, lcids[i].threadcp);
+        else
+            ok(cpi.CodePage == acp, "wrong codepage %u for lcid %04x, should be %u\n",
+               cpi.CodePage, lcids[i].lcid, acp);
+
+        /* WideCharToMultiByte - CP_THREAD_ACP */
+        num = WideCharToMultiByte(CP_THREAD_ACP, 0, foobarW, -1, NULL, 0, NULL, NULL);
+        ok(num == 7, "ret is %d (%04x)\n", num, lcids[i].lcid);
+
+        /* MultiByteToWideChar - CP_THREAD_ACP */
+        num = MultiByteToWideChar(CP_THREAD_ACP, 0, "foobar", -1, NULL, 0);
+        ok(num == 7, "ret is %d (%04x)\n", num, lcids[i].lcid);
+    }
+
+    /* IsDBCSLeadByteEx - locales without codepage */
+    for (i = 0; i < sizeof(isleads_nocp)/sizeof(isleads_nocp[0]); i++)
+    {
+        SetThreadLocale(isleads_nocp[i].lcid);
+
+        islead_acp = IsDBCSLeadByteEx(CP_ACP,        isleads_nocp[i].testchar);
+        islead     = IsDBCSLeadByteEx(CP_THREAD_ACP, isleads_nocp[i].testchar);
+
+        ok(islead == islead_acp, "wrong islead %i for test char %x in lcid %04x.  should be %i\n",
+            islead, isleads_nocp[i].testchar, isleads_nocp[i].lcid, islead_acp);
+    }
+
+    /* IsDBCSLeadByteEx - locales with codepage */
+    for (i = 0; i < sizeof(isleads)/sizeof(isleads[0]); i++)
+    {
+        SetThreadLocale(isleads[i].lcid);
+
+        islead = IsDBCSLeadByteEx(CP_THREAD_ACP, isleads[i].testchar);
+        ok(islead == isleads[i].islead, "wrong islead %i for test char %x in lcid %04x.  should be %i\n",
+            islead, isleads[i].testchar, isleads[i].lcid, isleads[i].islead);
+    }
+
+    SetThreadLocale(last);
+}
+
 START_TEST(codepage)
 {
     BOOL bUsedDefaultChar;
@@ -478,4 +619,5 @@ START_TEST(codepage)
     test_string_conversion(&bUsedDefaultChar);
 
     test_undefined_byte_char();
+    test_threadcp();
 }

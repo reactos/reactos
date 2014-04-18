@@ -46,7 +46,7 @@ static void testGetModuleFileName(const char* name)
     WCHAR       bufW[MAX_PATH];
     DWORD       len1A, len1W = 0, len2A, len2W = 0;
 
-    hMod = (name) ? GetModuleHandle(name) : NULL;
+    hMod = (name) ? GetModuleHandleA(name) : NULL;
 
     /* first test, with enough space in buffer */
     memset(bufA, '-', sizeof(bufA));
@@ -157,7 +157,7 @@ static void testNestedLoadLibraryA(void)
      * - it must not already be loaded
      * - it must not have a 16-bit counterpart
      */
-    GetWindowsDirectory(path1, sizeof(path1));
+    GetWindowsDirectoryA(path1, sizeof(path1));
     strcat(path1, "\\system\\");
     strcat(path1, dllname);
     hModule1 = LoadLibraryA(path1);
@@ -167,7 +167,7 @@ static void testNestedLoadLibraryA(void)
         return;
     }
 
-    GetWindowsDirectory(path2, sizeof(path2));
+    GetWindowsDirectoryA(path2, sizeof(path2));
     strcat(path2, "\\system32\\");
     strcat(path2, dllname);
     hModule2 = LoadLibraryA(path2);
@@ -189,7 +189,7 @@ static void testNestedLoadLibraryA(void)
     ok(FreeLibrary(hModule3), "FreeLibrary() failed\n");
     ok(FreeLibrary(hModule2), "FreeLibrary() failed\n");
     ok(FreeLibrary(hModule1), "FreeLibrary() failed\n");
-    ok(GetModuleHandle(dllname) == NULL, "%s was not fully unloaded\n", dllname);
+    ok(GetModuleHandleA(dllname) == NULL, "%s was not fully unloaded\n", dllname);
 
     /* Try to load the dll again, if refcounting is ok, this should work */
     hModule1 = LoadLibraryA(path1);
@@ -261,7 +261,8 @@ static void testLoadLibraryEx(void)
     hmodule = LoadLibraryExA("", NULL, 0);
     ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
     ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
-       GetLastError() == ERROR_DLL_NOT_FOUND, /* win9x */
+       GetLastError() == ERROR_DLL_NOT_FOUND /* win9x */ ||
+       GetLastError() == ERROR_INVALID_PARAMETER /* win8 */,
        "Expected ERROR_MOD_NOT_FOUND or ERROR_DLL_NOT_FOUND, got %d\n",
        GetLastError());
 
@@ -347,7 +348,7 @@ static void testLoadLibraryEx(void)
     if (!hmodule)  /* succeeds on xp and older */
         ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
 
-    CloseHandle(hmodule);
+    FreeLibrary(hmodule);
 
     /* load kernel32.dll with no path */
     SetLastError(0xdeadbeef);
@@ -357,7 +358,7 @@ static void testLoadLibraryEx(void)
        GetLastError() == ERROR_SUCCESS, /* win9x */
        "Expected 0xdeadbeef or ERROR_SUCCESS, got %d\n", GetLastError());
 
-    CloseHandle(hmodule);
+    FreeLibrary(hmodule);
 
     GetCurrentDirectoryA(MAX_PATH, path);
     if (path[lstrlenA(path) - 1] != '\\')
@@ -375,7 +376,7 @@ static void testLoadLibraryEx(void)
        broken(GetLastError() == ERROR_INVALID_HANDLE),  /* nt4 */
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
-    /* Free the loaded dll when its the first time this dll is loaded
+    /* Free the loaded dll when it's the first time this dll is loaded
        in process - First time should pass, second fail */
     SetLastError(0xdeadbeef);
     hmodule = LoadLibraryExA("comctl32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -388,8 +389,19 @@ static void testLoadLibraryEx(void)
     ret = FreeLibrary(hmodule);
     ok(!ret, "Unexpected ability to free the module, failed with %d\n", GetLastError());
 
-    CloseHandle(hmodule);
+    /* load with full path, name without extension */
+    GetSystemDirectoryA(path, MAX_PATH);
+    if (path[lstrlenA(path) - 1] != '\\')
+        lstrcatA(path, "\\");
+    lstrcatA(path, "kernel32");
+    hmodule = LoadLibraryExA(path, NULL, 0);
+    ok(hmodule != NULL, "got %p\n", hmodule);
+    FreeLibrary(hmodule);
 
+    /* same with alterate search path */
+    hmodule = LoadLibraryExA(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    ok(hmodule != NULL, "got %p\n", hmodule);
+    FreeLibrary(hmodule);
 }
 
 static void testGetDllDirectory(void)
@@ -438,7 +450,8 @@ static void testGetDllDirectory(void)
         bufferA[length] = 'A';
         bufferA[length + 1] = 'A';
         ret = pGetDllDirectoryA(length + 1, bufferA);
-        ok(ret == length, "i=%d, Expected %u, got %u\n", i, length, ret);
+        ok(ret == length || broken(ret + 1 == length) /* win8 */,
+           "i=%d, Expected %u(+1), got %u\n", i, length, ret);
         ok(bufferA[length + 1] == 'A', "i=%d, Buffer overflow\n", i);
         ok(strcmp(bufferA, dll_directories[i]) == 0, "i=%d, Wrong path returned: '%s'\n", i, bufferA);
 
@@ -450,13 +463,11 @@ static void testGetDllDirectory(void)
         ok(cmpStrAW(dll_directories[i], bufferW, length, length),
            "i=%d, Wrong path returned: %s\n", i, wine_dbgstr_w(bufferW));
 
-        /* zero size buffer
-         * the A version always null-terminates the buffer,
-         * the W version doesn't do it on some platforms */
+        /* Zero size buffer. The buffer may or may not be terminated depending
+         * on the Windows version and whether the A or W API is called. */
         bufferA[0] = 'A';
         ret = pGetDllDirectoryA(0, bufferA);
         ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
-        ok(bufferA[0] == 0, "i=%d, Buffer not null terminated\n", i);
 
         bufferW[0] = 'A';
         ret = pGetDllDirectoryW(0, bufferW);
@@ -468,7 +479,8 @@ static void testGetDllDirectory(void)
         bufferA[0] = 'A';
         ret = pGetDllDirectoryA(length, bufferA);
         ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
-        ok(bufferA[0] == 0, "i=%d, Buffer not null terminated\n", i);
+        if (length != 0)
+            ok(bufferA[0] == 0, "i=%d, Buffer not null terminated\n", i);
 
         bufferW[0] = 'A';
         ret = pGetDllDirectoryW(length, bufferW);
