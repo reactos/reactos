@@ -50,14 +50,14 @@ static void flush_events(void)
     while (diff > 0)
     {
         if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
-        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
         diff = time - GetTickCount();
     }
 }
 
 static HWND build_static(DWORD style)
 {
-    return CreateWindow("static", "Test", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)CTRL_ID, NULL, 0);
+    return CreateWindowA("static", "Test", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)CTRL_ID, NULL, 0);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -76,7 +76,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
         break;
     }
 
-    return DefWindowProc(hwnd, msg, wparam, lparam);
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
 }
 
 static void test_updates(int style, int flags)
@@ -119,24 +119,24 @@ static void test_updates(int style, int flags)
 
 START_TEST(static)
 {
-    static char szClassName[] = "testclass";
-    WNDCLASSEX  wndclass;
+    static const char szClassName[] = "testclass";
+    WNDCLASSEXA  wndclass;
 
     wndclass.cbSize         = sizeof(wndclass);
     wndclass.style          = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc    = WndProc;
     wndclass.cbClsExtra     = 0;
     wndclass.cbWndExtra     = 0;
-    wndclass.hInstance      = GetModuleHandle(NULL);
-    wndclass.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
-    wndclass.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
-    wndclass.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hInstance      = GetModuleHandleA(NULL);
+    wndclass.hIcon          = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
+    wndclass.hIconSm        = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
+    wndclass.hCursor        = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     wndclass.hbrBackground  = GetStockObject(WHITE_BRUSH);
     wndclass.lpszClassName  = szClassName;
     wndclass.lpszMenuName   = NULL;
-    RegisterClassEx(&wndclass);
+    RegisterClassExA(&wndclass);
 
-    hMainWnd = CreateWindow(szClassName, "Test", WS_OVERLAPPEDWINDOW, 0, 0, 500, 500, NULL, NULL, GetModuleHandle(NULL), NULL);
+    hMainWnd = CreateWindowA(szClassName, "Test", WS_OVERLAPPEDWINDOW, 0, 0, 500, 500, NULL, NULL, GetModuleHandleA(NULL), NULL);
     ShowWindow(hMainWnd, SW_SHOW);
 
     test_updates(0, 0);

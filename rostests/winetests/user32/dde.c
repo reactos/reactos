@@ -2397,8 +2397,8 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
     char str[MAX_PATH];
     static int msg_index = 0;
     static HCONV conversation = 0;
-    static char test_service [] = "TestDDEService";
-    static char test_topic [] = "TestDDETopic";
+    static const char test_service [] = "TestDDEService";
+    static const char test_topic [] = "TestDDETopic";
 
     msg_index++;
 
@@ -2586,10 +2586,10 @@ static void test_end_to_end_client(BOOL type_a)
     HSZ server, topic;
     HCONV hconv;
     HDDEDATA hdata;
-    static char test_service[] = "TestDDEService";
-    static WCHAR test_service_w[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
-    static char test_topic[] = "TestDDETopic";
-    static WCHAR test_topic_w[] = {'T','e','s','t','D','D','E','T','o','p','i','c',0};
+    static const char test_service[] = "TestDDEService";
+    static const WCHAR test_service_w[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
+    static const char test_topic[] = "TestDDETopic";
+    static const WCHAR test_topic_w[] = {'T','e','s','t','D','D','E','T','o','p','i','c',0};
 
     trace("Start end to end client %s\n", type_a ? "ASCII" : "UNICODE");
 
@@ -2651,7 +2651,7 @@ static void test_end_to_end_server(HANDLE hproc, HANDLE hthread, BOOL type_a)
     BOOL ret;
     DWORD res;
     HDDEDATA hdata;
-    static CHAR test_service[] = "TestDDEService";
+    static const char test_service[] = "TestDDEService";
 
     trace("start end to end server %s\n", type_a ? "ASCII" : "UNICODE");
     server_pid = 0;

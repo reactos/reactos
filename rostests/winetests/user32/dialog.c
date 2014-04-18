@@ -54,7 +54,7 @@ static HWND g_hwndInitialFocusT1, g_hwndInitialFocusT2, g_hwndInitialFocusGroupB
 static LONG g_styleInitialFocusT1, g_styleInitialFocusT2;
 static BOOL g_bInitialFocusInitDlgResult, g_bReceivedCommand;
 
-static int g_terminated;
+static BOOL g_terminated;
 
 typedef struct {
     INT_PTR id;

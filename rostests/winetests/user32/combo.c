@@ -60,7 +60,7 @@ static INT CALLBACK is_font_installed_proc(const LOGFONTA *elf, const TEXTMETRIC
     return 0;
 }
 
-static int is_font_installed(const char *name)
+static BOOL is_font_installed(const char *name)
 {
     HDC hdc = GetDC(NULL);
     BOOL ret = !EnumFontFamiliesA(hdc, name, is_font_installed_proc, 0);

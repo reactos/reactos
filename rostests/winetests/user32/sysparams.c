@@ -2869,8 +2869,9 @@ static void test_EnumDisplaySettings(void)
         if (!EnumDisplaySettingsA(NULL, num, &devmode)) {
             DWORD le = GetLastError();
             ok(le == ERROR_NO_MORE_FILES ||
+               le == ERROR_MOD_NOT_FOUND /* Win8 */ ||
                le == 0xdeadbeef, /* XP, 2003 */
-               "Expected ERROR_NO_MORE_FILES or 0xdeadbeef, got %d for %d\n", le, num);
+               "Expected ERROR_NO_MORE_FILES, ERROR_MOD_NOT_FOUND or 0xdeadbeef, got %d for %d\n", le, num);
             break;
 	}
 	num++;

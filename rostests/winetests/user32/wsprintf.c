@@ -113,16 +113,16 @@ static void wsprintfWTest(void)
 
 static void CharUpperTest(void)
 {
-    INT_PTR i,out,failed;
+    INT_PTR i, out;
+    BOOL failed = FALSE;
 
-    failed = 0;
     for (i=0;i<256;i++)
     	{
-	out = (INT_PTR)CharUpper((LPTSTR)i);
+	out = (INT_PTR)CharUpperA((LPSTR)i);
 	/* printf("%0x ",out); */
 	if ((out >> 16) != 0)
 	   {
-	   failed = 1;
+           failed = TRUE;
 	   break;
 	   }
 	}
@@ -131,16 +131,16 @@ static void CharUpperTest(void)
 
 static void CharLowerTest(void)
 {
-    INT_PTR i,out,failed;
+    INT_PTR i, out;
+    BOOL failed = FALSE;
 
-    failed = 0;
     for (i=0;i<256;i++)
     	{
-	out = (INT_PTR)CharLower((LPTSTR)i);
+	out = (INT_PTR)CharLowerA((LPSTR)i);
 	/* printf("%0x ",out); */
 	if ((out >> 16) != 0)
 	   {
-	   failed = 1;
+           failed = TRUE;
 	   break;
 	   }
 	}

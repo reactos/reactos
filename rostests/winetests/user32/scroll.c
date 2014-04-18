@@ -56,7 +56,7 @@ static void scrollbar_test_track(void)
 {
     /* test that scrollbar tracking is terminated when
      * the control looses mouse capture */
-    SendMessage( hScroll, WM_LBUTTONDOWN, 0, MAKELPARAM( 1, 1));
+    SendMessageA( hScroll, WM_LBUTTONDOWN, 0, MAKELPARAM( 1, 1));
     /* a normal return from the sendmessage */
     /* not normal for instance by closing the windws */
     ok( IsWindow( hScroll), "Scrollbar has gone!\n");
@@ -467,7 +467,7 @@ static void scrollbar_test_init(void)
     wc.cbSize        = sizeof wc;
     wc.style         = CS_VREDRAW | CS_HREDRAW;
     wc.hInstance     = GetModuleHandleA(0);
-    wc.hCursor       = LoadCursorA(NULL, IDC_ARROW);
+    wc.hCursor       = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     wc.hbrBackground = GetStockObject(WHITE_BRUSH);
     wc.lpszClassName = cls_name;
     wc.lpfnWndProc   = scroll_init_proc;
@@ -495,7 +495,7 @@ START_TEST ( scroll )
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "MyTestWnd";
