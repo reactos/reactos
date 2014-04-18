@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #pragma once
@@ -25,7 +25,7 @@
 #define REG_FORMAT_4 2
 
 BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format);
-BOOL import_registry_file(FILE* reg_file);
-void delete_registry_key(LPTSTR reg_key_name);
+BOOL import_registry_file(FILE *in);
+void delete_registry_key(WCHAR *reg_key_name);
 WCHAR* GetWideString(const char* strA);
 CHAR* GetMultiByteString(const WCHAR* strW);
