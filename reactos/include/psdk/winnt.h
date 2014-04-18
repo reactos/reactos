@@ -4638,6 +4638,25 @@ typedef struct _IMAGE_BOUND_FORWARDER_REF {
   WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF, *PIMAGE_BOUND_FORWARDER_REF;
 
+typedef struct _IMAGE_DELAYLOAD_DESCRIPTOR {
+  union {
+    DWORD AllAttributes;
+    struct {
+      DWORD RvaBased:1;
+      DWORD ReservedAttributes:31;
+    };
+  } Attributes;
+  DWORD DllNameRVA;
+  DWORD ModuleHandleRVA;
+  DWORD ImportAddressTableRVA;
+  DWORD ImportNameTableRVA;
+  DWORD BoundImportAddressTableRVA;
+  DWORD UnloadInformationTableRVA;
+  DWORD TimeDateStamp;
+} IMAGE_DELAYLOAD_DESCRIPTOR, *PIMAGE_DELAYLOAD_DESCRIPTOR;
+
+typedef const IMAGE_DELAYLOAD_DESCRIPTOR *PCIMAGE_DELAYLOAD_DESCRIPTOR;
+
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
   DWORD Characteristics;
   DWORD TimeDateStamp;
@@ -5694,6 +5713,78 @@ DbgRaiseAssertionFailure(VOID)
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 
 #endif
+
+typedef struct _TP_POOL TP_POOL, *PTP_POOL;
+typedef struct _TP_WORK TP_WORK, *PTP_WORK;
+typedef struct _TP_CALLBACK_INSTANCE TP_CALLBACK_INSTANCE, *PTP_CALLBACK_INSTANCE;
+
+typedef DWORD TP_VERSION, *PTP_VERSION;
+
+typedef enum _TP_CALLBACK_PRIORITY {
+  TP_CALLBACK_PRIORITY_HIGH,
+  TP_CALLBACK_PRIORITY_NORMAL,
+  TP_CALLBACK_PRIORITY_LOW,
+  TP_CALLBACK_PRIORITY_INVALID,
+  TP_CALLBACK_PRIORITY_COUNT = TP_CALLBACK_PRIORITY_INVALID
+} TP_CALLBACK_PRIORITY;
+
+typedef VOID
+(NTAPI *PTP_WORK_CALLBACK)(
+  _Inout_ PTP_CALLBACK_INSTANCE Instance,
+  _Inout_opt_ PVOID Context,
+  _Inout_ PTP_WORK Work);
+
+typedef struct _TP_CLEANUP_GROUP TP_CLEANUP_GROUP, *PTP_CLEANUP_GROUP;
+
+typedef VOID
+(NTAPI *PTP_SIMPLE_CALLBACK)(
+  _Inout_ PTP_CALLBACK_INSTANCE Instance,
+  _Inout_opt_ PVOID Context);
+
+typedef VOID
+(NTAPI *PTP_CLEANUP_GROUP_CANCEL_CALLBACK)(
+  _Inout_opt_ PVOID ObjectContext,
+  _Inout_opt_ PVOID CleanupContext);
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+typedef struct _TP_CALLBACK_ENVIRON_V3 {
+  TP_VERSION Version;
+  PTP_POOL Pool;
+  PTP_CLEANUP_GROUP CleanupGroup;
+  PTP_CLEANUP_GROUP_CANCEL_CALLBACK CleanupGroupCancelCallback;
+  PVOID RaceDll;
+  struct _ACTIVATION_CONTEXT *ActivationContext;
+  PTP_SIMPLE_CALLBACK FinalizationCallback;
+  union {
+    DWORD Flags;
+    struct {
+      DWORD LongFunction:1;
+      DWORD Persistent:1;
+      DWORD Private:30;
+    } s;
+  } u;
+  TP_CALLBACK_PRIORITY CallbackPriority;
+  DWORD Size;
+} TP_CALLBACK_ENVIRON_V3, TP_CALLBACK_ENVIRON, *PTP_CALLBACK_ENVIRON;
+#else
+typedef struct _TP_CALLBACK_ENVIRON_V1 {
+  TP_VERSION Version;
+  PTP_POOL Pool;
+  PTP_CLEANUP_GROUP CleanupGroup;
+  PTP_CLEANUP_GROUP_CANCEL_CALLBACK CleanupGroupCancelCallback;
+  PVOID RaceDll;
+  struct _ACTIVATION_CONTEXT *ActivationContext;
+  PTP_SIMPLE_CALLBACK FinalizationCallback;
+  union {
+    DWORD Flags;
+    struct {
+      DWORD LongFunction:1;
+      DWORD Persistent:1;
+      DWORD Private:30;
+    } s;
+  } u;
+} TP_CALLBACK_ENVIRON_V1, TP_CALLBACK_ENVIRON, *PTP_CALLBACK_ENVIRON;
+#endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
 
 #ifdef _MSC_VER
 #pragma warning(pop)
