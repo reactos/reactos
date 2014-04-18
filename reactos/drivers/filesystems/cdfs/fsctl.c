@@ -429,6 +429,9 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     KeInitializeSpinLock(&DeviceExt->FcbListLock);
     InitializeListHead(&DeviceExt->FcbListHead);
 
+    FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
+    InitializeListHead(&DeviceExt->NotifyList);
+
     Status = STATUS_SUCCESS;
 
 ByeBye:

@@ -46,6 +46,10 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
         DeviceExt,
         FileObject);
 
+    /* Notify about the cleanup */
+    FsRtlNotifyCleanup(DeviceExt->NotifySync,
+                       &(DeviceExt->NotifyList),
+                       FileObject->FsContext2);
 
     /* Uninitialize file cache if initialized for this file object. */
     if (FileObject->SectionObjectPointer && FileObject->SectionObjectPointer->SharedCacheMap)

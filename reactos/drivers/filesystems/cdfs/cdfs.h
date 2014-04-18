@@ -160,6 +160,10 @@ typedef struct
   PFILE_OBJECT StreamFileObject;
 
   CDINFO CdInfo;
+
+  /* Notifications */
+  LIST_ENTRY NotifyList;
+  PNOTIFY_SYNC NotifySync;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 

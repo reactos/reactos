@@ -752,6 +752,40 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 }
 
 
+static NTSTATUS
+CdfsNotifyChangeDirectory(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp)
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PFCB Fcb;
+    PCCB Ccb;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+
+    DPRINT("CdfsNotifyChangeDirectory() called\n");
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FileObject = Stack->FileObject;
+
+    Ccb = (PCCB)FileObject->FsContext2;
+    Fcb = (PFCB)FileObject->FsContext;
+ 
+    FsRtlNotifyFullChangeDirectory(DeviceExtension->NotifySync,
+                                   &(DeviceExtension->NotifyList),
+                                   Ccb,
+                                   (PSTRING)&(Fcb->PathName),
+                                   BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
+                                   FALSE,
+                                   Stack->Parameters.NotifyDirectory.CompletionFilter,
+                                   Irp,
+                                   NULL,
+                                   NULL);
+
+    return STATUS_PENDING;
+}
+
+
 NTSTATUS NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
                      PIRP Irp)
@@ -772,8 +806,8 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-        DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-        Status = STATUS_NOT_IMPLEMENTED;
+        Status = CdfsNotifyChangeDirectory(DeviceObject,
+            Irp);
         break;
 
     default:
@@ -785,7 +819,10 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (Status != STATUS_PENDING)
+    {
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
     FsRtlExitFileSystem();
 
     return(Status);
