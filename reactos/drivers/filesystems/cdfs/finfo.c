@@ -164,7 +164,7 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
         return STATUS_BUFFER_OVERFLOW;
 
     /* Calculate file name length in bytes */
-    NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+    NameLength = Fcb->PathName.Length;
     NameInfo->FileNameLength = NameLength;
 
     /* Calculate amount of bytes to copy not to overflow the buffer */
@@ -172,7 +172,7 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
         *BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]));
 
     /* Fill in the bytes */
-    RtlCopyMemory(NameInfo->FileName, Fcb->PathName, BytesToCopy);
+    RtlCopyMemory(NameInfo->FileName, Fcb->PathName.Buffer, BytesToCopy);
 
     /* Check if we could write more but are not able to */
     if (*BufferLength < NameLength + FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
@@ -268,7 +268,7 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
     ASSERT(Info);
     ASSERT(Fcb);
 
-    NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+    NameLength = Fcb->PathName.Length;
     if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength)
         return(STATUS_BUFFER_OVERFLOW);
 
@@ -321,7 +321,7 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
     /* Name Information */
     Info->NameInformation.FileNameLength = NameLength;
     RtlCopyMemory(Info->NameInformation.FileName,
-        Fcb->PathName,
+        Fcb->PathName.Buffer,
         NameLength + sizeof(WCHAR));
 
     *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR));

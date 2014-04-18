@@ -216,17 +216,20 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             /* it's root : complete essentials fields then return ok */
             RtlZeroMemory(Fcb, sizeof(FCB));
 
-            Fcb->PathName[0] = '\\';
-            Fcb->ObjectName = &Fcb->PathName[1];
+            Fcb->PathNameBuffer[0] = '\\';
+            Fcb->ObjectName = &Fcb->PathNameBuffer[1];
             Fcb->Entry.ExtentLocationL = DeviceExt->CdInfo.RootStart;
             Fcb->Entry.DataLengthL = DeviceExt->CdInfo.RootSize;
             Fcb->Entry.FileFlags = 0x02; //FILE_ATTRIBUTE_DIRECTORY;
+            Fcb->PathName.Length = sizeof(WCHAR);
+            Fcb->PathName.MaximumLength = sizeof(Fcb->PathNameBuffer);
+            Fcb->PathName.Buffer = Fcb->PathNameBuffer;
 
             if (pDirIndex)
                 *pDirIndex = 0;
             if (pOffset)
                 *pOffset = 0;
-            DPRINT("CdfsFindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
+            DPRINT("CdfsFindFile: new Pathname %wZ, new Objectname %S)\n",&Fcb->PathName, Fcb->ObjectName);
             return STATUS_SUCCESS;
         }
     }
@@ -303,12 +306,13 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
             FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {
-            if (Parent->PathName[0])
+            if (Parent->PathName.Buffer[0])
             {
-                len = wcslen(Parent->PathName);
-                memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));
-                Fcb->ObjectName=&Fcb->PathName[len];
-                if (len != 1 || Fcb->PathName[0] != '\\')
+                len = Parent->PathName.Length / sizeof(WCHAR);
+                memcpy(Fcb->PathName.Buffer, Parent->PathName.Buffer, Parent->PathName.Length);
+                Fcb->PathName.Length = Parent->PathName.Length;
+                Fcb->ObjectName=&Fcb->PathName.Buffer[len];
+                if (len != 1 || Fcb->PathName.Buffer[0] != '\\')
                 {
                     Fcb->ObjectName[0] = '\\';
                     Fcb->ObjectName = &Fcb->ObjectName[1];
@@ -316,16 +320,16 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             }
             else
             {
-                Fcb->ObjectName=Fcb->PathName;
+                Fcb->ObjectName=Fcb->PathName.Buffer;
                 Fcb->ObjectName[0]='\\';
                 Fcb->ObjectName=&Fcb->ObjectName[1];
             }
 
-            DPRINT("PathName '%S'  ObjectName '%S'\n", Fcb->PathName, Fcb->ObjectName);
+            DPRINT("PathName '%wZ'  ObjectName '%S'\n", &Fcb->PathName, Fcb->ObjectName);
 
             memcpy(&Fcb->Entry, Record, sizeof(DIR_RECORD));
             wcsncpy(Fcb->ObjectName, name, min(wcslen(name) + 1,
-                MAX_PATH - wcslen(Fcb->PathName) + wcslen(Fcb->ObjectName)));
+                MAX_PATH - (Fcb->PathName.Length / sizeof(WCHAR)) + wcslen(Fcb->ObjectName)));
 
             /* Copy short name */
             Fcb->ShortNameU.Length = ShortName.Length;
@@ -338,8 +342,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             if (pOffset)
                 *pOffset = Offset;
 
-            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %u\n",
-                Fcb->PathName, Fcb->ObjectName, DirIndex);
+            DPRINT("FindFile: new Pathname %wZ, new Objectname %S, DirIndex %u\n",
+                &Fcb->PathName, Fcb->ObjectName, DirIndex);
 
             RtlFreeUnicodeString(&FileToFindUpcase);
             CcUnpinData(Context);
@@ -572,6 +576,8 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
+    TempFcb.PathName.Buffer = TempFcb.PathNameBuffer;
+    TempFcb.PathName.MaximumLength = sizeof(TempFcb.PathNameBuffer);
 
     Ccb = (PCCB)FileObject->FsContext2;
     Fcb = (PFCB)FileObject->FsContext;
@@ -646,7 +652,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     }
     DPRINT("Buffer = %p  tofind = %wZ\n", Buffer, &Ccb->DirectorySearchPattern);
 
-    TempFcb.ObjectName = TempFcb.PathName;
+    TempFcb.ObjectName = TempFcb.PathName.Buffer;
     while (Status == STATUS_SUCCESS && BufferLength > 0)
     {
         Status = CdfsFindFile(DeviceExtension,
@@ -744,7 +750,6 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
     return(Status);
 }
-
 
 
 NTSTATUS NTAPI
