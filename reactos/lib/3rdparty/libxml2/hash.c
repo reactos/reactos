@@ -93,11 +93,13 @@ xmlHashComputeKey(xmlHashTablePtr table, const xmlChar *name,
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
 	}
     }
+    value = value ^ ((value << 5) + (value >> 3));
     if (name2 != NULL) {
 	while ((ch = *name2++) != 0) {
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
 	}
     }
+    value = value ^ ((value << 5) + (value >> 3));
     if (name3 != NULL) {
 	while ((ch = *name3++) != 0) {
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
@@ -133,6 +135,7 @@ xmlHashComputeQKey(xmlHashTablePtr table,
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
 	}
     }
+    value = value ^ ((value << 5) + (value >> 3));
     if (prefix2 != NULL) {
 	while ((ch = *prefix2++) != 0) {
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
@@ -144,6 +147,7 @@ xmlHashComputeQKey(xmlHashTablePtr table,
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
 	}
     }
+    value = value ^ ((value << 5) + (value >> 3));
     if (prefix3 != NULL) {
 	while ((ch = *prefix3++) != 0) {
 	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);

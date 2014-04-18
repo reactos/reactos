@@ -26063,6 +26063,20 @@ xmlSchemaValidatorPopElem(xmlSchemaValidCtxtPtr vctxt)
 		    "AUTOMATON create on '%s'\n", inode->localName);
 #endif
 	    }
+
+	    /*
+	     * Do not check further content if the node has been nilled
+	     */
+	    if (INODE_NILLED(inode)) {
+		ret = 0;
+#ifdef DEBUG_AUTOMATA
+		xmlGenericError(xmlGenericErrorContext,
+		    "AUTOMATON succeeded on nilled '%s'\n",
+		    inode->localName);
+#endif
+                goto skip_nilled;
+	    }
+
 	    /*
 	    * Get hold of the still expected content, since a further
 	    * call to xmlRegExecPushString() will loose this information.
@@ -26100,6 +26114,9 @@ xmlSchemaValidatorPopElem(xmlSchemaValidCtxtPtr vctxt)
 
 	}
     }
+
+skip_nilled:
+
     if (inode->typeDef->contentType == XML_SCHEMA_CONTENT_ELEMENTS)
 	goto end_elem;
 
@@ -27846,7 +27863,10 @@ xmlSchemaVDocWalk(xmlSchemaValidCtxtPtr vctxt)
     const xmlChar *nsName;
 
     /* DOC VAL TODO: Move this to the start function. */
-    valRoot = xmlDocGetRootElement(vctxt->doc);
+    if (vctxt->validationRoot != NULL)
+        valRoot = vctxt->validationRoot;
+    else
+	valRoot = xmlDocGetRootElement(vctxt->doc);
     if (valRoot == NULL) {
 	/* VAL TODO: Error code? */
 	VERROR(1, NULL, "The document has no document element");

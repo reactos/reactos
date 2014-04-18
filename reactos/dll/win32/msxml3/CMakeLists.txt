@@ -9,7 +9,10 @@ if(MSVC)
     add_compile_flags("/FIwine/typeof.h /FImsvc.h")
 endif()
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
+
 spec2def(msxml3.dll msxml3.spec ADD_IMPORTLIB)
 add_typelib(msxml3_v1.idl)
 
@@ -66,7 +69,7 @@ add_library(msxml3 SHARED
 
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)
-target_link_libraries(msxml3 libxml2 iconv-static uuid wine)
+target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h SOURCE)

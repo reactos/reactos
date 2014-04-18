@@ -1517,6 +1517,8 @@ xmlGetCharEncodingHandler(xmlCharEncoding enc) {
             if (handler != NULL) return(handler);
             handler = xmlFindCharEncodingHandler("EBCDIC-US");
             if (handler != NULL) return(handler);
+            handler = xmlFindCharEncodingHandler("IBM-037");
+            if (handler != NULL) return(handler);
 	    break;
         case XML_CHAR_ENCODING_UCS4BE:
             handler = xmlFindCharEncodingHandler("ISO-10646-UCS-4");
@@ -2161,6 +2163,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
 /**
  * xmlCharEncInput:
  * @input: a parser input buffer
+ * @flush: try to flush all the raw buffer
  *
  * Generic front-end for the encoding handler on parser input
  *
@@ -2170,7 +2173,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
  *        the result of transformation can't fit into the encoding we want), or
  */
 int
-xmlCharEncInput(xmlParserInputBufferPtr input)
+xmlCharEncInput(xmlParserInputBufferPtr input, int flush)
 {
     int ret = -2;
     size_t written;
@@ -2189,7 +2192,7 @@ xmlCharEncInput(xmlParserInputBufferPtr input)
     toconv = xmlBufUse(in);
     if (toconv == 0)
         return (0);
-    if (toconv > 64 * 1024)
+    if ((toconv > 64 * 1024) && (flush == 0))
         toconv = 64 * 1024;
     written = xmlBufAvail(out);
     if (written > 0)
@@ -2200,7 +2203,7 @@ xmlCharEncInput(xmlParserInputBufferPtr input)
         if (written > 0)
             written--; /* count '\0' */
     }
-    if (written > 128 * 1024)
+    if ((written > 128 * 1024) && (flush == 0))
         written = 128 * 1024;
 
     c_in = toconv;
