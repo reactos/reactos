@@ -38,33 +38,6 @@
 #include "expr.h"
 #include "typetree.h"
 
-#if defined(YYBYACC)
-	/* Berkeley yacc (byacc) doesn't seem to know about these */
-	/* Some *BSD supplied versions do define these though */
-# ifndef YYEMPTY
-#  define YYEMPTY	(-1)	/* Empty lookahead value of yychar */
-# endif
-# ifndef YYLEX
-#  define YYLEX		yylex()
-# endif
-
-#elif defined(YYBISON)
-	/* Bison was used for original development */
-	/* #define YYEMPTY -2 */
-	/* #define YYLEX   yylex() */
-
-#else
-	/* No yacc we know yet */
-# if !defined(YYEMPTY) || !defined(YYLEX)
-#  error Yacc version/type unknown. This version needs to be verified for settings of YYEMPTY and YYLEX.
-# elif defined(__GNUC__)	/* gcc defines the #warning directive */
-#  warning Yacc version/type unknown. It defines YYEMPTY and YYLEX, but is not tested
-  /* #else we just take a chance that it works... */
-# endif
-#endif
-
-#define YYERROR_VERBOSE
-
 static unsigned char pointer_default = RPC_FC_UP;
 
 typedef struct list typelist_t;
@@ -141,6 +114,7 @@ static statement_t *make_statement_type_decl(type_t *type);
 static statement_t *make_statement_reference(type_t *type);
 static statement_t *make_statement_declaration(var_t *var);
 static statement_t *make_statement_library(typelib_t *typelib);
+static statement_t *make_statement_pragma(const char *str);
 static statement_t *make_statement_cppquote(const char *str);
 static statement_t *make_statement_importlib(const char *str);
 static statement_t *make_statement_module(type_t *type);
@@ -148,6 +122,8 @@ static statement_t *make_statement_typedef(var_list_t *names);
 static statement_t *make_statement_import(const char *str);
 static statement_t *make_statement_typedef(var_list_t *names);
 static statement_list_t *append_statement(statement_list_t *list, statement_t *stmt);
+static statement_list_t *append_statements(statement_list_t *, statement_list_t *);
+static attr_list_t *append_attribs(attr_list_t *, attr_list_t *);
 
 %}
 %union {
@@ -177,7 +153,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 	enum storage_class stgclass;
 }
 
-%token <str> aIDENTIFIER
+%token <str> aIDENTIFIER aPRAGMA
 %token <str> aKNOWNTYPE
 %token <num> aNUM aHEXNUM
 %token <dbl> aDOUBLE
@@ -229,6 +205,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %token tMAYBE tMESSAGE
 %token tMETHODS
 %token tMODULE
+%token tNAMESPACE
 %token tNOCODE tNONBROWSABLE
 %token tNONCREATABLE
 %token tNONEXTENSIBLE
@@ -285,6 +262,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %type <type> inherit interface interfacedef interfacedec
 %type <type> dispinterface dispinterfacehdr dispinterfacedef
 %type <type> module modulehdr moduledef
+%type <type> namespacedef
 %type <type> base_type int_std
 %type <type> enumdef structdef uniondef typedecl
 %type <type> type
@@ -323,6 +301,8 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %right '!' '~' CAST PPTR POS NEG ADDRESSOF tSIZEOF
 %left '.' MEMBERPTR '[' ']'
 
+%error-verbose
+
 %%
 
 input:   gbl_statements				{ fix_incomplete();
@@ -340,6 +320,8 @@ input:   gbl_statements				{ fix_incomplete();
 	;
 
 gbl_statements:					{ $$ = NULL; }
+	| gbl_statements namespacedef '{' gbl_statements '}'
+						{ $$ = append_statements($1, $4); }
 	| gbl_statements interfacedec		{ $$ = append_statement($1, make_statement_reference($2)); }
 	| gbl_statements interfacedef		{ $$ = append_statement($1, make_statement_type_decl($2)); }
 	| gbl_statements coclass ';'		{ $$ = $1;
@@ -355,6 +337,8 @@ gbl_statements:					{ $$ = NULL; }
 
 imp_statements:					{ $$ = NULL; }
 	| imp_statements interfacedec		{ $$ = append_statement($1, make_statement_reference($2)); }
+	| imp_statements namespacedef '{' imp_statements '}'
+						{ $$ = append_statements($1, $4); }
 	| imp_statements interfacedef		{ $$ = append_statement($1, make_statement_type_decl($2)); }
 	| imp_statements coclass ';'		{ $$ = $1; reg_type($2, $2->name, 0); }
 	| imp_statements coclassdef		{ $$ = append_statement($1, make_statement_type_decl($2));
@@ -380,6 +364,7 @@ statement:
 	| declaration ';'			{ $$ = make_statement_declaration($1); }
 	| import				{ $$ = make_statement_import($1); }
 	| typedef ';'				{ $$ = $1; }
+	| aPRAGMA				{ $$ = make_statement_pragma($1); }
 	;
 
 typedecl:
@@ -573,6 +558,7 @@ attribute:					{ $$ = NULL; }
 	| tUSESGETLASTERROR			{ $$ = make_attr(ATTR_USESGETLASTERROR); }
 	| tUSERMARSHAL '(' type ')'		{ $$ = make_attrp(ATTR_USERMARSHAL, $3); }
 	| tUUID '(' uuid_string ')'		{ $$ = make_attrp(ATTR_UUID, $3); }
+	| tASYNCUUID '(' uuid_string ')'	{ $$ = make_attrp(ATTR_ASYNCUUID, $3); }
 	| tV1ENUM				{ $$ = make_attr(ATTR_V1ENUM); }
 	| tVARARG				{ $$ = make_attr(ATTR_VARARG); }
 	| tVERSION '(' version ')'		{ $$ = make_attrv(ATTR_VERSION, $3); }
@@ -826,6 +812,9 @@ coclassdef: coclasshdr '{' coclass_ints '}' semicolon_opt
 						{ $$ = type_coclass_define($1, $3); }
 	;
 
+namespacedef: tNAMESPACE aIDENTIFIER		{ $$ = NULL; }
+	;
+
 coclass_ints:					{ $$ = NULL; }
 	| coclass_ints coclass_int		{ $$ = append_ifref( $1, $2 ); }
 	;
@@ -887,6 +876,8 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 
 interfacedef: interfacehdr inherit
 	  '{' int_statements '}' semicolon_opt	{ $$ = $1.interface;
+						  if($$ == $2)
+						    error_loc("Interface can't inherit from itself\n");
 						  type_interface_define($$, $2, $4);
 						  pointer_default = $1.old_pointer_default;
 						}
@@ -1106,9 +1097,10 @@ type:	  tVOID					{ $$ = type_new_void(); }
 	| tSAFEARRAY '(' type ')'		{ $$ = make_safearray($3); }
 	;
 
-typedef: tTYPEDEF m_attributes decl_spec declarator_list
-						{ reg_typedefs($3, $4, check_typedef_attrs($2));
-						  $$ = make_statement_typedef($4);
+typedef: m_attributes tTYPEDEF m_attributes decl_spec declarator_list
+						{ $1 = append_attribs($1, $3);
+						  reg_typedefs($4, $5, check_typedef_attrs($1));
+						  $$ = make_statement_typedef($5);
 						}
 	;
 
@@ -1122,6 +1114,7 @@ uniondef: tUNION t_ident '{' ne_union_fields '}'
 version:
 	  aNUM					{ $$ = MAKEVERSION($1, 0); }
 	| aNUM '.' aNUM				{ $$ = MAKEVERSION($1, $3); }
+	| aHEXNUM				{ $$ = $1; }
 	;
 
 %%
@@ -1424,11 +1417,6 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
   array_dims_t *arr = decl ? decl->array : NULL;
   type_t *func_type = decl ? decl->func_type : NULL;
   type_t *type = decl_spec->type;
-  
-  /* In case of a range attribute, duplicate the type to keep track of
-   * the min/max values in the type format string */
-  if(is_attr(attrs, ATTR_RANGE))
-    type = duptype(type, 1);
 
   if (is_attr(type->attrs, ATTR_INLINE))
   {
@@ -1854,13 +1842,14 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
        type_get_type_detect_alias(type) == TYPE_STRUCT ||
        type_get_type_detect_alias(type) == TYPE_UNION ||
        type_get_type_detect_alias(type) == TYPE_ENCAPSULATED_UNION) &&
-      !type->name && !parse_only)
+      !type->name)
   {
-    if (! is_attr(attrs, ATTR_PUBLIC))
+    if (! is_attr(attrs, ATTR_PUBLIC) && ! is_attr (attrs, ATTR_HIDDEN))
       attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
     type->name = gen_name();
   }
-  else if (is_attr(attrs, ATTR_UUID) && !is_attr(attrs, ATTR_PUBLIC))
+  else if (is_attr(attrs, ATTR_UUID) && !is_attr(attrs, ATTR_PUBLIC)
+	   && !is_attr(attrs, ATTR_HIDDEN))
     attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
 
   /* Append the SWITCHTYPE attribute to a non-encapsulated union if it does not already have it.  */
@@ -1877,7 +1866,17 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
       var_t *name;
 
       cur = find_type(decl->var->name, 0);
-      if (cur)
+
+      /*
+       * MIDL allows shadowing types that are declared in imported files.
+       * We don't throw an error in this case and instead add a new type
+       * (which is earlier on the list in hash table, so it will be used
+       * instead of shadowed type).
+       *
+       * FIXME: We may consider string separated type tables for each input
+       *        for cleaner solution.
+       */
+      if (cur && input_name == cur->loc_info.input_name)
           error_loc("%s: redefinition error; original definition was at %s:%d\n",
                     cur->name, cur->loc_info.input_name,
                     cur->loc_info.line_number);
@@ -1989,7 +1988,7 @@ static char *gen_name(void)
 
   if (! file_id)
   {
-    char *dst = dup_basename(input_name, ".idl");
+    char *dst = dup_basename(input_idl_name, ".idl");
     file_id = dst;
 
     for (; *dst; ++dst)
@@ -2030,6 +2029,7 @@ struct allowed_attr allowed_attr[] =
     /* ATTR_ANNOTATION */          { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, "annotation" },
     /* ATTR_APPOBJECT */           { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "appobject" },
     /* ATTR_ASYNC */               { 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "async" },
+    /* ATTR_ASYNCUUID */           { 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, "async_uuid" },
     /* ATTR_AUTO_HANDLE */         { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "auto_handle" },
     /* ATTR_BINDABLE */            { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "bindable" },
     /* ATTR_BROADCAST */           { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "broadcast" },
@@ -2065,8 +2065,8 @@ struct allowed_attr allowed_attr[] =
     /* ATTR_HELPSTRING */          { 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, "helpstring" },
     /* ATTR_HELPSTRINGCONTEXT */   { 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, "helpstringcontext" },
     /* ATTR_HELPSTRINGDLL */       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, "helpstringdll" },
-    /* ATTR_HIDDEN */              { 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, "hidden" },
-    /* ATTR_ID */                  { 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, "id" },
+    /* ATTR_HIDDEN */              { 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, "hidden" },
+    /* ATTR_ID */                  { 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, "id" },
     /* ATTR_IDEMPOTENT */          { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "idempotent" },
     /* ATTR_IGNORE */              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, "ignore" },
     /* ATTR_IIDIS */               { 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, "iid_is" },
@@ -2074,7 +2074,7 @@ struct allowed_attr allowed_attr[] =
     /* ATTR_IMPLICIT_HANDLE */     { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "implicit_handle" },
     /* ATTR_IN */                  { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, "in" },
     /* ATTR_INLINE */              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "inline" },
-    /* ATTR_INPUTSYNC */           { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "inputsync" },
+    /* ATTR_INPUTSYNC */           { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "inputsync" },
     /* ATTR_LENGTHIS */            { 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, "length_is" },
     /* ATTR_LIBLCID */             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, "lcid" },
     /* ATTR_LICENSED */            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "licensed" },
@@ -2120,10 +2120,10 @@ struct allowed_attr allowed_attr[] =
     /* ATTR_UIDEFAULT */           { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "uidefault" },
     /* ATTR_USESGETLASTERROR */    { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "usesgetlasterror" },
     /* ATTR_USERMARSHAL */         { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, "user_marshal" },
-    /* ATTR_UUID */                { 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, "uuid" },
+    /* ATTR_UUID */                { 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, "uuid" },
     /* ATTR_V1ENUM */              { 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, "v1_enum" },
     /* ATTR_VARARG */              { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "vararg" },
-    /* ATTR_VERSION */             { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, "version" },
+    /* ATTR_VERSION */             { 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, "version" },
     /* ATTR_VIPROGID */            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "vi_progid" },
     /* ATTR_WIREMARSHAL */         { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, "wire_marshal" },
 };
@@ -2752,6 +2752,13 @@ static statement_t *make_statement_library(typelib_t *typelib)
     return stmt;
 }
 
+static statement_t *make_statement_pragma(const char *str)
+{
+    statement_t *stmt = make_statement(STMT_PRAGMA);
+    stmt->u.str = str;
+    return stmt;
+}
+
 static statement_t *make_statement_cppquote(const char *str)
 {
     statement_t *stmt = make_statement(STMT_CPPQUOTE);
@@ -2806,6 +2813,22 @@ static statement_t *make_statement_typedef(declarator_list_t *decls)
     }
 
     return stmt;
+}
+
+static statement_list_t *append_statements(statement_list_t *l1, statement_list_t *l2)
+{
+    if (!l2) return l1;
+    if (!l1 || l1 == l2) return l2;
+    list_move_tail (l1, l2);
+    return l1;
+}
+
+static attr_list_t *append_attribs(attr_list_t *l1, attr_list_t *l2)
+{
+    if (!l2) return l1;
+    if (!l1 || l1 == l2) return l2;
+    list_move_tail (l1, l2);
+    return l1;
 }
 
 static statement_list_t *append_statement(statement_list_t *list, statement_t *stmt)

@@ -47,16 +47,6 @@
 
 static typelib_t *typelib;
 
-int is_ptr(const type_t *t)
-{
-    return type_get_type(t) == TYPE_POINTER;
-}
-
-int is_array(const type_t *t)
-{
-    return type_get_type(t) == TYPE_ARRAY;
-}
-
 /* List of oleauto types that should be recognized by name.
  * (most of) these seem to be intrinsic types in mktyplib.
  * This table MUST be alphabetically sorted on the kw field.

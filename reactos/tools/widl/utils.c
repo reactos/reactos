@@ -159,8 +159,8 @@ char *dup_basename(const char *name, const char *ext)
 
 	namelen = strlen(name);
 
-	/* +4 for later extension and +1 for '\0' */
-	base = xmalloc(namelen +4 +1);
+	/* +6 for later extension (strlen("_r.rgs")) and +1 for '\0' */
+	base = xmalloc(namelen +6 +1);
 	strcpy(base, name);
 	if(!strcasecmp(name + namelen-extlen, ext))
 	{

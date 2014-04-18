@@ -109,17 +109,7 @@ unsigned int get_attrv(const attr_list_t *list, enum attr_type t)
     return 0;
 }
 
-int is_void(const type_t *t)
-{
-    return type_get_type(t) == TYPE_VOID;
-}
-
-int is_conformant_array(const type_t *t)
-{
-    return is_array(t) && type_array_has_conformance(t);
-}
-
-void write_guid(FILE *f, const char *guid_prefix, const char *name, const UUID *uuid)
+static void write_guid(FILE *f, const char *guid_prefix, const char *name, const UUID *uuid)
 {
   if (!uuid) return;
   fprintf(f, "DEFINE_GUID(%s_%s, 0x%08x, 0x%04x, 0x%04x, 0x%02x,0x%02x, 0x%02x,"
@@ -1351,6 +1341,7 @@ static void write_imports(FILE *header, const statement_list_t *stmts)
       case STMT_TYPEDEF:
       case STMT_MODULE:
       case STMT_CPPQUOTE:
+      case STMT_PRAGMA:
       case STMT_DECLARATION:
         /* not processed here */
         break;
@@ -1385,6 +1376,7 @@ static void write_forward_decls(FILE *header, const statement_list_t *stmts)
       case STMT_TYPEDEF:
       case STMT_MODULE:
       case STMT_CPPQUOTE:
+      case STMT_PRAGMA:
       case STMT_DECLARATION:
         /* not processed here */
         break;
@@ -1437,6 +1429,7 @@ static void write_header_stmts(FILE *header, const statement_list_t *stmts, cons
         break;
       case STMT_IMPORTLIB:
       case STMT_MODULE:
+      case STMT_PRAGMA:
         /* not included in header */
         break;
       case STMT_IMPORT:

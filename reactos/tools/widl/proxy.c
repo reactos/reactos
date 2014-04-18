@@ -796,6 +796,11 @@ int need_proxy_file(const statement_list_t *stmts)
     return does_any_iface(stmts, need_proxy);
 }
 
+int need_proxy_delegation(const statement_list_t *stmts)
+{
+    return does_any_iface(stmts, need_delegation);
+}
+
 int need_inline_stubs(const type_t *iface)
 {
     const statement_t *stmt;

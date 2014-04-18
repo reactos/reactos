@@ -97,12 +97,12 @@ typedef struct tagMSFT_SegDir {
 /*2*/MSFT_pSeg pImpInfo;     /* table with info for imported types */
 /*3*/MSFT_pSeg pImpFiles;    /* import libraries */
 /*4*/MSFT_pSeg pRefTab;      /* References table */
-/*5*/MSFT_pSeg pLibtab;      /* always exists, always same size (0x80) */
-                             /* hash table w offsets to guid????? */
+/*5*/MSFT_pSeg pGuidHashTab; /* always exists, always same size (0x80) */
+                             /* hash table with offsets to guid */
 /*6*/MSFT_pSeg pGuidTab;     /* all guids are stored here together with  */
                              /* offset in some table???? */
-/*7*/MSFT_pSeg res07;        /* always created, always same size (0x200) */
-                             /* purpose largely unknown */
+/*7*/MSFT_pSeg pNameHashTab; /* always created, always same size (0x200) */
+                             /* hash table with offsets to names */
 /*8*/MSFT_pSeg pNametab;     /* name tables */
 /*9*/MSFT_pSeg pStringtab;   /* string table */
 /*A*/MSFT_pSeg pTypdescTab;  /* table with type descriptors */

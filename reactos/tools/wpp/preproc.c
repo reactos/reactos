@@ -209,7 +209,7 @@ static void wpp_default_write( const char *buffer, unsigned int len ) {
     fwrite(buffer, 1, len, ppy_out);
 }
 
-/* Don't comment on the hash, its primitive but functional... */
+/* Don't comment on the hash, it's primitive but functional... */
 static int pphash(const char *str)
 {
 	int sum = 0;
