@@ -69,6 +69,7 @@ extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, int n );
+extern const char *wine_dbgstr_guid( const GUID *guid );
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -538,6 +539,19 @@ const char *wine_dbgstr_wn( const WCHAR *str, int n )
     }
     *dst++ = 0;
     release_temp_buffer( res, dst - res );
+    return res;
+}
+
+const char *wine_dbgstr_guid( const GUID *guid )
+{
+    char *res;
+
+    if (!guid) return "(null)";
+    res = get_temp_buffer( 39 ); /* CHARS_IN_GUID */
+    sprintf( res, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+             guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
+             guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
+             guid->Data4[5], guid->Data4[6], guid->Data4[7] );
     return res;
 }
 
