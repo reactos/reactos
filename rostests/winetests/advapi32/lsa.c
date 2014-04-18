@@ -49,7 +49,7 @@ static NTSTATUS (WINAPI *pLsaLookupSids)(LSA_HANDLE,ULONG,PSID*,LSA_REFERENCED_D
 
 static BOOL init(void)
 {
-    hadvapi32 = GetModuleHandle("advapi32.dll");
+    hadvapi32 = GetModuleHandleA("advapi32.dll");
 
     pLsaClose = (void*)GetProcAddress(hadvapi32, "LsaClose");
     pLsaEnumerateAccountRights = (void*)GetProcAddress(hadvapi32, "LsaEnumerateAccountRights");
@@ -378,7 +378,7 @@ static void test_LsaLookupSids(void)
     ok(ret, "got %d\n", ret);
 
     ret = GetTokenInformation(token, TokenUser, NULL, 0, &size);
-    ok(!ret, "gotr %d\n", ret);
+    ok(!ret, "got %d\n", ret);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     ret = GetTokenInformation(token, TokenUser, user, size, &size);

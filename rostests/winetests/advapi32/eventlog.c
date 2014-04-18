@@ -49,17 +49,27 @@ static void init_function_pointers(void)
     pWow64RevertWow64FsRedirection = (void*)GetProcAddress(hkernel32, "Wow64RevertWow64FsRedirection");
 }
 
-static void create_backup(const char *filename)
+static BOOL create_backup(const char *filename)
 {
     HANDLE handle;
+    DWORD rc, attribs;
 
     DeleteFileA(filename);
     handle = OpenEventLogA(NULL, "Application");
-    BackupEventLogA(handle, filename);
+    rc = BackupEventLogA(handle, filename);
+    if (!rc && GetLastError() == ERROR_PRIVILEGE_NOT_HELD)
+    {
+        skip("insufficient privileges to backup the eventlog\n");
+        CloseEventLog(handle);
+        return FALSE;
+    }
+    ok(rc, "BackupEventLogA failed, le=%u\n", GetLastError());
     CloseEventLog(handle);
 
+    attribs = GetFileAttributesA(filename);
     todo_wine
-    ok(GetFileAttributesA(filename) != INVALID_FILE_ATTRIBUTES, "Expected a backup file\n");
+    ok(attribs != INVALID_FILE_ATTRIBUTES, "Expected a backup file attribs=%#x le=%u\n", attribs, GetLastError());
+    return TRUE;
 }
 
 static void test_open_close(void)
@@ -209,23 +219,24 @@ static void test_count(void)
     CloseEventLog(handle);
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    todo_wine
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Does GetNumberOfEventLogRecords work with backup eventlogs? */
-    count = 0xdeadbeef;
-    ret = GetNumberOfEventLogRecords(handle, &count);
-    todo_wine
+    if (create_backup(backup))
     {
-    ok(ret, "Expected success\n");
-    ok(count != 0xdeadbeef, "Expected the number of records\n");
-    }
+        handle = OpenBackupEventLogA(NULL, backup);
+        todo_wine
+        ok(handle != NULL, "Expected a handle, le=%d\n", GetLastError());
 
-    CloseEventLog(handle);
-    DeleteFileA(backup);
+        /* Does GetNumberOfEventLogRecords work with backup eventlogs? */
+        count = 0xdeadbeef;
+        ret = GetNumberOfEventLogRecords(handle, &count);
+        todo_wine
+        {
+        ok(ret, "Expected success\n");
+        ok(count != 0xdeadbeef, "Expected the number of records\n");
+        }
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
+    }
 }
 
 static void test_oldest(void)
@@ -262,23 +273,24 @@ static void test_oldest(void)
     CloseEventLog(handle);
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    todo_wine
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Does GetOldestEventLogRecord work with backup eventlogs? */
-    oldest = 0xdeadbeef;
-    ret = GetOldestEventLogRecord(handle, &oldest);
-    todo_wine
+    if (create_backup(backup))
     {
-    ok(ret, "Expected success\n");
-    ok(oldest != 0xdeadbeef, "Expected the number of the oldest record\n");
-    }
+        handle = OpenBackupEventLogA(NULL, backup);
+        todo_wine
+        ok(handle != NULL, "Expected a handle\n");
 
-    CloseEventLog(handle);
-    DeleteFileA(backup);
+        /* Does GetOldestEventLogRecord work with backup eventlogs? */
+        oldest = 0xdeadbeef;
+        ret = GetOldestEventLogRecord(handle, &oldest);
+        todo_wine
+        {
+        ok(ret, "Expected success\n");
+        ok(oldest != 0xdeadbeef, "Expected the number of the oldest record\n");
+        }
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
+    }
 }
 
 static void test_backup(void)
@@ -306,6 +318,12 @@ static void test_backup(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     ret = BackupEventLogA(handle, backup);
+    if (!ret && GetLastError() == ERROR_PRIVILEGE_NOT_HELD)
+    {
+        skip("insufficient privileges for backup tests\n");
+        CloseEventLog(handle);
+        return;
+    }
     ok(ret, "Expected success\n");
     todo_wine
     ok(GetFileAttributesA(backup) != INVALID_FILE_ATTRIBUTES, "Expected a backup file\n");
@@ -516,38 +534,39 @@ static void test_openbackup(void)
        "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    /* FIXME: Wine stops here */
-    if (GetFileAttributesA(backup) == INVALID_FILE_ATTRIBUTES)
+    if (create_backup(backup))
     {
-        skip("We don't have a backup eventlog to work with\n");
-        return;
+        /* FIXME: Wine stops here */
+        if (GetFileAttributesA(backup) == INVALID_FILE_ATTRIBUTES)
+        {
+            skip("We don't have a backup eventlog to work with\n");
+            return;
+        }
+
+        SetLastError(0xdeadbeef);
+        handle = OpenBackupEventLogA("IDontExist", backup);
+        ok(handle == NULL, "Didn't expect a handle\n");
+        ok(GetLastError() == RPC_S_SERVER_UNAVAILABLE ||
+           GetLastError() == RPC_S_INVALID_NET_ADDR, /* Some Vista and Win7 */
+           "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
+
+        /* Empty servername should be read as local server */
+        handle = OpenBackupEventLogA("", backup);
+        ok(handle != NULL, "Expected a handle\n");
+        CloseEventLog(handle);
+
+        handle = OpenBackupEventLogA(NULL, backup);
+        ok(handle != NULL, "Expected a handle\n");
+
+        /* Can we open that same backup eventlog more than once? */
+        handle2 = OpenBackupEventLogA(NULL, backup);
+        ok(handle2 != NULL, "Expected a handle\n");
+        ok(handle2 != handle, "Didn't expect the same handle\n");
+        CloseEventLog(handle2);
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
     }
-
-    SetLastError(0xdeadbeef);
-    handle = OpenBackupEventLogA("IDontExist", backup);
-    ok(handle == NULL, "Didn't expect a handle\n");
-    ok(GetLastError() == RPC_S_SERVER_UNAVAILABLE ||
-       GetLastError() == RPC_S_INVALID_NET_ADDR, /* Some Vista and Win7 */
-       "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
-
-    /* Empty servername should be read as local server */
-    handle = OpenBackupEventLogA("", backup);
-    ok(handle != NULL, "Expected a handle\n");
-    CloseEventLog(handle);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Can we open that same backup eventlog more than once? */
-    handle2 = OpenBackupEventLogA(NULL, backup);
-    ok(handle2 != NULL, "Expected a handle\n");
-    ok(handle2 != handle, "Didn't expect the same handle\n");
-    CloseEventLog(handle2);
-
-    CloseEventLog(handle);
-    DeleteFileA(backup);
 
     /* Is there any content checking done? */
     file = CreateFileA(backup, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, NULL);
@@ -585,7 +604,8 @@ static void test_clear(void)
     ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
+    if (!create_backup(backup))
+        return;
 
     SetLastError(0xdeadbeef);
     ret = ClearEventLogA(NULL, backup);
@@ -761,11 +781,11 @@ static void test_readwrite(void)
     }
 
     SetLastError(0xdeadbeef);
-    ret = ReportEvent(handle, 0x20, 0, 0, NULL, 0, 0, NULL, NULL);
+    ret = ReportEventA(handle, 0x20, 0, 0, NULL, 0, 0, NULL, NULL);
     if (!ret && GetLastError() == ERROR_CRC)
     {
         win_skip("Win7 fails when using incorrect event types\n");
-        ret = ReportEvent(handle, 0, 0, 0, NULL, 0, 0, NULL, NULL);
+        ret = ReportEventA(handle, 0, 0, 0, NULL, 0, 0, NULL, NULL);
         ok(ret, "Expected success : %d\n", GetLastError());
     }
     else
@@ -822,9 +842,9 @@ static void test_readwrite(void)
         ok(handle != NULL, "Expected a handle\n");
 
         SetLastError(0xdeadbeef);
-        ret = ReportEvent(handle, read_write[i].evt_type, read_write[i].evt_cat,
-                          read_write[i].evt_id, run_sidtests ? user : NULL,
-                          read_write[i].evt_numstrings, 0, read_write[i].evt_strings, NULL);
+        ret = ReportEventA(handle, read_write[i].evt_type, read_write[i].evt_cat,
+                           read_write[i].evt_id, run_sidtests ? user : NULL,
+                           read_write[i].evt_numstrings, 0, read_write[i].evt_strings, NULL);
         ok(ret, "Expected ReportEvent success : %d\n", GetLastError());
 
         count = 0xdeadbeef;
