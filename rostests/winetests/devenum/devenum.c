@@ -34,6 +34,8 @@
 #include <uuids.h>
 
 static const WCHAR friendly_name[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
+static const WCHAR fcc_handlerW[] = {'F','c','c','H','a','n','d','l','e','r',0};
+static const WCHAR mrleW[] = {'m','r','l','e',0};
 
 struct category
 {
@@ -57,6 +59,7 @@ static void test_devenum(IBindCtx *bind_ctx)
     HRESULT res;
     ICreateDevEnum* create_devenum;
     IEnumMoniker* enum_moniker = NULL;
+    BOOL have_mrle = FALSE;
     int i;
 
     res = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
@@ -101,6 +104,17 @@ static void test_devenum(IBindCtx *bind_ctx)
                     {
                         trace("  ???\n");
                     }
+
+                    if (IsEqualGUID(&CLSID_VideoCompressorCategory, am_categories[i].clsid)) {
+                        /* Test well known compressor to ensure that we really enumerate codecs */
+                        hr = IPropertyBag_Read(prop_bag, fcc_handlerW, &var, NULL);
+                        if (SUCCEEDED(hr)) {
+                            ok(V_VT(&var) == VT_BSTR, "V_VT(var) = %d\n", V_VT(&var));
+                            if(!lstrcmpW(V_BSTR(&var), mrleW))
+                                have_mrle = TRUE;
+                            VariantClear(&var);
+                        }
+                    }
                 }
 
                 if (prop_bag)
@@ -112,6 +126,10 @@ static void test_devenum(IBindCtx *bind_ctx)
     }
 
     ICreateDevEnum_Release(create_devenum);
+
+    /* 64-bit windows are missing mrle codec */
+    if(sizeof(void*) == 4)
+        ok(have_mrle, "mrle codec not found\n");
 }
 
 /* CLSID_CDeviceMoniker */
