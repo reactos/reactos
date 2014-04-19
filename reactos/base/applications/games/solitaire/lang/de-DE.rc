@@ -18,8 +18,13 @@ BEGIN
     GROUPBOX "Karten", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "&Eine ziehen", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Drei ziehen", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    AUTOCHECKBOX "&Zeit anzeigen", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Punkte zählen", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
+    AUTORADIOBUTTON "Ke&ine", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTOCHECKBOX "&Zeit anzeigen", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "S&tatusleiste", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX "P&unkte behalten", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Abbrechen",IDCANCEL,101,97,50,14
 END
@@ -54,6 +59,8 @@ BEGIN
     IDS_SOL_QUIT "Laufendes Spiel beenden?"
     IDS_SOL_WIN "Glückwunsch, Sie haben gewonnen!"
     IDS_SOL_DEAL "Neu geben?"
+    IDS_SOL_SCORE "Punkte: %d"
+    IDS_SOL_TIME "Zeit: %d"
 END
 
 /* Menus */
