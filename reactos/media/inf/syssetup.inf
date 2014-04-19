@@ -42,6 +42,7 @@ AddReg=Classes
 11,,comctl32.dll,2
 11,,cryptdlg.dll,1
 11,,cryptnet.dll,1
+11,,d3dxof.dll,1
 11,,ddraw.dll,1
 11,,devenum.dll,1
 11,,dinput.dll,1
