@@ -46,6 +46,12 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
         DeviceExt,
         FileObject);
 
+    PFCB Fcb = FileObject->FsContext;
+    if (!Fcb)
+    {
+        return STATUS_SUCCESS;
+    }
+
     /* Notify about the cleanup */
     FsRtlNotifyCleanup(DeviceExt->NotifySync,
                        &(DeviceExt->NotifyList),
