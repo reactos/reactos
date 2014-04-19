@@ -156,6 +156,8 @@ BEGIN
     IDS_LOGONTITLE "Logon Message"
     IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
     IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
+    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
+    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
 END
 
 /* Shutdown Dialog Strings */

@@ -150,6 +150,8 @@ BEGIN
     IDS_LOGONTITLE "Logon Message"
     IDS_LOGONWRONGUSERORPWD "Системе не удается войти в. Убедитесь в том, ваше имя пользователя и домен верны, то введите пароль еще раз. Символы в Пароли вводятся с учетом регистра"
     IDS_LOGONUSERDISABLED "Ваш аккаунт был отключен. Пожалуйста, обратитесь к системному администратору."
+    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
+    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
 END
 
 /* Shutdown Dialog Strings */

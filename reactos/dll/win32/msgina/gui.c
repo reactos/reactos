@@ -975,6 +975,38 @@ TRACE("Account locked!\n");
                                                 MB_OK | MB_ICONERROR);
             goto done;
         }
+        else if ((SubStatus == STATUS_PASSWORD_MUST_CHANGE) ||
+                 (SubStatus == STATUS_PASSWORD_EXPIRED))
+        {
+            if (SubStatus == STATUS_PASSWORD_MUST_CHANGE)
+                ResourceMessageBox(pgContext,
+                                   hwndDlg,
+                                   MB_OK | MB_ICONSTOP,
+                                   IDS_LOGONTITLE,
+                                   IDS_PASSWORDMUSTCHANGE);
+            else
+                ResourceMessageBox(pgContext,
+                                   hwndDlg,
+                                   MB_OK | MB_ICONSTOP,
+                                   IDS_LOGONTITLE,
+                                   IDS_PASSWORDEXPIRED);
+
+            if (!OnChangePassword(hwndDlg,
+                                  pgContext))
+                goto done;
+
+            Status = DoLoginTasks(pgContext,
+                                  pgContext->UserName,
+                                  pgContext->Domain,
+                                  pgContext->Password,
+                                  &SubStatus);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("Login after password change failed! (Status 0x%08lx)\n", Status);
+
+                goto done;
+            }
+        }
         else
         {
 TRACE("Other error!\n");
@@ -1018,6 +1050,43 @@ done:
     return result;
 }
 
+
+static
+VOID
+SetDomainComboBox(
+    HWND hwndDomainComboBox,
+    PGINA_CONTEXT pgContext)
+{
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength;
+    LONG lIndex = 0;
+    LONG lFindIndex;
+
+    SendMessageW(hwndDomainComboBox, CB_RESETCONTENT, 0, 0);
+
+    dwComputerNameLength = sizeof(szComputerName) / sizeof(WCHAR);
+    if (GetComputerNameW(szComputerName, &dwComputerNameLength))
+    {
+        lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)szComputerName);
+    }
+
+    if (wcslen(pgContext->Domain) != 0)
+    {
+        lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->Domain);
+        if (lFindIndex == CB_ERR)
+        {
+            lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
+        }
+        else
+        {
+            lIndex = lFindIndex;
+        }
+    }
+
+    SendMessageW(hwndDomainComboBox, CB_SETCURSEL, lIndex, 0);
+}
+
+
 static INT_PTR CALLBACK
 LoggedOutWindowProc(
     IN HWND hwndDlg,
@@ -1045,8 +1114,7 @@ LoggedOutWindowProc(
             if (pgContext->bShutdownWithoutLogon == FALSE)
                 EnableWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN), FALSE);
 
-            SendDlgItemMessageW(hwndDlg, IDC_LOGON_TO, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
-            SendDlgItemMessageW(hwndDlg, IDC_LOGON_TO, CB_SETCURSEL, 0, 0);
+            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_TO), pgContext);
 
             SetFocus(GetDlgItem(hwndDlg, pgContext->bDontDisplayLastUserName ? IDC_USERNAME : IDC_PASSWORD));
 
