@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Code::Blocks (no compiler)
+Version = 13.12
+Licence = GPLv3
+Description = A open source, cross-platform, powerful IDE. It doesn't contain a compiler.
+Size = 29.2 MB
+Category = 7
+URLSite = http://www.codeblocks.org/
+URLDownload = http://sourceforge.net/projects/codeblocks/files/Binaries/13.12/Windows/codeblocks-13.12-setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthält keinen Compiler.
+
+[Section.041f]
+Name = Code::Blocks (Derleyicisiz)
+Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
+Size = 29,2 MB
