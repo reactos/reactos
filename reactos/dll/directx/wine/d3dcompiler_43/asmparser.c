@@ -497,11 +497,10 @@ static void asmparser_texreg2rgb(struct asm_parser *This, DWORD mod, DWORD shift
  * go through asmparser_instr).
  */
 
-static void asmparser_instr(struct asm_parser *This, DWORD opcode,
-                            DWORD mod, DWORD shift,
-                            BWRITER_COMPARISON_TYPE comp,
-                            const struct shader_reg *dst,
-                            const struct src_regs *srcs, int expectednsrcs) {
+static void asmparser_instr(struct asm_parser *This, DWORD opcode, DWORD mod, DWORD shift,
+        enum bwriter_comparison_type comp, const struct shader_reg *dst,
+        const struct src_regs *srcs, int expectednsrcs)
+{
     struct instruction *instr;
     unsigned int i;
     BOOL firstreg = TRUE;

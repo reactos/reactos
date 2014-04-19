@@ -21,7 +21,7 @@
 
 #include "d3dcompiler_private.h"
 
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
+BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
 {
     switch (reason)
     {
