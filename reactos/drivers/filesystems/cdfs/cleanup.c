@@ -41,12 +41,13 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
                 * FUNCTION: Cleans up after a file has been closed.
                 */
 {
+    PFCB Fcb;
 
     DPRINT("CdfsCleanupFile(DeviceExt %p, FileObject %p)\n",
         DeviceExt,
         FileObject);
 
-    PFCB Fcb = FileObject->FsContext;
+    Fcb = FileObject->FsContext;
     if (!Fcb)
     {
         return STATUS_SUCCESS;
