@@ -39,6 +39,11 @@
 #define D3DX_FILTER_SRGB_OUT             0x00400000
 #define D3DX_FILTER_SRGB                 0x00600000
 
+#define D3DX_SKIP_DDS_MIP_LEVELS_MASK    0x1f
+#define D3DX_SKIP_DDS_MIP_LEVELS_SHIFT   26
+#define D3DX_SKIP_DDS_MIP_LEVELS(l, f)   ((((l) & D3DX_SKIP_DDS_MIP_LEVELS_MASK) \
+        << D3DX_SKIP_DDS_MIP_LEVELS_SHIFT) | ((f) == D3DX_DEFAULT ? D3DX_FILTER_BOX : (f)))
+
 #define D3DX_NORMALMAP_MIRROR_U          0x00010000
 #define D3DX_NORMALMAP_MIRROR_V          0x00020000
 #define D3DX_NORMALMAP_MIRROR            0x00030000
@@ -83,8 +88,10 @@ typedef struct _D3DXIMAGE_INFO
  ****************** Functions *****************
  **********************************************/
 /* Typedefs for callback functions */
-typedef VOID (WINAPI *LPD3DXFILL2D)(D3DXVECTOR4 *out, CONST D3DXVECTOR2 *texcoord, CONST D3DXVECTOR2 *texelsize, LPVOID data);
-typedef VOID (WINAPI *LPD3DXFILL3D)(D3DXVECTOR4 *out, CONST D3DXVECTOR3 *texcoord, CONST D3DXVECTOR3 *texelsize, LPVOID data);
+typedef void (WINAPI *LPD3DXFILL2D)(D3DXVECTOR4 *out, const D3DXVECTOR2 *texcoord,
+        const D3DXVECTOR2 *texelsize, void *data);
+typedef void (WINAPI *LPD3DXFILL3D)(D3DXVECTOR4 *out, const D3DXVECTOR3 *texcoord,
+        const D3DXVECTOR3 *texelsize, void *data);
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,15 +99,15 @@ extern "C" {
 
 
 /* Image Information */
-HRESULT WINAPI D3DXGetImageInfoFromFileA(LPCSTR file, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromFileA(const char *file, D3DXIMAGE_INFO *info);
 HRESULT WINAPI D3DXGetImageInfoFromFileW(const WCHAR *file, D3DXIMAGE_INFO *info);
 #define        D3DXGetImageInfoFromFile WINELIB_NAME_AW(D3DXGetImageInfoFromFile)
 
-HRESULT WINAPI D3DXGetImageInfoFromResourceA(HMODULE module, LPCSTR resource, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromResourceA(HMODULE module, const char *resource, D3DXIMAGE_INFO *info);
 HRESULT WINAPI D3DXGetImageInfoFromResourceW(HMODULE module, const WCHAR *resource, D3DXIMAGE_INFO *info);
 #define        D3DXGetImageInfoFromResource WINELIB_NAME_AW(D3DXGetImageInfoFromResource)
 
-HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(LPCVOID data, UINT datasize, D3DXIMAGE_INFO *info);
+HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT data_size, D3DXIMAGE_INFO *info);
 
 
 /* Surface Loading/Saving */

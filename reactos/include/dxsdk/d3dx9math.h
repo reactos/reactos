@@ -414,7 +414,7 @@ DEFINE_GUID(IID_ID3DXMatrixStack,
 
 DECLARE_INTERFACE_(ID3DXMatrixStack, IUnknown)
 {
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID * ppvObj) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     STDMETHOD(Pop)(THIS) PURE;

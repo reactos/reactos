@@ -27,7 +27,9 @@
 /* D3DX_VERSION will be completely ignored since we are
     implementing all dlls from d3dx9_24 to d3dx9_36 */
 #define D3DX_VERSION 0x0902
+#ifndef D3DX_SDK_VERSION
 #define D3DX_SDK_VERSION 36
+#endif
 #define D3DXSPRITE_DONOTSAVESTATE          0x00000001
 #define D3DXSPRITE_DONOTMODIFY_RENDERSTATE 0x00000002
 #define D3DXSPRITE_OBJECTSPACE             0x00000004
@@ -65,11 +67,11 @@ typedef struct ID3DXSprite *LPD3DXSPRITE;
 DECLARE_INTERFACE_(ID3DXBuffer, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXBuffer methods ***/
-    STDMETHOD_(LPVOID, GetBufferPointer)(THIS) PURE;
+    STDMETHOD_(void *, GetBufferPointer)(THIS) PURE;
     STDMETHOD_(DWORD, GetBufferSize)(THIS) PURE;
 };
 #undef INTERFACE
@@ -127,7 +129,7 @@ DECL_WINELIB_TYPE_AW(LPD3DXFONT_DESC)
 DECLARE_INTERFACE_(ID3DXFont, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXFont methods ***/
@@ -143,7 +145,7 @@ DECLARE_INTERFACE_(ID3DXFont, IUnknown)
 
     STDMETHOD(PreloadCharacters)(THIS_ UINT first, UINT last) PURE;
     STDMETHOD(PreloadGlyphs)(THIS_ UINT first, UINT last) PURE;
-    STDMETHOD(PreloadTextA)(THIS_ LPCSTR string, INT count) PURE;
+    STDMETHOD(PreloadTextA)(THIS_ const char *string, INT count) PURE;
     STDMETHOD(PreloadTextW)(THIS_ const WCHAR *string, INT count) PURE;
 
     STDMETHOD_(INT, DrawTextA)(THIS_ struct ID3DXSprite *sprite, const char *string,
@@ -209,7 +211,7 @@ DECLARE_INTERFACE_(ID3DXFont, IUnknown)
 DECLARE_INTERFACE_(ID3DXLine, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
@@ -217,9 +219,9 @@ DECLARE_INTERFACE_(ID3DXLine, IUnknown)
     STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9 **device) PURE;
 
     STDMETHOD(Begin)(THIS) PURE;
-    STDMETHOD(Draw)(THIS_ CONST D3DXVECTOR2 *vertexlist, DWORD vertexlistcount, D3DCOLOR color) PURE;
-    STDMETHOD(DrawTransform)(THIS_ CONST D3DXVECTOR3 *vertexlist, DWORD vertexlistcount,
-                             CONST D3DXMATRIX *transform, D3DCOLOR color) PURE;
+    STDMETHOD(Draw)(THIS_ const D3DXVECTOR2 *vertexlist, DWORD vertexlistcount, D3DCOLOR color) PURE;
+    STDMETHOD(DrawTransform)(THIS_ const D3DXVECTOR3 *vertexlist, DWORD vertexlistcount,
+            const D3DXMATRIX *transform, D3DCOLOR color) PURE;
     STDMETHOD(SetPattern)(THIS_ DWORD pattern) PURE;
     STDMETHOD_(DWORD, GetPattern)(THIS) PURE;
     STDMETHOD(SetPatternScale)(THIS_ FLOAT scale) PURE;
@@ -298,7 +300,7 @@ typedef struct _D3DXRTE_DESC
 DECLARE_INTERFACE_(ID3DXRenderToEnvMap, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
@@ -366,7 +368,7 @@ typedef struct _D3DXRTS_DESC
 DECLARE_INTERFACE_(ID3DXRenderToSurface, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXRenderToSurface methods ***/
@@ -411,16 +413,16 @@ DECLARE_INTERFACE_(ID3DXRenderToSurface, IUnknown)
 DECLARE_INTERFACE_(ID3DXSprite, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID *object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **object) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXSprite methods ***/
     STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9 **device) PURE;
 
     STDMETHOD(GetTransform)(THIS_ D3DXMATRIX *transform) PURE;
-    STDMETHOD(SetTransform)(THIS_ CONST D3DXMATRIX *transform) PURE;
-    STDMETHOD(SetWorldViewRH)(THIS_ CONST D3DXMATRIX *world, CONST D3DXMATRIX *view) PURE;
-    STDMETHOD(SetWorldViewLH)(THIS_ CONST D3DXMATRIX *world, CONST D3DXMATRIX *view) PURE;
+    STDMETHOD(SetTransform)(THIS_ const D3DXMATRIX *transform) PURE;
+    STDMETHOD(SetWorldViewRH)(THIS_ const D3DXMATRIX *world, const D3DXMATRIX *view) PURE;
+    STDMETHOD(SetWorldViewLH)(THIS_ const D3DXMATRIX *world, const D3DXMATRIX *view) PURE;
 
     STDMETHOD(Begin)(THIS_ DWORD flags) PURE;
     STDMETHOD(Draw)(THIS_ struct IDirect3DTexture9 *texture, const RECT *rect,

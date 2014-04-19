@@ -193,20 +193,20 @@ typedef D3DXATTRIBUTERANGE* LPD3DXATTRIBUTERANGE;
 typedef struct _D3DXMATERIAL
 {
     D3DMATERIAL9 MatD3D;
-    LPSTR pTextureFilename;
+    char *pTextureFilename;
 } D3DXMATERIAL, *LPD3DXMATERIAL;
 
 typedef struct _D3DXEFFECTDEFAULT
 {
-    LPSTR pParamName;
+    char *pParamName;
     D3DXEFFECTDEFAULTTYPE Type;
     DWORD NumBytes;
-    LPVOID pValue;
+    void *pValue;
 } D3DXEFFECTDEFAULT, *LPD3DXEFFECTDEFAULT;
 
 typedef struct _D3DXEFFECTINSTANCE
 {
-    LPSTR pEffectFilename;
+    char *pEffectFilename;
     DWORD NumDefaults;
     LPD3DXEFFECTDEFAULT pDefaults;
 } D3DXEFFECTINSTANCE, *LPD3DXEFFECTINSTANCE;
@@ -297,9 +297,9 @@ typedef struct _XFILECOMPRESSEDANIMATIONSET
     DWORD BufferLength;
 } XFILECOMPRESSEDANIMATIONSET;
 
-typedef HRESULT (WINAPI *LPD3DXUVATLASCB)(FLOAT, LPVOID);
-typedef HRESULT (WINAPI *LPD3DXIMTSIGNALCALLBACK)(CONST D3DXVECTOR2 *, UINT, UINT, VOID *, FLOAT *);
-typedef HRESULT (WINAPI *LPD3DXSHPRTSIMCB)(float, LPVOID);
+typedef HRESULT (WINAPI *LPD3DXUVATLASCB)(float complete, void *ctx);
+typedef HRESULT (WINAPI *LPD3DXIMTSIGNALCALLBACK)(const D3DXVECTOR2 *, UINT, UINT, void *, FLOAT *);
+typedef HRESULT (WINAPI *LPD3DXSHPRTSIMCB)(float complete, void *ctx);
 
 #undef INTERFACE
 #define INTERFACE ID3DXBaseMesh
@@ -307,7 +307,7 @@ typedef HRESULT (WINAPI *LPD3DXSHPRTSIMCB)(float, LPVOID);
 DECLARE_INTERFACE_(ID3DXBaseMesh, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXBaseMesh ***/
@@ -325,13 +325,13 @@ DECLARE_INTERFACE_(ID3DXBaseMesh, IUnknown)
             struct IDirect3DDevice9 *device, struct ID3DXMesh **clone_mesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ struct IDirect3DVertexBuffer9 **vertex_buffer) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ struct IDirect3DIndexBuffer9 **index_buffer) PURE;
-    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(THIS_ D3DXATTRIBUTERANGE* attrib_table, DWORD* attrib_table_size) PURE;
-    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* point_reps, DWORD* adjacency) PURE;
-    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* adjacency, DWORD* point_reps) PURE;
+    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ const DWORD *point_reps, DWORD *adjacency) PURE;
+    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ const DWORD *adjacency, DWORD *point_reps) PURE;
     STDMETHOD(GenerateAdjacency)(THIS_ FLOAT epsilon, DWORD* adjacency) PURE;
     STDMETHOD(UpdateSemantics)(THIS_ D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE]) PURE;
 };
@@ -341,7 +341,7 @@ DECLARE_INTERFACE_(ID3DXBaseMesh, IUnknown)
 DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXBaseMesh ***/
@@ -359,13 +359,13 @@ DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
             struct IDirect3DDevice9 *device, struct ID3DXMesh **clone_mesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ struct IDirect3DVertexBuffer9 **vertex_buffer) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ struct IDirect3DIndexBuffer9 **index_buffer) PURE;
-    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(THIS_ D3DXATTRIBUTERANGE* attrib_table, DWORD* attrib_table_size) PURE;
-    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* point_reps, DWORD* adjacency) PURE;
-    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* adjacency, DWORD* point_reps) PURE;
+    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ const DWORD *point_reps, DWORD *adjacency) PURE;
+    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ const DWORD *adjacency, DWORD *point_reps) PURE;
     STDMETHOD(GenerateAdjacency)(THIS_ FLOAT epsilon, DWORD* adjacency) PURE;
     STDMETHOD(UpdateSemantics)(THIS_ D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE]) PURE;
     /*** ID3DXMesh ***/
@@ -375,7 +375,8 @@ DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
             DWORD *face_remap, ID3DXBuffer **vertex_remap, ID3DXMesh **opt_mesh) PURE;
     STDMETHOD(OptimizeInplace)(THIS_ DWORD flags, const DWORD *adjacency_in, DWORD *adjacency_out,
                      DWORD *face_remap, ID3DXBuffer **vertex_remap) PURE;
-    STDMETHOD(SetAttributeTable)(THIS_ CONST D3DXATTRIBUTERANGE* attrib_table, DWORD attrib_table_size) PURE;
+    STDMETHOD(SetAttributeTable)(THIS_ const D3DXATTRIBUTERANGE *attrib_table,
+            DWORD attrib_table_size) PURE;
 };
 #undef INTERFACE
 
@@ -383,7 +384,7 @@ DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
 DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXBaseMesh ***/
@@ -401,13 +402,13 @@ DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
             struct IDirect3DDevice9 *device, struct ID3DXMesh **clone_mesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ struct IDirect3DVertexBuffer9 **vertex_buffer) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ struct IDirect3DIndexBuffer9 **index_buffer) PURE;
-    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(THIS_ D3DXATTRIBUTERANGE* attrib_table, DWORD* attrib_table_size) PURE;
-    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* point_reps, DWORD* adjacency) PURE;
-    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* adjacency, DWORD* point_reps) PURE;
+    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ const DWORD *point_reps, DWORD *adjacency) PURE;
+    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ const DWORD *adjacency, DWORD *point_reps) PURE;
     STDMETHOD(GenerateAdjacency)(THIS_ FLOAT epsilon, DWORD* adjacency) PURE;
     STDMETHOD(UpdateSemantics)(THIS_ D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE]) PURE;
     /*** ID3DXPMesh ***/
@@ -421,7 +422,8 @@ DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
     STDMETHOD_(DWORD, GetMinFaces)(THIS) PURE;
     STDMETHOD_(DWORD, GetMaxVertices)(THIS) PURE;
     STDMETHOD_(DWORD, GetMinVertices)(THIS) PURE;
-    STDMETHOD(Save)(THIS_ IStream *stream, CONST D3DXMATERIAL* material, CONST D3DXEFFECTINSTANCE* effect_instance, DWORD num_materials) PURE;
+    STDMETHOD(Save)(THIS_ IStream *stream, const D3DXMATERIAL *material,
+            const D3DXEFFECTINSTANCE *effect_instance, DWORD num_materials) PURE;
     STDMETHOD(Optimize)(THIS_ DWORD flags, DWORD *adjacency_out, DWORD *face_remap,
             ID3DXBuffer **vertex_remap, ID3DXMesh **opt_mesh) PURE;
     STDMETHOD(OptimizeBaseLOD)(THIS_ DWORD flags, DWORD* face_remap) PURE;
@@ -436,7 +438,7 @@ DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
 DECLARE_INTERFACE_(ID3DXSPMesh, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXSPMesh ***/
@@ -471,7 +473,7 @@ DECLARE_INTERFACE_(ID3DXSPMesh, IUnknown)
 DECLARE_INTERFACE_(ID3DXPatchMesh, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXPatchMesh ***/
@@ -484,9 +486,9 @@ DECLARE_INTERFACE_(ID3DXPatchMesh, IUnknown)
     STDMETHOD(GetPatchInfo)(THIS_ LPD3DXPATCHINFO patch_info) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ struct IDirect3DVertexBuffer9 **vertex_buffer) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ struct IDirect3DIndexBuffer9 **index_buffer) PURE;
-    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, LPVOID* data) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, void **data) PURE;
     STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(LockAttributeBuffer)(THIS_ DWORD flags, DWORD** data) PURE;
     STDMETHOD(UnlockAttributeBuffer)(THIS) PURE;
@@ -510,11 +512,12 @@ DECLARE_INTERFACE_(ID3DXPatchMesh, IUnknown)
 DECLARE_INTERFACE_(ID3DXSkinInfo, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXSkinInfo ***/
-    STDMETHOD(SetBoneInfluence)(THIS_ DWORD bone, DWORD num_influences, CONST DWORD* vertices, CONST FLOAT* weights) PURE;
+    STDMETHOD(SetBoneInfluence)(THIS_ DWORD bone, DWORD num_influences, const DWORD *vertices,
+            const FLOAT *weights) PURE;
     STDMETHOD(SetBoneVertexInfluence)(THIS_ DWORD bone_num, DWORD influence_num, float weight) PURE;
     STDMETHOD_(DWORD, GetNumBoneInfluences)(THIS_ DWORD bone) PURE;
     STDMETHOD(GetBoneInfluence)(THIS_ DWORD bone, DWORD* vertices, FLOAT* weights) PURE;
@@ -526,18 +529,18 @@ DECLARE_INTERFACE_(ID3DXSkinInfo, IUnknown)
             DWORD num_faces, DWORD *max_face_influences) PURE;
     STDMETHOD(SetMinBoneInfluence)(THIS_ FLOAT min_influence) PURE;
     STDMETHOD_(FLOAT, GetMinBoneInfluence)(THIS) PURE;
-    STDMETHOD(SetBoneName)(THIS_ DWORD bone, LPCSTR name) PURE;
-    STDMETHOD_(LPCSTR, GetBoneName)(THIS_ DWORD bone) PURE;
-    STDMETHOD(SetBoneOffsetMatrix)(THIS_ DWORD bone, CONST D3DXMATRIX* bone_transform) PURE;
+    STDMETHOD(SetBoneName)(THIS_ DWORD bone_idx, const char *name) PURE;
+    STDMETHOD_(const char *, GetBoneName)(THIS_ DWORD bone_idx) PURE;
+    STDMETHOD(SetBoneOffsetMatrix)(THIS_ DWORD bone, const D3DXMATRIX *bone_transform) PURE;
     STDMETHOD_(D3DXMATRIX *, GetBoneOffsetMatrix)(THIS_ DWORD bone) PURE;
     STDMETHOD(Clone)(THIS_ ID3DXSkinInfo **skin_info) PURE;
     STDMETHOD(Remap)(THIS_ DWORD num_vertices, DWORD* vertex_remap) PURE;
     STDMETHOD(SetFVF)(THIS_ DWORD FVF) PURE;
-    STDMETHOD(SetDeclaration)(THIS_ CONST D3DVERTEXELEMENT9* declaration) PURE;
+    STDMETHOD(SetDeclaration)(THIS_ const D3DVERTEXELEMENT9 *declaration) PURE;
     STDMETHOD_(DWORD, GetFVF)(THIS) PURE;
     STDMETHOD(GetDeclaration)(THIS_ D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE]) PURE;
-    STDMETHOD(UpdateSkinnedMesh)(THIS_ CONST D3DXMATRIX* bone_transforms,
-        CONST D3DXMATRIX* bone_inv_transpose_transforms, LPCVOID vertices_src, PVOID vertices_dest) PURE;
+    STDMETHOD(UpdateSkinnedMesh)(THIS_ const D3DXMATRIX *bone_transforms,
+            const D3DXMATRIX *bone_inv_transpose_transforms, const void *src_vertices, void *dst_vertices) PURE;
     STDMETHOD(ConvertToBlendedMesh)(THIS_ ID3DXMesh *mesh_in, DWORD options, const DWORD *adjacency_in,
             DWORD *adjacency_out, DWORD *face_remap, ID3DXBuffer **vertex_remap, DWORD *max_face_infl,
             DWORD *num_bone_combinations, ID3DXBuffer **bone_combination_table, ID3DXMesh **mesh_out) PURE;
@@ -551,7 +554,7 @@ DECLARE_INTERFACE_(ID3DXSkinInfo, IUnknown)
 DECLARE_INTERFACE_(ID3DXPRTBuffer, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXPRTBuffer methods ***/
@@ -580,7 +583,7 @@ DECLARE_INTERFACE_(ID3DXPRTBuffer, IUnknown)
 DECLARE_INTERFACE_(ID3DXPRTCompBuffer, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXPRTCompBuffer methods ***/
@@ -605,7 +608,7 @@ DECLARE_INTERFACE_(ID3DXPRTCompBuffer, IUnknown)
 DECLARE_INTERFACE_(ID3DXTextureGutterHelper, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXTextureGutterHelper methods ***/
@@ -632,13 +635,13 @@ DECLARE_INTERFACE_(ID3DXTextureGutterHelper, IUnknown)
 DECLARE_INTERFACE_(ID3DXPRTEngine, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID* object) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXPRTEngine methods ***/
-    STDMETHOD(SetMeshMaterials)(THIS_ CONST D3DXSHMATERIAL **materials, UINT num_meshes,
+    STDMETHOD(SetMeshMaterials)(THIS_ const D3DXSHMATERIAL **materials, UINT num_meshes,
         UINT num_channels, BOOL set_albedo, FLOAT length_scale) PURE;
-    STDMETHOD(SetPerVertexAlbedo)(THIS_ CONST VOID *data_in, UINT num_channels, UINT stride) PURE;
+    STDMETHOD(SetPerVertexAlbedo)(THIS_ const void *data_in, UINT num_channels, UINT stride) PURE;
     STDMETHOD(SetPerTexelAlbedo)(THIS_ struct IDirect3DTexture9 *albedo_texture,
             UINT num_channels, struct ID3DXTextureGutterHelper *gh) PURE;
     STDMETHOD(GetVertexAlbedo)(THIS_ D3DXCOLOR *vert_colors, UINT num_verts) PURE;
@@ -681,10 +684,11 @@ DECLARE_INTERFACE_(ID3DXPRTEngine, IUnknown)
             ID3DXPRTBuffer *data_out) PURE;
     STDMETHOD(ScaleMeshChunk)(THIS_ UINT mesh_chunk, float scale, ID3DXPRTBuffer *data_out) PURE;
     STDMETHOD(MultiplyAlbedo)(THIS_ ID3DXPRTBuffer *data_out) PURE;
-    STDMETHOD(SetCallback)(THIS_ LPD3DXSHPRTSIMCB cb, FLOAT frequency, LPVOID user_context) PURE;
-    STDMETHOD_(BOOL, ShadowRayIntersects)(THIS_ CONST D3DXVECTOR3 *ray_pos, CONST D3DXVECTOR3 *ray_dir) PURE;
-    STDMETHOD_(BOOL, ClosestRayIntersects)(THIS_ CONST D3DXVECTOR3 *ray_pos, CONST D3DXVECTOR3 *ray_dir,
-        DWORD *face_index, FLOAT *u, FLOAT *v, FLOAT *dist) PURE;
+    STDMETHOD(SetCallback)(THIS_ LPD3DXSHPRTSIMCB cb, float frequency, void *user_context) PURE;
+    STDMETHOD_(BOOL, ShadowRayIntersects)(THIS_ const D3DXVECTOR3 *ray_pos,
+            const D3DXVECTOR3 *ray_dir) PURE;
+    STDMETHOD_(BOOL, ClosestRayIntersects)(THIS_ const D3DXVECTOR3 *ray_pos,
+            const D3DXVECTOR3 *ray_dir, DWORD *face_index, FLOAT *u, FLOAT *v, FLOAT *dist) PURE;
 };
 #undef INTERFACE
 
@@ -762,15 +766,19 @@ HRESULT WINAPI D3DXSavePRTCompBufferToFileW(const WCHAR *filename, ID3DXPRTCompB
 UINT    WINAPI D3DXGetDeclLength(const D3DVERTEXELEMENT9 *decl);
 UINT    WINAPI D3DXGetDeclVertexSize(const D3DVERTEXELEMENT9 *decl, DWORD stream_idx);
 UINT    WINAPI D3DXGetFVFVertexSize(DWORD);
-BOOL    WINAPI D3DXBoxBoundProbe(CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *);
-BOOL    WINAPI D3DXSphereBoundProbe(CONST D3DXVECTOR3 *,FLOAT,CONST D3DXVECTOR3 *,CONST D3DXVECTOR3 *);
+BOOL WINAPI D3DXBoxBoundProbe(const D3DXVECTOR3 *vmin, const D3DXVECTOR3 *vmax,
+        const D3DXVECTOR3 *ray_pos, const D3DXVECTOR3 *ray_dir);
+BOOL WINAPI D3DXSphereBoundProbe(const D3DXVECTOR3 *center, FLOAT radius,
+        const D3DXVECTOR3 *ray_pos, const D3DXVECTOR3 *ray_dir);
 HRESULT WINAPI D3DXCleanMesh(D3DXCLEANTYPE clean_type, ID3DXMesh *mesh_in, const DWORD *adjacency_in,
         ID3DXMesh **mesh_out, DWORD *adjacency_out, ID3DXBuffer **errors);
 HRESULT WINAPI D3DXConcatenateMeshes(struct ID3DXMesh **meshes, UINT mesh_count, DWORD flags,
         const D3DXMATRIX *geometry_matrices, const D3DXMATRIX *texture_matrices,
         const D3DVERTEXELEMENT9 *declaration, struct IDirect3DDevice9 *device, struct ID3DXMesh **mesh);
-HRESULT WINAPI D3DXComputeBoundingBox(CONST D3DXVECTOR3 *, DWORD, DWORD, D3DXVECTOR3 *, D3DXVECTOR3 *);
-HRESULT WINAPI D3DXComputeBoundingSphere(CONST D3DXVECTOR3 *, DWORD, DWORD, D3DXVECTOR3 *, FLOAT *);
+HRESULT WINAPI D3DXComputeBoundingBox(const D3DXVECTOR3 *first_pos, DWORD num_vertices,
+        DWORD stride, D3DXVECTOR3 *vmin, D3DXVECTOR3 *vmax);
+HRESULT WINAPI D3DXComputeBoundingSphere(const D3DXVECTOR3 *first_pos, DWORD num_vertices,
+        DWORD stride, D3DXVECTOR3 *center, FLOAT *radius);
 HRESULT WINAPI D3DXComputeIMTFromPerTexelSignal(ID3DXMesh *mesh, DWORD texture_idx, float *texel_signal,
         UINT width, UINT height, UINT signal_dimension, UINT component_count, DWORD flags,
         LPD3DXUVATLASCB cb, void *ctx, ID3DXBuffer **buffer);
@@ -797,7 +805,7 @@ HRESULT WINAPI D3DXConvertMeshSubsetToStrips(struct ID3DXBaseMesh *mesh_in, DWOR
         struct ID3DXBuffer **strip_lengths, DWORD *strip_count);
 HRESULT WINAPI D3DXDeclaratorFromFVF(DWORD, D3DVERTEXELEMENT9[MAX_FVF_DECL_SIZE]);
 HRESULT WINAPI D3DXFVFFromDeclarator(const D3DVERTEXELEMENT9 *decl, DWORD *fvf);
-HRESULT WINAPI D3DXGenerateOutputDecl(D3DVERTEXELEMENT9 *, CONST D3DVERTEXELEMENT9 *);
+HRESULT WINAPI D3DXGenerateOutputDecl(D3DVERTEXELEMENT9 *decl_out, const D3DVERTEXELEMENT9 *decl_in);
 HRESULT WINAPI D3DXGeneratePMesh(ID3DXMesh *mesh, const DWORD *adjacency,
         const D3DXATTRIBUTEWEIGHTS *attribute_weights, const float *vertex_weights,
         DWORD min_value, DWORD flags, ID3DXPMesh **pmesh);
@@ -806,10 +814,15 @@ HRESULT WINAPI D3DXIntersect(ID3DXBaseMesh *mesh, const D3DXVECTOR3 *ray_positio
 HRESULT WINAPI D3DXIntersectSubset(ID3DXBaseMesh *mesh, DWORD attribute_id, const D3DXVECTOR3 *ray_position,
         const D3DXVECTOR3 *ray_direction, BOOL *hit, DWORD *face_idx, float *u, float *v, float *distance,
         ID3DXBuffer **hits, DWORD *hit_count);
-BOOL    WINAPI D3DXIntersectTri(CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *, CONST D3DXVECTOR3 *, CONST D3DXVECTOR3*, FLOAT *, FLOAT *, FLOAT *);
-HRESULT WINAPI D3DXOptimizeFaces(LPCVOID, UINT, UINT, BOOL, DWORD *);
-HRESULT WINAPI D3DXOptimizeVertices(LPCVOID, UINT, UINT, BOOL, DWORD *);
-HRESULT WINAPI D3DXRectPatchSize(CONST FLOAT *, DWORD *, DWORD *);
+BOOL WINAPI D3DXIntersectTri(const D3DXVECTOR3 *vtx0, const D3DXVECTOR3 *vtx1,
+        const D3DXVECTOR3 *vtx2, const D3DXVECTOR3 *ray_pos, const D3DXVECTOR3 *ray_dir, FLOAT *u,
+        FLOAT *v, FLOAT *dist);
+HRESULT WINAPI D3DXOptimizeFaces(const void *indices, UINT face_count,
+        UINT vertex_count, BOOL idx_32bit, DWORD *face_remap);
+HRESULT WINAPI D3DXOptimizeVertices(const void *indices, UINT face_count,
+        UINT vertex_count, BOOL idx_32bit, DWORD *vertex_remap);
+HRESULT WINAPI D3DXRectPatchSize(const FLOAT *segment_count, DWORD *num_triangles,
+        DWORD *num_vertices);
 HRESULT WINAPI D3DXSHPRTCompSuperCluster(UINT *cluster_ids, ID3DXMesh *scene, UINT max_cluster_count,
         UINT cluster_count, UINT *scluster_ids, UINT *scluster_count);
 HRESULT WINAPI D3DXSHPRTCompSplitMeshSC(UINT *cluster_idx, UINT vertex_count, UINT cluster_count, UINT *scluster_ids,
@@ -828,7 +841,8 @@ HRESULT WINAPI D3DXTesselateRectPatch(struct IDirect3DVertexBuffer9 *buffer, con
         const D3DVERTEXELEMENT9 *declaration, const D3DRECTPATCH_INFO *patch_info, struct ID3DXMesh *mesh);
 HRESULT WINAPI D3DXTesselateTriPatch(struct IDirect3DVertexBuffer9 *buffer, const float *segment_count,
         const D3DVERTEXELEMENT9 *declaration, const D3DTRIPATCH_INFO *patch_info, struct ID3DXMesh *mesh);
-HRESULT WINAPI D3DXTriPatchSize(CONST FLOAT *, DWORD *, DWORD *);
+HRESULT WINAPI D3DXTriPatchSize(const FLOAT *segment_count, DWORD *num_triangles,
+        DWORD *num_vertices);
 HRESULT WINAPI D3DXUVAtlasCreate(ID3DXMesh *mesh_in, UINT max_chart_count, float max_stretch_in,
         UINT width, UINT height, float gutter, DWORD texture_idx, const DWORD *adjacency, const DWORD *false_edges,
         const float *imt_array, LPD3DXUVATLASCB cb, float cb_freq, void *ctx, DWORD flags, ID3DXMesh **mesh_out,
