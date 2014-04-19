@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Bos Wars
@@ -17,10 +18,14 @@ Description = Bos Wars ist ein futuristisches Echtzeitstrategiespiel. Um das Spi
 [Section.0410]
 Description = Bos Wars è un gioco futuristico di strategia in tempo reale. Per iniziare il gioco, installare Microsoft Visual C + + 2008 runtime.
 
+[Section.0415]
+Description = Bos Wars to futurystyczna gra strategiczna czasu rzeczywistego. Aby uruchomić grę, zainstaluj Microsoft Visual C++ 2008 runtime.
+
 [Section.0418]
 Description = Bos Wars e o strategie în timp real, futuristă. Pentru a porni jocul, instalați Microsoft Visual C++ 2008 Runtime.
 Size = 62,3 Mo
 
 [Section.041f]
-Description = Bos Wars, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Microsoft Visual C++ 2008 Yürütücüsü'nü kurunuz.
+Name = Bos Savaşları
+Description = Bos Savaşları, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Mikroyazılım Basarî C++ 2008 Yürütücüsü'nü kurunuz.
 Size = 62,3 MB

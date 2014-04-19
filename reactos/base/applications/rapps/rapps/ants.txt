@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = Ants
 Version = N/A
@@ -14,12 +14,16 @@ CDPath = none
 [Section.0407]
 Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren.
 
+[Section.0415]
+Description = Karciana gra strategiczna. Budujesz zamek, przy okazji próbujesz zniszczyć zamek wroga. Wymaga programu archiwizującego do wypakowania.
+
 [Section.0418]
 Licence = Gratuită
 Description = Un joc strategic de cărți. Jucătorul își va construi un castel și încerca să distrugă castelele oponenților. Este necesar un utilitar de dezarhivare ZIP pentru a instala acest joc.
 Size = 632 ko
 
 [Section.041f]
+Name = Karıncalar
 Licence = Ücretsiz
 Description = Bir kartlarla izlem oyunu. Kalenizi bitirmeye veyâ rakip kaleyi yıkmaya çalışın. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
 Size = 632 KB

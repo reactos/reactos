@@ -1,4 +1,5 @@
 ﻿; UTF-8
+;PL translation by wojo664
 
 [Section]
 Name = Zaz
@@ -16,6 +17,9 @@ Description = Zaz ist ein freies Arcade Action Puzzle Spiel, ein wenig wie Froze
 
 [Section.0410]
 Description = Zaz è un puzzle game gratuito, simile a Frozen Bubble.
+
+[Section.0415]
+Description = Zaz to darmowa gra logiczno-zręcznościowa, trochę podobna do gry Frozen Bubble
 
 [Section.0418]
 Description = Zaz este un joc de acțiune de tip enigmă/arcadă, asemănător cu Frozen Bubble.

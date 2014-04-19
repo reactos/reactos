@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Lazarus
@@ -14,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Eine plattformunabhängige, integrierte Entwicklungsumgebung (IDE), mit der man grafische (GUI) und nicht-grafische Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.
 
+[Section.0415]
+Description = Wielopratformowe zintegrowane środowisko programistyczne (IDE) które pozwala na tworzenie graficznych (GUI) i niegraficznych (działających w konsoli) programów obiektowych w języku Pascal. Program używa darmowego kompilatora Free Pascal.
+
 [Section.0410]
 Description = Un ambiente di sviluppo integrato (IDE) cross-platform che consente di creare interfacce grafiche (GUI) e programmi non visivi Object Pascal, e utilizza il compilatore Free Pascal per generare l'eseguibile.
 
@@ -24,4 +28,4 @@ Size = 112 Mo
 
 [Section.041f]
 Licence = Değiştirilmiş LGPL, GPL
-Description = Basarî ve basarî olmayan Nesne Paskal izlenceleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.
+Description = Basarî ve basarî olmayan Nesne Paskal çizeylemleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.
