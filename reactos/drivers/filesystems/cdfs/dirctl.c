@@ -215,15 +215,14 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         {
             /* it's root : complete essentials fields then return ok */
             RtlZeroMemory(Fcb, sizeof(FCB));
+            RtlInitEmptyUnicodeString(&Fcb->PathName, Fcb->PathNameBuffer, sizeof(Fcb->PathNameBuffer));
 
             Fcb->PathNameBuffer[0] = '\\';
+            Fcb->PathName.Length = sizeof(WCHAR);
             Fcb->ObjectName = &Fcb->PathNameBuffer[1];
             Fcb->Entry.ExtentLocationL = DeviceExt->CdInfo.RootStart;
             Fcb->Entry.DataLengthL = DeviceExt->CdInfo.RootSize;
             Fcb->Entry.FileFlags = 0x02; //FILE_ATTRIBUTE_DIRECTORY;
-            Fcb->PathName.Length = sizeof(WCHAR);
-            Fcb->PathName.MaximumLength = sizeof(Fcb->PathNameBuffer);
-            Fcb->PathName.Buffer = Fcb->PathNameBuffer;
 
             if (pDirIndex)
                 *pDirIndex = 0;
@@ -308,9 +307,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         {
             if (Parent->PathName.Buffer[0])
             {
+                RtlCopyUnicodeString(&Fcb->PathName, &Parent->PathName);
                 len = Parent->PathName.Length / sizeof(WCHAR);
-                memcpy(Fcb->PathName.Buffer, Parent->PathName.Buffer, Parent->PathName.Length);
-                Fcb->PathName.Length = Parent->PathName.Length;
                 Fcb->ObjectName=&Fcb->PathName.Buffer[len];
                 if (len != 1 || Fcb->PathName.Buffer[0] != '\\')
                 {
@@ -576,8 +574,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
-    TempFcb.PathName.Buffer = TempFcb.PathNameBuffer;
-    TempFcb.PathName.MaximumLength = sizeof(TempFcb.PathNameBuffer);
+    RtlInitEmptyUnicodeString(&TempFcb.PathName, TempFcb.PathNameBuffer, sizeof(TempFcb.PathNameBuffer));
 
     Ccb = (PCCB)FileObject->FsContext2;
     Fcb = (PFCB)FileObject->FsContext;

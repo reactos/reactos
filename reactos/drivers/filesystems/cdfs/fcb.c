@@ -73,8 +73,7 @@ CdfsCreateFCB(PCWSTR FileName)
     if(!Fcb) return NULL;
 
     RtlZeroMemory(Fcb, sizeof(FCB));
-    Fcb->PathName.Buffer = Fcb->PathNameBuffer;
-    Fcb->PathName.MaximumLength = sizeof(Fcb->PathNameBuffer);
+    RtlInitEmptyUnicodeString(&Fcb->PathName, Fcb->PathNameBuffer, sizeof(Fcb->PathNameBuffer));
 
     if (FileName)
     {
