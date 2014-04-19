@@ -130,7 +130,7 @@ CdfsFCBIsDirectory(PFCB Fcb)
 BOOLEAN
 CdfsFCBIsRoot(PFCB Fcb)
 {
-    return (Fcb->PathName.Length = sizeof(WCHAR) && Fcb->PathName.Buffer[0] == L'\\');
+    return (Fcb->PathName.Length == sizeof(WCHAR) && Fcb->PathName.Buffer[0] == L'\\');
 }
 
 
