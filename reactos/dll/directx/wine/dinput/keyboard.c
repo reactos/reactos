@@ -110,7 +110,7 @@ static int KeyboardCallback( LPDIRECTINPUTDEVICE8A iface, WPARAM wparam, LPARAM 
 
     EnterCriticalSection(&This->base.crit);
     queue_event(iface, DIDFT_MAKEINSTANCE(dik_code) | DIDFT_PSHBUTTON,
-                new_diks, hook->time, This->base.dinput->evsequence++);
+                new_diks, GetCurrentTime(), This->base.dinput->evsequence++);
     LeaveCriticalSection(&This->base.crit);
 
     return ret;
