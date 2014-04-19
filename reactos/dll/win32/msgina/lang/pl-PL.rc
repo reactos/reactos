@@ -3,8 +3,8 @@
  *    testament@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2013)
- *    Updated by wojo664 - Wojtek Kozlowski (wojo664@gmail.com, wojtekkozlo664@op.pl) (April 2014)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
+ *    Updated by wojo664 - Wojtek Kozłowski (wojo664@gmail.com, wojtekkozlo664@op.pl) (April, 2014)
  */
 
 
@@ -158,12 +158,11 @@ BEGIN
     IDS_LOGONTITLE "Logowanie - wiadomość"
     IDS_LOGONWRONGUSERORPWD "Logowanie w systemie nie jest możliwe. Upewnij się, że nazwa użytkownika i domena jest poprawna, a następnie wpisz ponownie hasło. Wielkość liter w haśle ma znaczenie."
     IDS_LOGONUSERDISABLED "Twoje konto zostało wyłączone. Skontaktuj się z administratorem systemu."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_PASSWORDMUSTCHANGE "Jesteś zobowiązany do zmiany hasła przy pierwszym logowaniu."
+    IDS_PASSWORDEXPIRED "Twoje hasło wygasło i musi zostać zmienione."
 END
 
-/* Shutdown Dialog Strings */
-STRINGTABLE
+/* Shutdown Dialog Strings */STRINGTABLE
 BEGIN
     IDS_SHUTDOWN_LOGOFF "Wyloguj ""%s"""
     IDS_SHUTDOWN_SHUTDOWN "Wyłącz"
