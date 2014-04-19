@@ -1665,27 +1665,8 @@ static HRESULT WINAPI ddraw_surface7_AddAttachedSurface(IDirectDrawSurface7 *ifa
 
 static HRESULT WINAPI ddraw_surface4_AddAttachedSurface(IDirectDrawSurface4 *iface, IDirectDrawSurface4 *attachment)
 {
-    struct ddraw_surface *This = impl_from_IDirectDrawSurface4(iface);
+    struct ddraw_surface *surface = impl_from_IDirectDrawSurface4(iface);
     struct ddraw_surface *attachment_impl = unsafe_impl_from_IDirectDrawSurface4(attachment);
-    HRESULT hr;
-
-    TRACE("iface %p, attachment %p.\n", iface, attachment);
-
-    hr = ddraw_surface7_AddAttachedSurface(&This->IDirectDrawSurface7_iface,
-            attachment_impl ? &attachment_impl->IDirectDrawSurface7_iface : NULL);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-    attachment_impl->attached_iface = (IUnknown *)attachment;
-    IUnknown_AddRef(attachment_impl->attached_iface);
-    ddraw_surface7_Release(&attachment_impl->IDirectDrawSurface7_iface);
-    return hr;
-}
-static HRESULT WINAPI ddraw_surface3_AddAttachedSurface(IDirectDrawSurface3 *iface, IDirectDrawSurface3 *attachment)
-{
-    struct ddraw_surface *This = impl_from_IDirectDrawSurface3(iface);
-    struct ddraw_surface *attachment_impl = unsafe_impl_from_IDirectDrawSurface3(attachment);
     HRESULT hr;
 
     TRACE("iface %p, attachment %p.\n", iface, attachment);
@@ -1695,76 +1676,83 @@ static HRESULT WINAPI ddraw_surface3_AddAttachedSurface(IDirectDrawSurface3 *ifa
      * -> offscreen plain surfaces can be attached to primaries
      * -> primaries can be attached to offscreen plain surfaces
      * -> z buffers can be attached to primaries */
-    if (This->surface_desc.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE | DDSCAPS_OFFSCREENPLAIN)
+    if (surface->surface_desc.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE | DDSCAPS_OFFSCREENPLAIN)
             && attachment_impl->surface_desc.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE | DDSCAPS_OFFSCREENPLAIN))
     {
         /* Sizes have to match */
-        if (attachment_impl->surface_desc.dwWidth != This->surface_desc.dwWidth
-                || attachment_impl->surface_desc.dwHeight != This->surface_desc.dwHeight)
+        if (attachment_impl->surface_desc.dwWidth != surface->surface_desc.dwWidth
+                || attachment_impl->surface_desc.dwHeight != surface->surface_desc.dwHeight)
         {
             WARN("Surface sizes do not match.\n");
             return DDERR_CANNOTATTACHSURFACE;
         }
-        /* OK */
     }
-    else if (This->surface_desc.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE | DDSCAPS_3DDEVICE)
-            && attachment_impl->surface_desc.ddsCaps.dwCaps & (DDSCAPS_ZBUFFER))
-    {
-        /* OK */
-    }
-    else
+    else if (!(surface->surface_desc.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE | DDSCAPS_3DDEVICE))
+            || !(attachment_impl->surface_desc.ddsCaps.dwCaps & (DDSCAPS_ZBUFFER)))
     {
         WARN("Invalid attachment combination.\n");
         return DDERR_CANNOTATTACHSURFACE;
     }
 
-    hr = ddraw_surface_attach_surface(This, attachment_impl);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr = ddraw_surface_attach_surface(surface, attachment_impl)))
         return hr;
-    }
+
     attachment_impl->attached_iface = (IUnknown *)attachment;
     IUnknown_AddRef(attachment_impl->attached_iface);
+    return hr;
+}
+
+static HRESULT WINAPI ddraw_surface3_AddAttachedSurface(IDirectDrawSurface3 *iface, IDirectDrawSurface3 *attachment)
+{
+    struct ddraw_surface *surface = impl_from_IDirectDrawSurface3(iface);
+    struct ddraw_surface *attachment_impl = unsafe_impl_from_IDirectDrawSurface3(attachment);
+    HRESULT hr;
+
+    TRACE("iface %p, attachment %p.\n", iface, attachment);
+
+    if (FAILED(hr = ddraw_surface4_AddAttachedSurface(&surface->IDirectDrawSurface4_iface,
+            attachment_impl ? &attachment_impl->IDirectDrawSurface4_iface : NULL)))
+        return hr;
+
+    attachment_impl->attached_iface = (IUnknown *)attachment;
+    IUnknown_AddRef(attachment_impl->attached_iface);
+    ddraw_surface4_Release(&attachment_impl->IDirectDrawSurface4_iface);
     return hr;
 }
 
 static HRESULT WINAPI ddraw_surface2_AddAttachedSurface(IDirectDrawSurface2 *iface, IDirectDrawSurface2 *attachment)
 {
-    struct ddraw_surface *This = impl_from_IDirectDrawSurface2(iface);
+    struct ddraw_surface *surface = impl_from_IDirectDrawSurface2(iface);
     struct ddraw_surface *attachment_impl = unsafe_impl_from_IDirectDrawSurface2(attachment);
     HRESULT hr;
 
     TRACE("iface %p, attachment %p.\n", iface, attachment);
 
-    hr = ddraw_surface3_AddAttachedSurface(&This->IDirectDrawSurface3_iface,
-            attachment_impl ? &attachment_impl->IDirectDrawSurface3_iface : NULL);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr = ddraw_surface4_AddAttachedSurface(&surface->IDirectDrawSurface4_iface,
+            attachment_impl ? &attachment_impl->IDirectDrawSurface4_iface : NULL)))
         return hr;
-    }
+
     attachment_impl->attached_iface = (IUnknown *)attachment;
     IUnknown_AddRef(attachment_impl->attached_iface);
-    ddraw_surface3_Release(&attachment_impl->IDirectDrawSurface3_iface);
+    ddraw_surface4_Release(&attachment_impl->IDirectDrawSurface4_iface);
     return hr;
 }
 
 static HRESULT WINAPI ddraw_surface1_AddAttachedSurface(IDirectDrawSurface *iface, IDirectDrawSurface *attachment)
 {
-    struct ddraw_surface *This = impl_from_IDirectDrawSurface(iface);
+    struct ddraw_surface *surface = impl_from_IDirectDrawSurface(iface);
     struct ddraw_surface *attachment_impl = unsafe_impl_from_IDirectDrawSurface(attachment);
     HRESULT hr;
 
     TRACE("iface %p, attachment %p.\n", iface, attachment);
 
-    hr = ddraw_surface3_AddAttachedSurface(&This->IDirectDrawSurface3_iface,
-            attachment_impl ? &attachment_impl->IDirectDrawSurface3_iface : NULL);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr = ddraw_surface4_AddAttachedSurface(&surface->IDirectDrawSurface4_iface,
+            attachment_impl ? &attachment_impl->IDirectDrawSurface4_iface : NULL)))
         return hr;
-    }
+
     attachment_impl->attached_iface = (IUnknown *)attachment;
     IUnknown_AddRef(attachment_impl->attached_iface);
-    ddraw_surface3_Release(&attachment_impl->IDirectDrawSurface3_iface);
+    ddraw_surface4_Release(&attachment_impl->IDirectDrawSurface4_iface);
     return hr;
 }
 
@@ -2253,25 +2241,24 @@ static HRESULT WINAPI ddraw_surface7_GetPriority(IDirectDrawSurface7 *iface, DWO
  *
  *****************************************************************************/
 static HRESULT WINAPI ddraw_surface7_SetPrivateData(IDirectDrawSurface7 *iface,
-        REFGUID tag, void *Data, DWORD Size, DWORD Flags)
+        REFGUID tag, void *data, DWORD size, DWORD flags)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-    struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, tag %s, data %p, data_size %u, flags %#x.\n",
-            iface, debugstr_guid(tag), Data, Size, Flags);
+            iface, debugstr_guid(tag), data, size, flags);
+
+    if (!data)
+    {
+        WARN("data is NULL, returning DDERR_INVALIDPARAMS.\n");
+        return DDERR_INVALIDPARAMS;
+    }
 
     wined3d_mutex_lock();
-    resource = wined3d_surface_get_resource(surface->wined3d_surface);
-    hr = wined3d_resource_set_private_data(resource, tag, Data, Size, Flags);
+    hr = wined3d_private_store_set_private_data(&surface->private_store, tag, data, size, flags);
     wined3d_mutex_unlock();
-
-    switch(hr)
-    {
-        case WINED3DERR_INVALIDCALL:        return DDERR_INVALIDPARAMS;
-        default:                            return hr;
-    }
+    return hr_ddraw_from_wined3d(hr);
 }
 
 static HRESULT WINAPI ddraw_surface4_SetPrivateData(IDirectDrawSurface4 *iface,
@@ -2301,23 +2288,45 @@ static HRESULT WINAPI ddraw_surface4_SetPrivateData(IDirectDrawSurface4 *iface,
  *  For more details, see IWineD3DSurface::GetPrivateData
  *
  *****************************************************************************/
-static HRESULT WINAPI ddraw_surface7_GetPrivateData(IDirectDrawSurface7 *iface, REFGUID tag, void *Data, DWORD *Size)
+static HRESULT WINAPI ddraw_surface7_GetPrivateData(IDirectDrawSurface7 *iface, REFGUID tag, void *data, DWORD *size)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-    struct wined3d_resource *resource;
+    const struct wined3d_private_data *stored_data;
     HRESULT hr;
 
     TRACE("iface %p, tag %s, data %p, data_size %p.\n",
-            iface, debugstr_guid(tag), Data, Size);
-
-    if(!Data)
-        return DDERR_INVALIDPARAMS;
+            iface, debugstr_guid(tag), data, size);
 
     wined3d_mutex_lock();
-    resource = wined3d_surface_get_resource(surface->wined3d_surface);
-    hr = wined3d_resource_get_private_data(resource, tag, Data, Size);
-    wined3d_mutex_unlock();
+    stored_data = wined3d_private_store_get_private_data(&surface->private_store, tag);
+    if (!stored_data)
+    {
+        hr = DDERR_NOTFOUND;
+        goto done;
+    }
+    if (!size)
+    {
+        hr = DDERR_INVALIDPARAMS;
+        goto done;
+    }
+    if (*size < stored_data->size)
+    {
+        *size = stored_data->size;
+        hr = DDERR_MOREDATA;
+        goto done;
+    }
+    if (!data)
+    {
+        hr = DDERR_INVALIDPARAMS;
+        goto done;
+    }
 
+    *size = stored_data->size;
+    memcpy(data, stored_data->content.data, stored_data->size);
+    hr = DD_OK;
+
+done:
+    wined3d_mutex_unlock();
     return hr;
 }
 
@@ -2347,17 +2356,22 @@ static HRESULT WINAPI ddraw_surface4_GetPrivateData(IDirectDrawSurface4 *iface, 
 static HRESULT WINAPI ddraw_surface7_FreePrivateData(IDirectDrawSurface7 *iface, REFGUID tag)
 {
     struct ddraw_surface *surface = impl_from_IDirectDrawSurface7(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
+    struct wined3d_private_data *entry;
 
     TRACE("iface %p, tag %s.\n", iface, debugstr_guid(tag));
 
     wined3d_mutex_lock();
-    resource = wined3d_surface_get_resource(surface->wined3d_surface);
-    hr = wined3d_resource_free_private_data(resource, tag);
+    entry = wined3d_private_store_get_private_data(&surface->private_store, tag);
+    if (!entry)
+    {
+        wined3d_mutex_unlock();
+        return DDERR_NOTFOUND;
+    }
+
+    wined3d_private_store_free_private_data(&surface->private_store, entry);
     wined3d_mutex_unlock();
 
-    return hr;
+    return DD_OK;
 }
 
 static HRESULT WINAPI ddraw_surface4_FreePrivateData(IDirectDrawSurface4 *iface, REFGUID tag)
@@ -5476,6 +5490,8 @@ static void STDMETHODCALLTYPE ddraw_surface_wined3d_object_destroyed(void *paren
     if (surface == surface->ddraw->primary)
         surface->ddraw->primary = NULL;
 
+    wined3d_private_store_cleanup(&surface->private_store);
+
     HeapFree(GetProcessHeap(), 0, surface);
 }
 
@@ -5537,11 +5553,6 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
 
     /* Ensure DDSD_CAPS is always set. */
     desc->dwFlags |= DDSD_CAPS;
-
-    /* If the surface is of the 'ALLOCONLOAD' type, ignore the LPSURFACE
-     * field. Frank Herbert's Dune specifies a NULL pointer for lpSurface. */
-    if ((desc->ddsCaps.dwCaps & DDSCAPS_ALLOCONLOAD) || !desc->lpSurface)
-        desc->dwFlags &= ~DDSD_LPSURFACE;
 
     if (desc->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
@@ -5820,6 +5831,34 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
         }
     }
 
+    /* If the surface is of the 'ALLOCONLOAD' type, ignore the LPSURFACE
+     * field. Frank Herbert's Dune specifies a NULL pointer for lpSurface. */
+    if ((desc->ddsCaps.dwCaps & DDSCAPS_ALLOCONLOAD) || !desc->lpSurface)
+        desc->dwFlags &= ~DDSD_LPSURFACE;
+    if (desc->dwFlags & DDSD_LPSURFACE)
+    {
+        if (wined3d_desc.pool != WINED3D_POOL_SYSTEM_MEM)
+        {
+            WARN("User memory surfaces should be in the system memory pool.\n");
+            HeapFree(GetProcessHeap(), 0, texture);
+            return DDERR_INVALIDCAPS;
+        }
+
+        if (version < 4)
+        {
+            WARN("User memory surfaces not supported before version 4.\n");
+            HeapFree(GetProcessHeap(), 0, texture);
+            return DDERR_INVALIDPARAMS;
+        }
+
+        if (!(desc->dwFlags & DDSD_PITCH))
+        {
+            WARN("User memory surfaces should explicitly specify the pitch.\n");
+            HeapFree(GetProcessHeap(), 0, texture);
+            return DDERR_INVALIDPARAMS;
+        }
+    }
+
     if (desc->ddsCaps.dwCaps & (DDSCAPS_OVERLAY))
         wined3d_desc.usage |= WINED3DUSAGE_OVERLAY;
 
@@ -6050,34 +6089,36 @@ HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, s
         else
             surface->surface_desc.u1.dwLinearSize = max(4, desc->dwWidth) * max(4, desc->dwHeight);
     }
-    else
+    else if (!(desc->dwFlags & DDSD_LPSURFACE))
     {
-        surface->surface_desc.dwFlags |= DDSD_PITCH;
-        surface->surface_desc.u1.lPitch = wined3d_surface_get_pitch(wined3d_surface);
+        desc->dwFlags |= DDSD_PITCH;
+        desc->u1.lPitch = wined3d_surface_get_pitch(wined3d_surface);
     }
 
     if (desc->dwFlags & DDSD_LPSURFACE)
     {
-        UINT pitch = 0;
-
-        if (desc->dwFlags & DDSD_PITCH)
+        if (desc->u1.lPitch < wined3d_surface_get_pitch(wined3d_surface) || desc->u1.lPitch & 3)
         {
-            pitch = desc->u1.lPitch;
-            surface->surface_desc.u1.lPitch = pitch;
+            WARN("Invalid pitch %u specified.\n", desc->u1.lPitch);
+            return DDERR_INVALIDPARAMS;
         }
 
         if (FAILED(hr = wined3d_surface_update_desc(wined3d_surface, wined3d_desc.width,
                 wined3d_desc.height, wined3d_desc.format, WINED3D_MULTISAMPLE_NONE, 0,
-                desc->lpSurface, pitch)))
+                desc->lpSurface, desc->u1.lPitch)))
         {
             ERR("Failed to set surface memory, hr %#x.\n", hr);
             return hr;
         }
+
+        desc->dwFlags &= ~DDSD_LPSURFACE;
     }
 
     wined3d_surface_incref(wined3d_surface);
     surface->wined3d_surface = wined3d_surface;
     *parent_ops = &ddraw_surface_wined3d_parent_ops;
+
+    wined3d_private_store_init(&surface->private_store);
 
     return DD_OK;
 }

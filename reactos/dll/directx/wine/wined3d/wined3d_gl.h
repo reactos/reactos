@@ -43,6 +43,7 @@ enum wined3d_gl_extension
     APPLE_FLUSH_BUFFER_RANGE,
     APPLE_YCBCR_422,
     /* ARB */
+    ARB_BLEND_FUNC_EXTENDED,
     ARB_COLOR_BUFFER_FLOAT,
     ARB_DEBUG_OUTPUT,
     ARB_DEPTH_BUFFER_FLOAT,
@@ -88,6 +89,7 @@ enum wined3d_gl_extension
     ARB_TEXTURE_NON_POWER_OF_TWO,
     ARB_TEXTURE_RECTANGLE,
     ARB_TEXTURE_RG,
+    ARB_TIMER_QUERY,
     ARB_VERTEX_ARRAY_BGRA,
     ARB_VERTEX_BLEND,
     ARB_VERTEX_BUFFER_OBJECT,
@@ -180,6 +182,9 @@ enum wined3d_gl_extension
     /* GL_APPLE_flush_buffer_range */ \
     USE_GL_FUNC(glBufferParameteriAPPLE) \
     USE_GL_FUNC(glFlushMappedBufferRangeAPPLE) \
+    /* GL_ARB_blend_func_extended */ \
+    USE_GL_FUNC(glBindFragDataLocationIndexed) \
+    USE_GL_FUNC(glGetFragDataIndex) \
     /* GL_ARB_color_buffer_float */ \
     USE_GL_FUNC(glClampColorARB) \
     /* GL_ARB_debug_output */ \
@@ -317,6 +322,9 @@ enum wined3d_gl_extension
     USE_GL_FUNC(glCompressedTexSubImage2DARB) \
     USE_GL_FUNC(glCompressedTexSubImage3DARB) \
     USE_GL_FUNC(glGetCompressedTexImageARB) \
+    /* GL_ARB_timer_query */ \
+    USE_GL_FUNC(glQueryCounter) \
+    USE_GL_FUNC(glGetQueryObjectui64v) \
     /* GL_ARB_vertex_blend */ \
     USE_GL_FUNC(glVertexBlendARB) \
     USE_GL_FUNC(glWeightPointerARB) \

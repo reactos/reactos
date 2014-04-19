@@ -56,7 +56,7 @@ static HRESULT WINAPI d3d8_texture_2d_QueryInterface(IDirect3DTexture8 *iface, R
 static ULONG WINAPI d3d8_texture_2d_AddRef(IDirect3DTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DTexture8(iface);
-    ULONG ref = InterlockedIncrement(&texture->refcount);
+    ULONG ref = InterlockedIncrement(&texture->resource.refcount);
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
 
@@ -74,7 +74,7 @@ static ULONG WINAPI d3d8_texture_2d_AddRef(IDirect3DTexture8 *iface)
 static ULONG WINAPI d3d8_texture_2d_Release(IDirect3DTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DTexture8(iface);
-    ULONG ref = InterlockedDecrement(&texture->refcount);
+    ULONG ref = InterlockedDecrement(&texture->resource.refcount);
 
     TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
@@ -110,52 +110,28 @@ static HRESULT WINAPI d3d8_texture_2d_SetPrivateData(IDirect3DTexture8 *iface,
         REFGUID guid, const void *data, DWORD data_size, DWORD flags)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
             iface, debugstr_guid(guid), data, data_size, flags);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_set_private_data(resource, guid, data, data_size, flags);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_set_private_data(&texture->resource, guid, data, data_size, flags);
 }
 
 static HRESULT WINAPI d3d8_texture_2d_GetPrivateData(IDirect3DTexture8 *iface,
         REFGUID guid, void *data, DWORD *data_size)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
             iface, debugstr_guid(guid), data, data_size);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_get_private_data(resource, guid, data, data_size);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_get_private_data(&texture->resource, guid, data, data_size);
 }
 
 static HRESULT WINAPI d3d8_texture_2d_FreePrivateData(IDirect3DTexture8 *iface, REFGUID guid)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s.\n", iface, debugstr_guid(guid));
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_free_private_data(resource, guid);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_free_private_data(&texture->resource, guid);
 }
 
 static DWORD WINAPI d3d8_texture_2d_SetPriority(IDirect3DTexture8 *iface, DWORD priority)
@@ -424,7 +400,7 @@ static HRESULT WINAPI d3d8_texture_cube_QueryInterface(IDirect3DCubeTexture8 *if
 static ULONG WINAPI d3d8_texture_cube_AddRef(IDirect3DCubeTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DCubeTexture8(iface);
-    ULONG ref = InterlockedIncrement(&texture->refcount);
+    ULONG ref = InterlockedIncrement(&texture->resource.refcount);
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
 
@@ -442,7 +418,7 @@ static ULONG WINAPI d3d8_texture_cube_AddRef(IDirect3DCubeTexture8 *iface)
 static ULONG WINAPI d3d8_texture_cube_Release(IDirect3DCubeTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DCubeTexture8(iface);
-    ULONG ref = InterlockedDecrement(&texture->refcount);
+    ULONG ref = InterlockedDecrement(&texture->resource.refcount);
 
     TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
@@ -480,52 +456,28 @@ static HRESULT WINAPI d3d8_texture_cube_SetPrivateData(IDirect3DCubeTexture8 *if
         REFGUID guid, const void *data, DWORD data_size, DWORD flags)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DCubeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
             iface, debugstr_guid(guid), data, data_size, flags);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_set_private_data(resource, guid, data, data_size, flags);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_set_private_data(&texture->resource, guid, data, data_size, flags);
 }
 
 static HRESULT WINAPI d3d8_texture_cube_GetPrivateData(IDirect3DCubeTexture8 *iface,
         REFGUID guid, void *data, DWORD *data_size)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DCubeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
             iface, debugstr_guid(guid), data, data_size);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_get_private_data(resource, guid, data, data_size);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_get_private_data(&texture->resource, guid, data, data_size);
 }
 
 static HRESULT WINAPI d3d8_texture_cube_FreePrivateData(IDirect3DCubeTexture8 *iface, REFGUID guid)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DCubeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s.\n", iface, debugstr_guid(guid));
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_free_private_data(resource, guid);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_free_private_data(&texture->resource, guid);
 }
 
 static DWORD WINAPI d3d8_texture_cube_SetPriority(IDirect3DCubeTexture8 *iface, DWORD priority)
@@ -817,7 +769,7 @@ static HRESULT WINAPI d3d8_texture_3d_QueryInterface(IDirect3DVolumeTexture8 *if
 static ULONG WINAPI d3d8_texture_3d_AddRef(IDirect3DVolumeTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DVolumeTexture8(iface);
-    ULONG ref = InterlockedIncrement(&texture->refcount);
+    ULONG ref = InterlockedIncrement(&texture->resource.refcount);
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
 
@@ -835,7 +787,7 @@ static ULONG WINAPI d3d8_texture_3d_AddRef(IDirect3DVolumeTexture8 *iface)
 static ULONG WINAPI d3d8_texture_3d_Release(IDirect3DVolumeTexture8 *iface)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DVolumeTexture8(iface);
-    ULONG ref = InterlockedDecrement(&texture->refcount);
+    ULONG ref = InterlockedDecrement(&texture->resource.refcount);
 
     TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
@@ -871,52 +823,28 @@ static HRESULT WINAPI d3d8_texture_3d_SetPrivateData(IDirect3DVolumeTexture8 *if
         REFGUID guid, const void *data, DWORD data_size, DWORD flags)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DVolumeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
             iface, debugstr_guid(guid), data, data_size, flags);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_set_private_data(resource, guid, data, data_size, flags);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_set_private_data(&texture->resource, guid, data, data_size, flags);
 }
 
 static HRESULT WINAPI d3d8_texture_3d_GetPrivateData(IDirect3DVolumeTexture8 *iface,
         REFGUID guid, void *data, DWORD *data_size)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DVolumeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
             iface, debugstr_guid(guid), data, data_size);
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_get_private_data(resource, guid, data, data_size);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_get_private_data(&texture->resource, guid, data, data_size);
 }
 
 static HRESULT WINAPI d3d8_texture_3d_FreePrivateData(IDirect3DVolumeTexture8 *iface, REFGUID guid)
 {
     struct d3d8_texture *texture = impl_from_IDirect3DVolumeTexture8(iface);
-    struct wined3d_resource *resource;
-    HRESULT hr;
-
     TRACE("iface %p, guid %s.\n", iface, debugstr_guid(guid));
 
-    wined3d_mutex_lock();
-    resource = wined3d_texture_get_resource(texture->wined3d_texture);
-    hr = wined3d_resource_free_private_data(resource, guid);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8_resource_free_private_data(&texture->resource, guid);
 }
 
 static DWORD WINAPI d3d8_texture_3d_SetPriority(IDirect3DVolumeTexture8 *iface, DWORD priority)
@@ -1171,7 +1099,9 @@ struct d3d8_texture *unsafe_impl_from_IDirect3DBaseTexture8(IDirect3DBaseTexture
 
 static void STDMETHODCALLTYPE d3d8_texture_wined3d_object_destroyed(void *parent)
 {
-    HeapFree(GetProcessHeap(), 0, parent);
+    struct d3d8_texture *texture = parent;
+    d3d8_resource_cleanup(&texture->resource);
+    HeapFree(GetProcessHeap(), 0, texture);
 }
 
 static const struct wined3d_parent_ops d3d8_texture_wined3d_parent_ops =
@@ -1187,7 +1117,7 @@ HRESULT texture_init(struct d3d8_texture *texture, struct d3d8_device *device,
     HRESULT hr;
 
     texture->IDirect3DBaseTexture8_iface.lpVtbl = (const IDirect3DBaseTexture8Vtbl *)&Direct3DTexture8_Vtbl;
-    texture->refcount = 1;
+    d3d8_resource_init(&texture->resource);
 
     desc.resource_type = WINED3D_RTYPE_TEXTURE;
     desc.format = wined3dformat_from_d3dformat(format);
@@ -1228,7 +1158,7 @@ HRESULT cubetexture_init(struct d3d8_texture *texture, struct d3d8_device *devic
     HRESULT hr;
 
     texture->IDirect3DBaseTexture8_iface.lpVtbl = (const IDirect3DBaseTexture8Vtbl *)&Direct3DCubeTexture8_Vtbl;
-    texture->refcount = 1;
+    d3d8_resource_init(&texture->resource);
 
     desc.resource_type = WINED3D_RTYPE_CUBE_TEXTURE;
     desc.format = wined3dformat_from_d3dformat(format);
@@ -1268,7 +1198,7 @@ HRESULT volumetexture_init(struct d3d8_texture *texture, struct d3d8_device *dev
     HRESULT hr;
 
     texture->IDirect3DBaseTexture8_iface.lpVtbl = (const IDirect3DBaseTexture8Vtbl *)&Direct3DVolumeTexture8_Vtbl;
-    texture->refcount = 1;
+    d3d8_resource_init(&texture->resource);
 
     desc.resource_type = WINED3D_RTYPE_VOLUME_TEXTURE;
     desc.format = wined3dformat_from_d3dformat(format);

@@ -751,7 +751,7 @@ DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf)
         case 16: cmd = "%04lx"; break;
         case 24: cmd = "%06lx"; break;
         case 32: cmd = "%08lx"; break;
-        default: ERR("Unexpected bit depth !\n"); cmd = "%d"; break;
+        default: ERR("Unexpected bit depth!\n"); cmd = "%d"; break;
         }
         TRACE(" R "); TRACE(cmd, pf->u2.dwRBitMask);
         TRACE(" G "); TRACE(cmd, pf->u3.dwGBitMask);

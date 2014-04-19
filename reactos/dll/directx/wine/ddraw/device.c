@@ -4264,9 +4264,6 @@ static HRESULT d3d_device7_DrawPrimitiveVB(IDirect3DDevice7 *iface, D3DPRIMITIVE
     wined3d_device_set_primitive_type(device->wined3d_device, PrimitiveType);
     hr = wined3d_device_draw_primitive(device->wined3d_device, StartVertex, NumVertices);
 
-    if (SUCCEEDED(hr))
-        vb->read_since_last_map = TRUE;
-
     wined3d_mutex_unlock();
 
     return hr;
@@ -4391,9 +4388,6 @@ static HRESULT d3d_device7_DrawIndexedPrimitiveVB(IDirect3DDevice7 *iface,
 
     wined3d_device_set_primitive_type(This->wined3d_device, PrimitiveType);
     hr = wined3d_device_draw_indexed_primitive(This->wined3d_device, ib_pos / sizeof(WORD), IndexCount);
-
-    if (SUCCEEDED(hr))
-        vb->read_since_last_map = TRUE;
 
     wined3d_mutex_unlock();
 

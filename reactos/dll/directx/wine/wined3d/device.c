@@ -1008,9 +1008,6 @@ HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
     if (!device->d3d_initialized)
         return WINED3DERR_INVALIDCALL;
 
-    /* Force making the context current again, to verify it is still valid
-     * (workaround for broken drivers) */
-    context_set_current(NULL);
     /* I don't think that the interface guarantees that the device is destroyed from the same thread
      * it was created. Thus make sure a context is active for the glDelete* calls
      */
@@ -4129,7 +4126,19 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     }
 
     if (reset_state)
+    {
+        if (device->logo_texture)
+        {
+            wined3d_texture_decref(device->logo_texture);
+            device->logo_texture = NULL;
+        }
+        if (device->cursor_texture)
+        {
+            wined3d_texture_decref(device->cursor_texture);
+            device->cursor_texture = NULL;
+        }
         state_unbind_resources(&device->state);
+    }
 
     if (device->fb.render_targets)
     {

@@ -23,7 +23,7 @@ import "dxgi.idl";
     local,
     uuid(a07ad9ab-fb01-4574-8bfb-0a70a7373f04)
 ]
-interface IWineDXGIFactory : IDXGIFactory
+interface IWineDXGIFactory : IDXGIFactory1
 {
     struct wined3d *get_wined3d();
 }
@@ -33,7 +33,7 @@ interface IWineDXGIFactory : IDXGIFactory
     local,
     uuid(ab1de34c-2963-4ffd-8493-40f580e510e5)
 ]
-interface IWineDXGIAdapter : IDXGIAdapter
+interface IWineDXGIAdapter : IDXGIAdapter1
 {
     UINT get_ordinal();
 }

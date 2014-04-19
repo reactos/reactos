@@ -127,9 +127,7 @@ static HRESULT STDMETHODCALLTYPE dxgi_output_GetDisplayModeList(IDXGIOutput *ifa
             iface, debug_dxgi_format(format), flags, mode_count, desc);
 
     if (!mode_count)
-    {
-        return S_OK;
-    }
+        return DXGI_ERROR_INVALID_CALL;
 
     if (format == DXGI_FORMAT_UNKNOWN)
     {
@@ -152,7 +150,14 @@ static HRESULT STDMETHODCALLTYPE dxgi_output_GetDisplayModeList(IDXGIOutput *ifa
         return S_OK;
     }
 
-    *mode_count = min(*mode_count,max_count);
+    if (max_count > *mode_count)
+    {
+        wined3d_decref(wined3d);
+        LeaveCriticalSection(&dxgi_cs);
+        return DXGI_ERROR_MORE_DATA;
+    }
+
+    *mode_count = max_count;
 
     for (i = 0; i < *mode_count; ++i)
     {

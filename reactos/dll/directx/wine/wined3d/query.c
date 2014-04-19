@@ -255,6 +255,14 @@ ULONG CDECL wined3d_query_decref(struct wined3d_query *query)
             if (oq->context) context_free_occlusion_query(oq);
             HeapFree(GetProcessHeap(), 0, query->extendedData);
         }
+        else if (query->type == WINED3D_QUERY_TYPE_TIMESTAMP)
+        {
+            struct wined3d_timestamp_query *tq = query->extendedData;
+
+            if (tq->context)
+                context_free_timestamp_query(tq);
+            HeapFree(GetProcessHeap(), 0, query->extendedData);
+        }
 
         HeapFree(GetProcessHeap(), 0, query);
     }
@@ -517,6 +525,148 @@ static HRESULT wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DW
     return WINED3D_OK; /* can be WINED3DERR_INVALIDCALL.    */
 }
 
+static HRESULT wined3d_timestamp_query_ops_get_data(struct wined3d_query *query,
+        void *data, DWORD size, DWORD flags)
+{
+    struct wined3d_timestamp_query *tq = query->extendedData;
+    struct wined3d_device *device = query->device;
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    struct wined3d_context *context;
+    UINT64 *u64data = data;
+    GLuint available;
+    GLuint64 timestamp;
+    HRESULT res;
+
+    TRACE("(%p) : type D3DQUERY_TIMESTAMP, data %p, size %#x, flags %#x.\n", query, data, size, flags);
+
+    if (!tq->context)
+        query->state = QUERY_CREATED;
+
+    if (query->state == QUERY_CREATED)
+    {
+        /* D3D allows GetData on a new query, OpenGL doesn't. So just invent the data ourselves. */
+        TRACE("Query wasn't yet started, returning S_OK.\n");
+        if (u64data)
+            *u64data = 0;
+        return S_OK;
+    }
+
+    if (tq->context->tid != GetCurrentThreadId())
+    {
+        FIXME("%p Wrong thread, returning 1.\n", query);
+        if (u64data)
+            *u64data = 1;
+        return S_OK;
+    }
+
+    context = context_acquire(query->device, tq->context->current_rt);
+
+    GL_EXTCALL(glGetQueryObjectuivARB(tq->id, GL_QUERY_RESULT_AVAILABLE_ARB, &available));
+    checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT_AVAILABLE)");
+    TRACE("available %#x.\n", available);
+
+    if (available)
+    {
+        if (u64data)
+        {
+            GL_EXTCALL(glGetQueryObjectui64v(tq->id, GL_QUERY_RESULT_ARB, &timestamp));
+            checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT)");
+            TRACE("Returning timestamp %s.\n", wine_dbgstr_longlong(timestamp));
+            *u64data = timestamp;
+        }
+        res = S_OK;
+    }
+    else
+    {
+        res = S_FALSE;
+    }
+
+    context_release(context);
+
+    return res;
+}
+
+static HRESULT wined3d_timestamp_query_ops_issue(struct wined3d_query *query, DWORD flags)
+{
+    struct wined3d_device *device = query->device;
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+
+    TRACE("query %p, flags %#x.\n", query, flags);
+
+    if (gl_info->supported[ARB_TIMER_QUERY])
+    {
+        struct wined3d_timestamp_query *tq = query->extendedData;
+        struct wined3d_context *context;
+
+        if (flags & WINED3DISSUE_BEGIN)
+        {
+            WARN("Ignoring WINED3DISSUE_BEGIN with a TIMESTAMP query.\n");
+        }
+        if (flags & WINED3DISSUE_END)
+        {
+            if (tq->context)
+                context_free_timestamp_query(tq);
+            context = context_acquire(query->device, NULL);
+            context_alloc_timestamp_query(context, tq);
+            GL_EXTCALL(glQueryCounter(tq->id, GL_TIMESTAMP));
+            checkGLcall("glQueryCounter()");
+            context_release(context);
+        }
+    }
+    else
+    {
+        ERR("Timestamp queries not supported.\n");
+    }
+
+    if (flags & WINED3DISSUE_END)
+        query->state = QUERY_SIGNALLED;
+
+    return WINED3D_OK;
+}
+
+static HRESULT wined3d_timestamp_disjoint_query_ops_get_data(struct wined3d_query *query,
+        void *data, DWORD size, DWORD flags)
+{
+    TRACE("(%p) : type D3DQUERY_TIMESTAMP_DISJOINT, data %p, size %#x, flags %#x.\n", query, data, size, flags);
+
+    if (query->type == WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT)
+    {
+        struct wined3d_query_data_timestamp_disjoint *disjoint_data = data;
+
+        if (query->state == QUERY_BUILDING)
+        {
+            TRACE("Query is building, returning S_FALSE.\n");
+            return S_FALSE;
+        }
+
+        if (disjoint_data)
+        {
+            disjoint_data->disjoint = FALSE;
+            disjoint_data->frequency = 1000 * 1000 * 1000;
+        }
+    }
+    else
+    {
+        UINT64 *u64data = data;
+
+        if (u64data)
+            *u64data = 1000 * 1000 * 1000;
+    }
+    return S_OK;
+}
+
+static HRESULT wined3d_timestamp_disjoint_query_ops_issue(struct wined3d_query *query, DWORD flags)
+{
+    TRACE("query %p, flags %#x.\n", query, flags);
+
+    if (flags & WINED3DISSUE_BEGIN)
+        query->state = QUERY_BUILDING;
+    if (flags & WINED3DISSUE_END)
+        query->state = QUERY_SIGNALLED;
+
+    return WINED3D_OK;
+}
+
 static const struct wined3d_query_ops event_query_ops =
 {
     wined3d_event_query_ops_get_data,
@@ -527,6 +677,18 @@ static const struct wined3d_query_ops occlusion_query_ops =
 {
     wined3d_occlusion_query_ops_get_data,
     wined3d_occlusion_query_ops_issue,
+};
+
+static const struct wined3d_query_ops timestamp_query_ops =
+{
+    wined3d_timestamp_query_ops_get_data,
+    wined3d_timestamp_query_ops_issue,
+};
+
+static const struct wined3d_query_ops timestamp_disjoint_query_ops =
+{
+    wined3d_timestamp_disjoint_query_ops_get_data,
+    wined3d_timestamp_disjoint_query_ops_issue,
 };
 
 static HRESULT query_init(struct wined3d_query *query, struct wined3d_device *device, enum wined3d_query_type type)
@@ -573,12 +735,41 @@ static HRESULT query_init(struct wined3d_query *query, struct wined3d_device *de
             }
             break;
 
+        case WINED3D_QUERY_TYPE_TIMESTAMP:
+            TRACE("Timestamp query.\n");
+            if (!gl_info->supported[ARB_TIMER_QUERY])
+            {
+                WARN("Unsupported in local OpenGL implementation: ARB_TIMER_QUERY.\n");
+                return WINED3DERR_NOTAVAILABLE;
+            }
+            query->query_ops = &timestamp_query_ops;
+            query->data_size = sizeof(UINT64);
+            query->extendedData = HeapAlloc(GetProcessHeap(), 0, sizeof(struct wined3d_timestamp_query));
+            if (!query->extendedData)
+            {
+                ERR("Failed to allocate timestamp query extended data.\n");
+                return E_OUTOFMEMORY;
+            }
+            ((struct wined3d_timestamp_query *)query->extendedData)->context = NULL;
+            break;
+
+        case WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT:
+        case WINED3D_QUERY_TYPE_TIMESTAMP_FREQ:
+            TRACE("TIMESTAMP_DISJOINT query.\n");
+            if (!gl_info->supported[ARB_TIMER_QUERY])
+            {
+                WARN("Unsupported in local OpenGL implementation: ARB_TIMER_QUERY.\n");
+                return WINED3DERR_NOTAVAILABLE;
+            }
+            query->query_ops = &timestamp_disjoint_query_ops;
+            query->data_size = type == WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT
+                    ? sizeof(struct wined3d_query_data_timestamp_disjoint) : sizeof(UINT64);
+            query->extendedData = NULL;
+            break;
+
         case WINED3D_QUERY_TYPE_VCACHE:
         case WINED3D_QUERY_TYPE_RESOURCE_MANAGER:
         case WINED3D_QUERY_TYPE_VERTEX_STATS:
-        case WINED3D_QUERY_TYPE_TIMESTAMP:
-        case WINED3D_QUERY_TYPE_TIMESTAMP_DISJOINT:
-        case WINED3D_QUERY_TYPE_TIMESTAMP_FREQ:
         case WINED3D_QUERY_TYPE_PIPELINE_TIMINGS:
         case WINED3D_QUERY_TYPE_INTERFACE_TIMINGS:
         case WINED3D_QUERY_TYPE_VERTEX_TIMINGS:

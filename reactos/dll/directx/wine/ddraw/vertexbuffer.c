@@ -240,7 +240,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
         wined3d_flags |= WINED3D_MAP_READONLY;
     if (flags & DDLOCK_NOOVERWRITE)
         wined3d_flags |= WINED3D_MAP_NOOVERWRITE;
-    if (flags & DDLOCK_DISCARDCONTENTS && buffer->read_since_last_map)
+    if (flags & DDLOCK_DISCARDCONTENTS)
     {
         wined3d_flags |= WINED3D_MAP_DISCARD;
 
@@ -273,9 +273,6 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
     }
 
     hr = wined3d_buffer_map(buffer->wineD3DVertexBuffer, 0, 0, (BYTE **)data, wined3d_flags);
-
-    if (SUCCEEDED(hr))
-        buffer->read_since_last_map = FALSE;
 
     wined3d_mutex_unlock();
 
