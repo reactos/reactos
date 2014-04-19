@@ -31,7 +31,7 @@ reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.17
 reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.17
 reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.17
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.17
-reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.1
+reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.17
 reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.1
 reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.17
 reactos/dll/directx/wine/devenum        # Synced to Wine-1.7.1

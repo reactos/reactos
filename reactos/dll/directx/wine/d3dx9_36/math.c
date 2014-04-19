@@ -155,7 +155,7 @@ D3DXMATRIX * WINAPI D3DXMatrixAffineTransformation2D(D3DXMATRIX *out, FLOAT scal
 
     s = sinf(rotation / 2.0f);
     tmp1 = 1.0f - 2.0f * s * s;
-    tmp2 = 2.0 * s * cosf(rotation / 2.0f);
+    tmp2 = 2.0f * s * cosf(rotation / 2.0f);
 
     D3DXMatrixIdentity(out);
     out->u.m[0][0] = scaling * tmp1;
@@ -480,8 +480,8 @@ D3DXMATRIX* WINAPI D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pout, FLOAT fovy, FLOA
     TRACE("pout %p, fovy %f, aspect %f, zn %f, zf %f\n", pout, fovy, aspect, zn, zf);
 
     D3DXMatrixIdentity(pout);
-    pout->u.m[0][0] = 1.0f / (aspect * tan(fovy/2.0f));
-    pout->u.m[1][1] = 1.0f / tan(fovy/2.0f);
+    pout->u.m[0][0] = 1.0f / (aspect * tanf(fovy/2.0f));
+    pout->u.m[1][1] = 1.0f / tanf(fovy/2.0f);
     pout->u.m[2][2] = zf / (zf - zn);
     pout->u.m[2][3] = 1.0f;
     pout->u.m[3][2] = (zf * zn) / (zn - zf);
@@ -494,8 +494,8 @@ D3DXMATRIX* WINAPI D3DXMatrixPerspectiveFovRH(D3DXMATRIX *pout, FLOAT fovy, FLOA
     TRACE("pout %p, fovy %f, aspect %f, zn %f, zf %f\n", pout, fovy, aspect, zn, zf);
 
     D3DXMatrixIdentity(pout);
-    pout->u.m[0][0] = 1.0f / (aspect * tan(fovy/2.0f));
-    pout->u.m[1][1] = 1.0f / tan(fovy/2.0f);
+    pout->u.m[0][0] = 1.0f / (aspect * tanf(fovy/2.0f));
+    pout->u.m[1][1] = 1.0f / tanf(fovy/2.0f);
     pout->u.m[2][2] = zf / (zn - zf);
     pout->u.m[2][3] = -1.0f;
     pout->u.m[3][2] = (zf * zn) / (zn - zf);
@@ -640,10 +640,10 @@ D3DXMATRIX* WINAPI D3DXMatrixRotationX(D3DXMATRIX *pout, FLOAT angle)
     TRACE("pout %p, angle %f\n", pout, angle);
 
     D3DXMatrixIdentity(pout);
-    pout->u.m[1][1] = cos(angle);
-    pout->u.m[2][2] = cos(angle);
-    pout->u.m[1][2] = sin(angle);
-    pout->u.m[2][1] = -sin(angle);
+    pout->u.m[1][1] = cosf(angle);
+    pout->u.m[2][2] = cosf(angle);
+    pout->u.m[1][2] = sinf(angle);
+    pout->u.m[2][1] = -sinf(angle);
     return pout;
 }
 
@@ -652,10 +652,10 @@ D3DXMATRIX* WINAPI D3DXMatrixRotationY(D3DXMATRIX *pout, FLOAT angle)
     TRACE("pout %p, angle %f\n", pout, angle);
 
     D3DXMatrixIdentity(pout);
-    pout->u.m[0][0] = cos(angle);
-    pout->u.m[2][2] = cos(angle);
-    pout->u.m[0][2] = -sin(angle);
-    pout->u.m[2][0] = sin(angle);
+    pout->u.m[0][0] = cosf(angle);
+    pout->u.m[2][2] = cosf(angle);
+    pout->u.m[0][2] = -sinf(angle);
+    pout->u.m[2][0] = sinf(angle);
     return pout;
 }
 
@@ -697,10 +697,10 @@ D3DXMATRIX* WINAPI D3DXMatrixRotationZ(D3DXMATRIX *pout, FLOAT angle)
     TRACE("pout %p, angle %f\n", pout, angle);
 
     D3DXMatrixIdentity(pout);
-    pout->u.m[0][0] = cos(angle);
-    pout->u.m[1][1] = cos(angle);
-    pout->u.m[0][1] = sin(angle);
-    pout->u.m[1][0] = -sin(angle);
+    pout->u.m[0][0] = cosf(angle);
+    pout->u.m[1][1] = cosf(angle);
+    pout->u.m[0][1] = sinf(angle);
+    pout->u.m[1][0] = -sinf(angle);
     return pout;
 }
 
@@ -881,15 +881,15 @@ D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *pout, const D3DXVECTOR
         trans.z=0.0f;
     }
 
-    rot.w=cos(rotation/2.0f);
+    rot.w=cosf(rotation/2.0f);
     rot.x=0.0f;
     rot.y=0.0f;
-    rot.z=sin(rotation/2.0f);
+    rot.z=sinf(rotation/2.0f);
 
-    sca_rot.w=cos(scalingrotation/2.0f);
+    sca_rot.w=cosf(scalingrotation/2.0f);
     sca_rot.x=0.0f;
     sca_rot.y=0.0f;
-    sca_rot.z=sin(scalingrotation/2.0f);
+    sca_rot.z=sinf(scalingrotation/2.0f);
 
     D3DXMatrixTransformation(pout, &sca_center, &sca_rot, &sca, &rot_center, &rot, &trans);
 
@@ -1648,7 +1648,7 @@ void WINAPI D3DXQuaternionToAxisAngle(const D3DXQUATERNION *pq, D3DXVECTOR3 *pax
     paxis->x = pq->x;
     paxis->y = pq->y;
     paxis->z = pq->z;
-    *pangle = 2.0f * acos(pq->w);
+    *pangle = 2.0f * acosf(pq->w);
 }
 
 /*_________________D3DXVec2_____________________*/
@@ -2121,7 +2121,7 @@ D3DXVECTOR4* WINAPI D3DXVec4TransformArray(D3DXVECTOR4* out, UINT outstride, con
 unsigned short float_32_to_16(const float in)
 {
     int exp = 0, origexp;
-    float tmp = fabs(in);
+    float tmp = fabsf(in);
     int sign = (copysignf(1, in) < 0);
     unsigned int mantissa;
     unsigned short ret;
@@ -2219,7 +2219,7 @@ D3DXFLOAT16 *WINAPI D3DXFloat32To16Array(D3DXFLOAT16 *pout, const FLOAT *pin, UI
 
 /* Native d3dx9's D3DXFloat16to32Array lacks support for NaN and Inf. Specifically, e = 16 is treated as a
  * regular number - e.g., 0x7fff is converted to 131008.0 and 0xffff to -131008.0. */
-static inline float float_16_to_32(const unsigned short in)
+float float_16_to_32(const unsigned short in)
 {
     const unsigned short s = (in & 0x8000);
     const unsigned short e = (in & 0x7C00) >> 10;
@@ -2279,7 +2279,7 @@ FLOAT WINAPI D3DXSHDot(UINT order, const FLOAT *a, const FLOAT *b)
     return s;
 }
 
-static void weightedcapintegrale(FLOAT *out, FLOAT order, FLOAT angle)
+static void weightedcapintegrale(FLOAT *out, UINT order, FLOAT angle)
 {
     FLOAT coeff[3];
 
@@ -2387,9 +2387,9 @@ FLOAT* WINAPI D3DXSHEvalDirection(FLOAT *out, UINT order, const D3DXVECTOR3 *dir
 
     out[9] = -sqrtf(70.0f / D3DX_PI) / 8.0f * dir->y * (3.0f * dirxx - diryy);
     out[10] = sqrtf(105.0f / D3DX_PI) / 2.0f * dirxy * dir->z;
-    out[11] = -sqrtf(42.0 / D3DX_PI) / 8.0f * dir->y * (-1.0f + 5.0f * dirzz);
+    out[11] = -sqrtf(42.0f / D3DX_PI) / 8.0f * dir->y * (-1.0f + 5.0f * dirzz);
     out[12] = sqrtf(7.0f / D3DX_PI) / 4.0f * dir->z * (5.0f * dirzz - 3.0f);
-    out[13] = sqrtf(42.0 / D3DX_PI) / 8.0f * dir->x * (1.0f - 5.0f * dirzz);
+    out[13] = sqrtf(42.0f / D3DX_PI) / 8.0f * dir->x * (1.0f - 5.0f * dirzz);
     out[14] = sqrtf(105.0f / D3DX_PI) / 4.0f * dir->z * (dirxx - diryy);
     out[15] = -sqrtf(70.0f / D3DX_PI) / 8.0f * dir->x * (dirxx - 3.0f * diryy);
     if (order == 4)
@@ -2402,7 +2402,7 @@ FLOAT* WINAPI D3DXSHEvalDirection(FLOAT *out, UINT order, const D3DXVECTOR3 *dir
     out[20] = 3.0f / (16.0f * sqrtf(D3DX_PI)) * (35.0f * dirzzzz - 30.f * dirzz + 3.0f);
     out[21] = 0.375f * sqrtf(10.0f / D3DX_PI) * dirxz * (3.0f - 7.0f * dirzz);
     out[22] = 0.375f * sqrtf(5.0f / D3DX_PI) * (dirxx - diryy) * (7.0f * dirzz - 1.0f);
-    out[23] = 3.0 * dir->z * out[15];
+    out[23] = 3.0f * dir->z * out[15];
     out[24] = 3.0f / 16.0f * sqrtf(35.0f / D3DX_PI) * (dirxxxx - 6.0f * dirxyxy + diryyyy);
     if (order == 5)
         return out;
@@ -2416,7 +2416,7 @@ FLOAT* WINAPI D3DXSHEvalDirection(FLOAT *out, UINT order, const D3DXVECTOR3 *dir
     out[31] = sqrtf(165.0f / D3DX_PI) / 16.0f * dir->x * (14.0f * dirzz - 21.0f * dirzzzz - 1.0f);
     out[32] = sqrtf(1155.0f / D3DX_PI) / 8.0f * dir->z * (dirxx - diryy) * (3.0f * dirzz - 1.0f);
     out[33] = sqrtf(770.0f / D3DX_PI) / 32.0f * dir->x * (dirxx - 3.0f * diryy) * (1.0f - 9.0f * dirzz);
-    out[34] = 3.0f / 16.0f * sqrtf(385.0f / D3DX_PI) * dir->z * (dirxxxx - 6.0 * dirxyxy + diryyyy);
+    out[34] = 3.0f / 16.0f * sqrtf(385.0f / D3DX_PI) * dir->z * (dirxxxx - 6.0f * dirxyxy + diryyyy);
     out[35] = -3.0f/ 32.0f * sqrtf(154.0f / D3DX_PI) * dir->x * (dirxxxx - 10.0f * dirxyxy + 5.0f * diryyyy);
 
     return out;
@@ -2622,8 +2622,8 @@ FLOAT * WINAPI D3DXSHMultiply3(FLOAT *out, const FLOAT *a, const FLOAT *b)
     t = a[4] * b[5] + a[5] * b[4];
     out[7] += 0.15607834f * t;
 
-    ta = 0.28209479f * a[0] + 0.09011186 * a[6] - 0.15607835f * a[8];
-    tb = 0.28209479f * b[0] + 0.09011186 * b[6] - 0.15607835f * b[8];
+    ta = 0.28209479f * a[0] + 0.09011186f * a[6] - 0.15607835f * a[8];
+    tb = 0.28209479f * b[0] + 0.09011186f * b[6] - 0.15607835f * b[8];
     out[5] += ta * b[5] + tb * a[5];
     t = a[5] * b[5];
     out[0] += 0.28209479f * t;
@@ -2637,8 +2637,8 @@ FLOAT * WINAPI D3DXSHMultiply3(FLOAT *out, const FLOAT *a, const FLOAT *b)
     out[0] += 0.28209480f * t;
     out[6] += 0.18022376f * t;
 
-    ta = 0.28209479f * a[0] + 0.09011186 * a[6] + 0.15607835f * a[8];
-    tb = 0.28209479f * b[0] + 0.09011186 * b[6] + 0.15607835f * b[8];
+    ta = 0.28209479f * a[0] + 0.09011186f * a[6] + 0.15607835f * a[8];
+    tb = 0.28209479f * b[0] + 0.09011186f * b[6] + 0.15607835f * b[8];
     out[7] += ta * b[7] + tb * a[7];
     t = a[7] * b[7];
     out[0] += 0.28209479f * t;
@@ -2981,7 +2981,7 @@ static void rotate_X(FLOAT *out, UINT order, FLOAT a, FLOAT *in)
 
     out[25] = a * 0.7015607357f * in[30] - a * 0.6846531630f * in[32] + a * 0.1976423711f * in[34];
     out[26] = -0.5f * in[26] + 0.8660253882f * in[28];
-    out[27] = a * 0.5229125023f * in[30] + a * 0.3061861992f * in[32] - a * 0.7954951525 * in[34];
+    out[27] = a * 0.5229125023f * in[30] + a * 0.3061861992f * in[32] - a * 0.7954951525f * in[34];
     out[28] = 0.8660253882f * in[26] + 0.5f * in[28];
     out[29] = a * 0.4841229022f * in[30] + a * 0.6614378691f * in[32] + a * 0.5728219748f * in[34];
     out[30] = -a * 0.7015607357f * in[25] - a * 0.5229125023f * in[27] - a * 0.4841229022f * in[29];
