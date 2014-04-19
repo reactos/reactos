@@ -39,7 +39,7 @@
 
 static IUnknown *pDSRender = NULL;
 
-static int create_dsound_renderer(void)
+static BOOL create_dsound_renderer(void)
 {
     HRESULT hr;
 
@@ -179,7 +179,7 @@ static void test_basefilter(void)
     ULONG ref;
     HRESULT hr;
 
-    IUnknown_QueryInterface(pDSRender, &IID_IBaseFilter, (void *)&base);
+    IUnknown_QueryInterface(pDSRender, &IID_IBaseFilter, (void **)&base);
     if (base == NULL)
     {
         /* test_query_interface handles this case */

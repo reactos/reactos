@@ -110,7 +110,7 @@ static void test_basefilter(void)
     ULONG ref;
     HRESULT hr;
 
-    IUnknown_QueryInterface(pVideoRenderer, &IID_IBaseFilter, (void *)&base);
+    IUnknown_QueryInterface(pVideoRenderer, &IID_IBaseFilter, (void **)&base);
     if (base == NULL)
     {
         /* test_query_interface handles this case */

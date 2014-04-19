@@ -233,7 +233,7 @@ static void test_legacy_filter_registration(void)
     ok(hr == S_OK, "CoCreateInstance failed with %x\n", hr);
     if (FAILED(hr)) goto out;
 
-    hr = IFilterMapper2_QueryInterface(pMapper2, &IID_IFilterMapper, (LPVOID)&pMapper);
+    hr = IFilterMapper2_QueryInterface(pMapper2, &IID_IFilterMapper, (void **)&pMapper);
     ok(hr == S_OK, "IFilterMapper2_QueryInterface failed with %x\n", hr);
     if (FAILED(hr)) goto out;
 

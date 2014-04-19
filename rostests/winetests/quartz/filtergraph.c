@@ -1094,7 +1094,6 @@ static HRESULT createtestfilter(const CLSID* pClsid, const TestFilterPinData *pi
     pTestFilter->IBaseFilter_iface.lpVtbl = &TestFilter_Vtbl;
     pTestFilter->refCount = 1;
     InitializeCriticalSection(&pTestFilter->csFilter);
-    pTestFilter->csFilter.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": TestFilterImpl.csFilter");
     pTestFilter->state = State_Stopped;
 
     ZeroMemory(&pTestFilter->filterInfo, sizeof(FILTER_INFO));
@@ -1149,7 +1148,6 @@ static HRESULT createtestfilter(const CLSID* pClsid, const TestFilterPinData *pi
         }
     }
     CoTaskMemFree(pTestFilter->ppPins);
-    pTestFilter->csFilter.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&pTestFilter->csFilter);
     CoTaskMemFree(pTestFilter);
 
@@ -1213,7 +1211,6 @@ static ULONG WINAPI TestFilter_Release(IBaseFilter * iface)
 
         CoTaskMemFree(This->ppPins);
 
-        This->csFilter.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->csFilter);
 
         CoTaskMemFree(This);
@@ -1559,9 +1556,10 @@ static void test_render_filter_priority(void)
     static const WCHAR wszFilterInstanceName4[] = {'T', 'e', 's', 't', 'f', 'i', 'l', 't', 'e', 'r', 'I',
                                                         'n', 's', 't', 'a', 'n', 'c', 'e', '4', 0 };
 
-    /* Test which renderer of two already added to the graph will be chosen (one is "exact" match, other is
-       "wildcard" match. Seems to very by order in which filters are added to the graph, thus indicating
-       no preference given to exact match. */
+    /* Test which renderer of two already added to the graph will be chosen
+     * (one is "exact" match, other is "wildcard" match. Seems to depend
+     * on the order in which filters are added to the graph, thus indicating
+     * no preference given to exact match. */
     hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, &IID_IFilterGraph2, (LPVOID*)&pgraph2);
     ok(hr == S_OK, "CoCreateInstance failed with %08x\n", hr);
     if (!pgraph2) return;
@@ -1643,7 +1641,7 @@ static void test_render_filter_priority(void)
     ok(hr == E_POINTER, "IFilterGraph2_Disconnect failed. Expected E_POINTER, received %08x\n", hr);
 
     get_connected_filter_name(ptestfilter, ConnectedFilterName2);
-    ok(lstrcmp(ConnectedFilterName1, ConnectedFilterName2),
+    ok(strcmp(ConnectedFilterName1, ConnectedFilterName2),
         "expected connected filters to be different but got %s both times\n", ConnectedFilterName1);
 
     IFilterGraph2_Release(pgraph2);
@@ -1699,7 +1697,7 @@ static void test_render_filter_priority(void)
     ok(hr == S_OK, "IFilterGraph2_Render failed with %08x\n", hr);
 
     get_connected_filter_name(ptestfilter, ConnectedFilterName1);
-    ok(!lstrcmp(ConnectedFilterName1, "TestfilterInstance3") || !lstrcmp(ConnectedFilterName1, "TestfilterInstance2"),
+    ok(!strcmp(ConnectedFilterName1, "TestfilterInstance3") || !strcmp(ConnectedFilterName1, "TestfilterInstance2"),
             "unexpected connected filter: %s\n", ConnectedFilterName1);
 
     IFilterGraph2_Release(pgraph2);
@@ -1751,9 +1749,9 @@ static void test_render_filter_priority(void)
     ok(hr == S_OK, "IFilterGraph2_Render failed with %08x\n", hr);
 
     get_connected_filter_name(ptestfilter, ConnectedFilterName2);
-    ok(!lstrcmp(ConnectedFilterName2, "TestfilterInstance3") || !lstrcmp(ConnectedFilterName2, "TestfilterInstance2"),
+    ok(!strcmp(ConnectedFilterName2, "TestfilterInstance3") || !strcmp(ConnectedFilterName2, "TestfilterInstance2"),
             "unexpected connected filter: %s\n", ConnectedFilterName2);
-    ok(lstrcmp(ConnectedFilterName1, ConnectedFilterName2),
+    ok(strcmp(ConnectedFilterName1, ConnectedFilterName2),
         "expected connected filters to be different but got %s both times\n", ConnectedFilterName1);
 
     IFilterGraph2_Release(pgraph2);
@@ -1847,7 +1845,7 @@ static void test_render_filter_priority(void)
         ok(hr == S_OK, "IFilterGraph2_Render failed with %08x\n", hr);
 
         get_connected_filter_name(ptestfilter, ConnectedFilterName1);
-        ok(!lstrcmp(ConnectedFilterName1, "TestfilterInstance3"),
+        ok(!strcmp(ConnectedFilterName1, "TestfilterInstance3"),
            "unexpected connected filter: %s\n", ConnectedFilterName1);
     }
 
