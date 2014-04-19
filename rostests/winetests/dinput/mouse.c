@@ -52,10 +52,10 @@ static const HRESULT SetCoop_child_window[16] =  {
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
 
-static void test_set_coop(LPDIRECTINPUT pDI, HWND hwnd)
+static void test_set_coop(IDirectInputA *pDI, HWND hwnd)
 {
     HRESULT hr;
-    LPDIRECTINPUTDEVICE pMouse = NULL;
+    IDirectInputDeviceA *pMouse = NULL;
     int i;
     HWND child;
 
@@ -74,8 +74,8 @@ static void test_set_coop(LPDIRECTINPUT pDI, HWND hwnd)
         ok(hr == SetCoop_real_window[i], "SetCooperativeLevel(hwnd, %d): %08x\n", i, hr);
     }
 
-    child = CreateWindow("static", "Title", WS_CHILD | WS_VISIBLE,
-                         10, 10, 50, 50, hwnd, NULL, NULL, NULL);
+    child = CreateWindowA("static", "Title", WS_CHILD | WS_VISIBLE, 10, 10, 50, 50, hwnd, NULL,
+                          NULL, NULL);
     ok(child != NULL, "err: %d\n", GetLastError());
 
     for (i=0; i<16; i++)
@@ -88,10 +88,10 @@ static void test_set_coop(LPDIRECTINPUT pDI, HWND hwnd)
     if (pMouse) IUnknown_Release(pMouse);
 }
 
-static void test_acquire(LPDIRECTINPUT pDI, HWND hwnd)
+static void test_acquire(IDirectInputA *pDI, HWND hwnd)
 {
     HRESULT hr;
-    LPDIRECTINPUTDEVICE pMouse = NULL;
+    IDirectInputDeviceA *pMouse = NULL;
     DIMOUSESTATE m_state;
     HWND hwnd2;
     DIPROPDWORD di_op;
@@ -132,8 +132,8 @@ static void test_acquire(LPDIRECTINPUT pDI, HWND hwnd)
     /* Foreground coop level requires window to have focus */
     /* Create a temporary window, this should make dinput
      * loose mouse input */
-    hwnd2 = CreateWindow("static", "Temporary", WS_VISIBLE,
-                         10, 210, 200, 200, NULL, NULL, NULL, NULL);
+    hwnd2 = CreateWindowA("static", "Temporary", WS_VISIBLE, 10, 210, 200, 200, NULL, NULL, NULL,
+                          NULL);
 
     hr = IDirectInputDevice_GetDeviceState(pMouse, sizeof(m_state), &m_state);
     ok(hr == DIERR_NOTACQUIRED, "GetDeviceState() should have failed: %08x\n", hr);
@@ -185,22 +185,22 @@ static void test_acquire(LPDIRECTINPUT pDI, HWND hwnd)
 static void mouse_tests(void)
 {
     HRESULT hr;
-    LPDIRECTINPUT pDI = NULL;
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    IDirectInputA *pDI = NULL;
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
     HWND hwnd;
     ULONG ref = 0;
 
-    hr = DirectInputCreate(hInstance, DIRECTINPUT_VERSION, &pDI, NULL);
+    hr = DirectInputCreateA(hInstance, DIRECTINPUT_VERSION, &pDI, NULL);
     if (hr == DIERR_OLDDIRECTINPUTVERSION)
     {
         skip("Tests require a newer dinput version\n");
         return;
     }
-    ok(SUCCEEDED(hr), "DirectInputCreate() failed: %08x\n", hr);
+    ok(SUCCEEDED(hr), "DirectInputCreateA() failed: %08x\n", hr);
     if (FAILED(hr)) return;
 
-    hwnd = CreateWindow("static", "Title", WS_OVERLAPPEDWINDOW,
-                        10, 10, 200, 200, NULL, NULL, NULL, NULL);
+    hwnd = CreateWindowA("static", "Title", WS_OVERLAPPEDWINDOW, 10, 10, 200, 200, NULL, NULL,
+                         NULL, NULL);
     ok(hwnd != NULL, "err: %d\n", GetLastError());
     if (hwnd)
     {
