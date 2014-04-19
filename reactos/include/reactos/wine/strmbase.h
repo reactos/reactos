@@ -71,6 +71,8 @@ typedef HRESULT (WINAPI *BaseOutputPin_DecideAllocator)(BaseOutputPin *This, IMe
 typedef HRESULT (WINAPI *BaseOutputPin_BreakConnect)(BaseOutputPin * This);
 
 typedef struct BaseOutputPinFuncTable {
+	BasePinFuncTable base;
+
 	/* Required for BaseOutputPinImpl_DecideAllocator */
 	BaseOutputPin_DecideBufferSize pfnDecideBufferSize;
 	/* Required for BaseOutputPinImpl_AttemptConnection */
@@ -94,6 +96,7 @@ typedef struct BaseInputPin
 typedef HRESULT (WINAPI *BaseInputPin_Receive)(BaseInputPin *This, IMediaSample *pSample);
 
 typedef struct BaseInputPinFuncTable {
+	BasePinFuncTable base;
 	/* Optional */
 	BaseInputPin_Receive pfnReceive;
 } BaseInputPinFuncTable;
@@ -132,7 +135,7 @@ HRESULT WINAPI BaseOutputPinImpl_InitAllocator(BaseOutputPin *This, IMemAllocato
 HRESULT WINAPI BaseOutputPinImpl_DecideAllocator(BaseOutputPin *This, IMemInputPin *pPin, IMemAllocator **pAlloc);
 HRESULT WINAPI BaseOutputPinImpl_AttemptConnection(BasePin *This, IPin * pReceivePin, const AM_MEDIA_TYPE * pmt);
 
-HRESULT WINAPI BaseOutputPin_Construct(const IPinVtbl *OutputPin_Vtbl, LONG outputpin_size, const PIN_INFO * pPinInfo, const BasePinFuncTable* pBaseFuncsTable, const BaseOutputPinFuncTable* pBaseOutputFuncsTable, LPCRITICAL_SECTION pCritSec, IPin ** ppPin);
+HRESULT WINAPI BaseOutputPin_Construct(const IPinVtbl *OutputPin_Vtbl, LONG outputpin_size, const PIN_INFO * pPinInfo, const BaseOutputPinFuncTable* pBaseOutputFuncsTable, LPCRITICAL_SECTION pCritSec, IPin ** ppPin);
 
 /* Base Input Pin */
 HRESULT WINAPI BaseInputPinImpl_QueryInterface(IPin * iface, REFIID riid, LPVOID * ppv);
@@ -145,7 +148,9 @@ HRESULT WINAPI BaseInputPinImpl_BeginFlush(IPin * iface);
 HRESULT WINAPI BaseInputPinImpl_EndFlush(IPin * iface);
 HRESULT WINAPI BaseInputPinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
-HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, const PIN_INFO * pPinInfo, const BasePinFuncTable* pBaseFuncsTable, const BaseInputPinFuncTable* pBaseInputFuncsTable, LPCRITICAL_SECTION pCritSec, IMemAllocator *, IPin ** ppPin);
+HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, LONG inputpin_size, const PIN_INFO * pPinInfo,
+        const BaseInputPinFuncTable* pBaseInputFuncsTable,
+        LPCRITICAL_SECTION pCritSec, IMemAllocator *, IPin ** ppPin);
 
 typedef struct BaseFilter
 {

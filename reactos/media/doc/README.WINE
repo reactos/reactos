@@ -27,7 +27,7 @@ reactos/tools/wpp                 # Synced to Wine-1.7.1
 
 The following libraries are shared with Wine.
 
-reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.1
+reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.17
 reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.11
 reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.11
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.1
@@ -45,7 +45,7 @@ reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.1
 reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/msdmo          # Synced to Wine-1.7.1
 reactos/dll/directx/wine/qedit          # Synced to Wine-1.7.1
-reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.1
+reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.17
 reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.11
 
 reactos/dll/win32/activeds         # Synced to Wine-1.7.1
@@ -246,7 +246,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.1
+reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.17
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # Synced to Wine-1.7.1

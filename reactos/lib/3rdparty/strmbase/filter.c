@@ -27,23 +27,15 @@ static inline BaseFilter *impl_from_IBaseFilter(IBaseFilter *iface)
 
 HRESULT WINAPI BaseFilterImpl_QueryInterface(IBaseFilter * iface, REFIID riid, LPVOID * ppv)
 {
-    BaseFilter *This = impl_from_IBaseFilter(iface);
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppv);
 
     *ppv = NULL;
 
-    if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IPersist))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IMediaFilter))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IBaseFilter))
-        *ppv = This;
-
-    if (*ppv)
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IPersist) ||
+        IsEqualIID(riid, &IID_IMediaFilter) || IsEqualIID(riid, &IID_IBaseFilter))
     {
-        IUnknown_AddRef((IUnknown *)(*ppv));
+        *ppv = iface;
+        IBaseFilter_AddRef(iface);
         return S_OK;
     }
 

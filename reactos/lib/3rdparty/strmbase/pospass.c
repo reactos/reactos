@@ -253,7 +253,7 @@ HRESULT WINAPI PosPassThru_Construct(IUnknown *pUnkOuter, LPVOID *ppPassThru)
     fimpl->IMediaPosition_iface.lpVtbl = &IMediaPositionPassThru_Vtbl;
     fimpl->ref = 1;
     fimpl->pin = NULL;
-    fimpl->timevalid = 0;
+    fimpl->timevalid = FALSE;
     InitializeCriticalSection(&fimpl->time_cs);
     fimpl->time_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PassThruImpl.time_cs");
     BaseDispatch_Init(&fimpl->baseDispatch, &IID_IMediaPosition);
@@ -589,7 +589,7 @@ HRESULT WINAPI RendererPosPassThru_RegisterMediaTime(IUnknown *iface, REFERENCE_
     PassThruImpl *This = impl_from_IUnknown_inner(iface);
     EnterCriticalSection(&This->time_cs);
     This->time_earliest = start;
-    This->timevalid = 1;
+    This->timevalid = TRUE;
     LeaveCriticalSection(&This->time_cs);
     return S_OK;
 }
@@ -598,7 +598,7 @@ HRESULT WINAPI RendererPosPassThru_ResetMediaTime(IUnknown *iface)
 {
     PassThruImpl *This = impl_from_IUnknown_inner(iface);
     EnterCriticalSection(&This->time_cs);
-    This->timevalid = 0;
+    This->timevalid = FALSE;
     LeaveCriticalSection(&This->time_cs);
     return S_OK;
 }
@@ -611,10 +611,10 @@ HRESULT WINAPI RendererPosPassThru_EOS(IUnknown *iface)
     hr = IMediaSeeking_GetStopPosition(&This->IMediaSeeking_iface, &time);
     EnterCriticalSection(&This->time_cs);
     if (SUCCEEDED(hr)) {
-        This->timevalid = 1;
+        This->timevalid = TRUE;
         This->time_earliest = time;
     } else
-        This->timevalid = 0;
+        This->timevalid = FALSE;
     LeaveCriticalSection(&This->time_cs);
     return hr;
 }

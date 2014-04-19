@@ -256,7 +256,7 @@ HRESULT WINAPI PullPin_ReceiveConnection(IPin * iface, IPin * pReceivePin, const
         ALLOCATOR_PROPERTIES props;
 
         props.cBuffers = 3;
-        props.cbBuffer = 64 * 1024; /* 64k bytes */
+        props.cbBuffer = 64 * 1024; /* 64 KB */
         props.cbAlign = 1;
         props.cbPrefix = 0;
 
@@ -589,7 +589,7 @@ static HRESULT PullPin_InitProcessing(PullPin * This)
         assert(WaitForSingleObject(This->thread_sleepy, 0) == WAIT_TIMEOUT);
         This->state = Req_Sleepy;
 
-        /* AddRef the filter to make sure it and it's pins will be around
+        /* AddRef the filter to make sure it and its pins will be around
          * as long as the thread */
         IBaseFilter_AddRef(This->pin.pinInfo.pFilter);
 

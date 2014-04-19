@@ -67,7 +67,7 @@ static int EventsQueue_Destroy(EventsQueue* omr)
     return TRUE;
 }
 
-static int EventsQueue_PutEvent(EventsQueue* omr, const Event* evt)
+static BOOL EventsQueue_PutEvent(EventsQueue* omr, const Event* evt)
 {
     EnterCriticalSection(&omr->msg_crst);
     if (omr->msg_toget == ((omr->msg_tosave + 1) % omr->ring_buffer_size))
@@ -96,7 +96,7 @@ static int EventsQueue_PutEvent(EventsQueue* omr, const Event* evt)
     return TRUE;
 }
 
-static int EventsQueue_GetEvent(EventsQueue* omr, Event* evt, LONG msTimeOut)
+static BOOL EventsQueue_GetEvent(EventsQueue* omr, Event* evt, LONG msTimeOut)
 {
     if (WaitForSingleObject(omr->msg_event, msTimeOut) != WAIT_OBJECT_0)
 	return FALSE;
@@ -356,7 +356,7 @@ static HRESULT WINAPI FilterGraph2_AddFilter(IFilterGraph2 *iface, IBaseFilter *
     HRESULT hr;
     int i,j;
     WCHAR* wszFilterName = NULL;
-    int duplicate_name = FALSE;
+    BOOL duplicate_name = FALSE;
 
     TRACE("(%p/%p)->(%p, %s (%p))\n", This, iface, pFilter, debugstr_w(pName), pName);
 
@@ -429,7 +429,7 @@ static HRESULT WINAPI FilterGraph2_AddFilter(IFilterGraph2 *iface, IBaseFilter *
         This->filterCapacity = newCapacity;
     }
 
-    hr = IBaseFilter_JoinFilterGraph(pFilter, (IFilterGraph *)This, wszFilterName);
+    hr = IBaseFilter_JoinFilterGraph(pFilter, (IFilterGraph *)&This->IFilterGraph2_iface, wszFilterName);
 
     if (SUCCEEDED(hr))
     {
@@ -469,7 +469,7 @@ static HRESULT WINAPI FilterGraph2_RemoveFilter(IFilterGraph2 *iface, IBaseFilte
             if (This->defaultclock && This->refClockProvider == pFilter)
             {
                 IMediaFilter_SetSyncSource(&This->IMediaFilter_iface, NULL);
-                This->defaultclock = 1;
+                This->defaultclock = TRUE;
             }
 
             TRACE("Removing filter %s\n", debugstr_w(This->pFilterNames[i]));
@@ -1481,7 +1481,7 @@ static HRESULT WINAPI FilterGraph2_RenderFile(IFilterGraph2 *iface, LPCWSTR lpcw
     IEnumPins* penumpins = NULL;
     HRESULT hr;
     BOOL partial = FALSE;
-    HRESULT any = FALSE;
+    BOOL any = FALSE;
 
     TRACE("(%p/%p)->(%s, %s)\n", This, iface, debugstr_w(lpcwstrFile), debugstr_w(lpcwstrPlayList));
 
@@ -1659,7 +1659,7 @@ static HRESULT WINAPI FilterGraph2_AddSourceFilter(IFilterGraph2 *iface, LPCWSTR
     }
 
     /* The file has been already loaded */
-    IFileSourceFilter_GetCurFile(pfile, &filename, &mt);
+    hr = IFileSourceFilter_GetCurFile(pfile, &filename, &mt);
     if (FAILED(hr)) {
         WARN("GetCurFile (%x)\n", hr);
         goto error;
@@ -5257,7 +5257,7 @@ static HRESULT WINAPI MediaFilter_SetSyncSource(IMediaFilter *iface, IReferenceC
                 IMediaEventSink *pEventSink;
                 HRESULT eshr;
 
-                eshr = IMediaFilter_QueryInterface(iface, &IID_IMediaEventSink, (LPVOID)&pEventSink);
+                eshr = IMediaFilter_QueryInterface(iface, &IID_IMediaEventSink, (void **)&pEventSink);
                 if (SUCCEEDED(eshr))
                 {
                     IMediaEventSink_Notify(pEventSink, EC_CLOCK_CHANGED, 0, 0);

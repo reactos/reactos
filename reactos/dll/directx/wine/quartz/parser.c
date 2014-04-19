@@ -405,14 +405,13 @@ HRESULT WINAPI Parser_QueryVendorInfo(IBaseFilter * iface, LPWSTR *pVendorInfo)
     return BaseFilterImpl_QueryVendorInfo(iface, pVendorInfo);
 }
 
-static const  BasePinFuncTable output_BaseFuncTable = {
-    NULL,
-    BaseOutputPinImpl_AttemptConnection,
-    BasePinImpl_GetMediaTypeVersion,
-    Parser_OutputPin_GetMediaType
-};
-
 static const BaseOutputPinFuncTable output_BaseOutputFuncTable = {
+    {
+        NULL,
+        BaseOutputPinImpl_AttemptConnection,
+        BasePinImpl_GetMediaTypeVersion,
+        Parser_OutputPin_GetMediaType
+    },
     Parser_OutputPin_DecideBufferSize,
     Parser_OutputPin_DecideAllocator,
     Parser_OutputPin_BreakConnect
@@ -428,7 +427,7 @@ HRESULT Parser_AddPin(ParserImpl * This, const PIN_INFO * piOutput, ALLOCATOR_PR
     This->ppPins = CoTaskMemAlloc((This->cStreams + 2) * sizeof(IPin *));
     memcpy(This->ppPins, ppOldPins, (This->cStreams + 1) * sizeof(IPin *));
 
-    hr = BaseOutputPin_Construct(&Parser_OutputPin_Vtbl, sizeof(Parser_OutputPin), piOutput, &output_BaseFuncTable, &output_BaseOutputFuncTable, &This->filter.csFilter, This->ppPins + (This->cStreams + 1));
+    hr = BaseOutputPin_Construct(&Parser_OutputPin_Vtbl, sizeof(Parser_OutputPin), piOutput, &output_BaseOutputFuncTable, &This->filter.csFilter, This->ppPins + (This->cStreams + 1));
 
     if (SUCCEEDED(hr))
     {
