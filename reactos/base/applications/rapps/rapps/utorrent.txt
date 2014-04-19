@@ -2,10 +2,10 @@
 
 [Section]
 Name = µTorrent
-Version = 3.3.2
+Version = 3.4.1
 Licence = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
-Size = 1020.58 kB
+Size = 1.6 MB
 Category = 5
 URLSite = http://www.utorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/utorrent/os/windows/track/stable/utorrent.exe
@@ -22,7 +22,7 @@ Description = Pequeño y rápido cliente BitTorrent.
 [Section.040c]
 Licence = Gratuit pour une utilisation non-commerciale
 Description = Client BitTorrent petit et rapide.
-Size = 1020,58 ko
+Size = 1,6 Mo
 
 [Section.040c]
 Licence = Gratita per un uso non-commerciale
@@ -43,7 +43,7 @@ Description = Mały i szybki klient BitTorrent.
 [Section.0418]
 Licence = Gratuită pentru uz necomercial
 Description = Client BitTorrent, mic și rapid.
-Size = 1020,58 ko
+Size = 1,6 Mo
 
 [Section.0419]
 Licence = Бесплатная для некоммерческого использования
@@ -52,7 +52,7 @@ Description = Маленький и быстрый клиент BitTorrent.
 [Section.041f]
 Licence = Ticârî olmayan kullanımlarda ücretsiz.
 Description = Küçük ve hızlı bir BitTorrent istemcisi.
-Size = 1020,58 KB
+Size = 1,6 MB
 
 [Section.0422]
 Licence = Безплатна для некомерційного використання

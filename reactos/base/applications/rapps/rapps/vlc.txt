@@ -2,13 +2,13 @@
 
 [Section]
 Name = VLC media player
-Version = 2.1.2
+Version = 2.1.3
 Licence = GPL
 Description = A media player.
-Size = 23.0 MB
+Size = 23.5 MB
 Category = 2
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://mirror.de.leaseweb.net/videolan/vlc/2.1.2/win32/vlc-2.1.2-win32.exe
+URLDownload = http://mirror.de.leaseweb.net/videolan/vlc/2.1.3/win32/vlc-2.1.3-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -19,7 +19,7 @@ Description = Reproductor multimedia.
 
 [Section.040c]
 Description = Un lecteur media.
-Size = 23,0 Mo
+Size = 23,5 Mo
 
 [Section.0410]
 Description = Lettore multimediale.
@@ -32,7 +32,7 @@ Description = Odtwarzacz multimediów.
 
 [Section.0418]
 Description = Lector multimedia.
-Size = 23,0 Mo
+Size = 23,5 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.
@@ -43,7 +43,7 @@ Description = Multimediálny prehrávač.
 [Section.041f]
 Name = VLC Ortam Oynatıcısı
 Description = Bir ortam oynatıcısı.
-Size = 23,0 MB
+Size = 23,5 MB
 
 [Section.0422]
 Description = Мультимедійний програвач.
