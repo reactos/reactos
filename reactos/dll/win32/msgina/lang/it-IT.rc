@@ -167,7 +167,7 @@ BEGIN
     IDS_SHUTDOWN_LOGOFF "Disconetti ""%s"""
     IDS_SHUTDOWN_SHUTDOWN "Spegni"
     IDS_SHUTDOWN_RESTART "Riavvia"
-    IDS_SHUTDOWN_SLEEP "Sleep"
+    IDS_SHUTDOWN_SLEEP "Sospendi"
     IDS_SHUTDOWN_HIBERNATE "Ibernazione"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Termina la sessione attuale e permette ad altri utenti di accedere al sistema."
