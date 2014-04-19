@@ -84,9 +84,9 @@ static void uniquecontainer(char *unique)
     RegQueryValueExA(hkey, szMachineGuid, NULL, NULL, (LPBYTE)guid, &size);
     RegCloseKey(hkey);
 
-    lstrcpy(unique, szContainer_md5);
-    lstrcat(unique, "_");
-    lstrcat(unique, guid);
+    lstrcpyA(unique, szContainer_md5);
+    lstrcatA(unique, "_");
+    lstrcatA(unique, guid);
 }
 
 static void printBytes(const char *heading, const BYTE *pb, size_t cb)
@@ -118,7 +118,7 @@ static void trace_hex(BYTE *pbData, DWORD dwLen) {
 }
 */
 
-static int init_base_environment(DWORD dwKeyFlags)
+static BOOL init_base_environment(DWORD dwKeyFlags)
 {
     HCRYPTKEY hKey;
     BOOL result;
@@ -127,12 +127,12 @@ static int init_base_environment(DWORD dwKeyFlags)
         
     hProv = (HCRYPTPROV)INVALID_HANDLE_VALUE;
 
-    result = CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    result = CryptAcquireContextA(&hProv, szContainer, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     ok(!result && (GetLastError()==NTE_BAD_FLAGS ||
        broken(GetLastError() == NTE_KEYSET_NOT_DEF /* Win9x/NT4 */)),
        "%d, %08x\n", result, GetLastError());
     
-    if (!CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, 0))
+    if (!CryptAcquireContextA(&hProv, szContainer, szProvider, PROV_RSA_FULL, 0))
     {
         ok(GetLastError()==NTE_BAD_KEYSET ||
            broken(GetLastError() == NTE_TEMPORARY_PROFILE /* some Win7 setups */) ||
@@ -141,15 +141,15 @@ static int init_base_environment(DWORD dwKeyFlags)
         if (GetLastError()!=NTE_BAD_KEYSET)
         {
             win_skip("RSA full provider not available\n");
-            return 0;
+            return FALSE;
         }
-        result = CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, 
+        result = CryptAcquireContextA(&hProv, szContainer, szProvider, PROV_RSA_FULL,
                                      CRYPT_NEWKEYSET);
         ok(result, "%08x\n", GetLastError());
         if (!result)
         {
             win_skip("Couldn't create crypto provider\n");
-            return 0;
+            return FALSE;
         }
         result = CryptGenKey(hProv, AT_KEYEXCHANGE, dwKeyFlags, &hKey);
         ok(result, "%08x\n", GetLastError());
@@ -158,7 +158,7 @@ static int init_base_environment(DWORD dwKeyFlags)
         ok(result, "%08x\n", GetLastError());
         if (result) CryptDestroyKey(hKey);
     }
-    return 1;
+    return TRUE;
 }
 
 static void clean_up_base_environment(void)
@@ -175,10 +175,10 @@ static void clean_up_base_environment(void)
     result = CryptReleaseContext(hProv, 0);
     ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "%08x\n", GetLastError());
 
-    CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    CryptAcquireContextA(&hProv, szContainer, szProvider, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
 }
 
-static int init_aes_environment(void)
+static BOOL init_aes_environment(void)
 {
     HCRYPTKEY hKey;
     BOOL result;
@@ -188,26 +188,26 @@ static int init_aes_environment(void)
     hProv = (HCRYPTPROV)INVALID_HANDLE_VALUE;
 
     /* we are using NULL as provider name for RSA_AES provider as the provider
-     * names are different in Windows XP and Vista. Its different as to what
-     * its defined in the SDK on Windows XP.
+     * names are different in Windows XP and Vista. It's different to what
+     * is defined in the SDK on Windows XP.
      * This provider is available on Windows XP, Windows 2003 and Vista.      */
 
-    result = CryptAcquireContext(&hProv, szContainer, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    result = CryptAcquireContextA(&hProv, szContainer, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
     if (!result && GetLastError() == NTE_PROV_TYPE_NOT_DEF)
     {
         win_skip("RSA_AES provider not supported\n");
-        return 0;
+        return FALSE;
     }
     ok(!result && GetLastError()==NTE_BAD_FLAGS, "%d, %08x\n", result, GetLastError());
 
-    if (!CryptAcquireContext(&hProv, szContainer, NULL, PROV_RSA_AES, 0))
+    if (!CryptAcquireContextA(&hProv, szContainer, NULL, PROV_RSA_AES, 0))
     {
         ok(GetLastError()==NTE_BAD_KEYSET, "%08x\n", GetLastError());
-        if (GetLastError()!=NTE_BAD_KEYSET) return 0;
-        result = CryptAcquireContext(&hProv, szContainer, NULL, PROV_RSA_AES,
+        if (GetLastError()!=NTE_BAD_KEYSET) return FALSE;
+        result = CryptAcquireContextA(&hProv, szContainer, NULL, PROV_RSA_AES,
                                      CRYPT_NEWKEYSET);
         ok(result, "%08x\n", GetLastError());
-        if (!result) return 0;
+        if (!result) return FALSE;
         result = CryptGenKey(hProv, AT_KEYEXCHANGE, 0, &hKey);
         ok(result, "%08x\n", GetLastError());
         if (result) CryptDestroyKey(hKey);
@@ -215,7 +215,7 @@ static int init_aes_environment(void)
         ok(result, "%08x\n", GetLastError());
         if (result) CryptDestroyKey(hKey);
     }
-    return 1;
+    return TRUE;
 }
 
 static void clean_up_aes_environment(void)
@@ -225,7 +225,7 @@ static void clean_up_aes_environment(void)
     result = CryptReleaseContext(hProv, 1);
     ok(!result && GetLastError()==NTE_BAD_FLAGS, "%08x\n", GetLastError());
 
-    CryptAcquireContext(&hProv, szContainer, NULL, PROV_RSA_AES, CRYPT_DELETEKEYSET);
+    CryptAcquireContextA(&hProv, szContainer, NULL, PROV_RSA_AES, CRYPT_DELETEKEYSET);
 }
 
 static void test_prov(void) 
@@ -446,7 +446,10 @@ static void test_hashes(void)
     result = CryptCreateHash(hProv, CALG_MD4, 0, 0, &hHash);
     ok(result, "%08x\n", GetLastError());
 
-    result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+    result = CryptHashData(hHash, pbData, sizeof(pbData), ~0);
+    ok(!result && GetLastError() == NTE_BAD_FLAGS, "%08x\n", GetLastError());
+
+    result = CryptHashData(hHash, pbData, sizeof(pbData), CRYPT_USERDATA);
     ok(result, "%08x\n", GetLastError());
 
     len = sizeof(DWORD);
@@ -470,7 +473,10 @@ static void test_hashes(void)
     result = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashlen, &len, 0);
     ok(result && (hashlen == 16), "%08x, hashlen: %d\n", GetLastError(), hashlen);
 
-    result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+    result = CryptHashData(hHash, pbData, sizeof(pbData), ~0);
+    ok(!result && GetLastError() == NTE_BAD_FLAGS, "%08x\n", GetLastError());
+
+    result = CryptHashData(hHash, pbData, sizeof(pbData), CRYPT_USERDATA);
     ok(result, "%08x\n", GetLastError());
 
     len = 16;
@@ -519,7 +525,7 @@ static void test_hashes(void)
     result = CryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash);
     ok(result, "%08x\n", GetLastError());
 
-    result = CryptHashData(hHash, pbData, 5, 0);
+    result = CryptHashData(hHash, pbData, 5, CRYPT_USERDATA);
     ok(result, "%08x\n", GetLastError());
 
     if(pCryptDuplicateHash) {
@@ -558,7 +564,7 @@ static void test_hashes(void)
        "expected NTE_BAD_ALGID, got %08x\n", GetLastError());
 
     result = CryptAcquireContextA(&prov, NULL, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(result, "CryptAcquireContext failed 0x%08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed 0x%08x\n", GetLastError());
 
     result = CryptCreateHash(prov, CALG_SHA1, 0, 0, &hHash);
     ok(result, "CryptCreateHash failed 0x%08x\n", GetLastError());
@@ -586,7 +592,7 @@ static void test_hashes(void)
     }
 
     result = CryptAcquireContextA(&prov, NULL, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(result, "CryptAcquireContext failed 0x%08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed 0x%08x\n", GetLastError());
 
     result = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
     ok(result, "CryptCreateHash failed 0x%08x\n", GetLastError());
@@ -616,7 +622,7 @@ static void test_hashes(void)
 
     /* Test CALG_SSL3_SHAMD5 */
     result = CryptAcquireContextA(&prov, NULL, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(result, "CryptAcquireContext failed 0x%08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed 0x%08x\n", GetLastError());
 
     /* Step 1: create an MD5 hash of the data */
     result = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
@@ -650,10 +656,10 @@ static void test_hashes(void)
     result = CryptImportKey(hProv, abPlainPrivateKey, len, 0, 0, &hKeyExchangeKey);
     ok(result, "%08x\n", GetLastError());
     len = 0;
-    result = CryptSignHash(hHash, AT_KEYEXCHANGE, NULL, 0, NULL, &len);
+    result = CryptSignHashA(hHash, AT_KEYEXCHANGE, NULL, 0, NULL, &len);
     ok(result, "%08x\n", GetLastError());
     ok(len == 128, "expected len 128, got %d\n", len);
-    result = CryptSignHash(hHash, AT_KEYEXCHANGE, NULL, 0, pbSigValue, &len);
+    result = CryptSignHashA(hHash, AT_KEYEXCHANGE, NULL, 0, pbSigValue, &len);
     ok(result, "%08x\n", GetLastError());
     ok(!memcmp(pbSigValue, signed_ssl3_shamd5_hash, len), "unexpected value\n");
     if (len != 128 || memcmp(pbSigValue, signed_ssl3_shamd5_hash, len))
@@ -1916,28 +1922,28 @@ static void test_verify_signature(void) {
     if (!result) return;
 
     /*check that a NULL pointer signature is correctly handled*/
-    result = CryptVerifySignature(hHash, NULL, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, NULL, 128, hPubSignKey, NULL, 0);
     ok(!result && ERROR_INVALID_PARAMETER == GetLastError(),
      "Expected ERROR_INVALID_PARAMETER error, got %08x\n", GetLastError());
     if (result) return;
 
     /* check that we get a bad signature error when the signature is too short*/
     SetLastError(0xdeadbeef);
-    result = CryptVerifySignature(hHash, abSignatureMD2, 64, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD2, 64, hPubSignKey, NULL, 0);
     ok((!result && NTE_BAD_SIGNATURE == GetLastError()) ||
      broken(result), /* Win9x, WinMe, NT4 */
      "Expected NTE_BAD_SIGNATURE, got %08x\n",  GetLastError());
 
-    result = CryptVerifySignature(hHash, abSignatureMD2, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD2, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
     /* It seems that CPVerifySignature doesn't care about the OID at all. */
-    result = CryptVerifySignature(hHash, abSignatureMD2NoOID, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD2NoOID, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD2NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
+    result = CryptVerifySignatureA(hHash, abSignatureMD2NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
@@ -1951,15 +1957,15 @@ static void test_verify_signature(void) {
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD4, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD4, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD4NoOID, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD4NoOID, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD4NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
+    result = CryptVerifySignatureA(hHash, abSignatureMD4NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
@@ -1973,15 +1979,15 @@ static void test_verify_signature(void) {
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD5, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD5, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD5NoOID, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureMD5NoOID, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureMD5NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
+    result = CryptVerifySignatureA(hHash, abSignatureMD5NoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
@@ -1995,15 +2001,15 @@ static void test_verify_signature(void) {
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureSHA, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureSHA, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureSHANoOID, 128, hPubSignKey, NULL, 0);
+    result = CryptVerifySignatureA(hHash, abSignatureSHANoOID, 128, hPubSignKey, NULL, 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
-    result = CryptVerifySignature(hHash, abSignatureSHANoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
+    result = CryptVerifySignatureA(hHash, abSignatureSHANoOID, 128, hPubSignKey, NULL, CRYPT_NOHASHOID);
     ok(result, "%08x\n", GetLastError());
     if (!result) return;
 
@@ -2487,7 +2493,7 @@ static void test_schannel_provider(void)
         0x3d, 0xca, 0x6a, 0x6f, 0xfa, 0x15, 0x4e, 0xaa
     };
     
-    result = CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_VERIFYCONTEXT|CRYPT_NEWKEYSET);
+    result = CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_VERIFYCONTEXT|CRYPT_NEWKEYSET);
     if (!result)
     {
         win_skip("no PROV_RSA_SCHANNEL support\n");
@@ -2497,7 +2503,7 @@ static void test_schannel_provider(void)
     if (result)
         CryptReleaseContext(hProv, 0);
 
-    result = CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_VERIFYCONTEXT);
+    result = CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_VERIFYCONTEXT);
     ok (result, "%08x\n", GetLastError());
     if (!result) return;
     
@@ -2636,7 +2642,7 @@ static void test_schannel_provider(void)
     CryptDestroyKey(hRSAKey);
     CryptDestroyKey(hMasterSecret);
     CryptReleaseContext(hProv, 0);
-    CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_DELETEKEYSET);
+    CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_SCHANNEL, CRYPT_DELETEKEYSET);
 }
 
 /* Test that a key can be used to encrypt data and exported, and that, when
@@ -2652,13 +2658,13 @@ static void test_rsa_round_trip(void)
     BYTE data[256], *exportedKey;
     DWORD dataLen, keyLen;
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* Generate a new key... */
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, CALG_RSA_KEYX, CRYPT_EXPORTABLE, &signKey);
     ok(result, "CryptGenKey with CALG_RSA_KEYX failed with error %08x\n", GetLastError());
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &keyExchangeKey);
@@ -2701,7 +2707,7 @@ static void test_rsa_round_trip(void)
     CryptDestroyKey(keyExchangeKey);
     CryptReleaseContext(prov, 0);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 }
 
@@ -2764,36 +2770,36 @@ static void test_null_provider(void)
     DWORD keySpec, dataLen,dwParam;
     char szName[MAX_PATH];
 
-    result = CryptAcquireContext(NULL, szContainer, NULL, 0, 0);
+    result = CryptAcquireContextA(NULL, szContainer, NULL, 0, 0);
     ok(!result && GetLastError() == NTE_BAD_PROV_TYPE,
      "Expected NTE_BAD_PROV_TYPE, got %08x\n", GetLastError());
-    result = CryptAcquireContext(NULL, szContainer, NULL, PROV_RSA_FULL, 0);
+    result = CryptAcquireContextA(NULL, szContainer, NULL, PROV_RSA_FULL, 0);
     ok(!result && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_KEYSET),
      "Expected ERROR_INVALID_PARAMETER or NTE_BAD_KEYSET, got %08x\n", GetLastError());
-    result = CryptAcquireContext(NULL, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(NULL, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
     ok(!result && ( GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_KEYSET),
      "Expected ERROR_INVALID_PARAMETER or NTE_BAD_KEYSET, got %08x\n", GetLastError());
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
     ok(!result && GetLastError() == NTE_BAD_KEYSET,
      "Expected NTE_BAD_KEYSET, got %08x\n", GetLastError());
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL, 0);
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL, 0);
     ok(!result && GetLastError() == NTE_BAD_KEYSET,
      "Expected NTE_BAD_KEYSET, got %08x\n", GetLastError());
 
     /* Delete the default container. */
-    CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
     /* Once you've deleted the default container you can't open it as if it
      * already exists.
      */
-    result = CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, 0);
+    result = CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL, 0);
     ok(!result && GetLastError() == NTE_BAD_KEYSET,
      "Expected NTE_BAD_KEYSET, got %08x\n", GetLastError());
     /* But you can always open the default container for CRYPT_VERIFYCONTEXT. */
-    result = CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL,
      CRYPT_VERIFYCONTEXT);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     if (!result) return;
     dataLen = sizeof(keySpec);
     result = CryptGetProvParam(prov, PP_KEYSPEC, (LPBYTE)&keySpec, &dataLen, 0);
@@ -2812,9 +2818,9 @@ static void test_null_provider(void)
     result = CryptReleaseContext(prov, 0);
     ok(result, "CryptReleaseContext failed: %08x\n", GetLastError());
     /* You can create a new default container. */
-    result = CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     /* But you still can't get the keys (until one's been generated.) */
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok(!result && GetLastError() == NTE_NO_KEY,
@@ -2823,20 +2829,20 @@ static void test_null_provider(void)
     ok(!result && GetLastError() == NTE_NO_KEY,
      "Expected NTE_NO_KEY, got %08x\n", GetLastError());
     CryptReleaseContext(prov, 0);
-    CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL, 0);
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL, 0);
     ok(!result && GetLastError() == NTE_BAD_KEYSET,
      "Expected NTE_BAD_KEYSET, got %08x\n", GetLastError());
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_VERIFYCONTEXT);
     ok(!result && GetLastError() == NTE_BAD_FLAGS,
      "Expected NTE_BAD_FLAGS, got %08x\n", GetLastError());
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     if (!result) return;
     /* Test provider parameters getter */
     dataLen = sizeof(dwParam);
@@ -2910,13 +2916,13 @@ static void test_null_provider(void)
     ok(!result && GetLastError() == NTE_NO_KEY,
      "Expected NTE_NO_KEY, got %08x\n", GetLastError());
     CryptReleaseContext(prov, 0);
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* Whereas importing a sign blob.. */
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     if (!result) return;
     result = CryptImportKey(prov, signBlob, sizeof(signBlob), 0, 0, &key);
     ok(result, "CryptImportKey failed: %08x\n", GetLastError());
@@ -2931,13 +2937,13 @@ static void test_null_provider(void)
     CryptDestroyKey(key);
     CryptReleaseContext(prov, 0);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* Test for being able to get a key generated with CALG_RSA_SIGN. */
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, CALG_RSA_SIGN, 0, &key);
     ok(result, "CryptGenKey with CALG_RSA_SIGN failed with error %08x\n", GetLastError());
     CryptDestroyKey(key);
@@ -2948,13 +2954,13 @@ static void test_null_provider(void)
     CryptDestroyKey(key);
     CryptReleaseContext(prov, 0);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* Test for being able to get a key generated with CALG_RSA_KEYX. */
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, CALG_RSA_KEYX, 0, &key);
     ok(result, "CryptGenKey with CALG_RSA_KEYX failed with error %08x\n", GetLastError());
     CryptDestroyKey(key);
@@ -2965,44 +2971,44 @@ static void test_null_provider(void)
     ok(!result, "expected CryptGetUserKey to fail\n");
     CryptReleaseContext(prov, 0);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* test for the bug in accessing the user key in a container
      */
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     result = CryptGenKey(prov, AT_KEYEXCHANGE, 0, &key);
     ok(result, "CryptGenKey with AT_KEYEXCHANGE failed with error %08x\n", GetLastError());
     CryptDestroyKey(key);
     CryptReleaseContext(prov,0);
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,0);
-    ok(result, "CryptAcquireContext failed: 0x%08x\n", GetLastError());
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,0);
+    ok(result, "CryptAcquireContextA failed: 0x%08x\n", GetLastError());
     result = CryptGetUserKey(prov, AT_KEYEXCHANGE, &key);
     ok (result, "CryptGetUserKey failed with error %08x\n", GetLastError());
     CryptDestroyKey(key);
     CryptReleaseContext(prov, 0);
 
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 
     /* test the machine key set */
-    CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET|CRYPT_MACHINE_KEYSET);
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_NEWKEYSET|CRYPT_MACHINE_KEYSET);
-    ok(result, "CryptAcquireContext with CRYPT_MACHINE_KEYSET failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA with CRYPT_MACHINE_KEYSET failed: %08x\n", GetLastError());
     CryptReleaseContext(prov, 0);
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_MACHINE_KEYSET);
-    ok(result, "CryptAcquireContext with CRYPT_MACHINE_KEYSET failed: %08x\n", GetLastError());
+    ok(result, "CryptAcquireContextA with CRYPT_MACHINE_KEYSET failed: %08x\n", GetLastError());
     CryptReleaseContext(prov,0);
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
        CRYPT_DELETEKEYSET|CRYPT_MACHINE_KEYSET);
-    ok(result, "CryptAcquireContext with CRYPT_DELETEKEYSET|CRYPT_MACHINE_KEYSET failed: %08x\n",
+    ok(result, "CryptAcquireContextA with CRYPT_DELETEKEYSET|CRYPT_MACHINE_KEYSET failed: %08x\n",
 		GetLastError());
-    result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
+    result = CryptAcquireContextA(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_MACHINE_KEYSET);
     ok(!result && GetLastError() == NTE_BAD_KEYSET ,
 	"Expected NTE_BAD_KEYSET, got %08x\n", GetLastError());
@@ -3114,11 +3120,11 @@ static void test_key_initialization(void)
     /* Like init_base_environment, but doesn't generate new keys, as they'll
      * be imported instead.
      */
-    if (!CryptAcquireContext(&prov1, szContainer, szProvider, PROV_RSA_FULL, 0))
+    if (!CryptAcquireContextA(&prov1, szContainer, szProvider, PROV_RSA_FULL, 0))
     {
-        result = CryptAcquireContext(&prov1, szContainer, szProvider, PROV_RSA_FULL,
+        result = CryptAcquireContextA(&prov1, szContainer, szProvider, PROV_RSA_FULL,
                                      CRYPT_NEWKEYSET);
-        ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+        ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     }
     dwLen = (DWORD)sizeof(abPlainPrivateKey);
     result = CryptImportKey(prov1, abPlainPrivateKey, dwLen, 0, 0, &hKeyExchangeKey);
@@ -3131,8 +3137,8 @@ static void test_key_initialization(void)
     /* Once the key has been imported, subsequently acquiring a context with
      * the same name will allow retrieving the key.
      */
-    result = CryptAcquireContext(&prov2, szContainer, szProvider, PROV_RSA_FULL, 0);
-    ok(result, "CryptAcquireContext failed: %08x\n", GetLastError());
+    result = CryptAcquireContextA(&prov2, szContainer, szProvider, PROV_RSA_FULL, 0);
+    ok(result, "CryptAcquireContextA failed: %08x\n", GetLastError());
     result = CryptGetUserKey(prov2, AT_KEYEXCHANGE, &hKey);
     ok(result, "CryptGetUserKey failed: %08x\n", GetLastError());
     if (result) CryptDestroyKey(hKey);
@@ -3141,7 +3147,7 @@ static void test_key_initialization(void)
     CryptDestroyKey(hSessionKey);
     CryptDestroyKey(hKeyExchangeKey);
     CryptReleaseContext(prov1, 0);
-    CryptAcquireContext(&prov1, szContainer, NULL, PROV_RSA_FULL,
+    CryptAcquireContextA(&prov1, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
 }
 
