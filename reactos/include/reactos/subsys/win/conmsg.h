@@ -547,6 +547,21 @@ typedef struct
     HANDLE  TargetHandle;
 } CONSOLE_DUPLICATEHANDLE, *PCONSOLE_DUPLICATEHANDLE;
 
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Flags;
+} CONSOLE_GETHANDLEINFO, *PCONSOLE_GETHANDLEINFO;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Mask;
+    DWORD  Flags;
+} CONSOLE_SETHANDLEINFO, *PCONSOLE_SETHANDLEINFO;
+
 /*
  * Type of handles.
  */
@@ -748,6 +763,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_CLOSEHANDLE CloseHandleRequest;
         CONSOLE_VERIFYHANDLE VerifyHandleRequest;
         CONSOLE_DUPLICATEHANDLE DuplicateHandleRequest;
+        CONSOLE_GETHANDLEINFO GetHandleInfoRequest;
+        CONSOLE_SETHANDLEINFO SetHandleInfoRequest;
 
         /* Cursor */
         CONSOLE_SHOWCURSOR ShowCursorRequest;

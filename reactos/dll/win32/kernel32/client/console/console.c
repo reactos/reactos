@@ -313,6 +313,67 @@ DuplicateConsoleHandle(HANDLE hConsole,
  */
 BOOL
 WINAPI
+GetConsoleHandleInformation(IN HANDLE hHandle,
+                            OUT LPDWORD lpdwFlags)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETHANDLEINFO GetHandleInfoRequest = &ApiMessage.Data.GetHandleInfoRequest;
+
+    GetHandleInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetHandleInfoRequest->Handle        = hHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHandleInformation),
+                        sizeof(*GetHandleInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    *lpdwFlags = GetHandleInfoRequest->Flags;
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetConsoleHandleInformation(IN HANDLE hHandle,
+                            IN DWORD dwMask,
+                            IN DWORD dwFlags)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETHANDLEINFO SetHandleInfoRequest = &ApiMessage.Data.SetHandleInfoRequest;
+
+    SetHandleInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetHandleInfoRequest->Handle        = hHandle;
+    SetHandleInfoRequest->Mask          = dwMask;
+    SetHandleInfoRequest->Flags         = dwFlags;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHandleInformation),
+                        sizeof(*SetHandleInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
 GetConsoleDisplayMode(LPDWORD lpModeFlags)
 {
     CONSOLE_API_MESSAGE ApiMessage;

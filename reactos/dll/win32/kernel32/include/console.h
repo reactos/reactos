@@ -39,6 +39,15 @@ DuplicateConsoleHandle(HANDLE hConsole,
                        DWORD  dwOptions);
 
 BOOL WINAPI
+GetConsoleHandleInformation(IN HANDLE hHandle,
+                            OUT LPDWORD lpdwFlags);
+
+BOOL WINAPI
+SetConsoleHandleInformation(IN HANDLE hHandle,
+                            IN DWORD dwMask,
+                            IN DWORD dwFlags);
+
+BOOL WINAPI
 VerifyConsoleIoHandle(HANDLE Handle);
 
 BOOL WINAPI

@@ -377,7 +377,6 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle)
 {
     ULONG Index = HandleToULong(Handle) >> 2;
-    PCONSOLE_IO_OBJECT Object;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -386,7 +385,7 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
     //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
 
     if (Index >= ProcessData->HandleTableSize ||
-        (Object = ProcessData->HandleTable[Index].Object) == NULL)
+        ProcessData->HandleTable[Index].Object == NULL)
     {
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
@@ -814,14 +813,100 @@ Quit:
 
 CSR_API(SrvGetHandleInformation)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_GETHANDLEINFO GetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHandleInfoRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    HANDLE Handle = GetHandleInfoRequest->Handle;
+    ULONG Index = HandleToULong(Handle) >> 2;
+    PCONSOLE_IO_HANDLE Entry;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    ASSERT(ProcessData->HandleTable);
+    // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+    //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
+
+    if (!IsConsoleHandle(Handle)              ||
+        Index >= ProcessData->HandleTableSize ||
+        (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
+
+    /*
+     * Retrieve the handle information flags. The console server
+     * doesn't support HANDLE_FLAG_PROTECT_FROM_CLOSE.
+     */
+    GetHandleInfoRequest->Flags = 0;
+    if (Entry->Inheritable) GetHandleInfoRequest->Flags |= HANDLE_FLAG_INHERIT;
+
+    Status = STATUS_SUCCESS;
+
+Quit:
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 CSR_API(SrvSetHandleInformation)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_SETHANDLEINFO SetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHandleInfoRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    HANDLE Handle = SetHandleInfoRequest->Handle;
+    ULONG Index = HandleToULong(Handle) >> 2;
+    PCONSOLE_IO_HANDLE Entry;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    ASSERT(ProcessData->HandleTable);
+    // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+    //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
+
+    if (!IsConsoleHandle(Handle)              ||
+        Index >= ProcessData->HandleTableSize ||
+        (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
+
+    /*
+     * Modify the handle information flags. The console server
+     * doesn't support HANDLE_FLAG_PROTECT_FROM_CLOSE.
+     */
+    if (SetHandleInfoRequest->Mask & HANDLE_FLAG_INHERIT)
+    {
+        Entry->Inheritable = ((SetHandleInfoRequest->Flags & HANDLE_FLAG_INHERIT) != 0);
+    }
+
+    Status = STATUS_SUCCESS;
+
+Quit:
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 CSR_API(SrvCloseHandle)
