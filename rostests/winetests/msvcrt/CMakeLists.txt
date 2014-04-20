@@ -1,5 +1,7 @@
 
-add_definitions(-D__msvcrt_ulong=ULONG)
+add_definitions(
+    -D_CRT_NONSTDC_NO_DEPRECATE
+    -D__msvcrt_ulong=ULONG)
 
 list(APPEND SOURCE
     cpp.c
