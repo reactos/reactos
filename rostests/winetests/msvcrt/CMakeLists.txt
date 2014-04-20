@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_CRT_NONSTDC_NO_DEPRECATE
-    -D__msvcrt_ulong=ULONG)
+add_definitions(-D__msvcrt_ulong=ULONG)
 
 list(APPEND SOURCE
     cpp.c
@@ -23,12 +20,14 @@ list(APPEND SOURCE
 
 add_executable(msvcrt_winetest ${SOURCE})
 
+set_module_type(msvcrt_winetest win32cui)
+add_importlibs(msvcrt_winetest msvcrt kernel32)
+
 if(MSVC)
     target_link_libraries(msvcrt_winetest oldnames)
+    add_importlibs(msvcrt_winetest ntdll)
 else()
     add_target_compile_flags(msvcrt_winetest "-Wno-format")
 endif()
 
-set_module_type(msvcrt_winetest win32cui)
-add_importlibs(msvcrt_winetest msvcrt kernel32 ntdll)
 add_cd_file(TARGET msvcrt_winetest DESTINATION reactos/bin FOR all)

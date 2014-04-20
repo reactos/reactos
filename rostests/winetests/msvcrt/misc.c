@@ -20,6 +20,7 @@
 
 #include "wine/test.h"
 #include <errno.h>
+#include <stdio.h>
 #include "msvcrt.h"
 
 static int (__cdecl *prand_s)(unsigned int *);
@@ -309,9 +310,53 @@ static void test__set_errno(void)
     ok(errno == 0xdeadbeef, "Expected errno to be 0xdeadbeef, got %d\n", errno);
 }
 
+static void test__popen_child(void)
+{
+    /* don't execute any tests here */
+    /* ExitProcess is used to set return code of _pclose */
+    printf("child output\n");
+    ExitProcess(0x37);
+}
+
+static void test__popen(const char *name)
+{
+    FILE *pipe;
+    char buf[1024];
+    int ret;
+
+    sprintf(buf, "%s misc popen", name);
+    pipe = _popen(buf, "r");
+    ok(pipe != NULL, "_popen failed with error: %d\n", errno);
+
+    fgets(buf, sizeof(buf), pipe);
+    ok(!strcmp(buf, "child output\n"), "buf = %s\n", buf);
+
+    ret = _pclose(pipe);
+    ok(ret == 0x37, "_pclose returned %x, expected 0x37\n", ret);
+
+    errno = 0xdeadbeef;
+    ret = _pclose((FILE*)0xdeadbeef);
+    ok(ret == -1, "_pclose returned %x, expected -1\n", ret);
+    if(p_set_errno)
+        ok(errno == EBADF, "errno = %d\n", errno);
+}
+
 START_TEST(misc)
 {
+    int arg_c;
+    char** arg_v;
+
     init();
+
+    arg_c = winetest_get_mainargs(&arg_v);
+    if(arg_c >= 3) {
+        if(!strcmp(arg_v[2], "popen"))
+            test__popen_child();
+        else
+            ok(0, "invalid argument '%s'\n", arg_v[2]);
+
+        return;
+    }
 
     test_rand_s();
     test_I10_OUTPUT();
@@ -320,4 +365,5 @@ START_TEST(misc)
     test__get_errno();
     test__set_doserrno();
     test__set_errno();
+    test__popen(arg_v[0]);
 }

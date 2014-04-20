@@ -46,13 +46,15 @@ static errno_t    (__cdecl *p_localtime32_s)(struct tm*, __time32_t*);
 static errno_t    (__cdecl *p_localtime64_s)(struct tm*, __time64_t*);
 static int*       (__cdecl *p__daylight)(void);
 static int*       (__cdecl *p___p__daylight)(void);
+static long*      (__cdecl *p___p__dstbias)(void);
+static long*      (__cdecl *p___p__timezone)(void);
 static size_t     (__cdecl *p_strftime)(char *, size_t, const char *, const struct tm *);
 static size_t     (__cdecl *p_wcsftime)(wchar_t *, size_t, const wchar_t *, const struct tm *);
 static char*      (__cdecl *p_asctime)(const struct tm *);
 
 static void init(void)
 {
-    HMODULE hmod = LoadLibrary("msvcrt.dll");
+    HMODULE hmod = LoadLibraryA("msvcrt.dll");
 
     p_gmtime32 = (void*)GetProcAddress(hmod, "_gmtime32");
     p_gmtime = (void*)GetProcAddress(hmod, "gmtime");
@@ -64,6 +66,8 @@ static void init(void)
     p_localtime64_s = (void*)GetProcAddress(hmod, "_localtime64_s");
     p__daylight = (void*)GetProcAddress(hmod, "__daylight");
     p___p__daylight = (void*)GetProcAddress(hmod, "__p__daylight");
+    p___p__dstbias = (void*)GetProcAddress(hmod, "__p__dstbias");
+    p___p__timezone = (void*)GetProcAddress(hmod, "__p__timezone");
     p_strftime = (void*)GetProcAddress(hmod, "strftime");
     p_wcsftime = (void*)GetProcAddress(hmod, "wcsftime");
     p_asctime = (void*)GetProcAddress(hmod, "asctime");
@@ -105,7 +109,7 @@ static void test_gmtime(void)
 
     gmt = -1;
     gmt_tm = p_gmtime32(&gmt);
-    ok(gmt_tm == NULL, "gmt_tm != NULL\n");
+    ok(gmt_tm==NULL || broken(gmt_tm->tm_year==70 && gmt_tm->tm_sec<0), "gmt_tm != NULL\n");
 
     gmt = valid = 0;
     gmt_tm = p_gmtime32(&gmt);
@@ -177,9 +181,12 @@ static void test_gmtime(void)
     errno = 0;
     gmt = -1;
     err = p_gmtime32_s(&gmt_tm_s, &gmt);
-    ok(err == EINVAL, "err = %d\n", err);
-    ok(errno == EINVAL, "errno = %d\n", errno);
-    ok(gmt_tm_s.tm_year == -1, "tm_year = %d\n", gmt_tm_s.tm_year);
+    ok(gmt_tm_s.tm_year == -1 || broken(gmt_tm_s.tm_year == 70 && gmt_tm_s.tm_sec < 0),
+       "tm_year = %d, tm_sec = %d\n", gmt_tm_s.tm_year, gmt_tm_s.tm_sec);
+    if(gmt_tm_s.tm_year == -1) {
+        ok(err==EINVAL, "err = %d\n", err);
+        ok(errno==EINVAL, "errno = %d\n", errno);
+    }
 }
 
 static void test_mktime(void)
@@ -804,10 +811,68 @@ static void test_asctime(void)
     ok(errno==EINVAL || broken(errno==0xdeadbeef), "errno = %d\n", errno);
 }
 
+static void test__tzset(void)
+{
+    char TZ_env[256];
+    int ret;
+
+    if(!p___p__daylight || !p___p__timezone || !p___p__dstbias) {
+        win_skip("__p__daylight, __p__timezone or __p__dstbias is not available\n");
+        return;
+    }
+
+    _snprintf(TZ_env,255,"TZ=%s",(getenv("TZ")?getenv("TZ"):""));
+
+    ret = *p___p__daylight();
+    ok(ret == 1, "*__p__daylight() = %d\n", ret);
+    ret = *p___p__timezone();
+    ok(ret == 28800, "*__p__timezone() = %d\n", ret);
+    ret = *p___p__dstbias();
+    ok(ret == -3600, "*__p__dstbias() = %d\n", ret);
+
+    _putenv("TZ=xxx+1yyy");
+    _tzset();
+    ret = *p___p__daylight();
+    ok(ret == 121, "*__p__daylight() = %d\n", ret);
+    ret = *p___p__timezone();
+    ok(ret == 3600, "*__p__timezone() = %d\n", ret);
+    ret = *p___p__dstbias();
+    ok(ret == -3600, "*__p__dstbias() = %d\n", ret);
+
+    *p___p__dstbias() = 0;
+    _putenv("TZ=xxx+1:3:5zzz");
+    _tzset();
+    ret = *p___p__daylight();
+    ok(ret == 122, "*__p__daylight() = %d\n", ret);
+    ret = *p___p__timezone();
+    ok(ret == 3785, "*__p__timezone() = %d\n", ret);
+    ret = *p___p__dstbias();
+    ok(ret == 0, "*__p__dstbias() = %d\n", ret);
+
+    _putenv(TZ_env);
+}
+
+static void test_clock(void)
+{
+    static const int THRESH = 50;
+    clock_t s, e;
+    int i;
+
+    for (i = 0; i < 10; i++)
+    {
+        s = clock();
+        Sleep(1000);
+        e = clock();
+
+        ok(abs((e-s) - 1000) < THRESH, "clock off on loop %i: %i\n", i, e-s);
+    }
+}
+
 START_TEST(time)
 {
     init();
 
+    test__tzset();
     test_strftime();
     test_ctime();
     test_gmtime();
@@ -821,4 +886,5 @@ START_TEST(time)
     test_localtime64_s();
     test_daylight();
     test_asctime();
+    test_clock();
 }

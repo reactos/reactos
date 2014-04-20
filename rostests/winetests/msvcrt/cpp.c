@@ -238,6 +238,55 @@ static BOOL InitFunctionPtrs(void)
     }
     else
     {
+#ifdef __arm__
+        SETNOFAIL(poperator_new, "??_U@YAPAXI@Z");
+        SETNOFAIL(poperator_delete, "??_V@YAXPAX@Z");
+
+        SET(pexception_ctor, "??0exception@std@@QAA@ABQBD@Z");
+        SET(pexception_copy_ctor, "??0exception@std@@QAA@ABV01@@Z");
+        SET(pexception_default_ctor, "??0exception@std@@QAA@XZ");
+        SET(pexception_dtor, "??1exception@std@@UAA@XZ");
+        SET(pexception_opequals, "??4exception@std@@QAAAAV01@ABV01@@Z");
+        SET(pexception_what, "?what@exception@std@@UBAPBDXZ");
+        SET(pexception_vector_dtor, "??_Eexception@@UAEPAXI@Z");/**/
+        SET(pexception_scalar_dtor, "??_Gexception@@UAEPAXI@Z");/**/
+
+        SET(pbad_typeid_ctor, "??0bad_typeid@std@@QAA@PBD@Z");
+        SETNOFAIL(pbad_typeid_ctor_closure, "??_Fbad_typeid@std@@QAAXXZ");
+        SET(pbad_typeid_copy_ctor, "??0bad_typeid@std@@QAA@ABV01@@Z");
+        SET(pbad_typeid_dtor, "??1bad_typeid@std@@UAA@XZ");
+        SET(pbad_typeid_opequals, "??4bad_typeid@std@@QAAAAV01@ABV01@@Z");
+        SET(pbad_typeid_what, "?what@exception@std@@UBAPBDXZ");
+        SET(pbad_typeid_vector_dtor, "??_Ebad_cast@@UAEPAXI@Z");
+        SET(pbad_typeid_scalar_dtor, "??_Gbad_cast@@UAEPAXI@Z");
+
+        SETNOFAIL(pbad_cast_ctor, "??0bad_cast@@QAE@ABQBD@Z");
+        if (!pbad_cast_ctor)
+            SET(pbad_cast_ctor, "??0bad_cast@std@@AAA@PBQBD@Z");
+        SETNOFAIL(pbad_cast_ctor2, "??0bad_cast@std@@QAA@PBD@Z");
+        SETNOFAIL(pbad_cast_ctor_closure, "??_Fbad_cast@std@@QAAXXZ");
+        /* FIXME: No ARM equivalent for "??0bad_cast@@QAE@ABV0@@Z" */
+        SET(pbad_cast_dtor, "??1bad_cast@std@@UAA@XZ");
+        SET(pbad_cast_opequals, "??4bad_cast@std@@QAAAAV01@ABV01@@Z");
+        SET(pbad_cast_what, "?what@exception@std@@UBAPBDXZ");
+        SET(pbad_cast_vector_dtor, "??_Ebad_cast@@UAEPAXI@Z");
+        SET(pbad_cast_scalar_dtor, "??_Gbad_cast@@UAEPAXI@Z");
+
+        SET(p__non_rtti_object_ctor, "??0__non_rtti_object@std@@QAA@PBD@Z");
+        SET(p__non_rtti_object_copy_ctor, "??0__non_rtti_object@std@@QAA@ABV01@@Z");
+        SET(p__non_rtti_object_dtor, "??1__non_rtti_object@std@@UAA@XZ");
+        SET(p__non_rtti_object_opequals, "??4__non_rtti_object@std@@QAAAAV01@ABV01@@Z");
+        SET(p__non_rtti_object_what, "?what@exception@std@@UBAPBDXZ");
+        SET(p__non_rtti_object_vector_dtor, "??_E__non_rtti_object@@UAEPAXI@Z");
+        SET(p__non_rtti_object_scalar_dtor, "??_G__non_rtti_object@@UAEPAXI@Z");
+
+        SET(ptype_info_dtor, "??1type_info@@UAA@XZ");
+        SET(ptype_info_raw_name, "?raw_name@type_info@@QBAPBDXZ");
+        SET(ptype_info_name, "?name@type_info@@QBEPBDXZ");
+        SET(ptype_info_before, "?before@type_info@@QBA_NABV1@@Z");
+        SET(ptype_info_opequals_equals, "??8type_info@@QBA_NABV0@@Z");
+        SET(ptype_info_opnot_equals, "??9type_info@@QBA_NABV0@@Z");
+#else
         SETNOFAIL(poperator_new, "??_U@YAPAXI@Z");
         SETNOFAIL(poperator_delete, "??_V@YAXPAX@Z");
 
@@ -285,6 +334,7 @@ static BOOL InitFunctionPtrs(void)
         SET(ptype_info_before, "?before@type_info@@QBEHABV1@@Z");
         SET(ptype_info_opequals_equals, "??8type_info@@QBEHABV0@@Z");
         SET(ptype_info_opnot_equals, "??9type_info@@QBEHABV0@@Z");
+#endif /* __arm__ */
     }
 
     if (!poperator_new)
@@ -901,6 +951,12 @@ static void test_rtti(void)
     { {RTTI_REF(child_class_rtti, base_descriptor[0]), RTTI_REF(child_class_rtti, base_descriptor[1])} },
     {0, 0, 2, RTTI_REF(child_class_rtti, base_array)},
     {1, 0, 0, RTTI_REF(child_class_rtti, type_info[1]), RTTI_REF(child_class_rtti, object_hierarchy), RTTI_REF(child_class_rtti, object_locator)}
+  }, virtual_base_class_rtti = {
+    { {NULL, NULL, "simple_class"}, {NULL, NULL, "child_class"} },
+    { {RTTI_REF(virtual_base_class_rtti, type_info[1]), 0, {0x10, sizeof(void*), sizeof(int)}, 0}, {RTTI_REF(virtual_base_class_rtti, type_info[0]), 0, {8, -1, 0}, 0} },
+    { {RTTI_REF(virtual_base_class_rtti, base_descriptor[0]), RTTI_REF(virtual_base_class_rtti, base_descriptor[1])} },
+    {0, 0, 2, RTTI_REF(virtual_base_class_rtti, base_array)},
+    {1, 0, 0, RTTI_REF(virtual_base_class_rtti, type_info[1]), RTTI_REF(virtual_base_class_rtti, object_hierarchy), RTTI_REF(virtual_base_class_rtti, object_locator)}
   };
   static struct rtti_data simple_class_sig0_rtti, child_class_sig0_rtti;
 
@@ -912,6 +968,9 @@ static void test_rtti(void)
   void *simple_class_sig0 = &simple_class_sig0_vtbl[1];
   void *child_class_sig0_vtbl[2] = {&child_class_sig0_rtti.object_locator};
   void *child_class_sig0 = &child_class_sig0_vtbl[1];
+  void *virtual_base_class_vtbl[2] = {&virtual_base_class_rtti.object_locator};
+  int virtual_base_class_vbtbl[2] = {0, 0x100};
+  void *virtual_base_class[2] = {&virtual_base_class_vtbl[1], virtual_base_class_vbtbl};
 
   static const char* e_name = "name";
   type_info *ti,*bti;
@@ -958,7 +1017,7 @@ static void test_rtti(void)
   call_func1(pexception_dtor, &e);
   call_func1(pbad_typeid_dtor, &b);
 
-  memcpy(&simple_class_sig0_rtti, &simple_class_rtti, sizeof(struct rtti_data));
+  simple_class_sig0_rtti = simple_class_rtti;
   simple_class_sig0_rtti.object_locator.signature = 0;
   simple_class_sig0_rtti.base_descriptor[0].type_descriptor = RTTI_REF_SIG0(simple_class_sig0_rtti, type_info[0], base);
   simple_class_sig0_rtti.base_array.bases[0] = RTTI_REF_SIG0(simple_class_sig0_rtti, base_descriptor[0], base);
@@ -966,7 +1025,7 @@ static void test_rtti(void)
   simple_class_sig0_rtti.object_locator.type_descriptor = RTTI_REF_SIG0(simple_class_sig0_rtti, type_info[0], base);
   simple_class_sig0_rtti.object_locator.type_hierarchy = RTTI_REF_SIG0(simple_class_sig0_rtti, object_hierarchy, base);
 
-  memcpy(&child_class_sig0_rtti, &child_class_rtti, sizeof(struct rtti_data));
+  child_class_sig0_rtti = child_class_rtti;
   child_class_sig0_rtti.object_locator.signature = 0;
   child_class_sig0_rtti.base_descriptor[0].type_descriptor = RTTI_REF_SIG0(child_class_sig0_rtti, type_info[1], base);
   child_class_sig0_rtti.base_descriptor[1].type_descriptor = RTTI_REF_SIG0(child_class_sig0_rtti, type_info[0], base);
@@ -1026,6 +1085,9 @@ static void test_rtti(void)
 
   casted = p__RTDynamicCast(&child_class, 0, &child_class_rtti.type_info[0], &child_class_rtti.type_info[1], 0);
   ok(casted == (char*)&child_class+4, "failed cast to child class (%p %p)\n", casted, &child_class);
+
+  casted = p__RTDynamicCast(&virtual_base_class, 0, &virtual_base_class_rtti.type_info[0], &virtual_base_class_rtti.type_info[1], 0);
+  ok(casted == (char*)&virtual_base_class+0x110+sizeof(void*), "failed cast to child class (%p %p)\n", casted, &virtual_base_class);
 }
 
 struct _demangle {
@@ -1247,7 +1309,20 @@ static void test_demangle(void)
 /* 122 */ {"?_R2@?BN@???$_Fabs@N@std@@YANAEBV?$complex@N@1@PEAH@Z@4NB",
            "double const `double __cdecl std::_Fabs<double>(class std::complex<double> const & __ptr64,int * __ptr64)'::`29'::_R2",
            "?_R2@?BN@???$_Fabs@N@std@@YANAEBV?$complex@N@1@PEAH@Z@4NB"},
-
+/* 123 */ {"?vtordisp_thunk@std@@$4PPPPPPPM@3EAA_NXZ",
+           "[thunk]:public: virtual bool __cdecl std::vtordisp_thunk`vtordisp{4294967292,4}' (void) __ptr64",
+           "[thunk]:public: virtual bool __cdecl std::vtordisp_thunk`vtordisp{-4,4}' (void) __ptr64"},
+/* 124 */ {"??_9CView@@$BBII@AE",
+           "[thunk]: __thiscall CView::`vcall'{392,{flat}}' }'",
+           "[thunk]: __thiscall CView::`vcall'{392,{flat}}' "},
+/* 125 */ {"?_dispatch@_impl_Engine@SalomeApp@@$R4CE@BA@PPPPPPPM@7AE_NAAVomniCallHandle@@@Z",
+           "[thunk]:public: virtual bool __thiscall SalomeApp::_impl_Engine::_dispatch`vtordispex{36,16,4294967292,8}' (class omniCallHandle &)",
+           "?_dispatch@_impl_Engine@SalomeApp@@$R4CE@BA@PPPPPPPM@7AE_NAAVomniCallHandle@@@Z"},
+/* 126 */ {"?_Doraise@bad_cast@std@@MEBAXXZ", "protected: virtual void __cdecl std::bad_cast::_Doraise(void)", NULL, 0x60},
+/* 127 */ {"??Xstd@@YAAEAV?$complex@M@0@AEAV10@AEBV10@@Z", "class std::complex<float> & ptr64 cdecl std::operator*=(class std::complex<float> & ptr64,class std::complex<float> const & ptr64)", NULL, 1},
+/* 128 */ {"??Xstd@@YAAEAV?$complex@M@0@AEAV10@AEBV10@@Z",
+           "class std::complex<float> & std::operator*=(class std::complex<float> &,class std::complex<float> const &)",
+           "??Xstd@@YAAEAV?$complex@M@0@AEAV10@AEBV10@@Z", 2},
     };
     int i, num_test = (sizeof(test)/sizeof(test[0]));
     char* name;

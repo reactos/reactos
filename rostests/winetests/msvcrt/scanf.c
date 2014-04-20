@@ -131,6 +131,13 @@ static void test_sscanf( void )
     ok( ret == 1, "Error with format \"%s\"\n","%*[a-cd-dg-e]%c");
     ok( buffer[0] == 'h', "Error with \"abcefgdh\" \"%c\"\n", buffer[0]);
 
+    buffer1[0] = 'b';
+    ret = sscanf("a","%s%s", buffer, buffer1);
+    ok( ret == 1, "expected 1, got %u\n", ret);
+    ok( buffer[0] == 'a', "buffer[0] = '%c'\n", buffer[0]);
+    ok( buffer[1] == '\0', "buffer[1] = '%c'\n", buffer[1]);
+    ok( buffer1[0] == 'b', "buffer1[0] = '%c'\n", buffer1[0]);
+
     /* check digits */
     ret = sprintf(buffer,"%d:%d:%d",hour,min,sec);
     ok( ret == 8, "expected 8, got %u\n", ret);

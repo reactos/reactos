@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <io.h>
+#include <mbctype.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
@@ -345,28 +346,28 @@ static void test_fullpath(void)
     BOOL rc,free1,free2;
 
     free1=free2=TRUE;
-    GetCurrentDirectory(MAX_PATH, prevpath);
-    GetTempPath(MAX_PATH,tmppath);
+    GetCurrentDirectoryA(MAX_PATH, prevpath);
+    GetTempPathA(MAX_PATH,tmppath);
     strcpy(level1,tmppath);
     strcat(level1,"msvcrt-test\\");
 
-    rc = CreateDirectory(level1,NULL);
+    rc = CreateDirectoryA(level1,NULL);
     if (!rc && GetLastError()==ERROR_ALREADY_EXISTS)
         free1=FALSE;
 
     strcpy(level2,level1);
     strcat(level2,"nextlevel\\");
-    rc = CreateDirectory(level2,NULL);
+    rc = CreateDirectoryA(level2,NULL);
     if (!rc && GetLastError()==ERROR_ALREADY_EXISTS)
         free2=FALSE;
-    SetCurrentDirectory(level2);
+    SetCurrentDirectoryA(level2);
 
     ok(_fullpath(full,"test", MAX_PATH)!=NULL,"_fullpath failed\n");
     strcpy(teststring,level2);
     strcat(teststring,"test");
     ok(strcmp(full,teststring)==0,"Invalid Path returned %s\n",full);
     ok(_fullpath(full,"\\test", MAX_PATH)!=NULL,"_fullpath failed\n");
-    strncpy(teststring,level2,3);
+    memcpy(teststring,level2,3);
     teststring[3]=0;
     strcat(teststring,"test");
     ok(strcmp(full,teststring)==0,"Invalid Path returned %s\n",full);
@@ -383,11 +384,36 @@ static void test_fullpath(void)
     ok(strcmp(freeme,teststring)==0,"Invalid Path returned %s\n",freeme);
     free(freeme);
 
-    SetCurrentDirectory(prevpath);
+    SetCurrentDirectoryA(prevpath);
     if (free2)
-        RemoveDirectory(level2);
+        RemoveDirectoryA(level2);
     if (free1)
-        RemoveDirectory(level1);
+        RemoveDirectoryA(level1);
+}
+
+static void test_splitpath(void)
+{
+    const char* path = "c:\\\x83\x5c\x83\x74\x83\x67.bin";
+    char drive[3], dir[MAX_PATH], fname[MAX_PATH], ext[MAX_PATH];
+    int prev_cp = _getmbcp();
+
+    /* SBCS codepage */
+    _setmbcp(1252);
+    _splitpath(path, drive, dir, fname, ext);
+    ok(!strcmp(drive, "c:"), "got %s\n", drive);
+    ok(!strcmp(dir, "\\\x83\x5c"), "got %s\n", dir);
+    ok(!strcmp(fname, "\x83\x74\x83\x67"), "got %s\n", fname);
+    ok(!strcmp(ext, ".bin"), "got %s\n", ext);
+
+    /* MBCS (Japanese) codepage */
+    _setmbcp(932);
+    _splitpath(path, drive, dir, fname, ext);
+    ok(!strcmp(drive, "c:"), "got %s\n", drive);
+    ok(!strcmp(dir, "\\"), "got %s\n", dir);
+    ok(!strcmp(fname, "\x83\x5c\x83\x74\x83\x67"), "got %s\n", fname);
+    ok(!strcmp(ext, ".bin"), "got %s\n", ext);
+
+    _setmbcp(prev_cp);
 }
 
 START_TEST(dir)
@@ -397,4 +423,5 @@ START_TEST(dir)
     test_fullpath();
     test_makepath();
     test_makepath_s();
+    test_splitpath();
 }

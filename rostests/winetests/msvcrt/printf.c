@@ -27,6 +27,7 @@
  
 #include <stdio.h>
 #include <errno.h>
+#include <math.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -44,6 +45,7 @@ static int (__cdecl *p__ecvt_s)(char *buffer, size_t length, double number,
 static int (__cdecl *p__fcvt_s)(char *buffer, size_t length, double number,
                                 int ndigits, int *decpt, int *sign);
 static unsigned int (__cdecl *p__get_output_format)(void);
+static unsigned int (__cdecl *p__set_output_format)(unsigned int);
 static int (__cdecl *p__vsprintf_p)(char*, size_t, const char*, __ms_va_list);
 static int (__cdecl *p_vswprintf)(wchar_t *str, const wchar_t *format, __ms_va_list valist);
 static int (__cdecl *p__vswprintf)(wchar_t *str, const wchar_t *format, __ms_va_list valist);
@@ -66,6 +68,7 @@ static void init( void )
     p__ecvt_s = (void *)GetProcAddress(hmod, "_ecvt_s");
     p__fcvt_s = (void *)GetProcAddress(hmod, "_fcvt_s");
     p__get_output_format = (void *)GetProcAddress(hmod, "_get_output_format");
+    p__set_output_format = (void *)GetProcAddress(hmod, "_set_output_format");
     p__vsprintf_p = (void*)GetProcAddress(hmod, "_vsprintf_p");
     p_vswprintf = (void*)GetProcAddress(hmod, "vswprintf");
     p__vswprintf = (void*)GetProcAddress(hmod, "_vswprintf");
@@ -79,7 +82,7 @@ static void test_sprintf( void )
 {
     char buffer[100];
     const char *format;
-    double pnumber=789456123;
+    double pnumber=789456123, inf, nan;
     int x, r;
     WCHAR wide[] = { 'w','i','d','e',0};
 
@@ -326,18 +329,52 @@ static void test_sprintf( void )
     format = "%#012x";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer,"0x0000000001"),"Hexadecimal zero-padded \"%s\"\n",buffer);
+    ok( r==12, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"000000000000"),"Hexadecimal zero-padded \"%s\"\n",buffer);
+    ok( r==12, "return count wrong\n");
 
     format = "%#04.8x";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer,"0x00000001"), "Hexadecimal zero-padded precision \"%s\"\n",buffer);
+    ok( r==10, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"00000000"), "Hexadecimal zero-padded precision \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
 
     format = "%#-08.2x";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer,"0x01    "), "Hexadecimal zero-padded not left-adjusted \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"00      "), "Hexadecimal zero-padded not left-adjusted \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    format = "%#.0x";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"0x1"), "Hexadecimal zero-padded zero-precision \"%s\"\n",buffer);
+    ok( r==3, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,""), "Hexadecimal zero-padded zero-precision \"%s\"\n",buffer);
+    ok( r==0, "return count wrong\n");
 
     format = "%#08o";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer,"00000001"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    format = "%#o";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"01"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==2, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"0"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==1, "return count wrong\n");
 
     if (sizeof(void *) == 8)
     {
@@ -515,6 +552,26 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"8.6000e+000"), "failed\n");
     ok( r==11, "return count wrong\n");
 
+    format = "% 2.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer," 8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
+    format = "% 014.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer," 008.6000e+000"), "failed: %s\n", buffer);
+    ok( r==14, "return count wrong\n");
+
+    format = "% 2.4e";
+    r = sprintf(buffer, format,-8.6);
+    ok(!strcmp(buffer,"-8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
+    format = "%+2.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer,"+8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
     format = "%2.4g";
     r = sprintf(buffer, format,8.6);
     ok(!strcmp(buffer,"8.6"), "failed\n");
@@ -617,6 +674,41 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"123"), "failed: \"%s\"\n", buffer);
     r = sprintf(buffer, format, 0x12345);
     ok(!strcmp(buffer,"2345"), "failed \"%s\"\n", buffer);
+
+    nan = 0.0;
+    inf = 1.0/nan;
+    nan = sqrt(-1);
+    format = "%lf";
+    r = sprintf(buffer, format, nan);
+    ok(r==9, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND00"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, inf);
+    ok(r==8, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF00"), "failed: \"%s\"\n", buffer);
+
+    format = "%le";
+    r = sprintf(buffer, format, nan);
+    ok(r==14, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND00e+000"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, inf);
+    ok(r==13, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF00e+000"), "failed: \"%s\"\n", buffer);
+
+    format = "%lg";
+    r = sprintf(buffer, format, nan);
+    ok(r==7, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, inf);
+    ok(r==6, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF"), "failed: \"%s\"\n", buffer);
+
+    format = "%010.2lf";
+    r = sprintf(buffer, format, nan);
+    ok(r==10, "r = %d\n", r);
+    ok(!strcmp(buffer, "-000001.#J"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, inf);
+    ok(r==10, "r = %d\n", r);
+    ok(!strcmp(buffer, "0000001.#J"), "failed: \"%s\"\n", buffer);
 }
 
 static void test_swprintf( void )
@@ -671,7 +763,9 @@ static void test_snprintf (void)
 
 static void test_fprintf(void)
 {
-    static char file_name[] = "fprintf.tst";
+    static const char file_name[] = "fprintf.tst";
+    static const WCHAR utf16_test[] = {'u','n','i','c','o','d','e','\n',0};
+
     FILE *fp = fopen(file_name, "wb");
     char buf[1024];
     int ret;
@@ -686,6 +780,11 @@ static void test_fprintf(void)
     ret = ftell(fp);
     ok(ret == 26, "ftell returned %d\n", ret);
 
+    ret = fwprintf(fp, utf16_test);
+    ok(ret == 8, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 42, "ftell returned %d\n", ret);
+
     fclose(fp);
 
     fp = fopen(file_name, "rb");
@@ -699,6 +798,51 @@ static void test_fprintf(void)
     ret = ftell(fp);
     ok(ret == 26, "ret = %d\n", ret);
     ok(!memcmp(buf, "contains\0null\n", 14), "buf = %s\n", buf);
+
+    memset(buf, 0, sizeof(buf));
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 41, "ret =  %d\n", ret);
+    ok(!memcmp(buf, utf16_test, sizeof(utf16_test)),
+            "buf = %s\n", wine_dbgstr_w((WCHAR*)buf));
+
+    fclose(fp);
+
+    fp = fopen(file_name, "wt");
+
+    ret = fprintf(fp, "simple test\n");
+    ok(ret == 12, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 13, "ftell returned %d\n", ret);
+
+    ret = fprintf(fp, "contains%cnull\n", '\0');
+    ok(ret == 14, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 28, "ftell returned %d\n", ret);
+
+    ret = fwprintf(fp, utf16_test);
+    ok(ret == 8, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 37, "ftell returned %d\n", ret);
+
+    fclose(fp);
+
+    fp = fopen(file_name, "rb");
+    ret = fscanf(fp, "%[^\n] ", buf);
+    ok(ret == 1, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 13, "ftell returned %d\n", ret);
+    ok(!strcmp(buf, "simple test\r"), "buf = %s\n", buf);
+
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 28, "ret = %d\n", ret);
+    ok(!memcmp(buf, "contains\0null\r\n", 15), "buf = %s\n", buf);
+
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 37, "ret =  %d\n", ret);
+    ok(!strcmp(buf, "unicode\r\n"), "buf = %s\n", buf);
 
     fclose(fp);
     unlink(file_name);
@@ -1244,15 +1388,34 @@ static void test_vsprintf_p(void)
 static void test__get_output_format(void)
 {
     unsigned int ret;
+    char buf[64];
+    int c;
 
-    if (!p__get_output_format)
+    if (!p__get_output_format || !p__set_output_format)
     {
-        win_skip("_get_output_format not available\n");
+        win_skip("_get_output_format or _set_output_format is not available\n");
         return;
     }
 
     ret = p__get_output_format();
     ok(ret == 0, "got %d\n", ret);
+
+    c = sprintf(buf, "%E", 1.23);
+    ok(c == 13, "c = %d\n", c);
+    ok(!strcmp(buf, "1.230000E+000"), "buf = %s\n", buf);
+
+    ret = p__set_output_format(_TWO_DIGIT_EXPONENT);
+    ok(ret == 0, "got %d\n", ret);
+
+    c = sprintf(buf, "%E", 1.23);
+    ok(c == 12, "c = %d\n", c);
+    ok(!strcmp(buf, "1.230000E+00"), "buf = %s\n", buf);
+
+    ret = p__get_output_format();
+    ok(ret == _TWO_DIGIT_EXPONENT, "got %d\n", ret);
+
+    ret = p__set_output_format(_TWO_DIGIT_EXPONENT);
+    ok(ret == _TWO_DIGIT_EXPONENT, "got %d\n", ret);
 }
 
 START_TEST(printf)

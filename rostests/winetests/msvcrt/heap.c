@@ -233,7 +233,7 @@ static void test_aligned_offset_realloc(unsigned int size1, unsigned int size2,
 
 static void test_aligned(void)
 {
-    HMODULE msvcrt = GetModuleHandle("msvcrt.dll");
+    HMODULE msvcrt = GetModuleHandleA("msvcrt.dll");
 
     if (msvcrt == NULL)
         return;
