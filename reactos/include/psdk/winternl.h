@@ -2448,6 +2448,9 @@ typedef struct _LDR_MODULE
 #define LDR_DONT_RESOLVE_REFS           0x40000000
 #define LDR_WINE_INTERNAL               0x80000000
 
+/* flag for LdrAddRefDll */
+#define LDR_ADDREF_DLL_PIN              0x00000001
+
 /* FIXME: to be checked */
 #define MAXIMUM_FILENAME_LENGTH 256
 
