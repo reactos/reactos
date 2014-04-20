@@ -96,7 +96,7 @@ static void test_DIB_PAL_COLORS(void) {
     getColor = GetPixel( memhdc, 0, 0 );
     ok( getColor == chkColor, "getColor=%08X\n", (UINT)getColor );
 
-    /* Test with a invalid DIBINDEX to DIB_PAL_COLORS */
+    /* Test with an invalid DIBINDEX to DIB_PAL_COLORS */
     setColor = DIBINDEX( 12 );
     SetPixel( memhdc, 0, 0, setColor );
     chkColor = RGB( 0, 0, 0 );
@@ -162,10 +162,10 @@ static void test_halftone_palette(void)
     ok( count == 256 || broken(count <= 20), /* nt 4 */
         "wrong size %u\n", count );
 
-    /* first and last 10 match the default palette */
+    /* first and last 8 match the default palette */
     if (count >= 20)
     {
-        for (i = 0; i < 10; i++)
+        for (i = 0; i < 8; i++)
         {
             ok( entries[i].peRed   == defpal[i].peRed &&
                 entries[i].peGreen == defpal[i].peGreen &&
@@ -175,7 +175,7 @@ static void test_halftone_palette(void)
                 entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
                 defpal[i].peRed, defpal[i].peGreen, defpal[i].peBlue );
         }
-        for (i = count - 10; i < count; i++)
+        for (i = count - 8; i < count; i++)
         {
             int idx = i - count + 20;
             ok( entries[i].peRed   == defpal[idx].peRed &&

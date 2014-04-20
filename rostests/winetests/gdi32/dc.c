@@ -457,12 +457,46 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
     type = GetClipBox( ref_dc, &rect );
     if (type != COMPLEXREGION && type != ERROR)  /* region can be complex on multi-monitor setups */
     {
+        RECT ref_rect;
+
         ok( type == SIMPLEREGION, "GetClipBox returned %d on %s\n", type, descr );
-        ok( rect.left == 0 && rect.top == 0 &&
-            rect.right == GetDeviceCaps( ref_dc, DESKTOPHORZRES ) &&
-            rect.bottom == GetDeviceCaps( ref_dc, DESKTOPVERTRES ),
-            "GetClipBox returned %d,%d,%d,%d on %s\n",
-            rect.left, rect.top, rect.right, rect.bottom, descr );
+        if (GetDeviceCaps( ref_dc, TECHNOLOGY ) == DT_RASDISPLAY)
+        {
+            if (GetSystemMetrics( SM_CXSCREEN ) != GetSystemMetrics( SM_CXVIRTUALSCREEN ))
+                todo_wine ok( GetDeviceCaps( ref_dc, DESKTOPHORZRES ) == GetSystemMetrics( SM_CXSCREEN ),
+                              "Got DESKTOPHORZRES %d on %s, expected %d\n",
+                              GetDeviceCaps( ref_dc, DESKTOPHORZRES ), descr, GetSystemMetrics( SM_CXSCREEN ) );
+            else
+                ok( GetDeviceCaps( ref_dc, DESKTOPHORZRES ) == GetSystemMetrics( SM_CXSCREEN ),
+                    "Got DESKTOPHORZRES %d on %s, expected %d\n",
+                    GetDeviceCaps( ref_dc, DESKTOPHORZRES ), descr, GetSystemMetrics( SM_CXSCREEN ) );
+
+            if (GetSystemMetrics( SM_CYSCREEN ) != GetSystemMetrics( SM_CYVIRTUALSCREEN ))
+                todo_wine ok( GetDeviceCaps( ref_dc, DESKTOPVERTRES ) == GetSystemMetrics( SM_CYSCREEN ),
+                              "Got DESKTOPVERTRES %d on %s, expected %d\n",
+                              GetDeviceCaps( ref_dc, DESKTOPVERTRES ), descr, GetSystemMetrics( SM_CYSCREEN ) );
+            else
+                ok( GetDeviceCaps( ref_dc, DESKTOPVERTRES ) == GetSystemMetrics( SM_CYSCREEN ),
+                    "Got DESKTOPVERTRES %d on %s, expected %d\n",
+                    GetDeviceCaps( ref_dc, DESKTOPVERTRES ), descr, GetSystemMetrics( SM_CYSCREEN ) );
+
+            SetRect( &ref_rect, GetSystemMetrics( SM_XVIRTUALSCREEN ), GetSystemMetrics( SM_YVIRTUALSCREEN ),
+                     GetSystemMetrics( SM_XVIRTUALSCREEN ) + GetSystemMetrics( SM_CXVIRTUALSCREEN ),
+                     GetSystemMetrics( SM_YVIRTUALSCREEN ) + GetSystemMetrics( SM_CYVIRTUALSCREEN ) );
+        }
+        else
+        {
+            SetRect( &ref_rect, 0, 0, GetDeviceCaps( ref_dc, DESKTOPHORZRES ),
+                     GetDeviceCaps( ref_dc, DESKTOPVERTRES ) );
+        }
+
+        if (GetDeviceCaps( ref_dc, TECHNOLOGY ) == DT_RASDISPLAY && GetObjectType( hdc ) != OBJ_ENHMETADC &&
+            (GetSystemMetrics( SM_XVIRTUALSCREEN ) || GetSystemMetrics( SM_YVIRTUALSCREEN )))
+            todo_wine ok( EqualRect( &rect, &ref_rect ), "GetClipBox returned %d,%d,%d,%d on %s\n",
+                          rect.left, rect.top, rect.right, rect.bottom, descr );
+        else
+            ok( EqualRect( &rect, &ref_rect ), "GetClipBox returned %d,%d,%d,%d on %s\n",
+                rect.left, rect.top, rect.right, rect.bottom, descr );
     }
 
     SetBoundsRect( ref_dc, NULL, DCB_RESET | DCB_ACCUMULATE );
@@ -531,19 +565,19 @@ static void test_CreateCompatibleDC(void)
     HDC hdc, hNewDC, hdcMetafile, screen_dc;
     HBITMAP bitmap;
     INT caps;
-    DEVMODE dm;
+    DEVMODEA dm;
 
     bitmap = CreateBitmap( 10, 10, 1, 1, NULL );
 
-    bRet = EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    bRet = EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &dm);
     ok(bRet, "EnumDisplaySettingsEx failed\n");
     dm.u1.s1.dmScale = 200;
     dm.dmFields |= DM_SCALE;
-    hdc = CreateDC( "DISPLAY", NULL, NULL, &dm );
+    hdc = CreateDCA( "DISPLAY", NULL, NULL, &dm );
 
-    screen_dc = CreateDC( "DISPLAY", NULL, NULL, NULL );
+    screen_dc = CreateDCA( "DISPLAY", NULL, NULL, NULL );
     test_device_caps( hdc, screen_dc, "display dc", 1 );
-    ResetDC( hdc, &dm );
+    ResetDCA( hdc, &dm );
     test_device_caps( hdc, screen_dc, "display dc", 1 );
     DeleteDC( hdc );
 
@@ -573,7 +607,7 @@ static void test_CreateCompatibleDC(void)
     caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
     ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
     test_device_caps( hdcMetafile, hdc, "enhmetafile dc", 1 );
-    ResetDC( hdcMetafile, &dm );
+    ResetDCA( hdcMetafile, &dm );
     test_device_caps( hdcMetafile, hdc, "enhmetafile dc", 1 );
     DeleteDC( hNewDC );
     DeleteEnhMetaFile( CloseEnhMetaFile( hdcMetafile ));
@@ -586,7 +620,7 @@ static void test_CreateCompatibleDC(void)
     caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
     ok( caps == DT_METAFILE, "wrong caps %u\n", caps );
     test_device_caps( hdcMetafile, screen_dc, "metafile dc", 1 );
-    ResetDC( hdcMetafile, &dm );
+    ResetDCA( hdcMetafile, &dm );
     test_device_caps( hdcMetafile, screen_dc, "metafile dc", 1 );
     DeleteMetaFile( CloseMetaFile( hdcMetafile ));
 
@@ -673,7 +707,7 @@ static void test_DeleteDC(void)
 {
     HWND hwnd;
     HDC hdc, hdc_test;
-    WNDCLASSEX cls;
+    WNDCLASSEXA cls;
     int ret;
 
     /* window DC */
@@ -727,7 +761,7 @@ static void test_DeleteDC(void)
     memset(&cls, 0, sizeof(cls));
     cls.cbSize = sizeof(cls);
     cls.style = CS_CLASSDC;
-    cls.hInstance = GetModuleHandle(0);
+    cls.hInstance = GetModuleHandleA(NULL);
     cls.lpszClassName = "Wine class DC";
     cls.lpfnWndProc = DefWindowProcA;
     ret = RegisterClassExA(&cls);
@@ -766,7 +800,7 @@ static void test_DeleteDC(void)
     ret = GetObjectType(hdc_test);
     ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
 
-    ret = UnregisterClassA("Wine class DC", GetModuleHandle(NULL));
+    ret = UnregisterClassA("Wine class DC", GetModuleHandleA(NULL));
     ok(ret, "UnregisterClassA failed\n");
 
     ret = GetObjectType(hdc_test);
@@ -777,7 +811,7 @@ todo_wine
     memset(&cls, 0, sizeof(cls));
     cls.cbSize = sizeof(cls);
     cls.style = CS_OWNDC;
-    cls.hInstance = GetModuleHandle(0);
+    cls.hInstance = GetModuleHandleA(NULL);
     cls.lpszClassName = "Wine own DC";
     cls.lpfnWndProc = DefWindowProcA;
     ret = RegisterClassExA(&cls);
@@ -811,7 +845,7 @@ todo_wine
 
     DestroyWindow(hwnd);
 
-    ret = UnregisterClassA("Wine own DC", GetModuleHandle(NULL));
+    ret = UnregisterClassA("Wine own DC", GetModuleHandleA(NULL));
     ok(ret, "UnregisterClassA failed\n");
 }
 
@@ -1262,7 +1296,7 @@ static HDC create_printer_dc(int scale, BOOL reset)
            dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName,
            is_postscript_printer(hdc) ? "" : "NOT " );
 
-    if (reset) ResetDC( hdc, pbuf->pDevMode );
+    if (reset) ResetDCA( hdc, pbuf->pDevMode );
 done:
     HeapFree( GetProcessHeap(), 0, dbuf );
     HeapFree( GetProcessHeap(), 0, pbuf );
@@ -1346,7 +1380,7 @@ static void test_printer_dc(void)
 
 START_TEST(dc)
 {
-    pSetLayout = (void *)GetProcAddress( GetModuleHandle("gdi32.dll"), "SetLayout");
+    pSetLayout = (void *)GetProcAddress( GetModuleHandleA("gdi32.dll"), "SetLayout");
     test_dc_values();
     test_savedc();
     test_savedc_2();

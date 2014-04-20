@@ -1,46 +1,46 @@
 SplineFontDB: 3.0
-FontName: mplus-1p-regular
-FullName: M+ 1p regular
-FamilyName: M+ 1p regular
-Weight: Book
-Copyright: Copyright(c) 2011 M+ FONTS PROJECT
-Version: 1.044
+FontName: WineTestVertical
+FullName: WineTestVertical
+FamilyName: WineTestVertical
+Weight: Regular
+Copyright: Copyright(c) 2013 Wine Project
+Version: 1.055
 ItalicAngle: 0
 UnderlinePosition: -100
 UnderlineWidth: 50
 Ascent: 860
 Descent: 140
-sfntRevision: 0x00010b43
+sfntRevision: 0x00010e14
 LayerCount: 2
 Layer: 0 1 "Back"  1
 Layer: 1 1 "Fore"  0
-NeedsXUIDChange: 1
-XUID: [1021 311 1688707159 7641229]
+HasVMetrics: 1
+XUID: [1021 564 53499222 16482262]
 FSType: 0
 OS2Version: 1
 OS2_WeightWidthSlopeOnly: 0
 OS2_UseTypoMetrics: 1
 CreationTime: 1314095750
-ModificationTime: 1323339383
+ModificationTime: 1368817482
 PfmFamily: 17
 TTFWeight: 400
 TTFWidth: 5
 LineGap: 90
 VLineGap: 0
-Panose: 2 11 5 2 2 2 3 2 2 7
-OS2TypoAscent: 0
-OS2TypoAOffset: 1
-OS2TypoDescent: 0
-OS2TypoDOffset: 1
+Panose: 2 11 5 9 2 2 3 2 2 7
+OS2TypoAscent: 860
+OS2TypoAOffset: 0
+OS2TypoDescent: -140
+OS2TypoDOffset: 0
 OS2TypoLinegap: 90
-OS2WinAscent: 0
-OS2WinAOffset: 1
-OS2WinDescent: -23
-OS2WinDOffset: 1
-HheadAscent: 0
-HheadAOffset: 1
-HheadDescent: 23
-HheadDOffset: 1
+OS2WinAscent: 1075
+OS2WinAOffset: 0
+OS2WinDescent: 320
+OS2WinDOffset: 0
+HheadAscent: 1075
+HheadAOffset: 0
+HheadDescent: -320
+HheadDOffset: 0
 OS2SubXSize: 650
 OS2SubYSize: 700
 OS2SubXOff: 0
@@ -51,110 +51,812 @@ OS2SupXOff: 0
 OS2SupYOff: 480
 OS2StrikeYSize: 49
 OS2StrikeYPos: 258
-OS2FamilyClass: 2054
+OS2FamilyClass: 2057
 OS2Vendor: 'M+  '
-OS2CodePages: 601201bf.dff70000
-OS2UnicodeRanges: e1000aff.4a47fdfb.02000012.00000000
-Lookup: 4 0 1 "kana semi-voiced lookup"  {"kana semi-voiced table"  } ['ccmp' ('kana' <'dflt' > ) 'liga' ('kana' <'dflt' > ) ]
+OS2CodePages: 4012019f.dfd70000
+OS2UnicodeRanges: e00002ff.4a47fdeb.00000012.00000000
 Lookup: 1 0 0 "gsubvert"  {"j-vert"  } ['vert' ('cyrl' <'dflt' > 'grek' <'dflt' > 'hani' <'dflt' > 'kana' <'JAN ' 'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 4 0 1 "ligalookup01"  {"ligalookup01 subtable"  } ['liga' ('cyrl' <'dflt' > 'grek' <'dflt' > 'hani' <'dflt' > 'kana' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 4 0 0 "ccmplookup01"  {"ccmplookup01 subtable"  } ['ccmp' ('hani' <'dflt' > 'kana' <'JAN ' 'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 4 0 0 "ccmplookup02"  {"ccmplookup02 subtable"  } ['ccmp' ('cyrl' <'dflt' > 'grek' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 1 0 0 "SingleSubstitutionlookupDotless"  {"SingleSubstitutionlookupDotless subtable"  } []
-Lookup: 6 0 0 "ccmplookup03"  {"ccmplookup03 contextual 0"  "ccmplookup03 contextual 1"  "ccmplookup03 contextual 2"  } ['ccmp' ('cyrl' <'dflt' > 'grek' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 258 0 0 "kerning pairs"  {"kp"  } ['kern' ('latn' <'dflt' > ) ]
-Lookup: 262 4 0 "mkmklookup1"  {"mkmklookup1 subtable"  } ['mkmk' ('DFLT' <'dflt' > 'cyrl' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 260 4 0 "marklookup2"  {"marklookup2 subtable"  } ['mark' ('DFLT' <'dflt' > 'cyrl' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 260 4 0 "marklookup1"  {"marklookup1 subtable"  } ['mark' ('DFLT' <'dflt' > 'cyrl' <'dflt' > 'grek' <'dflt' > 'latn' <'dflt' > ) ]
-Lookup: 262 4 0 "mkmklookup2"  {"mkmklookup2 subtable"  } ['mkmk' ('DFLT' <'dflt' > 'cyrl' <'dflt' > 'latn' <'dflt' > ) ]
+MarkAttachClasses: 1
 DEI: 91125
-ChainSub2: coverage "ccmplookup03 contextual 2"  0 0 0 1
- 1 0 3
-  Coverage: 19 i j uni0249 uni03F3
-  FCoverage: 271 uni0316 uni0317 uni0318 uni0319 uni031C uni031D uni031E uni031F uni0320 uni0321 uni0322 uni0324 uni0325 uni0326 uni0327 uni0328 uni0329 uni032A uni032B uni032C uni032D uni032E uni032F uni0330 uni0331 uni0332 uni0333 uni0339 uni033A uni033B uni033C uni0345 uni0347 uni0353
-  FCoverage: 271 uni0316 uni0317 uni0318 uni0319 uni031C uni031D uni031E uni031F uni0320 uni0321 uni0322 uni0324 uni0325 uni0326 uni0327 uni0328 uni0329 uni032A uni032B uni032C uni032D uni032E uni032F uni0330 uni0331 uni0332 uni0333 uni0339 uni033A uni033B uni033C uni0345 uni0347 uni0353
-  FCoverage: 307 gravecomb acutecomb uni0302 tildecomb uni0304 uni0305 uni0306 uni0307 uni0308 hookabovecomb uni030A uni030B uni030C uni030D uni030E uni030F uni0310 uni0311 uni0312 uni0313 uni0314 uni033D uni033E uni033F uni0340 uni0341 uni0342 uni0343 uni0344 uni0346 uni0351 uni0352 uni0357 uni0483 uni0484 uni0485 uni0486
- 1
-  SeqLookup: 0 "SingleSubstitutionlookupDotless" 
-EndFPST
-ChainSub2: coverage "ccmplookup03 contextual 1"  0 0 0 1
- 1 0 2
-  Coverage: 19 i j uni0249 uni03F3
-  FCoverage: 271 uni0316 uni0317 uni0318 uni0319 uni031C uni031D uni031E uni031F uni0320 uni0321 uni0322 uni0324 uni0325 uni0326 uni0327 uni0328 uni0329 uni032A uni032B uni032C uni032D uni032E uni032F uni0330 uni0331 uni0332 uni0333 uni0339 uni033A uni033B uni033C uni0345 uni0347 uni0353
-  FCoverage: 307 gravecomb acutecomb uni0302 tildecomb uni0304 uni0305 uni0306 uni0307 uni0308 hookabovecomb uni030A uni030B uni030C uni030D uni030E uni030F uni0310 uni0311 uni0312 uni0313 uni0314 uni033D uni033E uni033F uni0340 uni0341 uni0342 uni0343 uni0344 uni0346 uni0351 uni0352 uni0357 uni0483 uni0484 uni0485 uni0486
- 1
-  SeqLookup: 0 "SingleSubstitutionlookupDotless" 
-EndFPST
-ChainSub2: coverage "ccmplookup03 contextual 0"  0 0 0 1
- 1 0 1
-  Coverage: 19 i j uni0249 uni03F3
-  FCoverage: 307 gravecomb acutecomb uni0302 tildecomb uni0304 uni0305 uni0306 uni0307 uni0308 hookabovecomb uni030A uni030B uni030C uni030D uni030E uni030F uni0310 uni0311 uni0312 uni0313 uni0314 uni033D uni033E uni033F uni0340 uni0341 uni0342 uni0343 uni0344 uni0346 uni0351 uni0352 uni0357 uni0483 uni0484 uni0485 uni0486
- 1
-  SeqLookup: 0 "SingleSubstitutionlookupDotless" 
-EndFPST
-MacFeat: 0 0 0
-MacName: 0 0 24 "All Typographic Features"
-MacName: 0 1 24 "Fonctions typographiques"
-MacName: 0 2 33 "Alle typografischen M\232glichkeiten"
-MacName: 0 3 21 "Funzioni Tipografiche"
-MacName: 0 4 28 "Alle typografische kenmerken"
-MacSetting: 0
-MacName: 0 0 17 "All Type Features"
-MacName: 0 1 31 "Toutes fonctions typographiques"
-MacName: 0 2 23 "Alle Auszeichnungsarten"
-MacName: 0 3 17 "Tutte le Funzioni"
-MacName: 0 4 18 "Alle typekenmerken"
-MacFeat: 1 0 0
-MacName: 0 0 9 "Ligatures"
-MacName: 0 1 9 "Ligatures"
-MacName: 0 2 9 "Ligaturen"
-MacName: 0 3 8 "Legature"
-MacName: 0 4 9 "Ligaturen"
-MacSetting: 2
-MacName: 0 0 16 "Common Ligatures"
-MacName: 0 1 18 "Ligatures Usuelles"
-MacName: 0 2 17 "Normale Ligaturen"
-MacName: 0 3 19 "Legature pi\235 Comuni"
-MacName: 0 4 28 "Gemeenschappelijke Ligaturen"
-EndMacFeatures
 TtTable: prep
-PUSHW_2
+PUSHW_1
  511
- 0
-SCANTYPE
 SCANCTRL
+PUSHB_1
+ 1
+SCANTYPE
+SVTCA[y-axis]
+MPPEM
+PUSHB_1
+ 8
+LT
+IF
+PUSHB_2
+ 1
+ 1
+INSTCTRL
+EIF
+PUSHB_2
+ 70
+ 6
+CALL
+IF
+POP
+PUSHB_1
+ 16
+EIF
+MPPEM
+PUSHB_1
+ 20
+GT
+IF
+POP
+PUSHB_1
+ 128
+EIF
+SCVTCI
+PUSHB_1
+ 6
+CALL
+NOT
+IF
+EIF
+PUSHB_1
+ 20
+CALL
 EndTTInstrs
+TtTable: fpgm
+PUSHB_1
+ 0
+FDEF
+PUSHB_1
+ 0
+SZP0
+MPPEM
+PUSHB_1
+ 42
+LT
+IF
+PUSHB_1
+ 74
+SROUND
+EIF
+PUSHB_1
+ 0
+SWAP
+MIAP[rnd]
+RTG
+PUSHB_1
+ 6
+CALL
+IF
+RTDG
+EIF
+MPPEM
+PUSHB_1
+ 42
+LT
+IF
+RDTG
+EIF
+DUP
+MDRP[rp0,rnd,grey]
+PUSHB_1
+ 1
+SZP0
+MDAP[no-rnd]
+RTG
+ENDF
+PUSHB_1
+ 1
+FDEF
+DUP
+MDRP[rp0,min,white]
+PUSHB_1
+ 12
+CALL
+ENDF
+PUSHB_1
+ 2
+FDEF
+MPPEM
+GT
+IF
+RCVT
+SWAP
+EIF
+POP
+ENDF
+PUSHB_1
+ 3
+FDEF
+ROUND[Black]
+RTG
+DUP
+PUSHB_1
+ 64
+LT
+IF
+POP
+PUSHB_1
+ 64
+EIF
+ENDF
+PUSHB_1
+ 4
+FDEF
+PUSHB_1
+ 6
+CALL
+IF
+POP
+SWAP
+POP
+ROFF
+IF
+MDRP[rp0,min,rnd,black]
+ELSE
+MDRP[min,rnd,black]
+EIF
+ELSE
+MPPEM
+GT
+IF
+IF
+MIRP[rp0,min,rnd,black]
+ELSE
+MIRP[min,rnd,black]
+EIF
+ELSE
+SWAP
+POP
+PUSHB_1
+ 5
+CALL
+IF
+PUSHB_1
+ 70
+SROUND
+EIF
+IF
+MDRP[rp0,min,rnd,black]
+ELSE
+MDRP[min,rnd,black]
+EIF
+EIF
+EIF
+RTG
+ENDF
+PUSHB_1
+ 5
+FDEF
+GFV
+NOT
+AND
+ENDF
+PUSHB_1
+ 6
+FDEF
+PUSHB_2
+ 34
+ 1
+GETINFO
+LT
+IF
+PUSHB_1
+ 32
+GETINFO
+NOT
+NOT
+ELSE
+PUSHB_1
+ 0
+EIF
+ENDF
+PUSHB_1
+ 7
+FDEF
+PUSHB_2
+ 36
+ 1
+GETINFO
+LT
+IF
+PUSHB_1
+ 64
+GETINFO
+NOT
+NOT
+ELSE
+PUSHB_1
+ 0
+EIF
+ENDF
+PUSHB_1
+ 8
+FDEF
+SRP2
+SRP1
+DUP
+IP
+MDAP[rnd]
+ENDF
+PUSHB_1
+ 9
+FDEF
+DUP
+RDTG
+PUSHB_1
+ 6
+CALL
+IF
+MDRP[rnd,grey]
+ELSE
+MDRP[min,rnd,black]
+EIF
+DUP
+PUSHB_1
+ 3
+CINDEX
+MD[grid]
+SWAP
+DUP
+PUSHB_1
+ 4
+MINDEX
+MD[orig]
+PUSHB_1
+ 0
+LT
+IF
+ROLL
+NEG
+ROLL
+SUB
+DUP
+PUSHB_1
+ 0
+LT
+IF
+SHPIX
+ELSE
+POP
+POP
+EIF
+ELSE
+ROLL
+ROLL
+SUB
+DUP
+PUSHB_1
+ 0
+GT
+IF
+SHPIX
+ELSE
+POP
+POP
+EIF
+EIF
+RTG
+ENDF
+PUSHB_1
+ 10
+FDEF
+PUSHB_1
+ 6
+CALL
+IF
+POP
+SRP0
+ELSE
+SRP0
+POP
+EIF
+ENDF
+PUSHB_1
+ 11
+FDEF
+DUP
+MDRP[rp0,white]
+PUSHB_1
+ 12
+CALL
+ENDF
+PUSHB_1
+ 12
+FDEF
+DUP
+MDAP[rnd]
+PUSHB_1
+ 7
+CALL
+NOT
+IF
+DUP
+DUP
+GC[orig]
+SWAP
+GC[cur]
+SUB
+ROUND[White]
+DUP
+IF
+DUP
+ABS
+DIV
+SHPIX
+ELSE
+POP
+POP
+EIF
+ELSE
+POP
+EIF
+ENDF
+PUSHB_1
+ 13
+FDEF
+SRP2
+SRP1
+DUP
+DUP
+IP
+MDAP[rnd]
+DUP
+ROLL
+DUP
+GC[orig]
+ROLL
+GC[cur]
+SUB
+SWAP
+ROLL
+DUP
+ROLL
+SWAP
+MD[orig]
+PUSHB_1
+ 0
+LT
+IF
+SWAP
+PUSHB_1
+ 0
+GT
+IF
+PUSHB_1
+ 64
+SHPIX
+ELSE
+POP
+EIF
+ELSE
+SWAP
+PUSHB_1
+ 0
+LT
+IF
+PUSHB_1
+ 64
+NEG
+SHPIX
+ELSE
+POP
+EIF
+EIF
+ENDF
+PUSHB_1
+ 14
+FDEF
+PUSHB_1
+ 6
+CALL
+IF
+RTDG
+MDRP[rp0,rnd,white]
+RTG
+POP
+POP
+ELSE
+DUP
+MDRP[rp0,rnd,white]
+ROLL
+MPPEM
+GT
+IF
+DUP
+ROLL
+SWAP
+MD[grid]
+DUP
+PUSHB_1
+ 0
+NEQ
+IF
+SHPIX
+ELSE
+POP
+POP
+EIF
+ELSE
+POP
+POP
+EIF
+EIF
+ENDF
+PUSHB_1
+ 15
+FDEF
+SWAP
+DUP
+MDRP[rp0,rnd,white]
+DUP
+MDAP[rnd]
+PUSHB_1
+ 7
+CALL
+NOT
+IF
+SWAP
+DUP
+IF
+MPPEM
+GTEQ
+ELSE
+POP
+PUSHB_1
+ 1
+EIF
+IF
+ROLL
+PUSHB_1
+ 4
+MINDEX
+MD[grid]
+SWAP
+ROLL
+SWAP
+DUP
+ROLL
+MD[grid]
+ROLL
+SWAP
+SUB
+SHPIX
+ELSE
+POP
+POP
+POP
+POP
+EIF
+ELSE
+POP
+POP
+POP
+POP
+POP
+EIF
+ENDF
+PUSHB_1
+ 16
+FDEF
+DUP
+MDRP[rp0,min,white]
+PUSHB_1
+ 18
+CALL
+ENDF
+PUSHB_1
+ 17
+FDEF
+DUP
+MDRP[rp0,white]
+PUSHB_1
+ 18
+CALL
+ENDF
+PUSHB_1
+ 18
+FDEF
+DUP
+MDAP[rnd]
+PUSHB_1
+ 7
+CALL
+NOT
+IF
+DUP
+DUP
+GC[orig]
+SWAP
+GC[cur]
+SUB
+ROUND[White]
+ROLL
+DUP
+GC[orig]
+SWAP
+GC[cur]
+SWAP
+SUB
+ROUND[White]
+ADD
+DUP
+IF
+DUP
+ABS
+DIV
+SHPIX
+ELSE
+POP
+POP
+EIF
+ELSE
+POP
+POP
+EIF
+ENDF
+PUSHB_1
+ 19
+FDEF
+DUP
+ROLL
+DUP
+ROLL
+SDPVTL[orthog]
+DUP
+PUSHB_1
+ 3
+CINDEX
+MD[orig]
+ABS
+SWAP
+ROLL
+SPVTL[orthog]
+PUSHB_1
+ 32
+LT
+IF
+ALIGNRP
+ELSE
+MDRP[grey]
+EIF
+ENDF
+PUSHB_1
+ 20
+FDEF
+PUSHB_4
+ 0
+ 64
+ 1
+ 64
+WS
+WS
+SVTCA[x-axis]
+MPPEM
+PUSHW_1
+ 4096
+MUL
+SVTCA[y-axis]
+MPPEM
+PUSHW_1
+ 4096
+MUL
+DUP
+ROLL
+DUP
+ROLL
+NEQ
+IF
+DUP
+ROLL
+DUP
+ROLL
+GT
+IF
+SWAP
+DIV
+DUP
+PUSHB_1
+ 0
+SWAP
+WS
+ELSE
+DIV
+DUP
+PUSHB_1
+ 1
+SWAP
+WS
+EIF
+DUP
+PUSHB_1
+ 64
+GT
+IF
+PUSHB_3
+ 0
+ 32
+ 0
+RS
+MUL
+WS
+PUSHB_3
+ 1
+ 32
+ 1
+RS
+MUL
+WS
+PUSHB_1
+ 32
+MUL
+PUSHB_1
+ 25
+NEG
+JMPR
+POP
+EIF
+ELSE
+POP
+POP
+EIF
+ENDF
+PUSHB_1
+ 21
+FDEF
+PUSHB_1
+ 1
+RS
+MUL
+SWAP
+PUSHB_1
+ 0
+RS
+MUL
+SWAP
+ENDF
+EndTTInstrs
+ShortTable: cvt  6
+  -220
+  0
+  520
+  730
+  33
+  633
+EndShort
 ShortTable: maxp 16
   1
   0
-  6439
-  216
-  18
-  0
-  0
+  7223
+  192
+  22
+  102
+  11
   2
+  1
+  2
+  22
   0
-  0
-  0
-  0
-  4
-  0
-  0
-  0
+  256
+  46
+  1
+  1
 EndShort
-LangName: 1033 "" "@WineTestVertical" "Regular" "FontForge 2.0 : M+- 1p regular : 2-11-2011" "" "" "" "" "" "" "" "http://mplus-fonts.sourceforge.jp" "" "" "" "" "M+- 1p" "regular" 
-GaspTable: 1 65535 2
+LangName: 1033 "" "" "" "FontForge 2.0 : WineTestVertical: 11-3-2013" "" "Version 1.055" "" "" "" "" "" "http://www.winehq.com" "" "" "" "" "WineTestVertical" "regular"
+GaspTable: 1 65535 2 0
 Encoding: UnicodeFull
 UnicodeInterp: none
 NameList: Adobe Glyph List
-DisplaySize: -24
+DisplaySize: -36
 AntiAlias: 1
 FitToEm: 1
-AnchorClass2: "TopMark"  "mkmklookup1 subtable" "Bottom"  "marklookup2 subtable" "Top"  "marklookup1 subtable" "BottomMark"  "mkmklookup2 subtable" 
-BeginChars: 1114185 2
+WinInfo: 1114120 23 9
+BeginPrivate: 0
+EndPrivate
+TeXData: 1 0 0 346030 173015 115343 0 1048576 115343 783286 444596 497025 792723 393216 433062 380633 303038 157286 324010 404750 52429 2506097 1059062 262144
+BeginChars: 1114326 14
+
+StartChar: .notdef
+Encoding: 1114112 -1 0
+Width: 364
+Flags: W
+TtInstrs:
+PUSHB_2
+ 1
+ 0
+MDAP[rnd]
+ALIGNRP
+PUSHB_3
+ 7
+ 4
+ 4
+MIRP[min,rnd,black]
+SHP[rp2]
+PUSHB_2
+ 6
+ 5
+MDRP[rp0,min,rnd,grey]
+ALIGNRP
+PUSHB_3
+ 3
+ 2
+ 4
+MIRP[min,rnd,black]
+SHP[rp2]
+SVTCA[y-axis]
+PUSHB_2
+ 3
+ 0
+MDAP[rnd]
+ALIGNRP
+PUSHB_3
+ 5
+ 4
+ 4
+MIRP[min,rnd,black]
+SHP[rp2]
+PUSHB_3
+ 7
+ 6
+ 5
+MIRP[rp0,min,rnd,grey]
+ALIGNRP
+PUSHB_3
+ 1
+ 2
+ 4
+MIRP[min,rnd,black]
+SHP[rp2]
+EndTTInstrs
+LayerCount: 2
+Fore
+SplineSet
+33 0 m 1,0,-1
+ 33 666 l 1,1,-1
+ 298 666 l 1,2,-1
+ 298 0 l 1,3,-1
+ 33 0 l 1,0,-1
+66 33 m 1,4,-1
+ 265 33 l 1,5,-1
+ 265 633 l 1,6,-1
+ 66 633 l 1,7,-1
+ 66 33 l 1,4,-1
+EndSplineSet
+EndChar
+
+StartChar: glyph1
+Encoding: 1114113 -1 1
+Width: 0
+Flags: W
+LayerCount: 2
+EndChar
+
+StartChar: glyph2
+Encoding: 1114114 -1 2
+Width: 333
+Flags: W
+LayerCount: 2
+EndChar
+
+StartChar: W
+Encoding: 87 87 3
+Width: 500
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+415 0 m 1,0,-1
+ 257 725 l 1,1,-1
+ 85 0 l 1,2,-1
+ 415 0 l 1,0,-1
+EndSplineSet
+EndChar
 
 StartChar: twodotenleader
-Encoding: 8229 8229 0
+Encoding: 8229 8229 4
 Width: 1000
 GlyphClass: 2
 Flags: W
@@ -175,8 +877,41 @@ EndSplineSet
 Substitution2: "j-vert" twodotenleader.vert
 EndChar
 
-StartChar: twodotenleader.vert
-Encoding: 1114131 -1 1
+StartChar: uni3042
+Encoding: 12354 12354 5
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+133 677 m 1,0,-1
+ 133 613 l 1,1,-1
+ 487 0 l 5,2,-1
+ 867 613 l 1,3,-1
+ 867 677 l 1,4,-1
+ 133 677 l 1,0,-1
+EndSplineSet
+EndChar
+
+StartChar: uni5EAD
+Encoding: 24237 24237 6
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+21 -21 m 1,0,1
+876 741.3 m 1,2,-1
+ 122 815.3 l 1,3,-1
+ 122 683.3 l 1,4,-1
+ 876 741.3 l 1,2,-1
+EndSplineSet
+EndChar
+
+StartChar: uniFE30
+Encoding: 65072 65072 7
 Width: 1000
 GlyphClass: 2
 Flags: W
@@ -193,6 +928,113 @@ SplineSet
  547 180 l 1,6,-1
  547 40 l 1,7,-1
  453 40 l 1,4,-1
+EndSplineSet
+EndChar
+
+StartChar: uniFF37
+Encoding: 65335 65335 8
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+945 641 m 17,0,-1
+ 519 797 l 5,1,-1
+ 97 637 l 9,2,-1
+ 527 0 l 25,3,-1
+ 945 641 l 17,0,-1
+EndSplineSet
+EndChar
+
+StartChar: uniFF5B
+Encoding: 65371 65371 9
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+892 755 m 17,0,-1
+ 428 392 l 1,1,-1
+ 428 328 l 1,2,-1
+ 892 -35 l 9,3,-1
+ 892 755 l 17,0,-1
+EndSplineSet
+Substitution2: "j-vert" uniFF5B.vert
+EndChar
+
+StartChar: uniFF9D
+Encoding: 65437 65437 10
+Width: 500
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+467 623 m 17,0,-1
+ 397 637 l 1,1,-1
+ 77 322.2 l 17,2,-1
+ 100 -10 l 1,3,-1
+ 467 623 l 17,0,-1
+EndSplineSet
+EndChar
+
+StartChar: twodotenleader.vert
+Encoding: 1114272 -1 11
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+453 40 m 1,0,-1
+ 453 180 l 1,1,-1
+ 547 180 l 1,2,-1
+ 547 40 l 1,3,-1
+ 453 40 l 1,0,-1
+453 540 m 1,4,-1
+ 453 680 l 1,5,-1
+ 547 680 l 1,6,-1
+ 547 540 l 1,7,-1
+ 453 540 l 1,4,-1
+EndSplineSet
+EndChar
+
+StartChar: uni3041.vert
+Encoding: 1114293 -1 12
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+522 557 m 1,0,-1
+ 875 557 l 1,1,-1
+ 875 617 l 1,2,-1
+ 522 617 l 1,3,-1
+ 522 715 l 1,4,-1
+ 454 715 l 1,5,-1
+ 454 617 l 1,6,-1
+ 285 617 l 1,7,-1
+ 285 557 l 1,8,-1
+ 522 557 l 1,0,-1
+EndSplineSet
+EndChar
+
+StartChar: uniFF5B.vert
+Encoding: 1114321 -1 13
+Width: 1000
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+543 340 m 25,0,-1
+ 29 -30 l 25,1,-1
+ 971 -32 l 1,2,-1
+ 521 112 l 1,3,-1
+ 543 340 l 25,0,-1
 EndSplineSet
 EndChar
 EndChars

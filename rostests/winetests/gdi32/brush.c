@@ -49,7 +49,7 @@ static void test_solidbrush(void)
 
     for(i=0; i<sizeof(stock)/sizeof(stock[0]); i++) {
         solidBrush = CreateSolidBrush(stock[i].color);
-        
+
         if(stock[i].stockobj != -1) {
             stockBrush = GetStockObject(stock[i].stockobj);
             ok(stockBrush!=solidBrush ||
@@ -59,20 +59,20 @@ static void test_solidbrush(void)
         else
             stockBrush = NULL;
         memset(&br, 0, sizeof(br));
-        ret = GetObject(solidBrush, sizeof(br), &br);
+        ret = GetObjectW(solidBrush, sizeof(br), &br);
         ok( ret !=0, "GetObject on solid %s brush failed, error=%d\n", stock[i].name, GetLastError());
         ok(br.lbStyle==BS_SOLID, "%s brush has wrong style, got %d expected %d\n", stock[i].name, br.lbStyle, BS_SOLID);
         ok(br.lbColor==stock[i].color, "%s brush has wrong color, got 0x%08x expected 0x%08x\n", stock[i].name, br.lbColor, stock[i].color);
-        
+
         if(stockBrush) {
             /* Sanity check, make sure the colors being compared do in fact have a stock brush */
-            ret = GetObject(stockBrush, sizeof(br), &br);
+            ret = GetObjectW(stockBrush, sizeof(br), &br);
             ok( ret !=0, "GetObject on stock %s brush failed, error=%d\n", stock[i].name, GetLastError());
             ok(br.lbColor==stock[i].color, "stock %s brush unexpected color, got 0x%08x expected 0x%08x\n", stock[i].name, br.lbColor, stock[i].color);
         }
 
         DeleteObject(solidBrush);
-        ret = GetObject(solidBrush, sizeof(br), &br);
+        ret = GetObjectW(solidBrush, sizeof(br), &br);
         ok(ret==0 ||
            broken(ret!=0), /* win9x */
            "GetObject succeeded on a deleted %s brush\n", stock[i].name);
@@ -92,7 +92,7 @@ static void test_hatch_brush(void)
         if (i < HS_API_MAX)
         {
             ok( brush != 0, "%u: CreateHatchBrush failed err %u\n", i, GetLastError() );
-            size = GetObject( brush, sizeof(lb), &lb );
+            size = GetObjectW( brush, sizeof(lb), &lb );
             ok( size == sizeof(lb), "wrong size %u\n", size );
             ok( lb.lbColor == RGB(12,34,56), "wrong color %08x\n", lb.lbColor );
             if (i <= HS_DIAGCROSS)

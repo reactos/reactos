@@ -23,6 +23,8 @@
 /* @makedep: wine_test.ttf */
 wine_test.ttf RCDATA wine_test.ttf
 
+/* @makedep: wine_vdmx.ttf */
+wine_vdmx.ttf RCDATA wine_vdmx.ttf
 
 /* @makedep: vertical.ttf */
 vertical.ttf RCDATA vertical.ttf

@@ -121,7 +121,7 @@ static DWORD WINAPI thread_proc(void *param)
     DWORD status;
     struct hgdiobj_event *hgdiobj_event = param;
 
-    hgdiobj_event->hdc = CreateDC("display", NULL, NULL, NULL);
+    hgdiobj_event->hdc = CreateDCA("display", NULL, NULL, NULL);
     ok(hgdiobj_event->hdc != NULL, "CreateDC error %u\n", GetLastError());
 
     hgdiobj_event->hgdiobj1 = CreatePen(PS_DASHDOTDOT, 17, RGB(1, 2, 3));
@@ -134,7 +134,7 @@ static DWORD WINAPI thread_proc(void *param)
     status = WaitForSingleObject(hgdiobj_event->stop_event, INFINITE);
     ok(status == WAIT_OBJECT_0, "WaitForSingleObject error %u\n", GetLastError());
 
-    ok(!GetObject(hgdiobj_event->hgdiobj1, sizeof(lp), &lp), "GetObject should fail\n");
+    ok(!GetObjectA(hgdiobj_event->hgdiobj1, sizeof(lp), &lp), "GetObject should fail\n");
 
     ok(!GetDeviceCaps(hgdiobj_event->hdc, TECHNOLOGY), "GetDeviceCaps(TECHNOLOGY) should fail\n");
 
@@ -151,9 +151,9 @@ static void test_thread_objects(void)
     DWORD status;
     BOOL bRet;
 
-    hgdiobj_event.stop_event = CreateEvent(NULL, 0, 0, NULL);
+    hgdiobj_event.stop_event = CreateEventA(NULL, 0, 0, NULL);
     ok(hgdiobj_event.stop_event != NULL, "CreateEvent error %u\n", GetLastError());
-    hgdiobj_event.ready_event = CreateEvent(NULL, 0, 0, NULL);
+    hgdiobj_event.ready_event = CreateEventA(NULL, 0, 0, NULL);
     ok(hgdiobj_event.ready_event != NULL, "CreateEvent error %u\n", GetLastError());
 
     hthread = CreateThread(NULL, 0, thread_proc, &hgdiobj_event, 0, &tid);
@@ -162,7 +162,7 @@ static void test_thread_objects(void)
     status = WaitForSingleObject(hgdiobj_event.ready_event, INFINITE);
     ok(status == WAIT_OBJECT_0, "WaitForSingleObject error %u\n", GetLastError());
 
-    ret = GetObject(hgdiobj_event.hgdiobj1, sizeof(lp), &lp);
+    ret = GetObjectA(hgdiobj_event.hgdiobj1, sizeof(lp), &lp);
     ok(ret == sizeof(lp), "GetObject error %u\n", GetLastError());
     ok(lp.lopnStyle == PS_DASHDOTDOT, "wrong pen style %d\n", lp.lopnStyle);
     ok(lp.lopnWidth.x == 17, "wrong pen width.y %d\n", lp.lopnWidth.x);
@@ -249,7 +249,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_BITMAP);
     ok(hobj == hbmp, "OBJ_BITMAP is wrong: %p\n", hobj);
 
-    assert(GetObject(hbrush, sizeof(lb), &lb) == sizeof(lb));
+    assert(GetObjectA(hbrush, sizeof(lb), &lb) == sizeof(lb));
     hpen = ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_SQUARE | PS_JOIN_BEVEL,
                         10, &lb, 0, NULL);
     assert(hpen != 0);

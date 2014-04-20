@@ -95,7 +95,7 @@ static void test_logpen(void)
 
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp), &lp);
+        size = GetObjectW(hpen, sizeof(lp), &lp);
         ok(size == sizeof(lp), "GetObject returned %d, error %d\n", size, GetLastError());
 
         ok(lp.lopnStyle == pen[i].ret_style, "expected %u, got %u\n", pen[i].ret_style, lp.lopnStyle);
@@ -114,30 +114,30 @@ static void test_logpen(void)
         ok(obj_type == OBJ_PEN, "wrong object type %u\n", obj_type);
 
         /* check what's the real size of the object */
-        size = GetObject(hpen, 0, NULL);
+        size = GetObjectW(hpen, 0, NULL);
         ok(size == sizeof(lp), "GetObject returned %d, error %d\n", size, GetLastError());
 
         /* ask for truncated data */
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp.lopnStyle), &lp);
+        size = GetObjectW(hpen, sizeof(lp.lopnStyle), &lp);
         ok(!size, "GetObject should fail: size %d, error %d\n", size, GetLastError());
 
         /* see how larger buffer sizes are handled */
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp) * 4, &lp);
+        size = GetObjectW(hpen, sizeof(lp) * 4, &lp);
         ok(size == sizeof(lp), "GetObject returned %d, error %d\n", size, GetLastError());
 
         /* see how larger buffer sizes are handled */
         memset(&elp, 0xb0, sizeof(elp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(elp) * 2, &elp);
+        size = GetObjectW(hpen, sizeof(elp) * 2, &elp);
         ok(size == sizeof(lp), "GetObject returned %d, error %d\n", size, GetLastError());
 
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp), &lp);
+        size = GetObjectW(hpen, sizeof(lp), &lp);
         ok(size == sizeof(lp), "GetObject returned %d, error %d\n", size, GetLastError());
 
         ok(lp.lopnStyle == pen[i].ret_style, "expected %u, got %u\n", pen[i].ret_style, lp.lopnStyle);
@@ -147,13 +147,14 @@ static void test_logpen(void)
 
         memset(&elp, 0xb0, sizeof(elp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(elp), &elp);
+        size = GetObjectW(hpen, sizeof(elp), &elp);
 
         /* for some reason XP differentiates PS_NULL here */
         if (pen[i].style == PS_NULL)
         {
             ok(hpen == GetStockObject(NULL_PEN), "hpen should be a stock NULL_PEN\n");
-            ok(size == sizeof(EXTLOGPEN), "GetObject returned %d, error %d\n", size, GetLastError());
+            ok(size == offsetof(EXTLOGPEN, elpStyleEntry[1]), "GetObject returned %d, error %d\n",
+                size, GetLastError());
             ok(elp.elpPenStyle == pen[i].ret_style, "expected %u, got %u\n", pen[i].ret_style, elp.elpPenStyle);
             ok(elp.elpWidth == 0, "expected 0, got %u\n", elp.elpWidth);
             ok(elp.elpColor == pen[i].ret_color, "expected %08x, got %08x\n", pen[i].ret_color, elp.elpColor);
@@ -230,7 +231,7 @@ static void test_logpen(void)
 
         /* check what's the real size of the object */
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, 0, NULL);
+        size = GetObjectW(hpen, 0, NULL);
         switch (pen[i].style)
         {
         case PS_NULL:
@@ -239,12 +240,12 @@ static void test_logpen(void)
             break;
 
         case PS_USERSTYLE:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry[2] ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry[2] ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             break;
 
         default:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             break;
         }
@@ -252,13 +253,13 @@ static void test_logpen(void)
         /* ask for truncated data */
         memset(&elp, 0xb0, sizeof(elp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(elp.elpPenStyle), &elp);
+        size = GetObjectW(hpen, sizeof(elp.elpPenStyle), &elp);
         ok(!size, "GetObject should fail: size %d, error %d\n", size, GetLastError());
 
         /* see how larger buffer sizes are handled */
         memset(elp_buffer, 0xb0, sizeof(elp_buffer));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(elp_buffer), elp_buffer);
+        size = GetObjectW(hpen, sizeof(elp_buffer), elp_buffer);
         switch (pen[i].style)
         {
         case PS_NULL:
@@ -274,15 +275,15 @@ static void test_logpen(void)
             memset(&elp, 0xb0, sizeof(elp));
             memset(&unset_hatch, 0xb0, sizeof(unset_hatch));
             SetLastError(0xdeadbeef);
-            size = GetObject(hpen, sizeof(elp), &elp);
-            ok(size == sizeof(EXTLOGPEN),
+            size = GetObjectW(hpen, sizeof(elp), &elp);
+            ok(size == offsetof(EXTLOGPEN, elpStyleEntry[1]),
                 "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == unset_hatch, "expected 0xb0b0b0b0, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 0xb0b0b0b0, "expected 0xb0b0b0b0, got %x\n", ext_pen->elpNumEntries);
             break;
 
         case PS_USERSTYLE:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry[2] ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry[2] ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == HS_CROSS, "expected HS_CROSS, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 2, "expected 0, got %x\n", ext_pen->elpNumEntries);
@@ -291,7 +292,7 @@ static void test_logpen(void)
             break;
 
         default:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == HS_CROSS, "expected HS_CROSS, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 0, "expected 0, got %x\n", ext_pen->elpNumEntries);
@@ -340,7 +341,7 @@ test_geometric_pens:
             ok(obj_type == OBJ_EXTPEN, "wrong object type %u\n", obj_type);
 
         /* check what's the real size of the object */
-        size = GetObject(hpen, 0, NULL);
+        size = GetObjectW(hpen, 0, NULL);
         switch (pen[i].style)
         {
         case PS_NULL:
@@ -349,12 +350,12 @@ test_geometric_pens:
             break;
 
         case PS_USERSTYLE:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry[2] ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry[2] ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             break;
 
         default:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             break;
         }
@@ -362,12 +363,12 @@ test_geometric_pens:
         /* ask for truncated data */
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp.lopnStyle), &lp);
+        size = GetObjectW(hpen, sizeof(lp.lopnStyle), &lp);
         ok(!size, "GetObject should fail: size %d, error %d\n", size, GetLastError());
 
         memset(&lp, 0xb0, sizeof(lp));
         SetLastError(0xdeadbeef);
-        size = GetObject(hpen, sizeof(lp), &lp);
+        size = GetObjectW(hpen, sizeof(lp), &lp);
         /* for some reason XP differentiates PS_NULL here */
         if (pen[i].style == PS_NULL)
         {
@@ -385,18 +386,18 @@ test_geometric_pens:
         memset(elp_buffer, 0xb0, sizeof(elp_buffer));
         SetLastError(0xdeadbeef);
         /* buffer is too small for user styles */
-        size = GetObject(hpen, sizeof(EXTLOGPEN), elp_buffer);
+        size = GetObjectW(hpen, offsetof(EXTLOGPEN, elpStyleEntry[1]), elp_buffer);
         switch (pen[i].style)
         {
         case PS_NULL:
-            ok(size == sizeof(EXTLOGPEN),
+            ok(size == offsetof(EXTLOGPEN, elpStyleEntry[1]),
                 "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == 0, "expected 0, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 0, "expected 0, got %x\n", ext_pen->elpNumEntries);
 
             /* for PS_NULL it also works this way */
             SetLastError(0xdeadbeef);
-            size = GetObject(hpen, sizeof(elp_buffer), &lp);
+            size = GetObjectW(hpen, sizeof(elp_buffer), &lp);
             ok(size == sizeof(LOGPEN),
                 "GetObject returned %d, error %d\n", size, GetLastError());
             ok(lp.lopnStyle == pen[i].ret_style, "expected %u, got %u\n", pen[i].ret_style, lp.lopnStyle);
@@ -408,8 +409,8 @@ test_geometric_pens:
         case PS_USERSTYLE:
             ok(!size /*&& GetLastError() == ERROR_INVALID_PARAMETER*/,
                "GetObject should fail: size %d, error %d\n", size, GetLastError());
-            size = GetObject(hpen, sizeof(elp_buffer), elp_buffer);
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry[2] ),
+            size = GetObjectW(hpen, sizeof(elp_buffer), elp_buffer);
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry[2] ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == HS_CROSS, "expected HS_CROSS, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 2, "expected 0, got %x\n", ext_pen->elpNumEntries);
@@ -418,7 +419,7 @@ test_geometric_pens:
             break;
 
         default:
-            ok(size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ),
+            ok(size == offsetof( EXTLOGPEN, elpStyleEntry ),
                "GetObject returned %d, error %d\n", size, GetLastError());
             ok(ext_pen->elpHatch == HS_CROSS, "expected HS_CROSS, got %p\n", (void *)ext_pen->elpHatch);
             ok(ext_pen->elpNumEntries == 0, "expected 0, got %x\n", ext_pen->elpNumEntries);
@@ -511,12 +512,8 @@ static void test_ps_userstyle(void)
     LOGBRUSH lb;
     HPEN pen;
     INT size, i;
-
-    struct
-    {
-        EXTLOGPEN elp;
-        DWORD style_data[15];
-    } ext_pen;
+    char buffer[offsetof(EXTLOGPEN, elpStyleEntry) + 16 * sizeof(DWORD)];
+    EXTLOGPEN *ext_pen = (EXTLOGPEN *)buffer;
 
     lb.lbColor = 0x00ff0000;
     lb.lbStyle = BS_SOLID;
@@ -561,18 +558,18 @@ static void test_ps_userstyle(void)
     pen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 50, &lb, 16, style);
     ok(pen != 0, "ExtCreatePen should not fail\n");
 
-    size = GetObject(pen, sizeof(ext_pen), &ext_pen);
-    expect(FIELD_OFFSET(EXTLOGPEN,elpStyleEntry[16]), size);
+    size = GetObjectW(pen, sizeof(buffer), ext_pen);
+    ok(size == offsetof(EXTLOGPEN, elpStyleEntry[16]), "wrong size %d\n", size);
 
     for(i = 0; i < 16; i++)
-        expect(style[i], ext_pen.elp.elpStyleEntry[i]);
+        expect(style[i], ext_pen->elpStyleEntry[i]);
 
     DeleteObject(pen);
 }
 
 static void test_brush_pens(void)
 {
-    char buffer[sizeof(EXTLOGPEN) + 15 * sizeof(DWORD)];
+    char buffer[offsetof(EXTLOGPEN, elpStyleEntry) + 16 * sizeof(DWORD)];
     EXTLOGPEN *elp = (EXTLOGPEN *)buffer;
     LOGBRUSH lb;
     HPEN pen = 0;
@@ -604,8 +601,8 @@ static void test_brush_pens(void)
             lb.lbHatch = HS_CROSS;
             pen = ExtCreatePen( PS_DOT | PS_GEOMETRIC, 3, &lb, 0, NULL );
             ok( pen != 0, "ExtCreatePen failed err %u\n", GetLastError() );
-            size = GetObject( pen, sizeof(buffer), elp );
-            ok( size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
+            size = GetObjectW( pen, sizeof(buffer), elp );
+            ok( size == offsetof( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
             ok( elp->elpPenStyle == (PS_DOT | PS_GEOMETRIC), "wrong pen style %x\n", elp->elpPenStyle );
             ok( elp->elpBrushStyle == lb.lbStyle, "wrong brush style %x\n", elp->elpBrushStyle );
             ok( elp->elpColor == RGB(12,34,56), "wrong color %x\n", elp->elpColor );
@@ -616,7 +613,7 @@ static void test_brush_pens(void)
         case BS_NULL:
             pen = ExtCreatePen( PS_SOLID | PS_GEOMETRIC, 3, &lb, 0, NULL );
             ok( pen != 0, "ExtCreatePen failed err %u\n", GetLastError() );
-            size = GetObject( pen, sizeof(buffer), elp );
+            size = GetObjectW( pen, sizeof(buffer), elp );
             ok( size == sizeof(LOGPEN), "wrong size %u\n", size );
             ok( ((LOGPEN *)elp)->lopnStyle == PS_NULL,
                 "wrong pen style %x\n", ((LOGPEN *)elp)->lopnStyle );
@@ -629,8 +626,8 @@ static void test_brush_pens(void)
             lb.lbHatch = (ULONG_PTR)bmp;
             pen = ExtCreatePen( PS_DOT | PS_GEOMETRIC, 3, &lb, 0, NULL );
             ok( pen != 0, "ExtCreatePen failed err %u\n", GetLastError() );
-            size = GetObject( pen, sizeof(buffer), elp );
-            ok( size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
+            size = GetObjectW( pen, sizeof(buffer), elp );
+            ok( size == offsetof( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
             ok( elp->elpPenStyle == (PS_DOT | PS_GEOMETRIC), "wrong pen style %x\n", elp->elpPenStyle );
             ok( elp->elpBrushStyle == BS_PATTERN, "wrong brush style %x\n", elp->elpBrushStyle );
             ok( elp->elpColor == 0, "wrong color %x\n", elp->elpColor );
@@ -644,8 +641,8 @@ static void test_brush_pens(void)
             lb.lbHatch = lb.lbStyle == BS_DIBPATTERN ? (ULONG_PTR)hmem : (ULONG_PTR)info;
             pen = ExtCreatePen( PS_DOT | PS_GEOMETRIC, 3, &lb, 0, NULL );
             ok( pen != 0, "ExtCreatePen failed err %u\n", GetLastError() );
-            size = GetObject( pen, sizeof(buffer), elp );
-            ok( size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
+            size = GetObjectW( pen, sizeof(buffer), elp );
+            ok( size == offsetof( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
             ok( elp->elpPenStyle == (PS_DOT | PS_GEOMETRIC), "wrong pen style %x\n", elp->elpPenStyle );
             ok( elp->elpBrushStyle == BS_DIBPATTERNPT, "wrong brush style %x\n", elp->elpBrushStyle );
             ok( elp->elpColor == 0, "wrong color %x\n", elp->elpColor );
@@ -670,8 +667,8 @@ static void test_brush_pens(void)
         if (lb.lbStyle == BS_SOLID)
         {
             ok( pen != 0, "ExtCreatePen failed err %u\n", GetLastError() );
-            size = GetObject( pen, sizeof(buffer), elp );
-            ok( size == FIELD_OFFSET( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
+            size = GetObjectW( pen, sizeof(buffer), elp );
+            ok( size == offsetof( EXTLOGPEN, elpStyleEntry ), "wrong size %u\n", size );
             ok( elp->elpPenStyle == PS_DOT, "wrong pen style %x\n", elp->elpPenStyle );
             ok( elp->elpBrushStyle == BS_SOLID, "wrong brush style %x\n", elp->elpBrushStyle );
             ok( elp->elpColor == RGB(12,34,56), "wrong color %x\n", elp->elpColor );

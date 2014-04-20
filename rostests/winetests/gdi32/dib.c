@@ -136,8 +136,8 @@ static const char *sha1_graphics_a8r8g8b8[] =
     "d7dd4700f49808541bba99244b7eb5840e0a2439",
     "af99228aa4cfbd1f61bd824db046144a3c6c2ed7",
     "568f87f0194ca19b69a5b2bcdef795d89c5721ce",
-    "50d19fe68b2ab4fdbb5d590cdca6dc84a95bab68",
-    "a1fde1094d2c19ddb20871842dae1da73618709e",
+    "a37810f46dee8741fe5adbb3f1f2e87012ffc929",
+    "50a09678c49c208f71d40452daca5411279aa674",
     "e462052a03dbe4ec3814db7700e166d00d4d686f",
     "a27917d4db49ce77989fae246015aeb2a28520ee",
     "657514a4ca1f2b6ca7a125ad58dfed82099a37d1",
@@ -209,8 +209,8 @@ static const char *sha1_graphics_a8r8g8b8_bitfields[] =
     "d7dd4700f49808541bba99244b7eb5840e0a2439",
     "af99228aa4cfbd1f61bd824db046144a3c6c2ed7",
     "568f87f0194ca19b69a5b2bcdef795d89c5721ce",
-    "50d19fe68b2ab4fdbb5d590cdca6dc84a95bab68",
-    "a1fde1094d2c19ddb20871842dae1da73618709e",
+    "a37810f46dee8741fe5adbb3f1f2e87012ffc929",
+    "50a09678c49c208f71d40452daca5411279aa674",
     "0cda6b3297003b3ccd6d5baa17e1ca9bb7c56f08",
     "b2c8e1ebb9435031fe068442f479d1304096e79f",
     "657514a4ca1f2b6ca7a125ad58dfed82099a37d1",
@@ -282,8 +282,8 @@ static const char *sha1_graphics_a8b8g8r8[] =
     "86c84cc8306975edecc6d4a89a8aff29f59b55a7",
     "af99228aa4cfbd1f61bd824db046144a3c6c2ed7",
     "25675c30adfe24d6cae60793b156dfdaa36ac3ba",
-    "1cb1810b127f509117b38d62a15b67b2347b9145",
-    "f05b3294f25de5fa6d1114104bca97871052ea5a",
+    "849d4abf4b690128a5f70e9b8ac78f20c437de06",
+    "e768fc9f3167ef3144a4cfb1e20126a577f7dd5b",
     "87f57a31253a38dbf3dc3070473328fa04b68a48",
     "db64cc4d830fc35ed170b53943e722b2342954d4",
     "9988ceca44dafbee247aece1f027c06c27c01652",
@@ -355,8 +355,8 @@ static const char *sha1_graphics_r10g10b10[] =
     "fc0c32afb719295f28bcfef22803bef94f798e20",
     "36f6db4fbe2a1630a7597d3a446f2902755c96ef",
     "d3f08946300e1700865042aed121870e292d1095",
-    "467ff4af1e105855874f27fbf84d1d2b0417ab5d",
-    "fb0dcff8a67a88313557ee8b588aaa2004fe7b8b",
+    "4782df8e24127e66a434b4e839adebf2dbb223fb",
+    "739707cc85ca63e0580c79618dc0bb8a4a338d95",
     "8ea5d7e4bebc40a1d91b04b12e1c11a42c188095",
     "317521e576801acaea62c76fe16813cdfe20f4ad",
     "ce0fc29bb0281d6c955d64e239254ef9e6dbc06d",
@@ -428,8 +428,8 @@ static const char *sha1_graphics_r6g6b6[] =
     "49341c297a887186bd47d7465d827ab3147f05e3",
     "325279e76367200d3fd7194d81c09fd139988ece",
     "c3def160a1e847605ff0fc7edd30397fa90635a0",
-    "a9c2158329c207638cfd2c82cd8a6218efdb28d2",
-    "7f0c4e6874f0c36cee64ff5dec76258ca8822cb2",
+    "2b3e87e0b705b03c7c08f403409ab82cce095ba1",
+    "45c08e11fffc78b2a3574263419e0cb7f8cd9b45",
     "aecb242c31f31a90f071b6455ea7d808d4ea22e3",
     "77ea86e51a94b11a8081b29696cb4115687843e3",
     "d67b897cad72d31e75359094007b1346fd8806ea",
@@ -501,8 +501,8 @@ static const char *sha1_graphics_24[] =
     "b25ba91487ec945410deb2b51bc1156890c032a8",
     "d347ca5c6c4b6a61389247c3b6f61564033e8c25",
     "ee315634ed92da3a32c2675ecd1b369471c60936",
-    "6776e0612410e7e200c853721b4ab6ad8b6b81f5",
-    "620a5a520d81971a2d9c30b8d836ba696e11b8dd",
+    "099c688a920f606655b485e8f0a433dc811bc976",
+    "9c044a733335bca43766bda2b317249309155079",
     "354b92008a8409c62d0fa1dff1532c5943aa37a2",
     "8dc9cb7deae5c24d1eae004d53893fa6caf4723c",
     "cf311a96d41bd98fdbdfb5dfaac4ba1ba9b7d6da",
@@ -578,8 +578,8 @@ static const char *sha1_graphics_r5g5b5[] =
     "3772003c7fb420003512d0c437b3659d96d89ce4",
     "dab47c9dc149e570045d699598b14a613bf319b3",
     "2daca4d26a086ed34894693be0b0374402232809",
-    "e313ae8f7261b88999757ed0c6f26df85b4f01a5",
-    "47d0bab8664ae0aaa927495d07bb3537cce35f16",
+    "904f1d82159bcf5485f323bd12b859dc5e83f8eb",
+    "5bd29f94844351e9a5bd01f25d85608b9b0701b2",
     "295ec16530126046790fb734e99f86f5b3b74ed8",
     "d98b0561010606b55a1b9b85fbc93640f681d256",
     "1c1499051860b7caa25173b328ca9c862f01dd1a",
@@ -650,8 +650,8 @@ static const char *sha1_graphics_r4g4b4[] =
     "f0acb3cfcda62e95bee5f7bc8830ffeb3dd7e5a7",
     "07b10c3f191d0a93e5e5694aae37dcad407e10f5",
     "f7900e60347029876ba55e8f0c4c02e89deb36b6",
-    "7d80b8289da8a65931f03c74a9ef0aff5f8eb551",
-    "a7a986097e5b553c71bd93fd0ec6037e6bd0f2d1",
+    "f373a5f37b82e7523c64c08eb509b6191e49b173",
+    "9f0760a05190c9edf9ce2e8be6aaa5557601fe91",
     "7587a9c87cab1eca827807f351bb67ca184d1ac5",
     "b53ef0b5c674822e784903a9dbdd3b386d9f2350",
     "5505d2ed20dc61ffe48832ecf5329162a5ceb734",
@@ -728,8 +728,8 @@ static const char *sha1_graphics_8_color[] =
     "9ae38bb94c7b4c0c6dfebbee23d1de4db9b77488",
     "678979a45126a76eb629992cd64734862f53a555",
     "2f7ba8803604c032cb1a1228bc021f0f1c03e245",
-    "9b1cc7b24f8ce15db2af7f4aa8cde8687784dfa2",
-    "cc4a4cea622d825700bccef7d90a5a447d9ca39d",
+    "52e7c2f8b01592898c13f1e7633881e350244209",
+    "d9d5556b77301952b4caf113337720966bc8e1f5",
     "e58d9c0acf0219d0839e1dbd162e08a765ed7f0f",
     "34ca0f9660e1889f9f2c0deb80535d3c4f349fa4",
     "2c07272462c68cf5944b03e2aa049475b99143c5",
@@ -810,9 +810,9 @@ static const char *sha1_graphics_8_grayscale[] =
     "fb63bbb2f944fb63ed2d7399f07b168740c1034b",
     "3685c9ae95118a83db3569832c29753276fa1264",
     "09640bad951c33e7d70a1fced83b1869f65b3fc5",
-    "cb9ea8137eca1450e049879772f5c11a0e11ff0a",
-    "a4b04ed35484de0de61832a8a28bbc7def645622",
-    "515897610714251dd3b54f54fe76a9ed3fd12c53",
+    "5eb00252664ec39e61359adb1dade4906a87a248",
+    "ee7b9b292ea9fb559ef5ebf6a2a5586d38c7f854",
+    "dcad1a146c1d0ec2c4cc7f64bd4f45c57a604bfe",
     "0ca8775d9a61ccc251d1e6f2e3cfd26a24ae24a2",
     "17ae603c199a5d6695d198a7f36e6d7263990951",
     "1918a33f59d3500204ffc573318a39e9ff754221",
@@ -887,8 +887,8 @@ static const char *sha1_graphics_8[] =
     "31e667c2dbb81dcf81d01cb88f794e88ddb90ff2",
     "465d9cd0a77ab4fcf035aa67544b2a26269e0b09",
     "600d6b2713d5e4c0d90c02660245ed26c7ae3033",
-    "d4f3a5ea033adc405c44e1ca137dc908c606dad6",
-    "7103d428ec9a959778120fd6f0dc62dd608ddd63",
+    "0025a440866a404523a8a20e79a8891e45a2ff56",
+    "c04d335933895f836f0a28c1e3f7f444352c3b8e",
     "bd28d77cd85b20a2384d6b25082cfd884bba683e",
     "7e591ec8ae9bb61c3a443c93f071cab2b8978394",
     "f81c70b6ee2d4690f9f7c797c66582b176f8dcef",
@@ -959,8 +959,8 @@ static const char *sha1_graphics_4[] =
     "df5feb905a31c288008cf5e82d73ac818a160d82",
     "d8af3868c66c7d6dac35ec8ee0317b38a6910bb1",
     "ec8e2aebfb4a1c28ebcd0e053b9e4d8638b50951",
-    "1a23839d71d2379ed4e709a5ae6c14639fbe3ab8",
-    "09f8416a780d80be61cbda3d8a05aee418d0ea00",
+    "ccf8d11b1e81895e9781f17c227c821228d8714b",
+    "f751e26578193afe6a727ee2a52318c404c56555",
     "28a6b9f7927e99e53cf46f0333d29168cb10e920",
     "029552113292cc110fd6b7888e766628950aaeef",
     "297f6ad15200bffbf15198324ee8f27a61a6f2d4",
@@ -1031,8 +1031,8 @@ static const char *sha1_graphics_4_grayscale[] =
     "f8681c09f1abfc38d31e47622cb8798cd896a00e",
     "b5ee51cfc73acb59a2f6124509ea236f8fc7f9f7",
     "d374d4d92c940ae42a9b42c14d744341b68a8c14",
-    "43560b856907f552df3b9dd1f91e1aa8ab9ff17e",
-    "8cefa6dcb658487d0715598d5d120677dbfdab42",
+    "06a6a224be0f5cdc51ac4704f9f57fc1f3813d6f",
+    "c47c2dc806b6b8ff28f300949695d013a46c0083",
     "ada3b7c34946e584dcdf4203e07cfa3dad02bc63",
     "c2f61571b067a44b30f56b4658c9606f0edfc0f3",
     "58f400c9bb78e49a879276fb049edfc9c981740a",
@@ -1052,14 +1052,14 @@ static const char *sha1_graphics_4_grayscale[] =
 static const char *sha1_graphics_1[] =
 {
     "23366004515f3bc46796ea505d748f8d0f97fbe1",
-    "ad674a4104c6a1eacaee8f20effdfe31775b4409",
-    "a7cc69f957d7b533a0a330859a143d701daac73c",
-    "a955bf088c5edb129289ce65caace48ec95632e4",
-    "5316d3c558c254479883133cf58cd07ab521d3f0",
-    "fcbfdb5d60716ea05f2d1896fae7a6e7a8249d35",
-    "2c140b39cc8d21358fded8959cd655f03d7f0f89",
-    "121423a38b4ac4743bd516e0a7e88a3863796313",
-    "7c17635c6c7f62dbf8fd4773d0c503358553d2c7",
+    "61ade9054d4477fb89cf830539a5e8b4e45f0688",
+    "ac530c5dbaf837e15b2337347e974184fad73643",
+    "95fdcda26262d5948a9ade77d83fd698e0031050",
+    "1dd5cee06af78d026e5da8bfe3f45e1cf51faa13",
+    "f6b61ecf03ad11752775faca1d4404c6bb5065f5",
+    "d7ad44d6f377598268e9968333ae2cf23a0715ca",
+    "5871339cd7e6cee12d4dc45934a89071c73efe6b",
+    "69e9b85b34caf736069ba91e57a5c3fa7c891653",
     "21d5d9e47bb07de2cf7bc99b7725390d03a6cde6",
     "f69ee65ea25676429a28eea79b5b9cb9206b8d01",
     "39ff81f77ef4ee772367ed1a63785987c060126e",
@@ -1122,7 +1122,7 @@ static const char *sha1_graphics_1[] =
     "88763f8e8fcf4f78fa864325791a9dd35a0bd279",
     "013cee26bac8f815eadad4bfc012d9b5d01c3b7f",
     "44a28536466dc895feb824b23dfd4a47c6948af8",
-    "f0316a5765a0404760e94cd05b7dc956cae07d26",
+    "17468a3789f0a6d65c302bda735a01dc2c1a74d9",
     "781d8c5cbc28591fd48fce06f984c502fdc6b363",
     "df510792a7790cc699532b1420d43c6d4da2ae2f",
     "55c26d22f11d80b73383fa57d0fac552d705b092",
@@ -1131,14 +1131,14 @@ static const char *sha1_graphics_1[] =
     "4842a30dd7fdf38ddc3ddec85c08efe13a0e2e0b",
     "cc76db6da5ba1776f20240a5ad97a26a9cdf96b0",
     "014f477664a7f4ce4a948d6359a2707119afc8e2",
-    "1ee4e951743efc8764249fbc7adecefbfec0428e",
+    "74d01690e344bc22e7a0478e7a09ccd92354c486",
     "9ab50a663b74577b656e9849484a909d7ac52eeb",
     "128eefd2ee043d59dc37918065f687e378e5ca95",
-    "c642abc651f525332d9d635049646d309e877839",
+    "d7e2daab98ce1f698c4bfedfc01c0d79fcb76b8e",
     "8d34215487088b5d4ef63062270ce25c2862643d",
-    "3dc3075b0c87fdcaabbbae8928303fb2358c15c2",
+    "826562eb11a0d0bba77fa21245f7406a194e9225",
     "bbae6f0659e095a42b420082079663f937065813",
-    "ca711c69165e1fa5be72993b9a7870ef6d485249",
+    "bbabe686a6955402c90530e7c67f1428868369b3",
     NULL
 };
 
@@ -1488,6 +1488,129 @@ static const DWORD four_by_four_data[16] = { 0x000000, 0xff0000, 0x00ff00, 0x000
 static const DWORD ddb_brush_bits[8] = { 0x11112222, 0x33334444, 0x55556666, 0x77778888,
                                          0xaaaaaaaa, 0x00000000, 0x98765432, 0xabcdef00 };
 
+static const RGBQUAD default_palette_1[2] =
+{
+    { 0x00, 0x00, 0x00 }, { 0xff, 0xff, 0xff }
+};
+
+static const RGBQUAD default_palette_4[16] =
+{
+    { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x80 }, { 0x00, 0x80, 0x00 }, { 0x00, 0x80, 0x80 },
+    { 0x80, 0x00, 0x00 }, { 0x80, 0x00, 0x80 }, { 0x80, 0x80, 0x00 }, { 0x80, 0x80, 0x80 },
+    { 0xc0, 0xc0, 0xc0 }, { 0x00, 0x00, 0xff }, { 0x00, 0xff, 0x00 }, { 0x00, 0xff, 0xff },
+    { 0xff, 0x00, 0x00 }, { 0xff, 0x00, 0xff }, { 0xff, 0xff, 0x00 }, { 0xff, 0xff, 0xff },
+};
+
+static const RGBQUAD default_palette_8[256] =
+{
+    { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x80 }, { 0x00, 0x80, 0x00 }, { 0x00, 0x80, 0x80 },
+    { 0x80, 0x00, 0x00 }, { 0x80, 0x00, 0x80 }, { 0x80, 0x80, 0x00 }, { 0xc0, 0xc0, 0xc0 },
+    { 0xc0, 0xdc, 0xc0 }, { 0xf0, 0xca, 0xa6 }, { 0x00, 0x20, 0x40 }, { 0x00, 0x20, 0x60 },
+    { 0x00, 0x20, 0x80 }, { 0x00, 0x20, 0xa0 }, { 0x00, 0x20, 0xc0 }, { 0x00, 0x20, 0xe0 },
+    { 0x00, 0x40, 0x00 }, { 0x00, 0x40, 0x20 }, { 0x00, 0x40, 0x40 }, { 0x00, 0x40, 0x60 },
+    { 0x00, 0x40, 0x80 }, { 0x00, 0x40, 0xa0 }, { 0x00, 0x40, 0xc0 }, { 0x00, 0x40, 0xe0 },
+    { 0x00, 0x60, 0x00 }, { 0x00, 0x60, 0x20 }, { 0x00, 0x60, 0x40 }, { 0x00, 0x60, 0x60 },
+    { 0x00, 0x60, 0x80 }, { 0x00, 0x60, 0xa0 }, { 0x00, 0x60, 0xc0 }, { 0x00, 0x60, 0xe0 },
+    { 0x00, 0x80, 0x00 }, { 0x00, 0x80, 0x20 }, { 0x00, 0x80, 0x40 }, { 0x00, 0x80, 0x60 },
+    { 0x00, 0x80, 0x80 }, { 0x00, 0x80, 0xa0 }, { 0x00, 0x80, 0xc0 }, { 0x00, 0x80, 0xe0 },
+    { 0x00, 0xa0, 0x00 }, { 0x00, 0xa0, 0x20 }, { 0x00, 0xa0, 0x40 }, { 0x00, 0xa0, 0x60 },
+    { 0x00, 0xa0, 0x80 }, { 0x00, 0xa0, 0xa0 }, { 0x00, 0xa0, 0xc0 }, { 0x00, 0xa0, 0xe0 },
+    { 0x00, 0xc0, 0x00 }, { 0x00, 0xc0, 0x20 }, { 0x00, 0xc0, 0x40 }, { 0x00, 0xc0, 0x60 },
+    { 0x00, 0xc0, 0x80 }, { 0x00, 0xc0, 0xa0 }, { 0x00, 0xc0, 0xc0 }, { 0x00, 0xc0, 0xe0 },
+    { 0x00, 0xe0, 0x00 }, { 0x00, 0xe0, 0x20 }, { 0x00, 0xe0, 0x40 }, { 0x00, 0xe0, 0x60 },
+    { 0x00, 0xe0, 0x80 }, { 0x00, 0xe0, 0xa0 }, { 0x00, 0xe0, 0xc0 }, { 0x00, 0xe0, 0xe0 },
+    { 0x40, 0x00, 0x00 }, { 0x40, 0x00, 0x20 }, { 0x40, 0x00, 0x40 }, { 0x40, 0x00, 0x60 },
+    { 0x40, 0x00, 0x80 }, { 0x40, 0x00, 0xa0 }, { 0x40, 0x00, 0xc0 }, { 0x40, 0x00, 0xe0 },
+    { 0x40, 0x20, 0x00 }, { 0x40, 0x20, 0x20 }, { 0x40, 0x20, 0x40 }, { 0x40, 0x20, 0x60 },
+    { 0x40, 0x20, 0x80 }, { 0x40, 0x20, 0xa0 }, { 0x40, 0x20, 0xc0 }, { 0x40, 0x20, 0xe0 },
+    { 0x40, 0x40, 0x00 }, { 0x40, 0x40, 0x20 }, { 0x40, 0x40, 0x40 }, { 0x40, 0x40, 0x60 },
+    { 0x40, 0x40, 0x80 }, { 0x40, 0x40, 0xa0 }, { 0x40, 0x40, 0xc0 }, { 0x40, 0x40, 0xe0 },
+    { 0x40, 0x60, 0x00 }, { 0x40, 0x60, 0x20 }, { 0x40, 0x60, 0x40 }, { 0x40, 0x60, 0x60 },
+    { 0x40, 0x60, 0x80 }, { 0x40, 0x60, 0xa0 }, { 0x40, 0x60, 0xc0 }, { 0x40, 0x60, 0xe0 },
+    { 0x40, 0x80, 0x00 }, { 0x40, 0x80, 0x20 }, { 0x40, 0x80, 0x40 }, { 0x40, 0x80, 0x60 },
+    { 0x40, 0x80, 0x80 }, { 0x40, 0x80, 0xa0 }, { 0x40, 0x80, 0xc0 }, { 0x40, 0x80, 0xe0 },
+    { 0x40, 0xa0, 0x00 }, { 0x40, 0xa0, 0x20 }, { 0x40, 0xa0, 0x40 }, { 0x40, 0xa0, 0x60 },
+    { 0x40, 0xa0, 0x80 }, { 0x40, 0xa0, 0xa0 }, { 0x40, 0xa0, 0xc0 }, { 0x40, 0xa0, 0xe0 },
+    { 0x40, 0xc0, 0x00 }, { 0x40, 0xc0, 0x20 }, { 0x40, 0xc0, 0x40 }, { 0x40, 0xc0, 0x60 },
+    { 0x40, 0xc0, 0x80 }, { 0x40, 0xc0, 0xa0 }, { 0x40, 0xc0, 0xc0 }, { 0x40, 0xc0, 0xe0 },
+    { 0x40, 0xe0, 0x00 }, { 0x40, 0xe0, 0x20 }, { 0x40, 0xe0, 0x40 }, { 0x40, 0xe0, 0x60 },
+    { 0x40, 0xe0, 0x80 }, { 0x40, 0xe0, 0xa0 }, { 0x40, 0xe0, 0xc0 }, { 0x40, 0xe0, 0xe0 },
+    { 0x80, 0x00, 0x00 }, { 0x80, 0x00, 0x20 }, { 0x80, 0x00, 0x40 }, { 0x80, 0x00, 0x60 },
+    { 0x80, 0x00, 0x80 }, { 0x80, 0x00, 0xa0 }, { 0x80, 0x00, 0xc0 }, { 0x80, 0x00, 0xe0 },
+    { 0x80, 0x20, 0x00 }, { 0x80, 0x20, 0x20 }, { 0x80, 0x20, 0x40 }, { 0x80, 0x20, 0x60 },
+    { 0x80, 0x20, 0x80 }, { 0x80, 0x20, 0xa0 }, { 0x80, 0x20, 0xc0 }, { 0x80, 0x20, 0xe0 },
+    { 0x80, 0x40, 0x00 }, { 0x80, 0x40, 0x20 }, { 0x80, 0x40, 0x40 }, { 0x80, 0x40, 0x60 },
+    { 0x80, 0x40, 0x80 }, { 0x80, 0x40, 0xa0 }, { 0x80, 0x40, 0xc0 }, { 0x80, 0x40, 0xe0 },
+    { 0x80, 0x60, 0x00 }, { 0x80, 0x60, 0x20 }, { 0x80, 0x60, 0x40 }, { 0x80, 0x60, 0x60 },
+    { 0x80, 0x60, 0x80 }, { 0x80, 0x60, 0xa0 }, { 0x80, 0x60, 0xc0 }, { 0x80, 0x60, 0xe0 },
+    { 0x80, 0x80, 0x00 }, { 0x80, 0x80, 0x20 }, { 0x80, 0x80, 0x40 }, { 0x80, 0x80, 0x60 },
+    { 0x80, 0x80, 0x80 }, { 0x80, 0x80, 0xa0 }, { 0x80, 0x80, 0xc0 }, { 0x80, 0x80, 0xe0 },
+    { 0x80, 0xa0, 0x00 }, { 0x80, 0xa0, 0x20 }, { 0x80, 0xa0, 0x40 }, { 0x80, 0xa0, 0x60 },
+    { 0x80, 0xa0, 0x80 }, { 0x80, 0xa0, 0xa0 }, { 0x80, 0xa0, 0xc0 }, { 0x80, 0xa0, 0xe0 },
+    { 0x80, 0xc0, 0x00 }, { 0x80, 0xc0, 0x20 }, { 0x80, 0xc0, 0x40 }, { 0x80, 0xc0, 0x60 },
+    { 0x80, 0xc0, 0x80 }, { 0x80, 0xc0, 0xa0 }, { 0x80, 0xc0, 0xc0 }, { 0x80, 0xc0, 0xe0 },
+    { 0x80, 0xe0, 0x00 }, { 0x80, 0xe0, 0x20 }, { 0x80, 0xe0, 0x40 }, { 0x80, 0xe0, 0x60 },
+    { 0x80, 0xe0, 0x80 }, { 0x80, 0xe0, 0xa0 }, { 0x80, 0xe0, 0xc0 }, { 0x80, 0xe0, 0xe0 },
+    { 0xc0, 0x00, 0x00 }, { 0xc0, 0x00, 0x20 }, { 0xc0, 0x00, 0x40 }, { 0xc0, 0x00, 0x60 },
+    { 0xc0, 0x00, 0x80 }, { 0xc0, 0x00, 0xa0 }, { 0xc0, 0x00, 0xc0 }, { 0xc0, 0x00, 0xe0 },
+    { 0xc0, 0x20, 0x00 }, { 0xc0, 0x20, 0x20 }, { 0xc0, 0x20, 0x40 }, { 0xc0, 0x20, 0x60 },
+    { 0xc0, 0x20, 0x80 }, { 0xc0, 0x20, 0xa0 }, { 0xc0, 0x20, 0xc0 }, { 0xc0, 0x20, 0xe0 },
+    { 0xc0, 0x40, 0x00 }, { 0xc0, 0x40, 0x20 }, { 0xc0, 0x40, 0x40 }, { 0xc0, 0x40, 0x60 },
+    { 0xc0, 0x40, 0x80 }, { 0xc0, 0x40, 0xa0 }, { 0xc0, 0x40, 0xc0 }, { 0xc0, 0x40, 0xe0 },
+    { 0xc0, 0x60, 0x00 }, { 0xc0, 0x60, 0x20 }, { 0xc0, 0x60, 0x40 }, { 0xc0, 0x60, 0x60 },
+    { 0xc0, 0x60, 0x80 }, { 0xc0, 0x60, 0xa0 }, { 0xc0, 0x60, 0xc0 }, { 0xc0, 0x60, 0xe0 },
+    { 0xc0, 0x80, 0x00 }, { 0xc0, 0x80, 0x20 }, { 0xc0, 0x80, 0x40 }, { 0xc0, 0x80, 0x60 },
+    { 0xc0, 0x80, 0x80 }, { 0xc0, 0x80, 0xa0 }, { 0xc0, 0x80, 0xc0 }, { 0xc0, 0x80, 0xe0 },
+    { 0xc0, 0xa0, 0x00 }, { 0xc0, 0xa0, 0x20 }, { 0xc0, 0xa0, 0x40 }, { 0xc0, 0xa0, 0x60 },
+    { 0xc0, 0xa0, 0x80 }, { 0xc0, 0xa0, 0xa0 }, { 0xc0, 0xa0, 0xc0 }, { 0xc0, 0xa0, 0xe0 },
+    { 0xc0, 0xc0, 0x00 }, { 0xc0, 0xc0, 0x20 }, { 0xc0, 0xc0, 0x40 }, { 0xc0, 0xc0, 0x60 },
+    { 0xc0, 0xc0, 0x80 }, { 0xc0, 0xc0, 0xa0 }, { 0xf0, 0xfb, 0xff }, { 0xa4, 0xa0, 0xa0 },
+    { 0x80, 0x80, 0x80 }, { 0x00, 0x00, 0xff }, { 0x00, 0xff, 0x00 }, { 0x00, 0xff, 0xff },
+    { 0xff, 0x00, 0x00 }, { 0xff, 0x00, 0xff }, { 0xff, 0xff, 0x00 }, { 0xff, 0xff, 0xff }
+};
+
+static HPALETTE create_default_palette( int bpp )
+{
+    char pal_buffer[sizeof(LOGPALETTE) + 255 * sizeof(PALETTEENTRY)];
+    LOGPALETTE *pal = (LOGPALETTE *)pal_buffer;
+    PALETTEENTRY *entries = pal->palPalEntry;
+    int i;
+
+    pal->palVersion = 0x300;
+    pal->palNumEntries = 1 << bpp;
+    switch (bpp)
+    {
+    case 1:
+        for (i = 0; i < 2; i++)
+        {
+            entries[i].peRed   = default_palette_1[i].rgbRed;
+            entries[i].peGreen = default_palette_1[i].rgbGreen;
+            entries[i].peBlue  = default_palette_1[i].rgbBlue;
+            entries[i].peFlags = 0;
+        }
+        break;
+    case 4:
+        for (i = 0; i < 16; i++)
+        {
+            entries[i].peRed   = default_palette_4[i].rgbRed;
+            entries[i].peGreen = default_palette_4[i].rgbGreen;
+            entries[i].peBlue  = default_palette_4[i].rgbBlue;
+            entries[i].peFlags = 0;
+        }
+        break;
+    case 8:
+        for (i = 0; i < 256; i++)
+        {
+            entries[i].peRed   = default_palette_8[i].rgbRed;
+            entries[i].peGreen = default_palette_8[i].rgbGreen;
+            entries[i].peBlue  = default_palette_8[i].rgbBlue;
+            entries[i].peFlags = 0;
+        }
+        break;
+    }
+    return CreatePalette( pal );
+}
+
 static inline void solid_patblt( HDC hdc, int x, int y, int width, int height, COLORREF color )
 {
     HBRUSH brush = CreateSolidBrush( color );
@@ -1518,7 +1641,7 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
     BOOL dib_is_8bpp_gray = (bmi->bmiHeader.biBitCount == 8 && bmi->bmiColors[1].rgbRed == 1);
     BLENDFUNCTION blend;
     COLORREF old_text, old_bkgnd;
-    HPALETTE hpal;
+    HPALETTE hpal, old_hpal;
 
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;
@@ -2605,7 +2728,7 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
         entries[i].peFlags = 0;
     }
     hpal = CreatePalette( pal );
-    SelectPalette( hdc, hpal, FALSE );
+    old_hpal = SelectPalette( hdc, hpal, FALSE );
 
     solid_patblt( hdc, 20, 10, 10, 10, PALETTEINDEX(15) );
     Rectangle( hdc, 0, 0, 10, 10 );
@@ -2632,7 +2755,7 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
     SelectObject( hdc, orig_brush );
     DeleteObject( dib_brush );
 
-    SelectPalette( hdc, GetStockObject(DEFAULT_PALETTE), FALSE );
+    SelectPalette( hdc, old_hpal, FALSE );
     DeleteObject( hpal );
 
     /* NT4 broken for all cases, W2K for 1 bpp only */
@@ -2655,7 +2778,7 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
     SelectObject( hdc, solid_brush );
 
     ret = ExtFloodFill( hdc, 100, 100, RGB( 0, 0xff, 0 ), FLOODFILLSURFACE );
-    ok (!ret == !!dib_is_1bpp, "got ret %d\n", ret);
+    ok (ret, "got ret %d\n", ret);
     compare_hash(hdc, bmi, bits, "flood fill" );
 
     ExtSelectClipRgn( hdc, NULL, RGN_COPY );
@@ -2724,17 +2847,17 @@ static const BYTE masks[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
 {
     DWORD dib_size = get_dib_size(bmi), ret;
-    LOGFONT lf;
+    LOGFONTA lf;
     HFONT font;
     GLYPHMETRICS gm;
     BYTE g_buf[10000];
     int i, stride, x, y;
     static const MAT2 identity = { {0,1}, {0,0}, {0,0}, {0,1} };
     char *eto_hash = NULL, *diy_hash = NULL;
-    static const char *str = "Hello Wine";
+    static const char str[] = "Hello Wine";
     POINT origin, g_org;
     static const BYTE vals[4] = { 0x00, 0x00, 0x00, 0x00 };
-    TEXTMETRIC tm;
+    TEXTMETRICA tm;
     COLORREF text_color;
 
     for(i = 0; i < dib_size; i++)
@@ -2745,10 +2868,10 @@ static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
     lf.lfHeight = 24;
     lf.lfQuality = aa ? ANTIALIASED_QUALITY : NONANTIALIASED_QUALITY;
 
-    font = CreateFontIndirect( &lf );
+    font = CreateFontIndirectA( &lf );
     font = SelectObject( hdc, font );
 
-    GetTextMetrics( hdc, &tm );
+    GetTextMetricsA( hdc, &tm );
     if (!(tm.tmPitchAndFamily & TMPF_VECTOR))
     {
         skip( "skipping as a bitmap font has been selected for Tahoma.\n" );
@@ -2762,7 +2885,7 @@ static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
     origin.x = 10;
     origin.y = 100;
 
-    ExtTextOut( hdc, origin.x, origin.y, 0, NULL, str, strlen(str), NULL );
+    ExtTextOutA( hdc, origin.x, origin.y, 0, NULL, str, strlen(str), NULL );
     eto_hash = hash_dib( bmi, bits );
 
     for(i = 0; i < dib_size; i++)
@@ -2775,11 +2898,11 @@ static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
     {
         DWORD ggo_flags = aa ? GGO_GRAY4_BITMAP : GGO_BITMAP;
 
-        ret = GetGlyphOutline( hdc, str[i], ggo_flags, &gm, 0, NULL, &identity );
+        ret = GetGlyphOutlineA( hdc, str[i], ggo_flags, &gm, 0, NULL, &identity );
 
         if (ret == GDI_ERROR) continue;
 
-        if (ret) GetGlyphOutline( hdc, str[i], ggo_flags, &gm, sizeof(g_buf), g_buf, &identity );
+        if (ret) GetGlyphOutlineA( hdc, str[i], ggo_flags, &gm, sizeof(g_buf), g_buf, &identity );
 
         g_org.x = origin.x + gm.gmptGlyphOrigin.x;
         g_org.y = origin.y - gm.gmptGlyphOrigin.y;
@@ -2859,6 +2982,7 @@ static void test_simple_graphics(void)
     BYTE *bits;
     HBITMAP dib, orig_bm;
     DIBSECTION ds;
+    HPALETTE default_palette, old_hpal;
     int i;
 
     mem_dc = CreateCompatibleDC(NULL);
@@ -2885,6 +3009,9 @@ static void test_simple_graphics(void)
 
     orig_bm = SelectObject(mem_dc, dib);
 
+    default_palette = create_default_palette( 8 );
+    old_hpal = SelectPalette( mem_dc, default_palette, FALSE );
+
     dst_format = "8888";
     current_sha1 = sha1_graphics_a8r8g8b8;
     draw_graphics(mem_dc, bmi, bits);
@@ -2910,6 +3037,7 @@ static void test_simple_graphics(void)
     ok(ds.dsBmih.biCompression == BI_BITFIELDS, "got %x\n", ds.dsBmih.biCompression);
 
     orig_bm = SelectObject(mem_dc, dib);
+    SelectPalette( mem_dc, default_palette, FALSE );
 
     dst_format = "8888 - bitfields";
     current_sha1 = sha1_graphics_a8r8g8b8_bitfields;
@@ -3148,6 +3276,7 @@ static void test_simple_graphics(void)
     ok(dib != NULL, "ret NULL\n");
 
     orig_bm = SelectObject(mem_dc, dib);
+    DeleteObject( SelectPalette( mem_dc, create_default_palette(4), FALSE ));
 
     dst_format = "4";
     current_sha1 = sha1_graphics_4;
@@ -3191,12 +3320,14 @@ static void test_simple_graphics(void)
     ok(dib != NULL, "ret NULL\n");
 
     orig_bm = SelectObject(mem_dc, dib);
+    DeleteObject( SelectPalette( mem_dc, create_default_palette(1), FALSE ));
 
     dst_format = "1";
     current_sha1 = sha1_graphics_1;
     draw_graphics(mem_dc, bmi, bits);
     draw_text(mem_dc, bmi, bits);
 
+    DeleteObject( SelectPalette( mem_dc, old_hpal, FALSE ));
     SelectObject(mem_dc, orig_bm);
     DeleteObject(dib);
 

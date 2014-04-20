@@ -32,7 +32,7 @@ static DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
 static DWORD (WINAPI *pGetLayout)(HDC hdc);
 static INT (WINAPI *pGetRandomRgn)(HDC hDC, HRGN hRgn, INT iCode);
 static BOOL (WINAPI *pGetTransform)(HDC, DWORD, XFORM *);
-static DWORD (WINAPI *pSetVirtualResolution)(HDC, DWORD, DWORD, DWORD, DWORD);
+static BOOL (WINAPI *pSetVirtualResolution)(HDC, DWORD, DWORD, DWORD, DWORD);
 
 #define rough_match(got, expected) (abs( MulDiv( (got) - (expected), 1000, (expected) )) <= 5)
 
@@ -513,7 +513,7 @@ static void test_isotropic_mapping(void)
 static void test_setvirtualresolution(void)
 {
     HDC hdc = CreateICA("DISPLAY", NULL, NULL, NULL);
-    DWORD r;
+    BOOL r;
     INT horz_res = GetDeviceCaps(hdc, HORZRES);
     INT horz_size = GetDeviceCaps(hdc, HORZSIZE);
     INT log_pixels_x = GetDeviceCaps(hdc, LOGPIXELSX);

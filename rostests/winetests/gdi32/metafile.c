@@ -2724,7 +2724,7 @@ static HENHMETAFILE create_converted_emf(const METAFILEPICT *mfp)
     UINT size;
     LPBYTE pBits;
 
-    hdcMf = CreateMetaFile(NULL);
+    hdcMf = CreateMetaFileA(NULL);
     ok(hdcMf != NULL, "CreateMetaFile failed with error %d\n", GetLastError());
     ret = LineTo(hdcMf, (INT)LINE_X, (INT)LINE_Y);
     ok(ret, "LineTo failed with error %d\n", GetLastError());
@@ -2904,7 +2904,7 @@ static void test_SetWinMetaFileBits(void)
   HDC dc;
   LONG diffx, diffy;
 
-  wmfDC = CreateMetaFile(NULL);
+  wmfDC = CreateMetaFileA(NULL);
   ok(wmfDC != NULL, "CreateMetaFile failed\n");
   if (!wmfDC) return;
 
@@ -3251,7 +3251,7 @@ static void test_gdiis(void)
     HMODULE hgdi32;
 
     /* resolve all the functions */
-    hgdi32 = GetModuleHandle("gdi32");
+    hgdi32 = GetModuleHandleA("gdi32.dll");
     pGdiIsMetaPrintDC = (void*) GetProcAddress(hgdi32, "GdiIsMetaPrintDC");
     pGdiIsMetaFileDC = (void*) GetProcAddress(hgdi32, "GdiIsMetaFileDC");
     pGdiIsPlayMetafileDC = (void*) GetProcAddress(hgdi32, "GdiIsPlayMetafileDC");
@@ -3268,7 +3268,7 @@ static void test_gdiis(void)
     ok(!pGdiIsPlayMetafileDC(NULL), "isplaymetafile with NULL parameter\n");
 
     /* try with a metafile */
-    hmfDC = CreateMetaFile(NULL);
+    hmfDC = CreateMetaFileA(NULL);
     ok(!pGdiIsMetaPrintDC(hmfDC), "ismetaprint on metafile\n");
     ok(pGdiIsMetaFileDC(hmfDC), "ismetafile on metafile\n");
     ok(!pGdiIsPlayMetafileDC(hmfDC), "isplaymetafile on metafile\n");

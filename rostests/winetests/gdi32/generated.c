@@ -4434,13 +4434,6 @@ static void test_pack_NPEXTLOGPEN(void)
     TEST_TARGET_ALIGN(NPEXTLOGPEN, 8)
 }
 
-static void test_pack_OLDFONTENUMPROC(void)
-{
-    /* OLDFONTENUMPROC */
-    TEST_TYPE_SIZE   (OLDFONTENUMPROC, 8)
-    TEST_TYPE_ALIGN  (OLDFONTENUMPROC, 8)
-}
-
 static void test_pack_OLDFONTENUMPROCA(void)
 {
     /* OLDFONTENUMPROCA */
@@ -10964,13 +10957,6 @@ static void test_pack_NPEXTLOGPEN(void)
     TEST_TARGET_ALIGN(NPEXTLOGPEN, 4)
 }
 
-static void test_pack_OLDFONTENUMPROC(void)
-{
-    /* OLDFONTENUMPROC */
-    TEST_TYPE_SIZE   (OLDFONTENUMPROC, 4)
-    TEST_TYPE_ALIGN  (OLDFONTENUMPROC, 4)
-}
-
 static void test_pack_OLDFONTENUMPROCA(void)
 {
     /* OLDFONTENUMPROCA */
@@ -13386,7 +13372,6 @@ static void test_pack(void)
     test_pack_NEWTEXTMETRICEXW();
     test_pack_NEWTEXTMETRICW();
     test_pack_NPEXTLOGPEN();
-    test_pack_OLDFONTENUMPROC();
     test_pack_OLDFONTENUMPROCA();
     test_pack_OLDFONTENUMPROCW();
     test_pack_OUTLINETEXTMETRICA();
