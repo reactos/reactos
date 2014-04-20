@@ -49,7 +49,7 @@ reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.17
 reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.17
 
 reactos/dll/win32/activeds         # Synced to Wine-1.7.1
-reactos/dll/win32/actxprxy         # Synced to Wine-1.7.1
+reactos/dll/win32/actxprxy         # Synced to Wine-1.7.17
 reactos/dll/win32/advpack          # Synced to Wine-1.7.1
 reactos/dll/win32/atl              # Synced to Wine-1.7.1
 reactos/dll/win32/atl100           # Synced to Wine-1.7.1
