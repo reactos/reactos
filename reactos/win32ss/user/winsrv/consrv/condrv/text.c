@@ -1259,7 +1259,7 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                              IN WORD Attribute)
+                              IN WORD Attributes)
 {
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1267,7 +1267,7 @@ ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
-    Buffer->ScreenDefaultAttrib = Attribute;
+    Buffer->ScreenDefaultAttrib = Attributes;
     return STATUS_SUCCESS;
 }
 

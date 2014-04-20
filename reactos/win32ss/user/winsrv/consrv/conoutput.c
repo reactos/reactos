@@ -720,7 +720,7 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
 NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                              IN WORD Attribute);
+                              IN WORD Attributes);
 CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
@@ -736,7 +736,7 @@ CSR_API(SrvSetConsoleTextAttribute)
 
     Status = ConDrvSetConsoleTextAttribute(Buffer->Header.Console,
                                            Buffer,
-                                           SetTextAttribRequest->Attrib);
+                                           SetTextAttribRequest->Attributes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;

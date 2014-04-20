@@ -344,7 +344,7 @@ VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 NTSTATUS NTAPI
 ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
-                              IN ULONG Event);
+                              IN ULONG CtrlEvent);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);

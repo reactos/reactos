@@ -688,11 +688,11 @@ CSR_API(SrvOpenConsole)
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCONSOLE Console;
 
-    DWORD DesiredAccess = OpenConsoleRequest->Access;
+    DWORD DesiredAccess = OpenConsoleRequest->DesiredAccess;
     DWORD ShareMode = OpenConsoleRequest->ShareMode;
     PCONSOLE_IO_OBJECT Object;
 
-    OpenConsoleRequest->ConsoleHandle = INVALID_HANDLE_VALUE;
+    OpenConsoleRequest->Handle = INVALID_HANDLE_VALUE;
 
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
@@ -726,10 +726,10 @@ CSR_API(SrvOpenConsole)
     else
     {
         Status = ConSrvInsertObject(ProcessData,
-                                    &OpenConsoleRequest->ConsoleHandle,
+                                    &OpenConsoleRequest->Handle,
                                     Object,
                                     DesiredAccess,
-                                    OpenConsoleRequest->Inheritable,
+                                    OpenConsoleRequest->InheritHandle,
                                     ShareMode);
     }
 
@@ -746,10 +746,12 @@ CSR_API(SrvDuplicateHandle)
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCONSOLE Console;
 
-    HANDLE ConsoleHandle = DuplicateHandleRequest->ConsoleHandle;
-    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+    HANDLE SourceHandle = DuplicateHandleRequest->SourceHandle;
+    ULONG Index = HandleToULong(SourceHandle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
     DWORD DesiredAccess;
+
+    DuplicateHandleRequest->TargetHandle = INVALID_HANDLE_VALUE;
 
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
@@ -763,11 +765,11 @@ CSR_API(SrvDuplicateHandle)
     // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
     //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
 
-    if ( /** !IsConsoleHandle(ConsoleHandle)    || **/
+    if ( /** !IsConsoleHandle(SourceHandle)   || **/
         Index >= ProcessData->HandleTableSize ||
         (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
-        DPRINT1("Couldn't duplicate invalid handle %p\n", ConsoleHandle);
+        DPRINT1("Couldn't duplicate invalid handle 0x%p\n", SourceHandle);
         Status = STATUS_INVALID_HANDLE;
         goto Quit;
     }
@@ -778,12 +780,12 @@ CSR_API(SrvDuplicateHandle)
     }
     else
     {
-        DesiredAccess = DuplicateHandleRequest->Access;
+        DesiredAccess = DuplicateHandleRequest->DesiredAccess;
         /* Make sure the source handle has all the desired flags */
         if ((Entry->Access & DesiredAccess) == 0)
         {
-            DPRINT1("Handle %p only has access %X; requested %X\n",
-                    ConsoleHandle, Entry->Access, DesiredAccess);
+            DPRINT1("Handle 0x%p only has access %X; requested %X\n",
+                    SourceHandle, Entry->Access, DesiredAccess);
             Status = STATUS_INVALID_PARAMETER;
             goto Quit;
         }
@@ -791,10 +793,10 @@ CSR_API(SrvDuplicateHandle)
 
     /* Insert the new handle inside the process handles table */
     Status = ConSrvInsertObject(ProcessData,
-                                &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
+                                &DuplicateHandleRequest->TargetHandle,
                                 Entry->Object,
                                 DesiredAccess,
-                                DuplicateHandleRequest->Inheritable,
+                                DuplicateHandleRequest->InheritHandle,
                                 Entry->ShareMode);
     if (NT_SUCCESS(Status) &&
         (DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE))

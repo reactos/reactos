@@ -274,8 +274,9 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    COORD Position;
+    COORD  Position;
 } CONSOLE_SETCURSORPOSITION, *PCONSOLE_SETCURSORPOSITION;
 
 typedef struct
@@ -295,20 +296,27 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     CONSOLE_CURSOR_INFO Info;
+/*
+    DWORD   Size;
+    BOOLEAN Visible;
+*/
 } CONSOLE_GETSETCURSORINFO, *PCONSOLE_GETSETCURSORINFO;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    WORD Attrib;
+    WORD   Attributes;
 } CONSOLE_SETTEXTATTRIB, *PCONSOLE_SETTEXTATTRIB;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;   /* A valid input or output console handle */
-    DWORD ConsoleMode;
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Mode;
 } CONSOLE_GETSETCONSOLEMODE, *PCONSOLE_GETSETCONSOLEMODE;
 
 typedef struct
@@ -358,6 +366,7 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;  /* Handle to screen buffer to switch to */
 } CONSOLE_SETACTIVESCREENBUFFER, *PCONSOLE_SETACTIVESCREENBUFFER;
 
@@ -378,8 +387,10 @@ typedef struct
 
 typedef struct
 {
-    DWORD Length;
-    PWCHAR Title;
+    HANDLE  ConsoleHandle;
+    DWORD   Length;
+    PVOID   Title;
+    BOOLEAN Unicode;
 } CONSOLE_GETSETCONSOLETITLE, *PCONSOLE_GETSETCONSOLETITLE;
 
 typedef struct
@@ -395,6 +406,7 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
 } CONSOLE_FLUSHINPUTBUFFER, *PCONSOLE_FLUSHINPUTBUFFER;
 
@@ -527,10 +539,12 @@ typedef struct
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD Options;
+    HANDLE  ConsoleHandle;
+    HANDLE  SourceHandle;
+    DWORD   DesiredAccess;
+    BOOLEAN InheritHandle;
+    DWORD   Options;
+    HANDLE  TargetHandle;
 } CONSOLE_DUPLICATEHANDLE, *PCONSOLE_DUPLICATEHANDLE;
 
 /*
@@ -546,14 +560,16 @@ typedef struct
 {
     HANDLE ConsoleHandle;
     CONSOLE_HANDLE_TYPE HandleType;
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD ShareMode;
+    DWORD  DesiredAccess;
+    BOOL   InheritHandle;
+    DWORD  ShareMode;
+    HANDLE Handle;
 } CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
 
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     COORD  Size;
 } CONSOLE_GETLARGESTWINDOWSIZE, *PCONSOLE_GETLARGESTWINDOWSIZE;
@@ -575,6 +591,7 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     BOOL   Absolute;
     SMALL_RECT WindowRect; // New console window position in the screen-buffer frame (Absolute == TRUE)
@@ -668,20 +685,23 @@ typedef struct
 
 typedef struct
 {
-    DWORD Event;
-    DWORD ProcessGroup;
+    HANDLE ConsoleHandle;
+    DWORD  CtrlEvent;
+    DWORD  ProcessGroupId;
 } CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
-    DWORD NumInputEvents;
+    DWORD  NumberOfEvents;
 } CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    COORD Size;
+    COORD  Size;
 } CONSOLE_SETSCREENBUFFERSIZE, *PCONSOLE_SETSCREENBUFFERSIZE;
 
 typedef struct
