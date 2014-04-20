@@ -221,7 +221,6 @@ const char *debugstr_dmguid (const GUID *id) {
 		/* CLSIDs */
 		GE(CLSID_AudioVBScript),
 		GE(CLSID_DirectMusic),
-		GE(CLSID_DirectMusicAudioPath),
 		GE(CLSID_DirectMusicAudioPathConfig),
 		GE(CLSID_DirectMusicAuditionTrack),
 		GE(CLSID_DirectMusicBand),
