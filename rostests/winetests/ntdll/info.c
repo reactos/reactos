@@ -55,7 +55,7 @@ static DWORD one_before_last_pid = 0;
 static BOOL InitFunctionPtrs(void)
 {
     /* All needed functions are NT based, so using GetModuleHandle is a good check */
-    HMODULE hntdll = GetModuleHandle("ntdll");
+    HMODULE hntdll = GetModuleHandleA("ntdll");
     if (!hntdll)
     {
         win_skip("Not running on NT\n");
@@ -78,7 +78,7 @@ static BOOL InitFunctionPtrs(void)
     /* not present before XP */
     pNtGetCurrentProcessorNumber = (void *) GetProcAddress(hntdll, "NtGetCurrentProcessorNumber");
 
-    pIsWow64Process = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "IsWow64Process");
+    pIsWow64Process = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process");
     if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
     return TRUE;
 }
@@ -110,7 +110,7 @@ static void test_query_basic(void)
     ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER /* vista */,
         "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_PARAMETER, got %08x\n", status);
 
-    /* Use a existing class, correct length, a pointer to a buffer but no ReturnLength pointer */
+    /* Use an existing class, correct length, a pointer to a buffer but no ReturnLength pointer */
     trace("Check no ReturnLength pointer\n");
     status = pNtQuerySystemInformation(SystemBasicInformation, &sbi, sizeof(sbi), NULL);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -259,7 +259,7 @@ static void test_query_process(void)
     DWORD last_pid;
     ULONG ReturnLength;
     int i = 0, k = 0;
-    int is_nt = 0;
+    BOOL is_nt = FALSE;
     SYSTEM_BASIC_INFORMATION sbi;
 
     /* Copy of our winternl.h structure turned into a private one */
@@ -946,14 +946,14 @@ static void test_query_process_debug_port(int argc, char **argv)
     DWORD_PTR debug_port = 0xdeadbeef;
     char cmdline[MAX_PATH];
     PROCESS_INFORMATION pi;
-    STARTUPINFO si = { 0 };
+    STARTUPINFOA si = { 0 };
     NTSTATUS status;
     BOOL ret;
 
     sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
 
     si.cb = sizeof(si);
-    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &si, &pi);
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
     if (!ret) return;
 
@@ -1099,7 +1099,7 @@ static void test_query_process_image_file_name(void)
 static void test_query_process_debug_object_handle(int argc, char **argv)
 {
     char cmdline[MAX_PATH];
-    STARTUPINFO si = {0};
+    STARTUPINFOA si = {0};
     PROCESS_INFORMATION pi;
     BOOL ret;
     HANDLE debug_object;
@@ -1108,7 +1108,7 @@ static void test_query_process_debug_object_handle(int argc, char **argv)
     sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
 
     si.cb = sizeof(si);
-    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS, NULL,
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS, NULL,
                         NULL, &si, &pi);
     ok(ret, "CreateProcess failed with last error %u\n", GetLastError());
     if (!ret) return;
@@ -1198,14 +1198,14 @@ static void test_query_process_debug_flags(int argc, char **argv)
     DWORD debug_flags = 0xdeadbeef;
     char cmdline[MAX_PATH];
     PROCESS_INFORMATION pi;
-    STARTUPINFO si = { 0 };
+    STARTUPINFOA si = { 0 };
     NTSTATUS status;
     BOOL ret;
 
     sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
 
     si.cb = sizeof(si);
-    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi);
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
     if (!ret) return;
 
@@ -1359,12 +1359,17 @@ static void test_mapprotection(void)
     addr = NULL;
     status = pNtMapViewOfSection ( h, GetCurrentProcess(), &addr, 0, 0, &offset, &count, ViewShare, 0, PAGE_READWRITE);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+
 #if defined(__x86_64__) || defined(__i386__)
-    memset (addr, 0xc3, 1); /* lret ... in both i386 and x86_64 */
+    *(unsigned char*)addr = 0xc3;       /* lret ... in both i386 and x86_64 */
+#elif defined(__arm__)
+    *(unsigned long*)addr = 0xe12fff1e; /* bx lr */
+#else
+    ok(0, "Add a return opcode for your architecture or expect a crash in this test\n");
+#endif
     trace("trying to execute code in the readwrite only mapped anon file...\n");
     f = addr;f();
     trace("...done.\n");
-#endif
 
     status = pNtQueryVirtualMemory( GetCurrentProcess(), addr, MemoryBasicInformation, &info, sizeof(info), &retlen );
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -1390,7 +1395,7 @@ static void test_queryvirtualmemory(void)
     char stackbuf[42];
     HMODULE module;
 
-    module = GetModuleHandle( "ntdll.dll" );
+    module = GetModuleHandleA( "ntdll.dll" );
     trace("Check flags of the PE header of NTDLL.DLL at %p\n", module);
     status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryBasicInformation, &mbi, sizeof(MEMORY_BASIC_INFORMATION), &readcount);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -1402,7 +1407,7 @@ static void test_queryvirtualmemory(void)
     ok (mbi.Type == MEM_IMAGE, "mbi.Type is 0x%x, expected 0x%x\n", mbi.Type, MEM_IMAGE);
 
     trace("Check flags of a function entry in NTDLL.DLL at %p\n", pNtQueryVirtualMemory);
-    module = GetModuleHandle( "ntdll.dll" );
+    module = GetModuleHandleA( "ntdll.dll" );
     status = pNtQueryVirtualMemory(NtCurrentProcess(), pNtQueryVirtualMemory, MemoryBasicInformation, &mbi, sizeof(MEMORY_BASIC_INFORMATION), &readcount);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( readcount == sizeof(MEMORY_BASIC_INFORMATION), "Expected to read %d bytes, got %ld\n",(int)sizeof(MEMORY_BASIC_INFORMATION),readcount);
@@ -1430,7 +1435,7 @@ static void test_queryvirtualmemory(void)
     ok (mbi.Protect == PAGE_READWRITE, "mbi.Protect is 0x%x, expected 0x%x\n", mbi.Protect, PAGE_READWRITE);
 
     trace("Check flags of read-only data at %p\n", teststring);
-    module = GetModuleHandle( NULL );
+    module = GetModuleHandleA( NULL );
     status = pNtQueryVirtualMemory(NtCurrentProcess(), teststring, MemoryBasicInformation, &mbi, sizeof(MEMORY_BASIC_INFORMATION), &readcount);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( readcount == sizeof(MEMORY_BASIC_INFORMATION), "Expected to read %d bytes, got %ld\n",(int)sizeof(MEMORY_BASIC_INFORMATION),readcount);
@@ -1475,7 +1480,7 @@ static void test_affinity(void)
     GetSystemInfo(&si);
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL );
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    proc_affinity = (DWORD_PTR)pbi.Reserved2[0];
+    proc_affinity = pbi.AffinityMask;
     ok( proc_affinity == (1 << si.dwNumberOfProcessors) - 1, "Unexpected process affinity\n" );
     proc_affinity = 1 << si.dwNumberOfProcessors;
     status = pNtSetInformationProcess( GetCurrentProcess(), ProcessAffinityMask, &proc_affinity, sizeof(proc_affinity) );
@@ -1534,7 +1539,7 @@ static void test_affinity(void)
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL );
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    proc_affinity = (DWORD_PTR)pbi.Reserved2[0];
+    proc_affinity = pbi.AffinityMask;
     ok( proc_affinity == 2, "Unexpected process affinity\n" );
     /* Setting the process affinity changes the thread affinity to match */
     status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
@@ -1578,7 +1583,7 @@ static void test_NtGetCurrentProcessorNumber(void)
     trace("dwNumberOfProcessors: %d, current processor: %d\n", si.dwNumberOfProcessors, current_cpu);
 
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
-    old_process_mask = (DWORD_PTR)pbi.Reserved2[0];
+    old_process_mask = pbi.AffinityMask;
     ok(status == STATUS_SUCCESS, "got 0x%x (expected STATUS_SUCCESS)\n", status);
 
     status = pNtQueryInformationThread(GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL);
@@ -1721,7 +1726,7 @@ START_TEST(info)
     trace("Starting test_process_debug_flags()\n");
     test_query_process_debug_flags(argc, argv);
 
-    /* belongs into it's own file */
+    /* belongs to its own file */
     trace("Starting test_readvirtualmemory()\n");
     test_readvirtualmemory();
 

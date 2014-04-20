@@ -50,7 +50,7 @@
 static ULONG (WINAPI *pRtlNtStatusToDosError)(NTSTATUS Status);
 static int strict;
 
-static int prepare_test(void)
+static BOOL prepare_test(void)
 {
     HMODULE ntdll;
     int argc;
@@ -61,12 +61,12 @@ static int prepare_test(void)
     if (!pRtlNtStatusToDosError)
     {
         win_skip("RtlNtStatusToDosError is not available\n");
-        return 0;
+        return FALSE;
     }
 
     argc = winetest_get_mainargs(&argv);
     strict=(argc >= 3 && strcmp(argv[2],"strict")==0);
-    return 1;
+    return TRUE;
 }
 
 static void cmp_call(NTSTATUS win_nt, ULONG win32, const char* message)

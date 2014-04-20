@@ -33,9 +33,9 @@ static const int MonthLengths[2][12] =
 	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
-static inline int IsLeapYear(int Year)
+static inline BOOL IsLeapYear(int Year)
 {
-	return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
+    return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0);
 }
 
 /* start time of the tests */

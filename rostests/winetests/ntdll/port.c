@@ -160,7 +160,7 @@ static BOOL init_function_ptrs(void)
         return FALSE;
     }
 
-    pIsWow64Process = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "IsWow64Process");
+    pIsWow64Process = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process");
     if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
     return TRUE;
 }
@@ -197,30 +197,30 @@ static void ProcessLpcRequest(HANDLE PortHandle, union lpc_message *LpcMessage)
     {
         ok(LpcMessage->msg64.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg64.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg64.Data, REQUEST2),
+        ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REQUEST2),
            "Expected %s, got %s\n", REQUEST2, LpcMessage->msg64.Data);
-        lstrcpy((LPSTR)LpcMessage->msg64.Data, REPLY);
+        strcpy((LPSTR)LpcMessage->msg64.Data, REPLY);
 
         status = pNtReplyPort(PortHandle, &LpcMessage->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
         ok(LpcMessage->msg64.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg64.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg64.Data, REPLY),
+        ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REPLY),
            "Expected %s, got %s\n", REPLY, LpcMessage->msg64.Data);
     }
     else
     {
         ok(LpcMessage->msg.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg.Data, REQUEST2),
+        ok(!strcmp((LPSTR)LpcMessage->msg.Data, REQUEST2),
            "Expected %s, got %s\n", REQUEST2, LpcMessage->msg.Data);
-        lstrcpy((LPSTR)LpcMessage->msg.Data, REPLY);
+        strcpy((LPSTR)LpcMessage->msg.Data, REPLY);
 
         status = pNtReplyPort(PortHandle, &LpcMessage->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
         ok(LpcMessage->msg.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg.Data, REPLY),
+        ok(!strcmp((LPSTR)LpcMessage->msg.Data, REPLY),
            "Expected %s, got %s\n", REPLY, LpcMessage->msg.Data);
     }
 }
@@ -251,26 +251,26 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
         LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
         out = HeapAlloc(GetProcessHeap(), 0, size);
 
-        LpcMessage->msg64.DataSize = lstrlen(REQUEST1) + 1;
+        LpcMessage->msg64.DataSize = strlen(REQUEST1) + 1;
         LpcMessage->msg64.MessageSize = FIELD_OFFSET(LPC_MESSAGE64, Data[LpcMessage->msg64.DataSize]);
-        lstrcpy((LPSTR)LpcMessage->msg64.Data, REQUEST1);
+        strcpy((LPSTR)LpcMessage->msg64.Data, REQUEST1);
 
         status = pNtRequestPort(PortHandle, &LpcMessage->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
         ok(LpcMessage->msg64.MessageType == 0, "Expected 0, got %d\n", LpcMessage->msg64.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg64.Data, REQUEST1),
+        ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REQUEST1),
            "Expected %s, got %s\n", REQUEST1, LpcMessage->msg64.Data);
 
         /* Fill in the message */
         memset(LpcMessage, 0, size);
-        LpcMessage->msg64.DataSize = lstrlen(REQUEST2) + 1;
+        LpcMessage->msg64.DataSize = strlen(REQUEST2) + 1;
         LpcMessage->msg64.MessageSize = FIELD_OFFSET(LPC_MESSAGE64, Data[LpcMessage->msg64.DataSize]);
-        lstrcpy((LPSTR)LpcMessage->msg64.Data, REQUEST2);
+        strcpy((LPSTR)LpcMessage->msg64.Data, REQUEST2);
 
         /* Send the message and wait for the reply */
         status = pNtRequestWaitReplyPort(PortHandle, &LpcMessage->msg, &out->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
-        ok(!lstrcmp((LPSTR)out->msg64.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg64.Data);
+        ok(!strcmp((LPSTR)out->msg64.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg64.Data);
         ok(out->msg64.MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->msg64.MessageType);
     }
     else
@@ -279,26 +279,26 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
         LpcMessage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
         out = HeapAlloc(GetProcessHeap(), 0, size);
 
-        LpcMessage->msg.DataSize = lstrlen(REQUEST1) + 1;
+        LpcMessage->msg.DataSize = strlen(REQUEST1) + 1;
         LpcMessage->msg.MessageSize = FIELD_OFFSET(LPC_MESSAGE, Data[LpcMessage->msg.DataSize]);
-        lstrcpy((LPSTR)LpcMessage->msg.Data, REQUEST1);
+        strcpy((LPSTR)LpcMessage->msg.Data, REQUEST1);
 
         status = pNtRequestPort(PortHandle, &LpcMessage->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
         ok(LpcMessage->msg.MessageType == 0, "Expected 0, got %d\n", LpcMessage->msg.MessageType);
-        ok(!lstrcmp((LPSTR)LpcMessage->msg.Data, REQUEST1),
+        ok(!strcmp((LPSTR)LpcMessage->msg.Data, REQUEST1),
            "Expected %s, got %s\n", REQUEST1, LpcMessage->msg.Data);
 
         /* Fill in the message */
         memset(LpcMessage, 0, size);
-        LpcMessage->msg.DataSize = lstrlen(REQUEST2) + 1;
+        LpcMessage->msg.DataSize = strlen(REQUEST2) + 1;
         LpcMessage->msg.MessageSize = FIELD_OFFSET(LPC_MESSAGE, Data[LpcMessage->msg.DataSize]);
-        lstrcpy((LPSTR)LpcMessage->msg.Data, REQUEST2);
+        strcpy((LPSTR)LpcMessage->msg.Data, REQUEST2);
 
         /* Send the message and wait for the reply */
         status = pNtRequestWaitReplyPort(PortHandle, &LpcMessage->msg, &out->msg);
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
-        ok(!lstrcmp((LPSTR)out->msg.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg.Data);
+        ok(!strcmp((LPSTR)out->msg.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg.Data);
         ok(out->msg.MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->msg.MessageType);
     }
 
@@ -345,10 +345,10 @@ static void test_ports_server( HANDLE PortHandle )
 
             case LPC_DATAGRAM:
                 if (is_wow64)
-                    ok(!lstrcmp((LPSTR)LpcMessage->msg64.Data, REQUEST1),
+                    ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REQUEST1),
                        "Expected %s, got %s\n", REQUEST1, LpcMessage->msg64.Data);
                 else
-                    ok(!lstrcmp((LPSTR)LpcMessage->msg.Data, REQUEST1),
+                    ok(!strcmp((LPSTR)LpcMessage->msg.Data, REQUEST1),
                        "Expected %s, got %s\n", REQUEST1, LpcMessage->msg.Data);
                 break;
 

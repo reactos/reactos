@@ -1903,13 +1903,6 @@ static void test_pack_PCSTR(void)
     TEST_TARGET_ALIGN(PCSTR, 1)
 }
 
-static void test_pack_PCTSTR(void)
-{
-    /* PCTSTR */
-    TEST_TYPE_SIZE   (PCTSTR, 8)
-    TEST_TYPE_ALIGN  (PCTSTR, 8)
-}
-
 static void test_pack_PCWCH(void)
 {
     /* PCWCH */
@@ -2574,13 +2567,6 @@ static void test_pack_PTOKEN_USER(void)
     TEST_TARGET_ALIGN(PTOKEN_USER, 8)
 }
 
-static void test_pack_PTSTR(void)
-{
-    /* PTSTR */
-    TEST_TYPE_SIZE   (PTSTR, 8)
-    TEST_TYPE_ALIGN  (PTSTR, 8)
-}
-
 static void test_pack_PULARGE_INTEGER(void)
 {
     /* PULARGE_INTEGER */
@@ -2933,13 +2919,6 @@ static void test_pack_SYSTEM_AUDIT_ACE(void)
     TEST_FIELD_SIZE  (SYSTEM_AUDIT_ACE, SidStart, 4)
     TEST_FIELD_ALIGN (SYSTEM_AUDIT_ACE, SidStart, 4)
     TEST_FIELD_OFFSET(SYSTEM_AUDIT_ACE, SidStart, 8)
-}
-
-static void test_pack_TCHAR(void)
-{
-    /* TCHAR */
-    TEST_TYPE_SIZE   (TCHAR, 1)
-    TEST_TYPE_ALIGN  (TCHAR, 1)
 }
 
 static void test_pack_TOKEN_DEFAULT_DACL(void)
@@ -5271,13 +5250,6 @@ static void test_pack_PCSTR(void)
     TEST_TARGET_ALIGN(PCSTR, 1)
 }
 
-static void test_pack_PCTSTR(void)
-{
-    /* PCTSTR */
-    TEST_TYPE_SIZE   (PCTSTR, 4)
-    TEST_TYPE_ALIGN  (PCTSTR, 4)
-}
-
 static void test_pack_PCWCH(void)
 {
     /* PCWCH */
@@ -5940,13 +5912,6 @@ static void test_pack_PTOKEN_USER(void)
     TEST_TARGET_ALIGN(PTOKEN_USER, 4)
 }
 
-static void test_pack_PTSTR(void)
-{
-    /* PTSTR */
-    TEST_TYPE_SIZE   (PTSTR, 4)
-    TEST_TYPE_ALIGN  (PTSTR, 4)
-}
-
 static void test_pack_PULARGE_INTEGER(void)
 {
     /* PULARGE_INTEGER */
@@ -6299,13 +6264,6 @@ static void test_pack_SYSTEM_AUDIT_ACE(void)
     TEST_FIELD_SIZE  (SYSTEM_AUDIT_ACE, SidStart, 4)
     TEST_FIELD_ALIGN (SYSTEM_AUDIT_ACE, SidStart, 4)
     TEST_FIELD_OFFSET(SYSTEM_AUDIT_ACE, SidStart, 8)
-}
-
-static void test_pack_TCHAR(void)
-{
-    /* TCHAR */
-    TEST_TYPE_SIZE   (TCHAR, 1)
-    TEST_TYPE_ALIGN  (TCHAR, 1)
 }
 
 static void test_pack_TOKEN_DEFAULT_DACL(void)
@@ -6935,7 +6893,6 @@ static void test_pack(void)
     test_pack_PCCH();
     test_pack_PCH();
     test_pack_PCSTR();
-    test_pack_PCTSTR();
     test_pack_PCWCH();
     test_pack_PCWSTR();
     test_pack_PEXCEPTION_POINTERS();
@@ -7022,7 +6979,6 @@ static void test_pack(void)
     test_pack_PTOKEN_GROUPS();
     test_pack_PTOKEN_PRIVILEGES();
     test_pack_PTOKEN_USER();
-    test_pack_PTSTR();
     test_pack_PULARGE_INTEGER();
     test_pack_PVECTORED_EXCEPTION_HANDLER();
     test_pack_PVOID();
@@ -7052,7 +7008,6 @@ static void test_pack(void)
     test_pack_SSIZE_T();
     test_pack_SYSTEM_ALARM_ACE();
     test_pack_SYSTEM_AUDIT_ACE();
-    test_pack_TCHAR();
     test_pack_TOKEN_DEFAULT_DACL();
     test_pack_TOKEN_GROUPS();
     test_pack_TOKEN_OWNER();

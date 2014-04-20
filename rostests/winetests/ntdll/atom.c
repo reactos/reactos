@@ -25,7 +25,7 @@
 #include <stdarg.h>
 
 #include "ntstatus.h"
-/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro
+/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro 
  * definition errors when we get to winnt.h
  */
 #define WIN32_NO_STATUS
@@ -432,7 +432,7 @@ static void test_Global(void)
 {
     NTSTATUS    res;
     RTL_ATOM    atom;
-    ULONG       ptr[(sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR) + sizeof(ULONG)) / sizeof(ULONG)];
+    char        ptr[sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR)];
     ATOM_BASIC_INFORMATION*     abi = (ATOM_BASIC_INFORMATION*)ptr;
     ULONG       ptr_size = sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR);
 
@@ -445,7 +445,7 @@ static void test_Global(void)
 
     memset( ptr, 0xcc, sizeof(ptr) );
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
-    ok(!res, "atom lookup failed with status = 0x%x\n", res);
+    ok(!res, "atom lookup\n");
     ok(!lstrcmpW(abi->Name, testAtom1), "ok strings\n");
     ok(abi->NameLength == lstrlenW(testAtom1) * sizeof(WCHAR), "wrong string length\n");
     ok(abi->Name[lstrlenW(testAtom1)] == 0, "wrong string termination %x\n", abi->Name[lstrlenW(testAtom1)]);

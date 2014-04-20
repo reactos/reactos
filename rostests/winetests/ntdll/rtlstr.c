@@ -68,6 +68,8 @@ static NTSTATUS (WINAPI *pRtlGUIDFromString)(const UNICODE_STRING*,GUID*);
 static NTSTATUS (WINAPI *pRtlStringFromGUID)(const GUID*, UNICODE_STRING*);
 static BOOLEAN (WINAPI *pRtlIsTextUnicode)(LPVOID, INT, INT *);
 static NTSTATUS (WINAPI *pRtlHashUnicodeString)(PCUNICODE_STRING,BOOLEAN,ULONG,ULONG*);
+static NTSTATUS (WINAPI *pRtlUnicodeToUTF8N)(CHAR *, ULONG, ULONG *, const WCHAR *, ULONG);
+static NTSTATUS (WINAPI *pRtlUTF8ToUnicodeN)(WCHAR *, ULONG, ULONG *, const CHAR *, ULONG);
 
 /*static VOID (WINAPI *pRtlFreeOemString)(PSTRING);*/
 /*static VOID (WINAPI *pRtlCopyUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *);*/
@@ -137,6 +139,8 @@ static void InitFunctionPtrs(void)
 	pRtlStringFromGUID = (void *)GetProcAddress(hntdll, "RtlStringFromGUID");
 	pRtlIsTextUnicode = (void *)GetProcAddress(hntdll, "RtlIsTextUnicode");
         pRtlHashUnicodeString = (void*)GetProcAddress(hntdll, "RtlHashUnicodeString");
+        pRtlUnicodeToUTF8N = (void*)GetProcAddress(hntdll, "RtlUnicodeToUTF8N");
+        pRtlUTF8ToUnicodeN = (void*)GetProcAddress(hntdll, "RtlUTF8ToUnicodeN");
     }
 }
 
@@ -1971,6 +1975,527 @@ static void test_RtlHashUnicodeString(void)
     }
 }
 
+struct unicode_to_utf8_test {
+    WCHAR unicode[128];
+    const char *expected;
+    NTSTATUS status;
+};
+
+static const struct unicode_to_utf8_test unicode_to_utf8[] = {
+    { { 0 }, "", STATUS_SUCCESS },
+    { { '-',0 }, "-", STATUS_SUCCESS },
+    { { 'h','e','l','l','o',0 }, "hello", STATUS_SUCCESS },
+    { { '-',0x7f,'-',0x80,'-',0xff,'-',0x100,'-',0 }, "-\x7F-\xC2\x80-\xC3\xBF-\xC4\x80-", STATUS_SUCCESS },
+    { { '-',0x7ff,'-',0x800,'-',0 }, "-\xDF\xBF-\xE0\xA0\x80-", STATUS_SUCCESS },
+    { { '-',0xd7ff,'-',0xe000,'-',0 }, "-\xED\x9F\xBF-\xEE\x80\x80-", STATUS_SUCCESS },
+                       /* 0x10000 */
+    { { '-',0xffff,'-',0xd800,0xdc00,'-',0 }, "-\xEF\xBF\xBF-\xF0\x90\x80\x80-", STATUS_SUCCESS },
+            /* 0x103ff */     /* 0x10400 */
+    { { '-',0xd800,0xdfff,'-',0xd801,0xdc00,'-',0 }, "-\xF0\x90\x8F\xBF-\xF0\x90\x90\x80-", STATUS_SUCCESS },
+            /* 0x10ffff */
+    { { '-',0xdbff,0xdfff,'-',0 }, "-\xF4\x8F\xBF\xBF-", STATUS_SUCCESS },
+    /* standalone lead surrogates become 0xFFFD */
+    { { '-',0xd800,'-',0xdbff,'-',0 }, "-\xEF\xBF\xBD-\xEF\xBF\xBD-", STATUS_SOME_NOT_MAPPED },
+    /* standalone trail surrogates become 0xFFFD */
+    { { '-',0xdc00,'-',0xdfff,'-',0 }, "-\xEF\xBF\xBD-\xEF\xBF\xBD-", STATUS_SOME_NOT_MAPPED },
+    /* reverse surrogate pair */
+    { { '-',0xdfff,0xdbff,'-',0 }, "-\xEF\xBF\xBD\xEF\xBF\xBD-", STATUS_SOME_NOT_MAPPED },
+    /* byte order marks */
+    { { '-',0xfeff,'-',0xfffe,'-',0 }, "-\xEF\xBB\xBF-\xEF\xBF\xBE-", STATUS_SUCCESS },
+    { { 0xfeff,'-',0 }, "\xEF\xBB\xBF-", STATUS_SUCCESS },
+    { { 0xfffe,'-',0 }, "\xEF\xBF\xBE-", STATUS_SUCCESS },
+    /* invalid code point */
+    { { 0xffff,'-',0 }, "\xEF\xBF\xBF-", STATUS_SUCCESS },
+    /* canonically equivalent representations -- no normalization should happen */
+    { { '-',0x1e09,'-',0 }, "-\xE1\xB8\x89-", STATUS_SUCCESS },
+    { { '-',0x0107,0x0327,'-',0 }, "-\xC4\x87\xCC\xA7-", STATUS_SUCCESS },
+    { { '-',0x00e7,0x0301,'-',0 }, "-\xC3\xA7\xCC\x81-", STATUS_SUCCESS },
+    { { '-',0x0063,0x0327,0x0301,'-',0 }, "-\x63\xCC\xA7\xCC\x81-", STATUS_SUCCESS },
+    { { '-',0x0063,0x0301,0x0327,'-',0 }, "-\x63\xCC\x81\xCC\xA7-", STATUS_SUCCESS },
+};
+
+static void utf8_expect_(const unsigned char *out_string, ULONG buflen, ULONG out_bytes,
+                         const WCHAR *in_string, ULONG in_bytes,
+                         NTSTATUS expect_status, int line)
+{
+    NTSTATUS status;
+    ULONG bytes_out;
+    char buffer[128];
+    unsigned char *buf = (unsigned char *)buffer;
+    unsigned int i;
+
+    if (buflen == (ULONG)-1)
+        buflen = sizeof(buffer);
+    bytes_out = 0x55555555;
+    memset(buffer, 0x55, sizeof(buffer));
+    status = pRtlUnicodeToUTF8N(
+        out_string ? buffer : NULL, buflen, &bytes_out,
+        in_string, in_bytes);
+    ok_(__FILE__, line)(status == expect_status, "status = 0x%x\n", status);
+    ok_(__FILE__, line)(bytes_out == out_bytes, "bytes_out = %u\n", bytes_out);
+    if (out_string)
+    {
+        for (i = 0; i < bytes_out; i++)
+            ok_(__FILE__, line)(buf[i] == out_string[i],
+                                "buffer[%d] = 0x%x, expected 0x%x\n",
+                                i, buf[i], out_string[i]);
+        for (; i < sizeof(buffer); i++)
+            ok_(__FILE__, line)(buf[i] == 0x55,
+                                "buffer[%d] = 0x%x, expected 0x55\n",
+                                i, buf[i]);
+    }
+}
+#define utf8_expect(out_string, buflen, out_bytes, in_string, in_bytes, expect_status) \
+        utf8_expect_(out_string, buflen, out_bytes, in_string, in_bytes, expect_status, __LINE__)
+
+static void test_RtlUnicodeToUTF8N(void)
+{
+    NTSTATUS status;
+    ULONG bytes_out;
+    ULONG bytes_out_array[2];
+    void * const invalid_pointer = (void *)0x8;
+    char buffer[128];
+    const WCHAR empty_string[] = { 0 };
+    const WCHAR test_string[] = { 'A',0,'a','b','c','d','e','f','g',0 };
+    const WCHAR special_string[] = { 'X',0x80,0xd800,0 };
+    const unsigned char special_expected[] = { 'X',0xc2,0x80,0xef,0xbf,0xbd,0 };
+    unsigned int input_len;
+    const unsigned int test_count = sizeof(unicode_to_utf8) / sizeof(unicode_to_utf8[0]);
+    unsigned int i;
+
+    if (!pRtlUnicodeToUTF8N)
+    {
+        skip("RtlUnicodeToUTF8N unavailable\n");
+        return;
+    }
+
+    /* show that bytes_out is really ULONG */
+    memset(bytes_out_array, 0x55, sizeof(bytes_out_array));
+    status = pRtlUnicodeToUTF8N(NULL, 0, bytes_out_array, empty_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out_array[0] == 0x00000000, "Got 0x%x\n", bytes_out_array[0]);
+    ok(bytes_out_array[1] == 0x55555555, "Got 0x%x\n", bytes_out_array[1]);
+
+    /* parameter checks */
+    status = pRtlUnicodeToUTF8N(NULL, 0, NULL, NULL, 0);
+    ok(status == STATUS_INVALID_PARAMETER_4, "status = 0x%x\n", status);
+
+    status = pRtlUnicodeToUTF8N(NULL, 0, NULL, empty_string, 0);
+    ok(status == STATUS_INVALID_PARAMETER, "status = 0x%x\n", status);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(NULL, 0, &bytes_out, NULL, 0);
+    ok(status == STATUS_INVALID_PARAMETER_4, "status = 0x%x\n", status);
+    ok(bytes_out == 0x55555555, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(NULL, 0, &bytes_out, invalid_pointer, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(NULL, 0, &bytes_out, empty_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(NULL, 0, &bytes_out, test_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(NULL, 0, &bytes_out, empty_string, 1);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(invalid_pointer, 0, &bytes_out, empty_string, 1);
+    ok(status == STATUS_INVALID_PARAMETER_5, "status = 0x%x\n", status);
+    ok(bytes_out == 0x55555555, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUnicodeToUTF8N(invalid_pointer, 8, &bytes_out, empty_string, 1);
+    ok(status == STATUS_INVALID_PARAMETER_5, "status = 0x%x\n", status);
+    ok(bytes_out == 0x55555555, "bytes_out = 0x%x\n", bytes_out);
+
+    /* length output with special chars */
+#define length_expect(in_chars, out_bytes, expect_status) \
+        utf8_expect_(NULL, 0, out_bytes, \
+                     special_string, in_chars * sizeof(WCHAR), \
+                     expect_status, __LINE__)
+
+    length_expect(0, 0, STATUS_SUCCESS);
+    length_expect(1, 1, STATUS_SUCCESS);
+    length_expect(2, 3, STATUS_SUCCESS);
+    length_expect(3, 6, STATUS_SOME_NOT_MAPPED);
+    length_expect(4, 7, STATUS_SOME_NOT_MAPPED);
+#undef length_expect
+
+    /* output truncation */
+#define truncate_expect(buflen, out_bytes, expect_status) \
+        utf8_expect_(special_expected, buflen, out_bytes, \
+                     special_string, sizeof(special_string), \
+                     expect_status, __LINE__)
+
+    truncate_expect(0, 0, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(1, 1, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(2, 1, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(3, 3, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(4, 3, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(5, 3, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(6, 6, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(7, 7, STATUS_SOME_NOT_MAPPED);
+#undef truncate_expect
+
+    /* conversion behavior with varying input length */
+    for (input_len = 0; input_len <= sizeof(test_string); input_len++) {
+        /* no output buffer, just length */
+        utf8_expect(NULL, 0, input_len / sizeof(WCHAR),
+                    test_string, input_len, STATUS_SUCCESS);
+
+        /* write output */
+        bytes_out = 0x55555555;
+        memset(buffer, 0x55, sizeof(buffer));
+        status = pRtlUnicodeToUTF8N(
+            buffer, sizeof(buffer), &bytes_out,
+            test_string, input_len);
+        if (input_len % sizeof(WCHAR) == 0) {
+            ok(status == STATUS_SUCCESS,
+               "(len %u): status = 0x%x\n", input_len, status);
+            ok(bytes_out == input_len / sizeof(WCHAR),
+               "(len %u): bytes_out = 0x%x\n", input_len, bytes_out);
+            for (i = 0; i < bytes_out; i++) {
+                ok(buffer[i] == test_string[i],
+                   "(len %u): buffer[%d] = 0x%x, expected 0x%x\n",
+                   input_len, i, buffer[i], test_string[i]);
+            }
+            for (; i < sizeof(buffer); i++) {
+                ok(buffer[i] == 0x55,
+                   "(len %u): buffer[%d] = 0x%x\n", input_len, i, buffer[i]);
+            }
+        } else {
+            ok(status == STATUS_INVALID_PARAMETER_5,
+               "(len %u): status = 0x%x\n", input_len, status);
+            ok(bytes_out == 0x55555555,
+               "(len %u): bytes_out = 0x%x\n", input_len, bytes_out);
+            for (i = 0; i < sizeof(buffer); i++) {
+                ok(buffer[i] == 0x55,
+                   "(len %u): buffer[%d] = 0x%x\n", input_len, i, buffer[i]);
+            }
+        }
+    }
+
+    /* test cases for special characters */
+    for (i = 0; i < test_count; i++) {
+        bytes_out = 0x55555555;
+        memset(buffer, 0x55, sizeof(buffer));
+        status = pRtlUnicodeToUTF8N(
+            buffer, sizeof(buffer), &bytes_out,
+            unicode_to_utf8[i].unicode, lstrlenW(unicode_to_utf8[i].unicode) * sizeof(WCHAR));
+        ok(status == unicode_to_utf8[i].status,
+           "(test %d): status is 0x%x, expected 0x%x\n",
+           i, status, unicode_to_utf8[i].status);
+        ok(bytes_out == strlen(unicode_to_utf8[i].expected),
+           "(test %d): bytes_out is %u, expected %u\n",
+           i, bytes_out, lstrlenA(unicode_to_utf8[i].expected));
+        ok(!memcmp(buffer, unicode_to_utf8[i].expected, bytes_out),
+           "(test %d): got \"%.*s\", expected \"%s\"\n",
+           i, bytes_out, buffer, unicode_to_utf8[i].expected);
+        ok(buffer[bytes_out] == 0x55,
+           "(test %d): behind string: 0x%x\n", i, buffer[bytes_out]);
+
+        /* same test but include the null terminator */
+        bytes_out = 0x55555555;
+        memset(buffer, 0x55, sizeof(buffer));
+        status = pRtlUnicodeToUTF8N(
+            buffer, sizeof(buffer), &bytes_out,
+            unicode_to_utf8[i].unicode, (lstrlenW(unicode_to_utf8[i].unicode) + 1) * sizeof(WCHAR));
+        ok(status == unicode_to_utf8[i].status,
+           "(test %d): status is 0x%x, expected 0x%x\n",
+           i, status, unicode_to_utf8[i].status);
+        ok(bytes_out == strlen(unicode_to_utf8[i].expected) + 1,
+           "(test %d): bytes_out is %u, expected %u\n",
+           i, bytes_out, lstrlenA(unicode_to_utf8[i].expected) + 1);
+        ok(!memcmp(buffer, unicode_to_utf8[i].expected, bytes_out),
+           "(test %d): got \"%.*s\", expected \"%s\"\n",
+           i, bytes_out, buffer, unicode_to_utf8[i].expected);
+        ok(buffer[bytes_out] == 0x55,
+           "(test %d): behind string: 0x%x\n", i, buffer[bytes_out]);
+    }
+}
+
+struct utf8_to_unicode_test {
+    const char *utf8;
+    WCHAR expected[128];
+    NTSTATUS status;
+};
+
+static const struct utf8_to_unicode_test utf8_to_unicode[] = {
+    { "", { 0 }, STATUS_SUCCESS },
+    { "-", { '-',0 }, STATUS_SUCCESS },
+    { "hello", { 'h','e','l','l','o',0 }, STATUS_SUCCESS },
+    /* first and last of each range */
+    { "-\x7F-\xC2\x80-\xC3\xBF-\xC4\x80-", { '-',0x7f,'-',0x80,'-',0xff,'-',0x100,'-',0 }, STATUS_SUCCESS },
+    { "-\xDF\xBF-\xE0\xA0\x80-", { '-',0x7ff,'-',0x800,'-',0 }, STATUS_SUCCESS },
+    { "-\xED\x9F\xBF-\xEE\x80\x80-", { '-',0xd7ff,'-',0xe000,'-',0 }, STATUS_SUCCESS },
+                     /*   0x10000  */
+    { "-\xEF\xBF\xBF-\xF0\x90\x80\x80-", { '-',0xffff,'-',0xd800,0xdc00,'-',0 }, STATUS_SUCCESS },
+        /*   0x103ff  */ /*   0x10400  */
+    { "-\xF0\x90\x8F\xBF-\xF0\x90\x90\x80-", { '-',0xd800,0xdfff,'-',0xd801,0xdc00,'-',0 }, STATUS_SUCCESS },
+        /*  0x10ffff  */
+    { "-\xF4\x8F\xBF\xBF-", { '-',0xdbff,0xdfff,'-',0 }, STATUS_SUCCESS },
+    /* standalone surrogate code points */
+        /* 0xd800 */ /* 0xdbff */
+    { "-\xED\xA0\x80-\xED\xAF\xBF-", { '-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /* 0xdc00 */ /* 0xdfff */
+    { "-\xED\xB0\x80-\xED\xBF\xBF-", { '-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* UTF-8 encoded surrogate pair */
+        /* 0xdbff *//* 0xdfff */
+    { "-\xED\xAF\xBF\xED\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* reverse surrogate pair */
+        /* 0xdfff *//* 0xdbff */
+    { "-\xED\xBF\xBF\xED\xAF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* code points outside the UTF-16 range */
+        /*  0x110000  */
+    { "-\xF4\x90\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /*  0x1fffff  */
+    { "-\xF7\xBF\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /*     0x200000   */
+    { "-\xFA\x80\x80\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /*    0x3ffffff   */
+    { "-\xFB\xBF\xBF\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /*      0x4000000     */
+    { "-\xFC\x84\x80\x80\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+        /*     0x7fffffff     */
+    { "-\xFD\xBF\xBF\xBF\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* overlong encodings of each length for -, NUL, and the highest possible value */
+    { "-\xC0\xAD-\xC0\x80-\xC1\xBF-", { '-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xE0\x80\xAD-\xE0\x80\x80-\xE0\x9F\xBF-", { '-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF0\x80\x80\xAD-", { '-',0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF0\x80\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF0\x8F\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF8\x80\x80\x80\xAD-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF8\x80\x80\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xF8\x87\xBF\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xFC\x80\x80\x80\x80\xAD-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xFC\x80\x80\x80\x80\x80-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "-\xFC\x83\xBF\xBF\xBF\xBF-", { '-',0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* invalid bytes */
+    { "\xFE", { 0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFF", { 0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFE\xBF\xBF\xBF\xBF\xBF\xBF\xBF\xBF", { 0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFF\xBF\xBF\xBF\xBF\xBF\xBF\xBF\xBF", { 0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFF\x80\x80\x80\x80\x80\x80\x80\x80", { 0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFF\x40\x80\x80\x80\x80\x80\x80\x80", { 0xfffd,0x40,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    /* lone continuation bytes */
+    { "\x80", { 0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\x80\x80", { 0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xBF", { 0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xBF\xBF", { 0xfffd,0xfffd,0 }, STATUS_SOME_NOT_MAPPED },
+    /* incomplete sequences */
+    { "\xC2-", { 0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xE0\xA0-", { 0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xF0\x90\x80-", { 0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xF4\x8F\xBF-", { 0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFA\x80\x80\x80-", { 0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    { "\xFC\x84\x80\x80\x80-", { 0xfffd,0xfffd,0xfffd,0xfffd,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* multibyte sequence followed by lone continuation byte */
+    { "\xE0\xA0\x80\x80-", { 0x800,0xfffd,'-',0 }, STATUS_SOME_NOT_MAPPED },
+    /* byte order marks */
+    { "-\xEF\xBB\xBF-\xEF\xBF\xBE-", { '-',0xfeff,'-',0xfffe,'-',0 }, STATUS_SUCCESS },
+    { "\xEF\xBB\xBF-", { 0xfeff,'-',0 }, STATUS_SUCCESS },
+    { "\xEF\xBF\xBE-", { 0xfffe,'-',0 }, STATUS_SUCCESS },
+    /* invalid code point */
+       /* 0xffff */
+    { "\xEF\xBF\xBF-", { 0xffff,'-',0 }, STATUS_SUCCESS },
+    /* canonically equivalent representations -- no normalization should happen */
+    { "-\xE1\xB8\x89-", { '-',0x1e09,'-',0 }, STATUS_SUCCESS },
+    { "-\xC4\x87\xCC\xA7-", { '-',0x0107,0x0327,'-',0 }, STATUS_SUCCESS },
+    { "-\xC3\xA7\xCC\x81-", { '-',0x00e7,0x0301,'-',0 }, STATUS_SUCCESS },
+    { "-\x63\xCC\xA7\xCC\x81-", { '-',0x0063,0x0327,0x0301,'-',0 }, STATUS_SUCCESS },
+    { "-\x63\xCC\x81\xCC\xA7-", { '-',0x0063,0x0301,0x0327,'-',0 }, STATUS_SUCCESS },
+};
+
+static void unicode_expect_(const WCHAR *out_string, ULONG buflen, ULONG out_chars,
+                            const char *in_string, ULONG in_chars,
+                            NTSTATUS expect_status, int line)
+{
+    NTSTATUS status;
+    ULONG bytes_out;
+    WCHAR buffer[128];
+    unsigned int i;
+
+    if (buflen == (ULONG)-1)
+        buflen = sizeof(buffer);
+    bytes_out = 0x55555555;
+    memset(buffer, 0x55, sizeof(buffer));
+    status = pRtlUTF8ToUnicodeN(
+        out_string ? buffer : NULL, buflen, &bytes_out,
+        in_string, in_chars);
+    ok_(__FILE__, line)(status == expect_status, "status = 0x%x\n", status);
+    ok_(__FILE__, line)(bytes_out == out_chars * sizeof(WCHAR),
+                        "bytes_out = %u, expected %u\n", bytes_out, out_chars * (ULONG)sizeof(WCHAR));
+    if (out_string)
+    {
+        for (i = 0; i < bytes_out / sizeof(WCHAR); i++)
+            ok_(__FILE__, line)(buffer[i] == out_string[i],
+                                "buffer[%d] = 0x%x, expected 0x%x\n",
+                                i, buffer[i], out_string[i]);
+        for (; i < sizeof(buffer) / sizeof(WCHAR); i++)
+            ok_(__FILE__, line)(buffer[i] == 0x5555,
+                                "buffer[%d] = 0x%x, expected 0x5555\n",
+                                i, buffer[i]);
+    }
+}
+#define unicode_expect(out_string, buflen, out_chars, in_string, in_chars, expect_status) \
+        unicode_expect_(out_string, buflen, out_chars, in_string, in_chars, expect_status, __LINE__)
+
+static void test_RtlUTF8ToUnicodeN(void)
+{
+    NTSTATUS status;
+    ULONG bytes_out;
+    ULONG bytes_out_array[2];
+    void * const invalid_pointer = (void *)0x8;
+    WCHAR buffer[128];
+    const char empty_string[] = "";
+    const char test_string[] = "A\0abcdefg";
+    const WCHAR test_stringW[] = {'A',0,'a','b','c','d','e','f','g',0 };
+    const char special_string[] = { 'X',0xc2,0x80,0xF0,0x90,0x80,0x80,0 };
+    const WCHAR special_expected[] = { 'X',0x80,0xd800,0xdc00,0 };
+    unsigned int input_len;
+    const unsigned int test_count = sizeof(utf8_to_unicode) / sizeof(utf8_to_unicode[0]);
+    unsigned int i;
+
+    if (!pRtlUTF8ToUnicodeN)
+    {
+        skip("RtlUTF8ToUnicodeN unavailable\n");
+        return;
+    }
+
+    /* show that bytes_out is really ULONG */
+    memset(bytes_out_array, 0x55, sizeof(bytes_out_array));
+    status = pRtlUTF8ToUnicodeN(NULL, 0, bytes_out_array, empty_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out_array[0] == 0x00000000, "Got 0x%x\n", bytes_out_array[0]);
+    ok(bytes_out_array[1] == 0x55555555, "Got 0x%x\n", bytes_out_array[1]);
+
+    /* parameter checks */
+    status = pRtlUTF8ToUnicodeN(NULL, 0, NULL, NULL, 0);
+    ok(status == STATUS_INVALID_PARAMETER_4, "status = 0x%x\n", status);
+
+    status = pRtlUTF8ToUnicodeN(NULL, 0, NULL, empty_string, 0);
+    ok(status == STATUS_INVALID_PARAMETER, "status = 0x%x\n", status);
+
+    bytes_out = 0x55555555;
+    status = pRtlUTF8ToUnicodeN(NULL, 0, &bytes_out, NULL, 0);
+    ok(status == STATUS_INVALID_PARAMETER_4, "status = 0x%x\n", status);
+    ok(bytes_out == 0x55555555, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUTF8ToUnicodeN(NULL, 0, &bytes_out, invalid_pointer, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUTF8ToUnicodeN(NULL, 0, &bytes_out, empty_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUTF8ToUnicodeN(NULL, 0, &bytes_out, test_string, 0);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == 0, "bytes_out = 0x%x\n", bytes_out);
+
+    bytes_out = 0x55555555;
+    status = pRtlUTF8ToUnicodeN(NULL, 0, &bytes_out, empty_string, 1);
+    ok(status == STATUS_SUCCESS, "status = 0x%x\n", status);
+    ok(bytes_out == sizeof(WCHAR), "bytes_out = 0x%x\n", bytes_out);
+
+    /* length output with special chars */
+#define length_expect(in_chars, out_chars, expect_status) \
+        unicode_expect_(NULL, 0, out_chars, special_string, in_chars, \
+                        expect_status, __LINE__)
+
+    length_expect(0, 0, STATUS_SUCCESS);
+    length_expect(1, 1, STATUS_SUCCESS);
+    length_expect(2, 2, STATUS_SOME_NOT_MAPPED);
+    length_expect(3, 2, STATUS_SUCCESS);
+    length_expect(4, 3, STATUS_SOME_NOT_MAPPED);
+    length_expect(5, 3, STATUS_SOME_NOT_MAPPED);
+    length_expect(6, 3, STATUS_SOME_NOT_MAPPED);
+    length_expect(7, 4, STATUS_SUCCESS);
+    length_expect(8, 5, STATUS_SUCCESS);
+#undef length_expect
+
+    /* output truncation */
+#define truncate_expect(buflen, out_chars, expect_status) \
+        unicode_expect_(special_expected, buflen, out_chars, \
+                        special_string, sizeof(special_string), \
+                        expect_status, __LINE__)
+
+    truncate_expect( 0, 0, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 1, 0, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 2, 1, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 3, 1, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 4, 2, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 5, 2, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 6, 3, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 7, 3, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 8, 4, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect( 9, 4, STATUS_BUFFER_TOO_SMALL);
+    truncate_expect(10, 5, STATUS_SUCCESS);
+#undef truncate_expect
+
+    /* conversion behavior with varying input length */
+    for (input_len = 0; input_len <= sizeof(test_string); input_len++) {
+        /* no output buffer, just length */
+        unicode_expect(NULL, 0, input_len,
+                       test_string, input_len, STATUS_SUCCESS);
+
+        /* write output */
+        unicode_expect(test_stringW, -1, input_len,
+                       test_string, input_len, STATUS_SUCCESS);
+    }
+
+    /* test cases for special characters */
+    for (i = 0; i < test_count; i++) {
+        bytes_out = 0x55555555;
+        memset(buffer, 0x55, sizeof(buffer));
+        status = pRtlUTF8ToUnicodeN(
+            buffer, sizeof(buffer), &bytes_out,
+            utf8_to_unicode[i].utf8, strlen(utf8_to_unicode[i].utf8));
+        ok(status == utf8_to_unicode[i].status,
+           "(test %d): status is 0x%x, expected 0x%x\n",
+           i, status, utf8_to_unicode[i].status);
+        ok(bytes_out == lstrlenW(utf8_to_unicode[i].expected) * sizeof(WCHAR),
+           "(test %d): bytes_out is %u, expected %u\n",
+           i, bytes_out, lstrlenW(utf8_to_unicode[i].expected) * (ULONG)sizeof(WCHAR));
+        ok(!memcmp(buffer, utf8_to_unicode[i].expected, bytes_out),
+           "(test %d): got %s, expected %s\n",
+           i, wine_dbgstr_wn(buffer, bytes_out / sizeof(WCHAR)), wine_dbgstr_w(utf8_to_unicode[i].expected));
+        ok(buffer[bytes_out] == 0x5555,
+           "(test %d): behind string: 0x%x\n", i, buffer[bytes_out]);
+
+        /* same test but include the null terminator */
+        bytes_out = 0x55555555;
+        memset(buffer, 0x55, sizeof(buffer));
+        status = pRtlUTF8ToUnicodeN(
+            buffer, sizeof(buffer), &bytes_out,
+            utf8_to_unicode[i].utf8, strlen(utf8_to_unicode[i].utf8) + 1);
+        ok(status == utf8_to_unicode[i].status,
+           "(test %d): status is 0x%x, expected 0x%x\n",
+           i, status, utf8_to_unicode[i].status);
+        ok(bytes_out == (lstrlenW(utf8_to_unicode[i].expected) + 1) * sizeof(WCHAR),
+           "(test %d): bytes_out is %u, expected %u\n",
+           i, bytes_out, (lstrlenW(utf8_to_unicode[i].expected) + 1) * (ULONG)sizeof(WCHAR));
+        ok(!memcmp(buffer, utf8_to_unicode[i].expected, bytes_out),
+           "(test %d): got %s, expected %s\n",
+           i, wine_dbgstr_wn(buffer, bytes_out / sizeof(WCHAR)), wine_dbgstr_w(utf8_to_unicode[i].expected));
+        ok(buffer[bytes_out] == 0x5555,
+           "(test %d): behind string: 0x%x\n", i, buffer[bytes_out]);
+    }
+}
+
 START_TEST(rtlstr)
 {
     InitFunctionPtrs();
@@ -2004,4 +2529,6 @@ START_TEST(rtlstr)
 	test_RtlDowncaseUnicodeString();
     }
     test_RtlHashUnicodeString();
+    test_RtlUnicodeToUTF8N();
+    test_RtlUTF8ToUnicodeN();
 }

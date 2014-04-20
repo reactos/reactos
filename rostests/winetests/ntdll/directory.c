@@ -120,11 +120,11 @@ static void tear_down_attribute_test(const char *testdirA)
             continue;
         sprintf(buf, "%s\\%s", testdirA, testfiles[i].name);
         if (testfiles[i].attr & FILE_ATTRIBUTE_DIRECTORY) {
-            ret = RemoveDirectory(buf);
+            ret = RemoveDirectoryA(buf);
             ok(ret || (GetLastError() == ERROR_PATH_NOT_FOUND),
                "Failed to rmdir %s, error %d\n", buf, GetLastError());
         } else {
-            ret = DeleteFile(buf);
+            ret = DeleteFileA(buf);
             ok(ret || (GetLastError() == ERROR_PATH_NOT_FOUND),
                "Failed to rm %s, error %d\n", buf, GetLastError());
         }

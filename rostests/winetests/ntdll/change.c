@@ -69,7 +69,7 @@ static void test_ntncdf(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    hEvent = CreateEvent( NULL, 0, 0, NULL );
+    hEvent = CreateEventA( NULL, 0, 0, NULL );
 
     r = pNtNotifyChangeDirectoryFile(hdir,NULL,NULL,NULL,&iosb,NULL,0,0,0);
     ok(r==STATUS_INVALID_PARAMETER, "should return invalid parameter\n");
@@ -197,7 +197,7 @@ static void test_ntncdf_async(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    hEvent = CreateEvent( NULL, 0, 0, NULL );
+    hEvent = CreateEventA( NULL, 0, 0, NULL );
 
     filter = FILE_NOTIFY_CHANGE_FILE_NAME;
     filter |= FILE_NOTIFY_CHANGE_DIR_NAME;
@@ -312,7 +312,7 @@ static void test_ntncdf_async(void)
 
 START_TEST(change)
 {
-    HMODULE hntdll = GetModuleHandle("ntdll");
+    HMODULE hntdll = GetModuleHandleA("ntdll");
     if (!hntdll)
     {
         win_skip("not running on NT, skipping test\n");

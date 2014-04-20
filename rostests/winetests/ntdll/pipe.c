@@ -77,7 +77,7 @@ static DWORD (WINAPI *pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR 
 
 static BOOL init_func_ptrs(void)
 {
-    HMODULE module = GetModuleHandle("ntdll.dll");
+    HMODULE module = GetModuleHandleA("ntdll.dll");
 
 #define loadfunc(name)  if (!(p##name = (void *)GetProcAddress(module, #name))) { \
                             trace("GetProcAddress(%s) failed\n", #name); \
@@ -91,7 +91,7 @@ static BOOL init_func_ptrs(void)
     loadfunc(RtlInitUnicodeString)
 
     /* not fatal */
-    module = GetModuleHandle("kernel32.dll");
+    module = GetModuleHandleA("kernel32.dll");
     pOpenThread = (void *)GetProcAddress(module, "OpenThread");
     pQueueUserAPC = (void *)GetProcAddress(module, "QueueUserAPC");
     return TRUE;
