@@ -91,7 +91,7 @@ static void test_invalid_parametersA(void)
     const struct
     {
         PCSTR CabinetFile;
-        PSP_FILE_CALLBACK MsgHandler;
+        PSP_FILE_CALLBACK_A MsgHandler;
         DWORD expected_lasterror;
         int todo_lasterror;
     } invalid_parameters[] =
@@ -161,7 +161,7 @@ static void test_invalid_parametersW(void)
     const struct
     {
         PCWSTR CabinetFile;
-        PSP_FILE_CALLBACK MsgHandler;
+        PSP_FILE_CALLBACK_W MsgHandler;
         DWORD expected_lasterror;
         int todo_lasterror;
     } invalid_parameters[] =

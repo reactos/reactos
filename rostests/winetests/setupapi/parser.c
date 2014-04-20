@@ -103,36 +103,36 @@ static const struct
     const char *data;
     DWORD error;
     UINT err_line;
-    int todo;
+    BOOL todo;
 } invalid_files[] =
 {
     /* file contents                                         expected error (or 0)     errline  todo */
-    { "\r\n",                                                ERROR_WRONG_INF_STYLE,       0,    0 },
-    { "abcd\r\n",                                            ERROR_WRONG_INF_STYLE,       0,    1 },
-    { "[Version]\r\n",                                       ERROR_WRONG_INF_STYLE,       0,    0 },
-    { "[Version]\nSignature=",                               ERROR_WRONG_INF_STYLE,       0,    0 },
-    { "[Version]\nSignature=foo",                            ERROR_WRONG_INF_STYLE,       0,    0 },
-    { "[version]\nsignature=$chicago$",                      0,                           0,    0 },
-    { "[VERSION]\nSIGNATURE=$CHICAGO$",                      0,                           0,    0 },
-    { "[Version]\nSignature=$chicago$,abcd",                 0,                           0,    0 },
-    { "[Version]\nabc=def\nSignature=$chicago$",             0,                           0,    0 },
-    { "[Version]\nabc=def\n[Version]\nSignature=$chicago$",  0,                           0,    0 },
-    { STD_HEADER,                                            0,                           0,    0 },
-    { STD_HEADER "[]\r\n",                                   0,                           0,    0 },
-    { STD_HEADER "]\r\n",                                    0,                           0,    0 },
-    { STD_HEADER "[" A255 "]\r\n",                           0,                           0,    0 },
-    { STD_HEADER "[ab\r\n",                                  ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER "\n\n[ab\x1a]\n",                           ERROR_BAD_SECTION_NAME_LINE, 5,    0 },
-    { STD_HEADER "[" A256 "]\r\n",                           ERROR_SECTION_NAME_TOO_LONG, 3,    0 },
-    { "[abc]\n" STD_HEADER,                                  0,                           0,    0 },
-    { "abc\r\n" STD_HEADER,                                  ERROR_EXPECTED_SECTION_NAME, 1,    0 },
-    { ";\n;\nabc\r\n" STD_HEADER,                            ERROR_EXPECTED_SECTION_NAME, 3,    0 },
-    { ";\n;\nab\nab\n" STD_HEADER,                           ERROR_EXPECTED_SECTION_NAME, 3,    0 },
-    { ";aa\n;bb\n" STD_HEADER,                               0,                           0,    0 },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    0 },
+    { "\r\n",                                                ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { "abcd\r\n",                                            ERROR_WRONG_INF_STYLE,       0,    TRUE },
+    { "[Version]\r\n",                                       ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { "[Version]\nSignature=",                               ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { "[Version]\nSignature=foo",                            ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { "[version]\nsignature=$chicago$",                      0,                           0,    FALSE },
+    { "[VERSION]\nSIGNATURE=$CHICAGO$",                      0,                           0,    FALSE },
+    { "[Version]\nSignature=$chicago$,abcd",                 0,                           0,    FALSE },
+    { "[Version]\nabc=def\nSignature=$chicago$",             0,                           0,    FALSE },
+    { "[Version]\nabc=def\n[Version]\nSignature=$chicago$",  0,                           0,    FALSE },
+    { STD_HEADER,                                            0,                           0,    FALSE },
+    { STD_HEADER "[]\r\n",                                   0,                           0,    FALSE },
+    { STD_HEADER "]\r\n",                                    0,                           0,    FALSE },
+    { STD_HEADER "[" A255 "]\r\n",                           0,                           0,    FALSE },
+    { STD_HEADER "[ab\r\n",                                  ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { STD_HEADER "\n\n[ab\x1a]\n",                           ERROR_BAD_SECTION_NAME_LINE, 5,    FALSE },
+    { STD_HEADER "[" A256 "]\r\n",                           ERROR_SECTION_NAME_TOO_LONG, 3,    FALSE },
+    { "[abc]\n" STD_HEADER,                                  0,                           0,    FALSE },
+    { "abc\r\n" STD_HEADER,                                  ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { ";\n;\nabc\r\n" STD_HEADER,                            ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { ";\n;\nab\nab\n" STD_HEADER,                           ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { ";aa\n;bb\n" STD_HEADER,                               0,                           0,    FALSE },
+    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
 };
 
 static void test_invalid_files(void)
@@ -290,8 +290,8 @@ static void test_enum_sections(void)
         ret = pSetupEnumInfSectionsA( hinf, index, buffer, sizeof(buffer), &len );
         ok( ret, "SetupEnumInfSectionsA failed err %u\n", GetLastError() );
         ok( len == 3 || len == 8, "wrong len %u\n", len );
-        ok( !lstrcmpi( buffer, "version" ) || !lstrcmpi( buffer, "s1" ) ||
-            !lstrcmpi( buffer, "s2" ) || !lstrcmpi( buffer, "s3" ) || !lstrcmpi( buffer, "strings" ),
+        ok( !lstrcmpiA( buffer, "version" ) || !lstrcmpiA( buffer, "s1" ) ||
+            !lstrcmpiA( buffer, "s2" ) || !lstrcmpiA( buffer, "s3" ) || !lstrcmpiA( buffer, "strings" ),
             "bad section '%s'\n", buffer );
     }
     SetupCloseInfFile( hinf );
@@ -542,7 +542,7 @@ static void test_pSetupGetField(void)
     hinf = test_file_contents( contents, &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
-    ret = SetupFindFirstLine( hinf, "FileBranchInfo", NULL, &context );
+    ret = SetupFindFirstLineA( hinf, "FileBranchInfo", NULL, &context );
     ok( ret, "Failed to find first line\n" );
 
     /* native Windows crashes if a NULL context is sent in */

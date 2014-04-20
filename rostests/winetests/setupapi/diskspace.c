@@ -29,6 +29,8 @@
 
 #include "wine/test.h"
 
+static BOOL is_win9x;
+
 static void test_SetupCreateDiskSpaceListA(void)
 {
     HDSKSPC ret;
@@ -149,8 +151,6 @@ static void test_SetupCreateDiskSpaceListW(void)
 static void test_SetupDuplicateDiskSpaceListA(void)
 {
     HDSKSPC handle, duplicate;
-    int is_win9x = !SetupCreateDiskSpaceListW((void *)0xdeadbeef, 0xdeadbeef, 0) &&
-                    GetLastError() == ERROR_CALL_NOT_IMPLEMENTED;
 
     if (is_win9x)
         win_skip("SetupDuplicateDiskSpaceListA crashes with NULL disk space handle on Win9x\n");
@@ -305,8 +305,6 @@ static void test_SetupQuerySpaceRequiredOnDriveA(void)
     BOOL ret;
     HDSKSPC handle;
     LONGLONG space;
-    int is_win9x = !SetupCreateDiskSpaceListW((void *)0xdeadbeef, 0xdeadbeef, 0) &&
-                    GetLastError() == ERROR_CALL_NOT_IMPLEMENTED;
 
     if (is_win9x)
         win_skip("SetupQuerySpaceRequiredOnDriveA crashes with NULL disk space handle on Win9x\n");
@@ -476,6 +474,8 @@ static void test_SetupQuerySpaceRequiredOnDriveW(void)
 
 START_TEST(diskspace)
 {
+    is_win9x = !SetupCreateDiskSpaceListW((void *)0xdeadbeef, 0xdeadbeef, 0) &&
+                GetLastError() == ERROR_CALL_NOT_IMPLEMENTED;
     test_SetupCreateDiskSpaceListA();
     test_SetupCreateDiskSpaceListW();
     test_SetupDuplicateDiskSpaceListA();

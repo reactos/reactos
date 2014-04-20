@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#undef __WINESRC__
 #undef __ROS_LONG64__
 #include "windef.h"
 #include "winbase.h"

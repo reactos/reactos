@@ -48,10 +48,6 @@ static HSTRING_TABLE (WINAPI *pStringTableInitializeEx)(DWORD, DWORD);
 static DWORD    (WINAPI *pStringTableLookUpString)(HSTRING_TABLE, LPWSTR, DWORD);
 static DWORD    (WINAPI *pStringTableLookUpStringEx)(HSTRING_TABLE, LPWSTR, DWORD, LPVOID, DWORD);
 static LPWSTR   (WINAPI *pStringTableStringFromId)(HSTRING_TABLE, DWORD);
-#if 0
-static BOOL     (WINAPI *pStringTableStringFromIdEx)(HSTRING_TABLE, DWORD, LPWSTR, LPDWORD);
-static VOID     (WINAPI *pStringTableTrim)(HSTRING_TABLE);
-#endif
 
 static HMODULE hdll;
 static WCHAR string[] = {'s','t','r','i','n','g',0};
