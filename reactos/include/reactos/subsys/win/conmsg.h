@@ -351,17 +351,19 @@ typedef struct
 
 typedef struct
 {
-    HANDLE OutputHandle;     /* Handle to newly created screen buffer */
+    HANDLE ConsoleHandle;
+    DWORD  DesiredAccess;
+    BOOL   InheritHandle;
+    DWORD  ShareMode;
     DWORD  ScreenBufferType; /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
     /*
-     * If we are creating a graphics screen buffer,
-     * this structure holds the initialization information.
+     * This structure holds the initialization information
+     * for graphics screen buffers.
      */
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
-
-    DWORD Access;
-    DWORD ShareMode;
-    BOOL  Inheritable;
+    HANDLE hMutex;
+    PVOID  lpBitMap;
+    HANDLE OutputHandle;     /* Handle to newly created screen buffer */
 } CONSOLE_CREATESCREENBUFFER, *PCONSOLE_CREATESCREENBUFFER;
 
 typedef struct

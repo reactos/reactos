@@ -1935,11 +1935,10 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
                           DWORD dwFlags,
                           LPVOID lpScreenBufferData)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest = &ApiMessage.Data.CreateScreenBufferRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
-    PCONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo = /*(PCONSOLE_GRAPHICS_BUFFER_INFO)*/lpScreenBufferData;
+    PCONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo = lpScreenBufferData;
 
     if ( (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE))    ||
          (dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE))  ||
@@ -1949,15 +1948,16 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
         return INVALID_HANDLE_VALUE;
     }
 
-    CreateScreenBufferRequest->ScreenBufferType = dwFlags;
-    CreateScreenBufferRequest->Access      = dwDesiredAccess;
-    CreateScreenBufferRequest->ShareMode   = dwShareMode;
-    CreateScreenBufferRequest->Inheritable =
+    CreateScreenBufferRequest->ConsoleHandle    = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    CreateScreenBufferRequest->DesiredAccess    = dwDesiredAccess;
+    CreateScreenBufferRequest->InheritHandle    =
         (lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE);
+    CreateScreenBufferRequest->ShareMode        = dwShareMode;
+    CreateScreenBufferRequest->ScreenBufferType = dwFlags;
 
     if (dwFlags == CONSOLE_GRAPHICS_BUFFER)
     {
-        if (CreateScreenBufferRequest->Inheritable || GraphicsBufferInfo == NULL)
+        if (CreateScreenBufferRequest->InheritHandle || GraphicsBufferInfo == NULL)
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
@@ -1969,7 +1969,7 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
         if (CaptureBuffer == NULL)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
+            return INVALID_HANDLE_VALUE;
         }
 
         CsrCaptureMessageBuffer(CaptureBuffer,
@@ -1978,24 +1978,23 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
                                 (PVOID*)&CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMapInfo);
     }
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepCreateScreenBuffer),
-                                 sizeof(CONSOLE_CREATESCREENBUFFER));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepCreateScreenBuffer),
+                        sizeof(*CreateScreenBufferRequest));
 
-     if (CaptureBuffer)
-        CsrFreeCaptureBuffer(CaptureBuffer);
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return INVALID_HANDLE_VALUE;
     }
 
     if (dwFlags == CONSOLE_GRAPHICS_BUFFER && GraphicsBufferInfo)
     {
-        GraphicsBufferInfo->hMutex   = CreateScreenBufferRequest->GraphicsBufferInfo.hMutex  ;
-        GraphicsBufferInfo->lpBitMap = CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap;
+        GraphicsBufferInfo->hMutex   = CreateScreenBufferRequest->hMutex  ; // CreateScreenBufferRequest->GraphicsBufferInfo.hMutex  ;
+        GraphicsBufferInfo->lpBitMap = CreateScreenBufferRequest->lpBitMap; // CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap;
     }
 
     return CreateScreenBufferRequest->OutputHandle;
