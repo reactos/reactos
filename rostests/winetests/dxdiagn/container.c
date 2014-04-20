@@ -938,6 +938,9 @@ static void test_DxDiag_DisplayDevices(void)
     static const WCHAR szRevisionId[] = {'s','z','R','e','v','i','s','i','o','n','I','d',0};
     static const WCHAR dwRefreshRate[] = {'d','w','R','e','f','r','e','s','h','R','a','t','e',0};
     static const WCHAR szManufacturer[] = {'s','z','M','a','n','u','f','a','c','t','u','r','e','r',0};
+    static const WCHAR b3DAccelerationExists[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','x','i','s','t','s',0};
+    static const WCHAR b3DAccelerationEnabled[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
+    static const WCHAR bDDAccelerationEnabled[] = {'b','D','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
 
     static const struct property_test property_tests[] =
     {
@@ -959,6 +962,9 @@ static void test_DxDiag_DisplayDevices(void)
         {szRevisionId, VT_BSTR},
         {dwRefreshRate, VT_UI4},
         {szManufacturer, VT_BSTR},
+        {b3DAccelerationExists, VT_BOOL},
+        {b3DAccelerationEnabled, VT_BOOL},
+        {bDDAccelerationEnabled, VT_BOOL},
     };
 
     IDxDiagContainer *display_cont = NULL;
