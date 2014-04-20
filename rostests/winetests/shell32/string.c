@@ -87,13 +87,14 @@ static void test_StrRetToStringNW(void)
        "STRRET_OFFSET: dup failed, ret=%d\n", ret);
 
     /* The next test crashes on W2K, WinXP and W2K3, so we don't test. */
-#if 0
+if (0)
+{
     /* Invalid dest - should return FALSE, except NT4 does not, so we don't check. */
     strret.uType = STRRET_WSTR;
     U(strret).pOleStr = CoDupStrW("Test");
     pStrRetToStrNAW(NULL, sizeof(buff)/sizeof(WCHAR), &strret, NULL);
     trace("NULL dest: ret=%d\n", ret);
-#endif
+}
 }
 
 START_TEST(string)

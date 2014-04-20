@@ -41,7 +41,7 @@ static void test_cbsize(void)
         nidW.hWnd = hMainWnd;
         nidW.uID = 1;
         nidW.uFlags = NIF_ICON|NIF_MESSAGE;
-        nidW.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        nidW.hIcon = LoadIconA(NULL, (LPSTR)IDI_APPLICATION);
         nidW.uCallbackMessage = WM_USER+17;
         ret = pShell_NotifyIconW(NIM_ADD, &nidW);
         /* using an invalid cbSize does work */
@@ -61,7 +61,7 @@ static void test_cbsize(void)
     nidA.hWnd = hMainWnd;
     nidA.uID = 1;
     nidA.uFlags = NIF_ICON|NIF_MESSAGE;
-    nidA.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    nidA.hIcon = LoadIconA(NULL, (LPSTR)IDI_APPLICATION);
     nidA.uCallbackMessage = WM_USER+17;
     ok(Shell_NotifyIconA(NIM_ADD, &nidA), "NIM_ADD failed!\n");
 
@@ -91,11 +91,11 @@ START_TEST(systray)
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorA(NULL, (LPSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "MyTestWnd";
-    wc.lpfnWndProc = DefWindowProc;
+    wc.lpfnWndProc = DefWindowProcA;
     RegisterClassA(&wc);
 
     hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW,

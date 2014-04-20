@@ -106,7 +106,7 @@ static void flush_sequences(struct msg_sequence **seq, int n)
 }
 
 static void ok_sequence_(struct msg_sequence **seq, int sequence_index,
-    const struct message *expected, const char *context, int todo,
+    const struct message *expected, const char *context, BOOL todo,
     const char *file, int line)
 {
     struct msg_sequence *msg_seq = seq[sequence_index];

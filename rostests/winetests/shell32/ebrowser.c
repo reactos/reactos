@@ -61,6 +61,16 @@ DEFINE_GUID(IID_UnknownInterface7,    0x68A4FDBA, 0xA48A, 0x4A86, 0xA3,0x29, 0x1
 DEFINE_GUID(IID_UnknownInterface8,    0xD3B1CAF5, 0xEC4F, 0x4B2E, 0xBC,0xB0, 0x60,0xD7,0x15,0xC9,0x3C,0xB2);
 DEFINE_GUID(IID_UnknownInterface9,    0x9536CA39, 0x1ACB, 0x4AE6, 0xAD,0x27, 0x24,0x03,0xD0,0x4C,0xA2,0x8F);
 DEFINE_GUID(IID_UnknownInterface10,   0xB722BE00, 0x4E68, 0x101B, 0xA2,0xBC, 0x00,0xAA,0x00,0x40,0x47,0x70);
+DEFINE_GUID(IID_UnknownInterface11,   0x691ecf9f, 0x6b9c, 0x4311, 0xa1,0x7b, 0xad,0x15,0x4c,0x30,0xe9,0x1f);
+DEFINE_GUID(IID_UnknownInterface12,   0x7e3159f5, 0x21ca, 0x4ec2, 0x8f,0xbe, 0x66,0x2d,0x08,0x2c,0xa3,0xeb);
+DEFINE_GUID(IID_UnknownInterface13,   0xa36a3ace, 0x8332, 0x45ce, 0xaa,0x29, 0x50,0x3c,0xb7,0x6b,0x25,0x87);
+DEFINE_GUID(IID_UnknownInterface14,   0x16770868, 0x239c, 0x445b, 0xa0,0x1d, 0xf2,0x6c,0x7f,0xbb,0xf2,0x6c);
+DEFINE_GUID(IID_UnknownInterface15,   0x05a89298, 0x6246, 0x4c63, 0xbb,0x0d, 0x9b,0xda,0xf1,0x40,0xbf,0x3b);
+DEFINE_GUID(IID_UnknownInterface16,   0x35094a87, 0x8bb1, 0x4237, 0x96,0xc6, 0xc4,0x17,0xee,0xbd,0xb0,0x78);
+DEFINE_GUID(IID_UnknownInterface17,   0x3d5d8c60, 0x21e4, 0x4b03, 0x83,0xb8, 0xc7,0x3f,0x8c,0x94,0x00,0x78);
+DEFINE_GUID(IID_UnknownInterface18,   0x1fc45c07, 0x9e35, 0x4276, 0xad,0x7f, 0x08,0x60,0x3a,0xa0,0xf6,0x0f);
+DEFINE_GUID(IID_UnknownInterface19,   0xacd9b67a, 0xceab, 0x4c6c, 0x90,0xa1, 0xe8,0x57,0xc6,0x59,0xe3,0x9d);
+DEFINE_GUID(IID_UnknownInterface20,   0xd0fe6f62, 0xdea4, 0x46c9, 0x9d,0xae, 0x36,0xcb,0x13,0x99,0x78,0xfa);
 
 static HWND hwnd;
 
@@ -106,18 +116,11 @@ static HRESULT ebrowser_browse_to_desktop(IExplorerBrowser *peb)
 static void process_msgs(void)
 {
     MSG msg;
-    while(PeekMessage( &msg, NULL, 0, 0, PM_REMOVE))
+    while(PeekMessageA( &msg, NULL, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageA(&msg);
     }
-}
-
-static void dbg_print_guid(const GUID *guid) {
-    WCHAR buf[MAX_PATH];
-
-    StringFromGUID2(guid, buf, MAX_PATH);
-    printf("guid:[%s]\n", wine_dbgstr_wn(buf, lstrlenW(buf)));
 }
 
 /*********************************************************************
@@ -215,8 +218,7 @@ static inline IExplorerPaneVisibilityImpl *impl_from_IExplorerPaneVisibility(IEx
 static HRESULT WINAPI IExplorerPaneVisibility_fnQueryInterface(IExplorerPaneVisibility *iface,
                                                                REFIID riid, LPVOID *ppvObj)
 {
-    ok(0, "Not called.\n");
-    trace("REFIID:"); dbg_print_guid(riid);
+    ok(0, "unexpected, %s\n", wine_dbgstr_guid(riid));
     *ppvObj = NULL;
     return E_NOINTERFACE;
 }
@@ -260,7 +262,7 @@ static HRESULT WINAPI IExplorerPaneVisibility_fnGetPaneState(IExplorerPaneVisibi
     else if(IsEqualGUID(&EP_AdvQueryPane, ep))       This->aqp++;
     else
     {
-        trace("Unknown explorer pane: "); dbg_print_guid(ep);
+        trace("Unknown explorer pane: %s\n", wine_dbgstr_guid(ep));
         This->unk++;
     }
 
@@ -305,8 +307,7 @@ static inline ICommDlgBrowser3Impl *impl_from_ICommDlgBrowser3(ICommDlgBrowser3 
 
 static HRESULT WINAPI ICommDlgBrowser3_fnQueryInterface(ICommDlgBrowser3 *iface, REFIID riid, LPVOID *ppvObj)
 {
-    ok(0, "Not called.\n");
-    trace("riid:");    dbg_print_guid(riid);
+    ok(0, "unexpected %s\n", wine_dbgstr_guid(riid));
     *ppvObj = NULL;
     return E_NOINTERFACE;
 }
@@ -476,8 +477,7 @@ static HRESULT WINAPI IServiceProvider_fnQueryInterface(IServiceProvider *iface,
         return E_NOINTERFACE;
     }
 
-    ok(0, "Unexpected interface requested.\n");
-    trace("riid: "); dbg_print_guid(riid);
+    ok(0, "Unexpected interface requested, %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -521,12 +521,7 @@ static HRESULT WINAPI IServiceProvider_fnQueryService(IServiceProvider *iface,
         }
     }
 
-    ok(was_in_list, "-- Unknown service requested --\n");
-    if(!was_in_list)
-    {
-        trace("guidService: "); dbg_print_guid(guidService);
-        trace("riid: "); dbg_print_guid(riid);
-    }
+    ok(was_in_list, "unknown service, serviceID: %s, riid: %s\n", wine_dbgstr_guid(guidService), wine_dbgstr_guid(riid));
 
     /* Give back an interface, if any. */
     if(punk)
@@ -617,22 +612,25 @@ static void test_SB_misc(void)
     }
 
     /* Some unimplemented methods */
-    retHwnd = (HWND)0xDEADBEEF;
+    retHwnd = (HWND)0xdeadbeef;
     hr = IShellBrowser_GetControlWindow(psb, FCW_TOOLBAR, &retHwnd);
     ok(hr == E_NOTIMPL, "got (0x%08x)\n", hr);
-    ok(retHwnd == (HWND)0xDEADBEEF, "HWND overwritten\n");
+    ok(retHwnd == NULL || broken(retHwnd == (HWND)0xdeadbeef), "got %p\n", retHwnd);
 
+    retHwnd = (HWND)0xdeadbeef;
     hr = IShellBrowser_GetControlWindow(psb, FCW_STATUS, &retHwnd);
     ok(hr == E_NOTIMPL, "got (0x%08x)\n", hr);
-    ok(retHwnd == (HWND)0xDEADBEEF, "HWND overwritten\n");
+    ok(retHwnd == NULL || broken(retHwnd == (HWND)0xdeadbeef), "got %p\n", retHwnd);
 
+    retHwnd = (HWND)0xdeadbeef;
     hr = IShellBrowser_GetControlWindow(psb, FCW_TREE, &retHwnd);
     ok(hr == E_NOTIMPL, "got (0x%08x)\n", hr);
-    ok(retHwnd == (HWND)0xDEADBEEF, "HWND overwritten\n");
+    ok(retHwnd == NULL || broken(retHwnd == (HWND)0xdeadbeef), "got %p\n", retHwnd);
 
+    retHwnd = (HWND)0xdeadbeef;
     hr = IShellBrowser_GetControlWindow(psb, FCW_PROGRESS, &retHwnd);
     ok(hr == E_NOTIMPL, "got (0x%08x)\n", hr);
-    ok(retHwnd == (HWND)0xDEADBEEF, "HWND overwritten\n");
+    ok(retHwnd == NULL || broken(retHwnd == (HWND)0xdeadbeef), "got %p\n", retHwnd);
 
     /* ::InsertMenuSB */
     hr = IShellBrowser_InsertMenusSB(psb, NULL, NULL);
@@ -927,6 +925,18 @@ static void test_SetSite(void)
         { &IID_UnknownInterface4,       &IID_IUnknown, 0, NULL },
         { &IID_UnknownInterface6,       &IID_UnknownInterface7, 0, NULL },
         { &IID_IBrowserWithActivationNotification, &IID_IBrowserWithActivationNotification, 0, NULL },
+        /* Win 8 */
+        { &IID_ICommDlgBrowser,         &IID_UnknownInterface11, 0, NULL },
+        { &IID_ICommDlgBrowser,         &IID_UnknownInterface12, 0, NULL },
+        { &IID_ICommDlgBrowser,         &IID_UnknownInterface20, 0, NULL },
+        { &IID_UnknownInterface13,      &IID_IUnknown, 0, NULL },
+        { &IID_UnknownInterface13,      &IID_UnknownInterface13, 0, NULL },
+        { &IID_UnknownInterface13,      &IID_UnknownInterface18, 0, NULL },
+        { &IID_UnknownInterface14,      &IID_UnknownInterface14, 0, NULL },
+        { &IID_UnknownInterface15,      &IID_UnknownInterface15, 0, NULL },
+        { &IID_UnknownInterface16,      &IID_UnknownInterface16, 0, NULL },
+        { &IID_UnknownInterface17,      &IID_UnknownInterface17, 0, NULL },
+        { &IID_UnknownInterface17,      &IID_UnknownInterface19, 0, NULL },
 
         /* Other services requested in Vista, Windows 2008 but not in Windows 7 */
         { &IID_IBrowserSettings_Vista,  &IID_IBrowserSettings_Vista, 0, NULL },

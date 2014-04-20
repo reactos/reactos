@@ -29,6 +29,7 @@
 
 DEFINE_GUID(FMTID_Test,0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12);
 DEFINE_GUID(FMTID_NotExisting, 0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x13);
+DEFINE_GUID(CLSID_ClassMoniker, 0x0000031a,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -63,12 +64,16 @@ DEFINE_EXPECT(Release);
 DEFINE_EXPECT(Stat);
 DEFINE_EXPECT(WriteMultiple);
 
+DEFINE_EXPECT(autoplay_BindToObject);
+DEFINE_EXPECT(autoplay_GetClassObject);
+
 static HRESULT (WINAPI *pSHPropStgCreate)(IPropertySetStorage*, REFFMTID, const CLSID*,
         DWORD, DWORD, DWORD, IPropertyStorage**, UINT*);
 static HRESULT (WINAPI *pSHPropStgReadMultiple)(IPropertyStorage*, UINT,
         ULONG, const PROPSPEC*, PROPVARIANT*);
 static HRESULT (WINAPI *pSHPropStgWriteMultiple)(IPropertyStorage*, UINT*,
         ULONG, const PROPSPEC*, PROPVARIANT*, PROPID);
+static HRESULT (WINAPI *pSHCreateQueryCancelAutoPlayMoniker)(IMoniker**);
 
 static void init(void)
 {
@@ -77,6 +82,7 @@ static void init(void)
     pSHPropStgCreate = (void*)GetProcAddress(hmod, "SHPropStgCreate");
     pSHPropStgReadMultiple = (void*)GetProcAddress(hmod, "SHPropStgReadMultiple");
     pSHPropStgWriteMultiple = (void*)GetProcAddress(hmod, "SHPropStgWriteMultiple");
+    pSHCreateQueryCancelAutoPlayMoniker = (void*)GetProcAddress(hmod, "SHCreateQueryCancelAutoPlayMoniker");
 }
 
 static HRESULT WINAPI PropertyStorage_QueryInterface(IPropertyStorage *This,
@@ -429,9 +435,317 @@ static void test_SHPropStg_functions(void)
     CHECK_CALLED(Stat);
 }
 
+static HRESULT WINAPI test_activator_QI(IClassActivator *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IClassActivator))
+    {
+        *ppv = iface;
+    }
+
+    if (!*ppv) return E_NOINTERFACE;
+
+    IClassActivator_AddRef(iface);
+
+    return S_OK;
+}
+
+static ULONG WINAPI test_activator_AddRef(IClassActivator *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI test_activator_Release(IClassActivator *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI test_activator_GetClassObject(IClassActivator *iface, REFCLSID clsid,
+    DWORD context, LCID locale, REFIID riid, void **ppv)
+{
+    CHECK_EXPECT(autoplay_GetClassObject);
+    ok(IsEqualGUID(clsid, &CLSID_QueryCancelAutoPlay), "clsid %s\n", wine_dbgstr_guid(clsid));
+    ok(IsEqualIID(riid, &IID_IQueryCancelAutoPlay), "riid %s\n", wine_dbgstr_guid(riid));
+    return E_NOTIMPL;
+}
+
+static const IClassActivatorVtbl test_activator_vtbl = {
+    test_activator_QI,
+    test_activator_AddRef,
+    test_activator_Release,
+    test_activator_GetClassObject
+};
+
+static IClassActivator test_activator = { &test_activator_vtbl };
+
+static HRESULT WINAPI test_moniker_QueryInterface(IMoniker* iface, REFIID riid, void **ppvObject)
+{
+    *ppvObject = 0;
+
+    if (IsEqualIID(&IID_IUnknown, riid) ||
+        IsEqualIID(&IID_IPersist, riid) ||
+        IsEqualIID(&IID_IPersistStream, riid) ||
+        IsEqualIID(&IID_IMoniker, riid))
+    {
+        *ppvObject = iface;
+    }
+
+    if (!*ppvObject)
+        return E_NOINTERFACE;
+
+    return S_OK;
+}
+
+static ULONG WINAPI test_moniker_AddRef(IMoniker* iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI test_moniker_Release(IMoniker* iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI test_moniker_GetClassID(IMoniker* iface, CLSID *pClassID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_IsDirty(IMoniker* iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Load(IMoniker* iface, IStream* pStm)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_GetSizeMax(IMoniker* iface, ULARGE_INTEGER* pcbSize)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_BindToObject(IMoniker* iface,
+                                                IBindCtx* pbc,
+                                                IMoniker* moniker_to_left,
+                                                REFIID riid,
+                                                void** ppv)
+{
+    CHECK_EXPECT(autoplay_BindToObject);
+    ok(pbc != NULL, "got %p\n", pbc);
+    ok(moniker_to_left == NULL, "got %p\n", moniker_to_left);
+    ok(IsEqualIID(riid, &IID_IClassActivator), "got riid %s\n", wine_dbgstr_guid(riid));
+
+    if (IsEqualIID(riid, &IID_IClassActivator))
+    {
+        *ppv = &test_activator;
+        return S_OK;
+    }
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_BindToStorage(IMoniker* iface,
+                                             IBindCtx* pbc,
+                                             IMoniker* pmkToLeft,
+                                             REFIID riid,
+                                             VOID** ppvResult)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Reduce(IMoniker* iface,
+                                      IBindCtx* pbc,
+                                      DWORD dwReduceHowFar,
+                                      IMoniker** ppmkToLeft,
+                                      IMoniker** ppmkReduced)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_ComposeWith(IMoniker* iface,
+                                           IMoniker* pmkRight,
+                                           BOOL fOnlyIfNotGeneric,
+                                           IMoniker** ppmkComposite)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoniker)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_IsEqual(IMoniker* iface, IMoniker* pmkOtherMoniker)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Hash(IMoniker* iface, DWORD* pdwHash)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_IsRunning(IMoniker* iface,
+                                         IBindCtx* pbc,
+                                         IMoniker* pmkToLeft,
+                                         IMoniker* pmkNewlyRunning)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_GetTimeOfLastChange(IMoniker* iface,
+                                                   IBindCtx* pbc,
+                                                   IMoniker* pmkToLeft,
+                                                   FILETIME* pItemTime)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_Inverse(IMoniker* iface, IMoniker** ppmk)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_RelativePathTo(IMoniker* iface,IMoniker* pmOther, IMoniker** ppmkRelPath)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_GetDisplayName(IMoniker* iface,
+                                              IBindCtx* pbc,
+                                              IMoniker* pmkToLeft,
+                                              LPOLESTR *ppszDisplayName)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_ParseDisplayName(IMoniker* iface,
+                                                IBindCtx* pbc,
+                                                IMoniker* pmkToLeft,
+                                                LPOLESTR pszDisplayName,
+                                                ULONG* pchEaten,
+                                                IMoniker** ppmkOut)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI test_moniker_IsSystemMoniker(IMoniker* iface,DWORD* pwdMksys)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const IMonikerVtbl test_moniker_vtbl =
+{
+    test_moniker_QueryInterface,
+    test_moniker_AddRef,
+    test_moniker_Release,
+    test_moniker_GetClassID,
+    test_moniker_IsDirty,
+    test_moniker_Load,
+    test_moniker_Save,
+    test_moniker_GetSizeMax,
+    test_moniker_BindToObject,
+    test_moniker_BindToStorage,
+    test_moniker_Reduce,
+    test_moniker_ComposeWith,
+    test_moniker_Enum,
+    test_moniker_IsEqual,
+    test_moniker_Hash,
+    test_moniker_IsRunning,
+    test_moniker_GetTimeOfLastChange,
+    test_moniker_Inverse,
+    test_moniker_CommonPrefixWith,
+    test_moniker_RelativePathTo,
+    test_moniker_GetDisplayName,
+    test_moniker_ParseDisplayName,
+    test_moniker_IsSystemMoniker
+};
+
+static IMoniker test_moniker = { &test_moniker_vtbl };
+
+static void test_SHCreateQueryCancelAutoPlayMoniker(void)
+{
+    IBindCtx *ctxt;
+    IMoniker *mon;
+    IUnknown *unk;
+    CLSID clsid;
+    HRESULT hr;
+    DWORD sys;
+
+    if (!pSHCreateQueryCancelAutoPlayMoniker)
+    {
+        win_skip("SHCreateQueryCancelAutoPlayMoniker is not available, skipping tests.\n");
+        return;
+    }
+
+    hr = pSHCreateQueryCancelAutoPlayMoniker(NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = pSHCreateQueryCancelAutoPlayMoniker(&mon);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    sys = -1;
+    hr = IMoniker_IsSystemMoniker(mon, &sys);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(sys == MKSYS_CLASSMONIKER, "got %d\n", sys);
+
+    memset(&clsid, 0, sizeof(clsid));
+    hr = IMoniker_GetClassID(mon, &clsid);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(IsEqualGUID(&clsid, &CLSID_ClassMoniker), "got %s\n", wine_dbgstr_guid(&clsid));
+
+    /* extract used CLSID that implements this hook */
+    SET_EXPECT(autoplay_BindToObject);
+    SET_EXPECT(autoplay_GetClassObject);
+
+    CreateBindCtx(0, &ctxt);
+    hr = IMoniker_BindToObject(mon, ctxt, &test_moniker, &IID_IQueryCancelAutoPlay, (void**)&unk);
+    ok(hr == E_NOTIMPL, "got 0x%08x\n", hr);
+    IBindCtx_Release(ctxt);
+
+    CHECK_CALLED(autoplay_BindToObject);
+    CHECK_CALLED(autoplay_GetClassObject);
+
+    IMoniker_Release(mon);
+}
+
 START_TEST(shellole)
 {
     init();
 
     test_SHPropStg_functions();
+    test_SHCreateQueryCancelAutoPlayMoniker();
 }

@@ -75,18 +75,6 @@ static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFII
 static HRESULT (WINAPI *pSHCreateShellFolderView)(const SFV_CREATE *pcsfv, IShellView **ppsv);
 static HRESULT (WINAPI *pSHCreateShellFolderViewEx)(LPCSFV psvcbi, IShellView **ppv);
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static WCHAR *make_wstr(const char *str)
 {
     WCHAR *ret;
@@ -232,10 +220,13 @@ static void test_ParseDisplayName(void)
     /* Tests crash on W2K and below (SHCreateShellItem available as of XP) */
     if (pSHCreateShellItem)
     {
-        /* null name and pidl */
-        hr = IShellFolder_ParseDisplayName(IDesktopFolder,
-            NULL, NULL, NULL, NULL, NULL, 0);
-        ok(hr == E_INVALIDARG, "returned %08x, expected E_INVALIDARG\n", hr);
+        if (0)
+        {
+            /* null name and pidl, also crashes on Windows 8 */
+            hr = IShellFolder_ParseDisplayName(IDesktopFolder, NULL, NULL,
+                                               NULL, NULL, NULL, 0);
+            ok(hr == E_INVALIDARG, "returned %08x, expected E_INVALIDARG\n", hr);
+        }
 
         /* null name */
         newPIDL = (ITEMIDLIST*)0xdeadbeef;
@@ -584,7 +575,7 @@ if (0)
                     ok(hr == S_OK, "Got 0x%08x\n", hr);
                     /* CLSID_ShellFSFolder on some w2k systems */
                     ok(IsEqualIID(&id, &CLSID_ShellDocObjView) || broken(IsEqualIID(&id, &CLSID_ShellFSFolder)),
-                        "Unexpected classid %s\n", debugstr_guid(&id));
+                        "Unexpected classid %s\n", wine_dbgstr_guid(&id));
                     IPersist_Release(pp);
                 }
 
@@ -1967,8 +1958,8 @@ static void test_SHGetFolderPathAndSubDirA(void)
     BOOL delret;
     DWORD dwret;
     int i;
-    static char wine[] = "wine";
-    static char winetemp[] = "wine\\temp";
+    static const char wine[] = "wine";
+    static const char winetemp[] = "wine\\temp";
     static char appdata[MAX_PATH];
     static char testpath[MAX_PATH];
     static char toolongpath[MAX_PATH+1];
@@ -2063,7 +2054,7 @@ static void test_SHGetFolderPathAndSubDirA(void)
         "expected %s to start with %s\n", testpath, appdata);
     ok(!lstrcmpA(&testpath[1 + strlen(appdata)], winetemp),
         "expected %s to end with %s\n", testpath, winetemp);
-    dwret = GetFileAttributes(testpath);
+    dwret = GetFileAttributesA(testpath);
     ok(FILE_ATTRIBUTE_DIRECTORY | dwret, "expected %x to contain FILE_ATTRIBUTE_DIRECTORY\n", dwret);
 
     /* cleanup */
@@ -3005,13 +2996,14 @@ static inline IUnknownImpl *impl_from_IUnknown(IUnknown *iface)
 static HRESULT WINAPI unk_fnQueryInterface(IUnknown *iunk, REFIID riid, void** punk)
 {
     IUnknownImpl *This = impl_from_IUnknown(iunk);
-    UINT i, found;
-    for(i = found = 0; This->ifaces[i].id != NULL; i++)
+    UINT i;
+    BOOL found = FALSE;
+    for(i = 0; This->ifaces[i].id != NULL; i++)
     {
         if(IsEqualIID(This->ifaces[i].id, riid))
         {
             This->ifaces[i].count++;
-            found = 1;
+            found = TRUE;
             break;
         }
     }
@@ -3647,10 +3639,23 @@ static void test_ShellItemBindToHandler(void)
             ok(hr == S_OK, "Got 0x%08x\n", hr);
             if(SUCCEEDED(hr)) IUnknown_Release(punk);
 
-            /* BHID_Transfer */
-            hr = IShellItem_BindToHandler(psi, NULL, &BHID_Transfer, &IID_IUnknown, (void**)&punk);
-            ok(hr == E_NOINTERFACE || broken(hr == MK_E_NOOBJECT /* XP */), "Got 0x%08x\n", hr);
-            if(SUCCEEDED(hr)) IUnknown_Release(punk);
+            /* BHID_Transfer
+               ITransferSource and ITransferDestination are accessible starting Vista, IUnknown is
+               supported start Win8. */
+            hr = IShellItem_BindToHandler(psi, NULL, &BHID_Transfer, &IID_ITransferSource, (void**)&punk);
+            ok(hr == S_OK || broken(FAILED(hr)) /* pre-Vista */, "Got 0x%08x\n", hr);
+            if(SUCCEEDED(hr))
+            {
+                IUnknown_Release(punk);
+
+                hr = IShellItem_BindToHandler(psi, NULL, &BHID_Transfer, &IID_ITransferDestination, (void**)&punk);
+                ok(hr == S_OK, "Got 0x%08x\n", hr);
+                if(SUCCEEDED(hr)) IUnknown_Release(punk);
+
+                hr = IShellItem_BindToHandler(psi, NULL, &BHID_Transfer, &IID_IUnknown, (void**)&punk);
+                ok(hr == S_OK || broken(hr == E_NOINTERFACE) /* pre-Win8 */, "Got 0x%08x\n", hr);
+                if(SUCCEEDED(hr)) IUnknown_Release(punk);
+            }
 
             /* BHID_EnumItems */
             hr = IShellItem_BindToHandler(psi, NULL, &BHID_EnumItems, &IID_IEnumShellItems, (void**)&punk);
@@ -3921,11 +3926,12 @@ static void test_GetUIObject(void)
             ok(hr == S_OK, "Got 0x%08x\n", hr);
             if(SUCCEEDED(hr))
             {
+                const int baseItem = 0x40;
                 HMENU hmenu = CreatePopupMenu();
                 INT max_id, max_id_check;
                 UINT count, i;
                 const int id_upper_limit = 32767;
-                hr = IContextMenu_QueryContextMenu(pcm, hmenu, 0, 0, id_upper_limit, CMF_NORMAL);
+                hr = IContextMenu_QueryContextMenu(pcm, hmenu, 0, baseItem, id_upper_limit, CMF_NORMAL);
                 ok(SUCCEEDED(hr), "Got 0x%08x\n", hr);
                 max_id = HRESULT_CODE(hr) - 1; /* returns max_id + 1 */
                 ok(max_id <= id_upper_limit, "Got %d\n", max_id);
@@ -3937,9 +3943,12 @@ static void test_GetUIObject(void)
                 {
                     MENUITEMINFOA mii;
                     INT res;
+                    char buf[255], buf2[255];
                     ZeroMemory(&mii, sizeof(MENUITEMINFOA));
                     mii.cbSize = sizeof(MENUITEMINFOA);
-                    mii.fMask = MIIM_ID | MIIM_FTYPE;
+                    mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STRING;
+                    mii.dwTypeData = buf2;
+                    mii.cch = sizeof(buf2);
 
                     SetLastError(0);
                     res = GetMenuItemInfoA(hmenu, i, TRUE, &mii);
@@ -3948,8 +3957,17 @@ static void test_GetUIObject(void)
                     ok( (mii.wID <= id_upper_limit) || (mii.fType & MFT_SEPARATOR),
                         "Got non-separator ID out of range: %d (type: %x)\n", mii.wID, mii.fType);
                     if(!(mii.fType & MFT_SEPARATOR))
+                    {
                         max_id_check = (mii.wID>max_id_check)?mii.wID:max_id_check;
+                        hr = IContextMenu_GetCommandString(pcm, mii.wID - baseItem, GCS_VERBA, 0, buf, sizeof(buf));
+                        ok(SUCCEEDED(hr) || hr == E_NOTIMPL, "for id 0x%x got 0x%08x (menustr: %s)\n", mii.wID - baseItem, hr, mii.dwTypeData);
+                        if (SUCCEEDED(hr))
+                            trace("for id 0x%x got string %s (menu string: %s)\n", mii.wID - baseItem, buf, mii.dwTypeData);
+                        else if (hr == E_NOTIMPL)
+                            trace("for id 0x%x got E_NOTIMPL (menu string: %s)\n", mii.wID - baseItem, mii.dwTypeData);
+                    }
                 }
+                max_id_check -= baseItem;
                 ok((max_id_check == max_id) ||
                    (max_id_check == max_id-1 /* Win 7 */),
                    "Not equal (or near equal), got %d and %d\n", max_id_check, max_id);
@@ -4403,7 +4421,7 @@ static LRESULT CALLBACK testwindow_wndproc(HWND hwnd, UINT msg, WPARAM wparam, L
             ok(0, "Didn't expect a WM_USER_NOTIFY message (event: %x)\n", signal);
         return 0;
     }
-    return DefWindowProc(hwnd, msg, wparam, lparam);
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
 }
 
 static void register_testwindow_class(void)

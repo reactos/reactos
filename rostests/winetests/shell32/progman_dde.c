@@ -363,7 +363,7 @@ static void DdeExecuteCommand(DWORD instance, HCONV hConv, const char *strCmd, H
  * window creation happened were not encouraging (not including
  * SetWindowsHookEx).
  */
-static void CheckWindowCreated(const char *winName, int closeWindow, int testParams)
+static void CheckWindowCreated(const char *winName, BOOL closeWindow, int testParams)
 {
     HWND window = NULL;
     int i;
@@ -387,7 +387,7 @@ static void CheckWindowCreated(const char *winName, int closeWindow, int testPar
 /* Check for Existence (or non-existence) of a file or group
  *   When testing for existence of a group, groupName is not needed
  */
-static void CheckFileExistsInProgramGroups(const char *nameToCheck, int shouldExist, int isGroup,
+static void CheckFileExistsInProgramGroups(const char *nameToCheck, BOOL shouldExist, BOOL isGroup,
                                            const char *groupName, int testParams)
 {
     char path[MAX_PATH];
@@ -411,7 +411,7 @@ static void CheckFileExistsInProgramGroups(const char *nameToCheck, int shouldEx
         }
         strcat(path, "\\");
         strcat(path, nameToCheck);
-        attributes = GetFileAttributes(path);
+        attributes = GetFileAttributesA(path);
         if (!shouldExist)
         {
             ok (attributes == INVALID_FILE_ATTRIBUTES , "File exists and shouldn't %s.%s\n",
@@ -469,7 +469,7 @@ static void CreateGroupTest(DWORD instance, HCONV hConv, const char *command, UI
  *        1. window is open
  */
 static void ShowGroupTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                          const char *groupName, const char *windowTitle, int closeAfterShowing, int testParams)
+                          const char *groupName, const char *windowTitle, BOOL closeAfterShowing, int testParams)
 {
     HDDEDATA hData;
     UINT error;
@@ -711,11 +711,11 @@ START_TEST(progman_dde)
     init_strings();
 
     /* Initialize DDE Instance */
-    err = DdeInitialize(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
+    err = DdeInitializeA(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
     ok (err == DMLERR_NO_ERROR, "DdeInitialize Error %s\n", GetStringFromError(err));
 
     /* Create Connection */
-    hszProgman = DdeCreateStringHandle(instance, "PROGMAN", CP_WINANSI);
+    hszProgman = DdeCreateStringHandleA(instance, "PROGMAN", CP_WINANSI);
     ok (hszProgman != NULL, "DdeCreateStringHandle Error %s\n", GetDdeLastErrorStr(instance));
     hConv = DdeConnect(instance, hszProgman, hszProgman, NULL);
     ok (DdeFreeStringHandle(instance, hszProgman), "DdeFreeStringHandle failure\n");
@@ -736,11 +736,11 @@ START_TEST(progman_dde)
     /* 2nd Instance (Followup Tests) */
     /* Initialize DDE Instance */
     instance = 0;
-    err = DdeInitialize(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
+    err = DdeInitializeA(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
     ok (err == DMLERR_NO_ERROR, "DdeInitialize Error %s\n", GetStringFromError(err));
 
     /* Create Connection */
-    hszProgman = DdeCreateStringHandle(instance, "PROGMAN", CP_WINANSI);
+    hszProgman = DdeCreateStringHandleA(instance, "PROGMAN", CP_WINANSI);
     ok (hszProgman != NULL, "DdeCreateStringHandle Error %s\n", GetDdeLastErrorStr(instance));
     hConv = DdeConnect(instance, hszProgman, hszProgman, NULL);
     ok (hConv != NULL, "DdeConnect Error %s\n", GetDdeLastErrorStr(instance));

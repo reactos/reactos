@@ -18,10 +18,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#define COBJMACROS
+
 #include <windows.h>
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <string.h>
+#include "shellapi.h"
 
 #include "wine/test.h"
 #define IDD_MAKENEWFOLDER 0x3746 /* From "../shresdef.h" */
@@ -37,13 +41,13 @@ static int get_number_of_folders(LPCSTR path)
 {
     int number_of_folders = 0;
     char path_search_string[MAX_PATH];
-    WIN32_FIND_DATA find_data;
+    WIN32_FIND_DATAA find_data;
     HANDLE find_handle;
 
-    strncpy(path_search_string, path, MAX_PATH);
+    lstrcpynA(path_search_string, path, MAX_PATH);
     strncat(path_search_string, "*", 1);
 
-    find_handle = FindFirstFile(path_search_string, &find_data);
+    find_handle = FindFirstFileA(path_search_string, &find_data);
     if (find_handle == INVALID_HANDLE_VALUE)
         return -1;
 
@@ -56,7 +60,7 @@ static int get_number_of_folders(LPCSTR path)
             number_of_folders++;
         }
     }
-    while (FindNextFile(find_handle, &find_data) != 0);
+    while (FindNextFileA(find_handle, &find_data) != 0);
 
     FindClose(find_handle);
     return number_of_folders;
@@ -81,11 +85,11 @@ static void CALLBACK make_new_folder_timer_callback(HWND hwnd, UINT uMsg,
     {
     case 0:
         /* Click "Make New Folder" button */
-        PostMessage(hwnd, WM_COMMAND, IDD_MAKENEWFOLDER, 0);
+        PostMessageA(hwnd, WM_COMMAND, IDD_MAKENEWFOLDER, 0);
         break;
     case 1:
         /* Set the new folder name to foo by replacing text in edit control */
-        SendMessage(GetFocus(), EM_REPLACESEL, 0, (LPARAM) new_folder_name);
+        SendMessageA(GetFocus(), EM_REPLACESEL, 0, (LPARAM) new_folder_name);
         SetFocus(hwnd);
         break;
     case 2:
@@ -104,7 +108,7 @@ static void CALLBACK make_new_folder_timer_callback(HWND hwnd, UINT uMsg,
     case 4:
         KillTimer(hwnd, idEvent);
         /* Close dialog box */
-        SendMessage(hwnd, WM_COMMAND, IDOK, 0);
+        SendMessageA(hwnd, WM_COMMAND, IDOK, 0);
         break;
     default:
         break;
@@ -150,7 +154,7 @@ static int CALLBACK create_new_folder_callback(HWND hwnd, UINT uMsg,
 static void test_click_make_new_folder_button(void)
 {
     HRESULT resCoInit, hr;
-    BROWSEINFO bi;
+    BROWSEINFOA bi;
     LPITEMIDLIST pidl = NULL;
     LPITEMIDLIST test_folder_pidl;
     IShellFolder *test_folder_object;
@@ -161,7 +165,7 @@ static void test_click_make_new_folder_button(void)
     char selected_folder[MAX_PATH];
     const CHAR title[] = "test_click_make_new_folder_button";
     int number_of_folders = -1;
-    SHFILEOPSTRUCT shfileop;
+    SHFILEOPSTRUCTA shfileop;
 
     if (does_folder_or_file_exist(title))
     {
@@ -195,8 +199,8 @@ static void test_click_make_new_folder_button(void)
 
     /* Initialize browse info struct for SHBrowseForFolder */
     bi.hwndOwner = NULL;
-    bi.pszDisplayName = (LPTSTR) &selected_folder;
-    bi.lpszTitle = (LPTSTR) title;
+    bi.pszDisplayName = selected_folder;
+    bi.lpszTitle = title;
     bi.ulFlags = BIF_NEWDIALOGSTYLE;
     bi.lpfn = create_new_folder_callback;
     /* Use test folder as the root folder for dialog box */
@@ -213,7 +217,7 @@ static void test_click_make_new_folder_button(void)
     bi.pidlRoot = test_folder_pidl;
 
     /* Display dialog box and let callback click the buttons */
-    pidl = SHBrowseForFolder(&bi);
+    pidl = SHBrowseForFolderA(&bi);
 
     number_of_folders = get_number_of_folders(test_folder_path);
     ok(number_of_folders == 1 || broken(number_of_folders == 0) /* W95, W98 */,
@@ -242,7 +246,7 @@ static void test_click_make_new_folder_button(void)
     shfileop.pFrom = test_folder_path;
     shfileop.pTo = NULL;
     shfileop.fFlags = FOF_NOCONFIRMATION|FOF_NOERRORUI|FOF_SILENT;
-    SHFileOperation(&shfileop);
+    SHFileOperationA(&shfileop);
 
     if (pidl)
         CoTaskMemFree(pidl);
@@ -265,47 +269,47 @@ static int CALLBACK selection_callback(HWND hwnd, UINT uMsg, LPARAM lParam, LPAR
     {
     case BFFM_INITIALIZED:
         /* test with zero values */
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONA, 0, 0);
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONA, 0, 0);
         ok(!ret, "SendMessage returned: %u\n", ret);
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONW, 0, 0);
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONW, 0, 0);
         ok(!ret, "SendMessage returned: %u\n", ret);
 
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONA, 1, 0);
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONA, 1, 0);
         ok(!ret, "SendMessage returned: %u\n", ret);
 
         if(0)
         {
             /* Crashes on NT4 */
-            ret = SendMessage(hwnd, BFFM_SETSELECTIONW, 1, 0);
+            ret = SendMessageA(hwnd, BFFM_SETSELECTIONW, 1, 0);
             ok(!ret, "SendMessage returned: %u\n", ret);
         }
 
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONA, 0, (LPARAM)selected_folder_pidl);
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONA, 0, (LPARAM)selected_folder_pidl);
         ok(!ret, "SendMessage returned: %u\n", ret);
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONW, 0, (LPARAM)selected_folder_pidl);
-        ok(!ret, "SendMessage returned: %u\n", ret);
-
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONA, 1, (LPARAM)selected_folder_pidl);
-        ok(!ret, "SendMessage returned: %u\n", ret);
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONW, 1, (LPARAM)selected_folder_pidl);
+        ret = SendMessageW(hwnd, BFFM_SETSELECTIONW, 0, (LPARAM)selected_folder_pidl);
         ok(!ret, "SendMessage returned: %u\n", ret);
 
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONA, 1, (LPARAM)new_folder_name);
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONA, 1, (LPARAM)selected_folder_pidl);
         ok(!ret, "SendMessage returned: %u\n", ret);
-        ret = SendMessage(hwnd, BFFM_SETSELECTIONW, 1, (LPARAM)new_folder_name);
+        ret = SendMessageW(hwnd, BFFM_SETSELECTIONW, 1, (LPARAM)selected_folder_pidl);
         ok(!ret, "SendMessage returned: %u\n", ret);
 
-        SendMessage(hwnd, WM_COMMAND, IDOK, 0);
-        return TRUE;
+        ret = SendMessageA(hwnd, BFFM_SETSELECTIONA, 1, (LPARAM)new_folder_name);
+        ok(!ret, "SendMessage returned: %u\n", ret);
+        ret = SendMessageW(hwnd, BFFM_SETSELECTIONW, 1, (LPARAM)new_folder_name);
+        ok(!ret, "SendMessage returned: %u\n", ret);
+
+        SendMessageA(hwnd, WM_COMMAND, IDOK, 0);
+        return 1;
     default:
-        return FALSE;
+        return 0;
     }
 }
 
 static void test_selection(void)
 {
     HRESULT resCoInit, hr;
-    BROWSEINFO bi;
+    BROWSEINFOA bi;
     LPITEMIDLIST pidl = NULL;
     IShellFolder *desktop_object;
     WCHAR selected_folderW[MAX_PATH];
@@ -326,7 +330,7 @@ static void test_selection(void)
     /* Initialize browse info struct for SHBrowseForFolder */
     bi.hwndOwner = NULL;
     bi.pszDisplayName = NULL;
-    bi.lpszTitle = (LPTSTR) title;
+    bi.lpszTitle = title;
     bi.lpfn = selection_callback;
 
     hr = SHGetDesktopFolder(&desktop_object);
@@ -341,19 +345,19 @@ static void test_selection(void)
 
     /* test without flags */
     bi.ulFlags = 0;
-    pidl = SHBrowseForFolder(&bi);
+    pidl = SHBrowseForFolderA(&bi);
 
     if (pidl)
         CoTaskMemFree(pidl);
 
     /* test with flag */
     bi.ulFlags = BIF_NEWDIALOGSTYLE;
-    pidl = SHBrowseForFolder(&bi);
+    pidl = SHBrowseForFolderA(&bi);
 
     if (pidl)
         CoTaskMemFree(pidl);
 
-    desktop_object->lpVtbl->Release(desktop_object);
+    IShellFolder_Release(desktop_object);
 
     CoUninitialize();
 }

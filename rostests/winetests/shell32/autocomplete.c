@@ -194,7 +194,7 @@ static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     switch(msg) {
     case WM_CREATE:
         /* create edit control */
-        hEdit = CreateWindowEx(0, "EDIT", "Some text", 0, 10, 10, 300, 300,
+        hEdit = CreateWindowExA(0, "EDIT", "Some text", 0, 10, 10, 300, 300,
                     hWnd, NULL, hinst, NULL);
         ok(hEdit != NULL, "Can't create edit control\n");
         break;
@@ -214,7 +214,7 @@ static void createMainWnd(void)
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorA(NULL, (LPSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "MyTestWnd";
