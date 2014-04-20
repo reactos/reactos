@@ -9,6 +9,7 @@ list(APPEND SOURCE
     NtMapViewOfSection.c
     NtProtectVirtualMemory.c
     NtQuerySystemEnvironmentValue.c
+    NtQueryVolumeInformationFile.c
     RtlBitmap.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c

@@ -12,6 +12,7 @@ extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtProtectVirtualMemory(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
+extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
 extern void func_RtlBitmap(void);
 extern void func_RtlDetermineDosPathNameType(void);
@@ -39,6 +40,7 @@ const struct test winetest_testlist[] =
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtProtectVirtualMemory",         func_NtProtectVirtualMemory },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
+    { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
     { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
