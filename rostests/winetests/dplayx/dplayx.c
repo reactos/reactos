@@ -87,8 +87,6 @@ static LPSTR get_temp_buffer(void)
 
 static LPCSTR Guid2str(const GUID *guid)
 {
-    LPSTR buffer = get_temp_buffer();
-
     if (!guid) return "(null)";
 
     /* Service providers */
@@ -124,12 +122,7 @@ static LPCSTR Guid2str(const GUID *guid)
     if (IsEqualGUID(guid, &DPAID_ComPort))
         return "DPAID_ComPort";
 
-    sprintf( buffer, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             guid->Data1, guid->Data2, guid->Data3,
-             guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
-             guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7] );
-    return buffer;
-
+    return wine_dbgstr_guid(guid);
 }
 
 
@@ -667,7 +660,7 @@ static void init_TCPIP_provider( IDirectPlay4 *pDP, LPCSTR strIPAddressString, W
 
     /* IP address string */
     addressElements[1].guidDataType = DPAID_INet;
-    addressElements[1].dwDataSize   = lstrlen(strIPAddressString) + 1;
+    addressElements[1].dwDataSize   = lstrlenA(strIPAddressString) + 1;
     addressElements[1].lpData       = (LPVOID) strIPAddressString;
 
     /* Optional Port number */
@@ -6470,7 +6463,7 @@ static void test_COM_dplobby(void)
             &IID_IUnknown, (void**)&dpl);
     ok(hr == CLASS_E_NOAGGREGATION || broken(hr == E_INVALIDARG),
             "DirectPlayLobby create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
-    ok(!dpl || dpl == (IDirectPlayLobby*)0xdeadbeef, "dp4 = %p\n", dpl);
+    ok(!dpl || dpl == (IDirectPlayLobby*)0xdeadbeef, "dpl = %p\n", dpl);
 
     /* Invalid RIID */
     hr = CoCreateInstance(&CLSID_DirectPlayLobby, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectPlay,
