@@ -1,6 +1,6 @@
 Index: base/shell/explorer/desktop/desktop.cpp
 ===================================================================
---- base/shell/explorer/desktop/desktop.cpp	(revision 62316)
+--- base/shell/explorer/desktop/desktop.cpp	(revision 62758)
 +++ base/shell/explorer/desktop/desktop.cpp	(working copy)
 @@ -326,8 +326,8 @@
  HWND DesktopWindow::Create()
@@ -15,8 +15,17 @@ Index: base/shell/explorer/desktop/desktop.cpp
  	int height = GetSystemMetrics(SM_CYSCREEN);
 Index: cmake/baseaddress.cmake
 ===================================================================
---- cmake/baseaddress.cmake	(revision 62316)
+--- cmake/baseaddress.cmake	(revision 62758)
 +++ cmake/baseaddress.cmake	(working copy)
+@@ -1,7 +1,7 @@
+ set(baseaddress_ntdll                0x7c920000) # should be above 0x7c920000
+ set(baseaddress_kernel32             0x77d80000)
+ set(baseaddress_msvcrt               0x77cd0000)
+-set(baseaddress_advapi32             0x77c20000)
++set(baseaddress_advapi32             0x77c70000)
+ set(baseaddress_gdi32                0x77bb0000)
+ set(baseaddress_user32               0x77a20000)
+ set(baseaddress_dhcpcsvc             0x779d0000)
 @@ -272,6 +272,7 @@
  set(baseaddress_wbemprox             0x70c70000)
  set(baseaddress_windowscodecs        0x70b60000)
@@ -27,7 +36,7 @@ Index: cmake/baseaddress.cmake
  set(baseaddress_wing32               0x70900000)
 Index: cmake/config.cmake
 ===================================================================
---- cmake/config.cmake	(revision 62316)
+--- cmake/config.cmake	(revision 62758)
 +++ cmake/config.cmake	(working copy)
 @@ -58,6 +58,9 @@
  "Whether to compile support for ELF files.
@@ -37,11 +46,11 @@ Index: cmake/config.cmake
 +"Whether to build and use Wine-based Win32 subsystem.")
 +
  set(NSWPAT FALSE CACHE BOOL
- "Whether to compile apps/libs with features covered software patents or not.
+ "Whether to build apps/libs with features covered by software patents.
  If you live in a country where software patents are valid/apply, don't
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 62316)
+--- CMakeLists.txt	(revision 62758)
 +++ CMakeLists.txt	(working copy)
 @@ -134,6 +134,10 @@
          add_definitions(-D_WINKD_=1)
@@ -51,7 +60,7 @@ Index: CMakeLists.txt
 +        add_definitions(-D_ARWINSS_=1)
 +    endif()
 +
-     if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS"))
+     if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
          set(PCH 1)
      else()
 @@ -236,6 +240,9 @@
@@ -66,7 +75,7 @@ Index: CMakeLists.txt
      create_iso_lists()
 Index: include/asm/syscalls.inc
 ===================================================================
---- include/asm/syscalls.inc	(revision 62316)
+--- include/asm/syscalls.inc	(revision 62758)
 +++ include/asm/syscalls.inc	(working copy)
 @@ -95,6 +95,7 @@
  
@@ -86,7 +95,7 @@ Index: include/asm/syscalls.inc
      .ENDP
 Index: include/psdk/winddi.h
 ===================================================================
---- include/psdk/winddi.h	(revision 62316)
+--- include/psdk/winddi.h	(revision 62758)
 +++ include/psdk/winddi.h	(working copy)
 @@ -2683,7 +2683,7 @@
      _In_ ULONG cjSize,
@@ -99,7 +108,7 @@ Index: include/psdk/winddi.h
  FONTOBJ_pGetGammaTables(
 Index: include/reactos/wine/config.h
 ===================================================================
---- include/reactos/wine/config.h	(revision 62316)
+--- include/reactos/wine/config.h	(revision 62758)
 +++ include/reactos/wine/config.h	(working copy)
 @@ -1,3 +1,5 @@
 +#include "reactos/buildno.h"
@@ -109,7 +118,7 @@ Index: include/reactos/wine/config.h
  /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
 Index: lib/3rdparty/CMakeLists.txt
 ===================================================================
---- lib/3rdparty/CMakeLists.txt	(revision 62316)
+--- lib/3rdparty/CMakeLists.txt	(revision 62758)
 +++ lib/3rdparty/CMakeLists.txt	(working copy)
 @@ -2,7 +2,9 @@
  add_subdirectory(adns)
@@ -121,33 +130,42 @@ Index: lib/3rdparty/CMakeLists.txt
  add_subdirectory(fullfat)
  add_subdirectory(libmpg123)
  add_subdirectory(libsamplerate)
-Index: lib/3rdparty/freetype/CMakeLists.txt
+Index: subsystems/win32/csrsrv/init.c
 ===================================================================
---- lib/3rdparty/freetype/CMakeLists.txt	(revision 62316)
-+++ lib/3rdparty/freetype/CMakeLists.txt	(working copy)
-@@ -11,7 +11,9 @@
-   src/base/ftbbox.c
-   src/base/ftbdf.c
-   src/base/ftbitmap.c
-+  src/base/ftcid.c
-   src/base/ftdebug.c
-+  src/base/ftfstype.c
-   src/base/ftgasp.c
-   src/base/ftglyph.c
-   src/base/ftgxval.c
+--- subsystems/win32/csrsrv/init.c	(revision 62758)
++++ subsystems/win32/csrsrv/init.c	(working copy)
+@@ -20,7 +20,7 @@
+ /* DATA ***********************************************************************/
+ 
+ // Debug Flag
+-ULONG CsrDebug = 0; // 0xFFFFFFFF;
++ULONG CsrDebug = 0xFFFFFFFF;
+ 
+ HANDLE CsrHeap = NULL;
+ HANDLE CsrObjectDirectory = NULL;
 Index: win32ss/CMakeLists.txt
 ===================================================================
---- win32ss/CMakeLists.txt	(revision 62316)
+--- win32ss/CMakeLists.txt	(revision 62758)
 +++ win32ss/CMakeLists.txt	(working copy)
-@@ -7,6 +7,8 @@
+@@ -6,7 +6,10 @@
+ PROJECT(WIN32SS)
  
  add_subdirectory(drivers)
++add_subdirectory(user/winsrv)
  
 +if (NOT _ARWINSS_)
 +
  if(USE_DIBLIB)
      add_subdirectory(gdi/diblib)
  endif()
+@@ -18,7 +21,6 @@
+ add_subdirectory(gdi/gdi32)
+ add_subdirectory(reactx)
+ add_subdirectory(user/user32)
+-add_subdirectory(user/winsrv)
+ 
+ spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
+ 
 @@ -243,3 +245,4 @@
  add_asm_files(win32ksys_asm sys-stubs.S)
  add_library(win32ksys ${win32ksys_asm})
@@ -156,7 +174,7 @@ Index: win32ss/CMakeLists.txt
 \ No newline at end of file
 Index: win32ss/drivers/CMakeLists.txt
 ===================================================================
---- win32ss/drivers/CMakeLists.txt	(revision 62316)
+--- win32ss/drivers/CMakeLists.txt	(revision 62758)
 +++ win32ss/drivers/CMakeLists.txt	(working copy)
 @@ -1,6 +1,8 @@
  
@@ -169,7 +187,7 @@ Index: win32ss/drivers/CMakeLists.txt
  add_subdirectory(watchdog)
 Index: win32ss/include/ntgdihdl.h
 ===================================================================
---- win32ss/include/ntgdihdl.h	(revision 62316)
+--- win32ss/include/ntgdihdl.h	(revision 62758)
 +++ win32ss/include/ntgdihdl.h	(working copy)
 @@ -270,6 +270,7 @@
      DWORD           dwCFCount;
@@ -199,3 +217,81 @@ Index: win32ss/include/ntgdihdl.h
  typedef struct _BRUSH_ATTR /* Used with pen too. */
  {
      FLONG    AttrFlags;
+Index: win32ss/user/winsrv/consrv/conoutput.c
+===================================================================
+--- win32ss/user/winsrv/consrv/conoutput.c	(revision 62758)
++++ win32ss/user/winsrv/consrv/conoutput.c	(working copy)
+@@ -77,9 +77,13 @@
+      * Indeed, the palette handle comes from a console app
+      * calling ourselves, running in CSRSS.
+      */
++#ifndef _ARWINSS_
+     NtUserConsoleControl(ConsoleMakePalettePublic,
+                          &SetPaletteRequest->PaletteHandle,
+                          sizeof(SetPaletteRequest->PaletteHandle));
++#else
++	UNIMPLEMENTED;
++#endif
+ 
+     Status = ConDrvSetConsolePalette(Buffer->Header.Console,
+                                      Buffer,
+Index: win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
+===================================================================
+--- win32ss/user/winsrv/consrv/frontends/gui/conwnd.c	(revision 62758)
++++ win32ss/user/winsrv/consrv/frontends/gui/conwnd.c	(working copy)
+@@ -161,7 +161,11 @@
+     }
+     else
+     {
++#ifndef _ARWINSS_
+         NtUserConsoleControl(GuiConsoleWndClassAtom, &WndClassAtom, sizeof(ATOM));
++#else
++        UNIMPLEMENTED;
++#endif
+     }
+ 
+     return (WndClassAtom != 0);
+Index: win32ss/user/winsrv/usersrv/init.c
+===================================================================
+--- win32ss/user/winsrv/usersrv/init.c	(revision 62758)
++++ win32ss/user/winsrv/usersrv/init.c	(working copy)
+@@ -95,7 +95,9 @@
+ WINAPI
+ PrivateCsrssManualGuiCheck(LONG Check)
+ {
++#ifndef _ARWINSS_
+     NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
++#endif
+ }
+ 
+ ULONG
+@@ -102,7 +104,13 @@
+ NTAPI
+ CreateSystemThreads(PVOID pParam)
+ {
++#ifndef _ARWINSS_
+     NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
++#else
++    while (TRUE)
++    {
++    }
++#endif
+     DPRINT1("This thread should not terminate!\n");
+     return 0;
+ }
+Index: win32ss/user/winsrv/usersrv/shutdown.c
+===================================================================
+--- win32ss/user/winsrv/usersrv/shutdown.c	(revision 62758)
++++ win32ss/user/winsrv/usersrv/shutdown.c	(working copy)
+@@ -901,7 +901,11 @@
+     NTSTATUS Status;
+ 
+     /* FIXME Inside 2000 says we should impersonate the caller here */
++#ifndef _ARWINSS_
+     Status = NtUserCallTwoParam(UserProcessId, Flags, TWOPARAM_ROUTINE_EXITREACTOS);
++#else
++    Status = 0;
++#endif
+ 
+     /* If the message isn't handled, the return value is 0, so 0 doesn't indicate
+        success. Success is indicated by a 1 return value, if anything besides 0
