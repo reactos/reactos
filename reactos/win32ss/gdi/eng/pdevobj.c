@@ -94,8 +94,12 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
             PALETTE_ShareUnlockPalette(ppdev->ppalSurf);
         }
 
-        /* Disable PDEV */
-        ppdev->pfn.DisablePDEV(ppdev->dhpdev);
+        /* Check if the PDEV was enabled */
+        if (ppdev->dhpdev != NULL)
+        {
+            /* Disable the PDEV */
+            ppdev->pfn.DisablePDEV(ppdev->dhpdev);
+        }
 
         /* Remove it from list */
         if( ppdev == gppdevList )
@@ -155,6 +159,11 @@ PDEVOBJ_bEnablePDEV(
                                   (HDEV)ppdev,
                                   ppdev->pGraphicsDevice->pwszDescription,
                                   ppdev->pGraphicsDevice->DeviceObject);
+    if (ppdev->dhpdev == NULL)
+    {
+        DPRINT1("Failed to enable PDEV\n");
+        return FALSE;
+    }
 
     /* Fix up some values */
     if (ppdev->gdiinfo.ulLogPixelsX == 0)
@@ -337,7 +346,8 @@ EngpCreatePDEV(
     if (!PDEVOBJ_bEnablePDEV(ppdev, pdm, NULL))
     {
         DPRINT1("Failed to enable PDEV!\n");
-        ASSERT(FALSE);
+        PDEVOBJ_vRelease(ppdev);
+        return NULL;
     }
 
     /* FIXME: this must be done in a better way */
