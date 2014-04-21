@@ -283,53 +283,27 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     return TRUE;
 }
 
-static VOID
-SetRegTextData(HWND hwnd,
-               HKEY hKey,
-               LPTSTR Value,
-               UINT uID)
+static VOID SetRegTextData(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     LPTSTR lpBuf = NULL;
     DWORD BufSize = 0;
     DWORD Type;
 
-    if (RegQueryValueEx(hKey,
-                        Value,
-                        NULL,
-                        &Type,
-                        NULL,
-                        &BufSize) == ERROR_SUCCESS)
+    if (RegQueryValueEx(hKey, Value, NULL, &Type, NULL, &BufSize) == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
+
         if (!lpBuf)
             return;
 
-        if (RegQueryValueEx(hKey,
-                            Value,
-                            NULL,
-                            &Type,
-                            (PBYTE)lpBuf,
-                            &BufSize) == ERROR_SUCCESS)
-        {
-            SetDlgItemText(hwnd,
-                           uID,
-                           lpBuf);
-        }
+        if (RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)lpBuf, &BufSize) == ERROR_SUCCESS)
+            SetDlgItemText(hwnd, uID, lpBuf);
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpBuf);
+        HeapFree(GetProcessHeap(), 0, lpBuf);
     }
 }
 
-static INT
-SetProcNameString(HWND hwnd,
-                  HKEY hKey,
-                  LPTSTR Value,
-                  UINT uID1,
-                  UINT uID2)
+static INT SetProcNameString(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID1, UINT uID2)
 {
     LPTSTR lpBuf = NULL;
     DWORD BufSize = 0;
@@ -339,25 +313,14 @@ SetProcNameString(HWND hwnd,
     TCHAR* szLastSpace;
     INT LastSpace = 0;
 
-    if (RegQueryValueEx(hKey,
-                        Value,
-                        NULL,
-                        &Type,
-                        NULL,
-                        &BufSize) == ERROR_SUCCESS)
+    if (RegQueryValueEx(hKey, Value, NULL, &Type, NULL, &BufSize) == ERROR_SUCCESS)
     {
-        lpBuf = HeapAlloc(GetProcessHeap(),
-                          0,
-                          BufSize);
+        lpBuf = HeapAlloc(GetProcessHeap(), 0, BufSize);
+
         if (!lpBuf)
             return 0;
 
-        if (RegQueryValueEx(hKey,
-                            Value,
-                            NULL,
-                            &Type,
-                            (PBYTE)lpBuf,
-                            &BufSize) == ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)lpBuf, &BufSize) == ERROR_SUCCESS)
         {
             if (BufSize > ((30 + 1) * sizeof(TCHAR)))
             {
@@ -385,39 +348,26 @@ SetProcNameString(HWND hwnd,
 
                 _tcsncpy(szBuf, lpBuf, LastSpace);
 
-                SetDlgItemText(hwnd,
-                               uID1,
-                               szBuf);
-
-                SetDlgItemText(hwnd,
-                               uID2,
-                               lpBuf+LastSpace+1);
+                SetDlgItemText(hwnd, uID1, szBuf);
+                SetDlgItemText(hwnd, uID2, lpBuf+LastSpace+1);
 
                 /* Return the number of used lines */
                 Ret = 2;
             }
             else
             {
-                SetDlgItemText(hwnd,
-                             uID1,
-                             lpBuf);
-
+                SetDlgItemText(hwnd, uID1, lpBuf);
                 Ret = 1;
             }
         }
 
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpBuf);
+        HeapFree(GetProcessHeap(), 0, lpBuf);
     }
 
     return Ret;
 }
 
-static VOID
-MakeFloatValueString(double* dFloatValue,
-                     LPTSTR szOutput,
-                     LPTSTR szAppend)
+static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR szAppend)
 {
     TCHAR szDecimalSeparator[4];
 
@@ -435,32 +385,21 @@ MakeFloatValueString(double* dFloatValue,
     }
 }
 
-static VOID
-SetProcSpeed(HWND hwnd,
-             HKEY hKey,
-             LPTSTR Value,
-             UINT uID)
+static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
     TCHAR szBuf[64];
     DWORD BufSize = sizeof(DWORD);
     DWORD Type = REG_SZ;
     PROCESSOR_POWER_INFORMATION ppi;
 
-    ZeroMemory(&ppi,
-               sizeof(ppi));
+    ZeroMemory(&ppi, sizeof(ppi));
 
     if ((CallNtPowerInformation(ProcessorInformation,
                                 NULL,
                                 0,
                                 (PVOID)&ppi,
                                 sizeof(ppi)) == STATUS_SUCCESS &&
-         ppi.CurrentMhz != 0) ||
-         RegQueryValueEx(hKey,
-                         Value,
-                         NULL,
-                         &Type,
-                         (PBYTE)&ppi.CurrentMhz,
-                         &BufSize) == ERROR_SUCCESS)
+         ppi.CurrentMhz != 0) || RegQueryValueEx(hKey, Value, NULL, &Type, (PBYTE)&ppi.CurrentMhz, &BufSize) == ERROR_SUCCESS)
     {
         if (ppi.CurrentMhz < 1000)
         {
@@ -472,14 +411,11 @@ SetProcSpeed(HWND hwnd,
             MakeFloatValueString(&flt, szBuf, _T("GHz"));
         }
 
-        SetDlgItemText(hwnd,
-                       uID,
-                       szBuf);
+        SetDlgItemText(hwnd, uID, szBuf);
     }
 }
 
-static VOID
-GetSystemInformation(HWND hwnd)
+static VOID GetSystemInformation(HWND hwnd)
 {
     HKEY hKey;
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
@@ -493,16 +429,9 @@ GetSystemInformation(HWND hwnd)
      * directly out of the registry instead of via setupapi as it
      * contains all the info we need, and should remain static
      */
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     ProcKey,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, ProcKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        SetRegTextData(hwnd,
-                       hKey,
-                       _T("VendorIdentifier"),
-                       CurMachineLine);
+        SetRegTextData(hwnd, hKey, _T("VendorIdentifier"), CurMachineLine);
         CurMachineLine++;
 
         CurMachineLine += SetProcNameString(hwnd,
@@ -511,16 +440,13 @@ GetSystemInformation(HWND hwnd)
                                             CurMachineLine,
                                             CurMachineLine + 1);
 
-        SetProcSpeed(hwnd,
-                     hKey,
-                     _T("~MHz"),
-                     CurMachineLine);
+        SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
         CurMachineLine++;
     }
 
-
     /* Get total physical RAM */
     MemStat.dwLength = sizeof(MemStat);
+
     if (GlobalMemoryStatusEx(&MemStat))
     {
         TCHAR szStr[32];
@@ -529,11 +455,7 @@ GetSystemInformation(HWND hwnd)
         if (MemStat.ullTotalPhys > 1024 * 1024 * 1024)
         {
             UINT i = 0;
-            static const UINT uStrId[] = {
-                IDS_GIGABYTE,
-                IDS_TERABYTE,
-                IDS_PETABYTE
-            };
+            static const UINT uStrId[] = { IDS_GIGABYTE, IDS_TERABYTE, IDS_PETABYTE};
 
             // We're dealing with GBs or more
             MemStat.ullTotalPhys /= 1024 * 1024;
@@ -578,13 +500,8 @@ GetSystemInformation(HWND hwnd)
 
 
 /* Property page dialog callback */
-INT_PTR CALLBACK
-GeneralPageProc(HWND hwndDlg,
-                UINT uMsg,
-                WPARAM wParam,
-                LPARAM lParam)
+INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
 
@@ -610,10 +527,7 @@ GeneralPageProc(HWND hwndDlg,
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_LICENCE)
             {
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_LICENCE),
-                          hwndDlg,
-                          LicenceDlgProc);
+                DialogBox(hApplet, MAKEINTRESOURCE(IDD_LICENCE), hwndDlg, LicenceDlgProc);
 
                 return TRUE;
             }
@@ -621,8 +535,8 @@ GeneralPageProc(HWND hwndDlg,
 
         case WM_DRAWITEM:
         {
-            LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+
             if (lpDrawItem->CtlID == IDC_ROSIMG)
             {
                 HDC hdcMem;
@@ -658,12 +572,7 @@ GeneralPageProc(HWND hwndDlg,
             {
                 PNMLINK nml = (PNMLINK)nmhdr;
 
-                ShellExecuteW(hwndDlg,
-                              L"open",
-                              nml->item.szUrl,
-                              NULL,
-                              NULL,
-                              SW_SHOWNORMAL);
+                ShellExecuteW(hwndDlg, L"open", nml->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
             }
             break;
         }
