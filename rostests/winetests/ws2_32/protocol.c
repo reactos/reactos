@@ -60,9 +60,10 @@ static void test_service_flags(int family, int version, int socktype, int protoc
 
 static void test_WSAEnumProtocolsA(void)
 {
-    INT ret;
+    INT ret, i, j, found;
     DWORD len = 0, error;
     WSAPROTOCOL_INFOA info, *buffer;
+    INT ptest[] = {0xdead, IPPROTO_TCP, 0xcafe, IPPROTO_UDP, 0xbeef, 0};
 
     ret = WSAEnumProtocolsA( NULL, NULL, &len );
     ok( ret == SOCKET_ERROR, "WSAEnumProtocolsA() succeeded unexpectedly\n");
@@ -80,8 +81,6 @@ static void test_WSAEnumProtocolsA(void)
 
     if (buffer)
     {
-        INT i;
-
         ret = WSAEnumProtocolsA( NULL, buffer, &len );
         ok( ret != SOCKET_ERROR, "WSAEnumProtocolsA() failed unexpectedly: %d\n",
             WSAGetLastError() );
@@ -96,13 +95,42 @@ static void test_WSAEnumProtocolsA(void)
 
         HeapFree( GetProcessHeap(), 0, buffer );
     }
+
+    /* Test invalid protocols in the list */
+    ret = WSAEnumProtocolsA( ptest, NULL, &len );
+    ok( ret == SOCKET_ERROR, "WSAEnumProtocolsA() succeeded unexpectedly\n");
+    error = WSAGetLastError();
+    ok( error == WSAENOBUFS || broken(error == WSAEFAULT) /* NT4 */,
+       "Expected 10055, received %d\n", error);
+
+    buffer = HeapAlloc( GetProcessHeap(), 0, len );
+
+    if (buffer)
+    {
+        ret = WSAEnumProtocolsA( ptest, buffer, &len );
+        ok( ret != SOCKET_ERROR, "WSAEnumProtocolsA() failed unexpectedly: %d\n",
+            WSAGetLastError() );
+        ok( ret >= 2, "Expected at least 2 items, received %d\n", ret);
+
+        for (i = found = 0; i < ret; i++)
+            for (j = 0; j < sizeof(ptest) / sizeof(ptest[0]); j++)
+                if (buffer[i].iProtocol == ptest[j])
+                {
+                    found |= 1 << j;
+                    break;
+                }
+        ok(found == 0x0A, "Expected 2 bits represented as 0xA, received 0x%x\n", found);
+
+        HeapFree( GetProcessHeap(), 0, buffer );
+    }
 }
 
 static void test_WSAEnumProtocolsW(void)
 {
-    INT ret;
+    INT ret, i, j, found;
     DWORD len = 0, error;
     WSAPROTOCOL_INFOW info, *buffer;
+    INT ptest[] = {0xdead, IPPROTO_TCP, 0xcafe, IPPROTO_UDP, 0xbeef, 0};
 
     ret = WSAEnumProtocolsW( NULL, NULL, &len );
     ok( ret == SOCKET_ERROR, "WSAEnumProtocolsW() succeeded unexpectedly\n");
@@ -120,8 +148,6 @@ static void test_WSAEnumProtocolsW(void)
 
     if (buffer)
     {
-        INT i;
-
         ret = WSAEnumProtocolsW( NULL, buffer, &len );
         ok( ret != SOCKET_ERROR, "WSAEnumProtocolsW() failed unexpectedly: %d\n",
             WSAGetLastError() );
@@ -133,6 +159,34 @@ static void test_WSAEnumProtocolsW(void)
                                 buffer[i].iSocketType, buffer[i].iProtocol,
                                 buffer[i].dwServiceFlags1);
         }
+
+        HeapFree( GetProcessHeap(), 0, buffer );
+    }
+
+    /* Test invalid protocols in the list */
+    ret = WSAEnumProtocolsW( ptest, NULL, &len );
+    ok( ret == SOCKET_ERROR, "WSAEnumProtocolsW() succeeded unexpectedly\n");
+    error = WSAGetLastError();
+    ok( error == WSAENOBUFS || broken(error == WSAEFAULT) /* NT4 */,
+       "Expected 10055, received %d\n", error);
+
+    buffer = HeapAlloc( GetProcessHeap(), 0, len );
+
+    if (buffer)
+    {
+        ret = WSAEnumProtocolsW( ptest, buffer, &len );
+        ok( ret != SOCKET_ERROR, "WSAEnumProtocolsW() failed unexpectedly: %d\n",
+            WSAGetLastError() );
+        ok( ret >= 2, "Expected at least 2 items, received %d\n", ret);
+
+        for (i = found = 0; i < ret; i++)
+            for (j = 0; j < sizeof(ptest) / sizeof(ptest[0]); j++)
+                if (buffer[i].iProtocol == ptest[j])
+                {
+                    found |= 1 << j;
+                    break;
+                }
+        ok(found == 0x0A, "Expected 2 bits represented as 0xA, received 0x%x\n", found);
 
         HeapFree( GetProcessHeap(), 0, buffer );
     }
