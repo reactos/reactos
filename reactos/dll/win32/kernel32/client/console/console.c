@@ -59,6 +59,10 @@ DefaultConsoleCtrlHandler(DWORD Event)
             DPRINT("Ctrl Close Event\n");
             break;
 
+        case CTRL_LAST_CLOSE_EVENT:
+            DPRINT("Ctrl Last Close Event\n");
+            break;
+
         case CTRL_LOGOFF_EVENT:
             DPRINT("Ctrl Logoff Event\n");
             break;
@@ -171,9 +175,9 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
                 switch(nCode)
                 {
                     case CTRL_CLOSE_EVENT:
+                    case CTRL_LAST_CLOSE_EVENT:
                     case CTRL_LOGOFF_EVENT:
                     case CTRL_SHUTDOWN_EVENT:
-                    case 3:
                         nExitCode = CodeAndFlag;
                         break;
                 }
