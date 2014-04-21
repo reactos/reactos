@@ -329,7 +329,6 @@ typedef struct _CONSOLE
 
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
-    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event when a process detaches, and only one process is still attached to it */
 
     COLORREF Colors[16];                    /* Colour palette */
 
