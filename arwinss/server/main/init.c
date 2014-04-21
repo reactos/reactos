@@ -28,8 +28,82 @@ NTSTATUS FASTCALL InitDcImpl(VOID);
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 LIST_ENTRY GlobalDriverListHead;
+BOOL gbInitialized;
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+APIENTRY
+UserCreateThreadInfo(PETHREAD Thread)
+{
+    struct _EPROCESS *Process;
+    PTHREADINFO Win32Thread;
+    PPROCESSINFO Win32Process;
+
+    Process = Thread->ThreadsProcess;
+
+    /* Get the Win32 Thread and Process */
+    Win32Thread = PsGetThreadWin32Thread(Thread);
+    Win32Process = PsGetProcessWin32Process(Process);
+    DPRINT("Win32 thread %p, process %p\n", Win32Thread, Win32Process);
+
+    DPRINT("Creating W32 thread TID:%d PID:%d at IRQ level: %lu. Win32Process %p, desktop %x\n",
+        Thread->Tcb.Teb->ClientId.UniqueThread, Thread->Tcb.Teb->ClientId.UniqueProcess, KeGetCurrentIrql(), Win32Process, Win32Process->desktop);
+
+    /* Allocate one if needed */
+    if (!Win32Thread)
+    {
+        /* FIXME - lock the process */
+        Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(THREADINFO),
+                                            't23W');
+
+        if (!Win32Thread)
+            return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
+
+        PsSetThreadWin32Thread(Thread, Win32Thread, NULL);
+        /* FIXME - unlock the process */
+    }
+
+    Win32Thread->process = Win32Process;
+    Win32Thread->peThread = Thread;
+    Win32Thread->desktop = Win32Process->desktop;
+    Win32Thread->KeyboardLayout = UserGetDefaultKeyBoardLayout();
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+APIENTRY
+UserDestroyThreadInfo(PETHREAD Thread)
+{
+    struct _EPROCESS *Process;
+    PTHREADINFO Win32Thread;
+    PPROCESSINFO Win32Process;
+
+    Process = Thread->ThreadsProcess;
+
+    /* Get the Win32 Thread and Process */
+    Win32Thread = PsGetThreadWin32Thread(Thread);
+    Win32Process = PsGetProcessWin32Process(Process);
+    DPRINT("Win32 thread %p, process %p\n", Win32Thread, Win32Process);
+
+    DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql());
+
+    /* USER thread-level cleanup */
+    UserEnterExclusive();
+    cleanup_clipboard_thread(Win32Thread);
+    destroy_thread_windows(Win32Thread);
+    free_msg_queue(Win32Thread);
+    close_thread_desktop(Win32Thread);
+    UserLeave();
+
+    PsSetThreadWin32Thread(Thread, NULL, NULL);
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 APIENTRY
@@ -119,62 +193,24 @@ APIENTRY
 Win32kThreadCallout(PETHREAD Thread,
                     PSW32THREADCALLOUTTYPE Type)
 {
-    struct _EPROCESS *Process;
-    PTHREADINFO Win32Thread;
-    PPROCESSINFO Win32Process;
+    NTSTATUS Status;
 
     DPRINT("Enter Win32kThreadCallback, current thread id %d, process id %d\n", PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueThread, PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueProcess);
 
-    Process = Thread->ThreadsProcess;
+    ASSERT(NtCurrentTeb());
 
-    /* Get the Win32 Thread and Process */
-    Win32Thread = PsGetThreadWin32Thread(Thread);
-    Win32Process = PsGetProcessWin32Process(Process);
-    DPRINT("Win32 thread %p, process %p\n", Win32Thread, Win32Process);
-    /* Allocate one if needed */
-    if (!Win32Thread)
-    {
-        /* FIXME - lock the process */
-        Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(THREADINFO),
-                                            't23W');
-
-        if (!Win32Thread)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
-
-        PsSetThreadWin32Thread(Thread, Win32Thread, NULL);
-        /* FIXME - unlock the process */
-    }
     if (Type == PsW32ThreadCalloutInitialize)
     {
-        DPRINT("Creating W32 thread TID:%d PID:%d at IRQ level: %lu. Win32Process %p, desktop %x\n",
-            Thread->Tcb.Teb->ClientId.UniqueThread, Thread->Tcb.Teb->ClientId.UniqueProcess, KeGetCurrentIrql(), Win32Process, Win32Process->desktop);
-
-        Win32Thread->process = Win32Process;
-        Win32Thread->peThread = Thread;
-        Win32Thread->desktop = Win32Process->desktop;
-        Win32Thread->KeyboardLayout = UserGetDefaultKeyBoardLayout();
+        Status = UserCreateThreadInfo(Thread);
     }
     else
     {
-        DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql());
-
-        /* USER thread-level cleanup */
-        UserEnterExclusive();
-            cleanup_clipboard_thread(Win32Thread);
-            destroy_thread_windows(Win32Thread);
-            free_msg_queue(Win32Thread);
-            close_thread_desktop(Win32Thread);
-        UserLeave();
-
-        PsSetThreadWin32Thread(Thread, NULL, NULL);
+        Status = UserDestroyThreadInfo(Thread);
     }
 
     DPRINT("Leave Win32kThreadCallback\n");
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -304,8 +340,34 @@ NtUserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
-    /* Connect CSR subsystem */
+    /* Check the Windows version */
+    if (dwWinVersion != 0)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Grab the lock exclusively */
+    UserEnterExclusive();
+
+    /* Check if already initialized */
+    if (gbInitialized)
+    {
+        /* Release the lock and exit */
+        UserLeave();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Save CSR process */
     CsrInit();
+
+    /* Create win32 info for the current thread */
+    UserCreateThreadInfo(PsGetCurrentThread());
+
+    /* User server is initialized now */
+    gbInitialized = TRUE;
+
+    /* Release the lock */
+    UserLeave();
 
     return STATUS_SUCCESS;
 }

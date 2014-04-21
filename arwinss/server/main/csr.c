@@ -48,7 +48,8 @@ CsrInit(void)
    CsrProcess = PsGetCurrentProcess();
    DPRINT("Win32k registered with CSRSS\n");
 #else
-    UNIMPLEMENTED;
+    CsrProcess = PsGetCurrentProcess();
+    DPRINT("Win32k called by CSRSS\n");
 #endif
 }
 
