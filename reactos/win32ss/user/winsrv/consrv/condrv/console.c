@@ -244,7 +244,7 @@ ConDrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
     return Status;
 }
 
-static NTSTATUS
+NTSTATUS
 ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData)
 {
@@ -535,6 +535,8 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->ReferenceCount = 0;
     InitializeCriticalSection(&Console->Lock);
     InitializeListHead(&Console->ProcessList);
+    Console->NotifiedLastCloseProcess = NULL;
+    Console->NotifyLastClose = FALSE;
 
     /* Initialize the frontend interface */
     ResetFrontEnd(Console);

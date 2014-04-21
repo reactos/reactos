@@ -30,6 +30,7 @@ PHANDLER_ROUTINE InitialHandler[1];
 PHANDLER_ROUTINE* CtrlHandlers;
 ULONG NrCtrlHandlers;
 ULONG NrAllocatedHandlers;
+BOOL LastCloseNotify = FALSE;
 
 HANDLE InputWaitHandle = INVALID_HANDLE_VALUE;
 
@@ -129,8 +130,14 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
         case CTRL_SHUTDOWN_EVENT:
             break;
 
-        case 3:
-            ExitThread(0);
+        case CTRL_LAST_CLOSE_EVENT:
+            /*
+             * In case the console app hasn't register for last close notification,
+             * just kill this console handler thread. We don't want that such apps
+             * get killed for unexpected reasons. On the contrary apps that registered
+             * can be killed because they expect to be.
+             */
+            if (!LastCloseNotify) ExitThread(0);
             break;
 
         case 4:
@@ -2595,14 +2602,26 @@ BOOL WINAPI GetConsoleKeyboardLayoutNameW(LPWSTR name)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-BOOL
+DWORD
 WINAPI
 SetLastConsoleEventActive(VOID)
 {
-    STUB;
-    return FALSE;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_NOTIFYLASTCLOSE NotifyLastCloseRequest = &ApiMessage.Data.NotifyLastCloseRequest;
+
+    /* Set the flag used by the console control dispatcher */
+    LastCloseNotify = TRUE;
+
+    /* Set up the input arguments */
+    NotifyLastCloseRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    /* Call CSRSS; just return the NTSTATUS cast to DWORD */
+    return CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                               NULL,
+                               CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepNotifyLastClose),
+                               sizeof(*NotifyLastCloseRequest));
 }
 
 /* EOF */

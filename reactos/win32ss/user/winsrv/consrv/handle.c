@@ -633,6 +633,10 @@ Quit:
     return Status;
 }
 
+NTSTATUS
+ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
+                       IN PCONSOLE_PROCESS_DATA ProcessData);
+
 VOID
 FASTCALL
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
@@ -661,6 +665,30 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
         /* Update the internal info of the terminal */
         TermRefreshInternalInfo(Console);
+
+        /*
+         * Check if there is only one process still attached to the console,
+         * and that the console should send a control event in this case.
+         */
+        if ((Console->ProcessList.Flink != &Console->ProcessList) &&
+            (Console->ProcessList.Flink->Flink == &Console->ProcessList) &&
+            // (Console->ProcessList.Flink == Console->ProcessList.Blink) &&
+            Console->NotifyLastClose)
+        {
+            PCONSOLE_PROCESS_DATA LastProcess = CONTAINING_RECORD(Console->ProcessList.Flink,
+                                                                  CONSOLE_PROCESS_DATA,
+                                                                  ConsoleLink);
+            /* If the remaining process is the one that wanted the notification... */
+            if (LastProcess == Console->NotifiedLastCloseProcess)
+            {
+                /* ... notify it that it's the only one remaining on the console */
+                ConDrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, LastProcess);
+            }
+
+            /* In any case reset the pointer and the flag */
+            Console->NotifiedLastCloseProcess = NULL;
+            Console->NotifyLastClose = FALSE;
+        }
 
         /* Release the console */
         DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);

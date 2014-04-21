@@ -641,8 +641,27 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
 
 CSR_API(SrvConsoleNotifyLastClose)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Only one process is allowed to be registered for last close notification */
+    if (!Console->NotifyLastClose)
+    {
+        Console->NotifiedLastCloseProcess = ProcessData;
+        Console->NotifyLastClose = TRUE;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_ACCESS_DENIED;
+    }
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 

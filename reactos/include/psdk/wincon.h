@@ -65,11 +65,12 @@ extern "C" {
 /*
  * Control handler codes
  */
-#define CTRL_C_EVENT        0
-#define CTRL_BREAK_EVENT    1
-#define CTRL_CLOSE_EVENT    2
-#define CTRL_LOGOFF_EVENT   5
-#define CTRL_SHUTDOWN_EVENT 6
+#define CTRL_C_EVENT            0
+#define CTRL_BREAK_EVENT        1
+#define CTRL_CLOSE_EVENT        2
+#define CTRL_LAST_CLOSE_EVENT   3   /* Undocumented */
+#define CTRL_LOGOFF_EVENT       5
+#define CTRL_SHUTDOWN_EVENT     6
 
 /*
  * Input mode flags

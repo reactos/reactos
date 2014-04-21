@@ -204,6 +204,20 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
+    DWORD  CtrlEvent;
+    DWORD  ProcessGroupId;
+} CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+} CONSOLE_NOTIFYLASTCLOSE, *PCONSOLE_NOTIFYLASTCLOSE;
+
+
+
+typedef struct
+{
     HANDLE OutputHandle;
 
     BOOL Unicode;
@@ -347,6 +361,7 @@ typedef struct
     DWORD  Flags;
     DWORD  State;
 } CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
+
 
 
 typedef struct
@@ -529,6 +544,15 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
+    HANDLE InputHandle;
+    DWORD  NumberOfEvents;
+} CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
+
+
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
     HANDLE Handle;
 } CONSOLE_CLOSEHANDLE, *PCONSOLE_CLOSEHANDLE;
 
@@ -582,6 +606,7 @@ typedef struct
     DWORD  ShareMode;
     HANDLE Handle;
 } CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
+
 
 
 typedef struct
@@ -703,20 +728,6 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
-    DWORD  CtrlEvent;
-    DWORD  ProcessGroupId;
-} CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    HANDLE InputHandle;
-    DWORD  NumberOfEvents;
-} CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     COORD  Size;
 } CONSOLE_SETSCREENBUFFERSIZE, *PCONSOLE_SETSCREENBUFFERSIZE;
@@ -757,8 +768,10 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_ATTACHCONSOLE AttachConsoleRequest;
         CONSOLE_FREECONSOLE FreeConsoleRequest;
 
-        /* Process list */
+        /* Processes */
         CONSOLE_GETPROCESSLIST GetProcessListRequest;
+        CONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest;
+        CONSOLE_NOTIFYLASTCLOSE NotifyLastCloseRequest;
 
         /* Handles */
         CONSOLE_OPENCONSOLE OpenConsoleRequest;
@@ -806,6 +819,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETINPUT GetInputRequest;               // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
         CONSOLE_READOUTPUT ReadOutputRequest;           // SrvReadConsoleOutput / ReadConsoleOutput
         CONSOLE_READOUTPUTCODE ReadOutputCodeRequest;   // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
+        CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
 
         /* Write */
         CONSOLE_WRITECONSOLE WriteConsoleRequest;       // SrvWriteConsole / WriteConsole
@@ -829,9 +843,6 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest;
         CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
         CONSOLE_GETSETHISTORYINFO HistoryInfoRequest;
-
-        CONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest;
-        CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
 
         /* Input and Output Code Pages */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
